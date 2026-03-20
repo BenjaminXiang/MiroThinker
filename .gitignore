@@ -208,6 +208,9 @@ __marimo__/
 
 
 # -- ADDED --
+# Claude Code local state
+.claude/
+
 # Log files
 logs/
 

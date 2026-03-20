@@ -1,0 +1,7 @@
+nav:
+  - 核心Agent框架: miroflow-agent
+  - 工具库: ...
+  - 数据收集: collect-trace
+  - Web演示: gradio-demo
+  - 可视化: visualize-trace
+  - LobeChat集成: lobehub-compatibility
