@@ -110,6 +110,7 @@ CREATE TABLE companies (
     investors           TEXT[],
     patent_count        INTEGER,
     team_description    TEXT,
+    key_personnel      JSONB,       -- [{name, role, education: [{institution, degree, year, field}]}]
     website             TEXT,
     profile_summary     TEXT NOT NULL,
     profile_embedding   VECTOR,
@@ -227,6 +228,8 @@ CREATE INDEX idx_company_tech_tags ON companies
     USING GIN (tech_tags);
 CREATE INDEX idx_company_industry_tags ON companies
     USING GIN (industry_tags);
+CREATE INDEX idx_company_key_personnel ON companies
+    USING GIN (key_personnel);
 
 CREATE INDEX idx_patent_applicant ON patents(applicant);
 CREATE INDEX idx_patent_inventors ON patents
@@ -491,7 +494,7 @@ WHERE p.id = $professor_id
 | product_description + tech_tags | 15 |
 | financing_round + investors | 15 |
 | legal_representative + registered_capital | 10 |
-| team_description | 10 |
+| team_description + key_personnel | 10 |
 | website + patent_count | 10 |
 | 其他 | 5 |
 
