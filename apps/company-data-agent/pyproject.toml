@@ -5,6 +5,7 @@ description = "Company data agent domain models and pipeline components"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "openpyxl>=3.1.5",
     "pydantic>=2.11.7",
 ]
 

@@ -10,6 +10,12 @@ from company_data_agent.config import (
     PostgresConfig,
     QimingpianConfig,
 )
+from company_data_agent.ingest import (
+    MasterListParseError,
+    MasterListParseResult,
+    MasterListParser,
+    ParsedMasterListRow,
+)
 from company_data_agent.models.company_record import (
     CompanySource,
     EducationRecord,
@@ -26,9 +32,13 @@ __all__ = [
     "EmbeddingConfig",
     "EnvVarRef",
     "FinalCompanyRecord",
+    "MasterListParseError",
+    "MasterListParseResult",
+    "MasterListParser",
     "KeyPersonnelRecord",
     "LLMConfig",
     "PartialCompanyRecord",
+    "ParsedMasterListRow",
     "PostgresConfig",
     "QimingpianConfig",
     "ArtifactLayout",
