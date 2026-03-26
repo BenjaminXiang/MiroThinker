@@ -150,11 +150,12 @@ record = PartialCompanyRecord.model_validate(
 ```python
 from datetime import UTC, datetime
 
+from company_data_agent.identity import generate_company_id
 from company_data_agent.models.company_record import CompanySource, FinalCompanyRecord
 
 record = FinalCompanyRecord.model_validate(
     {
-        "id": "COMP-91440300MA5FUTURE1",
+        "id": generate_company_id("91440300MA5FUTURE1"),
         "name": "深圳未来机器人有限公司",
         "credit_code": "91440300MA5FUTURE1",
         "profile_summary": "一家聚焦手术机器人与智能控制系统的深圳科技企业，面向医院与科研机构提供核心机器人平台能力。",

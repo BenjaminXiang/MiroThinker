@@ -8,6 +8,8 @@ from math import isfinite
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from company_data_agent.identity import normalize_credit_code, validate_company_id
+
 
 class CompanySource(StrEnum):
     """Known upstream sources for company data provenance."""
@@ -82,17 +84,12 @@ class CompanyRecordBase(BaseModel):
     def validate_company_id(cls, value: str | None) -> str | None:
         if value is None:
             return value
-        if not value.startswith("COMP-") or len(value) <= len("COMP-"):
-            raise ValueError("company id must start with 'COMP-' and include a suffix")
-        return value
+        return validate_company_id(value)
 
     @field_validator("credit_code")
     @classmethod
     def validate_credit_code(cls, value: str) -> str:
-        normalized = value.strip().upper()
-        if len(normalized) != 18 or not normalized.isalnum():
-            raise ValueError("credit_code must be an 18-character alphanumeric string")
-        return normalized
+        return normalize_credit_code(value)
 
     @field_validator("sources")
     @classmethod

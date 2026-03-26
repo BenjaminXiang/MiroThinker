@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
+from company_data_agent.identity import generate_company_id
 from company_data_agent.models.company_record import (
     CompanySource,
     FinalCompanyRecord,
@@ -25,7 +26,7 @@ def build_partial(**overrides: object) -> PartialCompanyRecord:
 
 def build_final(**overrides: object) -> FinalCompanyRecord:
     payload = {
-        "id": "COMP-91440300MA5FUTURE1",
+        "id": generate_company_id("91440300MA5FUTURE1"),
         "name": "深圳未来机器人有限公司",
         "credit_code": "91440300MA5FUTURE1",
         "profile_summary": "一家聚焦手术机器人与智能控制系统的深圳科技企业，面向医院与科研机构提供核心机器人平台能力。",
@@ -50,7 +51,7 @@ def test_partial_record_accepts_minimal_valid_payload() -> None:
 def test_final_record_requires_final_invariants() -> None:
     record = build_final(sources=[CompanySource.MASTER_LIST, CompanySource.WEBSITE, CompanySource.MASTER_LIST])
 
-    assert record.id == "COMP-91440300MA5FUTURE1"
+    assert record.id == generate_company_id("91440300MA5FUTURE1")
     assert record.sources == [CompanySource.MASTER_LIST, CompanySource.WEBSITE]
     assert record.profile_embedding == [0.1, 0.2, 0.3]
 
@@ -61,7 +62,7 @@ def test_invalid_credit_code_is_rejected() -> None:
 
 
 def test_invalid_company_id_is_rejected() -> None:
-    with pytest.raises(ValidationError, match="company id"):
+    with pytest.raises(ValidationError, match="canonical format"):
         build_final(id="BAD-91440300MA5FUTURE1")
 
 
