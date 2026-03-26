@@ -16,6 +16,13 @@ from company_data_agent.identity import (
     normalize_credit_code,
     validate_company_id,
 )
+from company_data_agent.importer import (
+    SkeletonImportAction,
+    SkeletonImportActionType,
+    SkeletonImportReport,
+    SkeletonImportResult,
+    SkeletonImporter,
+)
 from company_data_agent.ingest import (
     MasterListParseError,
     MasterListParseResult,
@@ -50,6 +57,11 @@ __all__ = [
     "ParsedMasterListRow",
     "PostgresConfig",
     "QimingpianConfig",
+    "SkeletonImportAction",
+    "SkeletonImportActionType",
+    "SkeletonImportReport",
+    "SkeletonImportResult",
+    "SkeletonImporter",
     "validate_company_id",
     "ArtifactLayout",
 ]
