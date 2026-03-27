@@ -8,3 +8,4 @@
 - [Issue 10 配置与路径约定说明](docs/issue-10-配置与路径约定说明.md)
 - [Issue 11 主数据表解析说明](docs/issue-11-主数据表解析说明.md)
 - [Issue 12 企业 identity 说明](docs/issue-12-company-identity-说明.md)
+- [Issue 13 Skeleton 导入说明](docs/issue-13-skeleton-import-说明.md)
