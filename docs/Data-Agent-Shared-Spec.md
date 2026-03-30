@@ -1,597 +1,571 @@
 # 数据采集智能体群 — 共享技术规范
 
-本文档定义 Company-Data-Agent、Professor-Data-Agent 和 Paper-Data-Agent 共享的技术规范，包括整体架构、数据库设计、接口约定和质量保证框架。
+本文档是 `Company-Data-Agent`、`Professor-Data-Agent`、`Paper-Data-Agent`、`Patent-Data-Agent` 的共享契约源，定义长期架构、域间协作方式、统一对外字段、质量要求，以及与当前 MiroThinker 实现的映射关系。
+
+本文档**不是**单一数据库 schema 说明书，也**不是**把所有域强行压成一套物理表结构的约束文件。共享的是逻辑契约，不是底层物理 schema。
 
 ---
 
-## 一、整体架构
+## 一、文档定位
 
-### 1.1 三个智能体 + 五阶段流水线
+### 1.1 共享规范的作用
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                     调度层 (Cron)                         │
-│  每月触发 → Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4 │
-└──────────────────────┬──────────────────────────────────┘
-                       │
-  Phase 0: Company-Data-Agent
-  ┌────────────────────▼──────────────────────┐
-  │ 输入: 全深圳企业列表 (Excel/CSV) + 企名片 API │
-  │ 过程: 批量导入骨架 → 企名片补充 → Web Crawling │
-  │       充实 → LLM 生成画像 → embedding + 入库   │
-  │ 输出: companies.jsonl + raw/                │
-  └────────────────────┬──────────────────────┘
-                       │
-  Phase 1: Professor-Data-Agent
-  ┌────────────────────▼──────────────────────┐
-  │ 输入: 高校教师列表页 URL                    │
-  │ 过程: 爬取官网 + Scholar + 企名片           │
-  │ 输出: professors.jsonl + raw/              │
-  └────────────────────┬──────────────────────┘
-                       │
-  Phase 2: Paper-Data-Agent
-  ┌────────────────────▼──────────────────────┐
-  │ 输入: 教授 ID + 姓名 + 机构列表            │
-  │ 过程: Arxiv/Scholar/DBLP + PDF解析 + 摘要  │
-  │ 输出: papers.jsonl + pdfs/ + raw/          │
-  └────────────────────┬──────────────────────┘
-                       │
-  Phase 3: 反哺 + 入库
-  ┌────────────────────▼──────────────────────┐
-  │ 过程:                                      │
-  │  1. 论文关键词 → 教授研究方向精细化         │
-  │  2. LLM 生成教授/企业 profile_summary       │
-  │  3. BGE-M3 计算所有 embedding              │
-  │  4. 导入 PostgreSQL + 建索引               │
-  │  5. 生成采集报告                           │
-  └────────────────────┬──────────────────────┘
-                       │
-  Phase 4: MiroThinker 验证 + 补采
-  ┌────────────────────▼──────────────────────┐
-  │ 过程:                                      │
-  │  1. 抽样 + 定向验证教授/企业信息准确性      │
-  │  2. 验证论文-教授关联正确性                │
-  │  3. 低质量数据由 MiroThinker 深度补采       │
-  │  4. 修正数据回写 + 输出验证报告            │
-  └───────────────────────────────────────────┘
-```
+本规范统一以下内容：
 
-### 1.2 执行依赖关系
+- 长期存储架构与域边界
+- 各数据域对线上服务暴露的最小契约字段
+- 统一的 filter 语义
+- 域间关联的最小要求
+- 数据质量、验证、更新与发布要求
+- 与当前 MiroThinker 代码实现的衔接方式
 
-- **Phase 0 必须先于 Phase 1 完成**：教授 Agent 采集时需通过企名片 API 关联企业信息（写入 `company_roles`），因此企业库必须先就绪
-- Phase 2 依赖 Phase 1 产出的教授 ID 列表
-- Phase 3 依赖 Phase 0 + Phase 1 + Phase 2 的全部数据
-- Phase 4 依赖 Phase 3 入库完成
-- Phase 0 中各企业采集任务、Phase 1 中各教授采集任务、Phase 2 中各论文采集任务互相独立，可并行
+### 1.2 不在本文档强制统一的内容
+
+以下内容不要求四个数据域完全一致：
+
+- PostgreSQL 的物理表名和列名
+- 原始抓取层、中间清洗层的内部 schema
+- 各域内部去重流程的具体实现细节
+- 各域 embedding 的生成批次与内部任务拆分
+- 离线中间文件目录结构
+
+原则是：
+
+- **逻辑契约强统一**
+- **物理 schema 允许独立演进**
 
 ---
 
-## 二、数据库选型
+## 二、整体架构
 
-### 2.1 方案：PostgreSQL + pgvector（单库）
+### 2.1 长期架构
 
-**选型理由**（从查询链路出发）：
+长期架构统一为：
 
-1. **LLM 生成 SQL 的准确率最高**：下游 RAG 智能体需要将用户自然语言转换为数据库查询。LLM 生成 PostgreSQL SQL 的能力远优于生成 Elasticsearch DSL 或其他查询语言——这是查询链路中最关键的准确率瓶颈。
+- `PostgreSQL + Milvus`
 
-2. **一条 SQL 实现多路召回**：pgvector 允许在同一条 SQL 中同时完成向量语义检索 + 结构化筛选 + 关联查询，无需跨库协调。
+设计目标是：
 
-3. **数据规模不需要分布式**：5000 教授 + 25 万论文的向量检索在 pgvector HNSW 索引上 < 10ms，远低于 5s 的 SLA 要求。专用向量数据库（Milvus/Qdrant）为百万/亿级设计，此处过度。
+- 教授、企业、论文、专利可各自独立维护 PostgreSQL 库
+- 每个数据域可各自维护一组 Milvus collection
+- 线上服务层负责跨域编排，不要求底层合并成一个总库
 
-4. **运维最简**：一个数据库，一套备份策略，一个连接池。避免多库数据同步。
+### 2.2 多库、多 collection 的域边界
 
-### 2.2 扩展
+推荐的长期形态如下：
 
-- **pgvector**：向量存储与检索（HNSW 索引，余弦距离）
-- **pg_trgm**：模糊文本匹配（三字母组相似度）
-- **zhparser**（可选）：中文全文检索分词
+| 数据域 | 主 PostgreSQL | 主 Milvus collection | 说明 |
+| --- | --- | --- | --- |
+| 教授 | professor domain DB | professor profile collections | 教授身份、履历、画像、关联关系 |
+| 企业 | company domain DB | company profile collections | 企业骨架、画像、关键人物、关联关系 |
+| 论文 | paper domain DB | paper summary collections | 论文事实、摘要、关键词、教授关联 |
+| 专利 | patent domain DB | patent summary collections | 专利事实、解释性摘要、申请人/发明人关联 |
 
----
+这里的“独立”包括：
 
-## 三、数据库 Schema
+- 各 Agent 可有各自独立 PostgreSQL 库
+- 各 Agent 可有各自独立 schema
+- 各 Agent 可有各自独立 collection 划分策略
 
-```sql
--- 企业表
-CREATE TABLE companies (
-    id                  TEXT PRIMARY KEY,
-    name                TEXT NOT NULL,
-    credit_code         TEXT NOT NULL UNIQUE,
-    legal_representative TEXT,
-    registered_capital  TEXT,
-    establishment_date  DATE,
-    registered_address  TEXT,
-    industry            TEXT,
-    business_scope      TEXT,
-    product_description TEXT,
-    tech_tags           TEXT[],
-    industry_tags       TEXT[],
-    financing_round     TEXT,
-    financing_amount    TEXT,
-    investors           TEXT[],
-    patent_count        INTEGER,
-    team_description    TEXT,
-    key_personnel      JSONB,       -- [{name, role, education: [{institution, degree, year, field}]}]
-    website             TEXT,
-    profile_summary     TEXT NOT NULL,
-    profile_embedding   VECTOR,
-    sources             TEXT[] NOT NULL,
-    completeness_score  INTEGER NOT NULL,
-    last_updated        TIMESTAMP DEFAULT NOW(),
-    raw_data_path       TEXT NOT NULL
-);
+但独立不等于任意：
 
--- 教授表
-CREATE TABLE professors (
-    id                  TEXT PRIMARY KEY,
-    name                TEXT NOT NULL,
-    name_en             TEXT,
-    institution         TEXT NOT NULL,
-    department          TEXT,
-    title               TEXT,
-    email               TEXT,
-    homepage            TEXT,
-    research_directions TEXT[],
-    education           TEXT,
-    education_structured  JSONB,       -- [{institution, degree, year, field}]
-    h_index             INTEGER,
-    citation_count      INTEGER,
-    recent_paper_count  INTEGER,
-    top_papers          JSONB,
-    company_roles       JSONB,       -- [{company_id, role, source_url}]
-    patent_ids          TEXT[],
-    awards              JSONB,       -- [{title, year, issuer, source_url}]
-    academic_positions  TEXT[],
-    projects            JSONB,       -- [{name, role, source, source_url}]
-    work_experience       JSONB,       -- [{organization, role, start_year, end_year, description}]
-    evaluation_summary    TEXT,         -- LLM 生成的事实性评价摘要（大牛判断用）
-    profile_summary     TEXT NOT NULL,
-    profile_embedding   VECTOR,          -- 维度由 embedding 模型配置决定
-    sources             TEXT[],
-    completeness_score  INTEGER,
-    last_updated        TIMESTAMP DEFAULT NOW(),
-    raw_data_path       TEXT
-);
+- 必须遵守统一的对外契约字段
+- 必须遵守统一的 filter 语义
+- 必须向服务层暴露稳定 ID 和可追溯来源字段
 
--- 论文表
-CREATE TABLE papers (
-    id                  TEXT PRIMARY KEY,
-    title               TEXT NOT NULL,
-    title_zh            TEXT,
-    authors             JSONB NOT NULL,
-    professor_ids       TEXT[],
-    year                INTEGER NOT NULL,
-    venue               TEXT,
-    arxiv_id            TEXT,
-    arxiv_version       TEXT,
-    doi                 TEXT,
-    abstract            TEXT,
-    summary_zh          JSONB,
-    summary_text        TEXT,
-    summary_type        TEXT NOT NULL DEFAULT 'pending',
-    keywords            TEXT[],
-    pdf_path            TEXT,
-    full_text           TEXT,
-    citation_count      INTEGER,
-    summary_embedding   VECTOR,          -- 维度由 embedding 模型配置决定
-    status              TEXT NOT NULL DEFAULT 'discovered',
-    last_updated        TIMESTAMP DEFAULT NOW()
-);
+### 2.3 线上服务层职责
 
--- 专利表
-CREATE TABLE patents (
-    id                  TEXT PRIMARY KEY,
-    title               TEXT NOT NULL,
-    patent_number       TEXT,
-    applicant           TEXT,
-    inventors           TEXT[],
-    type                TEXT,            -- 发明/实用新型/外观设计
-    status              TEXT,            -- 已授权/申请中/已失效
-    filing_date         DATE,
-    publication_date    DATE,
-    grant_date          DATE,
-    abstract            TEXT,
-    technical_scheme    TEXT,
-    ipc_codes           TEXT[],
-    claims              JSONB,
-    llm_summary         TEXT,
-    source              TEXT,
-    last_updated        TIMESTAMP DEFAULT NOW()
-);
+线上服务层显式承担以下职责：
 
--- 索引
-CREATE INDEX idx_prof_embedding ON professors
-    USING hnsw (profile_embedding vector_cosine_ops);
-CREATE INDEX idx_prof_institution ON professors(institution);
-CREATE INDEX idx_prof_title ON professors(title);
-CREATE INDEX idx_prof_directions ON professors
-    USING GIN (research_directions);
-CREATE INDEX idx_prof_education_structured ON professors
-    USING GIN (education_structured);
-CREATE INDEX idx_prof_work_experience ON professors
-    USING GIN (work_experience);
+- 查询编排
+- 多源召回
+- 结果融合
+- rerank
+- 跨域聚合
+- 实时外部 fallback
 
-CREATE INDEX idx_paper_embedding ON papers
-    USING hnsw (summary_embedding vector_cosine_ops);
-CREATE INDEX idx_paper_professor ON papers
-    USING GIN (professor_ids);
-CREATE INDEX idx_paper_keywords ON papers
-    USING GIN (keywords);
-CREATE INDEX idx_paper_year ON papers(year);
-CREATE INDEX idx_paper_venue ON papers(venue);
-CREATE INDEX idx_paper_arxiv ON papers(arxiv_id);
-CREATE INDEX idx_paper_doi ON papers(doi);
+因此，共享规范不再假设：
 
-CREATE INDEX idx_company_embedding ON companies
-    USING hnsw (profile_embedding vector_cosine_ops);
-CREATE INDEX idx_company_industry ON companies(industry);
-CREATE INDEX idx_company_tech_tags ON companies
-    USING GIN (tech_tags);
-CREATE INDEX idx_company_industry_tags ON companies
-    USING GIN (industry_tags);
-CREATE INDEX idx_company_key_personnel ON companies
-    USING GIN (key_personnel);
+- 所有数据都在单一关系库中
+- 所有召回都通过一条 SQL 完成
+- 各数据域必须复用同一套物理 schema
 
-CREATE INDEX idx_patent_applicant ON patents(applicant);
-CREATE INDEX idx_patent_inventors ON patents
-    USING GIN (inventors);
-CREATE INDEX idx_patent_ipc ON patents
-    USING GIN (ipc_codes);
-CREATE INDEX idx_patent_type ON patents(type);
-CREATE INDEX idx_patent_status ON patents(status);
-```
+### 2.4 通用离线工作流
+
+四个数据域建议统一采用以下离线流程模型：
+
+1. **源数据进入**
+   - xlsx 导入、自写爬虫、官网抓取、学术平台抓取、辅助 Web Search
+2. **清洗与标准化**
+   - 字段归一化、日期标准化、实体标准化、结构化抽取
+3. **去重与关联**
+   - 域内去重、跨域关联、关系字段生成
+4. **用户向摘要与向量化**
+   - 生成用户可读摘要字段，并写入向量索引
+5. **发布与验证**
+   - 发布到对外契约层，做抽样验证、定向补采、生成报告
+
+### 2.5 跨域依赖关系
+
+不再采用“所有域共用一个全局严格 Phase 链”的假设。
+
+当前共享依赖应收敛为：
+
+- `Professor roster -> Paper`
+  - 论文周期性采集以深圳教授 roster 为锚点
+- `Paper -> Professor enrichment`
+  - 论文是教授画像更新的重要输入
+- `Company <-> Professor`
+  - 教授与企业的关联建立在企业库匹配与公开证据之上
+- `Company <-> Patent`
+  - 企业与专利通过标准化企业名、申请人、公开证据建立关联
+- `Professor <-> Patent`
+  - 教授与专利通过发明人、单位、公开证据建立关联
+
+明确取消以下旧假设：
+
+- 企业域必须先完成，教授域才能开始基础采集
+- 教授的企业关联必须依赖 `企名片 API`
+- 把论文域当成开放式全文献抓取器
 
 ---
 
-## 四、可配置组件
+## 三、与当前 MiroThinker 实现的映射
 
-以下技术组件在系统中应作为可配置项，PRD 不绑定具体实现，只定义能力需求。
+### 3.1 为什么在 MiroThinker 项目内做这件事
 
-### 4.1 配置项清单
+原因不是“文档放在一个仓库里方便”，而是当前仓库已经有一套高价值实现：
 
-| 组件 | 能力需求 | 配置方式 |
+- BrowseComp-ZH 表现优异的 agent runtime
+- 多轮工具调用编排
+- 搜索、网页抓取、PDF/网页抽取、Python 处理工具
+- 任务日志、trace、benchmark-style 批量执行框架
+
+这意味着数据采集 Agent 的实现方向，应优先复用现有 MiroThinker 能力，而不是另起一套完全独立的 agent runtime。
+
+### 3.2 当前代码基线
+
+当前与数据采集 Agent 最相关的实现基线包括：
+
+- [`pipeline.py`](../apps/miroflow-agent/src/core/pipeline.py)
+  - 统一任务入口，负责拼装 `ToolManager`、`Orchestrator`、`OutputFormatter`
+- [`orchestrator.py`](../apps/miroflow-agent/src/core/orchestrator.py)
+  - 多轮 agent loop、上下文压缩、rollback、防重复查询
+- [`tool_executor.py`](../apps/miroflow-agent/src/core/tool_executor.py)
+  - 参数修正、重复调用检测、空结果回滚、工具结果后处理
+- [`settings.py`](../apps/miroflow-agent/src/config/settings.py)
+  - Hydra 配置到 MCP 工具的映射
+- [`mirothinker_1.7_keep5_max200.yaml`](../apps/miroflow-agent/conf/agent/mirothinker_1.7_keep5_max200.yaml)
+  - 当前单智能体 search + scrape/extract + python 的高信号配置范式
+- [`search_and_scrape_webpage.py`](../libs/miroflow-tools/src/miroflow_tools/dev_mcp_servers/search_and_scrape_webpage.py)
+  - 搜索、重试、URL 过滤
+- [`jina_scrape_llm_summary.py`](../libs/miroflow-tools/src/miroflow_tools/dev_mcp_servers/jina_scrape_llm_summary.py)
+  - 抓取后抽取、Jina + Python fallback
+- [`common_benchmark.py`](../apps/miroflow-agent/benchmarks/common_benchmark.py)
+  - 可复用的任务批量执行与日志框架
+
+### 3.3 推荐实现方式
+
+共享规范推荐的实现方向是：
+
+- 以现有 MiroThinker runtime 为基础
+- 为教授、企业、论文、专利分别补 domain-specific prompt / config / post-processing
+- 用现有搜索、抓取、抽取、Python 工具完成大部分“采集 + 清洗”闭环
+- 需要 domain-specific 硬规则时，再辅以离线脚本和结构化清洗模块
+
+不推荐一开始就设计：
+
+- 一套完全独立的调度器
+- 一套和现有 `ToolManager` 平行的新工具注册系统
+- 一套和现有 `benchmark` / `task log` 平行的新验证体系
+
+### 3.4 当前工具能力映射
+
+| 采集/清洗能力 | 当前优先复用实现 | 备注 |
 | --- | --- | --- |
-| **Embedding 模型** | 中文语义向量化，输出维度需与 DB VECTOR 列一致 | 模型名称 + 维度 + 部署地址 |
-| **LLM** | 结构化信息提取、摘要生成、研究方向聚类等 | 模型名称 + API 地址 + 密钥 |
-| **Web Search API** | 教授信息补充搜索、MiroThinker 验证 | 服务商 + API 密钥 |
-| **学术平台爬取** | Scholar/Semantic Scholar 学术指标获取 | 爬虫实现 + 代理 API（可选） |
-| **PDF 解析** | 论文全文提取（含公式、表格） | VLM 模型 + 部署地址 |
-| **企名片 API** | 企业工商数据、融资、股东等结构化补充 | API 密钥 + 缓存策略 |
-| **Web Crawling** | 企业官网、PR 稿件等非结构化数据爬取 | 爬虫框架 + 代理（可选） |
-
-### 4.2 配置文件示例
-
-```yaml
-# config.yaml — 所有外部依赖均通过此文件配置
-
-embedding:
-  # 向量维度需与 DB Schema 中 VECTOR(N) 一致
-  # 更换模型时需同步更新 DB Schema 和重建索引
-  model: "BAAI/bge-m3"
-  dimension: 1024
-  endpoint: "http://localhost:8080/embed"
-
-llm:
-  model: "deepseek-v3"
-  endpoint: "http://localhost:8081/v1"
-  api_key: "${LLM_API_KEY}"
-
-web_search:
-  provider: "serper"  # serper / bing / sogou / ...
-  api_key: "${SEARCH_API_KEY}"
-
-pdf_parser:
-  model: "marker"  # marker / nougat / ...
-  endpoint: "http://localhost:8082/parse"
-
-scholar:
-  primary: "self_crawler"        # 自写爬虫
-  fallback: "serpapi"            # 付费代理降级
-  serpapi_key: "${SERPAPI_KEY}"
-
-qimingpian:
-  api_key: "${QIMINGPIAN_API_KEY}"
-  endpoint: "https://api.qimingpian.com"
-  cache_ttl_days: 7
-  rate_limit: "100 req/min"
-
-crawling:
-  max_concurrency: 3
-  delay_range: [2, 5]            # 秒
-  timeout: 30                    # 秒
-```
-
-### 4.3 约束
-
-- **向量维度一致性**：Embedding 模型的输出维度必须与数据库 `VECTOR(N)` 列定义一致。更换 Embedding 模型时需重建向量列和索引。
-- **LLM 能力下限**：所选 LLM 需具备从非结构化中文/英文网页中提取结构化 JSON 的能力，以及生成 200-300 字中文摘要的能力。
-- **Web Search 覆盖**：所选搜索 API 需支持中文查询。
-
-### 4.4 向量化对象
-
-| 对象 | 源文本 | 用途 |
-| --- | --- | --- |
-| `professors.profile_embedding` | `profile_summary`（200-300 字画像摘要） | 教授语义检索 |
-| `companies.profile_embedding` | `profile_summary`（200-300 字企业画像摘要） | 企业语义检索 |
-| `papers.summary_embedding` | `summary_text`（四段式摘要拼接文本） | 论文语义检索 |
+| Web Search | `search_and_scrape_webpage` / `tool-google-search` / `tool-sogou-search` | Web Search 是辅助能力，不是主骨架 |
+| 网页抓取 | `search_and_scrape_webpage` / `jina_scrape_llm_summary` | 支持网页抓取与信息抽取 |
+| PDF/长文抽取 | `jina_scrape_llm_summary` | 适合论文、专利、报告类页面 |
+| 结构化清洗/标准化 | `tool-python` + 离线脚本 | 用于实体标准化、去重辅助、字段解析 |
+| 任务执行 | `pipeline.py` + `Orchestrator` | 适合 task-style 采集 Agent |
+| 评估与日志 | `common_benchmark.py` + `TaskLog` | 可复用到验证与补采环节 |
 
 ---
 
-## 五、RAG 查询接口约定
+## 四、共享逻辑契约
 
-### 5.1 查询函数定义
+### 4.1 统一 ID 规则
 
-下游 RAG 智能体通过以下函数访问数据（具体实现可以是 SQL 生成或直接函数调用）：
+各数据域必须提供稳定 ID，建议采用以下前缀：
+
+- `PROF-*`
+- `COMP-*`
+- `PAPER-*`
+- `PAT-*`
+
+ID 规则要求：
+
+- 同一对象跨更新周期尽量稳定
+- 不依赖用户可见名称直接裸拼
+- 可由各域内部规则生成，但需保证域内唯一
+
+### 4.2 最小对外对象契约
+
+每个数据域都必须向线上服务层暴露至少以下字段：
+
+| 字段 | 说明 |
+| --- | --- |
+| `id` | 稳定主键 |
+| `object_type` | `professor` / `company` / `paper` / `patent` |
+| `display_name` | 主展示字段，教授/企业通常对应 `name`，论文/专利通常对应 `title` |
+| `core_facts` | 供服务层和回答层消费的核心事实字段 |
+| `summary_fields` | 用户向摘要字段集合 |
+| `evidence` | 来源、来源类型、来源 URL、抓取时间、证据片段等 |
+| `last_updated` | 最近更新时间 |
+| `quality_status` | 可选，表示 `ready` / `needs_review` / `low_confidence` 等状态 |
+
+### 4.3 各域最低字段要求
+
+#### 企业
+
+最低对外字段必须包含：
+
+- `id`
+- `name`
+- `normalized_name`
+- `industry`
+- `profile_summary`
+- `evaluation_summary`
+- `technology_route_summary`
+- `key_personnel`
+- `last_updated`
+- `evidence`
+
+#### 教授
+
+最低对外字段必须包含：
+
+- `id`
+- `name`
+- `institution`
+- `department`
+- `title`
+- `research_directions`
+- `profile_summary`
+- `evaluation_summary`
+- `company_roles`
+- `top_papers`
+- `last_updated`
+- `evidence`
+
+#### 论文
+
+最低对外字段必须包含：
+
+- `id`
+- `title`
+- `authors`
+- `professor_ids`
+- `year`
+- `venue`
+- `summary_zh`
+- `summary_text`
+- `keywords`
+- `last_updated`
+- `evidence`
+
+#### 专利
+
+最低对外字段必须包含：
+
+- `id`
+- `title`
+- `applicants`
+- `inventors`
+- `patent_type`
+- `filing_date`
+- `publication_date`
+- `summary_text`
+- `company_ids`
+- `professor_ids`
+- `last_updated`
+- `evidence`
+
+### 4.4 统一 filter 语义
+
+服务层看到的 filter 语义必须统一，即使各域底层列名不同。
+
+最低统一 filter 包括：
+
+| filter | 语义 |
+| --- | --- |
+| `institution` | 高校或科研机构 |
+| `department` | 院系/部门 |
+| `title` | 教授职称 |
+| `industry` | 企业行业 |
+| `year_range` | 论文/专利相关年份范围 |
+| `patent_type` | 发明/实用新型/外观设计等 |
+| `company_name` | 企业标准化名称查询 |
+| `person_name` | 关键人物/发明人/作者姓名查询 |
+| `education_filter` | 教育背景相关结构化筛选 |
+| `research_direction` | 教授研究方向或论文技术方向 |
+
+### 4.5 统一证据与来源字段
+
+各域必须支持来源可追溯，不要求完全同字段名，但对外语义要一致。
+
+每条对象至少应能给出：
+
+- 主来源类型
+  - `official_site` / `xlsx_import` / `public_web` / `academic_platform` / `manual_review`
+- 主来源 URL 或来源文件标识
+- 抓取/导入时间
+- 可选证据片段
+- 可选置信度
+
+### 4.6 服务层查询接口契约
+
+共享规范不再强制 SQL 风格接口，而是定义逻辑接口语义：
 
 ```python
-# 教授查询
-search_professors(
-    query: str,                    # 自然语言查询
-    filters: dict = None,          # 可选结构化筛选
-    # filters 支持: institution, title, research_directions
-    mode: str = "hybrid",          # semantic / exact / hybrid
-    limit: int = 10
-) -> list[Professor]
-
-get_professor(id: str) -> Professor
-
-# 论文查询
-search_papers(
+search_domain(
+    domain: str,
     query: str,
-    filters: dict = None,
-    # filters 支持: professor_id, year_range, venue, keywords
+    filters: dict | None = None,
     mode: str = "hybrid",
-    limit: int = 10
-) -> list[Paper]
+    limit: int = 10,
+) -> list[dict]
 
-get_paper(id: str) -> Paper
+get_object(
+    domain: str,
+    object_id: str,
+) -> dict
 
-# 企业查询
-search_companies(
-    query: str,
-    filters: dict = None,
-    # filters 支持: industry, financing_round, tech_tags, industry_tags
-    mode: str = "hybrid",
-    limit: int = 10
-) -> list[Company]
-
-get_company(id: str) -> Company
-
-# 专利查询
-search_patents(
-    query: str,
-    filters: dict = None,
-    # filters 支持: applicant, type, status, filing_date_range, ipc_codes
-    mode: str = "hybrid",
-    limit: int = 10
-) -> list[Patent]
-
-get_patent(id: str) -> Patent
-
-# 关联查询
-get_professor_papers(professor_id: str) -> list[Paper]
-get_paper_professors(paper_id: str) -> list[Professor]
-get_professor_companies(professor_id: str) -> list[Company]
-get_company_patents(company_name: str) -> list[Patent]
+get_related_objects(
+    source_domain: str,
+    source_id: str,
+    target_domain: str,
+    relation_type: str,
+    limit: int = 20,
+) -> list[dict]
 ```
 
-### 5.2 查询模式说明
+逻辑模式统一为：
 
-| 模式 | 实现 | 适用场景 |
-| --- | --- | --- |
-| `exact` | SQL WHERE 精确匹配 | "介绍清华的丁文伯" |
-| `semantic` | pgvector 向量相似度 | "深圳有谁在做具身智能" |
-| `hybrid` | 向量检索 + 结构化筛选 | "港中深做 NLP 的副教授以上" |
+- `exact`
+- `semantic`
+- `hybrid`
 
-### 5.3 多路召回的 SQL 示例
-
-```sql
--- 混合查询: 语义 + 结构化筛选
-SELECT id, name, institution, title, research_directions,
-       1 - (profile_embedding <=> $query_embedding) AS relevance
-FROM professors
-WHERE institution LIKE '%深圳%'
-  AND title IN ('教授', '副教授')
-ORDER BY relevance DESC
-LIMIT 10;
-
--- 关联查询: 教授的论文
-SELECT p.*
-FROM papers p
-WHERE $professor_id = ANY(p.professor_ids)
-ORDER BY p.year DESC, p.citation_count DESC
-LIMIT 20;
-
--- 论文语义检索 + 时间筛选
-SELECT id, title, title_zh, summary_zh, year, venue,
-       1 - (summary_embedding <=> $query_embedding) AS relevance
-FROM papers
-WHERE year >= 2023
-ORDER BY relevance DESC
-LIMIT 10;
-
--- 企业语义检索 + 行业筛选
-SELECT id, name, industry, financing_round, product_description,
-       1 - (profile_embedding <=> $query_embedding) AS relevance
-FROM companies
-WHERE industry LIKE '%机器人%'
-ORDER BY relevance DESC
-LIMIT 10;
-
--- 专利按申请人查询
-SELECT id, title, patent_number, type, status, applicant, filing_date
-FROM patents
-WHERE applicant LIKE '%优必选%'
-ORDER BY filing_date DESC
-LIMIT 20;
-
--- 教授关联企业查询
-SELECT c.*
-FROM companies c, professors p
-WHERE p.id = $professor_id
-  AND p.company_roles IS NOT NULL
-  AND c.id = ANY(
-    SELECT elem->>'company_id'
-    FROM jsonb_array_elements(p.company_roles) elem
-  );
-```
+是否内部用 SQL、adapter、domain API、还是多段检索，由各域实现自行决定。
 
 ---
 
-## 六、数据质量保证框架
+## 五、各域强制规则
 
-### 6.1 三维度质量模型
+### 5.1 企业域
 
-| 维度 | 含义 | 自动化检查 |
-| --- | --- | --- |
-| 完整度 | 必填字段不为空 | 入库时检查，计算 `completeness_score` |
-| 准确度 | 数据与真实世界一致 | 规则校验 + MiroThinker 抽样验证 |
-| 唯一性 | 无重复记录 | 去重逻辑 + 唯一约束 |
+企业域共享强制规则：
 
-### 6.2 自动化校验规则
+- 主骨架数据以 `企名片导出 xlsx` 为准
+- 自写爬虫为主，Web Search 为辅助
+- 标准化公司名称是主去重锚点
+- `credit_code` 为可选补充字段，不是主去重锚点，也不是 Phase 契约必填
+- 必须预生成：
+  - `profile_summary`
+  - `evaluation_summary`
+  - `technology_route_summary`
+- `key_personnel` 必须是可检索结构化字段，而不是仅展示字段
 
-**教授数据**：
-1. `institution` 必须在目标高校列表中
-2. `research_directions` 与其论文的 `keywords` 重叠率 ≥ 30%
-3. `h_index` 不超过 150（超出标记异常）
-4. 近 5 年论文数不超过 50 篇/年（超出可能是同名人混入）
+### 5.2 教授域
 
-**论文数据**：
-1. `year` 不晚于当前年份
-2. `authors` 不为空
-3. `summary_zh` 包含完整的 what/why/how/result 四段
-4. `keywords` 至少 2 个标签
+教授域共享强制规则：
 
-**企业数据**：
-1. `credit_code` 格式校验（18 位）
-2. `name` 不能为空
-3. `profile_summary` 长度 150-400 字
-4. 融资金额格式校验
+- 覆盖目标是深圳高校教授
+- 主来源必须是深圳各高校官网、教师目录、教师主页
+- Scholar、个人主页、实验室主页、Web Search 是辅助补充和验证源
+- 教授-企业关联不得再把 `企名片 API` 作为默认关联方式
+- `company_roles` 应主要来自企业库匹配与公开证据
 
-### 6.3 completeness_score 计算
+### 5.3 论文域
 
-| 字段 | 权重 | 说明 |
-| --- | --- | --- |
-| name + institution | 12 | 必填，缺则不入库 |
-| profile_summary | 12 | 必填 |
-| title + department | 7 | 重要但非致命 |
-| email + homepage | 7 | 联系方式 |
-| h_index + citation_count | 10 | 学术指标 |
-| research_directions | 10 | 需论文反哺后才有 |
-| awards | 9 | 奖励荣誉，对"大牛"判断等评估类查询关键 |
-| academic_positions | 7 | 学术兼职，体现学术影响力 |
-| projects | 6 | 主持/参与项目，体现科研实力 |
-| education_structured | 5 | 结构化教育经历（新增） |
-| work_experience | 5 | 工作经历（新增） |
-| company_roles / patent_ids | 4 | 关联数据，有则加分 |
-| evaluation_summary | 6 | 事实性评价摘要（新增） |
+论文域共享强制规则：
 
-**企业 completeness_score 权重**：
+- 周期性论文采集必须从深圳教授 roster 出发
+- 论文库不是开放式全文献抓取器
+- 每篇论文在归属置信度足够时必须建立 `professor_ids`
+- 论文既是独立检索对象，也是教授画像更新信号
+- 论文信号必须参与教授：
+  - `research_directions`
+  - `profile_summary`
+  - 近期研究重点判断
+- 任意显式论文标题查询可由线上服务走实时外部 fallback，不要求离线论文库全覆盖全球论文
 
-| 字段 | 权重 |
+### 5.4 专利域
+
+专利域共享强制规则：
+
+- 主骨架数据以平台导出 `xlsx` 为准
+- 第一阶段默认全量导入导出数据
+- 查询时再做筛选，不在入库前过窄裁剪
+- 必须生成用户可读的解释性摘要字段
+- 必须支持 company / professor 关联字段
+
+---
+
+## 六、物理存储与向量化建议
+
+### 6.1 物理 schema 原则
+
+允许各域独立设计物理 schema，但建议按三层组织：
+
+- 原始层
+  - 保存导入行、原网页、原 PDF、原始响应
+- 标准化层
+  - 保存清洗后的事实字段、关系字段、去重结果
+- 发布层
+  - 面向线上服务暴露稳定对外契约字段
+
+发布层是共享规范真正关心的部分。
+
+### 6.2 向量化对象建议
+
+推荐的主向量对象如下：
+
+| 数据域 | 主向量文本 |
 | --- | --- |
-| name + credit_code | 20（必填） |
-| profile_summary | 15（必填） |
-| product_description + tech_tags | 15 |
-| financing_round + investors | 15 |
-| legal_representative + registered_capital | 10 |
-| team_description + key_personnel | 10 |
-| website + patent_count | 10 |
-| 其他 | 5 |
+| 教授 | `profile_summary` |
+| 企业 | `profile_summary` |
+| 论文 | `summary_text` |
+| 专利 | `summary_text` |
 
-### 6.4 MiroThinker 验证抽样策略
+如果某域需要多 collection，可按以下逻辑拆分：
 
-| 类别 | 数量 | 验证内容 |
-| --- | --- | --- |
-| 随机抽样 | 5%（约 250 人） | 全面验证所有字段 |
-| 低质量记录 | `completeness_score < 70` 全部 | 验证 + 补全缺失字段 |
-| 同名教授 | 全部 | 消歧验证 |
-| 月度增量 | 全部 | 新增/变更数据验证 |
+- 主画像 collection
+- 技术路线 / 研究方向 collection
+- 长文摘要 collection
+
+共享规范不强制 collection 名称，但要求服务层能明确知道每个 collection 的语义。
 
 ---
 
-## 七、自动化调度方案
+## 七、数据质量与验证
 
-### 7.1 月度执行计划
+### 7.1 质量维度
 
-```
-每月 1 号触发:
-  Day 1-2:   Phase 0 — 企业数据采集（批量导入 + 企名片补充 + Web Crawling 充实）
-  Day 2-4:   Phase 1 — 教授基础信息采集
-  Day 4-10:  Phase 2 — 论文采集 + PDF解析 + 摘要生成
-  Day 10-11: Phase 3 — 反哺 + 入库
-  Day 11-12: Phase 4 — MiroThinker 验证 + 补采
-  Day 12:    生成月度采集报告
-```
+共享质量维度统一为：
 
-### 7.2 采集报告内容
-
-每月采集完成后自动生成报告，包含：
-
-- 企业：总数、新增数、更新数、completeness_score 分布、企名片数据覆盖率
-- 教授：总数、新增数、更新数、completeness_score 分布
-- 论文：总数、新增数、PDF 下载成功率、摘要完成率
-- 质量：自动化校验通过率、MiroThinker 验证发现的问题数
-- 异常：采集失败记录、数据质量异常记录
-
-### 7.3 错误处理
-
-| 错误类型 | 处理策略 |
+| 维度 | 含义 |
 | --- | --- |
-| 网络超时 | 重试 3 次，指数退避 |
-| 数据源 API 限流 | 等待后重试，记录限流时间 |
-| LLM 调用失败 | 重试 2 次，失败则标记待处理 |
-| 解析异常 | 标记失败状态，降级处理 |
+| 完整度 | 契约必填字段是否齐全 |
+| 准确度 | 事实是否与可信来源一致 |
+| 新鲜度 | 是否能反映最近更新状态 |
+| 唯一性 | 是否存在重复对象或错误合并 |
+| 可追溯性 | 是否能追到来源和证据 |
 
-所有任务支持断点续传——记录每个教授/论文的处理状态，中断后可从上次断点继续。
+### 7.2 最小自动化校验
+
+#### 企业
+
+- `name` 不能为空
+- `normalized_name` 必须可生成
+- `profile_summary` / `evaluation_summary` / `technology_route_summary` 不得缺失
+- `credit_code` 若存在则做格式校验
+
+#### 教授
+
+- `institution` 必须在深圳高校名单内
+- 必须至少有一个官方来源
+- `profile_summary` 不得缺失
+- 论文反哺后的 `research_directions` 应与近年论文主题一致
+
+#### 论文
+
+- `title`、`authors`、`year` 不能为空
+- `summary_zh` 与 `summary_text` 不得缺失
+- 若论文来自教授 roster 采集，应尽量有 `professor_ids`
+
+#### 专利
+
+- `title`、`patent_type`、`filing_date` 或 `publication_date` 至少有一项可用
+- `summary_text` 不得缺失
+- 若能归属公司或教授，应写入关联字段
+
+### 7.3 MiroThinker 验证与补采
+
+共享验证流程建议如下：
+
+1. 抽样或定向挑选低置信对象
+2. 让 MiroThinker 基于现有搜索/抓取/抽取工具复核关键事实
+3. 对冲突事实做人工或规则复判
+4. 回写修正结果并记录验证报告
+
+重点验证对象包括：
+
+- 新增或大幅更新对象
+- 低质量对象
+- 重名、高歧义对象
+- 关键关联对象
+  - 教授-企业
+  - 教授-论文
+  - 企业-专利
+  - 教授-专利
 
 ---
 
-## 八、数据交付格式
+## 八、更新与发布
 
-### 8.1 中间文件格式
+### 8.1 更新节奏
 
-```
-output/
-├── companies.jsonl         # 每行一条企业 JSON
-├── professors.jsonl        # 每行一条教授 JSON
-├── papers.jsonl            # 每行一条论文 JSON
-├── embeddings/
-│   ├── companies.npy       # 企业画像向量 (K x 1024)
-│   ├── professors.npy      # 教授画像向量 (N x 1024)
-│   └── papers.npy          # 论文摘要向量 (M x 1024)
-├── pdfs/                   # 论文 PDF 文件
-│   └── {arxiv_id}.pdf
-├── raw/                    # 原始爬取数据（临时保存 3 个月）
-│   ├── companies/
-│   │   └── {company_id}/   # 每家企业的原始页面
-│   ├── professors/
-│   │   └── {prof_id}/      # 每位教授的原始页面
-│   └── papers/
-│       └── {paper_id}/     # 每篇论文的原始数据
-└── reports/
-    └── {yyyy-mm}_report.json  # 月度采集报告
-```
+共享规范只约束“可独立更新”，不强制所有域用一个统一周期。
 
-### 8.2 入库脚本
+允许：
 
-独立的入库脚本负责：
-1. 读取 JSONL + embeddings
-2. 数据校验（完整度 + 去重）
-3. 导入 PostgreSQL（upsert 语义：存在则更新，不存在则新增）
-4. 重建索引
-5. 生成导入报告（新增 N 条、更新 N 条、失败 N 条及原因）
+- 企业域独立更新
+- 教授域独立更新
+- 论文域依赖最新教授 roster 更新
+- 专利域独立更新
+
+如果某域本轮未更新，不应阻塞其他域发布。
+
+### 8.2 对外发布要求
+
+每个域发布时至少输出：
+
+- 最新发布快照或发布层表/视图
+- 向量索引同步结果
+- 数据质量报告
+- 更新范围说明
+- 错误与异常记录
+
+### 8.3 契约变更要求
+
+任何会影响服务层的变更，都必须同步更新：
+
+- 本共享规范
+- 对应域 PRD
+- 若影响用户查询行为，还需同步更新 [Agentic-RAG-PRD.md](./Agentic-RAG-PRD.md)
 
 ---
 
 ## 九、与下游系统的关系
 
-本数据采集智能体群为以下系统提供数据支撑：
+本数据采集智能体群为以下下游能力提供数据：
 
-| 下游系统 | 消费的数据 | 参考文档 |
-| --- | --- | --- |
-| 深圳科创检索增强智能体（模块一：查找教授） | professors 表 | [Agentic-RAG-PRD.md](./Agentic-RAG-PRD.md) |
-| 深圳科创检索增强智能体（模块二：查找企业） | companies 表 | [Agentic-RAG-PRD.md](./Agentic-RAG-PRD.md) |
-| 深圳科创检索增强智能体（模块三：查找论文） | papers 表 | [Agentic-RAG-PRD.md](./Agentic-RAG-PRD.md) |
-| 深圳科创检索增强智能体（模块四：查找专利） | patents 表 | [Agentic-RAG-PRD.md](./Agentic-RAG-PRD.md) |
-| 教授画像卡片展示 | professors + papers 关联查询 | [Agentic-RAG-PRD.md](./Agentic-RAG-PRD.md) |
-| 企业画像卡片展示 | companies + patents 关联查询 | [Agentic-RAG-PRD.md](./Agentic-RAG-PRD.md) |
+| 下游能力 | 消费方式 |
+| --- | --- |
+| 查教授 | 消费教授域发布层 + 论文关联信号 |
+| 查企业 | 消费企业域发布层 + 专利关联信号 |
+| 查论文 | 消费论文域发布层 + 教授关联 |
+| 查专利 | 消费专利域发布层 + 公司/教授关联 |
+| 跨域聚合问答 | 由线上服务层跨域编排、融合、rerank |
+
+共享规范要求的是：
+
+- 数据域可独立演进
+- 服务层可稳定消费
+- 最终问答效果能对齐总 PRD 与测试集目标
+
+而不是：
+
+- 所有域在一个 PostgreSQL 里共享一套表
+- 所有域必须通过同一条 SQL 被访问

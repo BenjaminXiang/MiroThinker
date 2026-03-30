@@ -2,218 +2,395 @@
 
 ## 一、为什么需要独立的企业数据采集智能体
 
-测试集分析表明，>50% 的查询需要企业关联数据（Q1 教授关联企业、Q4 企业信息查询、Q8/Q10 企业详情、Q2/Q5/Q14-Q16 行业知识问答）。教授数据中的 `company_roles` 字段依赖企业基础数据存在——没有企业库，教授关联企业就是无根之木。
+测试集和总 PRD 都表明，企业数据不是一个附属模块，而是系统中的核心数据域之一：
 
-因此，**企业数据采集必须先于教授数据采集完成（Phase 0）**，确保教授 Agent 在采集时能通过企名片 API 关联企业信息。
+- 企业本身就是高频查询对象
+- 教授 `company_roles` 需要企业库做关联锚点
+- 专利申请人需要与企业库做映射
+- 行业知识问答经常需要调用企业画像、技术路线、关键人物信息
+
+因此，需要一个独立的 `Company-Data-Agent` 负责企业数据的导入、清洗、去重、摘要生成和发布。
+
+这个 Agent 的目标不是“尽可能实时调用外部 API”，而是构建一个**可持续更新、可追溯、可供线上稳定消费**的企业知识库。
 
 ---
 
 ## 二、核心目标
 
-**一句话目标：** 构建深圳科创企业全景数据库，为教授关联企业、专利关联企业、行业知识问答提供数据基础。
+### 2.1 一句话目标
 
-**约束一：数据是给 RAG 和下游 Agent 用的。** 企业数据既要支持向量语义检索（"做手术机器人的公司"），也要支持结构化筛选（注册资本、融资轮次），还要作为教授 `company_roles` 的关联锚点。
+构建深圳科创企业全景数据库，为企业检索、教授关联企业、专利关联企业、行业知识问答和技术路线对比提供稳定数据支撑。
 
-**约束二：数据来源以全深圳企业列表为主干，Web Crawling 为主要充实手段。** 全深圳企业列表提供基础骨架（企业名称、统一社会信用代码），Web Crawling 从企业官网、PR 稿件、行业报告中提取高价值描述信息。
+### 2.2 成功标准
 
----
+企业域必须同时支持：
 
-## 三、数据来源
+- 语义检索
+  - 如“做手术机器人的公司”
+- 结构化筛选
+  - 如“融过 A 轮以上”“深圳本地”“创始人有海外教育背景”
+- 画像化回答
+  - 如企业简介、事实性评价、技术路线总结
+- 关联跳转
+  - 教授 → 企业
+  - 企业 → 专利
+  - 企业 → 关键人物
 
-| 数据源 | 角色 | 可获取内容 | 获取方式 | 更新频率 |
-| --- | --- | --- | --- | --- |
-| 全深圳企业列表 | **主干** | 企业名称、统一社会信用代码、注册地址、行业分类 | 批量导入（Excel/CSV） | 月度 |
-| 企名片 API | **结构化补充** | 工商注册、股东、融资、法律风险 | API 实时调用（缓存 7 天） | 实时/日更 |
-| Web Crawling | **主要充实** | 产品描述、技术栈、PR 稿件、团队介绍 | 爬取企业官网、行业媒体 | 月度批量 |
-| Web Search | **补充/发现** | 最新动态、融资新闻、产品发布 | 搜索 API | 按需 |
+### 2.3 与当前 MiroThinker 实现的衔接
 
-**数据融合**：通过统一社会信用代码关联各数据源。
+本 Agent 的实现优先复用当前 MiroThinker 代码能力，而不是另起一套运行时：
 
----
+- 任务执行：复用 `pipeline.py` + `Orchestrator`
+- 搜索：复用 `search_and_scrape_webpage`
+- 网页/PDF 抽取：复用 `jina_scrape_llm_summary`
+- 清洗与标准化：复用 `tool-python` + 离线脚本
+- 验证与补采：复用现有 benchmark / task log 风格
 
-## 四、数据模型
+推荐形态是：
 
-### 4.1 企业表字段定义
-
-| 字段 | 类型 | 必填 | 说明 |
-| --- | --- | --- | --- |
-| `id` | TEXT | 是 | 唯一标识，格式 `COMP-{统一社会信用代码哈希}` |
-| `name` | TEXT | 是 | 企业名称 |
-| `credit_code` | TEXT | 是 | 统一社会信用代码（去重锚点） |
-| `legal_representative` | TEXT | 否 | 法定代表人 |
-| `registered_capital` | TEXT | 否 | 注册资本 |
-| `establishment_date` | DATE | 否 | 成立日期 |
-| `registered_address` | TEXT | 否 | 注册地址 |
-| `industry` | TEXT | 否 | 行业分类 |
-| `business_scope` | TEXT | 否 | 经营范围 |
-| `product_description` | TEXT | 否 | 产品/服务描述（LLM 摘要 2-3 句） |
-| `tech_tags` | TEXT[] | 否 | 技术栈标签 |
-| `industry_tags` | TEXT[] | 否 | 行业标签 |
-| `financing_round` | TEXT | 否 | 最新融资轮次 |
-| `financing_amount` | TEXT | 否 | 融资金额 |
-| `investors` | TEXT[] | 否 | 投资方 |
-| `patent_count` | INTEGER | 否 | 专利数量 |
-| `team_description` | TEXT | 否 | 核心团队描述 |
-| `key_personnel` | JSONB | 否 | 关键人员信息，格式 `[{name, role, education: [{institution, degree, year, field}]}]`，Agent 从官网/企名片/Web Search 提取，支撑企业家教育背景筛选查询 |
-| `website` | TEXT | 否 | 企业官网 |
-| `profile_summary` | TEXT | 是 | 200-300 字企业画像摘要（语义检索用） |
-| `profile_embedding` | VECTOR | 是 | 画像摘要向量 |
-| `sources` | TEXT[] | 是 | 数据来源列表 |
-| `completeness_score` | INTEGER | 是 | 数据完整度评分 0-100 |
-| `last_updated` | TIMESTAMP | 是 | 最后更新时间 |
-| `raw_data_path` | TEXT | 是 | 原始数据存储路径 |
-
-### 4.2 profile_summary 规范
-
-200-300 字中文自然语言段落，包含：企业定位、核心技术/产品、应用场景、团队亮点、融资情况。禁止模糊表述，用具体技术词汇。
+- 为企业域增加 domain-specific prompt / config / post-processing
+- 用现有 agent loop 执行“搜集 -> 清洗 -> 结构化 -> 生成摘要”的任务链
 
 ---
 
-## 五、采集流程
+## 三、数据来源与去重策略
 
-### 5.1 整体流程
+### 3.1 主数据来源
 
-```
-Phase 0: 企业数据采集 (Company-Data-Agent)
-  输入 → 全深圳企业列表 (Excel/CSV) + 企名片 API
-  过程 → 批量导入企业骨架 → 企名片 API 补充工商数据 → Web Crawling 充实描述 → LLM 生成画像
-  输出 → companies.jsonl + raw/
+企业域主骨架数据以：
 
-Phase 0 完成后 → Phase 1 (教授采集) 可启动
-Phase 1 完成后 → Phase 2 (论文采集)
-Phase 1 + Phase 2 完成后 → Phase 3 (合并反哺)
-Phase 3 完成后 → Phase 4 (验证补采)
-```
+- `企名片导出 xlsx`
 
-### 5.2 详细流程
+为准。
 
-#### 5.2.1 企业列表批量导入
+它提供企业基础骨架，包括但不限于：
 
-```
-1. 读取全深圳企业列表 (Excel/CSV)
-2. 按统一社会信用代码去重（已有则更新，无则新增）
-3. 填充基础字段：name, credit_code, registered_address, industry
-4. 生成导入报告：新增 N 条、更新 N 条、失败 N 条
-```
+- 企业名称
+- 行业
+- 融资轮次 / 金额 / 投资方
+- 注册资本
+- 法人
+- 团队信息
+- 专利数量
+- 网址
 
-#### 5.2.2 企名片 API 数据补充
+### 3.2 补充来源
 
-```
-for each 企业 (from companies.jsonl):
-  1. 调用企名片 API 查询企业详情
-  2. 合并工商数据：legal_representative, registered_capital, establishment_date, business_scope
-  3. 合并融资数据：financing_round, financing_amount, investors
-  4. 缓存结果（7 天有效）
-  5. API 限速：遵守企名片 API 调用频率限制
-```
+辅助来源包括：
 
-**降级策略**：企名片 API 额度用完时，仅保留全深圳企业列表的基础数据 + Web Crawling 充实。
+- 企业官网
+- 产品页 / 关于页 / 新闻页
+- 行业媒体与 PR 稿件
+- Web Search 结果
 
-#### 5.2.3 Web Crawling 充实
+使用原则：
 
-```
-for each 企业 (有 website 字段):
-  1. 爬取企业官网首页 + 产品页 + 关于我们页
-  2. LLM 从页面中提取：product_description, tech_tags, team_description, key_personnel
-  3. 搜索 PR 稿件（企业名 + "融资"/"发布"/"合作"）
-  4. 合并到企业记录
-```
+- 自写爬虫与确定性导入为主
+- Web Search 为辅助发现、补充和事实校验
+- 不把 Web Search 作为企业主骨架来源
 
-**限速**：per-site 3 并发，间隔 2-5 秒随机延迟。
+### 3.3 去重主锚点
 
-#### 5.2.4 LLM 生成画像摘要
+企业主去重锚点应为：
 
-```
-输入：企业名称 + 行业 + 产品描述 + 技术标签 + 团队描述 + 融资信息
-输出：200-300 字 profile_summary
-批量处理：支持并发 LLM API 调用
-```
+- 标准化公司名称
 
-#### 5.2.5 计算 embedding + 入库
+辅助信号包括：
 
-```
-1. 使用 Embedding 模型对 profile_summary 做向量化
-2. 计算 completeness_score
-3. 写入 PostgreSQL + pgvector（UPSERT by id）
-```
+- `credit_code`
+- 企业官网
+- 法人
+- 注册地
+- 融资信息
+
+`credit_code` 的定位是：
+
+- 可选补充字段
+- 用于一致性校验时很有价值
+- 不是主去重锚点
+- 不是对外契约必填字段
+
+### 3.4 数据融合原则
+
+企业域的融合顺序建议为：
+
+1. 先导入 xlsx 骨架
+2. 再做标准化名称和去重
+3. 再用官网 / PR / Web Search 做补充
+4. 再生成用户向摘要字段和结构化关键人物字段
 
 ---
 
-## 六、与教授 Agent 的协作
+## 四、数据模型与对外契约
 
-### 6.1 Phase 0 → Phase 1 数据契约
+### 4.1 最低发布字段
 
-| 交接点 | 生产方 | 消费方 | 数据格式 | 必含字段 |
-| --- | --- | --- | --- | --- |
-| Phase 0 → Phase 1 | Company-Data-Agent | Professor-Data-Agent | companies 表 | `id`, `name`, `credit_code` |
+发布层至少应包含：
 
-### 6.2 教授 Agent 如何使用企业数据
+| 字段 | 必填 | 说明 |
+| --- | --- | --- |
+| `id` | 是 | 稳定主键，建议 `COMP-*` |
+| `name` | 是 | 企业名称 |
+| `normalized_name` | 是 | 标准化名称，作为主去重锚点 |
+| `credit_code` | 否 | 补充校验字段 |
+| `industry` | 否 | 行业分类 |
+| `legal_representative` | 否 | 法定代表人 |
+| `registered_capital` | 否 | 注册资本 |
+| `website` | 否 | 企业官网 |
+| `key_personnel` | 否 | 结构化关键人物信息 |
+| `profile_summary` | 是 | 企业画像摘要 |
+| `evaluation_summary` | 是 | 事实性评价摘要 |
+| `technology_route_summary` | 是 | 技术路线摘要 |
+| `patent_count` | 否 | 专利数量 |
+| `sources` | 是 | 来源列表 |
+| `last_updated` | 是 | 最后更新时间 |
 
-教授 Agent 在采集过程中，通过以下方式关联企业：
+### 4.2 必要用户向摘要字段
 
-1. **企名片 API 反向查询**：输入教授姓名 + 机构，查询其在企业中的角色（法人/股东/高管）
-2. **写入 `company_roles` 字段**：格式 `[{company_id, role, source_url}]`
-3. **消歧**：通过机构、研究方向交叉验证企业关联是否属于同一人
+企业域必须预生成以下字段：
+
+- `profile_summary`
+  - 面向语义检索和基础介绍
+- `evaluation_summary`
+  - 面向“技术实力怎么样”“值不值得关注”这类事实性判断
+- `technology_route_summary`
+  - 面向“这家公司走什么路线”“和别家有什么差异”这类问题
+
+### 4.3 `key_personnel` 必须可检索
+
+`key_personnel` 不能只是展示文本，必须是结构化、可检索字段。
+
+最低结构建议：
+
+```json
+[
+  {
+    "name": "张三",
+    "role": "创始人 / CEO",
+    "education_structured": [
+      {
+        "institution": "某大学",
+        "degree": "硕士",
+        "field": "自动化",
+        "year": "2018"
+      }
+    ],
+    "work_experience": [
+      {
+        "organization": "某公司",
+        "role": "算法负责人",
+        "start_year": "2018",
+        "end_year": "2022",
+        "description": "负责机器人感知算法"
+      }
+    ],
+    "description": "创业者背景简介"
+  }
+]
+```
+
+### 4.4 存储要求
+
+企业域长期存储要求为：
+
+- 企业域独立 PostgreSQL 库
+- 企业域独立 Milvus collection
+
+共享规范只要求发布层对外契约统一，不要求和教授/论文/专利域使用相同物理 schema。
+
+---
+
+## 五、采集与清洗流程
+
+### 5.1 总体流程
+
+```text
+企名片导出 xlsx
+  -> 表头识别与原始解析
+  -> 标准化名称与去重
+  -> 官网 / PR / Web Search 补充
+  -> 关键人物结构化
+  -> 生成 profile_summary / evaluation_summary / technology_route_summary
+  -> 向量化
+  -> 发布到 company domain PostgreSQL + Milvus
+```
+
+### 5.2 xlsx 导入
+
+导入阶段至少完成：
+
+1. 读取企名片导出文件
+2. 自动识别真实表头
+3. 处理多行续写记录
+4. 抽取基础字段
+5. 生成 `normalized_name`
+6. 按标准化名称去重
+7. 生成导入报告
+
+### 5.3 Web 补充
+
+对有官网或可发现官网的企业，补充采集：
+
+- 企业官网首页
+- 产品页
+- 关于页
+- 新闻页
+- 重要 PR / 媒体稿件
+
+主要提取内容：
+
+- `product_description`
+- `tech_tags`
+- `industry_tags`
+- `team_description`
+- `key_personnel`
+- 最新公开动态
+
+### 5.4 LLM 与 Python 清洗分工
+
+建议分工如下：
+
+- LLM 负责：
+  - 非结构化网页理解
+  - 摘要生成
+  - 技术路线归纳
+  - 人物简介抽取
+- Python / 离线脚本负责：
+  - 标准化名称
+  - 融资金额、日期、网址规范化
+  - 去重辅助规则
+  - 字段格式校验
+
+### 5.5 向量化
+
+主向量文本建议采用：
+
+- `profile_summary`
+
+如果后续确有需要，可追加：
+
+- `technology_route_summary`
+
+作为第二类向量对象，但不是一期硬要求。
+
+---
+
+## 六、与其他数据域和服务层的协作
+
+### 6.1 与教授域的关系
+
+企业域是教授 `company_roles` 的重要锚点，但不再要求：
+
+- “教授基础采集必须等企业域全量完成才能开始”
+
+新的协作原则是：
+
+- 教授基础采集可以独立进行
+- 教授与企业的关联步骤优先消费企业域发布层
+- 若企业域当期未覆盖到某家公司，可先记录候选文本证据，后续再回填 `company_id`
+
+### 6.2 与专利域的关系
+
+企业域需要支持：
+
+- 通过标准化企业名与专利申请人做关联
+- 在企业卡片中展示专利数量或相关专利入口
+
+### 6.3 与线上服务层的关系
+
+企业域对服务层暴露的能力至少包括：
+
+- 企业搜索
+- 企业详情获取
+- 企业相关专利获取
+- 关键人物结构化筛选
+
+线上服务层负责：
+
+- 多域编排
+- 结果融合
+- rerank
+- 实时外部 fallback
 
 ---
 
 ## 七、质量保证
 
-### 7.1 completeness_score 权重
+### 7.1 质量维度
 
-| 字段 | 权重 |
-| --- | --- |
-| name + credit_code | 20（必填） |
-| profile_summary | 15（必填） |
-| product_description + tech_tags | 15 |
-| financing_round + investors | 15 |
-| legal_representative + registered_capital | 10 |
-| team_description + key_personnel | 10 |
-| website + patent_count | 10 |
-| 其他 | 5 |
+企业域至少考核：
+
+- 完整度
+- 准确度
+- 唯一性
+- 新鲜度
+- 可追溯性
 
 ### 7.2 自动化校验
 
-1. `credit_code` 格式校验（18 位）
-2. `name` 不能为空
-3. `profile_summary` 长度 150-400 字
-4. 融资金额格式校验
+至少做以下规则校验：
+
+1. `name` 不为空
+2. `normalized_name` 可生成
+3. `credit_code` 若存在则校验格式
+4. `profile_summary` 不为空
+5. `evaluation_summary` 不为空
+6. `technology_route_summary` 不为空
+7. `key_personnel` 若存在，字段结构必须合法
+
+### 7.3 定向验证
+
+重点验证对象包括：
+
+- 同名或近名企业
+- 关键人物背景信息丰富的企业
+- 融资字段变化较大的企业
+- 技术路线高度相近、容易混淆的企业
+
+验证方式优先复用当前 MiroThinker：
+
+- 搜索
+- 抓取
+- 抽取
+- Python 校验
+- task log / 报告输出
 
 ---
 
-## 八、配置
+## 八、配置与实现映射
+
+### 8.1 推荐配置项
 
 ```yaml
-# config.yaml 企业数据相关配置
-
 company:
-  # 全深圳企业列表文件路径
-  company_list_path: "data/shenzhen_company_list.xlsx"
-
-  # 企名片 API
-  qimingpian:
-    api_key: "${QIMINGPIAN_API_KEY}"
-    endpoint: "https://api.qimingpian.com"
-    cache_ttl_days: 7
-    rate_limit: "100 req/min"
-
-  # Web Crawling
-  crawling:
-    max_concurrency: 3
-    delay_range: [2, 5]  # 秒
-    timeout: 30  # 秒
+  source_xlsx_path: "data/qimingpian_export.xlsx"
+  crawling_max_concurrency: 3
+  crawling_delay_range: [2, 5]
+  crawling_timeout_seconds: 30
+  web_search_enabled: true
+  require_technology_route_summary: true
 ```
+
+### 8.2 当前实现映射
+
+推荐直接映射到当前代码：
+
+- 搜索：`search_and_scrape_webpage`
+- 抽取：`jina_scrape_llm_summary`
+- 清洗：`tool-python`
+- 调度：`pipeline.py` + `Orchestrator`
+- 日志：`TaskLog`
 
 ---
 
 ## 九、更新策略
 
-- **频率**：月度执行，与教授采集同步
-- **增量逻辑**：
-  - 全深圳企业列表重新导入，按 `credit_code` 去重
-  - 新增企业：全流程采集
-  - 已有企业：企名片数据刷新 + Web Crawling 增量更新
-- **企名片 API**：实时调用，7 天缓存
+- 主更新节奏：月度
+- xlsx 骨架：月度全量导入并去重
+- 官网 / PR 补充：月度或按需增量更新
+- Web Search：按需触发，不作为主更新机制
+
+允许企业域独立更新，不要求和教授/论文/专利完全同步。
 
 ---
 
@@ -221,9 +398,9 @@ company:
 
 | 指标 | 要求 |
 | --- | --- |
-| 企业总数 | ≥ 全深圳企业列表的 95% |
-| 必填字段完整率 | `name` + `credit_code` + `profile_summary` 100% |
-| `completeness_score` ≥ 60 | ≥ 85% 的企业记录 |
-| 企名片数据覆盖率 | ≥ 70% 的企业有企名片补充数据 |
-| 全量首次采集 | 6000+ 企业在 24 小时内完成 |
-| 月度增量更新 | 8 小时内完成 |
+| 企业总数覆盖 | ≥ 当期企名片导出企业数的 95% |
+| 必填字段完整率 | `name` + `normalized_name` + `profile_summary` + `evaluation_summary` + `technology_route_summary` 100% |
+| 关键人物结构化可用率 | 有团队信息的企业中，≥ 80% 可生成可检索 `key_personnel` |
+| 去重准确性 | 明显同名重复企业不重复入库，人工抽检准确率 ≥ 95% |
+| 检索效果 | 企业语义检索 Top-5 相关率 ≥ 85% |
+| 更新效率 | 1000+ 企业的月度导入与摘要更新在可接受批处理窗口内完成 |
