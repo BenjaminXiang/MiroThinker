@@ -231,9 +231,21 @@ This change must be reflected in the professor PRD, the shared spec, and the Pha
 
 `Paper-Data-Agent` should periodically collect:
 
-- papers related to Shenzhen university professors
+- papers associated with the Shenzhen professor roster
 
 This remains the scope of the periodic paper pipeline.
+
+More specifically, the collection anchor should be:
+
+- the professor list produced from Shenzhen university coverage
+
+This means the paper pipeline is not an open-ended citywide paper crawler.
+
+It is a professor-anchored paper pipeline:
+
+- start from covered Shenzhen professors
+- retrieve and normalize papers attributable to those professors
+- maintain explicit professor-paper linkage for downstream use
 
 #### 4.3.2 Explicit Paper Title Queries
 
@@ -245,7 +257,27 @@ Instead:
 
 This preserves a bounded periodic collection scope while still meeting product-level answer requirements.
 
-#### 4.3.3 Required User-Facing Summary Fields
+#### 4.3.3 Paper-to-Professor Enrichment Role
+
+Papers are not only an independent retrieval object.
+
+They are also a required input for professor-profile enrichment.
+
+This must be made explicit across the professor PRD and paper PRD:
+
+- each collected paper should be linked to one or more Shenzhen professor records whenever attribution is confident enough
+- paper-derived signals should be used to refine professor `research_directions`
+- paper-derived signals should be used as an important input to professor `profile_summary`
+- paper-derived signals should be used to surface a professor's more recent research focus when official profile pages lag behind reality
+
+The key product rationale is:
+
+- professor bios and official introductions may update slowly
+- papers often better reflect the professor's latest active research topics
+
+Therefore, the professor data product should treat papers as a continuing freshness signal rather than only as a separate searchable corpus.
+
+#### 4.3.4 Required User-Facing Summary Fields
 
 The paper pipeline already produces a strong user-facing summary layer.
 
@@ -427,11 +459,17 @@ Professor data should be anchored in:
 
 - official Shenzhen university sources first
 
+It should also explicitly state that:
+
+- paper-derived signals are a core input for keeping professor profiles current
+- professor `research_directions`, `profile_summary`, and recent-research understanding are refreshed from linked papers
+
 ### 7.5 `docs/Paper-Data-Agent-PRD.md`
 
 Clarify that:
 
-- periodic collection scope is bounded to Shenzhen-university-professor-related papers
+- periodic collection scope is bounded to papers linked from the Shenzhen professor roster
+- each paper is a first-class object and also an enrichment signal for professor profiles
 - explicit arbitrary paper-title queries may be served online via external fallback
 
 ### 7.6 New `docs/Patent-Data-Agent-PRD.md`
