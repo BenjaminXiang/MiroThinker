@@ -10,6 +10,7 @@ by coordinating between the main agent, sub-agents, and various tools.
 
 import asyncio
 import gc
+import json
 import logging
 import time
 import uuid
@@ -25,7 +26,7 @@ from ..io.input_handler import process_input
 from ..io.output_formatter import OutputFormatter
 from ..llm.base_client import BaseClient
 from ..logging.task_logger import TaskLog, get_utc_plus_8_time
-from ..utils.parsing_utils import extract_llm_response_text
+from ..utils.parsing_utils import extract_llm_response_text, safe_json_loads
 from ..utils.prompt_utils import (
     generate_agent_specific_system_prompt,
     generate_agent_summarize_prompt,
@@ -51,6 +52,42 @@ DEFAULT_MAX_CONSECUTIVE_ROLLBACKS = 5
 
 # Additional attempts beyond max_turns for total loop protection
 EXTRA_ATTEMPTS_BUFFER = 200
+
+
+def normalize_final_output_schema(
+    final_output_schema: Optional[str], output_mode: str
+) -> Optional[str]:
+    """Validate and canonicalize final_output_schema for deterministic JSON mode."""
+    if output_mode != "json":
+        return None
+
+    if final_output_schema is None or not str(final_output_schema).strip():
+        return "{}"
+
+    try:
+        json.loads(final_output_schema)
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            "final_output_schema must be valid JSON when output_mode='json'."
+        ) from exc
+
+    parsed = safe_json_loads(final_output_schema)
+    if not isinstance(parsed, dict) or "error" in parsed:
+        raise ValueError(
+            "final_output_schema must be a valid JSON object when output_mode='json'."
+        )
+
+    if parsed.get("type") not in (None, "object"):
+        raise ValueError(
+            "final_output_schema must define an object schema when output_mode='json'."
+        )
+
+    return json.dumps(
+        parsed,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
 
 
 def _list_tools(sub_agent_tool_managers: Dict[str, ToolManager]):
@@ -102,6 +139,7 @@ class Orchestrator:
         stream_queue: Optional[Any] = None,
         tool_definitions: Optional[List[Dict[str, Any]]] = None,
         sub_agent_tool_definitions: Optional[Dict[str, List[Dict[str, Any]]]] = None,
+        final_output_schema: Optional[str] = None,
     ):
         """
         Initialize the orchestrator.
@@ -126,6 +164,11 @@ class Orchestrator:
         self.stream_queue = stream_queue
         self.tool_definitions = tool_definitions
         self.sub_agent_tool_definitions = sub_agent_tool_definitions
+        self.output_mode = cfg.agent.get("output_mode", "boxed")
+        self.final_output_schema = normalize_final_output_schema(
+            final_output_schema=final_output_schema,
+            output_mode=self.output_mode,
+        )
 
         # Initialize sub-agent tool list function
         self._list_sub_agent_tools = None
@@ -165,6 +208,8 @@ class Orchestrator:
             stream_handler=self.stream,
             cfg=cfg,
             intermediate_boxed_answers=self.intermediate_boxed_answers,
+            output_mode=self.output_mode,
+            final_output_schema=self.final_output_schema,
         )
 
     def _save_message_history(
@@ -764,7 +809,9 @@ class Orchestrator:
 
         # Process input
         initial_user_content, processed_task_desc = process_input(
-            task_description, task_file_name
+            task_description,
+            task_file_name,
+            require_boxed_answer=self.output_mode == "boxed",
         )
         message_history = [{"role": "user", "content": initial_user_content}]
 
@@ -1119,6 +1166,8 @@ class Orchestrator:
             temp_summary_prompt = generate_agent_summarize_prompt(
                 task_description,
                 agent_type="main",
+                output_mode=self.output_mode,
+                final_output_schema=self.final_output_schema,
             )
 
             pass_length_check, message_history = self.llm_client.ensure_summary_context(

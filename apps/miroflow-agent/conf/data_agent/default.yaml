@@ -1,0 +1,29 @@
+output_path: "../../logs/data_agents/output.jsonl"
+publish:
+  enabled: false
+providers:
+  mirothinker:
+    base_url: "http://star.sustech.edu.cn/service/model/mirothinker/v1"
+    model: "mirothinker-1.7-235b-fp8"
+    timeout: 300.0
+    api_key_env: "API_KEY"
+  qwen:
+    base_url: "http://star.sustech.edu.cn/service/model/qwen35/v1"
+    model: "qwen3.5-35b-a3b"
+    timeout: 300.0
+    api_key_env: "API_KEY"
+  web_search:
+    endpoint: "https://google.serper.dev/search"
+    api_key_env: "SERPER_API_KEY"
+    gl: "cn"
+    hl: "zh-cn"
+    timeout: 30.0
+  dashscope:
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    model: "qwen3.6-plus"
+    timeout: 120.0
+    api_key_env: "DASHSCOPE_API_KEY"
+  embedding:
+    base_url: "http://172.18.41.222:18005/v1"
+    model: "qwen3-embedding-8b"
+    timeout: 60.0

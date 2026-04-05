@@ -3,9 +3,11 @@
 
 """Output formatting utilities for agent responses."""
 
+import json
 import re
 from typing import Tuple
 
+from ..utils.parsing_utils import safe_json_loads
 from ..utils.prompt_utils import FORMAT_ERROR_MESSAGE
 
 # Maximum length for tool results before truncation (100k chars ≈ 25k tokens)
@@ -92,6 +94,28 @@ class OutputFormatter:
         black_list = ["?", "??", "???", "？", "……", "…", "...", "unknown", None]
         return last_result.strip() if last_result not in black_list else ""
 
+    def _extract_json_payload(self, text: str) -> str:
+        """Extract and canonicalize a JSON object from the final answer text."""
+        candidate = text.split("</think>")[-1].strip()
+        if candidate.startswith("```json"):
+            candidate = candidate[len("```json") :].strip()
+        elif candidate.startswith("```"):
+            candidate = candidate[len("```") :].strip()
+
+        if candidate.endswith("```"):
+            candidate = candidate[: -len("```")].strip()
+
+        parsed = safe_json_loads(candidate)
+        if isinstance(parsed, dict) and "error" not in parsed:
+            return json.dumps(
+                parsed,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+
+        return FORMAT_ERROR_MESSAGE
+
     def format_tool_result_for_user(self, tool_call_execution_result: dict) -> dict:
         """
         Format tool execution results to be fed back to LLM as user messages.
@@ -124,7 +148,7 @@ class OutputFormatter:
         return {"type": "text", "text": content}
 
     def format_final_summary_and_log(
-        self, final_answer_text: str, client=None
+        self, final_answer_text: str, client=None, output_mode: str = "boxed"
     ) -> Tuple[str, str, str]:
         """
         Format final summary information, including answers and token statistics.
@@ -140,16 +164,22 @@ class OutputFormatter:
         summary_lines.append("\n" + "=" * 30 + " Final Answer " + "=" * 30)
         summary_lines.append(final_answer_text)
 
-        # Extract boxed result - find the last match using safer regex patterns
-        boxed_result = self._extract_boxed_content(final_answer_text)
+        # Extract the final payload in the configured output mode.
+        if output_mode == "json":
+            boxed_result = self._extract_json_payload(final_answer_text)
+        else:
+            boxed_result = self._extract_boxed_content(final_answer_text)
 
         # Add extracted result section
         summary_lines.append("\n" + "-" * 20 + " Extracted Result " + "-" * 20)
 
-        if boxed_result:
+        if boxed_result and boxed_result != FORMAT_ERROR_MESSAGE:
             summary_lines.append(boxed_result)
         elif final_answer_text:
-            summary_lines.append("No \\boxed{} content found.")
+            if output_mode == "json":
+                summary_lines.append("No valid JSON payload found.")
+            else:
+                summary_lines.append("No \\boxed{} content found.")
             boxed_result = FORMAT_ERROR_MESSAGE
 
         # Token usage statistics and cost estimation - use client method

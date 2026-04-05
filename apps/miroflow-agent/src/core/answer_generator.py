@@ -51,6 +51,8 @@ class AnswerGenerator:
         stream_handler: StreamHandler,
         cfg: DictConfig,
         intermediate_boxed_answers: List[str],
+        output_mode: str = "boxed",
+        final_output_schema: Optional[str] = None,
     ):
         """
         Initialize the answer generator.
@@ -69,6 +71,8 @@ class AnswerGenerator:
         self.stream = stream_handler
         self.cfg = cfg
         self.intermediate_boxed_answers = intermediate_boxed_answers
+        self.output_mode = output_mode
+        self.final_output_schema = final_output_schema
 
         # Context management settings
         self.context_compress_limit = cfg.agent.get("context_compress_limit", 0)
@@ -278,6 +282,8 @@ class AnswerGenerator:
         summary_prompt = generate_agent_summarize_prompt(
             task_description,
             agent_type="main",
+            output_mode=self.output_mode,
+            final_output_schema=self.final_output_schema,
         )
 
         if message_history[-1]["role"] == "user":
@@ -307,7 +313,9 @@ class AnswerGenerator:
             if final_answer_text:
                 final_summary, final_boxed_answer, usage_log = (
                     self.output_formatter.format_final_summary_and_log(
-                        final_answer_text, self.llm_client
+                        final_answer_text,
+                        self.llm_client,
+                        output_mode=self.output_mode,
                     )
                 )
 
@@ -315,14 +323,14 @@ class AnswerGenerator:
                     self.task_log.log_step(
                         "info",
                         "Main Agent | Final Answer",
-                        f"Boxed answer found on attempt {retry_idx + 1}",
+                        f"Final payload found on attempt {retry_idx + 1}",
                     )
                     break
                 else:
                     self.task_log.log_step(
                         "warning",
                         "Main Agent | Final Answer",
-                        f"No boxed answer on attempt {retry_idx + 1}, retrying...",
+                        f"No valid final payload on attempt {retry_idx + 1}, retrying...",
                     )
                     if retry_idx < self.max_final_answer_retries - 1:
                         if (

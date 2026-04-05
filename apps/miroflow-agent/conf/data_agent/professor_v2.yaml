@@ -1,0 +1,18 @@
+professor_pipeline_v2:
+  output_dir: "../../logs/data_agents/professor"
+  stage2a:
+    max_concurrent_regex: 16
+  stage2b:
+    max_concurrent_paper_crawl: 8
+    crawl_delay: 2.0
+    crawl_timeout: 30.0
+  stage2c:
+    max_concurrent_agents: 8
+    agent_timeout: 300.0
+    trigger_threshold: 0.5
+  stage3:
+    max_concurrent_summary: 16
+  stage4:
+    embedding_batch_size: 50
+    milvus_collection: "professor_profiles"
+    milvus_uri: "../../logs/data_agents/professor/milvus.db"

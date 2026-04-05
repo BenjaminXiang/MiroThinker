@@ -233,7 +233,12 @@ Do not infer, speculate, summarize broadly, or attempt to fill in missing parts 
     return system_prompt.strip()
 
 
-def generate_agent_summarize_prompt(task_description, agent_type=""):
+def generate_agent_summarize_prompt(
+    task_description,
+    agent_type="",
+    output_mode="boxed",
+    final_output_schema=None,
+):
     """
     Generate the final summarization prompt for an agent.
 
@@ -245,11 +250,13 @@ def generate_agent_summarize_prompt(task_description, agent_type=""):
     Args:
         task_description: The original task/question to reference in the summary
         agent_type: Type of agent ("main" or "agent-browsing")
+        output_mode: Final output mode for the main agent ("boxed" or "json")
+        final_output_schema: Optional JSON schema string for structured output
 
     Returns:
         Summarization prompt string with formatting instructions
     """
-    if agent_type == "main":
+    if agent_type == "main" and output_mode == "boxed":
         summarize_prompt = (
             "Summarize the above conversation, and output the FINAL ANSWER to the original question.\n\n"
             "If a clear answer has already been provided earlier in the conversation, do not rethink or recalculate it — "
@@ -273,6 +280,16 @@ def generate_agent_summarize_prompt(task_description, agent_type=""):
             "You can only answer the original question based on the information already retrieved and your own internal knowledge.\n"
             "If you attempt to call any tool, it will be considered a mistake."
         )
+    elif agent_type == "main" and output_mode == "json":
+        summarize_prompt = (
+            "Summarize the above conversation and Return exactly one JSON object.\n"
+            "Do not call tools. Do not wrap the result in markdown fences.\n"
+            "If the conversation is incomplete, return the best validated object you can "
+            "without fabricating unsupported fields.\n\n"
+            "The original task is repeated here for reference:\n\n"
+            f'"{task_description}"\n\n'
+            f"JSON schema:\n{final_output_schema or '{}'}"
+        )
     elif agent_type == "agent-browsing":
         summarize_prompt = (
             "This is a direct instruction to you (the assistant), not the result of a tool call.\n\n"
@@ -293,6 +310,8 @@ def generate_agent_summarize_prompt(task_description, agent_type=""):
             "Focus on factual, specific, and well-organized information."
         )
     else:
-        raise ValueError(f"Unknown agent type: {agent_type}")
+        raise ValueError(
+            f"Unknown agent type or output mode: {agent_type}/{output_mode}"
+        )
 
     return summarize_prompt.strip()

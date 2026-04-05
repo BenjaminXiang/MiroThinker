@@ -1,5 +1,7 @@
 # 论文采集清洗智能体 — 产品需求文档
 
+> 本文档定义论文域的特有需求。通用架构、MiroThinker 实现映射、质量维度、更新发布规则见 [共享技术规范](./Data-Agent-Shared-Spec.md)。术语定义见 [术语表](./index.md#术语表)。
+
 ## 一、定位
 
 `Paper-Data-Agent` 是一个**教授锚定型**论文采集与清洗智能体，不是开放式全文献抓取器。
@@ -29,20 +31,7 @@
 - 显式论文标题精确查询
 - 论文对教授画像的持续反哺
 
-### 2.3 与当前 MiroThinker 实现的衔接
-
-论文域优先复用当前 MiroThinker 实现：
-
-- 搜索：`search_and_scrape_webpage`
-- 网页 / PDF 抽取：`jina_scrape_llm_summary`
-- 清洗与标准化：`tool-python`
-- 任务调度：`pipeline.py` + `Orchestrator`
-- 验证与补采：`TaskLog` + benchmark 风格批处理
-
-论文域的推荐实现方式是：
-
-- 以“教授 -> 候选论文集合 -> 去重归并 -> 摘要生成 -> 发布”为主链
-- 不先做一个脱离教授 roster 的通用论文搜索引擎
+实现方式见 [共享技术规范 §3](./Data-Agent-Shared-Spec.md#三与当前-mirothinker-实现的映射)。
 
 ---
 
@@ -111,7 +100,7 @@
 | `keywords` | 否 | 关键词 |
 | `citation_count` | 否 | 引用数 |
 | `pdf_path` | 否 | PDF 路径或抓取标识 |
-| `sources` | 是 | 来源列表 |
+| `evidence` | 是 | 来源列表 |
 | `last_updated` | 是 | 最后更新时间 |
 
 ### 4.2 `summary_zh`
@@ -143,14 +132,11 @@
 - 相似论文推荐
 - 作为线上回答的压缩上下文
 
+`summary_text` 由 `summary_zh` 的四段内容拼接而成，不是独立生成的第二份摘要。它的主要用途是语义检索和相似论文推荐。
+
 ### 4.4 存储要求
 
-论文域长期存储要求为：
-
-- 论文域独立 PostgreSQL 库
-- 论文域独立 Milvus collection
-
-共享规范只要求对外契约统一，不要求与其他域共享物理 schema。
+论文域独立 PostgreSQL 库 + Milvus collection。详见 [共享技术规范 §6](./Data-Agent-Shared-Spec.md#六物理存储与向量化建议)。
 
 ---
 
@@ -298,19 +284,9 @@
 
 ## 八、质量保证
 
-### 8.1 质量维度
+通用质量维度和验证流程见 [共享技术规范 §7](./Data-Agent-Shared-Spec.md#七数据质量与验证)。
 
-论文域至少考核：
-
-- 完整度
-- 准确度
-- 去重正确性
-- 归属正确性
-- 可追溯性
-
-### 8.2 自动化校验
-
-至少做以下规则校验：
+### 8.1 论文域特有校验
 
 1. `title`、`authors`、`year` 不得缺失
 2. `summary_zh` 不得缺失
@@ -318,9 +294,7 @@
 4. DOI / Arxiv ID 格式合法时应被标准化
 5. `professor_ids` 存在时，作者归属应合理
 
-### 8.3 重点验证对象
-
-优先验证：
+### 8.2 重点验证对象
 
 - 同名高风险作者
 - 本地摘要质量差的论文
@@ -328,20 +302,9 @@
 - 代表成果候选论文
 - 本地未命中但用户高频显式查询的标题
 
-### 8.4 MiroThinker 验证与补采
-
-优先复用当前 MiroThinker：
-
-- 搜索补证
-- PDF / 网页抓取
-- 摘要复核
-- 归属复核
-
 ---
 
-## 九、配置与实现映射
-
-### 9.1 推荐配置项
+## 九、配置项
 
 ```yaml
 paper:
@@ -353,16 +316,6 @@ paper:
   full_text_preferred: true
   explicit_title_realtime_fallback: true
 ```
-
-### 9.2 当前实现映射
-
-推荐直接映射到当前代码：
-
-- 搜索：`search_and_scrape_webpage`
-- 抽取：`jina_scrape_llm_summary`
-- 清洗：`tool-python`
-- 调度：`pipeline.py` + `Orchestrator`
-- 日志与验证：`TaskLog` + benchmark 风格批处理
 
 ---
 
@@ -377,12 +330,12 @@ paper:
 
 ## 十一、验收标准
 
-| 指标 | 要求 |
-| --- | --- |
-| 关联论文覆盖 | 对已覆盖教授，能形成稳定的本地关联论文集合 |
-| `summary_zh` 完整率 | ≥ 90% |
-| `summary_text` 完整率 | ≥ 90% |
-| 归属准确率 | 抽样准确率 ≥ 90% |
-| 去重准确率 | 抽样准确率 ≥ 95% |
-| 教授反哺有效性 | 能显著改善教授 `research_directions` / `top_papers` / `profile_summary` |
-| 检索效果 | 论文语义检索 Top-5 相关率 ≥ 85% |
+| 指标 | 要求 | 测试集 | 样本量 | 评判标准 |
+| --- | --- | --- | --- | --- |
+| 关联论文覆盖 | 已覆盖教授有稳定的本地关联论文集合 | 有 Scholar 的教授子集 | ≥ 30 名 | 人工抽检论文完整度 |
+| `summary_zh` 完整率 | ≥ 90% | 全量论文 | 全量 | 自动化校验 |
+| `summary_text` 完整率 | ≥ 90% | 全量论文 | 全量 | 自动化校验 |
+| 归属准确率 | ≥ 90% | 教授-论文关联标注集 | ≥ 100 篇 | 人工判定作者归属 |
+| 去重准确率 | ≥ 95% | 含已知重复对的标注集 | ≥ 100 对 | 人工判定 |
+| 教授反哺有效性 | 可见改善教授画像 | 有论文关联的教授子集 | ≥ 30 名 | 人工对比更新前后 |
+| 检索效果 | Top-5 相关率 ≥ 85% | Agentic-RAG 测试集中论文类 query | ≥ 50 条 | 人工评估相关性 |

@@ -29,7 +29,7 @@ from ..logging.task_logger import (
     TaskLog,
     get_utc_plus_8_time,
 )
-from .orchestrator import Orchestrator
+from .orchestrator import Orchestrator, normalize_final_output_schema
 
 
 async def execute_task_pipeline(
@@ -46,6 +46,7 @@ async def execute_task_pipeline(
     tool_definitions: Optional[List[Dict[str, Any]]] = None,
     sub_agent_tool_definitions: Optional[Dict[str, List[Dict[str, Any]]]] = None,
     is_final_retry: bool = False,
+    final_output_schema: Optional[str] = None,
 ):
     """
     Executes the full pipeline for a single task.
@@ -63,6 +64,7 @@ async def execute_task_pipeline(
         stream_queue: A queue for streaming the task execution (optional).
         tool_definitions: The definitions of the tools for the main agent (optional).
         sub_agent_tool_definitions: The definitions of the tools for the sub-agents (optional).
+        final_output_schema: Optional schema string for structured JSON final output.
 
     Returns:
         A tuple of (final_summary, final_boxed_answer, log_file_path, failure_experience_summary):
@@ -93,6 +95,11 @@ async def execute_task_pipeline(
             sub_agent_tool_manager.set_task_log(task_log)
 
     try:
+        normalized_final_output_schema = normalize_final_output_schema(
+            final_output_schema=final_output_schema,
+            output_mode=cfg.agent.get("output_mode", "boxed"),
+        )
+
         # Initialize LLM client
         random_uuid = str(uuid.uuid4())
         unique_id = f"{task_id}-{random_uuid}"
@@ -109,6 +116,7 @@ async def execute_task_pipeline(
             stream_queue=stream_queue,
             tool_definitions=tool_definitions,
             sub_agent_tool_definitions=sub_agent_tool_definitions,
+            final_output_schema=normalized_final_output_schema,
         )
 
         (

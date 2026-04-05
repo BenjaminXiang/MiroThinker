@@ -1,5 +1,7 @@
 # 企业数据采集智能体 — 产品需求文档
 
+> 本文档定义企业域的特有需求。通用架构、MiroThinker 实现映射、质量维度、更新发布规则见 [共享技术规范](./Data-Agent-Shared-Spec.md)。术语定义见 [术语表](./index.md#术语表)。
+
 ## 一、为什么需要独立的企业数据采集智能体
 
 测试集和总 PRD 都表明，企业数据不是一个附属模块，而是系统中的核心数据域之一：
@@ -36,20 +38,7 @@
   - 企业 → 专利
   - 企业 → 关键人物
 
-### 2.3 与当前 MiroThinker 实现的衔接
-
-本 Agent 的实现优先复用当前 MiroThinker 代码能力，而不是另起一套运行时：
-
-- 任务执行：复用 `pipeline.py` + `Orchestrator`
-- 搜索：复用 `search_and_scrape_webpage`
-- 网页/PDF 抽取：复用 `jina_scrape_llm_summary`
-- 清洗与标准化：复用 `tool-python` + 离线脚本
-- 验证与补采：复用现有 benchmark / task log 风格
-
-推荐形态是：
-
-- 为企业域增加 domain-specific prompt / config / post-processing
-- 用现有 agent loop 执行“搜集 -> 清洗 -> 结构化 -> 生成摘要”的任务链
+实现方式见 [共享技术规范 §3](./Data-Agent-Shared-Spec.md#三与当前-mirothinker-实现的映射)。
 
 ---
 
@@ -142,7 +131,7 @@
 | `evaluation_summary` | 是 | 事实性评价摘要 |
 | `technology_route_summary` | 是 | 技术路线摘要 |
 | `patent_count` | 否 | 专利数量 |
-| `sources` | 是 | 来源列表 |
+| `evidence` | 是 | 来源列表 |
 | `last_updated` | 是 | 最后更新时间 |
 
 ### 4.2 必要用户向摘要字段
@@ -191,12 +180,7 @@
 
 ### 4.4 存储要求
 
-企业域长期存储要求为：
-
-- 企业域独立 PostgreSQL 库
-- 企业域独立 Milvus collection
-
-共享规范只要求发布层对外契约统一，不要求和教授/论文/专利域使用相同物理 schema。
+企业域独立 PostgreSQL 库 + Milvus collection。详见 [共享技术规范 §6](./Data-Agent-Shared-Spec.md#六物理存储与向量化建议)。
 
 ---
 
@@ -316,48 +300,26 @@
 
 ## 七、质量保证
 
-### 7.1 质量维度
+通用质量维度和验证流程见 [共享技术规范 §7](./Data-Agent-Shared-Spec.md#七数据质量与验证)。
 
-企业域至少考核：
-
-- 完整度
-- 准确度
-- 唯一性
-- 新鲜度
-- 可追溯性
-
-### 7.2 自动化校验
-
-至少做以下规则校验：
+### 7.1 企业域特有校验
 
 1. `name` 不为空
 2. `normalized_name` 可生成
-3. `credit_code` 若存在则校验格式
-4. `profile_summary` 不为空
-5. `evaluation_summary` 不为空
-6. `technology_route_summary` 不为空
-7. `key_personnel` 若存在，字段结构必须合法
+3. `credit_code` 若存在则校验格式（18 位统一社会信用代码）
+4. `profile_summary`、`evaluation_summary`、`technology_route_summary` 不为空
+5. `key_personnel` 若存在，字段结构必须合法
 
-### 7.3 定向验证
-
-重点验证对象包括：
+### 7.2 重点验证对象
 
 - 同名或近名企业
 - 关键人物背景信息丰富的企业
 - 融资字段变化较大的企业
 - 技术路线高度相近、容易混淆的企业
 
-验证方式优先复用当前 MiroThinker：
-
-- 搜索
-- 抓取
-- 抽取
-- Python 校验
-- task log / 报告输出
-
 ---
 
-## 八、配置与实现映射
+## 八、配置项
 
 ### 8.1 推荐配置项
 
@@ -370,16 +332,6 @@ company:
   web_search_enabled: true
   require_technology_route_summary: true
 ```
-
-### 8.2 当前实现映射
-
-推荐直接映射到当前代码：
-
-- 搜索：`search_and_scrape_webpage`
-- 抽取：`jina_scrape_llm_summary`
-- 清洗：`tool-python`
-- 调度：`pipeline.py` + `Orchestrator`
-- 日志：`TaskLog`
 
 ---
 
@@ -396,11 +348,11 @@ company:
 
 ## 十、验收标准
 
-| 指标 | 要求 |
-| --- | --- |
-| 企业总数覆盖 | ≥ 当期企名片导出企业数的 95% |
-| 必填字段完整率 | `name` + `normalized_name` + `profile_summary` + `evaluation_summary` + `technology_route_summary` 100% |
-| 关键人物结构化可用率 | 有团队信息的企业中，≥ 80% 可生成可检索 `key_personnel` |
-| 去重准确性 | 明显同名重复企业不重复入库，人工抽检准确率 ≥ 95% |
-| 检索效果 | 企业语义检索 Top-5 相关率 ≥ 85% |
-| 更新效率 | 1000+ 企业的月度导入与摘要更新在可接受批处理窗口内完成 |
+| 指标 | 要求 | 测试集 | 样本量 | 评判标准 |
+| --- | --- | --- | --- | --- |
+| 企业总数覆盖 | ≥ 当期企名片导出企业数的 95% | 企名片导出 xlsx | 全量 | 自动化比对 |
+| 必填字段完整率 | `name` + `normalized_name` + `profile_summary` + `evaluation_summary` + `technology_route_summary` 100% | 全量发布数据 | 全量 | 自动化校验 |
+| 关键人物结构化可用率 | 有团队信息的企业中 ≥ 80% | 有团队信息的企业子集 | 全量 | 自动化结构校验 |
+| 去重准确率 | ≥ 95% | 含已知重复对的标注集 | ≥ 100 对 | 人工判定 |
+| 检索效果 | Top-5 相关率 ≥ 85% | Agentic-RAG 测试集中企业类 query | ≥ 50 条 | 人工评估相关性 |
+| 更新效率 | 1000+ 企业月度更新在可接受窗口内 | 月度导入批次 | 全量 | 自动化计时 |

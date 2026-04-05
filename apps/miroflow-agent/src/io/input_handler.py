@@ -435,7 +435,11 @@ Please provide a concise summary of the relevant information from the video that
         return ""
 
 
-def process_input(task_description: str, task_file_name: str) -> Tuple[str, str]:
+def process_input(
+    task_description: str,
+    task_file_name: str = "",
+    require_boxed_answer: bool = True,
+) -> Tuple[str, str]:
     """
     Process user input and associated files.
 
@@ -445,6 +449,7 @@ def process_input(task_description: str, task_file_name: str) -> Tuple[str, str]
     Args:
         task_description: The original task description
         task_file_name: Path to an associated file, or empty string if none
+        require_boxed_answer: Whether to append the boxed-answer instruction
 
     Returns:
         Tuple of (updated_task_description, updated_task_description)
@@ -642,7 +647,11 @@ def process_input(task_description: str, task_file_name: str) -> Tuple[str, str]
             file_content_section += f"\nWarning: There was an error processing the file '{task_file_name}': {str(e)}"
 
     # output format requirement
-    updated_task_description += "\nYou should follow the format instruction in the request strictly and wrap the final answer in \\boxed{}."
+    if require_boxed_answer:
+        updated_task_description += (
+            "\nYou should follow the format instruction in the request strictly "
+            "and wrap the final answer in \\boxed{}."
+        )
 
     # Append file content at the end
     updated_task_description += file_content_section

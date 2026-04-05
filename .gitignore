@@ -38,6 +38,7 @@ pip-delete-this-directory.txt
 
 # Unit test / coverage reports
 htmlcov/
+report.html
 .tox/
 .nox/
 .coverage
@@ -207,21 +208,49 @@ marimo/_lsp/
 __marimo__/
 
 
-# -- ADDED --
+# -- Project-specific --
+
 # Claude Code local state
 .claude/
 
-# Log files
+# Log / output files (large, machine-generated)
 logs/
 
-# Data directory - exclude everything except README
+# Data directory
 data/
 
-
+# IDE / editor
 .idea/
-
+.vscode/
 .DS_Store
 
+# Local secrets and environment
+.sglang_api_key
+.python-version
+
+# AI tool local state
+.agents/
+.codex
+.context/
+config/
+todos/
+
+# Root-level experiment scripts (not part of the app)
+/openai_client_compat.py
+/recommended_client_template_*.py
+/test.txt
+/web-search-exp.py
+/web*search-api.py
+/package.json
+/tests/test_recommended_client_templates.py
+
+# Binary data files and sensitive docs
+docs/*.xlsx
+docs/api.md
+
+# Build / deploy
 apps/collect-trace/scripts/*/*.sh
 .worktrees/
 worktrees/
+.gstack/
+node_modules/

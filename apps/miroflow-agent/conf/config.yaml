@@ -3,6 +3,7 @@ defaults:
   - llm: default
   - agent: default
   - benchmark: default
+  - data_agent: default
   - _self_  # Allows variables to be defined at the top of this file
 
 hydra:

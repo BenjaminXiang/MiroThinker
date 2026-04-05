@@ -1,8 +1,11 @@
 # 数据采集智能体群 — 共享技术规范
 
-本文档是 `Company-Data-Agent`、`Professor-Data-Agent`、`Paper-Data-Agent`、`Patent-Data-Agent` 的共享契约源，定义长期架构、域间协作方式、统一对外字段、质量要求，以及与当前 MiroThinker 实现的映射关系。
+> **本文档是四个数据域的权威源。** 当域 PRD 与本文档冲突时，以本文档为准。
+> 术语定义见 [术语表](./index.md#术语表)。各域 PRD 见 [文档导航](./index.md)。
 
-本文档**不是**单一数据库 schema 说明书，也**不是**把所有域强行压成一套物理表结构的约束文件。共享的是逻辑契约，不是底层物理 schema。
+本文档定义 `Company-Data-Agent`、`Professor-Data-Agent`、`Paper-Data-Agent`、`Patent-Data-Agent` 的共享契约：长期架构、域间协作、统一对外字段、质量要求、MiroThinker 实现映射。
+
+共享的是**逻辑契约**，不是底层物理 schema。各域可独立设计物理表结构。
 
 ---
 
@@ -220,9 +223,23 @@ ID 规则要求：
 | `display_name` | 主展示字段，教授/企业通常对应 `name`，论文/专利通常对应 `title` |
 | `core_facts` | 供服务层和回答层消费的核心事实字段 |
 | `summary_fields` | 用户向摘要字段集合 |
-| `evidence` | 来源、来源类型、来源 URL、抓取时间、证据片段等 |
+| `evidence` | 来源证据数组，结构见 4.5 节 |
 | `last_updated` | 最近更新时间 |
 | `quality_status` | 可选，表示 `ready` / `needs_review` / `low_confidence` 等状态 |
+
+### 4.2.1 摘要字段命名标准
+
+各域的摘要字段必须使用以下统一名称（详见 [术语表](./index.md#摘要字段)）：
+
+| 字段 | 适用域 | 用途 |
+| --- | --- | --- |
+| `profile_summary` | 教授、企业 | 画像摘要，200-300 字中文 |
+| `evaluation_summary` | 教授、企业 | 事实性评价摘要，100-150 字 |
+| `technology_route_summary` | 企业 | 技术路线摘要 |
+| `summary_zh` | 论文 | 四段式结构化中文摘要（what / why / how / result） |
+| `summary_text` | 论文、专利 | embedding 用完整摘要文本 |
+
+论文域的 `summary_text` 由 `summary_zh` 四段拼接而成，不是独立生成的第二份摘要。
 
 ### 4.3 各域最低字段要求
 
@@ -310,18 +327,32 @@ ID 规则要求：
 | `education_filter` | 教育背景相关结构化筛选 |
 | `research_direction` | 教授研究方向或论文技术方向 |
 
-### 4.5 统一证据与来源字段
+### 4.5 统一 `evidence` 字段
 
-各域必须支持来源可追溯，不要求完全同字段名，但对外语义要一致。
+各域必须使用统一的 `evidence` 字段（不再使用 `sources`），支持来源可追溯。
 
-每条对象至少应能给出：
+每条对象的 `evidence` 为以下结构的数组：
 
-- 主来源类型
-  - `official_site` / `xlsx_import` / `public_web` / `academic_platform` / `manual_review`
-- 主来源 URL 或来源文件标识
-- 抓取/导入时间
-- 可选证据片段
-- 可选置信度
+```json
+[
+  {
+    "source_type": "official_site | xlsx_import | public_web | academic_platform | manual_review",
+    "source_url": "https://example.com/page",
+    "source_file": "qimingpian_export_202603.xlsx",
+    "fetched_at": "2026-03-15T10:30:00Z",
+    "snippet": "可选证据片段",
+    "confidence": 0.95
+  }
+]
+```
+
+字段说明：
+
+- `source_type`：必填，枚举值
+- `source_url` 或 `source_file`：至少有一个
+- `fetched_at`：必填，ISO 8601 时间
+- `snippet`：可选，支撑关键事实的原文片段
+- `confidence`：可选，0-1 浮点数
 
 ### 4.6 服务层查询接口契约
 
@@ -509,6 +540,17 @@ get_related_objects(
   - 教授-论文
   - 企业-专利
   - 教授-专利
+
+### 7.4 验收标准规范
+
+各域的验收标准必须满足以下模板要求（详见 [术语表](./index.md#验收标准模板)）：
+
+- **测试集来源**：明确指向哪组测试数据或标注集
+- **样本量**：抽样检验需注明最小样本量（建议 ≥ 50）
+- **评判标准**："准确"的具体定义
+- **评审方式**：自动化 / 人工抽检 / 混合
+
+不满足上述要求的验收指标视为草稿，不作为正式交付标准。
 
 ---
 

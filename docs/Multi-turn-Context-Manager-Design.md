@@ -1,5 +1,8 @@
 # 多轮对话上下文管理器 — 技术设计文档
 
+> 本设计服务于 [Agentic-RAG-PRD](./Agentic-RAG-PRD.md) 中定义的多轮对话能力（§4.2）。
+> 数据模型和字段定义见 [共享技术规范](./Data-Agent-Shared-Spec.md) 和 [术语表](./index.md#术语表)。
+
 ## 一、为什么需要独立的上下文管理器
 
 用户在与科创检索智能体交互时，超过 50% 的查询是多轮追问（如"看看他的论文""这些企业中哪些融过资"）。系统必须在对话轮次之间维护上下文，否则每次查询都是孤立的——用户不得不反复输入完整的实体名称和筛选条件。
@@ -21,7 +24,7 @@
 ```
 SessionContext {
   session_id: string              # 会话唯一标识
-  user_id: string                 # 微信用户 OpenID
+  user_id: string                 # 用户标识（微信 OpenID 或 Web 端会话 ID）
   created_at: timestamp           # 会话创建时间
   last_active_at: timestamp       # 最后活跃时间（30 分钟无活动则过期）
   ttl_seconds: int = 1800         # 会话有效期，默认 30 分钟
@@ -211,7 +214,7 @@ EntityStack {
 多轮上下文管理器是 RAG 智能体的中间层，位于用户接口和四个检索模块之间：
 
 ```
-用户 (微信 H5)
+用户 (微信 H5 / Web 端)
   │
   ▼
 ┌─────────────────────────────────┐
