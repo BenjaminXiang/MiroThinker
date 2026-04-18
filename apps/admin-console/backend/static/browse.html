@@ -4,52 +4,204 @@
 <meta charset="UTF-8">
 <title>深圳科创数据浏览</title>
 <style>
-  body { font-family: -apple-system, "PingFang SC", sans-serif; margin: 0; background: #fafbfc; color: #333; }
-  header { background: #1f2d3d; color: #fff; padding: 12px 24px; display: flex; align-items: center; gap: 24px; }
-  header h1 { margin: 0; font-size: 18px; font-weight: 500; }
-  nav { display: flex; gap: 4px; }
-  nav button { background: transparent; color: #aac; border: 1px solid transparent;
-               padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 14px; }
-  nav button.active { background: #2d4263; color: #fff; border-color: #3a5578; }
-  nav button:hover:not(.active) { color: #fff; background: rgba(255,255,255,0.05); }
-  #search { flex: 1; margin-left: 24px; padding: 6px 10px; border: 1px solid #3a5578;
-            background: #2d4263; color: #fff; border-radius: 4px; font-size: 13px; }
-  main { padding: 20px 24px; }
-  .stats { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
-  .stat { background: #fff; border: 1px solid #e8ecef; border-radius: 6px; padding: 10px 16px; min-width: 120px; }
-  .stat .label { color: #8a94a6; font-size: 12px; }
-  .stat .value { font-size: 22px; font-weight: 500; color: #1f2d3d; }
-  table { background: #fff; border-collapse: collapse; width: 100%;
-          border: 1px solid #e8ecef; border-radius: 6px; overflow: hidden; }
-  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #f0f3f5; font-size: 13px; vertical-align: top; }
-  th { background: #f5f7fa; color: #586278; font-weight: 500; }
-  tr:hover td { background: #f9fbfd; cursor: pointer; }
-  .pager { margin-top: 12px; display: flex; gap: 8px; align-items: center; font-size: 13px; color: #586278; }
-  .pager button { padding: 4px 10px; border: 1px solid #d0d7e0; background: #fff; border-radius: 3px; cursor: pointer; }
+  :root {
+    --bg: #f4f6fa;
+    --fg: #1c2a3a;
+    --fg-muted: #6b7689;
+    --fg-faint: #a8b1c0;
+    --panel: #ffffff;
+    --panel-alt: #f9fafc;
+    --border: #e5e9f0;
+    --border-strong: #cfd6e0;
+    --accent: #2f5fd4;
+    --accent-hover: #1f4db8;
+    --accent-soft: #e5edff;
+    --warn: #c66100;
+    --warn-soft: #fff4e5;
+    --danger: #b8253b;
+    --danger-soft: #fbe7ea;
+    --ok: #1e7a3a;
+    --ok-soft: #e4f5ea;
+    --chip-bg: #eef2f9;
+    --shadow: 0 1px 3px rgba(20,30,60,0.05), 0 0 0 1px rgba(20,30,60,0.02);
+    --radius: 8px;
+    --radius-sm: 4px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Helvetica Neue",
+                 "Segoe UI", "Microsoft YaHei", "Source Han Sans CN", sans-serif;
+    margin: 0; background: var(--bg); color: var(--fg); font-size: 14px; line-height: 1.5;
+  }
+  header {
+    background: #fff; border-bottom: 1px solid var(--border);
+    padding: 12px 24px; display: flex; align-items: center; gap: 20px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  header h1 {
+    margin: 0; font-size: 16px; font-weight: 600; color: var(--fg); letter-spacing: -0.01em;
+  }
+  header h1 .env { color: var(--fg-muted); font-weight: 400; font-size: 13px; margin-left: 8px; }
+  nav { display: flex; gap: 2px; }
+  nav button {
+    background: transparent; color: var(--fg-muted); border: none;
+    padding: 6px 14px; border-radius: var(--radius-sm); cursor: pointer;
+    font-size: 13px; font-weight: 500;
+  }
+  nav button.active { background: var(--accent-soft); color: var(--accent); }
+  nav button:hover:not(.active) { color: var(--fg); background: var(--panel-alt); }
+  #search {
+    flex: 1; max-width: 300px; margin-left: auto;
+    padding: 7px 12px; border: 1px solid var(--border); background: var(--panel-alt);
+    color: var(--fg); border-radius: var(--radius-sm); font-size: 13px;
+    transition: border-color 0.15s;
+  }
+  #search:focus { outline: none; border-color: var(--accent); background: #fff; }
+  main { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+  .stats { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+  .stat {
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 10px 16px; min-width: 110px;
+  }
+  .stat .label { color: var(--fg-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 500; }
+  .stat .value { font-size: 22px; font-weight: 600; color: var(--fg); margin-top: 2px; }
+  .filter-bar {
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 12px 16px; margin-bottom: 16px;
+    display: none; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  .filter-bar.visible { display: flex; }
+  .filter-bar label {
+    display: flex; flex-direction: column; gap: 4px; font-size: 11px;
+    color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 500;
+  }
+  .filter-bar select, .filter-bar input[type=text] {
+    padding: 5px 9px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 13px; font-family: inherit; color: var(--fg); background: #fff;
+    min-width: 140px;
+  }
+  .filter-bar select:focus, .filter-bar input:focus { outline: none; border-color: var(--accent); }
+  .filter-bar .toggle {
+    display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--fg);
+    cursor: pointer; padding: 6px 10px; background: var(--panel-alt);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    text-transform: none; letter-spacing: 0;
+  }
+  .filter-bar .toggle input { margin: 0; }
+  .filter-bar button.clear {
+    margin-left: auto; padding: 5px 10px; background: transparent; color: var(--fg-muted);
+    border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer;
+    font-size: 12px;
+  }
+  .filter-bar button.clear:hover { color: var(--fg); border-color: var(--border-strong); }
+  table {
+    background: var(--panel); border-collapse: separate; border-spacing: 0; width: 100%;
+    border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+  }
+  th, td {
+    padding: 9px 14px; text-align: left; font-size: 13px; vertical-align: top;
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    background: var(--panel-alt); color: var(--fg-muted); font-weight: 500;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+    position: sticky; top: 56px; z-index: 1;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background 0.1s; }
+  tbody tr:hover td { background: var(--panel-alt); cursor: pointer; }
+  tbody tr.anomaly td { background: var(--warn-soft); }
+  tbody tr.anomaly:hover td { background: #ffe8c7; }
+  .pager {
+    margin-top: 14px; display: flex; gap: 8px; align-items: center;
+    font-size: 13px; color: var(--fg-muted);
+  }
+  .pager button {
+    padding: 5px 12px; border: 1px solid var(--border); background: #fff;
+    border-radius: var(--radius-sm); cursor: pointer; font-size: 12px; color: var(--fg);
+  }
+  .pager button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
   .pager button:disabled { opacity: 0.4; cursor: not-allowed; }
-  .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 11px;
-           background: #e7f1fa; color: #2563a6; margin-right: 4px; }
-  .badge.verified { background: #e7f7ec; color: #1e7a3a; }
-  .badge.candidate { background: #fff4e0; color: #8a5d18; }
-  #detail { margin-top: 24px; background: #fff; border: 1px solid #e8ecef; border-radius: 6px; padding: 20px; display: none; }
-  #detail h3 { margin: 0 0 6px; font-size: 18px; }
-  #detail .sub { color: #8a94a6; font-size: 13px; margin-bottom: 16px; }
-  #detail section { margin-bottom: 20px; }
-  #detail section h4 { font-size: 13px; margin: 0 0 8px; color: #586278;
-                       text-transform: uppercase; letter-spacing: 0.5px; }
-  #detail dl { margin: 0; font-size: 13px; }
-  #detail dt { float: left; width: 130px; color: #8a94a6; margin-bottom: 6px; }
-  #detail dd { margin: 0 0 6px 140px; color: #1f2d3d; }
-  .fact-list li { font-size: 13px; margin-bottom: 4px; }
-  .empty { text-align: center; padding: 40px; color: #aab0bb; }
-  #error { background: #fee; border: 1px solid #fbb; padding: 10px; border-radius: 4px; color: #944; margin: 10px 0; display: none; }
-  .pill { display: inline-block; padding: 2px 8px; border-radius: 10px; background: #eef; color: #335; font-size: 11px; margin-right: 4px; }
+  .badge {
+    display: inline-block; padding: 2px 7px; border-radius: 3px; font-size: 11px;
+    background: var(--chip-bg); color: var(--fg-muted); font-weight: 500; margin-right: 4px;
+  }
+  .badge.verified { background: var(--ok-soft); color: var(--ok); }
+  .badge.candidate { background: var(--warn-soft); color: var(--warn); }
+  .badge.rejected { background: var(--danger-soft); color: var(--danger); }
+  .badge.accent { background: var(--accent-soft); color: var(--accent); }
+  .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 12px; font-size: 12px;
+    background: var(--chip-bg); color: var(--fg); margin: 2px 4px 2px 0;
+  }
+  .chip.zh { background: #eff3f9; color: #334b69; }
+  .chip.en { background: #f3edf7; color: #523e66; }
+  .chip.mix { background: #eef5f0; color: #3f5b45; }
+  .lang-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; }
+  .chip.zh .lang-dot { background: #5b7aa5; }
+  .chip.en .lang-dot { background: #8a6fa3; }
+  .chip.mix .lang-dot { background: #6d9076; }
+  .topic-bar {
+    display: inline-block; width: 40px; height: 6px; background: var(--border);
+    border-radius: 3px; vertical-align: middle; margin-left: 6px; position: relative;
+  }
+  .topic-bar > span {
+    display: block; height: 100%; border-radius: 3px; background: var(--ok);
+  }
+  .topic-bar.low > span { background: var(--warn); }
+  .topic-bar.verylow > span { background: var(--danger); }
+  #detail {
+    margin-top: 24px; background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px; display: none;
+  }
+  #detail h3 { margin: 0 0 6px; font-size: 22px; font-weight: 600; letter-spacing: -0.015em; }
+  #detail h3 .en-name { color: var(--fg-muted); font-weight: 400; font-size: 15px; margin-left: 8px; }
+  #detail .sub { color: var(--fg-muted); font-size: 13px; margin-bottom: 20px; }
+  #detail section { margin-bottom: 22px; }
+  #detail section:last-child { margin-bottom: 0; }
+  #detail section h4 {
+    font-size: 11px; margin: 0 0 10px; color: var(--fg-muted);
+    text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
+    padding-bottom: 6px; border-bottom: 1px solid var(--border);
+  }
+  #detail h4 .count { color: var(--fg-faint); font-weight: 400; margin-left: 6px; }
+  .grid { display: grid; grid-template-columns: 110px 1fr; gap: 6px 16px; font-size: 13px; }
+  .grid dt { color: var(--fg-muted); font-weight: 500; }
+  .grid dd { margin: 0; color: var(--fg); word-break: break-word; }
+  .grid dd a { color: var(--accent); text-decoration: none; }
+  .grid dd a:hover { text-decoration: underline; }
+  .paper-item {
+    padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    margin-bottom: 6px; background: var(--panel-alt);
+  }
+  .paper-item .title { font-weight: 500; color: var(--fg); margin-bottom: 4px; }
+  .paper-item .meta { font-size: 12px; color: var(--fg-muted); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .paper-item .meta a { color: var(--accent); text-decoration: none; }
+  .paper-item .meta a:hover { text-decoration: underline; }
+  .empty { text-align: center; padding: 40px; color: var(--fg-faint); font-style: italic; }
+  #error {
+    background: var(--danger-soft); border: 1px solid #f4c7ce; padding: 10px 14px;
+    border-radius: var(--radius-sm); color: var(--danger); margin: 10px 0; display: none;
+  }
+  .load-more {
+    display: inline-block; margin-top: 8px; padding: 5px 12px; background: var(--panel-alt);
+    border: 1px solid var(--border); color: var(--fg-muted); border-radius: var(--radius-sm);
+    cursor: pointer; font-size: 12px;
+  }
+  .load-more:hover { color: var(--fg); border-color: var(--border-strong); }
+  .flag-btn {
+    padding: 4px 10px; background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); cursor: pointer; font-size: 12px; color: var(--fg);
+  }
+  .flag-btn:hover { border-color: var(--warn); color: var(--warn); }
+  code { background: var(--panel-alt); padding: 1px 5px; border-radius: 2px; font-size: 12px; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>深圳科创数据 <span style="color:#8a94a6; font-size:13px">/ miroflow_real</span></h1>
+  <h1>深圳科创数据 <span class="env">· miroflow_real</span></h1>
   <nav id="tabs">
     <button data-domain="companies" class="active">企业</button>
     <button data-domain="professors">教授</button>
@@ -58,11 +210,36 @@
     <button data-domain="pipeline">Pipeline 诊断</button>
     <button data-domain="review">人工审核</button>
   </nav>
-  <input id="search" placeholder="按名称/关键词搜索…（回车）">
+  <input id="search" placeholder="按名称 / 关键词搜索…（回车）">
 </header>
 
 <main>
   <div class="stats" id="stats"></div>
+
+  <!-- Professor-specific faceted filters -->
+  <div class="filter-bar" id="prof-filters">
+    <label>机构
+      <select id="f-institution"><option value="">全部机构</option></select>
+    </label>
+    <label>学科
+      <select id="f-discipline">
+        <option value="">全部学科</option>
+        <option value="computer_science">计算机 / AI</option>
+        <option value="engineering">工程</option>
+        <option value="physics_math">物理 / 数学</option>
+        <option value="life_sciences">生命 / 医学</option>
+        <option value="chemistry_materials">化学 / 材料</option>
+        <option value="humanities_social">人文社科</option>
+        <option value="unknown">未分类</option>
+      </select>
+    </label>
+    <label class="toggle">
+      <input type="checkbox" id="f-verified-only">
+      只看有 verified 论文的
+    </label>
+    <button class="clear" id="f-clear">清空筛选</button>
+  </div>
+
   <div id="error"></div>
   <div id="list-wrapper">
     <table id="list-table"><thead></thead><tbody></tbody></table>
@@ -76,23 +253,59 @@
 </main>
 
 <script>
+// ============ State ============
 let currentDomain = "companies";
 let currentPage = 1;
 const PAGE_SIZE = 20;
 let currentQuery = "";
 let currentTotal = 0;
+let profFilters = { institution: "", discipline_family: "", has_verified_papers: false };
 
+// ============ DOM refs ============
 const listTable = document.getElementById("list-table");
 const detail = document.getElementById("detail");
 const statsBox = document.getElementById("stats");
 const pageInfo = document.getElementById("page-info");
 const searchBox = document.getElementById("search");
 const errorBox = document.getElementById("error");
+const profFiltersEl = document.getElementById("prof-filters");
+const fInst = document.getElementById("f-institution");
+const fDisc = document.getElementById("f-discipline");
+const fVerified = document.getElementById("f-verified-only");
 
-// ---- API wrappers (paths TBD on backend; fail soft) ----
-async function apiList(domain, { q, page, page_size }) {
-  const qs = new URLSearchParams({ page, page_size });
-  if (q) qs.set("q", q);
+// ============ Utilities ============
+function detectLang(text) {
+  if (!text) return "";
+  const hasZh = /[\u4e00-\u9fff]/.test(text);
+  const hasEn = /[A-Za-z]/.test(text);
+  if (hasZh && hasEn) return "mix";
+  if (hasZh) return "zh";
+  if (hasEn) return "en";
+  return "";
+}
+
+function esc(s) {
+  if (s == null) return "";
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+function topicBar(score) {
+  if (score == null) return "";
+  const pct = Math.round(score * 100);
+  const cls = score < 0.7 ? "verylow" : score < 0.85 ? "low" : "";
+  return `<span class="topic-bar ${cls}" title="topic consistency ${score.toFixed(2)}">
+    <span style="width:${pct}%"></span></span>`;
+}
+
+// ============ API wrappers ============
+async function apiList(domain, extraParams = {}) {
+  const qs = new URLSearchParams({ page: currentPage, page_size: PAGE_SIZE });
+  if (currentQuery) qs.set("q", currentQuery);
+  for (const [k, v] of Object.entries(extraParams)) {
+    if (v !== "" && v !== null && v !== undefined && v !== false) qs.set(k, v);
+  }
   const url = `/api/data/${domain}?${qs}`;
   const r = await fetch(url);
   if (!r.ok) throw new Error(`${url}: ${r.status}`);
@@ -103,7 +316,14 @@ async function apiDetail(domain, id) {
   if (!r.ok) throw new Error(`detail ${r.status}`);
   return r.json();
 }
-async function apiFacets() {
+async function apiInstitutionFacets() {
+  try {
+    const r = await fetch("/api/data/facets/professor-institutions");
+    if (r.ok) return r.json();
+  } catch (_) {}
+  return [];
+}
+async function apiIndustryFacets() {
   try {
     const r = await fetch("/api/data/facets/industries");
     if (r.ok) return r.json();
@@ -111,7 +331,7 @@ async function apiFacets() {
   return [];
 }
 
-// ---- Column layouts per domain ----
+// ============ Column layouts ============
 const COLUMNS = {
   companies: [
     { key: "canonical_name", label: "公司名" },
@@ -123,16 +343,24 @@ const COLUMNS = {
       render: (r) => r.last_refreshed_at ? r.last_refreshed_at.slice(0, 10) : "" },
   ],
   professors: [
-    { key: "canonical_name", label: "姓名" },
-    { key: "institution", label: "所属高校" },
-    { key: "discipline_family", label: "学科领域" },
-    { key: "research_topic_count", label: "研究方向" },
-    { key: "verified_paper_count", label: "已验证论文" },
+    { key: "canonical_name", label: "姓名",
+      render: (r) => `${esc(r.canonical_name)}${r.canonical_name_en
+        ? `<br><small style="color:var(--fg-muted);font-size:11px">${esc(r.canonical_name_en)}</small>`
+        : ""}` },
+    { key: "institution", label: "机构" },
+    { key: "discipline_family", label: "学科" },
+    { key: "research_topic_count", label: "研究方向",
+      render: (r) => r.research_topic_count || 0 },
+    { key: "verified_paper_count", label: "已验证论文",
+      render: (r) => {
+        const n = r.verified_paper_count || 0;
+        return n > 0 ? `<span class="badge verified">${n}</span>` : `<span style="color:var(--fg-faint)">0</span>`;
+      }},
   ],
   papers: [
-    { key: "title_clean", label: "标题", wide: true },
+    { key: "title_clean", label: "标题" },
     { key: "year", label: "年份" },
-    { key: "venue", label: "期刊/会议" },
+    { key: "venue", label: "期刊 / 会议" },
     { key: "citation_count", label: "引用" },
     { key: "linked_professor_count", label: "关联教授" },
   ],
@@ -144,7 +372,7 @@ const COLUMNS = {
   ],
 };
 
-// ---- Render functions ----
+// ============ List rendering ============
 function renderList(payload) {
   const cols = COLUMNS[currentDomain] || [];
   const thead = listTable.querySelector("thead");
@@ -168,11 +396,13 @@ function renderList(payload) {
       tr.addEventListener("click", () => showDetail(tr.dataset.id));
     });
   }
-  pageInfo.textContent = `共 ${currentTotal} 条 | 第 ${currentPage} / ${Math.max(1, Math.ceil(currentTotal / PAGE_SIZE))} 页`;
+  const pageCount = Math.max(1, Math.ceil(currentTotal / PAGE_SIZE));
+  pageInfo.textContent = `共 ${currentTotal} 条 · 第 ${currentPage} / ${pageCount} 页`;
   document.getElementById("prev").disabled = currentPage <= 1;
   document.getElementById("next").disabled = currentPage * PAGE_SIZE >= currentTotal;
 }
 
+// ============ Detail rendering ============
 async function showDetail(id) {
   if (!id) return;
   detail.style.display = "block";
@@ -182,8 +412,95 @@ async function showDetail(id) {
     detail.innerHTML = renderDetail(d);
     detail.scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (e) {
-    detail.innerHTML = `<div class="empty">详情加载失败: ${e.message}</div>`;
+    detail.innerHTML = `<div class="empty">详情加载失败: ${esc(e.message)}</div>`;
   }
+}
+
+function renderFact(f) {
+  const text = f.value_raw || f.value_normalized || "";
+  const lang = detectLang(text);
+  const langDot = lang ? `<span class="lang-dot"></span>` : "";
+  const cls = lang ? `chip ${lang}` : "chip";
+  return `<span class="${cls}" title="${lang === 'mix' ? '中英混合' : lang === 'en' ? '英文' : '中文'}">
+    ${langDot}${esc(text)}</span>`;
+}
+
+function renderPaperItem(p, statusClass) {
+  const y = p.year ? `<span class="badge ${statusClass}">${p.year}</span>` : "";
+  const cite = p.citation_count ? `<span>被引 ${p.citation_count}</span>` : "";
+  const venue = p.venue ? `<span title="${esc(p.venue)}">${esc(p.venue).slice(0, 40)}</span>` : "";
+  const tc = topicBar(p.topic_consistency_score);
+  const src = p.source_page_url
+    ? `<a href="${esc(p.source_page_url)}" target="_blank" rel="noopener">来源 ↗</a>`
+    : "";
+  const doi = p.doi ? `<a href="https://doi.org/${esc(p.doi)}" target="_blank" rel="noopener">DOI ↗</a>` : "";
+  return `<div class="paper-item">
+    <div class="title">${esc(p.title_clean || "(无标题)")}</div>
+    <div class="meta">${y}${venue ? "· " + venue : ""}${cite ? "· " + cite : ""}
+      ${tc}${src ? "· " + src : ""}${doi ? "· " + doi : ""}</div>
+  </div>`;
+}
+
+function renderProfessorDetail(d) {
+  const p = d.professor || {};
+  const affs = d.affiliations || [];
+  const fbt = d.facts_by_type || {};
+  const vp = d.verified_papers || [];
+  const cp = d.candidate_papers || [];
+  const rp = d.rejected_papers || [];
+  const rpTotal = d.rejected_papers_total || rp.length || 0;
+  const primaryAff = affs[0] || {};
+
+  const factSection = (title, key, statusClass = "") => {
+    const rows = fbt[key];
+    if (!rows || rows.length === 0) return "";
+    return `<section><h4>${title}<span class="count">${rows.length}</span></h4>
+      <div>${rows.map(renderFact).join("")}</div></section>`;
+  };
+
+  const paperSection = (label, arr, total, cls) => {
+    if (!arr || arr.length === 0) return total > 0
+      ? `<section><h4>${label}<span class="count">${total}</span></h4>
+          <p class="empty" style="padding:20px;margin:0">共 ${total} 条，后端返回 0 条（请求参数或筛选条件问题）</p></section>`
+      : "";
+    const extraCount = total > arr.length ? ` / ${total}` : "";
+    return `<section><h4>${label}<span class="count">${arr.length}${extraCount}</span></h4>
+      <div>${arr.map(p => renderPaperItem(p, cls)).join("")}</div></section>`;
+  };
+
+  const profileUrl = p.primary_profile_url
+    ? `<a href="${esc(p.primary_profile_url)}" target="_blank" rel="noopener">${esc(p.primary_profile_url)}</a>`
+    : "-";
+
+  const rdSource = p.research_directions_source
+    ? `<span class="badge accent">${esc(p.research_directions_source)}</span>`
+    : "";
+
+  return `
+    <h3>${esc(p.canonical_name || "(未知)")}${p.canonical_name_en
+      ? `<span class="en-name">${esc(p.canonical_name_en)}</span>`
+      : ""}</h3>
+    <div class="sub">
+      ${esc(primaryAff.institution || "")} · ${esc(primaryAff.department || "")} · ${esc(primaryAff.title || "")}
+    </div>
+    <section>
+      <h4>身份与出处</h4>
+      <dl class="grid">
+        <dt>professor_id</dt><dd><code>${esc(p.professor_id)}</code></dd>
+        <dt>官方主页</dt><dd>${profileUrl}</dd>
+        <dt>研究方向来源</dt><dd>${rdSource || "-"}</dd>
+        <dt>所用源页数</dt><dd>${d.source_pages_used || 0}</dd>
+      </dl>
+    </section>
+    ${factSection("研究方向", "research_topic")}
+    ${factSection("教育背景", "education")}
+    ${factSection("工作经历", "work_experience")}
+    ${factSection("获奖荣誉", "award")}
+    ${factSection("学术任职", "academic_position")}
+    ${factSection("联系方式", "contact")}
+    ${paperSection("已验证论文", vp, vp.length, "verified")}
+    ${paperSection("候选论文", cp, cp.length, "candidate")}
+    ${paperSection("已拒绝论文", rp, rpTotal, "rejected")}`;
 }
 
 function renderDetail(d) {
@@ -193,71 +510,59 @@ function renderDetail(d) {
     const fe = (d.funding_events || []).slice(0, 5);
     const tm = (d.team_members || []).slice(0, 10);
     return `
-      <h3>${c.canonical_name || "(未知)"}</h3>
-      <div class="sub">${snap.industry || "-"} · ${c.hq_city || ""} · ${c.is_shenzhen ? "深圳" : ""}</div>
-      <section><h4>身份</h4><dl>
-        <dt>company_id</dt><dd>${c.company_id}</dd>
-        <dt>网址</dt><dd>${c.website || "-"}</dd>
-        <dt>法人代表</dt><dd>${snap.legal_representative || "-"}</dd>
-        <dt>成立日期</dt><dd>${snap.established_date || "-"}</dd>
-        <dt>注册资金</dt><dd>${snap.registered_capital || "-"}</dd>
+      <h3>${esc(c.canonical_name || "(未知)")}</h3>
+      <div class="sub">${esc(snap.industry || "-")} · ${esc(c.hq_city || "")} ${c.is_shenzhen ? "· 深圳" : ""}</div>
+      <section><h4>身份</h4><dl class="grid">
+        <dt>company_id</dt><dd><code>${esc(c.company_id)}</code></dd>
+        <dt>网址</dt><dd>${c.website
+          ? `<a href="${esc(c.website)}" target="_blank" rel="noopener">${esc(c.website)}</a>` : "-"}</dd>
+        <dt>法人代表</dt><dd>${esc(snap.legal_representative || "-")}</dd>
+        <dt>成立日期</dt><dd>${esc(snap.established_date || "-")}</dd>
+        <dt>注册资金</dt><dd>${esc(snap.registered_capital || "-")}</dd>
       </dl></section>
-      <section><h4>公司简介</h4><p>${(snap.description || "").slice(0, 400)}</p></section>
-      <section><h4>团队成员 (${tm.length})</h4>
-        <ul class="fact-list">${tm.map(m => `<li><b>${m.raw_name}</b> ${m.raw_role ? `<span class="pill">${m.raw_role}</span>` : ""}</li>`).join("")}</ul>
+      <section><h4>公司简介</h4><p style="line-height:1.6;margin:0">${esc((snap.description || "").slice(0, 500))}</p></section>
+      <section><h4>团队成员<span class="count">${tm.length}</span></h4>
+        <div>${tm.map(m => `<span class="chip">${esc(m.raw_name)}${m.raw_role
+          ? ` · <span style="color:var(--fg-muted)">${esc(m.raw_role)}</span>` : ""}</span>`).join("")}</div>
       </section>
-      <section><h4>融资事件 (${fe.length})</h4>
-        <ul class="fact-list">${fe.map(e => `<li>${e.event_date || ""} · ${e.event_summary || ""}</li>`).join("")}</ul>
+      <section><h4>融资事件<span class="count">${fe.length}</span></h4>
+        <div>${fe.map(e => `<div class="paper-item">
+          <div class="title">${esc(e.event_summary || "")}</div>
+          <div class="meta">${esc(e.event_date || "")}</div></div>`).join("")}</div>
       </section>`;
   }
-  if (currentDomain === "professors") {
-    const p = d.professor || {};
-    const affs = d.affiliations || [];
-    const fbt = d.facts_by_type || {};
-    const vp = d.verified_papers || [];
-    const cp = d.candidate_papers || [];
-    const sec = (title, rows) => rows && rows.length ? `<section><h4>${title} (${rows.length})</h4>
-      <ul class="fact-list">${rows.map(f => `<li>${f.value_raw || f.value_normalized || JSON.stringify(f)}</li>`).join("")}</ul></section>` : "";
-    const paperList = (label, arr, cls) => arr.length ? `<section><h4>${label} (${arr.length})</h4>
-      <ul class="fact-list">${arr.map(x => `<li><span class="badge ${cls}">${x.year || "-"}</span> ${x.title_clean} ${x.citation_count ? `· 引用 ${x.citation_count}` : ""}</li>`).join("")}</ul></section>` : "";
-    return `
-      <h3>${p.canonical_name || "(未知)"} ${p.canonical_name_en ? `<span style="color:#aaa; font-size:14px">${p.canonical_name_en}</span>` : ""}</h3>
-      <div class="sub">${(affs[0] || {}).institution || ""} · ${(affs[0] || {}).department || ""} · ${(affs[0] || {}).title || ""}</div>
-      ${sec("研究方向", fbt.research_topic)}
-      ${sec("教育背景", fbt.education)}
-      ${sec("工作经历", fbt.work_experience)}
-      ${sec("获奖", fbt.award)}
-      ${sec("联系方式", (fbt.contact || []).concat(fbt.homepage || []))}
-      ${paperList("已验证论文 (官方 publication 页抓取)", vp, "verified")}
-      ${paperList("候选论文 (academic API 匹配)", cp, "candidate")}`;
-  }
+  if (currentDomain === "professors") return renderProfessorDetail(d);
   if (currentDomain === "papers") {
     const p = d.paper || {};
     const lp = d.linked_professors || {};
     return `
-      <h3>${p.title_clean}</h3>
-      <div class="sub">${p.venue || ""} · ${p.year || ""} · 引用 ${p.citation_count || 0}</div>
-      <section><h4>作者</h4><p>${p.authors_display || "-"}</p></section>
-      <section><h4>摘要</h4><p>${(p.abstract_clean || "").slice(0, 600)}</p></section>
-      <section><h4>DOI / ID</h4><dl>
-        <dt>DOI</dt><dd>${p.doi || "-"}</dd>
-        <dt>OpenAlex</dt><dd>${p.openalex_id || "-"}</dd>
-        <dt>arXiv</dt><dd>${p.arxiv_id || "-"}</dd>
+      <h3>${esc(p.title_clean)}</h3>
+      <div class="sub">${esc(p.venue || "")} · ${esc(p.year || "")} · 被引 ${p.citation_count || 0}</div>
+      <section><h4>作者</h4><p style="margin:0">${esc(p.authors_display || "-")}</p></section>
+      <section><h4>摘要</h4><p style="margin:0;line-height:1.6">${esc((p.abstract_clean || "").slice(0, 800))}</p></section>
+      <section><h4>标识</h4><dl class="grid">
+        <dt>DOI</dt><dd>${p.doi
+          ? `<a href="https://doi.org/${esc(p.doi)}" target="_blank" rel="noopener">${esc(p.doi)}</a>` : "-"}</dd>
+        <dt>OpenAlex</dt><dd><code>${esc(p.openalex_id || "-")}</code></dd>
+        <dt>arXiv</dt><dd><code>${esc(p.arxiv_id || "-")}</code></dd>
       </dl></section>
-      <section><h4>关联教授 verified (${(lp.verified || []).length})</h4>
-        <ul class="fact-list">${(lp.verified || []).map(x => `<li>${x.canonical_name} <span style="color:#aaa">${x.institution || ""}</span></li>`).join("")}</ul>
+      <section><h4>关联教授 verified<span class="count">${(lp.verified || []).length}</span></h4>
+        <div>${(lp.verified || []).map(x => `<span class="chip">${esc(x.canonical_name)}
+          <span style="color:var(--fg-muted);font-size:11px">${esc(x.institution || "")}</span></span>`).join("")}</div>
       </section>
-      <section><h4>关联教授 candidate (${(lp.candidate || []).length})</h4>
-        <ul class="fact-list">${(lp.candidate || []).map(x => `<li>${x.canonical_name} <span style="color:#aaa">${x.institution || ""}</span></li>`).join("")}</ul>
+      <section><h4>关联教授 candidate<span class="count">${(lp.candidate || []).length}</span></h4>
+        <div>${(lp.candidate || []).map(x => `<span class="chip">${esc(x.canonical_name)}
+          <span style="color:var(--fg-muted);font-size:11px">${esc(x.institution || "")}</span></span>`).join("")}</div>
       </section>`;
   }
-  return `<pre>${JSON.stringify(d, null, 2)}</pre>`;
+  return `<pre>${esc(JSON.stringify(d, null, 2))}</pre>`;
 }
 
-// ---- Specialized views: pipeline & review ----
+// ============ Pipeline view ============
 async function loadPipelineView() {
   errorBox.style.display = "none";
   detail.style.display = "none";
+  profFiltersEl.classList.remove("visible");
   statsBox.innerHTML = "";
   const tbody = listTable.querySelector("tbody");
   const thead = listTable.querySelector("thead");
@@ -267,38 +572,35 @@ async function loadPipelineView() {
       fetch("/api/pipeline/coverage-by-institution").then(r => r.json()),
       fetch("/api/pipeline/source-breakdown").then(r => r.json()),
     ]);
-    // Source breakdown as stat cards
     const sb = sources.by_link_status || {};
     statsBox.innerHTML = Object.entries(sb).map(
-      ([k, v]) => `<div class="stat"><div class="label">${k}</div><div class="value">${v}</div></div>`
+      ([k, v]) => `<div class="stat"><div class="label">${esc(k)}</div><div class="value">${v}</div></div>`
     ).join("") + `<div class="stat"><div class="label">机构数</div><div class="value">${coverage.length}</div></div>`;
-    // Coverage table
     thead.innerHTML = `<tr>
-      <th>机构</th><th>教授数</th><th>有 verified 论文</th><th>有研究方向</th>
-      <th>空作者论文</th><th>Gate 拒绝率</th><th>平均主题贴合度</th><th>异常标签</th>
+      <th>机构</th><th>教授</th><th>有 verified 论文</th><th>有研究方向</th>
+      <th>空作者论文</th><th>Gate 拒绝率</th><th>平均主题贴合</th><th>异常</th>
     </tr>`;
     tbody.innerHTML = coverage.map(c => {
-      const flags = (c.anomaly_flags || []).map(f => `<span class="badge candidate">${f}</span>`).join("");
+      const flags = (c.anomaly_flags || []).map(f => `<span class="badge candidate">${esc(f)}</span>`).join("");
       const rate = (c.identity_gate_rejection_rate * 100).toFixed(1);
       const topic = c.avg_topic_consistency_score == null ? "-" : c.avg_topic_consistency_score.toFixed(3);
-      const rowClass = flags ? 'style="background:#fff3f3"' : "";
-      return `<tr ${rowClass}><td>${c.institution}</td><td>${c.professor_count}</td>
+      const rowCls = flags ? 'class="anomaly"' : "";
+      return `<tr ${rowCls}><td>${esc(c.institution)}</td><td>${c.professor_count}</td>
         <td>${c.with_verified_papers}</td><td>${c.with_research_directions}</td>
         <td>${c.empty_authors_papers}</td><td>${rate}%</td>
         <td>${topic}</td><td>${flags || "-"}</td></tr>`;
     }).join("");
-    // Source breakdown detail below the table
     const byApi = sources.by_evidence_api_source || {};
     const byVby = sources.by_verified_by || {};
     detail.style.display = "block";
     detail.innerHTML = `
       <h3>论文链来源分布</h3>
       <section><h4>按 evidence_api_source</h4>
-        <dl>${Object.entries(byApi).sort((a,b) => b[1]-a[1]).slice(0,15).map(
-          ([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl></section>
+        <dl class="grid">${Object.entries(byApi).sort((a,b) => b[1]-a[1]).slice(0,15).map(
+          ([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join("")}</dl></section>
       <section><h4>按 verified_by</h4>
-        <dl>${Object.entries(byVby).map(
-          ([k, v]) => `<dt>${k || "(null)"}</dt><dd>${v}</dd>`).join("")}</dl></section>`;
+        <dl class="grid">${Object.entries(byVby).map(
+          ([k, v]) => `<dt>${esc(k || "(null)")}</dt><dd>${v}</dd>`).join("")}</dl></section>`;
     document.getElementById("prev").disabled = true;
     document.getElementById("next").disabled = true;
     pageInfo.textContent = `${coverage.length} 所机构`;
@@ -309,9 +611,11 @@ async function loadPipelineView() {
   }
 }
 
+// ============ Review view ============
 async function loadReviewView() {
   errorBox.style.display = "none";
   detail.style.display = "none";
+  profFiltersEl.classList.remove("visible");
   statsBox.innerHTML = "";
   const tbody = listTable.querySelector("tbody");
   const thead = listTable.querySelector("thead");
@@ -329,36 +633,45 @@ async function loadReviewView() {
       <div class="stat"><div class="label">未解决 issue</div><div class="value">${issues.length}</div></div>`;
     thead.innerHTML = `<tr>
       <th>姓名</th><th>机构</th><th>研究方向</th>
-      <th>Verified 论文 (top 3)</th><th>Rejected 论文 (top 3)</th><th>操作</th>
+      <th>Verified 论文 top 3</th><th>Rejected 论文 top 3</th><th>操作</th>
     </tr>`;
     tbody.innerHTML = samples.map(s => {
-      const directions = (s.research_directions || []).slice(0, 5).join(", ");
-      const mkList = (arr) => (arr || []).slice(0,3).map(p =>
-        `<div style="font-size:11px;margin-bottom:2px">${(p.title_clean||"").slice(0,60)}
-          ${p.topic_consistency_score != null ? `<span class="pill">${p.topic_consistency_score.toFixed(2)}</span>` : ""}</div>`
+      const directions = (s.research_directions || []).slice(0, 3).map(d =>
+        `<span class="chip ${detectLang(d)}"><span class="lang-dot"></span>${esc(d)}</span>`
       ).join("");
-      const vlist = mkList(s.verified_papers) || "-";
-      const rlist = mkList(s.rejected_papers) || "-";
-      const url = s.primary_profile_url ? `<a href="${s.primary_profile_url}" target="_blank">官网</a>` : "-";
+      const mkList = (arr) => (arr || []).slice(0,3).map(p =>
+        `<div style="font-size:12px;margin-bottom:3px;line-height:1.4">
+          <div style="color:var(--fg)">${esc((p.title_clean||"").slice(0, 55))}</div>
+          <div style="color:var(--fg-muted);font-size:11px">
+            ${p.year || "-"} ${topicBar(p.topic_consistency_score)}
+          </div></div>`
+      ).join("");
+      const url = s.primary_profile_url
+        ? `<a href="${esc(s.primary_profile_url)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11px">官网 ↗</a>`
+        : "";
       return `<tr>
-        <td>${s.canonical_name}<br><small>${s.canonical_name_en || ""}</small></td>
-        <td>${s.institution || "-"}<br><small>${url}</small></td>
-        <td>${directions}</td>
-        <td>${vlist}</td><td>${rlist}</td>
-        <td><button onclick="flagProf('${s.professor_id}', '${s.canonical_name}')">🚩 标记</button></td>
+        <td><div><b>${esc(s.canonical_name)}</b></div>
+          <div style="color:var(--fg-muted);font-size:11px">${esc(s.canonical_name_en || "")}</div></td>
+        <td><div>${esc(s.institution || "-")}</div><div>${url}</div></td>
+        <td>${directions || "-"}</td>
+        <td>${mkList(s.verified_papers) || "-"}</td>
+        <td>${mkList(s.rejected_papers) || "-"}</td>
+        <td><button class="flag-btn" onclick="flagProf('${esc(s.professor_id)}', '${esc(s.canonical_name)}')">🚩 标记</button></td>
       </tr>`;
     }).join("");
     detail.style.display = "block";
     detail.innerHTML = `
-      <h3>未解决 Pipeline Issues (${issues.length})</h3>
+      <h3>未解决 Pipeline Issues <span class="count">${issues.length}</span></h3>
       ${issues.length === 0 ? '<p class="empty">暂无未解决 issue</p>' : issues.map(i => `
-        <section style="border-left:3px solid #ccc;padding-left:12px">
-          <div><span class="badge">${i.stage}</span><span class="badge candidate">${i.severity}</span>
-            <small>${i.reported_at.slice(0,16)} by ${i.reported_by}</small></div>
-          <p>${i.description}</p>
-          <small>target: prof=${i.professor_id||"-"} link=${i.link_id||"-"} inst=${i.institution||"-"}</small>
+        <section style="border-left:3px solid var(--border);padding-left:14px;margin-bottom:14px">
+          <div><span class="badge accent">${esc(i.stage)}</span>
+            <span class="badge ${i.severity === 'high' ? 'rejected' : i.severity === 'medium' ? 'candidate' : ''}">${esc(i.severity)}</span>
+            <small style="color:var(--fg-muted)">${esc(i.reported_at.slice(0,16))} by ${esc(i.reported_by)}</small></div>
+          <p style="margin:6px 0 2px">${esc(i.description)}</p>
+          <small style="color:var(--fg-faint)">
+            target: prof=${esc(i.professor_id||"-")} link=${esc(i.link_id||"-")} inst=${esc(i.institution||"-")}</small>
         </section>`).join("")}
-      <p style="color:#8a94a6;font-size:12px;margin-top:20px">
+      <p style="color:var(--fg-muted);font-size:12px;margin-top:20px">
         抽样可通过 URL 参数 <code>?seed=xxx</code> 固定；同一 seed 返回同一批教授。
       </p>`;
     document.getElementById("prev").disabled = true;
@@ -385,12 +698,8 @@ async function flagProf(professorId, name) {
   if (!reportedBy) return;
   try {
     const r = await fetch("/api/review/issues", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        professor_id: professorId, stage, severity: "medium",
-        description, reported_by: reportedBy,
-      }),
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ professor_id: professorId, stage, severity: "medium", description, reported_by: reportedBy }),
     });
     if (r.status === 409) { alert("已有重复的未解决 issue"); return; }
     if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
@@ -401,7 +710,7 @@ async function flagProf(professorId, name) {
   }
 }
 
-// ---- Load domain ----
+// ============ Load domain ============
 async function loadDomain() {
   if (currentDomain === "pipeline") return loadPipelineView();
   if (currentDomain === "review") return loadReviewView();
@@ -409,25 +718,43 @@ async function loadDomain() {
   detail.style.display = "none";
   statsBox.innerHTML = "";
   listTable.querySelector("tbody").innerHTML = `<tr><td class="empty">加载中…</td></tr>`;
+
+  // Show/hide filter bar
+  if (currentDomain === "professors") {
+    profFiltersEl.classList.add("visible");
+    // Lazy-load institution dropdown
+    if (fInst.options.length <= 1) {
+      const facets = await apiInstitutionFacets();
+      facets.forEach(f => {
+        const opt = document.createElement("option");
+        opt.value = f.institution;
+        opt.textContent = `${f.institution} (${f.count})`;
+        fInst.appendChild(opt);
+      });
+    }
+  } else {
+    profFiltersEl.classList.remove("visible");
+  }
+
   try {
-    const payload = await apiList(currentDomain, {
-      q: currentQuery, page: currentPage, page_size: PAGE_SIZE });
+    const extra = currentDomain === "professors" ? profFilters : {};
+    const payload = await apiList(currentDomain, extra);
     renderList(payload);
-    statsBox.innerHTML = `<div class="stat"><div class="label">共</div><div class="value">${currentTotal}</div></div>`;
-    // Facets only for companies
+    statsBox.innerHTML = `<div class="stat"><div class="label">总数</div><div class="value">${currentTotal}</div></div>`;
     if (currentDomain === "companies") {
-      const facets = await apiFacets();
-      facets.slice(0, 6).forEach(f => {
-        statsBox.innerHTML += `<div class="stat"><div class="label">${f.industry}</div><div class="value">${f.count}</div></div>`;
+      const facets = await apiIndustryFacets();
+      facets.slice(0, 5).forEach(f => {
+        statsBox.innerHTML += `<div class="stat"><div class="label">${esc(f.industry)}</div><div class="value">${f.count}</div></div>`;
       });
     }
   } catch (e) {
     errorBox.style.display = "block";
-    errorBox.textContent = `加载失败: ${e.message}${currentDomain !== "companies" ? "（可能该域后端 API 尚未部署 — Round 8a Codex 实施中）" : ""}`;
+    errorBox.textContent = `加载失败: ${e.message}`;
     listTable.querySelector("tbody").innerHTML = "";
   }
 }
 
+// ============ Event wiring ============
 document.querySelectorAll("#tabs button").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll("#tabs button").forEach(b => b.classList.remove("active"));
@@ -454,7 +781,25 @@ searchBox.addEventListener("keydown", (e) => {
   }
 });
 
+// Filter-bar wiring (professors only)
+[fInst, fDisc, fVerified].forEach(el => {
+  el.addEventListener("change", () => {
+    profFilters = {
+      institution: fInst.value,
+      discipline_family: fDisc.value,
+      has_verified_papers: fVerified.checked,
+    };
+    currentPage = 1;
+    loadDomain();
+  });
+});
+document.getElementById("f-clear").addEventListener("click", () => {
+  fInst.value = ""; fDisc.value = ""; fVerified.checked = false;
+  profFilters = { institution: "", discipline_family: "", has_verified_papers: false };
+  currentPage = 1;
+  loadDomain();
+});
+
 loadDomain();
 </script>
-</body>
-</html>
+</body></html>

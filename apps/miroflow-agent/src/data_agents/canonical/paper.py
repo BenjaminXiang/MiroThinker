@@ -38,6 +38,7 @@ class Paper(BaseModel):
     )
     first_seen_at: datetime | None = None
     updated_at: datetime | None = None
+    run_id: UUID | None = None  # Round 7.16 — pipeline_run that produced this row
 
 
 class Patent(BaseModel):
@@ -62,6 +63,7 @@ class Patent(BaseModel):
     ipc_codes: list[str] = Field(default_factory=list)
     first_seen_at: datetime | None = None
     updated_at: datetime | None = None
+    run_id: UUID | None = None  # Round 7.16 — pipeline_run that produced this row
 
 
 class ProfessorPaperLink(BaseModel):
@@ -92,6 +94,7 @@ class ProfessorPaperLink(BaseModel):
     rejected_reason: str | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
+    run_id: UUID | None = None  # Round 7.16 — pipeline_run that produced this row
 
 
 __all__ = [

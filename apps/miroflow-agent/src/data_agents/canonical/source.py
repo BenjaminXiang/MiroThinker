@@ -89,6 +89,7 @@ class SourcePage(BaseModel):
     is_official_source: bool = False
     fetch_run_id: UUID | None = None
     created_at: datetime | None = None
+    run_id: UUID | None = None  # Round 7.16 — pipeline_run that produced this row
 
 
 class PipelineRun(BaseModel):

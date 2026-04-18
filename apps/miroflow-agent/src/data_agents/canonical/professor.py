@@ -31,6 +31,7 @@ class Professor(BaseModel):
     last_refreshed_at: datetime | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
+    run_id: UUID | None = None  # Round 7.16 — pipeline_run that produced this row
 
 
 class ProfessorAffiliation(BaseModel):
@@ -49,6 +50,7 @@ class ProfessorAffiliation(BaseModel):
     source_page_id: UUID
     created_at: datetime | None = None
     updated_at: datetime | None = None
+    run_id: UUID | None = None  # Round 7.16 — pipeline_run that produced this row
 
 
 class ProfessorFact(BaseModel):
@@ -73,6 +75,7 @@ class ProfessorFact(BaseModel):
     status: str = "active"
     created_at: datetime | None = None
     updated_at: datetime | None = None
+    run_id: UUID | None = None  # Round 7.16 — pipeline_run that produced this row
 
 
 __all__ = [

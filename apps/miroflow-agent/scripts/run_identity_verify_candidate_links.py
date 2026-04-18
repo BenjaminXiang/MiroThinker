@@ -68,15 +68,23 @@ def _iter_professor_ids(
     limit: int | None,
     filter_ids: list[str] | None,
     missing_topic_score_only: bool = False,
+    low_topic_consistency_threshold: float | None = None,
 ) -> Iterable[str]:
-    if missing_topic_score_only:
+    params: list[object] = []
+    if low_topic_consistency_threshold is not None:
+        clauses = [
+            "ppl.link_status = 'verified'",
+            "ppl.topic_consistency_score IS NOT NULL",
+            "ppl.topic_consistency_score < %s",
+        ]
+        params.append(low_topic_consistency_threshold)
+    elif missing_topic_score_only:
         clauses = [
             "ppl.link_status = 'verified'",
             "ppl.topic_consistency_score IS NULL",
         ]
     else:
         clauses = ["ppl.link_status IN ('candidate', 'verified')"]
-    params: list[object] = []
     if filter_ids:
         clauses.append("ppl.professor_id = ANY(%s)")
         params.append(filter_ids)
@@ -135,9 +143,18 @@ def _load_candidates(
     professor_id: str,
     *,
     missing_topic_score_only: bool = False,
+    low_topic_consistency_threshold: float | None = None,
 ) -> list[tuple[str, PaperIdentityCandidate, str]]:
     """Return (link_id, candidate, current_status) tuples."""
-    if missing_topic_score_only:
+    extra_params: list[object] = []
+    if low_topic_consistency_threshold is not None:
+        status_filter = (
+            "ppl.link_status='verified' "
+            "AND ppl.topic_consistency_score IS NOT NULL "
+            "AND ppl.topic_consistency_score < %s"
+        )
+        extra_params.append(low_topic_consistency_threshold)
+    elif missing_topic_score_only:
         status_filter = (
             "ppl.link_status='verified' AND ppl.topic_consistency_score IS NULL"
         )
@@ -158,7 +175,7 @@ def _load_candidates(
            AND {status_filter}
          ORDER BY paper.citation_count DESC NULLS LAST, paper.year DESC NULLS LAST
         """,
-        (professor_id,),
+        (professor_id, *extra_params),
     ).fetchall()
     out: list[tuple[str, PaperIdentityCandidate, str]] = []
     for idx, (link_id, status, title, authors_csv, year, venue, abstract) in enumerate(rows):
@@ -264,12 +281,16 @@ async def _process_professor(
     dry_run: bool,
     stats: GateStats,
     missing_topic_score_only: bool = False,
+    low_topic_consistency_threshold: float | None = None,
 ) -> None:
     context = _load_context(conn, professor_id)
     if context is None:
         return
     triples = _load_candidates(
-        conn, professor_id, missing_topic_score_only=missing_topic_score_only
+        conn,
+        professor_id,
+        missing_topic_score_only=missing_topic_score_only,
+        low_topic_consistency_threshold=low_topic_consistency_threshold,
     )
     if not triples:
         return
@@ -367,13 +388,15 @@ async def _run(args: argparse.Namespace) -> int:
                 limit=args.limit,
                 filter_ids=args.professor_id,
                 missing_topic_score_only=args.backfill_topic_scores,
+                low_topic_consistency_threshold=args.rescan_low_topic_threshold,
             )
         )
-        mode_desc = (
-            "topic-score backfill (verified w/ NULL score only)"
-            if args.backfill_topic_scores
-            else "full identity gate"
-        )
+        if args.rescan_low_topic_threshold is not None:
+            mode_desc = f"rescan verified links with topic_consistency < {args.rescan_low_topic_threshold}"
+        elif args.backfill_topic_scores:
+            mode_desc = "topic-score backfill (verified w/ NULL score only)"
+        else:
+            mode_desc = "full identity gate"
         print(f"[gate] mode = {mode_desc}")
         print(f"[gate] professors to process: {len(prof_ids)}")
         for i, pid in enumerate(prof_ids, 1):
@@ -385,6 +408,7 @@ async def _run(args: argparse.Namespace) -> int:
                 dry_run=args.dry_run,
                 stats=stats,
                 missing_topic_score_only=args.backfill_topic_scores,
+                low_topic_consistency_threshold=args.rescan_low_topic_threshold,
             )
             if i % args.commit_every == 0 and not args.dry_run:
                 conn.commit()
@@ -442,6 +466,16 @@ def main() -> int:
              "whose topic_consistency_score is NULL, keep the decision but "
              "fill the score. Use after an initial gate run to populate "
              "topic_consistency_score on existing rows.",
+    )
+    parser.add_argument(
+        "--rescan-low-topic-threshold",
+        type=float,
+        default=None,
+        help="Round 7.18 mode: re-examine verified links whose stored "
+             "topic_consistency_score is below this threshold. Re-runs the "
+             "current identity gate on suspected borderline cases; demotes "
+             "link_status to 'rejected' if the gate no longer accepts them. "
+             "Typical value: 0.8.",
     )
     args = parser.parse_args()
     return asyncio.run(_run(args))
