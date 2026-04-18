@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>深圳科创数据浏览</title>
+<style>
+  body { font-family: -apple-system, "PingFang SC", sans-serif; margin: 0; background: #fafbfc; color: #333; }
+  header { background: #1f2d3d; color: #fff; padding: 12px 24px; display: flex; align-items: center; gap: 24px; }
+  header h1 { margin: 0; font-size: 18px; font-weight: 500; }
+  nav { display: flex; gap: 4px; }
+  nav button { background: transparent; color: #aac; border: 1px solid transparent;
+               padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+  nav button.active { background: #2d4263; color: #fff; border-color: #3a5578; }
+  nav button:hover:not(.active) { color: #fff; background: rgba(255,255,255,0.05); }
+  #search { flex: 1; margin-left: 24px; padding: 6px 10px; border: 1px solid #3a5578;
+            background: #2d4263; color: #fff; border-radius: 4px; font-size: 13px; }
+  main { padding: 20px 24px; }
+  .stats { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+  .stat { background: #fff; border: 1px solid #e8ecef; border-radius: 6px; padding: 10px 16px; min-width: 120px; }
+  .stat .label { color: #8a94a6; font-size: 12px; }
+  .stat .value { font-size: 22px; font-weight: 500; color: #1f2d3d; }
+  table { background: #fff; border-collapse: collapse; width: 100%;
+          border: 1px solid #e8ecef; border-radius: 6px; overflow: hidden; }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #f0f3f5; font-size: 13px; vertical-align: top; }
+  th { background: #f5f7fa; color: #586278; font-weight: 500; }
+  tr:hover td { background: #f9fbfd; cursor: pointer; }
+  .pager { margin-top: 12px; display: flex; gap: 8px; align-items: center; font-size: 13px; color: #586278; }
+  .pager button { padding: 4px 10px; border: 1px solid #d0d7e0; background: #fff; border-radius: 3px; cursor: pointer; }
+  .pager button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 11px;
+           background: #e7f1fa; color: #2563a6; margin-right: 4px; }
+  .badge.verified { background: #e7f7ec; color: #1e7a3a; }
+  .badge.candidate { background: #fff4e0; color: #8a5d18; }
+  #detail { margin-top: 24px; background: #fff; border: 1px solid #e8ecef; border-radius: 6px; padding: 20px; display: none; }
+  #detail h3 { margin: 0 0 6px; font-size: 18px; }
+  #detail .sub { color: #8a94a6; font-size: 13px; margin-bottom: 16px; }
+  #detail section { margin-bottom: 20px; }
+  #detail section h4 { font-size: 13px; margin: 0 0 8px; color: #586278;
+                       text-transform: uppercase; letter-spacing: 0.5px; }
+  #detail dl { margin: 0; font-size: 13px; }
+  #detail dt { float: left; width: 130px; color: #8a94a6; margin-bottom: 6px; }
+  #detail dd { margin: 0 0 6px 140px; color: #1f2d3d; }
+  .fact-list li { font-size: 13px; margin-bottom: 4px; }
+  .empty { text-align: center; padding: 40px; color: #aab0bb; }
+  #error { background: #fee; border: 1px solid #fbb; padding: 10px; border-radius: 4px; color: #944; margin: 10px 0; display: none; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 10px; background: #eef; color: #335; font-size: 11px; margin-right: 4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>深圳科创数据 <span style="color:#8a94a6; font-size:13px">/ miroflow_real</span></h1>
+  <nav id="tabs">
+    <button data-domain="companies" class="active">企业</button>
+    <button data-domain="professors">教授</button>
+    <button data-domain="papers">论文</button>
+    <button data-domain="patents">专利</button>
+    <button data-domain="pipeline">Pipeline 诊断</button>
+    <button data-domain="review">人工审核</button>
+  </nav>
+  <input id="search" placeholder="按名称/关键词搜索…（回车）">
+</header>
+
+<main>
+  <div class="stats" id="stats"></div>
+  <div id="error"></div>
+  <div id="list-wrapper">
+    <table id="list-table"><thead></thead><tbody></tbody></table>
+    <div class="pager">
+      <button id="prev">上一页</button>
+      <span id="page-info"></span>
+      <button id="next">下一页</button>
+    </div>
+  </div>
+  <div id="detail"></div>
+</main>
+
+<script>
+let currentDomain = "companies";
+let currentPage = 1;
+const PAGE_SIZE = 20;
+let currentQuery = "";
+let currentTotal = 0;
+
+const listTable = document.getElementById("list-table");
+const detail = document.getElementById("detail");
+const statsBox = document.getElementById("stats");
+const pageInfo = document.getElementById("page-info");
+const searchBox = document.getElementById("search");
+const errorBox = document.getElementById("error");
+
+// ---- API wrappers (paths TBD on backend; fail soft) ----
+async function apiList(domain, { q, page, page_size }) {
+  const qs = new URLSearchParams({ page, page_size });
+  if (q) qs.set("q", q);
+  const url = `/api/data/${domain}?${qs}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`${url}: ${r.status}`);
+  return r.json();
+}
+async function apiDetail(domain, id) {
+  const r = await fetch(`/api/data/${domain}/${encodeURIComponent(id)}`);
+  if (!r.ok) throw new Error(`detail ${r.status}`);
+  return r.json();
+}
+async function apiFacets() {
+  try {
+    const r = await fetch("/api/data/facets/industries");
+    if (r.ok) return r.json();
+  } catch (_) {}
+  return [];
+}
+
+// ---- Column layouts per domain ----
+const COLUMNS = {
+  companies: [
+    { key: "canonical_name", label: "公司名" },
+    { key: "industry", label: "行业" },
+    { key: "latest_funding_round", label: "最近融资轮次" },
+    { key: "is_shenzhen", label: "深圳",
+      render: (r) => r.is_shenzhen ? "✓" : "" },
+    { key: "last_refreshed_at", label: "更新时间",
+      render: (r) => r.last_refreshed_at ? r.last_refreshed_at.slice(0, 10) : "" },
+  ],
+  professors: [
+    { key: "canonical_name", label: "姓名" },
+    { key: "institution", label: "所属高校" },
+    { key: "discipline_family", label: "学科领域" },
+    { key: "research_topic_count", label: "研究方向" },
+    { key: "verified_paper_count", label: "已验证论文" },
+  ],
+  papers: [
+    { key: "title_clean", label: "标题", wide: true },
+    { key: "year", label: "年份" },
+    { key: "venue", label: "期刊/会议" },
+    { key: "citation_count", label: "引用" },
+    { key: "linked_professor_count", label: "关联教授" },
+  ],
+  patents: [
+    { key: "patent_number", label: "专利号" },
+    { key: "title_clean", label: "标题" },
+    { key: "patent_type", label: "类型" },
+    { key: "filing_date", label: "申请日" },
+  ],
+};
+
+// ---- Render functions ----
+function renderList(payload) {
+  const cols = COLUMNS[currentDomain] || [];
+  const thead = listTable.querySelector("thead");
+  const tbody = listTable.querySelector("tbody");
+  thead.innerHTML = "<tr>" + cols.map(c => `<th>${c.label}</th>`).join("") + "</tr>";
+  const items = payload.items || [];
+  currentTotal = payload.total || items.length || 0;
+  if (items.length === 0) {
+    tbody.innerHTML = `<tr><td class="empty" colspan="${cols.length || 1}">
+      暂无数据${currentDomain === "patents" ? "（专利待 xlsx 导入）" : ""}</td></tr>`;
+  } else {
+    tbody.innerHTML = items.map(row => {
+      const tds = cols.map(c => {
+        const v = c.render ? c.render(row) : row[c.key];
+        return `<td>${v == null ? "" : String(v)}</td>`;
+      }).join("");
+      const id = row.company_id || row.professor_id || row.paper_id || row.patent_id;
+      return `<tr data-id="${id || ''}">${tds}</tr>`;
+    }).join("");
+    tbody.querySelectorAll("tr").forEach(tr => {
+      tr.addEventListener("click", () => showDetail(tr.dataset.id));
+    });
+  }
+  pageInfo.textContent = `共 ${currentTotal} 条 | 第 ${currentPage} / ${Math.max(1, Math.ceil(currentTotal / PAGE_SIZE))} 页`;
+  document.getElementById("prev").disabled = currentPage <= 1;
+  document.getElementById("next").disabled = currentPage * PAGE_SIZE >= currentTotal;
+}
+
+async function showDetail(id) {
+  if (!id) return;
+  detail.style.display = "block";
+  detail.innerHTML = "<em>加载中…</em>";
+  try {
+    const d = await apiDetail(currentDomain, id);
+    detail.innerHTML = renderDetail(d);
+    detail.scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (e) {
+    detail.innerHTML = `<div class="empty">详情加载失败: ${e.message}</div>`;
+  }
+}
+
+function renderDetail(d) {
+  if (currentDomain === "companies") {
+    const c = d.company || {};
+    const snap = d.latest_snapshot || {};
+    const fe = (d.funding_events || []).slice(0, 5);
+    const tm = (d.team_members || []).slice(0, 10);
+    return `
+      <h3>${c.canonical_name || "(未知)"}</h3>
+      <div class="sub">${snap.industry || "-"} · ${c.hq_city || ""} · ${c.is_shenzhen ? "深圳" : ""}</div>
+      <section><h4>身份</h4><dl>
+        <dt>company_id</dt><dd>${c.company_id}</dd>
+        <dt>网址</dt><dd>${c.website || "-"}</dd>
+        <dt>法人代表</dt><dd>${snap.legal_representative || "-"}</dd>
+        <dt>成立日期</dt><dd>${snap.established_date || "-"}</dd>
+        <dt>注册资金</dt><dd>${snap.registered_capital || "-"}</dd>
+      </dl></section>
+      <section><h4>公司简介</h4><p>${(snap.description || "").slice(0, 400)}</p></section>
+      <section><h4>团队成员 (${tm.length})</h4>
+        <ul class="fact-list">${tm.map(m => `<li><b>${m.raw_name}</b> ${m.raw_role ? `<span class="pill">${m.raw_role}</span>` : ""}</li>`).join("")}</ul>
+      </section>
+      <section><h4>融资事件 (${fe.length})</h4>
+        <ul class="fact-list">${fe.map(e => `<li>${e.event_date || ""} · ${e.event_summary || ""}</li>`).join("")}</ul>
+      </section>`;
+  }
+  if (currentDomain === "professors") {
+    const p = d.professor || {};
+    const affs = d.affiliations || [];
+    const fbt = d.facts_by_type || {};
+    const vp = d.verified_papers || [];
+    const cp = d.candidate_papers || [];
+    const sec = (title, rows) => rows && rows.length ? `<section><h4>${title} (${rows.length})</h4>
+      <ul class="fact-list">${rows.map(f => `<li>${f.value_raw || f.value_normalized || JSON.stringify(f)}</li>`).join("")}</ul></section>` : "";
+    const paperList = (label, arr, cls) => arr.length ? `<section><h4>${label} (${arr.length})</h4>
+      <ul class="fact-list">${arr.map(x => `<li><span class="badge ${cls}">${x.year || "-"}</span> ${x.title_clean} ${x.citation_count ? `· 引用 ${x.citation_count}` : ""}</li>`).join("")}</ul></section>` : "";
+    return `
+      <h3>${p.canonical_name || "(未知)"} ${p.canonical_name_en ? `<span style="color:#aaa; font-size:14px">${p.canonical_name_en}</span>` : ""}</h3>
+      <div class="sub">${(affs[0] || {}).institution || ""} · ${(affs[0] || {}).department || ""} · ${(affs[0] || {}).title || ""}</div>
+      ${sec("研究方向", fbt.research_topic)}
+      ${sec("教育背景", fbt.education)}
+      ${sec("工作经历", fbt.work_experience)}
+      ${sec("获奖", fbt.award)}
+      ${sec("联系方式", (fbt.contact || []).concat(fbt.homepage || []))}
+      ${paperList("已验证论文 (官方 publication 页抓取)", vp, "verified")}
+      ${paperList("候选论文 (academic API 匹配)", cp, "candidate")}`;
+  }
+  if (currentDomain === "papers") {
+    const p = d.paper || {};
+    const lp = d.linked_professors || {};
+    return `
+      <h3>${p.title_clean}</h3>
+      <div class="sub">${p.venue || ""} · ${p.year || ""} · 引用 ${p.citation_count || 0}</div>
+      <section><h4>作者</h4><p>${p.authors_display || "-"}</p></section>
+      <section><h4>摘要</h4><p>${(p.abstract_clean || "").slice(0, 600)}</p></section>
+      <section><h4>DOI / ID</h4><dl>
+        <dt>DOI</dt><dd>${p.doi || "-"}</dd>
+        <dt>OpenAlex</dt><dd>${p.openalex_id || "-"}</dd>
+        <dt>arXiv</dt><dd>${p.arxiv_id || "-"}</dd>
+      </dl></section>
+      <section><h4>关联教授 verified (${(lp.verified || []).length})</h4>
+        <ul class="fact-list">${(lp.verified || []).map(x => `<li>${x.canonical_name} <span style="color:#aaa">${x.institution || ""}</span></li>`).join("")}</ul>
+      </section>
+      <section><h4>关联教授 candidate (${(lp.candidate || []).length})</h4>
+        <ul class="fact-list">${(lp.candidate || []).map(x => `<li>${x.canonical_name} <span style="color:#aaa">${x.institution || ""}</span></li>`).join("")}</ul>
+      </section>`;
+  }
+  return `<pre>${JSON.stringify(d, null, 2)}</pre>`;
+}
+
+// ---- Specialized views: pipeline & review ----
+async function loadPipelineView() {
+  errorBox.style.display = "none";
+  detail.style.display = "none";
+  statsBox.innerHTML = "";
+  const tbody = listTable.querySelector("tbody");
+  const thead = listTable.querySelector("thead");
+  tbody.innerHTML = `<tr><td class="empty">加载中…</td></tr>`;
+  try {
+    const [coverage, sources] = await Promise.all([
+      fetch("/api/pipeline/coverage-by-institution").then(r => r.json()),
+      fetch("/api/pipeline/source-breakdown").then(r => r.json()),
+    ]);
+    // Source breakdown as stat cards
+    const sb = sources.by_link_status || {};
+    statsBox.innerHTML = Object.entries(sb).map(
+      ([k, v]) => `<div class="stat"><div class="label">${k}</div><div class="value">${v}</div></div>`
+    ).join("") + `<div class="stat"><div class="label">机构数</div><div class="value">${coverage.length}</div></div>`;
+    // Coverage table
+    thead.innerHTML = `<tr>
+      <th>机构</th><th>教授数</th><th>有 verified 论文</th><th>有研究方向</th>
+      <th>空作者论文</th><th>Gate 拒绝率</th><th>平均主题贴合度</th><th>异常标签</th>
+    </tr>`;
+    tbody.innerHTML = coverage.map(c => {
+      const flags = (c.anomaly_flags || []).map(f => `<span class="badge candidate">${f}</span>`).join("");
+      const rate = (c.identity_gate_rejection_rate * 100).toFixed(1);
+      const topic = c.avg_topic_consistency_score == null ? "-" : c.avg_topic_consistency_score.toFixed(3);
+      const rowClass = flags ? 'style="background:#fff3f3"' : "";
+      return `<tr ${rowClass}><td>${c.institution}</td><td>${c.professor_count}</td>
+        <td>${c.with_verified_papers}</td><td>${c.with_research_directions}</td>
+        <td>${c.empty_authors_papers}</td><td>${rate}%</td>
+        <td>${topic}</td><td>${flags || "-"}</td></tr>`;
+    }).join("");
+    // Source breakdown detail below the table
+    const byApi = sources.by_evidence_api_source || {};
+    const byVby = sources.by_verified_by || {};
+    detail.style.display = "block";
+    detail.innerHTML = `
+      <h3>论文链来源分布</h3>
+      <section><h4>按 evidence_api_source</h4>
+        <dl>${Object.entries(byApi).sort((a,b) => b[1]-a[1]).slice(0,15).map(
+          ([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl></section>
+      <section><h4>按 verified_by</h4>
+        <dl>${Object.entries(byVby).map(
+          ([k, v]) => `<dt>${k || "(null)"}</dt><dd>${v}</dd>`).join("")}</dl></section>`;
+    document.getElementById("prev").disabled = true;
+    document.getElementById("next").disabled = true;
+    pageInfo.textContent = `${coverage.length} 所机构`;
+  } catch (e) {
+    errorBox.style.display = "block";
+    errorBox.textContent = `Pipeline 视图加载失败: ${e.message}`;
+    tbody.innerHTML = "";
+  }
+}
+
+async function loadReviewView() {
+  errorBox.style.display = "none";
+  detail.style.display = "none";
+  statsBox.innerHTML = "";
+  const tbody = listTable.querySelector("tbody");
+  const thead = listTable.querySelector("thead");
+  tbody.innerHTML = `<tr><td class="empty">随机抽取教授审核样本中…</td></tr>`;
+  try {
+    const seed = new URLSearchParams(location.search).get("seed") || "";
+    const qs = new URLSearchParams({ n: 10 });
+    if (seed) qs.set("seed", seed);
+    const [samples, issues] = await Promise.all([
+      fetch(`/api/review/sample?${qs}`).then(r => r.json()),
+      fetch("/api/review/issues?resolved=false&limit=50").then(r => r.json()),
+    ]);
+    statsBox.innerHTML = `
+      <div class="stat"><div class="label">抽样数</div><div class="value">${samples.length}</div></div>
+      <div class="stat"><div class="label">未解决 issue</div><div class="value">${issues.length}</div></div>`;
+    thead.innerHTML = `<tr>
+      <th>姓名</th><th>机构</th><th>研究方向</th>
+      <th>Verified 论文 (top 3)</th><th>Rejected 论文 (top 3)</th><th>操作</th>
+    </tr>`;
+    tbody.innerHTML = samples.map(s => {
+      const directions = (s.research_directions || []).slice(0, 5).join(", ");
+      const mkList = (arr) => (arr || []).slice(0,3).map(p =>
+        `<div style="font-size:11px;margin-bottom:2px">${(p.title_clean||"").slice(0,60)}
+          ${p.topic_consistency_score != null ? `<span class="pill">${p.topic_consistency_score.toFixed(2)}</span>` : ""}</div>`
+      ).join("");
+      const vlist = mkList(s.verified_papers) || "-";
+      const rlist = mkList(s.rejected_papers) || "-";
+      const url = s.primary_profile_url ? `<a href="${s.primary_profile_url}" target="_blank">官网</a>` : "-";
+      return `<tr>
+        <td>${s.canonical_name}<br><small>${s.canonical_name_en || ""}</small></td>
+        <td>${s.institution || "-"}<br><small>${url}</small></td>
+        <td>${directions}</td>
+        <td>${vlist}</td><td>${rlist}</td>
+        <td><button onclick="flagProf('${s.professor_id}', '${s.canonical_name}')">🚩 标记</button></td>
+      </tr>`;
+    }).join("");
+    detail.style.display = "block";
+    detail.innerHTML = `
+      <h3>未解决 Pipeline Issues (${issues.length})</h3>
+      ${issues.length === 0 ? '<p class="empty">暂无未解决 issue</p>' : issues.map(i => `
+        <section style="border-left:3px solid #ccc;padding-left:12px">
+          <div><span class="badge">${i.stage}</span><span class="badge candidate">${i.severity}</span>
+            <small>${i.reported_at.slice(0,16)} by ${i.reported_by}</small></div>
+          <p>${i.description}</p>
+          <small>target: prof=${i.professor_id||"-"} link=${i.link_id||"-"} inst=${i.institution||"-"}</small>
+        </section>`).join("")}
+      <p style="color:#8a94a6;font-size:12px;margin-top:20px">
+        抽样可通过 URL 参数 <code>?seed=xxx</code> 固定；同一 seed 返回同一批教授。
+      </p>`;
+    document.getElementById("prev").disabled = true;
+    document.getElementById("next").disabled = true;
+    pageInfo.textContent = `${samples.length} 位随机教授 · ${issues.length} 条未解决 issue`;
+  } catch (e) {
+    errorBox.style.display = "block";
+    errorBox.textContent = `审核视图加载失败: ${e.message}`;
+    tbody.innerHTML = "";
+  }
+}
+
+async function flagProf(professorId, name) {
+  const description = prompt(`为教授 ${name} 填写问题描述（是哪一步出了问题？）`);
+  if (!description) return;
+  const stage = prompt(
+    "问题属于哪个 pipeline stage？\n" +
+    "discovery / name_extraction / affiliation / paper_attribution / " +
+    "paper_quality / research_directions / identity_gate / coverage / data_quality_flag",
+    "data_quality_flag"
+  );
+  if (!stage) return;
+  const reportedBy = prompt("你的名字 / 邮箱：", "admin");
+  if (!reportedBy) return;
+  try {
+    const r = await fetch("/api/review/issues", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        professor_id: professorId, stage, severity: "medium",
+        description, reported_by: reportedBy,
+      }),
+    });
+    if (r.status === 409) { alert("已有重复的未解决 issue"); return; }
+    if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
+    alert("已记录到 pipeline_issue 队列 ✓");
+    loadReviewView();
+  } catch (e) {
+    alert(`提交失败: ${e.message}`);
+  }
+}
+
+// ---- Load domain ----
+async function loadDomain() {
+  if (currentDomain === "pipeline") return loadPipelineView();
+  if (currentDomain === "review") return loadReviewView();
+  errorBox.style.display = "none";
+  detail.style.display = "none";
+  statsBox.innerHTML = "";
+  listTable.querySelector("tbody").innerHTML = `<tr><td class="empty">加载中…</td></tr>`;
+  try {
+    const payload = await apiList(currentDomain, {
+      q: currentQuery, page: currentPage, page_size: PAGE_SIZE });
+    renderList(payload);
+    statsBox.innerHTML = `<div class="stat"><div class="label">共</div><div class="value">${currentTotal}</div></div>`;
+    // Facets only for companies
+    if (currentDomain === "companies") {
+      const facets = await apiFacets();
+      facets.slice(0, 6).forEach(f => {
+        statsBox.innerHTML += `<div class="stat"><div class="label">${f.industry}</div><div class="value">${f.count}</div></div>`;
+      });
+    }
+  } catch (e) {
+    errorBox.style.display = "block";
+    errorBox.textContent = `加载失败: ${e.message}${currentDomain !== "companies" ? "（可能该域后端 API 尚未部署 — Round 8a Codex 实施中）" : ""}`;
+    listTable.querySelector("tbody").innerHTML = "";
+  }
+}
+
+document.querySelectorAll("#tabs button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#tabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentDomain = btn.dataset.domain;
+    currentPage = 1;
+    currentQuery = "";
+    searchBox.value = "";
+    loadDomain();
+  });
+});
+
+document.getElementById("prev").addEventListener("click", () => {
+  if (currentPage > 1) { currentPage -= 1; loadDomain(); }
+});
+document.getElementById("next").addEventListener("click", () => {
+  if (currentPage * PAGE_SIZE < currentTotal) { currentPage += 1; loadDomain(); }
+});
+searchBox.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    currentQuery = searchBox.value.trim();
+    currentPage = 1;
+    loadDomain();
+  }
+});
+
+loadDomain();
+</script>
+</body>
+</html>

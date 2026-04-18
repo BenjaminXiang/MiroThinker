@@ -102,7 +102,7 @@ async def enrich_from_papers(
     llm_client: Any,
     llm_model: str,
     timeout: float = 30.0,
-    identity_gate_enabled: bool = False,
+    identity_gate_enabled: bool = True,   # Round 7.13: default-on after 7.6/7.14 validated
     identity_gate_llm_client: Any | None = None,
     identity_gate_llm_model: str | None = None,
     author_picker: Any | None = None,
