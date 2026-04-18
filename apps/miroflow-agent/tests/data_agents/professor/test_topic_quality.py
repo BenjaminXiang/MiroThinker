@@ -67,3 +67,54 @@ def test_rejects_unbalanced_brackets():
     assert not is_plausible_research_topic("研究（未闭合")
     assert not is_plausible_research_topic("《引用未闭合")
     assert not is_plausible_research_topic("(open paren")
+
+
+# Round 7.9' — catch noise classes found in miroflow_real research_topic column.
+
+
+@pytest.mark.parametrize(
+    "topic",
+    [
+        # Generic English meta labels
+        "Research syntheses",
+        "Research interests",
+        "Research areas",
+        "Research topics",
+        # Journal name with year suffix (seen in real data, comma CN or EN)
+        "Conservation Biology，2023",
+        "Nature Communications，2025",
+        "One Earth，2023",
+        "Journal of Biogeography，2021",
+        "Conservation Biology, 2024",
+        # Bare journal name or truncated journal name
+        "Nano Letters",
+        "JACS",
+        "Matter and Radia",
+        "Nature",
+        # Numbered section fragments
+        "（1）3D",
+        "1.",
+        "(2)",
+    ],
+)
+def test_rejects_round_7_9_prime_noise(topic: str):
+    """Noise classes found in miroflow_real that the original guard missed."""
+    assert not is_plausible_research_topic(topic), topic
+
+
+@pytest.mark.parametrize(
+    "topic",
+    [
+        # Legit English tech terms that happen to be short / all-caps
+        "PVD",
+        "Transfer learning",
+        "AI4Science",
+        "AR/VR",
+        "HDR",
+        # Legit topics that mention a journal name but are full phrases
+        "发表于 Nature Communications 的机器学习算法",
+    ],
+)
+def test_keeps_legit_english_tech_terms(topic: str):
+    """The new rules must not over-reject short English terms that are real topics."""
+    assert is_plausible_research_topic(topic), topic
