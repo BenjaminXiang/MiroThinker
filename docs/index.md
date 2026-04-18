@@ -1,40 +1,24 @@
 # 深圳科创数据平台 — 文档导航
 
-## 当前权威入口
+## 快速入口
 
 - [工作区地图](../WORKSPACE.md)
-- [计划索引](./plans/index.md)
+- [**计划索引（当前状态一表看完）**](./plans/index.md)
 - [解决方案与经验沉淀索引](./solutions/index.md)
-- [当前执行 authority](./plans/2026-04-16-007-plan-portfolio-execution-roadmap.md)
-- [教授主线当前操作口径](./solutions/workflow-issues/professor-pipeline-current-findings-and-operating-guidance-2026-04-16.md)
-- [教授主线已收住 / 未收住问题清单](./solutions/workflow-issues/professor-pipeline-current-closed-vs-open-issues-2026-04-16.md)
 
-## 当前主线任务
+## 当前主线（2026-04-18）
 
-- 当前唯一顶层执行 authority：
-  [2026-04-16-007-plan-portfolio-execution-roadmap.md](./plans/2026-04-16-007-plan-portfolio-execution-roadmap.md)
-- 当前下一波主线：
-  [2026-04-08-001-feat-paper-multi-source-priority-implementation-plan.md](./plans/2026-04-08-001-feat-paper-multi-source-priority-implementation-plan.md)
-- 当前排队但非主线任务：
-  [2026-04-06-001-feat-admin-console-phase2-upgrade-plan.md](./plans/2026-04-06-001-feat-admin-console-phase2-upgrade-plan.md)
-- 当前完成状态和待优化项判断：
-  [plans/index.md](./plans/index.md)
-  与
-  [solutions/index.md](./solutions/index.md)
+- **数据质量防线**：Round 7.x 全系列 LLM-优先数据门
+  已完成 7.6 / 7.8 / 7.9 / 7.10' / 7.13 / 7.14 / 7.15 / 7.16-phase1 / 7.17。
+  → [plans/2026-04-18-005](./plans/2026-04-18-005-data-quality-guards-and-identity-gate.md)
+- **管道验证台**：`/browse` 三 tab（provenance / coverage / review）+ `pipeline_issue` 表
+  → [plans/2026-04-18-006](./plans/2026-04-18-006-pipeline-verification-console.md)
+- **下一波架构主线**：企业主 KG + 教授 STEM 并行重建
+  → [plans/2026-04-17-005](./plans/2026-04-17-005-company-primary-knowledge-graph-architecture-plan.md)
+  → [plans/2026-04-17-002](./plans/2026-04-17-002-professor-stem-parallel-rebuild-plan.md)
+- **顶层路线图（波次编排）**：[plans/2026-04-16-007](./plans/2026-04-16-007-plan-portfolio-execution-roadmap.md)
 
-## 文档层级
-
-本项目采用分层文档结构：
-
-- **共享技术规范**：[Data-Agent-Shared-Spec.md](./Data-Agent-Shared-Spec.md)
-- **各域 PRD**：企业 / 教授 / 论文 / 专利
-- **服务层 PRD**：[Agentic-RAG-PRD.md](./Agentic-RAG-PRD.md)
-- **执行计划**：集中在 [plans/index.md](./plans/index.md)
-- **经验沉淀**：集中在 [solutions/index.md](./solutions/index.md)
-
-当共享规范与域 PRD 冲突时，以共享规范为准。
-
-## 跨域依赖
+## 文档分层
 
 ```
 Data-Agent-Shared-Spec.md          ← 权威源
@@ -45,54 +29,49 @@ Data-Agent-Shared-Spec.md          ← 权威源
 
 Agentic-RAG-PRD.md                 ← 消费四域数据的服务层
   └── Multi-turn-Context-Manager-Design.md
+
+plans/index.md                     ← 执行计划（活跃 + 已完成 + 归档）
+solutions/index.md                 ← 经验沉淀（best practices / 问题复盘）
 ```
 
-- 论文域依赖教授 roster 作为采集锚点
-- 论文信号反哺教授画像（`research_directions`、`profile_summary`）
-- 企业↔教授：通过企业库匹配 + 公开证据建立关联
-- 企业↔专利：通过标准化申请人名称建立关联
-- 教授↔专利：通过发明人 + 所属机构建立关联
+当共享规范与域 PRD 冲突时，以共享规范为准。
 
-## 当前执行状态
+## 跨域依赖
 
-- 当前执行 authority 与主线任务说明，见上面的“当前主线任务”。
-- 当前计划的 active / completed / reference 分类，统一以 [plans/index.md](./plans/index.md) 为准。
+- **论文 → 教授**：论文以教授 roster 为采集锚点
+- **论文 ← 教授**：论文信号反哺教授画像（`research_directions`、`profile_summary`）
+- **企业 ↔ 教授**：通过企业库匹配 + 公开证据建立关联
+- **企业 ↔ 专利**：通过标准化申请人名称建立关联
+- **教授 ↔ 专利**：通过发明人 + 所属机构建立关联
 
-## 产品需求与架构
-
-| 文档 | 用途 | 状态 |
-|------|------|------|
-| [Data-Agent-Shared-Spec.md](./Data-Agent-Shared-Spec.md) | 四域共享架构、契约、质量标准 | 活跃 |
-| [Company-Data-Agent-PRD.md](./Company-Data-Agent-PRD.md) | 企业域特有需求 | 活跃 |
-| [Professor-Data-Agent-PRD.md](./Professor-Data-Agent-PRD.md) | 教授域特有需求 | 活跃 |
-| [Paper-Data-Agent-PRD.md](./Paper-Data-Agent-PRD.md) | 论文域特有需求 | 活跃 |
-| [Patent-Data-Agent-PRD.md](./Patent-Data-Agent-PRD.md) | 专利域特有需求 | 活跃 |
-| [Agentic-RAG-PRD.md](./Agentic-RAG-PRD.md) | 检索增强智能体（服务层） | 活跃 |
-| [Multi-turn-Context-Manager-Design.md](./Multi-turn-Context-Manager-Design.md) | 多轮对话上下文管理器设计 | 活跃 |
-
-## 使用说明
+## 产品需求 / 架构
 
 | 文档 | 用途 | 状态 |
-|------|------|------|
-| [Professor-Pipeline-V2-User-Guide.md](./Professor-Pipeline-V2-User-Guide.md) | 教授 Pipeline 运行、配置、检索、排查 | 活跃 |
-| [Codex-Claude-Cross-Review-Usage.md](./Codex-Claude-Cross-Review-Usage.md) | Codex 主控 + Claude CLI 交叉 review 工作流 | 活跃 |
+|---|---|---|
+| [Data-Agent-Shared-Spec](./Data-Agent-Shared-Spec.md) | 四域共享架构、契约、质量标准 | 活跃 |
+| [Company-Data-Agent-PRD](./Company-Data-Agent-PRD.md) | 企业域特有需求 | 活跃 |
+| [Professor-Data-Agent-PRD](./Professor-Data-Agent-PRD.md) | 教授域特有需求 | 活跃 |
+| [Paper-Data-Agent-PRD](./Paper-Data-Agent-PRD.md) | 论文域特有需求 | 活跃 |
+| [Patent-Data-Agent-PRD](./Patent-Data-Agent-PRD.md) | 专利域特有需求 | 活跃 |
+| [Paper-Collection-Multi-Source-Design](./Paper-Collection-Multi-Source-Design.md) | 论文多源采集设计 | 活跃 |
+| [Agentic-RAG-PRD](./Agentic-RAG-PRD.md) | 检索增强智能体（服务层） | 活跃 |
+| [Multi-turn-Context-Manager-Design](./Multi-turn-Context-Manager-Design.md) | 多轮对话上下文管理器 | 活跃 |
 
-## 计划与实现上下文
+## 使用说明 / 工作流
 
-| 分组 | 入口 | 说明 |
-|------|------|------|
-| 当前计划入口 | [plans/index.md](./plans/index.md) | 先看 active / completed / reference 分类 |
-| 当前 authority | [2026-04-16-007-plan-portfolio-execution-roadmap.md](./plans/2026-04-16-007-plan-portfolio-execution-roadmap.md) | 当前执行顺序与波次状态 |
-| 历史设计上下文 | [superpowers/specs/2026-04-05-professor-enrichment-pipeline-v2-design.md](./superpowers/specs/2026-04-05-professor-enrichment-pipeline-v2-design.md) | 历史设计背景 |
-| 历史实现路线 | [superpowers/plans/2026-03-31-agentic-rag-implementation.md](./superpowers/plans/2026-03-31-agentic-rag-implementation.md) | 早期 RAG 实现路线 |
+| 文档 | 用途 |
+|---|---|
+| [Professor-Pipeline-V2-User-Guide](./Professor-Pipeline-V2-User-Guide.md) | 教授 Pipeline 运行、配置、检索、排查 |
+| [Codex-Claude-Cross-Review-Usage](./Codex-Claude-Cross-Review-Usage.md) | Codex 主控 + Claude CLI 交叉 review 工作流 |
+| [quality-status-compatibility](./quality-status-compatibility.md) | `quality_status` 字段兼容性规则 |
 
-## 经验沉淀入口
+## 经验沉淀快速入口
 
-- [解决方案与经验沉淀索引](./solutions/index.md)
-- [教授数据采集当前发现与操作经验汇总](./solutions/workflow-issues/professor-pipeline-current-findings-and-operating-guidance-2026-04-16.md)
-- [教授 Pipeline 当前已收住与剩余旁路问题清单](./solutions/workflow-issues/professor-pipeline-current-closed-vs-open-issues-2026-04-16.md)
-- [实现测试集答案 Workbook 覆盖度验证](./solutions/workflow-issues/testset-answer-workbook-coverage-validation-2026-04-16.md)
-- [Workbook Closure via Source Backfill](./solutions/best-practices/workbook-closure-via-source-backfill-and-serving-side-knowledge-fields-2026-04-16.md)
+- [solutions/index.md](./solutions/index.md)
+- [数据质量 — Round 7.17 name-identity gate](./solutions/data-quality/name-identity-gate-round-7-17-2026-04-18.md)
+- [workflow — 教授 Pipeline 当前操作口径](./solutions/workflow-issues/professor-pipeline-current-findings-and-operating-guidance-2026-04-16.md)
+- [workflow — 教授主线已收住 / 未收住问题](./solutions/workflow-issues/professor-pipeline-current-closed-vs-open-issues-2026-04-16.md)
+- [best-practices — 工作簿 closure via source backfill](./solutions/best-practices/workbook-closure-via-source-backfill-and-serving-side-knowledge-fields-2026-04-16.md)
 
 ---
 
@@ -103,7 +82,7 @@ Agentic-RAG-PRD.md                 ← 消费四域数据的服务层
 ### 摘要字段
 
 | 统一术语 | 适用域 | 含义 |
-|----------|--------|------|
+|---|---|---|
 | `profile_summary` | 教授、企业 | 用户向画像摘要，200-300 字中文，用于语义检索和介绍 |
 | `evaluation_summary` | 教授、企业 | 事实性评价摘要，100-150 字，基于客观指标 |
 | `technology_route_summary` | 企业 | 技术路线摘要，面向路线对比和差异分析 |
@@ -112,11 +91,12 @@ Agentic-RAG-PRD.md                 ← 消费四域数据的服务层
 
 ### 来源与质量
 
-| 统一术语 | 含义 | 不再使用 |
-|----------|------|----------|
-| `evidence` | 来源证据字段集合（类型、URL、时间、证据片段） | ~~`sources`~~ |
-| `quality_status` | 对象质量状态：`ready` / `needs_review` / `low_confidence` | ~~`confidence`~~、~~`completeness_score`~~ |
-| `last_updated` | 对象最后更新时间 | — |
+| 统一术语 | 含义 |
+|---|---|
+| `evidence` | 来源证据字段集合（类型、URL、时间、证据片段） |
+| `quality_status` | 对象质量状态：`ready` / `needs_review` / `low_confidence` |
+| `last_updated` | 对象最后更新时间 |
+| `run_id` | 生产该行的 `pipeline_run.run_id`（Round 7.16 phase 1 起） |
 
 ### `evidence` 统一结构
 
@@ -131,12 +111,10 @@ Agentic-RAG-PRD.md                 ← 消费四域数据的服务层
 }
 ```
 
-每条对象的 `evidence` 字段为上述结构的数组。
-
 ### ID 前缀
 
 | 域 | 前缀 | 示例 |
-|----|------|------|
+|---|---|---|
 | 教授 | `PROF-` | `PROF-a1b2c3` |
 | 企业 | `COMP-` | `COMP-x7y8z9` |
 | 论文 | `PAPER-` | `PAPER-d4e5f6` |
@@ -145,7 +123,7 @@ Agentic-RAG-PRD.md                 ← 消费四域数据的服务层
 ### 去重主锚点
 
 | 域 | 主锚点 | 辅助信号 |
-|----|--------|----------|
+|---|---|---|
 | 企业 | 标准化公司名称 | `credit_code`、官网、法人 |
 | 教授 | 姓名 + 学校 + 院系 + 职称 | 邮箱、Scholar ID |
 | 论文 | DOI > Arxiv ID > 标题相似度+作者重叠 | — |
@@ -163,5 +141,5 @@ Agentic-RAG-PRD.md                 ← 消费四域数据的服务层
 示例：
 
 | 指标 | 要求 | 测试集 | 样本量 | 评判标准 |
-|------|------|--------|--------|----------|
+|---|---|---|---|---|
 | 去重准确率 | ≥ 95% | 含已知重复对的标注集 | ≥ 100 对 | 人工判定是否为同一实体 |
