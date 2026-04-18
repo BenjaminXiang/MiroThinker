@@ -4,12 +4,14 @@ const COLOR_MAP: Record<string, string> = {
   ready: "green",
   needs_review: "orange",
   low_confidence: "red",
+  needs_enrichment: "magenta",
 };
 
 const LABEL_MAP: Record<string, string> = {
   ready: "就绪",
   needs_review: "待审核",
   low_confidence: "低置信度",
+  needs_enrichment: "需补充",
 };
 
 interface Props {

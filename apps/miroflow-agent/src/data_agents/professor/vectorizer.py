@@ -20,7 +20,7 @@ from .models import EnrichedProfessorProfile
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_EMBEDDING_URL = "http://172.18.41.222:18005/v1"
+_DEFAULT_EMBEDDING_URL = "http://100.64.0.27:18005/v1"
 _DEFAULT_MODEL = "Qwen/Qwen3-Embedding-8B"
 _VECTOR_DIM = 4096
 

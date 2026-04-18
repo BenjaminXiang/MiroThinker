@@ -19,8 +19,12 @@ from src.data_agents.paper.hybrid import (
 from src.data_agents.paper.openalex import (
     discover_professor_paper_candidates_from_openalex,
 )
+from src.data_agents.paper.exact_backfill import (
+    load_exact_backfill_papers,
+    merge_release_outputs_by_id,
+)
 from src.data_agents.paper.pipeline import run_paper_pipeline
-from src.data_agents.paper.release import publish_paper_release
+from src.data_agents.paper.release import build_paper_release
 from src.data_agents.paper.semantic_scholar import (
     discover_professor_paper_candidates,
 )
@@ -51,6 +55,11 @@ def _default_output_paths() -> tuple[Path, Path, Path, Path]:
         output_dir / "professor_records_enriched.jsonl",
         output_dir / "report.json",
     )
+
+
+def _default_supplement_paths() -> list[Path]:
+    path = _repo_root() / "docs" / "source_backfills" / "paper_exact_identifier_backfills.jsonl"
+    return [path] if path.exists() else []
 
 
 def _load_professor_records(path: Path) -> list[ProfessorRecord]:
@@ -108,6 +117,13 @@ def main() -> int:
         default=None,
         help="Output path for JSON report. Use '-' to print report JSON to stdout.",
     )
+    parser.add_argument(
+        "--supplement-jsonl",
+        type=Path,
+        action="append",
+        default=None,
+        help="Optional JSONL file(s) with exact-identifier paper backfills.",
+    )
     args = parser.parse_args()
 
     professor_records_path = args.professor_records or _latest_professor_records_path()
@@ -129,24 +145,36 @@ def main() -> int:
         "openalex": discover_professor_paper_candidates_from_openalex,
         "semantic_scholar": discover_professor_paper_candidates,
     }[args.source]
+    generated_at = datetime.now(timezone.utc)
     pipeline_result = run_paper_pipeline(
         professors=professors,
         discover_papers=discover_papers,
         max_workers=args.max_workers,
         max_papers_per_professor=args.max_papers_per_professor,
-        now=datetime.now(timezone.utc),
+        now=generated_at,
     )
-    publish_paper_release(
-        pipeline_result,
-        paper_records_path=paper_output,
-        released_objects_path=released_output,
-    )
+    supplement_paths = args.supplement_jsonl if args.supplement_jsonl is not None else _default_supplement_paths()
+    paper_records = list(pipeline_result.paper_records)
+    released_objects = list(pipeline_result.released_objects)
+    supplemental_papers = load_exact_backfill_papers(supplement_paths)
+    if supplemental_papers:
+        supplemental_release = build_paper_release(papers=supplemental_papers, now=generated_at)
+        paper_records, released_objects = merge_release_outputs_by_id(
+            paper_records,
+            released_objects,
+            supplemental_release.paper_records,
+            supplemental_release.released_objects,
+        )
+    publish_jsonl(paper_output, paper_records)
+    publish_jsonl(released_output, released_objects)
     publish_jsonl(enriched_professor_output, pipeline_result.updated_professors)
 
     report_payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "professor_records_input": str(professor_records_path),
         "paper_summary": asdict(pipeline_result.report),
+        "supplement_inputs": [str(path) for path in supplement_paths],
+        "supplemental_paper_count": len(supplemental_papers),
         "outputs": {
             "paper_records_jsonl": str(paper_output),
             "released_objects_jsonl": str(released_output),

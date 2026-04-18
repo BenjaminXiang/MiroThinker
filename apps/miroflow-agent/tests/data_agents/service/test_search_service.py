@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from src.data_agents.contracts import CompanyRecord, PaperRecord, ProfessorRecord
+from src.data_agents.contracts import (
+    CompanyRecord,
+    PaperRecord,
+    ProfessorPaperLinkRecord,
+    ProfessorRecord,
+)
 from src.data_agents.evidence import build_evidence
 from src.data_agents.service.search_service import DataSearchService
 from src.data_agents.storage.milvus_store import MilvusVectorStore
@@ -20,7 +25,6 @@ def _professor_record() -> ProfessorRecord:
         department="教育学部",
         title="教授",
         research_directions=["课程思政"],
-        top_papers=["要认真对待高校课程思政的“泛意识形态化”倾向"],
         profile_summary="靳玉乐现任深圳大学教育学部教授，研究方向包括课程思政。",
         evaluation_summary="靳玉乐当前资料完整度为structured，已关联课程思政论文。",
         evidence=[
@@ -62,6 +66,31 @@ def _paper_record() -> PaperRecord:
     )
 
 
+def _professor_paper_link_record() -> ProfessorPaperLinkRecord:
+    return ProfessorPaperLinkRecord(
+        id="PPLINK-1",
+        professor_id="PROF-1",
+        paper_id="PAPER-1",
+        professor_name="靳玉乐",
+        paper_title="要认真对待高校课程思政的“泛意识形态化”倾向",
+        link_status="verified",
+        evidence_source="official_site",
+        evidence_url="https://fe.szu.edu.cn/info/1021/1191.htm",
+        match_reason="Official profile lists the paper in the teacher's publication section.",
+        verified_by="pipeline_v3",
+        evidence=[
+            build_evidence(
+                source_type="official_site",
+                source_url="https://fe.szu.edu.cn/info/1021/1191.htm",
+                fetched_at=TIMESTAMP,
+                confidence=0.9,
+            )
+        ],
+        last_updated=TIMESTAMP,
+        quality_status="ready",
+    )
+
+
 def _service(tmp_path) -> DataSearchService:
     sql_store = SqliteReleasedObjectStore(tmp_path / "service.sqlite3")
     vector_store = MilvusVectorStore(
@@ -69,7 +98,11 @@ def _service(tmp_path) -> DataSearchService:
         collection_name="service_vectors",
     )
     sql_store.upsert_released_objects(
-        [_professor_record().to_released_object(), _paper_record().to_released_object()]
+        [
+            _professor_record().to_released_object(),
+            _paper_record().to_released_object(),
+            _professor_paper_link_record().to_released_object(),
+        ]
     )
     vector_store.upsert_released_objects(
         [_professor_record().to_released_object(), _paper_record().to_released_object()]

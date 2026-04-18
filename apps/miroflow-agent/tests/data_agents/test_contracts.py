@@ -11,6 +11,7 @@ from src.data_agents.contracts import (
     PaperRecord,
     PatentRecord,
     ProfessorCompanyRole,
+    ProfessorPaperLinkRecord,
     ProfessorRecord,
     ReleasedObject,
 )
@@ -55,13 +56,13 @@ def test_release_contracts_map_to_shared_released_object():
             )
         ],
         work_experience=["Analytical Engines advisor"],
+        paper_count=12,
         citation_count=128,
         profile_summary="Focuses on agent runtime design.",
         evaluation_summary="Has a strong publication and systems track record.",
         company_roles=[
             ProfessorCompanyRole(company_name="Analytical Engines", role="Advisor")
         ],
-        top_papers=["On the Analytical Engine"],
         patent_ids=["PAT-001"],
         evidence=[_evidence()],
         last_updated=TIMESTAMP,
@@ -143,6 +144,8 @@ def test_release_contracts_map_to_shared_released_object():
         }
     ]
     assert released[0].core_facts["work_experience"] == ["Analytical Engines advisor"]
+    assert released[0].core_facts["paper_count"] == 12
+    assert "top_papers" not in released[0].core_facts
     assert released[0].core_facts["citation_count"] == 128
     assert released[0].core_facts["patent_ids"] == ["PAT-001"]
     assert released[1].core_facts["normalized_name"] == "AnalyticalEngines"
@@ -157,6 +160,79 @@ def test_release_contracts_map_to_shared_released_object():
     assert released[3].core_facts["filing_date"] == "1843-01-01"
     assert released[3].core_facts["publication_date"] == "1844-01-01"
 
+
+
+
+def test_professor_paper_link_contract_maps_to_released_object():
+    record = ProfessorPaperLinkRecord(
+        id="PPLINK-001",
+        professor_id="PROF-001",
+        paper_id="PAPER-001",
+        professor_name="Ada Lovelace",
+        paper_title="On the Analytical Engine",
+        link_status="verified",
+        evidence_source="official_linked_google_scholar",
+        evidence_url="https://scholar.google.com/citations?user=ada",
+        match_reason="Official scholar profile contains the paper.",
+        verified_by="pipeline_v3",
+        evidence=[_evidence()],
+        last_updated=TIMESTAMP,
+    )
+
+    released = record.to_released_object()
+
+    assert released.object_type == "professor_paper_link"
+    assert released.core_facts["professor_id"] == "PROF-001"
+    assert released.core_facts["paper_id"] == "PAPER-001"
+    assert released.core_facts["link_status"] == "verified"
+    assert released.summary_fields["match_reason"] == "Official scholar profile contains the paper."
+
+
+def test_shared_contracts_default_to_non_ready_quality_status():
+    released = ReleasedObject(
+        id="OBJ-1",
+        object_type="paper",
+        display_name="Test Paper",
+        core_facts={"title": "Test Paper"},
+        summary_fields={"summary_text": "Test"},
+        evidence=[_evidence()],
+        last_updated=TIMESTAMP,
+    )
+    professor = ProfessorRecord(
+        id="PROF-001",
+        name="Ada Lovelace",
+        institution="SUSTech",
+        profile_summary="Focuses on agent runtime design.",
+        evidence=[_evidence()],
+        last_updated=TIMESTAMP,
+    )
+    paper = PaperRecord(
+        id="PAPER-001",
+        title="On the Analytical Engine",
+        authors=["Ada Lovelace"],
+        year=1843,
+        publication_date="1843-01-01",
+        summary_zh="介绍了分析机的设计与意义。",
+        summary_text="介绍了分析机的设计、背景、方法与影响。",
+        evidence=[_evidence()],
+        last_updated=TIMESTAMP,
+    )
+    link = ProfessorPaperLinkRecord(
+        id="PPLINK-001",
+        professor_id="PROF-001",
+        paper_id="PAPER-001",
+        professor_name="Ada Lovelace",
+        paper_title="On the Analytical Engine",
+        link_status="candidate",
+        match_reason="Awaiting verification.",
+        evidence=[_evidence()],
+        last_updated=TIMESTAMP,
+    )
+
+    assert released.quality_status == "needs_review"
+    assert professor.quality_status == "needs_review"
+    assert paper.quality_status == "needs_review"
+    assert link.quality_status == "needs_review"
 
 def test_released_object_requires_evidence():
     with pytest.raises(ValidationError, match="evidence"):

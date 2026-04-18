@@ -13,6 +13,7 @@ class DomainStats(BaseModel):
     name: str
     count: int
     quality: dict[str, int]
+    last_updated: str | None
 
 
 class DashboardResponse(BaseModel):
@@ -29,5 +30,14 @@ def get_dashboard(
     for name in domain_names:
         count = counts.get(name, 0)
         quality = store.quality_breakdown(name) if count > 0 else {}
-        domains.append(DomainStats(name=name, count=count, quality=quality))
+        last_updated_dt = store.get_domain_last_updated(name) if count > 0 else None
+        last_updated = last_updated_dt.isoformat() if last_updated_dt else None
+        domains.append(
+            DomainStats(
+                name=name,
+                count=count,
+                quality=quality,
+                last_updated=last_updated,
+            )
+        )
     return DashboardResponse(domains=domains)

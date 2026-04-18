@@ -4,6 +4,22 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True, slots=True)
+class PaperMetadataEnrichment:
+    abstract: str | None = None
+    venue: str | None = None
+    publication_date: str | None = None
+    citation_count: int | None = None
+    fields_of_study: tuple[str, ...] = ()
+    tldr: str | None = None
+    license: str | None = None
+    funders: tuple[str, ...] = ()
+    oa_status: str | None = None
+    reference_count: int | None = None
+    source_url: str | None = None
+    enrichment_sources: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
 class DiscoveredPaper:
     paper_id: str
     title: str
@@ -17,6 +33,13 @@ class DiscoveredPaper:
     professor_ids: tuple[str, ...]
     citation_count: int | None
     source_url: str
+    fields_of_study: tuple[str, ...] = ()
+    tldr: str | None = None
+    license: str | None = None
+    funders: tuple[str, ...] = ()
+    oa_status: str | None = None
+    reference_count: int | None = None
+    enrichment_sources: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,3 +59,10 @@ class ProfessorPaperDiscoveryResult:
     h_index: int | None
     citation_count: int | None
     papers: list[DiscoveredPaper]
+    paper_count: int | None = None
+    source: str | None = None
+    school_matched: bool = False
+    fallback_used: bool = False
+    name_disambiguation_conflict: bool = False
+    candidate_count: int = 0
+    query_name: str | None = None

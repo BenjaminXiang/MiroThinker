@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
+import requests
 
 from src.data_agents.contracts import CompanyRecord
 from src.data_agents.evidence import build_evidence, merge_evidence
@@ -242,6 +243,131 @@ def test_web_search_provider_exposes_example_aligned_request_surface(monkeypatch
         "Content-Type": "application/json",
         "X-API-KEY": "env-token",
     }
+
+
+def test_web_search_provider_falls_back_to_curl_on_ssl_transport_failure(monkeypatch):
+    monkeypatch.setenv("SERPER_API_KEY", "env-token")
+
+    class FailingSession:
+        def __init__(self):
+            self.calls = []
+            self.trust_env = True
+
+        def post(self, url, json, headers, timeout):
+            self.calls.append({"url": url, "json": json, "headers": headers, "timeout": timeout})
+            raise requests.exceptions.SSLError("tls eof")
+
+    runner_calls = []
+
+    def fake_runner(command, capture_output, text, timeout, check, env):
+        runner_calls.append({
+            "command": command,
+            "capture_output": capture_output,
+            "text": text,
+            "timeout": timeout,
+            "check": check,
+            "env": env,
+        })
+
+        class Result:
+            returncode = 0
+            stdout = '{"organic":[{"title":"Result from curl"}]}'
+            stderr = ''
+
+        return Result()
+
+    provider = WebSearchProvider(session=FailingSession(), curl_runner=fake_runner)
+    result = provider.search("apple inc")
+
+    assert result["organic"][0]["title"] == "Result from curl"
+    assert runner_calls[0]["command"][:5] == ["curl", "-sS", "--http1.1", "-X", "POST"]
+    assert "all_proxy" not in runner_calls[0]["env"]
+    assert provider.session.trust_env is False
+
+def test_web_search_provider_curl_fallback_keeps_api_key_out_of_argv(monkeypatch):
+    monkeypatch.setenv("SERPER_API_KEY", "env-token")
+
+    class FailingSession:
+        def __init__(self):
+            self.trust_env = True
+
+        def post(self, url, json, headers, timeout):
+            raise requests.exceptions.SSLError("tls eof")
+
+    runner_calls = []
+
+    def fake_runner(command, capture_output, text, timeout, check, env):
+        runner_calls.append(command)
+
+        class Result:
+            returncode = 0
+            stdout = '{"organic":[{"title":"Result from curl"}]}'
+            stderr = ''
+
+        return Result()
+
+    provider = WebSearchProvider(session=FailingSession(), curl_runner=fake_runner)
+
+    result = provider.search("apple inc")
+
+    assert result["organic"][0]["title"] == "Result from curl"
+    assert not any("env-token" in part for part in runner_calls[0])
+
+
+def test_web_search_provider_surfaces_serper_api_error_body(monkeypatch):
+    monkeypatch.setenv("SERPER_API_KEY", "env-token")
+
+    class ErrorResponse:
+        status_code = 400
+        text = '{"message":"Not enough credits","statusCode":400}'
+
+        def raise_for_status(self):
+            raise requests.exceptions.HTTPError("400 Client Error", response=self)
+
+    class ErrorSession:
+        def __init__(self):
+            self.calls = []
+            self.trust_env = True
+
+        def post(self, url, json, headers, timeout):
+            self.calls.append({"url": url, "json": json, "headers": headers, "timeout": timeout})
+            return ErrorResponse()
+
+    provider = WebSearchProvider(session=ErrorSession())
+
+    with pytest.raises(RuntimeError, match="Not enough credits"):
+        provider.search("apple inc")
+
+
+def test_web_search_provider_disables_after_serper_credit_exhaustion(monkeypatch):
+    monkeypatch.setenv("SERPER_API_KEY", "env-token")
+
+    class ErrorResponse:
+        status_code = 400
+        text = '{"message":"Not enough credits","statusCode":400}'
+
+        def raise_for_status(self):
+            raise requests.exceptions.HTTPError("400 Client Error", response=self)
+
+    class ErrorSession:
+        def __init__(self):
+            self.calls = []
+            self.trust_env = True
+
+        def post(self, url, json, headers, timeout):
+            self.calls.append({"url": url, "json": json, "headers": headers, "timeout": timeout})
+            return ErrorResponse()
+
+    session = ErrorSession()
+    provider = WebSearchProvider(session=session)
+
+    with pytest.raises(RuntimeError, match="Not enough credits"):
+        provider.search("apple inc")
+    with pytest.raises(RuntimeError, match="Not enough credits"):
+        provider.search("apple inc")
+
+    assert len(session.calls) == 1
+
 
 
 @pytest.mark.parametrize(

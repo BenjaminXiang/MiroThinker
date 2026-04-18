@@ -1,3 +1,7 @@
+# LEGACY (Round 7.5): professor pipeline v1/v2. Superseded by pipeline_v3.py which
+# adds Stage 4 homepage_crawler (LLM sub-page decision) and paper-driven
+# research direction clustering. Do not extend v2; extend v3 or write a new
+# pipeline. See docs/plans/2026-04-18-002 §3.2 and 2026-04-18-003 addenda.
 # SPDX-FileCopyrightText: 2026 MiroThinker Contributors
 # SPDX-License-Identifier: Apache-2.0
 """Professor Enrichment Pipeline v2 — orchestrator.
@@ -20,6 +24,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from src.data_agents.contracts import quality_status_compatibility_rows
 from src.data_agents.normalization import build_stable_id
 from src.data_agents.publish import publish_jsonl
 
@@ -29,6 +34,7 @@ from .enrichment import build_profile_record, normalize_text
 from .models import EnrichedProfessorProfile, MergedProfessorProfileRecord
 from .pipeline import run_professor_pipeline
 from .quality_gate import QualityResult, build_quality_report, evaluate_quality
+from .llm_profiles import resolve_professor_llm_settings
 
 logger = logging.getLogger(__name__)
 
@@ -38,14 +44,14 @@ class PipelineV2Config:
     seed_doc: Path
     output_dir: Path
     # LLM
-    local_llm_base_url: str = "http://star.sustech.edu.cn/service/model/qwen35/v1"
-    local_llm_model: str = "qwen3.5-35b-a3b"
+    local_llm_base_url: str = ""
+    local_llm_model: str = ""
     local_llm_api_key: str = ""
-    online_llm_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-    online_llm_model: str = "qwen3.6-plus"
+    online_llm_base_url: str = ""
+    online_llm_model: str = ""
     online_llm_api_key: str = ""
     # Embedding
-    embedding_base_url: str = "http://172.18.41.222:18005/v1"
+    embedding_base_url: str = "http://100.64.0.27:18005/v1"
     embedding_api_key: str = ""
     # Milvus
     milvus_uri: str = ""
@@ -64,6 +70,34 @@ class PipelineV2Config:
     # Limits
     limit: int | None = None  # Process at most N professors (for testing)
 
+    def __post_init__(self) -> None:
+        if (
+            self.local_llm_base_url
+            and self.local_llm_model
+            and self.local_llm_api_key is not None
+            and self.online_llm_base_url
+            and self.online_llm_model
+            and self.online_llm_api_key is not None
+        ):
+            return
+
+        defaults = resolve_professor_llm_settings(
+            default_profile="qwen35",
+            strict=False,
+        )
+        if not self.local_llm_base_url:
+            self.local_llm_base_url = defaults["local_llm_base_url"]
+        if not self.local_llm_model:
+            self.local_llm_model = defaults["local_llm_model"]
+        if not self.local_llm_api_key:
+            self.local_llm_api_key = defaults["local_llm_api_key"]
+        if not self.online_llm_base_url:
+            self.online_llm_base_url = defaults["online_llm_base_url"]
+        if not self.online_llm_model:
+            self.online_llm_model = defaults["online_llm_model"]
+        if not self.online_llm_api_key:
+            self.online_llm_api_key = defaults["online_llm_api_key"]
+
 
 @dataclass
 class PipelineV2Report:
@@ -79,6 +113,11 @@ class PipelineV2Report:
     papers_collected_total: int = 0
     paper_staging_count: int = 0
     avg_disambiguation_confidence: float = 0.0
+    paper_observation_count: int = 0
+    paper_school_hit_count: int = 0
+    paper_fallback_count: int = 0
+    paper_name_disambiguation_conflict_count: int = 0
+    paper_source_breakdown: dict[str, int] = field(default_factory=dict)
     # Stage 2c
     agent_triggered_count: int = 0
     agent_local_success_count: int = 0
@@ -301,8 +340,8 @@ async def run_professor_pipeline_v2(
     qreport = build_quality_report(quality_results)
     report.quality_distribution = {
         "ready": qreport.ready_count,
-        "incomplete": qreport.incomplete_count,
-        "shallow_summary": qreport.shallow_summary_count,
+        "needs_review": qreport.needs_review_count,
+        "low_confidence": qreport.low_confidence_count,
         "needs_enrichment": qreport.needs_enrichment_count,
     }
     report.alerts = qreport.alerts
@@ -315,6 +354,8 @@ async def run_professor_pipeline_v2(
                 "released": qreport.released_count,
                 "blocked": qreport.blocked_count,
                 "quality_distribution": report.quality_distribution,
+                "quality_distribution_legacy": qreport.legacy_breakdown,
+                "quality_status_compatibility": quality_status_compatibility_rows(),
                 "alerts": report.alerts,
             },
             ensure_ascii=False,
@@ -387,16 +428,26 @@ async def _process_single_professor(
         prof_id = _build_professor_id(profile)
         staging_records: list[PaperStagingRecord] = []
 
+        # Fetch profile page HTML — reused by both Stage 2b and 2c
+        from .discovery import fetch_html_with_fallback
+
+        profile_html = ""
+        try:
+            fetch_result = fetch_html_with_fallback(profile.profile_url, timeout=config.crawl_timeout)
+            if fetch_result.html:
+                profile_html = fetch_result.html
+        except Exception as e:
+            logger.debug("Failed to fetch profile HTML for %s: %s", profile.name, e)
+
+        def fetch_html(url: str, timeout: float) -> str:
+            result = fetch_html_with_fallback(url, timeout=timeout)
+            if result.html is not None:
+                return result.html
+            raise RuntimeError(f"unable to fetch html from {url}")
+
         # Stage 2b: paper collection
         try:
-            from .discovery import fetch_html_with_fallback
             from .paper_collector import enrich_from_papers
-
-            def fetch_html(url: str, timeout: float) -> str:
-                result = fetch_html_with_fallback(url, timeout=timeout)
-                if result.html is not None:
-                    return result.html
-                raise RuntimeError(f"unable to fetch html from {url}")
 
             paper_result = await enrich_from_papers(
                 name=profile.name,
@@ -404,6 +455,12 @@ async def _process_single_professor(
                 institution=profile.institution,
                 institution_en=None,
                 official_directions=profile.research_directions,
+                official_paper_count=profile.official_paper_count,
+                official_top_papers=profile.official_top_papers,
+                official_anchor_profile=profile.official_anchor_profile,
+                publication_evidence_urls=profile.publication_evidence_urls,
+                scholarly_profile_urls=profile.scholarly_profile_urls,
+                cv_urls=profile.cv_urls,
                 professor_id=prof_id,
                 fetch_html=fetch_html,
                 llm_client=local_client,
@@ -429,6 +486,17 @@ async def _process_single_professor(
             })
             staging_records = paper_result.staging_records
             report.papers_collected_total += len(paper_result.staging_records)
+            report.paper_observation_count += 1
+            if paper_result.school_matched:
+                report.paper_school_hit_count += 1
+            if paper_result.fallback_used:
+                report.paper_fallback_count += 1
+            if paper_result.name_disambiguation_conflict:
+                report.paper_name_disambiguation_conflict_count += 1
+            if paper_result.paper_source:
+                report.paper_source_breakdown[paper_result.paper_source] = (
+                    report.paper_source_breakdown.get(paper_result.paper_source, 0) + 1
+                )
         except Exception as e:
             logger.warning("Paper collection failed for %s: %s", profile.name, e)
 
@@ -442,7 +510,7 @@ async def _process_single_professor(
                 agent_result = await run_agent_enrichment(
                     profile=profile,
                     missing_fields=assessment.missing_fields,
-                    html_text="",  # TODO: pass actual page HTML
+                    html_text=profile_html,
                     local_llm_client=local_client,
                     local_llm_model=config.local_llm_model,
                     online_llm_client=online_client,
@@ -460,7 +528,7 @@ async def _process_single_professor(
                 logger.warning("Agent enrichment failed for %s: %s", profile.name, e)
                 report.agent_failed_count += 1
 
-        # Stage 3 (inline): generate summaries if needed
+        # Stage 3 (inline): generate profile_summary if needed
         if not profile.profile_summary or len(profile.profile_summary) < 200:
             try:
                 summaries = await _generate_summaries_for_profile(
@@ -468,12 +536,12 @@ async def _process_single_professor(
                 )
                 profile = profile.model_copy(update={
                     "profile_summary": summaries[0],
-                    "evaluation_summary": summaries[1],
+                    "evaluation_summary": "",
                 })
             except Exception:
                 profile = profile.model_copy(update={
                     "profile_summary": _build_fallback_summary(profile),
-                    "evaluation_summary": _build_fallback_eval(profile),
+                    "evaluation_summary": "",
                 })
 
         return profile, staging_records

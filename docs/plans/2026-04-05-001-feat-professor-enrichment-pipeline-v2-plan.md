@@ -1,9 +1,10 @@
 ---
 title: "feat: Professor Enrichment Pipeline v2 — LLM-Powered Agent-Driven Data Collection"
 type: feat
-status: active
+status: reference
 date: 2026-04-05
 origin: docs/superpowers/specs/2026-04-05-professor-enrichment-pipeline-v2-design.md
+superseded_by: docs/plans/2026-04-16-007-plan-portfolio-execution-roadmap.md
 ---
 
 # feat: Professor Enrichment Pipeline v2

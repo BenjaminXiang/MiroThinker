@@ -1,0 +1,64 @@
+name: postgres-tests
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'apps/miroflow-agent/alembic/**'
+      - 'apps/miroflow-agent/src/data_agents/storage/postgres/**'
+      - 'apps/miroflow-agent/tests/postgres/**'
+      - 'apps/admin-console/backend/**'
+      - '.github/workflows/postgres-tests.yml'
+
+jobs:
+  postgres-tests:
+    if: github.repository_owner == 'MiroMindAI'
+    name: postgres schema & integration tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: miroflow
+          POSTGRES_PASSWORD: miroflow
+          POSTGRES_DB: miroflow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U miroflow"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+
+    env:
+      DATABASE_URL: postgresql+psycopg://miroflow:miroflow@localhost:5432/miroflow_test
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Sync project
+        working-directory: apps/miroflow-agent
+        run: uv sync --frozen --no-install-project || uv sync
+
+      - name: Run alembic upgrade head
+        working-directory: apps/miroflow-agent
+        run: uv run alembic upgrade head
+
+      - name: Verify pgvector extension available
+        run: |
+          PGPASSWORD=miroflow psql -h localhost -U miroflow -d miroflow_test -c "CREATE EXTENSION IF NOT EXISTS vector;"
+          PGPASSWORD=miroflow psql -h localhost -U miroflow -d miroflow_test -c "SELECT extname, extversion FROM pg_extension WHERE extname='vector';"
+
+      - name: Run Postgres-backed tests (if present)
+        working-directory: apps/miroflow-agent
+        run: |
+          if [ -d "tests/postgres" ]; then
+            uv run pytest tests/postgres -v
+          else
+            echo "no tests/postgres directory yet; skipping"
+          fi

@@ -7,6 +7,14 @@ dependencies = [
     "miroflow-agent",
     "fastapi[standard]>=0.115.0",
     "uvicorn>=0.34.0",
+    "python-multipart>=0.0.20",
+    # Postgres access (plan 005 §9.6)
+    "psycopg[binary,pool]>=3.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
 ]
 
 [build-system]

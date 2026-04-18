@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+from dataclasses import replace
 import requests
 
 from src.data_agents.paper.hybrid import (
     discover_professor_paper_candidates_from_hybrid_sources,
 )
-from src.data_agents.paper.models import ProfessorPaperDiscoveryResult
+from src.data_agents.paper.models import DiscoveredPaper, ProfessorPaperDiscoveryResult
 
 
 def test_discover_professor_paper_candidates_from_hybrid_sources_falls_back_when_openalex_is_rate_limited(
@@ -45,6 +46,8 @@ def test_discover_professor_paper_candidates_from_hybrid_sources_falls_back_when
     assert result.author_id == "S2-1"
     assert result.h_index == 12
     assert result.citation_count == 345
+    assert result.fallback_used is True
+    assert result.source == "semantic_scholar"
 
 
 def test_discover_professor_paper_candidates_from_hybrid_sources_falls_back_when_openalex_has_no_exact_name_match(
@@ -91,6 +94,8 @@ def test_discover_professor_paper_candidates_from_hybrid_sources_falls_back_when
     assert result.author_id == "S2-2"
     assert result.h_index == 3
     assert result.citation_count == 42
+    assert result.fallback_used is True
+    assert result.source == "semantic_scholar"
 
 
 def test_discover_professor_paper_candidates_from_hybrid_sources_falls_back_to_crossref_when_semantic_scholar_is_rate_limited(
@@ -137,6 +142,8 @@ def test_discover_professor_paper_candidates_from_hybrid_sources_falls_back_to_c
 
     assert result.author_id == "crossref:PROF-3:丁南"
     assert result.citation_count == 9
+    assert result.fallback_used is True
+    assert result.source == "crossref"
 
 
 def test_discover_professor_paper_candidates_from_hybrid_sources_skips_semantic_scholar_after_waf_block(
@@ -269,3 +276,58 @@ def test_discover_professor_paper_candidates_from_hybrid_sources_skips_openalex_
     assert first_result.author_id == "S2:PROF-6"
     assert second_result.author_id == "S2:PROF-7"
     assert openalex_call_count == 1
+
+
+def test_discover_professor_paper_candidates_from_hybrid_sources_applies_doi_enrichment(
+    monkeypatch,
+) -> None:
+    base_result = ProfessorPaperDiscoveryResult(
+        professor_id="PROF-8",
+        professor_name="吴亚北",
+        institution="南方科技大学",
+        author_id="https://openalex.org/A1",
+        h_index=15,
+        citation_count=708,
+        papers=[
+            DiscoveredPaper(
+                paper_id="https://openalex.org/W1",
+                title="Twisted bilayer graphene",
+                year=2024,
+                publication_date="2024-01-01",
+                venue="Nature",
+                doi="10.1234/example",
+                arxiv_id=None,
+                abstract="Short abstract.",
+                authors=("Yabei Wu",),
+                professor_ids=("PROF-8",),
+                citation_count=80,
+                source_url="https://example.org/paper/w1",
+            )
+        ],
+    )
+
+    monkeypatch.setattr(
+        "src.data_agents.paper.hybrid.discover_professor_paper_candidates_from_openalex",
+        lambda **_kwargs: base_result,
+    )
+    monkeypatch.setattr(
+        "src.data_agents.paper.hybrid.enrich_discovered_papers_by_doi",
+        lambda papers: [
+            replace(
+                paper,
+                tldr="A concise DOI-enriched summary.",
+                enrichment_sources=("crossref", "semantic_scholar"),
+            )
+            for paper in papers
+        ],
+    )
+
+    result = discover_professor_paper_candidates_from_hybrid_sources(
+        professor_id="PROF-8",
+        professor_name="吴亚北",
+        institution="南方科技大学",
+        max_papers=5,
+    )
+
+    assert result.papers[0].tldr == "A concise DOI-enriched summary."
+    assert result.papers[0].enrichment_sources == ("crossref", "semantic_scholar")

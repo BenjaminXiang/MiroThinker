@@ -14,11 +14,9 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from src.data_agents.company.import_xlsx import import_company_xlsx
 from src.data_agents.company.release import build_company_release
+from src.data_agents.patent.exact_backfill import build_patent_release_from_sources
 from src.data_agents.patent.import_xlsx import import_patent_xlsx
-from src.data_agents.patent.release import (
-    build_patent_release,
-    publish_patent_release,
-)
+from src.data_agents.patent.release import publish_patent_release
 
 
 def _repo_root() -> Path:
@@ -31,6 +29,11 @@ def _default_patent_input() -> Path:
 
 def _default_company_input() -> Path:
     return _repo_root() / "docs" / "专辑项目导出1768807339.xlsx"
+
+
+def _default_supplement_patent_inputs() -> list[Path]:
+    path = _repo_root() / "docs" / "source_backfills" / "patent_exact_identifier_supplement.xlsx"
+    return [path] if path.exists() else []
 
 
 def _default_output_paths() -> tuple[Path, Path, Path]:
@@ -52,6 +55,13 @@ def main() -> int:
     parser.add_argument("--patent-output", type=Path, default=None)
     parser.add_argument("--released-output", type=Path, default=None)
     parser.add_argument("--report-output", type=Path, default=None)
+    parser.add_argument(
+        "--supplement-patent-input",
+        type=Path,
+        action="append",
+        default=None,
+        help="Optional extra patent workbook(s) with exact-identifier backfills.",
+    )
     args = parser.parse_args()
 
     patent_output, released_output, report_output = _default_output_paths()
@@ -62,7 +72,13 @@ def main() -> int:
     if args.report_output is not None:
         report_output = args.report_output
 
-    patent_import_result = import_patent_xlsx(args.patent_input)
+    supplement_patent_inputs = (
+        args.supplement_patent_input
+        if args.supplement_patent_input is not None
+        else _default_supplement_patent_inputs()
+    )
+    patent_inputs = [args.patent_input, *supplement_patent_inputs]
+    patent_import_reports = [asdict(import_patent_xlsx(path).report) for path in patent_inputs]
     company_import_result = import_company_xlsx(args.company_input, sheet_name="sheet1")
     company_release_result = build_company_release(
         records=company_import_result.records,
@@ -71,10 +87,10 @@ def main() -> int:
     company_name_to_id = {
         record.name: record.id for record in company_release_result.company_records
     }
-    patent_release_result = build_patent_release(
-        records=patent_import_result.records,
-        source_file=args.patent_input,
+    patent_release_result = build_patent_release_from_sources(
+        workbook_paths=patent_inputs,
         company_name_to_id=company_name_to_id,
+        now=datetime.now(timezone.utc),
     )
     publish_patent_release(
         patent_release_result,
@@ -83,9 +99,9 @@ def main() -> int:
     )
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "patent_input": str(args.patent_input),
+        "patent_inputs": [str(path) for path in patent_inputs],
         "company_input": str(args.company_input),
-        "patent_import_summary": asdict(patent_import_result.report),
+        "patent_import_summaries": patent_import_reports,
         "patent_release_summary": asdict(patent_release_result.report),
         "outputs": {
             "patent_records_jsonl": str(patent_output),

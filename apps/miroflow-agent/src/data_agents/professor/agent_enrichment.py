@@ -17,7 +17,9 @@ from typing import Any
 from pydantic import BaseModel, ValidationError
 
 from .cross_domain import CompanyLink, PatentLink
+from .homepage_crawler import _sanitize_title
 from .models import EducationEntry, EnrichedProfessorProfile, WorkEntry
+from .translation_spec import LLM_EXTRA_BODY, TRANSLATION_GUIDELINES
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +98,8 @@ h-index: {profile.h_index or "未知"} | 总引用: {profile.citation_count or "
 4. 工作经历请包含机构、职位、起止年份
 5. 企业关联请包含企业名称和角色
 
+{TRANSLATION_GUIDELINES}
+
 ## 输出格式
 严格按以下 JSON Schema 输出，不要包含任何其他文字:
 {schema}"""
@@ -112,26 +116,154 @@ def _parse_agent_output(text: str) -> AgentOutputModel:
     if start != -1 and end != -1 and end > start:
         content = content[start : end + 1]
 
-    return AgentOutputModel.model_validate_json(content)
+    data = json.loads(content)
+    data["education_structured"] = _filter_education_entries(
+        data.get("education_structured", [])
+    )
+    data["work_experience"] = _filter_work_entries(
+        data.get("work_experience", [])
+    )
+    data["company_roles"] = _filter_company_roles(
+        data.get("company_roles", [])
+    )
+    return AgentOutputModel.model_validate(data)
+
+
+def _filter_education_entries(entries: object) -> list[dict[str, Any]]:
+    if not isinstance(entries, list):
+        return []
+    filtered: list[dict[str, Any]] = []
+    for item in entries:
+        if not isinstance(item, dict):
+            continue
+        school = item.get("school") or item.get("institution")
+        if not school:
+            continue
+        normalized = dict(item)
+        normalized["school"] = school
+        filtered.append(normalized)
+    return filtered
+
+
+def _filter_work_entries(entries: object) -> list[dict[str, Any]]:
+    if not isinstance(entries, list):
+        return []
+    filtered: list[dict[str, Any]] = []
+    for item in entries:
+        if not isinstance(item, dict):
+            continue
+        organization = item.get("organization") or item.get("institution")
+        if not organization:
+            continue
+        normalized = dict(item)
+        normalized["organization"] = organization
+        filtered.append(normalized)
+    return filtered
+
+
+def _filter_company_roles(entries: object) -> list[dict[str, Any]]:
+    if not isinstance(entries, list):
+        return []
+    filtered: list[dict[str, Any]] = []
+    for item in entries:
+        if not isinstance(item, dict):
+            continue
+        company_name = item.get("company_name") or item.get("name")
+        role = item.get("role")
+        source = item.get("source")
+        if not isinstance(company_name, str) or not company_name.strip():
+            continue
+        if not isinstance(role, str) or not role.strip():
+            continue
+        if not isinstance(source, str) or not source.strip():
+            continue
+        normalized = dict(item)
+        normalized["company_name"] = company_name.strip()
+        normalized["role"] = role.strip()
+        normalized["source"] = source.strip()
+        filtered.append(normalized)
+    return filtered
+
+
+def _merge_string_list(existing: list[str], new: list[str]) -> list[str] | None:
+    """Merge two string lists, deduplicating by lowercase value. Returns None if no change."""
+    if not new:
+        return None
+    seen = {s.lower() for s in existing}
+    merged = list(existing)
+    for s in new:
+        if s.lower() not in seen:
+            seen.add(s.lower())
+            merged.append(s)
+    return merged if len(merged) > len(existing) else None
 
 
 def _merge_agent_output(
     profile: EnrichedProfessorProfile,
     output: AgentOutputModel,
 ) -> EnrichedProfessorProfile:
-    """Merge agent output into profile, not overwriting existing non-empty fields."""
+    """Merge agent output into profile, additively merging list fields."""
     updates: dict[str, Any] = {}
 
-    if output.education_structured and not profile.education_structured:
-        updates["education_structured"] = output.education_structured
-    if output.work_experience and not profile.work_experience:
-        updates["work_experience"] = output.work_experience
-    if output.awards and not profile.awards:
-        updates["awards"] = output.awards
-    if output.academic_positions and not profile.academic_positions:
-        updates["academic_positions"] = output.academic_positions
-    if output.projects and not profile.projects:
-        updates["projects"] = output.projects
+    if output.education_structured:
+        if not profile.education_structured:
+            updates["education_structured"] = output.education_structured
+        else:
+            # Dedupe by (institution, degree) key
+            existing_keys = {
+                (
+                    e.school.lower() if getattr(e, "school", None) else "",
+                    e.degree.lower() if getattr(e, "degree", None) else "",
+                )
+                for e in profile.education_structured
+            }
+            merged = list(profile.education_structured)
+            for e in output.education_structured:
+                key = (
+                    e.school.lower() if getattr(e, "school", None) else "",
+                    e.degree.lower() if getattr(e, "degree", None) else "",
+                )
+                if key not in existing_keys:
+                    existing_keys.add(key)
+                    merged.append(e)
+            if len(merged) > len(profile.education_structured):
+                updates["education_structured"] = merged
+
+    if output.work_experience:
+        if not profile.work_experience:
+            updates["work_experience"] = output.work_experience
+        else:
+            existing_keys = {
+                (
+                    w.organization.lower() if getattr(w, "organization", None) else "",
+                    w.role.lower() if getattr(w, "role", None) else "",
+                )
+                for w in profile.work_experience
+            }
+            merged = list(profile.work_experience)
+            for w in output.work_experience:
+                key = (
+                    w.organization.lower() if getattr(w, "organization", None) else "",
+                    w.role.lower() if getattr(w, "role", None) else "",
+                )
+                if key not in existing_keys:
+                    existing_keys.add(key)
+                    merged.append(w)
+            if len(merged) > len(profile.work_experience):
+                updates["work_experience"] = merged
+
+    awards_merged = _merge_string_list(profile.awards, output.awards)
+    if awards_merged is not None:
+        updates["awards"] = awards_merged
+
+    positions_merged = _merge_string_list(profile.academic_positions, output.academic_positions)
+    if positions_merged is not None:
+        updates["academic_positions"] = positions_merged
+
+    projects_merged = _merge_string_list(profile.projects, output.projects)
+    if projects_merged is not None:
+        updates["projects"] = projects_merged
+
     if output.company_roles and not profile.company_roles:
         updates["company_roles"] = output.company_roles
     if output.patent_ids and not profile.patent_ids:
@@ -139,7 +271,9 @@ def _merge_agent_output(
     if output.department and not profile.department:
         updates["department"] = output.department
     if output.title and not profile.title:
-        updates["title"] = output.title
+        sanitized_title = _sanitize_title(output.title)
+        if sanitized_title:
+            updates["title"] = sanitized_title
 
     if updates:
         return profile.model_copy(update=updates)
@@ -176,6 +310,7 @@ async def run_agent_enrichment(
             ],
             temperature=0.3,
             max_tokens=4096,
+            extra_body=LLM_EXTRA_BODY,
         )
         llm_calls += 1
         text = response.choices[0].message.content

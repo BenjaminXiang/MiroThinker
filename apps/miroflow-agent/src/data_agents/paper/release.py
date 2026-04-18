@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import logging
 import re
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
+
+from pydantic import ValidationError
 from pathlib import Path
 
 from src.data_agents.contracts import PaperRecord, ReleasedObject
@@ -12,6 +15,9 @@ from src.data_agents.normalization import build_stable_id
 from src.data_agents.publish import publish_jsonl
 
 from .models import DiscoveredPaper
+from .title_cleaner import clean_paper_title
+
+logger = logging.getLogger(__name__)
 
 _TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z0-9-]{2,}|[\u3400-\u4DBF\u4E00-\u9FFF]{2,8}")
 
@@ -44,12 +50,13 @@ def build_paper_release(
     skip_reasons: Counter[str] = Counter()
 
     for paper in merged_papers:
+        cleaned_title = clean_paper_title(paper.title)
         summary_zh = _build_summary_zh(paper)
         try:
             record = PaperRecord(
                 id=build_stable_id("paper", _paper_identity_key(paper)),
-                title=paper.title,
-                title_zh=paper.title,
+                title=cleaned_title,
+                title_zh=cleaned_title,
                 authors=list(paper.authors),
                 year=paper.year,
                 venue=paper.venue,
@@ -59,6 +66,13 @@ def build_paper_release(
                 publication_date=paper.publication_date,
                 keywords=_extract_keywords(paper),
                 citation_count=paper.citation_count,
+                fields_of_study=list(paper.fields_of_study),
+                tldr=paper.tldr,
+                license=paper.license,
+                funders=list(paper.funders),
+                oa_status=paper.oa_status,
+                reference_count=paper.reference_count,
+                enrichment_sources=list(paper.enrichment_sources),
                 pdf_path=None,
                 professor_ids=list(dict.fromkeys(paper.professor_ids)),
                 summary_zh=summary_zh,
@@ -73,9 +87,12 @@ def build_paper_release(
                 ],
                 last_updated=generated_at,
             )
-        except Exception:
+        except ValidationError:
             skip_reasons["contract_validation_failed"] += 1
             continue
+        except Exception:
+            logger.exception("Unexpected paper release failure for %s", paper.paper_id)
+            raise
 
         paper_records.append(record)
         released_objects.append(record.to_released_object())
@@ -116,20 +133,50 @@ def _dedupe_papers(papers: list[DiscoveredPaper]) -> list[DiscoveredPaper]:
     return list(merged.values())
 
 
-def _merge_paper(current: DiscoveredPaper, candidate: DiscoveredPaper) -> DiscoveredPaper:
+def _merge_paper(
+    current: DiscoveredPaper, candidate: DiscoveredPaper
+) -> DiscoveredPaper:
     return DiscoveredPaper(
-        paper_id=current.paper_id if len(current.paper_id) >= len(candidate.paper_id) else candidate.paper_id,
-        title=current.title if len(current.title) >= len(candidate.title) else candidate.title,
+        paper_id=current.paper_id
+        if len(current.paper_id) >= len(candidate.paper_id)
+        else candidate.paper_id,
+        title=(
+            current.title
+            if len(clean_paper_title(current.title))
+            >= len(clean_paper_title(candidate.title))
+            else candidate.title
+        ),
         year=max(current.year, candidate.year),
         publication_date=current.publication_date or candidate.publication_date,
         venue=current.venue or candidate.venue,
         doi=current.doi or candidate.doi,
         arxiv_id=current.arxiv_id or candidate.arxiv_id,
-        abstract=current.abstract if len(current.abstract or "") >= len(candidate.abstract or "") else candidate.abstract,
-        authors=current.authors if len(current.authors) >= len(candidate.authors) else candidate.authors,
-        professor_ids=tuple(dict.fromkeys([*current.professor_ids, *candidate.professor_ids])),
+        abstract=current.abstract
+        if len(current.abstract or "") >= len(candidate.abstract or "")
+        else candidate.abstract,
+        authors=current.authors
+        if len(current.authors) >= len(candidate.authors)
+        else candidate.authors,
+        professor_ids=tuple(
+            dict.fromkeys([*current.professor_ids, *candidate.professor_ids])
+        ),
         citation_count=max(current.citation_count or 0, candidate.citation_count or 0),
         source_url=current.source_url or candidate.source_url,
+        fields_of_study=_merge_unique_strings(
+            current.fields_of_study, candidate.fields_of_study
+        ),
+        tldr=current.tldr or candidate.tldr,
+        license=current.license or candidate.license,
+        funders=_merge_unique_strings(current.funders, candidate.funders),
+        oa_status=current.oa_status or candidate.oa_status,
+        reference_count=max(
+            current.reference_count or 0, candidate.reference_count or 0
+        )
+        or None,
+        enrichment_sources=_merge_unique_strings(
+            current.enrichment_sources,
+            candidate.enrichment_sources,
+        ),
     )
 
 
@@ -141,17 +188,23 @@ def _paper_identity_key(paper: DiscoveredPaper) -> str:
     return "|".join(
         [
             "title",
-            re.sub(r"\s+", "", paper.title).lower(),
+            re.sub(r"\s+", "", clean_paper_title(paper.title)).lower(),
             str(paper.year),
-            ",".join(sorted(author.strip().lower() for author in paper.authors if author.strip())),
+            ",".join(
+                sorted(
+                    author.strip().lower() for author in paper.authors if author.strip()
+                )
+            ),
         ]
     )
 
 
 def _build_summary_zh(paper: DiscoveredPaper) -> str:
-    title = paper.title.strip()
+    title = clean_paper_title(paper.title).strip()
     venue = (paper.venue or "未标注期刊/会议").strip()
-    abstract = (paper.abstract or "暂无公开摘要，当前摘要依据标题和发表信息生成。").strip()
+    abstract = (
+        paper.abstract or "暂无公开摘要，当前摘要依据标题和发表信息生成。"
+    ).strip()
     keywords = "、".join(_extract_keywords(paper)[:5]) or "暂无关键词"
     result = (
         f"what：论文《{title}》发表于{paper.year}年，发表载体为{venue}。"
@@ -179,3 +232,21 @@ def _extract_keywords(paper: DiscoveredPaper) -> list[str]:
         if len(keywords) >= 12:
             break
     return keywords
+
+
+def _merge_unique_strings(
+    left: tuple[str, ...],
+    right: tuple[str, ...],
+) -> tuple[str, ...]:
+    seen: set[str] = set()
+    merged: list[str] = []
+    for value in [*left, *right]:
+        item = value.strip()
+        if not item:
+            continue
+        key = item.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        merged.append(item)
+    return tuple(merged)

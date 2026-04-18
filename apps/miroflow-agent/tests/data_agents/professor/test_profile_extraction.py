@@ -162,3 +162,75 @@ def test_extract_professor_profile_ignores_subject_heading_when_title_contains_n
     )
 
     assert profile.name == "牛鹏涛"
+
+
+def test_extract_professor_profile_extracts_structured_research_directions_from_table_cells():
+    html = """
+    <html>
+      <body>
+        <h3 class="t-name">靳玉乐</h3>
+        <table>
+          <tr>
+            <th>研究方向</th>
+            <td>课程思政、 高等教育治理</td>
+          </tr>
+          <tr>
+            <th>邮箱</th>
+            <td>jinyule_AT_example.edu.cn</td>
+          </tr>
+        </table>
+      </body>
+    </html>
+    """
+
+    profile = extract_professor_profile(
+        html=html,
+        source_url="https://example.edu.cn/faculty/jinyule.html",
+        institution="深圳大学",
+        department="教育学部",
+    )
+
+    assert profile.name == "靳玉乐"
+    assert profile.research_directions == ("课程思政", "高等教育治理")
+
+
+def test_extract_professor_profile_rejects_section_heading_as_name_on_detail_page():
+    html = """
+    <html>
+      <head><title>工作履历-中山大学（深圳）材料学院</title></head>
+      <body>
+        <h1>工作履历</h1>
+        <div>中山大学（深圳）材料学院教授，长期从事材料科学研究。</div>
+        <div>邮箱：example@sysu.edu.cn</div>
+      </body>
+    </html>
+    """
+
+    profile = extract_professor_profile(
+        html=html,
+        source_url="http://materials.sysu.edu.cn/teacher/162",
+        institution="中山大学（深圳）",
+        department="材料学院",
+    )
+
+    assert profile.name is None
+
+
+def test_extract_professor_profile_uses_person_name_from_page_title_with_at_separator():
+    html = """
+    <html>
+      <head><title>Jianwei Huang @ CUHK</title></head>
+      <body>
+        <a href="Files/CV.pdf">CV</a>
+      </body>
+    </html>
+    """
+
+    profile = extract_professor_profile(
+        html=html,
+        source_url="https://jianwei.cuhk.edu.cn/",
+        institution="香港中文大学（深圳）",
+        department=None,
+    )
+
+    assert profile.name == "Jianwei Huang"

@@ -1,3 +1,6 @@
+# LEGACY (Round 7.5): v2 pipeline runner. Canonical professor data should now
+# come from pipeline_v3 + canonical_writer + run_real_e2e_professor_backfill.py.
+# Kept for reference; do not use for new data collection.
 #!/usr/bin/env python3
 # SPDX-FileCopyrightText: 2026 MiroThinker Contributors
 # SPDX-License-Identifier: Apache-2.0
@@ -33,6 +36,12 @@ from src.data_agents.professor.pipeline_v2 import (
     PipelineV2Config,
     run_professor_pipeline_v2,
 )
+from src.data_agents.professor.llm_profiles import (
+    render_professor_llm_profile_names,
+    resolve_professor_llm_settings,
+)
+
+_DEFAULT_LLM_PROFILE = "qwen35"
 
 
 def _repo_root() -> Path:
@@ -86,12 +95,32 @@ def main() -> int:
         help="Skip Milvus vectorization step.",
     )
     parser.add_argument(
+        "--llm-profile",
+        type=str,
+        default=None,
+        help=(
+            "LLM profile to use for local/online routing."
+            " Supported aliases: gemma, gemma4, qwen, qwen35, miro, mirothinker, ark, volc, volces, doubao."
+            f" Defaults to {_DEFAULT_LLM_PROFILE}."
+        ),
+    )
+    parser.add_argument(
         "--timeout",
         type=float,
         default=30.0,
         help="HTTP request timeout in seconds.",
     )
     args = parser.parse_args()
+
+    try:
+        llm_settings = resolve_professor_llm_settings(
+            profile_name=args.llm_profile,
+            default_profile=_DEFAULT_LLM_PROFILE,
+            strict=True,
+            include_profile=True,
+        )
+    except ValueError as exc:
+        parser.error(f"{exc} Available profiles: {render_professor_llm_profile_names()}")
 
     if not args.seed_doc.exists():
         print(
@@ -108,21 +137,15 @@ def main() -> int:
     config = PipelineV2Config(
         seed_doc=args.seed_doc,
         output_dir=args.output_dir,
-        local_llm_base_url=os.getenv(
-            "LOCAL_LLM_BASE_URL",
-            "http://star.sustech.edu.cn/service/model/qwen35/v1",
-        ),
-        local_llm_model=os.getenv("LOCAL_LLM_MODEL", "qwen3.5-35b-a3b"),
-        local_llm_api_key=os.getenv("API_KEY", ""),
-        online_llm_base_url=os.getenv(
-            "ONLINE_LLM_BASE_URL",
-            "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        ),
-        online_llm_model=os.getenv("ONLINE_LLM_MODEL", "qwen3.6-plus"),
-        online_llm_api_key=os.getenv("DASHSCOPE_API_KEY", ""),
+        local_llm_base_url=llm_settings["local_llm_base_url"],
+        local_llm_model=llm_settings["local_llm_model"],
+        local_llm_api_key=llm_settings["local_llm_api_key"],
+        online_llm_base_url=llm_settings["online_llm_base_url"],
+        online_llm_model=llm_settings["online_llm_model"],
+        online_llm_api_key=llm_settings["online_llm_api_key"],
         embedding_base_url="" if args.skip_vectorize else os.getenv(
             "EMBEDDING_BASE_URL",
-            "http://172.18.41.222:18005/v1",
+            "http://100.64.0.27:18005/v1",
         ),
         embedding_api_key=os.getenv("EMBEDDING_API_KEY", os.getenv("API_KEY", "")),
         milvus_uri=str(args.output_dir / "milvus.db"),
@@ -138,6 +161,7 @@ def main() -> int:
     report_dict = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "elapsed_seconds": round(elapsed, 1),
+        "llm_profile": llm_settings.get("llm_profile", _DEFAULT_LLM_PROFILE),
         "seed_document": str(args.seed_doc),
         "output_directory": str(args.output_dir),
         "report": {
@@ -154,6 +178,29 @@ def main() -> int:
                 "paper_enriched": result.report.paper_enriched_count,
                 "papers_collected_total": result.report.papers_collected_total,
                 "paper_staging_count": result.report.paper_staging_count,
+                "observability": {
+                    "observed": result.report.paper_observation_count,
+                    "school_hit_count": result.report.paper_school_hit_count,
+                    "fallback_count": result.report.paper_fallback_count,
+                    "name_disambiguation_conflict_count": result.report.paper_name_disambiguation_conflict_count,
+                    "school_hit_rate": (
+                        result.report.paper_school_hit_count / result.report.paper_observation_count
+                        if result.report.paper_observation_count
+                        else 0.0
+                    ),
+                    "fallback_rate": (
+                        result.report.paper_fallback_count / result.report.paper_observation_count
+                        if result.report.paper_observation_count
+                        else 0.0
+                    ),
+                    "name_disambiguation_conflict_rate": (
+                        result.report.paper_name_disambiguation_conflict_count
+                        / result.report.paper_observation_count
+                        if result.report.paper_observation_count
+                        else 0.0
+                    ),
+                    "source_breakdown": result.report.paper_source_breakdown,
+                },
             },
             "stage2c": {
                 "agent_triggered": result.report.agent_triggered_count,

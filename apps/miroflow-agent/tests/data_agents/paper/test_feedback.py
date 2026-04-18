@@ -33,7 +33,7 @@ def _professor_record() -> ProfessorRecord:
     )
 
 
-def test_apply_paper_feedback_to_professors_updates_metrics_top_papers_and_summary():
+def test_apply_paper_feedback_to_professors_updates_metrics_and_summary():
     updated = apply_paper_feedback_to_professors(
         professors=[_professor_record()],
         papers=[
@@ -67,7 +67,6 @@ def test_apply_paper_feedback_to_professors_updates_metrics_top_papers_and_summa
     professor = updated[0]
     assert professor.h_index == 3
     assert professor.citation_count == 9
-    assert professor.top_papers == ["要认真对待高校课程思政的“泛意识形态化”倾向"]
     assert "课程思政" in professor.research_directions
     assert "近期论文" in professor.profile_summary
     assert "h-index=3" in professor.evaluation_summary

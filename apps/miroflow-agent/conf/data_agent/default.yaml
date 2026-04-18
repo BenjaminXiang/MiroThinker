@@ -24,6 +24,6 @@ providers:
     timeout: 120.0
     api_key_env: "DASHSCOPE_API_KEY"
   embedding:
-    base_url: "http://172.18.41.222:18005/v1"
+    base_url: "http://100.64.0.27:18005/v1"
     model: "qwen3-embedding-8b"
     timeout: 60.0

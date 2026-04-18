@@ -92,9 +92,6 @@ def test_run_paper_pipeline_collects_papers_and_updates_professors():
     assert result.report.feedback_professor_count == 2
     assert len(result.paper_records) == 1
     assert len(result.updated_professors) == 2
-    assert result.updated_professors[0].top_papers == [
-        "要认真对待高校课程思政的“泛意识形态化”倾向"
-    ]
     assert result.updated_professors[0].h_index == 3
 
 

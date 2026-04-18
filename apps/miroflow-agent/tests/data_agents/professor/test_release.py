@@ -63,10 +63,9 @@ def test_build_professor_release_generates_contract_valid_record_with_fallback_s
     assert professor.id.startswith("PROF-")
     assert professor.id == release_result_again.professor_records[0].id
     assert professor.profile_summary
-    assert professor.evaluation_summary
+    assert professor.evaluation_summary == ""  # V3: no longer generated
     assert "李志" in professor.profile_summary
     assert 200 <= len(professor.profile_summary) <= 300
-    assert 100 <= len(professor.evaluation_summary) <= 150
     assert any(item.source_type == "official_site" for item in professor.evidence)
     assert any(item.source_type == "public_web" for item in professor.evidence)
     assert professor.email == "lizhi@sustech.edu.cn"

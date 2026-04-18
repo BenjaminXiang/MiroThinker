@@ -64,6 +64,69 @@ def test_invalid_sort_by_returns_422(client: TestClient):
 
 
 def test_health_endpoint(client: TestClient):
-    resp = client.get("/")
+    resp = client.get("/api/health")
     assert resp.status_code == 200
     assert resp.json() == {"status": "ok"}
+
+
+def test_get_professor_related_papers_uses_relation_objects(client: TestClient, populated_store):
+    from src.data_agents.contracts import ReleasedObject
+    from .conftest import _evidence, TIMESTAMP
+
+    paper = ReleasedObject(
+        id="PAPER-1",
+        object_type="paper",
+        display_name="On the Analytical Engine",
+        core_facts={"title": "On the Analytical Engine", "professor_ids": []},
+        summary_fields={"summary_text": "A paper."},
+        evidence=[_evidence()],
+        last_updated=TIMESTAMP,
+        quality_status="ready",
+    )
+    link = ReleasedObject(
+        id="PPLINK-1",
+        object_type="professor_paper_link",
+        display_name="靳玉乐 -> On the Analytical Engine",
+        core_facts={
+            "professor_id": "PROF-1",
+            "paper_id": "PAPER-1",
+            "link_status": "verified",
+            "professor_name": "靳玉乐",
+            "paper_title": "On the Analytical Engine",
+            "evidence_source": "official_linked_google_scholar",
+            "evidence_url": "https://scholar.google.com/citations?user=abc",
+            "verified_by": "pipeline_v3",
+        },
+        summary_fields={"match_reason": "Verified via official scholar profile."},
+        evidence=[_evidence()],
+        last_updated=TIMESTAMP,
+        quality_status="ready",
+    )
+    populated_store.upsert_released_objects([paper, link])
+
+    resp = client.get('/api/professor/PROF-1/related')
+    assert resp.status_code == 200
+    data = resp.json()
+    assert [item['id'] for item in data['papers']] == ['PAPER-1']
+
+
+def test_get_paper_related_professors_does_not_fallback_to_legacy_professor_ids(client: TestClient, populated_store):
+    from src.data_agents.contracts import ReleasedObject
+    from .conftest import _evidence, TIMESTAMP
+
+    paper = ReleasedObject(
+        id="PAPER-1",
+        object_type="paper",
+        display_name="On the Analytical Engine",
+        core_facts={"title": "On the Analytical Engine", "professor_ids": ["PROF-1"]},
+        summary_fields={"summary_text": "A paper."},
+        evidence=[_evidence()],
+        last_updated=TIMESTAMP,
+        quality_status="ready",
+    )
+    populated_store.upsert_released_objects([paper])
+
+    resp = client.get('/api/paper/PAPER-1/related')
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data['papers'] == []

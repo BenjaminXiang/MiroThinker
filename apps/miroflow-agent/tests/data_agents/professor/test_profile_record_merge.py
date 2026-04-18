@@ -29,7 +29,7 @@ def _extracted_profile(name: str) -> ExtractedProfessorProfile:
     )
 
 
-@pytest.mark.parametrize("junk_name", ["师资", "师资队伍", "首页", "南燕新闻"])
+@pytest.mark.parametrize("junk_name", ["师资", "师资队伍", "首页", "南燕新闻", "中山大学"])
 def test_build_profile_record_prefers_roster_name_when_extracted_name_is_navigation_junk(
     junk_name: str,
 ):
@@ -63,3 +63,34 @@ def test_build_profile_record_keeps_richer_roster_name_for_same_person():
     )
 
     assert record.name == "李志教授"
+
+
+def test_build_profile_record_keeps_roster_name_for_synthetic_anchor_profiles():
+    roster_seed = DiscoveredProfessorSeed(
+        name="杜鹤民",
+        institution="深圳技术大学",
+        department="创意设计学院",
+        profile_url="https://design.sztu.edu.cn/xygk/szdw/jytd.htm#prof-%E6%9D%9C%E9%B9%A4%E6%B0%91",
+        source_url="https://design.sztu.edu.cn/xygk/szdw/jytd.htm",
+    )
+    extracted = ExtractedProfessorProfile(
+        name="教研团队",
+        institution="深圳技术大学",
+        department="创意设计学院",
+        title=None,
+        email=None,
+        homepage_url="https://design.sztu.edu.cn/xygk/szdw/jytd.htm",
+        profile_url=roster_seed.profile_url,
+        office=None,
+        research_directions=[],
+        source_urls=[roster_seed.profile_url],
+    )
+
+    record = build_profile_record(
+        roster_seed=roster_seed,
+        extracted=extracted,
+        extraction_status="structured",
+        skip_reason=None,
+    )
+
+    assert record.name == "杜鹤民"

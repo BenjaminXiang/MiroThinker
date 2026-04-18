@@ -101,12 +101,12 @@ def build_professor_release(
 
         summaries = summary_builder(profile)
         profile_summary_raw = normalize_text(summaries.profile_summary)
-        evaluation_summary_raw = normalize_text(summaries.evaluation_summary)
-        if not profile_summary_raw or not evaluation_summary_raw:
+        if not profile_summary_raw:
             skip_reasons["invalid_summaries"] += 1
             continue
         profile_summary = _coerce_profile_summary(profile_summary_raw)
-        evaluation_summary = _coerce_evaluation_summary(evaluation_summary_raw)
+        evaluation_summary_raw = normalize_text(summaries.evaluation_summary)
+        evaluation_summary = _coerce_evaluation_summary(evaluation_summary_raw) if evaluation_summary_raw else ""
 
         evidence = _build_evidence_items(
             profile=profile,
@@ -146,7 +146,6 @@ def build_professor_release(
                 profile_summary=profile_summary,
                 evaluation_summary=evaluation_summary,
                 company_roles=[],
-                top_papers=[],
                 patent_ids=[],
                 evidence=evidence,
                 last_updated=generated_at,
@@ -272,21 +271,9 @@ def _build_rule_based_summaries(
             "在论文和企业域完成联动前，摘要仅覆盖已验证信息，不对缺失经历或成果做主观推断。",
         ),
     )
-    if _has_auxiliary_public_evidence(
-        profile,
-        official_domain_suffixes=official_domain_suffixes,
-    ):
-        evidence_statement = "当前包含辅助公开页面证据，可用于补充官网信息。"
-    else:
-        evidence_statement = "当前未检出辅助公开页面证据，已按官网锚点完成基础核验。"
-    evaluation_summary = (
-        f"{name}当前资料完整度为{profile.extraction_status}，已整理{source_count}条可追溯来源。"
-        f"{evidence_statement}研究方向与基础身份字段可直接用于检索过滤，"
-        "企业角色与代表论文字段暂为空，待跨域数据回填后更新。"
-    )
     return ProfessorSummaries(
         profile_summary=profile_summary,
-        evaluation_summary=evaluation_summary,
+        evaluation_summary="",
     )
 
 

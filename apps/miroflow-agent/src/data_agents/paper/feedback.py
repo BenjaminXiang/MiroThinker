@@ -55,11 +55,8 @@ def apply_paper_feedback_to_professors(
                     ),
                     "h_index": metrics.h_index if metrics else professor.h_index,
                     "citation_count": (
-                        metrics.citation_count
-                        if metrics
-                        else professor.citation_count
+                        metrics.citation_count if metrics else professor.citation_count
                     ),
-                    "top_papers": [paper.title for paper in related_papers[:5]],
                     "profile_summary": profile_summary,
                     "evaluation_summary": evaluation_summary,
                     "last_updated": updated_at,

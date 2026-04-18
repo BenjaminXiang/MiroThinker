@@ -1,3 +1,7 @@
+# LEGACY (Round 7.5): professor pipeline v1/v2. Superseded by pipeline_v3.py which
+# adds Stage 4 homepage_crawler (LLM sub-page decision) and paper-driven
+# research direction clustering. Do not extend v2; extend v3 or write a new
+# pipeline. See docs/plans/2026-04-18-002 §3.2 and 2026-04-18-003 addenda.
 from __future__ import annotations
 
 from collections import Counter
@@ -69,6 +73,7 @@ def run_professor_pipeline(
     official_domain_suffixes: tuple[str, ...] = ("sustech.edu.cn",),
     include_external_profiles: bool = False,
     skip_profile_fetch: bool = False,
+    max_profile_fetch: int | None = None,
     discover_professors: DiscoverProfessors | None = None,
     extract_profile: ExtractProfile | None = None,
     max_workers: int | None = None,
@@ -110,6 +115,8 @@ def run_professor_pipeline(
     partial_profile_count = 0
 
     ordered_professors = list(unique_professors.values())
+    if max_profile_fetch is not None:
+        ordered_professors = ordered_professors[:max_profile_fetch]
     fetched_profile_records: dict[int, MergedProfessorProfileRecord] = {}
     profile_jobs: list[tuple[int, DiscoveredProfessorSeed]] = []
 

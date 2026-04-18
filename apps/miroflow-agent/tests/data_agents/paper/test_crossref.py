@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from src.data_agents.paper.crossref import (
     discover_professor_paper_candidates_from_crossref,
+    enrich_paper_metadata_from_crossref,
 )
 
 
@@ -66,3 +67,39 @@ def test_discover_professor_paper_candidates_from_crossref_filters_exact_author_
     assert paper.professor_ids == ("PROF-1",)
     assert paper.citation_count == 123
     assert paper.source_url == "https://doi.org/10.1109/example"
+
+
+def test_enrich_paper_metadata_from_crossref_by_doi() -> None:
+    def fake_request_json(url: str, params: dict[str, object]) -> dict[str, object]:
+        assert url == "https://api.crossref.org/works/10.1109/example"
+        assert params["mailto"] == "mirothinker-data-agent@example.com"
+        return {
+            "message": {
+                "DOI": "10.1109/example",
+                "title": ["Networked Control Systems: A Survey"],
+                "published-online": {"date-parts": [[2017, 8, 1]]},
+                "container-title": ["IEEE TAC"],
+                "abstract": "<jats:p>Longer abstract from Crossref.</jats:p>",
+                "subject": ["Control Systems", "Automation"],
+                "license": [{"URL": "https://creativecommons.org/licenses/by/4.0/"}],
+                "funder": [{"name": "NSFC"}, {"name": "National Key R&D Program of China"}],
+                "reference-count": 77,
+                "URL": "https://doi.org/10.1109/example",
+            }
+        }
+
+    enrichment = enrich_paper_metadata_from_crossref(
+        "10.1109/example",
+        request_json=fake_request_json,
+    )
+
+    assert enrichment is not None
+    assert enrichment.abstract == "Longer abstract from Crossref."
+    assert enrichment.venue == "IEEE TAC"
+    assert enrichment.publication_date == "2017-08-01"
+    assert enrichment.fields_of_study == ("Control Systems", "Automation")
+    assert enrichment.license == "https://creativecommons.org/licenses/by/4.0/"
+    assert enrichment.funders == ("NSFC", "National Key R&D Program of China")
+    assert enrichment.reference_count == 77
+    assert enrichment.source_url == "https://doi.org/10.1109/example"
+    assert enrichment.enrichment_sources == ("crossref",)

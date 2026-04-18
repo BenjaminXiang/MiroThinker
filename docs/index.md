@@ -1,16 +1,40 @@
 # 深圳科创数据平台 — 文档导航
 
+## 当前权威入口
+
+- [工作区地图](../WORKSPACE.md)
+- [计划索引](./plans/index.md)
+- [解决方案与经验沉淀索引](./solutions/index.md)
+- [当前执行 authority](./plans/2026-04-16-007-plan-portfolio-execution-roadmap.md)
+- [教授主线当前操作口径](./solutions/workflow-issues/professor-pipeline-current-findings-and-operating-guidance-2026-04-16.md)
+- [教授主线已收住 / 未收住问题清单](./solutions/workflow-issues/professor-pipeline-current-closed-vs-open-issues-2026-04-16.md)
+
+## 当前主线任务
+
+- 当前唯一顶层执行 authority：
+  [2026-04-16-007-plan-portfolio-execution-roadmap.md](./plans/2026-04-16-007-plan-portfolio-execution-roadmap.md)
+- 当前下一波主线：
+  [2026-04-08-001-feat-paper-multi-source-priority-implementation-plan.md](./plans/2026-04-08-001-feat-paper-multi-source-priority-implementation-plan.md)
+- 当前排队但非主线任务：
+  [2026-04-06-001-feat-admin-console-phase2-upgrade-plan.md](./plans/2026-04-06-001-feat-admin-console-phase2-upgrade-plan.md)
+- 当前完成状态和待优化项判断：
+  [plans/index.md](./plans/index.md)
+  与
+  [solutions/index.md](./solutions/index.md)
+
 ## 文档层级
 
-本项目采用**分层文档结构**：
+本项目采用分层文档结构：
 
-- **共享技术规范**（[Data-Agent-Shared-Spec.md](./Data-Agent-Shared-Spec.md)）是所有数据域的权威源，定义架构、契约、质量标准和 MiroThinker 实现映射
-- **各域 PRD** 只定义该域的特有需求（数据来源、字段差异、采集流程、域特有校验）
-- **服务层 PRD**（[Agentic-RAG-PRD.md](./Agentic-RAG-PRD.md)）定义面向用户的检索和对话能力
+- **共享技术规范**：[Data-Agent-Shared-Spec.md](./Data-Agent-Shared-Spec.md)
+- **各域 PRD**：企业 / 教授 / 论文 / 专利
+- **服务层 PRD**：[Agentic-RAG-PRD.md](./Agentic-RAG-PRD.md)
+- **执行计划**：集中在 [plans/index.md](./plans/index.md)
+- **经验沉淀**：集中在 [solutions/index.md](./solutions/index.md)
 
 当共享规范与域 PRD 冲突时，以共享规范为准。
 
-## 文档依赖关系
+## 跨域依赖
 
 ```
 Data-Agent-Shared-Spec.md          ← 权威源
@@ -23,17 +47,18 @@ Agentic-RAG-PRD.md                 ← 消费四域数据的服务层
   └── Multi-turn-Context-Manager-Design.md
 ```
 
-跨域依赖：
-
 - 论文域依赖教授 roster 作为采集锚点
 - 论文信号反哺教授画像（`research_directions`、`profile_summary`）
 - 企业↔教授：通过企业库匹配 + 公开证据建立关联
 - 企业↔专利：通过标准化申请人名称建立关联
 - 教授↔专利：通过发明人 + 所属机构建立关联
 
-## 文档清单
+## 当前执行状态
 
-### 产品需求与架构
+- 当前执行 authority 与主线任务说明，见上面的“当前主线任务”。
+- 当前计划的 active / completed / reference 分类，统一以 [plans/index.md](./plans/index.md) 为准。
+
+## 产品需求与架构
 
 | 文档 | 用途 | 状态 |
 |------|------|------|
@@ -45,28 +70,29 @@ Agentic-RAG-PRD.md                 ← 消费四域数据的服务层
 | [Agentic-RAG-PRD.md](./Agentic-RAG-PRD.md) | 检索增强智能体（服务层） | 活跃 |
 | [Multi-turn-Context-Manager-Design.md](./Multi-turn-Context-Manager-Design.md) | 多轮对话上下文管理器设计 | 活跃 |
 
-### 使用说明
+## 使用说明
 
 | 文档 | 用途 | 状态 |
 |------|------|------|
-| [Professor-Pipeline-V2-User-Guide.md](./Professor-Pipeline-V2-User-Guide.md) | 教授 Pipeline V2 使用说明（运行、配置、检索、排查） | 活跃 |
+| [Professor-Pipeline-V2-User-Guide.md](./Professor-Pipeline-V2-User-Guide.md) | 教授 Pipeline 运行、配置、检索、排查 | 活跃 |
+| [Codex-Claude-Cross-Review-Usage.md](./Codex-Claude-Cross-Review-Usage.md) | Codex 主控 + Claude CLI 交叉 review 工作流 | 活跃 |
 
-### 设计文档与实现计划
+## 计划与实现上下文
 
-| 文档 | 用途 | 状态 |
+| 分组 | 入口 | 说明 |
 |------|------|------|
-| [教授 Pipeline V2 设计规范](./superpowers/specs/2026-04-05-professor-enrichment-pipeline-v2-design.md) | 教授管线 v2 全面改造设计 | 已实现 |
-| [Agentic RAG 实现计划](./superpowers/plans/2026-03-31-agentic-rag-implementation.md) | RAG 服务层实现路线图 | 待启动 |
-| [Admin Console 计划](./plans/2026-04-04-001-feat-admin-console-plan.md) | 管理后台功能计划 | 已实现 |
-| [教授 Pipeline V2 计划](./plans/2026-04-05-001-feat-professor-enrichment-pipeline-v2-plan.md) | 教授管线 v2 实现计划 | 已实现 |
+| 当前计划入口 | [plans/index.md](./plans/index.md) | 先看 active / completed / reference 分类 |
+| 当前 authority | [2026-04-16-007-plan-portfolio-execution-roadmap.md](./plans/2026-04-16-007-plan-portfolio-execution-roadmap.md) | 当前执行顺序与波次状态 |
+| 历史设计上下文 | [superpowers/specs/2026-04-05-professor-enrichment-pipeline-v2-design.md](./superpowers/specs/2026-04-05-professor-enrichment-pipeline-v2-design.md) | 历史设计背景 |
+| 历史实现路线 | [superpowers/plans/2026-03-31-agentic-rag-implementation.md](./superpowers/plans/2026-03-31-agentic-rag-implementation.md) | 早期 RAG 实现路线 |
 
-### 经验沉淀
+## 经验沉淀入口
 
-| 文档 | 用途 |
-|------|------|
-| [Admin Console 模式](./solutions/admin-console-fastapi-sqlite-patterns-2026-04-04.md) | FastAPI + SQLite 分页、LIKE 转义、路由冲突 |
-| [教授 Pipeline V2 部署](./solutions/professor-pipeline-v2-deployment-patterns-2026-04-05.md) | Milvus Lite、嵌入模型、域名匹配、代理 SSL |
-| [数据代理 E2E 门控](./solutions/workflow-issues/data-agent-real-e2e-gates-2026-04-02.md) | 真实 E2E 验收标准 |
+- [解决方案与经验沉淀索引](./solutions/index.md)
+- [教授数据采集当前发现与操作经验汇总](./solutions/workflow-issues/professor-pipeline-current-findings-and-operating-guidance-2026-04-16.md)
+- [教授 Pipeline 当前已收住与剩余旁路问题清单](./solutions/workflow-issues/professor-pipeline-current-closed-vs-open-issues-2026-04-16.md)
+- [实现测试集答案 Workbook 覆盖度验证](./solutions/workflow-issues/testset-answer-workbook-coverage-validation-2026-04-16.md)
+- [Workbook Closure via Source Backfill](./solutions/best-practices/workbook-closure-via-source-backfill-and-serving-side-knowledge-fields-2026-04-16.md)
 
 ---
 

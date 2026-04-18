@@ -226,6 +226,7 @@ data/
 
 # Local secrets and environment
 .sglang_api_key
+.serper_api_key
 .python-version
 
 # AI tool local state
@@ -254,3 +255,22 @@ apps/collect-trace/scripts/*/*.sh
 worktrees/
 .gstack/
 node_modules/
+
+# Local DB dumps / one-off backups
+backups/
+/tmp/
+
+# uv cache inside repo (when HOME is restricted)
+.uv-cache/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# External AI tool scratch workspaces
+_bmad/
+local-skills/
+/scripts/
+/tests/
+
+# Root-level xlsx uploads
+*.xlsx

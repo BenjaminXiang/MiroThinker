@@ -103,6 +103,22 @@ class WorkEntry(BaseModel):
     end_year: int | None = None
 
 
+class OfficialAnchorProfile(BaseModel):
+    """Official anchor facts extracted only from the main official teacher page."""
+
+    source_url: str
+    title: str | None = None
+    email: str | None = None
+    bio_text: str = ""
+    research_topics: list[str] = []
+    education_lines: list[str] = []
+    award_lines: list[str] = []
+    work_role_lines: list[str] = []
+    english_name_candidates: list[str] = []
+    topic_tokens: list[str] = []
+    sparse_anchor: bool = True
+
+
 class EnrichedProfessorProfile(BaseModel):
     """Stage 2 output — fully enriched professor profile.
 
@@ -126,13 +142,19 @@ class EnrichedProfessorProfile(BaseModel):
     citation_count: int | None = None
     paper_count: int | None = None
     top_papers: list[PaperLink] = []
+    official_paper_count: int | None = None
+    official_top_papers: list[PaperLink] = []
+    publication_evidence_urls: list[str] = []
+    scholarly_profile_urls: list[str] = []
+    cv_urls: list[str] = []
+    official_anchor_profile: OfficialAnchorProfile | None = None
     awards: list[str] = []
     academic_positions: list[str] = []
     projects: list[str] = []
     company_roles: list[CompanyLink] = []
     patent_ids: list[PatentLink] = []
     profile_summary: str = ""
-    evaluation_summary: str = ""
+    evaluation_summary: str = ""  # V3: no longer generated, kept for backward compat
     enrichment_source: str = "regex_only"  # "regex_only" | "paper_enriched" | "agent_local" | "agent_online"
     evidence_urls: list[str] = []
     field_provenance: dict[str, str] = {}

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import json
 import re
 from urllib.parse import quote, urljoin, urlparse
 
 from bs4 import BeautifulSoup, Tag
 
 from .models import DiscoveredProfessorSeed
+from .school_adapters import SchoolRosterAdapter, find_matching_school_adapter
 
 _NON_PERSON_KEYWORDS = {
     "教师",
@@ -25,7 +27,10 @@ _NON_PERSON_KEYWORDS = {
     "faculty",
     "development",
     "english",
-    "en",
+    "teaching",
+    "presentation",
+    "presentations",
+    "service",
     "发展历程",
     "访问量排序",
     "教辅人员",
@@ -63,6 +68,61 @@ _NON_PERSON_KEYWORDS = {
     "中国哲学",
     "中国史",
     "汉语国际教育系",
+    "教学名师",
+    "师资力量",
+    "返回主站",
+    "院长致辞",
+    "院长专区",
+    "院长寄语",
+    "院长讲话",
+    "院长采访",
+    "院长视频",
+    "专业设置",
+    "本科专业",
+    "研究人员",
+    "博士生",
+    "学生活动",
+    "学生风采",
+    "创新创意",
+    "学院资讯",
+    "学院新闻",
+    "最新公告",
+    "活动预告",
+    "国际交流",
+    "关于我们",
+    "国际顾问",
+    "院系介绍",
+    "师资概况",
+    "教育教学",
+    "本科教学",
+    "研究生教学",
+    "实验课程",
+    "导师介绍",
+    "行政教辅",
+    "学术委员会",
+    "科教融汇",
+    "产教融合",
+    "产业联盟",
+    "投资基金",
+    "校园风景",
+    "活动照片",
+    "历年毕业照",
+    "重要新闻",
+    "科研进展",
+    "综合新闻",
+    "讲座通知",
+    "学生工作",
+    "学术交流",
+    "行政服务",
+    "人才培养",
+    "荣誉教授",
+    "荣休人员",
+    "客座教授",
+    "机构设置",
+    "团学风采",
+    "本科生",
+    "研究生",
+    "why med",
 }
 _CARD_HINT_CLASS_TOKENS = {
     "teacherlist",
@@ -74,7 +134,24 @@ _CARD_HINT_CLASS_TOKENS = {
 }
 _NAME_CLASS_TOKENS = {"t-name", "name"}
 _PROFILE_PATH_HINTS = ("teacher", "teachers", "faculty", "faculties", "profile", "people", "info/")
-_PROFILE_PATH_BLOCKLIST = ("index", "list", "letter", "search", "teacher-search", "szdw", "jsjj")
+_PROFILE_PATH_BLOCKLIST = (
+    "index",
+    "list",
+    "letter",
+    "search",
+    "teacher-search",
+    "szdw",
+    "jsjj",
+    "xyjj",
+    "xzfw",
+    "rcpy",
+    "ryjs",
+    "szgk",
+    "jyxl",
+    "yjxl",
+    "jfxl",
+    "xzxl",
+)
 _ROSTER_LINK_TEXT_HINTS = ("师资", "教师", "导师", "教授", "faculty", "teacher", "people", "roster")
 _ROSTER_LINK_PATH_HINTS = ("szdw", "jsjj", "faculty", "teacher", "teachers", "people")
 _MARKDOWN_LINK_RE = re.compile(
@@ -104,11 +181,38 @@ _LATIN_ROLE_STOPWORDS = {
     "Ocean",
     "Physics",
     "Science",
+    "Student",
     "Technology",
+    "Training",
     "Urban",
     "Water",
 }
 _DEPARTMENT_LABEL_RE = re.compile(r"[\u3400-\u4DBF\u4E00-\u9FFFA-Za-z（）()·]+(?:学院|学部|系|中心|书院|研究院|实验室)")
+_TITLE_SUFFIX_RE = re.compile(
+    r"(?:校长学勤讲座教授|校长永平讲座教授|校长讲座教授|特聘杰出教授|讲席教授|特聘教授|杰出教授|教研助理教授|教研副教授|教研教授|教学正教授|教学副教授|教学教授|助理教授|副教授|教授|副研究员|研究员|博士生导师|博导)+$"
+)
+_HEADING_PROFILE_ROLE_HINTS = (
+    "教授",
+    "副教授",
+    "助理教授",
+    "讲席教授",
+    "特聘教授",
+    "研究员",
+    "副研究员",
+    "工程师",
+    "实验师",
+    "导师",
+    "院长",
+    "副院长",
+    "个人简介",
+)
+_HEADING_PROFILE_BLOCK_HINTS = ("友情链接", "联系我们", "copyright")
+_HEADING_PROFILE_BLOCK_PATTERNS = (
+    re.compile(r"\bback to top\b", re.IGNORECASE),
+    re.compile(r"\btop of page\b", re.IGNORECASE),
+    re.compile(r"回到顶部"),
+)
+_EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 
 
 def extract_roster_entries(
@@ -126,6 +230,11 @@ def extract_roster_entries(
         )
         if hit_entries:
             return hit_entries
+    school_adapter = find_matching_school_adapter(source_url, _SCHOOL_ROSTER_ADAPTERS)
+    if school_adapter is not None:
+        adapter_entries = school_adapter.extract(html, institution, department, source_url)
+        if adapter_entries:
+            return adapter_entries
     site_specific_profile_links = _extract_site_specific_markdown_profile_links(
         markdown=html,
         source_url=source_url,
@@ -135,8 +244,16 @@ def extract_roster_entries(
     else:
         candidate_links: list[tuple[str, str]] = []
     if not candidate_links:
+        candidate_links = _extract_inline_record_profile_links(html)
+    if not candidate_links:
+        candidate_links = _extract_markdown_heading_profile_links(html, source_url)
+    if not candidate_links:
         soup = BeautifulSoup(html, "html.parser")
         candidate_links = _extract_site_specific_html_profile_links(soup, source_url)
+        if not candidate_links:
+            candidate_links = _extract_heading_profile_links(soup, source_url)
+        if not candidate_links:
+            candidate_links = _extract_info_profile_links(soup)
         if not candidate_links and _should_skip_direct_entry_extraction(source_url, html):
             return []
         if not candidate_links:
@@ -146,6 +263,21 @@ def extract_roster_entries(
         if not candidate_links:
             candidate_links = _extract_markdown_profile_links(html)
 
+    return _build_discovered_professor_seeds(
+        candidate_links,
+        institution=institution,
+        department=department,
+        source_url=source_url,
+    )
+
+
+def _build_discovered_professor_seeds(
+    candidate_links: list[tuple[str, str]],
+    *,
+    institution: str,
+    department: str | None,
+    source_url: str,
+) -> list[DiscoveredProfessorSeed]:
     deduped: dict[tuple[str, str, str], DiscoveredProfessorSeed] = {}
     for href, raw_name in candidate_links:
         name = _normalize_person_name(raw_name)
@@ -179,6 +311,8 @@ def extract_roster_page_links(html: str, source_url: str) -> list[tuple[str, str
             links = _extract_generic_roster_links(soup, source_url)
         if not links:
             links = _extract_markdown_roster_links(html)
+        if not links:
+            links = _extract_inline_redirect_links(html)
     deduped: dict[str, str] = {}
     for href, label in links:
         absolute_url = _normalize_profile_url(source_url, href)
@@ -205,6 +339,24 @@ def _extract_card_links(soup: BeautifulSoup) -> list[tuple[str, str]]:
         if not href:
             continue
         links.append((href, name_text))
+    return links
+
+
+def _extract_info_profile_links(soup: BeautifulSoup) -> list[tuple[str, str]]:
+    links: list[tuple[str, str]] = []
+    for anchor in soup.select('a[href*="info/"]'):
+        href = str(anchor.get("href", "")).strip()
+        if not href:
+            continue
+        text = anchor.get_text(" ", strip=True) or str(anchor.get("title", "")).strip()
+        if not text:
+            title_node = _find_nearby_title_node(anchor)
+            if title_node is not None:
+                text = title_node.get_text(" ", strip=True)
+        candidate_name = _extract_candidate_person_name(text)
+        if not candidate_name or not _is_likely_professor_name(candidate_name):
+            continue
+        links.append((href, candidate_name))
     return links
 
 
@@ -251,6 +403,14 @@ def _extract_site_specific_hub_links(
         return _extract_links_from_selectors(soup, ("ul.l18-q h4 a",))
     if hostname.endswith("pkusz.edu.cn"):
         return _extract_links_from_selectors(soup, ("div.szdw_jsdw .szdw_bd a",))
+    if hostname == "ise.sysu.edu.cn" and parsed.path.rstrip("/").lower() == "/teachers":
+        return _extract_links_from_selectors(
+            soup,
+            (
+                'a[href="/teacher"]',
+                'a[href*="/Faculty/"]',
+            ),
+        )
     return []
 
 
@@ -367,9 +527,10 @@ def _normalize_profile_url(source_url: str, href: str) -> str:
 
 
 def _normalize_person_name(value: str) -> str:
-    value = value.replace("\ufeff", "").replace("\u3000", " ")
+    value = value.replace("\ufeff", "").replace("\u200b", "").replace("\u3000", " ")
     value = re.sub(r"\s+", " ", value).strip()
     value = re.sub(r"[（(].*?[）)]", "", value)
+    value = _TITLE_SUFFIX_RE.sub("", value).strip()
     if re.search(r"[\u3400-\u4DBF\u4E00-\u9FFF]", value):
         value = value.replace(" ", "")
     return value.strip("：:;；,，")
@@ -415,6 +576,8 @@ def _is_likely_professor_name(name: str) -> bool:
         if keyword in lowered:
             return False
     if re.fullmatch(r"[\u3400-\u4DBF\u4E00-\u9FFF·]+", name):
+        if name.endswith(("大学", "学院", "学部", "研究院", "实验室", "中心", "博士后")):
+            return False
         if "·" in name:
             return 2 <= len(name) <= 8
         return len(name) <= 4
@@ -438,6 +601,15 @@ def _should_skip_direct_entry_extraction(source_url: str, html: str) -> bool:
             return False
         return True
     if hostname == "www.szu.edu.cn" and path in {"/szdw/jsjj.htm", "/yxjg/xbxy.htm"}:
+        return True
+    if hostname.endswith("sztu.edu.cn") and path.endswith("/szdw.htm"):
+        lowered_html = html.lower()
+        if all(
+            marker in lowered_html
+            for marker in ("教研序列", "研究序列", "教辅序列", "行政序列")
+        ):
+            return True
+    if hostname == "ise.sysu.edu.cn" and path == "/teachers":
         return True
     if hostname.endswith("szu.edu.cn") and _is_szu_profile_detail_page(source_url):
         return True
@@ -500,6 +672,8 @@ def _extract_site_specific_markdown_profile_links(
         return _extract_szu_markdown_profile_links(markdown)
     if hostname == "csce.suat-sz.edu.cn" and path == "/szdw.htm":
         return _extract_suat_profile_links(markdown)
+    if hostname.endswith("cuhk.edu.cn") and "teacher-search" in path:
+        return extract_cuhk_markdown_profile_links(markdown)
     return []
 
 
@@ -510,6 +684,10 @@ def _extract_site_specific_html_profile_links(
     parsed = urlparse(source_url)
     hostname = (parsed.hostname or "").lower()
     path = parsed.path.rstrip("/")
+    if hostname.endswith("cuhk.edu.cn") and "teacher-search" in path:
+        return extract_cuhk_profile_links(soup)
+    if hostname.endswith("sysu.edu.cn"):
+        return _extract_sysu_drupal_profile_links(soup)
     if hostname.endswith("szu.edu.cn"):
         return _extract_szu_profile_links(soup)
     if hostname == "www.ece.pku.edu.cn" and path.startswith("/szdw"):
@@ -517,6 +695,167 @@ def _extract_site_specific_html_profile_links(
     if _is_pkusz_teacher_page(source_url):
         return _extract_pkusz_profile_links(soup)
     return []
+
+
+def _matches_sustech_roster_family(source_url: str) -> bool:
+    parsed = urlparse(source_url)
+    hostname = (parsed.hostname or "").lower()
+    path = parsed.path.rstrip("/").lower()
+    return hostname == "www.sustech.edu.cn" and path in {"/zh/letter", "/zh/faculty_members.html"}
+
+
+def _matches_szu_teacher_family(source_url: str) -> bool:
+    parsed = urlparse(source_url)
+    hostname = (parsed.hostname or "").lower()
+    path = parsed.path.lower()
+    return hostname.endswith("szu.edu.cn") and not _is_szu_profile_detail_page(source_url) and any(
+        token in path for token in ("/szdw", "/jsjj", "/jsml", "/jsfc", "/teacher", "/faculty")
+    )
+
+
+def _matches_suat_teacher_family(source_url: str) -> bool:
+    parsed = urlparse(source_url)
+    hostname = (parsed.hostname or "").lower()
+    path = parsed.path.lower()
+    return hostname.endswith("suat-sz.edu.cn") and any(
+        token in path for token in ("/szdw", "/szll", "/teacher", "/faculty")
+    )
+
+
+def _matches_cuhk_teacher_search(source_url: str) -> bool:
+    parsed = urlparse(source_url)
+    hostname = (parsed.hostname or "").lower()
+    return hostname.endswith("cuhk.edu.cn") and "teacher-search" in parsed.path.lower()
+
+
+def _matches_sysu_faculty_staff_family(source_url: str) -> bool:
+    parsed = urlparse(source_url)
+    hostname = (parsed.hostname or "").lower()
+    path = parsed.path.lower()
+    return hostname.endswith("sysu.edu.cn") and any(
+        token in path for token in ("/faculty", "/staff", "/teacher", "/teachers")
+    )
+
+
+def _extract_sustech_roster_adapter_entries(
+    html: str,
+    institution: str,
+    department: str | None,
+    source_url: str,
+) -> list[DiscoveredProfessorSeed]:
+    candidate_links = _extract_sustech_profile_links(html)
+    return _build_discovered_professor_seeds(
+        candidate_links,
+        institution=institution,
+        department=department,
+        source_url=source_url,
+    )
+
+
+def _extract_szu_teacher_adapter_entries(
+    html: str,
+    institution: str,
+    department: str | None,
+    source_url: str,
+) -> list[DiscoveredProfessorSeed]:
+    soup = BeautifulSoup(html, "html.parser")
+    candidate_links = _extract_szu_profile_links(soup)
+    if not candidate_links:
+        candidate_links = _extract_szu_markdown_profile_links(html)
+    if not candidate_links:
+        candidate_links = _extract_heading_profile_links(soup, source_url)
+    return _build_discovered_professor_seeds(
+        candidate_links,
+        institution=institution,
+        department=department,
+        source_url=source_url,
+    )
+
+
+def _extract_suat_teacher_adapter_entries(
+    html: str,
+    institution: str,
+    department: str | None,
+    source_url: str,
+) -> list[DiscoveredProfessorSeed]:
+    candidate_links = _extract_suat_profile_links(html)
+    if not candidate_links:
+        soup = BeautifulSoup(html, "html.parser")
+        candidate_links = _extract_heading_profile_links(soup, source_url)
+    return _build_discovered_professor_seeds(
+        candidate_links,
+        institution=institution,
+        department=department,
+        source_url=source_url,
+    )
+
+
+def _extract_cuhk_teacher_search_adapter_entries(
+    html: str,
+    institution: str,
+    department: str | None,
+    source_url: str,
+) -> list[DiscoveredProfessorSeed]:
+    candidate_links = extract_cuhk_markdown_profile_links(html)
+    if not candidate_links:
+        candidate_links = extract_cuhk_profile_links(BeautifulSoup(html, "html.parser"))
+    return _build_discovered_professor_seeds(
+        candidate_links,
+        institution=institution,
+        department=department,
+        source_url=source_url,
+    )
+
+
+def _extract_sysu_faculty_staff_adapter_entries(
+    html: str,
+    institution: str,
+    department: str | None,
+    source_url: str,
+) -> list[DiscoveredProfessorSeed]:
+    soup = BeautifulSoup(html, "html.parser")
+    candidate_links = _extract_sysu_drupal_profile_links(soup)
+    if not candidate_links:
+        candidate_links = _extract_heading_profile_links(soup, source_url)
+    if not candidate_links:
+        candidate_links = _extract_markdown_profile_links(html)
+    if not candidate_links:
+        candidate_links = _extract_markdown_heading_profile_links(html, source_url)
+    return _build_discovered_professor_seeds(
+        candidate_links,
+        institution=institution,
+        department=department,
+        source_url=source_url,
+    )
+
+
+_SCHOOL_ROSTER_ADAPTERS: tuple[SchoolRosterAdapter, ...] = (
+    SchoolRosterAdapter(
+        name="sustech-roster",
+        matcher=_matches_sustech_roster_family,
+        extractor=_extract_sustech_roster_adapter_entries,
+    ),
+    SchoolRosterAdapter(
+        name="szu-teacher-family",
+        matcher=_matches_szu_teacher_family,
+        extractor=_extract_szu_teacher_adapter_entries,
+    ),
+    SchoolRosterAdapter(
+        name="suat-teacher-family",
+        matcher=_matches_suat_teacher_family,
+        extractor=_extract_suat_teacher_adapter_entries,
+    ),
+    SchoolRosterAdapter(
+        name="cuhk-teacher-search",
+        matcher=_matches_cuhk_teacher_search,
+        extractor=_extract_cuhk_teacher_search_adapter_entries,
+    ),
+    SchoolRosterAdapter(
+        name="sysu-faculty-staff",
+        matcher=_matches_sysu_faculty_staff_family,
+        extractor=_extract_sysu_faculty_staff_adapter_entries,
+    ),
+)
 
 
 def _iter_markdown_links(markdown: str) -> list[tuple[str, str]]:
@@ -617,6 +956,97 @@ def _extract_szu_profile_links(soup: BeautifulSoup) -> list[tuple[str, str]]:
             continue
         links.append((href, name))
     return links
+
+
+def extract_cuhk_profile_links(soup: BeautifulSoup) -> list[tuple[str, str]]:
+    links: list[tuple[str, str]] = []
+    for title_anchor in soup.select("div.list-title a"):
+        href = str(title_anchor.get("href", "")).strip()
+        name = _extract_candidate_person_name(title_anchor.get_text(" ", strip=True))
+        if not name or not _is_likely_professor_name(name):
+            continue
+        if href:
+            links.append((href, name))
+    return links
+
+
+def extract_cuhk_markdown_profile_links(markdown: str) -> list[tuple[str, str]]:
+    links: list[tuple[str, str]] = []
+    for label, href in _iter_markdown_links(markdown):
+        parsed = urlparse(href)
+        hostname = (parsed.hostname or "").lower()
+        if not hostname.endswith("cuhk.edu.cn"):
+            continue
+        if "/teacher/" not in parsed.path:
+            continue
+        name = _extract_candidate_person_name(label)
+        if not name or not _is_likely_professor_name(name):
+            continue
+        links.append((href, name))
+    return links
+
+
+def _extract_sysu_drupal_profile_links(soup: BeautifulSoup) -> list[tuple[str, str]]:
+    links: list[tuple[str, str]] = []
+    selectors = (
+        "div.list-images-1-1",
+        "div.list-images-2-1",
+        "div.views-row",
+        "div.col-sm-12",
+    )
+    for selector in selectors:
+        for card in soup.select(selector):
+            teacher_anchor = card.select_one('a[href*="/teacher/"]')
+            if not isinstance(teacher_anchor, Tag):
+                continue
+            href = str(teacher_anchor.get("href", "")).strip()
+            if not href:
+                continue
+            title_node = card.select_one(
+                "h4.list-title strong, h4.list-title, h3.list-title strong, h3.list-title, .list-title strong, .list-title"
+            )
+            if title_node is None:
+                title_node = _find_nearby_title_node(teacher_anchor)
+            if title_node is None:
+                continue
+            name = _extract_candidate_person_name(title_node.get_text(" ", strip=True))
+            if not name or not _is_likely_professor_name(name):
+                continue
+            links.append((href, name))
+    for card in soup.select("div.teacher"):
+        title_node = card.select_one("div.teacherinfo h3, h3")
+        profile_anchor = card.select_one(
+            'div.teacherpicture a[href], div.teacherinfo a.btn[href], div.teacherinfo a[href$=".htm"]'
+        )
+        if title_node is None or not isinstance(profile_anchor, Tag):
+            continue
+        href = str(profile_anchor.get("href", "")).strip()
+        if not href:
+            continue
+        name = _extract_candidate_person_name(title_node.get_text(" ", strip=True))
+        if not name or not _is_likely_professor_name(name):
+            continue
+        links.append((href, name))
+    for card in soup.select("div.faculty-list-wrap, a.faculty-item"):
+        if isinstance(card, Tag) and card.name == "a":
+            profile_anchor = card
+            title_node = card.select_one("h4")
+        else:
+            profile_anchor = card.select_one('a.faculty-item[href*="/teacher/"], a[href*="/teacher/"]')
+            title_node = card.select_one("h4")
+        if title_node is None or not isinstance(profile_anchor, Tag):
+            continue
+        href = str(profile_anchor.get("href", "")).strip()
+        if not href:
+            continue
+        name = _extract_candidate_person_name(title_node.get_text(" ", strip=True))
+        if not name or not _is_likely_professor_name(name):
+            continue
+        links.append((href, name))
+    deduped: dict[str, str] = {}
+    for href, name in links:
+        deduped.setdefault(href, name)
+    return [(href, name) for href, name in deduped.items()]
 
 
 def _extract_szu_markdown_profile_links(markdown: str) -> list[tuple[str, str]]:
@@ -735,6 +1165,8 @@ def _is_pkusz_teacher_page(source_url: str) -> bool:
     path = parsed.path.lower()
     if not (hostname.endswith("pkusz.edu.cn") or hostname.endswith("pku.edu.cn")):
         return False
+    if hostname == "www.pkusz.edu.cn" and path == "/szdw.htm":
+        return False
     if "/info/" in path:
         return False
     return path.startswith("/szdw") or "faculty" in path
@@ -760,6 +1192,188 @@ def _extract_suat_profile_links(markdown: str) -> list[tuple[str, str]]:
             continue
         links.append((href, name))
     return links
+
+
+def _extract_inline_record_profile_links(html: str) -> list[tuple[str, str]]:
+    links: list[tuple[str, str]] = []
+    pattern = re.compile(
+        r"(?:[\"']showTitle[\"']|showTitle)\s*:\s*[\"'](?P<title>[^\"']+)[\"']"
+        r"(?:(?!(?:[\"']showTitle[\"']|showTitle)).)*?"
+        r"(?:[\"'](?:url|aHref)[\"']|(?<![A-Za-z0-9_])(?:url|aHref)(?![A-Za-z0-9_]))\s*:\s*[\"'](?P<url>[^\"']+)[\"']",
+        flags=re.DOTALL,
+    )
+    for match in pattern.finditer(html):
+        raw_title = _decode_inline_json_string(match.group("title"))
+        raw_url = _decode_inline_json_string(match.group("url"))
+        if not raw_title or not raw_url:
+            continue
+        name = _extract_candidate_person_name(raw_title)
+        if not name or not _is_likely_professor_name(name):
+            continue
+        if not _looks_like_profile_href(raw_url) and not _looks_like_generic_html_profile_href(raw_url):
+            continue
+        links.append((raw_url, name))
+    deduped: dict[str, str] = {}
+    for href, name in links:
+        deduped.setdefault(href, name)
+    return [(href, name) for href, name in deduped.items()]
+
+
+def _extract_markdown_heading_profile_links(
+    markdown: str, source_url: str
+) -> list[tuple[str, str]]:
+    if not _should_try_heading_profile_extraction(source_url):
+        return []
+    lines = markdown.splitlines()
+    links: list[tuple[str, str]] = []
+    for index, raw_line in enumerate(lines):
+        match = re.match(r"^\s*#{3,4}\s+(.+?)\s*$", raw_line)
+        if not match:
+            continue
+        name = _extract_candidate_person_name(match.group(1))
+        if not name or not _is_likely_professor_name(name):
+            continue
+        context = " ".join(lines[index + 1 : index + 5])
+        if _context_looks_non_person(context):
+            continue
+        if not _context_supports_heading_profile(context):
+            continue
+        links.append((f"{source_url}#prof-{quote(name)}", name))
+    deduped: dict[str, str] = {}
+    for href, name in links:
+        deduped.setdefault(name, href)
+    return [(href, name) for name, href in deduped.items()]
+
+
+def _extract_heading_profile_links(
+    soup: BeautifulSoup, source_url: str
+) -> list[tuple[str, str]]:
+    if not _should_try_heading_profile_extraction(source_url):
+        return []
+    links: list[tuple[str, str]] = []
+    for heading in soup.find_all(["h3", "h4", "h5"]):
+        if not isinstance(heading, Tag):
+            continue
+        name = _extract_candidate_person_name(heading.get_text(" ", strip=True))
+        if not name or not _is_likely_professor_name(name):
+            continue
+        context = _collect_heading_context(heading)
+        if _context_looks_non_person(context):
+            continue
+        if not _context_supports_heading_profile(context):
+            continue
+        href = _find_heading_profile_href(heading) or f"{source_url}#prof-{quote(name)}"
+        links.append((href, name))
+    deduped: dict[str, str] = {}
+    for href, name in links:
+        deduped.setdefault(name, href)
+    return [(href, name) for name, href in deduped.items()]
+
+
+def _extract_inline_redirect_links(html: str) -> list[tuple[str, str]]:
+    links: list[tuple[str, str]] = []
+    patterns = (
+        r'window\.location\.replace\(\s*[\'"]([^\'"]+)[\'"]\s*\)',
+        r'location\.replace\(\s*[\'"]([^\'"]+)[\'"]\s*\)',
+        r'window\.location\.href\s*=\s*[\'"]([^\'"]+)[\'"]',
+        r'location\.href\s*=\s*[\'"]([^\'"]+)[\'"]',
+        r'<meta[^>]+http-equiv=["\']refresh["\'][^>]+content=["\'][^"\']*url=([^"\']+)["\']',
+    )
+    for pattern in patterns:
+        for match in re.finditer(pattern, html, flags=re.IGNORECASE):
+            href = match.group(1).strip()
+            if not _is_navigable_href(href):
+                continue
+            links.append((href, "redirect"))
+    return links
+
+
+def _decode_inline_json_string(value: str) -> str:
+    try:
+        return json.loads(f'"{value}"')
+    except json.JSONDecodeError:
+        return value.replace("\\/", "/")
+
+
+def _find_nearby_title_node(anchor: Tag) -> Tag | None:
+    current: Tag | None = anchor
+    for _ in range(5):
+        if current is None:
+            break
+        title_node = current.select_one(
+            "h4.list-title strong, h4.list-title, h3.list-title strong, h3.list-title, p.bt, .bt, .name, .title"
+        )
+        if isinstance(title_node, Tag):
+            return title_node
+        current = current.parent if isinstance(current.parent, Tag) else None
+    return None
+
+
+def _should_try_heading_profile_extraction(source_url: str) -> bool:
+    hostname = (urlparse(source_url).hostname or "").lower()
+    return hostname.endswith("sztu.edu.cn") or hostname.endswith("sysu.edu.cn")
+
+
+def _collect_heading_context(heading: Tag) -> str:
+    parts: list[str] = []
+    for sibling in heading.next_siblings:
+        if isinstance(sibling, Tag):
+            if sibling.name in {"h2", "h3", "h4", "h5"}:
+                break
+            text = sibling.get_text(" ", strip=True)
+        else:
+            text = str(sibling).strip()
+        if text:
+            parts.append(text)
+        if len(parts) >= 4 or sum(len(part) for part in parts) >= 400:
+            break
+    if not parts and isinstance(heading.parent, Tag):
+        parent_text = heading.parent.get_text(" ", strip=True)
+        heading_text = heading.get_text(" ", strip=True)
+        if parent_text and parent_text != heading_text:
+            parts.append(parent_text.removeprefix(heading_text).strip())
+    return " ".join(parts)
+
+
+def _find_heading_profile_href(heading: Tag) -> str | None:
+    candidate_anchors: list[Tag] = []
+    current: Tag | None = heading
+    for _ in range(4):
+        if current is None:
+            break
+        if current.name == "a" and current.get("href"):
+            candidate_anchors.append(current)
+            break
+        current = current.parent if isinstance(current.parent, Tag) else None
+    if isinstance(heading.parent, Tag):
+        candidate_anchors.extend(heading.parent.find_all("a", href=True))
+    for sibling in list(heading.previous_siblings)[:2] + list(heading.next_siblings)[:2]:
+        if isinstance(sibling, Tag):
+            candidate_anchors.extend(sibling.find_all("a", href=True))
+            if sibling.name == "a" and sibling.get("href"):
+                candidate_anchors.append(sibling)
+    for anchor in candidate_anchors:
+        href = str(anchor.get("href", "")).strip()
+        if not href:
+            continue
+        if _looks_like_profile_href(href) or _looks_like_generic_html_profile_href(href):
+            return href
+    return None
+
+
+def _context_supports_heading_profile(context: str) -> bool:
+    if not context:
+        return False
+    if _EMAIL_RE.search(context):
+        return True
+    return any(marker in context for marker in _HEADING_PROFILE_ROLE_HINTS)
+
+
+def _context_looks_non_person(context: str) -> bool:
+    lowered = context.lower()
+    if any(marker in lowered for marker in _HEADING_PROFILE_BLOCK_HINTS):
+        return True
+    return any(pattern.search(lowered) for pattern in _HEADING_PROFILE_BLOCK_PATTERNS)
 
 
 def _is_hit_directory_page(source_url: str) -> bool:

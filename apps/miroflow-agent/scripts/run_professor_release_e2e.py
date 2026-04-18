@@ -1,3 +1,6 @@
+# LEGACY (Round 7.5): v2 pipeline runner. Canonical professor data should now
+# come from pipeline_v3 + canonical_writer + run_real_e2e_professor_backfill.py.
+# Kept for reference; do not use for new data collection.
 #!/usr/bin/env python3
 from __future__ import annotations
 

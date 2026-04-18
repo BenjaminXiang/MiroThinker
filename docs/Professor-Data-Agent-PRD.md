@@ -109,7 +109,6 @@
 | `work_experience` | 否 | 结构化工作经历 |
 | `h_index` | 否 | 学术指标 |
 | `citation_count` | 否 | 总引用数 |
-| `top_papers` | 否 | 代表论文 |
 | `company_roles` | 否 | 企业关联 |
 | `patent_ids` | 否 | 专利关联 |
 | `awards` | 否 | 奖项荣誉 |
@@ -119,6 +118,8 @@
 | `profile_summary` | 是 | 教授画像摘要 |
 | `evidence` | 是 | 来源列表 |
 | `last_updated` | 是 | 最后更新时间 |
+
+代表论文不再作为 professor 主记录的原始字段发布。若需要展示教师代表论文，必须从已验证的 `professor_paper_link` 和 canonical `paper` 对象派生。
 
 ### 4.2 `profile_summary`
 

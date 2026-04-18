@@ -1,19 +1,30 @@
 from __future__ import annotations
 
+import atexit
+import contextvars
 import hashlib
 import json
+import re
 from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
 import threading
 import time
 from typing import Any, Callable
-from urllib.parse import urljoin, urlparse
+from urllib.parse import parse_qsl, urlencode, urljoin, urlparse, urlunparse
 
+from bs4 import BeautifulSoup
 import requests
 
+from .name_selection import is_obvious_non_person_name, is_same_person_name_variant, normalize_name_key
+from .profile import extract_professor_profile
 from .models import DiscoveredProfessorSeed, ProfessorRosterSeed
-from .roster import extract_roster_entries, extract_roster_page_links
+from .roster import (
+    extract_cuhk_markdown_profile_links,
+    extract_cuhk_profile_links,
+    extract_roster_entries,
+    extract_roster_page_links,
+)
 
 FetchHtml = Callable[[str], str]
 FetchJson = Callable[[str, dict[str, object]], object]
@@ -38,9 +49,17 @@ _SEED_FALLBACK_URLS: dict[str, tuple[str, ...]] = {
     "https://stl.pku.edu.cn/Faculty_Research/Resident_Faculty.htm": (
         "https://stl.pku.edu.cn/faculty/faculty/residentfaculty.html",
     ),
+    "http://sa.sysu.edu.cn/zh-hans/teacher/faculty": (
+        "https://ab.sysu.edu.cn/zh-hans/teacher/faculty",
+    ),
+    "https://sa.sysu.edu.cn/zh-hans/teacher/faculty": (
+        "https://ab.sysu.edu.cn/zh-hans/teacher/faculty",
+    ),
 }
 _SEED_OFFICIAL_DOMAIN_SUFFIXES: dict[str, tuple[str, ...]] = {
     "https://www.pkusz.edu.cn/szdw.htm": ("pkusz.edu.cn", "pku.edu.cn"),
+    "http://sa.sysu.edu.cn/zh-hans/teacher/faculty": ("sysu.edu.cn",),
+    "https://sa.sysu.edu.cn/zh-hans/teacher/faculty": ("sysu.edu.cn",),
 }
 _HOST_DIRECT_MIN_INTERVAL_SECONDS: dict[str, float] = {
     "med.szu.edu.cn": 1.2,
@@ -51,6 +70,71 @@ _READER_SERIAL_LOCK = threading.Lock()
 _READER_CONNECT_TIMEOUT_SECONDS = 8.0
 _READER_MIN_INTERVAL_SECONDS = 2.0
 _last_reader_request_started_at = 0.0
+_BROWSER_FIRST_HOST_SUFFIXES: tuple[str, ...] = ("cuhk.edu.cn",)
+_BROWSER_FIRST_HOSTS: set[str] = {
+    "med.szu.edu.cn",
+}
+_BROWSER_FIRST_PATH_HINTS: tuple[str, ...] = (
+    "teacher-search",
+)
+_learned_browser_first_hosts: set[str] = set()
+_LEARNED_BROWSER_FIRST_LOCK = threading.Lock()
+_learned_reader_first_hosts: set[str] = set()
+_LEARNED_READER_FIRST_LOCK = threading.Lock()
+_DISCOVERY_FETCH_POLICY_STATE: contextvars.ContextVar[tuple[set[str], set[str]] | None] = contextvars.ContextVar(
+    "discovery_fetch_policy_state",
+    default=None,
+)
+_THREAD_LOCAL_PLAYWRIGHT = threading.local()
+_PLAYWRIGHT_RUNTIME_REGISTRY: list[_PlaywrightThreadState] = []
+_SHARED_BROWSER_LOCK = threading.Lock()
+_PLAYWRIGHT_CONTEXT_OPTIONS = {
+    "locale": "zh-CN",
+    "viewport": {"width": 1440, "height": 2200},
+    "user_agent": (
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "extra_http_headers": {
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+    },
+}
+_PERSONAL_HOMEPAGE_NAV_HINTS = (
+    "teaching",
+    "research",
+    "presentation",
+    "presentations",
+    "service",
+    "bio",
+    "cv",
+    "publications",
+)
+
+
+_DIRECT_PROFILE_CONTENT_CLASS_HINTS = (
+    "page_content_teacher",
+    "content_teacher_box",
+    "v_news_content",
+    "teacher_inner",
+    "introduce-main",
+    "introduce",
+    "message-left",
+    "message-right",
+    "teachercontent",
+    "page_content_detail",
+)
+_DIRECT_PROFILE_TEXT_HINTS = (
+    "研究方向",
+    "研究领域",
+    "电子邮箱",
+    "邮箱",
+    "email",
+    "博士生导师",
+    "研究助理教授",
+    "助理教授",
+    "副教授",
+    "讲席教授",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -86,6 +170,16 @@ class HtmlFetchResult:
     blocked_by_anti_scraping: bool
     request_error: str | None
     browser_error: str | None
+    fetch_policy: str = "direct_first"
+    fetch_method: str | None = None
+
+
+@dataclass(slots=True)
+class _PlaywrightThreadState:
+    thread_id: int
+    playwright: object
+    browser: object
+    render_lock: threading.Lock
 
 
 @dataclass(frozen=True, slots=True)
@@ -107,54 +201,63 @@ def discover_professor_seeds(
     fetch_json: FetchJson | None = None,
     limits: DiscoveryLimits | None = None,
 ) -> ProfessorSeedDiscoveryResult:
-    html_fetcher = fetch_html or _default_fetch_html
-    json_fetcher = fetch_json or _default_fetch_json
-    applied_limits = limits or DiscoveryLimits()
+    token = _DISCOVERY_FETCH_POLICY_STATE.set((set(), set()))
+    try:
+        html_fetcher = fetch_html or _default_fetch_html
+        json_fetcher = fetch_json or _default_fetch_json
+        applied_limits = limits or DiscoveryLimits()
 
-    discovered: list[DiscoveredProfessorSeed] = []
-    source_statuses: list[DiscoverySourceStatus] = []
-    failed_fetch_urls: set[str] = set()
+        discovered: list[DiscoveredProfessorSeed] = []
+        source_statuses: list[DiscoverySourceStatus] = []
+        failed_fetch_urls: set[str] = set()
 
-    for seed in seeds:
-        try:
-            if _is_sigs_seed(seed.roster_url):
-                try:
-                    result = _discover_sigs_seed(seed, json_fetcher)
-                except Exception:
+        for seed in seeds:
+            try:
+                if _is_sigs_seed(seed.roster_url):
+                    try:
+                        result = _discover_sigs_seed(seed, json_fetcher)
+                    except Exception:
+                        result = _discover_recursive_seed(seed, html_fetcher, applied_limits)
+                elif _is_hit_seed(seed.roster_url):
+                    try:
+                        result = _discover_hit_seed(seed, json_fetcher)
+                    except Exception:
+                        result = _discover_recursive_seed(seed, html_fetcher, applied_limits)
+                elif _is_cuhk_seed(seed.roster_url):
+                    try:
+                        result = _discover_cuhk_seed(seed, html_fetcher, applied_limits)
+                    except Exception:
+                        result = _discover_recursive_seed(seed, html_fetcher, applied_limits)
+                else:
                     result = _discover_recursive_seed(seed, html_fetcher, applied_limits)
-            elif _is_hit_seed(seed.roster_url):
-                try:
-                    result = _discover_hit_seed(seed, json_fetcher)
-                except Exception:
-                    result = _discover_recursive_seed(seed, html_fetcher, applied_limits)
-            else:
-                result = _discover_recursive_seed(seed, html_fetcher, applied_limits)
-        except Exception as exc:
-            institution = (seed.institution or "").strip() or "UNKNOWN_INSTITUTION"
-            result = _SeedDiscovery(
-                professors=[],
-                status=DiscoverySourceStatus(
-                    seed_url=seed.roster_url,
-                    institution=institution,
-                    department=_normalize_text(seed.department),
-                    status="failed",
-                    reason="fetch_failed",
-                    error=str(exc),
-                    visited_urls=[seed.roster_url],
-                    discovered_professor_count=0,
-                ),
-                failed_fetch_urls=[seed.roster_url],
-            )
+            except Exception as exc:
+                institution = (seed.institution or "").strip() or "UNKNOWN_INSTITUTION"
+                result = _SeedDiscovery(
+                    professors=[],
+                    status=DiscoverySourceStatus(
+                        seed_url=seed.roster_url,
+                        institution=institution,
+                        department=_normalize_text(seed.department),
+                        status="failed",
+                        reason="fetch_failed",
+                        error=str(exc),
+                        visited_urls=[seed.roster_url],
+                        discovered_professor_count=0,
+                    ),
+                    failed_fetch_urls=[seed.roster_url],
+                )
 
-        discovered.extend(result.professors)
-        source_statuses.append(result.status)
-        failed_fetch_urls.update(result.failed_fetch_urls)
+            discovered.extend(result.professors)
+            source_statuses.append(result.status)
+            failed_fetch_urls.update(result.failed_fetch_urls)
 
-    return ProfessorSeedDiscoveryResult(
-        professors=discovered,
-        source_statuses=source_statuses,
-        failed_fetch_urls=sorted(failed_fetch_urls),
-    )
+        return ProfessorSeedDiscoveryResult(
+            professors=discovered,
+            source_statuses=source_statuses,
+            failed_fetch_urls=sorted(failed_fetch_urls),
+        )
+    finally:
+        _DISCOVERY_FETCH_POLICY_STATE.reset(token)
 
 
 def fetch_html_with_fallback(
@@ -164,16 +267,19 @@ def fetch_html_with_fallback(
     browser_fetch: Callable[[str, float], str] | None = None,
     reader_fetch: Callable[[str, float], str] | None = None,
 ) -> HtmlFetchResult:
+    fetch_policy = _resolve_fetch_policy(url)
     use_cache = request_get is None and browser_fetch is None and reader_fetch is None
     if use_cache:
         cached_html = _load_cached_html(url)
-        if cached_html is not None:
+        if cached_html is not None and not _should_refresh_cached_html(url, cached_html):
             return HtmlFetchResult(
                 html=cached_html,
                 used_browser=False,
                 blocked_by_anti_scraping=False,
                 request_error=None,
                 browser_error=None,
+                fetch_policy=fetch_policy,
+                fetch_method="cache",
             )
 
     getter = request_get or _requests_get
@@ -191,21 +297,28 @@ def fetch_html_with_fallback(
             rendered_html = None
         else:
             if rendered_html and rendered_html.strip():
-                if use_cache:
-                    _store_cached_html(url, rendered_html)
-                return HtmlFetchResult(
-                    html=rendered_html,
-                    used_browser=True,
-                    blocked_by_anti_scraping=True,
-                    request_error=request_error,
-                    browser_error=None,
-                )
+                if _is_blocked_response(200, rendered_html):
+                    browser_error = "browser returned blocked page"
+                else:
+                    if use_cache:
+                        _store_cached_html(url, rendered_html)
+                    return HtmlFetchResult(
+                        html=rendered_html,
+                        used_browser=True,
+                        blocked_by_anti_scraping=True,
+                        request_error=request_error,
+                        browser_error=None,
+                        fetch_policy=fetch_policy,
+                        fetch_method="browser",
+                    )
         return HtmlFetchResult(
             html=None,
             used_browser=False,
             blocked_by_anti_scraping=True,
             request_error=request_error,
             browser_error=browser_error,
+            fetch_policy=fetch_policy,
+            fetch_method=None,
         )
 
     def _fetch_with_reader_fallback(browser_error: str | None) -> HtmlFetchResult:
@@ -221,53 +334,102 @@ def fetch_html_with_fallback(
                 blocked_by_anti_scraping=True,
                 request_error=request_error,
                 browser_error=composite_error or None,
+                fetch_policy=fetch_policy,
+                fetch_method=None,
             )
+        if request_error or browser_error:
+            _remember_reader_first_host(url)
         return HtmlFetchResult(
             html=rendered_text,
             used_browser=False,
             blocked_by_anti_scraping=True,
             request_error=request_error,
             browser_error=browser_error,
+            fetch_policy=fetch_policy,
+            fetch_method="reader",
         )
 
-    try:
-        response = getter(url, timeout)
-    except requests.RequestException as exc:
-        request_error = str(exc)
-        browser_result = _fetch_with_browser_fallback()
-        if browser_result.html is not None:
-            return browser_result
-        return _fetch_with_reader_fallback(browser_result.browser_error)
+    def _fetch_with_direct_request() -> HtmlFetchResult | None:
+        nonlocal request_error
+        try:
+            response = getter(url, timeout)
+        except requests.RequestException as exc:
+            request_error = str(exc)
+            _remember_browser_first_host(url)
+            return None
 
-    html = _decode_response_text(response)
-    blocked = _is_blocked_response(response.status_code, html)
+        html = _decode_response_text(response)
+        blocked = _is_blocked_response(response.status_code, html)
 
-    if blocked:
-        if response.status_code >= 400:
-            request_error = f"{response.status_code} Client Error"
-        browser_result = _fetch_with_browser_fallback()
-        if browser_result.html is not None:
-            return browser_result
-        return _fetch_with_reader_fallback(browser_result.browser_error)
+        if blocked:
+            if response.status_code >= 400:
+                request_error = f"{response.status_code} Client Error"
+            else:
+                request_error = f"{response.status_code} blocked (anti-scraping detected)"
+            _remember_browser_first_host(url)
+            return None
 
-    response.raise_for_status()
-    if not html.strip():
+        try:
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            request_error = str(exc)
+            return None
+        if not html.strip():
+            request_error = "empty response body"
+            return None
+        if use_cache:
+            _store_cached_html(url, html)
         return HtmlFetchResult(
-            html=None,
+            html=html,
             used_browser=False,
             blocked_by_anti_scraping=False,
             request_error=None,
             browser_error=None,
+            fetch_policy=fetch_policy,
+            fetch_method="direct",
         )
-    if use_cache:
-        _store_cached_html(url, html)
-    return HtmlFetchResult(
-        html=html,
-        used_browser=False,
-        blocked_by_anti_scraping=False,
-        request_error=None,
-        browser_error=None,
-    )
+
+    if fetch_policy == "browser_first":
+        browser_result = _fetch_with_browser_fallback()
+        if browser_result.html is not None:
+            return browser_result
+        direct_result = _fetch_with_direct_request()
+        if direct_result is not None:
+            return direct_result
+        return _fetch_with_reader_fallback(browser_result.browser_error)
+
+    if fetch_policy == "reader_first":
+        reader_result = _fetch_with_reader_fallback(None)
+        if reader_result.html is not None:
+            return reader_result
+        direct_result = _fetch_with_direct_request()
+        if direct_result is not None:
+            return direct_result
+        browser_result = _fetch_with_browser_fallback()
+        if browser_result.html is not None:
+            return browser_result
+        composite_error = " | ".join(
+            part
+            for part in (reader_result.browser_error, browser_result.browser_error)
+            if part
+        )
+        return HtmlFetchResult(
+            html=None,
+            used_browser=False,
+            blocked_by_anti_scraping=True,
+            request_error=request_error,
+            browser_error=composite_error or None,
+            fetch_policy=fetch_policy,
+            fetch_method=None,
+        )
+
+    direct_result = _fetch_with_direct_request()
+    if direct_result is not None:
+        return direct_result
+    browser_result = _fetch_with_browser_fallback()
+    if browser_result.html is not None:
+        return browser_result
+    return _fetch_with_reader_fallback(browser_result.browser_error)
 
 
 def get_registered_domain(url: str) -> str:
@@ -500,6 +662,14 @@ def _load_cached_html(url: str) -> str | None:
     return content
 
 
+def _should_refresh_cached_html(url: str, content: str) -> bool:
+    path = urlparse(url).path.lower()
+    lowered = content.lower()
+    if "teacher-search" in path and lowered.startswith("title:"):
+        return "/teacher/" not in lowered
+    return False
+
+
 def _store_cached_html(url: str, content: str) -> None:
     normalized = content.strip()
     if not normalized:
@@ -532,21 +702,197 @@ def _is_blocked_response(status_code: int, html: str) -> bool:
 def _render_html_with_playwright(url: str, timeout: float) -> str:
     try:
         from playwright.sync_api import Error as PlaywrightError
-        from playwright.sync_api import sync_playwright
     except Exception as exc:  # noqa: BLE001 - import/runtime surfaces upstream.
         raise RuntimeError(f"playwright unavailable: {exc}") from exc
 
     timeout_ms = int(timeout * 1000)
+    for attempt in range(2):
+        try:
+            state = _get_shared_playwright_state()
+            with state.render_lock:
+                context = state.browser.new_context(**_PLAYWRIGHT_CONTEXT_OPTIONS)
+                try:
+                    page = context.new_page()
+                    page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
+                    try:
+                        page.wait_for_load_state("networkidle", timeout=min(timeout_ms, 5000))
+                    except PlaywrightError:
+                        pass
+                    try:
+                        page.mouse.wheel(0, 1200)
+                        page.wait_for_timeout(350)
+                    except PlaywrightError:
+                        pass
+                    return page.content()
+                finally:
+                    context.close()
+        except PlaywrightError as exc:
+            if attempt == 0 and _looks_like_stale_playwright_browser_error(exc):
+                _shutdown_shared_playwright_browser(threading.get_ident())
+                continue
+            raise RuntimeError(f"playwright browser runtime unavailable: {exc}") from exc
+    raise RuntimeError("playwright browser runtime unavailable: stale browser retry exhausted")
+
+
+def _current_fetch_policy_state() -> tuple[set[str], set[str]]:
+    state = _DISCOVERY_FETCH_POLICY_STATE.get()
+    if state is not None:
+        return state
+    return _learned_browser_first_hosts, _learned_reader_first_hosts
+
+
+def _snapshot_global_fetch_policy_state() -> tuple[set[str], set[str]]:
+    with _LEARNED_BROWSER_FIRST_LOCK:
+        learned_browser_hosts = set(_learned_browser_first_hosts)
+    with _LEARNED_READER_FIRST_LOCK:
+        learned_reader_hosts = set(_learned_reader_first_hosts)
+    return learned_browser_hosts, learned_reader_hosts
+
+
+def _looks_like_stale_playwright_browser_error(exc: Exception) -> bool:
+    message = str(exc).lower()
+    return any(
+        marker in message
+        for marker in (
+            "has been closed",
+            "browser has been closed",
+            "target closed",
+            "connection closed",
+            "context closed",
+        )
+    )
+
+
+def _resolve_fetch_policy(url: str) -> str:
+    hostname = (urlparse(url).hostname or "").lower()
+    path = urlparse(url).path.lower()
+    registered_domain = get_registered_domain(url)
+    state = _DISCOVERY_FETCH_POLICY_STATE.get()
+    if state is None:
+        learned_browser_hosts, learned_reader_hosts = _snapshot_global_fetch_policy_state()
+    else:
+        learned_browser_hosts, learned_reader_hosts = state
+    if hostname in learned_reader_hosts:
+        return "reader_first"
+    if hostname in _BROWSER_FIRST_HOSTS:
+        return "browser_first"
+    if registered_domain and any(
+        registered_domain.endswith(suffix) for suffix in _BROWSER_FIRST_HOST_SUFFIXES
+    ):
+        return "browser_first"
+    if any(hint in path for hint in _BROWSER_FIRST_PATH_HINTS):
+        return "browser_first"
+    if hostname in learned_browser_hosts:
+        return "browser_first"
+    return "direct_first"
+
+
+def _reset_learned_fetch_policy_state() -> None:
+    with _LEARNED_BROWSER_FIRST_LOCK:
+        _learned_browser_first_hosts.clear()
+    with _LEARNED_READER_FIRST_LOCK:
+        _learned_reader_first_hosts.clear()
+
+
+def _remember_browser_first_host(url: str) -> None:
+    hostname = (urlparse(url).hostname or "").lower()
+    if not hostname:
+        return
+    state = _DISCOVERY_FETCH_POLICY_STATE.get()
+    if state is not None:
+        state[0].add(hostname)
+        return
+    with _LEARNED_BROWSER_FIRST_LOCK:
+        _learned_browser_first_hosts.add(hostname)
+
+
+def _remember_reader_first_host(url: str) -> None:
+    hostname = (urlparse(url).hostname or "").lower()
+    if not hostname:
+        return
+    state = _DISCOVERY_FETCH_POLICY_STATE.get()
+    if state is not None:
+        state[1].add(hostname)
+        return
+    with _LEARNED_READER_FIRST_LOCK:
+        _learned_reader_first_hosts.add(hostname)
+
+
+def _get_shared_playwright_state() -> _PlaywrightThreadState:
+    state = getattr(_THREAD_LOCAL_PLAYWRIGHT, "state", None)
+    if state is not None:
+        return state
     try:
-        with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(headless=True)
-            page = browser.new_page()
-            page.goto(url, wait_until="networkidle", timeout=timeout_ms)
-            content = page.content()
-            browser.close()
-            return content
-    except PlaywrightError as exc:
-        raise RuntimeError(f"playwright browser runtime unavailable: {exc}") from exc
+        from playwright.sync_api import sync_playwright
+    except Exception as exc:  # noqa: BLE001 - import/runtime surfaces upstream.
+        raise RuntimeError(f"playwright unavailable: {exc}") from exc
+    playwright = sync_playwright().start()
+    try:
+        browser = playwright.chromium.launch(headless=True)
+    except Exception:
+        try:
+            playwright.stop()
+        except Exception:
+            pass
+        raise
+    state = _PlaywrightThreadState(
+        thread_id=threading.get_ident(),
+        playwright=playwright,
+        browser=browser,
+        render_lock=threading.Lock(),
+    )
+    with _SHARED_BROWSER_LOCK:
+        existing = getattr(_THREAD_LOCAL_PLAYWRIGHT, "state", None)
+        if existing is not None:
+            try:
+                browser.close()
+            except Exception:
+                pass
+            try:
+                playwright.stop()
+            except Exception:
+                pass
+            return existing
+        _THREAD_LOCAL_PLAYWRIGHT.state = state
+        _PLAYWRIGHT_RUNTIME_REGISTRY.append(state)
+    return state
+
+
+def _get_shared_playwright_browser():
+    return _get_shared_playwright_state().browser
+
+
+def _shutdown_shared_playwright_browser(thread_id: int | None = None) -> None:
+    with _SHARED_BROWSER_LOCK:
+        current_state = getattr(_THREAD_LOCAL_PLAYWRIGHT, "state", None)
+        if thread_id is None:
+            runtimes = list(_PLAYWRIGHT_RUNTIME_REGISTRY)
+            _PLAYWRIGHT_RUNTIME_REGISTRY.clear()
+            if current_state is not None:
+                delattr(_THREAD_LOCAL_PLAYWRIGHT, "state")
+        else:
+            runtimes = [state for state in _PLAYWRIGHT_RUNTIME_REGISTRY if state.thread_id == thread_id]
+            _PLAYWRIGHT_RUNTIME_REGISTRY[:] = [
+                state for state in _PLAYWRIGHT_RUNTIME_REGISTRY if state.thread_id != thread_id
+            ]
+            if current_state is not None and current_state.thread_id == thread_id:
+                delattr(_THREAD_LOCAL_PLAYWRIGHT, "state")
+    for state in runtimes:
+        try:
+            state.browser.close()
+        except Exception:
+            pass
+        try:
+            state.playwright.stop()
+        except Exception:
+            pass
+
+
+def _shutdown_current_thread_playwright_browser() -> None:
+    _shutdown_shared_playwright_browser(threading.get_ident())
+
+
+atexit.register(_shutdown_current_thread_playwright_browser)
 
 
 @dataclass(frozen=True, slots=True)
@@ -562,6 +908,8 @@ def _discover_recursive_seed(
     limits: DiscoveryLimits,
 ) -> _SeedDiscovery:
     institution = (seed.institution or "").strip() or "UNKNOWN_INSTITUTION"
+    seed_label = _normalize_text(seed.label)
+
     queue: deque[_PendingPage] = deque(
         [_PendingPage(url=seed.roster_url, depth=0, department=_normalize_text(seed.department))]
     )
@@ -591,6 +939,76 @@ def _discover_recursive_seed(
             )
             continue
 
+        if (
+            current.depth == 0
+            and current.url == seed.roster_url
+            and not seed_label
+        ):
+            homepage_name = _extract_person_name_from_root_homepage(
+                current.url,
+                html,
+                institution=institution,
+                department=seed.department,
+            )
+            if homepage_name:
+                professors = [
+                    DiscoveredProfessorSeed(
+                        name=homepage_name,
+                        institution=institution,
+                        department=_normalize_text(seed.department),
+                        profile_url=seed.roster_url,
+                        source_url=seed.roster_url,
+                    )
+                ]
+                status = DiscoverySourceStatus(
+                    seed_url=seed.roster_url,
+                    institution=institution,
+                    department=_normalize_text(seed.department),
+                    status="resolved",
+                    reason="direct_profile_homepage",
+                    error=None,
+                    visited_urls=[seed.roster_url],
+                    discovered_professor_count=1,
+                )
+                return _SeedDiscovery(
+                    professors=professors,
+                    status=status,
+                    failed_fetch_urls=failed_fetch_urls,
+                )
+
+        direct_seed_name, direct_seed_reason = _resolve_direct_profile_seed_after_fetch(
+            seed=seed,
+            institution=institution,
+            current=current,
+            html=html,
+            seed_label=seed_label,
+        )
+        if direct_seed_name:
+            professors = [
+                DiscoveredProfessorSeed(
+                    name=direct_seed_name,
+                    institution=institution,
+                    department=_normalize_text(seed.department),
+                    profile_url=seed.roster_url,
+                    source_url=seed.roster_url,
+                )
+            ]
+            status = DiscoverySourceStatus(
+                seed_url=seed.roster_url,
+                institution=institution,
+                department=_normalize_text(seed.department),
+                status="resolved",
+                reason=direct_seed_reason,
+                error=None,
+                visited_urls=[seed.roster_url],
+                discovered_professor_count=1,
+            )
+            return _SeedDiscovery(
+                professors=professors,
+                status=status,
+                failed_fetch_urls=failed_fetch_urls,
+            )
+
         entries = extract_roster_entries(
             html=html,
             institution=institution,
@@ -601,7 +1019,13 @@ def _discover_recursive_seed(
             discovered.extend(entries)
             continue
 
-        if current.depth >= limits.max_depth:
+        prioritize_seed_fallback = _should_prioritize_seed_fallback(
+            seed_url=seed.roster_url,
+            current_url=current.url,
+            current_depth=current.depth,
+            html=html,
+        )
+        if prioritize_seed_fallback:
             _enqueue_seed_fallback_pages(
                 queue=queue,
                 visited_set=visited_set,
@@ -610,14 +1034,28 @@ def _discover_recursive_seed(
                 current_depth=current.depth,
                 department=current.department,
             )
+
+        if current.depth >= limits.max_depth:
+            if not prioritize_seed_fallback:
+                _enqueue_seed_fallback_pages(
+                    queue=queue,
+                    visited_set=visited_set,
+                    seed_url=seed.roster_url,
+                    current_url=current.url,
+                    current_depth=current.depth,
+                    department=current.department,
+                )
             continue
 
-        candidates = _bounded_candidates(
-            seed_url=seed.roster_url,
-            links=extract_roster_page_links(html, current.url),
-            current_department=current.department,
-            max_candidates=limits.max_candidate_links_per_page,
-        )
+        if prioritize_seed_fallback:
+            candidates: list[_CandidatePage] = []
+        else:
+            candidates = _bounded_candidates(
+                seed_url=seed.roster_url,
+                links=extract_roster_page_links(html, current.url),
+                current_department=current.department,
+                max_candidates=limits.max_candidate_links_per_page,
+            )
         if not candidates:
             _enqueue_seed_fallback_pages(
                 queue=queue,
@@ -684,6 +1122,37 @@ def _seed_entry_urls(seed_url: str) -> tuple[str, ...]:
         if fallback_url not in candidates:
             candidates.append(fallback_url)
     return tuple(candidates)
+
+
+def _path_looks_like_roster_seed(path: str) -> bool:
+    lowered = path.lower()
+    return any(token in lowered for token in ("/teacher", "/teachers", "/faculty", "/szdw", "/jsjj"))
+
+
+def _should_prioritize_seed_fallback(
+    *,
+    seed_url: str,
+    current_url: str,
+    current_depth: int,
+    html: str,
+) -> bool:
+    if current_depth != 0 or current_url != seed_url:
+        return False
+    if seed_url not in _SEED_FALLBACK_URLS:
+        return False
+    seed_path = urlparse(seed_url).path.rstrip("/")
+    if not _path_looks_like_roster_seed(seed_path):
+        return False
+    soup = BeautifulSoup(html, "html.parser")
+    title = soup.title.get_text(" ", strip=True).lower() if soup.title else ""
+    canonical_tag = soup.find("link", rel=lambda value: isinstance(value, str) and value.lower() == "canonical")
+    canonical_href = canonical_tag.get("href", "") if canonical_tag else ""
+    canonical_path = urlparse(str(canonical_href)).path.rstrip("/")
+    if not canonical_path or canonical_path == seed_path:
+        return False
+    if _path_looks_like_roster_seed(canonical_path):
+        return False
+    return "首页" in title or title.startswith("home")
 
 
 def _enqueue_seed_fallback_pages(
@@ -832,6 +1301,64 @@ def _discover_hit_seed(
     return _SeedDiscovery(professors=professors, status=status, failed_fetch_urls=[])
 
 
+def _discover_cuhk_seed(
+    seed: ProfessorRosterSeed,
+    fetch_html: FetchHtml,
+    limits: DiscoveryLimits | None = None,
+) -> _SeedDiscovery:
+    institution = (seed.institution or "").strip() or "UNKNOWN_INSTITUTION"
+    department = _normalize_text(seed.department)
+    professors: list[DiscoveredProfessorSeed] = []
+    visited_urls: list[str] = []
+    seen_profile_urls: set[str] = set()
+    applied_limits = limits or DiscoveryLimits()
+
+    for page_index in range(applied_limits.max_pages_per_seed):
+        page_url = _cuhk_page_url(seed.roster_url, page_index)
+        visited_urls.append(page_url)
+        html = fetch_html(page_url)
+        soup = BeautifulSoup(html, "html.parser")
+        profile_links = extract_cuhk_profile_links(soup)
+        if not profile_links:
+            profile_links = extract_cuhk_markdown_profile_links(html)
+        if not profile_links:
+            break
+        new_links_found = False
+        for raw_url, raw_name in profile_links:
+            name = _normalize_text(raw_name)
+            if not name:
+                continue
+            profile_url = urljoin(page_url, raw_url)
+            if profile_url in seen_profile_urls:
+                continue
+            seen_profile_urls.add(profile_url)
+            new_links_found = True
+            professors.append(
+                DiscoveredProfessorSeed(
+                    name=name,
+                    institution=institution,
+                    department=department,
+                    profile_url=profile_url,
+                    source_url=page_url,
+                )
+            )
+        if not new_links_found:
+            break
+
+    professors = _dedupe_professors(professors)
+    status = DiscoverySourceStatus(
+        seed_url=seed.roster_url,
+        institution=institution,
+        department=department,
+        status="resolved" if professors else "unresolved",
+        reason="cuhk_teacher_search" if professors else "cuhk_teacher_search_empty",
+        error=None,
+        visited_urls=visited_urls,
+        discovered_professor_count=len(professors),
+    )
+    return _SeedDiscovery(professors=professors, status=status, failed_fetch_urls=[])
+
+
 def _build_professor_seeds_from_records(
     records: list[object],
     institution: str,
@@ -905,6 +1432,385 @@ def _normalize_department_label(label: str | None) -> str | None:
     return None
 
 
+def _looks_like_direct_profile_url(url: str) -> bool:
+    parsed = urlparse(url)
+    path = parsed.path.lower().rstrip("/")
+    if not path:
+        return False
+    if any(
+        token in path
+        for token in (
+            "list",
+            "index",
+            "search",
+            "letter",
+            "directory",
+            "roster",
+            "faculty_members",
+            "jsjj",
+            "szdw",
+            "szll",
+            "jsml",
+            "jxjs",
+            "qbjs",
+            "news",
+            "notice",
+            "notices",
+            "event",
+            "events",
+            "article",
+            "articles",
+        )
+    ):
+        return False
+    leaf = path.rsplit("/", 1)[-1]
+    stem = leaf.rsplit(".", 1)[0]
+    if any(
+        token in path
+        for token in (
+            "teacher/",
+            "teachers/",
+            "faculty/",
+            "faculties/",
+            "profile/",
+            "people/",
+        )
+    ):
+        if stem in {
+            "teacher",
+            "teachers",
+            "faculty",
+            "faculties",
+            "profile",
+            "profiles",
+            "people",
+            "staff",
+            "team",
+            "group",
+            "list",
+            "index",
+            "professor",
+            "associate-professor",
+            "assistant-professor",
+            "full-time",
+            "part-time",
+            "adjunct",
+            "emeritus",
+            "famous",
+            "shuangpin",
+        }:
+            return False
+        return True
+    if not leaf.endswith((".htm", ".html")):
+        return False
+    blocked_leafs = {
+        "list.htm",
+        "list.html",
+        "index.htm",
+        "index.html",
+        "about.htm",
+        "about.html",
+        "contact.htm",
+        "contact.html",
+        "news.htm",
+        "news.html",
+        "szll.htm",
+        "szll.html",
+        "jsml.htm",
+        "jsml.html",
+        "jxjs.htm",
+        "jxjs.html",
+        "qbjs.htm",
+        "qbjs.html",
+    }
+    return leaf not in blocked_leafs and not path.startswith("/info/") and any(char.isdigit() for char in stem)
+
+
+def _looks_like_labeled_direct_profile_seed_url(url: str) -> bool:
+    if _looks_like_direct_profile_url(url):
+        return True
+    parsed = urlparse(url)
+    path = parsed.path.lower().rstrip("/")
+    if not path or not path.endswith((".htm", ".html")):
+        return False
+    if any(
+        token in path
+        for token in (
+            "list",
+            "index",
+            "search",
+            "letter",
+            "directory",
+            "roster",
+            "faculty_members",
+            "jsjj",
+            "szdw",
+            "szll",
+            "jsml",
+            "jxjs",
+            "qbjs",
+            "news",
+            "notice",
+            "notices",
+            "event",
+            "events",
+            "article",
+            "articles",
+        )
+    ):
+        return False
+    leaf = path.rsplit("/", 1)[-1]
+    stem = leaf.rsplit(".", 1)[0]
+    if stem not in {"main", "home", "homepage", "profile"}:
+        return False
+    return path.count("/") >= 2 and not path.startswith("/info/")
+
+
+def _looks_like_root_homepage_direct_profile_seed(
+    url: str,
+    *,
+    seed_label: str,
+    institution: str | None,
+    department: str | None,
+) -> bool:
+    parsed = urlparse(url)
+    hostname = (parsed.hostname or "").lower()
+    path = parsed.path.strip()
+    if path not in ("", "/"):
+        return False
+    if parsed.query or parsed.fragment:
+        return False
+    registered_domain = get_registered_domain(url)
+    if hostname == registered_domain:
+        return False
+    subdomain = hostname[: -(len(registered_domain) + 1)] if registered_domain and hostname.endswith(f".{registered_domain}") else ""
+    first_label = subdomain.split(".", 1)[0] if subdomain else ""
+    if first_label in {"", "www", "faculty", "teacher", "teachers", "people", "profile", "home"}:
+        return False
+
+    normalized_label = _normalize_text(seed_label)
+    if not normalized_label or is_obvious_non_person_name(normalized_label):
+        return False
+
+    label_key = normalize_name_key(normalized_label)
+    if not label_key:
+        return False
+    context_keys = {
+        normalize_name_key(institution),
+        normalize_name_key(department),
+    }
+    if label_key in context_keys:
+        return False
+
+    if re.fullmatch(
+        r"[\u4e00-\u9fff·]{2,4}(?:院士|教授|副教授|讲师|研究员|副研究员|助理教授|老师|博士)?",
+        normalized_label,
+    ):
+        return True
+    if re.fullmatch(r"[A-Za-z][A-Za-z ,.'-]{1,39}", normalized_label) and (
+        " " in normalized_label or "," in normalized_label
+    ):
+        return True
+    return False
+
+
+def _looks_like_unlabeled_direct_profile_seed_url(url: str) -> bool:
+    parsed = urlparse(url)
+    path = parsed.path.rstrip("/").lower()
+    if not path:
+        return False
+    return any(
+        marker in path
+        for marker in (
+            "/teacher/",
+            "/teachers/",
+            "/faculty/",
+            "/faculties/",
+            "/profile/",
+            "/people/",
+        )
+    )
+
+
+def _profile_detail_marker_score(html: str) -> int:
+    lowered = html.lower()
+    score = sum(1 for hint in _DIRECT_PROFILE_CONTENT_CLASS_HINTS if hint in lowered)
+    score += sum(1 for hint in _DIRECT_PROFILE_TEXT_HINTS if hint.casefold() in lowered)
+    return score
+
+
+def _extract_name_from_profile_like_detail_page(
+    *,
+    url: str,
+    html: str,
+    institution: str | None,
+    department: str | None,
+) -> str | None:
+    if _profile_detail_marker_score(html) < 1:
+        return None
+    extracted = extract_professor_profile(
+        html,
+        source_url=url,
+        institution=institution,
+        department=department,
+    )
+    candidate = _normalize_text(extracted.name)
+    if not candidate or is_obvious_non_person_name(candidate):
+        return None
+    return candidate
+
+
+def _resolve_direct_profile_seed_after_fetch(
+    *,
+    seed: ProfessorRosterSeed,
+    institution: str,
+    current: _PendingPage,
+    html: str,
+    seed_label: str,
+) -> tuple[str | None, str | None]:
+    if current.depth != 0 or current.url != seed.roster_url:
+        return None, None
+
+    direct_profile_like = (
+        (seed_label and _looks_like_labeled_direct_profile_seed_url(seed.roster_url))
+        or (
+            _looks_like_direct_profile_url(seed.roster_url)
+            and (seed_label or _looks_like_unlabeled_direct_profile_seed_url(seed.roster_url))
+        )
+    )
+    root_homepage_like = seed_label and _looks_like_root_homepage_direct_profile_seed(
+        seed.roster_url,
+        seed_label=seed_label,
+        institution=institution,
+        department=seed.department,
+    )
+    if seed_label and (direct_profile_like or root_homepage_like):
+        return seed_label, "direct_profile_seed_fetched"
+
+    profile_like_name = _extract_name_from_profile_like_detail_page(
+        url=seed.roster_url,
+        html=html,
+        institution=institution,
+        department=seed.department,
+    )
+    if seed_label and profile_like_name and is_same_person_name_variant(seed_label, profile_like_name):
+        return seed_label, "direct_profile_seed_fetched"
+    if not seed_label and profile_like_name:
+        return profile_like_name, "direct_profile_seed_fetched"
+
+    if not seed_label and _looks_like_direct_profile_url(seed.roster_url):
+        soup = BeautifulSoup(html, "html.parser")
+        title_text = soup.title.get_text(" ", strip=True) if soup.title else ""
+        candidate = _extract_person_name_from_title_text(
+            title_text,
+            institution=institution,
+            department=seed.department,
+        )
+        if candidate:
+            return candidate, "direct_profile_seed_fetched"
+
+    if not seed_label:
+        homepage_name = _extract_person_name_from_root_homepage(
+            seed.roster_url,
+            html,
+            institution=institution,
+            department=seed.department,
+        )
+        if homepage_name:
+            return homepage_name, "direct_profile_homepage"
+
+    return None, None
+
+
+def _extract_person_name_from_root_homepage(
+    url: str,
+    html: str,
+    *,
+    institution: str | None,
+    department: str | None,
+) -> str | None:
+    parsed = urlparse(url)
+    if parsed.path.strip() not in ("", "/"):
+        return None
+    if parsed.query or parsed.fragment:
+        return None
+
+    lowered_html = html.lower()
+    nav_hint_count = sum(hint in lowered_html for hint in _PERSONAL_HOMEPAGE_NAV_HINTS)
+    if nav_hint_count < 2:
+        return None
+
+    soup = BeautifulSoup(html, "html.parser")
+    title_text = soup.title.get_text(" ", strip=True) if soup.title else ""
+    candidate = _extract_person_name_from_title_text(
+        title_text,
+        institution=institution,
+        department=department,
+    )
+    if candidate:
+        return candidate
+
+    return None
+
+
+def _extract_person_name_from_title_text(
+    title_text: str,
+    *,
+    institution: str | None,
+    department: str | None,
+) -> str | None:
+    normalized_title = _normalize_text(title_text)
+    if not normalized_title:
+        return None
+
+    for separator in ("@", "-", "_", "|", "－", "—"):
+        if separator not in normalized_title:
+            continue
+        prefix = _normalize_text(normalized_title.split(separator, 1)[0])
+        if _looks_like_person_name_text(prefix):
+            return prefix
+
+    for context_text in (institution, department):
+        normalized_context = _normalize_text(context_text or "")
+        if normalized_context and normalized_title.endswith(normalized_context):
+            prefix = _normalize_text(normalized_title[: -len(normalized_context)])
+            if _looks_like_person_name_text(prefix):
+                return prefix
+
+    if _looks_like_person_name_text(normalized_title):
+        return normalized_title
+    return None
+
+
+def _looks_like_person_name_text(value: str | None) -> bool:
+    normalized = _normalize_text(value)
+    if not normalized or is_obvious_non_person_name(normalized):
+        return False
+    if re.fullmatch(
+        r"[\u4e00-\u9fff·]{2,4}(?:院士|教授|副教授|讲师|研究员|副研究员|助理教授|老师|博士)?",
+        normalized,
+    ):
+        return True
+    if re.fullmatch(r"[A-Za-z][A-Za-z ,.'-]{1,39}", normalized) and (
+        " " in normalized or "," in normalized
+    ):
+        return True
+    return False
+
+
+def _cuhk_page_url(seed_url: str, page_index: int) -> str:
+    parsed = urlparse(seed_url)
+    if page_index == 0:
+        return seed_url
+    query_items = [
+        (key, value)
+        for key, value in parse_qsl(parsed.query, keep_blank_values=True)
+        if key != "page"
+    ]
+    query_items.append(("page", str(page_index)))
+    return urlunparse(parsed._replace(query=urlencode(query_items)))
+
+
 def _is_sigs_seed(url: str) -> bool:
     parsed = urlparse(url)
     return (parsed.hostname or "").lower() == "www.sigs.tsinghua.edu.cn" and parsed.path.endswith(
@@ -915,3 +1821,9 @@ def _is_sigs_seed(url: str) -> bool:
 def _is_hit_seed(url: str) -> bool:
     parsed = urlparse(url)
     return (parsed.hostname or "").lower() == "homepage.hit.edu.cn" and "school-dept" in parsed.path
+
+
+def _is_cuhk_seed(url: str) -> bool:
+    parsed = urlparse(url)
+    hostname = (parsed.hostname or "").lower()
+    return hostname.endswith("cuhk.edu.cn") and "teacher-search" in parsed.path

@@ -12,10 +12,16 @@ import requests
 
 from src.data_agents.normalization import normalize_person_name
 
-from .models import DiscoveredPaper, ProfessorPaperDiscoveryResult
+from .models import (
+    DiscoveredPaper,
+    PaperMetadataEnrichment,
+    ProfessorPaperDiscoveryResult,
+)
 
 _WORKS_ENDPOINT = "https://api.crossref.org/works"
-_CACHE_ROOT = Path(__file__).resolve().parents[5] / "logs" / "debug" / "paper_crossref_cache"
+_CACHE_ROOT = (
+    Path(__file__).resolve().parents[5] / "logs" / "debug" / "paper_crossref_cache"
+)
 _MAX_RETRIES = 2
 _REQUEST_TIMEOUT = (5, 20)
 _HTML_TAG_RE = re.compile(r"<[^>]+>")
@@ -72,9 +78,56 @@ def discover_professor_paper_candidates_from_crossref(
             else None
         ),
         h_index=None,
-        citation_count=max((paper.citation_count or 0 for paper in papers), default=None),
+        citation_count=max(
+            (paper.citation_count or 0 for paper in papers), default=None
+        ),
         papers=papers,
+        paper_count=len(papers) if papers else None,
+        source="crossref",
+        school_matched=False,
+        fallback_used=False,
+        name_disambiguation_conflict=False,
+        candidate_count=1 if papers else 0,
+        query_name=query_name,
     )
+
+
+def enrich_paper_metadata_from_crossref(
+    doi: str,
+    *,
+    request_json: RequestJson | None = None,
+) -> PaperMetadataEnrichment | None:
+    normalized_doi = _normalize_optional_str(doi)
+    if not normalized_doi:
+        return None
+    fetch_json = request_json or _request_json
+    payload = fetch_json(
+        f"{_WORKS_ENDPOINT}/{normalized_doi}",
+        {"mailto": "mirothinker-data-agent@example.com"},
+    )
+    message = payload.get("message")
+    if not isinstance(message, dict):
+        return None
+
+    year, publication_date = _extract_date(message)
+    enrichment = PaperMetadataEnrichment(
+        abstract=_clean_abstract(message.get("abstract")),
+        venue=_first_text(message.get("container-title"))
+        or _first_text(message.get("short-container-title")),
+        publication_date=publication_date if year is not None else None,
+        fields_of_study=_extract_subjects(message.get("subject")),
+        license=_extract_license_url(message.get("license")),
+        funders=_extract_funders(message.get("funder")),
+        reference_count=_coerce_non_negative_int(message.get("reference-count")),
+        source_url=(
+            _normalize_optional_str(message.get("URL"))
+            or f"https://doi.org/{normalized_doi}"
+        ),
+        enrichment_sources=("crossref",),
+    )
+    if not _has_enrichment_content(enrichment):
+        return None
+    return enrichment
 
 
 def _request_json(url: str, params: RequestParams) -> dict[str, object]:
@@ -127,9 +180,8 @@ def _to_discovered_paper(
     title = _first_text(item.get("title"))
     year, publication_date = _extract_date(item)
     doi = _normalize_optional_str(item.get("DOI"))
-    source_url = (
-        _normalize_optional_str(item.get("URL"))
-        or (f"https://doi.org/{doi}" if doi else None)
+    source_url = _normalize_optional_str(item.get("URL")) or (
+        f"https://doi.org/{doi}" if doi else None
     )
     if not title or year is None or not doi or not source_url:
         return None
@@ -210,6 +262,44 @@ def _clean_abstract(value: object) -> str | None:
     return _normalize_optional_str(_HTML_TAG_RE.sub(" ", text))
 
 
+def _extract_subjects(value: object) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        return ()
+    return tuple(
+        subject for item in value if (subject := _normalize_optional_str(item))
+    )
+
+
+def _extract_license_url(value: object) -> str | None:
+    if not isinstance(value, list):
+        return None
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        if url := _normalize_optional_str(item.get("URL")):
+            return url
+    return None
+
+
+def _extract_funders(value: object) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        return ()
+    funders: list[str] = []
+    seen: set[str] = set()
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        funder = _normalize_optional_str(item.get("name"))
+        if not funder:
+            continue
+        key = funder.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        funders.append(funder)
+    return tuple(funders)
+
+
 def _normalize_query_name(name: str) -> str:
     normalized = normalize_person_name(name).strip().strip("\u200b\ufeff")
     normalized = _TRAILING_TITLE_RE.sub("", normalized)
@@ -233,6 +323,21 @@ def _normalize_optional_str(value: object) -> str | None:
         return None
     item = value.strip()
     return item or None
+
+
+def _has_enrichment_content(enrichment: PaperMetadataEnrichment) -> bool:
+    return any(
+        (
+            enrichment.abstract,
+            enrichment.venue,
+            enrichment.publication_date,
+            enrichment.fields_of_study,
+            enrichment.license,
+            enrichment.funders,
+            enrichment.reference_count is not None,
+            enrichment.source_url,
+        )
+    )
 
 
 def _cache_key(url: str, params: RequestParams) -> str:

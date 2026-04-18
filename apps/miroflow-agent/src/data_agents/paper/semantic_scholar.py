@@ -11,11 +11,23 @@ import requests
 
 from src.data_agents.normalization import normalize_person_name
 
-from .models import DiscoveredPaper, ProfessorPaperDiscoveryResult
+from .models import (
+    DiscoveredPaper,
+    PaperMetadataEnrichment,
+    ProfessorPaperDiscoveryResult,
+)
 
 _AUTHOR_SEARCH_ENDPOINT = "https://api.semanticscholar.org/graph/v1/author/search"
-_AUTHOR_PAPERS_ENDPOINT = "https://api.semanticscholar.org/graph/v1/author/{author_id}/papers"
-_CACHE_ROOT = Path(__file__).resolve().parents[5] / "logs" / "debug" / "paper_semantic_scholar_cache"
+_AUTHOR_PAPERS_ENDPOINT = (
+    "https://api.semanticscholar.org/graph/v1/author/{author_id}/papers"
+)
+_PAPER_LOOKUP_ENDPOINT = "https://api.semanticscholar.org/graph/v1/paper/DOI:{doi}"
+_CACHE_ROOT = (
+    Path(__file__).resolve().parents[5]
+    / "logs"
+    / "debug"
+    / "paper_semantic_scholar_cache"
+)
 _MAX_RETRIES = 2
 _REQUEST_TIMEOUT = (5, 20)
 
@@ -40,7 +52,10 @@ def discover_professor_paper_candidates(
             "fields": "name,affiliations,paperCount,citationCount,hIndex,url",
         },
     )
-    author = _select_exact_name_author(professor_name, author_payload.get("data", []))
+    author, name_disambiguation_conflict, candidate_count = _select_exact_name_author(
+        professor_name,
+        author_payload.get("data", []),
+    )
     if author is None:
         return ProfessorPaperDiscoveryResult(
             professor_id=professor_id,
@@ -50,6 +65,13 @@ def discover_professor_paper_candidates(
             h_index=None,
             citation_count=None,
             papers=[],
+            paper_count=None,
+            source="semantic_scholar",
+            school_matched=False,
+            fallback_used=False,
+            name_disambiguation_conflict=name_disambiguation_conflict,
+            candidate_count=candidate_count,
+            query_name=professor_name,
         )
 
     author_id = str(author.get("authorId") or "").strip() or None
@@ -64,6 +86,13 @@ def discover_professor_paper_candidates(
             h_index=None,
             citation_count=None,
             papers=[],
+            paper_count=None,
+            source="semantic_scholar",
+            school_matched=False,
+            fallback_used=False,
+            name_disambiguation_conflict=name_disambiguation_conflict,
+            candidate_count=candidate_count,
+            query_name=professor_name,
         )
 
     papers_payload = fetch_json(
@@ -99,7 +128,52 @@ def discover_professor_paper_candidates(
         h_index=h_index,
         citation_count=citation_count,
         papers=papers,
+        paper_count=_coerce_non_negative_int(author.get("paperCount")),
+        source="semantic_scholar",
+        school_matched=False,
+        fallback_used=False,
+        name_disambiguation_conflict=name_disambiguation_conflict,
+        candidate_count=candidate_count,
+        query_name=professor_name,
     )
+
+
+def enrich_paper_metadata_from_semantic_scholar(
+    doi: str,
+    *,
+    request_json: RequestJson | None = None,
+) -> PaperMetadataEnrichment | None:
+    normalized_doi = _normalize_optional_str(doi)
+    if not normalized_doi:
+        return None
+    fetch_json = request_json or _request_json
+    payload = fetch_json(
+        _PAPER_LOOKUP_ENDPOINT.format(doi=normalized_doi),
+        {
+            "fields": (
+                "title,abstract,tldr,fieldsOfStudy,publicationDate,venue,url,"
+                "isOpenAccess,openAccessPdf,citationCount,referenceCount"
+            ),
+        },
+    )
+    if not isinstance(payload, dict):
+        return None
+
+    enrichment = PaperMetadataEnrichment(
+        abstract=_normalize_optional_str(payload.get("abstract")),
+        venue=_normalize_optional_str(payload.get("venue")),
+        publication_date=_normalize_optional_str(payload.get("publicationDate")),
+        citation_count=_coerce_non_negative_int(payload.get("citationCount")),
+        fields_of_study=_extract_fields_of_study(payload.get("fieldsOfStudy")),
+        tldr=_extract_tldr(payload.get("tldr")),
+        oa_status=_extract_oa_status(payload),
+        reference_count=_coerce_non_negative_int(payload.get("referenceCount")),
+        source_url=_normalize_optional_str(payload.get("url")),
+        enrichment_sources=("semantic_scholar",),
+    )
+    if not _has_enrichment_content(enrichment):
+        return None
+    return enrichment
 
 
 def _request_json(url: str, params: RequestParams) -> dict[str, object]:
@@ -134,9 +208,9 @@ def _request_json(url: str, params: RequestParams) -> dict[str, object]:
 def _select_exact_name_author(
     professor_name: str,
     candidates: object,
-) -> dict[str, object] | None:
+) -> tuple[dict[str, object] | None, bool, int]:
     if not isinstance(candidates, list):
-        return None
+        return None, False, 0
 
     target_name = normalize_person_name(professor_name)
     exact_matches: list[dict[str, object]] = []
@@ -149,9 +223,9 @@ def _select_exact_name_author(
         exact_matches.append(item)
 
     if not exact_matches:
-        return None
+        return None, False, 0
 
-    return max(
+    selected_author = max(
         exact_matches,
         key=lambda item: (
             _coerce_non_negative_int(item.get("hIndex")) or 0,
@@ -160,6 +234,22 @@ def _select_exact_name_author(
             str(item.get("authorId") or ""),
         ),
     )
+    top_score = (
+        _coerce_non_negative_int(selected_author.get("hIndex")) or 0,
+        _coerce_non_negative_int(selected_author.get("citationCount")) or 0,
+        _coerce_non_negative_int(selected_author.get("paperCount")) or 0,
+    )
+    top_score_count = sum(
+        1
+        for item in exact_matches
+        if (
+            _coerce_non_negative_int(item.get("hIndex")) or 0,
+            _coerce_non_negative_int(item.get("citationCount")) or 0,
+            _coerce_non_negative_int(item.get("paperCount")) or 0,
+        )
+        == top_score
+    )
+    return selected_author, top_score_count > 1, len(exact_matches)
 
 
 def _to_discovered_paper(
@@ -219,6 +309,44 @@ def _normalize_optional_str(value: object) -> str | None:
         return None
     item = value.strip()
     return item or None
+
+
+def _extract_tldr(value: object) -> str | None:
+    if isinstance(value, dict):
+        return _normalize_optional_str(value.get("text"))
+    return _normalize_optional_str(value)
+
+
+def _extract_fields_of_study(value: object) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        return ()
+    return tuple(field for item in value if (field := _normalize_optional_str(item)))
+
+
+def _extract_oa_status(payload: dict[str, object]) -> str | None:
+    if payload.get("isOpenAccess") is True or isinstance(
+        payload.get("openAccessPdf"), dict
+    ):
+        return "open"
+    if payload.get("isOpenAccess") is False:
+        return "closed"
+    return None
+
+
+def _has_enrichment_content(enrichment: PaperMetadataEnrichment) -> bool:
+    return any(
+        (
+            enrichment.abstract,
+            enrichment.venue,
+            enrichment.publication_date,
+            enrichment.citation_count is not None,
+            enrichment.fields_of_study,
+            enrichment.tldr,
+            enrichment.oa_status,
+            enrichment.reference_count is not None,
+            enrichment.source_url,
+        )
+    )
 
 
 def _cache_root() -> Path:

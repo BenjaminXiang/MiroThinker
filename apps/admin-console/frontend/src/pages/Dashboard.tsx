@@ -20,6 +20,18 @@ const DOMAIN_META: Record<string, { label: string; icon: ReactNode }> = {
   patent: { label: "专利", icon: <SafetyCertificateOutlined /> },
 };
 
+function formatDate(iso: string | null): string {
+  if (!iso) return "-";
+  const d = new Date(iso);
+  return d.toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default function Dashboard() {
   const [data, setData] = useState<DashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,6 +81,22 @@ export default function Dashboard() {
         </span>
       ),
     },
+    {
+      title: "需补充",
+      key: "needs_enrichment",
+      render: (_: unknown, record: (typeof data.domains)[0]) => (
+        <span>
+          <QualityTag status="needs_enrichment" />{" "}
+          {record.quality.needs_enrichment ?? 0}
+        </span>
+      ),
+    },
+    {
+      title: "最后更新",
+      key: "last_updated",
+      render: (_: unknown, record: (typeof data.domains)[0]) =>
+        formatDate(record.last_updated),
+    },
   ];
 
   return (
@@ -81,6 +109,7 @@ export default function Dashboard() {
               title={DOMAIN_META[d.name]?.label ?? d.name}
               value={d.count}
               icon={DOMAIN_META[d.name]?.icon}
+              lastUpdated={formatDate(d.last_updated)}
             />
           </Col>
         ))}

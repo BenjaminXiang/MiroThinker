@@ -271,9 +271,11 @@ ID 规则要求：
 - `profile_summary`
 - `evaluation_summary`
 - `company_roles`
-- `top_papers`
 - `last_updated`
 - `evidence`
+
+教授的代表论文不再作为 professor 对象上的原始字段发布。
+如需展示代表论文，必须通过 `verified professor_paper_link` 关联到 canonical `paper` 对象后再派生。
 
 #### 论文
 

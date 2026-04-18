@@ -6,7 +6,35 @@ from typing import Annotated, Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 
-QualityStatus = Literal["ready", "needs_review", "low_confidence"]
+QualityStatus = Literal["ready", "needs_review", "low_confidence", "needs_enrichment"]
+LegacyQualityStatus = Literal["ready", "needs_review", "low_confidence", "needs_enrichment", "incomplete", "shallow_summary"]
+
+QUALITY_STATUS_CANONICAL_MAP: dict[str, QualityStatus] = {
+    "ready": "ready",
+    "needs_review": "needs_review",
+    "low_confidence": "low_confidence",
+    "needs_enrichment": "needs_enrichment",
+    "incomplete": "needs_review",
+    "shallow_summary": "needs_review",
+}
+
+
+def normalize_quality_status(raw_status: str) -> QualityStatus:
+    """Normalize legacy and current statuses into shared quality states."""
+    if raw_status not in QUALITY_STATUS_CANONICAL_MAP:
+        return "needs_review"
+    return QUALITY_STATUS_CANONICAL_MAP[raw_status]
+
+
+def quality_status_compatibility_rows() -> dict[str, list[str]]:
+    """Return compact compatibility mapping for docs and troubleshooting."""
+    mapping: dict[str, list[str]] = {
+        "ready": ["ready"],
+        "needs_review": ["needs_review", "incomplete", "shallow_summary"],
+        "needs_enrichment": ["needs_enrichment"],
+        "low_confidence": ["low_confidence"],
+    }
+    return mapping
 EvidenceSourceType = Literal[
     "official_site",
     "xlsx_import",
@@ -14,7 +42,7 @@ EvidenceSourceType = Literal[
     "academic_platform",
     "manual_review",
 ]
-ObjectType = Literal["professor", "company", "paper", "patent"]
+ObjectType = Literal["professor", "company", "paper", "patent", "professor_paper_link"]
 NonEmptyStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 OptionalNonEmptyStr = NonEmptyStr | None
 SHENZHEN_INSTITUTION_KEYWORDS = (
@@ -25,10 +53,13 @@ SHENZHEN_INSTITUTION_KEYWORDS = (
     "北京大学深圳研究生院",
     "PKUSZ",
     "深圳理工大学",
+    "深圳技术大学",
+    "SZTU",
     "哈尔滨工业大学（深圳）",
     "HIT Shenzhen",
     "香港中文大学（深圳）",
     "CUHK-Shenzhen",
+    "中山大学（深圳）",
 )
 
 
@@ -59,12 +90,56 @@ class ReleasedObject(SharedBaseModel):
     summary_fields: dict[str, Any]
     evidence: list[Evidence] = Field(min_length=1)
     last_updated: datetime
-    quality_status: QualityStatus = "ready"
+    quality_status: QualityStatus = "needs_review"
+
+
+ProfessorPaperLinkStatus = Literal["verified", "candidate", "rejected"]
 
 
 class ProfessorCompanyRole(SharedBaseModel):
     company_name: NonEmptyStr
     role: NonEmptyStr
+
+
+class ProfessorPaperLinkRecord(SharedBaseModel):
+    id: NonEmptyStr
+    professor_id: NonEmptyStr
+    paper_id: NonEmptyStr
+    professor_name: NonEmptyStr
+    paper_title: NonEmptyStr
+    link_status: ProfessorPaperLinkStatus
+    evidence_source: OptionalNonEmptyStr = None
+    evidence_url: OptionalNonEmptyStr = None
+    match_reason: NonEmptyStr
+    verified_by: OptionalNonEmptyStr = None
+    evidence: list[Evidence] = Field(min_length=1)
+    last_updated: datetime
+    quality_status: QualityStatus = "needs_review"
+
+    @property
+    def display_name(self) -> str:
+        return f"{self.professor_name} -> {self.paper_title}"
+
+    def to_released_object(self) -> ReleasedObject:
+        return ReleasedObject(
+            id=self.id,
+            object_type="professor_paper_link",
+            display_name=self.display_name,
+            core_facts={
+                "professor_id": self.professor_id,
+                "paper_id": self.paper_id,
+                "professor_name": self.professor_name,
+                "paper_title": self.paper_title,
+                "link_status": self.link_status,
+                "evidence_source": self.evidence_source,
+                "evidence_url": self.evidence_url,
+                "verified_by": self.verified_by,
+            },
+            summary_fields={"match_reason": self.match_reason},
+            evidence=self.evidence,
+            last_updated=self.last_updated,
+            quality_status=self.quality_status,
+        )
 
 
 class EducationExperience(SharedBaseModel):
@@ -94,17 +169,17 @@ class ProfessorRecord(SharedBaseModel):
     work_experience: list[NonEmptyStr] = Field(default_factory=list)
     h_index: int | None = Field(default=None, ge=0)
     citation_count: int | None = Field(default=None, ge=0)
+    paper_count: int | None = Field(default=None, ge=0)
     awards: list[NonEmptyStr] = Field(default_factory=list)
     academic_positions: list[NonEmptyStr] = Field(default_factory=list)
     projects: list[NonEmptyStr] = Field(default_factory=list)
     profile_summary: NonEmptyStr
-    evaluation_summary: NonEmptyStr
+    evaluation_summary: str = ""
     company_roles: list[ProfessorCompanyRole] = Field(default_factory=list)
-    top_papers: list[NonEmptyStr] = Field(default_factory=list)
     patent_ids: list[NonEmptyStr] = Field(default_factory=list)
     evidence: list[Evidence] = Field(min_length=1)
     last_updated: datetime
-    quality_status: QualityStatus = "ready"
+    quality_status: QualityStatus = "needs_review"
 
     @model_validator(mode="after")
     def validate_professor_baseline(self) -> ProfessorRecord:
@@ -138,18 +213,18 @@ class ProfessorRecord(SharedBaseModel):
                 "work_experience": self.work_experience,
                 "h_index": self.h_index,
                 "citation_count": self.citation_count,
+                "paper_count": self.paper_count,
                 "awards": self.awards,
                 "academic_positions": self.academic_positions,
                 "projects": self.projects,
                 "company_roles": [
                     role.model_dump(mode="json") for role in self.company_roles
                 ],
-                "top_papers": self.top_papers,
                 "patent_ids": self.patent_ids,
             },
             summary_fields={
                 "profile_summary": self.profile_summary,
-                "evaluation_summary": self.evaluation_summary,
+                **({"evaluation_summary": self.evaluation_summary} if self.evaluation_summary else {}),
             },
             evidence=self.evidence,
             last_updated=self.last_updated,
@@ -169,7 +244,7 @@ class CompanyRecord(SharedBaseModel):
     technology_route_summary: NonEmptyStr
     evidence: list[Evidence] = Field(min_length=1)
     last_updated: datetime
-    quality_status: QualityStatus = "ready"
+    quality_status: QualityStatus = "needs_review"
 
     @property
     def display_name(self) -> str:
@@ -213,13 +288,20 @@ class PaperRecord(SharedBaseModel):
     publication_date: OptionalNonEmptyStr = None
     keywords: list[NonEmptyStr] = Field(default_factory=list)
     citation_count: int | None = Field(default=None, ge=0)
+    fields_of_study: list[NonEmptyStr] = Field(default_factory=list)
+    tldr: OptionalNonEmptyStr = None
+    license: OptionalNonEmptyStr = None
+    funders: list[NonEmptyStr] = Field(default_factory=list)
+    oa_status: OptionalNonEmptyStr = None
+    reference_count: int | None = Field(default=None, ge=0)
+    enrichment_sources: list[NonEmptyStr] = Field(default_factory=list)
     pdf_path: OptionalNonEmptyStr = None
     professor_ids: list[NonEmptyStr] = Field(default_factory=list)
     summary_zh: NonEmptyStr
     summary_text: NonEmptyStr
     evidence: list[Evidence] = Field(min_length=1)
     last_updated: datetime
-    quality_status: QualityStatus = "ready"
+    quality_status: QualityStatus = "needs_review"
 
     @property
     def display_name(self) -> str:
@@ -242,6 +324,13 @@ class PaperRecord(SharedBaseModel):
                 "publication_date": self.publication_date,
                 "keywords": self.keywords,
                 "citation_count": self.citation_count,
+                "fields_of_study": self.fields_of_study,
+                "tldr": self.tldr,
+                "license": self.license,
+                "funders": self.funders,
+                "oa_status": self.oa_status,
+                "reference_count": self.reference_count,
+                "enrichment_sources": self.enrichment_sources,
                 "pdf_path": self.pdf_path,
                 "professor_ids": self.professor_ids,
             },
@@ -274,7 +363,7 @@ class PatentRecord(SharedBaseModel):
     summary_text: NonEmptyStr
     evidence: list[Evidence] = Field(min_length=1)
     last_updated: datetime
-    quality_status: QualityStatus = "ready"
+    quality_status: QualityStatus = "needs_review"
 
     @model_validator(mode="after")
     def validate_patent_dates(self) -> PatentRecord:

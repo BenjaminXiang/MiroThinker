@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from urllib.parse import urlparse
 
 from .models import (
     DiscoveredProfessorSeed,
@@ -25,10 +26,14 @@ def build_profile_record(
     skip_reason: str | None,
     error: str | None = None,
 ) -> MergedProfessorProfileRecord:
-    name = select_canonical_name(
-        roster_name=roster_seed.name,
-        extracted_name=extracted.name if extracted else None,
-    )
+    extracted_name = extracted.name if extracted else None
+    if _has_synthetic_profile_fragment(roster_seed.profile_url):
+        name = normalize_text(roster_seed.name)
+    else:
+        name = select_canonical_name(
+            roster_name=roster_seed.name,
+            extracted_name=extracted_name,
+        )
     institution = normalize_text(extracted.institution if extracted else None) or normalize_text(
         roster_seed.institution
     )
@@ -67,6 +72,10 @@ def build_profile_record(
         error=error,
         roster_source=roster_seed.source_url,
     )
+
+
+def _has_synthetic_profile_fragment(url: str) -> bool:
+    return urlparse(url).fragment.startswith("prof-")
 
 
 def is_structured_profile(profile: ExtractedProfessorProfile) -> bool:

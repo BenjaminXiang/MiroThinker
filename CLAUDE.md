@@ -20,6 +20,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **`docs/Multi-turn-Context-Manager-Design.md`** — 多轮对话上下文管理器：指代消解、跨模块跳转、话题切换检测
 - **`docs/solutions/`** — 经验沉淀：部署模式、基础设施问题、集成陷阱
 
+`docs/solutions/` 下的经验文档按 `docs/solutions/<category>/` 分类存放，并使用 YAML frontmatter 标记 `module`、`problem_type`、`component`、`tags` 等检索字段。这些文档在实现、调试或调整已记录过的模块时通常最有价值。
+
 ## Common Commands
 
 ```bash
@@ -155,7 +157,7 @@ If gstack skills aren't working, run `cd .claude/skills/gstack && ./setup` to bu
 
 ### ⚙️ 协作流模式 (Hybrid Design-Build Flow)
 
-当触发新功能开发、核心重构或用户使用 `/full` 命令时，**必须严格按以下顺序串行调用插件**：
+当触发新功能开发、核心重构，**必须严格按以下顺序串行调用插件**：
 
 #### Stage 1: 架构与边界确认 (Architecting)
 1. `/plan-ceo-review` (gstack)：**强制刹车**。以挑剔的视角审视需求，精简掉不必要的过度设计，锁定“必须做”的核心目标。
@@ -166,11 +168,11 @@ If gstack skills aren't working, run `cd .claude/skills/gstack && ./setup` to bu
 
 #### Stage 3: 测试驱动与代码落地 (Implementation)
 4. `/superpowers:test-driven-development` (Superpowers)：开启严格的 RED-GREEN-REFACTOR（红-绿-重构）循环，先由 Claude Code 定义测试桩。
-5. `/codex:implement` (Codex)：**核心执行步骤**。由 Codex 接管，根据测试要求进行具体的代码写入与大规模修改。
+5. `/codex` (Codex)： implemen**核心执行步骤**。由 Codex 接管，根据测试要求进行具体的代码写入与大规模修改。
 
 #### Stage 4: 交叉验证与深度防御 (Verification & Deep Review)
-6. **Claude Code 交叉验证 (Cross-Validation)**：**强校验点**。Claude Code 必须主动读取 Codex 生成的源码，对照 Stage 2 的 `/ce:plan` 计划书逐行校验。检查逻辑是否对齐、类型注解是否完整。如发现偏差或“幻觉”，立即重新触发 Codex 进行修正。
-7. `/review` (gstack)：**禁止挑剔代码风格**。专门排查常规 AI 容易漏掉的致命生产 Bug：N+1 数据库查询、并发竞争条件、安全信任边界越权。
+6. **Claude Code 交叉验证 (Cross-Validation)**：**强校验点**。Claude Code 必须主动读取 Codex 生成的源码，对照 Stage 2 的 `/ce:plan` 计划书逐行校验。检查逻辑是否对齐、类型注解是否完整。如发现偏差或“幻觉”，立即重新触发 Codex 进行修正。如果是Claude Code 实现的代码，必须使用 Codex 对照 Stage 2 的 `/ce:plan` 计划书逐行校验。 检查逻辑是否对齐、类型注解是否完整。如发现偏差或“幻觉”，立即重新触发 Claude Code 进行修正。
+7. `/ce:review` ：**禁止挑剔代码风格**。多代理审查，专门排查常规 AI 容易漏掉的致命生产 Bug：N+1 数据库查询、并发竞争条件、安全信任边界越权。
 
 #### Stage 5: 知识复利 (Compounding)
 8. `/ce:compound` (Compound)：将本次迭代遇到的坑、架构决策及解决方案，永久沉淀至 `docs/solutions/` 目录，确保系统随时间推移越来越聪明。

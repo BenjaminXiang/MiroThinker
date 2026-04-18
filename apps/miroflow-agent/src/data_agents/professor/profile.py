@@ -2,7 +2,9 @@ import re
 from html.parser import HTMLParser
 from urllib.parse import urljoin
 
+from .direction_cleaner import clean_directions
 from .models import ExtractedProfessorProfile
+from .name_selection import is_obvious_non_person_name
 
 _TITLE_LABELS = ("职位", "职称", "Title")
 _EMAIL_LABELS = ("邮箱", "电子邮箱", "Email", "E-mail")
@@ -13,6 +15,7 @@ _HOMEPAGE_LABELS = ("主页", "个人主页", "Homepage", "Home Page", "Profile"
 _HOMEPAGE_TEXT_KEYWORDS = ("主页", "homepage", "home page", "profile")
 _EMAIL_PATTERN = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 _HEADING_TAGS = {"h1", "h2", "h3", "h4", "h5", "h6"}
+_STRUCTURED_TEXT_TAGS = {"div", "p", "li", "td", "th", "dd", "dt", "section", "article"}
 _IGNORED_TEXT_TAGS = {"script", "style", "noscript"}
 _INLINE_LABEL_BOUNDARY_RE = re.compile(
     r"\s+(?:姓名|Name|职位|职称|Title|邮箱|电子邮箱|Email|E-mail|"
@@ -54,6 +57,29 @@ _NON_NAME_HEADING_KEYWORDS = (
     "中国史",
     "汉语国际教育系",
 )
+_STRUCTURED_RESEARCH_BLOCKERS = (
+    "教育背景",
+    "工作经历",
+    "学术成果",
+    "科研项目",
+    "联系方式",
+    "个人简介",
+    "基本信息",
+    "研究成果",
+    "招生信息",
+    "主讲课程",
+    "课程教学",
+    "本科课程",
+    "荣誉",
+    "获奖",
+    "教授",
+    "副教授",
+    "讲师",
+    "研究员",
+    "院士",
+    "博士",
+    "硕士",
+)
 
 
 class _ProfileParser(HTMLParser):
@@ -65,8 +91,11 @@ class _ProfileParser(HTMLParser):
         self.generic_heading_name_candidates: list[str] = []
         self.homepage_links: list[tuple[str, str]] = []
         self.page_title_parts: list[str] = []
+        self.structured_text_samples: list[str] = []
         self._in_paragraph = False
         self._paragraph_parts: list[str] = []
+        self._structured_text_depth = 0
+        self._structured_text_parts: list[str] = []
         self._name_heading_depth = 0
         self._name_parts: list[str] = []
         self._generic_heading_depth = 0
@@ -90,6 +119,10 @@ class _ProfileParser(HTMLParser):
         if tag == "p":
             self._in_paragraph = True
             self._paragraph_parts = []
+        if tag in _STRUCTURED_TEXT_TAGS:
+            if self._structured_text_depth == 0:
+                self._structured_text_parts = []
+            self._structured_text_depth += 1
 
         if tag in _HEADING_TAGS:
             if "t-name" in class_tokens:
@@ -114,6 +147,8 @@ class _ProfileParser(HTMLParser):
 
         if self._in_paragraph:
             self._paragraph_parts.append(data)
+        if self._structured_text_depth > 0:
+            self._structured_text_parts.append(data)
         if self._name_heading_depth > 0:
             self._name_parts.append(data)
         if self._generic_heading_depth > 0:
@@ -136,6 +171,13 @@ class _ProfileParser(HTMLParser):
                 self.paragraphs.append(paragraph_text)
             self._in_paragraph = False
             self._paragraph_parts = []
+        if tag in _STRUCTURED_TEXT_TAGS and self._structured_text_depth > 0:
+            self._structured_text_depth -= 1
+            if self._structured_text_depth == 0:
+                structured_text = _normalize_text("".join(self._structured_text_parts))
+                if structured_text:
+                    self.structured_text_samples.append(structured_text)
+                self._structured_text_parts = []
 
         if tag in _HEADING_TAGS and self._name_heading_depth > 0:
             candidate = _normalize_text("".join(self._name_parts))
@@ -172,7 +214,7 @@ def extract_professor_profile(
     parser.close()
 
     full_text = _normalize_text(" ".join(parser.full_text_parts))
-    text_samples = [*parser.paragraphs, full_text]
+    text_samples = [*parser.structured_text_samples, *parser.paragraphs, full_text]
 
     labeled_name = _extract_first_labeled_value(text_samples, _NAME_LABELS)
     title_name = _extract_name_from_page_title(
@@ -189,7 +231,10 @@ def extract_professor_profile(
     title = _extract_first_labeled_value(text_samples, _TITLE_LABELS)
     office = _extract_first_labeled_value(text_samples, _OFFICE_LABELS)
     research_raw = _extract_first_labeled_value(text_samples, _RESEARCH_LABELS)
-    research_directions = _split_research_directions(research_raw) if research_raw else []
+    research_directions = _extract_research_directions(
+        text_samples=text_samples,
+        research_raw=research_raw,
+    )
 
     labeled_email = _extract_first_labeled_value(text_samples, _EMAIL_LABELS)
     fallback_email = _extract_email_from_text(full_text)
@@ -308,11 +353,75 @@ def _split_research_directions(value: str) -> list[str]:
     return items
 
 
+def _extract_research_directions(
+    *,
+    text_samples: list[str],
+    research_raw: str | None,
+) -> list[str]:
+    candidates: list[str] = []
+    if research_raw:
+        candidates.append(research_raw)
+
+    for index, sample in enumerate(text_samples):
+        normalized = _normalize_text(sample)
+        if not normalized:
+            continue
+        for label in _RESEARCH_LABELS:
+            if normalized == label:
+                next_value = _next_non_empty_sample(text_samples, index + 1)
+                if _looks_like_research_directions(next_value):
+                    candidates.append(next_value)
+                continue
+            match = re.match(
+                rf"^{re.escape(label)}\s*(?:[：:]\s*|\s+)(.+)$",
+                normalized,
+                flags=re.IGNORECASE,
+            )
+            if match:
+                candidate = _clean_value(match.group(1))
+                if _looks_like_research_directions(candidate):
+                    candidates.append(candidate)
+
+    return _clean_structured_research_directions(candidates)
+
+
+def _clean_structured_research_directions(values: list[str]) -> list[str]:
+    protected_token = "__COURSE_THOUGHT__"
+    protected = [
+        value.replace("课程思政", protected_token)
+        for value in values
+        if value
+    ]
+    cleaned = clean_directions(protected)
+    return [value.replace(protected_token, "课程思政") for value in cleaned]
+
+
+def _next_non_empty_sample(text_samples: list[str], start_index: int) -> str | None:
+    for sample in text_samples[start_index:]:
+        normalized = _normalize_text(sample)
+        if normalized:
+            return normalized
+    return None
+
+
+def _looks_like_research_directions(value: str | None) -> bool:
+    normalized = _normalize_text(value or "")
+    if not normalized:
+        return False
+    if len(normalized) > 80:
+        return False
+    if any(blocker in normalized for blocker in _STRUCTURED_RESEARCH_BLOCKERS):
+        return False
+    return True
+
+
 def _is_generic_name_heading(value: str) -> bool:
     normalized = _normalize_text(value)
     if not normalized:
         return False
     if len(normalized) > 20:
+        return False
+    if is_obvious_non_person_name(normalized):
         return False
     if any(keyword in normalized for keyword in _NON_NAME_HEADING_KEYWORDS):
         return False
@@ -333,7 +442,7 @@ def _clean_value(value: str) -> str:
     boundary_match = _INLINE_LABEL_BOUNDARY_RE.search(normalized)
     if boundary_match:
         normalized = normalized[: boundary_match.start()]
-    return _normalize_text(normalized).strip("：:;,，；/|")
+    return _normalize_text(normalized).strip("：:;,，；/|").strip()
 
 
 def _normalize_text(value: str) -> str:
@@ -368,7 +477,7 @@ def _extract_name_from_page_title(
     if not title:
         return None
 
-    for separator in ("-", "_", "|", "－", "—"):
+    for separator in ("@", "-", "_", "|", "－", "—"):
         if separator in title:
             prefix = _normalize_text(title.split(separator, 1)[0])
             if _is_generic_name_heading(prefix):

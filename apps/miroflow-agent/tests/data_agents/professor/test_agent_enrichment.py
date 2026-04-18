@@ -11,12 +11,14 @@ import pytest
 from src.data_agents.professor.agent_enrichment import (
     AgentOutputModel,
     build_agent_prompt,
+    _merge_agent_output,
     run_agent_enrichment,
 )
 from src.data_agents.professor.cross_domain import CompanyLink
 from src.data_agents.professor.models import (
     EducationEntry,
     EnrichedProfessorProfile,
+    WorkEntry,
 )
 
 
@@ -151,6 +153,56 @@ async def test_both_tiers_fail_returns_original():
 
 
 @pytest.mark.asyncio
+async def test_agent_drops_invalid_company_roles_instead_of_failing_whole_output():
+    profile = _profile()
+    llm = _mock_llm(json.dumps({
+        "company_roles": [
+            {"company_name": "深圳AI科技", "role": None, "source": "web_search"},
+            {"company_name": "深圳AI科技", "role": "首席科学家", "source": "web_search"}
+        ],
+        "department": "计算机系"
+    }, ensure_ascii=False))
+
+    result = await run_agent_enrichment(
+        profile=profile,
+        missing_fields=["company_roles", "department"],
+        html_text="",
+        local_llm_client=llm,
+        local_llm_model="test",
+    )
+
+    assert result.enrichment_source == "agent_local"
+    assert result.profile.department == "计算机系"
+    assert len(result.profile.company_roles) == 1
+    assert result.profile.company_roles[0].company_name == "深圳AI科技"
+    assert result.profile.company_roles[0].role == "首席科学家"
+
+
+@pytest.mark.asyncio
+async def test_agent_drops_invalid_education_entries_instead_of_failing_whole_output():
+    profile = _profile()
+    llm = _mock_llm(json.dumps({
+        "education_structured": [
+            {"school": None, "degree": "博士"},
+            {"school": "清华大学", "degree": "博士", "field": "计算机科学"}
+        ],
+        "department": "计算机系"
+    }, ensure_ascii=False))
+
+    result = await run_agent_enrichment(
+        profile=profile,
+        missing_fields=["education_structured", "department"],
+        html_text="",
+        local_llm_client=llm,
+        local_llm_model="test",
+    )
+
+    assert result.enrichment_source == "agent_local"
+    assert result.profile.department == "计算机系"
+    assert [item.school for item in result.profile.education_structured] == ["清华大学"]
+
+
+@pytest.mark.asyncio
 async def test_agent_does_not_overwrite_existing_fields():
     profile = _profile(
         department="已有院系",
@@ -175,3 +227,36 @@ async def test_agent_does_not_overwrite_existing_fields():
     assert result.profile.education_structured[0].school == "已有学校"
     # New field filled
     assert result.profile.title == "教授"
+
+
+def test_merge_agent_output_preserves_distinct_school_and_organization_entries():
+    profile = _profile(
+        education_structured=[EducationEntry(school="MIT", degree="博士")],
+        work_experience=[WorkEntry(organization="微软亚洲研究院", role="研究员")],
+    )
+    output = AgentOutputModel(
+        education_structured=[
+            EducationEntry(school="MIT", degree="博士"),
+            EducationEntry(school="Stanford", degree="博士"),
+        ],
+        work_experience=[
+            WorkEntry(organization="微软亚洲研究院", role="研究员"),
+            WorkEntry(organization="Google", role="研究员"),
+        ],
+    )
+
+    result = _merge_agent_output(profile, output)
+
+    assert [item.school for item in result.education_structured] == ["MIT", "Stanford"]
+    assert [item.organization for item in result.work_experience] == ["微软亚洲研究院", "Google"]
+
+
+def test_merge_agent_output_sanitizes_reader_artifact_title():
+    profile = _profile()
+    output = AgentOutputModel(
+        title="URL Source: https://example.com\nPublished Time: 2026-04-12\nMarkdown Content:\nTitle: Professor",
+    )
+
+    result = _merge_agent_output(profile, output)
+
+    assert result.title is None
