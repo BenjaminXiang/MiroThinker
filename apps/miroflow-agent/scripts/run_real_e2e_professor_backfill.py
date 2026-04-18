@@ -41,13 +41,43 @@ from src.data_agents.professor.canonical_writer import (
     upsert_source_page_for_url,
     write_professor_bundle,
 )
+from src.data_agents.professor.llm_profiles import resolve_professor_llm_settings
 from src.data_agents.professor.models import EnrichedProfessorProfile
+from src.data_agents.professor.name_identity_gate import (
+    NameIdentityCandidate,
+    NameIdentityDecision,
+    verify_name_identity,
+)
 from src.data_agents.professor.name_selection import is_obvious_non_person_name
 from src.data_agents.storage.postgres.connection import resolve_dsn
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_ENRICHED = REPO_ROOT / "logs" / "data_agents" / "professor" / "enriched.jsonl"
+
+
+def _build_name_identity_gate():
+    """Round 7.17: build a sync gate callable, or return None to disable.
+
+    Default: enabled. Set NAME_IDENTITY_GATE_ENABLED=false to kill-switch.
+    Uses shared llm_profiles resolver for the Gemma endpoint.
+    """
+    if os.environ.get("NAME_IDENTITY_GATE_ENABLED", "true").lower() in ("0", "false", "off", "no"):
+        return None
+
+    from openai import OpenAI
+
+    settings = resolve_professor_llm_settings("gemma4")
+    client = OpenAI(
+        base_url=settings["local_llm_base_url"],
+        api_key=settings["local_llm_api_key"] or "EMPTY",
+    )
+    model = settings["local_llm_model"]
+
+    def _gate(candidate: NameIdentityCandidate) -> NameIdentityDecision:
+        return verify_name_identity(candidate, llm_client=client, llm_model=model)
+
+    return _gate
 
 
 @dataclass
@@ -94,7 +124,7 @@ def _is_official_host(url: str) -> bool:
     return host.endswith(".edu.cn") or host.endswith(".gov.cn") or host.endswith(".ac.cn")
 
 
-def _process_one(conn, raw: dict, stats: BackfillStats) -> None:
+def _process_one(conn, raw: dict, stats: BackfillStats, name_identity_gate=None) -> None:
     stats.total_read += 1
     if raw.get("extraction_status") != "structured":
         stats.skipped_non_structured += 1
@@ -195,6 +225,7 @@ def _process_one(conn, raw: dict, stats: BackfillStats) -> None:
             enriched=enriched,
             paper_staging=None,
             official_profile_page_id=primary_page_id,
+            name_identity_gate=name_identity_gate,
         )
         if report.is_new_professor:
             stats.written += 1
@@ -240,6 +271,11 @@ def main() -> int:
 
     stats = BackfillStats()
     structured_seen = 0
+    name_identity_gate = _build_name_identity_gate()
+    if name_identity_gate is not None:
+        print("name_identity_gate: ENABLED (Round 7.17)")
+    else:
+        print("name_identity_gate: DISABLED via NAME_IDENTITY_GATE_ENABLED env")
 
     # canonical_writer uses positional row[0] access → tuple_row, not dict_row.
     with psycopg.connect(dsn, row_factory=tuple_row) as conn:
@@ -275,7 +311,7 @@ def main() -> int:
             # doesn't cascade into subsequent inserts.
             try:
                 with conn.transaction():
-                    _process_one(conn, raw, stats)
+                    _process_one(conn, raw, stats, name_identity_gate=name_identity_gate)
             except Exception as exc:
                 # _process_one already incremented stats.errors and logged;
                 # the savepoint rolls back and we keep going.
