@@ -90,7 +90,7 @@ _INSTITUTION_KEYS_BY_LEN = sorted(
 
 
 _Q_PROFILE_RE = re.compile(
-    r"介绍\s*(?:(?P<inst>[\u4e00-\u9fff]{2,10}?)\s*的\s*)?(?P<name>[\u4e00-\u9fff]{2,5})$"
+    r"介绍\s*(?:(?P<inst>[\u4e00-\u9fff]{2,15}?)\s*的\s*)?(?P<name>[\u4e00-\u9fff]{2,5})$"
 )
 _Q_TOPIC_LIST_RE = re.compile(
     r"(?P<inst>[\u4e00-\u9fff]{2,15}?)\s*做\s*(?P<topic>.{2,30}?)\s*的?\s*(教授|老师|学者)"
@@ -150,24 +150,28 @@ def _lookup_professors_by_topic(
 ) -> list[dict]:
     placeholders = ", ".join(["%s"] * len(institutions))
     sql = f"""
-        SELECT p.professor_id,
-               p.canonical_name,
-               pa.institution,
-               array_agg(DISTINCT f.value_raw) FILTER (
-                 WHERE f.value_raw ILIKE %s
-               ) AS matched_topics
-          FROM professor p
-          JOIN professor_affiliation pa
-            ON pa.professor_id = p.professor_id AND pa.is_primary = true
-          JOIN professor_fact f
-            ON f.professor_id = p.professor_id
-               AND f.fact_type = 'research_topic'
-               AND f.status = 'active'
-         WHERE p.identity_status = 'resolved'
-           AND pa.institution IN ({placeholders})
-           AND f.value_raw ILIKE %s
-         GROUP BY p.professor_id, p.canonical_name, pa.institution
-         ORDER BY p.canonical_name
+        WITH matches AS (
+          SELECT p.professor_id,
+                 p.canonical_name,
+                 pa.institution,
+                 array_agg(DISTINCT f.value_raw) FILTER (
+                   WHERE f.value_raw ILIKE %s
+                 ) AS matched_topics
+            FROM professor p
+            JOIN professor_affiliation pa
+              ON pa.professor_id = p.professor_id AND pa.is_primary = true
+            JOIN professor_fact f
+              ON f.professor_id = p.professor_id
+                 AND f.fact_type = 'research_topic'
+                 AND f.status = 'active'
+           WHERE p.identity_status = 'resolved'
+             AND pa.institution IN ({placeholders})
+             AND f.value_raw ILIKE %s
+           GROUP BY p.professor_id, p.canonical_name, pa.institution
+        )
+        SELECT *, count(*) OVER ()::int AS total_count
+          FROM matches
+         ORDER BY canonical_name
          LIMIT 20
     """
     like = f"%{topic}%"
@@ -206,7 +210,8 @@ def _lookup_patents_by_applicant(
     return conn.execute(
         """
         SELECT patent_id, patent_number, title_clean, applicants_raw,
-               filing_date, grant_date, patent_type
+               filing_date, grant_date, patent_type,
+               count(*) OVER ()::int AS total_count
           FROM patent
          WHERE applicants_raw ILIKE %s
          ORDER BY filing_date DESC NULLS LAST
@@ -238,22 +243,35 @@ def _answer_prof_list(institutions: tuple[str, ...], topic: str, rows: list[dict
     if not rows:
         inst = "/".join(institutions)
         return f"在 {inst} 未找到研究 {topic!r} 方向的教授。"
-    lines = [f"共找到 {len(rows)} 位教授：", ""]
+    total = rows[0].get("total_count", len(rows))
+    header = (
+        f"共找到 {total} 位教授（显示前 {min(len(rows), 10)} 位）："
+        if total > len(rows) or len(rows) > 10
+        else f"共找到 {total} 位教授："
+    )
+    lines = [header, ""]
     for r in rows[:10]:
         topics = r.get("matched_topics") or []
         topic_str = "、".join(topics[:3]) if topics else "(无)"
         lines.append(
             f"  • {r['canonical_name']} — {r['institution']} — 匹配方向: {topic_str}"
         )
-    if len(rows) > 10:
-        lines.append(f"  ... (另有 {len(rows) - 10} 位未列出)")
+    remaining = total - min(len(rows), 10)
+    if remaining > 0:
+        lines.append(f"  ... (另有 {remaining} 位未列出)")
     return "\n".join(lines)
 
 
 def _answer_patent_list(company: str, rows: list[dict]) -> str:
     if not rows:
         return f"未找到以 {company!r} 为申请人的专利。"
-    lines = [f"共找到 {len(rows)} 件专利：", ""]
+    total = rows[0].get("total_count", len(rows))
+    header = (
+        f"共找到 {total} 件专利（显示前 {min(len(rows), 10)} 件）："
+        if total > len(rows) or len(rows) > 10
+        else f"共找到 {total} 件专利："
+    )
+    lines = [header, ""]
     for r in rows[:10]:
         date = (r.get("grant_date") or r.get("filing_date"))
         date_str = str(date) if date else "日期未知"
@@ -261,8 +279,21 @@ def _answer_patent_list(company: str, rows: list[dict]) -> str:
             f"  • {r['patent_number']} — {r['title_clean']} "
             f"（{r.get('patent_type') or '类型未知'}, {date_str}）"
         )
-    if len(rows) > 10:
-        lines.append(f"  ... (另有 {len(rows) - 10} 件未列出)")
+    remaining = total - min(len(rows), 10)
+    if remaining > 0:
+        lines.append(f"  ... (另有 {remaining} 件未列出)")
+    return "\n".join(lines)
+
+
+def _answer_ambiguous_profs(name: str, profs: list[dict]) -> str:
+    """Multiple profs share canonical_name; ask user to disambiguate by school."""
+    lines = [
+        f"找到 {len(profs)} 位名为 {name!r} 的教授，请加上学校再问一次：",
+        "",
+    ]
+    for p in profs[:10]:
+        inst = p.get("institution") or "单位未知"
+        lines.append(f"  • {name} — {inst}")
     return "\n".join(lines)
 
 
@@ -288,6 +319,27 @@ def chat(
                 query_type="A_prof_profile",
                 answer_text=f"没有找到{inst_fragment or ''}的{name}。",
                 citations=[],
+            )
+        # Ambiguous: multiple matches without an institution filter.
+        # Don't silently pick profs[0] — ask the user to disambiguate.
+        if len(profs) > 1 and institutions is None:
+            return ChatResponse(
+                query=query,
+                query_type="A_prof_profile_ambiguous",
+                answer_text=_answer_ambiguous_profs(name, profs),
+                citations=[
+                    ChatCitation(
+                        type="professor",
+                        id=p["professor_id"],
+                        label=f"{p['canonical_name']} - {p.get('institution') or '单位未知'}",
+                        url=f"/browse#professor/{p['professor_id']}",
+                    )
+                    for p in profs[:10]
+                ],
+                structured_payload={
+                    "name": name,
+                    "candidate_count": len(profs),
+                },
             )
         prof = profs[0]
         topics = _prof_research_topics(conn, prof["professor_id"])
@@ -347,7 +399,7 @@ def chat(
             structured_payload={
                 "institutions": list(institutions),
                 "topic": topic,
-                "match_count": len(rows),
+                "match_count": rows[0].get("total_count", len(rows)) if rows else 0,
             },
         )
 
@@ -370,7 +422,7 @@ def chat(
             ],
             structured_payload={
                 "company_name_query": company,
-                "match_count": len(rows),
+                "match_count": rows[0].get("total_count", len(rows)) if rows else 0,
             },
         )
 
