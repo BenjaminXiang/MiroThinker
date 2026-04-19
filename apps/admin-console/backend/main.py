@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.api.batch import router as batch_router
+from backend.api.chat import router as chat_router
 from backend.api.data import router as data_router
 from backend.api.dashboard import router as dashboard_router
 from backend.api.export import router as export_router
@@ -40,6 +41,7 @@ app.include_router(data_router)
 app.include_router(pipeline_router)
 app.include_router(review_router)
 app.include_router(domains_router)
+app.include_router(chat_router)
 
 
 # Lightweight built-in data browser (no React build required).
