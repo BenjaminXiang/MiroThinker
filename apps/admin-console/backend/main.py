@@ -13,6 +13,7 @@ from backend.api.data import router as data_router
 from backend.api.dashboard import router as dashboard_router
 from backend.api.export import router as export_router
 from backend.api.pipeline import router as pipeline_router
+from backend.api.pipeline_issues import router as pipeline_issues_router
 from backend.api.review import router as review_router
 from backend.api.upload import router as upload_router
 from backend.api.domains import router as domains_router
@@ -40,8 +41,9 @@ app.include_router(batch_router)
 app.include_router(data_router)
 app.include_router(pipeline_router)
 app.include_router(review_router)
-app.include_router(domains_router)
 app.include_router(chat_router)
+app.include_router(pipeline_issues_router)
+app.include_router(domains_router)
 
 
 # Lightweight built-in data browser (no React build required).
