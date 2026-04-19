@@ -112,12 +112,17 @@ def _fetch_active_professors(conn, *, limit: int | None) -> list[dict]:
 
 
 def _soft_delete(conn, professor_id) -> None:
+    # Belt-and-braces: only reversible from 'resolved' → 'inactive'. If some
+    # future caller reaches here with a row already in a different state,
+    # the UPDATE becomes a no-op instead of silently losing information
+    # (e.g. clobbering a 'merged_into' pointer).
     conn.execute(
         """
         UPDATE professor
            SET identity_status = 'inactive',
                updated_at = now()
          WHERE professor_id = %s
+           AND identity_status = 'resolved'
         """,
         (professor_id,),
     )
