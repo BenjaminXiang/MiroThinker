@@ -21,7 +21,7 @@ class Paper(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     paper_id: str  # PAPER-{12hex}
-    title_clean: str
+    title_clean: str | None = None
     title_raw: str | None = None
     doi: str | None = None
     arxiv_id: str | None = None

@@ -1,139 +1,111 @@
-"""Paper-title plausibility guard.
+"""Rule-based paper-title plausibility guard.
 
-Scraped ``paper_staging`` records occasionally include CV bullet-points
-(Ph.D. entries, editorial roles, fellowships, workshop co-chair lines)
-harvested from professor homepages. Those leak into ``paper`` rows and
-pollute the dashboard. ``is_plausible_paper_title`` is the minimal filter
-used at backfill time and for SQL cleanup.
+Round 7.12' targets a narrow failure mode in ``paper.title_clean``: author
+lists and editorial bios pasted into the title field. This v1 is intentionally
+rule-based only; there is no LLM fallback.
 """
 
 from __future__ import annotations
 
 import re
 
-_NON_PAPER_PREFIXES = (
-    "ph.d",
-    "ph.d.",
-    "phd ",
-    "b.sc",
-    "b.sc.",
-    "b.s.",
-    "b.eng",
-    "b.eng.",
-    "m.sc",
-    "m.sc.",
-    "m.s.",
-    "m.eng",
-    "m.eng.",
-    "m.phil",
-    "d.phil",
-    "fellow,",
-    "fellow of",
-    "member,",
-    "member of",
-    "senior member,",
-    "distinguished fellow",
-    "editor,",
-    "editor-in-chief",
-    "editor in chief",
-    "associate editor",
-    "co-editor",
-    "guest editor",
-    "handling editor",
-    "managing editor",
-    "reviewer",
-    "reviewer,",
-    "workshop",
-    "co-chair",
-    "chair,",
-    "vice chair",
-    "session chair",
-    "program chair",
-    "general chair",
-    "panel ",
-    "keynote",
-    "invited ",
-    "visiting ",
-    "assistant professor",
-    "associate professor",
-    "adjunct",
-    "president,",
-    "vice president",
-    "director,",
-    "vice director",
-    "dean,",
-    "vice dean",
-    "teaching prize",
-    "teaching award",
-    "award,",
-    "award:",
-    "grant,",
-    "grant:",
-    "professional ",
-    "current position",
-    "past position",
-    "biography",
-    "research area",
-    "research interest",
-    "research direction",
-    "research group",
-    "research focus",
-    "selected publication",
-    "selected public",
-    "publications:",
-    "books:",
-    "book chapter",
-    "edited book",
-    "edited volume",
-    "funded project",
-    "teaching:",
-    "course:",
-    "courses:",
-    "service:",
-    "education:",
-    "appointments:",
-    "professional experience",
-    "work experience",
-    "employment",
-    "honors and awards",
-    "honors &",
+
+_WHITESPACE_RE = re.compile(r"\s+")
+_PAREN_PREFIX_RE = re.compile(r"^\(\d+\)[A-Z]")
+_EDITORIAL_ROLE_RE = re.compile(
+    r"(?:\bassociate editor\b|\beditor(?:-in-chief)?\b|\bco-chair\b|\bchair\b|主席)",
+    re.IGNORECASE,
 )
-
-_YEAR_RANGE_RE = re.compile(r"^(19|20)\d{2}\s*[-–—]")
-_YEAR_DASH_POSITION_RE = re.compile(r"^(19|20)\d{2}\s*[-–—]\s*(present|continue|\d{4})", re.IGNORECASE)
-
-
-def _normalize(value: str) -> str:
-    return " ".join(value.replace("\ufeff", "").split()).strip()
+_ACRONYM_RE = re.compile(r"\b[A-Z]{2,}\b")
+_INITIAL_RE = re.compile(r"[A-Z]\.")
+_CAPITALIZED_RE = re.compile(r"[A-Z][a-z]+(?:[-'][A-Z][a-z]+)*")
+_UPPER_RE = re.compile(r"[A-Z]{2,}")
+_CJK_RE = re.compile(r"[\u4e00-\u9fff]")
 
 
-def is_plausible_paper_title(value: str | None) -> bool:
-    """Return True if *value* plausibly describes a paper title.
+def _normalize(title: str) -> str:
+    return _WHITESPACE_RE.sub(" ", title.replace("\ufeff", " ")).strip()
 
-    Conservative: missed junk (false negative) is fine, but blocking a
-    real paper (false positive) pollutes recall. Only rejects titles with
-    shape indicators that are very unlikely in an academic title.
-    """
-    if not value:
+
+def _is_name_token(token: str) -> bool:
+    return bool(
+        _INITIAL_RE.fullmatch(token)
+        or _CAPITALIZED_RE.fullmatch(token)
+        or _UPPER_RE.fullmatch(token)
+    )
+
+
+def _looks_like_first_last(segment: str) -> bool:
+    if "," in segment:
         return False
-    normalized = _normalize(value)
-    if not normalized:
+    tokens = segment.split()
+    if not 2 <= len(tokens) <= 4:
         return False
-    if len(normalized) < 8:
+    if not all(_is_name_token(token) for token in tokens):
         return False
-    lower = normalized.lower()
-    for prefix in _NON_PAPER_PREFIXES:
-        if lower.startswith(prefix):
-            return False
-    if _YEAR_DASH_POSITION_RE.match(normalized):
+    return any(_CAPITALIZED_RE.fullmatch(token) for token in tokens)
+
+
+def _looks_like_lastname_first(segment: str) -> bool:
+    if segment.count(",") != 1:
         return False
-    if _YEAR_RANGE_RE.match(normalized) and len(normalized) <= 80:
-        # "2011 - 2016, Ph.D..." — year-range plus short descriptor.
+    last, first = (part.strip() for part in segment.split(",", 1))
+    if not last or not first:
         return False
-    # Chinese: at least 4 non-ASCII characters to dodge page-nav fragments.
-    non_ascii = sum(1 for ch in normalized if ord(ch) > 127)
-    if non_ascii == 0:
-        # Pure ASCII: require at least 3 space-separated tokens.
-        if normalized.count(" ") < 2:
-            return False
+    last_tokens = last.split()
+    first_tokens = first.split()
+    if not 1 <= len(last_tokens) <= 3 or not 1 <= len(first_tokens) <= 3:
+        return False
+    if not all(_is_name_token(token) for token in last_tokens + first_tokens):
+        return False
+    return any(_CAPITALIZED_RE.fullmatch(token) for token in last_tokens + first_tokens)
+
+
+def _looks_like_author_segment(segment: str) -> bool:
+    cleaned = segment.strip().strip("()[]{}")
+    cleaned = cleaned.rstrip(".")
+    cleaned = cleaned.replace("…", "").replace("...", "").strip()
+    if not cleaned:
+        return False
+    return _looks_like_lastname_first(cleaned) or _looks_like_first_last(cleaned)
+
+
+def _count_author_like_segments(title: str, separator: str) -> int:
+    parts = [part.strip() for part in title.split(separator)]
+    return sum(1 for part in parts if _looks_like_author_segment(part))
+
+
+
+
+def _looks_like_comma_author_list(title: str) -> bool:
+    if title.count(", ") < 3:
+        return False
+    parts = [part.strip() for part in title.split(",")]
+    if len(parts) < 4:
+        return False
+    author_like = [part for part in parts if _looks_like_author_segment(part)]
+    return len(author_like) >= 4 and len(author_like) >= len(parts) - 1
+
+
+def _looks_like_editorial_bio(title: str) -> bool:
+    return bool(_EDITORIAL_ROLE_RE.search(title) and len(_ACRONYM_RE.findall(title)) >= 2)
+
+
+def is_plausible_paper_title(title: str | None) -> bool:
+    """Return whether *title* looks like a real paper title."""
+    if title is None:
+        return False
+    normalized = _normalize(str(title))
+    if len(normalized) < 8 or len(normalized) > 300:
+        return False
+    if normalized.count(";") > 3:
+        return False
+    if normalized.count("; ") >= 2 and _count_author_like_segments(normalized, ";") >= 3:
+        return False
+    if _looks_like_comma_author_list(normalized):
+        return False
+    if _PAREN_PREFIX_RE.match(normalized):
+        return False
+    if _looks_like_editorial_bio(normalized):
+        return False
     return True
