@@ -574,6 +574,7 @@ JOIN LATERAL (
         pa.affiliation_id DESC
     LIMIT 1
 ) primary_affiliation ON TRUE
+WHERE p.identity_status = 'resolved'
 GROUP BY primary_affiliation.institution
 ORDER BY count DESC, primary_affiliation.institution ASC
 LIMIT 50
@@ -584,10 +585,12 @@ SELECT
     pf.value_raw AS value,
     count(*)::int AS count
 FROM professor_fact pf
+JOIN professor p ON p.professor_id = pf.professor_id
 WHERE pf.fact_type = 'research_topic'
   AND pf.status = 'active'
   AND pf.value_raw IS NOT NULL
   AND pf.value_raw != ''
+  AND p.identity_status = 'resolved'
 GROUP BY pf.value_raw
 ORDER BY count DESC, pf.value_raw ASC
 LIMIT 50
@@ -909,7 +912,7 @@ def _list_professors(
     page: int,
     page_size: int,
 ) -> ProfessorListResponse:
-    conditions: list[str] = []
+    conditions: list[str] = ["p.identity_status = 'resolved'"]
     params: dict[str, Any] = {
         "offset": (page - 1) * page_size,
         "page_size": page_size,

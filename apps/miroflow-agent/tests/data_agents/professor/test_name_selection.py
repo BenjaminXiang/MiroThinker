@@ -148,3 +148,60 @@ def test_select_canonical_name_prefers_roster_when_extracted_name_is_profile_blo
     )
 
     assert select_canonical_name(roster_name="常瑞华", extracted_name=extracted_name) == "常瑞华"
+
+
+# Round 7.18 — patterns observed in miroflow_real that slipped past earlier guard.
+
+
+@pytest.mark.parametrize(
+    "label",
+    [
+        "师资力量",
+        "综合新闻",
+        "教师简介",
+        "新闻动态",
+        "最新动态",
+        "学术动态",
+        "招生简章",
+        "学院动态",
+    ],
+)
+def test_is_obvious_non_person_name_recognizes_additional_page_headings(label: str):
+    """Page-section headings scrapers mistake for professor names."""
+    assert is_obvious_non_person_name(label)
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "陈怀海 性别： 男",
+        "倪江群职称：教授",
+        "张某职务：院长",
+        "李某 学位：博士",
+        "王某 E-mail：foo@bar.edu",
+        "赵某 邮箱：a@b.com",
+    ],
+)
+def test_is_obvious_non_person_name_rejects_field_label_pollution(name: str):
+    """Names with stuck-on Chinese field labels (e.g. 'Name 性别：男')."""
+    assert is_obvious_non_person_name(name)
+
+
+def test_is_obvious_non_person_name_rejects_long_mid_dot_suffix():
+    """'Name·MCI The Entrepreneurial ...' — multi-field stuck by · separator."""
+    assert is_obvious_non_person_name(
+        "Prof. Dr. Anita Zehrer·MCI The Entrepreneurial ..."
+    )
+
+
+def test_is_obvious_non_person_name_keeps_legitimate_western_lastname_first():
+    """Nobel-laureate style 'LASTNAME, Firstname' must pass (citation export format)."""
+    assert not is_obvious_non_person_name("WARSHEL, Arieh")
+    assert not is_obvious_non_person_name("KOBILKA, Brian")
+    assert not is_obvious_non_person_name("BRESAR, Miha")
+
+
+def test_is_obvious_non_person_name_keeps_short_middot_personal_names():
+    """Short · names (Uyghur/Tibetan personal names) must not be rejected."""
+    assert not is_obvious_non_person_name("吾买尔·阿卜杜拉")
+    assert not is_obvious_non_person_name("次仁·卓玛")

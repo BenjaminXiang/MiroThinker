@@ -6,6 +6,14 @@ JUNK_NAME_TITLES = {
     "首页",
     "师资",
     "师资队伍",
+    "师资力量",
+    "教师简介",
+    "综合新闻",
+    "新闻动态",
+    "最新动态",
+    "学术动态",
+    "学院动态",
+    "招生简章",
     "教师队伍",
     "全部教师",
     "教研团队",
@@ -168,6 +176,42 @@ _PROFILE_BLOB_KEYWORDS = (
     "teaching",
 )
 
+# Round 7.18 — Chinese field-label markers that appear when the scraper swallows
+# profile metadata into the "name" field. Seen in miroflow_real:
+#   "陈怀海 性别： 男" → scraper glued the gender row to the name
+#   "倪江群职称：教授" → scraper glued the title row to the name
+# A real person's name never contains these substrings.
+_FIELD_LABEL_MARKERS = (
+    "性别：",
+    "性别:",
+    "职称：",
+    "职称:",
+    "职务：",
+    "职务:",
+    "学位：",
+    "学位:",
+    "学历：",
+    "学历:",
+    "邮箱：",
+    "邮箱:",
+    "电话：",
+    "电话:",
+    "姓名：",
+    "姓名:",
+    "E-mail：",
+    "e-mail：",
+    "Email：",
+    "email：",
+    "研究方向：",
+    "工作单位：",
+    "个人简介：",
+)
+
+# Round 7.18 — long strings with a · separator usually indicate multi-field
+# pollution (e.g. "Prof. Dr. Anita Zehrer·MCI The Entrepreneurial ...").
+# Short · names (Uyghur/Tibetan personal names like 吾买尔·阿卜杜拉) must pass.
+_LONG_MIDDOT_THRESHOLD = 30
+
 
 def _normalize_text(value: str | None) -> str | None:
     if value is None:
@@ -227,6 +271,10 @@ def is_obvious_non_person_name(value: str | None) -> bool:
     if normalized.casefold() in JUNK_NAME_TITLES_CASEFOLD:
         return True
     if _looks_like_journal_or_topic_name(normalized):
+        return True
+    if any(marker in normalized for marker in _FIELD_LABEL_MARKERS):
+        return True
+    if len(normalized) > _LONG_MIDDOT_THRESHOLD and "·" in normalized:
         return True
     if len(normalized) > 12:
         return False
