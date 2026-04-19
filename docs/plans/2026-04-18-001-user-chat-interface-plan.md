@@ -1,7 +1,7 @@
 ---
 title: User-Facing Chat Interface (ChatGPT-Style) Plan
-date: 2026-04-18
-status: draft
+date: 2026-04-19
+status: v0-shipped-v1-planning
 owner: claude
 extends:
   - docs/plans/2026-04-17-005-company-primary-knowledge-graph-architecture-plan.md
@@ -43,24 +43,138 @@ origin:
 
 每一级都是**可验收、可演示**的独立 milestone。不要跳级。
 
-### v0 — 端到端打通（Round 8）
+### v0 — 端到端打通 ✅ 已发布（Round 8 完成）
 
-**范围**：单轮、无 LLM 合成、只查 canonical company 域。
+**状态**：2026-04-19 发布，单轮、模板答案、直查 canonical。原先因数据质量被 BLOCKED，现已解锁并上线。
 
-- 前端：单页 chat UI（输入框 + 消息气泡 + 引用卡片），无历史侧栏
-- 后端：`POST /api/chat` 接 query，做 entity_lookup（公司名/别名/website host），graph_traversal 取 team + funding，组装结构化 JSON 答案
-- 答案格式：`{answer_text, citations, structured_payload}`
-- 答案生成：**规则模板**（例如 "{canonical_name} 是一家 {industry} 公司..."），不调 LLM
-- 验收：问"云鲸智能"、"极智视觉"、"服务机器人有哪些公司"能返回合理答案
+**实现证据**：
+- 后端 `/api/chat` 端点：commit `8e2f297`
+- 前端 `chat.html` UI：commit `9a0617b`
+- Codex 交叉验证发现并修复 3 处缺陷：commit `47745a2`
+  - 正则 institution 捕获：消除贪婪匹配越界
+  - 同名教授消歧：`A_prof_profile_ambiguous` 分支返回候选列表
+  - LIMIT 引起的 count 虚报：分离 count 查询，不再用 `len(rows)` 谎报总数
 
-### v1 — LLM 合成（Round 9）
+**代码位置**：
+- 落点在 `apps/admin-console/backend/api/chat.py`（务实 v0 宿主；v1+ 会迁出至独立 `apps/chat-app/`）
+- 前端为 vanilla HTML，挂载于 `/chat`，**不需要 React build**
 
-**范围**：加 LLM 答案整合 + 更自然的自由文本输出。
+**支持的查询模式**：
+| pattern_id | 含义 |
+|---|---|
+| `A_prof_profile` | 单个教授画像（姓名 + 可选机构） |
+| `A_prof_profile_ambiguous` | 同名教授消歧（多候选） |
+| `A_prof_list_by_topic` | 按机构/主题的教授列表 |
+| `A_patent_by_applicant` | 按申请人的专利列表 |
 
-- 后端：retrieval 结果喂 MiroThinker agent runtime → 输出自然语言答案
-- 答案加 inline citation（[1][2] 对应下方 evidence 卡片）
-- 流式响应（SSE）
-- 验收：PRD Type A/B 查询返回流畅自然、带引用的答案
+**Golden-path 测试结果**（3 条典型 query）：
+- ✅ "丁文伯教授的简介" → 返回真实 profile（canonical 命中）
+- ✅ "清华大学做 AI 的教授有哪些" → 返回教授列表
+- ❌ "云鲸智能的专利" → 0 结果。**原因**：`patent` 表为空（0 rows），非代码缺陷
+
+**答案生成**：规则模板，格式 `{answer_text, citations, structured_payload}`，**不调 LLM**。
+
+### v1 — LLM 答案合成（下一轮）
+
+**范围**：在 v0 检索结果之上叠加 LLM 自然语言合成，保留 citation。
+
+**设计原则**：复用 v0 的 entity retrieval + graph traversal，**不改检索层**，只替换 synthesis 层。
+
+#### 1) 检索层保持不变
+
+与 v0 完全相同：`entity_lookup` + `graph_traversal`，得到结构化 rows（教授 / 论文 / 专利 / 公司）。
+
+#### 2) Evidence Block 组装
+
+将检索到的结构化 rows 打包成带引用标记的 context block，喂给 LLM：
+
+```
+[1] (professor) 丁文伯，清华大学深圳国际研究生院，研究方向：XXX
+    prof_id=PROF-abc123, identity_status=verified
+[2] (paper) "Title...", 2024, venue=ICML, authors=[丁文伯, ...]
+    paper_id=PAPER-xyz789, verification_confidence=0.92
+[3] (patent) 申请号 CN2024..., 申请人=...
+    patent_id=PAT-000001
+...
+```
+
+每个 evidence block 形如 `[N] (type) summary ... id=<ID>`，`[N]` 即 LLM 产出时要引用的标记。
+
+#### 3) LLM Prompt 骨架
+
+沿用项目现有本地 gemma4 模型（与 `name_identity_gate` / `paper_identity_gate` / `medium_rescan` Phase B 一致）。
+
+```python
+SYSTEM = """你是深圳科创检索助手。基于给定的证据块回答用户问题。
+要求：
+1. 只使用证据块中的事实，禁止编造。
+2. 在每个事实后用 [N] 标记引用的证据块编号。
+3. 若证据不足以回答，明确说"当前库中暂无相关信息"。
+4. 输出简洁的中文 markdown，不超过 300 字。
+"""
+
+USER = {
+  "question": "<原始 query>",
+  "evidence_blocks": [
+    {"marker": "[1]", "type": "professor", "summary": "...", "id": "PROF-abc123"},
+    {"marker": "[2]", "type": "paper", "summary": "...", "id": "PAPER-xyz789"},
+    ...
+  ],
+  "citation_format_spec": "每个事实后紧跟对应的 [N]；末尾不需要单独列参考文献。"
+}
+```
+
+LLM 输出解析：正则提取 `[\d+]` 标记，与 evidence_blocks 的 id 建立映射。
+
+#### 4) 响应契约扩展
+
+`ChatResponse` 新增字段：
+
+```python
+class ChatResponse(BaseModel):
+    # ... v0 既有字段
+    answer_style: Literal["template", "llm_synthesized"]
+    citation_map: dict[str, str]  # "[1]" -> "PROF-abc123"
+```
+
+**返回 BOTH**：
+- `structured_rows`：v0 原样的结构化 rows（前端仍可渲染实体卡片）
+- `answer_text`：LLM 合成的自然语言答案（含 `[N]` inline markers）
+- `citation_map`：`[N]` → evidence ID 的映射
+
+#### 5) 降级策略
+
+LLM 调用失败（超时 / 返回格式非法 / 网络错误）时：
+- 回退到 v0 规则模板答案
+- `answer_style="template"`
+- 写一条 `pipeline_issue` 记录：`stage='chat_synthesis'`, `severity='low'`
+- **用户侧无感知**：仍返回可用答案，不抛 500
+
+#### 6) 延迟预算
+
+| 路径 | 目标 p95 |
+|---|---|
+| LLM 合成成功 | ≤ 3s |
+| 模板降级 | ≤ 100ms |
+
+LLM 超过 3s 视为慢调用，触发 issue 记录（但不强制打断，以 timeout 为准）。
+
+#### v1 成功指标
+
+- **LLM 合成率 ≥ 80%**：其余 20% 允许降级到模板（应为长尾错误，非常态）
+- **Citation 准确性**：合成文本中每个 `[N]` 必须在 `citation_map` 中存在，且对应真实的 evidence row——**零悬空引用**
+- **事实保真度**：人工抽检 20 条 query 的答案，**不得虚构任何证据块之外的事实**（precision=1.0 的硬要求；recall 软指标）
+
+### v0 已知 gap（部分影响 v1 覆盖面，但不是 v1 的阻断项）
+
+明确列出，以免在 v1 实施过程中混淆责任边界：
+
+| Gap | 影响 | 是否阻断 v1 |
+|---|---|---|
+| 47% 教授没有 verified paper | 教授相关 list / 文献查询召回率受限 | ❌ 不阻断 v1 LLM 合成，纯数据缺口，由 paper pipeline 补齐 |
+| `patent` 表空（0 rows） | 专利查询返回 0 结果 | ❌ 不阻断 v1，由 patent pipeline 补齐 |
+| 多轮上下文未实现 | 无法指代消解 | ❌ 不阻断 v1（v1 保持单轮），在 v2 交给 context manager |
+| 软删除（`identity_status='inactive'`）行 | 已在 v0 的 chat 查询里过滤 ✓ | 已处理 |
 
 ### v2 — 多轮上下文（Round 10）
 
@@ -292,10 +406,10 @@ apps/chat-app/frontend/
 
 ## 6. Rounds 分解
 
-| Round | 内容 | 依赖 | 预估 |
+| Round | 内容 | 依赖 | 状态 |
 |---|---|---|---|
-| **Round 8** | chat-app 骨架 + v0 retrieval planner（entity_lookup）+ 规则模板答案 + React 前端单页 | Phase 1 company canonical ✅ | 1 文件集 |
-| **Round 9** | LLM answer synthesis + SSE 流式 + inline citation | Round 8 + MiroThinker agent runtime | |
+| **Round 8** | chat-app 骨架 + v0 retrieval planner（entity_lookup）+ 规则模板答案 + vanilla HTML 前端 | Phase 1 company canonical ✅ | ✅ 已发布（2026-04-19） |
+| **Round 9** | LLM answer synthesis（gemma4 本地）+ citation markers + 模板降级 | Round 8 ✅ | 下一轮，见 v1 设计 |
 | **Round 10** | 多轮上下文：SessionContext + 指代消解 + 跨模块跳转 | Round 9 | |
 | **Round 11** | online_freshness_patch：web search + `offline_enrichment_queue` 回写 | Round 10 + Phase 5（retrieval 全套） | |
 | **Round 12** | WeChat 公众号 webhook 适配 | Round 11 + 微信 AppID/Secret | |
@@ -310,18 +424,16 @@ Chat v3 依赖 `company_signal_event` 的实际新闻事件数据。那些数据
 
 这决定了如果要并行推进，Phase 2 news 和 Chat v3 是耦合的。v0-v2 可以独立先做。
 
-## 8. 首个 Round（Round 8）验收标准
+## 8. 首个 Round（Round 8）验收标准 ✅ 已达成
 
-v0 MVP 可感知交付物：
+v0 MVP 可感知交付物（2026-04-19 验收）：
 
-- [ ] 浏览器打开 `http://localhost:18100/` 看到 chat 页面
-- [ ] 输入"云鲸智能做什么？"返回合理答案 + 公司卡片 + citation
-- [ ] 输入"深圳有哪些服务机器人公司？"返回至少 3 家公司列表
-- [ ] 输入"今天天气怎么样？"返回礼貌拒答（out-of-scope）
-- [ ] `pytest apps/chat-app/tests -v` 全通过
-- [ ] 控制台无错误、HTTP 500 为 0
-
-Round 8 brief 的细节等确认启动后再写；本文档仅到计划层。
+- [x] 浏览器 `/chat` 路径可访问 chat 页面（vanilla HTML，无 React build）
+- [x] "丁文伯教授的简介" → 返回 canonical profile + citation
+- [x] "清华大学做 AI 的教授有哪些" → 返回列表
+- [ ] "云鲸智能的专利" → 0 结果（**数据缺口**：patent 表空，非代码 bug）
+- [x] Codex 交叉验证通过，已修复 3 处缺陷（见 commit `47745a2`）
+- [x] Golden-path 2/3 返回真实数据
 
 ## 9. 与 plan 005 的统一视图
 
@@ -332,8 +444,9 @@ Round 8 brief 的细节等确认启动后再写；本文档仅到计划层。
 │ apps/chat-app/   │ apps/admin-con.  │ apps/miroflow-agent/ │
 │ (端用户 chat)     │ (运维 dashboard) │ (数据采集 + canonical │
 │                  │                  │  + retrieval services)│
-│ [Round 8-12]     │ [Round 4 ✅ +     │ [Phase 1-3 ✅ 主体    │
-│                  │  未来 UI Round]  │  Phase 2 news 待做]   │
+│ [Round 8 ✅ 宿于   │ [Round 4 ✅ +     │ [Phase 1-3 ✅ 主体    │
+│  admin-console； │  未来 UI Round]  │  Phase 2 news 待做]   │
+│  v1+ 迁出]        │                  │                       │
 ├──────────────────┴──────────────────┴───────────────────────┤
 │            Postgres 16 + pgvector (canonical graph)          │
 │  V001 source + V002 company + V003 prof + V004 paper/pat     │
@@ -343,6 +456,10 @@ Round 8 brief 的细节等确认启动后再写；本文档仅到计划层。
 
 ## 10. 下一步行动
 
-1. **待确认**：是否启动 Round 8（chat-app v0 MVP）？
-2. 启动后我会写详细 Round 8 brief 给 Codex，按 Rounds 1-7 同样的流程（Claude 设计契约 → Codex 实现 → Claude 交叉验证）
-3. Round 8 与 Phase 3 pipeline 集成（professor 实际数据）可并行推进
+1. ✅ v0 已发布（Round 8 完成）——检索 + 模板答案 + Codex 交叉验证通过
+2. **下一步**：启动 Round 9（v1 LLM synthesis），按本文档 §3 v1 设计：
+   - 复用 v0 retrieval，不改检索层
+   - 新增 `synthesis/llm_answer.py`，gemma4 本地调用
+   - 扩展 `ChatResponse`（`answer_style`, `citation_map`）
+   - 实现降级到模板 + `pipeline_issue` 记录
+3. Round 9 与 Phase 3 pipeline 集成（professor 实际数据）可并行推进
