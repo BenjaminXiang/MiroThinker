@@ -1,6 +1,9 @@
 import pytest
 
-from src.data_agents.professor.topic_quality import is_plausible_research_topic
+from src.data_agents.professor.topic_quality import (
+    is_plausible_research_topic,
+    split_compound_research_topic,
+)
 
 
 @pytest.mark.parametrize(
@@ -118,3 +121,95 @@ def test_rejects_round_7_9_prime_noise(topic: str):
 def test_keeps_legit_english_tech_terms(topic: str):
     """The new rules must not over-reject short English terms that are real topics."""
     assert is_plausible_research_topic(topic), topic
+
+
+# Round 7.18b — split_compound_research_topic: break multi-topic strings
+# like "计算神经科学，机器学习，人工智能，数据科学，生物图像分析" into atomic topics.
+
+
+def test_split_compound_single_topic_returns_itself():
+    assert split_compound_research_topic("多智能体协同控制") == ["多智能体协同控制"]
+    assert split_compound_research_topic("量子计算") == ["量子计算"]
+
+
+def test_split_compound_with_chinese_commas():
+    assert split_compound_research_topic("计算神经科学，机器学习，人工智能") == [
+        "计算神经科学",
+        "机器学习",
+        "人工智能",
+    ]
+
+
+def test_split_compound_with_mixed_separators():
+    assert split_compound_research_topic("机器学习、人工智能；控制论,深度学习") == [
+        "机器学习",
+        "人工智能",
+        "控制论",
+        "深度学习",
+    ]
+
+
+def test_split_compound_five_topics_real_data():
+    """Sample from miroflow_real: 周鹏程/深圳理工大学."""
+    result = split_compound_research_topic(
+        "计算神经科学，机器学习，人工智能，数据科学，生物图像分析"
+    )
+    assert result == [
+        "计算神经科学",
+        "机器学习",
+        "人工智能",
+        "数据科学",
+        "生物图像分析",
+    ]
+
+
+def test_split_compound_drops_noise_fragments():
+    """Valid pieces keep, garbage pieces drop via is_plausible_research_topic."""
+    assert split_compound_research_topic("机器学习, 等") == ["机器学习"]
+    assert split_compound_research_topic("计算神经科学，研究兴趣，机器学习") == [
+        "计算神经科学",
+        "机器学习",
+    ]
+
+
+def test_split_compound_does_not_split_parenthetical_english():
+    """(Image Restoration) parenthetical must stay — no comma outside parens."""
+    assert split_compound_research_topic("图像退化恢复 (Image Restoration)") == [
+        "图像退化恢复 (Image Restoration)"
+    ]
+
+
+def test_split_compound_returns_empty_for_pure_noise():
+    assert split_compound_research_topic("等, 其他") == []
+    assert split_compound_research_topic("") == []
+    assert split_compound_research_topic(None) == []
+
+
+def test_split_compound_trims_whitespace():
+    assert split_compound_research_topic(" 机器学习 ， 人工智能 ") == [
+        "机器学习",
+        "人工智能",
+    ]
+
+
+@pytest.mark.parametrize(
+    "metric",
+    [
+        "发表学术论文350多篇",
+        "出版著作30余部",
+        "获得授权发明专利20余项",
+        "主持国家自然科学基金5项",
+        "发表SCI论文100篇以上",
+    ],
+)
+def test_rejects_publication_metric_pretending_to_be_topic(metric: str):
+    """Publication count/metric strings are not research topics."""
+    assert not is_plausible_research_topic(metric), metric
+
+
+def test_split_compound_drops_metric_fragments_from_compound():
+    """Real case: "课程与教学论研究，发表学术论文350多篇，出版著作30余部"."""
+    result = split_compound_research_topic(
+        "课程与教学论研究，发表学术论文350多篇，出版著作30余部"
+    )
+    assert result == ["课程与教学论研究"]

@@ -18,6 +18,7 @@ from src.data_agents.quality.threshold_config import (
 
 from .name_identity_gate import NameIdentityCandidate, NameIdentityDecision
 from .publish_helpers import build_professor_id, is_official_url
+from .topic_quality import split_compound_research_topic
 
 if TYPE_CHECKING:
     from src.data_agents.professor.cross_domain import PaperStagingRecord
@@ -237,9 +238,10 @@ def write_professor_bundle(
         affiliation_count += 1
 
     facts_written = 0
-    for direction in _dedupe_strings(
-        _iter_list(getattr(enriched, "research_directions", None))
-    ):
+    atomic_directions: list[str] = []
+    for raw_direction in _iter_list(getattr(enriched, "research_directions", None)):
+        atomic_directions.extend(split_compound_research_topic(raw_direction))
+    for direction in _dedupe_strings(atomic_directions):
         _upsert_fact(
             conn,
             professor_id=professor_id,
