@@ -18,15 +18,32 @@ and let the UI show it — that's better than faking an answer.
 
 from __future__ import annotations
 
+import os
 import re
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends
+from openai import OpenAI
 from pydantic import BaseModel, Field
 
 from backend.deps import get_pg_conn
+from src.data_agents.professor.llm_profiles import resolve_professor_llm_settings
 
 router = APIRouter(prefix="/api")
+
+_CHAT_SYNTHESIS_TIMEOUT_SECONDS = 3.0
+_CHAT_SYNTHESIS_REPORTED_BY = "round_9_p1_v1_chat_synthesis"
+_CHAT_SYNTHESIS_SYSTEM_PROMPT = (
+    "你是深圳科创信息检索助手。基于下面的证据回答用户问题。规则："
+    "(1) 只使用证据中出现的事实，不要编造。"
+    "(2) 每个事实用 [N] 标注来源编号，每个标记只写一个编号；"
+    "不要合并成 [1, 2, 3]——要么分别标 [1][2][3]，要么只标最关键的那个。"
+    "(3) 回答用中文，简洁自然，不要列 bullet。"
+    '(4) 如果证据不足，直说"证据不足以回答"。'
+)
+_CHAT_SYNTHESIS_EXTRA_BODY = {
+    "chat_template_kwargs": {"enable_thinking": False}
+}
 
 
 # --- Pydantic schemas ---
@@ -49,6 +66,8 @@ class ChatResponse(BaseModel):
     answer_text: str
     citations: list[ChatCitation] = Field(default_factory=list)
     structured_payload: dict[str, Any] = Field(default_factory=dict)
+    answer_style: Literal["template", "llm_synthesized"] = "template"
+    citation_map: dict[str, str] = Field(default_factory=dict)
 
 
 # --- Institution alias map ---
@@ -297,6 +316,303 @@ def _answer_ambiguous_profs(name: str, profs: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def llm_synthesis_enabled() -> bool:
+    return os.getenv("CHAT_LLM_SYNTHESIS", "on").strip().lower() != "off"
+
+
+def _clear_proxy_env() -> None:
+    for key in (
+        "all_proxy",
+        "ALL_PROXY",
+        "http_proxy",
+        "HTTP_PROXY",
+        "https_proxy",
+        "HTTPS_PROXY",
+    ):
+        os.environ.pop(key, None)
+
+
+def _append_evidence_block(
+    *,
+    blocks: list[str],
+    citation_map: dict[str, str],
+    marker: int,
+    kind: str,
+    summary: str,
+    evidence_id: str,
+) -> int:
+    blocks.append(f"[{marker}] ({kind}) {summary} id={evidence_id}")
+    citation_map[str(marker)] = evidence_id
+    return marker + 1
+
+
+def _build_evidence_blocks(
+    structured_payload: dict[str, Any],
+) -> tuple[str, dict[str, str]]:
+    blocks: list[str] = []
+    citation_map: dict[str, str] = {}
+    marker = 1
+
+    if professor_id := structured_payload.get("professor_id"):
+        canonical_name = structured_payload.get("canonical_name")
+        institution = structured_payload.get("institution")
+        title = structured_payload.get("title")
+        research_topics = structured_payload.get("research_topics") or []
+        verified_paper_count = structured_payload.get("verified_paper_count")
+
+        if canonical_name:
+            marker = _append_evidence_block(
+                blocks=blocks,
+                citation_map=citation_map,
+                marker=marker,
+                kind="professor",
+                summary=f"教授姓名：{canonical_name}",
+                evidence_id=professor_id,
+            )
+        if institution:
+            marker = _append_evidence_block(
+                blocks=blocks,
+                citation_map=citation_map,
+                marker=marker,
+                kind="professor",
+                summary=f"所属机构：{institution}",
+                evidence_id=professor_id,
+            )
+        if title:
+            marker = _append_evidence_block(
+                blocks=blocks,
+                citation_map=citation_map,
+                marker=marker,
+                kind="professor",
+                summary=f"职称：{title}",
+                evidence_id=professor_id,
+            )
+        for topic in research_topics[:6]:
+            marker = _append_evidence_block(
+                blocks=blocks,
+                citation_map=citation_map,
+                marker=marker,
+                kind="research_topic",
+                summary=f"研究方向：{topic}",
+                evidence_id=professor_id,
+            )
+        if verified_paper_count is not None:
+            marker = _append_evidence_block(
+                blocks=blocks,
+                citation_map=citation_map,
+                marker=marker,
+                kind="paper_count",
+                summary=f"已收录论文数：{verified_paper_count}",
+                evidence_id=professor_id,
+            )
+        return "\n".join(blocks), citation_map
+
+    matched_professors = structured_payload.get("matched_professors") or []
+    if matched_professors:
+        for prof in matched_professors[:10]:
+            topics = prof.get("matched_topics") or []
+            topic_text = f"，匹配方向：{'、'.join(topics[:3])}" if topics else ""
+            marker = _append_evidence_block(
+                blocks=blocks,
+                citation_map=citation_map,
+                marker=marker,
+                kind="professor",
+                summary=(
+                    f"{prof.get('canonical_name') or '姓名未知'}，"
+                    f"{prof.get('institution') or '机构未知'}"
+                    f"{topic_text}"
+                ),
+                evidence_id=prof["professor_id"],
+            )
+        return "\n".join(blocks), citation_map
+
+    patents = structured_payload.get("patents") or []
+    if patents:
+        for patent in patents[:10]:
+            date = patent.get("grant_date") or patent.get("filing_date") or "日期未知"
+            marker = _append_evidence_block(
+                blocks=blocks,
+                citation_map=citation_map,
+                marker=marker,
+                kind="patent",
+                summary=(
+                    f"{patent.get('patent_number') or '编号未知'}，"
+                    f"{patent.get('title_clean') or '标题未知'}，"
+                    f"申请人：{patent.get('applicants_raw') or '未知'}，"
+                    f"{patent.get('patent_type') or '类型未知'}，"
+                    f"{date}"
+                ),
+                evidence_id=patent["patent_id"],
+            )
+        return "\n".join(blocks), citation_map
+
+    candidates = structured_payload.get("candidates") or []
+    if candidates:
+        for prof in candidates[:10]:
+            title = prof.get("title") or "职称未知"
+            marker = _append_evidence_block(
+                blocks=blocks,
+                citation_map=citation_map,
+                marker=marker,
+                kind="professor_candidate",
+                summary=(
+                    f"{prof.get('canonical_name') or '姓名未知'}，"
+                    f"{prof.get('institution') or '机构未知'}，"
+                    f"{title}"
+                ),
+                evidence_id=prof["professor_id"],
+            )
+        return "\n".join(blocks), citation_map
+
+    return "", {}
+
+
+def _extract_chat_completion_text(response: Any) -> str:
+    choices = getattr(response, "choices", None) or []
+    if not choices:
+        raise ValueError("parse failure: missing choices")
+    message = getattr(choices[0], "message", None)
+    content = getattr(message, "content", None)
+    if isinstance(content, str):
+        text = content.strip()
+        if text:
+            return text
+        raise ValueError("parse failure: empty content")
+    if isinstance(content, list):
+        parts: list[str] = []
+        for item in content:
+            if isinstance(item, dict):
+                text = item.get("text")
+            else:
+                text = getattr(item, "text", None)
+            if text:
+                parts.append(str(text))
+        merged = "".join(parts).strip()
+        if merged:
+            return merged
+    raise ValueError("parse failure: unsupported content shape")
+
+
+def _call_gemma_synthesis(
+    query: str,
+    evidence_text: str,
+    *,
+    timeout: float,
+) -> str:
+    _clear_proxy_env()
+    llm_settings = resolve_professor_llm_settings("gemma4")
+    api_key = llm_settings.get("local_llm_api_key")
+    if not api_key:
+        raise ValueError("missing local_llm_api_key for gemma4")
+    client = OpenAI(
+        base_url=llm_settings["local_llm_base_url"],
+        api_key=api_key,
+        timeout=timeout,
+    )
+    response = client.chat.completions.create(
+        model=llm_settings["local_llm_model"],
+        messages=[
+            {"role": "system", "content": _CHAT_SYNTHESIS_SYSTEM_PROMPT},
+            {
+                "role": "user",
+                "content": (
+                    f"用户问题: {query}\n\n"
+                    f"证据（请引用 [N]）:\n{evidence_text}"
+                ),
+            },
+        ],
+        extra_body=_CHAT_SYNTHESIS_EXTRA_BODY,
+    )
+    return _extract_chat_completion_text(response)
+
+
+def _file_chat_synthesis_issue(
+    conn: Any,
+    query: str,
+    query_type: str,
+    exc: Exception,
+) -> None:
+    del query
+    try:
+        conn.execute(
+            """
+            INSERT INTO pipeline_issue (
+                professor_id,
+                institution,
+                stage,
+                severity,
+                description,
+                reported_by
+            )
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (
+                None,
+                "UNKNOWN_INSTITUTION",
+                "chat_synthesis",
+                "low",
+                f"LLM synthesis failed for {query_type}: {exc}",
+                _CHAT_SYNTHESIS_REPORTED_BY,
+            ),
+        )
+    except Exception:
+        # Best effort only; synthesis fallback must not turn into a 500.
+        return
+
+
+def _build_chat_response(
+    *,
+    conn: Any,
+    query: str,
+    query_type: str,
+    answer_text: str,
+    citations: list[ChatCitation],
+    structured_payload: dict[str, Any],
+) -> ChatResponse:
+    base_response = ChatResponse(
+        query=query,
+        query_type=query_type,
+        answer_text=answer_text,
+        citations=citations,
+        structured_payload=structured_payload,
+    )
+    if not llm_synthesis_enabled():
+        return base_response
+
+    evidence_text, citation_map = _build_evidence_blocks(structured_payload)
+    if not evidence_text:
+        return base_response
+
+    try:
+        llm_answer = _call_gemma_synthesis(
+            query,
+            evidence_text,
+            timeout=_CHAT_SYNTHESIS_TIMEOUT_SECONDS,
+        )
+        # Match single [N] markers AND compound [1, 2, 3] markers (just in case
+        # the LLM ignores the prompt rule). Extract every number inside brackets.
+        markers: set[str] = set()
+        for group in re.findall(r"\[([\d,\s]+)\]", llm_answer):
+            for n in re.findall(r"\d+", group):
+                markers.add(n)
+        if not markers:
+            raise ValueError("no citation markers found")
+        if not markers.issubset(citation_map):
+            raise ValueError("dangling citation marker")
+        return ChatResponse(
+            query=query,
+            query_type=query_type,
+            answer_text=llm_answer,
+            citations=citations,
+            structured_payload=structured_payload,
+            answer_style="llm_synthesized",
+            citation_map=citation_map,
+        )
+    except Exception as exc:
+        _file_chat_synthesis_issue(conn, query, query_type, exc)
+        return base_response
+
+
 # --- Endpoint ---
 
 
@@ -323,7 +639,22 @@ def chat(
         # Ambiguous: multiple matches without an institution filter.
         # Don't silently pick profs[0] — ask the user to disambiguate.
         if len(profs) > 1 and institutions is None:
-            return ChatResponse(
+            structured_payload = {
+                "name": name,
+                "candidate_count": len(profs),
+            }
+            if llm_synthesis_enabled():
+                structured_payload["candidates"] = [
+                    {
+                        "professor_id": p["professor_id"],
+                        "canonical_name": p["canonical_name"],
+                        "institution": p.get("institution"),
+                        "title": p.get("title"),
+                    }
+                    for p in profs[:10]
+                ]
+            return _build_chat_response(
+                conn=conn,
                 query=query,
                 query_type="A_prof_profile_ambiguous",
                 answer_text=_answer_ambiguous_profs(name, profs),
@@ -336,15 +667,13 @@ def chat(
                     )
                     for p in profs[:10]
                 ],
-                structured_payload={
-                    "name": name,
-                    "candidate_count": len(profs),
-                },
+                structured_payload=structured_payload,
             )
         prof = profs[0]
         topics = _prof_research_topics(conn, prof["professor_id"])
         n_papers = _prof_paper_count(conn, prof["professor_id"])
-        return ChatResponse(
+        return _build_chat_response(
+            conn=conn,
             query=query,
             query_type="A_prof_profile",
             answer_text=_answer_prof_profile(prof, topics, n_papers),
@@ -383,7 +712,23 @@ def chat(
         rows = _lookup_professors_by_topic(
             conn, institutions=institutions, topic=topic
         )
-        return ChatResponse(
+        structured_payload = {
+            "institutions": list(institutions),
+            "topic": topic,
+            "match_count": rows[0].get("total_count", len(rows)) if rows else 0,
+        }
+        if llm_synthesis_enabled():
+            structured_payload["matched_professors"] = [
+                {
+                    "professor_id": r["professor_id"],
+                    "canonical_name": r["canonical_name"],
+                    "institution": r.get("institution"),
+                    "matched_topics": r.get("matched_topics") or [],
+                }
+                for r in rows[:10]
+            ]
+        return _build_chat_response(
+            conn=conn,
             query=query,
             query_type="A_prof_list_by_topic",
             answer_text=_answer_prof_list(institutions, topic, rows),
@@ -396,18 +741,32 @@ def chat(
                 )
                 for r in rows[:10]
             ],
-            structured_payload={
-                "institutions": list(institutions),
-                "topic": topic,
-                "match_count": rows[0].get("total_count", len(rows)) if rows else 0,
-            },
+            structured_payload=structured_payload,
         )
 
     # Pattern C: "<company>有哪些专利" — patents by applicant
     if m := _Q_PATENT_LIST_RE.search(query):
         company = m.group("company").strip()
         rows = _lookup_patents_by_applicant(conn, company_name=company)
-        return ChatResponse(
+        structured_payload = {
+            "company_name_query": company,
+            "match_count": rows[0].get("total_count", len(rows)) if rows else 0,
+        }
+        if llm_synthesis_enabled():
+            structured_payload["patents"] = [
+                {
+                    "patent_id": r["patent_id"],
+                    "patent_number": r.get("patent_number"),
+                    "title_clean": r.get("title_clean"),
+                    "applicants_raw": r.get("applicants_raw"),
+                    "filing_date": r.get("filing_date"),
+                    "grant_date": r.get("grant_date"),
+                    "patent_type": r.get("patent_type"),
+                }
+                for r in rows[:10]
+            ]
+        return _build_chat_response(
+            conn=conn,
             query=query,
             query_type="A_patent_by_applicant",
             answer_text=_answer_patent_list(company, rows),
@@ -420,10 +779,7 @@ def chat(
                 )
                 for r in rows[:10]
             ],
-            structured_payload={
-                "company_name_query": company,
-                "match_count": rows[0].get("total_count", len(rows)) if rows else 0,
-            },
+            structured_payload=structured_payload,
         )
 
     return ChatResponse(
