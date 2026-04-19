@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>深圳科创检索 · v0</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --ink: #111418;
+    --ink-soft: #5a6168;
+    --accent: #2b64d9;
+    --accent-soft: #e8f0ff;
+    --border: #e5e7eb;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC",
+      "Helvetica Neue", "Microsoft YaHei", sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  .app {
+    max-width: 820px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    padding: 16px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  header .subtitle {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .examples {
+    padding: 12px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .examples .label {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-right: 4px;
+    align-self: center;
+  }
+  .example-chip {
+    font-size: 13px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 4px 10px;
+    cursor: pointer;
+  }
+  .example-chip:hover { border-color: var(--accent); }
+  main.messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .msg {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .msg .avatar {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    border-radius: 14px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .msg.user .avatar { background: #e7e7e7; color: var(--ink-soft); }
+  .msg .bubble {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    box-shadow: var(--shadow);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .msg.user .bubble { background: #f5f6f8; }
+  .meta {
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+  .citations {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .citation {
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    background: #fdfdfd;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .citation .badge {
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .citation a {
+    color: var(--accent);
+    text-decoration: none;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .citation a:hover { text-decoration: underline; }
+  .err { color: #c62828; }
+  footer {
+    padding: 12px 20px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+  .input-row {
+    display: flex;
+    gap: 8px;
+  }
+  input[type="text"] {
+    flex: 1;
+    font: inherit;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    outline: none;
+  }
+  input[type="text"]:focus { border-color: var(--accent); }
+  button {
+    font: inherit;
+    padding: 0 16px;
+    border-radius: var(--radius);
+    border: none;
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.6; cursor: not-allowed; }
+  .empty-state {
+    color: var(--ink-soft);
+    padding: 40px 20px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>深圳科创检索 · v0</h1>
+    <div class="subtitle">模板化回答 · 无 LLM 合成 · 单轮无上下文</div>
+  </header>
+  <div class="examples">
+    <span class="label">试试：</span>
+    <span class="example-chip" data-q="介绍清华的丁文伯">介绍清华的丁文伯</span>
+    <span class="example-chip" data-q="清华做人工智能的教授">清华做人工智能的教授</span>
+    <span class="example-chip" data-q="优必选有哪些专利">优必选有哪些专利</span>
+  </div>
+  <main class="messages" id="messages">
+    <div class="empty-state">问一个问题开始</div>
+  </main>
+  <footer>
+    <form id="chat-form">
+      <div class="input-row">
+        <input id="chat-input" type="text" autocomplete="off" placeholder="问一个问题…（支持三种句式：介绍学校的教授 / 学校做方向的教授 / 公司有哪些专利）">
+        <button id="chat-submit" type="submit">发送</button>
+      </div>
+    </form>
+  </footer>
+</div>
+
+<script>
+const $messages = document.getElementById('messages');
+const $form = document.getElementById('chat-form');
+const $input = document.getElementById('chat-input');
+const $submit = document.getElementById('chat-submit');
+
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function renderUserMsg(query) {
+  const el = document.createElement('div');
+  el.className = 'msg user';
+  el.innerHTML = `<div class="avatar">我</div><div class="bubble">${esc(query)}</div>`;
+  $messages.appendChild(el);
+  $messages.scrollTop = $messages.scrollHeight;
+}
+
+function renderBotMsg({ answer_text, citations, query_type, structured_payload }) {
+  const el = document.createElement('div');
+  el.className = 'msg bot';
+  let citationsHtml = '';
+  if (citations && citations.length) {
+    const items = citations.map(c => {
+      const url = c.url ? `href="${esc(c.url)}"` : '';
+      return `<div class="citation"><span class="badge">${esc(c.type)}</span>`
+           + `<a ${url} target="_blank">${esc(c.label)}</a></div>`;
+    }).join('');
+    citationsHtml = `<div class="citations">${items}</div>`;
+  }
+  const topics = (structured_payload?.research_topics || []).slice(0, 5);
+  const topicsLine = topics.length ? `<div class="meta">研究方向: ${topics.map(esc).join(' · ')}</div>` : '';
+  el.innerHTML = `<div class="avatar">检</div>`
+    + `<div class="bubble">${esc(answer_text)}`
+    + `<div class="meta">类型: ${esc(query_type)}</div>`
+    + topicsLine
+    + citationsHtml
+    + `</div>`;
+  $messages.appendChild(el);
+  $messages.scrollTop = $messages.scrollHeight;
+}
+
+function renderError(msg) {
+  const el = document.createElement('div');
+  el.className = 'msg bot';
+  el.innerHTML = `<div class="avatar">!</div><div class="bubble err">${esc(msg)}</div>`;
+  $messages.appendChild(el);
+  $messages.scrollTop = $messages.scrollHeight;
+}
+
+async function sendQuery(query) {
+  query = query.trim();
+  if (!query) return;
+  const empty = $messages.querySelector('.empty-state');
+  if (empty) empty.remove();
+  renderUserMsg(query);
+  $input.value = '';
+  $submit.disabled = true;
+  try {
+    const resp = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query }),
+    });
+    if (!resp.ok) {
+      renderError(`请求失败：HTTP ${resp.status}`);
+      return;
+    }
+    const data = await resp.json();
+    renderBotMsg(data);
+  } catch (e) {
+    renderError(`错误：${e.message || e}`);
+  } finally {
+    $submit.disabled = false;
+    $input.focus();
+  }
+}
+
+$form.addEventListener('submit', e => {
+  e.preventDefault();
+  sendQuery($input.value);
+});
+document.querySelectorAll('.example-chip').forEach(chip => {
+  chip.addEventListener('click', () => sendQuery(chip.dataset.q));
+});
+$input.focus();
+</script>
+</body>
+</html>

@@ -58,6 +58,11 @@ if (_STATIC_DIR / "browse.html").is_file():
     def serve_browse() -> FileResponse:
         return FileResponse(_STATIC_DIR / "browse.html")
 
+    if (_STATIC_DIR / "chat.html").is_file():
+        @app.get("/chat")
+        def serve_chat() -> FileResponse:
+            return FileResponse(_STATIC_DIR / "chat.html")
+
 
 # Serve React SPA static files
 _FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
