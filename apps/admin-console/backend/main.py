@@ -4,7 +4,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.api.batch import router as batch_router
@@ -48,13 +48,20 @@ app.include_router(domains_router)
 
 # Lightweight built-in data browser (no React build required).
 # Visit /browse to inspect companies/professors/papers/patents through the
-# Postgres-backed /api/data/* endpoints. Works the moment Round 8a lands
-# professor/paper/patent endpoints without any frontend rebuild.
+# Postgres-backed /api/data/* endpoints. The React SPA at /assets/* is the
+# legacy dashboard (now fed real Postgres numbers from /api/dashboard per
+# Round 9). The `/` root redirects to /browse because that's the primary
+# operator surface; the SPA is still reachable at the filename paths it
+# serves from /assets.
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
 if (_STATIC_DIR / "browse.html").is_file():
     app.mount(
         "/static", StaticFiles(directory=_STATIC_DIR), name="static-files"
     )
+
+    @app.get("/", include_in_schema=False)
+    def redirect_root_to_browse() -> RedirectResponse:
+        return RedirectResponse(url="/browse", status_code=302)
 
     @app.get("/browse")
     def serve_browse() -> FileResponse:
