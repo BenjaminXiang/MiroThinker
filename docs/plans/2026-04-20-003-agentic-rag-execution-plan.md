@@ -53,17 +53,19 @@ grounded_in:
 
 ## 1. 里程碑总览
 
+> **⚠️ 顺序调整（2026-04-20 eng-review 决议）**：原 M1 → M2 反转为 **M2 先**。理由：用户 pipeline inversion 洞见——主页权威论文命中率 100%，identity gate v2 只对非主页路径（OpenAlex 搜索，约 10-20% 论文）有价值；先 M2 能最大幅度降低论文缺口，M1 留到 M2 完成后评估 OpenAlex 路径实际缺口再决定是否全量做。
+
 | M | 名称 | 目标问题 | CC 时长估计 | 依赖 |
 |---|---|---|---|---|
-| **M0** | 基础设施 | 补齐 Reranker client + pgvector 取消、统一 LLM 配置 | 1-2 小时 | — |
-| **M1** | Identity Gate v2 | 把 47% 误拒降到 <5%（CJK+pinyin+ORCID） | 3-4 小时 | M0 |
+| **M0** | 基础设施 | 补齐 Reranker client + 统一 LLM 配置、httpx 统一 | 1-2 小时 | — |
 | **M2** | 主页权威论文管线 | 每个教授主页 papers 100% 收录 + arxiv 全文 | 6-8 小时 | M0 |
-| **M3** | 多域向量化 + 检索服务 | paper/company/patent 三个 Milvus 集合 + 统一 RetrievalService | 4-6 小时 | M0 |
+| **M1** | Identity Gate v2 | 补齐 OpenAlex 路径的 CJK+pinyin+ORCID（M2 未覆盖的 10-20%） | 3-4 小时 | M0 + M2 数据 |
+| **M3** | 多域向量化 + 检索服务 | paper/company/patent Milvus 集合 + 统一 RetrievalService | 4-6 小时 | M0 |
 | **M4** | Chat B/D 换成语义检索 | B 类用向量召回+rerank，D 类跨域合并 | 3-4 小时 | M3 |
 | **M5** | Web Search 兜底 + 引用 | E 类查知识问答，低置信度触发 Serper | 2-3 小时 | M0 |
 | **M6** | 画像反向增强闭环 | arxiv 全文 + 会议履历 → 更丰富的 profile_summary | 4-5 小时 | M2 |
 
-**关键路径**：M0 → M1 → M2 → M3 → M4（M5、M6 并行可行）
+**关键路径**：M0 → **M2** → M1 → M3 → M4（M5、M6 并行可行）
 
 **完整时长**：~25-32 小时 CC 工作量（按用户 tech doc 的 3-Sprint 15 工作日节奏展开）
 
@@ -188,6 +190,24 @@ def load_local_api_key(repo_root: Path | None = None) -> str:
 
 ---
 
+### M0.5 httpx 统一（eng-review Q1 决议）
+
+**Why**：`providers/web_search.py` 用 `requests`，`vectorizer.py` 和新 `rerank.py` 用 `httpx`。两个 HTTP 库共存=2MB install + 心智负担。`httpx` 已是主要选择（deps 里有），**统一到 httpx**。
+
+**改动**：
+- 改：`providers/web_search.py::WebSearchProvider` 的 `requests` → `httpx`（保留 `trust_env=False`、curl fallback）
+- 保留 public API（`search(query) → dict`）不变，避免调用方修改
+- 本次不动 `requests` 的卸载（其他模块还在用），等到 grep 出零引用后再清理
+
+**Acceptance**：
+- `uv run pytest -k test_web_search` 全过
+- `uv run pytest -k test_web_search_fallback_curl` 过
+- `grep -rn "import requests" apps/miroflow-agent/src/data_agents/providers/` 返回空
+
+**测试**：`test_web_search_httpx_migration_preserves_behavior` — 旧 mock 响应依然 parse OK。
+
+---
+
 ## 3. M1 — Identity Gate v2（CJK + pinyin + ORCID）
 
 ### M1.1 名字变体解析器
@@ -217,7 +237,7 @@ def resolve_name_variants(
     canonical_name_en: str | None,
 ) -> NameVariants:
     """Build all variants by:
-      - CJK → pinyin (via pypinyin, already in deps)
+      - CJK → pinyin (via pypinyin — **NEW DEP**, add to pyproject.toml)
       - en name → initials (first initial + surname)
       - normalize to lowercase for matching"""
 ```
@@ -257,8 +277,11 @@ def resolve_name_variants(
 - eval set（见 M1.4）上，误拒率从 47% → <10%
 - 同名冤假错案（不同领域的 "Jianquan Yao"）仍被拒，即**不牺牲精度**
 
+**⚠️ 测试前置**（eng-review 强规）：**先写回归测试复现 47% 误拒行为**（用真实 case：姚建铨/陈伟津的候选论文），跑 RED → 再写 fix → 跑 GREEN。不许先实现再补 test。
+
 **测试**：
-- `test_paper_identity_gate_accepts_chinese_author_list_with_latin_query_name` — mock LLM 输入姚建铨 context、候选含中文 authors，断言 prompt 含拼音 + Latin
+- `test_paper_identity_gate_rejects_chinese_authors_with_latin_query_FIXME` — 标 xfail；**fix 前必先跑红**
+- `test_paper_identity_gate_accepts_chinese_author_list_with_latin_query_name` — fix 后变绿
 - `test_paper_identity_gate_rejects_topic_mismatch_even_with_name_match` — 名字匹配但研究方向完全无关，断言仍拒
 
 ---
@@ -270,7 +293,7 @@ def resolve_name_variants(
 **现状**：`paper/orcid.py` 已经有基础 fetch 能力；`paper_identity_gate` 没用到。
 
 **改动**：
-- 新：`professor_orcid` 关联表（V011 迁移，**唯一的新表**）
+- **注意**：`professor_orcid` 表 **由 V011 迁移创建**（和 M2.3 的 `paper_full_text` 合并在一个迁移里，随 M2 一起 ship；见下文 §V011 决议）
   ```sql
   CREATE TABLE professor_orcid (
       professor_id UUID PRIMARY KEY REFERENCES professor(professor_id),
@@ -416,9 +439,9 @@ def resolve_paper_by_title(
 
 **文件**（新建 + 改）：
 - 新：`apps/miroflow-agent/src/data_agents/paper/full_text_fetcher.py`
-- 新：`V011_add_paper_full_text.py` 迁移（**和 M1.3 的 V011 合并成一次**）
+- 新：`V011_add_rag_tables.py`（**合并了 M1.3 的 `professor_orcid` + 本节的 `paper_full_text` + M2.2 的 `paper_title_resolution_cache`，三表一迁移；随 M2 PR 一起 ship**）
 
-**新表**：
+**新表 1**：
 ```sql
 CREATE TABLE paper_full_text (
     paper_id VARCHAR(64) PRIMARY KEY REFERENCES paper(paper_id) ON DELETE CASCADE,
@@ -432,6 +455,32 @@ CREATE TABLE paper_full_text (
 );
 CREATE INDEX paper_full_text_source_idx ON paper_full_text(source);
 ```
+
+**新表 2**（M1.3 的）：
+```sql
+CREATE TABLE professor_orcid (
+    professor_id UUID PRIMARY KEY REFERENCES professor(professor_id),
+    orcid VARCHAR(32) NOT NULL UNIQUE,
+    source VARCHAR(64) NOT NULL,    -- homepage/openalex/manual
+    confidence DECIMAL(3,2) NOT NULL,
+    verified_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+**新表 3**（M2.2 的 title-resolution cache，eng-review Q2 决议新增）：
+```sql
+CREATE TABLE paper_title_resolution_cache (
+    title_sha1 VARCHAR(40) PRIMARY KEY,   -- sha1(normalized clean_title)
+    clean_title_preview VARCHAR(500),      -- human-readable debug
+    resolved JSONB NOT NULL,               -- ResolvedPaper | null
+    match_source VARCHAR(32),              -- openalex | arxiv | web_search | miss
+    match_confidence DECIMAL(3,2),
+    cached_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX paper_title_cache_recent_idx ON paper_title_resolution_cache(cached_at DESC);
+-- TTL: 30 days. Cleanup via cron: DELETE WHERE cached_at < NOW() - INTERVAL '30 days'
+```
+**省 API 预算**：8000 papers × 3 API（OpenAlex/arxiv/Serper）= 24000 calls；30 天 cache 命中可省 ~90%。
 
 **接口**：
 ```python
@@ -533,12 +582,20 @@ for prof in iter_professors_with_homepage():
 
 **Why**：`chat.py` 目前直接查 Postgres；002 §4 设计的 L5 Context Packer 需要一个拉取证据的统一入口。legacy `service/search_service.py` 是基于 SQLite + 老 Milvus（4 路向量集合），**弃用**，新写一个 clean 实现。
 
+**位置决议（2026-04-20 eng-review）**：核心 `RetrievalService` 放在 **`apps/miroflow-agent/src/data_agents/service/retrieval.py`**——理由：
+- 已有 `data_agents/service/` 目录（存放 legacy search_service.py，替换原有实现）
+- 不只 chat 用，**reindex 脚本 / eval 脚本 / 未来其他消费者**都要用（Milvus+rerank+embed 三件套是共享基础能力）
+- backend 通过现有 `deps.py::get_retrieval_service()` 注入，不重复搭架子
+- chat 层如果需要 per-request 包装（session filter / citation tracking），放一个薄 adapter 在 `backend/chat/retrieval_client.py`
+
 **文件**（新建）：
-- `apps/admin-console/backend/chat/retrieval.py`（放在 chat 子目录；避免和 miroflow-agent 的 service 冲突）
+- 核心：`apps/miroflow-agent/src/data_agents/service/retrieval.py`
+- 接入：`apps/admin-console/backend/deps.py`（新增 `get_retrieval_service()` 单例）
+- 可选薄壳：`apps/admin-console/backend/chat/retrieval_client.py`（如果需要请求级包装）
 
 **接口**：
 ```python
-# backend/chat/retrieval.py
+# apps/miroflow-agent/src/data_agents/service/retrieval.py
 @dataclass(frozen=True, slots=True)
 class Evidence:
     object_type: str           # "professor" | "paper" | "company" | "patent"
@@ -787,6 +844,19 @@ class RetrievalService:
 
 ---
 
+## 9.5 性能注释（eng-review 决议）
+
+| 里程碑 | 注意项 | 降级策略 |
+|---|---|---|
+| M0.1 | Reranker 100 docs TTFT 未实测；估 500-1500ms | 若 P50 > 1s → candidate_limit 降到 30 |
+| M2.3 | arxiv 3s 限速 × 4000 篇 = ~3.3h 串行 | `asyncio`：arxiv/OpenAlex 两池独立调度；`--max-papers-per-hour` 节流 |
+| M3.2 | 4 域 Milvus 并发 ANN | 用 `asyncio.gather()`；未达 1.5s budget 先调 candidate_limit |
+| M4.3 | Serper free 2500/月 | 命中 cache 降低；超额退回 "本地证据不足" |
+
+**M0.1 ship 后立即跑 benchmark**，结果写入 `docs/solutions/retrieval/qwen3-reranker-latency-2026-04.md`。
+
+---
+
 ## 10. Parking Lot（明确推后）
 
 - **多轮对话 L1 Session 升级**：当前 chat.py 已有 session cookie + entity stack，MVP 够用；深度代词消解（跨多轮）放到 M7
@@ -862,6 +932,82 @@ M apps/miroflow-agent/src/data_agents/providers/__init__.py  (export RerankerCli
 
 ## 15. 下一步
 
-**立刻**：执行 Stage 1 — `/plan-ceo-review` + `/plan-eng-review` 审本文，锁定 M0-M6 边界与优先级。
+**立刻**：执行 Stage 1 — ~~`/plan-ceo-review`~~（已跳过）+ `/plan-eng-review` 审本文，锁定 M0-M6 边界与优先级。
 
 **审批过了**：开始 M0.1 — Reranker 客户端的 TDD 红绿循环（预计 1 小时 CC）。
+
+---
+
+## GSTACK REVIEW REPORT
+
+| Review | Trigger | Why | Runs | Status | Findings |
+|--------|---------|-----|------|--------|----------|
+| CEO Review | `/plan-ceo-review` | Scope & strategy | 0 | skipped | user skipped |
+| Codex Review | `/codex review` | Independent 2nd opinion | 0 | — | — |
+| Eng Review | `/plan-eng-review` | Architecture & tests (required) | 1 | issues_open | 9 issues, 0 critical gaps |
+| Design Review | `/plan-design-review` | UI/UX gaps | 0 | — | — |
+
+**Step 0 Scope Challenge (applied)**：
+- Confirmed existing code reuse: vectorizer.py (Qwen3-Embedding-8B + Milvus), WebSearchProvider (Serper), llm_profiles.gemma4 resolver, paper_identity_gate (LLM path wired), paper/orcid.py
+- Plan error caught: pypinyin is **not** in deps — M1.1 updated to add it
+- Complexity: 30+ new files / 10+ new classes across 7 milestones — accepted because each milestone = 1 PR
+
+**Decisions resolved (3/3)**：
+1. **M1 ↔ M2 order**: **M2 first**, M1 deferred to after M2 coverage analysis
+2. **Retrieval service location**: `apps/miroflow-agent/src/data_agents/service/retrieval.py` (core), `backend/deps.py` injects, optional thin adapter in `backend/chat/`
+3. **V011 collision**: single V011 migration creating 3 tables: `professor_orcid` + `paper_full_text` + `paper_title_resolution_cache` (Q2 also added a title-cache table)
+
+**Architecture findings** (6):
+- A1 pypinyin dep — **APPLIED** to M1.1
+- A2 M1/M2 overlap — **RESOLVED** (M2 first)
+- A3 V011 collision — **RESOLVED** (merged)
+- A4 Retrieval service location — **RESOLVED** (miroflow-agent/service/)
+- A5 4-way Milvus collections — Accepted, noted
+- A6 paper_identity_gate still needed for non-homepage — **APPLIED** doc clarification
+
+**Code quality findings** (3):
+- Q1 httpx standardization — **APPLIED** new M0.5 milestone
+- Q2 title resolution cache — **APPLIED** new table in V011
+- Q3 M1.2 prompt bloat — Accepted, minor cost
+
+**Test findings**: 20 test gaps across M0-M6, all listed per milestone. **CRITICAL added**: regression-test-first rule for M1.2 (xfail → fix → green).
+
+**Performance findings** (3): All have mitigations in new §9.5. M0.1 ships benchmark script to `docs/solutions/retrieval/` on completion.
+
+**NOT in scope** (deferred, in Parking Lot):
+- 多轮对话 L1 深度代词消解 (current MVP is good enough)
+- Agent Orchestrator L3 step planner
+- 微信公众号接入
+- BGE-M3 (Qwen3-Embedding-8B suffices)
+- pgvector double-write (M0.4 kill)
+- 专利 company_id 关联
+
+**What already exists** (reused in plan):
+- `vectorizer.py::EmbeddingClient` (M0.3 extends, not rewrites)
+- `providers/web_search.py::WebSearchProvider` (M5.1 reuses, M0.5 ports to httpx)
+- `llm_profiles::resolve_professor_llm_settings("gemma4")` (chat.py already uses)
+- `paper/orcid.py` (M1.3 extends)
+- `name_utils.py` (M1.1 complements with CJK→pinyin)
+- `chat.py` v3.1 classifier (M4.x extends B/D/E handlers)
+
+**Worktree parallelization strategy**：
+
+| Lane | Milestones | Modules | Notes |
+|---|---|---|---|
+| A | M0 → M2 → M1 | providers/, paper/, professor/ | Critical path. Sequential. |
+| B | M3 (parallel w/ M2 tail) | storage/, service/ | Only depends on M0. |
+| C | M4 (after M3) | backend/chat/ | Depends on B. |
+| D | M5 (after M0) | backend/chat/, providers/web_search | Independent of A/B/C for core logic |
+| E | M6 (after M2) | professor/summary_generator | Only depends on A. |
+
+Lane A is mandatory serial (data agent chain). B/D can start in parallel after M0 lands. C merges after B. E merges after A.
+
+**Failure modes flagged**:
+- **Critical gap: none**. All new codepaths have tests + error handling in plan.
+- Watch items: Qwen3-Reranker latency (M0.1 benchmark), arxiv rate limiting (M2.3 async), Serper free tier (M4.3 cache miss mitigation).
+
+**Outside voice**: Skipped (user requested speed). Can be invoked later via `/codex review`.
+
+**Unresolved decisions**: 0.
+
+**VERDICT**: **ENG CLEARED — ready to implement**. All issues resolved or noted. Start with M0.1 (Reranker client TDD loop).
