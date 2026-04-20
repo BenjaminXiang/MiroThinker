@@ -176,6 +176,7 @@ def write_professor_bundle(
         [NameIdentityCandidate], NameIdentityDecision
     ]
     | None = None,
+    run_id: UUID | str | None = None,
 ) -> ProfessorCanonicalReport:
     """Upsert a professor bundle into canonical Postgres tables."""
 
@@ -200,6 +201,7 @@ def write_professor_bundle(
         enriched=enriched,
         primary_page_id=primary_page_id,
         name_identity_gate=name_identity_gate,
+        run_id=run_id,
     )
 
     affiliation_count = 0
@@ -216,6 +218,7 @@ def write_professor_bundle(
             start_year=None,
             end_year=None,
             source_page_id=primary_page_id,
+            run_id=run_id,
         )
         affiliation_count += 1
 
@@ -234,6 +237,7 @@ def write_professor_bundle(
             start_year=_get_attr(work_entry, "start_year"),
             end_year=_get_attr(work_entry, "end_year"),
             source_page_id=primary_page_id,
+            run_id=run_id,
         )
         affiliation_count += 1
 
@@ -250,6 +254,7 @@ def write_professor_bundle(
             source_page_id=primary_page_id,
             evidence_span=_fact_evidence_span(enriched, direction),
             confidence=_fact_confidence_for_url(_primary_evidence_url(enriched)),
+            run_id=run_id,
         )
         facts_written += 1
 
@@ -265,6 +270,7 @@ def write_professor_bundle(
             source_page_id=primary_page_id,
             evidence_span=_fact_evidence_span(enriched, value_raw),
             confidence=_fact_confidence_for_url(_primary_evidence_url(enriched)),
+            run_id=run_id,
         )
         facts_written += 1
 
@@ -280,6 +286,7 @@ def write_professor_bundle(
             source_page_id=primary_page_id,
             evidence_span=_fact_evidence_span(enriched, value_raw),
             confidence=_fact_confidence_for_url(_primary_evidence_url(enriched)),
+            run_id=run_id,
         )
         facts_written += 1
 
@@ -292,6 +299,7 @@ def write_professor_bundle(
             source_page_id=primary_page_id,
             evidence_span=_fact_evidence_span(enriched, award),
             confidence=_fact_confidence_for_url(_primary_evidence_url(enriched)),
+            run_id=run_id,
         )
         facts_written += 1
 
@@ -305,6 +313,7 @@ def write_professor_bundle(
             source_page_id=primary_page_id,
             evidence_span=_fact_evidence_span(enriched, email),
             confidence=_fact_confidence_for_url(_primary_evidence_url(enriched)),
+            run_id=run_id,
         )
         facts_written += 1
 
@@ -317,6 +326,7 @@ def write_professor_bundle(
             owner_scope_kind="professor",
             owner_scope_ref=professor_id,
             is_official_source=is_official_url(homepage_url),
+            run_id=run_id,
         )
         _upsert_fact(
             conn,
@@ -326,6 +336,7 @@ def write_professor_bundle(
             source_page_id=homepage_page_id,
             evidence_span=_fact_evidence_span(enriched, homepage_url),
             confidence=_fact_confidence_for_url(homepage_url),
+            run_id=run_id,
         )
         facts_written += 1
 
@@ -339,6 +350,7 @@ def write_professor_bundle(
             owner_scope_kind="professor",
             owner_scope_ref=professor_id,
             is_official_source=True,
+            run_id=run_id,
         )
         _upsert_fact(
             conn,
@@ -348,6 +360,7 @@ def write_professor_bundle(
             source_page_id=external_page_id,
             evidence_span=_fact_evidence_span(enriched, external_url),
             confidence=_fact_confidence_for_url(external_url),
+            run_id=run_id,
         )
         facts_written += 1
 
@@ -379,6 +392,7 @@ def write_professor_bundle(
             authors_display=_authors_display(staging_record),
             citation_count=_get_attr(staging_record, "citation_count"),
             canonical_source=_paper_canonical_source(staging_record),
+            run_id=run_id,
         )
         written_paper_ids.add(paper_report.paper_id)
 
@@ -417,6 +431,7 @@ def write_professor_bundle(
             ),
             is_officially_listed=evidence_source_type
             != "academic_api_with_affiliation_match",
+            run_id=run_id,
         )
         link_key = (professor_id, paper_report.paper_id)
         written_link_keys.add(link_key)
@@ -443,6 +458,7 @@ def upsert_source_page_for_url(
     owner_scope_ref: str | None = None,
     fetched_at: datetime | None = None,
     is_official_source: bool = False,
+    run_id: UUID | str | None = None,
 ) -> UUID:
     """Upsert a source_page row keyed by URL and return its page id."""
 
@@ -458,15 +474,17 @@ def upsert_source_page_for_url(
             owner_scope_kind,
             owner_scope_ref,
             fetched_at,
-            is_official_source
+            is_official_source,
+            run_id
         )
-        VALUES (%s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT (url) DO UPDATE
            SET page_role          = EXCLUDED.page_role,
                owner_scope_kind   = COALESCE(EXCLUDED.owner_scope_kind, source_page.owner_scope_kind),
                owner_scope_ref    = COALESCE(EXCLUDED.owner_scope_ref, source_page.owner_scope_ref),
                fetched_at         = GREATEST(source_page.fetched_at, EXCLUDED.fetched_at),
-               is_official_source = source_page.is_official_source OR EXCLUDED.is_official_source
+               is_official_source = source_page.is_official_source OR EXCLUDED.is_official_source,
+               run_id             = COALESCE(EXCLUDED.run_id, source_page.run_id)
         RETURNING page_id
         """,
         (
@@ -476,6 +494,7 @@ def upsert_source_page_for_url(
             owner_scope_ref,
             effective_fetched_at,
             is_official_source,
+            run_id,
         ),
     ).fetchone()
     assert row is not None
@@ -511,6 +530,7 @@ def _upsert_professor_row(
         [NameIdentityCandidate], NameIdentityDecision
     ]
     | None = None,
+    run_id: UUID | str | None = None,
 ) -> bool:
     is_new = (
         conn.execute(
@@ -551,15 +571,17 @@ def _upsert_professor_row(
             discipline_family,
             primary_official_profile_page_id,
             first_seen_at,
-            last_refreshed_at
+            last_refreshed_at,
+            run_id
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT (professor_id) DO UPDATE
            SET canonical_name                    = EXCLUDED.canonical_name,
                canonical_name_en                 = EXCLUDED.canonical_name_en,
                discipline_family                 = EXCLUDED.discipline_family,
                primary_official_profile_page_id  = COALESCE(EXCLUDED.primary_official_profile_page_id, professor.primary_official_profile_page_id),
                last_refreshed_at                 = EXCLUDED.last_refreshed_at,
+               run_id                            = COALESCE(EXCLUDED.run_id, professor.run_id),
                updated_at                        = now()
         """,
         (
@@ -570,6 +592,7 @@ def _upsert_professor_row(
             primary_page_id,
             now,
             now,
+            run_id,
         ),
     )
     return is_new
@@ -600,6 +623,7 @@ def _upsert_affiliation(
     start_year: int | None,
     end_year: int | None,
     source_page_id: UUID,
+    run_id: UUID | str | None = None,
 ) -> None:
     row = conn.execute(
         """
@@ -632,10 +656,11 @@ def _upsert_affiliation(
         conn.execute(
             """
             UPDATE professor_affiliation
-               SET updated_at = now()
+               SET updated_at = now(),
+                   run_id = COALESCE(%s, run_id)
              WHERE affiliation_id = %s
             """,
-            (row[0],),
+            (run_id, row[0]),
         )
         return
 
@@ -650,9 +675,10 @@ def _upsert_affiliation(
             is_current,
             start_year,
             end_year,
-            source_page_id
+            source_page_id,
+            run_id
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """,
         (
             professor_id,
@@ -664,6 +690,7 @@ def _upsert_affiliation(
             start_year,
             end_year,
             source_page_id,
+            run_id,
         ),
     )
 
@@ -677,6 +704,7 @@ def _upsert_fact(
     source_page_id: UUID,
     evidence_span: str,
     confidence: Decimal,
+    run_id: UUID | str | None = None,
 ) -> None:
     row = conn.execute(
         """
@@ -701,12 +729,14 @@ def _upsert_fact(
             UPDATE professor_fact
                SET evidence_span = %s,
                    confidence = %s,
+                   run_id = COALESCE(%s, run_id),
                    updated_at = now()
              WHERE fact_id = %s
             """,
             (
                 evidence_span,
                 confidence,
+                run_id,
                 row[0],
             ),
         )
@@ -720,9 +750,10 @@ def _upsert_fact(
             value_raw,
             source_page_id,
             evidence_span,
-            confidence
+            confidence,
+            run_id
         )
-        VALUES (%s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         """,
         (
             professor_id,
@@ -731,6 +762,7 @@ def _upsert_fact(
             source_page_id,
             evidence_span,
             confidence,
+            run_id,
         ),
     )
 
@@ -749,6 +781,7 @@ def _upsert_professor_paper_link(
     topic_consistency_score: Decimal | None,
     institution_consistency_score: Decimal | None,
     is_officially_listed: bool,
+    run_id: UUID | str | None = None,
 ) -> None:
     verified_by = "rule_auto" if link_status == "verified" else None
     verified_at = datetime.now(timezone.utc) if link_status == "verified" else None
@@ -767,9 +800,10 @@ def _upsert_professor_paper_link(
             institution_consistency_score,
             is_officially_listed,
             verified_by,
-            verified_at
+            verified_at,
+            run_id
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT (professor_id, paper_id) DO UPDATE
            SET link_status                    = EXCLUDED.link_status,
                evidence_source_type           = EXCLUDED.evidence_source_type,
@@ -782,6 +816,7 @@ def _upsert_professor_paper_link(
                is_officially_listed           = EXCLUDED.is_officially_listed,
                verified_by                    = EXCLUDED.verified_by,
                verified_at                    = EXCLUDED.verified_at,
+               run_id                         = COALESCE(EXCLUDED.run_id, professor_paper_link.run_id),
                updated_at                     = now()
         """,
         (
@@ -798,6 +833,7 @@ def _upsert_professor_paper_link(
             is_officially_listed,
             verified_by,
             verified_at,
+            run_id,
         ),
     )
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import re
+from uuid import UUID
 
 from psycopg import Connection
 
@@ -35,6 +36,7 @@ def upsert_paper(
     authors_display: str | None,
     citation_count: int | None,
     canonical_source: str,
+    run_id: UUID | str | None = None,
 ) -> PaperUpsertReport:
     """Upsert a canonical paper row keyed by a stable paper id."""
 
@@ -77,9 +79,10 @@ def upsert_paper(
             abstract_clean,
             authors_display,
             citation_count,
-            canonical_source
+            canonical_source,
+            run_id
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT (paper_id) DO UPDATE
            SET title_clean          = EXCLUDED.title_clean,
                title_raw            = EXCLUDED.title_raw,
@@ -93,6 +96,7 @@ def upsert_paper(
                authors_display      = COALESCE(EXCLUDED.authors_display, paper.authors_display),
                citation_count       = COALESCE(EXCLUDED.citation_count, paper.citation_count),
                canonical_source     = EXCLUDED.canonical_source,
+               run_id               = COALESCE(EXCLUDED.run_id, paper.run_id),
                updated_at           = %s
         """,
         (
@@ -109,6 +113,7 @@ def upsert_paper(
             _normalize_optional(authors_display),
             citation_count,
             canonical_source,
+            run_id,
             now,
         ),
     )
