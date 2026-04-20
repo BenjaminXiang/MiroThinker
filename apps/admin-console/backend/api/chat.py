@@ -20,9 +20,13 @@ from __future__ import annotations
 
 import os
 import re
-from typing import Any, Literal
+import threading
+import time
+import uuid
+from collections import deque
+from typing import Any, Deque, Literal
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Cookie, Depends, Response
 from openai import OpenAI
 from pydantic import BaseModel, Field
 
@@ -117,6 +121,107 @@ _Q_TOPIC_LIST_RE = re.compile(
 _Q_PATENT_LIST_RE = re.compile(
     r"(?P<company>[\u4e00-\u9fff A-Za-z0-9]{2,20})\s*(有哪些|有什么|的)\s*专利"
 )
+# Round 10 v2 — follow-up query patterns once context pins a prof.
+# Name is non-greedy ({2,20}?) and the connector (的/发了/有) is required so
+# the name class doesn't swallow the 的 connector.
+_Q_PROF_PAPERS_RE = re.compile(
+    r"^(?P<name>[\u4e00-\u9fff A-Za-z.-]{2,20}?)\s*(的|发了(哪些)?|有(哪些|什么))\s*(论文|文章|paper)s?\s*$",
+    re.IGNORECASE,
+)
+_Q_PROF_TOPICS_RE = re.compile(
+    r"^(?P<name>[\u4e00-\u9fff A-Za-z.-]{2,20}?)\s*的\s*(研究方向|研究领域|研究)\s*(是什么|有哪些)?\s*$"
+)
+
+
+# --- Round 10 v2: multi-turn context ---
+# In-memory session store. Keyed by an opaque session_id we hand back via
+# cookie. Each SessionContext keeps the last few entities and turns so we
+# can resolve pronouns ("他"/"她"/"这位教授") to the most-recently-mentioned
+# professor. Process-local only — lost on restart. A future iteration
+# could persist to Postgres or Redis for HA.
+
+_SESSION_COOKIE = "miroflow_chat_session"
+_SESSION_TTL_SECONDS = 24 * 3600
+_SESSION_MAX_ENTITIES = 5
+_SESSION_MAX_TURNS = 5
+_SESSION_PRONOUNS_RE = re.compile(
+    r"(他|她|这位(?:教授|老师|学者)?|该(?:教授|学者)|上面那位)"
+)
+_SESSIONS_LOCK = threading.Lock()
+_SESSIONS: dict[str, "SessionContext"] = {}
+
+
+class SessionEntity(BaseModel):
+    kind: Literal["professor", "paper", "patent", "company"]
+    id: str
+    label: str
+
+
+class SessionContext:
+    """Per-session state. Not a Pydantic model to allow mutable deque usage."""
+
+    __slots__ = ("session_id", "entities", "turns", "last_seen_at")
+
+    def __init__(self, session_id: str) -> None:
+        self.session_id = session_id
+        self.entities: Deque[SessionEntity] = deque(maxlen=_SESSION_MAX_ENTITIES)
+        self.turns: Deque[dict[str, Any]] = deque(maxlen=_SESSION_MAX_TURNS)
+        self.last_seen_at = time.time()
+
+    def push_entity(self, entity: SessionEntity) -> None:
+        # Drop existing copies so the most-recent mention lands at the end
+        self.entities = deque(
+            [e for e in self.entities if not (e.kind == entity.kind and e.id == entity.id)],
+            maxlen=_SESSION_MAX_ENTITIES,
+        )
+        self.entities.append(entity)
+
+    def latest_professor(self) -> SessionEntity | None:
+        for e in reversed(self.entities):
+            if e.kind == "professor":
+                return e
+        return None
+
+    def push_turn(self, query: str, query_type: str, answer_text: str) -> None:
+        self.turns.append({
+            "query": query,
+            "query_type": query_type,
+            "answer_text": answer_text[:300],  # trim for memory hygiene
+            "at": time.time(),
+        })
+
+
+def _get_or_create_session(session_id: str | None) -> SessionContext:
+    with _SESSIONS_LOCK:
+        now = time.time()
+        # Opportunistic cleanup: drop stale sessions (cheap since we're holding the lock)
+        stale = [
+            k for k, ctx in _SESSIONS.items()
+            if now - ctx.last_seen_at > _SESSION_TTL_SECONDS
+        ]
+        for k in stale:
+            _SESSIONS.pop(k, None)
+
+        if session_id and session_id in _SESSIONS:
+            ctx = _SESSIONS[session_id]
+            ctx.last_seen_at = now
+            return ctx
+        new_id = session_id or uuid.uuid4().hex
+        ctx = SessionContext(new_id)
+        _SESSIONS[new_id] = ctx
+        return ctx
+
+
+def _rewrite_query_with_context(query: str, session: SessionContext) -> str:
+    """If the query has pronouns and session has a pinned professor, splice
+    the prof's canonical_name in. Heuristic but covers the common case."""
+    if not _SESSION_PRONOUNS_RE.search(query):
+        return query
+    prof = session.latest_professor()
+    if not prof:
+        return query
+    rewritten = _SESSION_PRONOUNS_RE.sub(prof.label, query)
+    return rewritten
 
 
 def _resolve_institution(fragment: str) -> tuple[str, ...] | None:
@@ -616,12 +721,143 @@ def _build_chat_response(
 # --- Endpoint ---
 
 
+def _lookup_verified_papers_for_prof(conn: Any, *, professor_id: str) -> list[dict]:
+    return conn.execute(
+        """
+        SELECT p.paper_id, p.title_clean, p.year, p.venue, p.citation_count,
+               ppl.topic_consistency_score,
+               count(*) OVER ()::int AS total_count
+          FROM professor_paper_link ppl
+          JOIN paper p ON p.paper_id = ppl.paper_id
+         WHERE ppl.professor_id = %s AND ppl.link_status = 'verified'
+         ORDER BY p.year DESC NULLS LAST, p.citation_count DESC NULLS LAST
+         LIMIT 20
+        """,
+        (professor_id,),
+    ).fetchall()
+
+
+def _answer_prof_papers(prof: dict, rows: list[dict]) -> str:
+    name = prof["canonical_name"]
+    if not rows:
+        return f"{name} 目前没有 verified 论文。"
+    total = rows[0].get("total_count", len(rows))
+    lines = [
+        f"{name} 共有 {total} 篇已验证论文（显示前 {min(len(rows), 10)} 篇）：",
+        "",
+    ]
+    for r in rows[:10]:
+        y = r.get("year") or "?"
+        venue = r.get("venue") or ""
+        lines.append(f"  • {y} | {r['title_clean'][:80]} | {venue[:40]}")
+    return "\n".join(lines)
+
+
 @router.post("/chat", response_model=ChatResponse)
 def chat(
     payload: ChatRequest,
+    response: Response,
+    miroflow_chat_session: str | None = Cookie(default=None),
     conn: Any = Depends(get_pg_conn),
 ) -> ChatResponse:
-    query = payload.query.strip()
+    # --- Round 10 v2: session + pronoun rewrite ---
+    session = _get_or_create_session(miroflow_chat_session)
+    if session.session_id != miroflow_chat_session:
+        response.set_cookie(
+            _SESSION_COOKIE,
+            session.session_id,
+            max_age=_SESSION_TTL_SECONDS,
+            httponly=True,
+            samesite="lax",
+        )
+    raw_query = payload.query.strip()
+    query = _rewrite_query_with_context(raw_query, session)
+
+    def _record_and_return(chat_resp: ChatResponse) -> ChatResponse:
+        """Push the primary entity from this response onto the session stack."""
+        sp = chat_resp.structured_payload or {}
+        prof_id = sp.get("professor_id")
+        prof_name = sp.get("canonical_name")
+        if prof_id and prof_name:
+            session.push_entity(SessionEntity(
+                kind="professor", id=prof_id, label=prof_name
+            ))
+        session.push_turn(raw_query, chat_resp.query_type, chat_resp.answer_text)
+        return chat_resp
+
+    # Pattern D' (v2): "<name>的研究方向" — follow-up on a pinned professor
+    if m := _Q_PROF_TOPICS_RE.search(query):
+        name = m.group("name").strip()
+        profs = _lookup_professor(conn, name=name, institutions=None)
+        if len(profs) == 1:
+            prof = profs[0]
+            topics = _prof_research_topics(conn, prof["professor_id"])
+            topic_text = (
+                "、".join(topics[:10])
+                if topics
+                else "(暂无已记录的研究方向)"
+            )
+            return _record_and_return(_build_chat_response(
+                conn=conn,
+                query=raw_query,
+                query_type="D_prof_topics_followup",
+                answer_text=f"{prof['canonical_name']} 的研究方向包括：{topic_text}",
+                citations=[
+                    ChatCitation(
+                        type="professor",
+                        id=prof["professor_id"],
+                        label=f"{prof['canonical_name']} - {prof.get('institution') or '单位未知'}",
+                        url=f"/browse#professor/{prof['professor_id']}",
+                    )
+                ],
+                structured_payload={
+                    "professor_id": prof["professor_id"],
+                    "canonical_name": prof["canonical_name"],
+                    "research_topics": topics,
+                },
+            ))
+
+    # Pattern D (v2): "<name>的论文" — follow-up on a pinned professor
+    if m := _Q_PROF_PAPERS_RE.search(query):
+        name = m.group("name").strip()
+        profs = _lookup_professor(conn, name=name, institutions=None)
+        if len(profs) == 1:
+            prof = profs[0]
+            papers = _lookup_verified_papers_for_prof(
+                conn, professor_id=prof["professor_id"]
+            )
+            structured_payload = {
+                "professor_id": prof["professor_id"],
+                "canonical_name": prof["canonical_name"],
+                "paper_count": papers[0]["total_count"] if papers else 0,
+                "papers": [
+                    {
+                        "paper_id": p["paper_id"],
+                        "title": p["title_clean"],
+                        "year": p["year"],
+                        "venue": p["venue"],
+                    }
+                    for p in papers[:10]
+                ],
+            }
+            return _record_and_return(
+                _build_chat_response(
+                    conn=conn,
+                    query=raw_query,
+                    query_type="D_prof_papers_followup",
+                    answer_text=_answer_prof_papers(prof, papers),
+                    citations=[
+                        ChatCitation(
+                            type="paper",
+                            id=p["paper_id"],
+                            label=f"{p.get('year') or '?'} · {p['title_clean'][:80]}",
+                            url=f"/browse#paper/{p['paper_id']}",
+                        )
+                        for p in papers[:10]
+                    ],
+                    structured_payload=structured_payload,
+                )
+            )
 
     # Pattern A: "介绍<inst>的<name>" — single professor profile
     if m := _Q_PROFILE_RE.search(query):
@@ -672,7 +908,7 @@ def chat(
         prof = profs[0]
         topics = _prof_research_topics(conn, prof["professor_id"])
         n_papers = _prof_paper_count(conn, prof["professor_id"])
-        return _build_chat_response(
+        return _record_and_return(_build_chat_response(
             conn=conn,
             query=query,
             query_type="A_prof_profile",
@@ -695,7 +931,7 @@ def chat(
                 "research_topics": topics,
                 "verified_paper_count": n_papers,
             },
-        )
+        ))
 
     # Pattern B: "<inst>做<topic>的教授" — list professors by topic + institution
     if m := _Q_TOPIC_LIST_RE.search(query):
