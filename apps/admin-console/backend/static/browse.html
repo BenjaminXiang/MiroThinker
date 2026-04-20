@@ -162,9 +162,41 @@
   }
   .topic-bar.low > span { background: var(--warn); }
   .topic-bar.verylow > span { background: var(--danger); }
+  /* Round 9.1c — right-side slide-in drawer for professor detail */
+  #detail-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15, 18, 22, 0.32);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease;
+    z-index: 900;
+  }
+  #detail-overlay.open { opacity: 1; pointer-events: auto; }
   #detail {
-    margin-top: 24px; background: var(--panel); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 24px; display: none;
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: min(780px, 60vw);
+    background: var(--panel); border-left: 1px solid var(--border);
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.08);
+    padding: 28px 32px; padding-right: 44px;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    z-index: 1000;
+    display: block;
+  }
+  #detail.open { transform: translateX(0); }
+  #detail-close {
+    position: absolute; top: 18px; right: 18px;
+    width: 30px; height: 30px;
+    border: none; background: transparent;
+    border-radius: 50%;
+    font-size: 20px; color: var(--fg-muted);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #detail-close:hover { background: var(--border); color: var(--fg); }
+  @media (max-width: 900px) {
+    #detail { width: 100vw; padding: 20px 22px; padding-right: 22px; }
   }
   #detail h3 { margin: 0 0 6px; font-size: 22px; font-weight: 600; letter-spacing: -0.015em; }
   #detail h3 .en-name { color: var(--fg-muted); font-weight: 400; font-size: 15px; margin-left: 8px; }
@@ -564,8 +596,12 @@
       <button id="next">下一页</button>
     </div>
   </div>
-  <div id="detail"></div>
 </main>
+<div id="detail-overlay"></div>
+<aside id="detail">
+  <button id="detail-close" aria-label="关闭详情">×</button>
+  <div id="detail-body"></div>
+</aside>
 
 <script>
 // ============ Discipline i18n (Round 9.1a) ============
@@ -601,8 +637,29 @@ let guardRunsCache = null;
 // ============ DOM refs ============
 const listTable = document.getElementById("list-table");
 const detail = document.getElementById("detail");
+const detailBody = document.getElementById("detail-body");
+const detailOverlay = document.getElementById("detail-overlay");
+const detailClose = document.getElementById("detail-close");
 const statsBox = document.getElementById("stats");
 const pageInfo = document.getElementById("page-info");
+
+// Round 9.1c — open/close helpers
+function openDetail() {
+  detail.classList.add("open");
+  detailOverlay.classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+function closeDetail() {
+  detail.classList.remove("open");
+  detailOverlay.classList.remove("open");
+  document.body.style.overflow = "";
+  if (location.hash) history.replaceState(null, "", location.pathname);
+}
+detailClose.addEventListener("click", closeDetail);
+detailOverlay.addEventListener("click", closeDetail);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && detail.classList.contains("open")) closeDetail();
+});
 const searchBox = document.getElementById("search");
 const errorBox = document.getElementById("error");
 const profFiltersEl = document.getElementById("prof-filters");
@@ -784,18 +841,18 @@ function renderList(payload) {
 // ============ Detail rendering ============
 async function showDetail(id) {
   if (!id) return;
-  detail.style.display = "block";
-  detail.innerHTML = "<em>加载中…</em>";
+  detailBody.innerHTML = "<em>加载中…</em>";
+  openDetail();
   // Sync URL hash so /browse#professor/{id} deep-links the drawer
   if (currentDomain === "professors" && !location.hash.includes(id)) {
     history.replaceState(null, "", `#professor/${encodeURIComponent(id)}`);
   }
   try {
     const d = await apiDetail(currentDomain, id);
-    detail.innerHTML = renderDetail(d);
-    detail.scrollIntoView({ behavior: "smooth", block: "start" });
+    detailBody.innerHTML = renderDetail(d);
+    detail.scrollTop = 0;
   } catch (e) {
-    detail.innerHTML = `<div class="empty">详情加载失败: ${esc(e.message)}</div>`;
+    detailBody.innerHTML = `<div class="empty">详情加载失败: ${esc(e.message)}</div>`;
   }
 }
 
@@ -983,7 +1040,7 @@ function renderDetail(d) {
 // ============ Pipeline view ============
 async function loadPipelineView() {
   errorBox.style.display = "none";
-  detail.style.display = "none";
+  closeDetail();
   profFiltersEl.classList.remove("visible");
   statsBox.innerHTML = "";
   const tbody = listTable.querySelector("tbody");
@@ -1014,8 +1071,8 @@ async function loadPipelineView() {
     }).join("");
     const byApi = sources.by_evidence_api_source || {};
     const byVby = sources.by_verified_by || {};
-    detail.style.display = "block";
-    detail.innerHTML = `
+    openDetail();
+    detailBody.innerHTML = `
       <h3>论文链来源分布</h3>
       <section><h4>按 evidence_api_source</h4>
         <dl class="grid">${Object.entries(byApi).sort((a,b) => b[1]-a[1]).slice(0,15).map(
@@ -1036,7 +1093,7 @@ async function loadPipelineView() {
 // ============ Review view ============
 async function loadReviewView() {
   errorBox.style.display = "none";
-  detail.style.display = "none";
+  closeDetail();
   profFiltersEl.classList.remove("visible");
   statsBox.innerHTML = "";
   const tbody = listTable.querySelector("tbody");
@@ -1081,8 +1138,8 @@ async function loadReviewView() {
         <td><button class="flag-btn" onclick="flagProf('${esc(s.professor_id)}', '${esc(s.canonical_name)}')">🚩 标记</button></td>
       </tr>`;
     }).join("");
-    detail.style.display = "block";
-    detail.innerHTML = `
+    openDetail();
+    detailBody.innerHTML = `
       <h3>未解决 Pipeline Issues <span class="count">${issues.length}</span></h3>
       ${issues.length === 0 ? '<p class="empty">暂无未解决 issue</p>' : issues.map(i => `
         <section style="border-left:3px solid var(--border);padding-left:14px;margin-bottom:14px">
@@ -1197,7 +1254,7 @@ function switchToIssuesFiltered(filters) {
 // ============ Issues view ============
 async function loadIssuesView() {
   errorBox.style.display = "none";
-  detail.style.display = "none";
+  closeDetail();
   profFiltersEl.classList.remove("visible");
   issueFiltersEl.classList.add("visible");
   statsBox.innerHTML = "";
@@ -1356,7 +1413,7 @@ async function loadDomain() {
   if (currentDomain === "review") return loadReviewView();
   if (currentDomain === "issues") return loadIssuesView();
   errorBox.style.display = "none";
-  detail.style.display = "none";
+  closeDetail();
   statsBox.innerHTML = "";
   issueFiltersEl.classList.remove("visible");
   listTable.querySelector("tbody").innerHTML = skeletonRows(5, 5);
