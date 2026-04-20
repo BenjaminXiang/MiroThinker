@@ -234,6 +234,46 @@ Subagent 映射（可以再来一波 Agent-A ~ F 并行派发）：
 - Agent-E: 9.1b profile_summary 后端扩展 + 前端渲染（Codex + design-iterator）
 - Agent-F: 文档：现有 Taxonomy 78 学科码中英对照的文件位置 + 导出 .ts 映射（general-purpose）
 
+## 8a. Round 7.20 — CV/PDF 附件解析（用户 2026-04-19 补充）
+
+### 问题
+部分教授在官方主页上挂自己的 CV（PDF / doc / docx），内容往往比网页摘要更完整：
+- 完整教育履历 + 时间点
+- 工作经历（包括早期博士后 / 访问学者 / 海外经历）
+- 完整 publication list（可能比 OpenAlex 查到的更新）
+- 项目基金、专利、获奖明细
+- 社会任职（编委、审稿、学会）
+- 指导学生名单
+
+爬虫层已捕获一些：`source_page` 表里 7 条 `.pdf` URL 来自 edu 域名，但都没被解析。整体估计 787 位教授中 5-10% 会有 CV（~40-80 份）。
+
+### 设计（Round 7.20 — PDF/CV 解析与字段抽取）
+
+1. **发现阶段**：扩展 `source_page` 表加一个 `page_kind: Literal['official_profile', 'cv_pdf', 'publication_list', ...]` 列；爬虫识别 CV 链接时打 `cv_pdf` 标记。
+2. **下载与文本化**：`scripts/run_cv_download_and_extract.py` — 读 `source_page` 里 `page_kind='cv_pdf'` 的行，拉取 PDF → 用 `pypdf` / `pdfplumber` 抽纯文本 → 存进 `source_page.clean_text_path`（这个字段现在 0 条）。
+3. **结构化抽取（LLM）**：给 gemma4 一个 prompt 解析 CV 文本，返回 JSON：`{"education": [...], "experience": [...], "publications": [...], "awards": [...], "projects": [...], "services": [...]}`。每个字段落到现有 `professor_fact` 表（`fact_type='education'/'work_experience'/'award'/...`），跑现有 identity/quality guards。
+4. **新 fact_type 扩展**：如果 CV 带来 `professional_service`、`project_lead`、`student_advisory` 这些当前没有的 fact_type，加 V011 migration 扩枚举。
+5. **冲突解决**：CV 与官网摘要 / OpenAlex 冲突时——CV 通常是权威版本（教授亲自编写），优先级高于爬虫抽取。但 publication 部分仍走 `paper_identity_gate` 防 SNDP。
+
+### 依赖
+- `pypdf` 或 `pdfplumber` 新依赖
+- gemma4 有足够 context 处理长 CV（5-20 页），可能要分段
+- Round 7.19c 的 `profile_raw_text` 字段可复用（CV 完整文本当 raw_text 存）
+
+### 交付
+- V011 migration (page_kind 列 + 新 fact_type 枚举)
+- `src/data_agents/professor/cv_extractor.py` (download + text + LLM)
+- `scripts/run_cv_extract_backfill.py`
+- Tests for each segment of the extraction JSON
+
+### 验收
+- 从当前 7 条 edu PDF URL 中成功解析出 ≥ 5 份 CV 的结构化字段
+- Dashboard 详情抽屉显示"完整 CV"卡片（可展开）
+- 至少 3 位教授的详情页通过 CV 解析多出 education/experience 字段
+
+### 归属
+作为独立 Round 7.20，排在 7.19a/b/c 之后。优先级 P2（数据层增量提升，但不阻拦 RAG v1/v2）。
+
 ## 9. 验收指标
 
 - **7.19a**：Jianwei Huang 的详情页同时显示 "黄建伟" 和 "Jianwei Huang"
