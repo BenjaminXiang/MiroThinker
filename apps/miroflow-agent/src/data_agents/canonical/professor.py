@@ -22,6 +22,7 @@ class Professor(BaseModel):
     professor_id: str  # PROF-{12hex}
     canonical_name: str
     canonical_name_en: str | None = None
+    canonical_name_zh: str | None = None  # Round 7.19a — explicit Chinese anchor
     aliases: list[str] = Field(default_factory=list)
     discipline_family: str
     primary_official_profile_page_id: UUID | None = None
@@ -32,6 +33,9 @@ class Professor(BaseModel):
     created_at: datetime | None = None
     updated_at: datetime | None = None
     run_id: UUID | None = None  # Round 7.16 — pipeline_run that produced this row
+    # Round 9.1b / 7.19c — optional bio fields (columns land via future migration)
+    profile_summary: str | None = None
+    profile_raw_text: str | None = None
 
 
 class ProfessorAffiliation(BaseModel):
