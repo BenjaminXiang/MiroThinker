@@ -482,13 +482,16 @@
     <label>学科
       <select id="f-discipline">
         <option value="">全部学科</option>
-        <option value="computer_science">计算机 / AI</option>
-        <option value="engineering">工程</option>
-        <option value="physics_math">物理 / 数学</option>
-        <option value="life_sciences">生命 / 医学</option>
-        <option value="chemistry_materials">化学 / 材料</option>
-        <option value="humanities_social">人文社科</option>
-        <option value="unknown">未分类</option>
+        <option value="computer_science">计算机科学</option>
+        <option value="electrical_engineering">电气工程</option>
+        <option value="mechanical_engineering">机械工程</option>
+        <option value="materials">材料科学</option>
+        <option value="biomedical">生物医学</option>
+        <option value="mathematics">数学</option>
+        <option value="physics">物理</option>
+        <option value="chemistry">化学</option>
+        <option value="interdisciplinary">交叉学科</option>
+        <option value="other">其他</option>
       </select>
     </label>
     <label class="toggle">
@@ -511,6 +514,25 @@
 </main>
 
 <script>
+// ============ Discipline i18n (Round 9.1a) ============
+// Maps canonical professor.discipline_family enum → Chinese display label.
+// DB contract (enum values) unchanged; filter dropdown uses the codes as value.
+const DISCIPLINE_LABEL = {
+  computer_science: "计算机科学",
+  electrical_engineering: "电气工程",
+  mechanical_engineering: "机械工程",
+  materials: "材料科学",
+  biomedical: "生物医学",
+  mathematics: "数学",
+  physics: "物理",
+  chemistry: "化学",
+  interdisciplinary: "交叉学科",
+  other: "其他",
+};
+function disciplineLabel(code) {
+  return DISCIPLINE_LABEL[code] || code || "";
+}
+
 // ============ State ============
 let currentDomain = "companies";
 let currentPage = 1;
@@ -650,7 +672,8 @@ const COLUMNS = {
         ? `<br><small style="color:var(--fg-muted);font-size:11px">${esc(r.canonical_name_en)}</small>`
         : ""}` },
     { key: "institution", label: "机构" },
-    { key: "discipline_family", label: "学科" },
+    { key: "discipline_family", label: "学科",
+      render: (r) => disciplineLabel(r.discipline_family) },
     { key: "research_topic_count", label: "研究方向",
       render: (r) => r.research_topic_count || 0 },
     { key: "verified_paper_count", label: "已验证论文",
