@@ -50,6 +50,91 @@ _CHAT_SYNTHESIS_EXTRA_BODY = {
 }
 
 
+# --- Round 11 v3: LLM query classifier ---
+# gemma4 categorizes the user query into one of:
+#   A — exact single-entity lookup (介绍X / X有哪些专利 → rule path handles)
+#   B — semantic/topic search across SZ institutions (自由描述需求)
+#   F — refuse (闲聊/out-of-scope: 天气/股票/情感咨询)
+#   UNKNOWN — let the rule engine try; fall through
+# D/E deferred to Round 12.
+
+_CLASSIFIER_TIMEOUT = 2.5
+_CLASSIFIER_SYSTEM = (
+    "你是深圳科创检索助手的查询分类器。把用户的一句话归入以下类别，"
+    "JSON 输出，不要其他文字：\n"
+    '{"type": "A" | "B" | "F" | "UNKNOWN", "topic": "", "reason": ""}\n'
+    "类别定义：\n"
+    "A = 精确查询单个教授/公司/专利（有明确姓名、学校、专利号等）\n"
+    "B = 语义或模糊检索（如'深圳做机器人的专家'、'研究芯片的教授'、'具身智能领域的学者'）\n"
+    "F = 闲聊/范围外/危险/不适合（天气、股票、情感、投资建议、违法信息等）\n"
+    "UNKNOWN = 无法判断，或混合意图\n"
+    "topic 字段：仅在 B 类给出核心方向词（≤10 字，如'机器人'、'芯片设计'）；其他留空。"
+)
+
+
+def _classify_query_with_llm(query: str) -> dict[str, str] | None:
+    """Return {type, topic, reason} or None on error. Caller decides fallback."""
+    if os.environ.get("CHAT_QUERY_CLASSIFIER", "on").lower() == "off":
+        return None
+    settings = resolve_professor_llm_settings("gemma4", include_profile=True)
+    client = OpenAI(
+        base_url=settings["local_llm_base_url"],
+        api_key=settings["local_llm_api_key"] or "EMPTY",
+        timeout=_CLASSIFIER_TIMEOUT,
+    )
+    try:
+        resp = client.chat.completions.create(
+            model=settings["local_llm_model"],
+            messages=[
+                {"role": "system", "content": _CLASSIFIER_SYSTEM},
+                {"role": "user", "content": query},
+            ],
+            temperature=0.0,
+            max_tokens=120,
+            extra_body=_CHAT_SYNTHESIS_EXTRA_BODY,
+        )
+        text = resp.choices[0].message.content or ""
+        # Strip possible ```json fences
+        text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip(), flags=re.MULTILINE)
+        import json
+        data = json.loads(text)
+        if not isinstance(data, dict):
+            return None
+        t = data.get("type")
+        if t not in {"A", "B", "F", "UNKNOWN"}:
+            return None
+        return {
+            "type": t,
+            "topic": str(data.get("topic") or "").strip(),
+            "reason": str(data.get("reason") or "").strip()[:200],
+        }
+    except Exception:
+        return None
+
+
+_SZ_INSTITUTIONS_ALL = (
+    "南方科技大学",
+    "清华大学深圳国际研究生院",
+    "清华大学深圳研究生院",
+    "北京大学深圳研究生院",
+    "深圳大学",
+    "深圳理工大学",
+    "哈尔滨工业大学（深圳）",
+    "香港中文大学（深圳）",
+    "中山大学（深圳）",
+    "深圳技术大学",
+    "中国科学院深圳先进技术研究院",
+)
+
+
+def _answer_refuse(query: str, reason: str) -> str:
+    return (
+        "这个问题超出了深圳科创检索助手的范围。\n"
+        "我能帮你查：深圳 11 所高校的教授、1000+ 科创企业、7000+ 论文、专利。\n"
+        "试试换个科创相关的问题？"
+    )
+
+
 # --- Pydantic schemas ---
 
 
@@ -934,17 +1019,15 @@ def chat(
         ))
 
     # Pattern B: "<inst>做<topic>的教授" — list professors by topic + institution
-    if m := _Q_TOPIC_LIST_RE.search(query):
+    # If inst doesn't resolve (e.g. user wrote "深圳" / "南方" / "亚洲"), fall
+    # through to the v3 classifier at end of endpoint rather than returning
+    # a helpless "未能识别" — classifier may reroute as B semantic search.
+    if (m := _Q_TOPIC_LIST_RE.search(query)) and (
+        _resolve_institution(m.group("inst")) is not None
+    ):
         inst_fragment = m.group("inst")
         topic = m.group("topic").strip()
         institutions = _resolve_institution(inst_fragment)
-        if not institutions:
-            return ChatResponse(
-                query=query,
-                query_type="A_prof_list_by_topic",
-                answer_text=f"未能识别学校名 {inst_fragment!r}。支持：清华、南科大、深大、港中深、中大深圳、深技大、深理工、哈深、北大深圳。",
-                citations=[],
-            )
         rows = _lookup_professors_by_topic(
             conn, institutions=institutions, topic=topic
         )
@@ -1017,6 +1100,43 @@ def chat(
             ],
             structured_payload=structured_payload,
         )
+
+    # Round 11 v3: no rule pattern matched — ask LLM classifier
+    classification = _classify_query_with_llm(query)
+    if classification:
+        if classification["type"] == "F":
+            return _record_and_return(ChatResponse(
+                query=raw_query,
+                query_type="F_out_of_scope",
+                answer_text=_answer_refuse(raw_query, classification["reason"]),
+                citations=[],
+                structured_payload={"classifier_reason": classification["reason"]},
+            ))
+        if classification["type"] == "B" and classification["topic"]:
+            topic = classification["topic"]
+            rows = _lookup_professors_by_topic(
+                conn, institutions=_SZ_INSTITUTIONS_ALL, topic=topic
+            )
+            return _record_and_return(_build_chat_response(
+                conn=conn,
+                query=raw_query,
+                query_type="B_semantic_topic_search",
+                answer_text=_answer_prof_list(_SZ_INSTITUTIONS_ALL, topic, rows),
+                citations=[
+                    ChatCitation(
+                        type="professor",
+                        id=r["professor_id"],
+                        label=f"{r['canonical_name']} - {r['institution']}",
+                        url=f"/browse#professor/{r['professor_id']}",
+                    )
+                    for r in rows[:10]
+                ],
+                structured_payload={
+                    "classifier_topic": topic,
+                    "classifier_reason": classification["reason"],
+                    "match_count": rows[0].get("total_count", len(rows)) if rows else 0,
+                },
+            ))
 
     return ChatResponse(
         query=query,
