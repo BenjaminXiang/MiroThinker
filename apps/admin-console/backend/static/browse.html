@@ -168,6 +168,19 @@
   }
   #detail h3 { margin: 0 0 6px; font-size: 22px; font-weight: 600; letter-spacing: -0.015em; }
   #detail h3 .en-name { color: var(--fg-muted); font-weight: 400; font-size: 15px; margin-left: 8px; }
+  #detail h3 .zh-alt { color: var(--accent); font-weight: 400; font-size: 15px; margin-left: 8px; }
+  #detail h3 .detail-actions { float: right; display: inline-flex; gap: 8px; margin-top: 4px; }
+  #detail h3 .chip-btn {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    text-decoration: none;
+    border: 1px solid transparent;
+    font-weight: 500;
+  }
+  #detail h3 .chip-btn:hover { border-color: var(--accent); }
   #detail .sub { color: var(--fg-muted); font-size: 13px; margin-bottom: 20px; }
   #detail section { margin-bottom: 22px; }
   #detail section:last-child { margin-bottom: 0; }
@@ -177,6 +190,47 @@
     padding-bottom: 6px; border-bottom: 1px solid var(--border);
   }
   #detail h4 .count { color: var(--fg-faint); font-weight: 400; margin-left: 6px; }
+  /* Round 9.1b — AI 画像 / 官网简介 卡片 */
+  .summary-card {
+    padding: 14px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .summary-card--ai {
+    background: var(--accent-soft);
+    border-color: transparent;
+    border-left: 3px solid var(--accent);
+  }
+  .summary-card--raw {
+    background: var(--surface);
+  }
+  .summary-card .summary-body {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--fg);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .summary-card--raw.collapsed .summary-body {
+    max-height: 4.5em;
+    overflow: hidden;
+    mask-image: linear-gradient(to bottom, #000 50%, transparent);
+  }
+  .summary-card .collapse-toggle {
+    float: right;
+    font-size: 10px;
+    padding: 2px 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    color: var(--fg-muted);
+    text-transform: none;
+    letter-spacing: normal;
+  }
+  .summary-card .collapse-toggle:hover { color: var(--accent); border-color: var(--accent); }
   .grid { display: grid; grid-template-columns: 110px 1fr; gap: 6px 16px; font-size: 13px; }
   .grid dt { color: var(--fg-muted); font-weight: 500; }
   .grid dd { margin: 0; color: var(--fg); word-break: break-word; }
@@ -732,6 +786,10 @@ async function showDetail(id) {
   if (!id) return;
   detail.style.display = "block";
   detail.innerHTML = "<em>加载中…</em>";
+  // Sync URL hash so /browse#professor/{id} deep-links the drawer
+  if (currentDomain === "professors" && !location.hash.includes(id)) {
+    history.replaceState(null, "", `#professor/${encodeURIComponent(id)}`);
+  }
   try {
     const d = await apiDetail(currentDomain, id);
     detail.innerHTML = renderDetail(d);
@@ -740,6 +798,19 @@ async function showDetail(id) {
     detail.innerHTML = `<div class="empty">详情加载失败: ${esc(e.message)}</div>`;
   }
 }
+
+// Round 9.1c — deep-link handler: /browse#professor/{id} auto-opens that drawer on load
+function _handleDeepLink() {
+  const m = /^#professor\/([A-Za-z0-9-]+)$/.exec(location.hash);
+  if (!m) return;
+  const profId = decodeURIComponent(m[1]);
+  // Switch to professors tab first, then open the drawer
+  const btn = document.querySelector('nav#tabs button[data-domain="professors"]');
+  if (btn && !btn.classList.contains("active")) btn.click();
+  setTimeout(() => showDetail(profId), 120);
+}
+window.addEventListener("load", _handleDeepLink);
+window.addEventListener("hashchange", _handleDeepLink);
 
 function renderFact(f) {
   const text = f.value_raw || f.value_normalized || "";
@@ -801,12 +872,25 @@ function renderProfessorDetail(d) {
     ? `<span class="badge accent">${esc(p.research_directions_source)}</span>`
     : "";
 
+  const disciplineZh = disciplineLabel(p.discipline_family);
+  const zhName = p.canonical_name_zh && p.canonical_name_zh !== p.canonical_name
+    ? ` <span class="zh-alt">${esc(p.canonical_name_zh)}</span>` : "";
+  const enName = p.canonical_name_en && p.canonical_name_en !== p.canonical_name
+    ? ` <span class="en-name">${esc(p.canonical_name_en)}</span>` : "";
+  const detailUrl = `/browse#professor/${encodeURIComponent(p.professor_id || "")}`;
+  const exportJson = `data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(d, null, 2))}`;
+
   return `
-    <h3>${esc(p.canonical_name || "(未知)")}${p.canonical_name_en
-      ? `<span class="en-name">${esc(p.canonical_name_en)}</span>`
-      : ""}</h3>
+    <h3>
+      ${esc(p.canonical_name || "(未知)")}${zhName}${enName}
+      <span class="detail-actions">
+        <a class="chip-btn" href="${detailUrl}" target="_blank" rel="noopener">新窗口 ↗</a>
+        <a class="chip-btn" href="${exportJson}" download="${esc(p.professor_id || 'professor')}.json">导出 JSON</a>
+      </span>
+    </h3>
     <div class="sub">
       ${esc(primaryAff.institution || "")} · ${esc(primaryAff.department || "")} · ${esc(primaryAff.title || "")}
+      ${disciplineZh ? ` · <span class="badge accent">${esc(disciplineZh)}</span>` : ""}
     </div>
     <section>
       <h4>身份与出处</h4>
@@ -815,8 +899,21 @@ function renderProfessorDetail(d) {
         <dt>官方主页</dt><dd>${profileUrl}</dd>
         <dt>研究方向来源</dt><dd>${rdSource || "-"}</dd>
         <dt>所用源页数</dt><dd>${d.source_pages_used || 0}</dd>
+        <dt>最后刷新</dt><dd>${p.last_refreshed_at ? p.last_refreshed_at.slice(0, 10) : "-"}</dd>
       </dl>
     </section>
+    ${p.profile_summary ? `
+    <section class="summary-card summary-card--ai">
+      <h4>AI 教授画像</h4>
+      <p class="summary-body">${esc(p.profile_summary)}</p>
+    </section>` : ""}
+    ${p.profile_raw_text ? `
+    <section class="summary-card summary-card--raw">
+      <h4>官网简介
+        <button class="collapse-toggle" onclick="this.parentElement.parentElement.classList.toggle('collapsed')">折叠/展开</button>
+      </h4>
+      <p class="summary-body">${esc(p.profile_raw_text)}</p>
+    </section>` : ""}
     ${factSection("研究方向", "research_topic")}
     ${factSection("教育背景", "education")}
     ${factSection("工作经历", "work_experience")}
