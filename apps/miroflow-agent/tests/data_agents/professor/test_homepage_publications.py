@@ -111,7 +111,9 @@ def test_strip_item_suffix_online_journal_tag():
 
 
 def test_strip_item_suffix_no_suffix_is_passthrough():
-    assert _strip_item_suffix("Some Title with no suffix") == "Some Title with no suffix"
+    assert (
+        _strip_item_suffix("Some Title with no suffix") == "Some Title with no suffix"
+    )
 
 
 def test_strip_item_suffix_trailing_period_normalized():
@@ -188,9 +190,9 @@ def test_normalize_title_for_dedup_case_insensitive():
 
 
 def test_normalize_title_for_dedup_whitespace_collapsed():
-    assert _normalize_title_for_dedup("  Hello,  World!  ") == _normalize_title_for_dedup(
-        "Hello World"
-    )
+    assert _normalize_title_for_dedup(
+        "  Hello,  World!  "
+    ) == _normalize_title_for_dedup("Hello World")
 
 
 def test_normalize_title_for_dedup_empty_input():
@@ -221,7 +223,9 @@ def test_extract_ol_list_happy_path():
 
 def test_extract_ul_list_strips_prefixes_and_suffixes():
     html = _load("sample_ul_list.html")
-    pubs = extract_publications_from_html(html, page_url="https://example.edu/prof/zhang")
+    pubs = extract_publications_from_html(
+        html, page_url="https://example.edu/prof/zhang"
+    )
     assert len(pubs) == 15
     # No [1] prefixes nor [J]/[C]/[J/OL] suffixes in clean_title
     for p in pubs:
@@ -390,7 +394,9 @@ def test_extract_item_without_year_still_extracted():
 
 
 def test_extract_caps_at_200_items():
-    items = "\n".join(f"<li>Long Enough Item Title Number {i}. A 2023.</li>" for i in range(250))
+    items = "\n".join(
+        f"<li>Long Enough Item Title Number {i}. A 2023.</li>" for i in range(250)
+    )
     html = f"""<!doctype html><html><body>
     <h2>Publications</h2><ol>{items}</ol>
     </body></html>"""
