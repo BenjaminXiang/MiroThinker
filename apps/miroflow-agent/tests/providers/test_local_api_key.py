@@ -3,6 +3,7 @@
 Source of truth: docs/plans/2026-04-20-004-m0.1-reranker-client.md Unit 1.
 Requirements: R6 (env priority, file fallback, empty-string never-raise).
 """
+
 from __future__ import annotations
 
 from src.data_agents.providers.local_api_key import load_local_api_key

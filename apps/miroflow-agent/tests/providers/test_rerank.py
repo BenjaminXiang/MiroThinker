@@ -3,6 +3,7 @@
 Source of truth: docs/plans/2026-04-20-004-m0.1-reranker-client.md Unit 2.
 Requirements: R1-R5 (sort, empty, top_n, missing-key, trust_env).
 """
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -12,16 +13,21 @@ import pytest
 
 from src.data_agents.providers.rerank import RerankerClient, RerankResult
 
+# Capture real class references BEFORE any test patches `rerank.httpx.Client`
+# (patching mutates the shared httpx module attribute globally for the patch scope).
+_REAL_HTTPX_CLIENT = httpx.Client
+_REAL_HTTPX_RESPONSE = httpx.Response
+
 
 def _mock_response(results_payload):
-    resp = MagicMock(spec=httpx.Response)
+    resp = MagicMock(spec=_REAL_HTTPX_RESPONSE)
     resp.json.return_value = {"results": results_payload}
     resp.raise_for_status.return_value = None
     return resp
 
 
 def _fake_http_client(response):
-    client = MagicMock(spec=httpx.Client)
+    client = MagicMock(spec=_REAL_HTTPX_CLIENT)
     client.post.return_value = response
     client.trust_env = False
     client.is_closed = False
@@ -50,9 +56,7 @@ def test_returns_sorted_results_happy_path():
 
 
 def test_top_n_is_sent_in_payload():
-    response = _mock_response(
-        [{"index": 0, "relevance_score": 0.9, "document": "a"}]
-    )
+    response = _mock_response([{"index": 0, "relevance_score": 0.9, "document": "a"}])
     http = _fake_http_client(response)
     client = RerankerClient(api_key="k", client=http)
     client.rerank("q", ["a", "b", "c"], top_n=2)
@@ -108,7 +112,7 @@ def test_http_error_propagates():
 def test_context_manager_closes_owned_client():
     """Internally owned httpx.Client must be closed on __exit__."""
     with patch("src.data_agents.providers.rerank.httpx.Client") as ClientCls:
-        owned = MagicMock(spec=httpx.Client)
+        owned = MagicMock(spec=_REAL_HTTPX_CLIENT)
         owned.is_closed = False
         ClientCls.return_value = owned
         with RerankerClient(api_key="k"):
@@ -118,7 +122,7 @@ def test_context_manager_closes_owned_client():
 
 def test_does_not_close_injected_client():
     """Caller-provided httpx.Client must NOT be closed by context manager."""
-    injected = MagicMock(spec=httpx.Client)
+    injected = MagicMock(spec=_REAL_HTTPX_CLIENT)
     with RerankerClient(api_key="k", client=injected):
         pass
     injected.close.assert_not_called()
