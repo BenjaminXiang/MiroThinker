@@ -33,6 +33,7 @@ from openai import OpenAI
 from pydantic import BaseModel, Field
 
 from backend.deps import (
+    _get_reranker_client,
     _get_web_search_provider,
     chat_e_web_fallback_threshold,
     chat_use_retrieval_service,
@@ -182,6 +183,46 @@ def _get_web_search_provider_or_none():
     if not getattr(provider, "api_key", "").strip():
         return None
     return provider
+
+
+def _get_reranker_client_or_none():
+    try:
+        return _get_reranker_client()
+    except Exception as exc:
+        logger.warning("Failed to initialize reranker client: %s", exc)
+        return None
+
+
+def _rerank_web_organics(
+    query: str,
+    organics: list[dict],
+    reranker,
+    top_n: int = 3,
+) -> list[dict]:
+    """Rerank scholarly organic results via Qwen3-Reranker-8B.
+
+    Returns a list of organic dicts with `rerank_score` added, sorted by
+    rerank score desc. On any reranker exception, falls back to the first
+    `top_n` organics with `rerank_score=0.5` (preserving input order).
+    """
+    if not organics:
+        return []
+    docs = [
+        ((o.get("title") or "") + " — " + (o.get("snippet") or "")).strip(" —")
+        for o in organics
+    ]
+    try:
+        rerank_results = reranker.rerank(query, docs, top_n=top_n)
+    except Exception as exc:
+        logger.warning("Web organic rerank failed: %s", exc)
+        return [{**o, "rerank_score": 0.5} for o in organics[:top_n]]
+
+    ordered: list[dict] = []
+    for result in rerank_results:
+        idx = result.index
+        if 0 <= idx < len(organics):
+            ordered.append({**organics[idx], "rerank_score": result.score})
+    return ordered[:top_n]
 
 
 def _evidence_list_from_retrieval(results: list[Evidence]) -> list[dict]:
@@ -384,15 +425,25 @@ def _answer_knowledge_qa(query: str) -> tuple[str, str | None]:
                 except Exception as exc:
                     logger.warning("Web fallback failed for knowledge QA %r: %s", query, exc)
                 else:
-                    for organic in _e_route_filter_scholarly_organics(
+                    scholarly = _e_route_filter_scholarly_organics(
                         web_resp.get("organic", [])
-                    ):
+                    )
+                    reranker = _get_reranker_client_or_none()
+                    if reranker is not None:
+                        reranked = _rerank_web_organics(
+                            query, scholarly, reranker, top_n=3
+                        )
+                    else:
+                        reranked = [
+                            {**o, "rerank_score": 0.5} for o in scholarly[:3]
+                        ]
+                    for organic in reranked:
                         link = str(organic.get("link") or "").strip()
                         merged.append(
                             Evidence(
                                 object_type="web",
                                 object_id=link,
-                                score=0.5,
+                                score=float(organic.get("rerank_score", 0.5)),
                                 snippet=str(organic.get("snippet") or "")[:500],
                                 source_url=link,
                                 metadata={"title": organic.get("title", "")},
