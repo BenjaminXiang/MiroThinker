@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 from types import SimpleNamespace
 
+from fastapi import Response
+
 from backend.api import chat as chat_module
 
 
@@ -109,6 +111,7 @@ def test_chat_v1_profile_uses_llm_synthesis_and_returns_citation_map(
 
     response = chat_module.chat(
         chat_module.ChatRequest(query="介绍清华的丁文伯"),
+        response=Response(),
         conn=fake_conn,
     )
 
@@ -172,6 +175,7 @@ def test_chat_v1_patent_falls_back_to_template_and_files_pipeline_issue(
 
     response = chat_module.chat(
         chat_module.ChatRequest(query="优必选有哪些专利"),
+        response=Response(),
         conn=fake_conn,
     )
 
@@ -221,6 +225,7 @@ def test_chat_v1_dangling_marker_falls_back_for_ambiguous_professors(
 
     response = chat_module.chat(
         chat_module.ChatRequest(query="介绍王伟"),
+        response=Response(),
         conn=fake_conn,
     )
 
@@ -228,7 +233,12 @@ def test_chat_v1_dangling_marker_falls_back_for_ambiguous_professors(
     assert response.query_type == "A_prof_profile_ambiguous"
     assert "请加上学校再问一次" in response.answer_text
     assert len(fake_conn.pipeline_issues) == 1
-    assert "dangling citation marker" in fake_conn.pipeline_issues[0]["description"]
+    # M4's citation validator strips out-of-range [99] upstream, so the downstream
+    # check now reports "no citation markers found" instead of "dangling".
+    assert (
+        "no citation markers found"
+        in fake_conn.pipeline_issues[0]["description"]
+    )
 
 
 def test_chat_v1_env_off_keeps_v0_prof_list_behavior_and_skips_llm(
@@ -240,7 +250,7 @@ def test_chat_v1_env_off_keeps_v0_prof_list_behavior_and_skips_llm(
     monkeypatch.setattr(
         chat_module,
         "_lookup_professors_by_topic",
-        lambda conn, *, institutions, topic: [
+        lambda conn, *, institutions, topic, limit=None: [
             {
                 "professor_id": "PROF-101",
                 "canonical_name": "李明",
@@ -267,6 +277,7 @@ def test_chat_v1_env_off_keeps_v0_prof_list_behavior_and_skips_llm(
 
     response = chat_module.chat(
         chat_module.ChatRequest(query="南科大做力控的教授"),
+        response=Response(),
         conn=fake_conn,
     )
 
