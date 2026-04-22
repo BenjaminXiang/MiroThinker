@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-深圳科创数据平台：一个面向深圳科创生态的对话式科创信息检索系统。用户通过微信公众号用自然语言提问，系统在教授、企业、论文、专利四个数据域中智能路由检索，返回结构化、可追溯的回答。
+深圳科创数据平台：一个面向深圳科创生态的对话式科创信息检索系统。用户通过web用自然语言提问，系统在教授、企业、论文、专利四个数据域中智能路由检索，返回结构化、可追溯的回答。
 
 项目基于 MiroThinker 深度研究 agent 框架构建，复用其 agent runtime、多轮工具调用编排、搜索/抓取/抽取能力，在此之上构建了四域数据采集智能体和 Agentic RAG 检索服务层。
 
@@ -137,6 +137,22 @@ Four domain-specific data collection agents built on top of the core runtime. Ea
 - Pydantic for data contracts and validation
 - SQLite + Milvus for data agent storage
 - pytest with xdist (parallel), markers (`unit`, `integration`, `slow`, `requires_api_key`), and snapshot testing (`inline-snapshot`)
+
+### Agentic RAG env vars (M4+)
+
+Chat retrieval layer uses `RetrievalService` (M3). Controlled by:
+
+- `CHAT_USE_RETRIEVAL_SERVICE` — default `on`. Set `off` to revert to
+  pre-M4 SQL LIKE paths (B/D routes) and rule-based FAQ (E route).
+- `CHAT_E_WEB_FALLBACK_THRESHOLD` — default `0.5`. E-route triggers Serper
+  fallback when local paper-retrieve top-1 rerank score is below this.
+- `MILVUS_URI` — default `./milvus.db`. Used by `RetrievalService` +
+  `scripts/run_milvus_backfill.py`.
+- `SERPER_API_KEY` — existing; required for E-route Serper fallback. Missing
+  key → fallback skipped, rule-based FAQ used.
+- `API_KEY` / `OPENAI_API_KEY` / `SGLANG_API_KEY` — resolved via
+  `providers/local_api_key.py::load_local_api_key`. Falls back to
+  `.sglang_api_key` file at repo root.
 
 ## CI
 
