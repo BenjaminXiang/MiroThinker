@@ -18,6 +18,7 @@ and let the UI show it — that's better than faking an answer.
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 import threading
@@ -25,15 +26,24 @@ import time
 import uuid
 from collections import deque
 from typing import Any, Deque, Literal
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Cookie, Depends, Response
 from openai import OpenAI
 from pydantic import BaseModel, Field
 
-from backend.deps import get_pg_conn
+from backend.deps import (
+    _get_web_search_provider,
+    chat_e_web_fallback_threshold,
+    chat_use_retrieval_service,
+    get_pg_conn,
+    get_retrieval_service,
+)
 from src.data_agents.professor.llm_profiles import resolve_professor_llm_settings
+from src.data_agents.service.retrieval import Evidence
 
 router = APIRouter(prefix="/api")
+logger = logging.getLogger(__name__)
 
 _CHAT_SYNTHESIS_TIMEOUT_SECONDS = 3.0
 _CHAT_SYNTHESIS_REPORTED_BY = "round_9_p1_v1_chat_synthesis"
@@ -48,6 +58,24 @@ _CHAT_SYNTHESIS_SYSTEM_PROMPT = (
 _CHAT_SYNTHESIS_EXTRA_BODY = {
     "chat_template_kwargs": {"enable_thinking": False}
 }
+_SCHOLARLY_DOMAINS = frozenset(
+    {
+        "arxiv.org",
+        "doi.org",
+        "acm.org",
+        "ieee.org",
+        "nature.com",
+        "science.org",
+        "sciencedirect.com",
+        "springer.com",
+        "openreview.net",
+        "semanticscholar.org",
+        "pubmed.ncbi.nlm.nih.gov",
+        "ncbi.nlm.nih.gov",
+        "biorxiv.org",
+        "medrxiv.org",
+    }
+)
 
 
 # --- Round 11 v3: LLM query classifier ---
@@ -145,6 +173,99 @@ def _answer_refuse(query: str, reason: str) -> str:
 # --- Round 11 v3.1: D/E/G handlers ---
 
 
+def _get_web_search_provider_or_none():
+    try:
+        provider = _get_web_search_provider()
+    except Exception as exc:
+        logger.warning("Failed to initialize web search provider: %s", exc)
+        return None
+    if not getattr(provider, "api_key", "").strip():
+        return None
+    return provider
+
+
+def _evidence_list_from_retrieval(results: list[Evidence]) -> list[dict]:
+    rows: list[dict] = []
+    for evidence in results:
+        metadata = evidence.metadata or {}
+        if evidence.object_type == "professor":
+            rows.append(
+                {
+                    "type": "professor",
+                    "id": evidence.object_id,
+                    "title": metadata.get("name", ""),
+                    "snippet": evidence.snippet,
+                    "url": evidence.source_url,
+                    "score": evidence.score,
+                    "institution": metadata.get("institution", ""),
+                    "professor_id": evidence.object_id,
+                    "canonical_name": metadata.get("name", ""),
+                    "matched_topics": [],
+                }
+            )
+            continue
+        if evidence.object_type == "paper":
+            rows.append(
+                {
+                    "type": "paper",
+                    "id": evidence.object_id,
+                    "title": metadata.get("paper_id") or evidence.object_id,
+                    "snippet": evidence.snippet,
+                    "url": evidence.source_url,
+                    "score": evidence.score,
+                    "year": metadata.get("year"),
+                    "venue": metadata.get("venue"),
+                    "paper_id": evidence.object_id,
+                    "title_clean": metadata.get("paper_id") or evidence.object_id,
+                }
+            )
+            continue
+        if evidence.object_type == "web":
+            rows.append(
+                {
+                    "type": "web",
+                    "id": evidence.source_url,
+                    "title": metadata.get("title", ""),
+                    "snippet": evidence.snippet,
+                    "url": evidence.source_url,
+                    "score": evidence.score,
+                }
+            )
+    return rows
+
+
+def _validate_and_strip_citations(answer_text: str, evidence_count: int) -> str:
+    def _replace(match: re.Match[str]) -> str:
+        n = int(match.group(1))
+        if n == 0 or n > evidence_count:
+            logger.info("stripped out-of-range citation [%d]", n)
+            return ""
+        return match.group(0)
+
+    return re.sub(r"\[(\d+)\]", _replace, answer_text)
+
+
+def _maybe_prefix_low_confidence(
+    answer_text: str, evidence: list[Evidence], threshold: float = 0.3
+) -> str:
+    if not evidence:
+        return answer_text
+    top = max(item.score for item in evidence)
+    if top < threshold:
+        return f"根据检索结果置信度较低，以下仅供参考：{answer_text}"
+    return answer_text
+
+
+def _e_route_filter_scholarly_organics(organics: list[dict]) -> list[dict]:
+    filtered: list[dict] = []
+    for organic in organics:
+        link = str(organic.get("link") or "").strip()
+        hostname = (urlparse(link).hostname or "").lower()
+        if hostname and any(hostname.endswith(domain) for domain in _SCHOLARLY_DOMAINS):
+            filtered.append(organic)
+    return filtered[:3]
+
+
 def _lookup_companies_by_topic(conn: Any, *, topic: str) -> list[dict]:
     like = f"%{topic}%"
     return conn.execute(
@@ -191,8 +312,9 @@ def _answer_cross_domain(topic: str, profs: list[dict], companies: list[dict]) -
     lines.append(f"▎ 企业（{c_total} 家）：")
     if companies:
         for r in companies[:5]:
-            bits = [r['canonical_name']]
-            if r.get('industry'): bits.append(r['industry'])
+            bits = [r["canonical_name"]]
+            if r.get("industry"):
+                bits.append(r["industry"])
             lines.append(f"  • {' — '.join(bits[:2])}")
         if c_total > 5:
             lines.append(f"  ... 还有 {c_total - 5} 家")
@@ -210,9 +332,7 @@ _KNOWLEDGE_QA_SYSTEM = (
 )
 
 
-def _answer_knowledge_qa(query: str) -> tuple[str, str | None]:
-    """E — LLM knowledge answer with explicit disclaimer. No web search yet
-    (Round 12 follow-up). Returns (answer_text, error_or_None)."""
+def _answer_knowledge_qa_fallback(query: str) -> tuple[str, str | None]:
     try:
         settings = resolve_professor_llm_settings("gemma4", include_profile=True)
         client = OpenAI(
@@ -238,6 +358,57 @@ def _answer_knowledge_qa(query: str) -> tuple[str, str | None]:
         return (answer, None)
     except Exception as exc:
         return (f"知识问答失败：{exc}", str(exc))
+
+
+def _answer_knowledge_qa(query: str) -> tuple[str, str | None]:
+    if chat_use_retrieval_service():
+        results: list[Evidence] = []
+        try:
+            retrieval_service = get_retrieval_service()
+            results = retrieval_service.retrieve(
+                query,
+                domains=("paper",),
+                final_top_k=10,
+            )
+        except Exception as exc:
+            logger.warning("Paper retrieval failed for knowledge QA %r: %s", query, exc)
+            results = []
+
+        merged = list(results)
+        top_score = max((item.score for item in results), default=0.0)
+        if not results or top_score < chat_e_web_fallback_threshold():
+            web_provider = _get_web_search_provider_or_none()
+            if web_provider is not None:
+                try:
+                    web_resp = web_provider.search(query)
+                except Exception as exc:
+                    logger.warning("Web fallback failed for knowledge QA %r: %s", query, exc)
+                else:
+                    for organic in _e_route_filter_scholarly_organics(
+                        web_resp.get("organic", [])
+                    ):
+                        link = str(organic.get("link") or "").strip()
+                        merged.append(
+                            Evidence(
+                                object_type="web",
+                                object_id=link,
+                                score=0.5,
+                                snippet=str(organic.get("snippet") or "")[:500],
+                                source_url=link,
+                                metadata={"title": organic.get("title", "")},
+                            )
+                        )
+
+        if merged:
+            evidence_text, _ = _build_evidence_blocks(
+                {"retrieval_evidence": _evidence_list_from_retrieval(merged)}
+            )
+            answer_text = f"以下是检索到的相关资料：\n{evidence_text}"
+            answer_text = _validate_and_strip_citations(answer_text, len(merged))
+            answer_text = _maybe_prefix_low_confidence(answer_text, merged)
+            return (answer_text, None)
+
+    return _answer_knowledge_qa_fallback(query)
 
 
 # --- Pydantic schemas ---
@@ -459,8 +630,8 @@ def _lookup_professor(
     return conn.execute(sql, params).fetchall()
 
 
-def _lookup_professors_by_topic(
-    conn: Any, *, institutions: tuple[str, ...], topic: str
+def _lookup_professors_by_topic_sql(
+    conn: Any, *, institutions: tuple[str, ...], topic: str, limit: int
 ) -> list[dict]:
     placeholders = ", ".join(["%s"] * len(institutions))
     sql = f"""
@@ -486,10 +657,83 @@ def _lookup_professors_by_topic(
         SELECT *, count(*) OVER ()::int AS total_count
           FROM matches
          ORDER BY canonical_name
-         LIMIT 20
+         LIMIT %s
     """
     like = f"%{topic}%"
-    return conn.execute(sql, [like, *institutions, like]).fetchall()
+    return conn.execute(sql, [like, *institutions, like, limit]).fetchall()
+
+
+def _lookup_professors_by_topic(
+    conn: Any, *, institutions: tuple[str, ...], topic: str, limit: int
+) -> list[dict]:
+    if not chat_use_retrieval_service():
+        return _lookup_professors_by_topic_sql(
+            conn, institutions=institutions, topic=topic, limit=limit
+        )
+
+    filters: dict[str, str] = {}
+    if len(institutions) == 1:
+        filters["institution"] = institutions[0]
+    try:
+        retrieval_service = get_retrieval_service()
+        results = retrieval_service.retrieve(
+            query=topic,
+            domains=("professor",),
+            filters=filters or None,
+            candidate_limit=30,
+            final_top_k=limit,
+        )
+        return _evidence_list_from_retrieval(results)
+    except Exception as exc:
+        logger.warning("Professor retrieval failed for topic %r: %s", topic, exc)
+        return _lookup_professors_by_topic_sql(
+            conn, institutions=institutions, topic=topic, limit=limit
+        )
+
+
+def _lookup_cross_domain_evidence(conn: Any, *, topic: str) -> list[dict]:
+    company_rows = _lookup_companies_by_topic(conn, topic=topic)
+    merged: list[dict] = []
+    if chat_use_retrieval_service():
+        try:
+            results = get_retrieval_service().retrieve(
+                query=topic,
+                domains=("professor", "paper"),
+                final_top_k=5,
+            )
+        except Exception as exc:
+            logger.warning("Cross-domain retrieval failed for topic %r: %s", topic, exc)
+        else:
+            merged.extend(_evidence_list_from_retrieval(results))
+
+    for row in company_rows:
+        company_id = row.get("company_id") or row.get("id") or row.get("canonical_name") or row.get("name")
+        company_name = row.get("canonical_name") or row.get("name") or ""
+        merged.append(
+            {
+                "type": "company",
+                "id": company_id,
+                "title": company_name,
+                "snippet": row.get("business") or row.get("industry") or "",
+                "url": row.get("url"),
+                "score": row.get("score", 0.0),
+                "company_id": company_id,
+                "canonical_name": company_name,
+                "industry": row.get("industry"),
+                "business": row.get("business"),
+                "total_count": row.get("total_count"),
+            }
+        )
+
+    deduped: list[dict] = []
+    seen: set[tuple[str | None, Any]] = set()
+    for row in merged:
+        key = (row.get("type"), row.get("id"))
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(row)
+    return deduped
 
 
 def _prof_research_topics(conn: Any, professor_id: str) -> list[str]:
@@ -759,6 +1003,39 @@ def _build_evidence_blocks(
             )
         return "\n".join(blocks), citation_map
 
+    retrieval_evidence = structured_payload.get("retrieval_evidence") or []
+    if retrieval_evidence:
+        for item in retrieval_evidence[:10]:
+            evidence_type = item.get("type") or "evidence"
+            if evidence_type == "professor":
+                summary = (
+                    f"{item.get('title') or item.get('canonical_name') or '姓名未知'}，"
+                    f"{item.get('institution') or '机构未知'}"
+                )
+            elif evidence_type == "paper":
+                parts = [item.get("title") or "标题未知"]
+                if item.get("year"):
+                    parts.append(str(item["year"]))
+                if item.get("venue"):
+                    parts.append(str(item["venue"]))
+                summary = "，".join(parts)
+            elif evidence_type == "company":
+                summary = (
+                    f"{item.get('title') or item.get('canonical_name') or '企业未知'}，"
+                    f"{item.get('industry') or '行业未知'}"
+                )
+            else:
+                summary = item.get("title") or item.get("url") or "网页结果"
+            marker = _append_evidence_block(
+                blocks=blocks,
+                citation_map=citation_map,
+                marker=marker,
+                kind=str(evidence_type),
+                summary=summary,
+                evidence_id=str(item.get("id") or ""),
+            )
+        return "\n".join(blocks), citation_map
+
     return "", {}
 
 
@@ -884,6 +1161,7 @@ def _build_chat_response(
             evidence_text,
             timeout=_CHAT_SYNTHESIS_TIMEOUT_SECONDS,
         )
+        llm_answer = _validate_and_strip_citations(llm_answer, len(citation_map))
         # Match single [N] markers AND compound [1, 2, 3] markers (just in case
         # the LLM ignores the prompt rule). Extract every number inside brackets.
         markers: set[str] = set()
@@ -894,6 +1172,20 @@ def _build_chat_response(
             raise ValueError("no citation markers found")
         if not markers.issubset(citation_map):
             raise ValueError("dangling citation marker")
+        retrieval_evidence = structured_payload.get("retrieval_evidence") or []
+        scored_evidence = [
+            Evidence(
+                object_type=str(item.get("type") or ""),
+                object_id=str(item.get("id") or ""),
+                score=float(item.get("score") or 0.0),
+                snippet=str(item.get("snippet") or ""),
+                source_url=item.get("url"),
+                metadata={},
+            )
+            for item in retrieval_evidence
+            if item.get("score") is not None
+        ]
+        llm_answer = _maybe_prefix_low_confidence(llm_answer, scored_evidence)
         return ChatResponse(
             query=query,
             query_type=query_type,
@@ -1142,7 +1434,7 @@ def chat(
         topic = m.group("topic").strip()
         institutions = _resolve_institution(inst_fragment)
         rows = _lookup_professors_by_topic(
-            conn, institutions=institutions, topic=topic
+            conn, institutions=institutions, topic=topic, limit=20
         )
         structured_payload = {
             "institutions": list(institutions),
@@ -1233,7 +1525,7 @@ def chat(
 
         if ctype == "B" and topic:
             rows = _lookup_professors_by_topic(
-                conn, institutions=_SZ_INSTITUTIONS_ALL, topic=topic
+                conn, institutions=_SZ_INSTITUTIONS_ALL, topic=topic, limit=20
             )
             return _record_and_return(_build_chat_response(
                 conn=conn,
@@ -1258,10 +1550,9 @@ def chat(
 
         if ctype == "D" and topic:
             # 跨域聚合: 教授 + 企业（专利留下一轮，目前 patent 表空）
-            profs = _lookup_professors_by_topic(
-                conn, institutions=_SZ_INSTITUTIONS_ALL, topic=topic
-            )
-            companies = _lookup_companies_by_topic(conn, topic=topic)
+            evidence = _lookup_cross_domain_evidence(conn, topic=topic)
+            profs = [row for row in evidence if row.get("type") == "professor"]
+            companies = [row for row in evidence if row.get("type") == "company"]
             citations: list[ChatCitation] = []
             for r in profs[:5]:
                 citations.append(ChatCitation(
@@ -1275,8 +1566,17 @@ def chat(
                     label=f"{r['canonical_name']} - {r.get('industry') or ''}",
                     url=f"/browse#company/{r['company_id']}",
                 ))
-            return _record_and_return(ChatResponse(
+            for r in evidence[:5]:
+                if r.get("type") == "paper":
+                    citations.append(ChatCitation(
+                        type="paper",
+                        id=r["paper_id"],
+                        label=f"{r.get('year') or '?'} · {r.get('title') or r['paper_id']}",
+                        url=r.get("url") or f"/browse#paper/{r['paper_id']}",
+                    ))
+            return _record_and_return(_build_chat_response(
                 query=raw_query,
+                conn=conn,
                 query_type="D_cross_domain_topic",
                 answer_text=_answer_cross_domain(topic, profs, companies),
                 citations=citations,
@@ -1285,6 +1585,7 @@ def chat(
                     "classifier_reason": reason,
                     "prof_count": profs[0].get("total_count", len(profs)) if profs else 0,
                     "company_count": companies[0].get("total_count", len(companies)) if companies else 0,
+                    "retrieval_evidence": evidence,
                 },
             ))
 
