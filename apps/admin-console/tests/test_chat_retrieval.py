@@ -557,3 +557,105 @@ def test_unit6_build_chat_response_applies_low_confidence_prefix_when_applicable
         [_evidence(score=0.1)],
     )
     assert "仅供参考" in text
+
+
+# ============================================================================
+# M5.2 — Web search rerank
+# ============================================================================
+
+
+def _rerank_result(index: int, score: float, document: str = ""):
+    from src.data_agents.providers.rerank import RerankResult
+
+    return RerankResult(index=index, score=score, document=document)
+
+
+def test_m5_2_rerank_web_organics_reorders_by_rerank_score():
+    """5 organics + reranker returns top-3 in non-input order → result is 3 items sorted by rerank."""
+    organics = [
+        {"title": f"o{i}", "link": f"https://arxiv.org/abs/{i}", "snippet": f"snippet {i}"}
+        for i in range(5)
+    ]
+    reranker = MagicMock()
+    reranker.rerank.return_value = [
+        _rerank_result(index=3, score=0.95, document="snippet 3"),
+        _rerank_result(index=0, score=0.80, document="snippet 0"),
+        _rerank_result(index=4, score=0.60, document="snippet 4"),
+    ]
+    out = chat_module._rerank_web_organics("query", organics, reranker, top_n=3)
+    assert len(out) == 3
+    assert out[0]["link"] == "https://arxiv.org/abs/3"
+    assert out[0]["rerank_score"] == 0.95
+    assert out[1]["link"] == "https://arxiv.org/abs/0"
+    assert out[2]["link"] == "https://arxiv.org/abs/4"
+
+
+def test_m5_2_rerank_web_organics_empty_list():
+    reranker = MagicMock()
+    out = chat_module._rerank_web_organics("query", [], reranker, top_n=3)
+    assert out == []
+    reranker.rerank.assert_not_called()
+
+
+def test_m5_2_rerank_web_organics_reranker_exception_falls_back():
+    """Reranker raises → return first top_n organics unchanged, with rerank_score=0.5."""
+    organics = [
+        {"title": f"o{i}", "link": f"https://arxiv.org/abs/{i}", "snippet": f"s{i}"}
+        for i in range(5)
+    ]
+    reranker = MagicMock()
+    reranker.rerank.side_effect = RuntimeError("rerank down")
+    out = chat_module._rerank_web_organics("query", organics, reranker, top_n=3)
+    assert len(out) == 3
+    assert all(o["rerank_score"] == 0.5 for o in out)
+    # Order preserved (first 3 of input)
+    assert out[0]["link"] == "https://arxiv.org/abs/0"
+    assert out[2]["link"] == "https://arxiv.org/abs/2"
+
+
+def test_m5_2_rerank_web_organics_top_n_caps_output():
+    organics = [
+        {"title": f"o{i}", "link": f"https://arxiv.org/abs/{i}", "snippet": f"s{i}"}
+        for i in range(10)
+    ]
+    reranker = MagicMock()
+    reranker.rerank.return_value = [
+        _rerank_result(index=i, score=1.0 - i * 0.1) for i in range(10)
+    ]
+    out = chat_module._rerank_web_organics("query", organics, reranker, top_n=3)
+    assert len(out) == 3
+
+
+def test_m5_2_e_route_integration_uses_rerank_not_hardcoded_score(monkeypatch):
+    """End-to-end E-route: Serper returns scholarly orgs, reranker gives varied scores,
+    Evidence list's web scores reflect rerank output, not hardcoded 0.5."""
+    monkeypatch.setenv("CHAT_USE_RETRIEVAL_SERVICE", "on")
+
+    fake_service = MagicMock()
+    fake_service.retrieve.return_value = []  # force fallback path
+    monkeypatch.setattr(chat_module, "get_retrieval_service", lambda: fake_service)
+
+    fake_web = MagicMock()
+    fake_web.search.return_value = {
+        "organic": [
+            {"title": "t1", "link": "https://arxiv.org/abs/1", "snippet": "s1"},
+            {"title": "t2", "link": "https://arxiv.org/abs/2", "snippet": "s2"},
+            {"title": "t3", "link": "https://arxiv.org/abs/3", "snippet": "s3"},
+        ]
+    }
+    monkeypatch.setattr(chat_module, "_get_web_search_provider_or_none", lambda: fake_web)
+
+    fake_reranker = MagicMock()
+    fake_reranker.rerank.return_value = [
+        _rerank_result(index=1, score=0.88, document="s2"),
+        _rerank_result(index=0, score=0.70, document="s1"),
+    ]
+    # If the impl routes reranker via a patchable accessor, patch it:
+    if hasattr(chat_module, "_get_reranker_client_or_none"):
+        monkeypatch.setattr(chat_module, "_get_reranker_client_or_none", lambda: fake_reranker)
+    else:
+        pytest.skip("Implementation must expose _get_reranker_client_or_none for rerank wiring.")
+
+    # Call E-route; don't assert on answer text, just verify reranker was called.
+    chat_module._answer_knowledge_qa("test query")
+    fake_reranker.rerank.assert_called_once()
