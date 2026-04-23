@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import sys
+import time
 import warnings
 from dataclasses import asdict
 from pathlib import Path
@@ -64,11 +65,186 @@ def _load_resume_ids(path: Path | None) -> set[str]:
     return resume_ids
 
 
-def _backfill_professor_domain(conn, milvus_client, embedding_client, **kwargs):
-    raise NotImplementedError(
-        "Professor Milvus backfill is not implemented here. Reuse "
-        "src.data_agents.professor.vectorizer.ProfessorVectorizer instead."
+_PROFESSOR_COLLECTION = "professor_profiles"
+_PROFESSOR_VECTOR_DIM = 4096
+
+
+def _ensure_professor_collection(milvus_client) -> None:
+    if milvus_client.has_collection(_PROFESSOR_COLLECTION):
+        return
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="pkg_resources is deprecated as an API.*",
+            category=UserWarning,
+            module="milvus_lite",
+        )
+        from pymilvus import CollectionSchema, DataType, FieldSchema
+
+    fields = [
+        FieldSchema(name="id", dtype=DataType.VARCHAR, is_primary=True, max_length=64),
+        FieldSchema(name="name", dtype=DataType.VARCHAR, max_length=128),
+        FieldSchema(name="institution", dtype=DataType.VARCHAR, max_length=256),
+        FieldSchema(name="department", dtype=DataType.VARCHAR, max_length=128),
+        FieldSchema(name="title", dtype=DataType.VARCHAR, max_length=64),
+        FieldSchema(name="profile_summary", dtype=DataType.VARCHAR, max_length=4096),
+        FieldSchema(
+            name="profile_vector",
+            dtype=DataType.FLOAT_VECTOR,
+            dim=_PROFESSOR_VECTOR_DIM,
+        ),
+    ]
+    schema = CollectionSchema(
+        fields=fields, description="Professor profiles for semantic retrieval"
     )
+    milvus_client.create_collection(
+        collection_name=_PROFESSOR_COLLECTION, schema=schema
+    )
+    index_params = milvus_client.prepare_index_params()
+    index_params.add_index(
+        field_name="profile_vector", index_type="AUTOINDEX", metric_type="COSINE"
+    )
+    milvus_client.create_index(
+        collection_name=_PROFESSOR_COLLECTION, index_params=index_params
+    )
+
+
+_PROFESSOR_SQL = """
+    SELECT p.professor_id,
+           p.canonical_name,
+           p.canonical_name_en,
+           p.profile_summary,
+           p.profile_raw_text,
+           pa.institution,
+           pa.department,
+           pa.title
+      FROM professor p
+      LEFT JOIN LATERAL (
+          SELECT institution, department, title
+            FROM professor_affiliation
+           WHERE professor_id = p.professor_id
+           ORDER BY is_primary DESC NULLS LAST,
+                    is_current DESC NULLS LAST,
+                    start_year DESC NULLS LAST
+           LIMIT 1
+      ) pa ON true
+     WHERE p.canonical_name IS NOT NULL
+"""
+
+
+def _compose_profile_text(row: dict) -> str:
+    name = str(row.get("canonical_name") or "").strip()
+    institution = str(row.get("institution") or "").strip()
+    department = str(row.get("department") or "").strip()
+    title = str(row.get("title") or "").strip()
+    summary = str(row.get("profile_summary") or "").strip()
+    raw = str(row.get("profile_raw_text") or "").strip()
+
+    parts: list[str] = []
+    header = name
+    if title or institution or department:
+        chunks: list[str] = []
+        if title:
+            chunks.append(title)
+        loc = " ".join(c for c in (institution, department) if c)
+        if loc:
+            chunks.append(loc)
+        header = f"{name}，{'，'.join(chunks)}" if chunks else name
+    parts.append(header)
+
+    if summary:
+        parts.append(summary)
+    elif raw:
+        parts.append(raw[:1800])
+
+    return "\n".join(parts)
+
+
+def _backfill_professor_domain(
+    conn,
+    milvus_client,
+    embedding_client,
+    *,
+    limit=None,
+    batch_size=32,
+    resume_ids=None,
+):
+    started_at = time.monotonic()
+    _ensure_professor_collection(milvus_client)
+
+    sql = _PROFESSOR_SQL
+    params: list[object] = []
+    if resume_ids:
+        placeholders = ", ".join(["%s"] * len(resume_ids))
+        sql += f" AND p.professor_id NOT IN ({placeholders})"
+        params.extend(sorted(resume_ids))
+    sql += " ORDER BY p.professor_id"
+    if limit is not None:
+        sql += " LIMIT %s"
+        params.append(int(limit))
+
+    rows = conn.execute(sql, params).fetchall()
+    profs_total = len(rows)
+    profs_processed = 0
+    profs_skipped = 0
+    profs_with_errors = 0
+
+    for batch_start in range(0, profs_total, max(1, batch_size)):
+        batch_rows = rows[batch_start : batch_start + max(1, batch_size)]
+        texts: list[str] = []
+        ids: list[str] = []
+        row_refs: list[dict] = []
+        for row in batch_rows:
+            text = _compose_profile_text(row)
+            if not text.strip():
+                profs_skipped += 1
+                continue
+            ids.append(str(row["professor_id"]))
+            texts.append(text[:3800])
+            row_refs.append(row)
+
+        if not texts:
+            continue
+
+        try:
+            vectors = embedding_client.embed_batch(texts)
+        except Exception as exc:
+            profs_with_errors += len(texts)
+            logger.warning("Embedding batch failed (%d profs): %s", len(texts), exc)
+            continue
+
+        payload = []
+        for prof_id, row, text, vector in zip(
+            ids, row_refs, texts, vectors, strict=False
+        ):
+            payload.append(
+                {
+                    "id": prof_id,
+                    "name": str(row.get("canonical_name") or "")[:128],
+                    "institution": str(row.get("institution") or "")[:256],
+                    "department": str(row.get("department") or "")[:128],
+                    "title": str(row.get("title") or "")[:64],
+                    "profile_summary": text[:4000],
+                    "profile_vector": vector,
+                }
+            )
+
+        try:
+            milvus_client.upsert(collection_name=_PROFESSOR_COLLECTION, data=payload)
+        except Exception as exc:
+            profs_with_errors += len(payload)
+            logger.warning("Milvus upsert failed (%d profs): %s", len(payload), exc)
+            continue
+
+        profs_processed += len(payload)
+
+    return {
+        "profs_total": profs_total,
+        "profs_processed": profs_processed,
+        "profs_skipped": profs_skipped,
+        "profs_with_errors": profs_with_errors,
+        "duration_seconds": time.monotonic() - started_at,
+    }
 
 
 def _parse_args() -> argparse.Namespace:
@@ -118,7 +294,8 @@ def main() -> int:
                 resume_ids=resume_ids,
             )
 
-        print(json.dumps(asdict(report), ensure_ascii=False))
+        payload = report if isinstance(report, dict) else asdict(report)
+        print(json.dumps(payload, ensure_ascii=False))
         return 0
     except Exception:
         logging.exception("Milvus backfill failed")

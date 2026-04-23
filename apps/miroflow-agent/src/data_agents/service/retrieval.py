@@ -19,7 +19,6 @@ _PROFESSOR_OUTPUT_FIELDS = [
     "institution",
     "department",
     "profile_summary",
-    "homepage_url",
 ]
 _PAPER_OUTPUT_FIELDS = [
     "chunk_id",
