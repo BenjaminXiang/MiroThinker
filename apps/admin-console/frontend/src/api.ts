@@ -179,6 +179,33 @@ export function uploadFile(
   });
 }
 
+// --- Chat ---
+
+export interface ChatCitation {
+  type: "professor" | "paper" | "patent" | "company";
+  id: string;
+  label: string;
+  url: string | null;
+}
+
+export interface ChatResponse {
+  query: string;
+  query_type: string;
+  answer_text: string;
+  citations: ChatCitation[];
+  structured_payload: Record<string, unknown>;
+  answer_style: "template" | "llm_synthesized";
+  citation_map: Record<string, string>;
+}
+
+export function sendChatMessage(query: string): Promise<ChatResponse> {
+  return fetchJSON("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query }),
+  });
+}
+
 export function exportDomain(
   domain: string,
   format: "csv" | "xlsx" = "csv",
