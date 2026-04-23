@@ -2073,6 +2073,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "pydub" },
     { name = "pymilvus" },
+    { name = "pypinyin" },
     { name = "python-dotenv" },
     { name = "python-pptx" },
     { name = "regex" },
@@ -2127,6 +2128,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.11.3" },
     { name = "pydub" },
     { name = "pymilvus", specifier = ">=2.6.11" },
+    { name = "pypinyin", specifier = ">=0.53.0" },
     { name = "python-dotenv" },
     { name = "python-pptx" },
     { name = "regex", specifier = ">=2024.11.6" },
@@ -3612,6 +3614,15 @@ source = { registry = "https://mirrors.sustech.edu.cn/pypi/web/simple" }
 sdist = { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/e8/52/d87eba7cb129b81563019d1679026e7a112ef76855d6159d24754dbd2a51/pyperclip-1.11.0.tar.gz", hash = "sha256:244035963e4428530d9e3a6101a1ef97209c6825edab1567beac148ccc1db1b6" }
 wheels = [
     { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/df/80/fc9d01d5ed37ba4c42ca2b55b4339ae6e200b456be3a1aaddf4a9fa99b8c/pyperclip-1.11.0-py3-none-any.whl", hash = "sha256:299403e9ff44581cb9ba2ffeed69c7aa96a008622ad0c46cb575ca75b5b84273" },
+]
+
+[[package]]
+name = "pypinyin"
+version = "0.55.0"
+source = { registry = "https://mirrors.sustech.edu.cn/pypi/web/simple" }
+sdist = { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/b4/a4/784cf98c09e0dc22776b0d7d8a4a5b761218bcae4608c2416ce1e167c8af/pypinyin-0.55.0.tar.gz", hash = "sha256:b5711b3a0c6f76e67408ec6b2e3c4987a3a806b7c528076e7c7b86fcf0eaa66b" }
+wheels = [
+    { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/b9/7b/4cabc76fcc21c3c7d5c671d8783984d30ac9d3bb387c4ba784fca3cdfa3a/pypinyin-0.55.0-py2.py3-none-any.whl", hash = "sha256:d53b1e8ad2cdb815fb2cb604ed3123372f5a28c6f447571244aca36fc62a286f" },
 ]
 
 [[package]]
