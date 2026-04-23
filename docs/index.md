@@ -62,6 +62,7 @@ solutions/index.md                 ← 经验沉淀（best practices / 问题复
 | 文档 | 用途 |
 |---|---|
 | [Professor-Pipeline-V2-User-Guide](./Professor-Pipeline-V2-User-Guide.md) | 教授 Pipeline 运行、配置、检索、排查 |
+| [Agentic-RAG-Operating-Guide](./Agentic-RAG-Operating-Guide.md) | M0.1-M6 全流水线端到端操作手册（dogfood + 回滚 + 监控）|
 | [Codex-Claude-Cross-Review-Usage](./Codex-Claude-Cross-Review-Usage.md) | Codex 主控 + Claude CLI 交叉 review 工作流 |
 | [quality-status-compatibility](./quality-status-compatibility.md) | `quality_status` 字段兼容性规则 |
 
