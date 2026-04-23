@@ -13,8 +13,6 @@ from __future__ import annotations
 import warnings
 from unittest.mock import MagicMock
 
-import pytest
-
 from src.data_agents.providers.rerank import RerankResult
 from src.data_agents.service.retrieval import Evidence, RetrievalService
 from src.data_agents.storage.milvus_collections import (
