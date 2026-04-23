@@ -7,6 +7,7 @@ Creates a professor-specific Milvus collection with dual vectors:
 - profile_vector: for general semantic search on profile_summary
 - direction_vector: for research direction precision search
 """
+
 from __future__ import annotations
 
 import json
@@ -48,12 +49,12 @@ class EmbeddingClient:
         headers: dict[str, str] = {}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
-        response = httpx.post(
-            f"{self.base_url}/embeddings",
-            json={"input": texts, "model": model},
-            headers=headers,
-            timeout=self.timeout,
-        )
+        with httpx.Client(trust_env=False, timeout=self.timeout) as client:
+            response = client.post(
+                f"{self.base_url}/embeddings",
+                json={"input": texts, "model": model},
+                headers=headers,
+            )
         response.raise_for_status()
         data = response.json()
         results = sorted(data["data"], key=lambda x: x["index"])
@@ -78,19 +79,33 @@ class ProfessorVectorizer:
         from pymilvus import CollectionSchema, DataType, FieldSchema
 
         fields = [
-            FieldSchema(name="id", dtype=DataType.VARCHAR, is_primary=True, max_length=64),
+            FieldSchema(
+                name="id", dtype=DataType.VARCHAR, is_primary=True, max_length=64
+            ),
             FieldSchema(name="name", dtype=DataType.VARCHAR, max_length=128),
             FieldSchema(name="institution", dtype=DataType.VARCHAR, max_length=128),
             FieldSchema(name="department", dtype=DataType.VARCHAR, max_length=128),
             FieldSchema(name="title", dtype=DataType.VARCHAR, max_length=64),
-            FieldSchema(name="research_directions", dtype=DataType.VARCHAR, max_length=1024),
-            FieldSchema(name="profile_summary", dtype=DataType.VARCHAR, max_length=2048),
-            FieldSchema(name="evaluation_summary", dtype=DataType.VARCHAR, max_length=1024),
+            FieldSchema(
+                name="research_directions", dtype=DataType.VARCHAR, max_length=1024
+            ),
+            FieldSchema(
+                name="profile_summary", dtype=DataType.VARCHAR, max_length=2048
+            ),
+            FieldSchema(
+                name="evaluation_summary", dtype=DataType.VARCHAR, max_length=1024
+            ),
             FieldSchema(name="quality_status", dtype=DataType.VARCHAR, max_length=32),
-            FieldSchema(name="profile_vector", dtype=DataType.FLOAT_VECTOR, dim=_VECTOR_DIM),
-            FieldSchema(name="direction_vector", dtype=DataType.FLOAT_VECTOR, dim=_VECTOR_DIM),
+            FieldSchema(
+                name="profile_vector", dtype=DataType.FLOAT_VECTOR, dim=_VECTOR_DIM
+            ),
+            FieldSchema(
+                name="direction_vector", dtype=DataType.FLOAT_VECTOR, dim=_VECTOR_DIM
+            ),
         ]
-        schema = CollectionSchema(fields=fields, description="Professor profiles with dual vectors")
+        schema = CollectionSchema(
+            fields=fields, description="Professor profiles with dual vectors"
+        )
         self._milvus_client.create_collection(
             collection_name=self.collection_name,
             schema=schema,
@@ -120,7 +135,9 @@ class ProfessorVectorizer:
 
         profile_texts = [p.profile_summary for _, p, _ in professors]
         direction_texts = [
-            "，".join(p.research_directions) if p.research_directions else p.profile_summary
+            "，".join(p.research_directions)
+            if p.research_directions
+            else p.profile_summary
             for _, p, _ in professors
         ]
 
@@ -129,21 +146,23 @@ class ProfessorVectorizer:
 
         data = []
         for i, (prof_id, profile, quality_status) in enumerate(professors):
-            data.append({
-                "id": prof_id,
-                "name": profile.name,
-                "institution": profile.institution,
-                "department": profile.department or "",
-                "title": profile.title or "",
-                "research_directions": json.dumps(
-                    profile.research_directions, ensure_ascii=False
-                ),
-                "profile_summary": profile.profile_summary,
-                "evaluation_summary": profile.evaluation_summary,
-                "quality_status": quality_status,
-                "profile_vector": profile_vectors[i],
-                "direction_vector": direction_vectors[i],
-            })
+            data.append(
+                {
+                    "id": prof_id,
+                    "name": profile.name,
+                    "institution": profile.institution,
+                    "department": profile.department or "",
+                    "title": profile.title or "",
+                    "research_directions": json.dumps(
+                        profile.research_directions, ensure_ascii=False
+                    ),
+                    "profile_summary": profile.profile_summary,
+                    "evaluation_summary": profile.evaluation_summary,
+                    "quality_status": quality_status,
+                    "profile_vector": profile_vectors[i],
+                    "direction_vector": direction_vectors[i],
+                }
+            )
 
         self._milvus_client.upsert(
             collection_name=self.collection_name,
@@ -209,4 +228,5 @@ def _create_milvus_client(uri: str) -> Any:
             module="milvus_lite",
         )
         from pymilvus import MilvusClient
+
         return MilvusClient(uri=uri)

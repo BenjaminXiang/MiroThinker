@@ -146,8 +146,17 @@ Chat retrieval layer uses `RetrievalService` (M3). Controlled by:
   pre-M4 SQL LIKE paths (B/D routes) and rule-based FAQ (E route).
 - `CHAT_E_WEB_FALLBACK_THRESHOLD` — default `0.5`. E-route triggers Serper
   fallback when local paper-retrieve top-1 rerank score is below this.
-- `MILVUS_URI` — default `./milvus.db`. Used by `RetrievalService` +
-  `scripts/run_milvus_backfill.py`.
+- `CHAT_MILVUS_URI` — Milvus URI used by admin-console chat retrieval.
+  Prefer this over `MILVUS_URI`: pymilvus reads `MILVUS_URI` globally at
+  import and rejects milvus-lite file paths as "illegal URI". Defaults to
+  `./milvus.db` (relative to `apps/admin-console/`).
+- `MILVUS_USE_REAL_CLIENT` — default off. Set `1`/`true`/`on` to make
+  `milvus_collections.py` stop delegating `.db` URIs to the in-memory test
+  shim. Required for production / ops runs that actually persist vectors;
+  leave unset for unit tests that use `.db` tmp paths with in-memory
+  semantics.
+- `MILVUS_URI` — used by `scripts/run_milvus_backfill.py` and legacy
+  callers. Do **not** set this in the admin-console process (see above).
 - `SERPER_API_KEY` — existing; required for E-route Serper fallback. Missing
   key → fallback skipped, rule-based FAQ used.
 - `API_KEY` / `OPENAI_API_KEY` / `SGLANG_API_KEY` — resolved via

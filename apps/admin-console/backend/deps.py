@@ -7,7 +7,10 @@ Environment variables:
   truthy `1/true/yes/on` and falsy `0/false/no/off` values.
 - `CHAT_E_WEB_FALLBACK_THRESHOLD`: paper-retrieval confidence threshold for
   E-route web fallback. Defaults to `0.5`.
-- `MILVUS_URI`: Milvus URI for RetrievalService. Defaults to `./milvus.db`.
+- `CHAT_MILVUS_URI` / `MILVUS_URI`: Milvus URI for RetrievalService.
+  Prefer `CHAT_MILVUS_URI` — pymilvus also reads `MILVUS_URI` globally at
+  import, and a milvus-lite path (`./milvus.db`) trips its server-URI
+  validator. Defaults to `./milvus.db`.
 """
 
 from __future__ import annotations
@@ -91,7 +94,11 @@ def get_pg_conn() -> Iterator[Any]:
 
 @lru_cache(maxsize=1)
 def _get_milvus_client() -> Any:
-    milvus_uri = os.environ.get("MILVUS_URI", "./milvus.db")
+    milvus_uri = (
+        os.environ.get("CHAT_MILVUS_URI")
+        or os.environ.get("MILVUS_URI")
+        or "./milvus.db"
+    )
     with warnings.catch_warnings():
         warnings.filterwarnings(
             "ignore",

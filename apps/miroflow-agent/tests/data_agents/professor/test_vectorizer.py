@@ -30,12 +30,7 @@ def _profile(**overrides) -> EnrichedProfessorProfile:
 
 
 def _mock_embedding_response(texts: list[str], dim: int = _VECTOR_DIM) -> dict:
-    return {
-        "data": [
-            {"index": i, "embedding": [0.1] * dim}
-            for i in range(len(texts))
-        ]
-    }
+    return {"data": [{"index": i, "embedding": [0.1] * dim} for i in range(len(texts))]}
 
 
 class TestEmbeddingClient:
@@ -44,7 +39,15 @@ class TestEmbeddingClient:
         mock_response.json.return_value = _mock_embedding_response(["text1", "text2"])
         mock_response.raise_for_status = MagicMock()
 
-        with patch("src.data_agents.professor.vectorizer.httpx.post", return_value=mock_response):
+        mock_client = MagicMock()
+        mock_client.__enter__ = MagicMock(return_value=mock_client)
+        mock_client.__exit__ = MagicMock(return_value=False)
+        mock_client.post.return_value = mock_response
+
+        with patch(
+            "src.data_agents.professor.vectorizer.httpx.Client",
+            return_value=mock_client,
+        ):
             client = EmbeddingClient(base_url="http://test:8005/v1")
             vectors = client.embed_batch(["text1", "text2"])
             assert len(vectors) == 2
@@ -81,9 +84,11 @@ class TestProfessorVectorizer:
         profile = _profile()
         mock_embedding.embed_batch.return_value = [[0.1] * _VECTOR_DIM]
 
-        count = vectorizer.vectorize_and_upsert([
-            ("PROF-001", profile, "ready"),
-        ])
+        count = vectorizer.vectorize_and_upsert(
+            [
+                ("PROF-001", profile, "ready"),
+            ]
+        )
         assert count == 1
         mock_milvus.upsert.assert_called_once()
 
@@ -105,9 +110,7 @@ class TestProfessorVectorizer:
         vectorizer, mock_embedding, mock_milvus = self._make_vectorizer()
         mock_milvus.search.return_value = [[{"id": "PROF-001"}]]
 
-        results = vectorizer.search_by_direction(
-            "RLHF", institution="南方科技大学"
-        )
+        results = vectorizer.search_by_direction("RLHF", institution="南方科技大学")
         assert len(results) == 1
         call_kwargs = mock_milvus.search.call_args
         assert call_kwargs.kwargs.get("filter") is not None

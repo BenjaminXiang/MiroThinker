@@ -57,6 +57,7 @@ dependencies = [
     "alembic>=1.13",
     "sqlalchemy>=2.0",
     "apscheduler>=3.10",
+    "milvus-lite>=2.5.1",
 ]
 
 [build-system]

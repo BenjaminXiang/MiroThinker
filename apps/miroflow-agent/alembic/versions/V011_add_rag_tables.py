@@ -71,7 +71,7 @@ def upgrade() -> None:
 
     op.create_table(
         "professor_orcid",
-        sa.Column("professor_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("professor_id", sa.Text(), nullable=False),
         sa.Column("orcid", sa.String(length=32), nullable=False),
         sa.Column("source", sa.String(length=64), nullable=False),
         sa.Column("confidence", sa.Numeric(3, 2), nullable=False),

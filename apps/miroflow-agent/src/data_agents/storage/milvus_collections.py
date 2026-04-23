@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 import warnings
 from math import sqrt
@@ -39,7 +40,9 @@ def _install_milvus_memory_compat() -> None:
         def has_collection(self, collection_name: str) -> bool:
             return collection_name in self._collections
 
-        def create_collection(self, collection_name: str, schema=None, **kwargs) -> None:
+        def create_collection(
+            self, collection_name: str, schema=None, **kwargs
+        ) -> None:
             self._collections.setdefault(
                 collection_name,
                 {"schema": schema, "kwargs": kwargs, "rows": [], "indexes": []},
@@ -59,7 +62,9 @@ def _install_milvus_memory_compat() -> None:
         def drop_collection(self, collection_name: str, **kwargs) -> None:
             self._collections.pop(collection_name, None)
 
-        def delete(self, collection_name: str, filter: str | None = None, **kwargs) -> None:
+        def delete(
+            self, collection_name: str, filter: str | None = None, **kwargs
+        ) -> None:
             collection = self._collections.get(collection_name)
             if collection is None or not filter:
                 return
@@ -85,7 +90,8 @@ def _install_milvus_memory_compat() -> None:
             )
             rows = collection["rows"]
             existing_by_id = {
-                row.get("id") or row.get("chunk_id"): index for index, row in enumerate(rows)
+                row.get("id") or row.get("chunk_id"): index
+                for index, row in enumerate(rows)
             }
             for item in data:
                 row_id = item.get("id") or item.get("chunk_id")
@@ -129,9 +135,15 @@ def _install_milvus_memory_compat() -> None:
 
     class MilvusClientCompat:
         def __init__(self, uri: str, *args, **kwargs) -> None:
+            use_real = os.environ.get("MILVUS_USE_REAL_CLIENT", "").strip().lower() in {
+                "1",
+                "true",
+                "yes",
+                "on",
+            }
             if uri == ":memory:":
                 self._delegate = _InMemoryMilvusClient(f"memory:{id(self)}")
-            elif uri.endswith(".db"):
+            elif uri.endswith(".db") and not use_real:
                 self._delegate = _InMemoryMilvusClient(uri)
             else:
                 self._delegate = original_client(uri=uri, *args, **kwargs)
@@ -183,9 +195,13 @@ def ensure_paper_chunks_collection(milvus_client) -> None:
         FieldSchema(name="year", dtype=DataType.INT64),
         FieldSchema(name="venue", dtype=DataType.VARCHAR, max_length=128),
         FieldSchema(name="content_text", dtype=DataType.VARCHAR, max_length=2048),
-        FieldSchema(name="content_vector", dtype=DataType.FLOAT_VECTOR, dim=_VECTOR_DIM),
+        FieldSchema(
+            name="content_vector", dtype=DataType.FLOAT_VECTOR, dim=_VECTOR_DIM
+        ),
     ]
-    schema = CollectionSchema(fields=fields, description="Paper chunks for semantic retrieval")
+    schema = CollectionSchema(
+        fields=fields, description="Paper chunks for semantic retrieval"
+    )
     milvus_client.create_collection(
         collection_name=PAPER_CHUNKS_COLLECTION,
         schema=schema,

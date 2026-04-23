@@ -1417,6 +1417,20 @@ wheels = [
 ]
 
 [[package]]
+name = "milvus-lite"
+version = "2.5.1"
+source = { registry = "https://mirrors.sustech.edu.cn/pypi/web/simple" }
+dependencies = [
+    { name = "tqdm" },
+]
+wheels = [
+    { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/a9/b2/acc5024c8e8b6a0b034670b8e8af306ebd633ede777dcbf557eac4785937/milvus_lite-2.5.1-py3-none-macosx_10_9_x86_64.whl", hash = "sha256:6b014453200ba977be37ba660cb2d021030375fa6a35bc53c2e1d92980a0c512" },
+    { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/9b/2e/746f5bb1d6facd1e73eb4af6dd5efda11125b0f29d7908a097485ca6cad9/milvus_lite-2.5.1-py3-none-macosx_11_0_arm64.whl", hash = "sha256:a2e031088bf308afe5f8567850412d618cfb05a65238ed1a6117f60decccc95a" },
+    { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/2e/cf/3d1fee5c16c7661cf53977067a34820f7269ed8ba99fe9cf35efc1700866/milvus_lite-2.5.1-py3-none-manylinux2014_aarch64.whl", hash = "sha256:a13277e9bacc6933dea172e42231f7e6135bd3bdb073dd2688ee180418abd8d9" },
+    { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/d3/82/41d9b80f09b82e066894d9b508af07b7b0fa325ce0322980674de49106a0/milvus_lite-2.5.1-py3-none-manylinux2014_x86_64.whl", hash = "sha256:25ce13f4b8d46876dd2b7ac8563d7d8306da7ff3999bb0d14b116b30f71d706c" },
+]
+
+[[package]]
 name = "miroflow-agent"
 version = "0.1.0"
 source = { editable = "." }
@@ -1442,6 +1456,7 @@ dependencies = [
     { name = "markitdown" },
     { name = "markitdown-mcp" },
     { name = "mcp" },
+    { name = "milvus-lite" },
     { name = "miroflow-tools" },
     { name = "mutagen" },
     { name = "numpy" },
@@ -1509,6 +1524,7 @@ requires-dist = [
     { name = "markitdown", specifier = ">=0.1.1" },
     { name = "markitdown-mcp", specifier = ">=0.0.1a3" },
     { name = "mcp" },
+    { name = "milvus-lite", specifier = ">=2.5.1" },
     { name = "miroflow-tools", editable = "../../libs/miroflow-tools" },
     { name = "mutagen" },
     { name = "numpy", specifier = ">=2.2.5" },

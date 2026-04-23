@@ -41,10 +41,13 @@ def backfill_paper_chunks(
     try:
         ensure_paper_chunks_collection(milvus_client)
     except Exception as exc:
-        logger.warning("Failed to ensure %s collection: %s", PAPER_CHUNKS_COLLECTION, exc)
+        logger.warning(
+            "Failed to ensure %s collection: %s", PAPER_CHUNKS_COLLECTION, exc
+        )
 
     sql = (
-        "SELECT p.paper_id, p.title, p.year, p.venue, pft.abstract, pft.intro "
+        "SELECT p.paper_id, p.title_clean AS title, p.year, p.venue, "
+        "       pft.abstract, pft.intro "
         "FROM paper p "
         "LEFT JOIN paper_full_text pft ON pft.paper_id = p.paper_id"
     )
@@ -80,7 +83,9 @@ def backfill_paper_chunks(
             )
             if not chunks:
                 papers_with_errors += 1
-                logger.warning("Skipping paper %s because no chunks were produced", paper_id)
+                logger.warning(
+                    "Skipping paper %s because no chunks were produced", paper_id
+                )
                 continue
             batch_paper_ids.append(paper_id)
             batch_chunks.extend(chunks)
@@ -89,7 +94,9 @@ def backfill_paper_chunks(
             continue
 
         try:
-            vectors = embedding_client.embed_batch([chunk.content_text for chunk in batch_chunks])
+            vectors = embedding_client.embed_batch(
+                [chunk.content_text for chunk in batch_chunks]
+            )
         except Exception as exc:
             papers_with_errors += len(batch_paper_ids)
             logger.warning(
