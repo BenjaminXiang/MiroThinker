@@ -10,11 +10,9 @@ from unittest.mock import MagicMock
 import pytest
 
 from src.data_agents.professor.web_search_enrichment import (
-    CompanyMention,
     _merge_web_extract,
     _parse_extract_output,
     _reserved_follow_up_budget,
-    WebSearchResult,
     build_search_queries,
     search_and_enrich,
 )
