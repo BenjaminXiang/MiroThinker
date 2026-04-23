@@ -19,7 +19,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from pydantic import BaseModel, Field, ValidationError
@@ -36,7 +36,13 @@ _JSON_FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)\s*```", re.DOTALL)
 
 @dataclass(frozen=True, slots=True)
 class PaperIdentityCandidate:
-    """One paper presented to the gate for verification."""
+    """One paper presented to the gate for verification.
+
+    ``authors_orcid`` (M1 v2) holds ORCID strings attached to this paper's
+    authors when the source (e.g. OpenAlex) provides them. If the target
+    professor's ORCID appears in this list, the gate auto-accepts without
+    calling the LLM.
+    """
 
     index: int
     title: str
@@ -44,6 +50,7 @@ class PaperIdentityCandidate:
     year: int | None = None
     venue: str | None = None
     abstract: str | None = None
+    authors_orcid: list[str] = field(default_factory=list)
 
 
 class _PaperDecision(BaseModel):
@@ -98,6 +105,26 @@ def _render_candidates(candidates: list[PaperIdentityCandidate]) -> str:
     return "\n".join(lines)
 
 
+def _render_name_variants_block(context: ProfessorContext) -> str:
+    """Render a '已知姓名变体' block when name_variants is set; else empty string."""
+    nv = context.name_variants
+    if nv is None:
+        return ""
+    lines: list[str] = ["\n## 目标教授的已知姓名变体（可能被论文作者列表以不同形式书写）"]
+    if nv.zh:
+        lines.append(f"- 中文：{nv.zh}")
+    if nv.en:
+        lines.append(f"- 英文：{nv.en}")
+    if nv.pinyin:
+        lines.append(f"- 拼音：{nv.pinyin}")
+    if nv.initials:
+        lines.append("- 缩写：" + ", ".join(nv.initials))
+    if len(lines) == 1:
+        # Only the heading, no actual variants — drop entirely.
+        return ""
+    return "\n".join(lines) + "\n"
+
+
 def _build_prompt(
     context: ProfessorContext, candidates: list[PaperIdentityCandidate]
 ) -> str:
@@ -106,6 +133,13 @@ def _build_prompt(
         if context.research_directions
         else "未知"
     )
+    variants_block = _render_name_variants_block(context)
+    variant_rule = (
+        "7. 若候选论文的 authors 列表中出现以上任意一个姓名变体（或其子 token），"
+        "视为姓名匹配；但仍需结合合作者/领域综合判断 is_same_person。\n"
+        if variants_block
+        else ""
+    )
     return (
         "## 任务\n"
         "给定一位目标教授的身份信息，以及若干候选论文记录，判断每一篇论文是否由该教授本人撰写。\n\n"
@@ -113,8 +147,9 @@ def _build_prompt(
         f"姓名: {context.name}\n"
         f"学校: {context.institution}\n"
         f"院系: {context.department or '未知'}\n"
-        f"研究方向: {directions_text}\n\n"
-        "## 候选论文（按 index 编号）\n"
+        f"研究方向: {directions_text}\n"
+        f"{variants_block}"
+        "\n## 候选论文（按 index 编号）\n"
         f"{_render_candidates(candidates)}\n\n"
         "## 判断指引\n"
         "1. 合作者名单中若能看到同一机构的同事 → 强匹配证据\n"
@@ -123,7 +158,9 @@ def _build_prompt(
         "4. 信息不足难以判断 → 宁可拒绝 (confidence < 0.8)\n"
         "5. 对每篇论文独立给出决定，confidence 范围 0.0-1.0\n"
         "6. 同时估计 topic_consistency（0.0-1.0），表示论文主题与教授研究方向的贴合度：\n"
-        "   1.0 = 完全吻合；0.7 = 主题相关但子方向不同；0.3 = 仅领域交集；0.0 = 完全无关\n\n"
+        "   1.0 = 完全吻合；0.7 = 主题相关但子方向不同；0.3 = 仅领域交集；0.0 = 完全无关\n"
+        f"{variant_rule}"
+        "\n"
         "## 输出格式\n"
         "仅输出 JSON，字段 decisions 是数组，按 index 升序：\n"
         "```json\n"
@@ -232,6 +269,38 @@ async def _verify_single_batch(
     return out
 
 
+def _extract_orcid_shortcuts(
+    professor_context: ProfessorContext,
+    candidates: list[PaperIdentityCandidate],
+) -> tuple[list[PaperIdentityDecision], list[PaperIdentityCandidate]]:
+    """Pre-filter candidates by ORCID match (M1 v2 shortcut).
+
+    When the professor has an ORCID and a candidate's ``authors_orcid``
+    contains it, return a pre-decided accept; remaining candidates still
+    need LLM verification. Returns ``(shortcut_decisions, remaining)``.
+    """
+    target_orcid = (professor_context.orcid or "").strip()
+    if not target_orcid:
+        return [], candidates
+
+    shortcut: list[PaperIdentityDecision] = []
+    remaining: list[PaperIdentityCandidate] = []
+    for cand in candidates:
+        if target_orcid in (cand.authors_orcid or []):
+            shortcut.append(
+                PaperIdentityDecision(
+                    index=cand.index,
+                    accepted=True,
+                    confidence=1.0,
+                    reasoning="ORCID match",
+                    topic_consistency=None,
+                )
+            )
+        else:
+            remaining.append(cand)
+    return shortcut, remaining
+
+
 async def batch_verify_paper_identity(
     *,
     professor_context: ProfessorContext,
@@ -242,14 +311,22 @@ async def batch_verify_paper_identity(
 ) -> list[PaperIdentityDecision]:
     """Run LLM identity verification on *candidates* in batches.
 
-    Ordered output: one decision per input candidate, preserving order.
+    M1 v2: candidates whose ``authors_orcid`` list contains the target
+    professor's ORCID are auto-accepted without an LLM call. Remaining
+    candidates are batched normally. Ordered output: one decision per
+    input candidate, preserving input order.
     """
     if not candidates:
         return []
-    results: list[PaperIdentityDecision] = []
-    for start in range(0, len(candidates), batch_size):
-        chunk = candidates[start : start + batch_size]
-        results.extend(
+
+    shortcut_decisions, remaining = _extract_orcid_shortcuts(
+        professor_context, candidates
+    )
+
+    llm_decisions: list[PaperIdentityDecision] = []
+    for start in range(0, len(remaining), batch_size):
+        chunk = remaining[start : start + batch_size]
+        llm_decisions.extend(
             await _verify_single_batch(
                 context=professor_context,
                 candidates=chunk,
@@ -257,6 +334,7 @@ async def batch_verify_paper_identity(
                 llm_model=llm_model,
             )
         )
-    # Preserve input order even if LLM returns sorted differently
-    by_index = {d.index: d for d in results}
-    return [by_index[c.index] for c in candidates]
+
+    combined = {d.index: d for d in shortcut_decisions}
+    combined.update({d.index: d for d in llm_decisions})
+    return [combined[c.index] for c in candidates]

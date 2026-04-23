@@ -16,6 +16,7 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
+from .name_variants import NameVariants
 from .translation_spec import LLM_EXTRA_BODY
 
 logger = logging.getLogger(__name__)
@@ -28,13 +29,25 @@ CONFIDENCE_THRESHOLD = 0.8
 
 @dataclass(frozen=True)
 class ProfessorContext:
-    """Known anchor fields for identity verification."""
+    """Known anchor fields for identity verification.
+
+    `name_variants` (M1 v2) is optional for backward compatibility; when set,
+    `paper_identity_gate._build_prompt` renders all plausible name forms
+    (CJK / Latin / pinyin / initials) so the LLM can correctly match across
+    renderings. When None, the prompt falls back to `name` only.
+
+    `orcid` (M1 v2) enables the identity-gate ORCID shortcut: candidates
+    whose `authors_orcid` include this string auto-accept without burning
+    an LLM call.
+    """
 
     name: str
     institution: str
     department: str | None = None
     email: str | None = None
     research_directions: list[str] | None = None
+    name_variants: NameVariants | None = None
+    orcid: str | None = None
 
 
 class _VerificationOutput(BaseModel):

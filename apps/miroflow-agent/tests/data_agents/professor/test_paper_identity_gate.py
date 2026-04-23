@@ -286,3 +286,201 @@ async def test_gate_handles_empty_candidate_list():
     )
     assert results == []
     llm.chat.completions.create.assert_not_called()
+
+
+# -------------------------------------------------------------------------
+# M1 v2 — ORCID shortcut + name_variants prompt rendering
+# -------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_orcid_shortcut_accepts_without_llm_call():
+    """When ORCID set on context AND candidate has matching author ORCID,
+    candidate auto-accepted without LLM call."""
+    ctx = ProfessorContext(
+        name="Jianwei Huang",
+        institution="香港中文大学（深圳）",
+        research_directions=["无线通信"],
+        orcid="0000-0001-2345-6789",
+    )
+    cand = PaperIdentityCandidate(
+        index=0,
+        title="Paper matched by ORCID",
+        authors=["Jianwei Huang", "Other"],
+        year=2024,
+        venue="X",
+        authors_orcid=["0000-0001-2345-6789"],
+    )
+    llm = MagicMock()
+    results = await batch_verify_paper_identity(
+        professor_context=ctx,
+        candidates=[cand],
+        llm_client=llm,
+        llm_model="test",
+    )
+    assert len(results) == 1
+    assert results[0].accepted is True
+    assert results[0].confidence == 1.0
+    assert "ORCID" in results[0].reasoning
+    llm.chat.completions.create.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_orcid_shortcut_preserves_input_order_mixed():
+    """2 candidates: one ORCID-match (shortcut), one non-match (LLM).
+    Output preserves input order."""
+    ctx = ProfessorContext(
+        name="Jianwei Huang",
+        institution="X",
+        research_directions=["A"],
+        orcid="0000-0001-2345-6789",
+    )
+    c0 = PaperIdentityCandidate(
+        index=0,
+        title="orcid match paper",
+        authors=["Jianwei Huang"],
+        authors_orcid=["0000-0001-2345-6789"],
+    )
+    c1 = PaperIdentityCandidate(
+        index=1,
+        title="llm-evaluated paper",
+        authors=["Jianwei Huang"],
+        authors_orcid=[],
+    )
+    llm = _llm_returning(
+        {
+            "decisions": [
+                {
+                    "index": 1,
+                    "is_same_person": True,
+                    "confidence": 0.88,
+                    "topic_consistency": 0.7,
+                    "reasoning": "LLM verified",
+                }
+            ]
+        }
+    )
+    results = await batch_verify_paper_identity(
+        professor_context=ctx,
+        candidates=[c0, c1],
+        llm_client=llm,
+        llm_model="test",
+    )
+    assert [r.index for r in results] == [0, 1]
+    assert results[0].reasoning == "ORCID match"
+    assert results[0].accepted is True
+    assert results[1].reasoning == "LLM verified"
+    # LLM called exactly once — only for c1, not c0.
+    assert llm.chat.completions.create.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_no_orcid_on_context_no_shortcut():
+    """Context with no ORCID → everything goes through LLM."""
+    ctx = _ctx()  # no orcid field set
+    cand = PaperIdentityCandidate(
+        index=0,
+        title="Anything",
+        authors=["Jianwei Huang"],
+        authors_orcid=["0000-0001-2345-6789"],
+    )
+    llm = _llm_returning(
+        {
+            "decisions": [
+                {
+                    "index": 0,
+                    "is_same_person": True,
+                    "confidence": 0.9,
+                    "topic_consistency": 0.8,
+                    "reasoning": "ok",
+                }
+            ]
+        }
+    )
+    results = await batch_verify_paper_identity(
+        professor_context=ctx,
+        candidates=[cand],
+        llm_client=llm,
+        llm_model="test",
+    )
+    assert llm.chat.completions.create.call_count == 1
+    assert results[0].reasoning == "ok"
+
+
+@pytest.mark.asyncio
+async def test_prompt_renders_name_variants_when_set():
+    """With name_variants on context, prompt includes variants block and rule 7."""
+    from src.data_agents.professor.name_variants import resolve_name_variants
+
+    nv = resolve_name_variants(
+        canonical_name="Jianwei Huang",
+        canonical_name_zh="黄建伟",
+        canonical_name_en="Jianwei Huang",
+    )
+    ctx = ProfessorContext(
+        name="黄建伟",
+        institution="X",
+        research_directions=["wireless"],
+        name_variants=nv,
+    )
+    cand = PaperIdentityCandidate(
+        index=0, title="T", authors=["Huang, J."], year=2023
+    )
+    llm = _llm_returning(
+        {
+            "decisions": [
+                {
+                    "index": 0,
+                    "is_same_person": True,
+                    "confidence": 0.9,
+                    "topic_consistency": 0.8,
+                    "reasoning": "ok",
+                }
+            ]
+        }
+    )
+    await batch_verify_paper_identity(
+        professor_context=ctx,
+        candidates=[cand],
+        llm_client=llm,
+        llm_model="test",
+    )
+    sent_prompt = llm.chat.completions.create.call_args.kwargs["messages"][1][
+        "content"
+    ]
+    assert "姓名变体" in sent_prompt
+    assert "黄建伟" in sent_prompt
+    assert "Jianwei Huang" in sent_prompt
+    assert "huang" in sent_prompt.lower()  # pinyin
+    # Rule 7 added
+    assert "7." in sent_prompt and "变体" in sent_prompt
+
+
+@pytest.mark.asyncio
+async def test_prompt_no_variants_block_when_unset():
+    """With name_variants unset, prompt is the pre-M1 shape (no variants block)."""
+    ctx = _ctx()  # name_variants defaults None
+    cand = PaperIdentityCandidate(index=0, title="T", authors=["X"], year=2023)
+    llm = _llm_returning(
+        {
+            "decisions": [
+                {
+                    "index": 0,
+                    "is_same_person": False,
+                    "confidence": 0.1,
+                    "topic_consistency": 0.0,
+                    "reasoning": "no",
+                }
+            ]
+        }
+    )
+    await batch_verify_paper_identity(
+        professor_context=ctx,
+        candidates=[cand],
+        llm_client=llm,
+        llm_model="test",
+    )
+    sent_prompt = llm.chat.completions.create.call_args.kwargs["messages"][1][
+        "content"
+    ]
+    assert "姓名变体" not in sent_prompt
