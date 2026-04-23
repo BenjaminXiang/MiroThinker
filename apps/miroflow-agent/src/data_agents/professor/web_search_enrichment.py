@@ -234,9 +234,20 @@ def _build_company_follow_up_queries(
 def build_search_queries(profile: EnrichedProfessorProfile) -> list[str]:
     """Build search queries for a professor.
 
-    Order matters because the search budget is intentionally capped. Prioritize
-    official/homepage and academic-anchor discovery before company intent, then
-    use company-oriented queries as later initial/follow-up candidates.
+    Order matters because the search budget is intentionally capped (default
+    initial budget = 3 queries after reserving follow-ups). Interleave one
+    high-signal company query into the first 3 positions so company mentions
+    surface even on the minimum budget:
+
+      1. Identity anchor:           {name} {institution}
+      2. Identity anchor (homepage): {name} {institution} 个人主页
+      3. Company anchor (topic):    {name} {first_topic} 公司
+      4. Identity anchor (scholar): {name} {institution} scholar
+      5. Company anchor (institution): {name} {institution} 公司
+      6+ additional topic-based company queries, then research-direction follow-up
+
+    The previous ordering (company queries at positions 4+) caused them to be
+    cut off by the initial budget. Fixed 2026-04-23.
     """
     queries: list[str] = []
 
@@ -247,11 +258,17 @@ def build_search_queries(profile: EnrichedProfessorProfile) -> list[str]:
 
     add(f"{profile.name} {profile.institution}")
     add(f"{profile.name} {profile.institution} 个人主页")
+
+    topics = _extract_company_search_topics(profile)
+    if topics:
+        # Promote the first topic-based company query into the budget-3 window.
+        add(f"{profile.name} {topics[0]} 公司")
+
     add(f"{profile.name} {profile.institution} scholar")
 
-    for topic in _extract_company_search_topics(profile):
+    # Remaining company queries (rest of topics + institution-anchored).
+    for topic in topics[1:]:
         add(f"{profile.name} {topic} 公司")
-
     add(f"{profile.name} {profile.institution} 公司")
 
     if profile.research_directions:
