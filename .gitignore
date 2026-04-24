@@ -278,3 +278,6 @@ local-skills/
 # Milvus-Lite local database files (dogfood / local runs)
 milvus.db*
 .milvus.db*
+
+# Root-level browser baseline screenshots (gstack/QA artifacts, not baselines-of-record)
+/baseline-*.png
