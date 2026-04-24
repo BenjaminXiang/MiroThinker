@@ -41,16 +41,17 @@
 
 ## 二、整体架构
 
-### 2.1 长期架构
+### 2.1 架构形态
 
-长期架构统一为：
+架构形态统一为：
 
-- `PostgreSQL + Milvus`
+- **PostgreSQL + Milvus**。不区分 dev 与长期形态；所有环境（本地、测试、生产）均按此组织，不再使用 SQLite 作为 dev 代替物。
+- 当前部署：`miroflow_real`（生产数据）+ `miroflow_test_mock`（测试 / mock）两个 Postgres 实例并存；向量层使用 Milvus（本地部署为 Milvus-Lite 文件，生产为独立 Milvus 服务）。
 
-设计目标是：
+设计目标：
 
-- 教授、企业、论文、专利可各自独立维护 PostgreSQL 库
-- 每个数据域可各自维护一组 Milvus collection
+- 教授、企业、论文、专利可各自独立维护 PostgreSQL schema（允许同实例多 schema，或各域独立实例）
+- 每个数据域可各自维护一组 Milvus collection（示例当前在用：`professor_profiles`、`paper_chunks`；company / patent collection 规划中）
 - 线上服务层负责跨域编排，不要求底层合并成一个总库
 
 ### 2.2 多库、多 collection 的域边界
@@ -93,6 +94,12 @@
 - 所有召回都通过一条 SQL 完成
 - 各数据域必须复用同一套物理 schema
 
+**当前服务层实现范围（2026-04 状态）**：
+
+- `apps/miroflow-agent/src/data_agents/service/retrieval.py` 中的 `RetrievalService` 当前仅覆盖 `professor` / `paper` 两域（`_VALID_DOMAINS = {"professor", "paper"}`）。
+- `company` / `patent` 语义检索能力规划中，见 [plans/2026-04-20-003](./plans/2026-04-20-003-agentic-rag-execution-plan.md) M3 及 [plans/2026-04-17-005](./plans/2026-04-17-005-company-primary-knowledge-graph-architecture-plan.md)。
+- 在这两域未接入前，服务层对它们的查询仍走 SQL / 结构化检索回退。
+
 ### 2.4 通用离线工作流
 
 四个数据域建议统一采用以下离线流程模型：
@@ -106,7 +113,10 @@
 4. **用户向摘要与向量化**
    - 生成用户可读摘要字段，并写入向量索引
 5. **发布与验证**
-   - 发布到对外契约层，做抽样验证、定向补采、生成报告
+   - 发布到对外契约层（见 §6.1 第 3-4 层：canonical 规范化层 + 发布层）
+   - 过 Round 7.x 质量门控：`name_identity_gate`、`paper_identity_gate`、`title_quality` / `topic_quality` gate（见 §7.2 最小自动化校验）
+   - `pipeline_issue` 表（V006 起）记录异常与不一致项，供管道验证台回看
+   - 做抽样验证、定向补采、生成报告
 
 ### 2.5 跨域依赖关系
 
@@ -148,24 +158,59 @@
 
 ### 3.2 当前代码基线
 
-当前与数据采集 Agent 最相关的实现基线包括：
+当前与数据采集 Agent 最相关的实现基线分为三组：
 
-- [`pipeline.py`](../apps/miroflow-agent/src/core/pipeline.py)
-  - 统一任务入口，负责拼装 `ToolManager`、`Orchestrator`、`OutputFormatter`
-- [`orchestrator.py`](../apps/miroflow-agent/src/core/orchestrator.py)
-  - 多轮 agent loop、上下文压缩、rollback、防重复查询
-- [`tool_executor.py`](../apps/miroflow-agent/src/core/tool_executor.py)
-  - 参数修正、重复调用检测、空结果回滚、工具结果后处理
-- [`settings.py`](../apps/miroflow-agent/src/config/settings.py)
-  - Hydra 配置到 MCP 工具的映射
-- [`mirothinker_1.7_keep5_max200.yaml`](../apps/miroflow-agent/conf/agent/mirothinker_1.7_keep5_max200.yaml)
-  - 当前单智能体 search + scrape/extract + python 的高信号配置范式
-- [`search_and_scrape_webpage.py`](../libs/miroflow-tools/src/miroflow_tools/dev_mcp_servers/search_and_scrape_webpage.py)
-  - 搜索、重试、URL 过滤
-- [`jina_scrape_llm_summary.py`](../libs/miroflow-tools/src/miroflow_tools/dev_mcp_servers/jina_scrape_llm_summary.py)
-  - 抓取后抽取、Jina + Python fallback
-- [`common_benchmark.py`](../apps/miroflow-agent/benchmarks/common_benchmark.py)
-  - 可复用的任务批量执行与日志框架
+#### A. Agent 运行基线（runtime / 通用工具）
+
+- [`pipeline.py`](../apps/miroflow-agent/src/core/pipeline.py) — 统一任务入口，拼装 `ToolManager`、`Orchestrator`、`OutputFormatter`。
+- [`orchestrator.py`](../apps/miroflow-agent/src/core/orchestrator.py) — 多轮 agent loop、上下文压缩、rollback、防重复查询。
+- [`tool_executor.py`](../apps/miroflow-agent/src/core/tool_executor.py) — 参数修正、重复调用检测、空结果回滚、工具结果后处理。
+- [`settings.py`](../apps/miroflow-agent/src/config/settings.py) — Hydra 配置到 MCP 工具的映射。
+- Hydra agent 配置位于 [`conf/agent/`](../apps/miroflow-agent/conf/agent/)，包含 `mirothinker_v1.0`、`mirothinker_v1.5_keep5_max{200,400}`、`mirothinker_1.7_keep5_max{200,300}`、`multi_agent`、`single_agent` 等；**当前常用基线**是 `mirothinker_v1.5_keep5_max200.yaml`（single-agent search + scrape + python）与 `mirothinker_1.7_keep5_max200.yaml`。
+- [`search_and_scrape_webpage.py`](../libs/miroflow-tools/src/miroflow_tools/dev_mcp_servers/search_and_scrape_webpage.py) — 搜索、重试、URL 过滤。
+- [`jina_scrape_llm_summary.py`](../libs/miroflow-tools/src/miroflow_tools/dev_mcp_servers/jina_scrape_llm_summary.py) — 抓取后抽取、Jina + Python fallback。
+- [`common_benchmark.py`](../apps/miroflow-agent/benchmarks/common_benchmark.py) — 可复用的任务批量执行与日志框架。
+
+#### B. 数据契约层（共享层，四域共享）
+
+- [`contracts.py`](../apps/miroflow-agent/src/data_agents/contracts.py) — 四域共享 Pydantic 模型、`QualityStatus` 等 Literal 类型。
+- [`evidence.py`](../apps/miroflow-agent/src/data_agents/evidence.py) — 统一 `evidence` 结构构造与校验。
+- [`normalization.py`](../apps/miroflow-agent/src/data_agents/normalization.py) — 实体名、日期、字段归一化工具。
+- [`linking.py`](../apps/miroflow-agent/src/data_agents/linking.py) — 跨域关联（normalize + evidence 驱动）。
+- [`publish.py`](../apps/miroflow-agent/src/data_agents/publish.py) — 发布层通用 helper（发布层 = §6.1 第 4 层）。
+- [`runtime.py`](../apps/miroflow-agent/src/data_agents/runtime.py) — 运行时 context、run_id 生成、worker 调度。
+- [`canonical/`](../apps/miroflow-agent/src/data_agents/canonical/) — 规范化主 schema 层（§6.1 第 3 层）：`common.py`、`company.py`、`paper.py`、`professor.py`、`relations.py`、`source.py`。
+- [`taxonomy/`](../apps/miroflow-agent/src/data_agents/taxonomy/) — 学科分层 + 种子（`domain_tier.py`、`seed_data.py`）。
+- [`quality/`](../apps/miroflow-agent/src/data_agents/quality/) — 阈值配置（`threshold_config.py`）。
+- [`providers/`](../apps/miroflow-agent/src/data_agents/providers/) — LLM / 搜索 / 反查 provider（`anthropic`、`qwen`、`dashscope`、`mirothinker`、`web_search`）。
+- [`storage/`](../apps/miroflow-agent/src/data_agents/storage/) — 持久化：`sqlite_store.py`（历史）、`milvus_store.py`、`milvus_collections.py`（collection 定义）、`postgres/{connection,seed_loader}.py`。
+- [`service/retrieval.py`](../apps/miroflow-agent/src/data_agents/service/retrieval.py) — `RetrievalService` + `Evidence` dataclass；当前覆盖 professor / paper。
+- [`service/search_service.py`](../apps/miroflow-agent/src/data_agents/service/search_service.py) — 结构化检索回退。
+
+#### C. 四域与跨域质量门（domain-specific）
+
+- 教授域质量门：[`professor/name_identity_gate.py`](../apps/miroflow-agent/src/data_agents/professor/name_identity_gate.py)（Round 7.17 canonical_name 双语身份门）、[`professor/paper_identity_gate.py`](../apps/miroflow-agent/src/data_agents/professor/paper_identity_gate.py)（Round 8c，professor_paper_link 置信门，CONFIDENCE_THRESHOLD=0.8）、[`professor/quality_gate.py`](../apps/miroflow-agent/src/data_agents/professor/quality_gate.py)（学科敏感质量门）、[`professor/identity_verifier.py`](../apps/miroflow-agent/src/data_agents/professor/identity_verifier.py)。
+- 论文域门控：`paper/title_quality.py`、`paper/title_cleaner.py`、`paper/title_resolver.py`（见 V011 `paper_title_resolution_cache`）。
+- 教授域采集主体：`professor/{discovery,roster,parser,profile,school_adapters,enrichment,paper_publication,vectorizer,pipeline_v3}.py`（25+ 模块）。
+- 论文域采集主体：`paper/{homepage_http,homepage_ingest,chunker,openalex,orcid,crossref,semantic_scholar,full_text_fetcher,release,milvus_backfill}.py` 等（V011 RAG 表由 `run_homepage_paper_ingest.py` 写入）。
+- 企业域：`company/{models,release,enrichment,import_xlsx,canonical_import,knowledge_backfill,exact_backfill}.py`。
+- 专利域：`patent/{models,linkage,release,import_xlsx,exact_backfill}.py`。
+
+#### D. Alembic 主迁移（Postgres schema）
+
+位于 [`apps/miroflow-agent/alembic/versions/`](../apps/miroflow-agent/alembic/versions/)，按时间顺序：
+
+- V001 — `init_source_layer`
+- V002 — `init_company_domain`
+- V003 — `init_professor_domain`
+- V004 — `init_paper_patent_domain`
+- V005a / V005b — `professor_paper_link` / `cross_domain_relations`
+- V006 — `pipeline_issue`（管道验证台）
+- V007 — `add_run_id_trace`（全局 run_id 追踪；Round 7.16 phase 1）
+- V008 — `relax_paper_title_not_null`
+- V009 — `add_canonical_name_zh`（双语身份字段；Round 7.17）
+- V010 — `add_professor_profile_fields`
+- V011 — `add_rag_tables`（`paper_full_text` / `paper_title_resolution_cache` / `professor_orcid`）
 
 ### 3.3 推荐实现方式
 
@@ -186,12 +231,16 @@
 
 | 采集/清洗能力 | 当前优先复用实现 | 备注 |
 | --- | --- | --- |
-| Web Search | `search_and_scrape_webpage` / `tool-google-search` / `tool-sogou-search` | Web Search 是辅助能力，不是主骨架 |
-| 网页抓取 | `search_and_scrape_webpage` / `jina_scrape_llm_summary` | 支持网页抓取与信息抽取 |
-| PDF/长文抽取 | `jina_scrape_llm_summary` | 适合论文、专利、报告类页面 |
-| 结构化清洗/标准化 | `tool-python` + 离线脚本 | 用于实体标准化、去重辅助、字段解析 |
+| Web Search | `search_and_scrape_webpage` / `tool-google-search` / `tool-sogou-search` / `providers/web_search.py`（Serper） | Web Search 是辅助能力，不是主骨架 |
+| 网页抓取 | `search_and_scrape_webpage` / `jina_scrape_llm_summary` / `paper/homepage_http.py` | 支持网页抓取与信息抽取 |
+| PDF/长文抽取 | `jina_scrape_llm_summary` / `paper/full_text_fetcher.py` / `paper/cv_pdf.py` | 适合论文、专利、报告类页面 |
+| 结构化清洗/标准化 | `tool-python` + 离线脚本 + `data_agents/normalization.py` | 用于实体标准化、去重辅助、字段解析 |
 | 任务执行 | `pipeline.py` + `Orchestrator` | 适合 task-style 采集 Agent |
 | 评估与日志 | `common_benchmark.py` + `TaskLog` | 可复用到验证与补采环节 |
+| 向量检索 | `service/retrieval.py`（`RetrievalService` + 并发多域 ANN）+ `storage/milvus_collections.py` + `professor/vectorizer.py` + `paper/milvus_backfill.py` | 目前覆盖 professor / paper，company / patent 规划中 |
+| Rerank | `providers/` 下 reranker client（M0.1，chat.py 通过 `_get_reranker_client` 使用） | Qwen3-Reranker-8B 本地部署 |
+| 跨域关联 | `data_agents/linking.py` + `canonical/relations.py` + V005a/V005b 关系表 | 必须基于 normalization + 公开证据 |
+| 主 schema 承载 | `canonical/{common,company,paper,professor,relations,source}.py` + V003/V004 Postgres schema | §6.1 第 3 层 |
 
 ---
 
@@ -225,7 +274,8 @@ ID 规则要求：
 | `summary_fields` | 用户向摘要字段集合 |
 | `evidence` | 来源证据数组，结构见 4.5 节 |
 | `last_updated` | 最近更新时间 |
-| `quality_status` | 可选，表示 `ready` / `needs_review` / `low_confidence` 等状态 |
+| `run_id` | **必填**，对应 `pipeline_run.run_id`（Round 7.16 phase 1 起）；V007 迁移建立该列，legacy 行以 `legacy_backfill` 占位值填充。所有 writer 必须在 phase 2 writer wiring 完成后显式传递真实 run_id（进度见 [plans/2026-04-18-008](./plans/2026-04-18-008-pipeline-run-id-trace.md)）。 |
+| `quality_status` | 4 个 canonical 值：`ready` / `needs_review` / `low_confidence` / `needs_enrichment`（对齐 `data_agents/contracts.py:9` 与 [quality-status-compatibility](./quality-status-compatibility.md)） |
 
 ### 4.2.1 摘要字段命名标准
 
@@ -253,9 +303,10 @@ ID 规则要求：
 - `industry`
 - `profile_summary`
 - `evaluation_summary`
-- `technology_route_summary`
+- `technology_route_summary`（**当前实现为规则拼接**：`company/enrichment.py` 基于 `business` / `description` / `website` 等字段合成；LLM 增强版本见 [plans/2026-04-17-005](./plans/2026-04-17-005-company-primary-knowledge-graph-architecture-plan.md) §9.2，未交付）
 - `key_personnel`
 - `last_updated`
+- `run_id`
 - `evidence`
 
 #### 教授
@@ -264,6 +315,7 @@ ID 规则要求：
 
 - `id`
 - `name`
+- `canonical_name_zh` / `canonical_name_en`（V009 / Round 7.17 起必填；必须通过 `professor/name_identity_gate.py` LLM 核验才能赋值 `canonical_name_en`）
 - `institution`
 - `department`
 - `title`
@@ -272,10 +324,17 @@ ID 规则要求：
 - `evaluation_summary`
 - `company_roles`
 - `last_updated`
+- `run_id`
 - `evidence`
 
+**可选学术指标**（PRD §模块一 R2 要求，代码中 `professor/models.py` + `publish_helpers.py` 已有字段，但**服务层暴露未统一**——admin API / chat profile / Milvus schema 尚未全部带出，现状见 [docs/index.md](./index.md) 教授行缺口列）：
+
+- `h_index`（总 h-index；可选）
+- `citation_count`（总引用数；可选）
+- `paper_count`（论文总数；可选）
+
 教授的代表论文不再作为 professor 对象上的原始字段发布。
-如需展示代表论文，必须通过 `verified professor_paper_link` 关联到 canonical `paper` 对象后再派生。
+如需展示代表论文，必须通过 `verified professor_paper_link` 关联到 canonical `paper` 对象后再派生（verified 的判定见 §5.2 `paper_identity_gate`）。
 
 #### 论文
 
@@ -291,7 +350,10 @@ ID 规则要求：
 - `summary_text`
 - `keywords`
 - `last_updated`
+- `run_id`
 - `evidence`
+
+可选扩展字段（V011 起可用，RAG 支持）：`full_text_url`、`full_text_storage_ref`（对应 `paper_full_text` 表）；`title_resolution_cache_key`（对应 `paper_title_resolution_cache`）。
 
 #### 专利
 
@@ -308,6 +370,7 @@ ID 规则要求：
 - `company_ids`
 - `professor_ids`
 - `last_updated`
+- `run_id`
 - `evidence`
 
 ### 4.4 统一 filter 语义
@@ -358,38 +421,41 @@ ID 规则要求：
 
 ### 4.6 服务层查询接口契约
 
-共享规范不再强制 SQL 风格接口，而是定义逻辑接口语义：
+共享规范不强制 SQL 风格接口，而是定义逻辑接口语义。**当前实现**（`apps/miroflow-agent/src/data_agents/service/retrieval.py`）：
 
 ```python
-search_domain(
-    domain: str,
-    query: str,
-    filters: dict | None = None,
-    mode: str = "hybrid",
-    limit: int = 10,
-) -> list[dict]
+class RetrievalService:
+    def retrieve(
+        self,
+        query: str,
+        *,
+        domains: tuple[str, ...],      # 目前 _VALID_DOMAINS = {"professor", "paper"}
+        filters: dict | None = None,
+        candidate_limit: int = 30,     # ANN 候选数
+        final_top_k: int = 10,         # rerank 后返回数
+    ) -> list[Evidence]:
+        ...
+```
 
-get_object(
-    domain: str,
-    object_id: str,
-) -> dict
+实际召回链路：query embedding → 并发多域 ANN 召回（Milvus）→ filter → reranker（Qwen3-Reranker-8B）→ top_k。`mode` 字段已内化——检索路径默认走"向量召回 + rerank 融合"的 hybrid 范式，不再以参数暴露。
 
+**仍属契约层的逻辑接口语义**（未来扩展目标，非当前代码直接签名）：
+
+```python
+# 单对象获取（当前由各域 admin API 如 /api/professor/<id> 承担）
+get_object(domain, object_id) -> dict
+
+# 跨域关系查询（当前由 canonical/relations 表 + ad-hoc SQL 承担）
 get_related_objects(
-    source_domain: str,
-    source_id: str,
-    target_domain: str,
-    relation_type: str,
-    limit: int = 20,
+    source_domain, source_id,
+    target_domain, relation_type,
+    limit=20,
 ) -> list[dict]
 ```
 
-逻辑模式统一为：
+是否内部用 SQL、adapter、domain API、还是多段检索，由各域实现自行决定。逻辑模式仍保留 `exact` / `semantic` / `hybrid` 三种语义分类，以便未来规范化扩展。
 
-- `exact`
-- `semantic`
-- `hybrid`
-
-是否内部用 SQL、adapter、domain API、还是多段检索，由各域实现自行决定。
+**域覆盖扩展**：company / patent 接入 `retrieve` 的计划见 [plans/2026-04-20-003](./plans/2026-04-20-003-agentic-rag-execution-plan.md) M3 与 [plans/2026-04-17-005](./plans/2026-04-17-005-company-primary-knowledge-graph-architecture-plan.md)。在接入前，这两域的语义检索走 `service/search_service.py` 的结构化回退。
 
 ---
 
@@ -419,6 +485,12 @@ get_related_objects(
 - 教授-企业关联不得再把 `企名片 API` 作为默认关联方式
 - `company_roles` 应主要来自企业库匹配与公开证据
 
+**强制质量门控（Round 7.17 / Round 8c 起）**：
+
+- `canonical_name_zh` ↔ `canonical_name_en` 必须通过 `professor/name_identity_gate.py` LLM 核验（confidence ≥ 0.8）后才能共存；未通过者 `canonical_name_en` 必须置 NULL。详见 [plans/2026-04-18-007](./plans/2026-04-18-007-name-identity-gate.md)。
+- `professor_paper_link` 必须通过 `professor/paper_identity_gate.py` 核验（默认 `CONFIDENCE_THRESHOLD = 0.8`）才能标记为 `verified`；未通过者置为 `link_status = candidate` 并记录 `topic_consistency_score` / `institution_consistency_score`，低置信项入 `pipeline_issue` 表。
+- 教授发布前必须过 `professor/quality_gate.py` 的学科敏感质量门（STEM / HSS 阈值不同，详见 `quality/threshold_config.py`）。
+
 ### 5.3 论文域
 
 论文域共享强制规则：
@@ -432,6 +504,13 @@ get_related_objects(
   - `profile_summary`
   - 近期研究重点判断
 - 任意显式论文标题查询可由线上服务走实时外部 fallback，不要求离线论文库全覆盖全球论文
+
+**多源策略（Round M2 / Paper Multi-Source）**：
+
+- 主页权威论文优先（M2.1 `paper/homepage_http.py` 抽取 + M2.2 `title_resolver.py` 消歧）；兜底走 OpenAlex / Crossref / Semantic Scholar / ORCID / arXiv。
+- 全文抓取通过 `paper/full_text_fetcher.py` 触发并缓存到 V011 `paper_full_text` 表。
+- 标题归一化结果走 V011 `paper_title_resolution_cache`，避免重复 LLM 调用。
+- 多源优先级 Phase A 已落地；Phase B（证据权重与权威源切换）排队中，见 [plans/2026-04-08-001](./plans/2026-04-08-001-feat-paper-multi-source-priority-implementation-plan.md) 与 [plans/2026-04-22-001](./plans/2026-04-22-001-m3-retrieval-service-paper-first.md)。
 
 ### 5.4 专利域
 
@@ -449,27 +528,36 @@ get_related_objects(
 
 ### 6.1 物理 schema 原则
 
-允许各域独立设计物理 schema，但建议按三层组织：
+允许各域独立设计物理 schema，但必须按**四层**组织：
 
-- 原始层
-  - 保存导入行、原网页、原 PDF、原始响应
-- 标准化层
-  - 保存清洗后的事实字段、关系字段、去重结果
-- 发布层
-  - 面向线上服务暴露稳定对外契约字段
+1. **原始层（Raw）**
+   - 保存导入行、原网页、原 PDF、原始响应
+   - 各域独立 schema（如 `company_raw`、`professor_source_page` 等）
+2. **标准化层（Normalized）**
+   - 保存清洗后的事实字段、关系字段、域内去重结果
+   - 仍可各域独立 schema；`data_agents/normalization.py` 提供共享工具
+3. **规范化主 schema 层（Canonical）** — V003–V011 新增，**对外契约的实际承载层**
+   - 实现在 `apps/miroflow-agent/src/data_agents/canonical/`：`common.py`、`company.py`、`paper.py`、`professor.py`、`relations.py`、`source.py`
+   - Postgres 表通过 alembic V003 / V004 / V005a / V005b / V006 / V007 / V009 / V010 / V011 建立
+   - 该层输出结构即 §4.2 最小对外对象契约（含 `run_id` / `canonical_name_zh` / `quality_status` / `evidence` 等）
+4. **发布层（Published / Serving）**
+   - 面向线上服务暴露稳定对外契约字段（SQL view / Milvus collection / 发布快照）
+   - 包括 `professor_profiles`、`paper_chunks` 等 Milvus collection 以及各域 admin API 的 DTO
 
-发布层是共享规范真正关心的部分。
+共享规范真正关心的是**第 3 层 canonical 主 schema** 和**第 4 层发布层**。第 1-2 层允许各域自由演进，只要最终在第 3 层汇合到契约字段。
 
 ### 6.2 向量化对象建议
 
 推荐的主向量对象如下：
 
-| 数据域 | 主向量文本 |
-| --- | --- |
-| 教授 | `profile_summary` |
-| 企业 | `profile_summary` |
-| 论文 | `summary_text` |
-| 专利 | `summary_text` |
+| 数据域 | 主向量文本 | 当前 collection | 状态 |
+| --- | --- | --- | --- |
+| 教授 | `profile_summary` | `professor_profiles` | ✅ 已建并回填 |
+| 企业 | `profile_summary` | （规划中） | 🚧 M3 目标 |
+| 论文 | `summary_text` / chunk 分片 | `paper_chunks` | ✅ 已建；`run_milvus_backfill.py` 写入；支持 `chunk_type`（abstract / intro / conclusion 等）、`segment_index` 维度 |
+| 专利 | `summary_text` | （规划中） | 🚧 未启动 |
+
+论文 chunk 分片由 `paper/chunker.py` 产生；retrieval 时以 query embedding + `paper_chunks` 多 chunk_type ANN → rerank 为主路径。
 
 如果某域需要多 collection，可按以下逻辑拆分：
 
@@ -477,7 +565,7 @@ get_related_objects(
 - 技术路线 / 研究方向 collection
 - 长文摘要 collection
 
-共享规范不强制 collection 名称，但要求服务层能明确知道每个 collection 的语义。
+共享规范不强制 collection 名称，但要求服务层能明确知道每个 collection 的语义，并在 `storage/milvus_collections.py` 中集中定义常量与 schema。
 
 ---
 
@@ -497,6 +585,12 @@ get_related_objects(
 
 ### 7.2 最小自动化校验
 
+**共享契约级校验（所有域）**：
+
+- `run_id` 必须非空（Round 7.16 phase 1 起；legacy 行允许 `legacy_backfill` 占位）
+- `quality_status` 必须为 4 个 canonical 值之一：`ready` / `needs_review` / `low_confidence` / `needs_enrichment`
+- 不满足 `ready` 的对象不得进入默认检索池；`needs_enrichment` 与 `low_confidence` 的失败原因必须写入 `pipeline_issue` 表（V006 起）供管道验证台回看
+
 #### 企业
 
 - `name` 不能为空
@@ -509,13 +603,17 @@ get_related_objects(
 - `institution` 必须在深圳高校名单内
 - 必须至少有一个官方来源
 - `profile_summary` 不得缺失
-- 论文反哺后的 `research_directions` 应与近年论文主题一致
+- 论文反哺后的 `research_directions` 应与近年论文主题一致（由 `topic_consistency_score` 量化）
+- **Round 7.17 身份门**：`canonical_name_zh` 必填；`canonical_name_en` 仅在通过 `name_identity_gate` 核验时赋值，否则 NULL
+- **Round 8c paper 身份门**：`professor_paper_link` 进入 verified 状态必须 `confidence ≥ 0.8`（`paper_identity_gate`）；未通过项标 candidate 并入 `pipeline_issue`
+- **学科敏感质量门**：通过 `professor/quality_gate.py` + `quality/threshold_config.py` 的 STEM / HSS 差异阈值
 
 #### 论文
 
 - `title`、`authors`、`year` 不能为空
 - `summary_zh` 与 `summary_text` 不得缺失
 - 若论文来自教授 roster 采集，应尽量有 `professor_ids`
+- **Round 7.x 质量门**：`title_quality` / `topic_quality` 子校验不得失败；低分入 `pipeline_issue`
 
 #### 专利
 
@@ -527,16 +625,17 @@ get_related_objects(
 
 共享验证流程建议如下：
 
-1. 抽样或定向挑选低置信对象
+1. 抽样或定向挑选低置信对象（候选池来自 `pipeline_issue` 表 + `quality_status != ready` 行）
 2. 让 MiroThinker 基于现有搜索/抓取/抽取工具复核关键事实
-3. 对冲突事实做人工或规则复判
-4. 回写修正结果并记录验证报告
+3. 对冲突事实做人工或规则复判（管道验证台 `/browse` 三 tab：provenance / coverage / review，见 [plans/2026-04-18-006](./plans/2026-04-18-006-pipeline-verification-console.md)）
+4. 回写修正结果并记录验证报告；复判结果必须带 `run_id` 写回 canonical 层
 
 重点验证对象包括：
 
 - 新增或大幅更新对象
-- 低质量对象
-- 重名、高歧义对象
+- 低质量对象（`quality_status in {needs_review, low_confidence, needs_enrichment}`）
+- 重名、高歧义对象（`name_identity_gate` 未通过项）
+- 低置信关联（`professor_paper_link.link_status = candidate`）
 - 关键关联对象
   - 教授-企业
   - 教授-论文
@@ -588,6 +687,8 @@ get_related_objects(
 - 本共享规范
 - 对应域 PRD
 - 若影响用户查询行为，还需同步更新 [Agentic-RAG-PRD.md](./Agentic-RAG-PRD.md)
+
+**同步时限**：alembic migration（V00x）合入主干后，本 Spec 相关章节必须在 **1 周内**完成同步（涉及 §4 契约字段、§5 强制规则、§6.1 物理层、§7.2 校验的任何变更）。未及时同步的迁移视为文档漂移，应被 code review 拦截。
 
 ---
 
