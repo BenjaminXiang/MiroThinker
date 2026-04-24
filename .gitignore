@@ -274,3 +274,7 @@ local-skills/
 
 # Root-level xlsx uploads
 *.xlsx
+
+# Milvus-Lite local database files (dogfood / local runs)
+milvus.db*
+.milvus.db*
