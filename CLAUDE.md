@@ -1,207 +1,168 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Repo-level guidance for Claude Code. Keep this file compact: only include facts and rules useful in almost every session. Put task state, long PRDs, detailed runbooks, and temporary decisions in linked docs or `.agents/...` artifacts.
 
-## Project Overview
+Claude is the **designer / planner / reviewer**. Codex is the default **production-code builder**. For non-trivial product work, prefer: **Claude designs → Codex implements → Claude reviews**.
 
-深圳科创数据平台：一个面向深圳科创生态的对话式科创信息检索系统。用户通过web用自然语言提问，系统在教授、企业、论文、专利四个数据域中智能路由检索，返回结构化、可追溯的回答。
+## 1. Operating model
 
-项目基于 MiroThinker 深度研究 agent 框架构建，复用其 agent runtime、多轮工具调用编排、搜索/抓取/抽取能力，在此之上构建了四域数据采集智能体和 Agentic RAG 检索服务层。
+- Claude owns requirements clarification, architecture, invariants, design contracts, Codex handoffs, reviews, and reusable lessons.
+- Codex owns approved implementation slices, production-code edits, test updates, relevant checks, and evidence reporting.
+- Claude may directly edit docs, specs, plans, acceptance criteria, review notes, and tiny low-risk scaffolding.
+- Claude is not the default writer for production logic under `apps/`, `libs/`, `src/`, runtime, storage, service, API, or data-agent modules unless the user explicitly asks or the change is tiny and clearly reversible.
+- Use the lightest reliable workflow. Do not turn small fixes into multi-agent rituals.
 
-## Key Documentation
+## 2. Project overview
 
-文档按分层结构组织，冲突时以共享规范为准。完整导航见 `docs/index.md`。
+深圳科创数据平台：面向深圳科创生态的对话式科创信息检索系统。用户通过 Web 用自然语言提问，系统在教授、企业、论文、专利四个数据域中智能路由检索，并返回结构化、可追溯的回答。
 
-- **`docs/index.md`** — 文档导航与术语表（ID 前缀、摘要字段命名、evidence 结构、去重锚点）
-- **`docs/Data-Agent-Shared-Spec.md`** — 四域共享权威源：架构、逻辑契约、质量标准、MiroThinker 实现映射
-- **`docs/{Company,Professor,Paper,Patent}-Data-Agent-PRD.md`** — 各域特有需求
-- **`docs/Professor-Pipeline-V2-User-Guide.md`** — 教授 Pipeline V2 使用说明（运行、配置、检索、排查）
-- **`docs/Agentic-RAG-PRD.md`** — 面向用户的检索增强智能体（服务层）：查询分类（A-G 七种类型）、语义路由、多源召回/融合/rerank
-- **`docs/Multi-turn-Context-Manager-Design.md`** — 多轮对话上下文管理器：指代消解、跨模块跳转、话题切换检测
-- **`docs/solutions/`** — 经验沉淀：部署模式、基础设施问题、集成陷阱
+The project builds on the MiroThinker deep-research agent framework. It reuses agent runtime, multi-turn tool orchestration, search/scrape/extract capabilities, and adds four-domain data collection agents plus an Agentic RAG service layer.
 
-`docs/solutions/` 下的经验文档按 `docs/solutions/<category>/` 分类存放，并使用 YAML frontmatter 标记 `module`、`problem_type`、`component`、`tags` 等检索字段。这些文档在实现、调试或调整已记录过的模块时通常最有价值。
+Baseline stack: Python 3.12+, uv, Hydra, Ruff, MCP/FastMCP, Anthropic/OpenAI SDKs, Playwright, E2B, Pydantic, SQLite, Milvus, pytest + xdist + inline snapshots. Prefer local `pyproject.toml` or subproject config when more specific.
 
-## Common Commands
+## 3. Source-of-truth docs
+
+Repo-local docs are the system of record. If important knowledge exists only in chat, convert it into a task artifact or a durable `docs/solutions/` entry.
+
+- `docs/index.md` — documentation index, glossary, and implementation-status matrix.
+- `docs/Data-Agent-Shared-Spec.md` — shared data-agent architecture, logical contracts, quality standards, MiroThinker mapping.
+- `docs/{Company,Professor,Paper,Patent}-Data-Agent-PRD.md` — domain-specific requirements.
+- `docs/Agentic-RAG-PRD.md` — query classification A–G, semantic routing, multi-source recall/fusion/rerank.
+- `docs/Agentic-RAG-Operating-Guide.md` — M0.1–M6 全流水线运维手册（dogfood + 回滚 + 监控），对应当前在线 `/api/chat` 的运行口径。
+- `docs/Multi-turn-Context-Manager-Design.md` — 多轮指代消解与跨域跳转设计（**当前未落地**，chat v0/v1 仍为单轮；详见 `docs/index.md` 实现状态）。
+- `docs/plans/index.md` / `docs/solutions/index.md` — 活跃/完成的计划、可复用的问题复盘与最佳实践。
+- `docs/architecture-decisions/` — ADR（跨任务的长期架构决策）。
+
+## 4. Repository map
+
+**当前主线（数据采集 + Agentic RAG）**
+
+- `apps/miroflow-agent/` — 四域数据采集与 Agentic RAG 核心。
+  - `conf/` — Hydra 配置；`scripts/` — 运维与真实 E2E（`run_homepage_paper_ingest.py`、`run_professor_*`、`run_company_import_e2e.py`、`run_paper_release_e2e.py`、`run_patent_import_e2e.py`、`run_name_identity_scan.py`、`run_milvus_backfill.py`、`run_professor_orcid_backfill.py` 等 50+）；`tests/` — pytest suites；`alembic/versions/` — Postgres schema 迁移 V001–V011（含 V007 run_id trace、V009 canonical_name_zh、V011 RAG 表：`paper_full_text` / `paper_title_resolution_cache` / `professor_orcid`）。
+  - `src/core/` — pipeline entry/factory、orchestrator、tool executor、answer generator、stream handler。
+  - `src/data_agents/` — 四域采集与服务层：
+    - 共享层：`contracts.py`、`evidence.py`、`linking.py`、`normalization.py`、`publish.py`、`runtime.py`。
+    - 域子目录：`company/`、`professor/`、`paper/`、`patent/`（采集、发布、enrichment、exact/knowledge backfill、import_xlsx）。
+    - 横切：`canonical/`（统一主 schema：`common`/`company`/`paper`/`professor`/`relations`/`source`）、`taxonomy/`（学科分层 + 种子）、`quality/`（阈值配置）、`providers/`（Anthropic/Qwen/Dashscope/MiroThinker/web_search）、`storage/`（SQLite / Milvus / `postgres/`）、`service/`（`retrieval.py` + `search_service.py`，RAG 服务层）。
+  - `src/llm/`、`src/io/`、`src/logging/`、`src/config/`、`src/utils/` — 框架层。
+
+- `apps/admin-console/` — 管理后台 + 用户对话入口（FastAPI 后端 + React/Vite 前端）。
+  - `backend/api/` — `chat.py`（`/api/chat` 用户问答，B/D/E 路由 + Serper fallback + reranker）、`dashboard.py`、`domains.py`、`data.py`、`batch.py`、`export.py`、`pipeline.py`、`pipeline_issues.py`、`review.py`、`upload.py`。
+  - `frontend/src/` — React SPA，`pages/` 含 `/chat`（Round 9 P1-v1 MVP）与 `/browse`（三 tab 管道验证台：provenance / coverage / review）。
+
+- `libs/miroflow-tools/` — 共享 `ToolManager`、MCP servers、dev MCP servers。
+
+**辅助/历史应用**（非当前主线，修改前对齐 owner）
+
+- `apps/collect-trace/` — agent trace → SFT/DPO 转换。
+- `apps/gradio-demo/` — 本地 Gradio + vLLM demo。
+- `apps/visualize-trace/` — Flask trace 仪表盘。
+- `apps/lobehub-compatibility/` — LobeChat 适配器。
+
+**协作记录与文档**
+
+- `.agents/` — `specs/`、`handoffs/`、`reviews/`、`harness/`。
+- `docs/` — PRD、架构、`plans/`、`solutions/`、`architecture-decisions/`（ADR）、`source_backfills/`（补全用 JSONL/XLSX），入口 `docs/index.md`。
+
+## 5. Common commands
+
+Repository root:
 
 ```bash
-# Task runner: just (https://github.com/casey/just)
-# Package manager: uv (https://docs.astral.sh/uv/)
-
-# Install dependencies (from repo root)
 uv sync
+just lint
+just format
+just sort-imports
+just precommit
+just check-license
+just insert-license
+just format-md
+```
 
-# Linting & formatting (from repo root, pinned to ruff@0.8.0)
-just lint              # Ruff linter with auto-fix
-just format            # Ruff formatter
-just sort-imports      # Organize imports
-just precommit         # Run all pre-commit checks (lint + format + license + markdown)
+Agent app:
 
-# License compliance
-just check-license     # Verify REUSE license headers
-just insert-license    # Add missing license headers
-
-# Markdown formatting
-just format-md         # Format with mdformat
-
-# Tests (from apps/miroflow-agent/)
+```bash
 cd apps/miroflow-agent
-uv run pytest                              # Run all tests (parallel by default via -n=auto in pyproject.toml)
-uv run pytest tests/test_foo.py            # Single test file
-uv run pytest -k "test_name"               # Single test by name
-uv run pytest -m unit                      # By marker: unit, integration, slow, requires_api_key
-uv run pytest -n0                          # Disable parallel execution for debugging
-
-# Running the agent (from apps/miroflow-agent/)
+uv run pytest
+uv run pytest tests/test_foo.py
+uv run pytest -k "test_name"
+uv run pytest -m unit
+uv run pytest -m integration
+uv run pytest -m slow
+uv run pytest -m requires_api_key
+uv run pytest -n0
 uv run python -m src.core.pipeline agent=mirothinker_v1.5 llm=default benchmark=debug
-# Override Hydra config groups: agent=<variant> llm=<provider> benchmark=<suite> data_agent=<config>
-
-# Data agent E2E scripts (from apps/miroflow-agent/)
 uv run python scripts/run_company_import_e2e.py
 uv run python scripts/run_professor_crawler_e2e.py
 uv run python scripts/run_paper_release_e2e.py
 uv run python scripts/run_patent_import_e2e.py
 ```
 
-## Architecture
+Run the narrowest relevant check first, then broaden. Never claim completion without verification evidence or a clear reason a check could not run.
 
-### Monorepo Layout
+## 6. Non-negotiable invariants
 
-- **`apps/miroflow-agent/`** — Core agent framework (primary app). Hydra-based config in `conf/`, source in `src/`.
-- **`apps/collect-trace/`** — Harvests training data from agent runs, converts to SFT/DPO format.
-- **`apps/gradio-demo/`** — Local web UI using Gradio + vLLM.
-- **`apps/visualize-trace/`** — Flask dashboard for analyzing agent reasoning traces.
-- **`apps/lobehub-compatibility/`** — LobeChat integration adapter.
-- **`libs/miroflow-tools/`** — Shared library: `ToolManager` + pre-built MCP servers.
-- **`docs/solutions/`** — Documented solutions to past implementation/debugging issues.
+- `docs/Data-Agent-Shared-Spec.md` outranks domain-local convenience.
+- Evidence must remain structured, traceable, source-grounded, and suitable for user-facing audit.
+- Domain modules may use independent physical schemas but must conform to shared logical contracts.
+- Cross-domain linking must use normalization plus public evidence, not ad-hoc heuristics.
+- Structured outputs must stay Pydantic-validated where the data-agent contract requires it.
+- Do not silently change public APIs, serialized formats, benchmark output formats, or data contracts.
+- Secrets, API keys, tokens, cookies, and credentials must come from environment variables or approved secret managers. Never hardcode them.
+- Prefer boring, inspectable, agent-legible designs over clever abstractions.
+- Make changed lines traceable to the task. Avoid drive-by refactors, broad formatting, and unrelated cleanup.
+- Repeatedly violated rules should become tests, lint rules, hooks, CI checks, or documented invariants rather than more prompt text.
 
-### Core Agent Runtime (`apps/miroflow-agent/src/core/`)
+## 7. Task classification
 
-The base runtime from MiroThinker, reused by both benchmark tasks and data agents:
+**Tiny**: typo, doc note, obvious local bug, reversible one- or two-file edit, no schema/API/auth/security/concurrency/performance impact. Inspect local context, apply the smallest fix or delegate it, run a narrow check, review the diff.
 
-- **Pipeline** — Factory & entry point: creates tool managers, formatters, kicks off task execution.
-- **Orchestrator** — Main execution loop: multi-turn reasoning, sub-agent delegation, context compression, rollback.
-- **ToolExecutor** — Runs tool calls with retries/error handling; handles both MCP tools and sub-agent calls.
-- **AnswerGenerator** — Produces final answers; supports both `\boxed{}` (benchmark) and JSON (data agents) output modes.
-- **StreamHandler** — Real-time streaming event management.
+**Standard**: local feature, moderate refactor, user-visible behavior change, contract/test update. Flow: clarify goal and done criteria → write/update `.agents/specs/...` and `.agents/handoffs/...` → Codex implements/verifies → Claude reviews.
 
-### Data Agents (`apps/miroflow-agent/src/data_agents/`)
+**Epic/Risky**: new feature area, core refactor, schema/storage/API change, trust boundary, auth/secrets, background jobs, retries, state machines, concurrency, idempotency, caching, performance-sensitive or multi-session work. Flow: pressure-test scope → lock architecture/invariants/validation → plan implementation slices → Codex implements each slice → Claude reviews each slice → durable lessons go to `docs/solutions/`.
 
-Four domain-specific data collection agents built on top of the core runtime. Each follows the shared spec in `docs/Data-Agent-Shared-Spec.md`.
+## 8. Task artifacts
 
-**Shared layer:**
-- **`contracts.py`** — Pydantic models for all domains: `Evidence`, `QualityStatus`, `ObjectType`, ID prefixes (`PROF-`, `COMP-`, `PAPER-`, `PAT-`), Shenzhen institution keywords.
-- **`runtime.py`** — Structured-output task execution: wraps `pipeline.py` to emit validated JSON instead of `\boxed{}` answers.
-- **`normalization.py`** / **`linking.py`** / **`evidence.py`** — Cross-domain normalization, entity linking, evidence tracking.
-- **`publish.py`** — Publishing pipeline for release artifacts.
-- **`providers/`** — LLM adapters (MiroThinker, Qwen) and web search provider, configured via `conf/data_agent/default.yaml`.
-- **`storage/`** — SQLite and Milvus persistence. **`service/`** — Cross-domain search service.
+For Standard or Epic/Risky work, externalize state before implementation:
 
-**Domain modules** (each has `models.py`, pipeline, import/enrichment, release):
-- **`company/`** — Import from 企名片 xlsx, enrichment via web scraping, profile/evaluation/tech-route summary generation.
-- **`professor/`** — Roster discovery from Shenzhen university websites, profile enrichment, name selection/disambiguation, validation.
-- **`paper/`** — Professor-anchored paper collection from Semantic Scholar, OpenAlex, CrossRef; hybrid merge; professor feedback loop.
-- **`patent/`** — Import from patent xlsx, company/professor linkage, summary generation.
+- `.agents/specs/<YYYY-MM-DD>-<slug>.md` — Claude-owned design contract.
+- `.agents/handoffs/<YYYY-MM-DD>-<slug>.md` — Codex implementation handoff.
+- `.agents/reviews/<YYYY-MM-DD>-<slug>.md` — Claude review and rework decision.
 
-### Hydra Configuration (`apps/miroflow-agent/conf/`)
+Design contracts should include: goal, user-visible behavior, non-goals, affected paths, architecture/data flow, interface/type/Pydantic expectations, invariants, edge cases, failure modes, validation commands, expected evidence, migration/rollback notes, assumptions, and open questions.
 
-- **`config.yaml`** — Entry point with defaults: `llm`, `agent`, `benchmark`, `data_agent`.
-- **`agent/`** — 13 agent variants. `default.yaml` defines main_agent tools + sub_agents. `mirothinker_v1.5.yaml` is the main research variant.
-- **`llm/`** — 4 LLM provider configs (default, Claude 3.7, GPT-5, Qwen-3).
-- **`benchmark/`** — 17 benchmark suite configs.
-- **`data_agent/`** — Data agent configs (provider endpoints, output paths, publish settings).
+Handoffs should include: spec path, slice scope, source docs to read, likely files/directories, explicit do-not rules, tests/checks, done criteria, and what Codex must report back.
 
-### MCP Tool Ecosystem (`libs/miroflow-tools/`)
+When compacting or restarting, preserve task slug, artifact paths, acceptance criteria, changed files, commands/results, unresolved risks, and next owner.
 
-`ToolManager` manages MCP server lifecycle (stdio/SSE transports). Servers in `mcp_servers/`:
-- Search: Google, Sogou, Serper
-- Execution: Python sandbox (local + E2B)
-- Extraction: Vision (VQA), Audio transcription, Document reading
-- Reasoning: LLM-based reasoning tools
+## 9. Review and completion policy
 
-`dev_mcp_servers/` contains higher-level compound tools: `search_and_scrape_webpage`, `jina_scrape_llm_summary`.
+Claude reviews Codex output against the approved contract, acceptance criteria, unchanged invariants, interface contracts, evidence traceability, touched-file boundaries, command output, security/trust boundaries, concurrency/retry/state/idempotency/performance risks, docs drift, and migration/rollback risk.
 
-### Key Design Patterns
+Do not declare done unless:
 
-- **Hierarchical agents**: Main agent delegates to sub-agents (e.g., browsing agent) with independent tool sets. Tool blacklisting prevents problematic combinations.
-- **Structured output mode**: Data agents use `runtime.py` to get JSON-validated Pydantic outputs from the agent loop, bypassing the benchmark-style `\boxed{}` extraction.
-- **Domain independence with shared contracts**: Each data domain has independent physical schema but must conform to shared logical contracts (evidence structure, ID prefixes, filter semantics, minimum fields).
-- **Cross-domain dependencies**: Paper → Professor roster (anchoring), Paper → Professor enrichment (feedback), Company ↔ Professor/Patent (linking via normalized names and public evidence).
+- contract scope is implemented;
+- relevant checks passed, or failures are explicitly explained;
+- public docs are updated when behavior changed;
+- no secrets or credentials are hardcoded;
+- risks, assumptions, and unsupported checks are stated;
+- Claude has decided accept / revise / reject after review.
 
-## Tech Stack
+## 10. Skills, plugins, and deterministic controls
 
-- Python 3.12+, uv package manager, Hydra config, Ruff linter/formatter
-- MCP (`mcp`, `fastmcp`) for tool protocol
-- Anthropic + OpenAI SDKs for LLM providers
-- Playwright for browser automation, E2B for sandboxed code execution
-- Pydantic for data contracts and validation
-- SQLite + Milvus for data agent storage
-- pytest with xdist (parallel), markers (`unit`, `integration`, `slow`, `requires_api_key`), and snapshot testing (`inline-snapshot`)
+Use skills/plugins as targeted harness components, not an always-on ritual.
 
-### Agentic RAG env vars (M4+)
+- Use gstack / Compound / Superpowers / BMAD only when the task genuinely needs architecture challenge, technical planning, TDD slice design, QA, or epic-level product decomposition.
+- Do not chain planning frameworks by default. One good plan is better than stacked rituals.
+- Keep detailed plugin command catalogs outside this root file, for example in `.agents/harness/skills.md` or tool-specific docs.
+- Deterministic requirements belong in hooks, permissions, lint, tests, CI, or secret scans whenever possible.
 
-Chat retrieval layer uses `RetrievalService` (M3). Controlled by:
+## 11. Parallelism and protected files
 
-- `CHAT_USE_RETRIEVAL_SERVICE` — default `on`. Set `off` to revert to
-  pre-M4 SQL LIKE paths (B/D routes) and rule-based FAQ (E route).
-- `CHAT_E_WEB_FALLBACK_THRESHOLD` — default `0.5`. E-route triggers Serper
-  fallback when local paper-retrieve top-1 rerank score is below this.
-- `CHAT_MILVUS_URI` — Milvus URI used by admin-console chat retrieval.
-  Prefer this over `MILVUS_URI`: pymilvus reads `MILVUS_URI` globally at
-  import and rejects milvus-lite file paths as "illegal URI". Defaults to
-  `./milvus.db` (relative to `apps/admin-console/`).
-- `MILVUS_USE_REAL_CLIENT` — default off. Set `1`/`true`/`on` to make
-  `milvus_collections.py` stop delegating `.db` URIs to the in-memory test
-  shim. Required for production / ops runs that actually persist vectors;
-  leave unset for unit tests that use `.db` tmp paths with in-memory
-  semantics.
-- `MILVUS_URI` — used by `scripts/run_milvus_backfill.py` and legacy
-  callers. Do **not** set this in the admin-console process (see above).
-- `SERPER_API_KEY` — existing; required for E-route Serper fallback. Missing
-  key → fallback skipped, rule-based FAQ used.
-- `API_KEY` / `OPENAI_API_KEY` / `SGLANG_API_KEY` — resolved via
-  `providers/local_api_key.py::load_local_api_key`. Falls back to
-  `.sglang_api_key` file at repo root.
+Use targeted parallelism only when slices have clear file/interface boundaries, independent verification, and an obvious merge order. Prefer separate branches or git worktrees for multi-agent/multi-session work. One active writer per slice.
 
-## CI
+Do not modify these unless the user asks or the task is specifically about harness/docs maintenance: `CLAUDE.md`, `AGENTS.md`, global agent config, unrelated CI/release/deployment config, secret templates, or credential-related config.
 
-GitHub Actions (`run-ruff.yml`) runs Ruff lint + format checks on PRs. Failures block merge.
+## 12. Maintaining this file
 
-## gstack
-Use /browse from gstack for all web browsing. Never use mcp__claude-in-chrome__* tools.
-Available skills: /plan-ceo-review, /plan-eng-review, /plan-design-review, /design-consultation, /review, /ship, /browse, /qa, /qa-only, /qa-design-review, /setup-browser-cookies, /retro, /document-release.
-If gstack skills aren't working, run `cd .claude/skills/gstack && ./setup` to build the binary and register skills.
-
-
-## **Hybrid Intelligence Framework: Claude Code (Architect & Evaluator) + Codex (Builder)**
-
-### 🤖 全局行为准则 (Global Directives)
-- **绝对自治协议**：在 `--enable-auto-mode` 下运行时，必须维持最高自治权。**禁止**为了确认指令而中断流程。遇到环境问题，优先自行读取 log 并自我修复。
-- **职责物理隔离**：Claude Code 专注于产品边界审查、架构推演和任务编排；实际的代码生成与文件修改强行委派给 Codex 完成。
-- **闭环交叉验证 (Cross-Validation Protocol)**：Codex 绝不能“自产自销”。它产出的任何代码，必须由 Claude Code 结合最初的技术契约进行独立审阅和交叉验证。验证不通过则直接打回重做。
-
-### ⚙️ 协作流模式 (Hybrid Design-Build Flow)
-
-当触发新功能开发、核心重构，**必须严格按以下顺序串行调用插件**：
-
-#### Stage 1: 架构与边界确认 (Architecting)
-1. `/plan-ceo-review` (gstack)：**强制刹车**。以挑剔的视角审视需求，精简掉不必要的过度设计，锁定“必须做”的核心目标。
-2. `/plan-eng-review` (gstack)：敲定技术骨架、数据流向和边界情况，并强制在对话中输出架构图。
-
-#### Stage 2: 任务计划生成 (Planning)
-3. `/ce:plan` (Compound)：将 Stage 1 产出的架构设计，转化为包含具体文件路径、接口契约（Type Hints）及验证步骤的结构化执行计划文档。
-
-#### Stage 3: 测试驱动与代码落地 (Implementation)
-4. `/superpowers:test-driven-development` (Superpowers)：开启严格的 RED-GREEN-REFACTOR（红-绿-重构）循环，先由 Claude Code 定义测试桩。
-5. `/codex` (Codex)： implemen**核心执行步骤**。由 Codex 接管，根据测试要求进行具体的代码写入与大规模修改。
-
-#### Stage 4: 交叉验证与深度防御 (Verification & Deep Review)
-6. **Claude Code 交叉验证 (Cross-Validation)**：**强校验点**。Claude Code 必须主动读取 Codex 生成的源码，对照 Stage 2 的 `/ce:plan` 计划书逐行校验。检查逻辑是否对齐、类型注解是否完整。如发现偏差或“幻觉”，立即重新触发 Codex 进行修正。如果是Claude Code 实现的代码，必须使用 Codex 对照 Stage 2 的 `/ce:plan` 计划书逐行校验。 检查逻辑是否对齐、类型注解是否完整。如发现偏差或“幻觉”，立即重新触发 Claude Code 进行修正。
-7. `/ce:review` ：**禁止挑剔代码风格**。多代理审查，专门排查常规 AI 容易漏掉的致命生产 Bug：N+1 数据库查询、并发竞争条件、安全信任边界越权。
-
-#### Stage 5: 知识复利 (Compounding)
-8. `/ce:compound` (Compound)：将本次迭代遇到的坑、架构决策及解决方案，永久沉淀至 `docs/solutions/` 目录，确保系统随时间推移越来越聪明。
-
-### 🛠️ 项目约定 (Project Conventions)
-- **语言/框架**：Python 3.11+, FastAPI (Async native)。
-- **凭据管理**：Secrets、API Keys 必须通过环境变量注入，Codex 生成的代码严禁包含任何硬编码凭据。
+Keep `CLAUDE.md` specific and compact. Remove stale generic rules. Link to deeper docs instead of duplicating them. Update `AGENTS.md` when Codex-facing behavior changes. Promote repeated mistakes into checks/docs/skills rather than expanding root instructions indefinitely.
