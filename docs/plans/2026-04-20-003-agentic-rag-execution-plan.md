@@ -45,8 +45,8 @@ grounded_in:
 | 画像反向增强（arxiv→summary） | `batch_reprocess.py` 部分能力 | ⚠️ **半成品** | paper 全文没接入 |
 
 **核心约束**：
-- 本地 Qwen embed/rerank 的 key 是 `k8#pL2@mN9!qjfkew87@#$0204`，通过 `API_KEY` / `.sglang_api_key` 文件或 `resolve_professor_llm_settings` 读取（**不要硬编码**）
-- Serper 的 key 已在 api.md：`cba96f08451642c404770b65ab2d4494b7f61e2e`；读取用 `SERPER_API_KEY` 环境变量
+- 本地 Qwen embed/rerank 的 key 通过 `API_KEY` / `.sglang_api_key` 文件或 `resolve_professor_llm_settings` 读取（**不要硬编码**）
+- Serper 的 key 通过 `SERPER_API_KEY` 环境变量读取，真实值不得写入 plan 或 api.md
 - 所有 HTTP 调用必须 `trust_env=False` 或 `proxy=None`（历史踩过代理坑，memory 有记录）
 
 ---

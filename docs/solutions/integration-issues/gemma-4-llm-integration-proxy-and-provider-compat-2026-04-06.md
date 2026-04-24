@@ -89,10 +89,10 @@ Called at three levels:
 ### Fix 3: API key via environment variable
 
 ```bash
-API_KEY='k8#pL2@mN9!qjfkew87@#$0204' .venv/bin/python scripts/run_professor_pipeline_v3_e2e.py
+API_KEY='...' .venv/bin/python scripts/run_professor_pipeline_v3_e2e.py
 ```
 
-Key stored in `.sglang_api_key` at repo root. E2E scripts read from `API_KEY` env var.
+Store the real key in the shell environment or local `.sglang_api_key` at repo root. E2E scripts read from `API_KEY` env var.
 
 ### Fix 4: Provider-aware `extra_body` (found by Codex cross-validation)
 

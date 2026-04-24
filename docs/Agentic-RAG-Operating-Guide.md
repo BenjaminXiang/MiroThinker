@@ -1,10 +1,10 @@
 # Agentic RAG 操作指南
 
-> 面向运维人员的实操手册。系统代码已全部 ship；本文讲 **如何把它跑起来**。
+> 面向运维人员的实操手册。核心代码路径已在 repo；本文讲 **如何把当前实现跑起来**。完整 PRD 完成度以 [docs/index.md](./index.md) 的状态矩阵和已归档 dogfood 结果为准。
 >
 > 配套参考：
 > - `docs/plans/2026-04-20-003-agentic-rag-execution-plan.md` — 执行计划 (M0-M6)
-> - `docs/solutions/integration-issues/homepage-paper-ingest-dogfood-template-2026-04-22.md` — 首次跑完后填的验收日志
+> - `docs/solutions/integration-issues/homepage-paper-ingest-dogfood-template-2026-04-22.md` — 首次跑完后填的验收日志模板；未填充前不算完成证明
 > - `CLAUDE.md` → "Agentic RAG env vars (M4+)" — 环境变量清单
 
 ## 系统总览
@@ -62,8 +62,10 @@ export MILVUS_URI=./milvus.db             # Milvus-Lite 本地文件
 
 # 本地 LLM (embedding / reranker / gemma4) API key
 # 任选其一设置，或写到 <repo-root>/.sglang_api_key 文件
-export API_KEY="k8#pL2@mN9!qjfkew87@#$0204"
+export API_KEY="..."
 ```
+
+真实 key 不得写入文档或提交到仓库；使用 shell 环境、`.env`、本机 key 文件或批准的 secret manager。
 
 ### 2. 应用 V011 迁移
 
