@@ -30,6 +30,10 @@ from src.data_agents.professor.canonical_writer import (  # noqa: E402
 )
 from src.data_agents.professor.openalex_metrics import fetch_metrics  # noqa: E402
 from src.data_agents.storage.postgres.connection import resolve_dsn  # noqa: E402
+from src.data_agents.storage.postgres.pipeline_run import (  # noqa: E402
+    close_pipeline_run,
+    open_pipeline_run,
+)
 
 _LOG_DIR = _REPO_ROOT / "docs" / "source_backfills"
 _BATCH_SIZE = 50
@@ -68,15 +72,28 @@ def _open_database_connection(database_url: str | None):
 
 
 def _build_select_sql(*, limit: int | None, resume: bool) -> tuple[str, tuple[Any, ...]]:
+    # V003 schema: professor.institution 已迁到 professor_affiliation；这里 LATERAL
+    # JOIN 取 primary affiliation institution，与 data.py PROFESSOR_LIST_SELECT_SQL 一致。
     clauses = ["p.identity_status = 'resolved'"]
     if resume:
         clauses.append("p.metrics_computed_at IS NULL")
     sql = f"""
         SELECT p.professor_id::text AS professor_id,
                p.canonical_name,
-               p.institution,
+               COALESCE(primary_aff.institution, '') AS institution,
                o.orcid
           FROM professor p
+          LEFT JOIN LATERAL (
+              SELECT pa.institution
+                FROM professor_affiliation pa
+               WHERE pa.professor_id = p.professor_id
+               ORDER BY pa.is_primary DESC,
+                        pa.is_current DESC,
+                        pa.start_year DESC NULLS LAST,
+                        pa.created_at DESC NULLS LAST,
+                        pa.affiliation_id DESC
+               LIMIT 1
+          ) primary_aff ON TRUE
           LEFT JOIN professor_orcid o
             ON o.professor_id = p.professor_id
          WHERE {' AND '.join(clauses)}
@@ -242,11 +259,26 @@ def _process_professor(
 
 def run_backfill(args: argparse.Namespace) -> BackfillStats:
     database_url = args.database_url or os.environ.get("DATABASE_URL")
-    run_id = str(uuid.uuid4())
     log_path = _log_path()
     stats = BackfillStats(dry_run=args.dry_run)
 
     with _open_database_connection(database_url) as conn:
+        # 通过 open_pipeline_run 拿合法 run_id（FK 约束要求 pipeline_run 表先有行）
+        # dry-run 时仍拿 run_id 但最后 close 为 cancelled，避免污染统计
+        run_id = str(open_pipeline_run(
+            conn,
+            run_kind="backfill_real",
+            run_scope={
+                "task": "professor_metrics_backfill",
+                "limit": args.limit,
+                "resume": args.resume,
+                "dry_run": args.dry_run,
+            },
+            triggered_by="run_professor_metrics_backfill",
+        ))
+        # 立刻 commit pipeline_run insert，避免长事务回滚
+        conn.commit()
+
         rows = _fetch_professors(conn, limit=args.limit, resume=args.resume)
         stats.profs_total = len(rows)
         batch_writes = 0
@@ -280,6 +312,14 @@ def run_backfill(args: argparse.Namespace) -> BackfillStats:
             conn.rollback()
         elif batch_writes:
             conn.commit()
+
+        # 关闭 pipeline_run（合法状态：running/succeeded/partial/failed）
+        # dry-run 也用 succeeded（流程完成无错；run_scope.dry_run 字段标识用途）
+        try:
+            close_pipeline_run(conn, run_id=run_id, status="succeeded")
+            conn.commit()
+        except Exception as exc:  # noqa: BLE001
+            print(json.dumps({"warn": "close_pipeline_run failed", "error": str(exc)}), file=sys.stderr)
 
     return stats
 

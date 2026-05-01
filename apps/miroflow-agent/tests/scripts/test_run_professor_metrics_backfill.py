@@ -70,6 +70,8 @@ def test_backfill_happy_path_writes_openalex_metrics(tmp_path, monkeypatch):
     upsert = MagicMock()
     monkeypatch.setattr(cli, "_LOG_DIR", tmp_path)
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
+    monkeypatch.setattr(cli, "open_pipeline_run", lambda *_a, **_kw: "fake-run-id")
+    monkeypatch.setattr(cli, "close_pipeline_run", lambda *_a, **_kw: None)
     monkeypatch.setattr(cli, "_fetch_professors", lambda *_a, **_kw: [_row("PROF-1")])
     monkeypatch.setattr(
         cli,
@@ -90,7 +92,8 @@ def test_backfill_happy_path_writes_openalex_metrics(tmp_path, monkeypatch):
     assert upsert.call_args.kwargs["h_index"] == 12
     assert upsert.call_args.kwargs["citation_count"] == 345
     assert upsert.call_args.kwargs["metrics_source"] == "openalex"
-    assert conn.commits == 1
+    # 3 commits = open_pipeline_run + final batch + close_pipeline_run
+    assert conn.commits == 3
     assert "metrics_source" in next(tmp_path.glob("*.jsonl")).read_text()
 
 
@@ -101,6 +104,8 @@ def test_backfill_no_orcid_writes_verified_link_only(tmp_path, monkeypatch):
     fetch = MagicMock()
     monkeypatch.setattr(cli, "_LOG_DIR", tmp_path)
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
+    monkeypatch.setattr(cli, "open_pipeline_run", lambda *_a, **_kw: "fake-run-id")
+    monkeypatch.setattr(cli, "close_pipeline_run", lambda *_a, **_kw: None)
     monkeypatch.setattr(
         cli, "_fetch_professors", lambda *_a, **_kw: [_row("PROF-2", orcid=None)]
     )
@@ -122,6 +127,8 @@ def test_backfill_fetch_failure_files_pipeline_issue(tmp_path, monkeypatch):
     upsert = MagicMock()
     monkeypatch.setattr(cli, "_LOG_DIR", tmp_path)
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
+    monkeypatch.setattr(cli, "open_pipeline_run", lambda *_a, **_kw: "fake-run-id")
+    monkeypatch.setattr(cli, "close_pipeline_run", lambda *_a, **_kw: None)
     monkeypatch.setattr(cli, "_fetch_professors", lambda *_a, **_kw: [_row("PROF-3")])
     monkeypatch.setattr(
         cli,
@@ -155,6 +162,8 @@ def test_backfill_commits_every_50_professors(tmp_path, monkeypatch):
     conn = FakeConn()
     monkeypatch.setattr(cli, "_LOG_DIR", tmp_path)
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
+    monkeypatch.setattr(cli, "open_pipeline_run", lambda *_a, **_kw: "fake-run-id")
+    monkeypatch.setattr(cli, "close_pipeline_run", lambda *_a, **_kw: None)
     monkeypatch.setattr(
         cli,
         "_fetch_professors",
@@ -165,5 +174,6 @@ def test_backfill_commits_every_50_professors(tmp_path, monkeypatch):
     stats = cli.run_backfill(_args())
 
     assert stats.profs_successful == 51
-    assert conn.commits == 2
+    # 4 commits = open_pipeline_run + 50-prof batch + final-1prof batch + close_pipeline_run
+    assert conn.commits == 4
     assert conn.rollbacks == 0

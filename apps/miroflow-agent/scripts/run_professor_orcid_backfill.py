@@ -160,19 +160,34 @@ def _open_database_connection(url: str):
 def _build_select_sql(
     *, limit: int | None, institution: str | None, prof_id: str | None
 ) -> tuple[str, tuple]:
-    clauses = ["homepage_url IS NOT NULL OR canonical_name IS NOT NULL"]
+    # V003 schema: professor.institution 已迁到 professor_affiliation 多对多表；
+    # 这里 LATERAL JOIN 取 primary affiliation institution。
+    clauses = ["p.canonical_name IS NOT NULL"]
     params: list = []
     if institution:
-        clauses.append("institution ILIKE %s")
+        clauses.append("primary_aff.institution ILIKE %s")
         params.append(f"%{institution}%")
     if prof_id:
-        clauses.append("professor_id = %s")
+        clauses.append("p.professor_id = %s")
         params.append(prof_id)
     sql = (
-        "SELECT professor_id, canonical_name, institution "
-        "  FROM professor "
+        "SELECT p.professor_id, p.canonical_name, "
+        "       COALESCE(primary_aff.institution, '') AS institution "
+        "  FROM professor p "
+        "  LEFT JOIN LATERAL ("
+        "    SELECT pa.institution"
+        "    FROM professor_affiliation pa"
+        "    WHERE pa.professor_id = p.professor_id"
+        "    ORDER BY"
+        "      pa.is_primary DESC,"
+        "      pa.is_current DESC,"
+        "      pa.start_year DESC NULLS LAST,"
+        "      pa.created_at DESC NULLS LAST,"
+        "      pa.affiliation_id DESC"
+        "    LIMIT 1"
+        "  ) primary_aff ON TRUE "
         f" WHERE {' AND '.join(clauses)} "
-        " ORDER BY professor_id"
+        " ORDER BY p.professor_id"
     )
     if limit is not None:
         sql += " LIMIT %s"
