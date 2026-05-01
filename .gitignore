@@ -230,7 +230,9 @@ data/
 .python-version
 
 # AI tool local state
-.agents/
+# .agents/ 内部分两类：specs/handoffs/reviews 是协作记录入 git（CLAUDE.md §8）；
+# skills/ 含独立 git repo（如 gstack 487MB），必须 ignore
+.agents/skills/
 .codex
 .context/
 config/
