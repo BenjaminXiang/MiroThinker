@@ -22,23 +22,25 @@ import asyncio
 import json
 import logging
 import os
-import time
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from src.data_agents.contracts import quality_status_compatibility_rows
-from src.data_agents.publish import publish_jsonl
+from src.data_agents.storage.postgres.connection import connect as pg_connect
+from src.data_agents.storage.postgres.professor_orcid import get_professor_orcid
 
+from .canonical_writer import upsert_professor_metrics
 from .company_linker import verify_company_link
 from .completeness import assess_completeness
 from .cross_domain import CompanyLink, PaperStagingRecord
 from .cross_domain_linker import find_company_by_name, write_bidirectional_link
 from .direction_cleaner import clean_directions
-from .enrichment import build_profile_record, normalize_text
 from .homepage_crawler import _sanitize_title, crawl_homepage
 from .models import EnrichedProfessorProfile, MergedProfessorProfileRecord
+from .openalex_metrics import fetch_metrics as fetch_openalex_metrics
 from .paper_publication import build_paper_domain_publication
 from .pipeline import run_professor_pipeline
 from .publish_helpers import (
@@ -159,6 +161,10 @@ class PipelineV3Report:
     released_count: int = 0
     quality_distribution: dict[str, int] = field(default_factory=dict)
     vectorized_count: int = 0
+    metrics_refreshed_count: int = 0
+    metrics_openalex_count: int = 0
+    metrics_verified_link_only_count: int = 0
+    metrics_failed_count: int = 0
     alerts: list[str] = field(default_factory=list)
 
 
@@ -279,6 +285,146 @@ def _append_jsonl(path: Path, obj: Any) -> None:
         else:
             data = obj
         f.write(json.dumps(data, ensure_ascii=False) + "\n")
+
+
+def _metrics_source_from_openalex(metrics: Any, *, has_orcid: bool) -> tuple[str, int | None, int | None]:
+    has_openalex_values = (
+        has_orcid
+        and getattr(metrics, "source", None) == "openalex"
+        and (
+            getattr(metrics, "h_index", None) is not None
+            or getattr(metrics, "citation_count", None) is not None
+        )
+    )
+    if has_openalex_values:
+        return (
+            "openalex",
+            getattr(metrics, "h_index", None),
+            getattr(metrics, "citation_count", None),
+        )
+    return "verified_link_only", None, None
+
+
+def _file_metrics_pipeline_issue(
+    conn: Any,
+    *,
+    professor_id: str,
+    institution: str | None,
+    run_id: str,
+    message: str,
+    details: dict[str, Any] | None = None,
+) -> int:
+    evidence_snapshot = json.dumps(
+        {
+            "run_id": run_id,
+            "issue_type": "metrics_fetch_failed",
+            "message": message,
+            "details": details or {},
+        },
+        ensure_ascii=False,
+        default=str,
+    )
+    cursor = conn.execute(
+        """
+        INSERT INTO pipeline_issue (
+            professor_id,
+            institution,
+            stage,
+            severity,
+            description,
+            evidence_snapshot,
+            reported_by
+        )
+        VALUES (%s, %s, 'data_quality_flag', 'medium', %s, %s::jsonb, %s)
+        ON CONFLICT DO NOTHING
+        """,
+        (
+            professor_id,
+            institution,
+            f"[metrics_fetch_failed] {message}",
+            evidence_snapshot,
+            "professor_pipeline_v3_metrics",
+        ),
+    )
+    return int(getattr(cursor, "rowcount", 0) or 0)
+
+
+def _record_metrics_failure(
+    conn: Any,
+    *,
+    professor_id: str,
+    profile: EnrichedProfessorProfile,
+    run_id: str,
+    error: Exception,
+    report: PipelineV3Report,
+) -> None:
+    report.metrics_failed_count += 1
+    try:
+        conn.rollback()
+        _file_metrics_pipeline_issue(
+            conn,
+            professor_id=professor_id,
+            institution=profile.institution,
+            run_id=run_id,
+            message=f"Metrics refresh failed for {professor_id}: {error}",
+            details={"professor_name": profile.name, "error": str(error)},
+        )
+        conn.commit()
+    except Exception as issue_error:  # noqa: BLE001
+        conn.rollback()
+        report.alerts.append(f"metrics_issue_file_failed:{professor_id}:{issue_error}")
+
+
+def _refresh_academic_metrics_for_released_profiles(
+    *,
+    released_profiles: list[tuple[str, EnrichedProfessorProfile, str]],
+    run_id: str,
+    report: PipelineV3Report,
+) -> None:
+    if not released_profiles:
+        return
+
+    try:
+        with pg_connect() as conn:
+            for professor_id, profile, _quality_status in released_profiles:
+                try:
+                    orcid = get_professor_orcid(conn, professor_id)
+                    metrics = fetch_openalex_metrics(orcid=orcid) if orcid else None
+                    metrics_source, h_index, citation_count = (
+                        _metrics_source_from_openalex(
+                            metrics,
+                            has_orcid=bool(orcid),
+                        )
+                        if metrics is not None
+                        else ("verified_link_only", None, None)
+                    )
+                    upsert_professor_metrics(
+                        conn,
+                        professor_id=professor_id,
+                        h_index=h_index,
+                        citation_count=citation_count,
+                        metrics_source=metrics_source,
+                        run_id=run_id,
+                    )
+                    conn.commit()
+                    report.metrics_refreshed_count += 1
+                    if metrics_source == "openalex":
+                        report.metrics_openalex_count += 1
+                    else:
+                        report.metrics_verified_link_only_count += 1
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning("Metrics refresh failed for %s: %s", professor_id, exc)
+                    _record_metrics_failure(
+                        conn,
+                        professor_id=professor_id,
+                        profile=profile,
+                        run_id=run_id,
+                        error=exc,
+                        report=report,
+                    )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Academic metrics refresh skipped: %s", exc)
+        report.alerts.append(f"metrics_refresh_skipped:{exc}")
 
 
 def _load_enriched_profiles(path: Path) -> list[EnrichedProfessorProfile]:
@@ -590,6 +736,7 @@ async def run_professor_pipeline_v3(
 ) -> PipelineV3Result:
     """Run the full V3 professor enrichment pipeline."""
     _clear_proxy_env()
+    run_id = str(uuid.uuid4())
     report = PipelineV3Report()
     output_dir = config.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -801,6 +948,15 @@ async def run_professor_pipeline_v3(
                     write_bidirectional_link(store, prof_id, link)
                 except Exception as e:
                     logger.warning("Cross-domain write failed: %s", e)
+
+    # --- Stage 11.5: Academic Metrics Refresh ---
+    if released_profiles:
+        _log("Stage 11.5: Academic Metrics Refresh")
+        _refresh_academic_metrics_for_released_profiles(
+            released_profiles=released_profiles,
+            run_id=run_id,
+            report=report,
+        )
 
     # --- Stage 10: Vectorization ---
     if not config.skip_vectorize and config.embedding_base_url and released_profiles:

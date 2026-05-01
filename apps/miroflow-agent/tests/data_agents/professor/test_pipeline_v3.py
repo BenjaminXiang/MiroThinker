@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
+from uuid import UUID
 
 import pytest
 
@@ -17,6 +18,7 @@ from src.data_agents.professor.paper_collector import PaperEnrichmentResult
 from src.data_agents.professor.pipeline_v3 import (
     PipelineV3Config,
     PipelineV3Report,
+    _refresh_academic_metrics_for_released_profiles,
     _build_llm_client,
     _build_fallback_llm_client,
     _merged_to_enriched,
@@ -598,6 +600,177 @@ async def test_run_professor_pipeline_v3_upserts_released_paper_and_link_into_sh
     assert links[0].core_facts["professor_id"] == "PROF-TANG"
     assert links[0].core_facts["paper_id"] == papers[0].id
     assert links[0].core_facts["link_status"] == "verified"
+
+
+@pytest.mark.asyncio
+async def test_run_professor_pipeline_v3_metrics_stage_uses_run_id(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    seed_doc = tmp_path / "seeds.md"
+    seed_doc.write_text("- https://www.sustech.edu.cn/zh/letter/\n", encoding="utf-8")
+    output_dir = tmp_path / "output"
+    fixed_run_id = UUID("00000000-0000-0000-0000-000000000123")
+
+    config = PipelineV3Config(
+        seed_doc=seed_doc,
+        output_dir=output_dir,
+        local_llm_base_url="http://example.local/v1",
+        local_llm_model="gemma4",
+        local_llm_api_key="EMPTY",
+        online_llm_base_url="http://example.online/v1",
+        online_llm_model="qwen",
+        online_llm_api_key="EMPTY",
+        skip_web_search=True,
+        skip_vectorize=True,
+    )
+
+    enriched = EnrichedProfessorProfile(
+        name="吴亚北",
+        institution="南方科技大学",
+        department="物理系",
+        title="教授",
+        email="wuyb3@sustech.edu.cn",
+        homepage="https://faculty.sustech.edu.cn/?tagid=wuyb3",
+        research_directions=["二维材料", "电子结构"],
+        profile_summary="吴亚北现任南方科技大学教授，长期从事二维材料电子结构与莫尔超晶格研究。" * 6,
+        evaluation_summary="吴亚北已形成可核验论文画像，检索结果与官网身份一致。",
+        enrichment_source="paper_enriched",
+        evidence_urls=["https://www.sustech.edu.cn/zh/faculties/wuyabei.html"],
+        profile_url="https://www.sustech.edu.cn/zh/faculties/wuyabei.html",
+        roster_source="https://www.sustech.edu.cn/zh/letter/",
+        extraction_status="structured",
+    )
+    conn = SimpleNamespace(
+        commit=MagicMock(),
+        rollback=MagicMock(),
+        execute=MagicMock(return_value=SimpleNamespace(rowcount=1)),
+    )
+
+    async def fake_process_single_professor_v3(**_kwargs):
+        return enriched, [], []
+
+    class _ConnContext:
+        def __enter__(self):
+            return conn
+
+        def __exit__(self, *_exc):
+            return False
+
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3.run_professor_pipeline",
+        lambda *_args, **_kwargs: SimpleNamespace(
+            report=SimpleNamespace(
+                seed_url_count=1,
+                discovered_professor_count=1,
+                unique_professor_count=1,
+                structured_profile_count=1,
+                partial_profile_count=0,
+            ),
+            profiles=[_make_merged_record(name="吴亚北", department="物理系")],
+        ),
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3._build_llm_client",
+        lambda *_args, **_kwargs: MagicMock(),
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3._process_single_professor_v3",
+        fake_process_single_professor_v3,
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3._build_professor_id",
+        lambda _profile: "PROF-WUYABEI",
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3.uuid.uuid4",
+        lambda: fixed_run_id,
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3.pg_connect",
+        lambda: _ConnContext(),
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3.get_professor_orcid",
+        lambda _conn, _professor_id: "0000-0002-1825-009X",
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3.fetch_openalex_metrics",
+        lambda **_kwargs: SimpleNamespace(
+            source="openalex",
+            h_index=15,
+            citation_count=708,
+        ),
+    )
+    upsert_metrics = MagicMock()
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3.upsert_professor_metrics",
+        upsert_metrics,
+    )
+
+    result = await run_professor_pipeline_v3(config)
+
+    assert result.report.metrics_refreshed_count == 1
+    assert result.report.metrics_openalex_count == 1
+    upsert_metrics.assert_called_once()
+    assert upsert_metrics.call_args.kwargs["professor_id"] == "PROF-WUYABEI"
+    assert upsert_metrics.call_args.kwargs["h_index"] == 15
+    assert upsert_metrics.call_args.kwargs["citation_count"] == 708
+    assert upsert_metrics.call_args.kwargs["metrics_source"] == "openalex"
+    assert upsert_metrics.call_args.kwargs["run_id"] == str(fixed_run_id)
+
+
+def test_pipeline_v3_metrics_failure_files_issue_and_continues(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    report = PipelineV3Report()
+    profile = EnrichedProfessorProfile(
+        name="吴亚北",
+        institution="南方科技大学",
+        department="物理系",
+        research_directions=["二维材料"],
+        profile_summary="吴亚北现任南方科技大学教授。" * 12,
+        evaluation_summary="已有可核验画像。",
+        evidence_urls=["https://www.sustech.edu.cn/zh/faculties/wuyabei.html"],
+        profile_url="https://www.sustech.edu.cn/zh/faculties/wuyabei.html",
+        roster_source="https://www.sustech.edu.cn/zh/letter/",
+        extraction_status="structured",
+    )
+    conn = SimpleNamespace(
+        commit=MagicMock(),
+        rollback=MagicMock(),
+        execute=MagicMock(return_value=SimpleNamespace(rowcount=1)),
+    )
+
+    class _ConnContext:
+        def __enter__(self):
+            return conn
+
+        def __exit__(self, *_exc):
+            return False
+
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3.pg_connect",
+        lambda: _ConnContext(),
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3.get_professor_orcid",
+        lambda _conn, _professor_id: "0000-0002-1825-009X",
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3.fetch_openalex_metrics",
+        MagicMock(side_effect=RuntimeError("openalex 503")),
+    )
+
+    _refresh_academic_metrics_for_released_profiles(
+        released_profiles=[("PROF-WUYABEI", profile, "ready")],
+        run_id="run-1",
+        report=report,
+    )
+
+    assert report.metrics_failed_count == 1
+    assert report.metrics_refreshed_count == 0
+    assert any("INSERT INTO pipeline_issue" in call.args[0] for call in conn.execute.call_args_list)
 
 
 @pytest.mark.asyncio

@@ -33,6 +33,7 @@ if str(_REPO_ROOT) not in sys.path:
 from src.data_agents.storage.postgres.professor_orcid import (  # noqa: E402
     upsert_professor_orcid,
 )
+from src.data_agents.storage.postgres.connection import resolve_dsn  # noqa: E402
 
 logger = logging.getLogger("run_professor_orcid_backfill")
 
@@ -153,7 +154,7 @@ def _score_author_match(author: dict, prof: dict) -> float:
 
 
 def _open_database_connection(url: str):
-    return psycopg.connect(url, row_factory=dict_row)
+    return psycopg.connect(resolve_dsn(url), row_factory=dict_row)
 
 
 def _build_select_sql(
