@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 OFFICIAL_FACT_CONFIDENCE = Decimal("0.85")
 NON_OFFICIAL_FACT_CONFIDENCE = Decimal("0.70")
+_METRICS_SOURCES = {"openalex", "verified_link_only", "mixed"}
 
 _DISCIPLINE_KEYWORDS: tuple[tuple[str, tuple[str, ...]], ...] = (
     (
@@ -446,6 +447,53 @@ def write_professor_bundle(
         papers_written=len(written_paper_ids),
         professor_paper_links_written=len(written_link_keys),
         professor_paper_links_verified=len(verified_link_keys),
+    )
+
+
+def upsert_professor_metrics(
+    conn: Connection,
+    *,
+    professor_id: str,
+    h_index: int | None,
+    citation_count: int | None,
+    metrics_source: str | None,
+    run_id: UUID | str | None,
+) -> None:
+    """Compute verified paper_count and write professor academic metrics."""
+
+    if metrics_source is None:
+        if h_index is not None or citation_count is not None:
+            raise ValueError("metrics_source is required when OpenAlex metrics exist")
+        return
+    if metrics_source not in _METRICS_SOURCES:
+        raise ValueError(f"invalid metrics_source: {metrics_source}")
+
+    paper_count_row = conn.execute(
+        """
+        SELECT count(*)::int AS n
+        FROM professor_paper_link
+        WHERE professor_id = %s AND link_status = 'verified'
+        """,
+        (professor_id,),
+    ).fetchone()
+    paper_count = int(
+        paper_count_row["n"] if isinstance(paper_count_row, dict) else paper_count_row[0]
+    ) if paper_count_row else 0
+
+    conn.execute(
+        """
+        UPDATE professor
+        SET h_index = %s,
+            citation_count = %s,
+            paper_count = %s,
+            metrics_computed_at = LEAST(now(), COALESCE(last_refreshed_at, now())),
+            metrics_source = %s,
+            run_id = %s,
+            updated_at = now()
+        WHERE professor_id = %s
+          AND identity_status <> 'merged_into'
+        """,
+        (h_index, citation_count, paper_count, metrics_source, run_id, professor_id),
     )
 
 

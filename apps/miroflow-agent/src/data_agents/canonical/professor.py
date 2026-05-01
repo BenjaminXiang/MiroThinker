@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -36,6 +37,12 @@ class Professor(BaseModel):
     # Round 9.1b / 7.19c — optional bio fields (columns land via future migration)
     profile_summary: str | None = None
     profile_raw_text: str | None = None
+    # W9-1: academic metrics (PRD module 1 R2)
+    h_index: int | None = None
+    citation_count: int | None = None
+    paper_count: int | None = None
+    metrics_computed_at: datetime | None = None
+    metrics_source: Literal["openalex", "verified_link_only", "mixed", None] = None
 
 
 class ProfessorAffiliation(BaseModel):
