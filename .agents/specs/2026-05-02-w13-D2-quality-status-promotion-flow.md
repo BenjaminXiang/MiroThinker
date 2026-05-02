@@ -1,13 +1,16 @@
 ---
-title: "W13-D2: quality_status promotion 流程（让 reassess 有候选）"
+title: "W13-D2: quality_status promotion 流程（option C 混合）"
 date: 2026-05-02
 owner: claude
-status: blocked-on-user-decision
-audience: user（决策）；codex（实施）；claude review
+status: ready-for-codex
+revision: 2
+revised_reason: "user 决策（2026-05-02）：选 C 混合（高置信 auto / 中置信 pipeline_issue / 低置信保留 needs_review）"
+audience: codex（实施）；claude review
 wave: Wave 13 follow-up
 related_specs:
   - .agents/specs/2026-05-02-w13-6-quality-status-alembic-v019.md
   - .agents/specs/2026-05-02-w12-7-summary-quality-gate.md
+  - .agents/specs/2026-05-02-w13-12-paper-patent-identity-status.md
 ---
 
 # W13-D2: quality_status promotion 流程
@@ -72,32 +75,60 @@ professor / company / paper 仍全部 'needs_review'。
     （V019 之后）应该可以正常跑；W13-D2 land 后 reassess 才能找到候选
 ```
 
-## 5. 决策表（user 填）
+## 5. 决策（user 已选 C 2026-05-02）
 
-| 项 | A（auto） | B（review） | C（混合）| 决策 |
-|---|---|---|---|---|
-| professor 默认 | auto-promote 含 identity_status='confirmed' | review only | auto if confirmed AND summary | __ |
-| company 默认 | auto if narrative 完整 | review only | auto if 双 summary | __ |
-| paper 默认 | auto if summary_zh 非空 | review only | auto if summary_zh 非空 | __ |
+混合规则 — 每域三档：
 
-## 6. Done criteria（依决策）
+### professor
+| 档 | 条件 | quality_status |
+|---|---|---|
+| high | identity_status='confirmed' AND length(profile_summary) ≥ 150 | 'ready' |
+| medium | identity_status='confirmed' AND length(profile_summary) < 150 | 'needs_review' + pipeline_issue('professor_summary_too_short') |
+| low | identity_status != 'confirmed' | 'needs_review' (无 issue；name-identity gate 已 catch) |
 
-If A or C：
-1. ✅ promote 脚本 dry-run 报告：professor/company/paper 各 N 候选
-2. ✅ 实跑后各域 'ready' 比例符合预期
-3. ✅ W12-7 reassess 重跑：≥ 5 prof 从 ready → partial（W11-7 残留短摘要）
-4. ✅ pipeline_issue 写入历史 trace
+### company
+| 档 | 条件 | quality_status |
+|---|---|---|
+| high | profile_summary IS NOT NULL AND technology_route_summary IS NOT NULL AND length(profile_summary) ≥ 100 | 'ready' |
+| medium | 仅 1 个 summary 非空 | 'needs_review' + pipeline_issue('company_partial_narrative') |
+| low | 双 summary 都缺 | 'needs_review' + pipeline_issue('company_no_narrative') |
 
-If B：
-1. ✅ admin /browse 按钮 "approve ready" 实装
-2. ✅ /api/review/{domain}/{id}/promote API
-3. ✅ 单测覆盖
+### paper
+| 档 | 条件 | quality_status |
+|---|---|---|
+| high | summary_zh IS NOT NULL AND length ≥ 150 AND identity_status='confirmed' (DOI/arXiv 验证) | 'ready' |
+| medium | abstract_clean 非空 BUT (summary_zh 缺 OR identity_status='unverified') | 'needs_review' + pipeline_issue('paper_partial_metadata') |
+| low | abstract_clean 也缺 | 'needs_review' (无 issue；source enrich 时再 catch) |
 
-## 7. Open questions
+### patent
+W13-3 writer 已用规则计算 → 1931 'ready'；W13-12 V020 land 后 + identity_status='confirmed' 时仍 'ready'。本 spec 不动 patent。
 
-- 不动作的话：reassess 永远 0 候选；W12-7 spec §3 描述的 mental model 永远不兑现
-- chat retrieval 路径是否按 quality_status='ready' 过滤？当前 retrieval.py 不过滤；W13-13 才会改
+## 6. Done criteria
 
----
+1. ✅ `run_quality_promote.py` dry-run 报告：professor/company/paper 各 N 候选
+2. ✅ promotion_rules.py 单测覆盖三档分支
+3. ✅ 实跑后各域 'ready' 比例：
+   - professor: ≥ 80%（依赖 W11-7 后 summary 已 ≥ 150 比例）
+   - company: ≥ 95%（98.93% 双 summary 已具备）
+   - paper: ~30%（依赖 V1 summary_zh 47% × identity_status='confirmed' 子集；待 W13-12 land 后实测）
+4. ✅ W12-7 reassess 重跑：≥ 5 prof 从 ready → partial（W11-7 残留短摘要）
+5. ✅ pipeline_issue 写入：partial / no_narrative / paper_partial_metadata
+6. ✅ ruff + 既有 quality / professor 测试不退化
 
-**Action required**: user 在 §5 决策表填 A/B/C，并明确各域规则参数。Claude 收到后立刻起 follow-up impl spec。
+## 7. 顺序依赖
+
+依赖：
+- W13-6 V019 已 land ✅（quality_status 列）
+- W13-12 V020 paper/patent identity_status — paper promote 需要
+
+可并行：
+- W13-11 / W13-13 / W13-7 / W13-9（不冲突文件）
+
+## 8. Open questions（已锁）
+
+| 问题 | 决策 |
+|---|---|
+| 三档规则 | 已锁见 §5 |
+| 中档是否同时写 needs_review？| 是 + pipeline_issue trace |
+| reassess 重跑时机 | promote 落地后立即 |
+| chat retrieval filter | 由 W13-13 spec 处理（默认 ready 过滤；env 关闭兜底）|

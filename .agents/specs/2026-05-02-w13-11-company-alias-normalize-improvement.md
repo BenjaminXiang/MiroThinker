@@ -49,7 +49,7 @@ PRD §10 要求 patent 关联企业 ≥ 90%。当前差距巨大。根因：
 ```
 
 ### 3.2 alias 表
-新建 `company_alias` 表（V020 alembic）或在 company 表加 `aliases JSONB[]` 字段：
+在 company 表加 `aliases JSONB` 列（V021 alembic — V020 已被 W13-12 占用）：
 
 ```sql
 ALTER TABLE company ADD COLUMN aliases JSONB DEFAULT '[]'::jsonb;
@@ -72,8 +72,8 @@ ALTER TABLE company ADD COLUMN aliases JSONB DEFAULT '[]'::jsonb;
     link_company_ids: 失败时降级 fuzzy match（可选）
 
 新增：
-  apps/miroflow-agent/alembic/versions/V020_add_company_aliases.py
-    （选项 a：单列 JSONB；选项 b：单独 company_alias 表 — 选 a 简单）
+  apps/miroflow-agent/alembic/versions/V021_add_company_aliases.py
+    （单列 JSONB；V020 已被 W13-12 paper/patent identity_status 占用）
   apps/miroflow-agent/scripts/run_company_alias_seed.py
     从 W12-1 xlsx 导入已知别名；或用 LLM 生成简称（需 user 决策）
 
