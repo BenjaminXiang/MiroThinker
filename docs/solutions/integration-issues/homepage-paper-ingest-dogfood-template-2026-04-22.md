@@ -15,6 +15,12 @@ status: template-pending-execution
 
 # Homepage paper ingest — dogfood acceptance log (TEMPLATE)
 
+> **2026-05-02 更新**：首次 W9-5 真实运行结果归档于
+> [`homepage-paper-ingest-dogfood-2026-05-02.md`](./homepage-paper-ingest-dogfood-2026-05-02.md)
+> （R3 partial-fail，根因：M2.1 selector 在深圳高校 CMS 模板覆盖度不足；
+> 已转入 backlog）。本文件保留作 runbook 模板。
+
+
 This file is the Unit 8 deliverable of M2.4. It's a **template** for the operator to fill in after running the pipeline against the real dev DB. Until those entries are populated, M2.4's acceptance gate (R3: 10 profs × ≥15 papers linked each) is NOT confirmed.
 
 When filled in:
