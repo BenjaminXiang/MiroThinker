@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
+
+pytestmark = pytest.mark.skip(
+    reason="Legacy SQLite batch tests retired; Postgres coverage is in test_batch_postgres.py"
+)
 
 
 def test_batch_update_quality(client: TestClient):

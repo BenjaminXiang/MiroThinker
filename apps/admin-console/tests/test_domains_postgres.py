@@ -10,7 +10,6 @@ import pytest
 
 from fastapi import HTTPException
 
-from backend.api.data import _list_professors
 from backend.api.domains import (
     DomainEnum,
     UpdateRecordRequest,
@@ -21,6 +20,7 @@ from backend.api.domains import (
     list_domain,
     update_domain_object,
 )
+from backend.services.data_helpers import _list_professors
 
 NOW = datetime(2026, 4, 30, tzinfo=timezone.utc)
 RUN_ID = UUID("11111111-1111-1111-1111-111111111111")

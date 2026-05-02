@@ -4,13 +4,17 @@ import csv
 import io
 import json
 from enum import Enum
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 
-from backend.deps import get_store
-from src.data_agents.contracts import ReleasedObject
-from src.data_agents.storage.sqlite_store import SqliteReleasedObjectStore
+from backend.api.domains import (
+    _get_released_object,
+    _query_domain_rows,
+    _row_to_released_object,
+)
+from backend.deps import get_pg_conn
 
 router = APIRouter(prefix="/api/export")
 
@@ -62,17 +66,17 @@ _DOMAIN_HEADERS: dict[str, list[tuple[str, str]]] = {
 }
 
 
-def _extract_field(obj: ReleasedObject, field: str) -> str:
+def _extract_field(obj: dict[str, Any], field: str) -> str:
     if field == "id":
-        return obj.id
+        return obj["id"]
     if field == "display_name":
-        return obj.display_name
+        return obj["display_name"]
     if field == "quality_status":
-        return obj.quality_status
+        return obj["quality_status"]
 
-    val = obj.core_facts.get(field)
+    val = obj["core_facts"].get(field)
     if val is None:
-        val = obj.summary_fields.get(field)
+        val = obj["summary_fields"].get(field)
     if val is None:
         return ""
     if isinstance(val, list):
@@ -87,20 +91,12 @@ def export_domain(
     domain: str,
     format: ExportFormat = ExportFormat.csv,
     ids: str = Query(default=""),
-    store: SqliteReleasedObjectStore = Depends(get_store),
+    conn: Any = Depends(get_pg_conn),
 ) -> StreamingResponse:
     if domain not in _DOMAIN_HEADERS:
         raise HTTPException(status_code=422, detail="Invalid domain")
 
-    if ids:
-        id_list = [i.strip() for i in ids.split(",") if i.strip()]
-        objects = [
-            store.get_object(domain, obj_id)
-            for obj_id in id_list
-        ]
-        objects = [o for o in objects if o is not None]
-    else:
-        objects = store.export_domain_objects(domain)
+    objects = _load_export_objects(conn, domain, ids=ids)
 
     headers_def = _DOMAIN_HEADERS[domain]
     field_keys = [h[0] for h in headers_def]
@@ -113,7 +109,7 @@ def export_domain(
 
 
 def _export_csv(
-    objects: list[ReleasedObject],
+    objects: list[dict[str, Any]],
     field_keys: list[str],
     header_labels: list[str],
     domain: str,
@@ -135,7 +131,7 @@ def _export_csv(
 
 
 def _export_xlsx(
-    objects: list[ReleasedObject],
+    objects: list[dict[str, Any]],
     field_keys: list[str],
     header_labels: list[str],
     domain: str,
@@ -163,3 +159,31 @@ def _export_xlsx(
             "Content-Disposition": f'attachment; filename="{domain}_export.xlsx"'
         },
     )
+
+
+def _load_export_objects(
+    conn: Any,
+    domain: str,
+    *,
+    ids: str = "",
+) -> list[dict[str, Any]]:
+    if ids:
+        id_list = [item.strip() for item in ids.split(",") if item.strip()]
+        objects = [
+            _get_released_object(conn, domain, obj_id, include_evidence=True)
+            for obj_id in id_list
+        ]
+        return [obj for obj in objects if obj is not None]
+
+    rows, _ = _query_domain_rows(
+        conn,
+        domain=domain,
+        page=1,
+        page_size=1_000_000,
+        sort_by="display_name",
+        sort_order="asc",
+    )
+    return [
+        _row_to_released_object(domain, row, include_evidence=True)
+        for row in rows
+    ]

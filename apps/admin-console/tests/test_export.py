@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
+
+pytestmark = pytest.mark.skip(
+    reason="Legacy SQLite export tests retired; Postgres coverage is in test_export_postgres.py"
+)
 
 
 def test_export_csv_all(client: TestClient):

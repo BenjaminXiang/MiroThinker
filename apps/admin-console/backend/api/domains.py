@@ -365,7 +365,14 @@ DOMAIN_DEFAULT_ORDER = {
 }
 
 DOMAIN_SUPPORTED_FILTERS = {
-    "professor": {"quality_status", "institution", "department", "title", "discipline_family"},
+    "professor": {
+        "quality_status",
+        "institution",
+        "department",
+        "title",
+        "discipline_family",
+        "research_topic",
+    },
     "company": {"quality_status", "industry", "hq_city", "is_shenzhen"},
     "paper": {"quality_status", "year", "venue"},
     "patent": {"quality_status", "patent_type"},
@@ -420,6 +427,18 @@ DOMAIN_FILTER_OPTIONS_SQL = {
             LIMIT 1
         ) primary_affiliation ON TRUE
         WHERE p.identity_status = 'resolved'
+        ORDER BY value ASC
+        LIMIT 1000
+    """,
+    ("professor", "research_topic"): """
+        SELECT DISTINCT pf.value_raw AS value
+        FROM professor_fact pf
+        JOIN professor p ON p.professor_id = pf.professor_id
+        WHERE pf.fact_type = 'research_topic'
+          AND pf.status = 'active'
+          AND pf.value_raw IS NOT NULL
+          AND pf.value_raw != ''
+          AND p.identity_status = 'resolved'
         ORDER BY value ASC
         LIMIT 1000
     """,
@@ -864,6 +883,23 @@ def _add_filter_conditions(
         elif domain == "professor" and field == "discipline_family":
             params[param_name] = value
             conditions.append("p.discipline_family = %(filter_discipline_family)s")
+        elif domain == "professor" and field == "research_topic":
+            params[param_name] = value
+            conditions.append(
+                """
+                EXISTS (
+                    SELECT 1
+                    FROM professor_fact pf_filter
+                    WHERE pf_filter.professor_id = p.professor_id
+                      AND pf_filter.fact_type = 'research_topic'
+                      AND pf_filter.status = 'active'
+                      AND (
+                          pf_filter.value_raw = %(filter_research_topic)s
+                          OR pf_filter.value_normalized = %(filter_research_topic)s
+                      )
+                )
+                """
+            )
         elif domain == "company" and field == "industry":
             params[param_name] = value
             conditions.append("latest_snapshot.industry = %(filter_industry)s")

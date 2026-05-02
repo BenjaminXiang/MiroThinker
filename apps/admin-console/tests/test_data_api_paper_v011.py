@@ -3,8 +3,8 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any
 
-from backend.api.data import _list_papers, get_paper_detail
 from backend.api.domains import DomainEnum, get_domain_object
+from backend.services.data_helpers import _list_papers, get_paper_detail
 
 
 class _FakeResult:

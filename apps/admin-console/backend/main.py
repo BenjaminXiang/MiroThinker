@@ -48,11 +48,11 @@ app.include_router(domains_router)
 
 # Lightweight built-in data browser (no React build required).
 # Visit /browse to inspect companies/professors/papers/patents through the
-# Postgres-backed /api/data/* endpoints. The React SPA at /assets/* is the
-# legacy dashboard (now fed real Postgres numbers from /api/dashboard per
-# Round 9). The `/` root redirects to /browse because that's the primary
-# operator surface; the SPA is still reachable at the filename paths it
-# serves from /assets.
+# Legacy /api/data/* endpoints now redirect to the Postgres-backed /api/{domain}
+# API. The React SPA at /assets/* is the legacy dashboard (now fed real Postgres
+# numbers from /api/dashboard per Round 9). The `/` root redirects to /browse
+# because that's the primary operator surface; the SPA is still reachable at the
+# filename paths it serves from /assets.
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
 if (_STATIC_DIR / "browse.html").is_file():
     app.mount(

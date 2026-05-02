@@ -1,7 +1,6 @@
 """Dependency factories for the admin console.
 
 Environment variables:
-- `ADMIN_DB_PATH`: override the sqlite released-objects database path.
 - `DATABASE_URL` / `DATABASE_URL_TEST`: Postgres DSN for app runtime and tests.
 - `CHAT_USE_RETRIEVAL_SERVICE`: chat retrieval flag. Defaults on; accepts
   truthy `1/true/yes/on` and falsy `0/false/no/off` values.
@@ -19,7 +18,6 @@ import logging
 import os
 import warnings
 from functools import lru_cache
-from pathlib import Path
 from typing import Any, Iterator
 
 from src.data_agents.professor.vectorizer import EmbeddingClient
@@ -27,23 +25,10 @@ from src.data_agents.providers.local_api_key import load_local_api_key
 from src.data_agents.providers.rerank import RerankerClient
 from src.data_agents.providers.web_search import WebSearchProvider
 from src.data_agents.service.retrieval import RetrievalService
-from src.data_agents.storage.sqlite_store import SqliteReleasedObjectStore
 
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-_DEFAULT_DB_PATH = str(_REPO_ROOT / "logs" / "data_agents" / "released_objects.db")
 _DEFAULT_CHAT_E_WEB_FALLBACK_THRESHOLD = 0.5
 
 logger = logging.getLogger(__name__)
-
-
-@lru_cache(maxsize=1)
-def get_sqlite_store() -> SqliteReleasedObjectStore:
-    db_path = os.environ.get("ADMIN_DB_PATH", _DEFAULT_DB_PATH)
-    return SqliteReleasedObjectStore(db_path)
-
-
-def get_store() -> SqliteReleasedObjectStore:
-    return get_sqlite_store()
 
 
 def chat_use_retrieval_service() -> bool:

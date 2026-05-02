@@ -8,7 +8,6 @@ WebSearchProvider + conn + env vars. No real Milvus, no live network.
 
 from __future__ import annotations
 
-import os
 from unittest.mock import MagicMock
 
 import pytest
@@ -257,7 +256,7 @@ def test_unit3_b_route_flag_off_uses_sql(monkeypatch):
     cursor.fetchall.return_value = []
     conn.execute.return_value = cursor
 
-    results = chat_module._lookup_professors_by_topic(
+    chat_module._lookup_professors_by_topic(
         conn,
         institutions=("南方科技大学",),
         topic="topic",
@@ -482,9 +481,9 @@ def test_unit5_e_route_serper_filters_non_scholarly_domains(monkeypatch):
             fake_web.search.return_value.get("organic", [])
         )
         links = {o["link"] for o in filtered}
-        assert any("arxiv.org" in l for l in links)
-        assert not any("github.com" in l for l in links)
-        assert not any("example.com" in l for l in links)
+        assert any("arxiv.org" in link for link in links)
+        assert not any("github.com" in link for link in links)
+        assert not any("example.com" in link for link in links)
     else:
         pytest.skip("Implementation uses different filter helper.")
 

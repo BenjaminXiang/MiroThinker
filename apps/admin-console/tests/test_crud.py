@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import json
 
+import pytest
 from fastapi.testclient import TestClient
+
+pytestmark = pytest.mark.skip(
+    reason="Legacy SQLite CRUD tests retired; Postgres coverage is in test_domains_postgres.py"
+)
 
 
 # --- PATCH update tests ---

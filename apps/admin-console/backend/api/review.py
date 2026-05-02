@@ -10,8 +10,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from psycopg.types.json import Jsonb
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from backend.api.data import PaperSummaryWithProvenance
 from backend.deps import get_pg_conn
+from backend.services.data_helpers import PaperSummaryWithProvenance
 
 router = APIRouter()
 

@@ -205,7 +205,7 @@ def test_pipeline_issue_professor_fk_sets_null_on_delete(
             return
         pid = row[0]
         with conn.transaction():
-            issue_id = _insert_issue(
+            _insert_issue(
                 conn, professor_id=pid, institution=None,
                 stage="discovery", reported_by="bob",
                 description="fk test",
