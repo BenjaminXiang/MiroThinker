@@ -134,7 +134,8 @@ def _build_select_sql(
     sql = (
         "SELECT p.professor_id, p.canonical_name, "
         "       pa.institution, "
-        "       p.research_directions, p.profile_summary, p.profile_raw_text "
+        "       COALESCE(rd.directions, ARRAY[]::text[]) AS research_directions, "
+        "       p.profile_summary, p.profile_raw_text "
         "  FROM professor p "
         "  LEFT JOIN LATERAL (SELECT institution FROM professor_affiliation "
         "                     WHERE professor_id = p.professor_id "
@@ -142,6 +143,11 @@ def _build_select_sql(
         "                              is_current DESC NULLS LAST, "
         "                              start_year DESC NULLS LAST "
         "                     LIMIT 1) pa ON true "
+        "  LEFT JOIN LATERAL (SELECT array_agg(value_raw ORDER BY confidence DESC NULLS LAST) AS directions "
+        "                       FROM professor_fact "
+        "                      WHERE professor_id = p.professor_id "
+        "                        AND fact_type = 'research_topic' "
+        "                        AND status != 'deprecated') rd ON true "
         f" WHERE {' AND '.join(clauses).replace('profile_summary', 'p.profile_summary')} "
         " ORDER BY p.professor_id"
     )
@@ -154,7 +160,8 @@ def _build_select_sql(
 def _fetch_paper_contexts(conn, professor_id: str, *, max_papers: int) -> list[PaperContext]:
     rows = conn.execute(
         """
-        SELECT p.title, pft.abstract, pft.intro, p.year, p.venue
+        SELECT COALESCE(p.title_clean, p.title_raw, '') AS title,
+               pft.abstract, pft.intro, p.year, p.venue
           FROM professor_paper_link ppl
           JOIN paper p ON p.paper_id = ppl.paper_id
           JOIN paper_full_text pft ON pft.paper_id = p.paper_id
@@ -276,6 +283,10 @@ def main(argv: list[str] | None = None) -> None:
         except Exception as exc:  # noqa: BLE001
             logger.warning("Prof %s reinforcement crashed: %s", prof_id, exc)
             report["profs_with_errors"] += 1
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             _append_checkpoint(
                 new_checkpoint_path,
                 {"prof_id": prof_id, "status": "error", "error": str(exc)},
