@@ -7,7 +7,9 @@ from uuid import UUID
 
 import pytest
 
+from src.data_agents.contracts import Evidence, PatentRecord
 from src.data_agents.company import canonical_import as company_import
+from src.data_agents.patent.canonical_writer import upsert_patent
 from src.data_agents.paper.canonical_writer import upsert_paper
 from src.data_agents.paper.full_text_fetcher import FullTextExtract
 from src.data_agents.professor import canonical_writer as professor_writer
@@ -19,6 +21,7 @@ SENTINEL_RUN_ID = UUID("00000000-0000-0000-0000-000000000000")
 WRITER_FUNCTIONS = (
     upsert_paper,
     upsert_paper_full_text,
+    upsert_patent,
     professor_writer.write_professor_bundle,
     professor_writer.upsert_professor_metrics,
     professor_writer.upsert_source_page_for_url,
@@ -65,6 +68,29 @@ def test_writer_requires_run_id_signature(writer_fn):
                     pdf_sha256=None,
                     source="failed",
                     fetch_error="not_fetched",
+                ),
+            },
+        ),
+        (
+            upsert_patent,
+            {
+                "record": PatentRecord(
+                    id="PAT-run-id",
+                    title="Run ID Wiring Patent",
+                    patent_number="CN000000001A",
+                    applicants=["深圳测试科技有限公司"],
+                    patent_type="发明",
+                    filing_date="2026-05-01",
+                    summary_text="该专利用于测试 run_id 写入路径，摘要文本满足最小长度要求。",
+                    evidence=[
+                        Evidence(
+                            source_type="xlsx_import",
+                            source_file="test.xlsx",
+                            fetched_at="2026-05-01T00:00:00Z",
+                            confidence=1.0,
+                        )
+                    ],
+                    last_updated="2026-05-01T00:00:00Z",
                 ),
             },
         ),

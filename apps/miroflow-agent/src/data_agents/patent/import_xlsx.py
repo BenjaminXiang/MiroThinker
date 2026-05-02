@@ -250,8 +250,10 @@ def _normalize_patent_type(value: object) -> str | None:
 
 
 def _split_tokens(value: object) -> tuple[str, ...]:
-    text = _normalize_text(value)
-    if text is None:
+    if value is None:
+        return tuple()
+    text = str(value).strip()
+    if not text:
         return tuple()
     tokens = [
         _WS_RE.sub(" ", token).strip()

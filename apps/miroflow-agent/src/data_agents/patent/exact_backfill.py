@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 from typing import TypeVar
 
 from .import_xlsx import import_patent_xlsx
@@ -16,6 +17,7 @@ def build_patent_release_from_sources(
     workbook_paths: list[Path],
     company_name_to_id: dict[str, str],
     professor_name_to_id: dict[str, str] | None = None,
+    llm_client: Any | None = None,
     now: datetime | None = None,
 ) -> PatentReleaseResult:
     results: list[PatentReleaseResult] = []
@@ -29,6 +31,7 @@ def build_patent_release_from_sources(
                 source_file=workbook_path,
                 company_name_to_id=company_name_to_id,
                 professor_name_to_id=professor_name_to_id,
+                llm_client=llm_client,
                 now=now,
             )
         )

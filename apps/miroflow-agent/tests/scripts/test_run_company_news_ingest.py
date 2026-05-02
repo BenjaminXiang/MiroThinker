@@ -166,3 +166,124 @@ def test_cli_missing_database_url_exits_nonzero(monkeypatch):
     with pytest.raises(SystemExit) as exc:
         cli.main(["--limit", "1"])
     assert exc.value.code != 0
+
+
+def test_parse_args_accepts_serper_connector():
+    cli = _import_cli()
+
+    args = cli._parse_args(["--connector", "serper"])
+
+    assert args.connector == "serper"
+
+
+def test_build_connectors_serper_only_when_selected(monkeypatch):
+    cli = _import_cli()
+    constructed: list[tuple[str, str]] = []
+
+    class _FakeSerper:
+        def __init__(self, api_key):
+            constructed.append(("serper", api_key))
+
+    class _UnexpectedLegacy:
+        def __init__(self, _api_key):
+            raise AssertionError("legacy connector should not be constructed")
+
+    monkeypatch.setattr(cli, "SerperNewsConnector", _FakeSerper)
+    monkeypatch.setattr(cli, "TushareConnector", _UnexpectedLegacy)
+    monkeypatch.setattr(cli, "CNStockConnector", _UnexpectedLegacy)
+    monkeypatch.setenv("SERPER_API_KEY", "serper-key")
+    monkeypatch.setenv("TUSHARE_TOKEN", "tushare-token")
+    monkeypatch.setenv("CNSTOCK_TOKEN", "cnstock-token")
+
+    connectors = cli._build_connectors("serper")
+
+    assert [name for name, _connector in connectors] == ["serper"]
+    assert constructed == [("serper", "serper-key")]
+
+
+def test_build_connectors_all_defaults_to_serper_only(monkeypatch):
+    cli = _import_cli()
+    constructed: list[str] = []
+
+    class _FakeSerper:
+        def __init__(self, _api_key):
+            constructed.append("serper")
+
+    class _UnexpectedLegacy:
+        def __init__(self, _api_key):
+            raise AssertionError("legacy connector should not be constructed")
+
+    monkeypatch.setattr(cli, "SerperNewsConnector", _FakeSerper)
+    monkeypatch.setattr(cli, "TushareConnector", _UnexpectedLegacy)
+    monkeypatch.setattr(cli, "CNStockConnector", _UnexpectedLegacy)
+    monkeypatch.setenv("SERPER_API_KEY", "serper-key")
+    monkeypatch.setenv("TUSHARE_TOKEN", "tushare-token")
+    monkeypatch.setenv("CNSTOCK_TOKEN", "cnstock-token")
+
+    connectors = cli._build_connectors("all")
+
+    assert [name for name, _connector in connectors] == ["serper"]
+    assert constructed == ["serper"]
+
+
+def test_build_connectors_all_skips_gracefully_without_serper_key(monkeypatch, caplog):
+    caplog.set_level("INFO")
+    cli = _import_cli()
+    monkeypatch.delenv("SERPER_API_KEY", raising=False)
+    monkeypatch.setenv("TUSHARE_TOKEN", "tushare-token")
+    monkeypatch.setenv("CNSTOCK_TOKEN", "cnstock-token")
+
+    connectors = cli._build_connectors("all")
+
+    assert connectors == []
+    assert "Skipping Serper connector: SERPER_API_KEY is not set" in caplog.text
+
+
+def test_build_connectors_tushare_explicit_still_works(monkeypatch):
+    cli = _import_cli()
+    constructed: list[tuple[str, str]] = []
+
+    class _FakeTushare:
+        def __init__(self, token):
+            constructed.append(("tushare", token))
+
+    class _UnexpectedOther:
+        def __init__(self, _api_key):
+            raise AssertionError("other connector should not be constructed")
+
+    monkeypatch.setattr(cli, "TushareConnector", _FakeTushare)
+    monkeypatch.setattr(cli, "SerperNewsConnector", _UnexpectedOther)
+    monkeypatch.setattr(cli, "CNStockConnector", _UnexpectedOther)
+    monkeypatch.setenv("SERPER_API_KEY", "serper-key")
+    monkeypatch.setenv("TUSHARE_TOKEN", "tushare-token")
+    monkeypatch.setenv("CNSTOCK_TOKEN", "cnstock-token")
+
+    connectors = cli._build_connectors("tushare")
+
+    assert [name for name, _connector in connectors] == ["tushare"]
+    assert constructed == [("tushare", "tushare-token")]
+
+
+def test_build_connectors_cnstock_explicit_still_works(monkeypatch):
+    cli = _import_cli()
+    constructed: list[tuple[str, str]] = []
+
+    class _FakeCNStock:
+        def __init__(self, token):
+            constructed.append(("cnstock", token))
+
+    class _UnexpectedOther:
+        def __init__(self, _api_key):
+            raise AssertionError("other connector should not be constructed")
+
+    monkeypatch.setattr(cli, "CNStockConnector", _FakeCNStock)
+    monkeypatch.setattr(cli, "SerperNewsConnector", _UnexpectedOther)
+    monkeypatch.setattr(cli, "TushareConnector", _UnexpectedOther)
+    monkeypatch.setenv("SERPER_API_KEY", "serper-key")
+    monkeypatch.setenv("TUSHARE_TOKEN", "tushare-token")
+    monkeypatch.setenv("CNSTOCK_TOKEN", "cnstock-token")
+
+    connectors = cli._build_connectors("cnstock")
+
+    assert [name for name, _connector in connectors] == ["cnstock"]
+    assert constructed == [("cnstock", "cnstock-token")]

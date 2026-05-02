@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_vali
 
 QualityStatus = Literal["ready", "needs_review", "low_confidence", "needs_enrichment"]
 LegacyQualityStatus = Literal["ready", "needs_review", "low_confidence", "needs_enrichment", "incomplete", "shallow_summary"]
+PatentSummaryTextMethod = Literal["llm", "fallback_template"]
 
 QUALITY_STATUS_CANONICAL_MAP: dict[str, QualityStatus] = {
     "ready": "ready",
@@ -361,6 +362,7 @@ class PatentRecord(SharedBaseModel):
     company_ids: list[NonEmptyStr] = Field(default_factory=list)
     professor_ids: list[NonEmptyStr] = Field(default_factory=list)
     summary_text: NonEmptyStr
+    summary_text_method: PatentSummaryTextMethod = "fallback_template"
     evidence: list[Evidence] = Field(min_length=1)
     last_updated: datetime
     quality_status: QualityStatus = "needs_review"
@@ -396,7 +398,10 @@ class PatentRecord(SharedBaseModel):
                 "company_ids": self.company_ids,
                 "professor_ids": self.professor_ids,
             },
-            summary_fields={"summary_text": self.summary_text},
+            summary_fields={
+                "summary_text": self.summary_text,
+                "summary_text_method": self.summary_text_method,
+            },
             evidence=self.evidence,
             last_updated=self.last_updated,
             quality_status=self.quality_status,

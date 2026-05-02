@@ -1,16 +1,22 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
+from typing import Any
 
 from src.data_agents.contracts import PatentRecord, ReleasedObject
 from src.data_agents.evidence import build_evidence
 from src.data_agents.normalization import build_stable_id
 from src.data_agents.publish import publish_jsonl
 
+from .import_xlsx import _split_tokens
 from .linkage import link_company_ids, link_professor_ids
 from .models import PatentImportRecord
+from .summary_llm import (
+    PatentSummaryMethod,
+    generate_patent_summary_text,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,6 +38,7 @@ def build_patent_release(
     source_file: Path,
     company_name_to_id: dict[str, str],
     professor_name_to_id: dict[str, str] | None = None,
+    llm_client: Any | None = None,
     now: datetime | None = None,
 ) -> PatentReleaseResult:
     generated_at = now or datetime.now(timezone.utc)
@@ -43,8 +50,13 @@ def build_patent_release(
         title = record.title.strip()
         if not title:
             continue
-        applicants = list(record.applicants)
+        applicants = _split_applicant_tokens(record.applicants)
         inventors: list[str] = []
+        summary_text, summary_text_method = build_summary_text(
+            record,
+            llm_client=llm_client,
+        )
+        company_link_candidates = link_company_ids(applicants, company_name_to_id)
         patent = PatentRecord(
             id=build_stable_id(
                 "pat",
@@ -62,9 +74,10 @@ def build_patent_release(
             abstract=record.abstract,
             technology_effect=_technology_effect(record),
             ipc_codes=[],
-            company_ids=link_company_ids(applicants, company_name_to_id),
+            company_ids=[candidate[0] for candidate in company_link_candidates],
             professor_ids=link_professor_ids(inventors, professor_index),
-            summary_text=build_summary_text(record),
+            summary_text=summary_text,
+            summary_text_method=summary_text_method,
             evidence=[
                 build_evidence(
                     source_type="xlsx_import",
@@ -75,6 +88,11 @@ def build_patent_release(
                 )
             ],
             last_updated=generated_at,
+            quality_status=_calculate_quality_status(
+                title_clean=title,
+                applicants_parsed=applicants,
+                filing_date=record.filing_date,
+            ),
         )
         patent_records.append(patent)
         released_objects.append(patent.to_released_object())
@@ -89,16 +107,47 @@ def build_patent_release(
     )
 
 
-def build_summary_text(record: PatentImportRecord) -> str:
-    parts = [f"该专利围绕“{record.title}”展开。"]
-    if record.abstract:
-        parts.append(record.abstract)
-    effect = _technology_effect(record)
-    if effect:
-        parts.append(f"技术效果重点是{effect}。")
-    if record.patent_type:
-        parts.append(f"当前记录的专利类型为{record.patent_type}。")
-    return _join_and_trim(parts, limit=280)
+def build_summary_text(
+    record: PatentImportRecord,
+    *,
+    llm_client: Any | None = None,
+) -> tuple[str, PatentSummaryMethod]:
+    return generate_patent_summary_text(record, llm_client=llm_client)
+
+
+def record_to_patent_dict(record: PatentRecord) -> dict[str, object]:
+    applicants_parsed = [str(item).strip() for item in record.applicants if str(item).strip()]
+    inventors_parsed = [str(item).strip() for item in record.inventors if str(item).strip()]
+    filing_date = _date_from_iso(record.filing_date)
+
+    return {
+        "patent_id": record.id,
+        "patent_number": record.patent_number,
+        "title_clean": record.title.strip(),
+        "title_raw": record.title.strip(),
+        "title_en": record.title_en,
+        "applicants_raw": "；".join(applicants_parsed) if applicants_parsed else None,
+        "applicants_parsed": applicants_parsed,
+        "inventors_raw": "；".join(inventors_parsed) if inventors_parsed else None,
+        "inventors_parsed": inventors_parsed,
+        "filing_date": filing_date,
+        "publication_date": _date_from_iso(record.publication_date),
+        "grant_date": _date_from_iso(record.grant_date),
+        "patent_type": record.patent_type,
+        "status": None,
+        "abstract_clean": record.abstract,
+        "technology_effect": record.technology_effect,
+        "ipc_codes": list(record.ipc_codes),
+        "summary_text": record.summary_text,
+        "summary_text_method": record.summary_text_method,
+        "quality_status": _calculate_quality_status(
+            title_clean=record.title,
+            applicants_parsed=applicants_parsed,
+            filing_date=filing_date,
+        ),
+        "first_seen_at": record.last_updated,
+        "updated_at": record.last_updated,
+    }
 
 
 def publish_patent_release(
@@ -125,8 +174,41 @@ def _technology_effect(record: PatentImportRecord) -> str | None:
     return None
 
 
-def _join_and_trim(parts: list[str], *, limit: int) -> str:
-    text = "".join(part for part in parts if part)
-    if len(text) <= limit:
-        return text
-    return text[: max(0, limit - 1)].rstrip("，。；; ") + "。"
+def _split_applicant_tokens(applicants: tuple[str, ...] | list[str]) -> list[str]:
+    tokens: list[str] = []
+    seen: set[str] = set()
+    for applicant in applicants:
+        for token in _split_tokens(applicant):
+            if token in seen:
+                continue
+            seen.add(token)
+            tokens.append(token)
+    return tokens
+
+
+def _calculate_quality_status(
+    *,
+    title_clean: str | None,
+    applicants_parsed: list[str],
+    filing_date: date | str | None,
+) -> str:
+    first_applicant = applicants_parsed[0].strip() if applicants_parsed else ""
+    if (title_clean or "").strip() and first_applicant and filing_date:
+        return "ready"
+    return "needs_review"
+
+
+def _date_from_iso(value: str | date | datetime | None) -> date | None:
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    text = str(value).strip()
+    if not text:
+        return None
+    try:
+        return date.fromisoformat(text[:10])
+    except ValueError:
+        return None

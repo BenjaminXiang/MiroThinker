@@ -27,6 +27,7 @@ from src.data_agents.company.news_connectors import (  # noqa: E402
     CNStockConnector,
     NewsConnector,
     NewsRecord,
+    SerperNewsConnector,
     TushareConnector,
 )
 from src.data_agents.storage.postgres.connection import resolve_dsn  # noqa: E402
@@ -42,7 +43,7 @@ logger = logging.getLogger("run_company_news_ingest")
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Fetch Tushare/CNStock company news and write company_news_item.",
+        description="Fetch company news and write company_news_item.",
     )
     parser.add_argument(
         "--priority",
@@ -52,9 +53,9 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--connector",
-        choices=("all", "tushare", "cnstock"),
+        choices=("all", "tushare", "cnstock", "serper"),
         default="all",
-        help="News connector to use.",
+        help="News connector to use. all defaults to Serper only.",
     )
     parser.add_argument("--since", type=_parse_date, default=None)
     parser.add_argument("--limit", type=int, default=None)
@@ -85,13 +86,19 @@ def _open_database_connection(url: str):
 
 def _build_connectors(selection: str) -> list[tuple[str, NewsConnector]]:
     connectors: list[tuple[str, NewsConnector]] = []
-    if selection in ("all", "tushare"):
+    if selection in ("all", "serper"):
+        api_key = os.environ.get("SERPER_API_KEY", "").strip()
+        if api_key:
+            connectors.append(("serper", SerperNewsConnector(api_key)))
+        else:
+            logger.info("Skipping Serper connector: SERPER_API_KEY is not set")
+    if selection == "tushare":
         token = os.environ.get("TUSHARE_TOKEN", "").strip()
         if token:
             connectors.append(("tushare", TushareConnector(token)))
         else:
             logger.info("Skipping Tushare connector: TUSHARE_TOKEN is not set")
-    if selection in ("all", "cnstock"):
+    if selection == "cnstock":
         token = os.environ.get("CNSTOCK_TOKEN", "").strip()
         if token:
             connectors.append(("cnstock", CNStockConnector(token)))
@@ -267,11 +274,13 @@ def main(argv: list[str] | None = None) -> None:
     for company in companies:
         company_id = str(company["company_id"])
         credit_code = str(company["unified_credit_code"])
+        canonical_name = str(company.get("canonical_name") or company_id)
         report["companies_processed"] += 1
         company_records: list[NewsRecord] = []
         for connector_name, connector in connectors:
             try:
-                fetched = connector.fetch(credit_code, since)
+                fetch_key = canonical_name if connector_name == "serper" else credit_code
+                fetched = connector.fetch(fetch_key, since)
             except Exception as exc:  # noqa: BLE001
                 logger.warning(
                     "%s fetch crashed for %s: %s", connector_name, company_id, exc
