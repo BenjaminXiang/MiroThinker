@@ -800,6 +800,10 @@ const COLUMNS = {
   ],
   papers: [
     { key: "title_clean", label: "标题" },
+    { key: "pdf_url", label: "PDF",
+      render: (r) => r.pdf_url
+        ? `<a href="${esc(r.pdf_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">PDF</a>`
+        : "—" },
     { key: "year", label: "年份" },
     { key: "venue", label: "期刊 / 会议" },
     { key: "citation_count", label: "引用" },
@@ -1027,8 +1031,12 @@ function renderDetail(d) {
       <section><h4>标识</h4><dl class="grid">
         <dt>DOI</dt><dd>${p.doi
           ? `<a href="https://doi.org/${esc(p.doi)}" target="_blank" rel="noopener">${esc(p.doi)}</a>` : "-"}</dd>
+        <dt>PDF</dt><dd>${p.pdf_url
+          ? `<a href="${esc(p.pdf_url)}" target="_blank" rel="noopener">打开 PDF</a>` : "-"}</dd>
         <dt>OpenAlex</dt><dd><code>${esc(p.openalex_id || "-")}</code></dd>
         <dt>arXiv</dt><dd><code>${esc(p.arxiv_id || "-")}</code></dd>
+        <dt>全文来源</dt><dd><code>${esc(p.full_text_source || "-")}</code></dd>
+        <dt>标题匹配</dt><dd><code>${esc(p.title_match_source || "-")}</code>${p.title_match_confidence == null ? "" : ` · ${p.title_match_confidence}`}</dd>
       </dl></section>
       <section><h4>关联教授 verified<span class="count">${(lp.verified || []).length}</span></h4>
         <div>${(lp.verified || []).map(x => `<span class="chip">${esc(x.canonical_name)}

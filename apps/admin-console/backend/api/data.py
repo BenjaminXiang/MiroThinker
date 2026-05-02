@@ -603,10 +603,12 @@ SELECT
     p.citation_count,
     p.authors_display,
     p.canonical_source,
+    pft.pdf_url,
     COALESCE(link_counts.linked_professor_count, 0) AS linked_professor_count,
     COALESCE(verified_link_counts.verified_professor_count, 0) AS verified_professor_count,
     count(*) OVER() AS total_count
 FROM paper p
+LEFT JOIN paper_full_text pft ON pft.paper_id = p.paper_id
 LEFT JOIN LATERAL (
     SELECT count(*)::int AS linked_professor_count
     FROM professor_paper_link ppl
@@ -626,6 +628,40 @@ ORDER BY
     p.year DESC NULLS LAST,
     p.citation_count DESC NULLS LAST,
     p.title_clean ASC
+"""
+
+PAPER_DETAIL_SELECT_SQL = """
+SELECT
+    p.*,
+    pft.pdf_url,
+    pft.pdf_sha256,
+    pft.source AS full_text_source,
+    prc.match_source AS title_match_source,
+    prc.match_confidence AS title_match_confidence
+FROM paper p
+LEFT JOIN paper_full_text pft ON pft.paper_id = p.paper_id
+LEFT JOIN paper_title_resolution_cache prc
+       ON prc.title_sha1 = encode(
+            digest(
+                convert_to(
+                    trim(regexp_replace(
+                        regexp_replace(
+                            lower(coalesce(p.title_clean, p.title_raw, '')),
+                            '[^[:alnum:]_[:space:]]',
+                            ' ',
+                            'g'
+                        ),
+                        '[[:space:]]+',
+                        ' ',
+                        'g'
+                    )),
+                    'UTF8'
+                ),
+                'sha1'
+            ),
+            'hex'
+       )
+WHERE p.paper_id = %s
 """
 
 PAPER_LINKED_PROFESSORS_SQL = """
@@ -829,6 +865,7 @@ class PaperListItem(BaseModel):
     citation_count: int | None = None
     authors_display: str | None = None
     canonical_source: str
+    pdf_url: str | None = None
     linked_professor_count: int
 
 
@@ -860,8 +897,16 @@ class LinkedProfessorsByStatus(BaseModel):
     rejected: list[LinkedProfessorSummary] = Field(default_factory=list)
 
 
+class PaperDetail(Paper):
+    pdf_url: str | None = None
+    pdf_sha256: str | None = None
+    full_text_source: str | None = None
+    title_match_source: str | None = None
+    title_match_confidence: float | None = None
+
+
 class PaperDetailResponse(BaseModel):
-    paper: Paper
+    paper: PaperDetail
     linked_professors: LinkedProfessorsByStatus
 
 
@@ -1083,6 +1128,7 @@ def _list_papers(
             citation_count=row["citation_count"],
             authors_display=row["authors_display"],
             canonical_source=row["canonical_source"],
+            pdf_url=row["pdf_url"],
             linked_professor_count=row["linked_professor_count"],
         )
         for row in rows
@@ -1307,15 +1353,8 @@ def get_paper_detail(
     paper_id: str,
     conn: Any = Depends(get_pg_conn),
 ) -> PaperDetailResponse:
-    paper_row = conn.execute(
-        """
-        SELECT *
-        FROM paper
-        WHERE paper_id = %s
-        """,
-        (paper_id,),
-    ).fetchone()
-    paper = _row_to_model(paper_row, Paper)
+    paper_row = conn.execute(PAPER_DETAIL_SELECT_SQL, (paper_id,)).fetchone()
+    paper = _row_to_model(paper_row, PaperDetail)
     if paper is None:
         raise HTTPException(status_code=404, detail="Paper not found")
 

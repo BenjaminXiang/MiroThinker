@@ -232,6 +232,7 @@ SELECT
     p.authors_raw,
     p.citation_count,
     p.canonical_source,
+    pft.pdf_url,
     p.first_seen_at,
     p.updated_at,
     p.run_id,
@@ -240,6 +241,7 @@ SELECT
     COALESCE(verified_link_counts.verified_professor_count, 0) AS verified_professor_count,
     count(*) OVER() AS total_count
 FROM paper p
+LEFT JOIN paper_full_text pft ON pft.paper_id = p.paper_id
 LEFT JOIN pipeline_run admin_run
        ON admin_run.run_id = p.run_id
       AND admin_run.triggered_by = 'admin-console'
@@ -255,6 +257,39 @@ LEFT JOIN LATERAL (
     WHERE ppl.paper_id = p.paper_id
       AND ppl.link_status = 'verified'
 ) verified_link_counts ON TRUE
+"""
+
+PAPER_DETAIL_METADATA_SQL = """
+SELECT
+    pft.pdf_url,
+    pft.pdf_sha256,
+    pft.source AS full_text_source,
+    prc.match_source AS title_match_source,
+    prc.match_confidence AS title_match_confidence
+FROM paper p
+LEFT JOIN paper_full_text pft ON pft.paper_id = p.paper_id
+LEFT JOIN paper_title_resolution_cache prc
+       ON prc.title_sha1 = encode(
+            digest(
+                convert_to(
+                    trim(regexp_replace(
+                        regexp_replace(
+                            lower(coalesce(p.title_clean, p.title_raw, '')),
+                            '[^[:alnum:]_[:space:]]',
+                            ' ',
+                            'g'
+                        ),
+                        '[[:space:]]+',
+                        ' ',
+                        'g'
+                    )),
+                    'UTF8'
+                ),
+                'sha1'
+            ),
+            'hex'
+       )
+WHERE p.paper_id = %(id)s
 """
 
 PATENT_SELECT_SQL = """
@@ -673,6 +708,11 @@ def _row_to_released_object(
             "canonical_source": row.get("canonical_source"),
             "linked_professor_count": row.get("linked_professor_count"),
             "verified_professor_count": row.get("verified_professor_count"),
+            "pdf_url": row.get("pdf_url"),
+            "pdf_sha256": row.get("pdf_sha256"),
+            "full_text_source": row.get("full_text_source"),
+            "title_match_source": row.get("title_match_source"),
+            "title_match_confidence": row.get("title_match_confidence"),
         }
         return {
             "id": row["paper_id"],
@@ -998,7 +1038,12 @@ def _get_released_object(
     )
     if not rows:
         return None
-    return _row_to_released_object(domain, rows[0], include_evidence=include_evidence)
+    row = rows[0]
+    if domain == "paper":
+        metadata = _fetchone(conn, PAPER_DETAIL_METADATA_SQL, {"id": object_id})
+        if metadata:
+            row.update(metadata)
+    return _row_to_released_object(domain, row, include_evidence=include_evidence)
 
 
 def _open_admin_run(conn: Any, *, domain: str, object_id: str, action: str) -> Any:
