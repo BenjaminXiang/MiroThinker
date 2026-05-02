@@ -132,11 +132,18 @@ def _build_select_sql(
             f"(profile_summary IS NULL OR length(profile_summary) < {int(min_length)})"
         )
     sql = (
-        "SELECT professor_id, canonical_name, institution, "
-        "       research_directions, profile_summary, profile_raw_text "
-        "  FROM professor "
-        f" WHERE {' AND '.join(clauses)} "
-        " ORDER BY professor_id"
+        "SELECT p.professor_id, p.canonical_name, "
+        "       pa.institution, "
+        "       p.research_directions, p.profile_summary, p.profile_raw_text "
+        "  FROM professor p "
+        "  LEFT JOIN LATERAL (SELECT institution FROM professor_affiliation "
+        "                     WHERE professor_id = p.professor_id "
+        "                     ORDER BY is_primary DESC NULLS LAST, "
+        "                              is_current DESC NULLS LAST, "
+        "                              start_year DESC NULLS LAST "
+        "                     LIMIT 1) pa ON true "
+        f" WHERE {' AND '.join(clauses).replace('profile_summary', 'p.profile_summary')} "
+        " ORDER BY p.professor_id"
     )
     if limit is not None:
         sql += " LIMIT %s"

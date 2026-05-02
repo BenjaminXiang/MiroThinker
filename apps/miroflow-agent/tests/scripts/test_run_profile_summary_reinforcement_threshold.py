@@ -31,7 +31,7 @@ def test_default_min_length_is_150():
     )
 
     assert args.min_length == 150
-    assert "length(profile_summary) < 150" in sql
+    assert "length(p.profile_summary) < 150" in sql
 
 
 def test_min_length_cli_override():
@@ -45,4 +45,4 @@ def test_min_length_cli_override():
     )
 
     assert args.min_length == 50
-    assert "length(profile_summary) < 50" in sql
+    assert "length(p.profile_summary) < 50" in sql
