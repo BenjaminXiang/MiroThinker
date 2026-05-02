@@ -77,6 +77,8 @@ just precommit
 just check-license
 just insert-license
 just format-md
+just frontend-fresh    # rebuild admin-console SPA into frontend/dist
+just frontend-dev      # start vite dev server on :5180 (HMR; manual)
 ```
 
 Agent app:

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -55,9 +57,7 @@ app.include_router(domains_router)
 # filename paths it serves from /assets.
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
 if (_STATIC_DIR / "browse.html").is_file():
-    app.mount(
-        "/static", StaticFiles(directory=_STATIC_DIR), name="static-files"
-    )
+    app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static-files")
 
     @app.get("/", include_in_schema=False)
     def redirect_root_to_browse() -> RedirectResponse:
@@ -68,6 +68,7 @@ if (_STATIC_DIR / "browse.html").is_file():
         return FileResponse(_STATIC_DIR / "browse.html")
 
     if (_STATIC_DIR / "chat.html").is_file():
+
         @app.get("/chat")
         def serve_chat() -> FileResponse:
             return FileResponse(_STATIC_DIR / "chat.html")
@@ -85,3 +86,54 @@ if _FRONTEND_DIST.is_dir():
     def serve_spa(full_path: str) -> FileResponse:
         """Serve index.html for all non-API routes (React Router client-side routing)."""
         return FileResponse(_FRONTEND_DIST / "index.html")
+
+
+_LOGGER = logging.getLogger(__name__)
+_FRONTEND_STALENESS_GRACE_SECONDS = 5.0
+
+
+def _check_frontend_dist_freshness() -> None:
+    try:
+        dist_index = _FRONTEND_DIST / "index.html"
+        if not dist_index.is_file():
+            _LOGGER.warning(
+                "ADMIN_CONSOLE_FRONTEND_MISSING: dist/index.html not found at %s. "
+                "SPA routes will 404. Run `just frontend-fresh` to build.",
+                dist_index,
+            )
+            return
+
+        dist_mtime = dist_index.stat().st_mtime
+
+        frontend_root = _FRONTEND_DIST.parent
+        src_root = frontend_root / "src"
+        candidates: list[Path] = []
+        if src_root.is_dir():
+            for ext in ("ts", "tsx", "js", "jsx", "css", "html"):
+                candidates.extend(src_root.rglob(f"*.{ext}"))
+        for extra in ("index.html", "package.json", "vite.config.ts"):
+            p = frontend_root / extra
+            if p.is_file():
+                candidates.append(p)
+
+        if not candidates:
+            return
+
+        latest = max(candidates, key=lambda p: p.stat().st_mtime)
+        latest_mtime = latest.stat().st_mtime
+
+        if latest_mtime > dist_mtime + _FRONTEND_STALENESS_GRACE_SECONDS:
+            _LOGGER.warning(
+                "ADMIN_CONSOLE_FRONTEND_STALE: dist/index.html built at %s, "
+                "but src has newer file (%s at %s). Browser will see stale "
+                "React SPA. Run `just frontend-fresh` to rebuild, or "
+                "`just frontend-dev` for HMR on http://localhost:5180.",
+                datetime.fromtimestamp(dist_mtime).isoformat(timespec="seconds"),
+                latest.relative_to(frontend_root.parent),
+                datetime.fromtimestamp(latest_mtime).isoformat(timespec="seconds"),
+            )
+    except Exception as exc:  # noqa: BLE001
+        _LOGGER.debug("frontend dist freshness check skipped: %s", exc)
+
+
+_check_frontend_dist_freshness()

@@ -207,6 +207,8 @@ React 上的所有 PATCH / DELETE / 批量 quality 标记动作只写 SQLite。c
 6. **字段契约（与 Shared-Spec 对齐）**：admin-console 暴露的 professor / company / paper / patent 字段必须是 Shared-Spec §4.2 / §4.3 的子集；不得自创字段。
 7. **环境变量唯一**：DATABASE_URL 是 admin-console backend 启动的唯一 DB 配置入口。不允许 module-level 默认值或硬编码 fallback。
 8. **/browse 不直接连 DB**：`browse.html` 永远只通过 `fetch('/api/...')` 间接访问；不引入独立 DB 客户端。
+9. **5180 不是常驻服务**：vite dev server 仅在前端开发期手动启动（`just frontend-dev`），不需要 systemd / nohup 守护；任意时刻 5180 不存在不构成"系统故障"。
+10. **dist 新鲜度守卫**：backend 启动时若检测到 `frontend/src/` 比 `frontend/dist/index.html` 新（grace 5s），必须以 `ADMIN_CONSOLE_FRONTEND_STALE` 前缀的 WARNING 输出；dist 缺失输出 `ADMIN_CONSOLE_FRONTEND_MISSING`。WARN 不阻塞启动。
 
 ## 8. Migration plan（与 W10-6 衔接）
 
@@ -239,6 +241,17 @@ React 上的所有 PATCH / DELETE / 批量 quality 标记动作只写 SQLite。c
 - **Wave 13（端口迁移 + 退役）**：W13-7 在 React 建 `Provenance.tsx` / `Coverage.tsx` / `Review.tsx` / `PipelineIssues.tsx` 4 页消费 `/api/pipeline/*` / `/api/review/*` / `/api/pipeline-issues/*`；W13-8 git rm `backend/static/browse.html` + `chat.html`；W13-9 git rm `SqliteReleasedObjectStore`
 
 **退役完成态**：admin-console 单面 = React SPA；唯一存储 = Postgres `miroflow_real`；端口 5180/8088 数据完全一致。
+
+### 8.4 端口工作模式（2026-05-02 锁）
+
+| 场景 | 该用 |
+|---|---|
+| 看数据 / `/browse` / production demo | `http://<host>:8088` |
+| 改前端 React 代码（HMR） | `just frontend-dev` 起 5180，浏览器开 `http://localhost:5180` |
+| 改完前端要让 8088 显示新版 | `just frontend-fresh` |
+| backend 启动看到 `ADMIN_CONSOLE_FRONTEND_STALE` | 立即跑 `just frontend-fresh` |
+
+5180 是开发期可选工具，不是常驻服务。8088 是唯一权威进入点，永远在跑；它服务 production-built `frontend/dist/`，dist 由 `just frontend-fresh` 手动刷新。模块加载时一次性自检（见 §7 invariant 10）保证 dist 与 src 不一致时立即可见。
 
 ## 9. Validation commands
 

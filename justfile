@@ -34,3 +34,12 @@ format-md:
 # run precommit before PR
 [group('precommit')]
 precommit: lint sort-imports format-md format
+
+# Build admin-console React SPA into frontend/dist (refreshes the SPA served by 8088)
+frontend-fresh:
+    cd apps/admin-console/frontend && npm run build
+
+# Start admin-console Vite dev server with HMR on port 5180 (proxies /api to 8088).
+# Use this only when actively editing React code; otherwise rely on 8088 + dist.
+frontend-dev:
+    cd apps/admin-console/frontend && npm run dev
