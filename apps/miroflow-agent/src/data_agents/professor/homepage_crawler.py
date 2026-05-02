@@ -30,6 +30,7 @@ from .models import (
     OfficialAnchorProfile,
     WorkEntry,
 )
+from .multi_source_crawler import follow_supplementary_links
 from .name_utils import (
     derive_english_name_candidates_from_url,
     normalize_english_name,
@@ -1554,6 +1555,15 @@ async def crawl_homepage(
         _FetchedPage(url=homepage_url, html=main_html, publication_candidate=False)
     ]
     all_content = main_html
+    supplementary_text_segments = follow_supplementary_links(
+        main_html,
+        homepage_url,
+        professor_name=profile.name,
+        max_hops=2,
+        fetch_html_fn=fetch_html_fn,
+    )
+    if supplementary_text_segments:
+        all_content += "\n\n" + "\n\n".join(supplementary_text_segments)
 
     # Step 2-4: From the official detail page, let the LLM decide which anchored targets
     # are worth following. Only LLM-selected anchored pages are recursively fetched.
@@ -1714,7 +1724,9 @@ async def crawl_homepage(
     main_anchor_text = _extract_official_anchor_text_from_html(
         html=main_html, profile=profile
     )
-    main_sanitized_content = _sanitize_page_content(main_anchor_text)
+    main_sanitized_content = _sanitize_page_content(
+        "\n\n".join([main_anchor_text, *supplementary_text_segments])[:30000]
+    )
     official_research_directions = _extract_official_research_directions(
         main_sanitized_content
     )

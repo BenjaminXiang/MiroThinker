@@ -30,6 +30,7 @@ class Paper(BaseModel):
     year: int | None = None
     venue: str | None = None
     abstract_clean: str | None = None
+    summary_zh: str | None = None
     authors_display: str | None = None
     authors_raw: list[dict[str, Any]] | dict[str, Any] | None = None
     citation_count: int | None = None

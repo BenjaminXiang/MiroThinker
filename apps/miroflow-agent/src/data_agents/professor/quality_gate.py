@@ -6,6 +6,7 @@ L1: Hard blocks (release prevented)
 L2: Quality markers (released with status flag)
 L3: Statistical alerts (aggregate-level warnings)
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -19,58 +20,60 @@ from src.data_agents.contracts import (
 
 from .models import EnrichedProfessorProfile
 from .name_selection import is_obvious_non_person_name, looks_like_profile_blob
+from .summary_generator import BOILERPLATE_KEYWORDS as SUMMARY_BOILERPLATE_KEYWORDS
 
-BOILERPLATE_KEYWORDS = frozenset({
-    "暂未获取",
-    "持续补全",
-    "仍在完善",
-    "已整理",
-    "可追溯来源",
-    "已同步整理",
-    "持续补充",
-    "仍在持续",
-    "由于您提供的教授信息极度匮乏",
-    "无法构建符合您要求",
-    "若需生成符合学术规范",
-    "请补充以下关键维度信息",
-})
+_QUALITY_GATE_REFUSAL_KEYWORDS = frozenset(
+    {
+        "由于您提供的教授信息极度匮乏",
+        "无法构建符合您要求",
+        "若需生成符合学术规范",
+        "请补充以下关键维度信息",
+    }
+)
+BOILERPLATE_KEYWORDS = SUMMARY_BOILERPLATE_KEYWORDS | _QUALITY_GATE_REFUSAL_KEYWORDS
 READER_ARTIFACT_MARKERS = ("URL Source:", "Published Time:", "Markdown Content:")
-HSS_DEPARTMENT_KEYWORDS = frozenset({
-    "法学院",
-    "法学",
-    "教育学",
-    "教育学部",
-    "文学",
-    "文学院",
-    "外语",
-    "外国语",
-    "历史",
-    "哲学",
-    "新闻",
-    "传播",
-    "社会学",
-    "人文",
-    "马克思主义",
-    "艺术",
-    "创意设计",
-    "设计学院",
-})
-HSS_PROJECT_KEYWORDS = frozenset({
-    "国家社科",
-    "社科基金",
-    "哲学社会科学",
-    "教育部人文",
-    "教育部社科",
-    "人文社科",
-    "教改",
-})
-HSS_AWARD_KEYWORDS = frozenset({
-    "教学成果",
-    "哲学社会科学",
-    "社科",
-    "人文社科",
-    "优秀成果",
-})
+HSS_DEPARTMENT_KEYWORDS = frozenset(
+    {
+        "法学院",
+        "法学",
+        "教育学",
+        "教育学部",
+        "文学",
+        "文学院",
+        "外语",
+        "外国语",
+        "历史",
+        "哲学",
+        "新闻",
+        "传播",
+        "社会学",
+        "人文",
+        "马克思主义",
+        "艺术",
+        "创意设计",
+        "设计学院",
+    }
+)
+HSS_PROJECT_KEYWORDS = frozenset(
+    {
+        "国家社科",
+        "社科基金",
+        "哲学社会科学",
+        "教育部人文",
+        "教育部社科",
+        "人文社科",
+        "教改",
+    }
+)
+HSS_AWARD_KEYWORDS = frozenset(
+    {
+        "教学成果",
+        "哲学社会科学",
+        "社科",
+        "人文社科",
+        "优秀成果",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -80,6 +83,13 @@ class QualityResult:
     l1_failures: list[str]
     l2_flags: list[str]
     quality_detail: str | None = None
+
+
+@dataclass(frozen=True)
+class CheckResult:
+    passed: bool
+    code: str | None = None
+    message: str | None = None
 
 
 @dataclass(frozen=True)
@@ -114,7 +124,9 @@ def evaluate_quality(
     # L1 — hard blocks
     if not profile.name or not profile.name.strip():
         l1_failures.append("name_empty")
-    elif is_obvious_non_person_name(profile.name) or looks_like_profile_blob(profile.name):
+    elif is_obvious_non_person_name(profile.name) or looks_like_profile_blob(
+        profile.name
+    ):
         l1_failures.append("name_not_person")
 
     if not profile.institution or not profile.institution.strip():
@@ -135,8 +147,13 @@ def evaluate_quality(
     summary = profile.profile_summary
     if not summary:
         l1_failures.append("summary_missing")
-    elif any(kw in summary for kw in BOILERPLATE_KEYWORDS):
-        l1_failures.append("profile_summary_boilerplate")
+    else:
+        summary_length = _check_profile_summary_length(profile)
+        if not summary_length.passed and summary_length.code:
+            l1_failures.append(summary_length.code)
+        summary_boilerplate = _check_profile_summary_boilerplate(profile)
+        if not summary_boilerplate.passed and summary_boilerplate.code:
+            l1_failures.append(summary_boilerplate.code)
 
     passed_l1 = len(l1_failures) == 0
 
@@ -183,6 +200,35 @@ def evaluate_quality(
         l2_flags=l2_flags,
         quality_detail=quality_detail,
     )
+
+
+def _check_profile_summary_length(
+    profile: EnrichedProfessorProfile,
+    *,
+    min_length: int = 150,
+) -> CheckResult:
+    text = (profile.profile_summary or "").strip()
+    if len(text) < min_length:
+        return CheckResult(
+            passed=False,
+            code="profile_summary_too_short",
+            message=f"profile_summary length {len(text)} < {min_length}",
+        )
+    return CheckResult(passed=True)
+
+
+def _check_profile_summary_boilerplate(
+    profile: EnrichedProfessorProfile,
+) -> CheckResult:
+    text = profile.profile_summary or ""
+    for keyword in BOILERPLATE_KEYWORDS:
+        if keyword in text:
+            return CheckResult(
+                passed=False,
+                code="profile_summary_boilerplate",
+                message=f"contains banned phrase: {keyword}",
+            )
+    return CheckResult(passed=True)
 
 
 def build_quality_report(
@@ -341,7 +387,9 @@ def has_scholarly_output_signal(profile: EnrichedProfessorProfile) -> bool:
         return True
     if not _is_hss_profile(profile):
         return False
-    return _has_hss_project_signal(profile.projects) or _has_hss_award_signal(profile.awards)
+    return _has_hss_project_signal(profile.projects) or _has_hss_award_signal(
+        profile.awards
+    )
 
 
 def _is_hss_profile(profile: EnrichedProfessorProfile) -> bool:
@@ -353,18 +401,12 @@ def _is_hss_profile(profile: EnrichedProfessorProfile) -> bool:
 
 def _has_hss_project_signal(projects: list[str]) -> bool:
     return any(
-        keyword in project
-        for project in projects
-        for keyword in HSS_PROJECT_KEYWORDS
+        keyword in project for project in projects for keyword in HSS_PROJECT_KEYWORDS
     )
 
 
 def _has_hss_award_signal(awards: list[str]) -> bool:
-    return any(
-        keyword in award
-        for award in awards
-        for keyword in HSS_AWARD_KEYWORDS
-    )
+    return any(keyword in award for award in awards for keyword in HSS_AWARD_KEYWORDS)
 
 
 def _has_reader_artifact(profile: EnrichedProfessorProfile) -> bool:

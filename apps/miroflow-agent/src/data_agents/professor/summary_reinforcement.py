@@ -33,7 +33,11 @@ _MARKDOWN_FENCE_RE = re.compile(r"^\s*```[a-zA-Z]*\s*|\s*```\s*$", re.MULTILINE)
 
 @dataclass(frozen=True, slots=True)
 class PaperContext:
-    """One paper's textual context used to build the reinforcement prompt."""
+    """One paper's textual context used to build the reinforcement prompt.
+
+    Callers should pass paper.summary_zh as abstract when present, falling
+    back to paper.abstract_clean or paper_full_text.abstract.
+    """
 
     title: str
     abstract: str | None
@@ -105,9 +109,7 @@ def _build_user_prompt(
             if paper.intro and paper.intro.strip():
                 parts.append(f"  引言摘录：{paper.intro.strip()[:500]}")
     else:
-        parts.append(
-            "\n## 论文信息\n本教授暂无已收录的论文全文。仅基于基本信息合成。"
-        )
+        parts.append("\n## 论文信息\n本教授暂无已收录的论文全文。仅基于基本信息合成。")
     parts.append("\n现在请合成画像：")
     return "\n".join(parts)
 

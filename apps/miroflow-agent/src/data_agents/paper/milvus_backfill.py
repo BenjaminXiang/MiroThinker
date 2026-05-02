@@ -47,7 +47,7 @@ def backfill_paper_chunks(
 
     sql = (
         "SELECT p.paper_id, p.title_clean AS title, p.year, p.venue, "
-        "       pft.abstract, pft.intro "
+        "       p.summary_zh, p.abstract_clean, pft.abstract, pft.intro "
         "FROM paper p "
         "LEFT JOIN paper_full_text pft ON pft.paper_id = p.paper_id"
     )
@@ -78,7 +78,7 @@ def backfill_paper_chunks(
                 title=row["title"] or "",
                 year=row["year"],
                 venue=row["venue"],
-                abstract=row["abstract"],
+                abstract=_paper_embedding_abstract(row),
                 intro=row["intro"],
             )
             if not chunks:
@@ -150,6 +150,10 @@ def backfill_paper_chunks(
         papers_with_errors=papers_with_errors,
         duration_seconds=duration_seconds,
     )
+
+
+def _paper_embedding_abstract(row: dict) -> str | None:
+    return row.get("summary_zh") or row.get("abstract_clean") or row.get("abstract")
 
 
 def _chunk_to_row(chunk: PaperChunk, vector: list[float]) -> dict[str, object]:

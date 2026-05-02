@@ -6,6 +6,8 @@ from src.data_agents.professor.models import EnrichedProfessorProfile
 from src.data_agents.professor.quality_gate import (
     build_quality_report,
     evaluate_quality,
+    _check_profile_summary_boilerplate,
+    _check_profile_summary_length,
 )
 
 
@@ -41,9 +43,12 @@ def _pad_summary(base: str, target_len: int) -> str:
 
 
 def test_passes_l1_with_all_fields():
-    profile = _profile(profile_summary=_pad_summary(
-        "张三现任南方科技大学教授，研究方向聚焦大语言模型安全对齐与RLHF训练策略", 250
-    ))
+    profile = _profile(
+        profile_summary=_pad_summary(
+            "张三现任南方科技大学教授，研究方向聚焦大语言模型安全对齐与RLHF训练策略",
+            250,
+        )
+    )
     result = evaluate_quality(profile)
     assert result.passed_l1
     assert result.l1_failures == []
@@ -77,7 +82,9 @@ def test_fails_l1_missing_official_evidence():
 
 
 def test_fails_l1_boilerplate_summary():
-    boilerplate = _pad_summary("张三南方科技大学教授。已整理5条可追溯来源，持续补全中", 250)
+    boilerplate = _pad_summary(
+        "张三南方科技大学教授。已整理5条可追溯来源，持续补全中", 250
+    )
     profile = _profile(profile_summary=boilerplate)
     result = evaluate_quality(profile)
     assert not result.passed_l1
@@ -102,7 +109,9 @@ def test_fails_l1_reader_artifact_in_title_or_name():
             "李海洲 | 人工智能学院 URL Source: https://sai.cuhk.edu.cn/teacher/102 "
             "Published Time: Thu, 02 Apr 2026 08:09:45 GMT Markdown Content: ..."
         ),
-        profile_summary=_pad_summary("张三现任南方科技大学教授，研究大语言模型安全对齐", 250),
+        profile_summary=_pad_summary(
+            "张三现任南方科技大学教授，研究大语言模型安全对齐", 250
+        ),
     )
     result = evaluate_quality(profile)
     assert not result.passed_l1
@@ -112,7 +121,9 @@ def test_fails_l1_reader_artifact_in_title_or_name():
 def test_fails_l1_faculty_section_heading_name():
     profile = _profile(
         name="教师队伍",
-        profile_summary=_pad_summary("张三现任中山大学（深圳）材料学院教授，研究半导体封装关键材料", 250),
+        profile_summary=_pad_summary(
+            "张三现任中山大学（深圳）材料学院教授，研究半导体封装关键材料", 250
+        ),
         institution="中山大学（深圳）",
         department="材料学院",
     )
@@ -125,7 +136,9 @@ def test_fails_l1_faculty_section_heading_name():
 def test_fails_l1_title_only_profile_name():
     profile = _profile(
         name="教授",
-        profile_summary=_pad_summary("张三现任中山大学（深圳）材料学院教授，研究半导体封装关键材料", 250),
+        profile_summary=_pad_summary(
+            "张三现任中山大学（深圳）材料学院教授，研究半导体封装关键材料", 250
+        ),
         institution="中山大学（深圳）",
         department="材料学院",
     )
@@ -138,7 +151,9 @@ def test_fails_l1_title_only_profile_name():
 def test_fails_l1_non_person_profile_name():
     profile = _profile(
         name="Teaching",
-        profile_summary=_pad_summary("张三现任南方科技大学教授，研究大语言模型安全对齐", 250),
+        profile_summary=_pad_summary(
+            "张三现任南方科技大学教授，研究大语言模型安全对齐", 250
+        ),
     )
     result = evaluate_quality(profile)
     assert not result.passed_l1
@@ -146,12 +161,54 @@ def test_fails_l1_non_person_profile_name():
     assert result.quality_status == "low_confidence"
 
 
-def test_short_summary_passes_l1_with_l2_flag():
+def test_summary_length_check_rejects_below_150():
     profile = _profile(profile_summary="张三是教授。")
     result = evaluate_quality(profile)
+    assert not result.passed_l1
+    assert "profile_summary_too_short" in result.l1_failures
+    assert result.quality_status == "low_confidence"
+
+
+def test_summary_length_check_accepts_above_150():
+    profile = _profile(
+        profile_summary=_pad_summary(
+            "张三现任南方科技大学教授，研究大语言模型安全对齐与RLHF训练策略",
+            150,
+        )
+    )
+    result = _check_profile_summary_length(profile)
+    assert result.passed
+
+
+def test_summary_boilerplate_check_rejects():
+    profile = _profile(
+        profile_summary=_pad_summary("张三南方科技大学教授。持续补全中", 180)
+    )
+    result = _check_profile_summary_boilerplate(profile)
+    assert not result.passed
+    assert result.code == "profile_summary_boilerplate"
+
+
+def test_summary_full_check_accepts_clean():
+    profile = _profile(
+        enrichment_source="paper_enriched",
+        top_papers=[
+            {
+                "title": "Safety Alignment for LLMs",
+                "year": 2024,
+                "venue": "NeurIPS",
+                "citation_count": 120,
+                "source": "openalex",
+            }
+        ],
+        paper_count=30,
+        profile_summary=_pad_summary(
+            "张三现任南方科技大学教授，研究大语言模型安全对齐", 250
+        ),
+    )
+    result = evaluate_quality(profile)
     assert result.passed_l1
-    assert "summary_length_suboptimal" in result.l2_flags
-    assert result.quality_status == "needs_enrichment"
+    assert result.quality_status == "ready"
 
 
 def test_fails_l1_missing_summary():
@@ -165,7 +222,9 @@ def test_fails_l1_missing_summary():
 def test_l2_flags_incomplete_when_no_directions():
     profile = _profile(
         research_directions=[],
-        profile_summary=_pad_summary("张三现任南方科技大学教授，在人工智能领域有丰富经验", 250),
+        profile_summary=_pad_summary(
+            "张三现任南方科技大学教授，在人工智能领域有丰富经验", 250
+        ),
     )
     result = evaluate_quality(profile)
     assert result.passed_l1
@@ -176,7 +235,9 @@ def test_l2_flags_needs_enrichment():
     profile = _profile(
         enrichment_source="regex_only",
         top_papers=[],
-        profile_summary=_pad_summary("张三现任南方科技大学教授，研究大语言模型安全对齐", 250),
+        profile_summary=_pad_summary(
+            "张三现任南方科技大学教授，研究大语言模型安全对齐", 250
+        ),
     )
     result = evaluate_quality(profile)
     assert result.passed_l1
@@ -196,7 +257,9 @@ def test_quality_status_ready_when_all_good():
             }
         ],
         paper_count=30,
-        profile_summary=_pad_summary("张三现任南方科技大学教授，研究大语言模型安全对齐", 250),
+        profile_summary=_pad_summary(
+            "张三现任南方科技大学教授，研究大语言模型安全对齐", 250
+        ),
     )
     result = evaluate_quality(profile)
     assert result.passed_l1
@@ -242,7 +305,9 @@ def test_quality_status_needs_enrichment_when_paper_fields_missing():
         h_index=None,
         citation_count=None,
         paper_count=None,
-        profile_summary=_pad_summary("张三现任南方科技大学教授，研究大语言模型安全对齐", 250),
+        profile_summary=_pad_summary(
+            "张三现任南方科技大学教授，研究大语言模型安全对齐", 250
+        ),
     )
     result = evaluate_quality(profile)
     assert result.passed_l1
@@ -333,7 +398,9 @@ def test_build_quality_report_generates_alert_on_low_ready():
     for i in range(10):
         p = _profile(
             name=f"教授{i}",
-            profile_summary=_pad_summary(f"教授{i}南方科技大学大语言模型安全对齐研究", 250),
+            profile_summary=_pad_summary(
+                f"教授{i}南方科技大学大语言模型安全对齐研究", 250
+            ),
         )
         from src.data_agents.professor.quality_gate import QualityResult
 
@@ -363,7 +430,9 @@ def test_build_quality_report_generates_alert_on_low_ready():
 def test_build_quality_report_counts_low_confidence_blocked_profiles():
     profile = _profile(
         name="Teaching",
-        profile_summary=_pad_summary("张三现任南方科技大学教授，研究大语言模型安全对齐", 250),
+        profile_summary=_pad_summary(
+            "张三现任南方科技大学教授，研究大语言模型安全对齐", 250
+        ),
     )
     from src.data_agents.professor.quality_gate import QualityResult
 

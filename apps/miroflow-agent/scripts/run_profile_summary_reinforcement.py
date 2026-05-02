@@ -157,14 +157,17 @@ def _build_select_sql(
     return sql, tuple(params)
 
 
-def _fetch_paper_contexts(conn, professor_id: str, *, max_papers: int) -> list[PaperContext]:
+def _fetch_paper_contexts(
+    conn, professor_id: str, *, max_papers: int
+) -> list[PaperContext]:
     rows = conn.execute(
         """
         SELECT COALESCE(p.title_clean, p.title_raw, '') AS title,
-               pft.abstract, pft.intro, p.year, p.venue
+               COALESCE(p.summary_zh, p.abstract_clean, pft.abstract) AS abstract,
+               pft.intro, p.year, p.venue
           FROM professor_paper_link ppl
           JOIN paper p ON p.paper_id = ppl.paper_id
-          JOIN paper_full_text pft ON pft.paper_id = p.paper_id
+          LEFT JOIN paper_full_text pft ON pft.paper_id = p.paper_id
          WHERE ppl.professor_id = %s
            AND ppl.link_status IN ('verified', 'candidate')
          ORDER BY COALESCE(p.year, 0) DESC
@@ -199,7 +202,9 @@ def _append_checkpoint(path: Path, row: dict) -> None:
 
 
 def _resolve_checkpoint_path(resume_arg: str | None, run_id: str) -> Path:
-    base = _REPO_ROOT / "logs" / "data_agents" / "professor" / "summary_reinforcement_runs"
+    base = (
+        _REPO_ROOT / "logs" / "data_agents" / "professor" / "summary_reinforcement_runs"
+    )
     if resume_arg:
         # Explicit path
         return Path(resume_arg)

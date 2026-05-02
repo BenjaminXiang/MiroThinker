@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-import pytest
 
 from src.data_agents.paper.milvus_backfill import (
     BackfillReport,
@@ -44,6 +43,8 @@ def _paper_row(
     year: int | None = 2023,
     venue: str | None = "NeurIPS",
     abstract: str | None = "Short abstract text.",
+    abstract_clean: str | None = None,
+    summary_zh: str | None = None,
     intro: str | None = None,
 ) -> dict:
     return {
@@ -51,6 +52,8 @@ def _paper_row(
         "title": title,
         "year": year,
         "venue": venue,
+        "summary_zh": summary_zh,
+        "abstract_clean": abstract_clean,
         "abstract": abstract,
         "intro": intro,
     }
@@ -87,7 +90,9 @@ def test_backfill_single_paper_writes_chunks():
 
 def test_backfill_deletes_before_insert_per_paper():
     """Idempotency: for each paper, Milvus delete(expr='paper_id == ...') runs before insert."""
-    conn = _fake_pg_conn_returning([_paper_row(paper_id="p1"), _paper_row(paper_id="p2")])
+    conn = _fake_pg_conn_returning(
+        [_paper_row(paper_id="p1"), _paper_row(paper_id="p2")]
+    )
     milvus = _fake_milvus_client()
     embed = _fake_embedding_client()
     backfill_paper_chunks(conn, milvus, embed, batch_size=32)
@@ -128,19 +133,34 @@ def test_backfill_skips_resume_ids():
     assert report.papers_processed == 1
     # SELECT SQL should include NOT IN clause or similar for resume
     executed_sqls = [c.args[0] for c in conn.execute.call_args_list if c.args]
-    select_sqls = [s for s in executed_sqls if isinstance(s, str) and "SELECT" in s.upper()]
+    select_sqls = [
+        s for s in executed_sqls if isinstance(s, str) and "SELECT" in s.upper()
+    ]
     assert any("NOT IN" in s.upper() or "paper_id" in s for s in select_sqls)
 
 
 def test_backfill_paper_without_abstract_or_intro_gets_title_chunk():
-    conn = _fake_pg_conn_returning(
-        [_paper_row(abstract=None, intro=None)]
-    )
+    conn = _fake_pg_conn_returning([_paper_row(abstract=None, intro=None)])
     milvus = _fake_milvus_client()
     embed = _fake_embedding_client()
     report = backfill_paper_chunks(conn, milvus, embed)
     # At least title chunk written
     assert report.chunks_inserted >= 1
+
+
+def test_backfill_prefers_summary_zh_for_abstract_chunk():
+    summary_zh = "中文摘要内容。" * 20
+    conn = _fake_pg_conn_returning(
+        [_paper_row(abstract="English abstract text.", summary_zh=summary_zh)]
+    )
+    milvus = _fake_milvus_client()
+    embed = _fake_embedding_client()
+    backfill_paper_chunks(conn, milvus, embed)
+
+    inserted = milvus.insert.call_args.kwargs["data"]
+    abstract_chunks = [row for row in inserted if row["chunk_type"] == "abstract"]
+    assert abstract_chunks
+    assert abstract_chunks[0]["content_text"] == summary_zh
 
 
 def test_backfill_empty_title_paper_skipped_or_counted_as_error():
