@@ -6,8 +6,8 @@ from typing import Annotated, Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 
-QualityStatus = Literal["ready", "needs_review", "low_confidence", "needs_enrichment"]
-LegacyQualityStatus = Literal["ready", "needs_review", "low_confidence", "needs_enrichment", "incomplete", "shallow_summary"]
+QualityStatus = Literal["ready", "needs_review", "low_confidence", "needs_enrichment", "partial", "rejected"]
+LegacyQualityStatus = Literal["ready", "needs_review", "low_confidence", "needs_enrichment", "incomplete", "shallow_summary", "partial", "rejected"]
 PatentSummaryTextMethod = Literal["llm", "fallback_template"]
 
 QUALITY_STATUS_CANONICAL_MAP: dict[str, QualityStatus] = {
@@ -344,6 +344,7 @@ class PatentRecord(SharedBaseModel):
     title: NonEmptyStr
     title_en: OptionalNonEmptyStr = None
     patent_number: OptionalNonEmptyStr = None
+    identity_status: str = "confirmed"
     applicants: list[NonEmptyStr] = Field(min_length=1)
     inventors: list[NonEmptyStr] = Field(default_factory=list)
     patent_type: NonEmptyStr

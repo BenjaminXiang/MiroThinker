@@ -1,8 +1,14 @@
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
+
+# admin-console serves real users; ensure Milvus uses real client (not in-memory mock).
+# The mock is intentional for unit tests but unsafe for production retrieval.
+# See .agents/specs/2026-05-02-w13-9-milvus-real-client-explicit.md.
+os.environ.setdefault("MILVUS_USE_REAL_CLIENT", "1")
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

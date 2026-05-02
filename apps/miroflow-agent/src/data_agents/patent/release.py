@@ -65,6 +65,7 @@ def build_patent_release(
             title=title,
             title_en=record.title_en,
             patent_number=record.patent_number,
+            identity_status=_identity_status_for_patent_number(record.patent_number),
             applicants=applicants,
             inventors=inventors,
             patent_type=record.patent_type or "未知类型",
@@ -162,6 +163,7 @@ def record_to_patent_dict(record: PatentRecord) -> dict[str, object]:
         "ipc_codes": list(record.ipc_codes),
         "summary_text": record.summary_text,
         "summary_text_method": record.summary_text_method,
+        "identity_status": _identity_status_for_patent_number(record.patent_number),
         "quality_status": _calculate_quality_status(
             title_clean=record.title,
             applicants_parsed=applicants_parsed,
@@ -170,6 +172,12 @@ def record_to_patent_dict(record: PatentRecord) -> dict[str, object]:
         "first_seen_at": record.last_updated,
         "updated_at": record.last_updated,
     }
+
+
+def _identity_status_for_patent_number(patent_number: str | None) -> str:
+    if patent_number and patent_number.strip():
+        return "confirmed"
+    return "unverified"
 
 
 def publish_patent_release(

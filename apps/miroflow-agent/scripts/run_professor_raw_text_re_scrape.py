@@ -48,6 +48,16 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--dry-run", action="store_true", help="No DB writes")
     parser.add_argument("--log-level", default="INFO")
+    parser.add_argument(
+        "--stem-only",
+        action="store_true",
+        help=(
+            "Restrict to STEM disciplines: computer_science / materials / "
+            "biomedical / electrical_engineering / mechanical_engineering / "
+            "physics / chemistry / mathematics / interdisciplinary. "
+            "Skips 'other' and NULL discipline_family."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -94,16 +104,35 @@ def _append_checkpoint(path: Path, row: dict[str, Any]) -> None:
         fh.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
-def _build_select_sql(limit: int | None = None) -> tuple[str, tuple[Any, ...]]:
+_STEM_DISCIPLINE_FAMILIES = (
+    "computer_science",
+    "materials",
+    "biomedical",
+    "electrical_engineering",
+    "mechanical_engineering",
+    "physics",
+    "chemistry",
+    "mathematics",
+    "interdisciplinary",
+)
+
+
+def _build_select_sql(
+    limit: int | None = None, *, stem_only: bool = False
+) -> tuple[str, tuple[Any, ...]]:
     sql = (
         "SELECT p.professor_id, p.canonical_name, p.profile_raw_text, sp.url AS profile_url "
         "  FROM professor p "
         "  JOIN source_page sp ON sp.page_id = p.primary_official_profile_page_id "
         " WHERE p.identity_status = 'resolved' "
         "   AND sp.url LIKE 'http%%' "
-        " ORDER BY p.professor_id"
     )
     params: list[Any] = []
+    if stem_only:
+        placeholders = ",".join(["%s"] * len(_STEM_DISCIPLINE_FAMILIES))
+        sql += f"   AND p.discipline_family IN ({placeholders}) "
+        params.extend(_STEM_DISCIPLINE_FAMILIES)
+    sql += " ORDER BY p.professor_id"
     if limit is not None:
         sql += " LIMIT %s"
         params.append(int(limit))
@@ -183,7 +212,7 @@ def main(argv: list[str] | None = None) -> None:
     resume_ids = _load_resume_ids(resume_path) if resume_path else set()
     checkpoint_path = _resolve_checkpoint_path(None, run_id)
 
-    sql, params = _build_select_sql(args.limit)
+    sql, params = _build_select_sql(args.limit, stem_only=args.stem_only)
     rows = conn.execute(sql, params).fetchall()
     started_at = time.monotonic()
     report: dict[str, Any] = {

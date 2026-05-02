@@ -250,6 +250,7 @@ def run_homepage_paper_ingest(
                                 citation_count=None,
                                 canonical_source=resolved.match_source,
                                 run_id=run_id,
+                                title_resolution_source=resolved.match_source,
                             )
                             actual_paper_id = getattr(
                                 paper_report,

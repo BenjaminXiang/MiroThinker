@@ -14,6 +14,7 @@ from .title_cleaner import clean_paper_title
 
 
 _WHITESPACE_RE = re.compile(r"\s+")
+_CONFIRMED_TITLE_RESOLUTION_SOURCES = {"openalex", "arxiv", "doi_lookup"}
 
 
 @dataclass(frozen=True)
@@ -38,6 +39,7 @@ def upsert_paper(
     citation_count: int | None,
     canonical_source: str,
     run_id: UUID | str,
+    title_resolution_source: str | None = None,
 ) -> PaperUpsertReport:
     """Upsert a canonical paper row keyed by a stable paper id."""
     run_id = require_real_run_id(run_id, writer_name="upsert_paper")
@@ -50,6 +52,9 @@ def upsert_paper(
     normalized_openalex = _normalize_optional(openalex_id)
     normalized_arxiv = _normalize_optional(arxiv_id)
     normalized_semantic_scholar = _normalize_optional(semantic_scholar_id)
+    identity_status = _identity_status_for_title_resolution_source(
+        title_resolution_source or canonical_source
+    )
     paper_id = _build_paper_id(
         title_clean=normalized_title,
         doi=normalized_doi,
@@ -82,9 +87,10 @@ def upsert_paper(
             authors_display,
             citation_count,
             canonical_source,
+            identity_status,
             run_id
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT (paper_id) DO UPDATE
            SET title_clean          = EXCLUDED.title_clean,
                title_raw            = EXCLUDED.title_raw,
@@ -98,6 +104,7 @@ def upsert_paper(
                authors_display      = COALESCE(EXCLUDED.authors_display, paper.authors_display),
                citation_count       = COALESCE(EXCLUDED.citation_count, paper.citation_count),
                canonical_source     = EXCLUDED.canonical_source,
+               identity_status      = EXCLUDED.identity_status,
                run_id               = COALESCE(EXCLUDED.run_id, paper.run_id),
                updated_at           = %s
         """,
@@ -115,6 +122,7 @@ def upsert_paper(
             _normalize_optional(authors_display),
             citation_count,
             canonical_source,
+            identity_status,
             run_id,
             now,
         ),
@@ -138,6 +146,13 @@ def _build_paper_id(
         return build_stable_id("paper", f"arxiv:{arxiv_id}")
     normalized_title = _WHITESPACE_RE.sub("", title_clean).lower()
     return build_stable_id("paper", f"title:{normalized_title}|year:{year or 0}")
+
+
+def _identity_status_for_title_resolution_source(source: str | None) -> str:
+    normalized_source = _normalize_optional(source)
+    if normalized_source in _CONFIRMED_TITLE_RESOLUTION_SOURCES:
+        return "confirmed"
+    return "unverified"
 
 
 def _normalize_optional(value: object) -> str | None:

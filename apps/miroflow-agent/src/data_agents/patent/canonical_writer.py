@@ -78,6 +78,7 @@ def upsert_patent(
             ipc_codes,
             summary_text,
             summary_text_method,
+            identity_status,
             quality_status,
             run_id,
             first_seen_at,
@@ -85,7 +86,7 @@ def upsert_patent(
         )
         VALUES (
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
         )
         ON CONFLICT (patent_id) DO UPDATE
            SET patent_number       = EXCLUDED.patent_number,
@@ -106,6 +107,7 @@ def upsert_patent(
                ipc_codes           = EXCLUDED.ipc_codes,
                summary_text        = EXCLUDED.summary_text,
                summary_text_method = EXCLUDED.summary_text_method,
+               identity_status     = EXCLUDED.identity_status,
                quality_status      = EXCLUDED.quality_status,
                run_id              = EXCLUDED.run_id,
                updated_at          = EXCLUDED.updated_at
@@ -131,6 +133,7 @@ def upsert_patent(
             values["ipc_codes"],
             values["summary_text"],
             values["summary_text_method"],
+            values["identity_status"],
             values["quality_status"],
             run_id,
             values["first_seen_at"],
