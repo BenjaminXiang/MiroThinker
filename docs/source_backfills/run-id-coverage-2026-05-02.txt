@@ -1,0 +1,16 @@
+run_id coverage generated_at=2026-05-02T02:57:17+00:00
+legacy_backfill_run_id=00000000-0000-0000-0000-000000000001
+dry_run_sentinel_run_id=00000000-0000-0000-0000-000000000000
+
+table,total,legacy_backfill,real_run_id,null_run_id,sentinel_run_id,has_run_id_column
+company,1024,1024,0,0,0,true
+professor,787,12,775,0,0,true
+professor_affiliation,3464,3464,0,0,0,true
+professor_fact,15498,15309,0,189,0,true
+professor_paper_link,8287,8287,0,0,0,true
+paper,7297,7297,0,0,0,true
+paper_full_text,4011,4011,0,0,0,true
+patent,0,0,0,0,0,true
+source_page,5594,5593,0,1,0,true
+
+json=[{"table_name": "company", "has_run_id_column": true, "total_rows": 1024, "legacy_backfill_rows": 1024, "real_run_id_rows": 0, "null_run_id_rows": 0, "sentinel_run_id_rows": 0}, {"table_name": "professor", "has_run_id_column": true, "total_rows": 787, "legacy_backfill_rows": 12, "real_run_id_rows": 775, "null_run_id_rows": 0, "sentinel_run_id_rows": 0}, {"table_name": "professor_affiliation", "has_run_id_column": true, "total_rows": 3464, "legacy_backfill_rows": 3464, "real_run_id_rows": 0, "null_run_id_rows": 0, "sentinel_run_id_rows": 0}, {"table_name": "professor_fact", "has_run_id_column": true, "total_rows": 15498, "legacy_backfill_rows": 15309, "real_run_id_rows": 0, "null_run_id_rows": 189, "sentinel_run_id_rows": 0}, {"table_name": "professor_paper_link", "has_run_id_column": true, "total_rows": 8287, "legacy_backfill_rows": 8287, "real_run_id_rows": 0, "null_run_id_rows": 0, "sentinel_run_id_rows": 0}, {"table_name": "paper", "has_run_id_column": true, "total_rows": 7297, "legacy_backfill_rows": 7297, "real_run_id_rows": 0, "null_run_id_rows": 0, "sentinel_run_id_rows": 0}, {"table_name": "paper_full_text", "has_run_id_column": true, "total_rows": 4011, "legacy_backfill_rows": 4011, "real_run_id_rows": 0, "null_run_id_rows": 0, "sentinel_run_id_rows": 0}, {"table_name": "patent", "has_run_id_column": true, "total_rows": 0, "legacy_backfill_rows": 0, "real_run_id_rows": 0, "null_run_id_rows": 0, "sentinel_run_id_rows": 0}, {"table_name": "source_page", "has_run_id_column": true, "total_rows": 5594, "legacy_backfill_rows": 5593, "real_run_id_rows": 0, "null_run_id_rows": 1, "sentinel_run_id_rows": 0}]
