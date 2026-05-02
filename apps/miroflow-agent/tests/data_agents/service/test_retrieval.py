@@ -350,15 +350,14 @@ def test_retrieve_embedding_failure_returns_empty():
 # =============================================================================
 
 
-def test_retrieve_unknown_domain_raises_value_error():
+def test_retrieve_unknown_domain_returns_empty_list():
     svc = RetrievalService(
         pg_conn_factory=lambda: MagicMock(),
         milvus_client=_fake_milvus_with_domains({}),
         embedding_client=_fake_embedding_client(),
         reranker=_fake_reranker(),
     )
-    with pytest.raises(ValueError):
-        svc.retrieve("query", domains=("not_a_real_domain",))
+    assert svc.retrieve("query", domains=("not_a_real_domain",)) == []
 
 
 def test_retrieve_no_candidates_returns_empty_list():

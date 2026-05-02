@@ -7,11 +7,15 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Protocol
 
-from ..storage.milvus_collections import PAPER_CHUNKS_COLLECTION
+from ..storage.milvus_collections import (
+    COMPANY_PROFILES_COLLECTION,
+    PAPER_CHUNKS_COLLECTION,
+    PATENT_PROFILES_COLLECTION,
+)
 
 logger = logging.getLogger(__name__)
 
-_VALID_DOMAINS = {"professor", "paper"}
+_VALID_DOMAINS = {"professor", "paper", "company", "patent"}
 _PROFESSOR_COLLECTION = "professor_profiles"
 _PROFESSOR_OUTPUT_FIELDS = [
     "id",
@@ -28,6 +32,24 @@ _PAPER_OUTPUT_FIELDS = [
     "year",
     "venue",
     "content_text",
+]
+_COMPANY_OUTPUT_FIELDS = [
+    "id",
+    "name",
+    "industry",
+    "hq_city",
+    "description",
+    "profile_summary",
+    "technology_route_summary",
+]
+_PATENT_OUTPUT_FIELDS = [
+    "id",
+    "patent_number",
+    "title",
+    "abstract",
+    "technology_effect",
+    "patent_type",
+    "ipc_codes",
 ]
 
 
@@ -89,9 +111,15 @@ class RetrievalService:
         candidate_limit: int = 30,
         final_top_k: int = 10,
     ) -> list[Evidence]:
-        for domain in domains:
-            if domain not in _VALID_DOMAINS:
-                raise ValueError(f"Unsupported retrieval domain: {domain}")
+        unsupported_domains = tuple(
+            domain for domain in domains if domain not in _VALID_DOMAINS
+        )
+        if unsupported_domains:
+            logger.warning(
+                "Unsupported retrieval domains skipped: %s",
+                ", ".join(unsupported_domains),
+            )
+        domains = tuple(domain for domain in domains if domain in _VALID_DOMAINS)
 
         filters_key = self._compute_filters_key(filters)
         if self._cache is not None:
@@ -241,12 +269,50 @@ class RetrievalService:
                 metadata=metadata,
             )
 
+        if domain == "company":
+            object_id = str(entity.get("id") or "")
+            name = str(entity.get("name") or "")
+            snippet = str(
+                entity.get("profile_summary")
+                or entity.get("technology_route_summary")
+                or entity.get("description")
+                or name
+            )[:500]
+            return Evidence(
+                object_type="company",
+                object_id=object_id,
+                score=raw_score,
+                snippet=snippet,
+                source_url=None,
+                metadata=dict(entity),
+            )
+
+        if domain == "patent":
+            object_id = str(entity.get("id") or "")
+            snippet = (
+                str(entity.get("title") or "")
+                + "\n"
+                + str(entity.get("abstract") or "")[:500]
+            )
+            return Evidence(
+                object_type="patent",
+                object_id=object_id,
+                score=raw_score,
+                snippet=snippet,
+                source_url=None,
+                metadata=dict(entity),
+            )
+
         return None
 
     def _domain_search_config(self, domain: str) -> tuple[str, list[str]]:
         if domain == "professor":
             return _PROFESSOR_COLLECTION, _PROFESSOR_OUTPUT_FIELDS
-        return PAPER_CHUNKS_COLLECTION, _PAPER_OUTPUT_FIELDS
+        if domain == "paper":
+            return PAPER_CHUNKS_COLLECTION, _PAPER_OUTPUT_FIELDS
+        if domain == "company":
+            return COMPANY_PROFILES_COLLECTION, _COMPANY_OUTPUT_FIELDS
+        return PATENT_PROFILES_COLLECTION, _PATENT_OUTPUT_FIELDS
 
     def _apply_filters(
         self,
