@@ -759,6 +759,16 @@ class SessionContext(BaseModel):
                 return e
         return None
 
+    def latest_entity_for_other_domains(
+        self, target_domain: str
+    ) -> SessionEntity | None:
+        if target_domain not in _TARGET_DOMAINS:
+            return None
+        for e in reversed(self.entities):
+            if e.kind != target_domain:
+                return e
+        return None
+
     def latest_result_domain(self) -> str | None:
         for domain in reversed(self.last_result_set):
             if self.last_result_set.get(domain):
@@ -1178,6 +1188,304 @@ def _answer_patent_list(company: str, rows: list[dict]) -> str:
     return "\n".join(lines)
 
 
+_TARGET_DOMAIN_LABELS = {
+    "professor": "教授",
+    "paper": "论文",
+    "company": "企业",
+    "patent": "专利",
+}
+
+
+def _related_row_to_chat_row(domain: str, row: dict[str, Any]) -> dict[str, Any]:
+    if domain == "professor":
+        professor_id = str(row.get("professor_id") or row.get("id") or "")
+        name = str(row.get("canonical_name") or row.get("name") or professor_id)
+        return {
+            "type": "professor",
+            "id": professor_id,
+            "professor_id": professor_id,
+            "title": name,
+            "canonical_name": name,
+            "institution": row.get("institution")
+            or row.get("primary_affiliation_institution"),
+            "snippet": row.get("profile_summary") or row.get("match_reason") or "",
+            "score": row.get("score", 1.0),
+        }
+    if domain == "paper":
+        paper_id = str(row.get("paper_id") or row.get("id") or "")
+        title = str(row.get("title_clean") or row.get("title") or paper_id)
+        return {
+            "type": "paper",
+            "id": paper_id,
+            "paper_id": paper_id,
+            "title": title,
+            "title_clean": title,
+            "year": row.get("year"),
+            "venue": row.get("venue"),
+            "snippet": row.get("abstract_clean") or row.get("match_reason") or "",
+            "score": row.get("score", 1.0),
+        }
+    if domain == "company":
+        company_id = str(row.get("company_id") or row.get("id") or "")
+        name = str(row.get("canonical_name") or row.get("name") or company_id)
+        return {
+            "type": "company",
+            "id": company_id,
+            "company_id": company_id,
+            "title": name,
+            "canonical_name": name,
+            "industry": row.get("industry"),
+            "business": row.get("business")
+            or row.get("description")
+            or row.get("profile_summary"),
+            "snippet": row.get("match_reason") or row.get("description") or "",
+            "score": row.get("score", 1.0),
+        }
+    patent_id = str(row.get("patent_id") or row.get("id") or "")
+    title = str(row.get("title_clean") or row.get("title") or patent_id)
+    return {
+        "type": "patent",
+        "id": patent_id,
+        "patent_id": patent_id,
+        "patent_number": row.get("patent_number"),
+        "title": title,
+        "title_clean": title,
+        "patent_type": row.get("patent_type"),
+        "snippet": row.get("abstract_clean") or row.get("match_reason") or "",
+        "score": row.get("score", 1.0),
+    }
+
+
+def _answer_c_related_objects(
+    source: SessionEntity,
+    target_domain: str,
+    rows: list[dict[str, Any]],
+) -> str:
+    target_label = _TARGET_DOMAIN_LABELS.get(target_domain, "关联对象")
+    if not rows:
+        return f"暂未收录{source.label}关联的{target_label}数据。"
+    lines = [
+        f"{source.label}关联的{target_label}如下（显示前 {min(len(rows), 5)} 条）：",
+        "",
+    ]
+    for row in rows[:5]:
+        title = (
+            row.get("canonical_name")
+            or row.get("title")
+            or row.get("title_clean")
+            or row.get("patent_number")
+            or row.get("id")
+        )
+        if row.get("type") == "patent" and row.get("patent_number"):
+            if row.get("title") and row["title"] != row["patent_number"]:
+                title = f"{row['patent_number']} — {row['title']}"
+            else:
+                title = row["patent_number"]
+        detail = row.get("institution") or row.get("venue") or row.get("industry") or ""
+        suffix = f" — {detail}" if detail else ""
+        lines.append(f"  • {title}{suffix}")
+    return "\n".join(lines)
+
+
+def _primary_payload_for_c_target(
+    target_domain: str,
+    row: dict[str, Any] | None,
+) -> dict[str, Any]:
+    if not row:
+        return {}
+    if target_domain == "professor":
+        return {
+            "professor_id": row.get("professor_id") or row.get("id"),
+            "canonical_name": row.get("canonical_name") or row.get("title"),
+        }
+    if target_domain == "paper":
+        return {
+            "paper_id": row.get("paper_id") or row.get("id"),
+            "title": row.get("title") or row.get("title_clean"),
+        }
+    if target_domain == "company":
+        return {
+            "company_id": row.get("company_id") or row.get("id"),
+            "canonical_name": row.get("canonical_name") or row.get("title"),
+        }
+    if target_domain == "patent":
+        return {
+            "patent_id": row.get("patent_id") or row.get("id"),
+            "patent_number": row.get("patent_number") or row.get("title"),
+        }
+    return {}
+
+
+def _build_c_type_response(
+    *,
+    conn: Any,
+    query: str,
+    session: SessionContext,
+    target_domain: str,
+) -> ChatResponse | None:
+    if target_domain not in _TARGET_DOMAINS:
+        return None
+    source = session.latest_entity_for_other_domains(target_domain)
+    if source is None:
+        target_label = _TARGET_DOMAIN_LABELS.get(target_domain, "目标")
+        return ChatResponse(
+            query=query,
+            query_type="C_cross_domain_clarification",
+            answer_text=f"请先确认要查询哪一个实体，再追问它关联的{target_label}。",
+            citations=[],
+            structured_payload={"target_domain": target_domain},
+        )
+    try:
+        rows = get_retrieval_service().get_related_objects(
+            source_domain=source.kind,
+            source_id=source.id,
+            target_domain=target_domain,
+            limit=5,
+        )
+    except Exception as exc:
+        logger.warning(
+            "C type related lookup failed: %s:%s -> %s: %s",
+            source.kind,
+            source.id,
+            target_domain,
+            exc,
+        )
+        return None
+
+    evidence_rows = [_related_row_to_chat_row(target_domain, row) for row in rows]
+    citations = _chat_citations_from_result_rows(evidence_rows)
+    structured_payload = {
+        "source_domain": source.kind,
+        "source_id": source.id,
+        "source_label": source.label,
+        "target_domain": target_domain,
+        "retrieval_evidence": evidence_rows,
+        **_primary_payload_for_c_target(
+            target_domain,
+            evidence_rows[0] if evidence_rows else None,
+        ),
+    }
+    return _build_chat_response(
+        conn=conn,
+        query=query,
+        query_type="C_cross_domain_related",
+        answer_text=_answer_c_related_objects(source, target_domain, evidence_rows),
+        citations=citations,
+        structured_payload=structured_payload,
+    )
+
+
+def _build_c_fallback_a_response(
+    *,
+    conn: Any,
+    query: str,
+    target_domain: str,
+) -> ChatResponse | None:
+    if target_domain == "company":
+        companies = _lookup_company(conn, name=query)
+        if len(companies) == 1:
+            company = companies[0]
+            return _build_chat_response(
+                conn=conn,
+                query=query,
+                query_type="A_company_profile",
+                answer_text=_answer_company_profile(company),
+                citations=[
+                    ChatCitation(
+                        type="company",
+                        id=company["company_id"],
+                        label=company["canonical_name"],
+                        url=f"/browse#company/{company['company_id']}",
+                    )
+                ],
+                structured_payload={
+                    "company_id": company["company_id"],
+                    "canonical_name": company["canonical_name"],
+                    "industry": company.get("industry"),
+                    "business": company.get("business"),
+                    "description": company.get("description"),
+                },
+            )
+    if target_domain == "paper":
+        papers = _lookup_paper(conn, title=query)
+        if len(papers) == 1:
+            paper = papers[0]
+            return _build_chat_response(
+                conn=conn,
+                query=query,
+                query_type="A_paper_profile",
+                answer_text=_answer_paper_profile(paper),
+                citations=[
+                    ChatCitation(
+                        type="paper",
+                        id=paper["paper_id"],
+                        label=paper.get("title_clean") or paper["paper_id"],
+                        url=f"/browse#paper/{paper['paper_id']}",
+                    )
+                ],
+                structured_payload={
+                    "paper_id": paper["paper_id"],
+                    "title": paper.get("title_clean"),
+                    "year": paper.get("year"),
+                    "venue": paper.get("venue"),
+                    "citation_count": paper.get("citation_count"),
+                },
+            )
+    if target_domain == "patent":
+        patents = _lookup_patent(conn, query=query)
+        if len(patents) == 1:
+            patent = patents[0]
+            return _build_chat_response(
+                conn=conn,
+                query=query,
+                query_type="A_patent_profile",
+                answer_text=_answer_patent_profile(patent),
+                citations=[
+                    ChatCitation(
+                        type="patent",
+                        id=patent["patent_id"],
+                        label=patent.get("patent_number") or patent["patent_id"],
+                        url=f"/browse#patent/{patent['patent_id']}",
+                    )
+                ],
+                structured_payload={
+                    "patent_id": patent["patent_id"],
+                    "patent_number": patent.get("patent_number"),
+                    "title_clean": patent.get("title_clean"),
+                    "applicants_raw": patent.get("applicants_raw"),
+                    "patent_type": patent.get("patent_type"),
+                },
+            )
+    profs = _lookup_professor(conn, name=query, institutions=None)
+    if len(profs) == 1:
+        prof = profs[0]
+        topics = _prof_research_topics(conn, prof["professor_id"])
+        n_papers = _prof_paper_count(conn, prof["professor_id"])
+        return _build_chat_response(
+            conn=conn,
+            query=query,
+            query_type="A_prof_profile",
+            answer_text=_answer_prof_profile(prof, topics, n_papers),
+            citations=[
+                ChatCitation(
+                    type="professor",
+                    id=prof["professor_id"],
+                    label=f"{prof['canonical_name']} - {prof.get('institution') or '单位未知'}",
+                    url=f"/browse#professor/{prof['professor_id']}",
+                )
+            ],
+            structured_payload={
+                "professor_id": prof["professor_id"],
+                "canonical_name": prof["canonical_name"],
+                "institution": prof.get("institution"),
+                "research_topics": topics,
+                "verified_paper_count": n_papers,
+                **_professor_metric_payload(prof),
+            },
+        )
+    return None
+
+
 def _professor_metric_payload(prof: dict) -> dict[str, int | None]:
     return {
         "h_index": prof.get("h_index"),
@@ -1434,6 +1742,11 @@ def _build_evidence_blocks(
                 summary = (
                     f"{item.get('title') or item.get('canonical_name') or '企业未知'}，"
                     f"{item.get('industry') or '行业未知'}"
+                )
+            elif evidence_type == "patent":
+                summary = (
+                    f"{item.get('patent_number') or item.get('id') or '编号未知'}，"
+                    f"{item.get('title') or item.get('title_clean') or '标题未知'}"
                 )
             else:
                 summary = item.get("title") or item.get("url") or "网页结果"
@@ -2034,6 +2347,26 @@ def chat(
                 citations=[],
                 structured_payload={"classifier_reason": reason},
             ))
+
+        if ctype == "C":
+            target_domain = classification.get("target_domain") or "paper"
+            c_response = _build_c_type_response(
+                conn=conn,
+                query=raw_query,
+                session=session,
+                target_domain=target_domain,
+            )
+            if c_response is not None:
+                return _record_and_return(c_response)
+            fallback_response = _build_c_fallback_a_response(
+                conn=conn,
+                query=raw_query,
+                target_domain=target_domain
+                if target_domain in _TARGET_DOMAINS
+                else "paper",
+            )
+            if fallback_response is not None:
+                return _record_and_return(fallback_response)
 
         if ctype == "A" and name:
             target_domain = infer_a_target_domain(raw_query, name, classification)

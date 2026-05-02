@@ -111,6 +111,9 @@ def _prof_ann_row(object_id: str, score: float):
             "name": "Prof " + object_id,
             "institution": "南科大",
             "profile_summary": f"Short summary for {object_id}. " * 3,
+            "h_index": 21,
+            "citation_count": 3456,
+            "paper_count": 87,
         },
         "distance": score,
     }
@@ -162,6 +165,9 @@ def test_retrieve_single_domain_professor_happy_path():
     assert all(isinstance(r, Evidence) for r in results)
     assert len(results) == 3
     assert all(r.object_type == "professor" for r in results)
+    assert results[0].metadata["h_index"] == 21
+    assert results[0].metadata["citation_count"] == 3456
+    assert results[0].metadata["paper_count"] == 87
 
 
 def test_retrieve_single_domain_paper_happy_path():

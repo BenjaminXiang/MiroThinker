@@ -228,6 +228,7 @@ SELECT
     p.year,
     p.venue,
     p.abstract_clean,
+    p.summary_zh,
     p.authors_display,
     p.authors_raw,
     p.citation_count,
@@ -740,7 +741,7 @@ def _row_to_released_object(
             "core_facts": _json_value(core_facts),
             "summary_fields": {
                 "summary_text": row.get("abstract_clean"),
-                "summary_zh": row.get("abstract_clean"),
+                "summary_zh": row.get("summary_zh"),
             },
             "evidence": [],
             "last_updated": _last_updated(row, "updated_at", "first_seen_at"),

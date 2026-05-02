@@ -30,6 +30,7 @@ def _paper_row(**overrides: Any) -> dict[str, Any]:
         "year": 2026,
         "venue": "TestConf",
         "abstract_clean": "A test abstract.",
+        "summary_zh": "一段中文摘要。",
         "authors_display": "Ada Lovelace",
         "authors_raw": None,
         "citation_count": 12,
@@ -86,8 +87,9 @@ class _FakeDataConn:
 
 
 class _FakeDomainsConn:
-    def __init__(self) -> None:
+    def __init__(self, **paper_overrides: Any) -> None:
         self.calls: list[str] = []
+        self.paper_overrides = paper_overrides
 
     def execute(
         self,
@@ -111,7 +113,7 @@ class _FakeDomainsConn:
                 ]
             )
         if "from paper p" in sql_lower:
-            return _FakeResult([_paper_row()])
+            return _FakeResult([_paper_row(**self.paper_overrides)])
         raise AssertionError(f"Unexpected SQL: {sql}")
 
 
@@ -160,3 +162,22 @@ def test_domains_paper_detail_transmits_v011_fields() -> None:
     assert core_facts["title_match_source"] == "openalex"
     assert core_facts["title_match_confidence"] == 0.92
     assert any("paper_title_resolution_cache" in call for call in conn.calls)
+
+
+def test_domains_paper_detail_returns_summary_zh_column_value() -> None:
+    conn = _FakeDomainsConn(summary_zh="中文摘要来自数据库。")
+
+    payload = get_domain_object(DomainEnum.paper, "PAPER-V011", conn=conn)
+
+    assert payload["summary_fields"]["summary_text"] == "A test abstract."
+    assert payload["summary_fields"]["summary_zh"] == "中文摘要来自数据库。"
+    assert "p.summary_zh" in conn.calls[0]
+
+
+def test_domains_paper_detail_returns_none_for_missing_summary_zh() -> None:
+    conn = _FakeDomainsConn(summary_zh=None)
+
+    payload = get_domain_object(DomainEnum.paper, "PAPER-V011", conn=conn)
+
+    assert payload["summary_fields"]["summary_text"] == "A test abstract."
+    assert payload["summary_fields"]["summary_zh"] is None

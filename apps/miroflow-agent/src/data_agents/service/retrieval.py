@@ -26,6 +26,9 @@ _PROFESSOR_OUTPUT_FIELDS = [
     "institution",
     "department",
     "profile_summary",
+    "h_index",
+    "citation_count",
+    "paper_count",
 ]
 _PAPER_OUTPUT_FIELDS = [
     "chunk_id",
