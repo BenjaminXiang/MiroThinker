@@ -127,7 +127,12 @@ class SessionStore:
         with psycopg.connect(self._dsn, row_factory=dict_row) as conn:
             return conn.execute(
                 """
-                SELECT session_id, user_id, entities, turns, last_seen_at
+                SELECT session_id,
+                       user_id,
+                       entities,
+                       turns,
+                       last_result_set,
+                       last_seen_at
                   FROM chat_session
                  WHERE session_id = %s
                    AND last_seen_at > now() - (%s * interval '1 second')
@@ -145,13 +150,15 @@ class SessionStore:
                     user_id,
                     entities,
                     turns,
+                    last_result_set,
                     last_seen_at
                 )
-                VALUES (%s, %s, %s::jsonb, %s::jsonb, to_timestamp(%s))
+                VALUES (%s, %s, %s::jsonb, %s::jsonb, %s::jsonb, to_timestamp(%s))
                 ON CONFLICT (session_id) DO UPDATE
                    SET user_id = EXCLUDED.user_id,
                        entities = EXCLUDED.entities,
                        turns = EXCLUDED.turns,
+                       last_result_set = EXCLUDED.last_result_set,
                        last_seen_at = EXCLUDED.last_seen_at
                 """,
                 (
@@ -159,6 +166,7 @@ class SessionStore:
                     payload.get("user_id"),
                     json.dumps(payload["entities"], ensure_ascii=False),
                     json.dumps(payload["turns"], ensure_ascii=False),
+                    json.dumps(payload["last_result_set"], ensure_ascii=False),
                     payload["last_seen_at"],
                 ),
             )
@@ -187,6 +195,7 @@ class SessionStore:
                     for e in ctx.entities
                 ],
                 "turns": list(ctx.turns),
+                "last_result_set": dict(getattr(ctx, "last_result_set", {}) or {}),
                 "last_seen_at": ctx.last_seen_at,
             }
         return {
@@ -194,6 +203,7 @@ class SessionStore:
             "user_id": data.get("user_id"),
             "entities": data.get("entities") or [],
             "turns": data.get("turns") or [],
+            "last_result_set": data.get("last_result_set") or {},
             "last_seen_at": _coerce_epoch(data.get("last_seen_at")),
         }
 
@@ -201,12 +211,14 @@ class SessionStore:
         cls = _context_cls()
         entities = self._json_payload(row.get("entities"), fallback=[])
         turns = self._json_payload(row.get("turns"), fallback=[])
+        last_result_set = self._json_payload(row.get("last_result_set"), fallback={})
         try:
             return cls(
                 session_id=row["session_id"],
                 user_id=row.get("user_id"),
                 entities=entities,
                 turns=turns,
+                last_result_set=last_result_set,
                 last_seen_at=_coerce_epoch(row.get("last_seen_at")),
             )
         except Exception as exc:

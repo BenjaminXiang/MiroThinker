@@ -102,7 +102,7 @@ def _row(pg_dsn: str, session_id: str) -> dict[str, Any] | None:
     with psycopg.connect(pg_dsn, row_factory=dict_row) as conn:
         return conn.execute(
             """
-            SELECT session_id, entities, turns, last_seen_at
+            SELECT session_id, entities, turns, last_result_set, last_seen_at
               FROM chat_session
              WHERE session_id = %s
             """,
@@ -119,6 +119,7 @@ def test_get_or_create_creates_row_and_round_trips_jsonb(
 
     ctx = store.get_or_create(session_id)
     ctx.push_entity(SessionEntity(kind="professor", id="PROF-001", label="丁文伯"))
+    ctx.push_result_set("professor", ["PROF-001", "PROF-002"])
     ctx.push_turn("介绍丁文伯", "A_prof_profile", "丁文伯是教授。")
     store.persist(ctx)
 
@@ -128,9 +129,11 @@ def test_get_or_create_creates_row_and_round_trips_jsonb(
         {"kind": "professor", "id": "PROF-001", "label": "丁文伯"}
     ]
     assert stored["turns"][0]["query_type"] == "A_prof_profile"
+    assert stored["last_result_set"] == {"professor": ["PROF-001", "PROF-002"]}
 
     reloaded = SessionStore(pg_dsn).get_or_create(session_id)
     assert reloaded.latest_professor().label == "丁文伯"
+    assert reloaded.last_result_set == {"professor": ["PROF-001", "PROF-002"]}
     assert reloaded.turns[0]["answer_text"] == "丁文伯是教授。"
 
 

@@ -37,6 +37,24 @@ from backend.deps import (
     get_pg_conn,
     get_retrieval_service,
 )
+from backend.services.web_search_cache import (
+    WebSearchCache,
+    answer_knowledge_qa_with_web_search,
+)
+from backend.services.chat_context import (
+    answer_company_profile as _answer_company_profile,
+    answer_narrowed_results,
+    answer_paper_profile as _answer_paper_profile,
+    answer_patent_profile as _answer_patent_profile,
+    domain_id_key,
+    infer_a_target_domain,
+    looks_like_narrowing_query,
+    lookup_company as _lookup_company,
+    lookup_paper as _lookup_paper,
+    lookup_patent as _lookup_patent,
+    normalize_narrowing_topic,
+    result_ids_by_domain,
+)
 from backend.storage.chat_session import SessionStore
 from src.data_agents.professor.llm_profiles import resolve_professor_llm_settings
 from src.data_agents.service.retrieval import Evidence
@@ -296,11 +314,46 @@ def _evidence_list_from_retrieval(results: list[Evidence]) -> list[dict]:
             rows.append(
                 {
                     "type": "web",
+                    "source_type": "web",
                     "id": evidence.source_url,
                     "title": metadata.get("title", ""),
                     "snippet": evidence.snippet,
                     "url": evidence.source_url,
                     "score": evidence.score,
+                }
+            )
+            continue
+        if evidence.object_type == "company":
+            rows.append(
+                {
+                    "type": "company",
+                    "id": evidence.object_id,
+                    "title": metadata.get("name", "") or evidence.object_id,
+                    "snippet": evidence.snippet,
+                    "url": evidence.source_url,
+                    "score": evidence.score,
+                    "company_id": evidence.object_id,
+                    "canonical_name": metadata.get("name", "") or evidence.object_id,
+                    "industry": metadata.get("industry"),
+                    "business": metadata.get("business")
+                    or metadata.get("description")
+                    or metadata.get("profile_summary"),
+                }
+            )
+            continue
+        if evidence.object_type == "patent":
+            rows.append(
+                {
+                    "type": "patent",
+                    "id": evidence.object_id,
+                    "title": metadata.get("title", "") or evidence.object_id,
+                    "snippet": evidence.snippet,
+                    "url": evidence.source_url,
+                    "score": evidence.score,
+                    "patent_id": evidence.object_id,
+                    "patent_number": metadata.get("patent_number"),
+                    "title_clean": metadata.get("title", "") or evidence.object_id,
+                    "patent_type": metadata.get("patent_type"),
                 }
             )
     return rows
@@ -493,6 +546,34 @@ def _answer_knowledge_qa(query: str) -> tuple[str, str | None]:
     return _answer_knowledge_qa_fallback(query)
 
 
+def _synthesize_web_search_answer(query: str, evidence: list[dict[str, Any]]) -> str:
+    evidence_text, citation_map = _build_evidence_blocks(
+        {"retrieval_evidence": evidence}
+    )
+    if not evidence_text:
+        raise ValueError("empty web evidence")
+    answer = _call_gemma_synthesis(
+        query,
+        evidence_text,
+        timeout=_CHAT_SYNTHESIS_TIMEOUT_SECONDS,
+    )
+    answer = _validate_and_strip_citations(answer, len(citation_map))
+    return answer
+
+
+def _answer_knowledge_qa_with_web_search(
+    query: str,
+) -> tuple[str, str | None, list[dict[str, Any]]]:
+    return answer_knowledge_qa_with_web_search(
+        query,
+        cache=_get_web_search_cache(),
+        provider_factory=_get_web_search_provider_or_none,
+        synthesize=_synthesize_web_search_answer,
+        fallback=_answer_knowledge_qa_fallback,
+        logger=logger,
+    )
+
+
 # --- Pydantic schemas ---
 
 
@@ -503,8 +584,23 @@ class ChatCitation(BaseModel):
     url: str | None = None
 
 
+class CandidateOption(BaseModel):
+    id: str
+    domain: TargetDomain
+    label: str
+    hint: str
+
+
+class ClarificationPayload(BaseModel):
+    prompt: str
+    options: list[CandidateOption]
+    default_id: str
+    omitted: int = 0
+
+
 class ChatRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=500)
+    entity_id_hint: str | None = None
 
 
 class ChatResponse(BaseModel):
@@ -512,6 +608,8 @@ class ChatResponse(BaseModel):
     query_type: str  # A_prof_profile | A_prof_list_by_topic | A_patent_by_applicant | unknown
     answer_text: str
     citations: list[ChatCitation] = Field(default_factory=list)
+    evidence: list[dict[str, Any]] = Field(default_factory=list)
+    clarification: ClarificationPayload | None = None
     structured_payload: dict[str, Any] = Field(default_factory=dict)
     answer_style: Literal["template", "llm_synthesized"] = "template"
     citation_map: dict[str, str] = Field(default_factory=dict)
@@ -586,8 +684,30 @@ _SESSION_COOKIE = "miroflow_chat_session"
 _SESSION_TTL_SECONDS = 24 * 3600
 _SESSION_MAX_ENTITIES = 5
 _SESSION_MAX_TURNS = 5
+_SESSION_RESULT_SET_CAP = 100
+_PRONOUN_DOMAIN_MAP = {
+    "他": "professor",
+    "她": "professor",
+    "这位": "professor",
+    "这位教授": "professor",
+    "这位老师": "professor",
+    "这位学者": "professor",
+    "该教授": "professor",
+    "该学者": "professor",
+    "上面那位": "professor",
+    "这家公司": "company",
+    "该公司": "company",
+    "这件专利": "patent",
+    "该专利": "patent",
+    "这篇论文": "paper",
+    "这本论文": "paper",
+    "该论文": "paper",
+}
 _SESSION_PRONOUNS_RE = re.compile(
-    r"(他|她|这位(?:教授|老师|学者)?|该(?:教授|学者)|上面那位)"
+    "|".join(
+        re.escape(key)
+        for key in sorted(_PRONOUN_DOMAIN_MAP, key=len, reverse=True)
+    )
 )
 
 
@@ -606,11 +726,17 @@ class SessionContext(BaseModel):
     user_id: str | None = None
     entities: list[SessionEntity] = Field(default_factory=list)
     turns: list[dict[str, Any]] = Field(default_factory=list)
+    last_result_set: dict[str, list[str]] = Field(default_factory=dict)
     last_seen_at: float = Field(default_factory=time.time)
 
     def model_post_init(self, __context: Any) -> None:
         self.entities = self.entities[-_SESSION_MAX_ENTITIES:]
         self.turns = self.turns[-_SESSION_MAX_TURNS:]
+        self.last_result_set = {
+            domain: list(ids)[:_SESSION_RESULT_SET_CAP]
+            for domain, ids in self.last_result_set.items()
+            if domain in _TARGET_DOMAINS and isinstance(ids, list)
+        }
 
     def push_entity(self, entity: SessionEntity) -> None:
         # Drop existing copies so the most-recent mention lands at the end
@@ -623,10 +749,41 @@ class SessionContext(BaseModel):
         self.entities = entities[-_SESSION_MAX_ENTITIES:]
 
     def latest_professor(self) -> SessionEntity | None:
+        return self.latest_for("professor")
+
+    def latest_for(self, domain: str) -> SessionEntity | None:
+        if domain not in _TARGET_DOMAINS:
+            return None
         for e in reversed(self.entities):
-            if e.kind == "professor":
+            if e.kind == domain:
                 return e
         return None
+
+    def latest_result_domain(self) -> str | None:
+        for domain in reversed(self.last_result_set):
+            if self.last_result_set.get(domain):
+                return domain
+        return None
+
+    def push_result_set(
+        self, domain: str, ids: list[str], cap: int = _SESSION_RESULT_SET_CAP
+    ) -> None:
+        if domain not in _TARGET_DOMAINS:
+            return
+        seen: set[str] = set()
+        deduped: list[str] = []
+        for item in ids:
+            if item in seen:
+                continue
+            seen.add(item)
+            deduped.append(item)
+        self.last_result_set.pop(domain, None)
+        self.last_result_set[domain] = deduped[:cap]
+
+    def clear_other_domains(self, current: str) -> None:
+        """W11 keeps per-domain result history; this hook is intentionally no-op."""
+        if current not in _TARGET_DOMAINS:
+            return
 
     def push_turn(self, query: str, query_type: str, answer_text: str) -> None:
         self.turns.append({
@@ -639,6 +796,7 @@ class SessionContext(BaseModel):
 
 
 _SESSION_STORE = SessionStore(_chat_session_dsn(), ttl_seconds=_SESSION_TTL_SECONDS)
+_WEB_SEARCH_CACHE = WebSearchCache(_chat_session_dsn())
 
 
 def _get_or_create_session(session_id: str | None) -> SessionContext:
@@ -647,16 +805,78 @@ def _get_or_create_session(session_id: str | None) -> SessionContext:
     return _SESSION_STORE.get_or_create(session_id)
 
 
+def _get_web_search_cache() -> WebSearchCache:
+    return _WEB_SEARCH_CACHE
+
+
 def _rewrite_query_with_context(query: str, session: SessionContext) -> str:
-    """If the query has pronouns and session has a pinned professor, splice
-    the prof's canonical_name in. Heuristic but covers the common case."""
+    """Replace known pronouns with the latest matching-domain entity label."""
     if not _SESSION_PRONOUNS_RE.search(query):
         return query
-    prof = session.latest_professor()
-    if not prof:
-        return query
-    rewritten = _SESSION_PRONOUNS_RE.sub(prof.label, query)
-    return rewritten
+
+    def replace(match: re.Match[str]) -> str:
+        pronoun = match.group(0)
+        domain = _PRONOUN_DOMAIN_MAP.get(pronoun)
+        entity = session.latest_for(domain or "")
+        return entity.label if entity else pronoun
+
+    return _SESSION_PRONOUNS_RE.sub(replace, query)
+
+
+def _chat_citations_from_result_rows(rows: list[dict]) -> list[ChatCitation]:
+    citations: list[ChatCitation] = []
+    for row in rows[:10]:
+        domain = str(row.get("type") or "")
+        if domain not in _TARGET_DOMAINS:
+            continue
+        object_id = row.get(domain_id_key(domain)) or row.get("id")
+        if not object_id:
+            continue
+        title = (
+            row.get("canonical_name")
+            or row.get("title")
+            or row.get("title_clean")
+            or row.get("patent_number")
+            or str(object_id)
+        )
+        citations.append(
+            ChatCitation(
+                type=domain,
+                id=str(object_id),
+                label=str(title),
+                url=f"/browse#{domain}/{object_id}",
+            )
+        )
+    return citations
+
+
+def _lookup_narrowed_results(
+    conn: Any,
+    *,
+    domain: str,
+    allowed_ids: list[str],
+    topic: str,
+    limit: int = 20,
+) -> list[dict]:
+    del conn
+    allowed = set(allowed_ids)
+    if not chat_use_retrieval_service():
+        return []
+    try:
+        results = get_retrieval_service().retrieve(
+            query=topic,
+            domains=(domain,),
+            candidate_limit=max(30, min(len(allowed_ids) * 2, 100)),
+            final_top_k=min(limit, max(len(allowed_ids), 1)),
+        )
+    except Exception as exc:
+        logger.warning("Narrowing retrieval failed for %s %r: %s", domain, topic, exc)
+        return []
+    return [
+        row
+        for row in _evidence_list_from_retrieval(results)
+        if str(row.get("id") or "") in allowed
+    ][:limit]
 
 
 def _resolve_institution(fragment: str) -> tuple[str, ...] | None:
@@ -705,6 +925,35 @@ def _lookup_professor(
          LIMIT 10
     """
     return conn.execute(sql, params).fetchall()
+
+
+def _lookup_professor_by_id(conn: Any, *, professor_id: str) -> dict | None:
+    rows = conn.execute(
+        """
+        SELECT p.professor_id,
+               p.canonical_name,
+               p.canonical_name_en,
+               pa.institution,
+               pa.title,
+               p.discipline_family,
+               p.h_index,
+               p.citation_count,
+               p.paper_count
+          FROM professor p
+          LEFT JOIN LATERAL (
+            SELECT pa_inner.institution, pa_inner.title
+              FROM professor_affiliation pa_inner
+             WHERE pa_inner.professor_id = p.professor_id
+               AND pa_inner.is_primary = true
+             LIMIT 1
+          ) pa ON true
+         WHERE p.identity_status = 'resolved'
+           AND p.professor_id = %s
+         LIMIT 1
+        """,
+        (professor_id,),
+    ).fetchall()
+    return rows[0] if rows else None
 
 
 def _lookup_professors_by_topic_sql(
@@ -947,6 +1196,44 @@ def _answer_ambiguous_profs(name: str, profs: list[dict]) -> str:
         inst = p.get("institution") or "单位未知"
         lines.append(f"  • {name} — {inst}")
     return "\n".join(lines)
+
+
+def _professor_clarification(name: str, profs: list[dict]) -> ClarificationPayload | None:
+    if len(profs) <= 1:
+        return None
+    ranked = sorted(
+        profs,
+        key=lambda p: (
+            p.get("paper_count") or 0,
+            p.get("citation_count") or 0,
+            p.get("h_index") or 0,
+        ),
+        reverse=True,
+    )
+    options: list[CandidateOption] = []
+    for prof in ranked[:5]:
+        institution = prof.get("institution") or "单位未知"
+        title = prof.get("title") or "职称未知"
+        paper_count = prof.get("paper_count")
+        hint_parts = [institution, title]
+        if paper_count is not None:
+            hint_parts.append(f"{paper_count} 篇论文")
+        options.append(
+            CandidateOption(
+                id=prof["professor_id"],
+                domain="professor",
+                label=prof.get("canonical_name") or name,
+                hint=" / ".join(hint_parts),
+            )
+        )
+    if not options:
+        return None
+    return ClarificationPayload(
+        prompt=f"找到 {len(profs)} 位名为 {name} 的教授，请选择具体对象。",
+        options=options,
+        default_id=options[0].id,
+        omitted=max(0, len(profs) - len(options)),
+    )
 
 
 def llm_synthesis_enabled() -> bool:
@@ -1264,12 +1551,14 @@ def _build_chat_response(
     answer_text: str,
     citations: list[ChatCitation],
     structured_payload: dict[str, Any],
+    clarification: ClarificationPayload | None = None,
 ) -> ChatResponse:
     base_response = ChatResponse(
         query=query,
         query_type=query_type,
         answer_text=answer_text,
         citations=citations,
+        clarification=clarification,
         structured_payload=structured_payload,
     )
     if not llm_synthesis_enabled():
@@ -1315,6 +1604,7 @@ def _build_chat_response(
             query_type=query_type,
             answer_text=llm_answer,
             citations=citations,
+            clarification=clarification,
             structured_payload=structured_payload,
             answer_style="llm_synthesized",
             citation_map=citation_map,
@@ -1380,17 +1670,107 @@ def chat(
     query = _rewrite_query_with_context(raw_query, session)
 
     def _record_and_return(chat_resp: ChatResponse) -> ChatResponse:
-        """Push the primary entity from this response onto the session stack."""
+        """Persist session context derived from this response."""
         sp = chat_resp.structured_payload or {}
-        prof_id = sp.get("professor_id")
-        prof_name = sp.get("canonical_name")
-        if prof_id and prof_name:
-            session.push_entity(SessionEntity(
-                kind="professor", id=prof_id, label=prof_name
-            ))
+        primary_entities = {
+            "professor": (
+                sp.get("professor_id"),
+                sp.get("canonical_name"),
+            ),
+            "company": (
+                sp.get("company_id"),
+                sp.get("canonical_name") or sp.get("company_name"),
+            ),
+            "paper": (
+                sp.get("paper_id"),
+                sp.get("title") or sp.get("title_clean"),
+            ),
+            "patent": (
+                sp.get("patent_id"),
+                sp.get("patent_number") or sp.get("title_clean") or sp.get("title"),
+            ),
+        }
+        for domain, (object_id, label) in primary_entities.items():
+            if object_id and label:
+                session.push_entity(SessionEntity(
+                    kind=domain, id=str(object_id), label=str(label)
+                ))
+        for domain, ids in result_ids_by_domain(sp, chat_resp.citations).items():
+            session.push_result_set(domain, ids)
         session.push_turn(raw_query, chat_resp.query_type, chat_resp.answer_text)
         _SESSION_STORE.persist(session)
         return chat_resp
+
+    def _handle_d_narrowing(topic_hint: str = "") -> ChatResponse | None:
+        domain = session.latest_result_domain()
+        if domain is None:
+            return None
+        allowed_ids = session.last_result_set.get(domain) or []
+        if not allowed_ids:
+            return None
+        topic = normalize_narrowing_topic(query, fallback=topic_hint)
+        rows = _lookup_narrowed_results(
+            conn,
+            domain=domain,
+            allowed_ids=allowed_ids,
+            topic=topic,
+        )
+        citations = _chat_citations_from_result_rows(rows)
+        return _record_and_return(_build_chat_response(
+            conn=conn,
+            query=raw_query,
+            query_type="D_narrowing",
+            answer_text=answer_narrowed_results(domain, topic, rows, len(allowed_ids)),
+            citations=citations,
+            structured_payload={
+                "narrowing_domain": domain,
+                "narrowing_topic": topic,
+                "narrowed_from_count": len(allowed_ids),
+                "retrieval_evidence": rows,
+            },
+        ))
+
+    def _handle_entity_id_hint() -> ChatResponse | None:
+        hint = (payload.entity_id_hint or "").strip()
+        if not hint:
+            return None
+        prof = _lookup_professor_by_id(conn, professor_id=hint)
+        if not prof:
+            return None
+        topics = _prof_research_topics(conn, prof["professor_id"])
+        n_papers = _prof_paper_count(conn, prof["professor_id"])
+        return _record_and_return(_build_chat_response(
+            conn=conn,
+            query=raw_query,
+            query_type="A_prof_profile",
+            answer_text=_answer_prof_profile(prof, topics, n_papers),
+            citations=[
+                ChatCitation(
+                    type="professor",
+                    id=prof["professor_id"],
+                    label=f"{prof['canonical_name']} - {prof.get('institution') or '单位未知'}",
+                    url=f"/browse#professor/{prof['professor_id']}",
+                )
+            ],
+            structured_payload={
+                "professor_id": prof["professor_id"],
+                "canonical_name": prof["canonical_name"],
+                "canonical_name_en": prof.get("canonical_name_en"),
+                "institution": prof.get("institution"),
+                "title": prof.get("title"),
+                "discipline_family": prof.get("discipline_family"),
+                "research_topics": topics,
+                "verified_paper_count": n_papers,
+                **_professor_metric_payload(prof),
+            },
+        ))
+
+    if hint_response := _handle_entity_id_hint():
+        return hint_response
+
+    if looks_like_narrowing_query(query):
+        if narrowed_response := _handle_d_narrowing():
+            return narrowed_response
 
     # Pattern D' (v2): "<name>的研究方向" — follow-up on a pinned professor
     if m := _Q_PROF_TOPICS_RE.search(query):
@@ -1518,6 +1898,7 @@ def chat(
                     for p in profs[:10]
                 ],
                 structured_payload=structured_payload,
+                clarification=_professor_clarification(name, profs),
             )
         elif profs:
             prof = profs[0]
@@ -1578,21 +1959,23 @@ def chat(
                 }
                 for r in rows[:10]
             ]
-        return _build_chat_response(
-            conn=conn,
-            query=query,
-            query_type="A_prof_list_by_topic",
-            answer_text=_answer_prof_list(institutions, topic, rows),
-            citations=[
-                ChatCitation(
-                    type="professor",
-                    id=r["professor_id"],
-                    label=f"{r['canonical_name']} - {r['institution']}",
-                    url=f"/browse#professor/{r['professor_id']}",
-                )
-                for r in rows[:10]
-            ],
-            structured_payload=structured_payload,
+        return _record_and_return(
+            _build_chat_response(
+                conn=conn,
+                query=query,
+                query_type="A_prof_list_by_topic",
+                answer_text=_answer_prof_list(institutions, topic, rows),
+                citations=[
+                    ChatCitation(
+                        type="professor",
+                        id=r["professor_id"],
+                        label=f"{r['canonical_name']} - {r['institution']}",
+                        url=f"/browse#professor/{r['professor_id']}",
+                    )
+                    for r in rows[:10]
+                ],
+                structured_payload=structured_payload,
+            )
         )
 
     # Pattern C: "<company>有哪些专利" — patents by applicant
@@ -1616,21 +1999,23 @@ def chat(
                 }
                 for r in rows[:10]
             ]
-        return _build_chat_response(
-            conn=conn,
-            query=query,
-            query_type="A_patent_by_applicant",
-            answer_text=_answer_patent_list(company, rows),
-            citations=[
-                ChatCitation(
-                    type="patent",
-                    id=r["patent_id"],
-                    label=f"{r['patent_number']} - {r['title_clean']}",
-                    url=f"/browse#patent/{r['patent_id']}",
-                )
-                for r in rows[:10]
-            ],
-            structured_payload=structured_payload,
+        return _record_and_return(
+            _build_chat_response(
+                conn=conn,
+                query=query,
+                query_type="A_patent_by_applicant",
+                answer_text=_answer_patent_list(company, rows),
+                citations=[
+                    ChatCitation(
+                        type="patent",
+                        id=r["patent_id"],
+                        label=f"{r['patent_number']} - {r['title_clean']}",
+                        url=f"/browse#patent/{r['patent_id']}",
+                    )
+                    for r in rows[:10]
+                ],
+                structured_payload=structured_payload,
+            )
         )
 
     # Round 11 v3 / v3.1: no rule pattern matched — ask LLM classifier
@@ -1649,6 +2034,112 @@ def chat(
                 citations=[],
                 structured_payload={"classifier_reason": reason},
             ))
+
+        if ctype == "A" and name:
+            target_domain = infer_a_target_domain(raw_query, name, classification)
+            if target_domain == "company":
+                companies = _lookup_company(conn, name=name)
+                if len(companies) == 1:
+                    company = companies[0]
+                    return _record_and_return(_build_chat_response(
+                        conn=conn,
+                        query=raw_query,
+                        query_type="A_company_profile",
+                        answer_text=_answer_company_profile(company),
+                        citations=[
+                            ChatCitation(
+                                type="company",
+                                id=company["company_id"],
+                                label=company["canonical_name"],
+                                url=f"/browse#company/{company['company_id']}",
+                            )
+                        ],
+                        structured_payload={
+                            "company_id": company["company_id"],
+                            "canonical_name": company["canonical_name"],
+                            "industry": company.get("industry"),
+                            "business": company.get("business"),
+                            "description": company.get("description"),
+                        },
+                    ))
+            elif target_domain == "paper":
+                papers = _lookup_paper(conn, title=name)
+                if len(papers) == 1:
+                    paper = papers[0]
+                    return _record_and_return(_build_chat_response(
+                        conn=conn,
+                        query=raw_query,
+                        query_type="A_paper_profile",
+                        answer_text=_answer_paper_profile(paper),
+                        citations=[
+                            ChatCitation(
+                                type="paper",
+                                id=paper["paper_id"],
+                                label=paper.get("title_clean") or paper["paper_id"],
+                                url=f"/browse#paper/{paper['paper_id']}",
+                            )
+                        ],
+                        structured_payload={
+                            "paper_id": paper["paper_id"],
+                            "title": paper.get("title_clean"),
+                            "year": paper.get("year"),
+                            "venue": paper.get("venue"),
+                            "citation_count": paper.get("citation_count"),
+                        },
+                    ))
+            elif target_domain == "patent":
+                patents = _lookup_patent(conn, query=name)
+                if len(patents) == 1:
+                    patent = patents[0]
+                    return _record_and_return(_build_chat_response(
+                        conn=conn,
+                        query=raw_query,
+                        query_type="A_patent_profile",
+                        answer_text=_answer_patent_profile(patent),
+                        citations=[
+                            ChatCitation(
+                                type="patent",
+                                id=patent["patent_id"],
+                                label=patent.get("patent_number") or patent["patent_id"],
+                                url=f"/browse#patent/{patent['patent_id']}",
+                            )
+                        ],
+                        structured_payload={
+                            "patent_id": patent["patent_id"],
+                            "patent_number": patent.get("patent_number"),
+                            "title_clean": patent.get("title_clean"),
+                            "applicants_raw": patent.get("applicants_raw"),
+                            "patent_type": patent.get("patent_type"),
+                        },
+                    ))
+            else:
+                profs = _lookup_professor(conn, name=name, institutions=None)
+                if len(profs) == 1:
+                    prof = profs[0]
+                    topics = _prof_research_topics(conn, prof["professor_id"])
+                    n_papers = _prof_paper_count(conn, prof["professor_id"])
+                    return _record_and_return(_build_chat_response(
+                        conn=conn,
+                        query=raw_query,
+                        query_type="A_prof_profile",
+                        answer_text=_answer_prof_profile(prof, topics, n_papers),
+                        citations=[
+                            ChatCitation(
+                                type="professor",
+                                id=prof["professor_id"],
+                                label=f"{prof['canonical_name']} - {prof.get('institution') or '单位未知'}",
+                                url=f"/browse#professor/{prof['professor_id']}",
+                            )
+                        ],
+                        structured_payload={
+                            "professor_id": prof["professor_id"],
+                            "canonical_name": prof["canonical_name"],
+                            "institution": prof.get("institution"),
+                            "research_topics": topics,
+                            "verified_paper_count": n_papers,
+                            **_professor_metric_payload(prof),
+                        },
+                    ))
 
         if ctype == "B" and topic:
             rows = _lookup_professors_by_topic(
@@ -1686,6 +2177,8 @@ def chat(
             ))
 
         if ctype == "D" and topic:
+            if narrowed_response := _handle_d_narrowing(topic):
+                return narrowed_response
             # 跨域聚合: 教授 + 企业（专利留下一轮，目前 patent 表空）
             evidence = _lookup_cross_domain_evidence(conn, topic=topic)
             profs = [row for row in evidence if row.get("type") == "professor"]
@@ -1727,15 +2220,17 @@ def chat(
             ))
 
         if ctype == "E":
-            answer, err = _answer_knowledge_qa(raw_query)
+            answer, err, evidence = _answer_knowledge_qa_with_web_search(raw_query)
             return _record_and_return(ChatResponse(
                 query=raw_query,
                 query_type="E_knowledge_qa",
                 answer_text=answer,
                 citations=[],
+                evidence=evidence,
                 structured_payload={
                     "classifier_reason": reason,
                     "llm_error": err,
+                    "retrieval_evidence": evidence,
                 },
             ))
 
@@ -1776,7 +2271,7 @@ def chat(
                 ))
             return _record_and_return(ChatResponse(
                 query=raw_query,
-                query_type="A_prof_profile_ambiguous",
+                query_type="G_ambiguous_clarification",
                 answer_text=_answer_ambiguous_profs(name, profs),
                 citations=[
                     ChatCitation(
@@ -1787,6 +2282,7 @@ def chat(
                     )
                     for p in profs[:10]
                 ],
+                clarification=_professor_clarification(name, profs),
                 structured_payload={
                     "name": name,
                     "candidate_count": len(profs),
