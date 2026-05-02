@@ -47,6 +47,7 @@ DATABASE_URL_SKIP_REASON = (
 )
 NETWORK_SKIP_REASON = "Network access blocked; skipping Postgres integration tests"
 _REAL_DB_NAMES = ("miroflow_real",)
+_LEGACY_RUN_ID = "00000000-0000-0000-0000-000000000001"
 
 
 def _raw_database_url() -> str:
@@ -155,6 +156,7 @@ def _page_id(conn: psycopg.Connection, url: str) -> UUID:
         owner_scope_ref="PROF-SEED",
         fetched_at=datetime(2026, 4, 18, tzinfo=timezone.utc),
         is_official_source=True,
+        run_id=_LEGACY_RUN_ID,
     )
     assert isinstance(page_id, UUID)
     return page_id
@@ -184,6 +186,7 @@ def test_legacy_no_gate_leaves_name_en_unchanged(pg_conn: psycopg.Connection):
         pg_conn,
         enriched=enriched,
         official_profile_page_id=page_id,
+        run_id=_LEGACY_RUN_ID,
         # name_identity_gate deliberately omitted
     )
     # Legacy path: junk name_en is preserved. The gate is a new opt-in.
@@ -207,6 +210,7 @@ def test_rejected_decision_nulls_db_column(pg_conn: psycopg.Connection):
         enriched=enriched,
         official_profile_page_id=page_id,
         name_identity_gate=fake_gate,
+        run_id=_LEGACY_RUN_ID,
     )
     assert _stored_name_en(pg_conn, pid) is None
 
@@ -226,6 +230,7 @@ def test_accepted_decision_persists_name_en(pg_conn: psycopg.Connection):
         enriched=enriched,
         official_profile_page_id=page_id,
         name_identity_gate=fake_gate,
+        run_id=_LEGACY_RUN_ID,
     )
     assert _stored_name_en(pg_conn, pid) == "Huiyuan Xiong"
 
@@ -247,6 +252,7 @@ def test_gate_skipped_when_name_en_empty(pg_conn: psycopg.Connection):
         enriched=enriched,
         official_profile_page_id=page_id,
         name_identity_gate=fake_gate,
+        run_id=_LEGACY_RUN_ID,
     )
     assert called["n"] == 0
     assert _stored_name_en(pg_conn, pid) is None
@@ -270,6 +276,7 @@ def test_gate_called_with_cleaned_name(pg_conn: psycopg.Connection):
         enriched=enriched,
         official_profile_page_id=page_id,
         name_identity_gate=fake_gate,
+        run_id=_LEGACY_RUN_ID,
     )
     assert captured["name"] == "张三"  # cleaned
     assert captured["candidate"] == "Zhang San"  # cleaned
@@ -295,4 +302,5 @@ def test_gate_callable_must_be_sync(pg_conn: psycopg.Connection):
             enriched=enriched,
             official_profile_page_id=page_id,
             name_identity_gate=async_gate,  # type: ignore[arg-type]
+            run_id=_LEGACY_RUN_ID,
         )

@@ -47,6 +47,7 @@ class Company(BaseModel):
     first_seen_batch_id: UUID | None = None
     first_seen_at: datetime | None = None
     last_refreshed_at: datetime | None = None
+    run_id: UUID | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
 

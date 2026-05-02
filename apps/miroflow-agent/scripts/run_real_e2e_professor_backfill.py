@@ -50,6 +50,7 @@ from src.data_agents.professor.name_identity_gate import (
 )
 from src.data_agents.professor.name_selection import is_obvious_non_person_name
 from src.data_agents.storage.postgres.connection import resolve_dsn
+from src.data_agents.storage.postgres.pipeline_run import close_pipeline_run, open_pipeline_run
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -124,7 +125,14 @@ def _is_official_host(url: str) -> bool:
     return host.endswith(".edu.cn") or host.endswith(".gov.cn") or host.endswith(".ac.cn")
 
 
-def _process_one(conn, raw: dict, stats: BackfillStats, name_identity_gate=None) -> None:
+def _process_one(
+    conn,
+    raw: dict,
+    stats: BackfillStats,
+    *,
+    run_id: str,
+    name_identity_gate=None,
+) -> None:
     stats.total_read += 1
     if raw.get("extraction_status") != "structured":
         stats.skipped_non_structured += 1
@@ -182,6 +190,7 @@ def _process_one(conn, raw: dict, stats: BackfillStats, name_identity_gate=None)
             owner_scope_ref=None,  # professor_id computed inside bundle
             fetched_at=fetched_at,
             is_official_source=_is_official_host(enriched.profile_url),
+            run_id=run_id,
         )
         # Also upsert roster_source as a page with role=roster_seed
         if enriched.roster_source and enriched.roster_source != enriched.profile_url:
@@ -193,6 +202,7 @@ def _process_one(conn, raw: dict, stats: BackfillStats, name_identity_gate=None)
                 owner_scope_ref=enriched.institution,
                 fetched_at=fetched_at,
                 is_official_source=_is_official_host(enriched.roster_source),
+                run_id=run_id,
             )
         # Upsert other evidence URLs best-effort
         for evidence_url in (enriched.evidence_urls or [])[:5]:
@@ -207,6 +217,7 @@ def _process_one(conn, raw: dict, stats: BackfillStats, name_identity_gate=None)
                     owner_scope_ref=None,
                     fetched_at=fetched_at,
                     is_official_source=_is_official_host(evidence_url),
+                    run_id=run_id,
                 )
             except Exception as sub_exc:  # pragma: no cover
                 print(f"  [warn] evidence page upsert failed: {evidence_url} ({sub_exc})",
@@ -226,6 +237,7 @@ def _process_one(conn, raw: dict, stats: BackfillStats, name_identity_gate=None)
             paper_staging=None,
             official_profile_page_id=primary_page_id,
             name_identity_gate=name_identity_gate,
+            run_id=run_id,
         )
         if report.is_new_professor:
             stats.written += 1
@@ -279,6 +291,21 @@ def main() -> int:
 
     # canonical_writer uses positional row[0] access → tuple_row, not dict_row.
     with psycopg.connect(dsn, row_factory=tuple_row) as conn:
+        run_id: str | None = None
+        if not args.dry_run:
+            run_id = str(
+                open_pipeline_run(
+                    conn,
+                    run_kind="backfill_real",
+                    run_scope={
+                        "task": "real_e2e_professor_backfill",
+                        "source": str(args.source),
+                        "limit": args.limit,
+                    },
+                    triggered_by="run_real_e2e_professor_backfill",
+                )
+            )
+            conn.commit()
         for line_no, line in enumerate(args.source.open("r", encoding="utf-8"), 1):
             if line.strip() == "":
                 continue
@@ -311,7 +338,14 @@ def main() -> int:
             # doesn't cascade into subsequent inserts.
             try:
                 with conn.transaction():
-                    _process_one(conn, raw, stats, name_identity_gate=name_identity_gate)
+                    assert run_id is not None
+                    _process_one(
+                        conn,
+                        raw,
+                        stats,
+                        run_id=run_id,
+                        name_identity_gate=name_identity_gate,
+                    )
             except Exception as exc:
                 # _process_one already incremented stats.errors and logged;
                 # the savepoint rolls back and we keep going.
@@ -321,6 +355,14 @@ def main() -> int:
                 conn.commit()
 
         if not args.dry_run:
+            conn.commit()
+            close_pipeline_run(
+                conn,
+                run_id,
+                status="partial" if stats.errors else "succeeded",
+                items_processed=stats.total_read,
+                items_failed=stats.errors,
+            )
             conn.commit()
 
     print()

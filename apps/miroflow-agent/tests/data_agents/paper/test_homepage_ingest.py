@@ -543,7 +543,7 @@ def test_resume_missing_file_treated_as_no_resume(tmp_path):
 # ---------- Cancellation -----------------------------------------------------
 
 
-def test_keyboard_interrupt_closes_run_as_cancelled(tmp_path):
+def test_keyboard_interrupt_closes_run_as_failed(tmp_path):
     prof = _prof_row()
     conn = _mock_conn_with_profs([prof])
 
@@ -557,9 +557,9 @@ def test_keyboard_interrupt_closes_run_as_cancelled(tmp_path):
         m_fetch_html.side_effect = KeyboardInterrupt()
         with pytest.raises(KeyboardInterrupt):
             run_homepage_paper_ingest(conn, resume_checkpoint_path=tmp_path / "c.jsonl")
-        # close_pipeline_run called with status="cancelled"
+        # close_pipeline_run uses a legal terminal status from V001/V007.
         m_close.assert_called_once()
-        assert m_close.call_args.kwargs.get("status") == "cancelled"
+        assert m_close.call_args.kwargs.get("status") == "failed"
 
 
 # ---------- IngestReport contract -------------------------------------------

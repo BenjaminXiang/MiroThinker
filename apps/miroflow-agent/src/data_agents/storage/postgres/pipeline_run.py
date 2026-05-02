@@ -5,8 +5,8 @@
 V007 added `run_id: uuid` columns to professor / professor_affiliation /
 professor_fact / professor_paper_link / paper / patent / source_page and
 filled every existing row with a synthetic `legacy_backfill` run. That
-migration intentionally left new writes uncoupled: writers accept
-`run_id=None` and the column stays NULL until the next periodic backfill.
+migration intentionally left new writes uncoupled until phase 2 wired writers
+to require a concrete `run_id`.
 
 Phase 2 wires `run_id` through the write path. A pipeline entrypoint:
 
@@ -31,6 +31,21 @@ from typing import Any
 from uuid import UUID
 
 from psycopg import Connection
+
+DRY_RUN_SENTINEL_RUN_ID = UUID("00000000-0000-0000-0000-000000000000")
+
+
+def require_real_run_id(
+    run_id: UUID | str | None,
+    *,
+    writer_name: str = "writer",
+) -> UUID | str:
+    """Reject missing or dry-run sentinel run ids on wet-run writer paths."""
+    if run_id is None:
+        raise ValueError(f"{writer_name} requires run_id")
+    if str(run_id) == str(DRY_RUN_SENTINEL_RUN_ID):
+        raise ValueError(f"{writer_name} received dry-run sentinel run_id")
+    return run_id
 
 
 def open_pipeline_run(
@@ -79,8 +94,7 @@ def close_pipeline_run(
     """Mark a pipeline_run as finished with terminal `status`.
 
     Status must satisfy the run_status CHECK: 'succeeded' | 'failed' |
-    'partial' | 'cancelled'. For in-progress cancellation mid-script use
-    'cancelled'; catch-and-rethrow patterns typically call with 'failed'.
+    'partial'. Catch-and-rethrow patterns typically call with 'failed'.
     """
     error_json = json.dumps(error_summary, ensure_ascii=False) if error_summary else None
     conn.execute(

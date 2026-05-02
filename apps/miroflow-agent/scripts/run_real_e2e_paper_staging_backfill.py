@@ -40,6 +40,7 @@ from src.data_agents.paper.canonical_writer import upsert_paper
 from src.data_agents.paper.title_quality import is_plausible_paper_title
 from src.data_agents.professor.canonical_writer import _upsert_professor_paper_link
 from src.data_agents.storage.postgres.connection import resolve_dsn
+from src.data_agents.storage.postgres.pipeline_run import close_pipeline_run, open_pipeline_run
 
 
 _OFFICIAL_SOURCE_ALIASES = {
@@ -142,6 +143,7 @@ def _process_record(
     canonical_ids: set[str],
     name_index: dict[tuple[str, str], str],
     stats: PaperBackfillStats,
+    run_id: str,
 ) -> None:
     stats.total_records += 1
 
@@ -203,6 +205,7 @@ def _process_record(
             authors_display=authors_display,
             citation_count=record.get("citation_count"),
             canonical_source=canonical_source,
+            run_id=run_id,
         )
     except Exception as exc:
         stats.errors += 1
@@ -235,6 +238,7 @@ def _process_record(
             topic_consistency_score=None,
             institution_consistency_score=None,
             is_officially_listed=False,
+            run_id=run_id,
         )
     except Exception as exc:
         stats.errors += 1
@@ -273,6 +277,19 @@ def main() -> int:
     processed = 0
 
     with psycopg.connect(dsn, row_factory=tuple_row) as conn:
+        run_id = str(
+            open_pipeline_run(
+                conn,
+                run_kind="backfill_real",
+                run_scope={
+                    "task": "real_e2e_paper_staging_backfill",
+                    "root": str(args.root),
+                    "limit": args.limit,
+                },
+                triggered_by="run_real_e2e_paper_staging_backfill",
+            )
+        )
+        conn.commit()
         canonical_ids = _fetch_canonical_professor_ids(conn)
         name_index = _build_name_institution_index(conn)
         print(f"canonical professors: {len(canonical_ids)}")
@@ -292,7 +309,14 @@ def main() -> int:
                     except json.JSONDecodeError:
                         stats.errors += 1
                         continue
-                    _process_record(conn, record, canonical_ids, name_index, stats)
+                    _process_record(
+                        conn,
+                        record,
+                        canonical_ids,
+                        name_index,
+                        stats,
+                        run_id,
+                    )
                     processed += 1
                     if processed % args.commit_every == 0:
                         conn.commit()
@@ -305,6 +329,14 @@ def main() -> int:
             if args.limit is not None and processed >= args.limit:
                 break
 
+        conn.commit()
+        close_pipeline_run(
+            conn,
+            run_id,
+            status="partial" if stats.errors else "succeeded",
+            items_processed=stats.total_records,
+            items_failed=stats.errors,
+        )
         conn.commit()
 
     print()

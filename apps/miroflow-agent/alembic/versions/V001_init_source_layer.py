@@ -67,6 +67,9 @@ PIPELINE_RUN_KINDS = [
     "projection_build",
     "answer_readiness_eval",
     "quality_scan",
+    "legacy_backfill",
+    "professor_v3",
+    "backfill_real",
 ]
 PIPELINE_RUN_STATUSES = ["running", "succeeded", "partial", "failed"]
 

@@ -32,6 +32,7 @@ DATABASE_URL_SKIP_REASON = (
 )
 NETWORK_SKIP_REASON = "Network access blocked; skipping Postgres integration tests"
 _REAL_DB_NAMES = ("miroflow_real",)
+_LEGACY_RUN_ID = "00000000-0000-0000-0000-000000000001"
 
 
 def _raw_database_url() -> str:
@@ -188,6 +189,7 @@ def _official_page_id(conn: psycopg.Connection, url: str) -> UUID:
         owner_scope_ref="PROF-SEED",
         fetched_at=datetime(2026, 4, 18, tzinfo=timezone.utc),
         is_official_source=True,
+        run_id=_LEGACY_RUN_ID,
     )
     assert isinstance(page_id, UUID)
     return page_id
@@ -202,6 +204,7 @@ def test_write_new_professor_and_one_affiliation(pg_conn: psycopg.Connection):
         pg_conn,
         enriched=enriched,
         official_profile_page_id=page_id,
+        run_id=_LEGACY_RUN_ID,
     )
 
     assert report.professor_id == professor_id
@@ -241,11 +244,13 @@ def test_idempotent_on_repeat_upsert(pg_conn: psycopg.Connection):
         pg_conn,
         enriched=enriched,
         official_profile_page_id=page_id,
+        run_id=_LEGACY_RUN_ID,
     )
     second = write_professor_bundle(
         pg_conn,
         enriched=enriched,
         official_profile_page_id=page_id,
+        run_id=_LEGACY_RUN_ID,
     )
 
     assert second.professor_id == professor_id
@@ -264,6 +269,7 @@ def test_research_topics_become_facts(pg_conn: psycopg.Connection):
         pg_conn,
         enriched=enriched,
         official_profile_page_id=page_id,
+        run_id=_LEGACY_RUN_ID,
     )
 
     assert (
@@ -293,6 +299,7 @@ def test_paper_staging_produces_verified_link_when_official(
         enriched=enriched,
         paper_staging=[staging],
         official_profile_page_id=page_id,
+        run_id=_LEGACY_RUN_ID,
     )
 
     assert report.papers_written == 1
@@ -337,6 +344,7 @@ def test_paper_staging_produces_candidate_link_when_api_only(
         enriched=enriched,
         paper_staging=[staging],
         official_profile_page_id=page_id,
+        run_id=_LEGACY_RUN_ID,
     )
 
     assert report.professor_paper_links_written == 1
@@ -361,6 +369,7 @@ def test_upsert_source_page_returns_stable_page_id(pg_conn: psycopg.Connection):
         owner_scope_ref="PROF-001",
         fetched_at=datetime(2026, 4, 18, tzinfo=timezone.utc),
         is_official_source=True,
+        run_id=_LEGACY_RUN_ID,
     )
     second = upsert_source_page_for_url(
         pg_conn,
@@ -370,6 +379,7 @@ def test_upsert_source_page_returns_stable_page_id(pg_conn: psycopg.Connection):
         owner_scope_ref="PROF-001",
         fetched_at=datetime(2026, 4, 19, tzinfo=timezone.utc),
         is_official_source=True,
+        run_id=_LEGACY_RUN_ID,
     )
 
     assert first == second

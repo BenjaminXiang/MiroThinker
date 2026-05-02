@@ -15,6 +15,7 @@ from psycopg.types.json import Jsonb
 
 from ..normalization import normalize_company_name, normalize_person_name
 from ..storage.postgres.connection import connect
+from ..storage.postgres.pipeline_run import require_real_run_id
 from ._company_id import generate_company_id
 from .team_parser import parse_team_raw
 
@@ -157,6 +158,7 @@ def import_company_xlsx_to_postgres(
                         conn,
                         batch_id=batch_id,
                         values=merged_row.values,
+                        run_id=pipeline_run_id,
                     )
                     snapshot_id = _insert_company_snapshot(
                         conn,
@@ -466,7 +468,9 @@ def _upsert_company(
     *,
     batch_id: UUID,
     values: dict[str, str | None],
+    run_id: UUID | str,
 ) -> tuple[str, bool]:
+    run_id = require_real_run_id(run_id, writer_name="_upsert_company")
     registered_name = values.get("company_name_xlsx")
     if not registered_name:
         raise ValueError("company_name_xlsx is required")
@@ -510,15 +514,17 @@ def _upsert_company(
             identity_status,
             first_seen_batch_id,
             first_seen_at,
-            last_refreshed_at
+            last_refreshed_at,
+            run_id
         )
         VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, now(), now()
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, now(), now(), %s
         )
         ON CONFLICT (company_id) DO UPDATE
         SET last_refreshed_at = EXCLUDED.last_refreshed_at,
             website = COALESCE(company.website, EXCLUDED.website),
             registered_name = COALESCE(company.registered_name, EXCLUDED.registered_name),
+            run_id = EXCLUDED.run_id,
             updated_at = now()
         """,
         (
@@ -533,6 +539,7 @@ def _upsert_company(
             values.get("country_xlsx") or "国内",
             "resolved",
             batch_id,
+            run_id,
         ),
     )
     return company_id, is_new

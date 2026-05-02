@@ -15,6 +15,7 @@ from src.data_agents.paper.title_cleaner import clean_paper_title
 from src.data_agents.quality.threshold_config import (
     PROFESSOR_PAPER_LINK_PROMOTION,
 )
+from src.data_agents.storage.postgres.pipeline_run import require_real_run_id
 
 from .name_identity_gate import NameIdentityCandidate, NameIdentityDecision
 from .publish_helpers import build_professor_id, is_official_url
@@ -177,9 +178,10 @@ def write_professor_bundle(
         [NameIdentityCandidate], NameIdentityDecision
     ]
     | None = None,
-    run_id: UUID | str | None = None,
+    run_id: UUID | str,
 ) -> ProfessorCanonicalReport:
     """Upsert a professor bundle into canonical Postgres tables."""
+    run_id = require_real_run_id(run_id, writer_name="write_professor_bundle")
 
     professor_name = _clean_text(getattr(enriched, "name", None))
     if not professor_name:
@@ -190,6 +192,7 @@ def write_professor_bundle(
         conn,
         enriched=enriched,
         professor_id=professor_id,
+        run_id=run_id,
     )
     if primary_page_id is None:
         raise ValueError(
@@ -403,6 +406,7 @@ def write_professor_bundle(
             professor_id=professor_id,
             staging_record=staging_record,
             evidence_source_type=evidence_source_type,
+            run_id=run_id,
         )
         _upsert_professor_paper_link(
             conn,
@@ -457,9 +461,10 @@ def upsert_professor_metrics(
     h_index: int | None,
     citation_count: int | None,
     metrics_source: str | None,
-    run_id: UUID | str | None,
+    run_id: UUID | str,
 ) -> None:
     """Compute verified paper_count and write professor academic metrics."""
+    run_id = require_real_run_id(run_id, writer_name="upsert_professor_metrics")
 
     if metrics_source is None:
         if h_index is not None or citation_count is not None:
@@ -506,9 +511,10 @@ def upsert_source_page_for_url(
     owner_scope_ref: str | None = None,
     fetched_at: datetime | None = None,
     is_official_source: bool = False,
-    run_id: UUID | str | None = None,
+    run_id: UUID | str,
 ) -> UUID:
     """Upsert a source_page row keyed by URL and return its page id."""
+    run_id = require_real_run_id(run_id, writer_name="upsert_source_page_for_url")
 
     normalized_url = _clean_text(url)
     if not normalized_url:
@@ -554,6 +560,7 @@ def _resolve_primary_profile_page_id(
     *,
     enriched: EnrichedProfessorProfile,
     professor_id: str,
+    run_id: UUID | str,
 ) -> UUID | None:
     url = _primary_evidence_url(enriched)
     if not url:
@@ -565,6 +572,7 @@ def _resolve_primary_profile_page_id(
         owner_scope_kind="professor",
         owner_scope_ref=professor_id,
         is_official_source=is_official_url(url),
+        run_id=run_id,
     )
 
 
@@ -578,7 +586,7 @@ def _upsert_professor_row(
         [NameIdentityCandidate], NameIdentityDecision
     ]
     | None = None,
-    run_id: UUID | str | None = None,
+    run_id: UUID | str,
 ) -> bool:
     is_new = (
         conn.execute(
@@ -671,7 +679,7 @@ def _upsert_affiliation(
     start_year: int | None,
     end_year: int | None,
     source_page_id: UUID,
-    run_id: UUID | str | None = None,
+    run_id: UUID | str,
 ) -> None:
     row = conn.execute(
         """
@@ -752,7 +760,7 @@ def _upsert_fact(
     source_page_id: UUID,
     evidence_span: str,
     confidence: Decimal,
-    run_id: UUID | str | None = None,
+    run_id: UUID | str,
 ) -> None:
     row = conn.execute(
         """
@@ -829,8 +837,9 @@ def _upsert_professor_paper_link(
     topic_consistency_score: Decimal | None,
     institution_consistency_score: Decimal | None,
     is_officially_listed: bool,
-    run_id: UUID | str | None = None,
+    run_id: UUID | str,
 ) -> None:
+    run_id = require_real_run_id(run_id, writer_name="_upsert_professor_paper_link")
     verified_by = "rule_auto" if link_status == "verified" else None
     verified_at = datetime.now(timezone.utc) if link_status == "verified" else None
     conn.execute(
@@ -1073,6 +1082,7 @@ def _paper_evidence_page_id(
     professor_id: str,
     staging_record: Any,
     evidence_source_type: str,
+    run_id: UUID | str,
 ) -> UUID | None:
     if evidence_source_type == "academic_api_with_affiliation_match":
         return None
@@ -1087,6 +1097,7 @@ def _paper_evidence_page_id(
         owner_scope_ref=professor_id,
         is_official_source=evidence_source_type
         in {"official_publication_page", "official_external_profile"},
+        run_id=run_id,
     )
 
 

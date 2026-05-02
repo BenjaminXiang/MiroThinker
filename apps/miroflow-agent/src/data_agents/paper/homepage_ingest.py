@@ -112,8 +112,9 @@ def run_homepage_paper_ingest(
         if not dry_run:
             run_id = open_pipeline_run(
                 conn,
-                run_kind="homepage_paper_ingest",
+                run_kind="backfill_real",
                 run_scope={
+                    "task": "homepage_paper_ingest",
                     "institution": institution,
                     "limit": limit,
                     "prof_id": prof_id,
@@ -123,6 +124,7 @@ def run_homepage_paper_ingest(
                         else None
                     ),
                 },
+                triggered_by="homepage_paper_ingest",
             )
             run_opened = True
 
@@ -336,7 +338,7 @@ def run_homepage_paper_ingest(
             close_pipeline_run(
                 conn,
                 run_id,
-                status="cancelled",
+                status="failed",
             )
         raise
     except Exception as exc:

@@ -683,8 +683,13 @@ async def test_run_professor_pipeline_v3_metrics_stage_uses_run_id(
         lambda _profile: "PROF-WUYABEI",
     )
     monkeypatch.setattr(
-        "src.data_agents.professor.pipeline_v3.uuid.uuid4",
-        lambda: fixed_run_id,
+        "src.data_agents.professor.pipeline_v3.open_pipeline_run",
+        lambda *_args, **_kwargs: fixed_run_id,
+    )
+    close_run = MagicMock()
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3.close_pipeline_run",
+        close_run,
     )
     monkeypatch.setattr(
         "src.data_agents.professor.pipeline_v3.pg_connect",
@@ -718,6 +723,7 @@ async def test_run_professor_pipeline_v3_metrics_stage_uses_run_id(
     assert upsert_metrics.call_args.kwargs["citation_count"] == 708
     assert upsert_metrics.call_args.kwargs["metrics_source"] == "openalex"
     assert upsert_metrics.call_args.kwargs["run_id"] == str(fixed_run_id)
+    close_run.assert_called_once()
 
 
 def test_pipeline_v3_metrics_failure_files_issue_and_continues(

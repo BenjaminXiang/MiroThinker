@@ -8,6 +8,7 @@ from uuid import UUID
 from psycopg import Connection
 
 from src.data_agents.normalization import build_stable_id
+from src.data_agents.storage.postgres.pipeline_run import require_real_run_id
 
 from .title_cleaner import clean_paper_title
 
@@ -36,9 +37,10 @@ def upsert_paper(
     authors_display: str | None,
     citation_count: int | None,
     canonical_source: str,
-    run_id: UUID | str | None = None,
+    run_id: UUID | str,
 ) -> PaperUpsertReport:
     """Upsert a canonical paper row keyed by a stable paper id."""
+    run_id = require_real_run_id(run_id, writer_name="upsert_paper")
 
     normalized_title = clean_paper_title(title_clean)
     if not normalized_title:

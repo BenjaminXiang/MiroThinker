@@ -22,7 +22,6 @@ import asyncio
 import json
 import logging
 import os
-import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -30,6 +29,10 @@ from typing import Any
 
 from src.data_agents.contracts import quality_status_compatibility_rows
 from src.data_agents.storage.postgres.connection import connect as pg_connect
+from src.data_agents.storage.postgres.pipeline_run import (
+    close_pipeline_run,
+    open_pipeline_run,
+)
 from src.data_agents.storage.postgres.professor_orcid import get_professor_orcid
 
 from .canonical_writer import upsert_professor_metrics
@@ -378,14 +381,30 @@ def _record_metrics_failure(
 def _refresh_academic_metrics_for_released_profiles(
     *,
     released_profiles: list[tuple[str, EnrichedProfessorProfile, str]],
-    run_id: str,
     report: PipelineV3Report,
+    run_id: str | None = None,
 ) -> None:
     if not released_profiles:
         return
 
     try:
         with pg_connect() as conn:
+            opened_run = run_id is None
+            if opened_run:
+                run_id = str(
+                    open_pipeline_run(
+                        conn,
+                        run_kind="professor_v3",
+                        run_scope={
+                            "task": "academic_metrics_refresh",
+                            "released_profile_count": len(released_profiles),
+                        },
+                        triggered_by="professor_pipeline_v3",
+                    )
+                )
+                conn.commit()
+
+            failed_before = report.metrics_failed_count
             for professor_id, profile, _quality_status in released_profiles:
                 try:
                     orcid = get_professor_orcid(conn, professor_id)
@@ -422,6 +441,19 @@ def _refresh_academic_metrics_for_released_profiles(
                         error=exc,
                         report=report,
                     )
+            if opened_run:
+                close_pipeline_run(
+                    conn,
+                    run_id,
+                    status=(
+                        "partial"
+                        if report.metrics_failed_count > failed_before
+                        else "succeeded"
+                    ),
+                    items_processed=len(released_profiles),
+                    items_failed=report.metrics_failed_count - failed_before,
+                )
+                conn.commit()
     except Exception as exc:  # noqa: BLE001
         logger.warning("Academic metrics refresh skipped: %s", exc)
         report.alerts.append(f"metrics_refresh_skipped:{exc}")
@@ -736,7 +768,6 @@ async def run_professor_pipeline_v3(
 ) -> PipelineV3Result:
     """Run the full V3 professor enrichment pipeline."""
     _clear_proxy_env()
-    run_id = str(uuid.uuid4())
     report = PipelineV3Report()
     output_dir = config.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -954,7 +985,6 @@ async def run_professor_pipeline_v3(
         _log("Stage 11.5: Academic Metrics Refresh")
         _refresh_academic_metrics_for_released_profiles(
             released_profiles=released_profiles,
-            run_id=run_id,
             report=report,
         )
 

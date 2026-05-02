@@ -21,6 +21,7 @@ from src.data_agents.storage.postgres.paper_full_text import (
 )
 
 _SKIP_REASON = "Neither DATABASE_URL_TEST nor DATABASE_URL set; skipping"
+_LEGACY_RUN_ID = "00000000-0000-0000-0000-000000000001"
 
 
 def _dsn() -> str | None:
@@ -44,7 +45,12 @@ def test_upsert_paper_full_text_executes_insert_on_conflict():
         source="arxiv",
         fetch_error=None,
     )
-    upsert_paper_full_text(conn, paper_id="paper:arxiv:2310.12345", extract=extract)
+    upsert_paper_full_text(
+        conn,
+        paper_id="paper:arxiv:2310.12345",
+        extract=extract,
+        run_id=_LEGACY_RUN_ID,
+    )
     # The writer must call conn.execute at least once.
     assert conn.execute.called
     # The SQL should contain ON CONFLICT for idempotent upsert.
@@ -65,7 +71,7 @@ def test_upsert_paper_full_text_passes_all_fields():
         source="arxiv",
         fetch_error=None,
     )
-    upsert_paper_full_text(conn, paper_id="p1", extract=extract)
+    upsert_paper_full_text(conn, paper_id="p1", extract=extract, run_id=_LEGACY_RUN_ID)
     # Params passed should include all extract fields in some order.
     call_args = conn.execute.call_args
     params = call_args[0][1]
@@ -89,7 +95,12 @@ def test_upsert_paper_full_text_handles_none_values():
         fetch_error="http_404",
     )
     # Should not raise on None content fields.
-    upsert_paper_full_text(conn, paper_id="p_failed", extract=extract)
+    upsert_paper_full_text(
+        conn,
+        paper_id="p_failed",
+        extract=extract,
+        run_id=_LEGACY_RUN_ID,
+    )
     assert conn.execute.called
 
 
@@ -105,7 +116,7 @@ def test_upsert_paper_full_text_does_not_commit():
         source="failed",
         fetch_error="no_arxiv_id",
     )
-    upsert_paper_full_text(conn, paper_id="p", extract=extract)
+    upsert_paper_full_text(conn, paper_id="p", extract=extract, run_id=_LEGACY_RUN_ID)
     conn.commit.assert_not_called()
 
 
@@ -170,13 +181,19 @@ def test_integration_upsert_and_read_back(pg_conn):
         source="arxiv",
         fetch_error=None,
     )
-    upsert_paper_full_text(pg_conn, paper_id=paper_id, extract=extract)
+    upsert_paper_full_text(
+        pg_conn,
+        paper_id=paper_id,
+        extract=extract,
+        run_id=_LEGACY_RUN_ID,
+    )
     row = pg_conn.execute(
-        "SELECT abstract, intro, source FROM paper_full_text WHERE paper_id = %s",
+        "SELECT abstract, intro, source, run_id::text FROM paper_full_text WHERE paper_id = %s",
         (paper_id,),
     ).fetchone()
     assert row["abstract"] == "Integration test abstract."
     assert row["source"] == "arxiv"
+    assert row["run_id"] == _LEGACY_RUN_ID
 
 
 def test_integration_upsert_is_idempotent(pg_conn):
@@ -199,8 +216,18 @@ def test_integration_upsert_is_idempotent(pg_conn):
         paper_id=paper_id, abstract="v2", intro=None, pdf_url=None,
         pdf_sha256=None, source="openalex", fetch_error=None,
     )
-    upsert_paper_full_text(pg_conn, paper_id=paper_id, extract=extract1)
-    upsert_paper_full_text(pg_conn, paper_id=paper_id, extract=extract2)
+    upsert_paper_full_text(
+        pg_conn,
+        paper_id=paper_id,
+        extract=extract1,
+        run_id=_LEGACY_RUN_ID,
+    )
+    upsert_paper_full_text(
+        pg_conn,
+        paper_id=paper_id,
+        extract=extract2,
+        run_id=_LEGACY_RUN_ID,
+    )
     row = pg_conn.execute(
         "SELECT abstract, source FROM paper_full_text WHERE paper_id = %s",
         (paper_id,),

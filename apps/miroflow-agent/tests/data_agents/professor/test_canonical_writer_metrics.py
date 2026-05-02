@@ -8,6 +8,8 @@ from pydantic import ValidationError
 from src.data_agents.canonical.professor import Professor
 from src.data_agents.professor.canonical_writer import upsert_professor_metrics
 
+_RUN_ID = "00000000-0000-0000-0000-000000000001"
+
 
 def _conn_with_paper_count(count: int) -> MagicMock:
     conn = MagicMock()
@@ -57,7 +59,7 @@ def test_upsert_professor_metrics_writes_verified_link_only_zero_count() -> None
         h_index=None,
         citation_count=None,
         metrics_source="verified_link_only",
-        run_id=None,
+        run_id=_RUN_ID,
     )
 
     assert _params_at(conn, 1) == (
@@ -65,7 +67,7 @@ def test_upsert_professor_metrics_writes_verified_link_only_zero_count() -> None
         None,
         0,
         "verified_link_only",
-        None,
+        _RUN_ID,
         "PROF-2",
     )
 
@@ -107,10 +109,10 @@ def test_upsert_professor_metrics_rejects_unknown_source() -> None:
         upsert_professor_metrics(
             conn,
             professor_id="PROF-5",
-            h_index=None,
-            citation_count=None,
-            metrics_source="google_scholar",
-            run_id=None,
+        h_index=None,
+        citation_count=None,
+        metrics_source="google_scholar",
+        run_id=_RUN_ID,
         )
 
     conn.execute.assert_not_called()
@@ -123,10 +125,10 @@ def test_upsert_professor_metrics_requires_source_for_openalex_values() -> None:
         upsert_professor_metrics(
             conn,
             professor_id="PROF-6",
-            h_index=1,
-            citation_count=None,
-            metrics_source=None,
-            run_id=None,
+        h_index=1,
+        citation_count=None,
+        metrics_source=None,
+        run_id=_RUN_ID,
         )
 
     conn.execute.assert_not_called()
@@ -141,7 +143,7 @@ def test_upsert_professor_metrics_uses_verified_link_count_sql() -> None:
         h_index=1,
         citation_count=2,
         metrics_source="openalex",
-        run_id=None,
+        run_id=_RUN_ID,
     )
 
     assert _sql_at(conn, 0) == (
@@ -160,7 +162,7 @@ def test_upsert_professor_metrics_skips_merged_professors() -> None:
         h_index=3,
         citation_count=4,
         metrics_source="openalex",
-        run_id=None,
+        run_id=_RUN_ID,
     )
 
     update_sql = _sql_at(conn, 1)
@@ -176,7 +178,7 @@ def test_upsert_professor_metrics_computed_at_not_newer_than_refresh() -> None:
         h_index=3,
         citation_count=4,
         metrics_source="openalex",
-        run_id=None,
+        run_id=_RUN_ID,
     )
 
     update_sql = _sql_at(conn, 1)
@@ -192,7 +194,7 @@ def test_upsert_professor_metrics_does_not_commit() -> None:
         h_index=3,
         citation_count=4,
         metrics_source="openalex",
-        run_id=None,
+        run_id=_RUN_ID,
     )
 
     conn.commit.assert_not_called()

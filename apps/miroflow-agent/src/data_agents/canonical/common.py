@@ -29,6 +29,9 @@ class RunKind(str, Enum):
     projection_build = "projection_build"
     answer_readiness_eval = "answer_readiness_eval"
     quality_scan = "quality_scan"
+    legacy_backfill = "legacy_backfill"
+    professor_v3 = "professor_v3"
+    backfill_real = "backfill_real"
 
 
 class RunStatus(str, Enum):
