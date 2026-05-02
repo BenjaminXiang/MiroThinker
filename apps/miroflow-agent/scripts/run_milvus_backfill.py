@@ -18,14 +18,28 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from src.data_agents.company.vectorizer import (  # noqa: E402
+    _company_row_to_payload,
+    _compose_company_text,
+)
 from src.data_agents.paper.milvus_backfill import backfill_paper_chunks  # noqa: E402
+from src.data_agents.patent.vectorizer import (  # noqa: E402
+    _compose_patent_text,
+    _patent_row_to_payload,
+)
 from src.data_agents.professor.vectorizer import EmbeddingClient  # noqa: E402
 from src.data_agents.providers.local_api_key import load_local_api_key  # noqa: E402
 from src.data_agents.storage.milvus_collections import (  # noqa: E402
+    COMPANY_PROFILES_COLLECTION,
     PAPER_CHUNKS_COLLECTION,
+    PATENT_PROFILES_COLLECTION,
     PROFESSOR_PROFILES_COLLECTION,
+    drop_company_profiles_collection,
     drop_paper_chunks_collection,
+    drop_patent_profiles_collection,
     drop_professor_profiles_collection,
+    ensure_company_profiles_collection,
+    ensure_patent_profiles_collection,
     ensure_professor_profiles_collection,
 )
 
@@ -66,9 +80,11 @@ def _load_resume_ids(path: Path | None) -> set[str]:
         except json.JSONDecodeError:
             logger.warning("Skipping corrupt resume line %d in %s", line_number, path)
             continue
-        paper_id = payload.get("paper_id")
-        if isinstance(paper_id, str) and paper_id:
-            resume_ids.add(paper_id)
+        for key in ("paper_id", "professor_id", "company_id", "patent_id", "id"):
+            entity_id = payload.get(key)
+            if isinstance(entity_id, str) and entity_id:
+                resume_ids.add(entity_id)
+                break
     return resume_ids
 
 
@@ -86,9 +102,41 @@ _PROFESSOR_EXPECTED_FIELDS = [
     "paper_count",
 ]
 
+_COMPANY_COLLECTION = COMPANY_PROFILES_COLLECTION
+_COMPANY_EXPECTED_FIELDS = [
+    "id",
+    "name",
+    "industry",
+    "hq_city",
+    "description",
+    "profile_summary",
+    "technology_route_summary",
+    "profile_vector",
+]
+
+_PATENT_COLLECTION = PATENT_PROFILES_COLLECTION
+_PATENT_EXPECTED_FIELDS = [
+    "id",
+    "patent_number",
+    "title",
+    "abstract",
+    "technology_effect",
+    "patent_type",
+    "ipc_codes",
+    "profile_vector",
+]
+
 
 def _ensure_professor_collection(milvus_client) -> None:
     ensure_professor_profiles_collection(milvus_client)
+
+
+def _ensure_company_collection(milvus_client) -> None:
+    ensure_company_profiles_collection(milvus_client)
+
+
+def _ensure_patent_collection(milvus_client) -> None:
+    ensure_patent_profiles_collection(milvus_client)
 
 
 _PROFESSOR_SQL = """
@@ -235,12 +283,221 @@ def _backfill_professor_domain(
     }
 
 
+_COMPANY_SQL = """
+    SELECT c.company_id,
+           c.canonical_name,
+           c.hq_city,
+           c.profile_summary,
+           c.technology_route_summary,
+           cs.industry,
+           cs.description
+      FROM company c
+      LEFT JOIN LATERAL (
+          SELECT industry, description
+            FROM company_snapshot
+           WHERE company_id = c.company_id
+           ORDER BY snapshot_created_at DESC NULLS LAST
+           LIMIT 1
+      ) cs ON true
+     WHERE c.canonical_name IS NOT NULL
+       AND c.identity_status != 'inactive'
+"""
+
+
+def _backfill_company_domain(
+    conn,
+    milvus_client,
+    embedding_client,
+    *,
+    limit=None,
+    batch_size=32,
+    resume_ids=None,
+):
+    started_at = time.monotonic()
+    _ensure_company_collection(milvus_client)
+
+    sql = _COMPANY_SQL
+    params: list[object] = []
+    if resume_ids:
+        placeholders = ", ".join(["%s"] * len(resume_ids))
+        sql += f" AND c.company_id NOT IN ({placeholders})"
+        params.extend(sorted(resume_ids))
+    sql += " ORDER BY c.company_id"
+    if limit is not None:
+        sql += " LIMIT %s"
+        params.append(int(limit))
+
+    rows = conn.execute(sql, params).fetchall()
+    companies_total = len(rows)
+    companies_processed = 0
+    companies_skipped = 0
+    companies_with_errors = 0
+
+    for batch_start in range(0, companies_total, max(1, batch_size)):
+        batch_rows = rows[batch_start : batch_start + max(1, batch_size)]
+        texts: list[str] = []
+        row_refs: list[dict] = []
+        for row in batch_rows:
+            text = _compose_company_text(row)
+            if not str(row.get("canonical_name") or "").strip() or not text.strip():
+                companies_skipped += 1
+                continue
+            texts.append(text[:3800])
+            row_refs.append(row)
+
+        if not texts:
+            continue
+
+        try:
+            vectors = embedding_client.embed_batch(texts)
+        except Exception as exc:
+            companies_with_errors += len(texts)
+            logger.warning(
+                "Embedding batch failed (%d companies): %s", len(texts), exc
+            )
+            continue
+
+        payload = [
+            _company_row_to_payload(row, vector)
+            for row, vector in zip(row_refs, vectors, strict=False)
+        ]
+        if len(payload) != len(texts):
+            companies_with_errors += len(texts)
+            logger.warning(
+                "Embedding batch returned %d vectors for %d companies",
+                len(payload),
+                len(texts),
+            )
+            continue
+
+        try:
+            milvus_client.upsert(collection_name=_COMPANY_COLLECTION, data=payload)
+        except Exception as exc:
+            companies_with_errors += len(payload)
+            logger.warning(
+                "Milvus upsert failed (%d companies): %s", len(payload), exc
+            )
+            continue
+
+        companies_processed += len(payload)
+
+    return {
+        "companies_total": companies_total,
+        "companies_processed": companies_processed,
+        "companies_skipped": companies_skipped,
+        "companies_with_errors": companies_with_errors,
+        "duration_seconds": time.monotonic() - started_at,
+    }
+
+
+_PATENT_SQL = """
+    SELECT patent_id,
+           patent_number,
+           title_clean,
+           abstract_clean,
+           technology_effect,
+           patent_type,
+           ipc_codes
+      FROM patent
+     WHERE patent_id IS NOT NULL
+"""
+
+
+def _backfill_patent_domain(
+    conn,
+    milvus_client,
+    embedding_client,
+    *,
+    limit=None,
+    batch_size=32,
+    resume_ids=None,
+):
+    started_at = time.monotonic()
+    _ensure_patent_collection(milvus_client)
+
+    sql = _PATENT_SQL
+    params: list[object] = []
+    if resume_ids:
+        placeholders = ", ".join(["%s"] * len(resume_ids))
+        sql += f" AND patent_id NOT IN ({placeholders})"
+        params.extend(sorted(resume_ids))
+    sql += " ORDER BY patent_id"
+    if limit is not None:
+        sql += " LIMIT %s"
+        params.append(int(limit))
+
+    rows = conn.execute(sql, params).fetchall()
+    patents_total = len(rows)
+    patents_processed = 0
+    patents_skipped = 0
+    patents_with_errors = 0
+
+    for batch_start in range(0, patents_total, max(1, batch_size)):
+        batch_rows = rows[batch_start : batch_start + max(1, batch_size)]
+        texts: list[str] = []
+        row_refs: list[dict] = []
+        for row in batch_rows:
+            text = _compose_patent_text(row)
+            if not text.strip():
+                patents_skipped += 1
+                continue
+            texts.append(text[:3800])
+            row_refs.append(row)
+
+        if not texts:
+            continue
+
+        try:
+            vectors = embedding_client.embed_batch(texts)
+        except Exception as exc:
+            patents_with_errors += len(texts)
+            logger.warning(
+                "Embedding batch failed (%d patents): %s", len(texts), exc
+            )
+            continue
+
+        payload = [
+            _patent_row_to_payload(row, vector)
+            for row, vector in zip(row_refs, vectors, strict=False)
+        ]
+        if len(payload) != len(texts):
+            patents_with_errors += len(texts)
+            logger.warning(
+                "Embedding batch returned %d vectors for %d patents",
+                len(payload),
+                len(texts),
+            )
+            continue
+
+        try:
+            milvus_client.upsert(collection_name=_PATENT_COLLECTION, data=payload)
+        except Exception as exc:
+            patents_with_errors += len(payload)
+            logger.warning("Milvus upsert failed (%d patents): %s", len(payload), exc)
+            continue
+
+        patents_processed += len(payload)
+
+    return {
+        "patents_total": patents_total,
+        "patents_processed": patents_processed,
+        "patents_skipped": patents_skipped,
+        "patents_with_errors": patents_with_errors,
+        "duration_seconds": time.monotonic() - started_at,
+    }
+
+
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Backfill Milvus collections.")
-    parser.add_argument("--domain", choices=("paper", "professor"))
+    parser.add_argument("--domain", choices=("paper", "professor", "company", "patent"))
     parser.add_argument(
         "--collection",
-        choices=(PAPER_CHUNKS_COLLECTION, PROFESSOR_PROFILES_COLLECTION),
+        choices=(
+            PAPER_CHUNKS_COLLECTION,
+            PROFESSOR_PROFILES_COLLECTION,
+            COMPANY_PROFILES_COLLECTION,
+            PATENT_PROFILES_COLLECTION,
+        ),
     )
     parser.add_argument(
         "--dry-run",
@@ -268,6 +525,10 @@ def _resolve_domain(args: argparse.Namespace) -> str:
         collection_domain = "professor"
     elif args.collection == PAPER_CHUNKS_COLLECTION:
         collection_domain = "paper"
+    elif args.collection == COMPANY_PROFILES_COLLECTION:
+        collection_domain = "company"
+    elif args.collection == PATENT_PROFILES_COLLECTION:
+        collection_domain = "patent"
     else:
         collection_domain = None
     if args.domain and collection_domain and args.domain != collection_domain:
@@ -306,6 +567,10 @@ def _dry_run_collection_report(milvus_client, collection_name: str) -> dict[str,
     existing_fields = _collection_field_names(milvus_client, collection_name)
     if collection_name == PROFESSOR_PROFILES_COLLECTION:
         expected_fields = list(_PROFESSOR_EXPECTED_FIELDS)
+    elif collection_name == COMPANY_PROFILES_COLLECTION:
+        expected_fields = list(_COMPANY_EXPECTED_FIELDS)
+    elif collection_name == PATENT_PROFILES_COLLECTION:
+        expected_fields = list(_PATENT_EXPECTED_FIELDS)
     elif collection_name == PAPER_CHUNKS_COLLECTION:
         expected_fields = [
             "chunk_id",
@@ -333,9 +598,13 @@ def _dry_run_collection_report(milvus_client, collection_name: str) -> dict[str,
 def main() -> int:
     args = _parse_args()
     domain = _resolve_domain(args)
-    collection_name = args.collection or (
-        PROFESSOR_PROFILES_COLLECTION if domain == "professor" else PAPER_CHUNKS_COLLECTION
-    )
+    collection_by_domain = {
+        "paper": PAPER_CHUNKS_COLLECTION,
+        "professor": PROFESSOR_PROFILES_COLLECTION,
+        "company": COMPANY_PROFILES_COLLECTION,
+        "patent": PATENT_PROFILES_COLLECTION,
+    }
+    collection_name = args.collection or collection_by_domain[domain]
     log_level = getattr(logging, str(args.log_level).upper(), logging.INFO)
     logging.basicConfig(level=log_level, format="%(levelname)s %(name)s: %(message)s")
 
@@ -364,8 +633,12 @@ def main() -> int:
         if args.rebuild:
             if domain == "paper":
                 drop_paper_chunks_collection(milvus_client)
-            else:
+            elif domain == "professor":
                 drop_professor_profiles_collection(milvus_client)
+            elif domain == "company":
+                drop_company_profiles_collection(milvus_client)
+            elif domain == "patent":
+                drop_patent_profiles_collection(milvus_client)
 
         if domain == "paper":
             report = backfill_paper_chunks(
@@ -376,7 +649,7 @@ def main() -> int:
                 batch_size=args.batch_size,
                 resume_ids=resume_ids,
             )
-        else:
+        elif domain == "professor":
             report = _backfill_professor_domain(
                 conn,
                 milvus_client,
@@ -385,6 +658,26 @@ def main() -> int:
                 batch_size=args.batch_size,
                 resume_ids=resume_ids,
             )
+        elif domain == "company":
+            report = _backfill_company_domain(
+                conn,
+                milvus_client,
+                embedding_client,
+                limit=args.limit,
+                batch_size=args.batch_size,
+                resume_ids=resume_ids,
+            )
+        elif domain == "patent":
+            report = _backfill_patent_domain(
+                conn,
+                milvus_client,
+                embedding_client,
+                limit=args.limit,
+                batch_size=args.batch_size,
+                resume_ids=resume_ids,
+            )
+        else:
+            raise ValueError(f"Unsupported domain: {domain}")
 
         payload = report if isinstance(report, dict) else asdict(report)
         print(json.dumps(payload, ensure_ascii=False))

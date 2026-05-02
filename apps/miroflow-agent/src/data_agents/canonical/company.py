@@ -44,6 +44,8 @@ class Company(BaseModel):
     country: str = "国内"
     identity_status: IdentityStatus = IdentityStatus.resolved
     merged_into_id: str | None = None
+    profile_summary: str | None = None
+    technology_route_summary: str | None = None
     first_seen_batch_id: UUID | None = None
     first_seen_at: datetime | None = None
     last_refreshed_at: datetime | None = None

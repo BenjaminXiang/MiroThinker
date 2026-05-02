@@ -7,6 +7,8 @@ from math import sqrt
 
 PAPER_CHUNKS_COLLECTION = "paper_chunks"
 PROFESSOR_PROFILES_COLLECTION = "professor_profiles"
+COMPANY_PROFILES_COLLECTION = "company_profiles"
+PATENT_PROFILES_COLLECTION = "patent_profiles"
 _VECTOR_DIM = 4096
 
 
@@ -117,7 +119,14 @@ def _install_milvus_memory_compat() -> None:
                 collection["rows"],
                 key=lambda row: _cosine_similarity(
                     query_vector,
-                    list(row.get("vector") or row.get("content_vector") or []),
+                    list(
+                        row.get(str(kwargs.get("anns_field") or ""))
+                        or row.get("vector")
+                        or row.get("content_vector")
+                        or row.get("profile_vector")
+                        or row.get("direction_vector")
+                        or []
+                    ),
                 ),
                 reverse=True,
             )
@@ -285,3 +294,129 @@ def drop_professor_profiles_collection(milvus_client) -> None:
     if not milvus_client.has_collection(PROFESSOR_PROFILES_COLLECTION):
         return
     milvus_client.drop_collection(collection_name=PROFESSOR_PROFILES_COLLECTION)
+
+
+def ensure_company_profiles_collection(milvus_client) -> None:
+    if milvus_client.has_collection(COMPANY_PROFILES_COLLECTION):
+        return
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="pkg_resources is deprecated as an API.*",
+            category=UserWarning,
+            module="milvus_lite",
+        )
+        from pymilvus import CollectionSchema, DataType, FieldSchema
+
+    fields = [
+        FieldSchema(
+            name="id",
+            dtype=DataType.VARCHAR,
+            is_primary=True,
+            max_length=64,
+        ),
+        FieldSchema(name="name", dtype=DataType.VARCHAR, max_length=256),
+        FieldSchema(name="industry", dtype=DataType.VARCHAR, max_length=128),
+        FieldSchema(name="hq_city", dtype=DataType.VARCHAR, max_length=64),
+        FieldSchema(name="description", dtype=DataType.VARCHAR, max_length=2048),
+        FieldSchema(name="profile_summary", dtype=DataType.VARCHAR, max_length=2048),
+        FieldSchema(
+            name="technology_route_summary",
+            dtype=DataType.VARCHAR,
+            max_length=2048,
+        ),
+        FieldSchema(
+            name="profile_vector",
+            dtype=DataType.FLOAT_VECTOR,
+            dim=_VECTOR_DIM,
+        ),
+    ]
+    schema = CollectionSchema(
+        fields=fields,
+        description="Company profiles for semantic retrieval",
+    )
+    milvus_client.create_collection(
+        collection_name=COMPANY_PROFILES_COLLECTION,
+        schema=schema,
+    )
+
+    index_params = milvus_client.prepare_index_params()
+    index_params.add_index(
+        field_name="profile_vector",
+        index_type="AUTOINDEX",
+        metric_type="COSINE",
+    )
+    milvus_client.create_index(
+        collection_name=COMPANY_PROFILES_COLLECTION,
+        index_params=index_params,
+    )
+
+
+def drop_company_profiles_collection(milvus_client) -> None:
+    if not milvus_client.has_collection(COMPANY_PROFILES_COLLECTION):
+        return
+    milvus_client.drop_collection(collection_name=COMPANY_PROFILES_COLLECTION)
+
+
+def ensure_patent_profiles_collection(milvus_client) -> None:
+    if milvus_client.has_collection(PATENT_PROFILES_COLLECTION):
+        return
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="pkg_resources is deprecated as an API.*",
+            category=UserWarning,
+            module="milvus_lite",
+        )
+        from pymilvus import CollectionSchema, DataType, FieldSchema
+
+    fields = [
+        FieldSchema(
+            name="id",
+            dtype=DataType.VARCHAR,
+            is_primary=True,
+            max_length=64,
+        ),
+        FieldSchema(name="patent_number", dtype=DataType.VARCHAR, max_length=64),
+        FieldSchema(name="title", dtype=DataType.VARCHAR, max_length=512),
+        FieldSchema(name="abstract", dtype=DataType.VARCHAR, max_length=2048),
+        FieldSchema(
+            name="technology_effect",
+            dtype=DataType.VARCHAR,
+            max_length=1024,
+        ),
+        FieldSchema(name="patent_type", dtype=DataType.VARCHAR, max_length=32),
+        FieldSchema(name="ipc_codes", dtype=DataType.VARCHAR, max_length=512),
+        FieldSchema(
+            name="profile_vector",
+            dtype=DataType.FLOAT_VECTOR,
+            dim=_VECTOR_DIM,
+        ),
+    ]
+    schema = CollectionSchema(
+        fields=fields,
+        description="Patent profiles for semantic retrieval",
+    )
+    milvus_client.create_collection(
+        collection_name=PATENT_PROFILES_COLLECTION,
+        schema=schema,
+    )
+
+    index_params = milvus_client.prepare_index_params()
+    index_params.add_index(
+        field_name="profile_vector",
+        index_type="AUTOINDEX",
+        metric_type="COSINE",
+    )
+    milvus_client.create_index(
+        collection_name=PATENT_PROFILES_COLLECTION,
+        index_params=index_params,
+    )
+
+
+def drop_patent_profiles_collection(milvus_client) -> None:
+    if not milvus_client.has_collection(PATENT_PROFILES_COLLECTION):
+        return
+    milvus_client.drop_collection(collection_name=PATENT_PROFILES_COLLECTION)
