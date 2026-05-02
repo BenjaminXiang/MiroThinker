@@ -21,11 +21,8 @@ from __future__ import annotations
 import logging
 import os
 import re
-import threading
 import time
-import uuid
-from collections import deque
-from typing import Any, Deque, Literal
+from typing import Any, Literal
 from urllib.parse import urlparse
 
 from fastapi import APIRouter, Cookie, Depends, Response
@@ -40,6 +37,7 @@ from backend.deps import (
     get_pg_conn,
     get_retrieval_service,
 )
+from backend.storage.chat_session import SessionStore
 from src.data_agents.professor.llm_profiles import resolve_professor_llm_settings
 from src.data_agents.service.retrieval import Evidence
 
@@ -546,11 +544,10 @@ _Q_PROF_TOPICS_RE = re.compile(
 
 
 # --- Round 10 v2: multi-turn context ---
-# In-memory session store. Keyed by an opaque session_id we hand back via
-# cookie. Each SessionContext keeps the last few entities and turns so we
-# can resolve pronouns ("他"/"她"/"这位教授") to the most-recently-mentioned
-# professor. Process-local only — lost on restart. A future iteration
-# could persist to Postgres or Redis for HA.
+# SessionStore persists the small per-session context to Postgres while keeping
+# an in-process cache/fallback. Each SessionContext keeps the last few entities
+# and turns so pronouns ("他"/"她"/"这位教授") resolve to the most-recently
+# mentioned professor.
 
 _SESSION_COOKIE = "miroflow_chat_session"
 _SESSION_TTL_SECONDS = 24 * 3600
@@ -559,8 +556,10 @@ _SESSION_MAX_TURNS = 5
 _SESSION_PRONOUNS_RE = re.compile(
     r"(他|她|这位(?:教授|老师|学者)?|该(?:教授|学者)|上面那位)"
 )
-_SESSIONS_LOCK = threading.Lock()
-_SESSIONS: dict[str, "SessionContext"] = {}
+
+
+def _chat_session_dsn() -> str | None:
+    return os.environ.get("DATABASE_URL") or os.environ.get("DATABASE_URL_TEST")
 
 
 class SessionEntity(BaseModel):
@@ -569,24 +568,26 @@ class SessionEntity(BaseModel):
     label: str
 
 
-class SessionContext:
-    """Per-session state. Not a Pydantic model to allow mutable deque usage."""
+class SessionContext(BaseModel):
+    session_id: str
+    user_id: str | None = None
+    entities: list[SessionEntity] = Field(default_factory=list)
+    turns: list[dict[str, Any]] = Field(default_factory=list)
+    last_seen_at: float = Field(default_factory=time.time)
 
-    __slots__ = ("session_id", "entities", "turns", "last_seen_at")
-
-    def __init__(self, session_id: str) -> None:
-        self.session_id = session_id
-        self.entities: Deque[SessionEntity] = deque(maxlen=_SESSION_MAX_ENTITIES)
-        self.turns: Deque[dict[str, Any]] = deque(maxlen=_SESSION_MAX_TURNS)
-        self.last_seen_at = time.time()
+    def model_post_init(self, __context: Any) -> None:
+        self.entities = self.entities[-_SESSION_MAX_ENTITIES:]
+        self.turns = self.turns[-_SESSION_MAX_TURNS:]
 
     def push_entity(self, entity: SessionEntity) -> None:
         # Drop existing copies so the most-recent mention lands at the end
-        self.entities = deque(
-            [e for e in self.entities if not (e.kind == entity.kind and e.id == entity.id)],
-            maxlen=_SESSION_MAX_ENTITIES,
-        )
-        self.entities.append(entity)
+        entities = [
+            e
+            for e in self.entities
+            if not (e.kind == entity.kind and e.id == entity.id)
+        ]
+        entities.append(entity)
+        self.entities = entities[-_SESSION_MAX_ENTITIES:]
 
     def latest_professor(self) -> SessionEntity | None:
         for e in reversed(self.entities):
@@ -601,27 +602,16 @@ class SessionContext:
             "answer_text": answer_text[:300],  # trim for memory hygiene
             "at": time.time(),
         })
+        self.turns = self.turns[-_SESSION_MAX_TURNS:]
+
+
+_SESSION_STORE = SessionStore(_chat_session_dsn(), ttl_seconds=_SESSION_TTL_SECONDS)
 
 
 def _get_or_create_session(session_id: str | None) -> SessionContext:
-    with _SESSIONS_LOCK:
-        now = time.time()
-        # Opportunistic cleanup: drop stale sessions (cheap since we're holding the lock)
-        stale = [
-            k for k, ctx in _SESSIONS.items()
-            if now - ctx.last_seen_at > _SESSION_TTL_SECONDS
-        ]
-        for k in stale:
-            _SESSIONS.pop(k, None)
-
-        if session_id and session_id in _SESSIONS:
-            ctx = _SESSIONS[session_id]
-            ctx.last_seen_at = now
-            return ctx
-        new_id = session_id or uuid.uuid4().hex
-        ctx = SessionContext(new_id)
-        _SESSIONS[new_id] = ctx
-        return ctx
+    if not isinstance(session_id, str):
+        session_id = None
+    return _SESSION_STORE.get_or_create(session_id)
 
 
 def _rewrite_query_with_context(query: str, session: SessionContext) -> str:
@@ -1366,6 +1356,7 @@ def chat(
                 kind="professor", id=prof_id, label=prof_name
             ))
         session.push_turn(raw_query, chat_resp.query_type, chat_resp.answer_text)
+        _SESSION_STORE.persist(session)
         return chat_resp
 
     # Pattern D' (v2): "<name>的研究方向" — follow-up on a pinned professor
