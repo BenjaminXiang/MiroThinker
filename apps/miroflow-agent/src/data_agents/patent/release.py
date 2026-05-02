@@ -115,6 +115,28 @@ def build_summary_text(
     return generate_patent_summary_text(record, llm_client=llm_client)
 
 
+_PATENT_TYPE_CANONICAL = {"发明", "实用新型", "外观", "PCT", "其他"}
+
+
+def _normalize_patent_type_for_canonical(value: str | None) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+    if "实用新型" in text:
+        return "实用新型"
+    if "外观" in text:
+        return "外观"
+    if "发明" in text:
+        return "发明"
+    if "PCT" in text or "pct" in text.lower():
+        return "PCT"
+    if text in {"其他", "其它"}:
+        return "其他"
+    return None
+
+
 def record_to_patent_dict(record: PatentRecord) -> dict[str, object]:
     applicants_parsed = [str(item).strip() for item in record.applicants if str(item).strip()]
     inventors_parsed = [str(item).strip() for item in record.inventors if str(item).strip()]
@@ -133,7 +155,7 @@ def record_to_patent_dict(record: PatentRecord) -> dict[str, object]:
         "filing_date": filing_date,
         "publication_date": _date_from_iso(record.publication_date),
         "grant_date": _date_from_iso(record.grant_date),
-        "patent_type": record.patent_type,
+        "patent_type": _normalize_patent_type_for_canonical(record.patent_type),
         "status": None,
         "abstract_clean": record.abstract,
         "technology_effect": record.technology_effect,
