@@ -26,3 +26,8 @@ packages = ["backend"]
 
 [tool.uv.sources]
 miroflow-agent = { path = "../miroflow-agent", editable = true }
+
+[tool.pytest.ini_options]
+markers = [
+    "requires_classifier_llm: classifier benchmark; needs LLM (gemma-4) reachable",
+]
