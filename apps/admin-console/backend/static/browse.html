@@ -787,9 +787,14 @@ const COLUMNS = {
       render: (r) => disciplineLabel(r.discipline_family) },
     { key: "research_topic_count", label: "研究方向",
       render: (r) => r.research_topic_count || 0 },
-    { key: "verified_paper_count", label: "已验证论文",
+    { key: "h_index", label: "H-index",
+      render: (r) => r.h_index == null ? "—" : r.h_index },
+    { key: "citation_count", label: "引用",
+      render: (r) => r.citation_count == null ? "—" : r.citation_count },
+    { key: "paper_count", label: "论文数",
       render: (r) => {
-        const n = r.verified_paper_count || 0;
+        if (r.paper_count == null) return "—";
+        const n = r.paper_count;
         return n > 0 ? `<span class="badge verified">${n}</span>` : `<span style="color:var(--fg-faint)">0</span>`;
       }},
   ],

@@ -6,6 +6,7 @@ import warnings
 from math import sqrt
 
 PAPER_CHUNKS_COLLECTION = "paper_chunks"
+PROFESSOR_PROFILES_COLLECTION = "professor_profiles"
 _VECTOR_DIM = 4096
 
 
@@ -223,3 +224,64 @@ def drop_paper_chunks_collection(milvus_client) -> None:
     if not milvus_client.has_collection(PAPER_CHUNKS_COLLECTION):
         return
     milvus_client.drop_collection(collection_name=PAPER_CHUNKS_COLLECTION)
+
+
+def ensure_professor_profiles_collection(milvus_client) -> None:
+    if milvus_client.has_collection(PROFESSOR_PROFILES_COLLECTION):
+        return
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="pkg_resources is deprecated as an API.*",
+            category=UserWarning,
+            module="milvus_lite",
+        )
+        from pymilvus import CollectionSchema, DataType, FieldSchema
+
+    fields = [
+        FieldSchema(
+            name="id",
+            dtype=DataType.VARCHAR,
+            is_primary=True,
+            max_length=64,
+        ),
+        FieldSchema(name="name", dtype=DataType.VARCHAR, max_length=128),
+        FieldSchema(name="institution", dtype=DataType.VARCHAR, max_length=256),
+        FieldSchema(name="department", dtype=DataType.VARCHAR, max_length=128),
+        FieldSchema(name="title", dtype=DataType.VARCHAR, max_length=64),
+        FieldSchema(name="profile_summary", dtype=DataType.VARCHAR, max_length=4096),
+        FieldSchema(
+            name="profile_vector",
+            dtype=DataType.FLOAT_VECTOR,
+            dim=_VECTOR_DIM,
+        ),
+        FieldSchema(name="h_index", dtype=DataType.INT32, nullable=True),
+        FieldSchema(name="citation_count", dtype=DataType.INT64, nullable=True),
+        FieldSchema(name="paper_count", dtype=DataType.INT32, nullable=True),
+    ]
+    schema = CollectionSchema(
+        fields=fields,
+        description="Professor profiles for semantic retrieval",
+    )
+    milvus_client.create_collection(
+        collection_name=PROFESSOR_PROFILES_COLLECTION,
+        schema=schema,
+    )
+
+    index_params = milvus_client.prepare_index_params()
+    index_params.add_index(
+        field_name="profile_vector",
+        index_type="AUTOINDEX",
+        metric_type="COSINE",
+    )
+    milvus_client.create_index(
+        collection_name=PROFESSOR_PROFILES_COLLECTION,
+        index_params=index_params,
+    )
+
+
+def drop_professor_profiles_collection(milvus_client) -> None:
+    if not milvus_client.has_collection(PROFESSOR_PROFILES_COLLECTION):
+        return
+    milvus_client.drop_collection(collection_name=PROFESSOR_PROFILES_COLLECTION)

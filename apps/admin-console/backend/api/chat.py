@@ -664,7 +664,10 @@ def _lookup_professor(
                p.canonical_name_en,
                pa.institution,
                pa.title,
-               p.discipline_family
+               p.discipline_family,
+               p.h_index,
+               p.citation_count,
+               p.paper_count
           FROM professor p
           LEFT JOIN LATERAL (
             SELECT pa_inner.institution, pa_inner.title
@@ -690,6 +693,9 @@ def _lookup_professors_by_topic_sql(
           SELECT p.professor_id,
                  p.canonical_name,
                  pa.institution,
+                 p.h_index,
+                 p.citation_count,
+                 p.paper_count,
                  array_agg(DISTINCT f.value_raw) FILTER (
                    WHERE f.value_raw ILIKE %s
                  ) AS matched_topics
@@ -703,7 +709,13 @@ def _lookup_professors_by_topic_sql(
            WHERE p.identity_status = 'resolved'
              AND pa.institution IN ({placeholders})
              AND f.value_raw ILIKE %s
-           GROUP BY p.professor_id, p.canonical_name, pa.institution
+           GROUP BY
+             p.professor_id,
+             p.canonical_name,
+             pa.institution,
+             p.h_index,
+             p.citation_count,
+             p.paper_count
         )
         SELECT *, count(*) OVER ()::int AS total_count
           FROM matches
@@ -894,6 +906,14 @@ def _answer_patent_list(company: str, rows: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def _professor_metric_payload(prof: dict) -> dict[str, int | None]:
+    return {
+        "h_index": prof.get("h_index"),
+        "citation_count": prof.get("citation_count"),
+        "paper_count": prof.get("paper_count"),
+    }
+
+
 def _answer_ambiguous_profs(name: str, profs: list[dict]) -> str:
     """Multiple profs share canonical_name; ask user to disambiguate by school."""
     lines = [
@@ -949,6 +969,9 @@ def _build_evidence_blocks(
         title = structured_payload.get("title")
         research_topics = structured_payload.get("research_topics") or []
         verified_paper_count = structured_payload.get("verified_paper_count")
+        h_index = structured_payload.get("h_index")
+        citation_count = structured_payload.get("citation_count")
+        paper_count = structured_payload.get("paper_count")
 
         if canonical_name:
             marker = _append_evidence_block(
@@ -993,6 +1016,33 @@ def _build_evidence_blocks(
                 marker=marker,
                 kind="paper_count",
                 summary=f"已收录论文数：{verified_paper_count}",
+                evidence_id=professor_id,
+            )
+        if h_index is not None:
+            marker = _append_evidence_block(
+                blocks=blocks,
+                citation_map=citation_map,
+                marker=marker,
+                kind="academic_metric",
+                summary=f"H-index：{h_index}",
+                evidence_id=professor_id,
+            )
+        if citation_count is not None:
+            marker = _append_evidence_block(
+                blocks=blocks,
+                citation_map=citation_map,
+                marker=marker,
+                kind="academic_metric",
+                summary=f"引用数：{citation_count}",
+                evidence_id=professor_id,
+            )
+        if paper_count is not None:
+            marker = _append_evidence_block(
+                blocks=blocks,
+                citation_map=citation_map,
+                marker=marker,
+                kind="academic_metric",
+                summary=f"论文数：{paper_count}",
                 evidence_id=professor_id,
             )
         return "\n".join(blocks), citation_map
@@ -1471,6 +1521,7 @@ def chat(
                     "discipline_family": prof.get("discipline_family"),
                     "research_topics": topics,
                     "verified_paper_count": n_papers,
+                    **_professor_metric_payload(prof),
                 },
             ))
 
@@ -1499,6 +1550,7 @@ def chat(
                     "canonical_name": r["canonical_name"],
                     "institution": r.get("institution"),
                     "matched_topics": r.get("matched_topics") or [],
+                    **_professor_metric_payload(r),
                 }
                 for r in rows[:10]
             ]
@@ -1596,6 +1648,16 @@ def chat(
                     "classifier_topic": topic,
                     "classifier_reason": reason,
                     "match_count": rows[0].get("total_count", len(rows)) if rows else 0,
+                    "matched_professors": [
+                        {
+                            "professor_id": r["professor_id"],
+                            "canonical_name": r["canonical_name"],
+                            "institution": r.get("institution"),
+                            "matched_topics": r.get("matched_topics") or [],
+                            **_professor_metric_payload(r),
+                        }
+                        for r in rows[:10]
+                    ],
                 },
             ))
 
@@ -1685,6 +1747,7 @@ def chat(
                         "institution": prof.get("institution"),
                         "research_topics": topics,
                         "verified_paper_count": n_papers,
+                        **_professor_metric_payload(prof),
                     },
                 ))
             return _record_and_return(ChatResponse(

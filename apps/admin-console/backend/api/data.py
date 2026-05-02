@@ -386,7 +386,11 @@ SELECT
     p.discipline_family,
     p.aliases,
     COALESCE(research_topic_counts.research_topic_count, 0) AS research_topic_count,
-    COALESCE(verified_link_counts.verified_paper_count, 0) AS verified_paper_count,
+    p.h_index,
+    p.citation_count,
+    p.paper_count,
+    p.metrics_computed_at,
+    p.metrics_source,
     p.last_refreshed_at,
     count(*) OVER() AS total_count
 FROM professor p
@@ -409,12 +413,6 @@ LEFT JOIN LATERAL (
       AND pf.fact_type = 'research_topic'
       AND pf.status = 'active'
 ) research_topic_counts ON TRUE
-LEFT JOIN LATERAL (
-    SELECT count(*)::int AS verified_paper_count
-    FROM professor_paper_link ppl
-    WHERE ppl.professor_id = p.professor_id
-      AND ppl.link_status = 'verified'
-) verified_link_counts ON TRUE
 """
 
 PROFESSOR_ORDER_BY_SQL = """
@@ -744,7 +742,10 @@ class ProfessorListItem(BaseModel):
     discipline_family: str
     aliases: list[str] = Field(default_factory=list)
     research_topic_count: int
-    verified_paper_count: int
+    h_index: int | None = None
+    citation_count: int | None = None
+    paper_count: int | None = None
+    metrics_computed_at: datetime | None = None
     last_refreshed_at: datetime | None = None
 
 
@@ -909,6 +910,7 @@ def _list_professors(
     institution: str | None,
     discipline_family: str | None,
     has_verified_papers: bool | None,
+    metrics_source: str | None,
     page: int,
     page_size: int,
 ) -> ProfessorListResponse:
@@ -942,11 +944,15 @@ def _list_professors(
         params["discipline_family"] = discipline_family
         conditions.append("p.discipline_family = %(discipline_family)s")
 
+    if metrics_source:
+        params["metrics_source"] = metrics_source
+        conditions.append("p.metrics_source = %(metrics_source)s")
+
     if has_verified_papers is not None:
         if has_verified_papers:
-            conditions.append("COALESCE(verified_link_counts.verified_paper_count, 0) > 0")
+            conditions.append("p.paper_count > 0")
         else:
-            conditions.append("COALESCE(verified_link_counts.verified_paper_count, 0) = 0")
+            conditions.append("p.paper_count = 0")
 
     where_sql = ""
     if conditions:
@@ -972,7 +978,10 @@ def _list_professors(
             discipline_family=row["discipline_family"],
             aliases=row["aliases"] or [],
             research_topic_count=row["research_topic_count"],
-            verified_paper_count=row["verified_paper_count"],
+            h_index=row["h_index"],
+            citation_count=row["citation_count"],
+            paper_count=row["paper_count"],
+            metrics_computed_at=row["metrics_computed_at"],
             last_refreshed_at=row["last_refreshed_at"],
         )
         for row in rows
@@ -1170,6 +1179,7 @@ def list_professors(
     institution: str | None = Query(default=None),
     discipline_family: str | None = Query(default=None),
     has_verified_papers: bool | None = Query(default=None),
+    metrics_source: str | None = Query(default=None),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
     conn: Any = Depends(get_pg_conn),
@@ -1180,6 +1190,7 @@ def list_professors(
         institution=institution,
         discipline_family=discipline_family,
         has_verified_papers=has_verified_papers,
+        metrics_source=metrics_source,
         page=page,
         page_size=page_size,
     )

@@ -60,7 +60,10 @@ def test_list_professors_returns_data(professor_postgres_client: TestClient) -> 
     first_item = payload["items"][0]
     assert "professor_id" in first_item
     assert "canonical_name" in first_item
-    assert "verified_paper_count" in first_item
+    assert "verified_paper_count" not in first_item
+    assert "h_index" in first_item
+    assert "citation_count" in first_item
+    assert "paper_count" in first_item
 
 
 def test_filter_by_institution_tsinghua_sigs(
@@ -90,7 +93,7 @@ def test_filter_by_has_verified_papers(
     payload = response.json()
     assert payload["total"] >= 1
     assert len(payload["items"]) >= 1
-    assert all(item["verified_paper_count"] >= 1 for item in payload["items"])
+    assert all(item["paper_count"] >= 1 for item in payload["items"])
 
 
 def test_professor_detail_includes_facts_and_papers(

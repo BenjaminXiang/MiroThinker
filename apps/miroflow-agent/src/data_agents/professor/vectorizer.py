@@ -17,6 +17,7 @@ from typing import Any
 
 import httpx
 
+from ..storage.milvus_collections import PROFESSOR_PROFILES_COLLECTION
 from .models import EnrichedProfessorProfile
 
 logger = logging.getLogger(__name__)
@@ -67,7 +68,7 @@ class ProfessorVectorizer:
         *,
         embedding_client: EmbeddingClient,
         milvus_uri: str,
-        collection_name: str = "professor_profiles",
+        collection_name: str = PROFESSOR_PROFILES_COLLECTION,
     ) -> None:
         self.embedding_client = embedding_client
         self.collection_name = collection_name
@@ -96,6 +97,9 @@ class ProfessorVectorizer:
                 name="evaluation_summary", dtype=DataType.VARCHAR, max_length=1024
             ),
             FieldSchema(name="quality_status", dtype=DataType.VARCHAR, max_length=32),
+            FieldSchema(name="h_index", dtype=DataType.INT32, nullable=True),
+            FieldSchema(name="citation_count", dtype=DataType.INT64, nullable=True),
+            FieldSchema(name="paper_count", dtype=DataType.INT32, nullable=True),
             FieldSchema(
                 name="profile_vector", dtype=DataType.FLOAT_VECTOR, dim=_VECTOR_DIM
             ),
@@ -159,6 +163,9 @@ class ProfessorVectorizer:
                     "profile_summary": profile.profile_summary,
                     "evaluation_summary": profile.evaluation_summary,
                     "quality_status": quality_status,
+                    "h_index": profile.h_index,
+                    "citation_count": profile.citation_count,
+                    "paper_count": profile.paper_count,
                     "profile_vector": profile_vectors[i],
                     "direction_vector": direction_vectors[i],
                 }
