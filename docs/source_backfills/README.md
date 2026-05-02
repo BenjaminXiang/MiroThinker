@@ -8,6 +8,7 @@
 - `company_workbook_critical_supplement.xlsx`: workbook 关键公司对象补点源，当前覆盖 `普渡 / 开普勒 / 云迹 / 擎朗 / 九号 / 嘉立创 / 深南电路 / 一博科技 / 迈步机器人`，并补入 `跨维 / 光轮智能 / 银河通用 / 群核科技` 这批行业路线代表厂商。
 - `company_knowledge_fields.jsonl`: company serving-side 知识字段 backfill，当前覆盖 `q11-q16` 所需的 `data_route_types / real_data_methods / synthetic_data_methods / capability_facets / movement_data_needs / operation_data_needs` 等结构化字段。
 - `professor_company_roles.jsonl`: professor-company 关系 backfill，当前包含 `丁文伯 -> 深圳无界智航科技有限公司` 的证据链，用于 shared-store consolidate 时补入 `company_roles`。
+- `round-7-17-name-identity-clear-{YYYY-MM-DD}.jsonl`: Round 7.17 name-identity gate scan 量化日志，每行记录一个被处理的教授决定（accepted / rejected / cleared / etc）。最后一行为 summary aggregate。使用方式：`scripts/run_name_identity_scan.py --apply --archive` 自动归档。字段定义见 `.agents/specs/2026-04-30-w9-4-name-identity-archive.md` §6.2。
 
 使用方式：
 - `run_paper_release_e2e.py` 会在文件存在时自动加载 `paper_exact_identifier_backfills.jsonl`，也可通过 `--supplement-jsonl` 显式传入。

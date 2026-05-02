@@ -10,10 +10,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
+from typing import TextIO
+from urllib.parse import urlparse
 
 import psycopg
 from psycopg.rows import dict_row
@@ -24,8 +26,11 @@ from src.data_agents.professor.name_identity_gate import (
     batch_verify_name_identity,
 )
 from src.data_agents.storage.postgres.connection import resolve_dsn
+
 _REAL_DB_NAME = "miroflow_real"
 _REPORTED_BY = "round_7_17_scan"
+_ARCHIVE_DIR = Path(__file__).resolve().parents[3] / "docs" / "source_backfills"
+_ARCHIVE_PREFIX = "round-7-17-name-identity-clear"
 DESCRIPTION_TEMPLATE = (
     "canonical_name_en rejected for {canonical_name}: {candidate_name_en}"
 )
@@ -90,6 +95,22 @@ def _parse_args() -> argparse.Namespace:
         default=None,
         help="If 1 - confidence >= threshold, also clear canonical_name_en.",
     )
+    output_group = parser.add_mutually_exclusive_group()
+    output_group.add_argument(
+        "--json-output",
+        type=Path,
+        default=None,
+        help="Stream per-professor decisions as JSONL to this path. Append mode.",
+    )
+    output_group.add_argument(
+        "--archive",
+        action="store_true",
+        help=(
+            "Equivalent to --json-output "
+            "docs/source_backfills/round-7-17-name-identity-clear-{today}.jsonl. "
+            "Mutually exclusive with --json-output."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -143,6 +164,128 @@ def _should_auto_clear(
     if threshold is None or decision.error is not None:
         return False
     return (1.0 - decision.confidence) >= threshold
+
+
+def _utc_timestamp(value: datetime | None = None) -> str:
+    timestamp = value or datetime.now(timezone.utc)
+    return timestamp.replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def _utc_date_slug() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
+def _default_archive_path() -> Path:
+    return _ARCHIVE_DIR / f"{_ARCHIVE_PREFIX}-{_utc_date_slug()}.jsonl"
+
+
+def _json_output_path(args: argparse.Namespace) -> Path | None:
+    if args.archive:
+        return _default_archive_path()
+    return args.json_output
+
+
+def _open_jsonl(path: Path) -> TextIO:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path.open("a", encoding="utf-8")
+
+
+def _emit_jsonl(
+    handle: TextIO | None,
+    path: Path | None,
+    payload: dict[str, object],
+) -> bool:
+    if handle is None:
+        return True
+    try:
+        handle.write(json.dumps(payload, ensure_ascii=False))
+        handle.write("\n")
+        handle.flush()
+    except OSError as exc:
+        print(f"warning: failed to write JSONL to {path}: {exc}", file=sys.stderr)
+        return False
+    return True
+
+
+def _redacted_dsn_parts(dsn: str) -> tuple[str | None, str | None]:
+    parsed = urlparse(dsn)
+    if not parsed.scheme or not parsed.netloc:
+        return None, None
+
+    host = parsed.hostname or ""
+    try:
+        port = parsed.port
+    except ValueError:
+        port = None
+    if port is not None:
+        host = f"{host}:{port}"
+
+    database_name = parsed.path.lstrip("/").split("/", maxsplit=1)[0] or None
+    return host or None, database_name
+
+
+def _action_taken(*, accepted: bool, apply_mode: bool, should_clear: bool) -> str:
+    if accepted:
+        return "none"
+    if apply_mode:
+        if should_clear:
+            return "issue_filed_and_name_en_cleared"
+        return "issue_filed"
+    if should_clear:
+        return "would_clear"
+    return "would_file_issue"
+
+
+def _professor_record(
+    *,
+    row: _ProfessorRow,
+    decision,
+    action_taken: str,
+    apply_mode: bool,
+    scan_started_at: str,
+    examined_index: int,
+) -> dict[str, object]:
+    return {
+        "professor_id": row.professor_id,
+        "canonical_name": row.canonical_name,
+        "canonical_name_en_before": row.canonical_name_en,
+        "institution": row.institution,
+        "source_url": row.source_url,
+        "decision": "accepted" if decision.accepted else "rejected",
+        "confidence": decision.confidence,
+        "reason": "" if decision.accepted else (decision.reasoning or ""),
+        "action_taken": action_taken,
+        "apply_mode": apply_mode,
+        "scan_started_at": scan_started_at,
+        "examined_index": examined_index,
+    }
+
+
+def _summary_record(
+    *,
+    stats: _ScanStats,
+    args: argparse.Namespace,
+    dsn: str,
+    scan_started_at: datetime,
+    scan_finished_at: datetime,
+) -> dict[str, object]:
+    dsn_host, database_name = _redacted_dsn_parts(dsn)
+    return {
+        "summary": True,
+        "scan_started_at": _utc_timestamp(scan_started_at),
+        "scan_finished_at": _utc_timestamp(scan_finished_at),
+        "duration_seconds": int((scan_finished_at - scan_started_at).total_seconds()),
+        "institution_filter": args.institution,
+        "apply_mode": args.apply,
+        "examined": stats.examined,
+        "rejected": stats.rejected,
+        "issues_inserted": stats.issues_inserted,
+        "clear_updates": stats.clear_updates,
+        "would_clear": stats.would_clear,
+        "auto_clear_threshold": args.auto_clear_threshold,
+        "database_dsn_host": dsn_host,
+        "database_name": database_name,
+    }
 
 
 def _issue_snapshot(row: _ProfessorRow, decision) -> dict[str, object]:
@@ -231,43 +374,93 @@ def main() -> int:
 
     llm_client, llm_model = _build_llm_settings()
     stats = _ScanStats()
+    json_output_path = _json_output_path(args)
+    jsonl_handle: TextIO | None = None
+    scan_started_at = datetime.now(timezone.utc)
+    scan_started_at_text = _utc_timestamp(scan_started_at)
 
-    with psycopg.connect(dsn, row_factory=dict_row) as conn:
-        rows = _load_rows(conn, institution=args.institution)
-        candidates = [
-            NameIdentityCandidate(
-                canonical_name=row.canonical_name,
-                candidate_name_en=row.canonical_name_en,
-                source_url=row.source_url,
+    if json_output_path is not None:
+        try:
+            jsonl_handle = _open_jsonl(json_output_path)
+        except OSError as exc:
+            print(
+                f"Unable to open JSONL output {json_output_path}: {exc}",
+                file=sys.stderr,
             )
-            for row in rows
-        ]
-        decisions = batch_verify_name_identity(
-            candidates,
-            llm_client=llm_client,
-            llm_model=llm_model,
-        )
+            return 2
 
-        for row, decision in zip(rows, decisions, strict=True):
-            stats.examined += 1
-            if decision.accepted:
-                continue
-
-            stats.rejected += 1
-            should_clear = _should_auto_clear(
-                decision, threshold=args.auto_clear_threshold
+    try:
+        with psycopg.connect(dsn, row_factory=dict_row) as conn:
+            rows = _load_rows(conn, institution=args.institution)
+            candidates = [
+                NameIdentityCandidate(
+                    canonical_name=row.canonical_name,
+                    candidate_name_en=row.canonical_name_en,
+                    source_url=row.source_url,
+                )
+                for row in rows
+            ]
+            decisions = batch_verify_name_identity(
+                candidates,
+                llm_client=llm_client,
+                llm_model=llm_model,
             )
-            if args.apply:
-                stats.issues_inserted += _insert_issue(conn, row=row, decision=decision)
-                if should_clear:
-                    stats.clear_updates += _clear_name_en(
-                        conn, professor_id=row.professor_id
+
+            for row, decision in zip(rows, decisions, strict=True):
+                stats.examined += 1
+                should_clear = False
+                if not decision.accepted:
+                    stats.rejected += 1
+                    should_clear = _should_auto_clear(
+                        decision, threshold=args.auto_clear_threshold
                     )
-            elif should_clear:
-                stats.would_clear += 1
+                    if args.apply:
+                        stats.issues_inserted += _insert_issue(
+                            conn, row=row, decision=decision
+                        )
+                        if should_clear:
+                            stats.clear_updates += _clear_name_en(
+                                conn, professor_id=row.professor_id
+                            )
+                    elif should_clear:
+                        stats.would_clear += 1
 
-        if not args.apply:
-            conn.rollback()
+                action_taken = _action_taken(
+                    accepted=decision.accepted,
+                    apply_mode=args.apply,
+                    should_clear=should_clear,
+                )
+                _emit_jsonl(
+                    jsonl_handle,
+                    json_output_path,
+                    _professor_record(
+                        row=row,
+                        decision=decision,
+                        action_taken=action_taken,
+                        apply_mode=args.apply,
+                        scan_started_at=scan_started_at_text,
+                        examined_index=stats.examined,
+                    ),
+                )
+
+            if not args.apply:
+                conn.rollback()
+
+        scan_finished_at = datetime.now(timezone.utc)
+        _emit_jsonl(
+            jsonl_handle,
+            json_output_path,
+            _summary_record(
+                stats=stats,
+                args=args,
+                dsn=dsn,
+                scan_started_at=scan_started_at,
+                scan_finished_at=scan_finished_at,
+            ),
+        )
+    finally:
+        if jsonl_handle is not None:
+            jsonl_handle.close()
 
     print(f"Examined: {stats.examined}")
     print(f"Rejected: {stats.rejected}")
@@ -277,6 +470,8 @@ def main() -> int:
         print(f"canonical_name_en cleared: {stats.clear_updates}")
     else:
         print(f"Would clear canonical_name_en: {stats.would_clear}")
+    if json_output_path is not None:
+        print(f"archived to {json_output_path}", file=sys.stderr)
     return 0
 
 
