@@ -146,7 +146,8 @@ def run_homepage_paper_ingest(
             prof_papers_linked = 0
             checkpoint_status = "succeeded"
 
-            with conn.transaction(savepoint=True):
+            # psycopg3：嵌套 transaction() 自动用 SAVEPOINT；不需要 savepoint=True kwarg
+            with conn.transaction():
                 try:
                     try:
                         html = fetch_homepage_html(prof["homepage_url"])
@@ -420,17 +421,35 @@ def _fetch_professors(
     limit: int | None,
     prof_id: str | None,
 ) -> list[dict[str, Any]]:
+    # V003 schema: professor.institution / homepage_url 已迁出主表。
+    # institution 走 professor_affiliation 多对多；homepage_url 走 source_page
+    # via primary_official_profile_page_id FK。
     query = [
-        "SELECT professor_id, canonical_name, institution, homepage_url",
-        "FROM professor",
-        "WHERE homepage_url IS NOT NULL",
+        "SELECT p.professor_id::text AS professor_id,",
+        "       p.canonical_name,",
+        "       COALESCE(primary_aff.institution, '') AS institution,",
+        "       sp.url AS homepage_url",
+        "  FROM professor p",
+        "  LEFT JOIN LATERAL (",
+        "    SELECT pa.institution",
+        "    FROM professor_affiliation pa",
+        "    WHERE pa.professor_id = p.professor_id",
+        "    ORDER BY pa.is_primary DESC,",
+        "             pa.is_current DESC,",
+        "             pa.start_year DESC NULLS LAST,",
+        "             pa.created_at DESC NULLS LAST,",
+        "             pa.affiliation_id DESC",
+        "    LIMIT 1",
+        "  ) primary_aff ON TRUE",
+        "  LEFT JOIN source_page sp ON sp.page_id = p.primary_official_profile_page_id",
+        " WHERE sp.url IS NOT NULL",
     ]
     params: list[Any] = []
     if institution:
-        query.append("AND institution ILIKE %s")
+        query.append("AND primary_aff.institution ILIKE %s")
         params.append(f"%{institution}%")
     if prof_id:
-        query.append("AND professor_id = %s")
+        query.append("AND p.professor_id = %s")
         params.append(prof_id)
     if limit is not None:
         query.append("LIMIT %s")
