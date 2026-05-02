@@ -3,9 +3,10 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+from contextlib import contextmanager, nullcontext
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Literal, Protocol
 
 from ..storage.milvus_collections import (
     COMPANY_PROFILES_COLLECTION,
@@ -16,6 +17,8 @@ from ..storage.milvus_collections import (
 logger = logging.getLogger(__name__)
 
 _VALID_DOMAINS = {"professor", "paper", "company", "patent"}
+_Domain = Literal["professor", "paper", "company", "patent"]
+_MAX_RELATED_LIMIT = 200
 _PROFESSOR_COLLECTION = "professor_profiles"
 _PROFESSOR_OUTPUT_FIELDS = [
     "id",
@@ -206,6 +209,242 @@ class RetrievalService:
             self._cache.set(query, domains, filters_key, results)
 
         return results
+
+    def get_object(
+        self,
+        *,
+        domain: _Domain,
+        object_id: str,
+    ) -> dict | None:
+        if not object_id or domain not in _VALID_DOMAINS:
+            return None
+
+        sql = self._object_sql(domain)
+        with self._pg_connection() as conn:
+            row = conn.execute(sql, (object_id,)).fetchone()
+        return dict(row) if row else None
+
+    def get_related_objects(
+        self,
+        *,
+        source_domain: _Domain,
+        source_id: str,
+        target_domain: _Domain,
+        limit: int = 50,
+    ) -> list[dict]:
+        if (
+            not source_id
+            or source_domain not in _VALID_DOMAINS
+            or target_domain not in _VALID_DOMAINS
+            or source_domain == target_domain
+        ):
+            return []
+
+        clamped_limit = self._clamp_related_limit(limit)
+        if clamped_limit <= 0:
+            return []
+
+        sql = self._related_sql(source_domain, target_domain)
+        if sql is None:
+            return []
+
+        with self._pg_connection() as conn:
+            rows = conn.execute(sql, (source_id, clamped_limit)).fetchall()
+        return [dict(row) for row in rows]
+
+    def _pg_connection(self):
+        conn = self._pg_conn_factory()
+        if hasattr(conn, "__enter__") and hasattr(conn, "__exit__"):
+            return conn
+        if hasattr(conn, "__next__"):
+            return self._generator_connection(conn)
+        return nullcontext(conn)
+
+    @staticmethod
+    @contextmanager
+    def _generator_connection(conn_iter):
+        try:
+            conn = next(conn_iter)
+            yield conn
+        finally:
+            close = getattr(conn_iter, "close", None)
+            if close is not None:
+                close()
+
+    @staticmethod
+    def _clamp_related_limit(limit: int) -> int:
+        return min(max(int(limit), 0), _MAX_RELATED_LIMIT)
+
+    def _object_sql(self, domain: str) -> str:
+        if domain == "professor":
+            return """
+                SELECT *
+                  FROM professor
+                 WHERE professor_id = %s
+                   AND identity_status = 'resolved'
+                 LIMIT 1
+            """
+        if domain == "paper":
+            return """
+                SELECT *
+                  FROM paper
+                 WHERE paper_id = %s
+                 LIMIT 1
+            """
+        if domain == "company":
+            return """
+                SELECT *
+                  FROM company
+                 WHERE company_id = %s
+                   AND identity_status = 'resolved'
+                 LIMIT 1
+            """
+        return """
+            SELECT *
+              FROM patent
+             WHERE patent_id = %s
+               AND COALESCE(status, '') != 'inactive'
+             LIMIT 1
+        """
+
+    def _related_sql(self, source_domain: str, target_domain: str) -> str | None:
+        query_map = {
+            ("professor", "paper"): self._professor_papers_sql,
+            ("paper", "professor"): self._paper_professors_sql,
+            ("professor", "company"): self._professor_companies_sql,
+            ("company", "professor"): self._company_professors_sql,
+            ("professor", "patent"): self._professor_patents_sql,
+            ("patent", "professor"): self._patent_professors_sql,
+            ("company", "patent"): self._company_patents_sql,
+            ("patent", "company"): self._patent_companies_sql,
+        }
+        builder = query_map.get((source_domain, target_domain))
+        return builder() if builder else None
+
+    def _professor_papers_sql(self) -> str:
+        return """
+            SELECT p.*,
+                   ppl.link_status,
+                   ppl.topic_consistency_score,
+                   ppl.match_reason
+              FROM professor_paper_link ppl
+              JOIN paper p ON p.paper_id = ppl.paper_id
+             WHERE ppl.professor_id = %s
+               AND ppl.link_status = 'verified'
+             ORDER BY
+                   ppl.topic_consistency_score DESC NULLS LAST,
+                   p.citation_count DESC NULLS LAST,
+                   p.year DESC NULLS LAST,
+                   p.title_clean ASC
+             LIMIT %s
+        """
+
+    def _paper_professors_sql(self) -> str:
+        return """
+            SELECT prof.*,
+                   ppl.link_status,
+                   ppl.topic_consistency_score,
+                   ppl.match_reason
+              FROM professor_paper_link ppl
+              JOIN professor prof ON prof.professor_id = ppl.professor_id
+             WHERE ppl.paper_id = %s
+               AND ppl.link_status = 'verified'
+               AND prof.identity_status = 'resolved'
+             ORDER BY
+                   ppl.topic_consistency_score DESC NULLS LAST,
+                   prof.canonical_name ASC
+             LIMIT %s
+        """
+
+    def _professor_companies_sql(self) -> str:
+        return """
+            SELECT c.*,
+                   pcr.role_type,
+                   pcr.link_status,
+                   pcr.match_reason
+              FROM professor_company_role pcr
+              JOIN company c ON c.company_id = pcr.company_id
+             WHERE pcr.professor_id = %s
+               AND pcr.link_status IN ('verified', 'candidate')
+               AND c.identity_status != 'inactive'
+             ORDER BY c.canonical_name ASC
+             LIMIT %s
+        """
+
+    def _company_professors_sql(self) -> str:
+        return """
+            SELECT prof.*,
+                   pcr.role_type,
+                   pcr.link_status,
+                   pcr.match_reason
+              FROM professor_company_role pcr
+              JOIN professor prof ON prof.professor_id = pcr.professor_id
+             WHERE pcr.company_id = %s
+               AND pcr.link_status IN ('verified', 'candidate')
+               AND prof.identity_status = 'resolved'
+             ORDER BY prof.canonical_name ASC
+             LIMIT %s
+        """
+
+    def _professor_patents_sql(self) -> str:
+        return """
+            SELECT patent.*,
+                   ppl.link_role,
+                   ppl.link_status,
+                   ppl.match_reason
+              FROM professor_patent_link ppl
+              JOIN patent ON patent.patent_id = ppl.patent_id
+             WHERE ppl.professor_id = %s
+               AND ppl.link_status IN ('verified', 'candidate')
+               AND COALESCE(patent.status, '') != 'inactive'
+             ORDER BY patent.filing_date DESC NULLS LAST, patent.title_clean ASC
+             LIMIT %s
+        """
+
+    def _patent_professors_sql(self) -> str:
+        return """
+            SELECT prof.*,
+                   ppl.link_role,
+                   ppl.link_status,
+                   ppl.match_reason
+              FROM professor_patent_link ppl
+              JOIN professor prof ON prof.professor_id = ppl.professor_id
+             WHERE ppl.patent_id = %s
+               AND ppl.link_status IN ('verified', 'candidate')
+               AND prof.identity_status = 'resolved'
+             ORDER BY prof.canonical_name ASC
+             LIMIT %s
+        """
+
+    def _company_patents_sql(self) -> str:
+        return """
+            SELECT patent.*,
+                   cpl.link_role,
+                   cpl.link_status,
+                   cpl.match_reason
+              FROM company_patent_link cpl
+              JOIN patent ON patent.patent_id = cpl.patent_id
+             WHERE cpl.company_id = %s
+               AND cpl.link_status IN ('verified', 'candidate')
+               AND COALESCE(patent.status, '') != 'inactive'
+             ORDER BY patent.filing_date DESC NULLS LAST, patent.title_clean ASC
+             LIMIT %s
+        """
+
+    def _patent_companies_sql(self) -> str:
+        return """
+            SELECT c.*,
+                   cpl.link_role,
+                   cpl.link_status,
+                   cpl.match_reason
+              FROM company_patent_link cpl
+              JOIN company c ON c.company_id = cpl.company_id
+             WHERE cpl.patent_id = %s
+               AND cpl.link_status IN ('verified', 'candidate')
+               AND c.identity_status != 'inactive'
+             ORDER BY c.canonical_name ASC
+             LIMIT %s
+        """
 
     def _search_domain(
         self,
