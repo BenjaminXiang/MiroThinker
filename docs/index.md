@@ -114,7 +114,6 @@ architecture-decisions/            ← ADR（跨任务长期架构决策）
 | 统一术语 | 适用域 | 含义 |
 |---|---|---|
 | `profile_summary` | 教授、企业 | 用户向画像摘要，200-300 字中文，用于语义检索和介绍 |
-| `evaluation_summary` | 教授、企业 | 事实性评价摘要，100-150 字，基于客观指标 |
 | `technology_route_summary` | 企业 | 技术路线摘要，面向路线对比和差异分析 |
 | `summary_zh` | 论文 | 四段式结构化中文摘要（what / why / how / result） |
 | `summary_text` | 论文、专利 | 用于 embedding 的完整摘要文本（论文由 `summary_zh` 拼接而成） |

@@ -59,7 +59,6 @@ def test_release_contracts_map_to_shared_released_object():
         paper_count=12,
         citation_count=128,
         profile_summary="Focuses on agent runtime design.",
-        evaluation_summary="Has a strong publication and systems track record.",
         company_roles=[
             ProfessorCompanyRole(company_name="Analytical Engines", role="Advisor")
         ],
@@ -75,7 +74,6 @@ def test_release_contracts_map_to_shared_released_object():
         website="https://example.com",
         key_personnel=[CompanyKeyPerson(name="Ada Lovelace", role="Advisor")],
         profile_summary="Builds industrial automation systems.",
-        evaluation_summary="Strong engineering depth and execution quality.",
         technology_route_summary="Combines control systems and local models.",
         evidence=[_evidence()],
         last_updated=TIMESTAMP,
@@ -254,7 +252,6 @@ def test_display_name_defaults_for_domain_contracts():
         normalized_name="AnalyticalEngines",
         industry="Automation",
         profile_summary="Profile",
-        evaluation_summary="Evaluation",
         technology_route_summary="Route",
         evidence=[_evidence()],
         last_updated=TIMESTAMP,
@@ -270,7 +267,6 @@ def test_company_record_requires_industry():
             name="Analytical Engines",
             normalized_name="AnalyticalEngines",
             profile_summary="Profile",
-            evaluation_summary="Evaluation",
             technology_route_summary="Route",
             evidence=[_evidence()],
             last_updated=TIMESTAMP,
@@ -285,7 +281,6 @@ def test_company_record_rejects_blank_required_text_fields():
             normalized_name="AnalyticalEngines",
             industry=" ",
             profile_summary="",
-            evaluation_summary=" ",
             technology_route_summary="",
             evidence=[_evidence()],
             last_updated=TIMESTAMP,
@@ -294,7 +289,6 @@ def test_company_record_rejects_blank_required_text_fields():
     message = str(exc_info.value)
     assert "industry" in message
     assert "profile_summary" in message
-    assert "evaluation_summary" in message
     assert "technology_route_summary" in message
 
 
@@ -307,7 +301,6 @@ def test_professor_record_allows_missing_department_and_title():
         title=None,
         research_directions=["AI"],
         profile_summary="Profile",
-        evaluation_summary="Evaluation",
         evidence=[_evidence()],
         last_updated=TIMESTAMP,
     )
@@ -332,7 +325,6 @@ def test_professor_record_requires_name_and_institution():
             title=None,
             research_directions=["AI"],
             profile_summary="Profile",
-            evaluation_summary="Evaluation",
             evidence=[_evidence()],
             last_updated=TIMESTAMP,
         )
@@ -352,7 +344,6 @@ def test_professor_record_requires_shenzhen_institution():
             title="Professor",
             research_directions=["AI"],
             profile_summary="Profile",
-            evaluation_summary="Evaluation",
             evidence=[_evidence()],
             last_updated=TIMESTAMP,
         )
@@ -368,7 +359,6 @@ def test_professor_record_requires_at_least_one_official_source():
             title="Professor",
             research_directions=["AI"],
             profile_summary="Profile",
-            evaluation_summary="Evaluation",
             evidence=[_public_web_evidence()],
             last_updated=TIMESTAMP,
         )

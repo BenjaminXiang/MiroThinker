@@ -141,7 +141,6 @@ def build_professor_record_from_enriched(
         effective_quality_status = normalize_quality_status(quality_status)
 
     profile_summary = profile.profile_summary.strip()
-    evaluation_summary = profile.evaluation_summary.strip()
     if not profile_summary:
         return None
 
@@ -176,7 +175,6 @@ def build_professor_record_from_enriched(
             academic_positions=profile.academic_positions or [],
             projects=profile.projects or [],
             profile_summary=profile_summary,
-            evaluation_summary=evaluation_summary,
             company_roles=[
                 {
                     "company_name": role.company_name,

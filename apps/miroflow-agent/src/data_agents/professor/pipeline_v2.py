@@ -14,9 +14,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import os
 import sys
-import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -26,11 +24,9 @@ from pydantic import BaseModel
 
 from src.data_agents.contracts import quality_status_compatibility_rows
 from src.data_agents.normalization import build_stable_id
-from src.data_agents.publish import publish_jsonl
 
 from .completeness import assess_completeness
 from .cross_domain import PaperStagingRecord
-from .enrichment import build_profile_record, normalize_text
 from .models import EnrichedProfessorProfile, MergedProfessorProfileRecord
 from .pipeline import run_professor_pipeline
 from .quality_gate import QualityResult, build_quality_report, evaluate_quality
@@ -203,9 +199,6 @@ async def run_professor_pipeline_v2(
 
     enriched_path = output_dir / "enriched.jsonl"
     paper_staging_path = output_dir / "paper_staging.jsonl"
-    summarized_path = output_dir / "summarized.jsonl"
-    professor_records_path = output_dir / "professor_records.jsonl"
-    released_objects_path = output_dir / "released_objects.jsonl"
     quality_report_path = output_dir / "quality_report.json"
     failed_tasks_path = output_dir / "failed_tasks.jsonl"
 
@@ -310,15 +303,13 @@ async def run_professor_pipeline_v2(
                     profile, local_client, config.local_llm_model
                 )
                 profile = profile.model_copy(update={
-                    "profile_summary": summaries[0],
-                    "evaluation_summary": summaries[1],
+                    "profile_summary": summaries,
                 })
                 report.summary_generated_count += 1
             except Exception:
                 # Fallback to rule-based
                 profile = profile.model_copy(update={
                     "profile_summary": _build_fallback_summary(profile),
-                    "evaluation_summary": _build_fallback_eval(profile),
                 })
                 report.summary_fallback_count += 1
 
@@ -535,13 +526,11 @@ async def _process_single_professor(
                     profile, local_client, config.local_llm_model
                 )
                 profile = profile.model_copy(update={
-                    "profile_summary": summaries[0],
-                    "evaluation_summary": "",
+                    "profile_summary": summaries,
                 })
             except Exception:
                 profile = profile.model_copy(update={
                     "profile_summary": _build_fallback_summary(profile),
-                    "evaluation_summary": "",
                 })
 
         return profile, staging_records
@@ -551,8 +540,8 @@ async def _generate_summaries_for_profile(
     profile: EnrichedProfessorProfile,
     llm_client: Any,
     llm_model: str,
-) -> tuple[str, str]:
-    """Generate profile_summary and evaluation_summary via LLM."""
+) -> str:
+    """Generate profile summary via LLM."""
     try:
         from .summary_generator import generate_summaries
 
@@ -561,9 +550,9 @@ async def _generate_summaries_for_profile(
             llm_client=llm_client,
             llm_model=llm_model,
         )
-        return result.profile_summary, result.evaluation_summary
+        return result.profile_summary
     except ImportError:
-        return _build_fallback_summary(profile), _build_fallback_eval(profile)
+        return _build_fallback_summary(profile)
 
 
 def _build_fallback_summary(profile: EnrichedProfessorProfile) -> str:
@@ -597,30 +586,6 @@ def _build_fallback_summary(profile: EnrichedProfessorProfile) -> str:
     while len(summary) < 200:
         summary += "该教授在深圳科创领域有持续贡献。"
     return summary[:300]
-
-
-def _build_fallback_eval(profile: EnrichedProfessorProfile) -> str:
-    """Rule-based fallback evaluation summary."""
-    name = profile.name or "该教师"
-    parts = []
-
-    if profile.h_index:
-        parts.append(f"h-index {profile.h_index}")
-    if profile.citation_count:
-        parts.append(f"总引用{profile.citation_count}次")
-    if profile.paper_count:
-        parts.append(f"发表论文{profile.paper_count}篇")
-    if profile.awards:
-        parts.append(f"{profile.awards[0]}")
-
-    if parts:
-        summary = f"{name}：{'，'.join(parts)}。"
-    else:
-        summary = f"{name}目前已完成基础信息采集。"
-
-    while len(summary) < 100:
-        summary += "数据正在持续完善中。"
-    return summary[:150]
 
 
 def _append_jsonl(path: Path, record: BaseModel) -> None:

@@ -24,7 +24,6 @@ def _profile(**overrides) -> EnrichedProfessorProfile:
         "title": "教授",
         "research_directions": ["大语言模型安全对齐", "RLHF训练策略"],
         "profile_summary": good_summary[:280],
-        "evaluation_summary": "h-index 45，总引用12000次，发表论文150篇。国家杰青获得者。",
         "enrichment_source": "paper_enriched",
         "evidence_urls": ["https://faculty.sustech.edu.cn/zhangsan"],
         "profile_url": "https://faculty.sustech.edu.cn/zhangsan",

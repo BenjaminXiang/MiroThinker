@@ -1,0 +1,17 @@
+# V2 Stage 2 — Company Milvus backfill 真实状态 2026-05-02
+
+## 主 milvus.db 实测（apps/miroflow-agent/milvus.db, 331 MB）
+collections: ['company_profiles', 'paper_chunks', 'professor_profiles']
+  company_profiles: row_count=1024  ← V2 Stage 2 ✅ (与 PG company 表 1024 完全一致)
+  paper_chunks: row_count=17155
+  professor_profiles: row_count=787
+
+## 本次 V2 Stage 2 执行
+- 命令：DATABASE_URL=...miroflow_real uv run python scripts/run_milvus_backfill.py --domain=company
+- 耗时：11.5s
+- 结果：companies_processed=1024 / errors=0 / skipped=0
+- 结论：idempotent 快速重跑（W10-1 dogfood 时已 backfill；本次仅扫描验证）
+
+## 时间戳
+- milvus.db 主文件：mtime 06:10（W10-1 dogfood land 时）
+- 本次重跑：12:11（验证 + 增量同步）

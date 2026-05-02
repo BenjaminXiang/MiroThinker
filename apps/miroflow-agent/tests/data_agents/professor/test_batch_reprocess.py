@@ -6,7 +6,7 @@ from __future__ import annotations
 import asyncio
 import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -307,7 +307,6 @@ def test_update_store_with_enriched_filters_profiles_that_fail_release_gate(tmp_
         research_directions=["机器学习"],
         paper_count=5,
         profile_summary="教师队伍长期围绕机器学习与数据智能开展研究，形成稳定科研方向。" * 4,
-        evaluation_summary="具备基础科研画像。",
         evidence_urls=["https://www.sustech.edu.cn/zh/faculties/team.html"],
     )
     enriched_path.write_text(json.dumps(profile.model_dump(mode="json"), ensure_ascii=False) + "\n", encoding="utf-8")
@@ -337,7 +336,6 @@ def test_update_store_with_enriched_uses_release_gate_quality_status(tmp_path: P
         research_directions=["机器学习", "数据库系统"],
         paper_count=12,
         profile_summary=("李志现任南方科技大学计算机科学与工程系教授，长期从事机器学习、数据库系统与数据智能方向研究，围绕高效数据管理、复杂场景下的智能分析与系统优化持续开展工作，并在相关方向形成稳定研究主题与可核验学术产出。" * 2),
-        evaluation_summary="李志已形成可核验论文画像。",
         evidence_urls=["https://www.sustech.edu.cn/zh/faculties/lizhi.html"],
     )
     enriched_path.write_text(json.dumps(profile.model_dump(mode="json"), ensure_ascii=False) + "\n", encoding="utf-8")

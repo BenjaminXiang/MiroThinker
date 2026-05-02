@@ -90,7 +90,6 @@ def test_audit_workbook_coverage_marks_q1_pass_with_professor_company_link(tmp_p
                 core_facts={"name": "深圳无界智航科技有限公司"},
                 summary_fields={
                     "profile_summary": "深圳无界智航科技有限公司画像",
-                    "evaluation_summary": "评价",
                     "technology_route_summary": "技术路线",
                 },
             ),
@@ -185,7 +184,6 @@ def test_object_exists_ignores_irrelevant_url_substrings(tmp_path: Path):
                 },
                 summary_fields={
                     "profile_summary": "示例公司画像",
-                    "evaluation_summary": "评价",
                     "technology_route_summary": "技术路线",
                 },
             )
@@ -222,7 +220,6 @@ def test_object_exists_ignores_unrelated_summary_mentions(tmp_path: Path):
                 },
                 summary_fields={
                     "profile_summary": "示例公司曾与九号机器人合作举办活动",
-                    "evaluation_summary": "评价",
                     "technology_route_summary": "技术路线",
                 },
             )
@@ -259,7 +256,6 @@ def test_object_exists_rejects_partial_company_identity_matches(tmp_path: Path):
                 },
                 summary_fields={
                     "profile_summary": "示例公司画像",
-                    "evaluation_summary": "评价",
                     "technology_route_summary": "技术路线",
                 },
             )
@@ -303,7 +299,6 @@ def test_audit_workbook_coverage_keeps_q1_fail_without_professor_company_link(tm
                 core_facts={"name": "深圳无界智航科技有限公司"},
                 summary_fields={
                     "profile_summary": "深圳无界智航科技有限公司画像",
-                    "evaluation_summary": "评价",
                     "technology_route_summary": "技术路线",
                 },
             ),
@@ -335,7 +330,6 @@ def test_audit_workbook_coverage_marks_q11_pass_with_real_and_synthetic_routes(t
                 },
                 summary_fields={
                     "profile_summary": "公司画像",
-                    "evaluation_summary": "评价",
                     "technology_route_summary": "技术路线",
                 },
             ),
@@ -350,7 +344,6 @@ def test_audit_workbook_coverage_marks_q11_pass_with_real_and_synthetic_routes(t
                 },
                 summary_fields={
                     "profile_summary": "公司画像",
-                    "evaluation_summary": "评价",
                     "technology_route_summary": "技术路线",
                 },
             ),
@@ -381,7 +374,6 @@ def test_object_exists_rejects_unrelated_prefix_collision(tmp_path: Path):
                 },
                 summary_fields={
                     "profile_summary": "公司画像",
-                    "evaluation_summary": "评价",
                     "technology_route_summary": "技术路线",
                 },
             )

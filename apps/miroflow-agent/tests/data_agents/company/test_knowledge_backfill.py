@@ -21,7 +21,6 @@ def _company_object() -> ReleasedObject:
         },
         summary_fields={
             "profile_summary": "公司画像",
-            "evaluation_summary": "评价",
             "technology_route_summary": "技术路线",
         },
         evidence=[

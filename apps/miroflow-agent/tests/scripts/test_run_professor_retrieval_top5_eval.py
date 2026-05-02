@@ -54,7 +54,6 @@ def _professor_record(
         title="教授",
         research_directions=directions,
         profile_summary=f"{name}现任{institution}教授，研究方向包括{'、'.join(directions)}。",
-        evaluation_summary="资料完整。",
         evidence=[
             build_evidence(
                 source_type="official_site",

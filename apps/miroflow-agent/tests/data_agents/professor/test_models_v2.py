@@ -46,7 +46,6 @@ def _full_enriched_profile(**overrides) -> EnrichedProfessorProfile:
             PatentLink(patent_title="一种大模型安全对齐方法", patent_number="CN2024001", source="web_search"),
         ],
         "profile_summary": "张三现任南方科技大学计算机科学与工程系教授，研究方向聚焦大语言模型安全对齐与RLHF训练策略。" * 3,
-        "evaluation_summary": "张三h-index为45，总引用12000次，发表论文150篇。国家杰出青年科学基金获得者，IEEE Senior Member。" * 1,
         "enrichment_source": "agent_local",
         "evidence_urls": ["https://faculty.sustech.edu.cn/zhangsan", "https://semanticscholar.org/author/xxx"],
         "field_provenance": {"research_directions": "paper_analysis", "h_index": "semantic_scholar"},

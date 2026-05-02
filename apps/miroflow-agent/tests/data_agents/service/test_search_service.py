@@ -26,7 +26,6 @@ def _professor_record() -> ProfessorRecord:
         title="教授",
         research_directions=["课程思政"],
         profile_summary="靳玉乐现任深圳大学教育学部教授，研究方向包括课程思政。",
-        evaluation_summary="靳玉乐当前资料完整度为structured，已关联课程思政论文。",
         evidence=[
             build_evidence(
                 source_type="official_site",
@@ -150,7 +149,6 @@ def test_search_service_prefers_exact_sql_hits_over_semantic_noise_in_hybrid_mod
         normalized_name="极智视觉科技（深圳）",
         industry="VR/AR",
         profile_summary="极智视觉科技聚焦VR/AR。",
-        evaluation_summary="已形成企业画像。",
         technology_route_summary="围绕AI影像与VR/AR。",
         evidence=[
             build_evidence(
@@ -168,7 +166,6 @@ def test_search_service_prefers_exact_sql_hits_over_semantic_noise_in_hybrid_mod
         normalized_name="未来视觉智能科技",
         industry="机器人",
         profile_summary="未来视觉智能科技聚焦机器人。",
-        evaluation_summary="已形成企业画像。",
         technology_route_summary="围绕机器人视觉。",
         evidence=[
             build_evidence(

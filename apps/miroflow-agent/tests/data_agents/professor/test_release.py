@@ -63,7 +63,6 @@ def test_build_professor_release_generates_contract_valid_record_with_fallback_s
     assert professor.id.startswith("PROF-")
     assert professor.id == release_result_again.professor_records[0].id
     assert professor.profile_summary
-    assert professor.evaluation_summary == ""  # V3: no longer generated
     assert "李志" in professor.profile_summary
     assert 200 <= len(professor.profile_summary) <= 300
     assert any(item.source_type == "official_site" for item in professor.evidence)
@@ -120,7 +119,6 @@ def test_build_professor_release_supports_custom_summarizer_and_reports_skips():
         ],
         summarizer=lambda profile: ProfessorSummaries(
             profile_summary=f"PROFILE::{profile.name}",
-            evaluation_summary=f"EVAL::{profile.name}",
         ),
         official_domain_suffixes=("sustech.edu.cn",),
         now=TIMESTAMP,
@@ -132,11 +130,9 @@ def test_build_professor_release_supports_custom_summarizer_and_reports_skips():
     }
 
     assert "PROFILE::王五" in records_by_name["王五"].profile_summary
-    assert "EVAL::王五" in records_by_name["王五"].evaluation_summary
     assert records_by_name["钱七"].department is None
     assert records_by_name["钱七"].title is None
     assert 200 <= len(records_by_name["王五"].profile_summary) <= 300
-    assert 100 <= len(records_by_name["王五"].evaluation_summary) <= 150
     assert release_result.report.input_profile_count == 4
     assert release_result.report.released_record_count == 3
     assert release_result.report.skipped_record_count == 1
@@ -201,7 +197,7 @@ def test_publish_professor_release_writes_both_jsonl_outputs(tmp_path: Path):
     assert released_payload["object_type"] == "professor"
 
 
-def test_fallback_evaluation_summary_does_not_claim_auxiliary_without_auxiliary_evidence():
+def test_fallback_profile_summary_does_not_claim_auxiliary_without_auxiliary_evidence():
     profile = _merged_record(
         profile_url="https://cse.sustech.edu.cn/faculty/lizhi/",
         roster_source="https://www.sustech.edu.cn/zh/letter/",
@@ -213,11 +209,11 @@ def test_fallback_evaluation_summary_does_not_claim_auxiliary_without_auxiliary_
     )
 
     assert len(release_result.professor_records) == 1
-    evaluation_summary = release_result.professor_records[0].evaluation_summary
-    assert "包含辅助公开页面" not in evaluation_summary
+    profile_summary = release_result.professor_records[0].profile_summary
+    assert "包含辅助公开页面" not in profile_summary
 
 
-def test_fallback_evaluation_summary_uses_official_classification_not_domain_difference():
+def test_fallback_profile_summary_uses_official_classification_not_domain_difference():
     profile = _merged_record(
         profile_url="https://faculty.official-b.edu.cn/lizhi",
         roster_source="https://portal.official-a.edu.cn/teachers",
@@ -229,8 +225,8 @@ def test_fallback_evaluation_summary_uses_official_classification_not_domain_dif
     )
 
     assert len(release_result.professor_records) == 1
-    evaluation_summary = release_result.professor_records[0].evaluation_summary
-    assert "包含辅助公开页面" not in evaluation_summary
+    profile_summary = release_result.professor_records[0].profile_summary
+    assert "包含辅助公开页面" not in profile_summary
 
 
 def test_fallback_profile_summary_stays_generic_when_department_and_title_missing():

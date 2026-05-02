@@ -66,7 +66,7 @@ def test_rebuild_shared_store_merges_multiple_batch_dbs(tmp_path: Path):
             "professor",
             "教授A",
             core_facts={"name": "教授A", "company_roles": [], "top_papers": [], "patent_ids": []},
-            summary_fields={"profile_summary": "教授A summary", "evaluation_summary": "评价"},
+            summary_fields={"profile_summary": "教授A summary"},
         ),
         _released_object(
             "PAPER-A",
@@ -82,7 +82,7 @@ def test_rebuild_shared_store_merges_multiple_batch_dbs(tmp_path: Path):
             "professor",
             "教授B",
             core_facts={"name": "教授B", "company_roles": [], "top_papers": [], "patent_ids": []},
-            summary_fields={"profile_summary": "教授B summary", "evaluation_summary": "评价"},
+            summary_fields={"profile_summary": "教授B summary"},
         ),
         _released_object(
             "PAPER-B",
@@ -148,7 +148,7 @@ def test_rebuild_shared_store_replaces_professor_domains_and_preserves_other_dom
             "professor",
             "新教授",
             core_facts={"name": "新教授", "company_roles": [], "top_papers": [], "patent_ids": []},
-            summary_fields={"profile_summary": "新教授 summary", "evaluation_summary": "评价"},
+            summary_fields={"profile_summary": "新教授 summary"},
         ),
         _released_object(
             "PAPER-NEW",
@@ -203,7 +203,7 @@ def test_rebuild_shared_store_applies_professor_company_and_paper_backfills(tmp_
             "professor",
             "丁文伯",
             core_facts={"name": "丁文伯", "company_roles": [], "top_papers": [], "patent_ids": []},
-            summary_fields={"profile_summary": "丁文伯 summary", "evaluation_summary": "评价"},
+            summary_fields={"profile_summary": "丁文伯 summary"},
         ),
     ])
 
@@ -279,7 +279,7 @@ def test_rebuild_shared_store_keeps_target_unchanged_when_temp_write_fails(tmp_p
 
     batch_store = SqliteReleasedObjectStore(batch_db)
     batch_store.upsert_released_objects([
-        _released_object("PROF-NEW", "professor", "新教授", core_facts={"name": "新教授", "company_roles": [], "top_papers": [], "patent_ids": []}, summary_fields={"profile_summary": "新教授 summary", "evaluation_summary": "评价"}),
+        _released_object("PROF-NEW", "professor", "新教授", core_facts={"name": "新教授", "company_roles": [], "top_papers": [], "patent_ids": []}, summary_fields={"profile_summary": "新教授 summary"}),
     ])
 
     original_upsert = module.SqliteReleasedObjectStore.upsert_released_objects

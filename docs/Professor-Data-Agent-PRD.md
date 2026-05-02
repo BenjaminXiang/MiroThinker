@@ -84,7 +84,7 @@
 | --- | --- |
 | 非深圳高校教授全量采集 | 当前范围聚焦深圳 |
 | 复杂合作网络图谱 | 可后续从论文/企业/专利关系继续演化 |
-| 主观评分排名系统 | 用事实性 `evaluation_summary` 支撑回答，不做固定打分 |
+| 主观评分排名系统 | 用可追溯事实与在线合成摘要支撑回答，不做固定打分 |
 
 ---
 
@@ -114,7 +114,6 @@
 | `awards` | 否 | 奖项荣誉 |
 | `academic_positions` | 否 | 学术兼职 |
 | `projects` | 否 | 项目信息 |
-| `evaluation_summary` | 否 | 事实性评价摘要 |
 | `profile_summary` | 是 | 教授画像摘要 |
 | `evidence` | 是 | 来源列表 |
 | `last_updated` | 是 | 最后更新时间 |
@@ -136,21 +135,7 @@
 - 同时覆盖身份、研究方向、代表性成果、重要背景信息
 - 不能只重复官网套话
 
-### 4.3 `evaluation_summary`
-
-`evaluation_summary` 用于支撑：
-
-- “谁比较厉害”
-- “大牛有哪些”
-- “这个老师实力怎么样”
-
-要求：
-
-- 100-150 字
-- 只呈现事实，不做主观排名
-- 优先使用学术指标、奖项、头衔、项目、代表论文等客观信息
-
-### 4.4 存储要求
+### 4.3 存储要求
 
 教授域独立 PostgreSQL 库 + Milvus collection。详见 [共享技术规范 §6](./Data-Agent-Shared-Spec.md#六物理存储与向量化建议)。
 
@@ -166,7 +151,7 @@
   -> per-professor agent 采集
   -> 清洗与标准化
   -> 论文反哺
-  -> 生成 profile_summary / evaluation_summary
+  -> 生成 profile_summary
   -> 向量化
   -> 发布到 professor domain PostgreSQL + Milvus
 ```

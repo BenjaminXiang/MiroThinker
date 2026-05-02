@@ -6,12 +6,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from pathlib import Path
 
-import pytest
-
 from src.data_agents.contracts import (
-    CompanyRecord,
     Evidence,
-    ProfessorRecord,
     ReleasedObject,
 )
 from src.data_agents.professor.cross_domain import CompanyLink
@@ -63,7 +59,6 @@ def _company_released_object() -> ReleasedObject:
         },
         summary_fields={
             "profile_summary": "深圳点联传感科技有限公司简介" * 10,
-            "evaluation_summary": "评估" * 20,
             "technology_route_summary": "技术路线" * 10,
         },
         evidence=[Evidence(

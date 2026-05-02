@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 MiroThinker Contributors
 # SPDX-License-Identifier: Apache-2.0
-"""Tests for V3 release changes: evaluation_summary removal."""
+"""Tests for V3 profile-only release behavior."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -46,11 +46,10 @@ def _merged_record(**kwargs) -> MergedProfessorProfileRecord:
     return MergedProfessorProfileRecord(**defaults)
 
 
-class TestEvaluationSummaryRemoval:
-    """Verify evaluation_summary is optional in ProfessorRecord and release pipeline."""
+class TestProfileOnlyRelease:
+    """Verify professor release works with profile summaries only."""
 
-    def test_professor_record_without_evaluation_summary(self):
-        """ProfessorRecord should accept empty evaluation_summary (default)."""
+    def test_professor_record_uses_profile_summary_only(self):
         record = ProfessorRecord(
             id="PROF-test123",
             name="李志",
@@ -60,14 +59,12 @@ class TestEvaluationSummaryRemoval:
             email="lizhi@sustech.edu.cn",
             research_directions=["机器学习"],
             profile_summary="这是一段足够长的个人简介" * 20,
-            # No evaluation_summary — should default to ""
             evidence=_EVIDENCE,
             last_updated=TIMESTAMP,
         )
-        assert record.evaluation_summary == ""
+        assert record.profile_summary
 
-    def test_released_object_omits_empty_evaluation_summary(self):
-        """to_released_object should not include evaluation_summary when empty."""
+    def test_released_object_has_profile_summary_only(self):
         record = ProfessorRecord(
             id="PROF-test123",
             name="李志",
@@ -81,27 +78,21 @@ class TestEvaluationSummaryRemoval:
             last_updated=TIMESTAMP,
         )
         released = record.to_released_object()
-        # evaluation_summary should not appear in summary_fields when empty
-        assert "evaluation_summary" not in released.summary_fields
+        assert released.summary_fields == {"profile_summary": record.profile_summary}
 
     def test_release_pipeline_with_profile_only_summarizer(self):
-        """Release pipeline should work with summarizer that returns empty evaluation_summary."""
         profile = _merged_record()
         release_result = build_professor_release(
             profiles=[profile],
             summarizer=lambda p: ProfessorSummaries(
                 profile_summary=f"好的个人简介关于{p.name}",
-                evaluation_summary="",  # Explicitly empty
             ),
             official_domain_suffixes=("sustech.edu.cn",),
             now=TIMESTAMP,
         )
-        # Should not skip the record due to empty evaluation_summary
         assert len(release_result.professor_records) == 1
-        assert release_result.professor_records[0].evaluation_summary == ""
 
-    def test_release_pipeline_rule_based_no_evaluation_summary(self):
-        """Rule-based summarizer should not produce evaluation_summary."""
+    def test_release_pipeline_rule_based_summary(self):
         profile = _merged_record()
         release_result = build_professor_release(
             profiles=[profile],
@@ -110,5 +101,4 @@ class TestEvaluationSummaryRemoval:
         )
         assert len(release_result.professor_records) == 1
         professor = release_result.professor_records[0]
-        # evaluation_summary should be empty — rule-based no longer generates it
-        assert professor.evaluation_summary == ""
+        assert professor.profile_summary

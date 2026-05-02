@@ -405,7 +405,7 @@ quality_status="ready",
 
 - 教授 ready 的最低标准
 - 共享层是否允许教授域保留更细质量状态
-- 发布链路是否允许空 `evaluation_summary`
+- 发布链路是否允许空 `retired_evaluation_field`
 - 论文域与教授域的实际串联方式
 
 ## 8. 建议优先修改的文件清单

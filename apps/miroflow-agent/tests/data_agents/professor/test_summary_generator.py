@@ -11,10 +11,8 @@ from src.data_agents.professor.cross_domain import PaperLink
 from src.data_agents.professor.models import EnrichedProfessorProfile
 from src.data_agents.professor.summary_generator import (
     _coerce_summary_length,
-    build_evaluation_summary_prompt,
     build_profile_summary_prompt,
     generate_summaries,
-    validate_evaluation_summary,
     validate_profile_summary,
 )
 
@@ -63,18 +61,6 @@ class TestValidateProfileSummary:
         assert validate_profile_summary(text)
 
 
-class TestValidateEvaluationSummary:
-    def test_rejects_too_short(self):
-        assert not validate_evaluation_summary("太短")
-
-    def test_rejects_too_long(self):
-        assert not validate_evaluation_summary("a" * 151)
-
-    def test_accepts_valid(self):
-        text = _pad("张三h-index为45，总引用12000次，发表论文150篇。国家杰青获得者", 120)
-        assert validate_evaluation_summary(text)
-
-
 def test_coerce_summary_length_trims_overlong_profile_summary():
     text = _pad("张三现任南方科技大学教授，长期从事二维材料电子结构研究。", 330)
     coerced = _coerce_summary_length(text, min_length=200, max_length=300)
@@ -88,29 +74,15 @@ class TestBuildPrompts:
         assert "大语言模型安全对齐" in prompt
         assert "RLHF训练策略" in prompt
 
-    def test_eval_prompt_includes_hindex(self):
-        profile = _profile()
-        prompt = build_evaluation_summary_prompt(profile)
-        assert "45" in prompt
-
-    def test_eval_prompt_without_hindex(self):
-        profile = _profile(h_index=None)
-        prompt = build_evaluation_summary_prompt(profile)
-        assert "未知" in prompt
-
-
 @pytest.mark.asyncio
 class TestGenerateSummaries:
     async def test_with_valid_llm_response(self):
         profile_text = _pad("张三现任南方科技大学计算机系教授，研究大语言模型安全对齐", 250)
-        eval_text = _pad("张三h-index 45，总引用12000次，国家杰青", 120)
 
         mock = MagicMock()
-        # First call returns profile_summary, second returns evaluation_summary
-        mock.chat.completions.create.side_effect = [
-            SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=profile_text))]),
-            SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=eval_text))]),
-        ]
+        mock.chat.completions.create.return_value = SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(content=profile_text))]
+        )
 
         result = await generate_summaries(
             profile=_profile(),
@@ -118,7 +90,7 @@ class TestGenerateSummaries:
             llm_model="test",
         )
         assert validate_profile_summary(result.profile_summary)
-        assert validate_evaluation_summary(result.evaluation_summary)
+        mock.chat.completions.create.assert_called_once()
 
     async def test_falls_back_to_rule_based_summaries_when_llm_raises(self):
         mock = MagicMock()
@@ -142,16 +114,12 @@ class TestGenerateSummaries:
 
         assert validate_profile_summary(result.profile_summary)
         assert "课程与教学论" in result.profile_summary
-        assert validate_evaluation_summary(result.evaluation_summary)
-        assert "350" in result.evaluation_summary
 
     async def test_falls_back_when_llm_returns_invalid_length_outputs(self):
         mock = MagicMock()
         mock.chat.completions.create.side_effect = [
             SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content="太短"))]),
             SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content="仍然太短"))]),
-            SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content="很短"))]),
-            SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content="还是很短"))]),
         ]
 
         result = await generate_summaries(
@@ -173,5 +141,3 @@ class TestGenerateSummaries:
 
         assert validate_profile_summary(result.profile_summary)
         assert "流行病学" in result.profile_summary
-        assert validate_evaluation_summary(result.evaluation_summary)
-        assert "324" in result.evaluation_summary

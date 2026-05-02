@@ -154,7 +154,6 @@ class EnrichedProfessorProfile(BaseModel):
     company_roles: list[CompanyLink] = []
     patent_ids: list[PatentLink] = []
     profile_summary: str = ""
-    evaluation_summary: str = ""  # V3: no longer generated, kept for backward compat
     enrichment_source: str = "regex_only"  # "regex_only" | "paper_enriched" | "agent_local" | "agent_online"
     evidence_urls: list[str] = []
     field_provenance: dict[str, str] = {}

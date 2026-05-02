@@ -49,7 +49,6 @@ def build_company_release(
             website=record.website,
             key_personnel=extract_key_personnel(record),
             profile_summary=summaries.profile_summary,
-            evaluation_summary=summaries.evaluation_summary,
             technology_route_summary=summaries.technology_route_summary,
             evidence=[
                 build_evidence(

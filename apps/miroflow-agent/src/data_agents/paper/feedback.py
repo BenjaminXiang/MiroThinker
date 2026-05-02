@@ -41,11 +41,6 @@ def apply_paper_feedback_to_professors(
             professor,
             related_papers=related_papers,
         )
-        evaluation_summary = _build_evaluation_summary_with_papers(
-            professor,
-            related_papers=related_papers,
-            metrics=metrics,
-        )
         updated_professors.append(
             professor.model_copy(
                 update={
@@ -58,7 +53,6 @@ def apply_paper_feedback_to_professors(
                         metrics.citation_count if metrics else professor.citation_count
                     ),
                     "profile_summary": profile_summary,
-                    "evaluation_summary": evaluation_summary,
                     "last_updated": updated_at,
                 }
             )
@@ -110,25 +104,3 @@ def _build_profile_summary_with_papers(
         f"{base_summary.rstrip('。')}。近期论文包括《{top_titles}》，"
         "论文信号已用于更新研究方向与代表成果字段。"
     )
-
-
-def _build_evaluation_summary_with_papers(
-    professor: ProfessorRecord,
-    *,
-    related_papers: list[DiscoveredPaper],
-    metrics: AuthorPaperMetrics | None,
-) -> str:
-    summary = professor.evaluation_summary.strip()
-    if not related_papers and metrics is None:
-        return summary
-    metrics_text = ""
-    if metrics is not None:
-        h_index = metrics.h_index if metrics.h_index is not None else 0
-        citation_count = (
-            metrics.citation_count if metrics.citation_count is not None else 0
-        )
-        metrics_text = f"h-index={h_index}，总引用数={citation_count}。"
-    paper_text = ""
-    if related_papers:
-        paper_text = f"已关联{len(related_papers)}篇论文，代表作包括《{related_papers[0].title}》。"
-    return f"{summary.rstrip('。')}。{metrics_text}{paper_text}".strip()

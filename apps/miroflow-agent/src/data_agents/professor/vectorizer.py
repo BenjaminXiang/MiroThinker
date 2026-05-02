@@ -93,9 +93,6 @@ class ProfessorVectorizer:
             FieldSchema(
                 name="profile_summary", dtype=DataType.VARCHAR, max_length=2048
             ),
-            FieldSchema(
-                name="evaluation_summary", dtype=DataType.VARCHAR, max_length=1024
-            ),
             FieldSchema(name="quality_status", dtype=DataType.VARCHAR, max_length=32),
             FieldSchema(name="h_index", dtype=DataType.INT32, nullable=True),
             FieldSchema(name="citation_count", dtype=DataType.INT64, nullable=True),
@@ -151,24 +148,13 @@ class ProfessorVectorizer:
         data = []
         for i, (prof_id, profile, quality_status) in enumerate(professors):
             data.append(
-                {
-                    "id": prof_id,
-                    "name": profile.name,
-                    "institution": profile.institution,
-                    "department": profile.department or "",
-                    "title": profile.title or "",
-                    "research_directions": json.dumps(
-                        profile.research_directions, ensure_ascii=False
-                    ),
-                    "profile_summary": profile.profile_summary,
-                    "evaluation_summary": profile.evaluation_summary,
-                    "quality_status": quality_status,
-                    "h_index": profile.h_index,
-                    "citation_count": profile.citation_count,
-                    "paper_count": profile.paper_count,
-                    "profile_vector": profile_vectors[i],
-                    "direction_vector": direction_vectors[i],
-                }
+                build_professor_profile_payload(
+                    prof_id=prof_id,
+                    profile=profile,
+                    quality_status=quality_status,
+                    profile_vector=profile_vectors[i],
+                    direction_vector=direction_vectors[i],
+                )
             )
 
         self._milvus_client.upsert(
@@ -224,6 +210,33 @@ class ProfessorVectorizer:
             output_fields=["id"],
         )
         return [str(row.get("id", "")) for row in (results[0] if results else [])]
+
+
+def build_professor_profile_payload(
+    *,
+    prof_id: str,
+    profile: EnrichedProfessorProfile,
+    quality_status: str,
+    profile_vector: list[float],
+    direction_vector: list[float],
+) -> dict[str, Any]:
+    return {
+        "id": prof_id,
+        "name": profile.name,
+        "institution": profile.institution,
+        "department": profile.department or "",
+        "title": profile.title or "",
+        "research_directions": json.dumps(
+            profile.research_directions, ensure_ascii=False
+        ),
+        "profile_summary": profile.profile_summary,
+        "quality_status": quality_status,
+        "h_index": profile.h_index,
+        "citation_count": profile.citation_count,
+        "paper_count": profile.paper_count,
+        "profile_vector": profile_vector,
+        "direction_vector": direction_vector,
+    }
 
 
 def _create_milvus_client(uri: str) -> Any:

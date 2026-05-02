@@ -33,7 +33,6 @@ _JSON_FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)\s*```", re.DOTALL)
 @dataclass(frozen=True)
 class GeneratedSummaries:
     profile_summary: str
-    evaluation_summary: str
 
 
 def _build_affiliation_text(profile: EnrichedProfessorProfile) -> str:
@@ -164,39 +163,6 @@ def _build_fallback_profile_summary(profile: EnrichedProfessorProfile) -> str:
     )
 
 
-def _build_fallback_evaluation_summary(profile: EnrichedProfessorProfile) -> str:
-    name = profile.name.strip() or "该教师"
-    parts: list[str] = [name]
-    metrics: list[str] = []
-    if profile.h_index is not None:
-        metrics.append(f"h-index为{profile.h_index}")
-    if profile.citation_count is not None:
-        metrics.append(f"总引用约{profile.citation_count}")
-    if profile.paper_count is not None:
-        metrics.append(f"论文数为{profile.paper_count}")
-    if metrics:
-        parts.append("，".join(metrics) + "。")
-    if profile.awards:
-        parts.append(f"代表性荣誉包括{'、'.join(_dedupe_preserve_order(profile.awards)[:2])}。")
-    if profile.academic_positions:
-        parts.append(f"学术任职包括{'、'.join(_dedupe_preserve_order(profile.academic_positions)[:2])}。")
-    if profile.top_papers:
-        top_title = next((paper.title for paper in profile.top_papers if paper.title.strip()), "")
-        if top_title:
-            parts.append(f"已识别代表论文《{top_title}》。")
-
-    base = "".join(_ensure_sentence(part) for part in parts if part.strip())
-    return _ensure_summary_length(
-        base,
-        min_length=100,
-        max_length=150,
-        padding_sentences=(
-            "当前评价仅汇总已验证的客观指标与任职信息。",
-            "可用于事实检索与后续人工复核。",
-        ),
-    )
-
-
 def build_profile_summary_prompt(profile: EnrichedProfessorProfile) -> str:
     """Build prompt for profile_summary generation (200-300 chars)."""
     directions = "、".join(profile.research_directions[:5]) if profile.research_directions else "暂无具体方向"
@@ -247,28 +213,6 @@ h-index：{profile.h_index or "未知"}
 直接输出简介文本，不要包含任何前缀或标签："""
 
 
-def build_evaluation_summary_prompt(profile: EnrichedProfessorProfile) -> str:
-    """Build prompt for evaluation_summary generation (100-150 chars)."""
-    return f"""请为以下教授生成100-150字的事实性评价摘要（evaluation_summary）。
-
-要求：
-- 仅使用客观信息：人才称号、学术指标（h-index、引用数、论文数）、代表论文影响力、重要奖项、学术兼职
-- 禁止主观评价
-- 没有数据的维度直接跳过
-- 严格100-150字
-
-教授信息：
-姓名：{profile.name}
-h-index：{profile.h_index or "未知"}
-总引用：{profile.citation_count or "未知"}
-论文数：{profile.paper_count or "未知"}
-奖项：{"、".join(profile.awards[:3]) if profile.awards else "无"}
-学术兼职：{"、".join(profile.academic_positions[:3]) if profile.academic_positions else "无"}
-代表论文引用：{"、".join(f"{p.title}({p.citation_count}引用)" for p in profile.top_papers[:3]) if profile.top_papers else "无"}
-
-直接输出评价文本，不要包含任何前缀或标签："""
-
-
 def validate_profile_summary(summary: str) -> bool:
     """Check profile_summary meets quality requirements."""
     if not summary:
@@ -281,47 +225,25 @@ def validate_profile_summary(summary: str) -> bool:
     return True
 
 
-def validate_evaluation_summary(summary: str) -> bool:
-    """Check evaluation_summary meets quality requirements."""
-    if not summary:
-        return False
-    length = len(summary)
-    return 100 <= length <= 150
-
-
 async def generate_summaries(
     *,
     profile: EnrichedProfessorProfile,
     llm_client: Any,
     llm_model: str,
 ) -> GeneratedSummaries:
-    """Generate profile and evaluation summaries using LLM."""
+    """Generate profile summary using LLM."""
     profile_prompt = build_profile_summary_prompt(profile)
-    eval_prompt = build_evaluation_summary_prompt(profile)
 
-    # Generate profile_summary
     profile_summary = await _generate_single_summary(
         llm_client, llm_model, profile_prompt,
         validator=validate_profile_summary,
         summary_type="profile",
     )
 
-    # Generate evaluation_summary
-    evaluation_summary = await _generate_single_summary(
-        llm_client, llm_model, eval_prompt,
-        validator=validate_evaluation_summary,
-        summary_type="evaluation",
-    )
-
     if not validate_profile_summary(profile_summary):
         profile_summary = _build_fallback_profile_summary(profile)
-    if not validate_evaluation_summary(evaluation_summary):
-        evaluation_summary = _build_fallback_evaluation_summary(profile)
 
-    return GeneratedSummaries(
-        profile_summary=profile_summary,
-        evaluation_summary=evaluation_summary,
-    )
+    return GeneratedSummaries(profile_summary=profile_summary)
 
 
 async def _generate_single_summary(
@@ -356,8 +278,6 @@ async def _generate_single_summary(
             text = text.strip()
             if summary_type == "profile":
                 text = _coerce_summary_length(text, min_length=200, max_length=300)
-            elif summary_type == "evaluation":
-                text = _coerce_summary_length(text, min_length=100, max_length=150)
 
             if validator(text):
                 return text

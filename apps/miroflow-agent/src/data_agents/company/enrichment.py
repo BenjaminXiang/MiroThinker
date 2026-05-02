@@ -14,7 +14,6 @@ _PERSON_SPLIT_RE = re.compile(r"[\n；;]+")
 @dataclass(frozen=True, slots=True)
 class CompanySummaries:
     profile_summary: str
-    evaluation_summary: str
     technology_route_summary: str
 
 
@@ -54,7 +53,6 @@ def build_rule_based_summaries(record: CompanyImportRecord) -> CompanySummaries:
     business = normalize_text(record.business)
     description = normalize_text(record.description)
     sub_industry = normalize_text(record.sub_industry)
-    investor_text = "、".join(record.investors[:3]) if record.investors else None
 
     profile_parts = [f"{company_name}是一家聚焦{industry}的企业。"]
     if sub_industry:
@@ -64,18 +62,6 @@ def build_rule_based_summaries(record: CompanyImportRecord) -> CompanySummaries:
     if description:
         profile_parts.append(description)
     profile_summary = _join_and_trim(profile_parts, limit=220)
-
-    evaluation_parts = [f"{company_name}当前已形成基础企业画像。"]
-    if record.patent_count is not None:
-        evaluation_parts.append(f"公开专利数量记录为{record.patent_count}件。")
-    if record.financing_events:
-        evaluation_parts.append(
-            f"已记录{len(record.financing_events)}次融资事件。"
-        )
-    if investor_text:
-        evaluation_parts.append(f"主要投资方包括{investor_text}。")
-    evaluation_parts.append("现阶段评价以导出数据中的客观字段为主，不做主观排序。")
-    evaluation_summary = _join_and_trim(evaluation_parts, limit=150)
 
     technology_parts = [f"{company_name}的技术路线围绕{industry}展开。"]
     if sub_industry:
@@ -88,7 +74,6 @@ def build_rule_based_summaries(record: CompanyImportRecord) -> CompanySummaries:
 
     return CompanySummaries(
         profile_summary=profile_summary,
-        evaluation_summary=evaluation_summary,
         technology_route_summary=technology_route_summary,
     )
 

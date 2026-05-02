@@ -295,7 +295,7 @@ Phase 0.5 必须先锁定以下门槛：
 - `projects_json`
 - `awards_json`
 - `profile_summary`
-- `evaluation_summary`
+- `retired_evaluation_field`
 - `quality_status`
 - `quality_detail`
 - `discipline_bucket`
@@ -600,7 +600,7 @@ STEM `ready` 必须同时满足：
 ### Content Clean
 
 - `profile_summary` 非模板
-- `evaluation_summary` 非模板
+- `retired_evaluation_field` 非模板
 - 关键字段带 provenance
 
 ### Verified Scholarly Output

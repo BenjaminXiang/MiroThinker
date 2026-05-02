@@ -20,7 +20,6 @@ def _professor_record() -> ProfessorRecord:
         title="教授",
         research_directions=["课程论"],
         profile_summary="靳玉乐现任深圳大学教育学部教授，研究方向包括课程论。",
-        evaluation_summary="靳玉乐当前资料完整度为structured，已按官网资料完成基础核验。",
         evidence=[
             build_evidence(
                 source_type="official_site",
@@ -69,4 +68,3 @@ def test_apply_paper_feedback_to_professors_updates_metrics_and_summary():
     assert professor.citation_count == 9
     assert "课程思政" in professor.research_directions
     assert "近期论文" in professor.profile_summary
-    assert "h-index=3" in professor.evaluation_summary

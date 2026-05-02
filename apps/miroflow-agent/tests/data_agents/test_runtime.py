@@ -55,7 +55,7 @@ def test_load_domain_cfg_defaults_data_agents_to_json_mode():
 def test_parse_structured_payload_validates_model():
     payload = """
     ```json
-    {"id":"COMP-001","name":"优必选","normalized_name":"优必选","industry":"机器人","profile_summary":"A","evaluation_summary":"B","technology_route_summary":"C","evidence":[{"source_type":"xlsx_import","source_file":"seed.xlsx","fetched_at":"2026-04-01T00:00:00Z"}],"last_updated":"2026-04-01T00:00:00Z"}
+    {"id":"COMP-001","name":"优必选","normalized_name":"优必选","industry":"机器人","profile_summary":"A","technology_route_summary":"C","evidence":[{"source_type":"xlsx_import","source_file":"seed.xlsx","fetched_at":"2026-04-01T00:00:00Z"}],"last_updated":"2026-04-01T00:00:00Z"}
     ```
     """
 
@@ -126,7 +126,6 @@ def test_shared_helpers_cover_ids_normalization_evidence_linking_and_publish(tmp
         normalized_name="优必选科技",
         industry="机器人",
         profile_summary="A",
-        evaluation_summary="B",
         technology_route_summary="C",
         evidence=[official],
         last_updated=TIMESTAMP,
@@ -478,7 +477,7 @@ async def test_runtime_loads_config_and_executes_structured_task():
         execute_calls.append(kwargs)
         return (
             "summary",
-            '{"id":"COMP-001","name":"优必选","normalized_name":"优必选","industry":"机器人","profile_summary":"A","evaluation_summary":"B","technology_route_summary":"C","evidence":[{"source_type":"xlsx_import","source_file":"seed.xlsx","fetched_at":"2026-04-01T00:00:00Z"}],"last_updated":"2026-04-01T00:00:00Z"}',
+            '{"id":"COMP-001","name":"优必选","normalized_name":"优必选","industry":"机器人","profile_summary":"A","technology_route_summary":"C","evidence":[{"source_type":"xlsx_import","source_file":"seed.xlsx","fetched_at":"2026-04-01T00:00:00Z"}],"last_updated":"2026-04-01T00:00:00Z"}',
             str(Path(cfg.debug_dir) / "log.json"),
             None,
         )

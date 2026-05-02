@@ -24,7 +24,6 @@ from .models import MergedProfessorProfileRecord
 @dataclass(frozen=True, slots=True)
 class ProfessorSummaries:
     profile_summary: str
-    evaluation_summary: str
 
 
 ProfessorSummarizer = Callable[[MergedProfessorProfileRecord], ProfessorSummaries]
@@ -63,10 +62,11 @@ def build_professor_release(
     generated_at = now or datetime.now(timezone.utc)
     normalized_suffixes = _normalize_domain_suffixes(official_domain_suffixes)
     if summarizer is None:
-        summary_builder: ProfessorSummarizer = lambda profile: _build_rule_based_summaries(
-            profile,
-            official_domain_suffixes=normalized_suffixes,
-        )
+        def summary_builder(profile: MergedProfessorProfileRecord) -> ProfessorSummaries:
+            return _build_rule_based_summaries(
+                profile,
+                official_domain_suffixes=normalized_suffixes,
+            )
     else:
         summary_builder = summarizer
     professor_records: list[ProfessorRecord] = []
@@ -105,8 +105,6 @@ def build_professor_release(
             skip_reasons["invalid_summaries"] += 1
             continue
         profile_summary = _coerce_profile_summary(profile_summary_raw)
-        evaluation_summary_raw = normalize_text(summaries.evaluation_summary)
-        evaluation_summary = _coerce_evaluation_summary(evaluation_summary_raw) if evaluation_summary_raw else ""
 
         evidence = _build_evidence_items(
             profile=profile,
@@ -144,7 +142,6 @@ def build_professor_release(
                 work_experience=[],
                 citation_count=None,
                 profile_summary=profile_summary,
-                evaluation_summary=evaluation_summary,
                 company_roles=[],
                 patent_ids=[],
                 evidence=evidence,
@@ -246,7 +243,6 @@ def _build_rule_based_summaries(
         title=title,
     )
     directions = _normalize_research_directions(profile.research_directions)
-    source_count = len(_collect_unique_urls(profile))
     if directions:
         direction_text = "、".join(directions[:5])
         profile_summary_base = (
@@ -273,7 +269,6 @@ def _build_rule_based_summaries(
     )
     return ProfessorSummaries(
         profile_summary=profile_summary,
-        evaluation_summary="",
     )
 
 
@@ -424,18 +419,6 @@ def _coerce_profile_summary(text: str) -> str:
         padding_sentences=(
             "该摘要遵循官网优先与证据可追溯原则，仅保留已验证字段。",
             "在跨域联动完成前，系统会持续补充并校验研究方向与成果信息。",
-        ),
-    )
-
-
-def _coerce_evaluation_summary(text: str) -> str:
-    return _ensure_summary_length(
-        text,
-        min_length=100,
-        max_length=150,
-        padding_sentences=(
-            "当前内容可用于事实检索与人工复核。",
-            "后续会结合论文与专利证据继续更新。",
         ),
     )
 

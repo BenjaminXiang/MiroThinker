@@ -47,7 +47,6 @@ def _profile(**overrides) -> EnrichedProfessorProfile:
             )
         ],
         "profile_summary": "吴亚北现任南方科技大学教授，长期从事二维材料电子结构与莫尔超晶格研究。" * 6,
-        "evaluation_summary": "",
         "enrichment_source": "paper_enriched",
         "evidence_urls": ["https://www.sustech.edu.cn/zh/faculties/wuyabei.html"],
         "profile_url": "https://www.sustech.edu.cn/zh/faculties/wuyabei.html",

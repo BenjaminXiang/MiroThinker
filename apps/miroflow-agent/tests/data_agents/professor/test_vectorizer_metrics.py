@@ -30,7 +30,6 @@ def _profile(**overrides) -> EnrichedProfessorProfile:
         "title": "教授",
         "research_directions": ["大语言模型", "RLHF"],
         "profile_summary": "张三教授专注于大语言模型研究",
-        "evaluation_summary": "学术指标摘要",
         "profile_url": "https://example.com/prof",
         "roster_source": "https://example.com/roster",
         "extraction_status": "structured",

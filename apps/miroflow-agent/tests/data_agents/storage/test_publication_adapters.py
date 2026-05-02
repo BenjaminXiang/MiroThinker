@@ -20,7 +20,6 @@ def _professor_record() -> ProfessorRecord:
         title="教授",
         research_directions=["课程思政"],
         profile_summary="靳玉乐现任深圳大学教育学部教授，研究方向包括课程思政与课程论。",
-        evaluation_summary="靳玉乐当前资料完整度为structured，已按官网资料完成基础核验。",
         evidence=[
             build_evidence(
                 source_type="official_site",

@@ -27,7 +27,7 @@
 | **top_papers** | **0** | **0%** | **✗ 致命缺失** |
 | **h_index** | **2** | **5%** | **✗ 致命缺失** |
 | **citation_count** | **2** | **5%** | **✗ 致命缺失** |
-| **evaluation_summary** | **0** | **0%** | **✗ 代码bug** |
+| **retired_evaluation_field** | **0** | **0%** | **✗ 代码bug** |
 | **patent_ids** | **0** | **0%** | ✗ 跨域未联动 |
 | **projects** | **1** | **2%** | ✗ 来源稀缺 |
 | company_roles | 5 | 12% | ✗ 跨域未联动 |
@@ -65,7 +65,7 @@ Semantic Scholar "吴亚北" → 0 results
 - 基于论文的研究方向聚类（paper_driven directions）完全失效
 - Paper staging records（跨域论文关联）完全失效
 
-### 问题 B：evaluation_summary 被硬编码为空
+### 问题 B：retired_evaluation_field 被硬编码为空
 
 **根因**: `pipeline_v3.py:404`:
 ```python
@@ -73,13 +73,13 @@ Semantic Scholar "吴亚北" → 0 results
 summaries = await generate_summaries(profile=profile, ...)
 profile = profile.model_copy(update={
     "profile_summary": summaries.profile_summary,
-    "evaluation_summary": "",  # ← BUG: 丢弃了已生成的 evaluation_summary
+    "retired_evaluation_field": "",  # ← BUG: 丢弃了已生成的 retired_evaluation_field
 })
 ```
 
-`generate_summaries()` 实际会返回 `GeneratedSummaries(profile_summary=..., evaluation_summary=...)`，但 pipeline 用空字符串覆盖了 `evaluation_summary`。
+`generate_summaries()` 实际会返回 `GeneratedSummaries(profile_summary=..., retired_evaluation_field=...)`，但 pipeline 用空字符串覆盖了 `retired_evaluation_field`。
 
-**修复**: 改为 `"evaluation_summary": summaries.evaluation_summary`
+**修复**: 改为 `"retired_evaluation_field": summaries.retired_evaluation_field`
 
 ### 问题 C：SUSTech 异常——Agent 和 Web Search 均未触发
 
@@ -130,7 +130,7 @@ E2E 报告显示 SUSTech 的 agent_triggered=0, web_search_count=0，而其他 8
 |------|------|----------|--------|
 | A-1 | `name_en` 从未被提取 | 在 homepage_crawler 或 agent_enrichment 阶段增加英文名提取；或在 Stage 2b 之前增加翻译阶段 | 中 |
 | A-2 | 学术 API 仅支持英文名 | 提取 `name_en` 后，`collect_papers()` 自然修复 | 依赖 A-1 |
-| B-1 | `evaluation_summary` 被硬编码为空 | 修改 `pipeline_v3.py:404`，使用 `summaries.evaluation_summary` | 低 |
+| B-1 | `retired_evaluation_field` 被硬编码为空 | 修改 `pipeline_v3.py:404`，使用 `summaries.retired_evaluation_field` | 低 |
 
 ### P1（应修复，影响数据完整度）
 
@@ -200,12 +200,12 @@ E2E 期间 Semantic Scholar API 返回 429（Rate Limited）。当前实现：
 | Stage 2c: Agent Enrichment | LLM Agent 补全缺失字段 | △ 未要求 name_en |
 | Stage 5: Web Search | 网络搜索补全 + 身份验证 | ✓ 正常（SUSTech 除外）|
 | Stage 6: Company Linking | 企业关联验证 | △ 依赖 company 域数据 |
-| Stage 7: Summary | LLM 生成摘要 | **△ evaluation_summary 被丢弃** |
+| Stage 7: Summary | LLM 生成摘要 | **△ retired_evaluation_field 被丢弃** |
 | Stage 8: Quality Gate | 质量评估 + Release | ✓ 正常 |
 
 ## 9. 下一步行动项
 
-1. **[立即]** 修复 `evaluation_summary` bug（pipeline_v3.py:404）
+1. **[立即]** 修复 `retired_evaluation_field` bug（pipeline_v3.py:404）
 2. **[短期]** 实现 `name_en` 提取（homepage + LLM 翻译 fallback）
 3. **[短期]** 修复后重跑 E2E，验证论文数据可正常收集
 4. **[中期]** 注册 Semantic Scholar API Key

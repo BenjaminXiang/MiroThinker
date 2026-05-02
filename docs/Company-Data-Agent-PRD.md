@@ -128,7 +128,6 @@
 | `website` | 否 | 企业官网 |
 | `key_personnel` | 否 | 结构化关键人物信息 |
 | `profile_summary` | 是 | 企业画像摘要 |
-| `evaluation_summary` | 是 | 事实性评价摘要 |
 | `technology_route_summary` | 是 | 技术路线摘要 |
 | `patent_count` | 否 | 专利数量 |
 | `evidence` | 是 | 来源列表 |
@@ -140,8 +139,6 @@
 
 - `profile_summary`
   - 面向语义检索和基础介绍
-- `evaluation_summary`
-  - 面向“技术实力怎么样”“值不值得关注”这类事实性判断
 - `technology_route_summary`
   - 面向“这家公司走什么路线”“和别家有什么差异”这类问题
 
@@ -194,7 +191,7 @@
   -> 标准化名称与去重
   -> 官网 / PR / Web Search 补充
   -> 关键人物结构化
-  -> 生成 profile_summary / evaluation_summary / technology_route_summary
+  -> 生成 profile_summary / technology_route_summary
   -> 向量化
   -> 发布到 company domain PostgreSQL + Milvus
 ```
@@ -307,7 +304,7 @@
 1. `name` 不为空
 2. `normalized_name` 可生成
 3. `credit_code` 若存在则校验格式（18 位统一社会信用代码）
-4. `profile_summary`、`evaluation_summary`、`technology_route_summary` 不为空
+4. `profile_summary`、`technology_route_summary` 不为空
 5. `key_personnel` 若存在，字段结构必须合法
 
 ### 7.2 重点验证对象
@@ -351,7 +348,7 @@ company:
 | 指标 | 要求 | 测试集 | 样本量 | 评判标准 |
 | --- | --- | --- | --- | --- |
 | 企业总数覆盖 | ≥ 当期企名片导出企业数的 95% | 企名片导出 xlsx | 全量 | 自动化比对 |
-| 必填字段完整率 | `name` + `normalized_name` + `profile_summary` + `evaluation_summary` + `technology_route_summary` 100% | 全量发布数据 | 全量 | 自动化校验 |
+| 必填字段完整率 | `name` + `normalized_name` + `profile_summary` + `technology_route_summary` 100% | 全量发布数据 | 全量 | 自动化校验 |
 | 关键人物结构化可用率 | 有团队信息的企业中 ≥ 80% | 有团队信息的企业子集 | 全量 | 自动化结构校验 |
 | 去重准确率 | ≥ 95% | 含已知重复对的标注集 | ≥ 100 对 | 人工判定 |
 | 检索效果 | Top-5 相关率 ≥ 85% | Agentic-RAG 测试集中企业类 query | ≥ 50 条 | 人工评估相关性 |

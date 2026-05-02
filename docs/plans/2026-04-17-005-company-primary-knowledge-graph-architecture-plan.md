@@ -750,7 +750,7 @@ company.body = {
   data_route_tags: [code],
   description_summary,            // LLM 从 xlsx description 生成 ≤200 字
   technology_route_narrative,     // LLM 从 company_fact 生成 ≤300 字
-  evaluation_synthesis: {          // 取代废弃的 evaluation_summary 字段，显式声明是派生
+  evaluation_synthesis: {          // 取代废弃的 retired_evaluation_field 字段，显式声明是派生
     text,                          // LLM 从 canonical facts 合成
     sources: [fact_id, ...],       // 引用依据
     generated_at

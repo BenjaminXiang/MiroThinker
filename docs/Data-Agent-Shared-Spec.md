@@ -284,10 +284,11 @@ ID 规则要求：
 | 字段 | 适用域 | 用途 |
 | --- | --- | --- |
 | `profile_summary` | 教授、企业 | 画像摘要，200-300 字中文 |
-| `evaluation_summary` | 教授、企业 | 事实性评价摘要，100-150 字 |
 | `technology_route_summary` | 企业 | 技术路线摘要 |
 | `summary_zh` | 论文 | 四段式结构化中文摘要（what / why / how / result） |
 | `summary_text` | 论文、专利 | embedding 用完整摘要文本 |
+
+2026-05-02: `evaluation_summary` 字段退役（W13-D1 option B）。`profile_summary` 承担用户向画像；事实性评价后续按需在线 LLM 合成（不预 backfill）。
 
 论文域的 `summary_text` 由 `summary_zh` 四段拼接而成，不是独立生成的第二份摘要。
 
@@ -302,7 +303,6 @@ ID 规则要求：
 - `normalized_name`
 - `industry`
 - `profile_summary`
-- `evaluation_summary`
 - `technology_route_summary`（**当前实现为规则拼接**：`company/enrichment.py` 基于 `business` / `description` / `website` 等字段合成；LLM 增强版本见 [plans/2026-04-17-005](./plans/2026-04-17-005-company-primary-knowledge-graph-architecture-plan.md) §9.2，未交付）
 - `key_personnel`
 - `last_updated`
@@ -321,7 +321,6 @@ ID 规则要求：
 - `title`
 - `research_directions`
 - `profile_summary`
-- `evaluation_summary`
 - `company_roles`
 - `last_updated`
 - `run_id`
@@ -471,7 +470,6 @@ get_related_objects(
 - `credit_code` 为可选补充字段，不是主去重锚点，也不是 Phase 契约必填
 - 必须预生成：
   - `profile_summary`
-  - `evaluation_summary`
   - `technology_route_summary`
 - `key_personnel` 必须是可检索结构化字段，而不是仅展示字段
 
@@ -595,7 +593,7 @@ get_related_objects(
 
 - `name` 不能为空
 - `normalized_name` 必须可生成
-- `profile_summary` / `evaluation_summary` / `technology_route_summary` 不得缺失
+- `profile_summary` / `technology_route_summary` 不得缺失
 - `credit_code` 若存在则做格式校验
 
 #### 教授

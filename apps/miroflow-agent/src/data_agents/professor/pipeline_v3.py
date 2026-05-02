@@ -732,8 +732,7 @@ async def _process_single_professor_v3(
 
         # Stage 7: LLM Summary (LLM-only, no fallback padding)
         needs_profile_summary = not profile.profile_summary or len(profile.profile_summary) < 200
-        needs_evaluation_summary = not profile.evaluation_summary
-        if needs_profile_summary or needs_evaluation_summary:
+        if needs_profile_summary:
             try:
                 from .summary_generator import generate_summaries
                 summaries = await generate_summaries(
@@ -745,18 +744,12 @@ async def _process_single_professor_v3(
                     "profile_summary": (
                         summaries.profile_summary if needs_profile_summary else profile.profile_summary
                     ),
-                    "evaluation_summary": (
-                        summaries.evaluation_summary
-                        if needs_evaluation_summary
-                        else profile.evaluation_summary
-                    ),
                 })
                 report.summary_generated_count += 1
             except Exception:
                 # LLM failed — leave empty, quality gate marks as needs_review
                 profile = profile.model_copy(update={
                     "profile_summary": "" if needs_profile_summary else profile.profile_summary,
-                    "evaluation_summary": "" if needs_evaluation_summary else profile.evaluation_summary,
                 })
                 report.summary_fallback_count += 1
 

@@ -63,7 +63,6 @@ def test_build_company_release_generates_contract_records_and_released_objects()
     assert record.key_personnel[0].name == "王博洋"
     assert record.key_personnel[0].role == "CEO&联合创始人"
     assert record.profile_summary
-    assert record.evaluation_summary
     assert record.technology_route_summary
     assert any(item.source_type == "xlsx_import" for item in record.evidence)
 
@@ -75,7 +74,6 @@ def test_build_company_release_generates_contract_records_and_released_objects()
         {"name": "杨馥诚", "role": "董事长"},
     ]
     assert released.summary_fields["profile_summary"] == record.profile_summary
-    assert released.summary_fields["evaluation_summary"] == record.evaluation_summary
     assert (
         released.summary_fields["technology_route_summary"]
         == record.technology_route_summary

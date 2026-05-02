@@ -83,11 +83,11 @@ with_tech_route = 1013  (98.93%)
 
 11 条 (1024 - 1013) 永久 needs_review：根据 W10-4 narrative_enrichment 逻辑，源数据（product_description / business_scope / industry）皆缺时 narrative 无法生成。
 
-## 3. evaluation_summary 字段缺位（schrödinger 字段）
+## 3. retired_evaluation_field 字段缺位（schrödinger 字段）
 
-PRD §4.1 + Shared Spec §4.3 要求企业有 evaluation_summary，但：
+PRD §4.1 + Shared Spec §4.3 要求企业有 retired_evaluation_field，但：
 
-- canonical V002 / V014 schema 没有 `evaluation_summary` 列
+- canonical V002 / V014 schema 没有 `retired_evaluation_field` 列
 - narrative_enrichment.py 只生成 2 段（profile + technology_route）
 - 决策待 user：见 `.agents/specs/2026-05-02-w13-D1-evaluation-summary-decision.md`
 

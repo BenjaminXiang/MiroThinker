@@ -274,7 +274,7 @@
 
    - 路线解读：`technology_route_summary`
 
-   - 事实性评价：`evaluation_summary`
+   - 事实性评价：按需基于可追溯事实在线合成
 
    - 融资信息：最新融资轮次、金额、投资方
 
@@ -306,7 +306,7 @@
 
 - 上传一份包含 100 条企业数据的 Excel，导入成功率 ≥ 95%，导入报告准确
 
-- 企业卡片可稳定展示 `profile_summary`、`evaluation_summary`、`technology_route_summary` 和关键人物信息，信息组织清晰
+- 企业卡片可稳定展示 `profile_summary`、`technology_route_summary` 和关键人物信息，信息组织清晰
 
 - 6,000+ 企业库中的语义检索响应时间 ≤ 5 秒
 

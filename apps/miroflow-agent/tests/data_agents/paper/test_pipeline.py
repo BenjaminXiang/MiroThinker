@@ -19,7 +19,6 @@ def _professor_record(professor_id: str, name: str) -> ProfessorRecord:
         department="教育学部",
         title="教授",
         profile_summary=f"{name}现任深圳大学教育学部教授。",
-        evaluation_summary=f"{name}当前资料完整度为structured。",
         evidence=[
             build_evidence(
                 source_type="official_site",

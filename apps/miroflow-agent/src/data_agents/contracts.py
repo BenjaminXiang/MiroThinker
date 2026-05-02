@@ -175,7 +175,6 @@ class ProfessorRecord(SharedBaseModel):
     academic_positions: list[NonEmptyStr] = Field(default_factory=list)
     projects: list[NonEmptyStr] = Field(default_factory=list)
     profile_summary: NonEmptyStr
-    evaluation_summary: str = ""
     company_roles: list[ProfessorCompanyRole] = Field(default_factory=list)
     patent_ids: list[NonEmptyStr] = Field(default_factory=list)
     evidence: list[Evidence] = Field(min_length=1)
@@ -223,10 +222,7 @@ class ProfessorRecord(SharedBaseModel):
                 ],
                 "patent_ids": self.patent_ids,
             },
-            summary_fields={
-                "profile_summary": self.profile_summary,
-                **({"evaluation_summary": self.evaluation_summary} if self.evaluation_summary else {}),
-            },
+            summary_fields={"profile_summary": self.profile_summary},
             evidence=self.evidence,
             last_updated=self.last_updated,
             quality_status=self.quality_status,
@@ -241,7 +237,6 @@ class CompanyRecord(SharedBaseModel):
     website: OptionalNonEmptyStr = None
     key_personnel: list[CompanyKeyPerson] = Field(default_factory=list)
     profile_summary: NonEmptyStr
-    evaluation_summary: NonEmptyStr
     technology_route_summary: NonEmptyStr
     evidence: list[Evidence] = Field(min_length=1)
     last_updated: datetime
@@ -267,7 +262,6 @@ class CompanyRecord(SharedBaseModel):
             },
             summary_fields={
                 "profile_summary": self.profile_summary,
-                "evaluation_summary": self.evaluation_summary,
                 "technology_route_summary": self.technology_route_summary,
             },
             evidence=self.evidence,

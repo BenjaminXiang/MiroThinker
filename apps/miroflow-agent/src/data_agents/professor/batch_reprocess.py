@@ -12,18 +12,15 @@ import asyncio
 import json
 import logging
 import os
-import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from src.data_agents.contracts import ReleasedObject
 from src.data_agents.normalization import build_stable_id
 from src.data_agents.storage.sqlite_store import SqliteReleasedObjectStore
 
 from .completeness import assess_completeness
-from .cross_domain import CompanyLink, PaperStagingRecord
 from .direction_cleaner import clean_directions
 from .models import EnrichedProfessorProfile
 from .web_search_enrichment import CompanyMention
@@ -386,8 +383,7 @@ async def _reprocess_single(
         # Stage: Summary
         if not config.skip_summary:
             needs_profile_summary = not profile.profile_summary or len(profile.profile_summary) < 200
-            needs_evaluation_summary = not profile.evaluation_summary
-            if needs_profile_summary or needs_evaluation_summary:
+            if needs_profile_summary:
                 try:
                     from .summary_generator import generate_summaries
                     summaries = await generate_summaries(
@@ -401,17 +397,11 @@ async def _reprocess_single(
                             if needs_profile_summary
                             else profile.profile_summary
                         ),
-                        "evaluation_summary": (
-                            summaries.evaluation_summary
-                            if needs_evaluation_summary
-                            else profile.evaluation_summary
-                        ),
                     })
                     report.summary_generated += 1
                 except Exception:
                     profile = profile.model_copy(update={
                         "profile_summary": "" if needs_profile_summary else profile.profile_summary,
-                        "evaluation_summary": "" if needs_evaluation_summary else profile.evaluation_summary,
                     })
 
         report.processed += 1

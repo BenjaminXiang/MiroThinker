@@ -170,7 +170,7 @@ def test_merged_to_enriched_sanitizes_reader_artifact_title():
 
 
 @pytest.mark.asyncio
-async def test_process_single_professor_generates_missing_evaluation_summary(monkeypatch: pytest.MonkeyPatch):
+async def test_process_single_professor_keeps_existing_profile_summary(monkeypatch: pytest.MonkeyPatch):
     config = PipelineV3Config(
         seed_doc=Path("/tmp/seeds.md"),
         output_dir=Path("/tmp/output"),
@@ -184,7 +184,6 @@ async def test_process_single_professor_generates_missing_evaluation_summary(mon
         profile = kwargs["profile"].model_copy(update={
             "name_en": "Yabei Wu",
             "profile_summary": "吴亚北现任南方科技大学教授，长期研究二维材料电子结构与莫尔超晶格物理行为。" * 6,
-            "evaluation_summary": "",
         })
         return SimpleNamespace(profile=profile, success=True, pages_fetched=1)
 
@@ -209,10 +208,7 @@ async def test_process_single_professor_generates_missing_evaluation_summary(mon
         )
 
     async def fake_generate_summaries(**kwargs):
-        return SimpleNamespace(
-            profile_summary="不应覆盖已有简介" * 20,
-            evaluation_summary="吴亚北h-index为15，总引用708次，已形成可核验论文画像。" * 3,
-        )
+        raise AssertionError("summary generation should not run")
 
     monkeypatch.setattr("src.data_agents.professor.pipeline_v3.crawl_homepage", fake_crawl_homepage)
     monkeypatch.setattr(
@@ -246,8 +242,7 @@ async def test_process_single_professor_generates_missing_evaluation_summary(mon
     assert not company_mentions
     assert profile.name_en == "Yabei Wu"
     assert profile.profile_summary.startswith("吴亚北现任南方科技大学教授")
-    assert profile.evaluation_summary.startswith("吴亚北h-index为15")
-    assert report.summary_generated_count == 1
+    assert report.summary_generated_count == 0
 
 
 @pytest.mark.asyncio
@@ -317,7 +312,6 @@ async def test_process_single_professor_passes_official_publication_signals_to_p
         "src.data_agents.professor.summary_generator.generate_summaries",
         lambda **_kwargs: SimpleNamespace(
             profile_summary="陈伟津现任中山大学（深圳）材料学院教授。" * 12,
-            evaluation_summary="暂无",
         ),
     )
 
@@ -365,7 +359,6 @@ async def test_process_single_professor_merges_web_search_official_signals_and_r
     async def fake_crawl_homepage(**kwargs):
         profile = kwargs["profile"].model_copy(update={
             "profile_summary": "丁文伯是清华大学深圳国际研究生院副教授。" * 12,
-            "evaluation_summary": "",
             "evidence_urls": ["https://www.sigs.tsinghua.edu.cn/dwb/"],
         })
         return SimpleNamespace(profile=profile, success=True, pages_fetched=1)
@@ -455,7 +448,6 @@ async def test_process_single_professor_merges_web_search_official_signals_and_r
         "src.data_agents.professor.summary_generator.generate_summaries",
         lambda **_kwargs: SimpleNamespace(
             profile_summary="丁文伯是清华大学深圳国际研究生院副教授。" * 12,
-            evaluation_summary="丁文伯已有公司关联证据，待结构化发布。",
         ),
     )
 
@@ -548,7 +540,6 @@ async def test_run_professor_pipeline_v3_upserts_released_paper_and_link_into_sh
             )
         ],
         profile_summary="唐志敏现任深圳理工大学算力微电子学院讲席教授，长期从事并行计算与体系结构研究。" * 6,
-        evaluation_summary="唐志敏已形成可核验论文画像，论文来源由官方链接学术档案支撑。",
         enrichment_source="paper_enriched",
         evidence_urls=["https://www.suat-sz.edu.cn/info/1154/1850.htm"],
         profile_url="https://www.suat-sz.edu.cn/info/1154/1850.htm",
@@ -634,7 +625,6 @@ async def test_run_professor_pipeline_v3_metrics_stage_uses_run_id(
         homepage="https://faculty.sustech.edu.cn/?tagid=wuyb3",
         research_directions=["二维材料", "电子结构"],
         profile_summary="吴亚北现任南方科技大学教授，长期从事二维材料电子结构与莫尔超晶格研究。" * 6,
-        evaluation_summary="吴亚北已形成可核验论文画像，检索结果与官网身份一致。",
         enrichment_source="paper_enriched",
         evidence_urls=["https://www.sustech.edu.cn/zh/faculties/wuyabei.html"],
         profile_url="https://www.sustech.edu.cn/zh/faculties/wuyabei.html",
@@ -736,7 +726,6 @@ def test_pipeline_v3_metrics_failure_files_issue_and_continues(
         department="物理系",
         research_directions=["二维材料"],
         profile_summary="吴亚北现任南方科技大学教授。" * 12,
-        evaluation_summary="已有可核验画像。",
         evidence_urls=["https://www.sustech.edu.cn/zh/faculties/wuyabei.html"],
         profile_url="https://www.sustech.edu.cn/zh/faculties/wuyabei.html",
         roster_source="https://www.sustech.edu.cn/zh/letter/",
@@ -842,7 +831,6 @@ async def test_run_professor_pipeline_v3_upserts_released_professor_into_shared_
             )
         ],
         profile_summary="吴亚北现任南方科技大学教授，长期从事二维材料电子结构与莫尔超晶格研究。" * 6,
-        evaluation_summary="吴亚北已形成可核验论文画像，检索结果与官网身份一致。",
         enrichment_source="paper_enriched",
         evidence_urls=["https://www.sustech.edu.cn/zh/faculties/wuyabei.html"],
         profile_url="https://www.sustech.edu.cn/zh/faculties/wuyabei.html",
@@ -913,7 +901,6 @@ async def test_run_professor_pipeline_v3_resume_reloads_paper_staging_before_pub
             )
         ],
         profile_summary="唐志敏现任深圳理工大学算力微电子学院讲席教授，长期从事并行计算与体系结构研究。" * 6,
-        evaluation_summary="唐志敏已形成可核验论文画像，论文来源由官方链接学术档案支撑。",
         enrichment_source="paper_enriched",
         evidence_urls=["https://www.suat-sz.edu.cn/info/1154/1850.htm"],
         profile_url="https://www.suat-sz.edu.cn/info/1154/1850.htm",
