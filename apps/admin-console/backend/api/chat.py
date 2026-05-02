@@ -78,22 +78,36 @@ _SCHOLARLY_DOMAINS = frozenset(
 
 
 # --- Round 11 v3: LLM query classifier ---
-# gemma4 categorizes the user query into one of:
-#   A — exact single-entity lookup (介绍X / X有哪些专利 → rule path handles)
-#   B — semantic/topic search across SZ institutions (自由描述需求)
-#   F — refuse (闲聊/out-of-scope: 天气/股票/情感咨询)
-#   UNKNOWN — let the rule engine try; fall through
-# D/E deferred to Round 12.
+# gemma4 categorizes the user query into one of A/B/C/D/E/F/G.
+# UNKNOWN lets the rule engine try, then fall through.
+
+QueryType = Literal["A", "B", "C", "D", "E", "F", "G", "UNKNOWN"]
+TargetDomain = Literal["professor", "paper", "company", "patent"]
+
+
+class ClassifyResult(BaseModel):
+    type: QueryType
+    topic: str = ""
+    name: str = ""
+    target_domain: TargetDomain | None = None
+    reason: str = ""
+
 
 _CLASSIFIER_TIMEOUT = 2.5
+_CLASSIFIER_TYPES = {"A", "B", "C", "D", "E", "F", "G", "UNKNOWN"}
+_TARGET_DOMAINS = {"professor", "paper", "company", "patent"}
 _CLASSIFIER_SYSTEM = (
     "你是深圳科创检索助手的查询分类器。把用户一句话归入以下类别，"
     "JSON 输出，不要其他文字：\n"
-    '{"type": "A" | "B" | "D" | "E" | "F" | "G" | "UNKNOWN",'
-    ' "topic": "", "name": "", "reason": ""}\n'
+    '{"type": "A" | "B" | "C" | "D" | "E" | "F" | "G" | "UNKNOWN",'
+    ' "topic": "", "name": "", "target_domain": "", "reason": ""}\n'
     "类别定义：\n"
     "A = 精确查询单个教授/公司/专利（有明确姓名+学校/专利号）\n"
     "B = 语义模糊检索教授（如'做机器人的专家'、'研究芯片的教授'）\n"
+    "C = 跨域跳转（用户在已有上下文的教授/公司/论文/专利基础上，"
+    "追问另一个域的关联实体；如'他的论文'、'她参与的公司'、"
+    "'这家公司的专利'）。输出 target_domain: "
+    '"professor" | "paper" | "company" | "patent"；目标模糊时优先 "paper"。\n'
     "D = 跨域聚合（如'深圳做具身智能的教授和企业有哪些'、'深圳的 AI 生态'——"
     "  想要同时看教授+企业+专利的概览）\n"
     "E = 科创知识问答（如'具身智能合成数据有几种方法'、'大模型蒸馏原理'——"
@@ -102,12 +116,15 @@ _CLASSIFIER_SYSTEM = (
     "G = 歧义查询（只给了人名没给学校，如'介绍王伟'、'李雪芳是谁'）\n"
     "UNKNOWN = 无法判断\n"
     "topic：B/D 给方向词（≤10 字），E 给核心关键词，其他留空。\n"
-    "name：A/G 给出教授/公司名，其他留空。"
+    "name：A/G 给出教授/公司名，其他留空。\n"
+    "示例：Q: '丁文伯是谁' → type A, name='丁文伯'。\n"
+    "示例：Q: '他的论文' → type C, target_domain='paper'。\n"
+    "示例：Q: '他参与了哪些公司' → type C, target_domain='company'。"
 )
 
 
 def _classify_query_with_llm(query: str) -> dict[str, str] | None:
-    """Return {type, topic, name, reason} or None on error. Caller decides fallback."""
+    """Return classifier fields or None on error. Caller decides fallback."""
     if os.environ.get("CHAT_QUERY_CLASSIFIER", "on").lower() == "off":
         return None
     settings = resolve_professor_llm_settings("gemma4", include_profile=True)
@@ -133,15 +150,31 @@ def _classify_query_with_llm(query: str) -> dict[str, str] | None:
         data = json.loads(text)
         if not isinstance(data, dict):
             return None
-        t = data.get("type")
-        if t not in {"A", "B", "D", "E", "F", "G", "UNKNOWN"}:
+        t = str(data.get("type") or "").strip().upper()
+        if t not in _CLASSIFIER_TYPES:
             return None
-        return {
-            "type": t,
-            "topic": str(data.get("topic") or "").strip(),
-            "name": str(data.get("name") or "").strip(),
-            "reason": str(data.get("reason") or "").strip()[:200],
+        target_domain = str(data.get("target_domain") or "").strip().lower()
+        if t == "C":
+            if target_domain not in _TARGET_DOMAINS:
+                target_domain = "paper"
+        else:
+            target_domain = None
+        result = ClassifyResult(
+            type=t,
+            topic=str(data.get("topic") or "").strip(),
+            name=str(data.get("name") or "").strip(),
+            target_domain=target_domain,
+            reason=str(data.get("reason") or "").strip()[:200],
+        )
+        response = {
+            "type": result.type,
+            "topic": result.topic,
+            "name": result.name,
+            "reason": result.reason,
         }
+        if result.target_domain:
+            response["target_domain"] = result.target_domain
+        return response
     except Exception:
         return None
 
