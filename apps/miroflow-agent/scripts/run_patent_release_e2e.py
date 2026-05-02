@@ -46,7 +46,12 @@ def _default_company_input() -> Path:
 
 
 def _default_supplement_patent_inputs() -> list[Path]:
-    path = _repo_root() / "docs" / "source_backfills" / "patent_exact_identifier_supplement.xlsx"
+    path = (
+        _repo_root()
+        / "docs"
+        / "source_backfills"
+        / "patent_exact_identifier_supplement.xlsx"
+    )
     return [path] if path.exists() else []
 
 
@@ -107,7 +112,9 @@ def main(argv: list[str] | None = None) -> int:
         else _default_supplement_patent_inputs()
     )
     patent_inputs = [args.patent_input, *supplement_patent_inputs]
-    patent_import_reports = [asdict(import_patent_xlsx(path).report) for path in patent_inputs]
+    patent_import_reports = [
+        asdict(import_patent_xlsx(path).report) for path in patent_inputs
+    ]
     company_import_result = import_company_xlsx(args.company_input, sheet_name="sheet1")
     company_release_result = build_company_release(
         records=company_import_result.records,
@@ -118,18 +125,22 @@ def main(argv: list[str] | None = None) -> int:
     # short form (e.g. '极智视觉科技（深圳）') vs xlsx full name ('...有限公司') so the
     # in-memory ids do not match PG → all candidate links would FK-miss.
     company_name_to_id: dict[str, str] = {}
+    company_aliases_map: dict[str, str] = {}
     if args.database_url and not args.skip_postgres:
         import psycopg
+
         with psycopg.connect(resolve_dsn(args.database_url)) as _company_conn:
             cur = _company_conn.cursor()
             cur.execute(
-                "SELECT company_id, canonical_name, registered_name FROM company"
+                "SELECT company_id, canonical_name, registered_name, aliases FROM company"
             )
-            for cid, canonical, registered in cur.fetchall():
+            for cid, canonical, registered, aliases in cur.fetchall():
                 if canonical:
                     company_name_to_id.setdefault(canonical, cid)
                 if registered:
                     company_name_to_id.setdefault(registered, cid)
+                for alias in _iter_aliases(aliases):
+                    company_aliases_map.setdefault(alias, cid)
     if not company_name_to_id:
         for record in company_release_result.company_records:
             company_name_to_id.setdefault(record.name, record.id)
@@ -138,6 +149,7 @@ def main(argv: list[str] | None = None) -> int:
     patent_release_result = build_patent_release_from_sources(
         workbook_paths=patent_inputs,
         company_name_to_id=company_name_to_id,
+        company_aliases_map=company_aliases_map,
         llm_client=llm_client,
         now=datetime.now(timezone.utc),
     )
@@ -159,6 +171,7 @@ def main(argv: list[str] | None = None) -> int:
                 conn,
                 patent_release_result=patent_release_result,
                 company_name_to_id=company_name_to_id,
+                company_aliases_map=company_aliases_map,
                 patent_inputs=patent_inputs,
                 company_input=args.company_input,
             )
@@ -219,6 +232,7 @@ def _write_release_to_postgres(
     *,
     patent_release_result,
     company_name_to_id: dict[str, str],
+    company_aliases_map: dict[str, str],
     patent_inputs: list[Path],
     company_input: Path,
 ) -> dict[str, Any]:
@@ -244,6 +258,7 @@ def _write_release_to_postgres(
             for company_id, evidence_source_type, match_reason in link_company_ids(
                 record.applicants,
                 company_name_to_id,
+                company_aliases_map=company_aliases_map,
             ):
                 link_candidates += 1
                 try:
@@ -286,6 +301,17 @@ def _write_release_to_postgres(
         "company_patent_links_written": links_written,
         "company_patent_link_errors": link_errors,
     }
+
+
+def _iter_aliases(value: Any) -> list[str]:
+    if not isinstance(value, (list, tuple, set)):
+        return []
+    aliases: list[str] = []
+    for item in value:
+        alias = str(item).strip()
+        if alias:
+            aliases.append(alias)
+    return aliases
 
 
 def _clear_https_proxy_env() -> None:

@@ -37,6 +37,7 @@ def build_patent_release(
     records: list[PatentImportRecord],
     source_file: Path,
     company_name_to_id: dict[str, str],
+    company_aliases_map: dict[str, str] | None = None,
     professor_name_to_id: dict[str, str] | None = None,
     llm_client: Any | None = None,
     now: datetime | None = None,
@@ -56,7 +57,11 @@ def build_patent_release(
             record,
             llm_client=llm_client,
         )
-        company_link_candidates = link_company_ids(applicants, company_name_to_id)
+        company_link_candidates = link_company_ids(
+            applicants,
+            company_name_to_id,
+            company_aliases_map=company_aliases_map,
+        )
         patent = PatentRecord(
             id=build_stable_id(
                 "pat",
@@ -139,8 +144,12 @@ def _normalize_patent_type_for_canonical(value: str | None) -> str | None:
 
 
 def record_to_patent_dict(record: PatentRecord) -> dict[str, object]:
-    applicants_parsed = [str(item).strip() for item in record.applicants if str(item).strip()]
-    inventors_parsed = [str(item).strip() for item in record.inventors if str(item).strip()]
+    applicants_parsed = [
+        str(item).strip() for item in record.applicants if str(item).strip()
+    ]
+    inventors_parsed = [
+        str(item).strip() for item in record.inventors if str(item).strip()
+    ]
     filing_date = _date_from_iso(record.filing_date)
 
     return {
