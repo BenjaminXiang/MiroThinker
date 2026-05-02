@@ -124,6 +124,7 @@ SELECT
     p.aliases,
     p.discipline_family,
     p.identity_status,
+    p.quality_status,
     p.merged_into_id,
     p.profile_summary,
     p.h_index,
@@ -178,6 +179,7 @@ SELECT
     c.is_shenzhen,
     c.country,
     c.identity_status,
+    c.quality_status,
     c.merged_into_id,
     c.last_refreshed_at,
     c.created_at,
@@ -233,6 +235,7 @@ SELECT
     p.authors_raw,
     p.citation_count,
     p.canonical_source,
+    p.quality_status,
     pft.pdf_url,
     p.first_seen_at,
     p.updated_at,
@@ -309,6 +312,7 @@ SELECT
     patent.grant_date,
     patent.patent_type,
     patent.status,
+    patent.quality_status,
     patent.abstract_clean,
     patent.technology_effect,
     patent.ipc_codes,
@@ -613,6 +617,10 @@ def _derive_patent_quality(row: dict[str, Any]) -> str:
     return "ready"
 
 
+def _row_quality_status(row: dict[str, Any], fallback: str) -> str:
+    return row.get("quality_status") or fallback
+
+
 def _quality_to_identity_status(quality_status: str) -> str:
     if quality_status == "ready":
         return "resolved"
@@ -667,7 +675,7 @@ def _row_to_released_object(
             "summary_fields": {"profile_summary": row.get("profile_summary")},
             "evidence": _professor_evidence(row) if include_evidence else [],
             "last_updated": _last_updated(row, "last_refreshed_at", "updated_at"),
-            "quality_status": _derive_identity_quality(row),
+            "quality_status": _row_quality_status(row, _derive_identity_quality(row)),
         }
 
     if domain == "company":
@@ -709,7 +717,7 @@ def _row_to_released_object(
             "last_updated": _last_updated(
                 row, "last_refreshed_at", "updated_at", "snapshot_created_at"
             ),
-            "quality_status": _derive_identity_quality(row),
+            "quality_status": _row_quality_status(row, _derive_identity_quality(row)),
         }
 
     if domain == "paper":
@@ -745,7 +753,7 @@ def _row_to_released_object(
             },
             "evidence": [],
             "last_updated": _last_updated(row, "updated_at", "first_seen_at"),
-            "quality_status": _derive_paper_quality(row),
+            "quality_status": _row_quality_status(row, _derive_paper_quality(row)),
         }
 
     if domain == "patent":
@@ -775,7 +783,7 @@ def _row_to_released_object(
             "summary_fields": {"summary_text": row.get("abstract_clean")},
             "evidence": [],
             "last_updated": _last_updated(row, "updated_at", "first_seen_at"),
-            "quality_status": _derive_patent_quality(row),
+            "quality_status": _row_quality_status(row, _derive_patent_quality(row)),
         }
 
     raise HTTPException(status_code=422, detail=f"Unsupported domain: {domain}")
@@ -1178,6 +1186,13 @@ def _apply_professor_update(
         _set_clause(
             clauses,
             params,
+            "quality_status",
+            "quality_status",
+            body.quality_status,
+        )
+        _set_clause(
+            clauses,
+            params,
             "identity_status",
             "identity_status",
             _quality_to_identity_status(body.quality_status),
@@ -1249,6 +1264,13 @@ def _apply_company_update(
         if field in core:
             _set_clause(clauses, params, column, f"core_{field}", core[field])
     if body.quality_status is not None:
+        _set_clause(
+            clauses,
+            params,
+            "quality_status",
+            "quality_status",
+            body.quality_status,
+        )
         _set_clause(
             clauses,
             params,
@@ -1353,6 +1375,14 @@ def _apply_paper_update(
             "summary_zh",
             _str_or_none(summary["summary_zh"]),
         )
+    if body.quality_status is not None:
+        _set_clause(
+            clauses,
+            params,
+            "quality_status",
+            "quality_status",
+            body.quality_status,
+        )
 
     clauses.extend(["updated_at = now()", "run_id = %(run_id)s"])
     conn.execute(
@@ -1403,7 +1433,13 @@ def _apply_patent_update(
             _str_or_none(summary["summary_text"]),
         )
     if body.quality_status is not None:
-        _set_clause(clauses, params, "status", "status", body.quality_status)
+        _set_clause(
+            clauses,
+            params,
+            "quality_status",
+            "quality_status",
+            body.quality_status,
+        )
 
     clauses.extend(["updated_at = now()", "run_id = %(run_id)s"])
     conn.execute(

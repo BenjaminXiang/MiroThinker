@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import os
 from contextlib import contextmanager, nullcontext
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
@@ -57,6 +58,12 @@ _PATENT_OUTPUT_FIELDS = [
     "patent_type",
     "ipc_codes",
 ]
+_QUALITY_STATUS_LOOKUP: dict[str, tuple[str, str]] = {
+    "professor": ("professor", "professor_id"),
+    "paper": ("paper", "paper_id"),
+    "company": ("company", "company_id"),
+    "patent": ("patent", "patent_id"),
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -127,7 +134,15 @@ class RetrievalService:
             )
         domains = tuple(domain for domain in domains if domain in _VALID_DOMAINS)
 
-        filters_key = self._compute_filters_key(filters)
+        filter_by_quality_status = (
+            os.environ.get("FILTER_BY_QUALITY_STATUS", "1") != "0"
+        )
+        filters_key = self._compute_filters_key(
+            {
+                **(filters or {}),
+                "__quality_status_filter_enabled": filter_by_quality_status,
+            }
+        )
         if self._cache is not None:
             cached = self._cache.get(query, domains, filters_key)
             if cached is not None:
@@ -170,6 +185,11 @@ class RetrievalService:
                 evidence = self._row_to_evidence(domain, row)
                 if evidence is not None:
                     candidates.append(evidence)
+
+        candidates = self._annotate_quality_status(
+            candidates,
+            filter_ready_only=filter_by_quality_status,
+        )
 
         if filters:
             candidates = self._apply_filters(candidates, filters)
@@ -555,6 +575,64 @@ class RetrievalService:
         if domain == "company":
             return COMPANY_PROFILES_COLLECTION, _COMPANY_OUTPUT_FIELDS
         return PATENT_PROFILES_COLLECTION, _PATENT_OUTPUT_FIELDS
+
+    def _annotate_quality_status(
+        self,
+        candidates: list[Evidence],
+        *,
+        filter_ready_only: bool,
+    ) -> list[Evidence]:
+        if not candidates:
+            return []
+
+        ids_by_domain: dict[str, set[str]] = {}
+        for candidate in candidates:
+            if candidate.object_type in _QUALITY_STATUS_LOOKUP and candidate.object_id:
+                ids_by_domain.setdefault(candidate.object_type, set()).add(
+                    candidate.object_id
+                )
+
+        statuses = self._fetch_quality_statuses(ids_by_domain)
+        annotated: list[Evidence] = []
+        for candidate in candidates:
+            status = statuses.get((candidate.object_type, candidate.object_id))
+            if filter_ready_only and status != "ready":
+                continue
+            if status is not None:
+                candidate.metadata["quality_status"] = status
+            annotated.append(candidate)
+        return annotated
+
+    def _fetch_quality_statuses(
+        self,
+        ids_by_domain: dict[str, set[str]],
+    ) -> dict[tuple[str, str], str]:
+        statuses: dict[tuple[str, str], str] = {}
+        if not ids_by_domain:
+            return statuses
+
+        try:
+            with self._pg_connection() as conn:
+                for domain, object_ids in ids_by_domain.items():
+                    if not object_ids:
+                        continue
+                    table_name, id_column = _QUALITY_STATUS_LOOKUP[domain]
+                    sorted_ids = sorted(object_ids)
+                    placeholders = ", ".join(["%s"] * len(sorted_ids))
+                    rows = conn.execute(
+                        f"SELECT {id_column} AS object_id, quality_status "
+                        f"FROM {table_name} WHERE {id_column} IN ({placeholders})",
+                        tuple(sorted_ids),
+                    ).fetchall()
+                    for row in rows:
+                        row_dict = dict(row)
+                        object_id = row_dict.get("object_id")
+                        status = row_dict.get("quality_status")
+                        if object_id is not None and status is not None:
+                            statuses[(domain, str(object_id))] = str(status)
+        except Exception as exc:
+            logger.warning("Failed to fetch retrieval quality_status values: %s", exc)
+        return statuses
 
     def _apply_filters(
         self,

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from src.data_agents.linking import build_normalized_index, link_normalized_values
 from src.data_agents.normalization import (
-    normalize_company_name,
     normalize_company_name_v2,
     normalize_person_name,
 )

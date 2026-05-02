@@ -55,6 +55,11 @@ def test_evidence_is_frozen():
 # =============================================================================
 
 
+@pytest.fixture(autouse=True)
+def _disable_quality_status_filter(monkeypatch):
+    monkeypatch.setenv("FILTER_BY_QUALITY_STATUS", "0")
+
+
 def _fake_embedding_client():
     client = MagicMock()
     client.embed_batch.return_value = [[0.1] * 4096]
@@ -411,7 +416,9 @@ def test_retrieve_cache_hit_skips_milvus_and_rerank():
         )
     ]
     # Prime the cache manually
-    filters_key = RetrievalService._compute_filters_key({})  # may be a static method
+    filters_key = RetrievalService._compute_filters_key(
+        {"__quality_status_filter_enabled": False}
+    )
     cache.store[("query", ("paper",), filters_key)] = cached
 
     milvus = MagicMock()
