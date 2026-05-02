@@ -50,6 +50,12 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=5,
         help="Max papers per prof fed to LLM (default 5)",
     )
+    parser.add_argument(
+        "--min-length",
+        type=int,
+        default=150,
+        help="Threshold below which profile_summary is regenerated (default 150)",
+    )
     only_group = parser.add_mutually_exclusive_group()
     only_group.add_argument(
         "--only-missing",
@@ -113,11 +119,18 @@ def _load_resume_ids(path: Path | None) -> set[str]:
     return ids
 
 
-def _build_select_sql(*, only_missing: bool, limit: int | None) -> tuple[str, tuple]:
+def _build_select_sql(
+    *,
+    only_missing: bool,
+    limit: int | None,
+    min_length: int,
+) -> tuple[str, tuple]:
     clauses = ["1=1"]
     params: list = []
     if only_missing:
-        clauses.append("(profile_summary IS NULL OR length(profile_summary) < 50)")
+        clauses.append(
+            f"(profile_summary IS NULL OR length(profile_summary) < {int(min_length)})"
+        )
     sql = (
         "SELECT professor_id, canonical_name, institution, "
         "       research_directions, profile_summary, profile_raw_text "
@@ -206,7 +219,11 @@ def main(argv: list[str] | None = None) -> None:
 
     new_checkpoint_path = _resolve_checkpoint_path(None, run_id)
 
-    sql, params = _build_select_sql(only_missing=args.only_missing, limit=args.limit)
+    sql, params = _build_select_sql(
+        only_missing=args.only_missing,
+        limit=args.limit,
+        min_length=args.min_length,
+    )
     prof_rows = conn.execute(sql, params).fetchall()
 
     started_at = time.monotonic()
@@ -226,7 +243,9 @@ def main(argv: list[str] | None = None) -> None:
             report["profs_skipped"] += 1
             continue
 
-        if args.only_missing and not summary_reinforcement_needed(prof.get("profile_summary")):
+        if args.only_missing and not summary_reinforcement_needed(
+            prof.get("profile_summary"), min_length=args.min_length
+        ):
             # Defensive: should have been filtered by SQL already.
             report["profs_skipped"] += 1
             continue

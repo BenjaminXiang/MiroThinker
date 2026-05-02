@@ -24,8 +24,8 @@ from src.data_agents.professor.summary_reinforcement import (
         ("", True),
         ("   ", True),
         ("tiny", True),
-        ("x" * 30, True),  # below 50 default
-        ("x" * 50, False),  # boundary
+        ("x" * 149, True),  # below 150 default
+        ("x" * 150, False),  # boundary
         ("x" * 200, False),
     ],
 )

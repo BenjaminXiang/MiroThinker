@@ -209,6 +209,15 @@ def build_profile_summary_prompt(profile: EnrichedProfessorProfile) -> str:
     edu_text = "、".join(
         f"{e.school}{e.degree or ''}" for e in profile.education_structured[:3]
     ) if profile.education_structured else ""
+    raw_text = ""
+    if profile.official_anchor_profile and profile.official_anchor_profile.bio_text:
+        raw_text = profile.official_anchor_profile.bio_text.strip()
+    raw_text_section = ""
+    if raw_text:
+        raw_text_section = (
+            "\n个人主页正文摘录（请提取关键信号补充上述结构化字段不足之处）：\n"
+            f"{raw_text[:4000]}"
+        )
 
     return f"""请为以下教授生成200-300字的中文简介（profile_summary）。
 
@@ -233,6 +242,7 @@ h-index：{profile.h_index or "未知"}
 {papers}
 {f"奖项：{awards_text}" if awards_text else ""}
 {f"教育背景：{edu_text}" if edu_text else ""}
+{raw_text_section}
 
 直接输出简介文本，不要包含任何前缀或标签："""
 
