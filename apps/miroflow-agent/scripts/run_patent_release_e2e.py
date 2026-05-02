@@ -113,10 +113,27 @@ def main(argv: list[str] | None = None) -> int:
         records=company_import_result.records,
         source_file=args.company_input,
     )
+    # When DATABASE_URL is provided, prefer PG company.company_id (the real FK target).
+    # In-memory build_company_release ids are stable hashes but PG canonical_name uses
+    # short form (e.g. '极智视觉科技（深圳）') vs xlsx full name ('...有限公司') so the
+    # in-memory ids do not match PG → all candidate links would FK-miss.
     company_name_to_id: dict[str, str] = {}
-    for record in company_release_result.company_records:
-        company_name_to_id.setdefault(record.name, record.id)
-        company_name_to_id.setdefault(record.normalized_name, record.id)
+    if args.database_url and not args.skip_postgres:
+        import psycopg
+        with psycopg.connect(resolve_dsn(args.database_url)) as _company_conn:
+            cur = _company_conn.cursor()
+            cur.execute(
+                "SELECT company_id, canonical_name, registered_name FROM company"
+            )
+            for cid, canonical, registered in cur.fetchall():
+                if canonical:
+                    company_name_to_id.setdefault(canonical, cid)
+                if registered:
+                    company_name_to_id.setdefault(registered, cid)
+    if not company_name_to_id:
+        for record in company_release_result.company_records:
+            company_name_to_id.setdefault(record.name, record.id)
+            company_name_to_id.setdefault(record.normalized_name, record.id)
     llm_client = None if args.skip_llm else _open_llm_client()
     patent_release_result = build_patent_release_from_sources(
         workbook_paths=patent_inputs,
@@ -221,7 +238,8 @@ def _write_release_to_postgres(
     link_errors = 0
     try:
         for record in patent_release_result.patent_records:
-            upsert_patent(conn, record=record, run_id=run_id)
+            with conn.transaction():
+                upsert_patent(conn, record=record, run_id=run_id)
             patents_written += 1
             for company_id, evidence_source_type, match_reason in link_company_ids(
                 record.applicants,
@@ -229,14 +247,15 @@ def _write_release_to_postgres(
             ):
                 link_candidates += 1
                 try:
-                    upsert_company_patent_link(
-                        conn,
-                        patent_id=record.id,
-                        company_id=company_id,
-                        link_role="applicant",
-                        evidence_source_type=evidence_source_type,
-                        match_reason=match_reason,
-                    )
+                    with conn.transaction():
+                        upsert_company_patent_link(
+                            conn,
+                            patent_id=record.id,
+                            company_id=company_id,
+                            link_role="applicant",
+                            evidence_source_type=evidence_source_type,
+                            match_reason=match_reason,
+                        )
                 except Exception:  # noqa: BLE001 - one unmapped FK must not drop patent rows
                     link_errors += 1
                     continue
