@@ -133,8 +133,8 @@ def _build_company_select_sql(
         "       LIMIT 1"
         "    ) latest_snapshot ON true "
         "   WHERE c.identity_status = 'resolved' "
-        "     AND c.unified_credit_code IS NOT NULL "
-        "     AND btrim(c.unified_credit_code) <> ''"
+        # tushare/cnstock 需要 credit_code；serper 仅用 canonical_name。
+        # 不强制 credit_code，让 connector 内部按需 skip 缺 token / 缺字段的公司。
         ") "
         "SELECT company_id, unified_credit_code, canonical_name, website_host, priority_rank "
         "  FROM ranked_company"
