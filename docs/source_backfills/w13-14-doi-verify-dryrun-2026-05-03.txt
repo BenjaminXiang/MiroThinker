@@ -1,0 +1,36 @@
+# W13-14 paper DOI verify dogfood (--limit 100 --dry-run) 2026-05-03
+
+## 结果（all 0 confirmed）
+
+```json
+{"run_id": "e5dde7ac-1b5a-4b99-aacd-f4ab36799abb",
+ "dry_run": true, "limit": 100,
+ "papers_total": 100, "papers_processed": 100,
+ "papers_confirmed": 0, "papers_unverified": 100,
+ "papers_with_errors": 0,
+ "cache_hits": 0, "openalex_hits": 0, "arxiv_hits": 0,
+ "paper_updates": 0, "cache_writes": 0, "pipeline_issues_inserted": 0}
+```
+
+## 揭示问题（W13-14 之外，但本 dogfood 必跟）
+
+### Q-10 OpenAlex 400 Bad Request
+URL: `https://api.openalex.org/works?search=%22{title}%22&...`
+title_resolver 用 search= 时双引号包 query，OpenAlex 拒（不支持 search 引号过滤）。
+修：改用 `filter=display_name.search:{title}` 或删引号。
+
+### Q-11 arXiv 429 Rate Limit
+URL: `https://export.arxiv.org/api/query?search_query=ti%3A%22{title}%22`
+title_resolver 已有 `_min_interval_seconds` 节流，但 arXiv 偶发 429（IP / 整体频次）。
+修：加 429 retry-after backoff（headers Retry-After 解析 + 退避 30s 重试）。
+
+## 现状
+- W13-14 8 unit tests passed (mock OpenAlex/arXiv 客户端)
+- dogfood 0 confirmed = title_resolver upstream bug + 7297 paper 多数中文（OpenAlex/arXiv 主英文索引）
+  本身命中率上限低
+- W13-14 wet-run 暂缓；先 fix Q-10/Q-11 再跑
+
+## 后续
+- W13-14b spec：title_resolver Q-10/Q-11 fix
+- 之后 W13-14 wet-run 全量 7297 paper（约 2-4 hr）
+- 之后 W13-D2 promote paper 'ready'
