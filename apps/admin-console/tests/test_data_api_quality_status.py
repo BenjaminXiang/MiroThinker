@@ -3,10 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi.testclient import TestClient
-
-from backend.api import domains as domains_api
-from backend.main import app
+from backend.api.domains import DomainEnum, get_domain_object
 
 NOW = datetime(2026, 5, 2, tzinfo=timezone.utc)
 
@@ -103,15 +100,7 @@ def _patent_row() -> dict[str, Any]:
 
 
 def _get_with_conn(domain: str, object_id: str, conn: _DomainDetailConn) -> dict[str, Any]:
-    app.dependency_overrides[domains_api.get_pg_conn] = lambda: conn
-    try:
-        with TestClient(app) as client:
-            response = client.get(f"/api/{domain}/{object_id}")
-    finally:
-        app.dependency_overrides.clear()
-
-    assert response.status_code == 200
-    return response.json()
+    return get_domain_object(DomainEnum(domain), object_id, conn=conn)
 
 
 def test_get_professor_detail_returns_quality_status() -> None:
