@@ -139,6 +139,12 @@ def _build_select_sql(
     return sql, tuple(params)
 
 
+def _strip_nul_bytes(text: str) -> str:
+    """PG TEXT columns reject NUL (0x00) bytes; some HTML pages contain them
+    (e.g. binary PDF embedded inline)."""
+    return text.replace("\x00", "")
+
+
 def _persist_raw_text(
     conn: Any,
     *,
@@ -146,6 +152,7 @@ def _persist_raw_text(
     raw_text: str,
     run_id: str,
 ) -> None:
+    sanitized = _strip_nul_bytes(raw_text)
     conn.execute(
         """
         UPDATE professor
@@ -154,7 +161,7 @@ def _persist_raw_text(
                run_id = %s
          WHERE professor_id = %s
         """,
-        (raw_text, run_id, professor_id),
+        (sanitized, run_id, professor_id),
     )
 
 
