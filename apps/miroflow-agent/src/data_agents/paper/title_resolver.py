@@ -27,7 +27,8 @@ _OPENALEX_SELECT = ",".join(
         "doi",
         "title",
         "publication_year",
-        "host_venue",
+        # W13-14b Q-10: OpenAlex 已弃用 'host_venue'；改用 'primary_location' (含 source.display_name)
+        "primary_location",
         "authorships",
         "abstract_inverted_index",
     ]
@@ -223,14 +224,15 @@ def _search_openalex_by_title(title: str, *, http_client=None) -> list[dict]:
     _OPENALEX_GATE.wait()
     client, owns_client = _ensure_client(http_client)
     try:
-        response = client.get(
-            _OPENALEX_ENDPOINT,
-            params={
-                "search": f'"{title}"',
-                "per-page": 5,
-                "select": _OPENALEX_SELECT,
-            },
+        # W13-14b Q-10: OpenAlex 拒 (a) search= 含双引号；(b) httpx 默认把 select 中的逗号
+        # 编码成 %2C 也拒。改：raw URL，title 经 quote_plus 但保留 + 作分隔；select 不编码。
+        from urllib.parse import quote_plus
+        title_q = quote_plus(title)
+        url = (
+            f"{_OPENALEX_ENDPOINT}?search={title_q}&per-page=5"
+            f"&select={_OPENALEX_SELECT}"
         )
+        response = client.get(url)
         response.raise_for_status()
         payload = response.json()
         results = payload.get("results", [])
@@ -276,7 +278,7 @@ def _openalex_work_to_resolved(
         pdf_url=None,
         authors=authors,
         year=year,
-        venue=_openalex_venue(work.get("host_venue")),
+        venue=_openalex_venue(work.get("primary_location") or work.get("host_venue")),
         match_confidence=confidence,
         match_source="openalex",
     )
@@ -290,13 +292,26 @@ def _search_arxiv_by_title(title: str, *, http_client=None) -> list:
     _ARXIV_GATE.wait()
     client, owns_client = _ensure_client(http_client)
     try:
-        response = client.get(
-            _ARXIV_ENDPOINT,
-            params={
-                "search_query": f'ti:"{title}"',
-                "max_results": 5,
-            },
-        )
+        # W13-14b Q-11: arXiv 偶发 429 即使 _ARXIV_GATE 节流；遇 429 解析 Retry-After + 退避 1 次。
+        for attempt in range(2):
+            response = client.get(
+                _ARXIV_ENDPOINT,
+                params={
+                    "search_query": f'ti:"{title}"',
+                    "max_results": 5,
+                },
+            )
+            if response.status_code == 429 and attempt == 0:
+                retry_after_header = response.headers.get("Retry-After", "30")
+                try:
+                    retry_after = float(retry_after_header)
+                except ValueError:
+                    retry_after = 30.0
+                retry_after = min(max(retry_after, 5.0), 60.0)
+                logger.info("arXiv 429 for %r; sleeping %.1fs then retry", title, retry_after)
+                time.sleep(retry_after)
+                continue
+            break
         response.raise_for_status()
         root = ET.fromstring(response.text)
         return root.findall("atom:entry", _ATOM_NAMESPACE)
@@ -470,9 +485,14 @@ def _openalex_authors(authorships) -> tuple[str, ...]:
 
 
 def _openalex_venue(host_venue) -> str | None:
+    """Extract venue name from OpenAlex 'host_venue' (legacy) or 'primary_location' (current)."""
     if not isinstance(host_venue, dict):
         return None
-    venue = clean_paper_title(host_venue.get("display_name"))
+    # primary_location wraps source dict under 'source' key
+    source = host_venue.get("source") if "source" in host_venue else host_venue
+    if not isinstance(source, dict):
+        source = host_venue
+    venue = clean_paper_title(source.get("display_name") or host_venue.get("display_name"))
     return venue or None
 
 
