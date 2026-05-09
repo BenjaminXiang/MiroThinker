@@ -20,6 +20,7 @@ from src.data_agents.paper.title_resolver import (
 VerificationSource = Literal["cache", "openalex", "arxiv"]
 
 _TITLE_SCORE_THRESHOLD = 85.0
+_EXACT_TITLE_SCORE_THRESHOLD = 99.5
 _AUTHOR_JACCARD_THRESHOLD = 0.3
 _AUTHOR_SPLIT_RE = re.compile(r"\s*(?:,|，|;|；|、|\band\b)\s*", re.IGNORECASE)
 _AUTHOR_TOKEN_RE = re.compile(r"[A-Za-z0-9]+|[\u4e00-\u9fff]+")
@@ -57,6 +58,7 @@ def verify_via_openalex(
     title: str,
     authors: object,
     *,
+    year: int | None = None,
     openalex_client=None,
 ) -> DoiVerification | None:
     clean_title = clean_paper_title(title)
@@ -67,6 +69,7 @@ def verify_via_openalex(
         candidates,
         query_title=clean_title,
         query_authors=authors,
+        query_year=year,
         source="openalex",
         converter=_openalex_work_to_resolved,
     )
@@ -76,6 +79,7 @@ def verify_via_arxiv(
     title: str,
     authors: object,
     *,
+    year: int | None = None,
     arxiv_client=None,
 ) -> DoiVerification | None:
     clean_title = clean_paper_title(title)
@@ -86,6 +90,7 @@ def verify_via_arxiv(
         candidates,
         query_title=clean_title,
         query_authors=authors,
+        query_year=year,
         source="arxiv",
         converter=_arxiv_entry_to_resolved,
     )
@@ -108,14 +113,16 @@ def verify_paper_row(
     authors = normalize_authors(
         paper_row.get("authors_raw") or paper_row.get("authors_display")
     )
+    year = _optional_int(paper_row.get("year"))
     openalex = verify_via_openalex(
         title,
         authors,
+        year=year,
         openalex_client=openalex_client,
     )
     if openalex is not None:
         return openalex
-    return verify_via_arxiv(title, authors, arxiv_client=arxiv_client)
+    return verify_via_arxiv(title, authors, year=year, arxiv_client=arxiv_client)
 
 
 def external_id_from_resolved(value: ResolvedPaper) -> str | None:
@@ -177,6 +184,7 @@ def _best_confirmed_candidate(
     *,
     query_title: str,
     query_authors: object,
+    query_year: int | None,
     source: VerificationSource,
     converter,
 ) -> DoiVerification | None:
@@ -190,7 +198,7 @@ def _best_confirmed_candidate(
                 candidate,
                 query_title=query_title,
                 author_hint=None,
-                year_hint=None,
+                year_hint=query_year,
             )
         except TypeError:
             raise
@@ -200,6 +208,7 @@ def _best_confirmed_candidate(
         decision = _confirmed_if_match(
             query_title=query_title,
             query_authors=query_authors,
+            query_year=query_year,
             resolved=resolved,
             source=source,
         )
@@ -214,6 +223,7 @@ def _confirmed_if_match(
     *,
     query_title: str,
     query_authors: object,
+    query_year: int | None,
     resolved: ResolvedPaper,
     source: VerificationSource,
 ) -> DoiVerification | None:
@@ -223,7 +233,14 @@ def _confirmed_if_match(
     author_jaccard = author_token_jaccard(query_authors, resolved.authors)
     if title_score < _TITLE_SCORE_THRESHOLD:
         return None
-    if author_jaccard < _AUTHOR_JACCARD_THRESHOLD:
+    if (
+        author_jaccard < _AUTHOR_JACCARD_THRESHOLD
+        and not _has_exact_title_year_match(
+            title_score=title_score,
+            query_year=query_year,
+            resolved_year=resolved.year,
+        )
+    ):
         return None
     return DoiVerification(
         status="confirmed",
@@ -236,6 +253,19 @@ def _confirmed_if_match(
 
 def _decision_sort_key(decision: DoiVerification) -> tuple[float, float]:
     return (decision.title_score, decision.author_jaccard)
+
+
+def _has_exact_title_year_match(
+    *,
+    title_score: float,
+    query_year: int | None,
+    resolved_year: int | None,
+) -> bool:
+    return (
+        title_score >= _EXACT_TITLE_SCORE_THRESHOLD
+        and query_year is not None
+        and resolved_year == query_year
+    )
 
 
 def _coerce_resolved_paper(value: object) -> ResolvedPaper | None:

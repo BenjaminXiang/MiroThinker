@@ -42,6 +42,8 @@ logger = logging.getLogger("run_paper_doi_verify")
 _REPORTED_BY = "w13_14_paper_doi_verify"
 _RUN_KIND = "backfill_real"
 _ISSUE_CODE = "paper_doi_verify_failed"
+_SAMPLE_LIMIT = 10
+_ATTEMPTED_SOURCES = ["cache", "openalex", "arxiv"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -223,6 +225,52 @@ def _empty_report(
         "paper_updates": 0,
         "cache_writes": 0,
         "pipeline_issues_inserted": 0,
+        "confirmed_samples": [],
+        "unverified_samples": [],
+        "error_samples": [],
+    }
+
+
+def _report_title(row: dict[str, Any]) -> str:
+    return clean_paper_title(row.get("title_clean") or row.get("title_raw"))
+
+
+def _append_sample(report: dict[str, Any], key: str, sample: dict[str, Any]) -> None:
+    samples = report[key]
+    if len(samples) < _SAMPLE_LIMIT:
+        samples.append(sample)
+
+
+def _confirmed_sample(
+    row: dict[str, Any],
+    decision: DoiVerification,
+) -> dict[str, Any]:
+    return {
+        "paper_id": str(row["paper_id"]),
+        "title": _report_title(row),
+        "source": decision.source,
+        "external_id": decision.external_id,
+        "title_score": round(decision.title_score, 4),
+        "author_jaccard": round(decision.author_jaccard, 4),
+    }
+
+
+def _unverified_sample(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "paper_id": str(row["paper_id"]),
+        "title": _report_title(row),
+        "authors": list(
+            normalize_authors(row.get("authors_raw") or row.get("authors_display"))
+        ),
+        "attempted_sources": list(_ATTEMPTED_SOURCES),
+    }
+
+
+def _error_sample(row: dict[str, Any], exc: Exception) -> dict[str, Any]:
+    return {
+        "paper_id": str(row["paper_id"]),
+        "title": _report_title(row),
+        "error": str(exc),
     }
 
 
@@ -249,6 +297,11 @@ def _process_rows(
             decision = verification.decision
             if decision is None:
                 report["papers_unverified"] += 1
+                _append_sample(
+                    report,
+                    "unverified_samples",
+                    _unverified_sample(row_dict),
+                )
                 if not args.dry_run:
                     report["pipeline_issues_inserted"] += _file_pipeline_issue(
                         conn,
@@ -260,6 +313,11 @@ def _process_rows(
 
             report["papers_confirmed"] += 1
             report[f"{decision.source}_hits"] += 1
+            _append_sample(
+                report,
+                "confirmed_samples",
+                _confirmed_sample(row_dict, decision),
+            )
             if not args.dry_run:
                 report["paper_updates"] += _mark_paper_confirmed(
                     conn,
@@ -273,6 +331,7 @@ def _process_rows(
         except Exception as exc:  # noqa: BLE001
             logger.warning("Failed to verify paper %s: %s", paper_id, exc)
             report["papers_with_errors"] += 1
+            _append_sample(report, "error_samples", _error_sample(row_dict, exc))
             try:
                 conn.rollback()
             except Exception:

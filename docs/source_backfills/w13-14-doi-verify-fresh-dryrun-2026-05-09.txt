@@ -1,0 +1,45 @@
+# W13-14 DOI verify fresh-provider dry-run 2026-05-09
+
+Context:
+- Goal: verify the paper DOI/identity pipeline with fresh OpenAlex/arXiv requests, not stale cached artifacts.
+- DB: local `miroflow_real` on `localhost:15432` (password redacted in command below).
+- Dry-run mode performs no per-paper identity/cache/issue writes, but still records pipeline_run metadata.
+
+Command:
+
+```bash
+cd apps/miroflow-agent
+DATABASE_URL=postgresql+psycopg://miroflow:<redacted>@localhost:15432/miroflow_real \
+  uv run python scripts/run_paper_doi_verify.py --dry-run --limit 20 --log-level WARNING
+```
+
+Pre-fix observation:
+- `run_id=d4d2fd66-b619-49f4-8b0d-2aeadc59c6cf`
+- Result: `papers_total=20`, `papers_confirmed=12`, `papers_unverified=8`, `papers_with_errors=0`.
+- Provider status: OpenAlex requests returned HTTP 200; no OpenAlex 400 or arXiv 429 reproduced.
+- Diagnostic sample: `PAPER-0071B9EB00B3` (`ArenaSim: A High-Performance Simulation Platform for Multi-Robot Self-Play Learning`) had exact OpenAlex title/year match, but `authors_display="et al."` caused `author_jaccard=0.0` and the old verifier rejected it.
+
+Fix applied:
+- `doi_verifier` now allows sparse-author confirmation only when `title_score >= 99.5` and the source year equals the row year.
+- The negative guard remains: exact title with sparse authors and mismatched year is still rejected.
+- `run_paper_doi_verify.py` now emits bounded `confirmed_samples`, `unverified_samples`, and `error_samples` in its JSON report so dry-runs identify concrete rows for follow-up.
+
+Post-fix fresh-provider dry-run:
+- `run_id=086ea1e9-b2ae-4605-9b78-e98cb97db71f`
+- Result: `papers_total=20`, `papers_processed=20`, `papers_confirmed=16`, `papers_unverified=4`, `papers_with_errors=0`.
+- Source split: `openalex_hits=16`, `arxiv_hits=0`, `cache_hits=0`.
+- No per-paper writes: `paper_updates=0`, `cache_writes=0`, `pipeline_issues_inserted=0`.
+
+Confirmed sample evidence:
+- `PAPER-00021E8E374C` -> DOI `10.1109/comst.2019.2951818`, title_score `100.0`, author_jaccard `1.0`.
+- `PAPER-0071B9EB00B3` -> DOI `10.1109/lra.2025.3557224`, title_score `100.0`, author_jaccard `0.0`, accepted because year matched.
+
+Remaining unverified samples:
+- `PAPER-0057B6BA369E`: `Online subspace learning from gradient orientations`; OpenAlex top candidate title was a longer related title, title_score around `79`, so rejection is expected.
+- `PAPER-00769FFAFBA1`: recruitment-style text, likely bad source row rather than a paper title.
+- `PAPER-0078933E3D45`: `Solar corona modeling by path-conservative HLLEM Riemann solver`; needs separate investigation.
+- `PAPER-00878B71EFCE`: author-list fragment ending with `and`, likely bad source row rather than a paper title.
+
+Next:
+- Safe next real-data step: run non-dry DOI verify in a small maintenance batch, e.g. `--limit 20`, then inspect confirmed/unverified sample reports before scaling.
+- Separate data-quality cleanup: add or run a paper-title sanity audit for recruitment text and author-list fragments in existing paper rows.

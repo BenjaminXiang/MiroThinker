@@ -231,3 +231,55 @@ def test_failed_verify_writes_pipeline_issue(
     snapshot = json.loads(issue_statements[0][1][2])
     assert snapshot["issue_code"] == "paper_doi_verify_failed"
     assert snapshot["paper_id"] == "PAPER-1"
+
+
+def test_dry_run_report_includes_actionable_samples(
+    monkeypatch: Any,
+    capsys: Any,
+) -> None:
+    confirmed = _paper_row()
+    unverified = {
+        **_paper_row(),
+        "paper_id": "PAPER-2",
+        "title_clean": "Chen's group is looking for graduate students",
+        "authors_display": "Materials Science Lab",
+    }
+    conn = FakeConnection([confirmed, unverified])
+    _install_pipeline_run_mocks(monkeypatch)
+    monkeypatch.setenv("DATABASE_URL_TEST", "postgresql://example/test")
+    monkeypatch.setattr(doi_verify, "_open_database_connection", lambda dsn: conn)
+    monkeypatch.setattr(doi_verify, "_open_http_client", FakeHttpClient)
+
+    def _fake_verify(row, *, cache, http_client):
+        if row["paper_id"] == "PAPER-1":
+            return doi_verify.RowVerification(
+                decision=_decision(),
+                cache_key="0" * 40,
+            )
+        return doi_verify.RowVerification(decision=None, cache_key="1" * 40)
+
+    monkeypatch.setattr(doi_verify, "_verify_row", _fake_verify)
+
+    doi_verify.main(["--dry-run"])
+
+    report = json.loads(capsys.readouterr().out)
+    assert report["papers_confirmed"] == 1
+    assert report["papers_unverified"] == 1
+    assert report["confirmed_samples"] == [
+        {
+            "paper_id": "PAPER-1",
+            "title": "Graph Neural Networks for Shenzhen Innovation",
+            "source": "openalex",
+            "external_id": "10.1234/example",
+            "title_score": 98.0,
+            "author_jaccard": 0.42,
+        }
+    ]
+    assert report["unverified_samples"] == [
+        {
+            "paper_id": "PAPER-2",
+            "title": "Chen's group is looking for graduate students",
+            "authors": ["Materials Science Lab"],
+            "attempted_sources": ["cache", "openalex", "arxiv"],
+        }
+    ]

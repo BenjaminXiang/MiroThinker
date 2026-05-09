@@ -38,12 +38,13 @@ def _openalex_work(
     title: str = "Graph Neural Networks for Shenzhen Innovation",
     authors: list[str] | None = None,
     doi: str | None = "https://doi.org/10.1234/example",
+    year: int = 2024,
 ) -> dict[str, Any]:
     return {
         "id": "https://openalex.org/W123",
         "doi": doi,
         "title": title,
-        "publication_year": 2024,
+        "publication_year": year,
         "host_venue": {"display_name": "TestConf"},
         "authorships": [
             {"author": {"display_name": author}}
@@ -190,3 +191,77 @@ def test_title_clean_abnormal_characters_do_not_break_fuzzy_match(
     assert result is not None
     assert result.status == "confirmed"
     assert result.title_score >= 85.0
+
+
+def test_exact_title_and_year_confirm_when_authors_are_sparse(
+    monkeypatch: Any,
+) -> None:
+    title = "ArenaSim: A High-Performance Simulation Platform for Multi-Robot Self-Play Learning"
+    monkeypatch.setattr(
+        verifier,
+        "_search_openalex_by_title",
+        lambda title, *, http_client=None: [
+            _openalex_work(
+                title=title,
+                authors=["Yuxin Ke", "Shaohui Li", "Zhi Li", "Haoran Li"],
+                doi="https://doi.org/10.1109/lra.2025.3557224",
+                year=2025,
+            )
+        ],
+    )
+
+    result = verifier.verify_paper_row(
+        {
+            "paper_id": "PAPER-0071B9EB00B3",
+            "title_clean": title,
+            "authors_display": "et al.",
+            "year": 2025,
+        },
+        cached_resolution=None,
+        openalex_client=object(),
+        arxiv_client=object(),
+    )
+
+    assert result is not None
+    assert result.status == "confirmed"
+    assert result.source == "openalex"
+    assert result.resolved.doi == "10.1109/lra.2025.3557224"
+    assert result.title_score == 100.0
+    assert result.author_jaccard == 0.0
+
+
+def test_exact_title_with_sparse_authors_requires_matching_year(
+    monkeypatch: Any,
+) -> None:
+    title = "ArenaSim: A High-Performance Simulation Platform for Multi-Robot Self-Play Learning"
+    monkeypatch.setattr(
+        verifier,
+        "_search_openalex_by_title",
+        lambda title, *, http_client=None: [
+            _openalex_work(
+                title=title,
+                authors=["Yuxin Ke", "Shaohui Li", "Zhi Li", "Haoran Li"],
+                doi="https://doi.org/10.1109/lra.2025.3557224",
+                year=2025,
+            )
+        ],
+    )
+    monkeypatch.setattr(
+        verifier,
+        "_search_arxiv_by_title",
+        lambda title, *, http_client=None: [],
+    )
+
+    result = verifier.verify_paper_row(
+        {
+            "paper_id": "PAPER-0071B9EB00B3",
+            "title_clean": title,
+            "authors_display": "et al.",
+            "year": 2024,
+        },
+        cached_resolution=None,
+        openalex_client=object(),
+        arxiv_client=object(),
+    )
+
+    assert result is None
