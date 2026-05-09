@@ -17,6 +17,9 @@ _PUBLICATIONS_HEADING_KEYWORDS = (
     "论文著作",
     "发表论文",
     "代表性论文",
+    "学术成果",
+    "代表性文章",
+    "代表文章",
     "代表论文",
     "主要论文",
     "论著",
@@ -26,6 +29,6 @@ _PUBLICATIONS_HEADING_KEYWORDS = (
 _PUBLICATIONS_HEADING_RE = re.compile(
     r"^(?:"
     + "|".join(re.escape(keyword) for keyword in _PUBLICATIONS_HEADING_KEYWORDS)
-    + r")$",
+    + r")[:：]?$",
     re.IGNORECASE,
 )

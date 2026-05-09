@@ -19,6 +19,9 @@ from src.data_agents.professor.homepage_publication_headings import (
 logger = logging.getLogger(__name__)
 
 _ITEM_PREFIX_RE = re.compile(r"^\s*(?:\[\d+\]|\(\d+\)|\d+[.)])\s*")
+_NUMBERED_ITEM_START_RE = re.compile(
+    r"(?:^|\s)(?:\[\d+\]|\(\d+\)|\d+[.)])\s*(?=[A-Za-z\u4e00-\u9fff])"
+)
 _ITEM_SUFFIX_RE = re.compile(r"\s*\[(?:J|C|J/OL)\]\s*\.?\s*$", re.IGNORECASE)
 _YEAR_RE = re.compile(r"\b(?:19|20)\d{2}\b")
 _WHITESPACE_RE = re.compile(r"\s+")
@@ -61,6 +64,8 @@ _SURNAME_INITIAL_AUTHOR_RE = re.compile(
     r"\b([A-Z][A-Za-z-]+),\s*((?:[A-Z]\.\s*){1,3}|[A-Z]\.?)(?=\s*(?:,|and\b|&|$))"
 )
 _HEADING_TAG_NAMES = frozenset({"h1", "h2", "h3", "h4", "h5", "h6"})
+_NON_HEADING_SECTION_TAG_NAMES = ("p", "div")
+_GENERAL_PUBLICATIONS_HEADING_TEXTS = frozenset({"学术成果"})
 _LANDMARK_TAGS = ("header", "footer", "nav", "aside")
 _MAX_ITEMS_PER_PAGE = 200
 _MIN_TITLE_LENGTH = 10
@@ -614,9 +619,6 @@ def _find_publications_sections(soup: BeautifulSoup) -> list[Tag]:
                 seen.add(key)
                 sections.append(tag)
 
-    if sections:
-        return sections
-
     for tag in soup.find_all(True):
         values = [*tag.get("class", []), tag.get("id")]
         attributes = " ".join(str(value) for value in values if value).casefold()
@@ -628,7 +630,14 @@ def _find_publications_sections(soup: BeautifulSoup) -> list[Tag]:
                 seen.add(key)
                 sections.append(tag)
 
-    return sections
+    for tag in soup.find_all(_NON_HEADING_SECTION_TAG_NAMES):
+        if _is_non_heading_publications_heading(tag):
+            key = id(tag)
+            if key not in seen:
+                seen.add(key)
+                sections.append(tag)
+
+    return _filter_publications_section_candidates(sections)
 
 
 def _extract_section_publications(
@@ -681,13 +690,15 @@ def _extract_from_paragraphs(
 
     items: list[HomepagePublication] = []
     for paragraph in _iter_section_descendants(section, {"p"}):
-        publication = _publication_from_tag(
-            paragraph,
-            page_url=page_url,
-            author_filter=author_filter,
-        )
-        if publication is not None:
-            items.append(publication)
+        for raw_text in _publication_texts_from_paragraph(paragraph):
+            publication = _publication_from_text(
+                raw_text=raw_text,
+                source_url=page_url,
+                source_anchor=_extract_source_anchor(paragraph, page_url),
+                author_filter=author_filter,
+            )
+            if publication is not None:
+                items.append(publication)
     return items
 
 
@@ -824,6 +835,28 @@ def _publication_from_tag(
     )
 
 
+def _publication_texts_from_paragraph(paragraph: Tag) -> list[str]:
+    raw_text = _normalize_sentence(paragraph.get_text(" ", strip=True))
+    if not raw_text or paragraph.find("br") is None:
+        return [raw_text] if raw_text else []
+
+    item_starts = list(_NUMBERED_ITEM_START_RE.finditer(raw_text))
+    if len(item_starts) < 2:
+        return [raw_text]
+
+    items: list[str] = []
+    for index, match in enumerate(item_starts):
+        end = (
+            item_starts[index + 1].start()
+            if index + 1 < len(item_starts)
+            else len(raw_text)
+        )
+        item_text = raw_text[match.start() : end].strip()
+        if item_text:
+            items.append(item_text)
+    return items
+
+
 def _publication_from_text(
     *,
     raw_text: str,
@@ -913,6 +946,19 @@ def _section_root_blocks(section: Tag) -> list[Tag]:
             if blocks:
                 return blocks
         return []
+    if _is_non_heading_publications_heading(section):
+        blocks = _following_non_heading_section_blocks(section)
+        if blocks:
+            return blocks
+        for parent in section.parents:
+            if not isinstance(parent, Tag) or parent.name in {"body", "html"}:
+                break
+            if not _is_non_heading_publications_heading(parent):
+                continue
+            blocks = _following_non_heading_section_blocks(parent)
+            if blocks:
+                return blocks
+        return []
     return [section]
 
 
@@ -925,6 +971,17 @@ def _following_section_blocks(section: Tag, *, current_level: int) -> list[Tag]:
             sibling.name in _HEADING_TAG_NAMES
             and int(sibling.name[1]) <= current_level
         ):
+            break
+        blocks.append(sibling)
+    return blocks
+
+
+def _following_non_heading_section_blocks(section: Tag) -> list[Tag]:
+    blocks: list[Tag] = []
+    for sibling in section.next_siblings:
+        if not isinstance(sibling, Tag):
+            continue
+        if _is_non_heading_section_boundary(sibling):
             break
         blocks.append(sibling)
     return blocks
@@ -946,6 +1003,87 @@ def _is_heading_tag(tag: Tag) -> bool:
     return tag.name in _HEADING_TAG_NAMES and _is_publications_heading_text(
         tag.get_text(" ", strip=True)
     )
+
+
+def _filter_publications_section_candidates(candidates: list[Tag]) -> list[Tag]:
+    has_specific_candidate = any(
+        _normalized_heading_candidate_text(candidate)
+        not in _GENERAL_PUBLICATIONS_HEADING_TEXTS
+        for candidate in candidates
+    )
+    if not has_specific_candidate:
+        return candidates
+    return [
+        candidate
+        for candidate in candidates
+        if _normalized_heading_candidate_text(candidate)
+        not in _GENERAL_PUBLICATIONS_HEADING_TEXTS
+    ]
+
+
+def _normalized_heading_candidate_text(tag: Tag) -> str:
+    return _strip_heading_trailing_punctuation(tag.get_text(" ", strip=True))
+
+
+def _is_non_heading_publications_heading(tag: Tag) -> bool:
+    if tag.name in _HEADING_TAG_NAMES or tag.name not in _NON_HEADING_SECTION_TAG_NAMES:
+        return False
+
+    text = tag.get_text(" ", strip=True)
+    normalized = _strip_heading_trailing_punctuation(text)
+    if not normalized or not _PUBLICATIONS_HEADING_RE.fullmatch(normalized):
+        return False
+
+    return (
+        _has_strong_or_b_marker(tag)
+        or _has_title_class(tag)
+        or len(normalized) <= 30
+    )
+
+
+def _is_non_heading_section_boundary(tag: Tag) -> bool:
+    if tag.name in _HEADING_TAG_NAMES:
+        return True
+    if tag.name not in _NON_HEADING_SECTION_TAG_NAMES:
+        return False
+
+    text = tag.get_text(" ", strip=True)
+    if _has_short_chinese_label_prefix(text):
+        return True
+
+    normalized = _strip_heading_trailing_punctuation(text)
+    if not normalized or len(normalized) > 30 or _ITEM_PREFIX_RE.match(normalized):
+        return False
+    return _has_title_class(tag) or _has_strong_or_b_marker(tag)
+
+
+def _has_strong_or_b_marker(tag: Tag) -> bool:
+    return tag.name in {"strong", "b"} or tag.find(["strong", "b"]) is not None
+
+
+def _has_title_class(tag: Tag) -> bool:
+    class_values = tag.get("class", [])
+    if isinstance(class_values, str):
+        class_values = [class_values]
+    return any(
+        "tit" in str(class_value).casefold()
+        or "title" in str(class_value).casefold()
+        for class_value in class_values
+    )
+
+
+def _strip_heading_trailing_punctuation(text: str) -> str:
+    return _normalize_sentence(text).strip().rstrip(":：").strip()
+
+
+def _has_short_chinese_label_prefix(text: str) -> bool:
+    normalized = _normalize_sentence(text).strip()
+    if _ITEM_PREFIX_RE.match(normalized):
+        return False
+    match = re.match(r"^([^:：]{2,12})[:：]", normalized)
+    if match is None:
+        return False
+    return bool(re.search(r"[\u4e00-\u9fff]", match.group(1)))
 
 
 def _is_publications_heading_text(text: str) -> bool:
