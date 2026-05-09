@@ -13,6 +13,7 @@ import {
   Modal,
   message,
   Dropdown,
+  Segmented,
 } from "antd";
 import type { TablePaginationConfig } from "antd";
 import type { SorterResult } from "antd/es/table/interface";
@@ -104,6 +105,7 @@ export default function DomainList() {
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadDryRun, setUploadDryRun] = useState(true);
 
   // Domain-specific filter options loaded from API
   const [filterOptions, setFilterOptions] = useState<
@@ -202,14 +204,17 @@ export default function DomainList() {
     load();
   };
 
-  const handleUpload = async (file: File) => {
+  const handleUpload = async (file: File, dryRun: boolean) => {
     setUploading(true);
     try {
-      const resp = await uploadFile(domain as "company" | "patent", file);
+      const resp = await uploadFile(domain as "company" | "patent", file, {
+        dryRun,
+      });
       message.success(
-        `导入 ${resp.imported} 条，当前共 ${resp.total_in_store} 条`
+        `${resp.dry_run ? "已创建验证任务" : "已创建导入任务"}，当前共 ${resp.total_in_store} 条`
       );
       setUploadModalOpen(false);
+      navigate(`/pipeline-runs/${resp.task_id}`);
       load();
     } catch {
       message.error("上传失败，请检查文件格式");
@@ -468,11 +473,21 @@ export default function DomainList() {
         onCancel={() => setUploadModalOpen(false)}
         footer={null}
       >
+        <Segmented
+          block
+          value={uploadDryRun ? "dry-run" : "apply"}
+          onChange={(value) => setUploadDryRun(value === "dry-run")}
+          options={[
+            { label: "验证", value: "dry-run" },
+            { label: "导入", value: "apply" },
+          ]}
+          style={{ marginBottom: 16 }}
+        />
         <Upload.Dragger
           accept=".xlsx"
           showUploadList={false}
           beforeUpload={(file) => {
-            handleUpload(file);
+            handleUpload(file, uploadDryRun);
             return false;
           }}
           disabled={uploading}

@@ -18,8 +18,18 @@ import {
   FileTextOutlined,
   BankOutlined,
   SafetyCertificateOutlined,
+  ExclamationCircleOutlined,
+  BranchesOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
-import { sendChatMessage, type ChatCitation, type ChatResponse } from "../api";
+import {
+  reportChatFeedback,
+  resetChatSession,
+  sendChatMessage,
+  type ChatCandidateOption,
+  type ChatCitation,
+  type ChatResponse,
+} from "../api";
 
 const { Text, Paragraph } = Typography;
 
@@ -58,30 +68,39 @@ const CITATION_COLOR: Record<ChatCitation["type"], string> = {
 };
 
 const SAMPLE_QUERIES = [
-  "清华大学深圳国际研究生院做人工智能的教授",
-  "深度学习在医学影像中的应用",
-  "深圳理工大学做生物的教授",
+  "介绍无界智航的相关信息",
+  "深圳有哪些做具身智能的教授和企业",
+  "具身智能合成数据有几种实现方法",
 ];
 
 export default function Chat() {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [turns, pending]);
 
-  async function submit(query: string) {
+  async function submit(
+    query: string,
+    params: { entityIdHint?: string; displayQuery?: string } = {}
+  ) {
     const trimmed = query.trim();
     if (!trimmed || pending) return;
     const now = Date.now();
-    setTurns((prev) => [...prev, { role: "user", query: trimmed, at: now }]);
+    setTurns((prev) => [
+      ...prev,
+      { role: "user", query: params.displayQuery ?? trimmed, at: now },
+    ]);
     setDraft("");
     setPending(true);
     try {
-      const response = await sendChatMessage(trimmed);
+      const response = await sendChatMessage(trimmed, {
+        entityIdHint: params.entityIdHint,
+      });
       setTurns((prev) => [
         ...prev,
         { role: "assistant", response, at: Date.now() },
@@ -97,8 +116,48 @@ export default function Chat() {
     }
   }
 
+  async function startNewConversation() {
+    if (pending || resetting) return;
+    setResetting(true);
+    try {
+      await resetChatSession();
+      setTurns([]);
+      setDraft("");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setTurns((prev) => [
+        ...prev,
+        { role: "error", message, at: Date.now() },
+      ]);
+    } finally {
+      setResetting(false);
+    }
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 48px)" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 8,
+          marginBottom: 8,
+        }}
+      >
+        <Text strong>对话检索</Text>
+        <Tooltip title="开始新会话">
+          <Button
+            size="small"
+            icon={<PlusOutlined />}
+            loading={resetting}
+            disabled={pending}
+            onClick={startNewConversation}
+          >
+            新对话
+          </Button>
+        </Tooltip>
+      </div>
       <div
         style={{
           flex: 1,
@@ -144,7 +203,19 @@ export default function Chat() {
               </Bubble>
             );
           }
-          return <AssistantBubble key={turn.at} response={turn.response} />;
+          return (
+            <AssistantBubble
+              key={turn.at}
+              response={turn.response}
+              onSelectCandidate={(option) =>
+                submit(turn.response.query, {
+                  entityIdHint: option.id,
+                  displayQuery: `选择：${option.label}`,
+                })
+              }
+              onFollowup={(query) => submit(query)}
+            />
+          );
         })}
 
         {pending && (
@@ -225,8 +296,38 @@ function Bubble({
   );
 }
 
-function AssistantBubble({ response }: { response: ChatResponse }) {
+function AssistantBubble({
+  response,
+  onSelectCandidate,
+  onFollowup,
+}: {
+  response: ChatResponse;
+  onSelectCandidate: (option: ChatCandidateOption) => void;
+  onFollowup: (query: string) => void;
+}) {
   const cits = response.citations ?? [];
+  const clarification = response.clarification;
+  const followups = response.suggested_followups ?? [];
+  const [feedbackState, setFeedbackState] = useState<
+    "idle" | "sending" | "sent"
+  >("idle");
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
+
+  async function submitFeedback() {
+    if (feedbackState !== "idle") return;
+    setFeedbackError(null);
+    setFeedbackState("sending");
+    try {
+      await reportChatFeedback(response, {
+        note: "Flagged from admin-console chat UI.",
+      });
+      setFeedbackState("sent");
+    } catch (err) {
+      setFeedbackState("idle");
+      setFeedbackError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
   return (
     <Bubble align="left" icon={<RobotOutlined />}>
       <Space direction="vertical" size={8} style={{ width: "100%" }}>
@@ -258,9 +359,76 @@ function AssistantBubble({ response }: { response: ChatResponse }) {
             </Space>
           </div>
         )}
-        <Text type="secondary" style={{ fontSize: 11 }}>
-          {response.query_type} · {response.answer_style}
-        </Text>
+        {clarification && clarification.options.length > 0 && (
+          <div>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              {clarification.prompt}
+            </Text>
+            <Space size={[6, 6]} wrap style={{ marginTop: 6 }}>
+              {clarification.options.map((option) => (
+                <Tooltip key={option.id} title={option.hint}>
+                  <Button
+                    size="small"
+                    type={
+                      option.id === clarification.default_id
+                        ? "primary"
+                        : "default"
+                    }
+                    onClick={() => onSelectCandidate(option)}
+                  >
+                    {option.label}
+                  </Button>
+                </Tooltip>
+              ))}
+              {clarification.omitted > 0 && (
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  另有 {clarification.omitted} 个候选未展示
+                </Text>
+              )}
+            </Space>
+          </div>
+        )}
+        {followups.length > 0 && (
+          <div>
+            <Text type="secondary" style={{ fontSize: 12, marginRight: 6 }}>
+              继续问：
+            </Text>
+            <Space size={[4, 4]} wrap>
+              {followups.map((query) => (
+                <Button
+                  key={query}
+                  size="small"
+                  type="link"
+                  icon={<BranchesOutlined />}
+                  style={{ padding: "0 4px", height: 22 }}
+                  onClick={() => onFollowup(query)}
+                >
+                  {query}
+                </Button>
+              ))}
+            </Space>
+          </div>
+        )}
+        {feedbackError && (
+          <Alert type="error" message={feedbackError} showIcon={false} />
+        )}
+        <Space size={8} wrap>
+          <Text type="secondary" style={{ fontSize: 11 }}>
+            {response.query_type} · {response.answer_style}
+          </Text>
+          <Tooltip title="提交到问题列表">
+            <Button
+              size="small"
+              type="text"
+              icon={<ExclamationCircleOutlined />}
+              loading={feedbackState === "sending"}
+              disabled={feedbackState === "sent"}
+              onClick={submitFeedback}
+            >
+              {feedbackState === "sent" ? "已反馈" : "反馈"}
+            </Button>
+          </Tooltip>
+        </Space>
       </Space>
     </Bubble>
   );

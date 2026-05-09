@@ -6,18 +6,24 @@ import {
   FileTextOutlined,
   SafetyCertificateOutlined,
   MessageOutlined,
+  ClockCircleOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import DomainList from "./pages/DomainList";
 import RecordDetail from "./pages/RecordDetail";
 import Chat from "./pages/Chat";
+import PipelineRuns from "./pages/PipelineRuns";
+import PipelineIssues from "./pages/PipelineIssues";
 
 const { Sider, Content } = Layout;
 
 const NAV_ITEMS = [
   { key: "/", icon: <DashboardOutlined />, label: "数据总览" },
   { key: "/chat", icon: <MessageOutlined />, label: "对话检索" },
+  { key: "/pipeline-runs", icon: <ClockCircleOutlined />, label: "导入任务" },
+  { key: "/pipeline-issues", icon: <WarningOutlined />, label: "质量问题" },
   { key: "/professor", icon: <TeamOutlined />, label: "教授" },
   { key: "/company", icon: <BankOutlined />, label: "企业" },
   { key: "/paper", icon: <FileTextOutlined />, label: "论文" },
@@ -62,6 +68,9 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/chat" element={<Chat />} />
+            <Route path="/pipeline-runs" element={<PipelineRuns />} />
+            <Route path="/pipeline-runs/:runId" element={<PipelineRuns />} />
+            <Route path="/pipeline-issues" element={<PipelineIssues />} />
             <Route path="/:domain" element={<DomainList />} />
             <Route path="/:domain/:id" element={<RecordDetail />} />
           </Routes>

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import json
+from typing import Any
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
+
+from backend.deps import get_pg_conn
 
 router = APIRouter(prefix="/api/data")
 
@@ -36,6 +39,79 @@ _FACET_REDIRECTS = {
     "research-topics": "/api/professor/filters/research_topic",
     "industries": "/api/company/filters/industry",
 }
+
+
+@router.get("/facets/industries", include_in_schema=False)
+def legacy_industry_facets(conn: Any = Depends(get_pg_conn)) -> list[dict[str, Any]]:
+    return _legacy_fetchall(
+        conn,
+        """
+        SELECT latest_snapshot.industry AS industry,
+               count(*)::int AS count
+          FROM company c
+          JOIN LATERAL (
+            SELECT cs.industry
+              FROM company_snapshot cs
+             WHERE cs.company_id = c.company_id
+               AND cs.industry IS NOT NULL
+               AND cs.industry != ''
+             ORDER BY cs.snapshot_created_at DESC NULLS LAST, cs.snapshot_id DESC
+             LIMIT 1
+          ) latest_snapshot ON TRUE
+         WHERE c.identity_status != 'inactive'
+         GROUP BY latest_snapshot.industry
+         ORDER BY count DESC, latest_snapshot.industry ASC
+         LIMIT 100
+        """,
+    )
+
+
+@router.get("/facets/professor-institutions", include_in_schema=False)
+def legacy_professor_institution_facets(
+    conn: Any = Depends(get_pg_conn),
+) -> list[dict[str, Any]]:
+    return _legacy_fetchall(
+        conn,
+        """
+        SELECT pa.institution AS institution,
+               count(DISTINCT p.professor_id)::int AS count
+          FROM professor p
+          JOIN professor_affiliation pa ON pa.professor_id = p.professor_id
+         WHERE p.identity_status = 'resolved'
+           AND pa.institution IS NOT NULL
+           AND pa.institution != ''
+         GROUP BY pa.institution
+         ORDER BY count DESC, pa.institution ASC
+         LIMIT 100
+        """,
+    )
+
+
+@router.get("/facets/research-topics", include_in_schema=False)
+def legacy_research_topic_facets(
+    conn: Any = Depends(get_pg_conn),
+) -> list[dict[str, Any]]:
+    return _legacy_fetchall(
+        conn,
+        """
+        SELECT pf.value_raw AS topic,
+               count(DISTINCT pf.professor_id)::int AS count
+          FROM professor_fact pf
+          JOIN professor p ON p.professor_id = pf.professor_id
+         WHERE p.identity_status = 'resolved'
+           AND pf.fact_type = 'research_topic'
+           AND pf.status = 'active'
+           AND pf.value_raw IS NOT NULL
+           AND pf.value_raw != ''
+         GROUP BY pf.value_raw
+         ORDER BY count DESC, pf.value_raw ASC
+         LIMIT 100
+        """,
+    )
+
+
+def _legacy_fetchall(conn: Any, query: str) -> list[dict[str, Any]]:
+    return [dict(row) for row in conn.execute(query).fetchall()]
 
 
 @router.api_route(

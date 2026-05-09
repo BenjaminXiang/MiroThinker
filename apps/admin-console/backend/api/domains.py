@@ -314,6 +314,8 @@ SELECT
     patent.status,
     patent.quality_status,
     patent.abstract_clean,
+    patent.summary_text,
+    patent.summary_text_method,
     patent.technology_effect,
     patent.ipc_codes,
     patent.first_seen_at,
@@ -780,7 +782,10 @@ def _row_to_released_object(
             "object_type": "patent",
             "display_name": display_name,
             "core_facts": _json_value(core_facts),
-            "summary_fields": {"summary_text": row.get("abstract_clean")},
+            "summary_fields": {
+                "summary_text": row.get("summary_text") or row.get("abstract_clean"),
+                "summary_text_method": row.get("summary_text_method"),
+            },
             "evidence": [],
             "last_updated": _last_updated(row, "updated_at", "first_seen_at"),
             "quality_status": _row_quality_status(row, _derive_patent_quality(row)),
@@ -1371,7 +1376,7 @@ def _apply_paper_update(
         _set_clause(
             clauses,
             params,
-            "abstract_clean",
+            "summary_zh",
             "summary_zh",
             _str_or_none(summary["summary_zh"]),
         )
@@ -1428,7 +1433,7 @@ def _apply_patent_update(
         _set_clause(
             clauses,
             params,
-            "abstract_clean",
+            "summary_text",
             "summary_text",
             _str_or_none(summary["summary_text"]),
         )

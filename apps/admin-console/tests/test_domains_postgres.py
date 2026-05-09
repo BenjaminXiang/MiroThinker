@@ -125,6 +125,7 @@ def _base_records() -> dict[str, dict[str, Any]]:
             "year": 2026,
             "venue": "TestConf",
             "abstract_clean": "A test paper.",
+            "summary_zh": "A test paper.",
             "authors_display": "Ada Lovelace",
             "authors_raw": None,
             "citation_count": 10,
@@ -153,6 +154,8 @@ def _base_records() -> dict[str, dict[str, Any]]:
             "patent_type": "invention",
             "status": None,
             "abstract_clean": "A test patent.",
+            "summary_text": "A readable patent summary.",
+            "summary_text_method": "llm",
             "technology_effect": "Faster computing.",
             "ipc_codes": ["G06F"],
             "first_seen_at": NOW,
@@ -342,6 +345,10 @@ class _FakePostgresConn:
             row["admin_action"] = "delete"
         if "core_title" in params:
             row["title_clean"] = params["core_title"]
+        if "summary_text" in params:
+            row["abstract_clean"] = params["summary_text"]
+        if "summary_zh" in params:
+            row["summary_zh"] = params["summary_zh"]
         row["run_id"] = params.get("run_id", row["run_id"])
 
     def _update_patent(
@@ -357,6 +364,8 @@ class _FakePostgresConn:
             row["status"] = params["status"]
         if "core_title" in params:
             row["title_clean"] = params["core_title"]
+        if "summary_text" in params:
+            row["summary_text"] = params["summary_text"]
         row["run_id"] = params.get("run_id", row["run_id"])
 
 
@@ -508,6 +517,48 @@ def test_patch_domain_object_updates_postgres_and_records_run(
     assert response["display_name"] == expected_display
     assert fake_pg_conn.run_scopes[-1]["action"] == "patch"
     assert fake_pg_conn.run_scopes[-1]["domain"] == domain
+
+
+def test_patch_paper_summary_zh_updates_summary_zh_not_abstract(
+    fake_pg_conn: _FakePostgresConn,
+) -> None:
+    response = update_domain_object(
+        DomainEnum.paper,
+        "PAPER-TEST",
+        conn=fake_pg_conn,
+        body=UpdateRecordRequest(
+            summary_fields={"summary_zh": "更新后的中文摘要"}
+        ),
+    )
+
+    assert response["summary_fields"]["summary_zh"] == "更新后的中文摘要"
+    assert fake_pg_conn.records["paper"]["abstract_clean"] == "A test paper."
+    update_sql = next(
+        sql for sql, _params in fake_pg_conn.calls if sql.startswith("UPDATE paper SET")
+    )
+    assert "summary_zh = %(summary_zh)s" in update_sql
+    assert "abstract_clean = %(summary_zh)s" not in update_sql
+
+
+def test_patch_patent_summary_text_updates_summary_text_not_abstract(
+    fake_pg_conn: _FakePostgresConn,
+) -> None:
+    response = update_domain_object(
+        DomainEnum.patent,
+        "PAT-TEST",
+        conn=fake_pg_conn,
+        body=UpdateRecordRequest(
+            summary_fields={"summary_text": "更新后的专利通俗解读"}
+        ),
+    )
+
+    assert response["summary_fields"]["summary_text"] == "更新后的专利通俗解读"
+    assert fake_pg_conn.records["patent"]["abstract_clean"] == "A test patent."
+    update_sql = next(
+        sql for sql, _params in fake_pg_conn.calls if sql.startswith("UPDATE patent SET")
+    )
+    assert "summary_text = %(summary_text)s" in update_sql
+    assert "abstract_clean = %(summary_text)s" not in update_sql
 
 
 @pytest.mark.parametrize(

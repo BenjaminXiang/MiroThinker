@@ -39,7 +39,8 @@ precommit: lint sort-imports format-md format
 frontend-fresh:
     cd apps/admin-console/frontend && npm run build
 
-# Start admin-console Vite dev server with HMR on port 5180 (proxies /api to 8088).
-# Use this only when actively editing React code; otherwise rely on 8088 + dist.
+# Start admin-console Vite dev server with HMR on port 5180.
+# Proxies /api to VITE_API_PROXY_TARGET, default http://localhost:18088.
+# Use this only when actively editing React code; otherwise rely on backend-served dist.
 frontend-dev:
     cd apps/admin-console/frontend && npm run dev
