@@ -48,6 +48,7 @@ _MISSING_MARKERS = {"-", "--", "—", "－", "N/A", "n/a", "NULL", "null"}
 _INVESTOR_SPLIT_RE = re.compile(r"[、,，;；/\n]+")
 _TRUE_SET = {"是", "true", "1", "yes", "y"}
 _FALSE_SET = {"否", "false", "0", "no", "n"}
+_FOOTER_DATE_RE = re.compile(r"\d{4}-\d{1,2}-\d{1,2}")
 
 
 @dataclass(slots=True)
@@ -85,7 +86,10 @@ def import_company_xlsx(
 
         rows_read = 0
         rows_empty_skipped = 0
+        rows_footer_skipped = 0
+        footer_row_numbers: list[int] = []
         rows_missing_company_name = 0
+        missing_company_name_rows: list[int] = []
         continuation_rows_merged = 0
         orphan_continuation_rows = 0
         merged_rows: list[_MergedCompanyRow] = []
@@ -98,6 +102,11 @@ def import_company_xlsx(
             mapped_values = _extract_mapped_values(row, column_mapping)
             if not any(mapped_values.values()):
                 rows_empty_skipped += 1
+                continue
+            if _is_export_footer_row(mapped_values):
+                rows_footer_skipped += 1
+                footer_row_numbers.append(row_index)
+                current_row = None
                 continue
 
             rows_read += 1
@@ -114,6 +123,7 @@ def import_company_xlsx(
 
             if not company_name:
                 rows_missing_company_name += 1
+                missing_company_name_rows.append(row_index)
                 current_row = None
                 continue
 
@@ -125,10 +135,12 @@ def import_company_xlsx(
             company_name = merged_row.values.get("company_name")
             if not company_name:
                 rows_missing_company_name += 1
+                missing_company_name_rows.extend(merged_row.source_row_numbers)
                 continue
             normalized_name = normalize_company_name(company_name)
             if not normalized_name:
                 rows_missing_company_name += 1
+                missing_company_name_rows.extend(merged_row.source_row_numbers)
                 continue
             parsed_records.append(
                 _build_company_record(
@@ -145,12 +157,15 @@ def import_company_xlsx(
             rows_read=rows_read,
             rows_empty_skipped=rows_empty_skipped,
             rows_missing_company_name=rows_missing_company_name,
+            missing_company_name_rows=tuple(missing_company_name_rows),
             continuation_rows_merged=continuation_rows_merged,
             orphan_continuation_rows=orphan_continuation_rows,
             company_rows_parsed=len(parsed_records),
             deduped_records=len(deduped_records),
             duplicate_groups=duplicate_groups,
             duplicate_records_discarded=len(parsed_records) - len(deduped_records),
+            rows_footer_skipped=rows_footer_skipped,
+            footer_row_numbers=tuple(footer_row_numbers),
         )
         return CompanyImportResult(records=deduped_records, report=report)
     finally:
@@ -200,6 +215,46 @@ def _extract_mapped_values(
         value = row[column_index] if column_index < len(row) else None
         mapped_values[key] = _normalize_cell(value)
     return mapped_values
+
+
+def _is_export_footer_row(values: dict[str, str | None]) -> bool:
+    non_empty_values = [value for value in values.values() if value]
+    if not non_empty_values:
+        return False
+    joined = " ".join(non_empty_values).lower()
+    if "qimingpian" in joined or "客服微信" in joined or "数据有任何疑问" in joined:
+        return True
+
+    business_keys = {
+        "industry",
+        "sub_industry",
+        "business",
+        "region",
+        "financing_round",
+        "financing_time",
+        "financing_amount",
+        "investor",
+        "registered_capital",
+        "description",
+        "company_name",
+        "website",
+        "legal_representative",
+        "team_raw",
+        "registered_address",
+        "contact_phone",
+        "contact_email",
+        "patent_count",
+    }
+    has_business_value = any(values.get(key) for key in business_keys)
+    sequence_no = values.get("sequence_no")
+    project_name = values.get("project_name")
+    if not has_business_value and not project_name and sequence_no:
+        return bool(
+            sequence_no.startswith("http://")
+            or sequence_no.startswith("https://")
+            or _FOOTER_DATE_RE.fullmatch(sequence_no)
+        )
+    return False
 
 
 def _start_merged_row(values: dict[str, str | None], row_index: int) -> _MergedCompanyRow:

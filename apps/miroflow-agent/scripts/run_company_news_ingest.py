@@ -57,6 +57,23 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default="all",
         help="News connector to use. all defaults to Serper only.",
     )
+    parser.add_argument(
+        "--serper-site",
+        action="append",
+        default=None,
+        help="Optional Serper site filter (e.g. data.iyiou.com). Repeat for multiple.",
+    )
+    parser.add_argument(
+        "--serper-fetch-article-text",
+        action="store_true",
+        help="Try fetching article body text for Serper results.",
+    )
+    parser.add_argument(
+        "--serper-article-max-chars",
+        type=int,
+        default=1800,
+        help="Max chars to keep when Serper article text is fetched.",
+    )
     parser.add_argument("--since", type=_parse_date, default=None)
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument(
@@ -84,12 +101,28 @@ def _open_database_connection(url: str):
     return psycopg.connect(resolve_dsn(url), row_factory=dict_row)
 
 
-def _build_connectors(selection: str) -> list[tuple[str, NewsConnector]]:
+def _build_connectors(
+    selection: str,
+    *,
+    serper_site_filters: list[str] | None = None,
+    fetch_article_text: bool = False,
+    article_max_chars: int = 1800,
+) -> list[tuple[str, NewsConnector]]:
     connectors: list[tuple[str, NewsConnector]] = []
     if selection in ("all", "serper"):
         api_key = os.environ.get("SERPER_API_KEY", "").strip()
         if api_key:
-            connectors.append(("serper", SerperNewsConnector(api_key)))
+            connectors.append(
+                (
+                    "serper",
+                    SerperNewsConnector(
+                        api_key,
+                        site_filters=serper_site_filters,
+                        fetch_article_content=fetch_article_text,
+                        article_max_chars=article_max_chars,
+                    ),
+                )
+            )
         else:
             logger.info("Skipping Serper connector: SERPER_API_KEY is not set")
     if selection == "tushare":
@@ -254,7 +287,12 @@ def main(argv: list[str] | None = None) -> None:
     )
     conn.commit()
 
-    connectors = _build_connectors(args.connector)
+    connectors = _build_connectors(
+        args.connector,
+        serper_site_filters=args.serper_site,
+        fetch_article_text=args.serper_fetch_article_text,
+        article_max_chars=args.serper_article_max_chars,
+    )
     sql, params = _build_company_select_sql(priority=args.priority, limit=args.limit)
     companies = conn.execute(sql, params).fetchall()
     report: dict[str, Any] = {

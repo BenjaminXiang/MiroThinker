@@ -32,7 +32,7 @@ def test_build_company_select_sql_top200_limits_rank():
     sql, params = cli._build_company_select_sql(priority="top200", limit=5)
 
     assert "priority_rank <= 200" in sql
-    assert "unified_credit_code IS NOT NULL" in sql
+    assert "WHERE c.identity_status = 'resolved'" in sql
     assert params == (5,)
 
 
@@ -137,7 +137,9 @@ def test_cli_dry_run_fetches_without_news_insert(monkeypatch, capsys):
 
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
     monkeypatch.setattr(
-        cli, "_build_connectors", lambda _selection: [("fake", _Connector())]
+        cli,
+        "_build_connectors",
+        lambda _selection, **_kwargs: [("fake", _Connector())],
     )
     monkeypatch.setattr(
         cli,
@@ -176,12 +178,33 @@ def test_parse_args_accepts_serper_connector():
     assert args.connector == "serper"
 
 
+def test_parse_args_accepts_serper_site_and_article_options():
+    cli = _import_cli()
+
+    args = cli._parse_args(
+        [
+            "--connector",
+            "serper",
+            "--serper-site",
+            "data.iyiou.com",
+            "--serper-fetch-article-text",
+            "--serper-article-max-chars",
+            "1200",
+        ]
+    )
+
+    assert args.connector == "serper"
+    assert args.serper_site == ["data.iyiou.com"]
+    assert args.serper_fetch_article_text is True
+    assert args.serper_article_max_chars == 1200
+
+
 def test_build_connectors_serper_only_when_selected(monkeypatch):
     cli = _import_cli()
     constructed: list[tuple[str, str]] = []
 
     class _FakeSerper:
-        def __init__(self, api_key):
+        def __init__(self, api_key, **kwargs):
             constructed.append(("serper", api_key))
 
     class _UnexpectedLegacy:
@@ -201,12 +224,40 @@ def test_build_connectors_serper_only_when_selected(monkeypatch):
     assert constructed == [("serper", "serper-key")]
 
 
+def test_build_connectors_passes_serper_site_and_article_options(monkeypatch):
+    cli = _import_cli()
+    captured: dict[str, object] = {}
+
+    class _FakeSerper:
+        def __init__(self, api_key, **kwargs):
+            captured["api_key"] = api_key
+            captured["site_filters"] = kwargs.get("site_filters")
+            captured["fetch_article_content"] = kwargs.get("fetch_article_content")
+            captured["article_max_chars"] = kwargs.get("article_max_chars")
+
+    monkeypatch.setattr(cli, "SerperNewsConnector", _FakeSerper)
+    monkeypatch.setenv("SERPER_API_KEY", "serper-key")
+
+    connectors = cli._build_connectors(
+        "serper",
+        serper_site_filters=["data.iyiou.com"],
+        fetch_article_text=True,
+        article_max_chars=1200,
+    )
+
+    assert [name for name, _connector in connectors] == ["serper"]
+    assert captured["api_key"] == "serper-key"
+    assert captured["site_filters"] == ["data.iyiou.com"]
+    assert captured["fetch_article_content"] is True
+    assert captured["article_max_chars"] == 1200
+
+
 def test_build_connectors_all_defaults_to_serper_only(monkeypatch):
     cli = _import_cli()
     constructed: list[str] = []
 
     class _FakeSerper:
-        def __init__(self, _api_key):
+        def __init__(self, _api_key, **_kwargs):
             constructed.append("serper")
 
     class _UnexpectedLegacy:

@@ -120,3 +120,45 @@ def test_import_company_xlsx_report_counts_are_consistent(tmp_path: Path):
     assert result.report.duplicate_records_discarded == (
         result.report.company_rows_parsed - result.report.deduped_records
     )
+
+
+def test_import_company_xlsx_reports_missing_company_name_source_rows(
+    tmp_path: Path,
+) -> None:
+    workbook_path = tmp_path / "missing_company_name_fixture.xlsx"
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "sheet1"
+    ws.append(["专辑项目导出"])
+    ws.append(["序号", "项目名称", "行业领域", "公司名称"])
+    ws.append(["1", "有效企业", "先进制造", "深圳市星火半导体科技有限公司"])
+    ws.append(["2", "缺公司名项目", "机器人", None])
+    ws.append(["3", "另一个缺公司名项目", "传感器", "-"])
+    wb.save(workbook_path)
+
+    result = import_company_xlsx(workbook_path)
+
+    assert result.report.rows_missing_company_name == 2
+    assert result.report.missing_company_name_rows == (4, 5)
+
+
+def test_import_company_xlsx_skips_qimingpian_footer_rows(tmp_path: Path) -> None:
+    workbook_path = tmp_path / "footer_fixture.xlsx"
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "sheet1"
+    ws.append(["专辑项目导出"])
+    ws.append(["序号", "项目名称", "行业领域", "公司名称"])
+    ws.append(["1", "有效企业", "先进制造", "深圳市星火半导体科技有限公司"])
+    ws.append(["对数据有任何疑问or更多数据?", "客服微信:qimingpian01", None, None])
+    ws.append(["http://www.qimingpian.com", None, None, None])
+    ws.append(["2026-01-19", None, None, None])
+    wb.save(workbook_path)
+
+    result = import_company_xlsx(workbook_path)
+
+    assert len(result.records) == 1
+    assert result.report.rows_missing_company_name == 0
+    assert result.report.missing_company_name_rows == ()
+    assert result.report.footer_row_numbers == (4, 5, 6)
+    assert result.report.rows_footer_skipped == 3

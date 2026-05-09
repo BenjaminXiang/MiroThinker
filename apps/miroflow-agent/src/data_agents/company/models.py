@@ -94,12 +94,15 @@ class CompanyImportReport:
     rows_read: int
     rows_empty_skipped: int
     rows_missing_company_name: int
+    missing_company_name_rows: tuple[int, ...]
     continuation_rows_merged: int
     orphan_continuation_rows: int
     company_rows_parsed: int
     deduped_records: int
     duplicate_groups: int
     duplicate_records_discarded: int
+    rows_footer_skipped: int = 0
+    footer_row_numbers: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

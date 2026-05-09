@@ -7,14 +7,24 @@ import requests
 
 from src.data_agents.company.news_connectors.serper import (
     SerperNewsConnector,
+    _build_query,
+    _extract_text,
+    _normalize_site_filters,
     _parse_serper_date,
 )
 
 
 class _Response:
-    def __init__(self, payload, *, error: Exception | None = None) -> None:
+    def __init__(
+        self,
+        payload,
+        *,
+        error: Exception | None = None,
+        text: str = "",
+    ) -> None:
         self._payload = payload
         self._error = error
+        self.text = text
 
     def raise_for_status(self) -> None:
         if self._error is not None:
@@ -185,6 +195,149 @@ def test_parse_serper_date_common_chinese_relative_forms():
     assert timedelta(hours=2) - timedelta(seconds=2) <= delta <= timedelta(
         hours=2, seconds=2
     )
+
+
+def test_query_contains_site_filters_and_limits_tail():
+    session = MagicMock()
+    session.post.return_value = _Response({"news": []})
+    connector = SerperNewsConnector(
+        "serper-key",
+        session=session,
+        site_filters=("data.iyiou.com", "tech.example.com"),
+    )
+
+    connector.fetch("深圳示例科技", date(2026, 5, 1))
+
+    payload = session.post.call_args.kwargs["json"]
+    query = payload["q"]
+    assert "site:data.iyiou.com" in query
+    assert "site:tech.example.com" in query
+    assert (
+        " (融资 OR 发布 OR 收购 OR 上市 OR 任命 OR 中标 OR 产品) -招聘 -招标公告" in query
+    )
+
+
+def test_site_filters_skip_non_matching_serper_items():
+    session = MagicMock()
+    session.post.return_value = _Response(
+        {
+            "news": [
+                {
+                    "title": "目标企业新闻",
+                    "link": "https://data.iyiou.com/news/1",
+                    "snippet": "匹配到目标站点。",
+                    "date": "2026-05-01",
+                },
+                {
+                    "title": "非目标站点新闻",
+                    "link": "https://tech.example.com/news/2",
+                    "snippet": "不该出现。",
+                    "date": "2026-05-01",
+                },
+            ]
+        }
+    )
+    connector = SerperNewsConnector(
+        "serper-key",
+        session=session,
+        site_filters=("data.iyiou.com",),
+    )
+
+    records = connector.fetch("深圳示例科技", date(2026, 5, 1))
+
+    assert len(records) == 1
+    assert records[0].source_url == "https://data.iyiou.com/news/1"
+
+
+def test_fetch_article_text_replaces_summary_when_available_and_trimmed():
+    session = MagicMock()
+    session.post.return_value = _Response(
+        {
+            "news": [
+                {
+                    "title": "示例融资公告",
+                    "link": "https://data.iyiou.com/news/1",
+                    "snippet": "这是简短摘要。",
+                    "date": "2026-05-01",
+                }
+            ]
+        }
+    )
+    session.get.return_value = _Response(
+        {},
+        text="<html><body><h1>标题</h1><p>正文第一段</p><p>正文第二段</p></body></html>",
+    )
+    connector = SerperNewsConnector(
+        "serper-key",
+        session=session,
+        site_filters=("data.iyiou.com",),
+        fetch_article_content=True,
+        article_max_chars=80,
+    )
+
+    records = connector.fetch("深圳示例科技", date(2026, 5, 1))
+
+    assert len(records) == 1
+    assert records[0].summary == "标题\n正文第一段\n正文第二段"
+    assert records[0].raw_text == "标题\n正文第一段\n正文第二段"
+    assert records[0].summary == records[0].raw_text
+
+
+def test_fetch_article_text_skips_waf_like_pages_and_keeps_snippet():
+    session = MagicMock()
+    session.post.return_value = _Response(
+        {
+            "news": [
+                {
+                    "title": "示例融资公告",
+                    "link": "https://data.iyiou.com/news/1",
+                    "snippet": "这是简短摘要。",
+                    "date": "2026-05-01",
+                }
+            ]
+        }
+    )
+    session.get.return_value = _Response(
+        {},
+        text="<html><head><script>window.location.href='/';</script></head>"
+        "<body><div>x-waf-captcha-referer</div></body></html>",
+    )
+    connector = SerperNewsConnector(
+        "serper-key",
+        session=session,
+        site_filters=("data.iyiou.com",),
+        fetch_article_content=True,
+        article_max_chars=100,
+    )
+
+    records = connector.fetch("深圳示例科技", date(2026, 5, 1))
+
+    assert len(records) == 1
+    assert records[0].summary == "这是简短摘要。"
+    assert records[0].raw_text == "这是简短摘要。"
+
+
+def test_normalize_site_filters_removes_protocol_and_subpath():
+    assert _normalize_site_filters(("https://Data.IYIOU.com/abc", "  ", "www.abc.com/path")) == (
+        "abc.com",
+        "data.iyiou.com",
+    )
+
+
+def test_build_query_appends_site_filters_before_keywords():
+    query = _build_query("深圳示例科技", site_filters=("data.iyiou.com", "tech.example.com"))
+    assert query.startswith("深圳示例科技 site:data.iyiou.com site:tech.example.com")
+    assert "产品" in query
+
+
+def test_extract_text_removes_script_style_and_compacts_spaces():
+    html = """
+      <html><head><script>window.bad()</script><style>body{}</style></head>
+      <body><p>一  </p><p>  二  </p><script>skip</script></body></html>
+    """
+    text = _extract_text(html)
+
+    assert text == "一\n二"
 
 
 def test_query_contains_canonical_name_noise_filters_and_qdr():
