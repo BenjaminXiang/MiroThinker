@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 from collections import Counter
 import sys
+import json
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -24,6 +25,11 @@ def _load_module(module_name: str, module_path: Path):
 def _load_url_md_script():
     script_path = Path(__file__).resolve().parents[2] / "scripts" / "run_professor_url_md_e2e.py"
     return _load_module("run_professor_url_md_e2e_sampling", script_path)
+
+
+def _load_v3_pipeline_script():
+    script_path = Path(__file__).resolve().parents[2] / "scripts" / "run_professor_pipeline_v3_e2e.py"
+    return _load_module("run_professor_pipeline_v3_e2e", script_path)
 
 
 def _v3_fake_result():
@@ -549,3 +555,165 @@ def test_url_md_e2e_succeeds_when_degraded_ratio_within_threshold(
 
     code = module.main()
     assert code == 0
+
+
+def test_v3_pipeline_main_writes_report_on_exception(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _load_v3_pipeline_script()
+    seed_path = tmp_path / "seed.md"
+    output_dir = tmp_path / "out"
+    seed_path.write_text("https://example.com\n", encoding="utf-8")
+
+    def fake_resolve_professor_llm_settings(
+        profile_name: str | None = None,
+        *,
+        default_profile: str,
+        strict: bool,
+        include_profile: bool = False,
+    ) -> dict[str, str]:
+        return {
+            "local_llm_base_url": "http://localhost:1234/v1",
+            "local_llm_model": "test-local-model",
+            "local_llm_api_key": "",
+            "online_llm_base_url": "http://localhost:5678/v1",
+            "online_llm_model": "test-online-model",
+            "online_llm_api_key": "",
+            "llm_profile": "gemma4",
+        }
+
+    async def always_fail(*_args, **_kwargs):
+        raise RuntimeError("pipeline boom")
+
+    monkeypatch.setattr(module, "resolve_professor_llm_settings", fake_resolve_professor_llm_settings)
+    monkeypatch.setattr(module, "run_professor_pipeline_v3", always_fail)
+    monkeypatch.setattr(
+        module.sys,
+        "argv",
+        [
+            "script",
+            "--seed-doc",
+            str(seed_path),
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    code = module.main()
+    assert code == 1
+
+    report_path = output_dir / "e2e_report.json"
+    assert report_path.exists()
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    assert report["error"] == "pipeline boom"
+    assert report["seed_document"] == str(seed_path)
+    assert report["output_directory"] == str(output_dir)
+    assert report["report"]["stage8_release"]["alerts"] == ["pipeline_failed"]
+
+
+def test_v3_pipeline_main_succeeds_and_writes_report(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _load_v3_pipeline_script()
+    seed_path = tmp_path / "seed.md"
+    output_dir = tmp_path / "out"
+    seed_path.write_text("https://example.com\n", encoding="utf-8")
+
+    def fake_resolve_professor_llm_settings(
+        profile_name: str | None = None,
+        *,
+        default_profile: str,
+        strict: bool,
+        include_profile: bool = False,
+    ) -> dict[str, str]:
+        return {
+            "local_llm_base_url": "http://localhost:1234/v1",
+            "local_llm_model": "test-local-model",
+            "local_llm_api_key": "",
+            "online_llm_base_url": "http://localhost:5678/v1",
+            "online_llm_model": "test-online-model",
+            "online_llm_api_key": "",
+            "llm_profile": "gemma4",
+        }
+
+    async def fake_success(*_args, **_kwargs):
+        return _v3_fake_result()
+
+    monkeypatch.setattr(module, "resolve_professor_llm_settings", fake_resolve_professor_llm_settings)
+    monkeypatch.setattr(module, "run_professor_pipeline_v3", fake_success)
+    monkeypatch.setattr(
+        module.sys,
+        "argv",
+        [
+            "script",
+            "--seed-doc",
+            str(seed_path),
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    code = module.main()
+    assert code == 0
+
+    report_path = output_dir / "e2e_report.json"
+    assert report_path.exists()
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    assert report.get("error") is None
+    assert report["report"]["stage1_discovery"]["seed_count"] == 0
+    assert report["output_files"]["quality_report"].endswith("quality_report.json")
+
+
+def test_v3_pipeline_main_defaults_database_url_for_metrics_refresh(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _load_v3_pipeline_script()
+    seed_path = tmp_path / "seed.md"
+    output_dir = tmp_path / "out"
+    seed_path.write_text("https://example.com\n", encoding="utf-8")
+    seen_env: dict[str, str | None] = {}
+
+    def fake_resolve_professor_llm_settings(
+        profile_name: str | None = None,
+        *,
+        default_profile: str,
+        strict: bool,
+        include_profile: bool = False,
+    ) -> dict[str, str]:
+        return {
+            "local_llm_base_url": "http://localhost:1234/v1",
+            "local_llm_model": "test-local-model",
+            "local_llm_api_key": "",
+            "online_llm_base_url": "http://localhost:5678/v1",
+            "online_llm_model": "test-online-model",
+            "online_llm_api_key": "",
+            "llm_profile": "gemma4",
+        }
+
+    async def fake_success(*_args, **_kwargs):
+        seen_env["DATABASE_URL"] = module.os.environ.get("DATABASE_URL")
+        return _v3_fake_result()
+
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.delenv("DATABASE_URL_TEST", raising=False)
+    monkeypatch.setattr(module, "resolve_professor_llm_settings", fake_resolve_professor_llm_settings)
+    monkeypatch.setattr(module, "run_professor_pipeline_v3", fake_success)
+    monkeypatch.setattr(
+        module.sys,
+        "argv",
+        [
+            "script",
+            "--seed-doc",
+            str(seed_path),
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    code = module.main()
+
+    assert code == 0
+    assert seen_env["DATABASE_URL"] == "postgresql://miroflow:miroflow@localhost:15432/miroflow_real"

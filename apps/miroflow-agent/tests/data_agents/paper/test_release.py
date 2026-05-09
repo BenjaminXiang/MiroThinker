@@ -209,3 +209,37 @@ def test_build_paper_domain_publication_builds_verified_link_objects():
     assert {item.paper_id for item in result.link_records} == {result.paper_records[0].id}
     assert all(item.link_status == "verified" for item in result.link_records)
     assert all(item.evidence_source == "official_linked_google_scholar" for item in result.link_records)
+
+
+def test_build_paper_domain_publication_preserves_candidate_link_status():
+    result = build_paper_domain_publication(
+        staging_records=[
+            PaperStagingRecord(
+                title="石墨烯/炭黑杂化材料：新型、高效锂离子电池二元导电剂",
+                authors=["康飞宇"],
+                year=2015,
+                venue="新型炭材料",
+                abstract=None,
+                doi=None,
+                citation_count=0,
+                keywords=["carbon"],
+                source_url="https://www.airitilibrary.com/Publication/alDetailedMesh?docid=xxtcl201502006",
+                source="openalex",
+                link_status="candidate",
+                identity_confidence=0.45,
+                match_reason="Candidate OpenAlex paper link; requires admin review.",
+                anchoring_professor_id="PROF-KANG",
+                anchoring_professor_name="康飞宇",
+                anchoring_institution="清华大学深圳国际研究生院",
+            )
+        ],
+        now=TIMESTAMP,
+    )
+
+    assert len(result.link_records) == 1
+    link = result.link_records[0]
+    assert link.link_status == "candidate"
+    assert link.quality_status == "needs_review"
+    assert link.verified_by == "pipeline_v3_candidate_staging"
+    assert link.evidence[0].confidence == 0.45
+    assert link.match_reason == "Candidate OpenAlex paper link; requires admin review."

@@ -22,6 +22,7 @@ import asyncio
 import json
 import logging
 import os
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -50,11 +51,39 @@ from .publish_helpers import (
     build_professor_id as build_published_professor_id,
     build_professor_record_from_enriched,
 )
-from .quality_gate import QualityResult, build_quality_report, evaluate_quality
+from .quality_gate import (
+    QualityResult,
+    build_quality_report,
+    evaluate_quality,
+    has_minimum_academic_signal,
+)
 from .web_search_enrichment import CompanyMention, search_and_enrich
 from .llm_profiles import resolve_professor_llm_settings
 
 logger = logging.getLogger(__name__)
+
+_NON_STEM_SCOPE_KEYWORDS = (
+    "人文社会科学",
+    "人文社科",
+    "社会科学部",
+    "人文社会科学部",
+    "科学技术哲学",
+    "科学社会学",
+    "哲学",
+    "法学",
+    "马克思主义",
+    "新闻传播",
+    "外国语",
+    "公共管理",
+    "工商管理",
+    "金融学",
+    "会计学",
+    "经济学",
+    "艺术学",
+    "设计学",
+    "文学",
+    "历史学",
+)
 _DEFAULT_LLM_TIMEOUT_SECONDS = 60.0
 
 
@@ -81,7 +110,10 @@ class PipelineV3Config:
     embedding_batch_size: int = 50
     # Timeouts
     crawl_timeout: float = 30.0
+    homepage_timeout: float = 180.0
+    paper_collection_timeout: float = 180.0
     agent_timeout: float = 300.0
+    summary_timeout: float = 90.0
     # Domain
     official_domain_suffixes: tuple[str, ...] = ("sustech.edu.cn",)
     # Limits
@@ -90,7 +122,9 @@ class PipelineV3Config:
     # V3 specific
     identity_confidence_threshold: float = 0.8
     skip_web_search: bool = False
+    force_web_search_for_low_signal: bool = True
     skip_vectorize: bool = False
+    exclude_non_stem: bool = False
     # Store
     store_db_path: str | None = None
 
@@ -154,6 +188,9 @@ class PipelineV3Report:
     # Stage 5 — Web Search
     web_search_count: int = 0
     identity_verified_count: int = 0
+    low_signal_web_search_count: int = 0
+    low_signal_web_search_skipped_count: int = 0
+    low_signal_web_search_skipped_reasons: dict[str, int] = field(default_factory=dict)
     # Stage 6 — Company Linking
     company_links_confirmed: int = 0
     # Stage 7 — Summary
@@ -168,6 +205,7 @@ class PipelineV3Report:
     metrics_openalex_count: int = 0
     metrics_verified_link_only_count: int = 0
     metrics_failed_count: int = 0
+    non_stem_filtered_count: int = 0
     alerts: list[str] = field(default_factory=list)
 
 
@@ -256,6 +294,64 @@ def _merged_to_enriched(
 
 def _build_professor_id(profile: EnrichedProfessorProfile) -> str:
     return build_published_professor_id(profile)
+
+
+def _record_progress_label(record: MergedProfessorProfileRecord) -> str:
+    return (
+        f"name={record.name or '<unknown>'} "
+        f"institution={record.institution or '<unknown>'} "
+        f"url={record.profile_url or record.homepage or '<missing>'}"
+    )
+
+
+def _profile_progress_label(profile: EnrichedProfessorProfile) -> str:
+    return (
+        f"name={profile.name or '<unknown>'} "
+        f"institution={profile.institution or '<unknown>'} "
+        f"url={profile.profile_url or profile.homepage or '<missing>'}"
+    )
+
+
+def _is_non_stem_profile(profile: object) -> bool:
+    research_directions = getattr(profile, "research_directions", None) or []
+    if isinstance(research_directions, str):
+        research_text = research_directions
+    else:
+        research_text = " ".join(str(value) for value in research_directions if value)
+    text = " ".join(
+        str(value)
+        for value in (
+            getattr(profile, "name", None),
+            getattr(profile, "institution", None),
+            getattr(profile, "department", None),
+            getattr(profile, "title", None),
+            research_text,
+        )
+        if value
+    )
+    return any(keyword in text for keyword in _NON_STEM_SCOPE_KEYWORDS)
+
+
+def _log_professor_progress(
+    label: str,
+    stage: str,
+    *,
+    started_at: float | None = None,
+    **details: object,
+) -> None:
+    parts = [f"professor_stage={stage}", label]
+    if started_at is not None:
+        parts.append(f"elapsed={time.monotonic() - started_at:.1f}s")
+    for key, value in details.items():
+        if value is not None:
+            parts.append(f"{key}={value}")
+    _log(" | ".join(parts))
+
+
+async def _await_with_timeout(awaitable: Any, *, timeout: float) -> Any:
+    if timeout and timeout > 0:
+        return await asyncio.wait_for(awaitable, timeout=timeout)
+    return await awaitable
 
 
 def _load_completed_ids(path: Path) -> set[str]:
@@ -524,6 +620,22 @@ def _should_retry_paper_collection_after_web_search(
     return _paper_input_signature(after_search) != _paper_input_signature(before_search)
 
 
+def _decide_web_search(
+    *,
+    config: PipelineV3Config,
+    profile: EnrichedProfessorProfile,
+    search_provider: Any | None,
+) -> tuple[bool, bool, str]:
+    low_academic_signal = not has_minimum_academic_signal(profile)
+    if search_provider is None:
+        return False, low_academic_signal, "missing_search_provider"
+    if not config.skip_web_search:
+        return True, low_academic_signal, "enabled"
+    if config.force_web_search_for_low_signal and low_academic_signal:
+        return True, low_academic_signal, "low_signal_override"
+    return False, low_academic_signal, "skip_web_search"
+
+
 async def _process_single_professor_v3(
     *,
     record: MergedProfessorProfileRecord,
@@ -536,6 +648,9 @@ async def _process_single_professor_v3(
 ) -> tuple[EnrichedProfessorProfile, list[PaperStagingRecord], list[CompanyMention]]:
     """Process a single professor through all V3 stages."""
     async with semaphore:
+        initial_label = _record_progress_label(record)
+        professor_started_at = time.monotonic()
+        _log_professor_progress(initial_label, "start")
         resilient_client = _build_fallback_llm_client(
             primary_client=local_client,
             primary_model=config.local_llm_model,
@@ -544,6 +659,7 @@ async def _process_single_professor_v3(
         )
         # Stage 2a: Convert to enriched profile
         profile = _merged_to_enriched(record)
+        label = _profile_progress_label(profile)
         staging_records: list[PaperStagingRecord] = []
         company_mentions: list[CompanyMention] = []
 
@@ -561,19 +677,39 @@ async def _process_single_professor_v3(
             return fetch_html_with_fallback(url, timeout=timeout)
 
         try:
-            homepage_result = await crawl_homepage(
-                profile=profile,
-                fetch_html_fn=fetch_html,
-                llm_client=resilient_client,
-                llm_model=config.local_llm_model,
-                timeout=config.crawl_timeout,
+            stage_started_at = time.monotonic()
+            _log_professor_progress(label, "homepage_start")
+            homepage_result = await _await_with_timeout(
+                crawl_homepage(
+                    profile=profile,
+                    fetch_html_fn=fetch_html,
+                    llm_client=resilient_client,
+                    llm_model=config.local_llm_model,
+                    timeout=config.crawl_timeout,
+                ),
+                timeout=config.homepage_timeout,
             )
             if homepage_result.success:
                 profile = homepage_result.profile
+                label = _profile_progress_label(profile)
                 report.homepage_crawled_count += 1
                 report.homepage_fields_filled += homepage_result.pages_fetched
+            _log_professor_progress(
+                label,
+                "homepage_done",
+                started_at=stage_started_at,
+                success=homepage_result.success,
+                pages=homepage_result.pages_fetched,
+                error=homepage_result.error,
+            )
         except Exception as e:
             logger.warning("Homepage crawl failed for %s: %s", profile.name, e)
+            _log_professor_progress(
+                label,
+                "homepage_failed",
+                started_at=stage_started_at,
+                error=type(e).__name__,
+            )
 
         # Stage 2b: Paper Collection
         from .paper_collector import enrich_from_papers
@@ -642,16 +778,43 @@ async def _process_single_professor_v3(
             return updated_profile, paper_result.staging_records
 
         try:
-            profile, staging_records = await run_paper_collection(profile)
+            stage_started_at = time.monotonic()
+            _log_professor_progress(label, "paper_start")
+            profile, staging_records = await _await_with_timeout(
+                run_paper_collection(profile),
+                timeout=config.paper_collection_timeout,
+            )
+            label = _profile_progress_label(profile)
+            _log_professor_progress(
+                label,
+                "paper_done",
+                started_at=stage_started_at,
+                staged=len(staging_records),
+                source=(
+                    staging_records[0].source if staging_records else None
+                ),
+            )
         except Exception as e:
             logger.warning("Paper collection failed for %s: %s", profile.name, e)
+            _log_professor_progress(
+                label,
+                "paper_failed",
+                started_at=stage_started_at,
+                error=type(e).__name__,
+            )
 
         # Stage 2c: Agent Enrichment
         assessment = assess_completeness(profile)
         if assessment.should_trigger_agent:
             report.agent_triggered_count += 1
             try:
+                stage_started_at = time.monotonic()
                 from .agent_enrichment import run_agent_enrichment
+                _log_professor_progress(
+                    label,
+                    "agent_start",
+                    missing=",".join(assessment.missing_fields[:8]),
+                )
 
                 # Fetch profile HTML for agent
                 profile_html = ""
@@ -673,20 +836,46 @@ async def _process_single_professor_v3(
                     timeout=config.agent_timeout,
                 )
                 profile = agent_result.profile
+                label = _profile_progress_label(profile)
                 if agent_result.enrichment_source == "agent_online":
                     report.agent_online_escalation_count += 1
                 elif agent_result.enrichment_source == "agent_failed":
                     report.agent_failed_count += 1
                 else:
                     report.agent_local_success_count += 1
+                _log_professor_progress(
+                    label,
+                    "agent_done",
+                    started_at=stage_started_at,
+                    source=agent_result.enrichment_source,
+                )
             except Exception as e:
                 logger.warning("Agent enrichment failed for %s: %s", profile.name, e)
                 report.agent_failed_count += 1
+                _log_professor_progress(
+                    label,
+                    "agent_failed",
+                    started_at=stage_started_at,
+                    error=type(e).__name__,
+                )
 
         # Stage 5: Web Search + Identity Verification
-        if not config.skip_web_search and search_provider is not None:
+        should_web_search, low_academic_signal, web_search_reason = _decide_web_search(
+            config=config,
+            profile=profile,
+            search_provider=search_provider,
+        )
+        if should_web_search:
             try:
                 before_web_search_profile = profile
+                if low_academic_signal:
+                    report.low_signal_web_search_count += 1
+                _log_professor_progress(
+                    label,
+                    "web_search_start",
+                    low_academic_signal=low_academic_signal,
+                    reason=web_search_reason,
+                )
                 web_result = await search_and_enrich(
                     profile=profile,
                     search_provider=search_provider,
@@ -698,6 +887,13 @@ async def _process_single_professor_v3(
                 report.identity_verified_count += web_result.pages_verified
                 profile = web_result.profile
                 company_mentions.extend(web_result.company_mentions)
+                _log_professor_progress(
+                    _profile_progress_label(profile),
+                    "web_search_done",
+                    low_academic_signal=low_academic_signal,
+                    verified=web_result.pages_verified,
+                    company_mentions=len(web_result.company_mentions),
+                )
                 if _should_retry_paper_collection_after_web_search(
                     before_search=before_web_search_profile,
                     after_search=profile,
@@ -705,6 +901,23 @@ async def _process_single_professor_v3(
                     profile, staging_records = await run_paper_collection(profile)
             except Exception as e:
                 logger.warning("Web search failed for %s: %s", profile.name, e)
+                _log_professor_progress(
+                    label,
+                    "web_search_failed",
+                    low_academic_signal=low_academic_signal,
+                    reason=type(e).__name__,
+                )
+        elif low_academic_signal and config.force_web_search_for_low_signal:
+            report.low_signal_web_search_skipped_count += 1
+            report.low_signal_web_search_skipped_reasons[web_search_reason] = (
+                report.low_signal_web_search_skipped_reasons.get(web_search_reason, 0) + 1
+            )
+            _log_professor_progress(
+                label,
+                "web_search_skipped",
+                low_academic_signal=True,
+                reason=web_search_reason,
+            )
 
         # Stage 6: Company Link Verification
         for mention in company_mentions:
@@ -734,25 +947,49 @@ async def _process_single_professor_v3(
         needs_profile_summary = not profile.profile_summary or len(profile.profile_summary) < 200
         if needs_profile_summary:
             try:
+                stage_started_at = time.monotonic()
                 from .summary_generator import generate_summaries
-                summaries = await generate_summaries(
-                    profile=profile,
-                    llm_client=resilient_client,
-                    llm_model=config.local_llm_model,
+                _log_professor_progress(label, "summary_start")
+                summaries = await _await_with_timeout(
+                    generate_summaries(
+                        profile=profile,
+                        llm_client=resilient_client,
+                        llm_model=config.local_llm_model,
+                    ),
+                    timeout=config.summary_timeout,
                 )
                 profile = profile.model_copy(update={
                     "profile_summary": (
                         summaries.profile_summary if needs_profile_summary else profile.profile_summary
                     ),
                 })
+                label = _profile_progress_label(profile)
                 report.summary_generated_count += 1
+                _log_professor_progress(
+                    label,
+                    "summary_done",
+                    started_at=stage_started_at,
+                    length=len(profile.profile_summary or ""),
+                )
             except Exception:
                 # LLM failed — leave empty, quality gate marks as needs_review
                 profile = profile.model_copy(update={
                     "profile_summary": "" if needs_profile_summary else profile.profile_summary,
                 })
                 report.summary_fallback_count += 1
+                _log_professor_progress(
+                    label,
+                    "summary_failed",
+                    started_at=stage_started_at,
+                )
 
+        _log_professor_progress(
+            label,
+            "done",
+            started_at=professor_started_at,
+            staged=len(staging_records),
+            company_mentions=len(company_mentions),
+        )
         return profile, staging_records, company_mentions
 
 
@@ -772,11 +1009,12 @@ async def run_professor_pipeline_v3(
 
     # --- Stage 1: Roster Discovery ---
     _log("Stage 1: Roster Discovery")
+    discovery_fetch_limit = None if config.institution_filter else config.limit
     v1_result = run_professor_pipeline(
         config.seed_doc,
         timeout=config.crawl_timeout,
         official_domain_suffixes=config.official_domain_suffixes,
-        max_profile_fetch=config.limit,
+        max_profile_fetch=discovery_fetch_limit,
     )
 
     report.seed_count = v1_result.report.seed_url_count
@@ -788,6 +1026,10 @@ async def run_professor_pipeline_v3(
     profiles = v1_result.profiles
     if config.institution_filter:
         profiles = [p for p in profiles if config.institution_filter in (p.institution or "")]
+    if config.exclude_non_stem:
+        before_count = len(profiles)
+        profiles = [p for p in profiles if not _is_non_stem_profile(p)]
+        report.non_stem_filtered_count += before_count - len(profiles)
     if config.limit:
         profiles = profiles[: config.limit]
 
@@ -808,7 +1050,9 @@ async def run_professor_pipeline_v3(
 
     # Build search provider
     search_provider = None
-    if config.serper_api_key and not config.skip_web_search:
+    if config.serper_api_key and (
+        not config.skip_web_search or config.force_web_search_for_low_signal
+    ):
         from src.data_agents.providers.web_search import WebSearchProvider
         search_provider = WebSearchProvider(api_key=config.serper_api_key)
 
@@ -836,27 +1080,67 @@ async def run_professor_pipeline_v3(
         )
 
     if tasks:
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        for result in results:
-            if isinstance(result, Exception):
-                _log(f"Professor failed: {result}")
+        completed_count = 0
+        total_count = len(tasks)
+        for completed in asyncio.as_completed(tasks):
+            try:
+                result = await completed
+            except Exception as exc:  # noqa: BLE001 - keep harvesting other professors
+                _log(f"Professor failed: {exc}")
                 report.agent_failed_count += 1
                 failed_tasks.append({
-                    "error": str(result),
+                    "error": str(exc),
                     "timestamp": datetime.now(timezone.utc).isoformat(),
                 })
+                completed_count += 1
                 continue
             enriched, staging, _company_mentions = result
+            if config.exclude_non_stem and _is_non_stem_profile(enriched):
+                report.non_stem_filtered_count += 1
+                _log_professor_progress(
+                    _profile_progress_label(enriched),
+                    "filtered_non_stem",
+                    department=enriched.department,
+                )
+                completed_count += 1
+                if completed_count % 25 == 0 or completed_count == total_count:
+                    _log(
+                        "Stage 2-6 progress: "
+                        f"{completed_count}/{total_count} processed, "
+                        f"{len(enriched_profiles)} enriched, "
+                        f"{len(all_staging_records)} staged papers"
+                    )
+                continue
             enriched_profiles.append(enriched)
             all_staging_records.extend(staging)
 
             _append_jsonl(enriched_path, enriched)
             for s in staging:
                 _append_jsonl(paper_staging_path, s)
+            completed_count += 1
+            if completed_count % 25 == 0 or completed_count == total_count:
+                _log(
+                    "Stage 2-6 progress: "
+                    f"{completed_count}/{total_count} processed, "
+                    f"{len(enriched_profiles)} enriched, "
+                    f"{len(all_staging_records)} staged papers"
+                )
 
     # Load all enriched profiles and paper staging records (including previously processed)
     all_enriched = _load_enriched_profiles(enriched_path)
     all_staging_records = _load_paper_staging_records(paper_staging_path)
+    if config.exclude_non_stem:
+        before_count = len(all_enriched)
+        all_enriched = [p for p in all_enriched if not _is_non_stem_profile(p)]
+        existing_filtered_count = before_count - len(all_enriched)
+        if existing_filtered_count:
+            report.non_stem_filtered_count += existing_filtered_count
+        publishable_professor_ids = {_build_professor_id(profile) for profile in all_enriched}
+        all_staging_records = [
+            record
+            for record in all_staging_records
+            if record.anchoring_professor_id in publishable_professor_ids
+        ]
     report.paper_enriched_count = sum(
         1 for p in all_enriched if p.enrichment_source != "regex_only"
     )

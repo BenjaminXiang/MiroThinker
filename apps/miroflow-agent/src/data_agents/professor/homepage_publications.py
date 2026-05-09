@@ -660,6 +660,8 @@ def _split_title_inline_venue_tail(text: str) -> tuple[str, str] | None:
         if not _extract_year_from_text(remainder):
             continue
         if _looks_like_venue(remainder) or _looks_like_journal_tail(remainder):
+            title = re.sub(r"\s*[,，;；:]\s*in$", "", title, flags=re.IGNORECASE)
+            title = _clean_segment(title)
             return title, remainder
     return None
 

@@ -35,6 +35,31 @@ def _make_profile(**kwargs) -> EnrichedProfessorProfile:
     return EnrichedProfessorProfile(**defaults)
 
 
+@pytest.fixture(autouse=True)
+def _run_web_search_blocking_calls_without_default_executor(monkeypatch):
+    async def to_thread_without_default_executor(func, /, *args, **kwargs):
+        result: dict[str, object] = {}
+        error: list[BaseException] = []
+
+        def run() -> None:
+            try:
+                result["value"] = func(*args, **kwargs)
+            except BaseException as exc:  # noqa: BLE001 - preserve to_thread error propagation.
+                error.append(exc)
+
+        thread = threading.Thread(target=run)
+        thread.start()
+        thread.join()
+        if error:
+            raise error[0]
+        return result.get("value")
+
+    monkeypatch.setattr(
+        "src.data_agents.professor.web_search_enrichment.asyncio.to_thread",
+        to_thread_without_default_executor,
+    )
+
+
 class TestBuildSearchQueries:
     """Test query construction."""
 

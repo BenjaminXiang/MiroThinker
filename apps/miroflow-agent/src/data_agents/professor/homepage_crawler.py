@@ -17,13 +17,14 @@ from dataclasses import dataclass
 from bs4 import BeautifulSoup
 from html.parser import HTMLParser
 from typing import Any, Callable
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urlencode, urljoin, urlparse
 
 from pydantic import BaseModel, ValidationError
 
 from .cross_domain import PaperLink
 from .direction_cleaner import clean_directions
 from .homepage_publication_headings import _PUBLICATIONS_HEADING_RE
+from .homepage_publications import extract_publications_from_html
 from .models import (
     EducationEntry,
     EnrichedProfessorProfile,
@@ -59,6 +60,10 @@ _SCRIPT_STYLE_RE = re.compile(
 )
 _HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
 _HTML_TAG_RE = re.compile(r"<[^>]+>")
+_HIT_TEACHER_BODY_ID_RE = re.compile(
+    r"\bdata-tid\s*=\s*[\"']([^\"']+)[\"']",
+    re.IGNORECASE,
+)
 
 # Max sub-pages to crawl per professor
 MAX_SUB_PAGES = 5
@@ -256,6 +261,27 @@ _OFFICIAL_ANCHOR_NAV_BLOCKERS = (
     "继续了解",
 )
 _PUBLICATION_CONTEXT_LINE_PATTERNS = (_PUBLICATIONS_HEADING_RE,)
+_PUBLICATION_FALLBACK_STOP_HEADINGS = (
+    "代表性著作",
+    "学术兼职",
+    "社会兼职",
+    "研究领域",
+    "主要项目",
+    "科研项目",
+    "荣誉奖项",
+    "教育背景",
+    "工作经历",
+    "研究方向",
+    "招生信息",
+    "联系方式",
+    "academic service",
+    "professional service",
+    "honors",
+    "awards",
+    "research",
+    "projects",
+    "teaching",
+)
 _RESEARCH_DIRECTION_BLOCKERS = (
     "教育背景",
     "工作经历",
@@ -1405,6 +1431,73 @@ def _extract_publication_titles(text: str, *, limit: int = 5) -> list[PaperLink]
     ]
 
 
+def _publication_fallback_scan_text(text: str) -> str:
+    lines = text.splitlines()
+    start_index: int | None = None
+    for index, raw_line in enumerate(lines):
+        normalized = re.sub(r"\s+", " ", raw_line).strip(" ：:-•*#\t")
+        if not normalized or len(normalized) > 80:
+            continue
+        if any(
+            pattern.fullmatch(normalized)
+            for pattern in _PUBLICATION_CONTEXT_LINE_PATTERNS
+        ):
+            start_index = index + 1
+            break
+
+    if start_index is None:
+        return text
+
+    section_lines: list[str] = []
+    for raw_line in lines[start_index:]:
+        normalized = re.sub(r"\s+", " ", raw_line).strip(" ：:-•*#\t")
+        lowered = normalized.casefold()
+        if section_lines and (
+            lowered in _PUBLICATION_FALLBACK_STOP_HEADINGS
+            or normalized in _PUBLICATION_FALLBACK_STOP_HEADINGS
+        ):
+            break
+        section_lines.append(raw_line)
+    return "\n".join(section_lines).strip()
+
+
+def _extract_structured_publication_titles(
+    *,
+    html_content: str,
+    page_url: str,
+    limit: int = 5,
+) -> list[PaperLink]:
+    publications = extract_publications_from_html(html_content, page_url=page_url)
+    candidates: list[PaperLink] = []
+    for publication in publications:
+        title = _normalize_publication_title(publication.clean_title)
+        if not title:
+            continue
+        if len(title) < 10 or len(title) > 240:
+            continue
+        if _extract_publication_count(title) is not None:
+            continue
+        if any(
+            marker in title
+            for marker in ("代表作有", "目前已发表", "累计发表", "发表论文")
+        ):
+            continue
+        lowered = title.lower()
+        if any(blocker.lower() in lowered for blocker in _PUBLICATION_LINE_BLOCKERS):
+            continue
+        if any(pattern.search(title) for pattern in _PUBLICATION_FOOTER_PATTERNS):
+            continue
+        candidates.append(
+            PaperLink(
+                title=title,
+                year=publication.year,
+                venue=publication.venue_text,
+                source="official_site",
+            )
+        )
+    return candidates[:limit]
+
+
 def _has_inline_publication_context(text: str) -> bool:
     if _extract_publication_count(text) is not None:
         return True
@@ -1448,7 +1541,13 @@ def _extract_official_publication_signals(
             index == 0 and _has_inline_publication_context(sanitized)
         )
         if titles_allowed and not page_is_sitewide:
-            extracted_titles = _extract_publication_titles(sanitized)
+            extracted_titles = _extract_structured_publication_titles(
+                html_content=page.html,
+                page_url=page.url,
+            )
+            if not extracted_titles:
+                fallback_text = _publication_fallback_scan_text(sanitized)
+                extracted_titles = _extract_publication_titles(fallback_text)
             if extracted_titles:
                 titles.extend(extracted_titles)
                 evidence_urls.append(page.url)
@@ -1509,6 +1608,53 @@ def _extract_official_link_targets(
     )
 
 
+def _html_from_fetch_result(result: Any) -> str:
+    return result.html if hasattr(result, "html") else str(result or "")
+
+
+def _decode_json_wrapped_html(value: str) -> str:
+    stripped = (value or "").strip()
+    if not stripped:
+        return ""
+    try:
+        decoded = json.loads(stripped)
+    except json.JSONDecodeError:
+        return stripped
+    return decoded if isinstance(decoded, str) else stripped
+
+
+def _augment_hit_homepage_dynamic_body(
+    *,
+    homepage_url: str,
+    html_content: str,
+    fetch_html_fn: Callable,
+    timeout: float,
+) -> str:
+    parsed = urlparse(homepage_url)
+    hostname = (parsed.hostname or "").lower()
+    if hostname != "homepage.hit.edu.cn":
+        return html_content
+
+    match = _HIT_TEACHER_BODY_ID_RE.search(html_content)
+    if not match:
+        return html_content
+
+    teacher_body_url = (
+        f"{parsed.scheme or 'https'}://{parsed.netloc}/TeacherHome/teacherBody.do?"
+        f"{urlencode({'id': match.group(1)})}"
+    )
+    try:
+        body_result = fetch_html_fn(teacher_body_url, timeout)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("Failed to fetch HIT dynamic teacher body %s: %s", homepage_url, exc)
+        return html_content
+
+    body_html = _decode_json_wrapped_html(_html_from_fetch_result(body_result))
+    if not body_html:
+        return html_content
+    return f"{html_content}\n\n--- HIT dynamic teacher body ---\n{body_html}"
+
+
 async def crawl_homepage(
     *,
     profile: EnrichedProfessorProfile,
@@ -1549,6 +1695,12 @@ async def crawl_homepage(
         return HomepageCrawlResult(
             profile=profile, success=False, pages_fetched=0, error="empty_html"
         )
+    main_html = _augment_hit_homepage_dynamic_body(
+        homepage_url=homepage_url,
+        html_content=main_html,
+        fetch_html_fn=fetch_html_fn,
+        timeout=timeout,
+    )
 
     pages_fetched = 1
     fetched_pages: list[_FetchedPage] = [

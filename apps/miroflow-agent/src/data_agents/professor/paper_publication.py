@@ -45,28 +45,40 @@ def build_paper_domain_publication(
             continue
         seen_link_keys.add(link_key)
         evidence_source_type = _link_evidence_source_type(record.source)
-        match_reason = _match_reason(record.source)
+        link_status = record.link_status
+        match_reason = record.match_reason or _match_reason(
+            record.source,
+            link_status=link_status,
+        )
         link = ProfessorPaperLinkRecord(
             id=build_stable_id('prof-paper-link', link_key),
             professor_id=record.anchoring_professor_id,
             paper_id=paper_id,
             professor_name=record.anchoring_professor_name,
             paper_title=record.title,
-            link_status='verified',
+            link_status=link_status,
             evidence_source=record.source,
             evidence_url=record.source_url,
             match_reason=match_reason,
-            verified_by='pipeline_v3_staging',
+            verified_by=(
+                'pipeline_v3_staging'
+                if link_status == 'verified'
+                else 'pipeline_v3_candidate_staging'
+            ),
             evidence=[
                 build_evidence(
                     source_type=evidence_source_type,
                     source_url=record.source_url,
                     fetched_at=now,
-                    confidence=0.85,
+                    confidence=(
+                        record.identity_confidence
+                        if record.identity_confidence is not None
+                        else (0.85 if link_status == 'verified' else 0.5)
+                    ),
                 )
             ],
             last_updated=now,
-            quality_status='ready',
+            quality_status='ready' if link_status == 'verified' else 'needs_review',
         )
         link_records.append(link)
 
@@ -130,8 +142,10 @@ def _link_evidence_source_type(source: str) -> str:
     return 'public_web'
 
 
-def _match_reason(source: str) -> str:
+def _match_reason(source: str, *, link_status: str = 'verified') -> str:
     lowered = source.strip().lower()
+    if link_status == 'candidate':
+        return 'Candidate paper link from academic discovery; requires admin review before it is treated as verified.'
     if lowered == 'official_site':
         return 'Verified from an official publication list collected during professor enrichment.'
     if lowered.startswith('official_linked_'):

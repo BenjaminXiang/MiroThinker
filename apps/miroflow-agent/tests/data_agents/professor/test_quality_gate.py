@@ -101,6 +101,48 @@ def test_fails_l1_refusal_style_summary():
     assert "profile_summary_boilerplate" in result.l1_failures
 
 
+def test_fails_l1_academic_norm_refusal_style_summary():
+    refusal = _pad_summary(
+        "由于您提供的原始信息中，除姓名和学校外，缺乏研究方向、职称、院系、h-index、"
+        "代表论文及教育背景等核心学术维度，无法构建符合学术规范且达到要求的专业简介。"
+        "若要生成高质量的学术摘要，请提供包含具体研究领域、学术头衔、核心论文题目及具体科研成果的详细文本。",
+        250,
+    )
+    profile = _profile(profile_summary=refusal)
+    result = evaluate_quality(profile)
+    assert not result.passed_l1
+    assert "profile_summary_boilerplate" in result.l1_failures
+
+
+def test_fails_l1_when_profile_has_no_academic_signal():
+    profile = _profile(
+        department=None,
+        title=None,
+        research_directions=[],
+        top_papers=[],
+        paper_count=None,
+        h_index=None,
+        citation_count=None,
+        awards=[],
+        academic_positions=[],
+        education_structured=[],
+        work_experience=[],
+        profile_summary=_pad_summary(
+            "尤政现任清华大学深圳国际研究生院教师，当前官方主页未提供可核验的研究方向、"
+            "职称、论文、项目、履历或荣誉信息，本条记录需继续补充后再进入发布库。",
+            250,
+        ),
+        evidence_urls=["http://www.sigs.tsinghua.edu.cn/yzys/main.htm"],
+        profile_url="http://www.sigs.tsinghua.edu.cn/yzys/main.htm",
+    )
+
+    result = evaluate_quality(profile)
+
+    assert not result.passed_l1
+    assert "insufficient_academic_signal" in result.l1_failures
+    assert result.quality_status == "low_confidence"
+
+
 def test_fails_l1_reader_artifact_in_title_or_name():
     profile = _profile(
         name_en="Published Time",

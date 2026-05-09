@@ -56,6 +56,14 @@ class TestValidateProfileSummary:
         text = _pad("张三教授已整理5条可追溯来源", 250)
         assert not validate_profile_summary(text)
 
+    def test_rejects_refusal_style_output(self):
+        text = _pad(
+            "由于您提供的原始信息中缺乏研究方向、职称、代表论文及教育背景等核心学术维度，"
+            "无法构建符合学术规范且达到要求的专业简介。若要生成高质量的学术摘要，请补充以下关键维度信息。",
+            250,
+        )
+        assert not validate_profile_summary(text)
+
     def test_accepts_valid_summary(self):
         text = _pad("张三现任南方科技大学计算机系教授，研究方向聚焦大语言模型安全对齐", 250)
         assert validate_profile_summary(text)

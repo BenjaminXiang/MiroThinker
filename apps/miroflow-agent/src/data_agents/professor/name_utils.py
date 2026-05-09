@@ -114,6 +114,7 @@ _BLOCKED_PHRASES_CASEFOLD = {
     "english search",
     "gongchang road",
     "integrative plant biology",
+    "intercalation compounds",
     "view more",
     "nano lett",
     "nature photonics",

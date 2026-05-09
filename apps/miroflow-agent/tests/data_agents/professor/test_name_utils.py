@@ -30,5 +30,9 @@ def test_sanitize_english_person_name_rejects_early_access():
     assert sanitize_english_person_name("Early Access") is None
 
 
+def test_sanitize_english_person_name_rejects_research_topic_phrase():
+    assert sanitize_english_person_name("Intercalation Compounds") is None
+
+
 def test_derive_english_name_candidates_from_url_rejects_generic_slug():
     assert derive_english_name_candidates_from_url("https://example.edu.cn/faculty/main.htm") == []

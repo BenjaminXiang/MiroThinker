@@ -119,42 +119,43 @@ async def enrich_from_papers(
 
     hybrid_result = _reject_result_if_official_anchor_conflicts(
         _discover_best_hybrid_result(
-        name=name,
-        name_en=name_en,
-        institution=institution,
-        institution_en=institution_en,
-        professor_id=professor_id,
-        homepage_url=homepage_url,
-        author_picker=author_picker,
-        target_research_directions=official_directions,
-    ),
+            name=name,
+            name_en=name_en,
+            institution=institution,
+            institution_en=institution_en,
+            professor_id=professor_id,
+            homepage_url=homepage_url,
+            author_picker=author_picker,
+            target_research_directions=official_directions,
+            include_candidate_results=True,
+        ),
         anchor_profile=anchor_profile,
     )
     orcid_result = _reject_result_if_official_anchor_conflicts(
         _discover_official_linked_orcid_result(
-        scholarly_profile_urls=scholarly_profile_urls,
-        professor_id=professor_id,
-        professor_name=name,
-        institution=institution,
-    ),
+            scholarly_profile_urls=scholarly_profile_urls,
+            professor_id=professor_id,
+            professor_name=name,
+            institution=institution,
+        ),
         anchor_profile=anchor_profile,
     )
     scholar_result = _reject_result_if_official_anchor_conflicts(
         _discover_official_linked_scholar_result(
-        scholarly_profile_urls=scholarly_profile_urls,
-        professor_id=professor_id,
-        professor_name=name,
-        institution=institution,
-    ),
+            scholarly_profile_urls=scholarly_profile_urls,
+            professor_id=professor_id,
+            professor_name=name,
+            institution=institution,
+        ),
         anchor_profile=anchor_profile,
     )
     cv_result = _reject_result_if_official_anchor_conflicts(
         _discover_official_linked_cv_result(
-        cv_urls=cv_urls,
-        professor_id=professor_id,
-        professor_name=name,
-        institution=institution,
-    ),
+            cv_urls=cv_urls,
+            professor_id=professor_id,
+            professor_name=name,
+            institution=institution,
+        ),
         anchor_profile=anchor_profile,
     )
     selected_result = _select_preferred_official_anchor_result(
@@ -172,6 +173,9 @@ async def enrich_from_papers(
     )
     metadata_result = selected_result or hybrid_result
     legacy_used = False
+    candidate_link_status = "verified"
+    candidate_match_reason: str | None = None
+    candidate_identity_confidence: float | None = None
 
     if usable_official_collection_papers and (selected_result is None or len(usable_official_collection_papers) >= 3):
         collection_papers = usable_official_collection_papers
@@ -208,7 +212,16 @@ async def enrich_from_papers(
             paper_count=hybrid_result.paper_count or len(collection_papers),
             source=source,
         )
-        disambiguation_confidence = 0.95
+        if _should_stage_as_candidate(hybrid_result):
+            candidate_link_status = "candidate"
+            candidate_identity_confidence = 0.45
+            candidate_match_reason = (
+                "Candidate OpenAlex paper link from exact-name discovery without "
+                "a matched Shenzhen institution affiliation; requires admin review."
+            )
+            disambiguation_confidence = candidate_identity_confidence
+        else:
+            disambiguation_confidence = 0.95
     elif selected_result is not None and selected_result.author_id:
         collection_papers = []
         collection_author_info = AcademicAuthorInfo(
@@ -274,6 +287,33 @@ async def enrich_from_papers(
                 paper_count=len(collection_papers) or None,
                 source=collection_author_info.source,
             )
+
+    if candidate_link_status == "candidate" and collection_papers:
+        staging = build_staging_records(
+            collection_papers,
+            professor_id=professor_id,
+            professor_name=name,
+            institution=institution,
+            link_status="candidate",
+            identity_confidence=candidate_identity_confidence,
+            match_reason=candidate_match_reason,
+        )
+        return PaperEnrichmentResult(
+            research_directions=official_directions,
+            research_directions_source="official_only",
+            h_index=None,
+            citation_count=None,
+            paper_count=None,
+            top_papers=[],
+            staging_records=staging,
+            disambiguation_confidence=disambiguation_confidence,
+            paper_source=collection_author_info.source if collection_author_info else None,
+            school_matched=False,
+            fallback_used=fallback_used,
+            name_disambiguation_conflict=(
+                selected_result.name_disambiguation_conflict if selected_result is not None else False
+            ),
+        )
 
     if not collection_papers:
         return PaperEnrichmentResult(
@@ -704,6 +744,7 @@ def _discover_best_hybrid_result(
     homepage_url: str | None,
     author_picker: Any | None = None,
     target_research_directions: list[str] | None = None,
+    include_candidate_results: bool = False,
 ) -> ProfessorPaperDiscoveryResult | None:
     institution_query = institution_en or get_primary_english_institution_name(institution) or institution
     institution_id = resolve_openalex_institution_id(institution)
@@ -720,12 +761,52 @@ def _discover_best_hybrid_result(
             author_picker=author_picker,
             target_research_directions=target_research_directions,
         )
+        if (
+            include_candidate_results
+            and author_picker is not None
+            and not _has_any_paper_signal(result)
+        ):
+            result = discover_professor_paper_candidates_from_hybrid_sources(
+                professor_id=professor_id,
+                professor_name=query_name,
+                institution=institution_query,
+                institution_id=institution_id,
+                max_papers=20,
+                author_picker=None,
+                target_research_directions=target_research_directions,
+            )
         if not _has_any_paper_signal(result):
             continue
-        if _should_reject_weak_discovery_result(
+        should_reject = _should_reject_weak_discovery_result(
             query_name=query_name,
             institution_id=institution_id,
             result=result,
+        )
+        if (
+            should_reject
+            and include_candidate_results
+            and author_picker is not None
+            and not _is_stageable_candidate_discovery_result(result)
+        ):
+            fallback_result = discover_professor_paper_candidates_from_hybrid_sources(
+                professor_id=professor_id,
+                professor_name=query_name,
+                institution=institution_query,
+                institution_id=institution_id,
+                max_papers=20,
+                author_picker=None,
+                target_research_directions=target_research_directions,
+            )
+            if _has_any_paper_signal(fallback_result):
+                result = fallback_result
+                should_reject = _should_reject_weak_discovery_result(
+                    query_name=query_name,
+                    institution_id=institution_id,
+                    result=result,
+                )
+        if should_reject and (
+            not include_candidate_results
+            or not _is_stageable_candidate_discovery_result(result)
         ):
             continue
         score = (
@@ -741,6 +822,27 @@ def _discover_best_hybrid_result(
             best_score = score
             best_result = result
     return best_result
+
+
+def _should_stage_as_candidate(result: ProfessorPaperDiscoveryResult) -> bool:
+    return bool(result.papers and not result.school_matched)
+
+
+def _is_stageable_candidate_discovery_result(
+    result: ProfessorPaperDiscoveryResult,
+) -> bool:
+    if result.source != "openalex":
+        return False
+    if result.fallback_used:
+        return False
+    if not result.author_id or not result.papers:
+        return False
+    paper_signal_count = max(result.paper_count or 0, len(result.papers))
+    if paper_signal_count >= 2:
+        return True
+    if (result.h_index or 0) >= 2:
+        return True
+    return (result.citation_count or 0) >= 10
 
 
 def _query_name_quality(query_name: str) -> int:
@@ -978,6 +1080,9 @@ def build_staging_records(
     professor_id: str,
     professor_name: str,
     institution: str,
+    link_status: str = "verified",
+    identity_confidence: float | None = None,
+    match_reason: str | None = None,
 ) -> list[PaperStagingRecord]:
     """Convert RawPaperRecords to PaperStagingRecords for paper domain consumption."""
     return [
@@ -992,6 +1097,9 @@ def build_staging_records(
             keywords=p.keywords,
             source_url=p.source_url,
             source=p.source,
+            link_status=link_status,
+            identity_confidence=identity_confidence,
+            match_reason=match_reason,
             anchoring_professor_id=professor_id,
             anchoring_professor_name=professor_name,
             anchoring_institution=institution,

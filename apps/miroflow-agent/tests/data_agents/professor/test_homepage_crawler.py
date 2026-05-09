@@ -4,13 +4,12 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 
+from src.data_agents.professor.discovery import _should_refresh_cached_html
 from src.data_agents.professor.homepage_crawler import (
-    HomepageCrawlResult,
-    HomepageExtractOutput,
     _extract_official_link_targets,
     _extract_official_publication_signals,
     _parse_extraction_output,
@@ -20,7 +19,7 @@ from src.data_agents.professor.homepage_crawler import (
     extract_same_domain_links,
     filter_relevant_links,
 )
-from src.data_agents.professor.models import EnrichedProfessorProfile, EducationEntry, WorkEntry
+from src.data_agents.professor.models import EnrichedProfessorProfile
 
 
 def _make_profile(**kwargs) -> EnrichedProfessorProfile:
@@ -64,7 +63,7 @@ class TestExtractSameDomainLinks:
         </body></html>
         """
         links = extract_same_domain_links(html, "https://example.com/")
-        page_links = [l for l in links if l.endswith("page.html")]
+        page_links = [link for link in links if link.endswith("page.html")]
         assert len(page_links) == 1
 
     def test_excludes_self_link(self):
@@ -275,6 +274,79 @@ def test_extract_official_publication_signals_keeps_homepage_titles_with_publica
     ]
 
 
+def test_extract_official_publication_signals_prefers_structured_publication_section():
+    pages = [
+        _FetchedPage(
+            url="http://www.sigs.tsinghua.edu.cn/wlm/main.htm",
+            html="""
+            <html><body>
+            <h1>王黎明</h1>
+            <div class="post">
+              <div class="tt"><h3><span class="title">学术兼职</span></h3></div>
+              <div class="con">
+                <p>IEEE Dielectrics and Electrical Insulation Society 'Discharges in Air at UHV'技术委员会主席</p>
+                <p>CIGRE SC D1 Materials and Emerging Test Techniques中国专家委员会委员</p>
+              </div>
+            </div>
+            <div class="post">
+              <div class="tt"><h3><span class="title">代表性论文</span></h3></div>
+              <div class="con">
+                <p>目前已发表学术论文500余篇。</p>
+                <p><span>[1] Zimin Luo, </span><strong>Liming Wang</strong><span>, Bin Cao, Yuhao Liu, Xiaobang Tong, Libao Liu, Xiaoqing Wu, Xukai Zhu. Synergistic enhancement of heat resistance and mechanical performance of epoxy resin by introducing entanglement effect. Composites Part A: Applied Science and Manufacturing, 2026, 203, 109581.</span></p>
+                <p><span>[2] Huijie Li, Yafeng Chao, Te Li, Fanghui Yin, Hongwei Mei, </span><strong>Liming Wang</strong><span>, Masoud Farzaneh. Aging Mechanism of Composite Insulated Cross-Arm Under Multi-Factor Coupling Effect, in IEEE Transactions on Dielectrics and Electrical Insulation, doi: 10.1109/TDEI.2025.3634477.</span></p>
+              </div>
+            </div>
+            </body></html>
+            """,
+            publication_candidate=False,
+        )
+    ]
+
+    signals = _extract_official_publication_signals(pages)
+
+    assert signals.paper_count == 500
+    assert [paper.title for paper in signals.top_papers] == [
+        "Synergistic enhancement of heat resistance and mechanical performance of epoxy resin by introducing entanglement effect",
+        "Aging Mechanism of Composite Insulated Cross-Arm Under Multi-Factor Coupling Effect",
+    ]
+
+
+def test_extract_official_publication_signals_bounds_fallback_to_publication_section():
+    pages = [
+        _FetchedPage(
+            url="http://www.sigs.tsinghua.edu.cn/wlm/main.htm",
+            html="""
+            <html><body>
+            <h3>学术兼职</h3>
+            <p>IEEE Dielectrics and Electrical Insulation Society 'Discharges in Air at UHV'技术委员会主席</p>
+            <p>CIGRE SC D1 Materials and Emerging Test Techniques中国专家委员会委员</p>
+            <h3>代表性论文</h3>
+            <p>目前已发表学术论文500余篇，其中SCI收录140余篇。</p>
+            <h3>代表性著作</h3>
+            </body></html>
+            """,
+            publication_candidate=False,
+        )
+    ]
+
+    signals = _extract_official_publication_signals(pages)
+
+    assert signals.paper_count == 500
+    assert signals.top_papers == []
+
+
+def test_should_refresh_stale_sigs_cached_profile_without_publication_items():
+    html = """
+    <html><body>
+    <h3>代表性论文</h3>
+    <p>目前已发表学术论文500余篇，其中SCI收录140余篇。</p>
+    <h3>代表性著作</h3>
+    </body></html>
+    """
+
+    assert _should_refresh_cached_html("http://www.sigs.tsinghua.edu.cn/wlm/main.htm", html)
+
+
 def test_extract_official_publication_signals_excludes_reviewer_lines_with_publication_heading():
     pages = [
         _FetchedPage(
@@ -296,7 +368,7 @@ def test_extract_official_publication_signals_excludes_reviewer_lines_with_publi
     signals = _extract_official_publication_signals(pages)
 
     assert [paper.title for paper in signals.top_papers] == [
-        "Ri Wu#, Despoina Svingou#, Jonas B. Metternich, Renato Zenobi*. Transition Metal Ion FRET-Based Probe to Study Cu(II)-Mediated Amyloid-beta Ligand Binding"
+        "Transition Metal Ion FRET-Based Probe to Study Cu(II)-Mediated Amyloid-beta Ligand Binding"
     ]
 
 
@@ -450,6 +522,79 @@ class TestCrawlHomepage:
         assert len(result.profile.education_structured) == 1
         assert result.profile.education_structured[0].school == "MIT"
         assert "国家优秀青年基金" in result.profile.awards
+
+    async def test_hit_homepage_fetches_dynamic_teacher_body(self):
+        main_html = """
+        <html><body>
+        <h1>张钦宇</h1>
+        <div class="teacher-body" data-tid="cc01a95e2af64116a28ba2c3e5ba36bc"></div>
+        </body></html>
+        """
+        dynamic_body = json.dumps(
+            """
+            <html><body>
+            <h3>研究方向</h3>
+            <p>宽带移动通信、卫星通信与无线网络</p>
+            <h3>代表性论文</h3>
+            <ul>
+              <li>Confidence Based Asynchronous Integrated Communication and Localization Networks Using IR-UWB Signals</li>
+            </ul>
+            </body></html>
+            """,
+            ensure_ascii=False,
+        )
+
+        calls: list[str] = []
+
+        def mock_fetch(url: str, timeout: float = 20.0):
+            from src.data_agents.professor.discovery import HtmlFetchResult
+
+            calls.append(url)
+            html = dynamic_body if "TeacherHome/teacherBody.do" in url else main_html
+            return HtmlFetchResult(
+                html=html,
+                used_browser=False,
+                blocked_by_anti_scraping=False,
+                request_error=None,
+                browser_error=None,
+            )
+
+        llm_response = json.dumps(
+            {
+                "research_directions": [],
+                "education_structured": [],
+                "work_experience": [],
+                "awards": [],
+                "academic_positions": [],
+            },
+            ensure_ascii=False,
+        )
+        mock_llm = MagicMock()
+        mock_llm.chat.completions.create.return_value = MagicMock(
+            choices=[MagicMock(message=MagicMock(content=llm_response))]
+        )
+
+        profile = _make_profile(
+            name="张钦宇",
+            institution="哈尔滨工业大学（深圳）",
+            homepage="http://homepage.hit.edu.cn/zhangqinyu?lang=zh",
+            profile_url="http://homepage.hit.edu.cn/zhangqinyu?lang=zh",
+        )
+        result = await crawl_homepage(
+            profile=profile,
+            fetch_html_fn=mock_fetch,
+            llm_client=mock_llm,
+            llm_model="test-model",
+        )
+
+        assert result.success
+        assert any("TeacherHome/teacherBody.do" in call for call in calls)
+        assert result.profile.research_directions == ["宽带移动通信", "卫星通信与无线网络"]
+        assert [
+            paper.title for paper in result.profile.official_top_papers
+        ] == [
+            "Confidence Based Asynchronous Integrated Communication and Localization Networks Using IR-UWB Signals"
+        ]
 
     async def test_recovers_structured_research_directions_when_llm_omits_them(self):
         main_html = """

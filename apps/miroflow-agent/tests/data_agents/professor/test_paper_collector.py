@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-import json
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -256,6 +255,87 @@ async def test_enrich_from_papers_rejects_hybrid_result_conflicting_with_officia
     assert result.paper_count is None
     assert result.top_papers == []
     assert result.paper_source is None
+
+
+@pytest.mark.asyncio
+async def test_enrich_from_papers_stages_unmatched_openalex_as_candidate_without_profile_paper_signal(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setattr(
+        "src.data_agents.professor.paper_collector.resolve_openalex_institution_id",
+        lambda institution: "I4405263052"
+        if institution == "清华大学深圳国际研究生院"
+        else None,
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.paper_collector.discover_professor_paper_candidates_from_hybrid_sources",
+        lambda **_: ProfessorPaperDiscoveryResult(
+            professor_id="PROF-KANG",
+            professor_name="康飞宇",
+            institution="Tsinghua Shenzhen International Graduate School",
+            author_id="https://openalex.org/A5064925351",
+            h_index=0,
+            citation_count=0,
+            paper_count=2,
+            source="openalex",
+            school_matched=False,
+            fallback_used=False,
+            name_disambiguation_conflict=False,
+            candidate_count=1,
+            papers=[
+                DiscoveredPaper(
+                    paper_id="https://openalex.org/W1",
+                    title="sp-sp2 杂化碳基材料的简易合成及表征",
+                    year=2020,
+                    publication_date="2020-01-01",
+                    venue="新型炭材料",
+                    doi=None,
+                    arxiv_id=None,
+                    abstract=None,
+                    authors=("康飞宇",),
+                    professor_ids=("PROF-KANG",),
+                    citation_count=0,
+                    source_url="http://xxtcl.sxicc.ac.cn/article/id/9601",
+                ),
+                DiscoveredPaper(
+                    paper_id="https://openalex.org/W2",
+                    title="石墨烯/炭黑杂化材料：新型、高效锂离子电池二元导电剂",
+                    year=2015,
+                    publication_date="2015-01-01",
+                    venue="新型炭材料",
+                    doi=None,
+                    arxiv_id=None,
+                    abstract=None,
+                    authors=("康飞宇",),
+                    professor_ids=("PROF-KANG",),
+                    citation_count=0,
+                    source_url="https://www.airitilibrary.com/Publication/alDetailedMesh?docid=xxtcl201502006",
+                ),
+            ],
+        ),
+    )
+
+    result = await enrich_from_papers(
+        name="康飞宇",
+        name_en=None,
+        institution="清华大学深圳国际研究生院",
+        institution_en=None,
+        official_directions=["碳材料", "储能材料"],
+        professor_id="PROF-KANG",
+        homepage_url="http://www.sigs.tsinghua.edu.cn/kfy/main.htm",
+        identity_gate_enabled=False,
+        fetch_html=lambda *_args, **_kwargs: "",
+        llm_client=_mock_llm('["碳材料"]'),
+        llm_model="test-model",
+    )
+
+    assert result.research_directions_source == "official_only"
+    assert result.paper_count is None
+    assert result.top_papers == []
+    assert len(result.staging_records) == 2
+    assert result.staging_records[0].link_status == "candidate"
+    assert result.staging_records[0].identity_confidence == 0.45
+    assert "requires admin review" in result.staging_records[0].match_reason
 
 
 @pytest.mark.asyncio
@@ -1616,6 +1696,115 @@ def test_discover_best_hybrid_result_rejects_strong_openalex_match_without_schoo
     )
 
     assert result is None
+
+
+def test_discover_best_hybrid_result_uses_no_picker_fallback_for_candidate_staging(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    calls: list[object] = []
+
+    def fake_discover(**kwargs):
+        calls.append(kwargs["author_picker"])
+        if kwargs["author_picker"] is not None:
+            return ProfessorPaperDiscoveryResult(
+                professor_id="PROF-KANG",
+                professor_name="康飞宇",
+                institution="Tsinghua Shenzhen International Graduate School",
+                author_id="semantic_scholar:123",
+                h_index=None,
+                citation_count=None,
+                paper_count=20,
+                source="semantic_scholar",
+                school_matched=False,
+                fallback_used=True,
+                papers=[
+                    DiscoveredPaper(
+                        paper_id="semantic:1",
+                        title="Ambiguous Semantic Scholar fallback",
+                        year=2020,
+                        publication_date="2020-01-01",
+                        venue="Unknown",
+                        doi=None,
+                        arxiv_id=None,
+                        abstract=None,
+                        authors=("康飞宇",),
+                        professor_ids=("PROF-KANG",),
+                        citation_count=0,
+                        source_url="https://example.org/semantic",
+                    )
+                ],
+            )
+        return ProfessorPaperDiscoveryResult(
+            professor_id="PROF-KANG",
+            professor_name="康飞宇",
+            institution="Tsinghua Shenzhen International Graduate School",
+            author_id="https://openalex.org/A5064925351",
+            h_index=0,
+            citation_count=0,
+            paper_count=2,
+            source="openalex",
+            school_matched=False,
+            fallback_used=False,
+            name_disambiguation_conflict=True,
+            papers=[
+                DiscoveredPaper(
+                    paper_id="https://openalex.org/W1",
+                    title="sp-sp2 杂化碳基材料的简易合成及表征",
+                    year=2020,
+                    publication_date="2020-01-01",
+                    venue="新型炭材料",
+                    doi=None,
+                    arxiv_id=None,
+                    abstract=None,
+                    authors=("康飞宇",),
+                    professor_ids=("PROF-KANG",),
+                    citation_count=0,
+                    source_url="http://xxtcl.sxicc.ac.cn/article/id/9601",
+                ),
+                DiscoveredPaper(
+                    paper_id="https://openalex.org/W2",
+                    title="石墨烯/炭黑杂化材料",
+                    year=2015,
+                    publication_date="2015-01-01",
+                    venue="新型炭材料",
+                    doi=None,
+                    arxiv_id=None,
+                    abstract=None,
+                    authors=("康飞宇",),
+                    professor_ids=("PROF-KANG",),
+                    citation_count=0,
+                    source_url="https://example.org/w2",
+                ),
+            ],
+        )
+
+    monkeypatch.setattr(
+        "src.data_agents.professor.paper_collector.resolve_openalex_institution_id",
+        lambda institution: "I4405263052"
+        if institution == "清华大学深圳国际研究生院"
+        else None,
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.paper_collector.discover_professor_paper_candidates_from_hybrid_sources",
+        fake_discover,
+    )
+
+    result = _discover_best_hybrid_result(
+        name="康飞宇",
+        name_en=None,
+        institution="清华大学深圳国际研究生院",
+        institution_en=None,
+        professor_id="PROF-KANG",
+        homepage_url="http://www.sigs.tsinghua.edu.cn/kfy/main.htm",
+        author_picker=lambda **_kwargs: None,
+        include_candidate_results=True,
+    )
+
+    assert len(calls) == 2
+    assert calls[0] is not None
+    assert calls[1] is None
+    assert result is not None
+    assert result.author_id == "https://openalex.org/A5064925351"
 
 
 def test_discover_best_hybrid_result_prefers_papers_over_metadata_only_result(

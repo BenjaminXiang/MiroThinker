@@ -25,6 +25,7 @@ from src.data_agents.professor.validator import (
 def reset_discovery_runtime_state(monkeypatch):
     from src.data_agents.professor import discovery as discovery_module
 
+    discovery_module._shutdown_shared_playwright_browser()
     monkeypatch.setattr(discovery_module, "_learned_browser_first_hosts", set())
     monkeypatch.setattr(discovery_module, "_learned_reader_first_hosts", set())
     monkeypatch.setattr(discovery_module, "_THREAD_LOCAL_PLAYWRIGHT", threading.local())
@@ -32,6 +33,10 @@ def reset_discovery_runtime_state(monkeypatch):
     monkeypatch.setattr(discovery_module, "_SHARED_BROWSER_LOCK", threading.Lock())
     monkeypatch.setattr(discovery_module, "_last_direct_request_started_at_by_host", {})
     monkeypatch.setattr(discovery_module, "_last_reader_request_started_at", 0.0)
+    try:
+        yield
+    finally:
+        discovery_module._shutdown_shared_playwright_browser()
 
 
 def test_parse_roster_seed_markdown_supports_links_and_plain_urls():
@@ -1849,23 +1854,19 @@ def test_fetch_html_with_fallback_refreshes_stale_teacher_search_reader_cache(tm
       <div class="list-title"><a href="https://jianwei.cuhk.edu.cn/">黄建伟</a></div>
     </body></html>
     """
+    monkeypatch.setattr(
+        discovery_module,
+        "_render_html_with_playwright",
+        lambda _url, _timeout: fresh_html,
+    )
 
     result = fetch_html_with_fallback(
         "https://sse.cuhk.edu.cn/teacher-search",
-        request_get=lambda _url, _timeout: type(
-            "Resp",
-            (),
-            {
-                "status_code": 200,
-                "encoding": "utf-8",
-                "apparent_encoding": "utf-8",
-                "text": fresh_html,
-                "raise_for_status": lambda self: None,
-            },
-        )(),
     )
 
     assert "黄建伟" in (result.html or "")
+    cached_payload = json.loads(cache_file.read_text(encoding="utf-8"))
+    assert cached_payload["content"] == fresh_html.strip()
 
 
 def test_fetch_html_with_fallback_propagates_non_request_exceptions(monkeypatch):
@@ -2593,8 +2594,6 @@ def test_discover_professor_seeds_skips_seed_fallback_pages_when_primary_page_al
 
 
 def test_discover_professor_seeds_prioritizes_configured_seed_fallback_when_primary_page_is_homepage_redirect(monkeypatch):
-    from src.data_agents.professor import discovery as discovery_module
-
     seed_url = "http://sa.sysu.edu.cn/zh-hans/teacher/faculty"
     fallback_url = "https://ab.sysu.edu.cn/zh-hans/teacher/faculty"
     seeds = [

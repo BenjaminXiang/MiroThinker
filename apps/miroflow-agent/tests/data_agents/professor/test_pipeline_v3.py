@@ -62,7 +62,10 @@ class TestPipelineV3Config:
         )
         assert hasattr(config, "max_concurrent")
         assert hasattr(config, "identity_confidence_threshold")
+        assert hasattr(config, "exclude_non_stem")
+        assert hasattr(config, "force_web_search_for_low_signal")
         assert config.identity_confidence_threshold == 0.8
+        assert config.force_web_search_for_low_signal is True
 
     def test_config_inherits_v2_fields(self):
         from pathlib import Path
@@ -82,8 +85,12 @@ class TestPipelineV3Report:
         assert report.homepage_crawled_count == 0
         assert report.web_search_count == 0
         assert report.identity_verified_count == 0
+        assert report.low_signal_web_search_count == 0
+        assert report.low_signal_web_search_skipped_count == 0
+        assert report.low_signal_web_search_skipped_reasons == {}
         assert report.company_links_confirmed == 0
         assert report.direction_cleaned_count == 0
+        assert report.non_stem_filtered_count == 0
 
 
 def test_build_fallback_llm_client_uses_primary_client_when_available():
@@ -479,6 +486,250 @@ async def test_process_single_professor_merges_web_search_official_signals_and_r
 
 
 @pytest.mark.asyncio
+async def test_process_single_professor_forces_web_search_for_low_academic_signal_when_global_skip_is_set(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    config = PipelineV3Config(
+        seed_doc=Path("/tmp/seeds.md"),
+        output_dir=Path("/tmp/output"),
+        skip_web_search=True,
+        skip_vectorize=True,
+    )
+    report = PipelineV3Report()
+    record = _make_merged_record(
+        department=None,
+        title=None,
+        research_directions=(),
+    )
+    search_calls: list[str] = []
+
+    async def fake_crawl_homepage(**kwargs):
+        return SimpleNamespace(
+            profile=kwargs["profile"].model_copy(update={"profile_summary": ""}),
+            success=True,
+            pages_fetched=1,
+        )
+
+    async def fake_enrich_from_papers(**kwargs):
+        return PaperEnrichmentResult(
+            research_directions=[],
+            research_directions_source=None,
+            h_index=None,
+            citation_count=None,
+            paper_count=None,
+            top_papers=[],
+            staging_records=[],
+            disambiguation_confidence=0.0,
+            paper_source=None,
+        )
+
+    async def fake_search_and_enrich(**kwargs):
+        search_calls.append(kwargs["profile"].name)
+        enriched = kwargs["profile"].model_copy(update={
+            "title": "副教授",
+            "department": "计算机科学与工程系",
+            "research_directions": ["机器视觉"],
+        })
+        return SimpleNamespace(
+            profile=enriched,
+            verified_urls=["https://faculty.sustech.edu.cn/lizhi/"],
+            company_mentions=[],
+            pages_searched=1,
+            pages_verified=1,
+            error=None,
+        )
+
+    async def fake_generate_summaries(**kwargs):
+        return SimpleNamespace(
+            profile_summary="李志现任南方科技大学计算机科学与工程系副教授，主要研究机器视觉。" * 8,
+        )
+
+    monkeypatch.setattr("src.data_agents.professor.pipeline_v3.crawl_homepage", fake_crawl_homepage)
+    monkeypatch.setattr(
+        "src.data_agents.professor.paper_collector.enrich_from_papers",
+        fake_enrich_from_papers,
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3.search_and_enrich",
+        fake_search_and_enrich,
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.discovery.fetch_html_with_fallback",
+        lambda *_args, **_kwargs: SimpleNamespace(html="<html></html>"),
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3.assess_completeness",
+        lambda profile: SimpleNamespace(should_trigger_agent=False, missing_fields=[]),
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.summary_generator.generate_summaries",
+        fake_generate_summaries,
+    )
+
+    profile, _staging_records, _company_mentions = await _process_single_professor_v3(
+        record=record,
+        config=config,
+        local_client=MagicMock(),
+        online_client=None,
+        search_provider=MagicMock(),
+        semaphore=asyncio.Semaphore(1),
+        report=report,
+    )
+
+    assert search_calls == ["李志"]
+    assert profile.title == "副教授"
+    assert profile.department == "计算机科学与工程系"
+    assert profile.research_directions == ["机器视觉"]
+    assert report.web_search_count == 1
+    assert report.identity_verified_count == 1
+    assert report.low_signal_web_search_count == 1
+    assert report.low_signal_web_search_skipped_count == 0
+
+
+@pytest.mark.asyncio
+async def test_process_single_professor_respects_web_search_skip_for_existing_academic_signal(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    config = PipelineV3Config(
+        seed_doc=Path("/tmp/seeds.md"),
+        output_dir=Path("/tmp/output"),
+        skip_web_search=True,
+        skip_vectorize=True,
+    )
+    report = PipelineV3Report()
+    record = _make_merged_record()
+
+    async def fake_crawl_homepage(**kwargs):
+        return SimpleNamespace(
+            profile=kwargs["profile"].model_copy(update={
+                "profile_summary": "李志现任南方科技大学计算机科学与工程系教师，主要研究机器视觉与图像处理。" * 8,
+            }),
+            success=True,
+            pages_fetched=1,
+        )
+
+    async def fake_enrich_from_papers(**kwargs):
+        return PaperEnrichmentResult(
+            research_directions=["机器视觉"],
+            research_directions_source="merged",
+            h_index=None,
+            citation_count=None,
+            paper_count=None,
+            top_papers=[],
+            staging_records=[],
+            disambiguation_confidence=0.0,
+            paper_source=None,
+        )
+
+    async def fail_search_and_enrich(**kwargs):
+        raise AssertionError("web search should not run for non-low-signal profile")
+
+    monkeypatch.setattr("src.data_agents.professor.pipeline_v3.crawl_homepage", fake_crawl_homepage)
+    monkeypatch.setattr(
+        "src.data_agents.professor.paper_collector.enrich_from_papers",
+        fake_enrich_from_papers,
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3.search_and_enrich",
+        fail_search_and_enrich,
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.discovery.fetch_html_with_fallback",
+        lambda *_args, **_kwargs: SimpleNamespace(html="<html></html>"),
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3.assess_completeness",
+        lambda profile: SimpleNamespace(should_trigger_agent=False, missing_fields=[]),
+    )
+
+    await _process_single_professor_v3(
+        record=record,
+        config=config,
+        local_client=MagicMock(),
+        online_client=None,
+        search_provider=MagicMock(),
+        semaphore=asyncio.Semaphore(1),
+        report=report,
+    )
+
+    assert report.web_search_count == 0
+    assert report.low_signal_web_search_count == 0
+    assert report.low_signal_web_search_skipped_count == 0
+
+
+@pytest.mark.asyncio
+async def test_process_single_professor_records_low_signal_web_search_skip_without_provider(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    config = PipelineV3Config(
+        seed_doc=Path("/tmp/seeds.md"),
+        output_dir=Path("/tmp/output"),
+        skip_web_search=True,
+        skip_vectorize=True,
+    )
+    report = PipelineV3Report()
+    record = _make_merged_record(
+        department=None,
+        title=None,
+        research_directions=(),
+    )
+
+    async def fake_crawl_homepage(**kwargs):
+        return SimpleNamespace(profile=kwargs["profile"], success=True, pages_fetched=1)
+
+    async def fake_enrich_from_papers(**kwargs):
+        return PaperEnrichmentResult(
+            research_directions=[],
+            research_directions_source=None,
+            h_index=None,
+            citation_count=None,
+            paper_count=None,
+            top_papers=[],
+            staging_records=[],
+            disambiguation_confidence=0.0,
+            paper_source=None,
+        )
+
+    async def fake_generate_summaries(**kwargs):
+        return SimpleNamespace(
+            profile_summary="李志目前可确认任职于南方科技大学，但公开主页学术信息不足，仍需继续补充。" * 8,
+        )
+
+    monkeypatch.setattr("src.data_agents.professor.pipeline_v3.crawl_homepage", fake_crawl_homepage)
+    monkeypatch.setattr(
+        "src.data_agents.professor.paper_collector.enrich_from_papers",
+        fake_enrich_from_papers,
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.discovery.fetch_html_with_fallback",
+        lambda *_args, **_kwargs: SimpleNamespace(html="<html></html>"),
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3.assess_completeness",
+        lambda profile: SimpleNamespace(should_trigger_agent=False, missing_fields=[]),
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.summary_generator.generate_summaries",
+        fake_generate_summaries,
+    )
+
+    await _process_single_professor_v3(
+        record=record,
+        config=config,
+        local_client=MagicMock(),
+        online_client=None,
+        search_provider=None,
+        semaphore=asyncio.Semaphore(1),
+        report=report,
+    )
+
+    assert report.web_search_count == 0
+    assert report.low_signal_web_search_count == 0
+    assert report.low_signal_web_search_skipped_count == 1
+    assert report.low_signal_web_search_skipped_reasons == {"missing_search_provider": 1}
+
+
+@pytest.mark.asyncio
 async def test_run_professor_pipeline_v3_upserts_released_paper_and_link_into_shared_store(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -591,6 +842,214 @@ async def test_run_professor_pipeline_v3_upserts_released_paper_and_link_into_sh
     assert links[0].core_facts["professor_id"] == "PROF-TANG"
     assert links[0].core_facts["paper_id"] == papers[0].id
     assert links[0].core_facts["link_status"] == "verified"
+
+
+@pytest.mark.asyncio
+async def test_run_professor_pipeline_v3_stem_only_filters_non_stem_after_enrichment(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    seed_doc = tmp_path / "seeds.md"
+    seed_doc.write_text("- https://www.sigs.tsinghua.edu.cn/7644/list.htm\n", encoding="utf-8")
+    output_dir = tmp_path / "output"
+
+    config = PipelineV3Config(
+        seed_doc=seed_doc,
+        output_dir=output_dir,
+        local_llm_base_url="http://example.local/v1",
+        local_llm_model="gemma4",
+        local_llm_api_key="test",
+        online_llm_base_url="http://example.online/v1",
+        online_llm_model="qwen",
+        online_llm_api_key="test",
+        skip_vectorize=True,
+        store_db_path=None,
+        exclude_non_stem=True,
+    )
+
+    records = [
+        _make_merged_record(name="王黎明", department=None, profile_url="https://sigs.example/wlm"),
+        _make_merged_record(name="王蒲生", department=None, profile_url="https://sigs.example/wps"),
+    ]
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3.run_professor_pipeline",
+        lambda *_args, **_kwargs: SimpleNamespace(
+            report=SimpleNamespace(
+                seed_url_count=1,
+                discovered_professor_count=2,
+                unique_professor_count=2,
+                structured_profile_count=2,
+                partial_profile_count=0,
+            ),
+            profiles=records,
+        ),
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3._build_llm_client",
+        lambda *_args, **_kwargs: MagicMock(),
+    )
+
+    async def fake_process_single_professor_v3(**kwargs):
+        record = kwargs["record"]
+        if record.name == "王蒲生":
+            return (
+                EnrichedProfessorProfile(
+                    name="王蒲生",
+                    institution="清华大学深圳国际研究生院",
+                    department="清华大学深圳国际研究生院人文社会科学部",
+                    title="教授、博士生导师",
+                    email="wangps@sz.tsinghua.edu.cn",
+                    homepage="https://sigs.example/wps",
+                    profile_url="https://sigs.example/wps",
+                    roster_source="https://www.sigs.tsinghua.edu.cn/7644/list.htm",
+                    research_directions=["科学技术哲学", "科学社会学"],
+                    profile_summary="王蒲生长期从事科学技术哲学与科学社会学研究。" * 8,
+                    enrichment_source="homepage_enriched",
+                    evidence_urls=["https://sigs.example/wps"],
+                    extraction_status="structured",
+                ),
+                [],
+                [],
+            )
+        return (
+            EnrichedProfessorProfile(
+                name="王黎明",
+                institution="清华大学深圳国际研究生院",
+                department="电气工程",
+                title="教授、博士生导师",
+                email="wanglm@sz.tsinghua.edu.cn",
+                homepage="https://sigs.example/wlm",
+                profile_url="https://sigs.example/wlm",
+                roster_source="https://www.sigs.tsinghua.edu.cn/7644/list.htm",
+                research_directions=["电气工程", "高压绝缘"],
+                paper_count=5,
+                top_papers=[
+                    PaperLink(
+                        title="Surface Streamer Discharge Under Composite Voltage",
+                        year=2025,
+                        venue="IEEE Transactions",
+                        source="official_site",
+                    )
+                ],
+                profile_summary="王黎明现任清华大学深圳国际研究生院教授，长期从事电气工程和高压绝缘研究。" * 8,
+                enrichment_source="paper_enriched",
+                evidence_urls=["https://sigs.example/wlm"],
+                extraction_status="structured",
+            ),
+            [],
+            [],
+        )
+
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3._process_single_professor_v3",
+        fake_process_single_professor_v3,
+    )
+
+    result = await run_professor_pipeline_v3(config)
+
+    rows = [
+        json.loads(line)
+        for line in (output_dir / "enriched_v3.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert result.report.non_stem_filtered_count == 1
+    assert [row["name"] for row in rows] == ["王黎明"]
+
+
+@pytest.mark.asyncio
+async def test_run_professor_pipeline_v3_does_not_prelimit_discovery_before_institution_filter(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    seed_doc = tmp_path / "seeds.md"
+    seed_doc.write_text("- https://example.edu/roster\n", encoding="utf-8")
+    output_dir = tmp_path / "output"
+    captured: dict[str, int | None] = {}
+
+    config = PipelineV3Config(
+        seed_doc=seed_doc,
+        output_dir=output_dir,
+        local_llm_base_url="http://example.local/v1",
+        local_llm_model="gemma4",
+        local_llm_api_key="EMPTY",
+        online_llm_base_url="http://example.online/v1",
+        online_llm_model="qwen",
+        online_llm_api_key="EMPTY",
+        institution_filter="哈尔滨工业大学（深圳）",
+        limit=1,
+        skip_web_search=True,
+        skip_vectorize=True,
+        store_db_path=str(tmp_path / "released_objects.db"),
+    )
+
+    records = [
+        _make_merged_record(name="王黎明", institution="清华大学深圳国际研究生院"),
+        _make_merged_record(name="张钦宇", institution="哈尔滨工业大学（深圳）"),
+    ]
+
+    def fake_run_professor_pipeline(*_args, **kwargs):
+        captured["max_profile_fetch"] = kwargs.get("max_profile_fetch")
+        return SimpleNamespace(
+            report=SimpleNamespace(
+                seed_url_count=1,
+                discovered_professor_count=2,
+                unique_professor_count=2,
+                structured_profile_count=2,
+                partial_profile_count=0,
+            ),
+            profiles=records,
+        )
+
+    async def fake_process_single_professor_v3(**kwargs):
+        record = kwargs["record"]
+        return (
+            EnrichedProfessorProfile(
+                name=record.name,
+                institution=record.institution,
+                department="信息科学与技术学院（深圳）",
+                title="教授",
+                homepage="https://homepage.hit.edu.cn/zhangqinyu",
+                profile_url="https://homepage.hit.edu.cn/zhangqinyu",
+                roster_source="https://example.edu/roster",
+                research_directions=["宽带移动通信"],
+                paper_count=1,
+                top_papers=[
+                    PaperLink(
+                        title="Confidence Based Asynchronous Integrated Communication and Localization Networks Using IR-UWB Signals",
+                        year=2024,
+                        venue="IEEE",
+                        source="official_site",
+                    )
+                ],
+                profile_summary="张钦宇长期从事宽带移动通信、卫星通信与无线网络研究。" * 8,
+                evidence_urls=["https://homepage.hit.edu.cn/zhangqinyu"],
+                extraction_status="structured",
+            ),
+            [],
+            [],
+        )
+
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3.run_professor_pipeline",
+        fake_run_professor_pipeline,
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3._process_single_professor_v3",
+        fake_process_single_professor_v3,
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.pipeline_v3._refresh_academic_metrics_for_released_profiles",
+        lambda **_kwargs: None,
+    )
+
+    result = await run_professor_pipeline_v3(config)
+
+    assert captured["max_profile_fetch"] is None
+    assert result.report.released_count == 1
+    rows = [
+        json.loads(line)
+        for line in (output_dir / "enriched_v3.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert [row["name"] for row in rows] == ["张钦宇"]
 
 
 @pytest.mark.asyncio

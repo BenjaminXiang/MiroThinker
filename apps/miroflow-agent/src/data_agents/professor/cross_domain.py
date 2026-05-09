@@ -3,6 +3,8 @@
 """Cross-domain link models for professor → paper/company/patent associations."""
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel
 
 
@@ -55,6 +57,9 @@ class PaperStagingRecord(BaseModel):
     keywords: list[str] = []
     source_url: str
     source: str  # "semantic_scholar" | "dblp" | "arxiv"
+    link_status: Literal["verified", "candidate"] = "verified"
+    identity_confidence: float | None = None
+    match_reason: str | None = None
     anchoring_professor_id: str
     anchoring_professor_name: str
     anchoring_institution: str

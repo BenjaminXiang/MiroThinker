@@ -663,10 +663,18 @@ def _load_cached_html(url: str) -> str | None:
 
 
 def _should_refresh_cached_html(url: str, content: str) -> bool:
-    path = urlparse(url).path.lower()
+    parsed = urlparse(url)
+    path = parsed.path.lower()
     lowered = content.lower()
     if "teacher-search" in path and lowered.startswith("title:"):
         return "/teacher/" not in lowered
+    if parsed.netloc.endswith("sigs.tsinghua.edu.cn") and path.endswith("/main.htm"):
+        marker_index = content.find("代表性论文")
+        if marker_index >= 0:
+            next_section_index = content.find("代表性著作", marker_index)
+            section = content[marker_index:next_section_index if next_section_index >= 0 else None]
+            if "目前已发表学术论文" in section and not re.search(r"\[\d+\]|\b\d+\)", section):
+                return True
     return False
 
 

@@ -26,7 +26,10 @@ _QUALITY_GATE_REFUSAL_KEYWORDS = frozenset(
     {
         "由于您提供的教授信息极度匮乏",
         "无法构建符合您要求",
+        "无法构建符合学术规范",
+        "无法构建符合学术规范且达到",
         "若需生成符合学术规范",
+        "若要生成高质量的学术摘要",
         "请补充以下关键维度信息",
     }
 )
@@ -140,6 +143,9 @@ def evaluate_quality(
         if _is_likely_official(url, shenzhen_keywords)
     ):
         l1_failures.append("missing_official_evidence")
+
+    if not has_minimum_academic_signal(profile):
+        l1_failures.append("insufficient_academic_signal")
 
     if _has_reader_artifact(profile):
         l1_failures.append("reader_artifact_detected")
@@ -380,6 +386,21 @@ def _has_paper_signal(profile: EnrichedProfessorProfile) -> bool:
     has_top_papers = len(profile.top_papers) > 0
     has_paper_count = (profile.paper_count or 0) > 0
     return has_top_papers or has_paper_count
+
+
+def has_minimum_academic_signal(profile: EnrichedProfessorProfile) -> bool:
+    return any(
+        (
+            bool((profile.title or "").strip()),
+            bool((profile.department or "").strip()),
+            bool(profile.research_directions),
+            has_scholarly_output_signal(profile),
+            bool(profile.awards),
+            bool(profile.academic_positions),
+            bool(profile.education_structured),
+            bool(profile.work_experience),
+        )
+    )
 
 
 def has_scholarly_output_signal(profile: EnrichedProfessorProfile) -> bool:
