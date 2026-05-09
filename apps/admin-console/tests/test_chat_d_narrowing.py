@@ -132,3 +132,5 @@ def test_d_narrowing_without_result_set_falls_through(
     )
 
     assert response.query_type == "unknown"
+    assert "v0" not in response.answer_text
+    assert "教授、企业、论文、专利" in response.answer_text

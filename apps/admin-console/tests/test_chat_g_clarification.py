@@ -157,3 +157,193 @@ def test_invalid_entity_id_hint_falls_back_to_g(monkeypatch: pytest.MonkeyPatch)
 
     assert response.query_type == "G_ambiguous_clarification"
     assert response.clarification is not None
+
+
+def test_g_paper_query_returns_paper_clarification(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        chat_module,
+        "_classify_query_with_llm",
+        lambda _query: {
+            "type": "G",
+            "topic": "",
+            "name": "Force Control",
+            "target_domain": "paper",
+            "reason": "ambiguous paper title",
+        },
+    )
+    monkeypatch.setattr(
+        chat_module,
+        "_lookup_paper",
+        lambda _conn, *, title: [
+            {
+                "paper_id": "PAPER-1",
+                "title_clean": "Force Control for Robots",
+                "year": 2025,
+                "venue": "ICRA",
+                "citation_count": 8,
+            },
+            {
+                "paper_id": "PAPER-2",
+                "title_clean": "Force Control in Automation",
+                "year": 2023,
+                "venue": "RA-L",
+                "citation_count": 20,
+            },
+        ],
+    )
+
+    response = chat_module.chat(
+        chat_module.ChatRequest(query="Force Control 是哪篇论文"),
+        response=Response(),
+        conn=object(),
+    )
+
+    assert response.query_type == "G_ambiguous_clarification"
+    assert response.clarification is not None
+    assert response.clarification.default_id == "PAPER-1"
+    assert [option.domain for option in response.clarification.options] == [
+        "paper",
+        "paper",
+    ]
+    assert "Force Control for Robots" in response.answer_text
+
+
+def test_paper_entity_id_hint_bypasses_g(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    called = {"classifier": False}
+
+    def classify(_query: str) -> dict[str, str]:
+        called["classifier"] = True
+        return {
+            "type": "G",
+            "topic": "",
+            "name": "Force Control",
+            "target_domain": "paper",
+            "reason": "ambiguous paper title",
+        }
+
+    monkeypatch.setattr(chat_module, "_classify_query_with_llm", classify)
+    monkeypatch.setattr(
+        chat_module,
+        "_lookup_paper",
+        lambda _conn, *, title: [
+            {
+                "paper_id": title,
+                "title_clean": "Force Control for Robots",
+                "year": 2025,
+                "venue": "ICRA",
+                "citation_count": 8,
+            }
+        ],
+    )
+
+    response = chat_module.chat(
+        chat_module.ChatRequest(
+            query="Force Control 是哪篇论文",
+            entity_id_hint="PAPER-1",
+        ),
+        response=Response(),
+        conn=object(),
+    )
+
+    assert response.query_type == "A_paper_profile"
+    assert response.structured_payload["paper_id"] == "PAPER-1"
+    assert called["classifier"] is False
+
+
+def test_g_patent_query_returns_patent_clarification(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        chat_module,
+        "_classify_query_with_llm",
+        lambda _query: {
+            "type": "G",
+            "topic": "",
+            "name": "机器人控制",
+            "target_domain": "patent",
+            "reason": "ambiguous patent title",
+        },
+    )
+    monkeypatch.setattr(
+        chat_module,
+        "_lookup_patent",
+        lambda _conn, *, query: [
+            {
+                "patent_id": "PAT-1",
+                "patent_number": "CN111",
+                "title_clean": "机器人控制方法",
+                "applicants_raw": "优必选",
+                "patent_type": "发明",
+            },
+            {
+                "patent_id": "PAT-2",
+                "patent_number": "CN222",
+                "title_clean": "机器人控制系统",
+                "applicants_raw": "卓驭科技",
+                "patent_type": "发明",
+            },
+        ],
+    )
+
+    response = chat_module.chat(
+        chat_module.ChatRequest(query="机器人控制是哪件专利"),
+        response=Response(),
+        conn=object(),
+    )
+
+    assert response.query_type == "G_ambiguous_clarification"
+    assert response.clarification is not None
+    assert response.clarification.default_id == "PAT-1"
+    assert [option.domain for option in response.clarification.options] == [
+        "patent",
+        "patent",
+    ]
+    assert "CN111" in response.answer_text
+
+
+def test_patent_entity_id_hint_bypasses_g(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    called = {"classifier": False}
+
+    def classify(_query: str) -> dict[str, str]:
+        called["classifier"] = True
+        return {
+            "type": "G",
+            "topic": "",
+            "name": "机器人控制",
+            "target_domain": "patent",
+            "reason": "ambiguous patent title",
+        }
+
+    monkeypatch.setattr(chat_module, "_classify_query_with_llm", classify)
+    monkeypatch.setattr(
+        chat_module,
+        "_lookup_patent",
+        lambda _conn, *, query: [
+            {
+                "patent_id": query,
+                "patent_number": "CN111",
+                "title_clean": "机器人控制方法",
+                "applicants_raw": "优必选",
+                "patent_type": "发明",
+            }
+        ],
+    )
+
+    response = chat_module.chat(
+        chat_module.ChatRequest(
+            query="机器人控制是哪件专利",
+            entity_id_hint="PAT-1",
+        ),
+        response=Response(),
+        conn=object(),
+    )
+
+    assert response.query_type == "A_patent_profile"
+    assert response.structured_payload["patent_id"] == "PAT-1"
+    assert called["classifier"] is False

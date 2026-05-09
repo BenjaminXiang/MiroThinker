@@ -129,7 +129,11 @@ def lookup_company(conn: Any, *, name: str) -> list[dict]:
              LIMIT 1
           ) latest ON true
          WHERE c.identity_status != 'inactive'
-           AND (c.canonical_name = %s OR %s = ANY(c.aliases) OR c.canonical_name ILIKE %s)
+           AND (
+                c.canonical_name = %s
+                OR jsonb_exists(COALESCE(c.aliases, '[]'::jsonb), %s)
+                OR c.canonical_name ILIKE %s
+           )
          ORDER BY c.canonical_name
          LIMIT 10
         """,

@@ -19,7 +19,11 @@ def _json_payload(**overrides: str) -> str:
     return json.dumps(payload, ensure_ascii=False)
 
 
-def _classify_with_payload(monkeypatch: pytest.MonkeyPatch, payload: str):
+def _classify_with_payload(
+    monkeypatch: pytest.MonkeyPatch,
+    payload: str,
+    query: str = "请处理这个内部分类测试",
+):
     def _fake_settings(profile_name: str, *, include_profile: bool = False):
         assert profile_name == "gemma4"
         assert include_profile is True
@@ -52,7 +56,7 @@ def _classify_with_payload(monkeypatch: pytest.MonkeyPatch, payload: str):
     monkeypatch.setattr(chat_module, "resolve_professor_llm_settings", _fake_settings)
     monkeypatch.setattr(chat_module, "OpenAI", _FakeOpenAI)
 
-    return chat_module._classify_query_with_llm("他的论文")
+    return chat_module._classify_query_with_llm(query)
 
 
 def test_c_type_returns_target_domain_paper(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -115,15 +119,30 @@ def test_c_type_default_paper_if_missing(monkeypatch: pytest.MonkeyPatch) -> Non
     }
 
 
+def test_deterministic_c_pronoun_bypasses_llm(monkeypatch: pytest.MonkeyPatch) -> None:
+    class _UnexpectedOpenAI:
+        def __init__(self, **_kwargs) -> None:
+            raise AssertionError("deterministic C query should not call LLM")
+
+    monkeypatch.delenv("CHAT_QUERY_CLASSIFIER", raising=False)
+    monkeypatch.setattr(chat_module, "OpenAI", _UnexpectedOpenAI)
+
+    result = chat_module._classify_query_with_llm("他的论文")
+
+    assert result is not None
+    assert result["type"] == "C"
+    assert result["target_domain"] == "paper"
+
+
 @pytest.mark.parametrize(
-    ("query_type", "topic", "name"),
+    ("query_type", "topic", "name", "expected_target_domain"),
     [
-        ("A", "", "丁文伯"),
-        ("B", "机器人", ""),
-        ("D", "AI 生态", ""),
-        ("E", "大模型蒸馏", ""),
-        ("F", "", ""),
-        ("G", "", "王伟"),
+        ("A", "", "丁文伯", "paper"),
+        ("B", "机器人", "", "paper"),
+        ("D", "AI 生态", "", "paper"),
+        ("E", "大模型蒸馏", "", "paper"),
+        ("F", "", "", "paper"),
+        ("G", "", "王伟", "paper"),
     ],
 )
 def test_existing_a_b_d_e_f_g_unchanged(
@@ -131,6 +150,7 @@ def test_existing_a_b_d_e_f_g_unchanged(
     query_type: str,
     topic: str,
     name: str,
+    expected_target_domain: str,
 ) -> None:
     result = _classify_with_payload(
         monkeypatch,
@@ -141,6 +161,7 @@ def test_existing_a_b_d_e_f_g_unchanged(
             target_domain="paper",
             reason="kept",
         ),
+        query="请处理这个内部分类测试",
     )
 
     assert result == {
@@ -148,4 +169,5 @@ def test_existing_a_b_d_e_f_g_unchanged(
         "topic": topic,
         "name": name,
         "reason": "kept",
+        "target_domain": expected_target_domain,
     }

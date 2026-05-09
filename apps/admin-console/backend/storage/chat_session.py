@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 _SQLALCHEMY_PREFIX = "postgresql+psycopg://"
 _PG_PREFIX = "postgresql://"
-_DEFAULT_TTL_SECONDS = 24 * 3600
+_DEFAULT_TTL_SECONDS = 30 * 60
 _DEFAULT_MAX_CACHE_SIZE = 512
 
 

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from backend.api.chat import _classify_query_with_llm
+from backend.api.chat import _classify_query_by_rules, _classify_query_with_llm
 
 
 FIXTURE = Path(__file__).parent / "fixtures" / "intent_classifier_benchmark.jsonl"
@@ -68,6 +68,21 @@ def test_intent_classifier_fixture_contract(
         Counter(case["expected_type"] for case in benchmark_cases)
         == EXPECTED_DISTRIBUTION
     )
+
+
+def test_deterministic_classifier_fallback_covers_benchmark(
+    benchmark_cases: list[dict[str, str]],
+) -> None:
+    mismatches = []
+    for case in benchmark_cases:
+        actual = _classify_query_by_rules(case["query"])
+        actual_type = (actual or {}).get("type", "UNKNOWN")
+        if actual_type != case["expected_type"]:
+            mismatches.append(
+                f"{case['id']} {case['expected_type']}->{actual_type}: {case['query']}"
+            )
+
+    assert not mismatches
 
 
 @pytest.mark.requires_classifier_llm

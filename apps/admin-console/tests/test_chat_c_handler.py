@@ -140,6 +140,55 @@ def test_c_handler_professor_to_company(
     assert store.sessions["w13-c-session"].latest_for("company").id == "COMP-001"
 
 
+def test_pronoun_followup_classifies_before_context_rewrite(
+    monkeypatch: pytest.MonkeyPatch,
+    store: _FakeSessionStore,
+) -> None:
+    _seed_session(store, kind="professor", object_id="PROF-001", label="丁文伯")
+    service = _FakeRetrievalService(
+        [
+            {
+                "company_id": "COMP-001",
+                "canonical_name": "未来机器人",
+                "industry": "机器人",
+            }
+        ]
+    )
+
+    class _UnexpectedOpenAI:
+        def __init__(self, **_kwargs: Any) -> None:
+            raise AssertionError("deterministic C query should not call LLM")
+
+    monkeypatch.setattr(chat_module, "OpenAI", _UnexpectedOpenAI)
+    monkeypatch.setattr(chat_module, "get_retrieval_service", lambda: service)
+    monkeypatch.setattr(
+        chat_module,
+        "_lookup_domain_by_topic",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AssertionError("pronoun follow-up must not fall through to B search")
+        ),
+    )
+
+    response = chat_module.chat(
+        chat_module.ChatRequest(query="他参与创立了哪些企业"),
+        response=Response(),
+        miroflow_chat_session="w13-c-session",
+        conn=object(),
+    )
+
+    assert response.query_type == "C_cross_domain_related"
+    assert response.citations[0].type == "company"
+    assert "未来机器人" in response.answer_text
+    assert service.calls == [
+        {
+            "source_domain": "professor",
+            "source_id": "PROF-001",
+            "target_domain": "company",
+            "limit": 5,
+        }
+    ]
+
+
 def test_c_handler_company_to_patent(
     monkeypatch: pytest.MonkeyPatch,
     store: _FakeSessionStore,
@@ -168,6 +217,90 @@ def test_c_handler_company_to_patent(
     assert response.citations[0].type == "patent"
     assert "CN202400001" in response.answer_text
     assert store.sessions["w13-c-session"].latest_for("patent").id == "PAT-001"
+
+
+def test_c_handler_paper_author_followup_targets_professor(
+    monkeypatch: pytest.MonkeyPatch,
+    store: _FakeSessionStore,
+) -> None:
+    _seed_session(store, kind="paper", object_id="PAPER-001", label="Force Control")
+    service = _FakeRetrievalService(
+        [
+            {
+                "professor_id": "PROF-001",
+                "canonical_name": "王伟",
+                "institution": "南方科技大学",
+            }
+        ]
+    )
+
+    class _UnexpectedOpenAI:
+        def __init__(self, **_kwargs: Any) -> None:
+            raise AssertionError("deterministic paper-author C query should not call LLM")
+
+    monkeypatch.setattr(chat_module, "OpenAI", _UnexpectedOpenAI)
+    monkeypatch.setattr(chat_module, "get_retrieval_service", lambda: service)
+
+    response = chat_module.chat(
+        chat_module.ChatRequest(query="这篇论文的作者是谁"),
+        response=Response(),
+        miroflow_chat_session="w13-c-session",
+        conn=object(),
+    )
+
+    assert response.query_type == "C_cross_domain_related"
+    assert response.citations[0].type == "professor"
+    assert "王伟" in response.answer_text
+    assert service.calls == [
+        {
+            "source_domain": "paper",
+            "source_id": "PAPER-001",
+            "target_domain": "professor",
+            "limit": 5,
+        }
+    ]
+
+
+def test_c_handler_patent_applicant_followup_targets_company(
+    monkeypatch: pytest.MonkeyPatch,
+    store: _FakeSessionStore,
+) -> None:
+    _seed_session(store, kind="patent", object_id="PAT-001", label="CN202400001")
+    service = _FakeRetrievalService(
+        [
+            {
+                "company_id": "COMP-001",
+                "canonical_name": "广和通",
+                "industry": "通信模组",
+            }
+        ]
+    )
+
+    class _UnexpectedOpenAI:
+        def __init__(self, **_kwargs: Any) -> None:
+            raise AssertionError("deterministic patent-applicant C query should not call LLM")
+
+    monkeypatch.setattr(chat_module, "OpenAI", _UnexpectedOpenAI)
+    monkeypatch.setattr(chat_module, "get_retrieval_service", lambda: service)
+
+    response = chat_module.chat(
+        chat_module.ChatRequest(query="该专利属于哪个公司"),
+        response=Response(),
+        miroflow_chat_session="w13-c-session",
+        conn=object(),
+    )
+
+    assert response.query_type == "C_cross_domain_related"
+    assert response.citations[0].type == "company"
+    assert "广和通" in response.answer_text
+    assert service.calls == [
+        {
+            "source_domain": "patent",
+            "source_id": "PAT-001",
+            "target_domain": "company",
+            "limit": 5,
+        }
+    ]
 
 
 def test_c_handler_empty_stack_clarifies_without_retrieval(
