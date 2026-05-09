@@ -182,3 +182,22 @@ def test_quality_status_filter_can_be_disabled(
         "ready",
         "needs_review",
     ]
+
+
+def test_quality_status_filter_argument_overrides_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("FILTER_BY_QUALITY_STATUS", raising=False)
+
+    results = _service("paper").retrieve(
+        "query",
+        domains=("paper",),
+        final_top_k=10,
+        filter_by_quality_status=False,
+    )
+
+    assert [result.object_id for result in results] == list(_IDS_BY_DOMAIN["paper"])
+    assert [result.metadata["quality_status"] for result in results] == [
+        "ready",
+        "needs_review",
+    ]

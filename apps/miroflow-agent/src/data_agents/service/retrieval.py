@@ -123,6 +123,7 @@ class RetrievalService:
         filters: dict | None = None,
         candidate_limit: int = 30,
         final_top_k: int = 10,
+        filter_by_quality_status: bool | None = None,
     ) -> list[Evidence]:
         unsupported_domains = tuple(
             domain for domain in domains if domain not in _VALID_DOMAINS
@@ -134,9 +135,10 @@ class RetrievalService:
             )
         domains = tuple(domain for domain in domains if domain in _VALID_DOMAINS)
 
-        filter_by_quality_status = (
-            os.environ.get("FILTER_BY_QUALITY_STATUS", "1") != "0"
-        )
+        if filter_by_quality_status is None:
+            filter_by_quality_status = (
+                os.environ.get("FILTER_BY_QUALITY_STATUS", "1") != "0"
+            )
         filters_key = self._compute_filters_key(
             {
                 **(filters or {}),
