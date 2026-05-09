@@ -133,6 +133,36 @@ def test_embedded_vocab_in_body_copy_is_not_a_heading():
     assert _extract(html) == []
 
 
+def test_specific_paper_subheading_overrides_general_academic_results_noise():
+    html = """
+    <html><body>
+      <div class="item">
+        <h3 class="tit">学术成果</h3>
+        <div class="desc">
+          <p>国际影响力：国际期刊《Knowledge-Based Systems》副主编。</p>
+          <p>所获荣誉：获辽宁省自然科学三等奖，青岛市政府科学技术进步一等奖。</p>
+          <p>近年发表的主要学术论文 (Selected Journal Papers)：</p>
+          <p>1.Xiang Lv, Mingwen Shao*, SUV: Suppressing Undesired Video
+          Content via Semantic Modulation Based on Text Embeddings, ICCV
+          2025, accepted.</p>
+          <p>2.Qiao Zhang, Mingwen Shao*, Wave-MambaAD: Wavelet-driven State
+          Space Model for Multi-class Unsupervised Anomaly Detection, ICCV
+          2025, accepted.</p>
+        </div>
+      </div>
+    </body></html>
+    """
+
+    publications = _extract(html)
+
+    assert [pub.clean_title for pub in publications] == [
+        "SUV: Suppressing Undesired Video Content via Semantic Modulation "
+        "Based on Text Embeddings",
+        "Wave-MambaAD: Wavelet-driven State Space Model for Multi-class "
+        "Unsupervised Anomaly Detection",
+    ]
+
+
 def test_swyxgcxy_prefetched_sample_still_extracts_papers():
     html = (_RUN_FIXTURE_DIR / "PROF-2E2F7D86A756.html").read_text(encoding="utf-8")
 

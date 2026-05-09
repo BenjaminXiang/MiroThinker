@@ -21,7 +21,6 @@ import pytest
 
 from src.data_agents.paper.title_resolver import (
     ResolvedPaper,
-    TitleResolutionCache,
     _arxiv_entry_to_resolved,
     _openalex_work_to_resolved,
     _reconstruct_abstract_from_inverted_index,
@@ -270,6 +269,13 @@ def _fake_http_client_returning(response):
     return client
 
 
+def _fake_http_client_returning_sequence(responses):
+    client = MagicMock(spec=_REAL_HTTPX_CLIENT)
+    client.get.side_effect = list(responses)
+    client.trust_env = False
+    return client
+
+
 def test_openalex_search_returns_results_list():
     works = [_openalex_work_fixture()]
     http = _fake_http_client_returning(_mock_openalex_response(works))
@@ -464,6 +470,27 @@ def test_arxiv_search_http_error_returns_empty():
     )
     http = _fake_http_client_returning(resp)
     assert _search_arxiv_by_title("anything", http_client=http) == []
+
+
+def test_arxiv_search_retries_429_then_accepts_success_without_status_metadata(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    first = MagicMock(spec=_REAL_HTTPX_RESPONSE)
+    first.status_code = 429
+    first.headers = {"Retry-After": "7"}
+
+    second = _mock_arxiv_response(_ARXIV_ATOM_FIXTURE)
+    http = _fake_http_client_returning_sequence([first, second])
+    sleeps: list[float] = []
+    monkeypatch.setattr(
+        "src.data_agents.paper.title_resolver.time.sleep", sleeps.append
+    )
+
+    results = _search_arxiv_by_title("Deep Learning for Images", http_client=http)
+
+    assert len(results) == 1
+    assert http.get.call_count == 2
+    assert sleeps[-1:] == [7.0]
 
 
 def test_arxiv_entry_to_resolved_happy_path():

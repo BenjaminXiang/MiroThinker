@@ -18,9 +18,9 @@ from src.data_agents.professor.homepage_publication_headings import (
 
 logger = logging.getLogger(__name__)
 
-_ITEM_PREFIX_RE = re.compile(r"^\s*(?:\[\d+\]|\(\d+\)|\d+[.)])\s*")
+_ITEM_PREFIX_RE = re.compile(r"^\s*(?:\[\d+\]|\(\d+\)|\d+\s*[.)、．。])\s*")
 _NUMBERED_ITEM_START_RE = re.compile(
-    r"(?:^|\s)(?:\[\d+\]|\(\d+\)|\d+[.)])\s*(?=[A-Za-z\u4e00-\u9fff])"
+    r"(?:^|\s)(?:\[\d+\]|\(\d+\)|\d+\s*[.)、．。])\s*(?=[A-Za-z\u4e00-\u9fff])"
 )
 _ITEM_SUFFIX_RE = re.compile(r"\s*\[(?:J|C|J/OL)\]\s*\.?\s*$", re.IGNORECASE)
 _YEAR_RE = re.compile(r"\b(?:19|20)\d{2}\b")
@@ -40,6 +40,18 @@ _JOURNAL_TAIL_HINT_RE = re.compile(
     r"geophysical)\b",
     re.IGNORECASE,
 )
+_ABBREVIATED_JOURNAL_RE = re.compile(
+    r"^(?:[A-Z][A-Za-z]{0,8}\.\s*){2,}[A-Z][A-Za-z]{1,16}\.?$"
+)
+_INLINE_VENUE_START_RE = re.compile(
+    r"\s+(?=(?:(?:american|asian|british|canadian|chinese|european|international)"
+    r"\s+)?(?:journal|proceedings|ieee|acm|acs|nature|science|elsevier|springer)\b)",
+    re.IGNORECASE,
+)
+_INLINE_PERIOD_VENUE_RE = re.compile(
+    r"\.(?=(?:journal|proceedings|ieee|acm|acs|nature|science|elsevier|springer)\b)",
+    re.IGNORECASE,
+)
 _AUTHOR_NAME_RE = re.compile(
     r"(?:"
     r"[A-Z][a-z]+(?:-[A-Z][a-z]+)?\s+[A-Z]\.?"
@@ -57,8 +69,18 @@ _AUTHOR_NAME_RE = re.compile(
 _TRAILING_PUNCTUATION_RE = re.compile(r"^[,;:\-.\s，；：。]+|[,;:\-.\s，；：。]+$")
 _AUTHOR_MARKER_RE = re.compile(r"[*#†‡]+")
 _AUTHOR_YEAR_MARKER_RE = re.compile(r"\(?\b(?:19|20)\d{2}\b\)?")
+_AUTHOR_NOTE_RE = re.compile(
+    r"\s*[（(]\s*(?:通讯作者|通信作者|共同通讯作者|第一作者|共同第一作者|"
+    r"corresponding\s+authors?|co-?first\s+authors?|equal\s+contribution)\s*[）)]",
+    re.IGNORECASE,
+)
+_ET_AL_SUFFIX_RE = re.compile(r"\s+et\s+al\.?$", re.IGNORECASE)
 _SURNAME_INITIAL_COMMA_RE = re.compile(
     r"^[A-Z][A-Za-z-]+,\s*(?:[A-Z]\.?\s*){1,3}$"
+)
+_SURNAME_GIVEN_AUTHOR_RE = re.compile(
+    r"^([A-Z][A-Za-z'’-]+),\s*"
+    r"((?:[A-Z][A-Za-z'’-]+|[A-Z]{1,4}\.?)(?:\s+[A-Z]\.?)*\.?)$"
 )
 _SURNAME_INITIAL_AUTHOR_RE = re.compile(
     r"\b([A-Z][A-Za-z-]+),\s*((?:[A-Z]\.\s*){1,3}|[A-Z]\.?)(?=\s*(?:,|and\b|&|$))"
@@ -115,6 +137,10 @@ def _split_title_authors_venue(text: str) -> tuple[str, str | None, str | None]:
     marked_author = _split_marked_author_prefix(normalized)
     if marked_author is not None:
         return marked_author
+
+    semicolon_surname_authors = _split_semicolon_surname_author_prefix(normalized)
+    if semicolon_surname_authors is not None:
+        return semicolon_surname_authors
 
     author_prefixed = _split_author_prefixed_citation(normalized)
     if author_prefixed is not None:
@@ -208,6 +234,8 @@ def _has_explicit_author_syntax(text: str) -> bool:
     normalized = _normalize_author_text(text)
     if not normalized:
         return False
+    if _ET_AL_SUFFIX_RE.search(normalized):
+        return True
     if _AUTHOR_MARKER_RE.search(text):
         return True
     if re.search(r"[,，;；]", normalized):
@@ -251,6 +279,9 @@ def _extract_quoted_title_segment(
 
 def _normalize_author_text(text: str) -> str:
     normalized = _clean_segment(text)
+    normalized = normalized.replace("’", "'")
+    normalized = re.sub(r"\b([A-Z])\.(?=[A-Z][a-z])", r"\1. ", normalized)
+    normalized = _AUTHOR_NOTE_RE.sub("", normalized)
     normalized = _AUTHOR_YEAR_MARKER_RE.sub("", normalized)
     normalized = _AUTHOR_MARKER_RE.sub("", normalized)
     normalized = re.sub(r"^\s*(?:and|&)\s+", "", normalized, flags=re.IGNORECASE)
@@ -265,6 +296,45 @@ def _normalize_surname_initial_author_order(text: str) -> str:
         return f"{initials} {surname} "
 
     return _SURNAME_INITIAL_AUTHOR_RE.sub(replace, text)
+
+
+def _parse_surname_given_author_segment(text: str) -> tuple[str, str] | None:
+    normalized = _normalize_author_text(text)
+    match = _SURNAME_GIVEN_AUTHOR_RE.fullmatch(normalized)
+    if match is None:
+        return None
+    surname = match.group(1)
+    given = _WHITESPACE_RE.sub(" ", match.group(2)).strip()
+    return surname, given
+
+
+def _normalize_surname_given_author_segment(text: str) -> str:
+    parsed = _parse_surname_given_author_segment(text)
+    if parsed is None:
+        return _normalize_author_text(text)
+    surname, given = parsed
+    given = re.sub(r"\b([A-Z])\.?(?=\s|$)", r"\1.", given)
+    return f"{given} {surname}".strip()
+
+
+def _looks_like_semicolon_surname_author_list(text: str) -> bool:
+    parts = [
+        _clean_segment(part)
+        for part in re.split(r"[;；]", text)
+        if _clean_segment(part)
+    ]
+    if len(parts) < 2:
+        return False
+    return all(_parse_surname_given_author_segment(part) is not None for part in parts)
+
+
+def _normalize_semicolon_surname_author_list(text: str) -> str:
+    parts = [
+        _normalize_surname_given_author_segment(part)
+        for part in re.split(r"[;；]", text)
+        if _clean_segment(part)
+    ]
+    return ", ".join(part for part in parts if part).strip(" ,;")
 
 
 def _normalize_author_list(text: str) -> str:
@@ -303,17 +373,54 @@ def _looks_like_author_segment(text: str) -> bool:
         return False
     if _looks_like_venue(normalized):
         return False
+    if _ET_AL_SUFFIX_RE.search(normalized):
+        base = _ET_AL_SUFFIX_RE.sub("", normalized).strip(" ,;")
+        return bool(base and base != normalized and _looks_like_author_segment(base))
+    if re.fullmatch(
+        r"[A-Z][A-Za-z-]+\s+\([A-Z][A-Za-z.-]+\)\s+[A-Z][A-Za-z-]+",
+        normalized,
+    ):
+        return True
     if re.fullmatch(r"(?:[A-Z]\.\s*){1,3}[A-Z][a-z]+(?:-[A-Z][a-z]+)?", normalized):
         return True
     tokens = normalized.split()
     if (
         2 <= len(tokens) <= 7
-        and all(re.fullmatch(r"(?:[A-Z]\.|[A-Za-z-]+)", token) for token in tokens)
+        and all(
+            re.fullmatch(r"(?:[A-Z]\.|[A-Za-z'’-]+)", token) for token in tokens
+        )
         and len(tokens[0]) > 1
         and any(char.isupper() for char in tokens[0])
         and tokens[1][:1].isupper()
     ):
-        return True
+        title_connectors = {
+            "after",
+            "against",
+            "as",
+            "at",
+            "based",
+            "before",
+            "between",
+            "by",
+            "for",
+            "from",
+            "in",
+            "into",
+            "of",
+            "on",
+            "over",
+            "through",
+            "to",
+            "toward",
+            "towards",
+            "under",
+            "using",
+            "via",
+            "with",
+            "within",
+            "without",
+        }
+        return not any(token.casefold() in title_connectors for token in tokens)
     return bool(_AUTHOR_NAME_RE.fullmatch(normalized))
 
 
@@ -365,6 +472,11 @@ def _split_comma_delimited_citation(
             venue_parts = [part for part in (remainder, *segments[index + 1 :]) if part]
             venue = ", ".join(venue_parts).strip(" ,;") or None
             return title, ", ".join(authors), venue
+        title, remainder = _split_title_and_remainder(segment)
+        if authors and title != segment and _looks_like_title_segment(title):
+            venue_parts = [part for part in (remainder, *segments[index + 1 :]) if part]
+            venue = ", ".join(venue_parts).strip(" ,;") or None
+            return title, ", ".join(authors), venue
         if not authors or not _looks_like_title_segment(segment):
             return None
         venue = ", ".join(segments[index + 1 :]).strip(" ,;") or None
@@ -400,6 +512,37 @@ def _split_author_prefixed_citation(
             continue
         _, venue = _split_remainder_authors_venue(remainder)
         return candidate_title, _normalize_author_list(prefix), venue
+    return None
+
+
+def _split_semicolon_surname_author_prefix(
+    text: str,
+) -> tuple[str, str | None, str | None] | None:
+    if ";" not in text and "；" not in text:
+        return None
+
+    for match in reversed(list(re.finditer(r",\s+", text))):
+        prefix = _clean_segment(text[: match.start()])
+        suffix = _clean_segment(text[match.end() :])
+        if not prefix or not suffix:
+            continue
+        if not _looks_like_semicolon_surname_author_list(prefix):
+            continue
+
+        comma_split = _split_title_venue_on_comma(suffix)
+        if comma_split is not None:
+            title, venue = comma_split
+        else:
+            title, remainder = _split_title_and_remainder(suffix)
+            _, venue = _split_remainder_authors_venue(remainder)
+        candidate_title = title or suffix
+        if not _looks_like_title_segment(candidate_title):
+            continue
+        return (
+            candidate_title,
+            _normalize_semicolon_surname_author_list(prefix),
+            venue,
+        )
     return None
 
 
@@ -485,6 +628,14 @@ def _split_title_and_remainder(text: str) -> tuple[str, str]:
                 return title, venue
             return candidate_title, remainder
 
+    inline_venue_split = _split_title_inline_venue_tail(text)
+    if inline_venue_split is not None:
+        return inline_venue_split
+
+    period_venue_split = _split_title_inline_period_venue_tail(text)
+    if period_venue_split is not None:
+        return period_venue_split
+
     comma_split = _split_title_venue_on_comma(text)
     if comma_split is not None:
         return comma_split
@@ -495,6 +646,36 @@ def _split_title_and_remainder(text: str) -> tuple[str, str]:
 
     cleaned = _clean_segment(text)
     return cleaned, ""
+
+
+def _split_title_inline_venue_tail(text: str) -> tuple[str, str] | None:
+    cleaned = _clean_segment(text)
+    if not cleaned:
+        return None
+    for match in _INLINE_VENUE_START_RE.finditer(cleaned):
+        title = _clean_segment(cleaned[: match.start()])
+        remainder = _clean_segment(cleaned[match.start() :])
+        if len(title) < _MIN_TITLE_LENGTH or len(title.split()) < 4:
+            continue
+        if not _extract_year_from_text(remainder):
+            continue
+        if _looks_like_venue(remainder) or _looks_like_journal_tail(remainder):
+            return title, remainder
+    return None
+
+
+def _split_title_inline_period_venue_tail(text: str) -> tuple[str, str] | None:
+    cleaned = _clean_segment(text)
+    if not cleaned:
+        return None
+    for match in _INLINE_PERIOD_VENUE_RE.finditer(cleaned):
+        title = _clean_segment(cleaned[: match.start()])
+        remainder = _clean_segment(cleaned[match.start() + 1 :])
+        if len(title) < _MIN_TITLE_LENGTH:
+            continue
+        if _looks_like_venue(remainder) or _looks_like_journal_tail(remainder):
+            return title, remainder
+    return None
 
 
 def _split_title_venue_on_comma(text: str) -> tuple[str, str] | None:
@@ -581,6 +762,8 @@ def _looks_like_journal_tail(text: str) -> bool:
     cleaned = _clean_segment(text)
     if not cleaned:
         return False
+    if _ABBREVIATED_JOURNAL_RE.fullmatch(cleaned):
+        return True
     head = _clean_segment(re.split(r"[,，]", cleaned, maxsplit=1)[0])
     has_citation_tail = bool(
         re.search(r"[,，]\s*(?:V\.?\s*)?\d", cleaned, re.IGNORECASE)
@@ -876,6 +1059,10 @@ def _publication_from_text(
     clean_title = _clean_segment(_strip_item_suffix(_strip_item_prefix(title_text)))
     if len(clean_title) < _MIN_TITLE_LENGTH:
         return None
+    if _looks_like_semicolon_surname_author_list(clean_title):
+        return None
+    if _ABBREVIATED_JOURNAL_RE.fullmatch(clean_title):
+        return None
 
     authors_value = authors_override if authors_override is not None else authors_text
     venue_value = venue_override if venue_override is not None else venue_text
@@ -1031,13 +1218,37 @@ def _is_non_heading_publications_heading(tag: Tag) -> bool:
 
     text = tag.get_text(" ", strip=True)
     normalized = _strip_heading_trailing_punctuation(text)
-    if not normalized or not _PUBLICATIONS_HEADING_RE.fullmatch(normalized):
+    if not normalized:
+        return False
+
+    is_exact_heading = _PUBLICATIONS_HEADING_RE.fullmatch(normalized) is not None
+    is_descriptive_heading = _is_descriptive_publications_heading_text(text)
+    if not is_exact_heading and not is_descriptive_heading:
         return False
 
     return (
         _has_strong_or_b_marker(tag)
         or _has_title_class(tag)
+        or is_descriptive_heading
         or len(normalized) <= 30
+    )
+
+
+def _is_descriptive_publications_heading_text(text: str) -> bool:
+    normalized = _strip_heading_trailing_punctuation(text)
+    if not normalized or len(normalized) > 80:
+        return False
+    if not _is_publications_heading_text(normalized):
+        return False
+    if re.search(r"(?:发表论文|论文)\s*\d+\s*余|主持|服务产业", normalized):
+        return False
+    return bool(
+        re.search(
+            r"\bselected\s+(?:journal\s+)?papers\b",
+            normalized,
+            re.IGNORECASE,
+        )
+        or re.search(r"(?:主要|代表性|代表|精选).{0,20}(?:论文|文章|论著)", normalized)
     )
 
 

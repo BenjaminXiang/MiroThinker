@@ -301,14 +301,20 @@ def _search_arxiv_by_title(title: str, *, http_client=None) -> list:
                     "max_results": 5,
                 },
             )
-            if response.status_code == 429 and attempt == 0:
-                retry_after_header = response.headers.get("Retry-After", "30")
+            status_code = getattr(response, "status_code", None)
+            if status_code == 429 and attempt == 0:
+                headers = getattr(response, "headers", {}) or {}
+                retry_after_header = headers.get("Retry-After", "30")
                 try:
                     retry_after = float(retry_after_header)
                 except ValueError:
                     retry_after = 30.0
                 retry_after = min(max(retry_after, 5.0), 60.0)
-                logger.info("arXiv 429 for %r; sleeping %.1fs then retry", title, retry_after)
+                logger.info(
+                    "arXiv 429 for %r; sleeping %.1fs then retry",
+                    title,
+                    retry_after,
+                )
                 time.sleep(retry_after)
                 continue
             break

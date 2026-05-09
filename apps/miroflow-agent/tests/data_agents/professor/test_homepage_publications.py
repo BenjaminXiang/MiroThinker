@@ -81,6 +81,11 @@ def test_strip_item_prefix_dotted_number():
     assert _strip_item_prefix("12. Another Title") == "Another Title"
 
 
+def test_strip_item_prefix_chinese_number_marker():
+    assert _strip_item_prefix("1、 Title goes here") == "Title goes here"
+    assert _strip_item_prefix("12、Another Title") == "Another Title"
+
+
 def test_strip_item_prefix_parenthesized_number():
     assert _strip_item_prefix("(1) Title goes here") == "Title goes here"
     assert _strip_item_prefix("(12) Another Title") == "Another Title"
@@ -180,6 +185,469 @@ def test_split_title_authors_venue_handles_missing_venue():
     assert authors is not None and "Doe" in authors
 
 
+def test_split_title_authors_venue_handles_comma_delimited_citation():
+    title, authors, venue = _split_title_authors_venue(
+        "Shuting Liu, Baochang Zhang, Yiqing Liu, Tian Guan*, and Yonghong He*, "
+        "Unpaired Stain Transfer Using Pathology-Consistent Constrained "
+        "Generative Adversarial Networks, IEEE Transactions on Medical Imaging, "
+        "40(8):1977-1989, 2021."
+    )
+
+    assert title == (
+        "Unpaired Stain Transfer Using Pathology-Consistent Constrained "
+        "Generative Adversarial Networks"
+    )
+    assert authors is not None and "Yonghong He" in authors
+    assert ", ," not in authors
+    assert venue is not None and "IEEE Transactions" in venue
+
+
+def test_split_title_authors_venue_handles_semicolon_author_prefix():
+    title, authors, venue = _split_title_authors_venue(
+        "Rui Feng; Fei Tang*; Ning Zhang; Xiaohao Wang, "
+        "Flexible; High-Power Density; Wearable Thermoelectric Nanogenerator "
+        "and Self-Powered Temperature Sensor"
+    )
+
+    assert title == (
+        "Flexible; High-Power Density; Wearable Thermoelectric Nanogenerator "
+        "and Self-Powered Temperature Sensor"
+    )
+    assert authors is not None and "Xiaohao Wang" in authors
+    assert venue is None
+
+
+def test_split_title_authors_venue_handles_initial_author_prefix():
+    title, authors, venue = _split_title_authors_venue(
+        "Wang J, Zhang J, Feng P. Experimental and theoretical investigation "
+        "on critical cutting force in rotary ultrasonic drilling of brittle "
+        "materials and composites"
+    )
+
+    assert title == (
+        "Experimental and theoretical investigation on critical cutting force "
+        "in rotary ultrasonic drilling of brittle materials and composites"
+    )
+    assert authors == "Wang J, Zhang J, Feng P"
+    assert venue is None
+
+
+def test_split_title_authors_venue_handles_chinese_author_note_in_prefix():
+    title, authors, venue = _split_title_authors_venue(
+        "Yuanchang Liang, Xiaobo Wang（通讯作者）,Kai Wang, Shuo Wang, "
+        "Xiaojiang Peng, Haoyu Chen, David Kim Huat Chua, Prahlad "
+        "Vadakkepat, Adaptive Action Chunking at Inference-Time for "
+        "Vision-Language-Action Models. IEEE Conference on Computer Vision "
+        "and Pattern Recognition. (CVPR), 2026"
+    )
+
+    assert title == (
+        "Adaptive Action Chunking at Inference-Time for Vision-Language-Action "
+        "Models"
+    )
+    assert authors is not None and "Xiaobo Wang" in authors
+    assert "通讯作者" not in authors
+    assert venue is not None and "Computer Vision" in venue
+
+
+def test_split_title_authors_venue_handles_et_al_author_prefix():
+    title, authors, venue = _split_title_authors_venue(
+        "Xiaobo Wang et al. Teacher Guided Neural Architecture Search for "
+        "Face Recognition. Association for the Advancement of Artificial "
+        "Intelligence (AAAI), 2021"
+    )
+
+    assert title == "Teacher Guided Neural Architecture Search for Face Recognition"
+    assert authors == "Xiaobo Wang et al"
+    assert venue is not None and "AAAI" in venue
+
+
+def test_split_title_authors_venue_handles_chinese_numbered_author_prefix():
+    title, authors, venue = _split_title_authors_venue(
+        _strip_item_prefix(
+            "1、 Mingzhou Wu, Shuqing He, Xin Hu, Jingqin Chen, Enna Ha, "
+            "Fujin Ai, Tao Ji, Junqing Hu and Shuangchen Ruan*, A "
+            "Near-Infrared Light Triggered Composite Nanoparticles for "
+            "Image-Guided Photothermal Therapy in Osteosarcoma. Journal of "
+            "Materials Chemistry B, 2018"
+        )
+    )
+
+    assert title == (
+        "A Near-Infrared Light Triggered Composite Nanoparticles for "
+        "Image-Guided Photothermal Therapy in Osteosarcoma"
+    )
+    assert authors is not None and "Mingzhou Wu" in authors
+    assert authors is not None and "Shuangchen Ruan" in authors
+    assert venue == "Journal of Materials Chemistry B, 2018"
+
+
+def test_split_title_authors_venue_does_not_treat_title_case_phrase_as_author():
+    title, authors, venue = _split_title_authors_venue(
+        _strip_item_prefix(
+            "36.Xiaodong Tan,Mingwen Shao*, Yuanjian Qiao, Tiyao Liu, "
+            "Xiangyong Cao, Low-Rank Prompt-Guided Transformer for "
+            "Hyperspectral Image Denoising,IEEE Transactions on Geoscience "
+            "and Remote Sensing, 2024, 62:5520815. (SCI 1区)"
+        )
+    )
+
+    assert title == (
+        "Low-Rank Prompt-Guided Transformer for Hyperspectral Image Denoising"
+    )
+    assert authors is not None and "Xiaodong Tan" in authors
+    assert authors is not None and "Xiangyong Cao" in authors
+    assert venue is not None and "Geoscience and Remote Sensing" in venue
+
+
+def test_split_title_authors_venue_handles_no_space_before_ieee_venue_tail():
+    title, authors, venue = _split_title_authors_venue(
+        _strip_item_prefix(
+            "51.Leiquan Wang, Yunfeng Wang, Zhongwei Li, Chunlei Wu, "
+            "Mingming Xu,Mingwen Shao, Eliminating Spatial Correlations of "
+            "Anomaly: Corner-Visible Network for Unsupervised Hyperspectral "
+            "Anomaly Detection.IEEE Transactions on Geoscience and Remote "
+            "Sensing, 2023, 61: 1-14. (SCI 1区)"
+        )
+    )
+
+    assert title == (
+        "Eliminating Spatial Correlations of Anomaly: Corner-Visible Network "
+        "for Unsupervised Hyperspectral Anomaly Detection"
+    )
+    assert authors is not None and "Leiquan Wang" in authors
+    assert authors is not None and "Mingwen Shao" in authors
+    assert venue is not None and "IEEE Transactions" in venue
+
+
+def test_split_title_authors_venue_handles_curly_apostrophe_author_name():
+    title, authors, venue = _split_title_authors_venue(
+        _strip_item_prefix(
+            "84.Baichen Liu, Zhi Han, Xi’ai Chen,Mingwen Shao, Huidi Jia, "
+            "Yanmei Wang, Yandong Tang, A novel compact design of "
+            "convolutional layers with spatial transformation towards "
+            "lower-rank representation for image classification,"
+            "Knowledge-Based Systems, 2022, 255: 109723. (SCI 1区)"
+        )
+    )
+
+    assert title == (
+        "A novel compact design of convolutional layers with spatial "
+        "transformation towards lower-rank representation for image "
+        "classification"
+    )
+    assert authors is not None and "Xi'ai Chen" in authors
+    assert authors is not None and "Yandong Tang" in authors
+    assert venue is not None and "Knowledge-Based Systems" in venue
+
+
+def test_split_title_authors_venue_does_not_treat_against_title_as_author():
+    title, authors, venue = _split_title_authors_venue(
+        _strip_item_prefix(
+            "147.Liu Shuqi, Mingwen Shao*, Liu Xinping, GAN-based Classifier "
+            "Protection against adversarial attacks, Journal of Intelligent "
+            "& Fuzzy Systems, 2020, 38(6):1-13. (SCI 4区)"
+        )
+    )
+
+    assert title == "GAN-based Classifier Protection against adversarial attacks"
+    assert authors is not None and "Liu Shuqi" in authors
+    assert authors is not None and "Liu Xinping" in authors
+    assert venue is not None and "Journal of Intelligent" in venue
+
+
+def test_split_title_authors_venue_handles_semicolon_surname_given_authors():
+    title, authors, venue = _split_title_authors_venue(
+        _strip_item_prefix(
+            "20. Li, Xiao-Tian; Mi, Sixuan; Xu, Yuzhi; Li, Bo-Wen; "
+            "Zhu, T; Zhang, John Z. H., Discovery of New Synthetic Routes "
+            "of Amino Acids in Prebiotic Chemistry, J. Am. Che m. Soc. Au, "
+            "2024, 4, 4757-4768."
+        )
+    )
+
+    assert title == (
+        "Discovery of New Synthetic Routes of Amino Acids in Prebiotic Chemistry"
+    )
+    assert authors is not None and "Xiao-Tian Li" in authors
+    assert authors is not None and "John Z. H. Zhang" in authors
+    assert venue is not None and "J. Am. Che m. Soc. Au" in venue
+
+
+def test_split_title_authors_venue_keeps_adjective_with_journal_name():
+    title, authors, venue = _split_title_authors_venue(
+        _strip_item_prefix(
+            "2、 Mingzhou Wu, Wangcheng Zhan*, Yun Guo, Yunsong Wang, "
+            "Yanglong Guo, Xueqing Gong, Li Wang and Guanzhong Lu*, "
+            "Solvent-free selective oxidation of cyclohexane with molecular "
+            "oxygen over manganese oxides: Effect of the calcination "
+            "temperature, Chinese Journal of Catalysis, 2016, 37: 184-192"
+        )
+    )
+
+    assert title == (
+        "Solvent-free selective oxidation of cyclohexane with molecular "
+        "oxygen over manganese oxides: Effect of the calcination temperature"
+    )
+    assert authors is not None and "Mingzhou Wu" in authors
+    assert venue is not None and venue.startswith("Chinese Journal of Catalysis")
+
+
+def test_split_title_authors_venue_handles_inline_journal_after_author_prefix():
+    title, authors, venue = _split_title_authors_venue(
+        "Kewei Liu, Zhorro NiCkolov, Jonghyun Oh and Moses Noh, "
+        "KrF excimer laser micromachining of MEMS materials: characterization "
+        "and applications Journal of Micromechanics and Microengineering, "
+        "2012,22 015012"
+    )
+
+    assert title == (
+        "KrF excimer laser micromachining of MEMS materials: characterization "
+        "and applications"
+    )
+    assert authors is not None and "Moses Noh" in authors
+    assert venue is not None and "Journal of Micromechanics" in venue
+
+
+def test_split_title_authors_venue_handles_author_parentheses_and_adjacent_initials():
+    title, authors, venue = _split_title_authors_venue(
+        "Xiang Ren, Kewei Liu, Qingwei Zhang, Hongseok (Moses) Noh, "
+        "E.Caglan Kumbur, Wenqiao Wayne Yuan, Jack G. Zhou, "
+        "Parkson Lee-Gau Chong, Design, Fabrication and Characterization "
+        "of Archaeal Tetraether Free-Standing Planar Membranes in a PDMS- "
+        "and PCB-Based Fluidic Platform, ACS Applied Materials & Interfaces, "
+        "2014, Vol.6, No.15, pp. 12618-12628"
+    )
+
+    assert title == (
+        "Design, Fabrication and Characterization of Archaeal Tetraether "
+        "Free-Standing Planar Membranes in a PDMS- and PCB-Based Fluidic Platform"
+    )
+    assert authors is not None and "Hongseok (Moses) Noh" in authors
+    assert authors is not None and "E. Caglan Kumbur" in authors
+    assert venue is not None and "ACS Applied Materials" in venue
+
+
+def test_split_title_authors_venue_handles_inline_journal_manufacturing_tail():
+    title, authors, venue = _split_title_authors_venue(
+        "Kewei Liu, Yoontae Kim, Moses Noh, "
+        "ArF excimer laser micromachining of MEMS materials: characterization "
+        "and applications Journal of Micro and Nano-Manufacturing, 2014, 2(2)."
+    )
+
+    assert title == (
+        "ArF excimer laser micromachining of MEMS materials: characterization "
+        "and applications"
+    )
+    assert authors is not None and "Moses Noh" in authors
+    assert venue is not None and "Journal of Micro" in venue
+
+
+def test_split_title_authors_venue_removes_short_journal_tail():
+    title, authors, venue = _split_title_authors_venue(
+        "Zhang J. Experimental study on vibration stability in rotary "
+        "ultrasonic machining of ceramic matrix composites: cutting force "
+        "variation at hole entrance. Ceramics International"
+    )
+
+    assert title == (
+        "Experimental study on vibration stability in rotary ultrasonic "
+        "machining of ceramic matrix composites: cutting force variation at "
+        "hole entrance"
+    )
+    assert authors == "Zhang J"
+    assert venue == "Ceramics International"
+
+
+def test_split_title_authors_venue_handles_ampersand_author_prefix():
+    title, authors, venue = _split_title_authors_venue(
+        "Marnix Wagemaker * & Chenglong Zhao *, Chemical short-range disorder "
+        "in lithium oxide cathodes"
+    )
+
+    assert title == "Chemical short-range disorder in lithium oxide cathodes"
+    assert authors == "Marnix Wagemaker, Chenglong Zhao"
+    assert venue is None
+
+
+def test_split_title_authors_venue_handles_comma_and_ampersand_author_prefix():
+    title, authors, venue = _split_title_authors_venue(
+        "Hadas Alon Yehezkel, Steven Langford, Dong Zhou *, Baohua Li *, "
+        "Guoxiu Wang * & Doron Aurbach *, External-pressure-electrochemistry "
+        "coupling in solid-state lithium metal batteries"
+    )
+
+    assert title == (
+        "External-pressure-electrochemistry coupling in solid-state lithium "
+        "metal batteries"
+    )
+    assert authors is not None and "Doron Aurbach" in authors
+    assert venue is None
+
+
+def test_split_title_authors_venue_handles_multi_initial_author_prefix():
+    title, authors, venue = _split_title_authors_venue(
+        "and G. H. Jirka (1994), Axisymmetric instability of the annular "
+        "Hagen Poiseuille flow with small inner radius by Chebyshevpseudospectral method"
+    )
+
+    assert title == (
+        "Axisymmetric instability of the annular Hagen Poiseuille flow with "
+        "small inner radius by Chebyshevpseudospectral method"
+    )
+    assert authors == "G. H. Jirka"
+    assert venue is None
+
+
+def test_split_title_authors_venue_handles_journal_tail_with_volume():
+    title, authors, venue = _split_title_authors_venue(
+        "and W. Brutsaert (1995), Diagnostics of landsurface spatial "
+        "variability and water vapor flux. J. of Geophysical Research "
+        "100(D12), 25595-25606"
+    )
+
+    assert title == "Diagnostics of landsurface spatial variability and water vapor flux"
+    assert authors == "W. Brutsaert"
+    assert venue == "J. of Geophysical Research 100(D12), 25595-25606"
+
+
+def test_split_title_authors_venue_handles_journal_tail_with_v_volume():
+    title, authors, venue = _split_title_authors_venue(
+        "and G. H. Jirka (1995), Experimental study of plane turbulent wakes "
+        "in a shallow water. Fluid Dynamics Research, V.16, 11-41"
+    )
+
+    assert title == "Experimental study of plane turbulent wakes in a shallow water"
+    assert authors == "G. H. Jirka"
+    assert venue == "Fluid Dynamics Research, V.16, 11-41"
+
+
+def test_split_title_authors_venue_strips_short_comma_venue_tail():
+    title, authors, venue = _split_title_authors_venue(
+        "3D location and trajectory reconstruction of a moving object behind "
+        "scattering media, IEEE Trans"
+    )
+
+    assert title == (
+        "3D location and trajectory reconstruction of a moving object behind "
+        "scattering media"
+    )
+    assert authors is None
+    assert venue == "IEEE Trans"
+
+
+def test_split_title_authors_venue_strips_abbreviated_semicolon_venue_tail():
+    title, authors, venue = _split_title_authors_venue(
+        "Human Pulse Diagnosis for Medical Assessments Using a Wearable "
+        "Piezoelectret Sensing System; Adv"
+    )
+
+    assert title == (
+        "Human Pulse Diagnosis for Medical Assessments Using a Wearable "
+        "Piezoelectret Sensing System"
+    )
+    assert authors is None
+    assert venue == "Adv"
+
+
+def test_split_title_authors_venue_handles_marked_author_without_comma():
+    title, authors, venue = _split_title_authors_venue(
+        "Yaou Zhang * Persistent high glucose induced EPB41L4A-AS1 inhibits "
+        "glucose uptake via GCN5 mediating crotonylation and acetylation of "
+        "histones and non-histones"
+    )
+
+    assert title == (
+        "Persistent high glucose induced EPB41L4A-AS1 inhibits glucose uptake "
+        "via GCN5 mediating crotonylation and acetylation of histones and "
+        "non-histones"
+    )
+    assert authors == "Yaou Zhang"
+    assert venue is None
+
+
+def test_split_title_authors_venue_handles_marked_last_author_inside_author_list():
+    title, authors, venue = _split_title_authors_venue(
+        "Weijie Liao, Naihan Xu, Haowei Zhang, Weifang Liao, Yanzhi Wang, "
+        "Songmao Wang, Shikuan Zhang, Yuyang Jiang, Weidong Xie *, Yaou "
+        "Zhang * Persistent high glucose induced EPB41L4A-AS1 inhibits "
+        "glucose uptake via GCN5 mediating crotonylation and acetylation of "
+        "histones and non-histones. Clin Transl Med. 2022 Feb;12(2):e699"
+    )
+
+    assert title == (
+        "Persistent high glucose induced EPB41L4A-AS1 inhibits glucose uptake "
+        "via GCN5 mediating crotonylation and acetylation of histones and "
+        "non-histones"
+    )
+    assert authors is not None and "Yaou Zhang" in authors
+    assert venue is not None and "Clin Transl Med" in venue
+
+
+def test_split_title_authors_venue_strips_split_short_venue_tail():
+    title, authors, venue = _split_title_authors_venue(
+        "Yao Chu; Junwen Zhong,* Huiliang Liu; Yuan Ma; Nathaniel Liu; "
+        "Yu Song; Jiaming Liang; Zhichun Shao; Yu Sun; Ying Dong,* Xiaohao "
+        "Wang; and Liwei Lin*, Human Pulse Diagnosis for Medical Assessments "
+        "Using a Wearable Piezoelectret Sensing System; Adv. Funct. Mater.; "
+        "1803413; 2018"
+    )
+
+    assert title == (
+        "Human Pulse Diagnosis for Medical Assessments Using a Wearable "
+        "Piezoelectret Sensing System"
+    )
+    assert authors is not None and "Liwei Lin" in authors
+    assert venue is not None and "Funct. Mater" in venue
+
+
+def test_split_title_authors_venue_handles_middle_initial_before_semicolon():
+    title, authors, venue = _split_title_authors_venue(
+        "Rizwan Ur Rehman Sagar; Khurram Shehzad Ayaz Ali Florian J. "
+        "Stadler; Qasim Khan; Jingjing Zhao; Xiaohao Wang; Min Zhang*, "
+        "Defect-induced; temperature-independent; tunable magnetoresistance "
+        "of partially fluorinated graphene foam. CARBON 2019(143), 179-188"
+    )
+
+    assert title == (
+        "Defect-induced; temperature-independent; tunable magnetoresistance "
+        "of partially fluorinated graphene foam"
+    )
+    assert authors is not None and "Florian J. Stadler" in authors
+    assert venue is not None and "CARBON" in venue
+
+
+def test_split_title_authors_venue_strips_split_comma_venue_tail():
+    title, authors, venue = _split_title_authors_venue(
+        "Rujia Deng, Xin Jin, Dongyu Du, 3D location and trajectory "
+        "reconstruction of a moving object behind scattering media, IEEE "
+        "Trans. Compuat. Imaging, 2021"
+    )
+
+    assert title == (
+        "3D location and trajectory reconstruction of a moving object behind "
+        "scattering media"
+    )
+    assert authors == "Rujia Deng, Xin Jin, Dongyu Du"
+    assert venue is not None and "IEEE Trans" in venue
+
+
+def test_split_title_authors_venue_handles_surname_initial_and_author_prefix():
+    title, authors, venue = _split_title_authors_venue(
+        "Chen, D. and G. H. Jirka (1994), Axisymmetric instability of the "
+        "annular Hagen Poiseuille flow with small inner radius by "
+        "Chebyshevpseudospectral method. International J. of Computational "
+        "Fluid Dynamics, V.3, 265-280."
+    )
+
+    assert title == (
+        "Axisymmetric instability of the annular Hagen Poiseuille flow with "
+        "small inner radius by Chebyshevpseudospectral method"
+    )
+    assert authors is not None and "G. H. Jirka" in authors
+    assert venue is not None and "Computational Fluid Dynamics" in venue
+
+
 # --- _normalize_title_for_dedup ---
 
 
@@ -251,6 +719,31 @@ def test_extract_paragraphs_happy_path():
         assert len(arxiv_items) >= 1
     else:
         assert any("arxiv" in p.raw_title.lower() for p in pubs)
+
+
+def test_extract_nested_sigs_heading_stitches_fragmented_spans():
+    html = """<!doctype html><html><body>
+    <div class="post">
+      <div class="tt"><h3><span class="title">代表性论文</span></h3></div>
+      <div class="con">
+        <p><span>[1]</span><span>Shuting Liu, Baochang Zhang, Yiqing Liu, Tian Guan*, and </span>
+        <strong>Yonghong He*</strong><span>, Unpaired Stain Transfer Using
+        Pathology-Consistent Constrained Generative Adversarial Networks, </span>
+        <em>IEEE Transactions on Medical Imaging</em><span>, 40(8):1977-1989, 2021.</span></p>
+      </div>
+    </div>
+    </body></html>"""
+
+    pubs = extract_publications_from_html(html, page_url="https://example.edu/hyh")
+
+    assert len(pubs) == 1
+    assert pubs[0].clean_title == (
+        "Unpaired Stain Transfer Using Pathology-Consistent Constrained "
+        "Generative Adversarial Networks"
+    )
+    assert pubs[0].authors_text is not None and "Yonghong He" in pubs[0].authors_text
+    assert pubs[0].venue_text is not None and "IEEE Transactions" in pubs[0].venue_text
+    assert pubs[0].year == 2021
 
 
 def test_extract_table_happy_path():
@@ -379,6 +872,18 @@ def test_extract_drops_items_below_min_title_length():
     pubs = extract_publications_from_html(html, page_url="https://x.edu")
     assert len(pubs) == 1
     assert "Proper Title" in pubs[0].clean_title
+
+
+def test_extract_drops_author_list_without_title():
+    html = """<!doctype html><html><body>
+    <h2>Publications</h2>
+    <p>22. Muhammad, D; Xia, W; Wang, MS; Sun, ZX; Zhang, JZH,
+    Int. J. Bio. Macromol. , 2025, 306, 141454.</p>
+    </body></html>"""
+
+    pubs = extract_publications_from_html(html, page_url="https://x.edu")
+
+    assert pubs == []
 
 
 def test_extract_item_without_year_still_extracted():
