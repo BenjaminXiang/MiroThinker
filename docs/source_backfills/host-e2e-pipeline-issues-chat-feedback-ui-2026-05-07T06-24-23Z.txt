@@ -1,0 +1,128 @@
+# Host Pipeline Issues chat feedback UI/API E2E 2026-05-07T06-24-23Z
+root=/home/longxiang/MiroThinker
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-pipeline-issues-chat-feedback-ui-2026-05-07T06-24-23Z.txt
+DATABASE_URL= postgresql://***@localhost:15432/miroflow_real
+DATABASE_URL_TEST= UNSET
+CHAT_MILVUS_URI= /home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db
+CHAT_USE_RETRIEVAL_SERVICE= on
+base_url=http://127.0.0.1:59115
+started_uvicorn_pid=3049804
+INFO:     Started server process [3049811]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:59115 (Press CTRL+C to quit)
+INFO:     127.0.0.1:54956 - "GET /api/health HTTP/1.1" 200 OK
+health=OK
+INFO:     127.0.0.1:54964 - "POST /api/chat HTTP/1.1" 200 OK
+chat_http_status=200
+chat_query_type= B_company_topic_search
+chat_citations_count= 6
+INFO:     127.0.0.1:54966 - "POST /api/chat/feedback HTTP/1.1" 200 OK
+feedback_http_status=200
+feedback_issue_id=5af9fc9d-7c59-4b23-91f3-d9bda3787bd9
+INFO:     127.0.0.1:54982 - "GET /api/pipeline-issues?reported_by=chat_user_feedback&issue_type=chat_feedback&domain=company&q=%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE&resolved=false&page_size=10 HTTP/1.1" 200 OK
+issues_http_status=200
+issues_total= 3
+issues_returned= 3
+api_issue_type= chat_feedback
+api_domain= company
+api_source_rows= []
+api_recommended_action= Review the chat answer, routing, citations, and source evidence.
+api_chat_query= 深圳哪些公司做激光雷达
+api_chat_answer_prefix= 共找到 6 个企业：    • 不止技术 — 生产制造   • 奇历士技术（深圳） — 硬件   • 深圳奥锐达科技 —
+api_chat_citations_count= 6
+
+## Browser smoke
+INFO:     127.0.0.1:35150 - "GET /pipeline-issues HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35150 - "GET /assets/index-C6bP66ZS.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35150 - "GET /api/pipeline-issues?page=1&page_size=50 HTTP/1.1" 200 OK
+✓ 深圳科创数据管理平台
+  http://127.0.0.1:59115/pipeline-issues
+INFO:     127.0.0.1:35150 - "GET /favicon.ico HTTP/1.1" 200 OK
+待处理对话反馈
+✓ Done
+INFO:     127.0.0.1:35150 - "GET /api/pipeline-issues?resolved=false&reported_by=chat_user_feedback&issue_type=chat_feedback&page=1&page_size=50 HTTP/1.1" 200 OK
+✓ Done
+chat_feedback
+- generic "科创数据平台数据总览对话检索导入任务质量问题教授企业论文专利质量问题待处理对话反馈待处理导入问题类型: chat_feedback来源: chat_user_feedback状态: 待处理清除级别描述" [ref=e1] clickable [onclick]
+  - menu "数据总览对话检索导入任务质量问题教授企业论文专利" [ref=e2] focusable [tabindex]
+    - menuitem "dashboard 数据总览" [ref=e3]
+    - menuitem "message 对话检索" [ref=e4]
+    - menuitem "clock-circle 导入任务" [ref=e5]
+    - menuitem "warning 质量问题" [ref=e6]
+    - menuitem "team 教授" [ref=e7]
+    - menuitem "bank 企业" [ref=e8]
+    - menuitem "file-text 论文" [ref=e9]
+    - menuitem "safety-certificate 专利" [ref=e10]
+  - heading "质量问题" [level=3, ref=e11]
+  - button "message 待处理对话反馈" [ref=e12]
+  - button "file-search 待处理导入问题" [ref=e13]
+  - button "close 清除" [ref=e14]
+  - columnheader "级别" [ref=e58]
+  - columnheader "描述" [ref=e59]
+  - columnheader "类型" [ref=e60]
+  - columnheader "源行" [ref=e61]
+  - columnheader "数据域" [ref=e62]
+  - columnheader "建议" [ref=e63]
+  - columnheader "任务 ID" [ref=e64]
+  - columnheader "来源" [ref=e65]
+  - columnheader "时间" [ref=e66]
+  - columnheader "状态" [ref=e67]
+  - columnheader "操作" [ref=e68]
+  - row "mediumChat feedback (incorrect_answer) for B_company_topic_search: 深圳哪些公司做激光雷达问：深圳哪些公司做激光雷达chat_feed" [ref=e18] clickable [onclick]
+    - cell "medium" [ref=e24]
+    - cell "Chat feedback (incorrect_answer) for B_company_topic_search: 深圳哪些公司做激光雷达 问：深圳哪些公司做激光雷达" [ref=e25]
+    - cell "chat_feedback" [ref=e26]
+    - cell "message 对话" [ref=e27]
+    - cell "company" [ref=e28]
+    - cell "Review the chat answer, routing, citations, and source evidence." [ref=e29]
+    - cell "-" [ref=e30]
+    - cell "chat_user_feedback" [ref=e31]
+    - cell "2026/05/07 06:24" [ref=e32]
+    - cell "待处理" [ref=e33]
+    - cell "eye 详情 check-circle 关闭" [ref=e34]
+      - button "eye 详情" [ref=e70]
+      - button "check-circle 关闭" [ref=e71]
+  - row "mediumChat feedback (incorrect_answer) for B_company_topic_search: 深圳哪些公司做激光雷达问：深圳哪些公司做激光雷达chat_feed" [ref=e19] clickable [onclick]
+    - cell "medium" [ref=e35]
+    - cell "Chat feedback (incorrect_answer) for B_company_topic_search: 深圳哪些公司做激光雷达 问：深圳哪些公司做激光雷达" [ref=e36]
+    - cell "chat_feedback" [ref=e37]
+    - cell "message 对话" [ref=e38]
+    - cell "company" [ref=e39]
+    - cell "Review the chat answer, routing, citations, and source evidence." [ref=e40]
+    - cell "-" [ref=e41]
+    - cell "chat_user_feedback" [ref=e42]
+    - cell "2026/05/07 06:16" [ref=e43]
+    - cell "待处理" [ref=e44]
+    - cell "eye 详情 check-circle 关闭" [ref=e45]
+      - button "eye 详情" [ref=e72]
+      - button "check-circle 关闭" [ref=e73]
+  - row "mediumChat feedback (incorrect_answer) for B_company_topic_search: 深圳哪些公司做激光雷达问：深圳哪些公司做激光雷达chat_feed" [ref=e20] clickable [onclick]
+    - cell "medium" [ref=e46]
+    - cell "Chat feedback (incorrect_answer) for B_company_topic_search: 深圳哪些公司做激光雷达 问：深圳哪些公司做激光雷达" [ref=e47]
+    - cell "chat_feedback" [ref=e48]
+    - cell "message 对话" [ref=e49]
+    - cell "company" [ref=e50]
+    - cell "Review the chat answer, routing, citations, and source evidence." [ref=e51]
+    - cell "-" [ref=e52]
+    - cell "chat_user_feedback" [ref=e53]
+    - cell "2026/05/07 06:13" [ref=e54]
+    - cell "待处理" [ref=e55]
+    - cell "eye 详情 check-circle 关闭" [ref=e56]
+      - button "eye 详情" [ref=e74]
+      - button "check-circle 关闭" [ref=e75]
+  - listitem "上一页" [level=1, disabled, ref=e15] clickable [onclick]
+    - button "left" [disabled, ref=e21]
+  - listitem "1" [level=1, ref=e16] clickable [cursor:pointer, onclick, tabindex]
+  - listitem "下一页" [level=1, disabled, ref=e17] clickable [onclick]
+    - button "right" [disabled, ref=e22]
+  - generic "页码" [ref=e23] clickable [cursor:pointer]
+    - generic "50 条/页" [ref=e57] clickable [onclick]
+      - combobox "页码" [expanded=false, ref=e69]
+browser_list_snapshot=PASS
+✓ Done
+✗ Wait timed out after 30000ms
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [3049811]

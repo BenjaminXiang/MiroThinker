@@ -1,0 +1,153 @@
+# Host Pipeline Issues chat feedback UI/API E2E 2026-05-07T06-29-05Z
+root=/home/longxiang/MiroThinker
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-pipeline-issues-chat-feedback-ui-2026-05-07T06-29-05Z.txt
+DATABASE_URL= postgresql://***@localhost:15432/miroflow_real
+DATABASE_URL_TEST= UNSET
+CHAT_MILVUS_URI= /home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db
+CHAT_USE_RETRIEVAL_SERVICE= on
+base_url=http://127.0.0.1:50651
+started_uvicorn_pid=3057068
+INFO:     Started server process [3057075]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:50651 (Press CTRL+C to quit)
+INFO:     127.0.0.1:46924 - "GET /api/health HTTP/1.1" 200 OK
+health=OK
+INFO:     127.0.0.1:46928 - "GET /api/pipeline-issues?reported_by=chat_user_feedback&issue_type=chat_feedback&domain=company&q=%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE&resolved=false&page_size=10 HTTP/1.1" 200 OK
+issues_http_status=200
+issues_total= 4
+issues_returned= 4
+api_issue_id= 05b6a9e3-0c3a-445c-a95c-c0d2e100c34e
+api_issue_type= chat_feedback
+api_domain= company
+api_source_rows= []
+api_recommended_action= Review the chat answer, routing, citations, and source evidence.
+api_chat_query= 深圳哪些公司做激光雷达
+api_chat_query_type= B_company_topic_search
+api_chat_citations_count= 6
+selected_issue_id=05b6a9e3-0c3a-445c-a95c-c0d2e100c34e
+
+## Browser smoke
+INFO:     127.0.0.1:46932 - "GET /pipeline-issues HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46932 - "GET /assets/index-C6bP66ZS.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46932 - "GET /api/pipeline-issues?page=1&page_size=50 HTTP/1.1" 200 OK
+✓ 深圳科创数据管理平台
+  http://127.0.0.1:50651/pipeline-issues
+INFO:     127.0.0.1:46932 - "GET /favicon.ico HTTP/1.1" 200 OK
+待处理对话反馈
+✓ Done
+INFO:     127.0.0.1:46932 - "GET /api/pipeline-issues?resolved=false&reported_by=chat_user_feedback&issue_type=chat_feedback&page=1&page_size=50 HTTP/1.1" 200 OK
+✓ Done
+chat_feedback
+- generic "科创数据平台数据总览对话检索导入任务质量问题教授企业论文专利质量问题待处理对话反馈待处理导入问题类型: chat_feedback来源: chat_user_feedback状态: 待处理清除级别描述" [ref=e1] clickable [onclick]
+  - menu "数据总览对话检索导入任务质量问题教授企业论文专利" [ref=e2] focusable [tabindex]
+    - menuitem "dashboard 数据总览" [ref=e3]
+    - menuitem "message 对话检索" [ref=e4]
+    - menuitem "clock-circle 导入任务" [ref=e5]
+    - menuitem "warning 质量问题" [ref=e6]
+    - menuitem "team 教授" [ref=e7]
+    - menuitem "bank 企业" [ref=e8]
+    - menuitem "file-text 论文" [ref=e9]
+    - menuitem "safety-certificate 专利" [ref=e10]
+  - heading "质量问题" [level=3, ref=e11]
+  - button "message 待处理对话反馈" [ref=e12]
+  - button "file-search 待处理导入问题" [ref=e13]
+  - button "close 清除" [ref=e14]
+  - columnheader "级别" [ref=e70]
+  - columnheader "描述" [ref=e71]
+  - columnheader "类型" [ref=e72]
+  - columnheader "源行" [ref=e73]
+  - columnheader "数据域" [ref=e74]
+  - columnheader "建议" [ref=e75]
+  - columnheader "任务 ID" [ref=e76]
+  - columnheader "来源" [ref=e77]
+  - columnheader "时间" [ref=e78]
+  - columnheader "状态" [ref=e79]
+  - columnheader "操作" [ref=e80]
+  - row "mediumChat feedback (incorrect_answer) for B_company_topic_search: 深圳哪些公司做激光雷达问：深圳哪些公司做激光雷达chat_feed" [ref=e18] clickable [onclick]
+    - cell "medium" [ref=e25]
+    - cell "Chat feedback (incorrect_answer) for B_company_topic_search: 深圳哪些公司做激光雷达 问：深圳哪些公司做激光雷达" [ref=e26]
+    - cell "chat_feedback" [ref=e27]
+    - cell "message 对话" [ref=e28]
+    - cell "company" [ref=e29]
+    - cell "Review the chat answer, routing, citations, and source evidence." [ref=e30]
+    - cell "-" [ref=e31]
+    - cell "chat_user_feedback" [ref=e32]
+    - cell "2026/05/07 06:28" [ref=e33]
+    - cell "待处理" [ref=e34]
+    - cell "eye 详情 check-circle 关闭" [ref=e35]
+      - button "eye 详情" [ref=e82]
+      - button "check-circle 关闭" [ref=e83]
+  - row "mediumChat feedback (incorrect_answer) for B_company_topic_search: 深圳哪些公司做激光雷达问：深圳哪些公司做激光雷达chat_feed" [ref=e19] clickable [onclick]
+    - cell "medium" [ref=e36]
+    - cell "Chat feedback (incorrect_answer) for B_company_topic_search: 深圳哪些公司做激光雷达 问：深圳哪些公司做激光雷达" [ref=e37]
+    - cell "chat_feedback" [ref=e38]
+    - cell "message 对话" [ref=e39]
+    - cell "company" [ref=e40]
+    - cell "Review the chat answer, routing, citations, and source evidence." [ref=e41]
+    - cell "-" [ref=e42]
+    - cell "chat_user_feedback" [ref=e43]
+    - cell "2026/05/07 06:24" [ref=e44]
+    - cell "待处理" [ref=e45]
+    - cell "eye 详情 check-circle 关闭" [ref=e46]
+      - button "eye 详情" [ref=e84]
+      - button "check-circle 关闭" [ref=e85]
+  - row "mediumChat feedback (incorrect_answer) for B_company_topic_search: 深圳哪些公司做激光雷达问：深圳哪些公司做激光雷达chat_feed" [ref=e20] clickable [onclick]
+    - cell "medium" [ref=e47]
+    - cell "Chat feedback (incorrect_answer) for B_company_topic_search: 深圳哪些公司做激光雷达 问：深圳哪些公司做激光雷达" [ref=e48]
+    - cell "chat_feedback" [ref=e49]
+    - cell "message 对话" [ref=e50]
+    - cell "company" [ref=e51]
+    - cell "Review the chat answer, routing, citations, and source evidence." [ref=e52]
+    - cell "-" [ref=e53]
+    - cell "chat_user_feedback" [ref=e54]
+    - cell "2026/05/07 06:16" [ref=e55]
+    - cell "待处理" [ref=e56]
+    - cell "eye 详情 check-circle 关闭" [ref=e57]
+      - button "eye 详情" [ref=e86]
+      - button "check-circle 关闭" [ref=e87]
+  - row "mediumChat feedback (incorrect_answer) for B_company_topic_search: 深圳哪些公司做激光雷达问：深圳哪些公司做激光雷达chat_feed" [ref=e21] clickable [onclick]
+    - cell "medium" [ref=e58]
+    - cell "Chat feedback (incorrect_answer) for B_company_topic_search: 深圳哪些公司做激光雷达 问：深圳哪些公司做激光雷达" [ref=e59]
+    - cell "chat_feedback" [ref=e60]
+    - cell "message 对话" [ref=e61]
+    - cell "company" [ref=e62]
+    - cell "Review the chat answer, routing, citations, and source evidence." [ref=e63]
+    - cell "-" [ref=e64]
+    - cell "chat_user_feedback" [ref=e65]
+    - cell "2026/05/07 06:13" [ref=e66]
+    - cell "待处理" [ref=e67]
+    - cell "eye 详情 check-circle 关闭" [ref=e68]
+      - button "eye 详情" [ref=e88]
+      - button "check-circle 关闭" [ref=e89]
+  - listitem "上一页" [level=1, disabled, ref=e15] clickable [onclick]
+    - button "left" [disabled, ref=e22]
+  - listitem "1" [level=1, ref=e16] clickable [cursor:pointer, onclick, tabindex]
+  - listitem "下一页" [level=1, disabled, ref=e17] clickable [onclick]
+    - button "right" [disabled, ref=e23]
+  - generic "页码" [ref=e24] clickable [cursor:pointer]
+    - generic "50 条/页" [ref=e69] clickable [onclick]
+      - combobox "页码" [expanded=false, ref=e81]
+browser_list_snapshot=PASS
+detail_ref=e82
+✓ Done
+detail_ref_after_scroll=e82
+✓ Done
+问题详情
+{
+  "hasCitationHeader": true,
+  "hasFeedbackNote": true,
+  "hasQuery": true,
+  "hasQueryType": true,
+  "hasRecommendedAction": true,
+  "hasTitle": true
+}
+browser_detail_dom=PASS
+
+## Final state
+result=PASS
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-pipeline-issues-chat-feedback-ui-2026-05-07T06-29-05Z.txt
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [3057075]

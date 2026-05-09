@@ -4,6 +4,14 @@
 
 ## 🔥 当前最常用入口
 
+- [W13-3 patent 真实 E2E + Milvus](./integration-issues/w13-3-patent-e2e-completed-2026-05-02.md) — patent summary / ready / relation write / Milvus / chat 查询完整证据
+- [V1 paper.summary_zh full backfill](./integration-issues/v1-paper-summary-zh-completed-2026-05-02.md) — 真实库 3412 条写入，剩余 paper 缺口与 Milvus follow-up
+- [V2 company narrative backfill](./integration-issues/v2-company-narrative-completed-2026-05-02.md) — company profile / technology route 98.93% 覆盖
+- [V2 company Top-5 retrieval eval](./integration-issues/v2-stage3-company-top5-eval-2026-05-02.md) — 50 query × top5 CSV，待人工标注
+- [Homepage paper ingest dogfood](./integration-issues/homepage-paper-ingest-dogfood-2026-05-02.md) — 真实 dry-run partial-fail，指向 homepage selector 修复
+- [Host E2E validation 2026-05-04](./integration-issues/host-e2e-validation-2026-05-04.md) — classifier fallback 通过但真实 DB/Milvus/LLM/chat E2E 被环境阻断
+- [Excel ingest validation roadmap](./integration-issues/excel-ingest-validation-roadmap-2026-05-04.md) — 国先中心 Excel 持续导入场景下的 company/patent 解析、写库、关联、Milvus、检索与运维可视化验证矩阵
+- [ADR-008 intent benchmark CI gate](../architecture-decisions/ADR-008-intent-benchmark-ci-gate.md) — 100-case classifier 历史真实基准 overall 0.690，CI gate 暂缓到 host 复验通过
 - [Round 7.17 name-identity gate](./data-quality/name-identity-gate-round-7-17-2026-04-18.md) — canonical_name ↔ canonical_name_en LLM 核验门，生产已触达
 - [教授主线当前操作口径](./workflow-issues/professor-pipeline-current-findings-and-operating-guidance-2026-04-16.md) — 当前事实 + 执行约定
 - [教授主线已收住 / 未收住问题清单](./workflow-issues/professor-pipeline-current-closed-vs-open-issues-2026-04-16.md) — 跟踪待办
@@ -13,6 +21,7 @@
 ## 🟡 数据质量（`data-quality/`）
 
 - [Round 7.17 — name-identity gate](./data-quality/name-identity-gate-round-7-17-2026-04-18.md) — 🆕 2026-04-18
+- [Professor/Paper PRD gap assessment](./data-quality/professor-paper-prd-gap-assessment-2026-05-04.md) — 2026-05-04 当前 live professor/paper 数据与 PRD 差距、风险和 clean rebuild 路线图
 - [教授-论文缺口根因与补救](./data-quality/professor-paper-gap-root-cause-and-remediation-plan-2026-04-07.md)
 - [教授 Pipeline V3 数据缺口分析](./data-quality/professor-pipeline-v3-data-gap-analysis-2026-04-07.md)
 - [research_direction cleaner 误过滤 HSS](./data-quality/professor-research-direction-cleaner-overfiltered-hss-fields-2026-04-14.md)
@@ -32,6 +41,15 @@
 
 ## 🔧 Integration Issues（`integration-issues/`）
 
+- [W13-3 patent e2e + Milvus](./integration-issues/w13-3-patent-e2e-completed-2026-05-02.md) — 🆕 2026-05-02
+- [V1 paper.summary_zh full backfill](./integration-issues/v1-paper-summary-zh-completed-2026-05-02.md) — 🆕 2026-05-02
+- [paper.summary_zh dogfood](./integration-issues/paper-summary-zh-dogfood-2026-05-02.md) — 🆕 2026-05-02
+- [V2 company narrative backfill](./integration-issues/v2-company-narrative-completed-2026-05-02.md) — 🆕 2026-05-02
+- [V2 company Top-5 retrieval eval](./integration-issues/v2-stage3-company-top5-eval-2026-05-02.md) — 🆕 2026-05-02
+- [Homepage paper ingest dogfood](./integration-issues/homepage-paper-ingest-dogfood-2026-05-02.md) — 🆕 2026-05-02
+- [Host E2E validation evidence](./integration-issues/host-e2e-validation-2026-05-04.md) — 🆕 2026-05-04
+- [Excel ingest validation roadmap](./integration-issues/excel-ingest-validation-roadmap-2026-05-04.md) — 🆕 2026-05-04
+- [W13 batch V Codex report](./integration-issues/w13-batch-v-codex-report-2026-05-02.md) — 🆕 2026-05-02
 - [Seed fallback 必须跑赢 homepage redirect/nav 候选](./integration-issues/professor-seed-fallback-must-outrank-homepage-redirect-nav-candidates-2026-04-16.md)
 - [Seed context + generic faculty direct-profile 误分类](./integration-issues/professor-seed-context-and-generic-faculty-direct-profile-misclassification-2026-04-16.md)
 - [Thread-scoped Playwright browser for threadpool pipeline](./integration-issues/professor-thread-scoped-playwright-browser-for-threadpool-pipeline-2026-04-16.md)

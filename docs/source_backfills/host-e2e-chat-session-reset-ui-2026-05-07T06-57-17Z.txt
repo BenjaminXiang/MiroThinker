@@ -1,0 +1,33 @@
+# Host Chat Session Reset UI E2E 2026-05-07T06-57-17Z
+log_file=docs/source_backfills/host-e2e-chat-session-reset-ui-2026-05-07T06-57-17Z.txt
+base_url=http://127.0.0.1:37443
+server_pid=3089873
+health=OK
+✓ 深圳科创数据管理平台
+  http://127.0.0.1:37443/pipeline-issues
+✓ Done
+✓ Done
+新对话
+✓ Done
+✓ Done
+看看他的论文
+✓ Done
+试试这些问题
+✓ Done
+✓ Done
+请先确认要查询哪一个实体
+- generic "科创数据平台数据总览对话检索导入任务质量问题教授企业论文专利对话检索新对话他的论文请先确认要查询哪一个实体，再追问它关联的论文。C_cross_domain_clarification · templ" [ref=e1] clickable [onclick]
+  - menu "数据总览对话检索导入任务质量问题教授企业论文专利" [ref=e2] focusable [tabindex]
+    - menuitem "dashboard 数据总览" [ref=e6]
+    - menuitem "message 对话检索" [ref=e7]
+    - menuitem "clock-circle 导入任务" [ref=e8]
+    - menuitem "warning 质量问题" [ref=e9]
+    - menuitem "team 教授" [ref=e10]
+    - menuitem "bank 企业" [ref=e11]
+    - menuitem "file-text 论文" [ref=e12]
+    - menuitem "safety-certificate 专利" [ref=e13]
+  - button "plus 新对话" [ref=e3]
+  - button "exclamation-circle 反馈" [ref=e14]
+  - textbox "例如：清华大学深圳国际研究生院做人工智能的教授" [ref=e4]
+  - button "send 发送" [disabled, ref=e5]
+result=PASS

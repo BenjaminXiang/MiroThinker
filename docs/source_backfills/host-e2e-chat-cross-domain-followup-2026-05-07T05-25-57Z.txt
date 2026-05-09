@@ -1,0 +1,53 @@
+# Host chat cross-domain follow-up E2E 2026-05-07T05-25-57Z
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-chat-cross-domain-followup-2026-05-07T05-25-57Z.txt
+base_url=http://127.0.0.1:43311
+DATABASE_URL=postgresql://***@localhost:15432/miroflow_real
+CHAT_MILVUS_URI=/home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db
+started_uvicorn_pid=3001083
+INFO:     Started server process [3001091]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:43311 (Press CTRL+C to quit)
+INFO:     127.0.0.1:45792 - "GET /api/health HTTP/1.1" 200 OK
+health=OK
+
+## A-paper
+query=论文 Image Super-Resolution Using Deep Convolutional Networks
+INFO:     127.0.0.1:45794 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+raw= {"query":"论文 Image Super-Resolution Using Deep Convolutional Networks","query_type":"A_paper_profile","answer_text":"Image Super-Resolution Using Deep Convolutional Networks 是一篇 2015 年发表于 IEEE Transactions on Pattern Analysis and Machine Intelligence 的论文。","citations":[{"type":"paper","id":"PAPER-8621BBC84190","label":"Image Super-Resolution Using Deep Convolutional Networks","url":"/browse#paper/PAPER-8621BBC84190"}],"evidence":[],"clarification":null,"structured_payload":{"paper_id":"PAPER-8621BBC84190","title":"Image Super-Resolution Using Deep Convolutional Networks","year":2015,"venue":"IEEE Transactions on Pattern Analysis and Machine Intelligence","citation_count":9671},"answer_style":"template","citation_map":{}}
+query_type= A_paper_profile
+citations_count= 1
+answer_prefix= Image Super-Resolution Using Deep Convolutional Networks 是一篇 2015 年发表于 IEEE Transactions on Pattern Analysis and Machine Intelligence 的论文。
+
+## C-paper-to-professor
+query=这篇论文的作者是谁
+/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/milvus_lite/__init__.py:15: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import DistributionNotFound, get_distribution
+INFO:     127.0.0.1:45810 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+raw= {"query":"这篇论文的作者是谁","query_type":"C_cross_domain_related","answer_text":"Image Super-Resolution Using Deep Convolutional Networks关联的教授如下（显示前 1 条）：\n\n  • 董超","citations":[{"type":"professor","id":"PROF-8C7B7A71878D","label":"董超","url":"/browse#professor/PROF-8C7B7A71878D"}],"evidence":[],"clarification":null,"structured_payload":{"source_domain":"paper","source_id":"PAPER-8621BBC84190","source_label":"Image Super-Resolution Using Deep Convolutional Networks","target_domain":"professor","retrieval_evidence":[{"type":"professor","id":"PROF-8C7B7A71878D","professor_id":"PROF-8C7B7A71878D","title":"董超","canonical_name":"董超","institution":null,"snippet":"董超教授是深圳理工大学正教授、研究员，同时担任中国科学院深圳先进技术研究院多媒体集成技术研究中心主任及上海人工智能实验室领军科学家。他长期致力于底层计算机视觉领域的研究，核心研究方向涵盖图像超分辨率、去噪、增强、视频恢复与时空特征提取、盲超分辨率与复杂退化建模、基于生成对抗网络及Transformer的图像超分辨率、以及基于深度学习的图像压缩伪影去除等。\n\n董超教授在学术界具有极高的国际影响力，曾被斯坦福大学评选为世界前2%顶尖科学家，并入选AI 2000人工智能全球最具影响力学者及Elsevier发布的中国高被引学者榜单。他在图像超分辨率领域具有开创性贡献，2014年在ECCV上发表的SRCNN论文首次将深度学习引入该领域。其研究成果在顶级国际期刊和会议中发表逾100篇，谷歌学术引用量超过3.5万次。在技术应用方面，他曾带领团队开发出世界首款基于深度学习的数码变焦软件，并在PIRM、NTIRE等多个国际超分辨率挑战赛中累计获得9项冠军。其代表性研究包括通过高阶退化建模解决真实世界盲超分辨率问题的Real-ESRGAN，以及通过混合注意力机制提升Transformer性能的HAT等，展现了其在解决复杂退化建模与提升模型性能方面的深厚学术造诣。","score":
+query_type= C_cross_domain_related
+citations_count= 1
+answer_prefix= Image Super-Resolution Using Deep Convolutional Networks关联的教授如下（显示前 1 条）：    • 董超
+
+## A-patent
+query=CN121053304A是什么专利
+INFO:     127.0.0.1:45826 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+raw= {"query":"CN121053304A是什么专利","query_type":"A_patent_profile","answer_text":"CN121053304A 是专利《管状组织的三维重建方法、手术机器人及相关产品》，申请人为 深圳惟德精准医疗科技有限公司。","citations":[{"type":"patent","id":"PAT-D62F6F1AC3F3","label":"CN121053304A","url":"/browse#patent/PAT-D62F6F1AC3F3"}],"evidence":[],"clarification":null,"structured_payload":{"patent_id":"PAT-D62F6F1AC3F3","patent_number":"CN121053304A","title_clean":"管状组织的三维重建方法、手术机器人及相关产品","applicants_raw":"深圳惟德精准医疗科技有限公司","patent_type":"发明"},"answer_style":"template","citation_map":{}}
+query_type= A_patent_profile
+citations_count= 1
+answer_prefix= CN121053304A 是专利《管状组织的三维重建方法、手术机器人及相关产品》，申请人为 深圳惟德精准医疗科技有限公司。
+
+## C-patent-to-company
+query=该专利属于哪个公司
+INFO:     127.0.0.1:45836 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+raw= {"query":"该专利属于哪个公司","query_type":"C_cross_domain_related","answer_text":"CN121053304A关联的企业如下（显示前 1 条）：\n\n  • 深圳惟德精准医疗科技","citations":[{"type":"company","id":"COMP-2640a0f609b5","label":"深圳惟德精准医疗科技","url":"/browse#company/COMP-2640a0f609b5"}],"evidence":[],"clarification":null,"structured_payload":{"source_domain":"patent","source_id":"PAT-D62F6F1AC3F3","source_label":"CN121053304A","target_domain":"company","retrieval_evidence":[{"type":"company","id":"COMP-2640a0f609b5","company_id":"COMP-2640a0f609b5","title":"深圳惟德精准医疗科技","canonical_name":"深圳惟德精准医疗科技","industry":null,"business":"深圳惟德精准医疗科技是一家位于深圳市的医疗健康领域高新技术企业。公司由多名具有深厚学术与产业背景的海归博士共同创立，其创始团队成员曾先后任职于德国西门子、中国飞利浦、德国马普所、德国海德堡大学以及瑞士伯尔尼大学等全球知名的医疗器械企业与顶尖科研机构，具备极其丰富的研发经验与产业资源。在成立不到三年的快速发展阶段内，公司通过高效的人才汇集机制，构建起了一支涵盖医学影像、人工智能、软硬件开发以及先进装备制造等多学科交叉的专业人才队伍，致力于通过技术创新推动精准医疗产业的发展，展现出强大的行业成长潜力和专业化发展态势。","snippet":"applicants_parsed[0]='深圳惟德精准医疗科技有限公司' exact match -> COMP-2640a0f609b5","score":1.0}],"company_id":"COMP-2640a0f609b5","canonical_name":"深圳惟德精准医疗科技"},"answer_style":"template","citation_map":{}}
+query_type= C_cross_domain_related
+citations_count= 1
+answer_prefix= CN121053304A关联的企业如下（显示前 1 条）：    • 深圳惟德精准医疗科技
+
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-chat-cross-domain-followup-2026-05-07T05-25-57Z.txt
+result=PASS

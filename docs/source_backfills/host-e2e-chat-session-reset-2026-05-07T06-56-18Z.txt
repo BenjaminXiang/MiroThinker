@@ -1,0 +1,22 @@
+# Host Chat Session Reset E2E 2026-05-07T06-56-18Z
+log_file=docs/source_backfills/host-e2e-chat-session-reset-2026-05-07T06-56-18Z.txt
+base_url=http://127.0.0.1:44117
+server_pid=3088608
+health=OK
+path=/api/chat
+http_status=200
+set_cookie= ['miroflow_chat_session=<redacted>; HttpOnly; Max-Age=1800; Path=/; SameSite=lax']
+raw= {"query":"介绍清华的丁文伯","query_type":"A_prof_profile","answer_text":"丁文伯是清华大学深圳国际研究生院的副教授、博士生导师 [2][3]。他的研究方向包括摩擦纳米发电机 (TENG) [4]、柔性可穿戴能量收集技术 [5]、自驱动机械传感系统 [6]、基于TENG的人机交互 (HMI) [7]、智能功能纺织品与纤维电子学 [8] 以及摩擦电微等离子体研究 [9]。目前他已收录论文19篇 [10]。","citations":[{"type":"professor","id":"PROF-5F14BBA866D9","label":"丁文伯 - 清华大学深圳国际研究生院","url":"/browse#professor/PROF-5F14BBA866D9"}],"evidence":[],"clarification":null,"structured_payload":{"professor_id":"PROF-5F14BBA866D9","canonical_name":"丁文伯","canonical_name_en":"Wenbo Ding","institution":"清华大学深圳国际研究生院","title":"副教授、博士生导师","discipline_family":"computer_science","research_topics":["摩擦纳米发电机 (TENG)","柔性可穿戴能量收集技术","自驱动机械传感系统","基于TENG的人机交互 (HMI)","智能功能纺织品与纤维电子学","摩擦电微等离子体研究","自驱动环境监测传感器","多模态高分辨率触觉传感器","机器人触觉感知","多模态触觉传感器","仿生传感","多模态高分辨率触觉传感器研发"],"verified_paper_count":19,"h_index":null,"citation_count":null,"paper_count":19},"answer_style":"llm_synthesized","citation_map":{"1":"PROF-5F14BBA866D9","2":"PROF-5F14BBA866D9","3":"PROF-5F14BBA866D9","4":"PROF-5F
+seed_session= <redacted>
+path=/api/chat/session/reset
+http_status=200
+set_cookie= ['miroflow_chat_session=<redacted>; HttpOnly; Max-Age=1800; Path=/; SameSite=lax']
+raw= {"session_id":"<redacted>"}
+reset_session= <redacted>
+path=/api/chat
+http_status=200
+set_cookie= []
+raw= {"query":"他的论文","query_type":"C_cross_domain_clarification","answer_text":"请先确认要查询哪一个实体，再追问它关联的论文。","citations":[],"evidence":[],"clarification":null,"structured_payload":{"target_domain":"paper"},"answer_style":"template","citation_map":{},"suggested_followups":[]}
+after_reset_query_type= C_cross_domain_clarification
+result=PASS
+result=PASS

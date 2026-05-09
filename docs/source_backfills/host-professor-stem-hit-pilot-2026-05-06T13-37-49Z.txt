@@ -1,0 +1,180 @@
+INFO:root:Metrics DATABASE_URL source: defaulted_host_real
+INFO:root:Using LLM profile: gemma4
+INFO:root:LLM aliases available: ark, gemma4, mirothinker, qwen35
+INFO:src.data_agents.professor.pipeline_v3:Stage 1: Roster Discovery
+INFO:src.data_agents.professor.pipeline_v3:Stage 1 done: 1603 unique professors, processing 3
+INFO:src.data_agents.professor.pipeline_v3:Stage 2-6: Per-Professor Processing
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=start | name=谢健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiejian?lang=zh
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_start | name=谢健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiejian?lang=zh
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_done | name=谢健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiejian?lang=zh | elapsed=7.0s | success=True | pages=2
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_start | name=谢健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiejian?lang=zh
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_done | name=谢健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiejian?lang=zh | elapsed=10.1s | staged=0
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_start | name=谢健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiejian?lang=zh | missing=academic_positions,projects,company_roles,patent_ids
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_done | name=谢健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiejian?lang=zh | elapsed=0.9s | source=agent_local
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_start | name=谢健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiejian?lang=zh
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_done | name=谢健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiejian?lang=zh | elapsed=1.2s | length=240
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=done | name=谢健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiejian?lang=zh | elapsed=19.3s | staged=0 | company_mentions=0
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=start | name=李翔 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/LIL?lang=zh
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_start | name=李翔 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/LIL?lang=zh
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_done | name=李翔 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/LIL?lang=zh | elapsed=5.9s | success=True | pages=2
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_start | name=李翔 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/LIL?lang=zh
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_done | name=李翔 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/LIL?lang=zh | elapsed=14.6s | staged=0
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_start | name=李翔 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/LIL?lang=zh | missing=projects,company_roles,patent_ids
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_done | name=李翔 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/LIL?lang=zh | elapsed=0.9s | source=agent_local
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_start | name=李翔 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/LIL?lang=zh
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_done | name=李翔 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/LIL?lang=zh | elapsed=1.3s | length=245
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=done | name=李翔 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/LIL?lang=zh | elapsed=22.6s | staged=0 | company_mentions=0
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=start | name=席伟健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiweijian?lang=zh
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_start | name=席伟健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiweijian?lang=zh
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_done | name=席伟健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiweijian?lang=zh | elapsed=8.3s | success=True | pages=2
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_start | name=席伟健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiweijian?lang=zh
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_done | name=席伟健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiweijian?lang=zh | elapsed=12.6s | staged=0
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_start | name=席伟健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiweijian?lang=zh | missing=awards,projects,company_roles,patent_ids
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_done | name=席伟健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiweijian?lang=zh | elapsed=0.8s | source=agent_local
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_start | name=席伟健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiweijian?lang=zh
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_done | name=席伟健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiweijian?lang=zh | elapsed=1.1s | length=236
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=done | name=席伟健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiweijian?lang=zh | elapsed=23.0s | staged=0 | company_mentions=0
+INFO:src.data_agents.professor.pipeline_v3:Stage 2-6 progress: 3/3 processed, 3 enriched, 0 staged papers
+INFO:src.data_agents.professor.pipeline_v3:Stage 2-6 done: 3 enriched, 3 homepages crawled, 0 web searched, 0 company links
+INFO:src.data_agents.professor.pipeline_v3:Stage 8: Quality Gate + Release
+INFO:src.data_agents.professor.pipeline_v3:Stage 9: Cross-Domain Writes
+INFO:src.data_agents.professor.pipeline_v3:Stage 11.5: Academic Metrics Refresh
+INFO:src.data_agents.professor.pipeline_v3:Pipeline V3 complete: 3 released, 0 blocked, 0 vectorized
+[V3] Stage 1: Roster Discovery
+[V3] Stage 1 done: 1603 unique professors, processing 3
+[V3] Stage 2-6: Per-Professor Processing
+[V3] professor_stage=start | name=谢健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiejian?lang=zh
+[V3] professor_stage=homepage_start | name=谢健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiejian?lang=zh
+[V3] professor_stage=homepage_done | name=谢健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiejian?lang=zh | elapsed=7.0s | success=True | pages=2
+[V3] professor_stage=paper_start | name=谢健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiejian?lang=zh
+[V3] professor_stage=paper_done | name=谢健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiejian?lang=zh | elapsed=10.1s | staged=0
+[V3] professor_stage=agent_start | name=谢健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiejian?lang=zh | missing=academic_positions,projects,company_roles,patent_ids
+[V3] professor_stage=agent_done | name=谢健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiejian?lang=zh | elapsed=0.9s | source=agent_local
+[V3] professor_stage=summary_start | name=谢健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiejian?lang=zh
+[V3] professor_stage=summary_done | name=谢健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiejian?lang=zh | elapsed=1.2s | length=240
+[V3] professor_stage=done | name=谢健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiejian?lang=zh | elapsed=19.3s | staged=0 | company_mentions=0
+[V3] professor_stage=start | name=李翔 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/LIL?lang=zh
+[V3] professor_stage=homepage_start | name=李翔 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/LIL?lang=zh
+[V3] professor_stage=homepage_done | name=李翔 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/LIL?lang=zh | elapsed=5.9s | success=True | pages=2
+[V3] professor_stage=paper_start | name=李翔 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/LIL?lang=zh
+[V3] professor_stage=paper_done | name=李翔 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/LIL?lang=zh | elapsed=14.6s | staged=0
+[V3] professor_stage=agent_start | name=李翔 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/LIL?lang=zh | missing=projects,company_roles,patent_ids
+[V3] professor_stage=agent_done | name=李翔 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/LIL?lang=zh | elapsed=0.9s | source=agent_local
+[V3] professor_stage=summary_start | name=李翔 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/LIL?lang=zh
+[V3] professor_stage=summary_done | name=李翔 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/LIL?lang=zh | elapsed=1.3s | length=245
+[V3] professor_stage=done | name=李翔 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/LIL?lang=zh | elapsed=22.6s | staged=0 | company_mentions=0
+[V3] professor_stage=start | name=席伟健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiweijian?lang=zh
+[V3] professor_stage=homepage_start | name=席伟健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiweijian?lang=zh
+[V3] professor_stage=homepage_done | name=席伟健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiweijian?lang=zh | elapsed=8.3s | success=True | pages=2
+[V3] professor_stage=paper_start | name=席伟健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiweijian?lang=zh
+[V3] professor_stage=paper_done | name=席伟健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiweijian?lang=zh | elapsed=12.6s | staged=0
+[V3] professor_stage=agent_start | name=席伟健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiweijian?lang=zh | missing=awards,projects,company_roles,patent_ids
+[V3] professor_stage=agent_done | name=席伟健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiweijian?lang=zh | elapsed=0.8s | source=agent_local
+[V3] professor_stage=summary_start | name=席伟健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiweijian?lang=zh
+[V3] professor_stage=summary_done | name=席伟健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiweijian?lang=zh | elapsed=1.1s | length=236
+[V3] professor_stage=done | name=席伟健 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/xiweijian?lang=zh | elapsed=23.0s | staged=0 | company_mentions=0
+[V3] Stage 2-6 progress: 3/3 processed, 3 enriched, 0 staged papers
+[V3] Stage 2-6 done: 3 enriched, 3 homepages crawled, 0 web searched, 0 company links
+[V3] Stage 8: Quality Gate + Release
+[V3] Stage 9: Cross-Domain Writes
+[V3] Stage 11.5: Academic Metrics Refresh
+[V3] Pipeline V3 complete: 3 released, 0 blocked, 0 vectorized
+{
+  "generated_at": "2026-05-06T13:41:39+00:00",
+  "elapsed_seconds": 229.6,
+  "llm_profile": "gemma4",
+  "seed_document": "apps/miroflow-agent/scripts/e2e_seeds/shenzhen_stem_mainline_20260504.md",
+  "output_directory": "logs/data_agents/professor_hit_pilot_2026-05-06T13-37-49Z",
+  "report": {
+    "stage1_discovery": {
+      "seed_count": 36,
+      "discovered_count": 1603,
+      "unique_count": 1603
+    },
+    "stage2_regex": {
+      "structured": 1566,
+      "partial": 22,
+      "non_stem_filtered": 0
+    },
+    "stage2_1_direction_cleaning": {
+      "cleaned_count": 0
+    },
+    "stage3_homepage_crawl": {
+      "crawled_count": 3,
+      "fields_filled": 6
+    },
+    "stage2b_papers": {
+      "enriched": 3,
+      "collected_total": 0,
+      "staging_count": 0,
+      "observability": {
+        "observed": 3,
+        "school_hit_count": 0,
+        "fallback_count": 0,
+        "name_disambiguation_conflict_count": 0,
+        "school_hit_rate": 0.0,
+        "fallback_rate": 0.0,
+        "name_disambiguation_conflict_rate": 0.0,
+        "source_breakdown": {}
+      }
+    },
+    "stage2c_agent": {
+      "triggered": 3,
+      "local_success": 3,
+      "online_escalation": 0,
+      "failed": 0
+    },
+    "stage5_web_search": {
+      "search_count": 0,
+      "identity_verified": 0,
+      "low_signal_search_count": 0,
+      "low_signal_skipped_count": 0,
+      "low_signal_skipped_reasons": {}
+    },
+    "stage6_company_linking": {
+      "links_confirmed": 0
+    },
+    "stage7_summary": {
+      "generated": 3,
+      "fallback": 0
+    },
+    "stage8_release": {
+      "l1_blocked": 0,
+      "released": 3,
+      "quality_distribution": {
+        "ready": 1,
+        "needs_review": 0,
+        "low_confidence": 0,
+        "needs_enrichment": 2
+      },
+      "vectorized": 0,
+      "alerts": [
+        "ready_ratio_low: 1/3 = 33.3% < 70%"
+      ]
+    }
+  },
+  "output_files": {
+    "enriched": "logs/data_agents/professor_hit_pilot_2026-05-06T13-37-49Z/enriched_v3.jsonl",
+    "paper_staging": "logs/data_agents/professor_hit_pilot_2026-05-06T13-37-49Z/paper_staging.jsonl",
+    "quality_report": "logs/data_agents/professor_hit_pilot_2026-05-06T13-37-49Z/quality_report.json"
+  }
+}
+
+Report saved to: logs/data_agents/professor_hit_pilot_2026-05-06T13-37-49Z/e2e_report.json

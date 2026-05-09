@@ -1,0 +1,37 @@
+# Host Pipeline Issues UI/API E2E 2026-05-05T17-05-10Z
+
+root=/home/longxiang/MiroThinker
+base_url=http://127.0.0.1:18088
+admin_server_pid=734964
+database=miroflow_real
+issue_id=dc7aa450-85a8-4046-a4c5-43e5b45cea68
+task_id=d11082da-654c-419b-ba36-c45b0ab450a1
+domain=company
+issue_type=missing_company_name
+
+## API smoke
+
+GET /api/health
+result=PASS
+body={"status":"ok"}
+
+GET /api/pipeline-issues?reported_by=admin_upload_dry_run&task_id=d11082da-654c-419b-ba36-c45b0ab450a1&domain=company&issue_type=missing_company_name&page_size=5
+result=PASS
+response.total=1
+response.items[0].source_rows=[1620,1621,1622]
+response.items[0].resolved=false
+response.items[0].recommended_action="Fill company_name in the source Excel rows before import."
+
+## Browser smoke
+
+agent_browser_open=/pipeline-issues?reported_by=admin_upload_dry_run&task_id=d11082da-654c-419b-ba36-c45b0ab450a1&domain=company&issue_type=missing_company_name
+result=PASS
+observed=质量问题 page showed columns 级别/描述/源行/数据域/建议/任务 ID/来源/时间/状态/操作.
+observed=建议 column rendered "Fill company_name in the source Excel rows before import."
+observed=row status remained 待处理 and actions included 任务/关闭.
+
+## Final state
+
+result=PASS
+issue_final_resolved=false
+note=This verifies the latest recommendation field in both API evidence and the admin-console UI.

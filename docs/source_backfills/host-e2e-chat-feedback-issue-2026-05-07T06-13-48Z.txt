@@ -1,0 +1,23 @@
+# Host chat feedback issue E2E 2026-05-07T06-13-48Z
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-chat-feedback-issue-2026-05-07T06-13-48Z.txt
+base_url=http://127.0.0.1:48019
+DATABASE_URL=postgresql://***@localhost:15432/miroflow_real
+started_uvicorn_pid=3039573
+INFO:     Started server process [3039582]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:48019 (Press CTRL+C to quit)
+INFO:     127.0.0.1:59098 - "GET /api/health HTTP/1.1" 200 OK
+health=OK
+INFO:     127.0.0.1:59104 - "POST /api/chat HTTP/1.1" 200 OK
+chat_http_status=200
+chat_raw= {"query":"深圳哪些公司做激光雷达","query_type":"B_company_topic_search","answer_text":"共找到 6 个企业：\n\n  • 不止技术 — 生产制造\n  • 奇历士技术（深圳） — 硬件\n  • 深圳奥锐达科技 — 汽车交通\n  • 深圳灵动芯光科技 — 生产制造\n  • 益鸿智能科技 — 先进制造\n  • 览沃科技 — 先进制造","citations":[{"type":"company","id":"COMP-04d42897fcfb","label":"不止技术","url":"/browse#company/COMP-04d42897fcfb"},{"type":"company","id":"COMP-c0bfe2f78354","label":"奇历士技术（深圳）","url":"/browse#company/COMP-c0bfe2f78354"},{"type":"company","id":"COMP-b689340c78db","label":"深圳奥锐达科技","url":"/browse#company/COMP-b689340c78db"},{"type":"company","id":"COMP-fbdbcc0ff9dd","label":"深圳灵动芯光科技","url":"/browse#company/COMP-fbdbcc0ff9dd"},{"type":"company","id":"COMP-796db62f3142","label":"益鸿智能科技","url":"/browse#company/COMP-796db62f3142"},{"type":"company","id":"COMP-0fc8c548d8f8","label":"览沃科技","url":"/browse#company/COMP-0fc8c548d8f8"}],"evidence":[],"clarification":null,"structured_payload":{"classifier_topic":"激光雷达","classifier_target_domain":"company","classifier_reason":"semantic list determi
+chat_query_type= B_company_topic_search
+chat_citations_count= 6
+INFO:     127.0.0.1:59114 - "POST /api/chat/feedback HTTP/1.1" 200 OK
+feedback_http_status=200
+bash: command substitution: line 120: syntax error near unexpected token `|'
+bash: command substitution: line 120: ` | tail -1)'
+INFO:     127.0.0.1:59130 - "GET /api/pipeline-issues?reported_by=chat_user_feedback&issue_type=chat_feedback&q=%E6%BF%80%E5%85%89%E9%9B%B7%E8%BE%BE&page_size=5 HTTP/1.1" 200 OK
+issues_http_status=200
+bash: line 113: ISSUE_ID: unbound variable

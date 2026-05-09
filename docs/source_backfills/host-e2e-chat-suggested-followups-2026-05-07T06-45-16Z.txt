@@ -1,0 +1,64 @@
+# Host chat suggested followups E2E 2026-05-07T06-45-16Z
+root=/home/longxiang/MiroThinker
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-chat-suggested-followups-2026-05-07T06-45-16Z.txt
+DATABASE_URL= postgresql://***@localhost:15432/miroflow_real
+DATABASE_URL_TEST= UNSET
+CHAT_MILVUS_URI= /home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db
+CHAT_USE_RETRIEVAL_SERVICE= on
+CHAT_LLM_SYNTHESIS= DEFAULT_ON
+base_url=http://127.0.0.1:60335
+started_uvicorn_pid=3074624
+INFO:     Started server process [3074631]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:60335 (Press CTRL+C to quit)
+INFO:     127.0.0.1:50912 - "GET /api/health HTTP/1.1" 200 OK
+health=OK
+INFO:     127.0.0.1:50914 - "POST /api/chat HTTP/1.1" 200 OK
+profile_http_status=200
+profile_query_type= A_prof_profile
+profile_answer_style= llm_synthesized
+profile_suggested_followups= ['看看他的论文', '他的专利有哪些', '他参与创立了哪些企业']
+INFO:     127.0.0.1:50930 - "POST /api/chat HTTP/1.1" 200 OK
+followup_http_status=200
+followup_query_type= D_prof_papers_followup
+followup_citations_count= 10
+followup_suggested_followups= []
+
+## Browser smoke
+INFO:     127.0.0.1:50946 - "GET /pipeline-issues HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50946 - "GET /assets/index-BODBNszd.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50946 - "GET /api/pipeline-issues?page=1&page_size=50 HTTP/1.1" 200 OK
+✓ 深圳科创数据管理平台
+  http://127.0.0.1:60335/pipeline-issues
+INFO:     127.0.0.1:50946 - "GET /favicon.ico HTTP/1.1" 200 OK
+质量问题
+✓ Done
+试试这些问题
+✓ Done
+✓ Done
+INFO:     127.0.0.1:50946 - "POST /api/chat HTTP/1.1" 200 OK
+继续问
+看看他的论文
+- generic "科创数据平台数据总览对话检索导入任务质量问题教授企业论文专利介绍清华的丁文伯丁文伯是清华大学深圳国际研究生院的副教授、博士生导师 [2][3]。他的研究方向包括摩擦纳米发电机 (TENG) [4]、柔" [ref=e1] clickable [onclick]
+  - menu "数据总览对话检索导入任务质量问题教授企业论文专利" [ref=e2] focusable [tabindex]
+    - menuitem "dashboard 数据总览" [ref=e5]
+    - menuitem "message 对话检索" [ref=e6]
+    - menuitem "clock-circle 导入任务" [ref=e7]
+    - menuitem "warning 质量问题" [ref=e8]
+    - menuitem "team 教授" [ref=e9]
+    - menuitem "bank 企业" [ref=e10]
+    - menuitem "file-text 论文" [ref=e11]
+    - menuitem "safety-certificate 专利" [ref=e12]
+  - generic "[1] 丁文伯 - 清华大学深圳国际研究生院" [ref=e14] clickable [cursor:pointer, onclick]
+  - button "branches 看看他的论文" [ref=e15]
+  - button "branches 他的专利有哪些" [ref=e16]
+  - button "branches 他参与创立了哪些企业" [ref=e17]
+  - button "exclamation-circle 反馈" [ref=e13]
+  - textbox "例如：清华大学深圳国际研究生院做人工智能的教授" [ref=e3]
+  - button "send 发送" [disabled, ref=e4]
+missing first-turn UI text: 继续问
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [3074631]

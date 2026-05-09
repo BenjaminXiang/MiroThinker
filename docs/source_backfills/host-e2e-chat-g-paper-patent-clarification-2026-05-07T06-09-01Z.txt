@@ -1,0 +1,43 @@
+# Host chat G paper/patent clarification E2E 2026-05-07T06-09-01Z
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-chat-g-paper-patent-clarification-2026-05-07T06-09-01Z.txt
+base_url=http://127.0.0.1:51071
+DATABASE_URL=postgresql://***@localhost:15432/miroflow_real
+CHAT_MILVUS_URI=/home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db
+started_uvicorn_pid=3033977
+INFO:     Started server process [3033985]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:51071 (Press CTRL+C to quit)
+INFO:     127.0.0.1:33924 - "GET /api/health HTTP/1.1" 200 OK
+health=OK
+
+## G-paper-clarification
+query=Image Super-Resolution 是哪篇论文
+INFO:     127.0.0.1:33930 - "POST /api/chat HTTP/1.1" 200 OK
+raw= http_status=200 {"query":"Image Super-Resolution 是哪篇论文","query_type":"G_ambiguous_clarification","answer_text":"找到 10 篇与 'Image Super-Resolution' 匹配的论文，请选择具体对象：\n\n  • Image Super-Resolution Using Deep Convolutional Networks — 2015 / IEEE Transactions on Pattern Analysis and Machine Intelligence\n  • Learning a Deep Convolutional Network for Image Super-Resolution — 2014 / Lecture notes in computer science\n  • Second-Order Attention Network for Single Image Super-Resolution — 2019 / 2019 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)\n  • NTIRE 2017 Challenge on Single Image Super-Resolution: Methods and Results — 2017 / 2017 IEEE Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)\n  • Deep Learning for Single Image Super-Resolution: A Brief Review — 2019 / IEEE Transactions on Multimedia\n  • Recovering Realistic Texture in Image Super-Resolution by Deep Spatial Feature Transform — 2018 / 2018 IEEE/CVF Conference on Computer Vision and Pattern Recognition\n  • Activating More Pixels in Image Super-Resolution Transformer — 2023 / 2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)\n  • Single Image Super-Resolution
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+  File "/home/longxiang/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/json/decoder.py", line 338, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/json/decoder.py", line 356, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+## G-paper-select
+query=Image Super-Resolution 是哪篇论文
+INFO:     127.0.0.1:33940 - "POST /api/chat HTTP/1.1" 200 OK
+Traceback (most recent call last):
+  File "<stdin>", line 3, in <module>
+  File "/home/longxiang/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/json/decoder.py", line 338, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/json/decoder.py", line 356, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)

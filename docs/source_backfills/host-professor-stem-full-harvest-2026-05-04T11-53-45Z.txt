@@ -1,0 +1,3 @@
+INFO:root:Using LLM profile: gemma4
+INFO:root:LLM aliases available: ark, gemma4, mirothinker, qwen35
+INFO:src.data_agents.professor.pipeline_v3:Stage 1: Roster Discovery

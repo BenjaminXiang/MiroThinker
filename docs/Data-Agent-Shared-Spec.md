@@ -51,7 +51,7 @@
 设计目标：
 
 - 教授、企业、论文、专利可各自独立维护 PostgreSQL schema（允许同实例多 schema，或各域独立实例）
-- 每个数据域可各自维护一组 Milvus collection（示例当前在用：`professor_profiles`、`paper_chunks`；company / patent collection 规划中）
+- 每个数据域可各自维护一组 Milvus collection（当前在用：`professor_profiles`、`paper_chunks`、`company_profiles`、`patent_profiles`）
 - 线上服务层负责跨域编排，不要求底层合并成一个总库
 
 ### 2.2 多库、多 collection 的域边界
@@ -94,11 +94,11 @@
 - 所有召回都通过一条 SQL 完成
 - 各数据域必须复用同一套物理 schema
 
-**当前服务层实现范围（2026-04 状态）**：
+**当前服务层实现范围（2026-05-04 状态）**：
 
-- `apps/miroflow-agent/src/data_agents/service/retrieval.py` 中的 `RetrievalService` 当前仅覆盖 `professor` / `paper` 两域（`_VALID_DOMAINS = {"professor", "paper"}`）。
-- `company` / `patent` 语义检索能力规划中，见 [plans/2026-04-20-003](./plans/2026-04-20-003-agentic-rag-execution-plan.md) M3 及 [plans/2026-04-17-005](./plans/2026-04-17-005-company-primary-knowledge-graph-architecture-plan.md)。
-- 在这两域未接入前，服务层对它们的查询仍走 SQL / 结构化检索回退。
+- `apps/miroflow-agent/src/data_agents/service/retrieval.py` 中的 `RetrievalService` 已覆盖 `professor` / `paper` / `company` / `patent` 四域（`_VALID_DOMAINS = {"professor", "paper", "company", "patent"}`），并提供 `retrieve` / `get_object` / `get_related_objects`。
+- 四域 Milvus collection 已有真实回填证据：`professor_profiles 787`、`paper_chunks 17155`、`company_profiles 1024`、`patent_profiles 1931`。其中 company Top-5 评估 CSV 已产出但待人工标注；patent W13-3 端到端已跑通；paper 因身份核验未完成仍不能算 ready。
+- Agentic RAG 层仍未完整验收：2026-05-02 100 条意图识别真实 benchmark 为 overall `0.690`（未达 `0.900` gate）；2026-05-04 已补确定性 fallback，本地可离线验证，但仍需 host 真实 LLM E2E 复跑。
 
 ### 2.4 通用离线工作流
 
@@ -184,7 +184,7 @@
 - [`quality/`](../apps/miroflow-agent/src/data_agents/quality/) — 阈值配置（`threshold_config.py`）。
 - [`providers/`](../apps/miroflow-agent/src/data_agents/providers/) — LLM / 搜索 / 反查 provider（`anthropic`、`qwen`、`dashscope`、`mirothinker`、`web_search`）。
 - [`storage/`](../apps/miroflow-agent/src/data_agents/storage/) — 持久化：`sqlite_store.py`（历史）、`milvus_store.py`、`milvus_collections.py`（collection 定义）、`postgres/{connection,seed_loader}.py`。
-- [`service/retrieval.py`](../apps/miroflow-agent/src/data_agents/service/retrieval.py) — `RetrievalService` + `Evidence` dataclass；当前覆盖 professor / paper。
+- [`service/retrieval.py`](../apps/miroflow-agent/src/data_agents/service/retrieval.py) — `RetrievalService` + `Evidence` dataclass；当前覆盖 professor / paper / company / patent，并支持单对象与跨域关系查询。
 - [`service/search_service.py`](../apps/miroflow-agent/src/data_agents/service/search_service.py) — 结构化检索回退。
 
 #### C. 四域与跨域质量门（domain-specific）
@@ -211,6 +211,15 @@
 - V009 — `add_canonical_name_zh`（双语身份字段；Round 7.17）
 - V010 — `add_professor_profile_fields`
 - V011 — `add_rag_tables`（`paper_full_text` / `paper_title_resolution_cache` / `professor_orcid`）
+- V012 — `add_professor_metrics`
+- V013 — `add_missing_run_id_trace_tables`
+- V014 — `add_company_narrative_fields`
+- V015 / V016 — `chat_session` 与 `last_result_set`
+- V017 — `web_search_cache`
+- V018 — `paper.summary_zh`
+- V019 — `quality_status` 与 `patent.summary_text`
+- V020 — `identity_status`（paper / patent）
+- V021 — `company_aliases`
 
 ### 3.3 推荐实现方式
 
@@ -237,7 +246,7 @@
 | 结构化清洗/标准化 | `tool-python` + 离线脚本 + `data_agents/normalization.py` | 用于实体标准化、去重辅助、字段解析 |
 | 任务执行 | `pipeline.py` + `Orchestrator` | 适合 task-style 采集 Agent |
 | 评估与日志 | `common_benchmark.py` + `TaskLog` | 可复用到验证与补采环节 |
-| 向量检索 | `service/retrieval.py`（`RetrievalService` + 并发多域 ANN）+ `storage/milvus_collections.py` + `professor/vectorizer.py` + `paper/milvus_backfill.py` | 目前覆盖 professor / paper，company / patent 规划中 |
+| 向量检索 | `service/retrieval.py`（`RetrievalService` + 并发多域 ANN）+ `storage/milvus_collections.py` + `professor/vectorizer.py` + `paper/milvus_backfill.py` + `scripts/run_milvus_backfill.py` | 目前覆盖 professor / paper / company / patent；company Top-5 待人工标注，paper summary_zh 需 rebackfill |
 | Rerank | `providers/` 下 reranker client（M0.1，chat.py 通过 `_get_reranker_client` 使用） | Qwen3-Reranker-8B 本地部署 |
 | 跨域关联 | `data_agents/linking.py` + `canonical/relations.py` + V005a/V005b 关系表 | 必须基于 normalization + 公开证据 |
 | 主 schema 承载 | `canonical/{common,company,paper,professor,relations,source}.py` + V003/V004 Postgres schema | §6.1 第 3 层 |
@@ -303,7 +312,7 @@ ID 规则要求：
 - `normalized_name`
 - `industry`
 - `profile_summary`
-- `technology_route_summary`（**当前实现为规则拼接**：`company/enrichment.py` 基于 `business` / `description` / `website` 等字段合成；LLM 增强版本见 [plans/2026-04-17-005](./plans/2026-04-17-005-company-primary-knowledge-graph-architecture-plan.md) §9.2，未交付）
+- `technology_route_summary`（V014 后由 LLM narrative backfill 生成；2026-05-02 真实库覆盖 `1013/1024 = 98.93%`，剩余 11 条因源数据不足 `needs_review`）
 - `key_personnel`
 - `last_updated`
 - `run_id`
@@ -326,7 +335,7 @@ ID 规则要求：
 - `run_id`
 - `evidence`
 
-**可选学术指标**（PRD §模块一 R2 要求，代码中 `professor/models.py` + `publish_helpers.py` 已有字段，但**服务层暴露未统一**——admin API / chat profile / Milvus schema 尚未全部带出，现状见 [docs/index.md](./index.md) 教授行缺口列）：
+**可选学术指标**（PRD §模块一 R2 要求；V012 起 schema 与 admin/chat/Milvus 输出字段已补强，但仍需真实 E2E 抽样确认覆盖率与口径一致性，现状见 [docs/index.md](./index.md) 教授行缺口列）：
 
 - `h_index`（总 h-index；可选）
 - `citation_count`（总引用数；可选）
@@ -428,7 +437,7 @@ class RetrievalService:
         self,
         query: str,
         *,
-        domains: tuple[str, ...],      # 目前 _VALID_DOMAINS = {"professor", "paper"}
+        domains: tuple[str, ...],      # 目前 _VALID_DOMAINS = {"professor", "paper", "company", "patent"}
         filters: dict | None = None,
         candidate_limit: int = 30,     # ANN 候选数
         final_top_k: int = 10,         # rerank 后返回数
@@ -438,23 +447,21 @@ class RetrievalService:
 
 实际召回链路：query embedding → 并发多域 ANN 召回（Milvus）→ filter → reranker（Qwen3-Reranker-8B）→ top_k。`mode` 字段已内化——检索路径默认走"向量召回 + rerank 融合"的 hybrid 范式，不再以参数暴露。
 
-**仍属契约层的逻辑接口语义**（未来扩展目标，非当前代码直接签名）：
+**当前已实现的补充接口语义**：
 
 ```python
-# 单对象获取（当前由各域 admin API 如 /api/professor/<id> 承担）
 get_object(domain, object_id) -> dict
 
-# 跨域关系查询（当前由 canonical/relations 表 + ad-hoc SQL 承担）
 get_related_objects(
     source_domain, source_id,
-    target_domain, relation_type,
+    target_domain,
     limit=20,
 ) -> list[dict]
 ```
 
 是否内部用 SQL、adapter、domain API、还是多段检索，由各域实现自行决定。逻辑模式仍保留 `exact` / `semantic` / `hybrid` 三种语义分类，以便未来规范化扩展。
 
-**域覆盖扩展**：company / patent 接入 `retrieve` 的计划见 [plans/2026-04-20-003](./plans/2026-04-20-003-agentic-rag-execution-plan.md) M3 与 [plans/2026-04-17-005](./plans/2026-04-17-005-company-primary-knowledge-graph-architecture-plan.md)。在接入前，这两域的语义检索走 `service/search_service.py` 的结构化回退。
+**验收口径**：代码与单测已覆盖四域，但完整验收还必须看真实 Milvus/Postgres/LLM dogfood。company 已产出 50-query Top-5 CSV，待人工标注；patent 已有 W13-3 真实 E2E；paper 仍受 DOI verify 与 `quality_status` 阻塞。
 
 ---
 
@@ -534,9 +541,9 @@ get_related_objects(
 2. **标准化层（Normalized）**
    - 保存清洗后的事实字段、关系字段、域内去重结果
    - 仍可各域独立 schema；`data_agents/normalization.py` 提供共享工具
-3. **规范化主 schema 层（Canonical）** — V003–V011 新增，**对外契约的实际承载层**
+3. **规范化主 schema 层（Canonical）** — V003–V021 持续演进，**对外契约的实际承载层**
    - 实现在 `apps/miroflow-agent/src/data_agents/canonical/`：`common.py`、`company.py`、`paper.py`、`professor.py`、`relations.py`、`source.py`
-   - Postgres 表通过 alembic V003 / V004 / V005a / V005b / V006 / V007 / V009 / V010 / V011 建立
+   - Postgres 表通过 alembic V003 / V004 / V005a / V005b / V006 / V007 / V009 / V010 / V011 / V012 / V014 / V018 / V019 / V020 / V021 等迁移建立或补强
    - 该层输出结构即 §4.2 最小对外对象契约（含 `run_id` / `canonical_name_zh` / `quality_status` / `evidence` 等）
 4. **发布层（Published / Serving）**
    - 面向线上服务暴露稳定对外契约字段（SQL view / Milvus collection / 发布快照）
@@ -550,10 +557,10 @@ get_related_objects(
 
 | 数据域 | 主向量文本 | 当前 collection | 状态 |
 | --- | --- | --- | --- |
-| 教授 | `profile_summary` | `professor_profiles` | ✅ 已建并回填 |
-| 企业 | `profile_summary` | （规划中） | 🚧 M3 目标 |
-| 论文 | `summary_text` / chunk 分片 | `paper_chunks` | ✅ 已建；`run_milvus_backfill.py` 写入；支持 `chunk_type`（abstract / intro / conclusion 等）、`segment_index` 维度 |
-| 专利 | `summary_text` | （规划中） | 🚧 未启动 |
+| 教授 | `profile_summary` | `professor_profiles` | ✅ 已建并回填；真实全景计数 787 |
+| 企业 | `profile_summary` / `technology_route_summary` | `company_profiles` | 🟡 已建并回填；真实全景计数 1024；Top-5 CSV 待人工标注 |
+| 论文 | `summary_text` / chunk 分片 | `paper_chunks` | 🟡 已建；真实全景计数 17155；`summary_zh` 新回填后仍需 rebackfill |
+| 专利 | `summary_text` | `patent_profiles` | ✅ 已建并回填；真实全景计数 1931，W13-3 patent e2e 通过 |
 
 论文 chunk 分片由 `paper/chunker.py` 产生；retrieval 时以 query embedding + `paper_chunks` 多 chunk_type ANN → rerank 为主路径。
 

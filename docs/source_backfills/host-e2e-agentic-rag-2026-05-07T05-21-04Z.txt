@@ -1,0 +1,170 @@
+# Host Agentic RAG E2E 2026-05-07T05-21-04Z
+root=/home/longxiang/MiroThinker
+admin_dir=/home/longxiang/MiroThinker/apps/admin-console
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-agentic-rag-2026-05-07T05-21-04Z.txt
+
+
+## Environment
+DATABASE_URL_DEFAULTED=true
+CHAT_MILVUS_URI_DEFAULTED=true
+DEFAULT_MILVUS_URI_EXISTS=true
+DATABASE_URL=postgresql://***@localhost:15432/miroflow_real
+DATABASE_URL_TEST=UNSET
+CHAT_MILVUS_URI=SET=/home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db
+MILVUS_URI=UNSET
+MILVUS_USE_REAL_CLIENT=SET=1
+CHAT_USE_RETRIEVAL_SERVICE=SET=on
+SERPER_API_KEY_present=False
+API_KEY_present=False
+LOCAL_LLM_API_KEY_present=False
+http_proxy_present=False
+https_proxy_present=False
+HTTP_PROXY_present=False
+HTTPS_PROXY_present=False
+all_proxy_present=False
+ALL_PROXY_present=False
+
+## LLM profile and connectivity
+
++ admin_python -
+profile=gemma4
+base_url_scheme= https
+base_url_host= star.sustech.edu.cn
+base_url_port= 443
+base_url_path= /service/model/gemma4/v1
+model= gemma-4-26b-a4b-it
+api_key_present= True
+tcp_probe=OK
+openai_probe=OK
+openai_text= pong! 🏓
+exit_code=0
+
+## Postgres probe
+
++ admin_python -
+database= miroflow_real
+professor_count= 787
+company_count= 1024
+paper_count= 7297
+patent_count= 1931
+ding_company_role_count= 0
+postgres_probe=OK
+exit_code=0
+
+## Milvus probe
+
++ admin_python -
+/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/milvus_lite/__init__.py:15: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import DistributionNotFound, get_distribution
+milvus_probe=OK
+uri= /home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db
+collections= company_profiles,paper_chunks,patent_profiles,professor_profiles
+professor_profiles_stats= {'row_count': 787}
+company_profiles_stats= {'row_count': 1024}
+paper_chunks_stats= {'row_count': 11591}
+patent_profiles_stats= {'row_count': 1931}
+exit_code=0
+
+## Classifier 100-case benchmark
+
++ timeout 240s uv run pytest tests/test_classifier_benchmark.py -m requires_classifier_llm -v --tb=short
+============================= test session starts ==============================
+platform linux -- Python 3.12.12, pytest-9.0.3, pluggy-1.6.0 -- /home/longxiang/MiroThinker/apps/admin-console/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/longxiang/MiroThinker/apps/admin-console
+configfile: pyproject.toml
+plugins: anyio-4.13.0, hydra-core-1.3.2
+collecting ... collected 3 items / 2 deselected / 1 selected
+
+tests/test_classifier_benchmark.py::test_classifier_benchmark PASSED     [100%]
+
+======================= 1 passed, 2 deselected in 0.02s ========================
+exit_code=0
+
+## HTTP chat E2E
+selected_free_port=47761
+started_uvicorn_pid=2996798
+INFO:     Started server process [2996807]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:47761 (Press CTRL+C to quit)
+INFO:     127.0.0.1:57006 - "GET /api/health HTTP/1.1" 200 OK
+health=OK
+health_body={"status":"ok"}
+
+### B-company
+query=深圳哪些公司做激光雷达
+expected_query_type=B_company_topic_search
+min_citations=1
+zero_citation_answer_pattern=ANY
+INFO:     127.0.0.1:57012 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+raw= {"query":"深圳哪些公司做激光雷达","query_type":"B_company_topic_search","answer_text":"共找到 6 个企业：\n\n  • 不止技术 — 生产制造\n  • 奇历士技术（深圳） — 硬件\n  • 深圳奥锐达科技 — 汽车交通\n  • 深圳灵动芯光科技 — 生产制造\n  • 益鸿智能科技 — 先进制造\n  • 览沃科技 — 先进制造","citations":[{"type":"company","id":"COMP-04d42897fcfb","label":"不止技术","url":"/browse#company/COMP-04d42897fcfb"},{"type":"company","id":"COMP-c0bfe2f78354","label":"奇历士技术（深圳）","url":"/browse#company/COMP-c0bfe2f78354"},{"type":"company","id":"COMP-b689340c78db","label":"深圳奥锐达科技","url":"/browse#company/COMP-b689340c78db"},{"type":"company","id":"COMP-fbdbcc0ff9dd","label":"深圳灵动芯光科技","url":"/browse#company/COMP-fbdbcc0ff9dd"},{"type":"company","id":"COMP-796db62f3142","label":"益鸿智能科技","url":"/browse#company/COMP-796db62f3142"},{"type":"company","id":"COMP-0fc8c548d8f8","label":"览沃科技","url":"/browse#company/COMP-0fc8c548d8f8"}],"evidence":[],"clarification":null,"structured_payload":{"classifier_topic":"激光雷达","classifier_target_domain":"company","classifier_reason":"semantic list determi
+query_type= B_company_topic_search
+answer_style= template
+citations_count= 6
+evidence_count= 0
+answer_prefix= 共找到 6 个企业：    • 不止技术 — 生产制造   • 奇历士技术（深圳） — 硬件   • 深圳奥锐达科技 — 汽车交通   • 深圳灵动芯光科技 — 生产制造   • 益鸿智能科技 — 先进制造   • 览沃科技 — 先进制造
+
+### B-paper
+query=近两年具身智能方向的论文有哪些
+expected_query_type=B_paper_topic_search
+min_citations=1
+zero_citation_answer_pattern=ANY
+/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/milvus_lite/__init__.py:15: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import DistributionNotFound, get_distribution
+INFO:     127.0.0.1:57024 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+raw= {"query":"近两年具身智能方向的论文有哪些","query_type":"B_paper_topic_search","answer_text":"共找到 20 个论文（显示前 10 个）：\n\n论文域质量门尚未完全完成，以下为检索候选，需结合来源复核。\n\n  • 关于“智能化”与设计的若干哲学思考 — 关于“智能化”与设计的若干哲学思考\n  • Synergetic Computers and Cognition — Synergetic Computers and Cognition\n  • Multi-stimulus perception and visualization by an intelligent liquid metal-elastomer architecture — Multi-stimulus perception and visualization by an intelligen\n  • Jiankun Zhu, Ya-Li Mao, Hu Chen — Jiankun Zhu, Ya-Li Mao, Hu Chen\n  • Making Social Robots More Attractive: The Effects of Voice Pitch, Humor and Empathy — Making Social Robots More Attractive: The Effects of Voice P\n  • A Mathematical Theory of Cortex-Receptor Artificial Extension — A Mathematical Theory of Cortex-Receptor Artificial Extensio\n  • Yuqi Ke, Yiyue Jiang, Rong Zhu — Yuqi Ke, Yiyue Jiang, Rong Zhu\n  • Cheng-Long Li#, Kai-Yi Zhang, Xingjian Zhang — Cheng-Long Li#, Kai-Yi Zhang, Xingjian Zhang\n  • Force-free control for the flexible-joint robot in huma
+query_type= B_paper_topic_search
+answer_style= template
+citations_count= 10
+evidence_count= 0
+answer_prefix= 共找到 20 个论文（显示前 10 个）：  论文域质量门尚未完全完成，以下为检索候选，需结合来源复核。    • 关于“智能化”与设计的若干哲学思考 — 关于“智能化”与设计的若干哲学思考   • Synergetic Computers and Cognition — Synergetic Computers and Cognition   • Multi-stimulus perception and visualization by an intelligent liquid metal-elastomer architecture — Multi-stimulus perceptio
+
+### B-patent
+query=哪些专利和柔性触觉传感有关
+expected_query_type=B_patent_topic_search
+min_citations=1
+zero_citation_answer_pattern=ANY
+INFO:     127.0.0.1:57032 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+raw= {"query":"哪些专利和柔性触觉传感有关","query_type":"B_patent_topic_search","answer_text":"共找到 20 个专利（显示前 10 个）：\n\n  • 一种柔性电感式触觉传感器及测量电路 — 一种柔性电感式触觉传感器及测量电路\n本发明涉及触觉传感器领域，特指一种采用R L振荡电路的电感阵列式柔性触觉传感器，包括\n  • 一种柔性电感式触觉传感器及测量电路 — 一种柔性电感式触觉传感器及测量电路\n本发明涉及触觉传感器领域，特指一种采用R L振荡电路的电感阵列式柔性触觉传感器，包括\n  • 一种触感部件、仿生结构及其感知反馈方法 — 一种触感部件、仿生结构及其感知反馈方法\n本发明公开了一种触感部件、仿生结构及其感知反馈方法，触感部件包括感应片、传感器以\n  • 一种柔性多功能触觉感知电子皮肤与应用 — 一种柔性多功能触觉感知电子皮肤与应用\n本申请涉及传感器技术领域，特别涉及一种柔性多功能触觉感知电子皮肤与应用，包括：变形\n  • 一种多通道仿生毛发阵列的摩擦电触觉传感器及制备方法 — 一种多通道仿生毛发阵列的摩擦电触觉传感器及制备方法\n一种多通道仿生毛发阵列的摩擦电触觉传感器，包括封装层、电极和毛发阵列\n  • 一种高分辨率、高灵敏度柔性触觉传感器阵列及其制备方法 — 一种高分辨率、高灵敏度柔性触觉传感器阵列及其制备方法\n本发明涉及柔性可穿戴健康电子设备领域，提供一种具有仿生多层次微阵列\n  • 一种全方向摩擦电触须传感器 — 一种全方向摩擦电触须传感器\n一种全方向摩擦电触须传感器，包括须子、底部毛囊和感应电极，所述须子为柔韧材料，与所述底部毛囊\n  • 一种仿生毛发触觉传感器与应用 — 一种仿生毛发触觉传感器与应用\n本申请涉及传感器技术领域，特别涉及一种仿生毛发触觉传感器与应用，该传感器包括：基底和设置在\n  • 一种面向触觉反馈的多参数动态编码方法 — 一种面向触觉反馈的多参数动态编码方法\n本发明公开一种面向触觉反馈的多参数动态编码方法。该方法包括：在触觉传感区域设置多通\n  • 一种超声波增强的触觉传感器系统、传感器和传感方法 — 一种超声波增强的触觉传感器系统、传感器和传感方法\n本发明公开一种超声波增强的触觉传感器系统、传感器和传感方法，该触觉传感\n  ... (
+query_type= B_patent_topic_search
+answer_style= template
+citations_count= 10
+evidence_count= 0
+answer_prefix= 共找到 20 个专利（显示前 10 个）：    • 一种柔性电感式触觉传感器及测量电路 — 一种柔性电感式触觉传感器及测量电路 本发明涉及触觉传感器领域，特指一种采用R L振荡电路的电感阵列式柔性触觉传感器，包括   • 一种柔性电感式触觉传感器及测量电路 — 一种柔性电感式触觉传感器及测量电路 本发明涉及触觉传感器领域，特指一种采用R L振荡电路的电感阵列式柔性触觉传感器，包括   • 一种触感部件、仿生结构及其感知反馈方法 — 一种触感部件、仿生结构及其感知反馈方法 本发明公开了一种触感部件、仿生结构及其感知反馈方法，触感部件包括感应片、传感器以   • 一种柔性多功能触觉感知电子皮肤与
+
+### A-professor
+query=介绍清华的丁文伯
+expected_query_type=A_prof_profile
+min_citations=1
+zero_citation_answer_pattern=ANY
+INFO:     127.0.0.1:39226 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+raw= {"query":"介绍清华的丁文伯","query_type":"A_prof_profile","answer_text":"丁文伯是清华大学深圳国际研究生院的副教授、博士生导师 [2][3]。他的研究方向涵盖了摩擦纳米发电机 (TENG) [4]、柔性可穿戴能量收集技术 [5]、自驱动机械传感系统 [6]、基于TENG的人机交互 (HMI) [7]、智能功能纺织品与纤维电子学 [8] 以及摩擦电微等离子体研究 [9]。目前他已收录论文19篇 [10][11]。","citations":[{"type":"professor","id":"PROF-5F14BBA866D9","label":"丁文伯 - 清华大学深圳国际研究生院","url":"/browse#professor/PROF-5F14BBA866D9"}],"evidence":[],"clarification":null,"structured_payload":{"professor_id":"PROF-5F14BBA866D9","canonical_name":"丁文伯","canonical_name_en":"Wenbo Ding","institution":"清华大学深圳国际研究生院","title":"副教授、博士生导师","discipline_family":"computer_science","research_topics":["摩擦纳米发电机 (TENG)","柔性可穿戴能量收集技术","自驱动机械传感系统","基于TENG的人机交互 (HMI)","智能功能纺织品与纤维电子学","摩擦电微等离子体研究","自驱动环境监测传感器","多模态高分辨率触觉传感器","机器人触觉感知","多模态触觉传感器","仿生传感","多模态高分辨率触觉传感器研发"],"verified_paper_count":19,"h_index":null,"citation_count":null,"paper_count":19},"answer_style":"llm_synthesized","citation_map":{"1":"PROF-5F14BBA866D9","2":"PROF-5F14BBA866D9","3":"PROF-5F14BBA866D9","4":"PR
+query_type= A_prof_profile
+answer_style= llm_synthesized
+citations_count= 1
+evidence_count= 0
+answer_prefix= 丁文伯是清华大学深圳国际研究生院的副教授、博士生导师 [2][3]。他的研究方向涵盖了摩擦纳米发电机 (TENG) [4]、柔性可穿戴能量收集技术 [5]、自驱动机械传感系统 [6]、基于TENG的人机交互 (HMI) [7]、智能功能纺织品与纤维电子学 [8] 以及摩擦电微等离子体研究 [9]。目前他已收录论文19篇 [10][11]。
+
+### C-followup-company
+query=他参与创立了哪些企业
+expected_query_type=C_cross_domain_related
+min_citations=0
+zero_citation_answer_pattern=暂未收录|未找到|证据不足|没有.*证据
+INFO:     127.0.0.1:39228 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+raw= {"query":"他参与创立了哪些企业","query_type":"C_cross_domain_related","answer_text":"暂未收录丁文伯关联的企业数据。","citations":[],"evidence":[],"clarification":null,"structured_payload":{"source_domain":"professor","source_id":"PROF-5F14BBA866D9","source_label":"丁文伯","target_domain":"company","retrieval_evidence":[]},"answer_style":"template","citation_map":{}}
+query_type= C_cross_domain_related
+answer_style= template
+citations_count= 0
+evidence_count= 0
+answer_prefix= 暂未收录丁文伯关联的企业数据。
+
+## Done
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-agentic-rag-2026-05-07T05-21-04Z.txt
+failures=0
+result=PASS

@@ -1,0 +1,71 @@
+# Host chat suggested followups E2E 2026-05-07T06-47-42Z
+root=/home/longxiang/MiroThinker
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-chat-suggested-followups-2026-05-07T06-47-42Z.txt
+DATABASE_URL= postgresql://***@localhost:15432/miroflow_real
+DATABASE_URL_TEST= UNSET
+CHAT_MILVUS_URI= /home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db
+CHAT_USE_RETRIEVAL_SERVICE= on
+CHAT_LLM_SYNTHESIS= DEFAULT_ON
+base_url=http://127.0.0.1:34893
+started_uvicorn_pid=3078489
+INFO:     Started server process [3078496]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:34893 (Press CTRL+C to quit)
+INFO:     127.0.0.1:48818 - "GET /api/health HTTP/1.1" 200 OK
+health=OK
+INFO:     127.0.0.1:48832 - "POST /api/chat HTTP/1.1" 200 OK
+profile_http_status=200
+profile_query_type= A_prof_profile
+profile_answer_style= llm_synthesized
+profile_suggested_followups= ['看看他的论文', '他的专利有哪些', '他参与创立了哪些企业']
+INFO:     127.0.0.1:48836 - "POST /api/chat HTTP/1.1" 200 OK
+followup_http_status=200
+followup_query_type= D_prof_papers_followup
+followup_citations_count= 10
+/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/milvus_lite/__init__.py:15: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import DistributionNotFound, get_distribution
+INFO:     127.0.0.1:48846 - "POST /api/chat HTTP/1.1" 200 OK
+no_result_http_status=200
+no_result_query_type= C_cross_domain_related
+no_result_suggested_followups= []
+
+## Browser smoke
+INFO:     127.0.0.1:48856 - "GET /pipeline-issues HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48856 - "GET /assets/index-BODBNszd.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48856 - "GET /api/pipeline-issues?page=1&page_size=50 HTTP/1.1" 200 OK
+✓ 深圳科创数据管理平台
+  http://127.0.0.1:34893/pipeline-issues
+INFO:     127.0.0.1:48856 - "GET /favicon.ico HTTP/1.1" 200 OK
+质量问题
+✓ Done
+试试这些问题
+✓ Done
+✓ Done
+INFO:     127.0.0.1:48856 - "POST /api/chat HTTP/1.1" 200 OK
+继续问
+看看他的论文
+{
+  "hasFeedback": true,
+  "hasFollowupLabel": true,
+  "hasPaperFollowup": true
+}
+browser_first_turn_dom=PASS
+followup_ref=e15
+✓ Done
+INFO:     127.0.0.1:48856 - "POST /api/chat HTTP/1.1" 200 OK
+D_prof_papers_followup
+{
+  "hasCitations": true,
+  "hasClickedQuestion": true,
+  "hasRoute": true
+}
+browser_followup_turn_dom=PASS
+
+## Final state
+result=PASS
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-chat-suggested-followups-2026-05-07T06-47-42Z.txt
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [3078496]

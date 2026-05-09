@@ -15,24 +15,26 @@ The Agentic RAG classifier has a 100-case benchmark covering intent classes
 A-G. Wave 13 V3 reran the LLM-backed benchmark locally against the internal
 Gemma-4 profile and archived the result at:
 
-- `docs/source_backfills/intent-classifier-benchmark-2026-05-02.log`
+- `docs/source_backfills/intent-classifier-benchmark-2026-05-02-real.txt`
 
 The 2026-05-02 run failed the validation gate:
 
 | Metric | Result | Gate |
 |---|---:|---:|
-| Overall accuracy | 0.000 | >= 0.900 |
-| A | 0.000 | >= 0.700 |
-| B | 0.000 | >= 0.700 |
-| C | 0.000 | >= 0.800 |
-| D | 0.000 | >= 0.700 |
-| E | 0.000 | >= 0.700 |
-| F | 0.000 | >= 0.700 |
-| G | 0.000 | >= 0.700 |
+| Overall accuracy | 0.690 | >= 0.900 |
+| A | 0.700 | >= 0.700 |
+| B | 0.350 | >= 0.700 |
+| C | 0.933 | >= 0.800 |
+| D | 1.000 | >= 0.700 |
+| E | 0.800 | >= 0.700 |
+| F | 1.000 | >= 0.700 |
+| G | 0.500 | >= 0.700 |
 
-All 100 cases returned `UNKNOWN`. This is below the handoff stop condition
-(`overall < 0.80`) and should be escalated to the W11-1 / classifier owner
-before any gate is made blocking.
+This is below the handoff stop condition (`overall < 0.80`) and should be
+escalated to the W11-1 / classifier owner before any gate is made blocking.
+`intent-classifier-benchmark-2026-05-02-codex-sandbox.txt` is the separate
+sandbox run that returned all `UNKNOWN` because the internal LLM path was not
+reachable from the sandbox.
 
 ## Options
 
@@ -62,7 +64,7 @@ Do not accept option C as the long-term state.
 
 ## Follow-up
 
-1. Investigate why the 2026-05-02 run returned `UNKNOWN` for all cases.
-2. Rerun V3 after the classifier LLM path is fixed.
+1. Investigate the low B/G boundary accuracy from the 2026-05-02 real run.
+2. Rerun V3 after the classifier deterministic fallback / LLM path is fixed.
 3. Once stable, create a separate implementation spec for the systemd service,
    timer, log archive, and failure notification.

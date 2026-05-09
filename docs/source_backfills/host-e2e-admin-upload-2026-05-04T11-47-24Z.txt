@@ -1,0 +1,194 @@
+# Host Admin Upload E2E 2026-05-04T11-47-24Z
+root=/home/longxiang/MiroThinker
+admin_dir=/home/longxiang/MiroThinker/apps/admin-console
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-admin-upload-2026-05-04T11-47-24Z.txt
+work_dir=/tmp/mirothinker-admin-upload-e2e.rSp8rL
+company_xlsx=/home/longxiang/MiroThinker/docs/专辑项目导出1768807339.xlsx
+patent_xlsx=/home/longxiang/MiroThinker/docs/2025-12-05 专利.xlsx
+
+## Environment
+DATABASE_URL_DEFAULTED=true
+CHAT_MILVUS_URI_DEFAULTED=true
+DEFAULT_MILVUS_URI_EXISTS=true
+POLL_SECONDS=300
+
+## Start admin server
+base_url=http://127.0.0.1:59577
+server_pid=3104139
+INFO:     Started server process [3104146]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:59577 (Press CTRL+C to quit)
+INFO:     127.0.0.1:57564 - "GET /api/health HTTP/1.1" 200 OK
+admin_health=OK
+
+## Before upload DB snapshot
+
++ admin_python -
+DATABASE_URL= postgresql://***@localhost:15432/miroflow_real
+DATABASE_URL_TEST= UNSET
+database= miroflow_real
+company_count= 1024
+company_snapshot_count= 1025
+patent_count= 1931
+company_patent_link_count= 76
+pipeline_run_count= 33
+source_page_count= 5594
+admin_upload_source_page_count= 0
+exit_code=0
+
+## Upload company
+upload_file=/home/longxiang/MiroThinker/docs/专辑项目导出1768807339.xlsx
+INFO:     127.0.0.1:57566 - "POST /api/upload/company HTTP/1.1" 200 OK
+upload_response_file=/tmp/mirothinker-admin-upload-e2e.rSp8rL/company-upload-response.json
+{"imported":0,"skipped":0,"total_in_store":1024,"task_id":"2620dcc3-2809-46bf-bc89-292e385d85ab","source_page_id":"47b6591c-329f-4d2f-b108-892fd852e493"}
+task_id=2620dcc3-2809-46bf-bc89-292e385d85ab
+INFO:     127.0.0.1:57580 - "GET /api/pipeline/runs/2620dcc3-2809-46bf-bc89-292e385d85ab HTTP/1.1" 200 OK
+poll domain=company task_id=2620dcc3-2809-46bf-bc89-292e385d85ab status=running items_processed= items_failed=
+INFO:     127.0.0.1:57594 - "GET /api/pipeline/runs/2620dcc3-2809-46bf-bc89-292e385d85ab HTTP/1.1" 200 OK
+poll domain=company task_id=2620dcc3-2809-46bf-bc89-292e385d85ab status=running items_processed= items_failed=
+INFO:     127.0.0.1:57610 - "GET /api/pipeline/runs/2620dcc3-2809-46bf-bc89-292e385d85ab HTTP/1.1" 200 OK
+poll domain=company task_id=2620dcc3-2809-46bf-bc89-292e385d85ab status=succeeded items_processed=1025 items_failed=0
+task_detail_file=/tmp/mirothinker-admin-upload-e2e.rSp8rL/company-task-detail.json
+{"run_id":"2620dcc3-2809-46bf-bc89-292e385d85ab","run_kind":"import_xlsx","status":"succeeded","run_scope":{"domain":"company","source":"admin-console-upload","filename":"专辑项目导出1768807339.xlsx","upload_path":"/tmp/mirothinker-admin-uploads/company-b6f301b9ab4bc600-专辑项目导出1768807339.xlsx","file_content_hash":"b6f301b9ab4bc6006800dcb3ce46bf89fa6369c122e8aa8cf78a646e81b02fef"},"triggered_by":"admin-console","started_at":"2026-05-04T11:47:27.135746Z","finished_at":"2026-05-04T11:47:31.027445Z","items_processed":1025,"items_failed":0,"error_summary":null,"source_pages":[{"page_id":"47b6591c-329f-4d2f-b108-892fd852e493","url":"admin-upload://company/b6f301b9ab4bc6006800dcb3ce46bf89fa6369c122e8aa8cf78a646e81b02fef","title":"专辑项目导出1768807339.xlsx","clean_text_path":"/tmp/mirothinker-admin-uploads/company-b6f301b9ab4bc600-专辑项目导出1768807339.xlsx","fetched_at":"2026-05-04T11:47:27.135746Z"}]}
+
+## Upload patent
+upload_file=/home/longxiang/MiroThinker/docs/2025-12-05 专利.xlsx
+INFO:     127.0.0.1:33902 - "POST /api/upload/patent HTTP/1.1" 200 OK
+upload_response_file=/tmp/mirothinker-admin-upload-e2e.rSp8rL/patent-upload-response.json
+{"imported":0,"skipped":0,"total_in_store":1931,"task_id":"ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7","source_page_id":"29ac6056-c01b-432b-bed5-fcd19bd4e076"}
+task_id=ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7
+INFO:     127.0.0.1:33912 - "GET /api/pipeline/runs/ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 HTTP/1.1" 200 OK
+poll domain=patent task_id=ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 status=running items_processed= items_failed=
+INFO:     127.0.0.1:33914 - "GET /api/pipeline/runs/ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 HTTP/1.1" 200 OK
+poll domain=patent task_id=ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 status=running items_processed= items_failed=
+INFO:     127.0.0.1:33930 - "GET /api/pipeline/runs/ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 HTTP/1.1" 200 OK
+poll domain=patent task_id=ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 status=running items_processed= items_failed=
+INFO:     127.0.0.1:33938 - "GET /api/pipeline/runs/ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 HTTP/1.1" 200 OK
+poll domain=patent task_id=ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 status=running items_processed= items_failed=
+INFO:     127.0.0.1:33952 - "GET /api/pipeline/runs/ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 HTTP/1.1" 200 OK
+poll domain=patent task_id=ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 status=running items_processed= items_failed=
+INFO:     127.0.0.1:52724 - "GET /api/pipeline/runs/ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 HTTP/1.1" 200 OK
+poll domain=patent task_id=ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 status=running items_processed= items_failed=
+INFO:     127.0.0.1:52730 - "GET /api/pipeline/runs/ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 HTTP/1.1" 200 OK
+poll domain=patent task_id=ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 status=running items_processed= items_failed=
+INFO:     127.0.0.1:52742 - "GET /api/pipeline/runs/ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 HTTP/1.1" 200 OK
+poll domain=patent task_id=ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 status=running items_processed= items_failed=
+INFO:     127.0.0.1:52750 - "GET /api/pipeline/runs/ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 HTTP/1.1" 200 OK
+poll domain=patent task_id=ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 status=running items_processed= items_failed=
+INFO:     127.0.0.1:52766 - "GET /api/pipeline/runs/ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 HTTP/1.1" 200 OK
+poll domain=patent task_id=ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 status=running items_processed= items_failed=
+INFO:     127.0.0.1:44552 - "GET /api/pipeline/runs/ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 HTTP/1.1" 200 OK
+poll domain=patent task_id=ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 status=running items_processed= items_failed=
+INFO:     127.0.0.1:44560 - "GET /api/pipeline/runs/ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 HTTP/1.1" 200 OK
+poll domain=patent task_id=ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 status=running items_processed= items_failed=
+INFO:     127.0.0.1:44574 - "GET /api/pipeline/runs/ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 HTTP/1.1" 200 OK
+poll domain=patent task_id=ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 status=running items_processed= items_failed=
+INFO:     127.0.0.1:44576 - "GET /api/pipeline/runs/ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 HTTP/1.1" 200 OK
+poll domain=patent task_id=ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 status=running items_processed= items_failed=
+INFO:     127.0.0.1:53112 - "GET /api/pipeline/runs/ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 HTTP/1.1" 200 OK
+poll domain=patent task_id=ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 status=running items_processed= items_failed=
+INFO:     127.0.0.1:53114 - "GET /api/pipeline/runs/ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 HTTP/1.1" 200 OK
+poll domain=patent task_id=ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 status=running items_processed= items_failed=
+INFO:     127.0.0.1:53116 - "GET /api/pipeline/runs/ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 HTTP/1.1" 200 OK
+poll domain=patent task_id=ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 status=running items_processed= items_failed=
+INFO:     127.0.0.1:53118 - "GET /api/pipeline/runs/ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 HTTP/1.1" 200 OK
+poll domain=patent task_id=ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7 status=succeeded items_processed=1930 items_failed=0
+task_detail_file=/tmp/mirothinker-admin-upload-e2e.rSp8rL/patent-task-detail.json
+{"run_id":"ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7","run_kind":"import_xlsx","status":"succeeded","run_scope":{"domain":"patent","source":"admin-console-upload","filename":"2025-12-05 专利.xlsx","upload_path":"/tmp/mirothinker-admin-uploads/patent-7a5d6eedeeb0cd34-2025-12-05 专利.xlsx","file_content_hash":"7a5d6eedeeb0cd34233b75310878545622e3d968d097100215b408ed52f43609"},"triggered_by":"admin-console","started_at":"2026-05-04T11:47:31.512718Z","finished_at":"2026-05-04T11:48:08.340946Z","items_processed":1930,"items_failed":0,"error_summary":null,"source_pages":[{"page_id":"29ac6056-c01b-432b-bed5-fcd19bd4e076","url":"admin-upload://patent/7a5d6eedeeb0cd34233b75310878545622e3d968d097100215b408ed52f43609","title":"2025-12-05 专利.xlsx","clean_text_path":"/tmp/mirothinker-admin-uploads/patent-7a5d6eedeeb0cd34-2025-12-05 专利.xlsx","fetched_at":"2026-05-04T11:47:31.512718Z"}]}
+
+## Recent admin upload API runs
+INFO:     127.0.0.1:53122 - "GET /api/pipeline/runs?triggered_by=admin-console&limit=8 HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/httptools_impl.py", line 420, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1163, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/starlette/applications.py", line 90, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 88, in __call__
+    await self.app(scope, receive, send)
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/starlette/routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/starlette/routing.py", line 680, in app
+    await route.handle(scope, receive, send)
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 134, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 120, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 674, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 330, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/starlette/concurrency.py", line 32, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2518, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1002, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/apps/admin-console/backend/api/pipeline.py", line 223, in list_pipeline_runs
+    rows = conn.execute(
+           ^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/psycopg/connection.py", line 300, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.AmbiguousParameter: could not determine data type of parameter $1
+LINE 15:          WHERE ($1 IS NULL OR run_scope->>'domain' = $1)
+                         ^
+curl: (22) The requested URL returned error: 500
+failure[1]=list_pipeline_runs_failed
+
+
+## After upload DB snapshot
+
++ admin_python -
+DATABASE_URL= postgresql://***@localhost:15432/miroflow_real
+DATABASE_URL_TEST= UNSET
+database= miroflow_real
+company_count= 1024
+company_snapshot_count= 2050
+patent_count= 1931
+company_patent_link_count= 105
+pipeline_run_count= 36
+source_page_count= 5596
+admin_upload_source_page_count= 2
+recent_admin_pipeline_run= (UUID('ece28ffd-4a5e-470f-bf0b-6f8c7ff1b9a7'), 'import_xlsx', 'succeeded', 'patent', 'admin-console', 1930, 0, datetime.datetime(2026, 5, 4, 11, 47, 31, 512718, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')), datetime.datetime(2026, 5, 4, 11, 48, 8, 340946, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')))
+recent_admin_pipeline_run= (UUID('6f85fa46-3e0d-412c-905b-d197a3fc3eab'), 'import_xlsx', 'succeeded', None, 'admin-console', 1025, 0, datetime.datetime(2026, 5, 4, 11, 47, 28, 663857, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')), datetime.datetime(2026, 5, 4, 11, 47, 28, 663857, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')))
+recent_admin_pipeline_run= (UUID('2620dcc3-2809-46bf-bc89-292e385d85ab'), 'import_xlsx', 'succeeded', 'company', 'admin-console', 1025, 0, datetime.datetime(2026, 5, 4, 11, 47, 27, 135746, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')), datetime.datetime(2026, 5, 4, 11, 47, 31, 27445, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')))
+exit_code=0
+
+## Result
+failures=1
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-admin-upload-2026-05-04T11-47-24Z.txt
+result=FAIL
