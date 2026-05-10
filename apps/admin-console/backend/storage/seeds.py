@@ -110,8 +110,13 @@ class Seed(BaseModel):
 # --- DB helpers --------------------------------------------------------------
 #
 # The `conn` parameter is a psycopg.Connection obtained via FastAPI's
-# Depends(get_pg_conn). Helpers commit explicitly because the connection is
-# pool-managed (no implicit autocommit at the pool boundary).
+# Depends(get_pg_conn). The pool sets `row_factory=dict_row`, so cur.fetchone()
+# / fetchall() return dicts directly. Helpers commit explicitly because the
+# connection is pool-managed (no implicit autocommit at the pool boundary).
+#
+# The smoke-test path used by the OpenSpec change sanity script runs through
+# psycopg.connect() (default tuple_row); a dict_row override is set on the
+# cursor so both call sites see the same shape.
 
 
 _SELECT_COLUMNS = (
@@ -120,8 +125,11 @@ _SELECT_COLUMNS = (
 )
 
 
-def _row_to_seed(row: dict[str, Any]) -> Seed:
-    return Seed.model_validate(row)
+def _seed_cursor(conn: Any) -> Any:
+    """Open a cursor that always yields dict rows, regardless of conn default."""
+    from psycopg.rows import dict_row
+
+    return conn.cursor(row_factory=dict_row)
 
 
 def list_seeds(conn: Any) -> list[Seed]:
@@ -130,33 +138,26 @@ def list_seeds(conn: Any) -> list[Seed]:
         f"SELECT {_SELECT_COLUMNS} FROM professor_seed "
         "ORDER BY school ASC, department ASC NULLS FIRST, id ASC"
     )
-    with conn.cursor() as cur:
+    with _seed_cursor(conn) as cur:
         cur.execute(sql)
-        cols = [desc[0] for desc in cur.description]
-        rows = [dict(zip(cols, row)) for row in cur.fetchall()]
-    return [_row_to_seed(r) for r in rows]
+        rows = cur.fetchall()
+    return [Seed.model_validate(r) for r in rows]
 
 
 def get_seed(conn: Any, seed_id: int) -> Seed | None:
     sql = f"SELECT {_SELECT_COLUMNS} FROM professor_seed WHERE id = %s"
-    with conn.cursor() as cur:
+    with _seed_cursor(conn) as cur:
         cur.execute(sql, (seed_id,))
         row = cur.fetchone()
-        if row is None:
-            return None
-        cols = [desc[0] for desc in cur.description]
-        return _row_to_seed(dict(zip(cols, row)))
+    return Seed.model_validate(row) if row else None
 
 
 def get_seed_by_url(conn: Any, seed_url: str) -> Seed | None:
     sql = f"SELECT {_SELECT_COLUMNS} FROM professor_seed WHERE seed_url = %s"
-    with conn.cursor() as cur:
+    with _seed_cursor(conn) as cur:
         cur.execute(sql, (seed_url,))
         row = cur.fetchone()
-        if row is None:
-            return None
-        cols = [desc[0] for desc in cur.description]
-        return _row_to_seed(dict(zip(cols, row)))
+    return Seed.model_validate(row) if row else None
 
 
 def create_seed(conn: Any, payload: SeedCreate) -> Seed:
@@ -165,19 +166,14 @@ def create_seed(conn: Any, payload: SeedCreate) -> Seed:
         "VALUES (%s, %s, %s) "
         f"RETURNING {_SELECT_COLUMNS}"
     )
-    with conn.cursor() as cur:
+    with _seed_cursor(conn) as cur:
         cur.execute(
             sql,
-            (
-                payload.school,
-                payload.department,
-                str(payload.seed_url),
-            ),
+            (payload.school, payload.department, str(payload.seed_url)),
         )
         row = cur.fetchone()
-        cols = [desc[0] for desc in cur.description]
     conn.commit()
-    return _row_to_seed(dict(zip(cols, row)))
+    return Seed.model_validate(row)
 
 
 def update_seed(conn: Any, seed_id: int, payload: SeedUpdate) -> Seed | None:
@@ -187,23 +183,17 @@ def update_seed(conn: Any, seed_id: int, payload: SeedUpdate) -> Seed | None:
         "WHERE id = %s "
         f"RETURNING {_SELECT_COLUMNS}"
     )
-    with conn.cursor() as cur:
+    with _seed_cursor(conn) as cur:
         cur.execute(
             sql,
-            (
-                payload.school,
-                payload.department,
-                str(payload.seed_url),
-                seed_id,
-            ),
+            (payload.school, payload.department, str(payload.seed_url), seed_id),
         )
         row = cur.fetchone()
-        if row is None:
-            conn.rollback()
-            return None
-        cols = [desc[0] for desc in cur.description]
+    if row is None:
+        conn.rollback()
+        return None
     conn.commit()
-    return _row_to_seed(dict(zip(cols, row)))
+    return Seed.model_validate(row)
 
 
 def delete_seed(conn: Any, seed_id: int) -> bool:

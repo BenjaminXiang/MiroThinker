@@ -23,6 +23,7 @@ from backend.api.export import router as export_router
 from backend.api.pipeline import router as pipeline_router
 from backend.api.pipeline_issues import router as pipeline_issues_router
 from backend.api.review import router as review_router
+from backend.api.seeds import router as seeds_router
 from backend.api.upload import router as upload_router
 from backend.api.domains import router as domains_router
 
@@ -51,6 +52,7 @@ app.include_router(pipeline_router)
 app.include_router(review_router)
 app.include_router(chat_router)
 app.include_router(pipeline_issues_router)
+app.include_router(seeds_router)
 app.include_router(domains_router)
 
 
