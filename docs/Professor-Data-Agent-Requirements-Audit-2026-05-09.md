@@ -9,6 +9,7 @@ calibrates:
   - docs/index.md (教授行)
 related:
   - docs/Data-Agent-Shared-Spec.md (§5.2、§4.3)
+  - docs/Professor-Requirement-Review-2026-05-10.md (用户决策快照；spec 起草以此为输入)
   - docs/plans/2026-04-17-001-professor-stem-reset-and-storage-redesign-plan.md
   - docs/plans/2026-04-17-002-professor-stem-parallel-rebuild-plan.md
   - docs/plans/2026-04-17-003-professor-stem-issue-closure-plan.md
