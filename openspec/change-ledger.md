@@ -8,6 +8,7 @@ Per CLAUDE.md §14 / AGENTS.md §15. Every OpenSpec change is registered here. S
 |---|---|---|---|---|---|---|---|---|---|
 | prof-seed-admin-console | feat (new admin UI + schema + endpoint + pipeline trigger) | professor-seed-management | Audit §2 + §9.4 + Review §3.1 Theme 2 | Phase A complete; Phase B pending | Standard | low-medium | — (no run yet) | n/a | no |
 | prof-paper-patent-from-page-flow | feat (codify) + refactor (deprecate S2 discovery) + new patent extraction | paper-patent-from-prof-page | Paper Review §3.1 P4/P9/P10/P11/P15/P16 + Professor Review Theme 7.1 | proposed | Standard | medium | — (no run yet) | n/a | no |
+| paper-summary-text-contract-fix | bugfix (admin API contract drift) | paper-canonical-api-projection | Paper Review §3.1 P3 + audit drift item | archived 2026-05-10 | Lite | low | — | n/a | yes |
 
 ## Notes
 
@@ -21,3 +22,4 @@ Per CLAUDE.md §14 / AGENTS.md §15. Every OpenSpec change is registered here. S
 |---|---|---|---|---|---|---|---|
 | refine-professor-data-agent-prd | `archive/2026-05-10-refine-professor-data-agent-prd/` | docs + architecture intent | professor data collection | premise-invalidated; T1–T5 marked but never shipped | Standard | low | 2026-05-10 |
 | resolve-professor-canonical-baseline | `archive/2026-05-10-resolve-professor-canonical-baseline/` | doc-governance (no behavior, no code) | professor data collection — canonical baseline | tasks-complete (T1–T4 all executed; debts 4/4 resolved) | Lite+ | low | 2026-05-10 |
+| paper-summary-text-contract-fix | `archive/2026-05-10-paper-summary-text-contract-fix/` | bugfix (admin API contract drift) | paper-canonical-api-projection | tasks-complete (1-line code + 2 test updates + spec delta); resolves debt paper-summary-text-contract-drift-001 | Lite | low | 2026-05-10 |
