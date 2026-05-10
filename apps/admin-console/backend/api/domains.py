@@ -750,7 +750,12 @@ def _row_to_released_object(
             "display_name": display_name,
             "core_facts": _json_value(core_facts),
             "summary_fields": {
-                "summary_text": row.get("abstract_clean"),
+                # summary_text contract = summary_zh content per
+                # Shared-Spec §4.2.1 / Paper PRD §4.3 / Paper Review
+                # 2026-05-10 §3.1 P3. Historic admin API aliased this
+                # to abstract_clean (English) — corrected by change
+                # paper-summary-text-contract-fix.
+                "summary_text": row.get("summary_zh"),
                 "summary_zh": row.get("summary_zh"),
             },
             "evidence": [],

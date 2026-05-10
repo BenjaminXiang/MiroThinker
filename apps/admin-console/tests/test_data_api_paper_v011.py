@@ -169,7 +169,10 @@ def test_domains_paper_detail_returns_summary_zh_column_value() -> None:
 
     payload = get_domain_object(DomainEnum.paper, "PAPER-V011", conn=conn)
 
-    assert payload["summary_fields"]["summary_text"] == "A test abstract."
+    # summary_text = summary_zh per Shared-Spec §4.2.1 / Paper Review §3.1 P3
+    # (corrected by change paper-summary-text-contract-fix; historically
+    # aliased to abstract_clean which was the bug).
+    assert payload["summary_fields"]["summary_text"] == "中文摘要来自数据库。"
     assert payload["summary_fields"]["summary_zh"] == "中文摘要来自数据库。"
     assert "p.summary_zh" in conn.calls[0]
 
@@ -179,5 +182,7 @@ def test_domains_paper_detail_returns_none_for_missing_summary_zh() -> None:
 
     payload = get_domain_object(DomainEnum.paper, "PAPER-V011", conn=conn)
 
-    assert payload["summary_fields"]["summary_text"] == "A test abstract."
+    # When summary_zh is null, summary_text is null too — no fallback to
+    # abstract_clean (per Paper Review §3.1 P3 contract correction).
+    assert payload["summary_fields"]["summary_text"] is None
     assert payload["summary_fields"]["summary_zh"] is None
