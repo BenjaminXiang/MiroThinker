@@ -6,8 +6,7 @@ Per CLAUDE.md §14 / AGENTS.md §15. Every OpenSpec change is registered here. S
 
 | Change ID | Type | Capability | Source | Status | Weight | Risk | Agent Run | PR | Archive |
 |---|---|---|---|---|---|---|---|---|---|
-
-(none)
+| prof-seed-admin-console | feat (new admin UI + schema + endpoint + pipeline trigger) | professor-seed-management | Audit §2 + §9.4 + Review §3.1 Theme 2 | proposed | Standard | low-medium | — (no run yet) | n/a | no |
 
 ## Notes
 
