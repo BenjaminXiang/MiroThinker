@@ -1,5 +1,25 @@
+"""Per-professor paper pipeline using Semantic Scholar discovery (LEGACY).
+
+Status as of 2026-05-10: ``run_paper_pipeline`` is **deprecated** under
+the Theme 7.1 architecture locked in
+`docs/Paper-Requirement-Review-2026-05-10.md §3.1 P7` + Professor
+Review Theme 7.1. Paper *discovery* is now restricted to professor-page
+extraction via ``paper.homepage_ingest``; external databases
+(Semantic Scholar / OpenAlex / Crossref / arXiv) are enrichment-only.
+
+Migration target: callers should invoke ``paper.homepage_ingest`` for
+discovery + ``paper.enrichment.enrich_paper_with_hybrid_sources`` for
+enrichment of each discovered paper.
+
+Until callers migrate, ``run_paper_pipeline`` continues to function for
+backward compatibility but emits a ``DeprecationWarning`` on first call.
+Removal is planned in OpenSpec change ``paper-pipeline-cleanup``
+(follow-up to ``prof-paper-patent-from-page-flow``).
+"""
+
 from __future__ import annotations
 
+import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import datetime
@@ -13,6 +33,16 @@ from .release import build_paper_release
 from .semantic_scholar import RequestJson, discover_professor_paper_candidates
 
 DiscoverPapers = Callable[..., ProfessorPaperDiscoveryResult]
+
+_DEPRECATION_WARNED = False
+_DEPRECATION_MESSAGE = (
+    "paper.pipeline.run_paper_pipeline is deprecated under Theme 7.1 "
+    "(OpenSpec change prof-paper-patent-from-page-flow). Discovery is "
+    "now restricted to paper.homepage_ingest; external databases are "
+    "enrichment-only. Migrate callers to homepage_ingest + "
+    "paper.enrichment.enrich_paper_with_hybrid_sources. Removal "
+    "scheduled in follow-up change paper-pipeline-cleanup."
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,6 +75,17 @@ def run_paper_pipeline(
     max_papers_per_professor: int = 20,
     now: datetime | None = None,
 ) -> PaperPipelineResult:
+    """DEPRECATED. See module docstring for migration target.
+
+    Emits ``DeprecationWarning`` once per process. Continues to function
+    for backward compatibility until callers migrate; tracked under
+    OpenSpec change ``prof-paper-patent-from-page-flow`` T2 + the
+    follow-up ``paper-pipeline-cleanup`` change.
+    """
+    global _DEPRECATION_WARNED
+    if not _DEPRECATION_WARNED:
+        warnings.warn(_DEPRECATION_MESSAGE, DeprecationWarning, stacklevel=2)
+        _DEPRECATION_WARNED = True
     discovery_results, failed_professor_count = _discover_all_professor_papers(
         professors=professors,
         discover_papers=discover_papers or discover_professor_paper_candidates,
