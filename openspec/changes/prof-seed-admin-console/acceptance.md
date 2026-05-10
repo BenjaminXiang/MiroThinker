@@ -11,7 +11,7 @@
 
 ## 2. Schema acceptance (after T1)
 
-- [ ] `apps/miroflow-agent/alembic/versions/V019_professor_seed.py`
+- [ ] `apps/miroflow-agent/alembic/versions/V022_professor_seed.py`
   exists; up-migration creates `professor_seed` table with exactly the
   columns named in the Schema Requirement
 - [ ] `\d professor_seed` in psql shows: `id` (PK), `school`,
@@ -20,7 +20,7 @@
 - [ ] CHECK constraint on `last_run_status` enforces 5 enum values
   (verified by `INSERT … last_run_status='garbage'` failing)
 - [ ] Down-migration drops the table cleanly
-- [ ] Test `tests/alembic/test_v019_professor_seed.py` passes
+- [ ] Test `tests/alembic/test_v022_professor_seed.py` passes
 
 ## 3. Endpoint acceptance (after T2)
 

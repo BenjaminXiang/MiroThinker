@@ -58,7 +58,7 @@
 ## Code paths touched by implementation (reference, not by this spec
 change itself)
 
-- `apps/miroflow-agent/alembic/versions/V019_professor_seed.py` — NEW
+- `apps/miroflow-agent/alembic/versions/V022_professor_seed.py` — NEW
 - `apps/miroflow-agent/src/data_agents/professor/pipeline.py` — MODIFIED
   (add `run_single_seed` entry point + adapter resolution stub)
 - `apps/miroflow-agent/src/data_agents/professor/discovery.py` — POSSIBLY

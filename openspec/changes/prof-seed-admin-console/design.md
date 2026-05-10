@@ -20,7 +20,7 @@ maps each decision back to its origin in the Audit doc and the
 | Add `granularity` enum (school / dept) | User clarified this is implicit from `department` being NULL; no need for explicit enum |
 | Add `notes`, `created_by`, `updated_by` audit fields | User: "MVP 先不用用户登录" — `created_by`/`updated_by` would be NULL anyway in MVP |
 
-**Implication for migration**: New table `professor_seed`. Alembic V019.
+**Implication for migration**: New table `professor_seed`. Alembic V022 (V019/V020/V021 already exist; survey 2026-05-10).
 
 ## 2. Decision: `last_run_status` is a 5-value enum (not 4 + error_message)
 

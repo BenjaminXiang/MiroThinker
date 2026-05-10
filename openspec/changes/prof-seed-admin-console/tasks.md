@@ -8,7 +8,7 @@ order: 1 → 2 → 3 → 4 → 5.
 
 ## 1. Database
 
-- [ ] T1.1: Write Alembic migration `V019_professor_seed.py` adding the
+- [ ] T1.1: Write Alembic migration `V022_professor_seed.py` adding the
   `professor_seed` table with columns matching `specs/professor-seed-
   management/spec.md` "Seed table schema" Requirement
 - [ ] T1.2: Add Postgres CHECK constraint on `last_run_status` enforcing

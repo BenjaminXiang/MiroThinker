@@ -67,7 +67,7 @@ implementation slices have a stable contract.
 
 This change writes the spec only. Subsequent slices implement:
 
-- New Alembic migration `V019_professor_seed.py` adding `professor_seed`
+- New Alembic migration `V022_professor_seed.py` adding `professor_seed`
   table.
 - New backend module `apps/admin-console/backend/api/seeds.py` with CRUD +
   trigger endpoints.
