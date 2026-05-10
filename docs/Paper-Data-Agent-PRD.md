@@ -105,34 +105,41 @@
 
 ### 4.2 `summary_zh`
 
+> 2026-05-10 更新：本节按 `docs/Paper-Requirement-Review-2026-05-10.md §3.1 P2`
+> 重写，从 JSON 4-key 形态改为中文段落形态。
+
 `summary_zh` 是论文域最重要的用户向字段之一。
 
-建议采用四段式结构：
+形态：
 
-```json
-{
-  "what": "这篇论文做了什么",
-  "why": "为什么重要",
-  "how": "核心方法是什么",
-  "result": "效果如何"
-}
-```
+- **中文段落 200-400 字**
+- 可选包含内部 4-段意涵 markers（如「【方法】… 【结果】…」），但不强制结构化为 JSON
+- 由 LLM 从 abstract（或 preprint case 仅 title）生成
 
 要求：
 
 - 面向中文用户可直接阅读
 - 尽量保留学术术语准确性
-- 避免空泛套话
+- 避免空泛套话；boilerplate-detection LLM judge 不通过 → `quality_status=rejected`
+
+历史说明：早期 PRD 曾建议 JSON `{what, why, how, result}` 四键对象；该形态从未在代码层落地（实现层始终输出段落）。Paper Review §3.1 P2 锁定为段落形态。
 
 ### 4.3 `summary_text`
 
-`summary_text` 由四段式摘要拼接而成，主要用于：
+`summary_text` 在内存 `PaperRecord` 与 release-time output 中等同于 `summary_zh` 内容（不是独立第二份摘要）。
 
-- 语义检索
+具体语义：
+
+- Postgres 不存独立 `summary_text` 列；只有 `summary_zh` 列
+- 内存 `PaperRecord.summary_text` = `summary_zh` 字符串值
+- Milvus `paper_chunks` collection embed `summary_text` 即等同 embed `summary_zh`
+- admin / chat API 返回 `summary_text` 字段 = `paper.summary_zh` 列值（per Paper Review §3.1 P3 + 已 ship 的 `paper-summary-text-contract-fix` change）
+
+主要用途：
+
+- 语义检索（Milvus embedding 输入）
 - 相似论文推荐
 - 作为线上回答的压缩上下文
-
-`summary_text` 由 `summary_zh` 的四段内容拼接而成，不是独立生成的第二份摘要。它的主要用途是语义检索和相似论文推荐。
 
 ### 4.4 存储要求
 
@@ -156,34 +163,70 @@
 
 ### 5.2 候选论文发现
 
-每位教授的候选论文发现可综合使用：
+> 2026-05-10 重写：本节按 `docs/Paper-Requirement-Review-2026-05-10.md §3.1 P7`
+> + Professor Review Theme 7.1 重写。原版本曾把 Google Scholar / Semantic
+> Scholar / DBLP / Arxiv / Web Search 列为候选发现源；当前架构下这些都已
+> 降级为 enrichment-only（见 §5.2.2）。
 
-- Google Scholar
-- Semantic Scholar
-- DBLP
-- Arxiv
-- Web Search
+#### 5.2.1 Discovery：仅来自教授页面
 
-但顺序上应以“教授锚点”优先：
+候选论文发现 **仅** 从教授 Tier 2 / Tier 3 页面 Publications 区段抽取：
 
-1. 先确定教授身份
-2. 再拉取候选论文
-3. 再做作者归属判断
+- Tier 2：教授学校官网主页（school official homepage）
+- Tier 3：教授个人维护主页 / 课题组主页（personal / lab homepage）
+- 抽取由 per-school adapter 解析；未注册 adapter 的学校 → 阻断采集（不爬）
+
+不允许：
+
+- ❌ 全网关键词扫库
+- ❌ 从 OpenAlex / Crossref / Semantic Scholar / DBLP / arXiv / Web Search **主动拉取教授作者维度的论文列表**
+
+#### 5.2.2 Enrichment：拿到 title 后的字段补齐
+
+候选论文从 prof 页面发现后，pipeline 异步从外部数据库补齐 metadata。**优先级**：
+
+| 字段 | 优先级 |
+|---|---|
+| `abstract` | OpenAlex → Crossref → Semantic Scholar → arXiv（first available wins） |
+| `citation_count` | OpenAlex（唯一权威） |
+| `venue / year` | OpenAlex `publication_date` / `host_venue.name` |
+| `authors` | OpenAlex 作者列表（带 ORCID 优先） |
+| `doi / arxiv_id` | 跨源 cross-check；不一致 → 写 pipeline_issue |
+
+Enrichment 是 fire-and-forget 异步：discovery + canonical upsert 完成即可视为 seed-run 成功，enrichment 后续在背景任务里跑。详细行为见 OpenSpec change `prof-paper-patent-from-page-flow` `paper-patent-from-prof-page` capability。
+
+#### 5.2.3 chat 实时 fallback（运行时，不入库）
+
+用户在 chat 中给出显式论文标题：
+
+1. 先查本地 paper 表
+2. 本地命中 → 返回
+3. 本地未命中 → chat 服务实时调 OpenAlex / Crossref，运行时返回 metadata，**不写入本地 paper 表**
+
+此 fallback 与 §5.2.1 的离线 discovery 边界严格隔离。
 
 ### 5.3 归属与消歧
 
-每篇论文是否属于某位教授，至少参考以下信号：
+> 2026-05-10 简化：原节列出 5 个信号（姓名/机构/scholar id/合作者网络/方向一致性）。
+> 新架构下教授页面声明的论文 **完全 trust**——见 Paper Review §3.1 P9 + meta-原则
+> "系统是科创检索系统，不对真实性兜底"。
 
-- 姓名匹配
-- 机构匹配
-- scholar / semantic scholar 标识
-- 合作者网络
-- 研究方向一致性
+每篇论文的归属判断逻辑：
 
-`professor_ids` 的写入原则：
+- **从教授页面发现的论文**：直接归属该教授（confidence=1.0；写 `professor_paper_link.match_reason="prof_page_declaration"`），无需多信号验证。
+- **enrichment 后发现同名作者冲突**（如 OpenAlex 返回多位 "Smith, J." 同名作者）：`paper_identity_gate` 介入，仅判定"同人 vs 同名"——不判定论文是否真实存在 / 内容是否真实。
 
-- 置信度足够才写入
-- 不确定时可先不关联，留待验证阶段复核
+`paper_identity_gate` 阈值：
+
+- confidence ≥ 0.8 → 自动接受
+- confidence ∈ [0.5, 0.8) → LLM judge fallback
+- confidence < 0.5 → 拒绝 + 写 pipeline_issue (`stage="identity_gate"`)
+
+`professor_ids` 写入原则：
+
+- 教授页面声明 → 置信度 1.0 写入
+- enrichment 同名冲突时由 gate 决定
+- 不确定时不关联，待 admin 复核
 
 ### 5.4 全文与摘要生成
 
@@ -306,16 +349,27 @@
 
 ## 九、配置项
 
-```yaml
-paper:
-  professor_roster_path: "data/professor_roster.jsonl"
-  scholar_enabled: true
-  semantic_scholar_enabled: true
-  dblp_enabled: true
-  arxiv_enabled: true
-  full_text_preferred: true
-  explicit_title_realtime_fallback: true
-```
+> 2026-05-10 标记为 **Phase 2 候选 · 当前不实现**。
+>
+> 原版本本节列出了 7-key YAML 配置面（`professor_roster_path` / `scholar_enabled` / `semantic_scholar_enabled` / `dblp_enabled` / `arxiv_enabled` / `full_text_preferred` / `explicit_title_realtime_fallback`），但这些 key 在代码中 0 hits（`apps/miroflow-agent/conf/` / `src/` 都没有），且 `*_enabled` 系列 toggle 在 §5.2 重写为 enrichment-only 后语义已变。
+>
+> Per `docs/Paper-Requirement-Review-2026-05-10.md §3.1 P8`：本节作为
+> Phase 2 候选保留；具体 toggle 逻辑随 Theme 7.1 enrichment-only 改变后
+> 需重新设计；当前不要求实现。
+>
+> 历史 YAML 块（仅作参考，**不要据此实现**）：
+>
+> ```yaml
+> # Phase 2 候选，当前不实现
+> # paper:
+> #   professor_roster_path: "data/professor_roster.jsonl"
+> #   scholar_enabled: true             # 旧含义；新架构下 Scholar 不参与 discovery
+> #   semantic_scholar_enabled: true    # enrichment-only 语义待重设计
+> #   dblp_enabled: true                # 同上
+> #   arxiv_enabled: true               # enrichment-only 语义待重设计
+> #   full_text_preferred: true         # enrichment 阶段 PDF 抓取偏好
+> #   explicit_title_realtime_fallback: true  # 对应 §5.2.3 chat fallback
+> ```
 
 ---
 
