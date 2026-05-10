@@ -13,6 +13,7 @@ related:
   - docs/data-agent-domain-index.md
   - openspec/debt-register.md
   - paper-companion-design-relationship-001 (existing debt)
+  - docs/Paper-Requirement-Review-2026-05-10.md (用户决策快照；spec 起草以此为输入；2026-05-10 锁定 16 条 Paper 域决策)
 ---
 
 # Paper Requirement-Code Reconciliation
