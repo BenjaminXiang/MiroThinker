@@ -18,7 +18,7 @@ from src.data_agents.professor.institution_names import (
 )
 
 from .author_id_picker import AuthorCandidate
-from .models import DiscoveredPaper, ProfessorPaperDiscoveryResult
+from .models import DiscoveredPaper, PaperMetadataEnrichment, ProfessorPaperDiscoveryResult
 
 _AUTHOR_SEARCH_ENDPOINT = "https://api.openalex.org/authors"
 _WORKS_ENDPOINT = "https://api.openalex.org/works"
@@ -578,6 +578,104 @@ def _normalize_optional_str(value: object) -> str | None:
         return None
     item = value.strip()
     return item or None
+
+
+def enrich_paper_with_openalex(
+    doi: str,
+    *,
+    request_json: RequestJson | None = None,
+) -> PaperMetadataEnrichment | None:
+    """Look up a paper in OpenAlex by DOI and return enrichment fields.
+
+    Theme 7.1-compliant enrichment-only entry point per
+    `docs/Paper-Requirement-Review-2026-05-10.md §3.1 P10`. Does NOT
+    discover papers from professor-author lookups; that role is owned
+    by `paper.homepage_ingest`. Mirrors the shape of
+    `crossref.enrich_paper_metadata_from_crossref` and
+    `semantic_scholar.enrich_paper_metadata_from_semantic_scholar`.
+
+    Per spec field-priority for hybrid enrichment, OpenAlex is consulted
+    first; downstream `paper.enrichment.enrich_paper_with_hybrid_sources`
+    fans out to Crossref / Semantic Scholar / arXiv only when a field is
+    not available from OpenAlex.
+    """
+    normalized_doi = _normalize_optional_str(doi)
+    if not normalized_doi:
+        return None
+    if normalized_doi.lower().startswith("https://doi.org/"):
+        normalized_doi = normalized_doi[16:]
+    fetch_json = request_json or _request_json
+    url = f"{_WORKS_ENDPOINT}/doi:{normalized_doi}"
+    try:
+        payload = fetch_json(url, {})
+    except (requests.RequestException, ValueError, RuntimeError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+
+    primary_location = payload.get("primary_location")
+    if not isinstance(primary_location, dict):
+        primary_location = {}
+    source_meta = primary_location.get("source")
+    if not isinstance(source_meta, dict):
+        source_meta = {}
+
+    enrichment = PaperMetadataEnrichment(
+        abstract=_decode_abstract(payload.get("abstract_inverted_index")),
+        venue=_normalize_optional_str(source_meta.get("display_name")),
+        publication_date=_normalize_optional_str(payload.get("publication_date")),
+        citation_count=_coerce_non_negative_int(payload.get("cited_by_count")),
+        fields_of_study=_extract_concepts_as_fields(payload.get("concepts")),
+        oa_status=_extract_oa_status(payload),
+        source_url=(
+            _normalize_optional_str(primary_location.get("landing_page_url"))
+            or f"https://doi.org/{normalized_doi}"
+        ),
+        enrichment_sources=("openalex",),
+    )
+    if not _enrichment_has_content(enrichment):
+        return None
+    return enrichment
+
+
+def _extract_concepts_as_fields(value: object) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        return ()
+    fields: list[str] = []
+    for concept in value:
+        if not isinstance(concept, dict):
+            continue
+        name = _normalize_optional_str(concept.get("display_name"))
+        if name and name not in fields:
+            fields.append(name)
+    return tuple(fields)
+
+
+def _extract_oa_status(payload: dict[str, object]) -> str | None:
+    open_access = payload.get("open_access")
+    if not isinstance(open_access, dict):
+        return None
+    status = open_access.get("oa_status")
+    if not isinstance(status, str):
+        return None
+    item = status.strip()
+    return item or None
+
+
+def _enrichment_has_content(enrichment: PaperMetadataEnrichment) -> bool:
+    return any(
+        getattr(enrichment, field) is not None
+        and getattr(enrichment, field) != ()
+        for field in (
+            "abstract",
+            "venue",
+            "publication_date",
+            "citation_count",
+            "fields_of_study",
+            "oa_status",
+            "source_url",
+        )
+    )
 
 
 def _cache_key(url: str, params: RequestParams) -> str:

@@ -1,3 +1,35 @@
+"""Hybrid paper-discovery aggregator (LEGACY; pending removal).
+
+Status as of 2026-05-10: this module's `discover_*_from_*` functions
+violate the Theme 7.1 architecture locked in
+`docs/Paper-Requirement-Review-2026-05-10.md §3.1 P7` and Professor
+Review Theme 7.1, which restricts paper *discovery* to professor-page
+extraction (`paper.homepage_ingest`) and relegates external databases
+(OpenAlex / Crossref / Semantic Scholar / arXiv) to enrichment-only
+roles.
+
+The Theme 7.1-compliant replacement is `paper.enrichment` (see module
+docstring there for the field-level fallback priority). New code MUST
+use `paper.enrichment.enrich_paper_with_hybrid_sources` for enrichment
+of papers already discovered via `paper.homepage_ingest`.
+
+Existing callers of this module's `discover_professor_paper_candidates_from_hybrid_sources`:
+
+- `professor.paper_collector` — 4 call sites; per Theme 7.1 the entire
+  per-professor S2/OpenAlex discovery loop is obsolete and should be
+  replaced by `paper.homepage_ingest` invocation. Migration deferred to
+  `prof-paper-patent-from-page-flow` T8 cleanup.
+- `scripts/run_paper_release_e2e.py` — 2 call sites; same disposition.
+- `tests/data_agents/professor/test_paper_collector.py` — 5 patches;
+  same disposition.
+
+Until the migration ships, this module continues to function for
+backward compatibility, but **no new code should call its `discover_*`
+functions**. See the OpenSpec change
+`prof-paper-patent-from-page-flow` for the full Theme 7.1 spec
+(particularly the Requirement "Refactor hybrid.py to enrichment-only").
+"""
+
 from __future__ import annotations
 
 from threading import Lock
