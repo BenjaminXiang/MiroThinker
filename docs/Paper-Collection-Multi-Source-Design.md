@@ -199,48 +199,69 @@ Phase A 明确不承诺“按论文字段级别融合所有来源”。首期只
 
 ## 6. Contract 与质量门集成
 
-### 6.1 Phase A 不扩共享 Paper contract
+### 6.1 Phase A 已完成；contract 已扩展为 Phase B 形态
 
-当前 `PaperRecord` / `DiscoveredPaper` 可稳定承载的字段只有：
+> 2026-05-10 更新：本节按 `docs/Paper-Requirement-Review-2026-05-10.md §3.1 P6`
+> 重写。原版本规定"Phase A 不扩共享 Paper contract"——但 Phase A 实际交付时
+> 已扩展，修订方案规定承认这个状态，不回滚。
 
-- `title`
-- `authors`
-- `year`
-- `venue`
-- `doi`
-- `abstract`
-- `publication_date`
-- `citation_count`
-- `summary_zh`
+**当前 contract 状态**（V019 + 后续提交后）：
 
-因此，Phase A 只在当前 contract 范围内交付，不引入额外 paper 字段。
+`apps/miroflow-agent/src/data_agents/contracts.py:286-292` 已包含 7 个 Phase B 字段：
 
-### 6.2 Phase B 需要 contract 扩展
-
-进入 Phase B 前，必须先完成 contract 设计，否则以下字段无法安全落地：
-
-- `funder`
+- `tldr`
+- `funders`
 - `license`
-- `reference`
+- `oa_status`
+- `fields_of_study`
+- `reference_count`
+- `enrichment_sources`
+
+加上 V019 添加的 `quality_status` 6 值：
+
+- `ready` / `needs_review` / `low_confidence` / `needs_enrichment` / `partial` / `rejected`
+
+合计 contract 已经处于 Phase B 形态。Phase A 实施期间事实上已扩展，但 MSD 当时未同步。Per Paper Review §3.1 P6，**承认现状，不回滚**。
+
+历史说明：早期 Phase A 计划严格保持 contract 不变以减少跨 phase 协调成本；实际 MSD 与代码并行迭代时，Phase B 字段提前接入。两难权衡时优先保留 code 现状（因为已生成数据）。
+
+### 6.2 Phase B 已落地的字段
+
+> 2026-05-10：原版本列为"必须先完成 contract 设计才能进 Phase B"——已实际交付。
+
+下面字段已存在于 contract（详见 §6.1）：
+
+- `funders`（原 `funder`，复数化以容纳多基金）
+- `license`
+- `oa_status`
 - `fields_of_study`
 - `tldr`
-- `oa_status`
+- `reference_count`（原 `reference` 计数化）
 - `enrichment_sources`
+
+剩余未实现的 Phase B 字段（仍是 backlog）：
+
+- 详细 `references` 列表（与 `reference_count` 区分）
+- `funder` 完整结构化对象（grant_id / award_id 等）
 
 ### 6.3 与教授质量门的映射
 
-当前教授质量门只有：
+> 2026-05-10：教授质量门已收敛为 Professor-Data-Agent-Requirements-Audit-2026-05-09 §7.3 + Paper Review §3.1 P15 双锁定。
 
-- `ready`
-- `incomplete`
-- `shallow_summary`
-- `needs_enrichment`
+**当前 paper.quality_status 6 值**（V019 锁定）：
 
-因此修订方案规定：
+- `ready` — minimum fields + summary_zh 通过 boilerplate 检测
+- `needs_review` — admin 标注 / 异常待复核
+- `low_confidence` — identity_gate < 0.8 candidate
+- `needs_enrichment` — preprint case 或 enrichment 未完成
+- `partial` — enrichment 部分成功
+- `rejected` — LLM judge 判定 boilerplate / 不应入库（terminal state）
 
-- Phase A 不增加新的共享 `quality_status`
-- identity 未确认、paper 未确认、source 结果冲突时，都不要填充可发布的 paper signal
-- 让这些记录自然停留在 `needs_enrichment`
+**与教授侧映射**：
+
+- 教授 `ready` 不要求其论文集合都达到 `ready`，但 `needs_enrichment` paper 不参与教授 `profile_summary` / `paper_summary` LLM 反哺（per Professor Review Theme 7.1 + Paper Review §3.1 P16）
+- identity 未确认、paper 未确认、source 结果冲突时，都不写可发布的 paper signal
+- 这些记录自然停留在 `needs_enrichment` 直到 enrichment / 人工补齐
 
 ## 7. institution registry 作为阻塞交付物
 
@@ -369,8 +390,14 @@ Phase B 完成必须额外满足：
 这份修订稿的核心决策只有四条：
 
 1. **首期先做可交付，不追求一次完成完整多源融合**
-2. **institution registry 是 Phase A 阻塞项，不再允许停留在“待查询”**
-3. **Phase A 不扩共享 contract，不新增共享 `quality_status`**
+2. **institution registry 是 Phase A 阻塞项，不再允许停留在"待查询"**
+3. ~~**Phase A 不扩共享 contract，不新增共享 `quality_status`**~~ — **2026-05-10 撤销**：实际 Phase A 已扩 contract（7 字段）+ quality_status（V019 加 partial/rejected 共 6 值）。Per Paper Review §3.1 P6，承认现状不回滚。详见 §6.1 重写版本。
 4. **Phase B 只在 Phase A 的真实 E2E 与人工精度审计稳定后再启动**
 
-如果后续代码实现与本设计冲突，以这四条为优先裁决原则。
+如果后续代码实现与本设计冲突，以这四条为优先裁决原则（其中第 3 条已按上面注记调整）。
+
+---
+
+## 修订记录
+
+- **2026-05-10**：§6.1 / §6.2 / §6.3 / §12.3 重写。Per Paper Review §3.1 P6 + P15 + Professor Review Theme 7.1 承认 Phase A → Phase B contract 转型已发生。Debt `paper-prd-msd-phase-a-rule-stale-001` 关闭。
