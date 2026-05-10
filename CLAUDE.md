@@ -222,3 +222,101 @@ Do not modify these unless the user explicitly asks or the task is specifically 
 ## 13. Maintaining this file
 
 Keep `CLAUDE.md` specific and compact. Remove stale generic rules. Link to deeper docs instead of duplicating them. Update `AGENTS.md` when Codex-facing behavior changes. Promote repeated mistakes into checks/docs/skills rather than expanding root instructions indefinitely.
+
+## 14. Spec and change discipline (OpenSpec)
+
+OpenSpec is the canonical source of truth for **system behavior** and **proposed behavior changes**. Existing `docs/` PRDs / Shared-Spec / Multi-turn design and existing `.agents/specs/` files are **legacy source material**. For capabilities not yet covered by OpenSpec, they may serve as the **temporary behavior baseline** until a touching change promotes that capability into OpenSpec. **No up-front migration is performed.**
+
+### 14.1 Authority and precedence (extends §3)
+
+```text
+openspec/specs/<capability>/spec.md         current agreed-upon behavior, once migrated
+openspec/changes/<change-id>/specs/         proposed behavior delta for one change
+docs/Data-Agent-Shared-Spec.md,             legacy source material; temporary behavior baseline
+docs/*-Data-Agent-PRD.md,                   for capabilities not yet covered by OpenSpec;
+docs/Agentic-RAG-PRD.md,                    product intent / history once migrated
+docs/Agentic-RAG-Operating-Guide.md,
+docs/Multi-turn-Context-Manager-Design.md
+docs/architecture-decisions/                rationale; never merged into openspec/specs/.
+                                            ADR files remain in docs/architecture-decisions/.
+                                            If an ADR contains durable externally observable
+                                            behavior, extract that behavior into OpenSpec; do not
+                                            move the ADR itself into openspec/specs/.
+.agents/specs/<date>-<slug>.md              frozen legacy; no new files (§14.5)
+.agents/runs/<change-id>/                   per-change execution workspace
+```
+
+Resolved precedence, refining §3:
+
+```text
+explicit user instruction
+> safety/security
+> nearest AGENTS instructions
+> openspec/changes/<change-id>/specs/         (active proposed behavior)
+> openspec/specs/                              (current agreed-upon behavior, where migrated)
+> docs/Data-Agent-Shared-Spec.md,
+  docs/*-PRD.md, docs/Agentic-RAG-*.md,
+  docs/Multi-turn-Context-Manager-Design.md    (legacy behavior baseline for unmigrated capabilities)
+> current code/tests
+> docs/architecture-decisions/                 (rationale, not behavior)
+> active .agents/handoffs/<slug> and
+  .agents/runs/<change-id>/                    (execution artifacts)
+> old notes, .agents/specs/, docs/solutions/
+```
+
+`.agents/handoffs/` and `.agents/runs/` are **execution artifacts**. They may narrow the implementation slice, but they cannot override OpenSpec or the legacy behavior baseline.
+
+If a `docs/*-PRD.md` claim conflicts with `openspec/specs/` for the same capability, OpenSpec wins. If no OpenSpec spec covers the capability yet, the legacy doc serves as the temporary behavior baseline — and the next change touching that capability must promote it (touch-to-promote, §14.3).
+
+### 14.2 When OpenSpec is required (extends §8)
+
+OpenSpec change required iff the work is **behavior-affecting**: user-visible behavior, public API or data contract, business rules, query classification A–G semantics, RAG retrieval / fusion / rerank / answer / citation behavior, agent tool-use policy, permissions, data lifecycle, error semantics, or acceptance criteria for an existing behavior.
+
+Pure refactor, test-only edits, formatting, internal performance work with unchanged semantics, dependency bumps with unchanged semantics — **not required**. They follow the existing §8 / §9 flow and may produce ADRs or `docs/solutions/` entries.
+
+Change weight follows the §8 classification:
+
+```text
+Tiny + behavior change         OpenSpec Lite      proposal.md, specs/, tasks.md, acceptance.md (design.md optional)
+Standard + behavior change     OpenSpec Standard  full proposal/specs/design/tasks/acceptance + source-links + agent-links
+Pattern-fix changing behavior  OpenSpec Standard or Epic, depending on horizontal scope
+Epic / Risky                   OpenSpec Epic      parent change + child changes
+Tiny without behavior change   no OpenSpec        proceed under existing §8 Tiny flow
+```
+
+If unsure whether a change is behavior-affecting, default to Lite. **Tiny is not an OpenSpec exemption — only a downgrade to Lite.**
+
+### 14.3 Touch-to-promote migration
+
+`docs/Data-Agent-Shared-Spec.md`, `docs/*-Data-Agent-PRD.md`, `docs/Agentic-RAG-PRD.md`, `docs/Multi-turn-Context-Manager-Design.md`, and `.agents/specs/<slug>.md` are **not migrated wholesale**.
+
+When a change touches a capability whose behavior currently lives only in legacy docs:
+
+1. Create or update `openspec/specs/<capability>/spec.md` to baseline the agreed-upon current behavior, or include the baseline in the change's `specs/` delta.
+2. Write `openspec/changes/<change-id>/source-links.md` listing which legacy docs were consulted and what was extracted.
+3. After the change is archived, the capability's behavior authority is OpenSpec; the legacy doc remains as product intent / history.
+
+Capability-by-capability promotion, not document-by-document migration.
+
+### 14.4 Change-id is the join key
+
+Every behavior change has one `<change-id>` shared across:
+
+```text
+openspec/changes/<change-id>/      proposal, specs, design, tasks, acceptance, change-log, source-links, agent-links
+.agents/runs/<change-id>/          implementation-plan, slices/, verification, review
+.agents/handoffs/<slug>            short-form Codex handoff; reference the change-id in header
+.agents/reviews/<slug>             review notes; reference the change-id in header
+```
+
+OpenSpec wins over `.agents/runs/`. If implementation reveals the spec is wrong, update OpenSpec first, then update the execution plan.
+
+The Claude-owned design-contract role previously held by `.agents/specs/<slug>.md` (see §9) splits into: behavior contract → `openspec/changes/<id>/specs/`; technical design → `openspec/changes/<id>/design.md`; execution detail → `.agents/runs/<id>/`.
+
+### 14.5 `.agents/specs/` is frozen
+
+`.agents/specs/` is frozen as legacy. **Do not create new files there.** Existing files remain readable as historical context. The Phase 0 scope does not move or rewrite them — that is deferred to Phase 1+.
+
+### 14.6 Phase status
+
+This is **Phase 0**: only the OpenSpec scaffolding, this section, the AGENTS.md companion (§15), `.agents/runs/`, and the empty `change-ledger.md` / `debt-register.md` are introduced. Phase 1+ work — capability migration of Agentic-RAG-PRD, `docs/` reorganization to `docs/product` / `docs/adr` / `docs/legacy`, `.agents/specs/` cleanup, populating ledgers — requires its own OpenSpec change and is **not** implicitly authorized by §14.

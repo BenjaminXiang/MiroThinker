@@ -528,3 +528,89 @@ always-needed repo rule        -> AGENTS.md
 ```
 
 Prefer deleting stale rules over adding compensating paragraphs. Keep detailed repeatable workflows in skills.
+
+---
+
+## 15. OpenSpec gate (extends §2 / §4 / §11)
+
+CLAUDE.md §14 is the canonical statement of the discipline. This section operationalizes it for Codex.
+
+### 15.1 Before editing code
+
+Identify the active `<change-id>` from the handoff or task contract.
+
+Read order for behavior-affecting work, extending §2:
+
+```text
+1. .agents/handoffs/<slug>                              current implementation slice
+2. openspec/changes/<change-id>/                        proposal, specs delta, design, tasks, acceptance
+3. openspec/specs/<capability>/spec.md                  if the capability has been migrated
+4. docs/Data-Agent-Shared-Spec.md, docs/*-PRD.md,       legacy behavior baseline until migrated
+   docs/Agentic-RAG-*.md, docs/Multi-turn-*.md
+5. .agents/runs/<change-id>/implementation-plan.md      Claude-owned execution plan if present
+6. local code and tests near touched files
+7. .agents/specs/<date>-<slug>.md                       historical context only; no new files
+```
+
+**Read order is for task loading only.** Conflict precedence is separate, per CLAUDE.md §14.1:
+
+```text
+OpenSpec change/specs
+> OpenSpec specs
+> legacy behavior baseline for unmigrated capabilities
+> current code/tests
+> .agents/handoffs and .agents/runs execution artifacts
+```
+
+Execution artifacts may narrow the implementation slice but cannot override OpenSpec or the legacy behavior baseline.
+
+### 15.2 Behavior-affecting classification
+
+Per CLAUDE.md §14.2:
+
+```text
+Tiny + behavior change         require an OpenSpec Lite change before code edits
+Standard + behavior change     require a Standard OpenSpec change with design.md and tasks.md
+Pattern-fix changing behavior  require a Standard or Epic OpenSpec change
+Tiny without behavior change   proceed under §4 Tiny work; no OpenSpec required
+```
+
+If a behavior-affecting requirement is missing from the active OpenSpec change, **stop and update the change** (`proposal.md`, `specs/`, `tasks.md`, `change-log.md`). Do not silently broaden scope (per §0 / §12).
+
+If the requested change is behavior-affecting and **no OpenSpec change exists**, **stop and report** under §12. Codex does not create OpenSpec changes — that is Claude's role. Codex may, during implementation, draft `change-log.md` entries and `acceptance.md` evidence rows for the existing change.
+
+### 15.3 Per-change artifacts (extends §11 reporting)
+
+```text
+openspec/changes/<id>/tasks.md           tick slice items as completed
+openspec/changes/<id>/acceptance.md      record verification evidence per requirement / scenario
+openspec/changes/<id>/change-log.md      append entries when scope, requirements, or design shift mid-implementation
+.agents/runs/<id>/verification.md        executed commands, outputs, and skipped-check rationale
+```
+
+`.agents/handoffs/<slug>.md` and `.agents/reviews/<slug>.md` remain in use; cross-reference the change-id in the header.
+
+### 15.4 Reporting addition (extends §11)
+
+For behavior-affecting work, append to the §11 report:
+
+```md
+## OpenSpec
+- Change: openspec/changes/<change-id>/
+- Spec deltas touched: <files>
+- tasks.md status: <n/m completed>
+- acceptance.md evidence: <n/m verified>
+- change-log.md entries this slice: <count>
+- Run workspace: .agents/runs/<change-id>/
+```
+
+If not behavior-affecting, state it explicitly:
+
+```md
+## OpenSpec
+- Not applicable: <pure refactor / test-only / formatting / dependency bump with unchanged semantics>
+```
+
+### 15.5 `.agents/specs/` is frozen
+
+Do not create new files under `.agents/specs/`. Existing files are read-only historical context. New design contracts go to `openspec/changes/<id>/design.md`; execution detail goes to `.agents/runs/<id>/`. The Claude-owned design-contract artifact described in §2 / §13 has been split per CLAUDE.md §14.4.
