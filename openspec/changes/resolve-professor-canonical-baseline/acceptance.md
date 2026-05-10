@@ -57,9 +57,10 @@ This file is filled in two passes: (1) when the change is proposed, the criteria
 > Filled by the executing agent during T1 / T2 / T3. Not filled at proposal time.
 
 ### T1.2 — Audit doc frontmatter extension
-- Decision: (taken | skipped)
-- Rationale if skipped:
-- Diff hash / commit ref:
+- Decision: taken
+- Rationale: provenance is most discoverable at the doc itself; future readers should not need to chase the change ID through `change-ledger.md` to know the doc's authority status.
+- Frontmatter block added (8 keys: `change_id`, `canonical_for`, `canonical_status`, `declared_by`, `declared_on`, `superseded_target`, `next_step`, `tracked_in_git_on`).
+- Diff hash / commit ref: see T1 commit (filled at commit time).
 
 ### T3.1 — PRD ↔ refine-change actually-shipped reconciliation
 For each task T1–T5 of `refine-professor-data-agent-prd/tasks.md`, cite the PRD section confirming the change is present (or absent):
