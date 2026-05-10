@@ -293,10 +293,10 @@ All document-debt entries are recorded in `openspec/debt-register.md`.
 
 The following actions are out of Phase 1A scope and will require their own OpenSpec changes:
 
-- `audit-doc-untracked-001`: track `docs/Professor-Data-Agent-Requirements-Audit-2026-05-09.md` into git (commit / move / merge decision)
-- `professor-canonical-pivot-001`: PRD legacy handling decision
-- `professor-prd-change-001`: re-target / abandon / archive the stale OpenSpec change
-- `professor-prd-change-002`: rewrite spec into proper Requirement / Scenario form (only if change reopened)
+- ~~`audit-doc-untracked-001`: track `docs/Professor-Data-Agent-Requirements-Audit-2026-05-09.md` into git~~ — **resolved 2026-05-10** by `resolve-professor-canonical-baseline` T1
+- ~~`professor-canonical-pivot-001`: PRD legacy handling decision~~ — **resolved 2026-05-10** by `resolve-professor-canonical-baseline` T2
+- ~~`professor-prd-change-001`: re-target / abandon / archive the stale OpenSpec change~~ — **resolved 2026-05-10** by `resolve-professor-canonical-baseline` T3 (archived as `2026-05-10-refine-professor-data-agent-prd`)
+- ~~`professor-prd-change-002`: rewrite spec into proper Requirement / Scenario form~~ — **resolved 2026-05-10** transitively (resolved-by-archive)
 - `multi-turn-design-partial-001`: align design doc with current SessionContext code
 - `agentic-rag-prd-vs-guide-001`: formalize PRD ↔ Operating-Guide relationship
 - `paper-companion-design-relationship-001`: formalize Paper PRD ↔ Multi-Source-Design relationship
@@ -304,3 +304,5 @@ The following actions are out of Phase 1A scope and will require their own OpenS
 - `copilot-openspec-artifacts-001`: decide on `.github/` Copilot OpenSpec artifacts
 
 Phase 1B / 1C may either bundle related items into a single OpenSpec change (e.g., all Professor pivot items into one) or split into focused changes. Decision deferred.
+
+The four Professor items above were bundled into a single OpenSpec change `resolve-professor-canonical-baseline` (proposed + executed 2026-05-10; now archived at `openspec/changes/archive/2026-05-10-resolve-professor-canonical-baseline/`). The remaining five items are still open. Eleven additional doc-debt entries surfaced from the Company / Paper / Patent reconciliation audits (commit `b6057dd`) are tracked separately in `openspec/debt-register.md` and are not part of this Phase 1A inventory.
