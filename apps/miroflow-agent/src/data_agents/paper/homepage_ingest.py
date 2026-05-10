@@ -24,13 +24,62 @@ from ..storage.postgres.title_resolution_cache import PostgresTitleResolutionCac
 from .canonical_writer import upsert_paper
 from .full_text_fetcher import fetch_and_extract_full_text
 from .homepage_http import fetch_homepage_html
-from .title_resolver import resolve_paper_by_title
+from .title_resolver import ResolvedPaper, resolve_paper_by_title
 
 logger = logging.getLogger(__name__)
 
 _DRY_RUN_SENTINEL_RUN_ID = UUID("00000000-0000-0000-0000-000000000000")
 _AUTHOR_NAME_MATCH_SCORE = Decimal("1.0")
 _LINK_MATCH_REASON = "homepage_title_resolution"
+_LINK_MATCH_REASON_PAGE_ONLY = "prof_page_declaration"
+_PROF_PAGE_ONLY_SOURCE = "prof_page_only"
+
+
+def _synthesize_page_only_resolution(
+    publication,
+    *,
+    canonical_name: str,
+) -> ResolvedPaper:
+    """Build a synthetic ResolvedPaper from prof-page data only.
+
+    Used when external title resolution (Crossref / OpenAlex / S2) fails
+    to find the publication — typically the preprint case (paper recently
+    accepted but not yet indexed in external DBs). Per Paper Review
+    §3.1 P4 and OpenSpec change `prof-paper-patent-from-page-flow` spec
+    Requirement "Preprint listed on professor page", the system MUST
+    still create a paper canonical record with page-only data and let
+    enrichment fill in DOI / abstract / etc. on the next cron run.
+    """
+    authors_text = (publication.authors_text or "").strip()
+    if authors_text:
+        authors = tuple(_split_page_authors(authors_text)) or (
+            f"{canonical_name} et al.",
+        )
+    else:
+        authors = (f"{canonical_name} et al.",)
+    return ResolvedPaper(
+        title=publication.clean_title,
+        doi=None,
+        openalex_id=None,
+        arxiv_id=None,
+        abstract=None,
+        pdf_url=None,
+        authors=authors,
+        year=publication.year,
+        venue=publication.venue_text,
+        match_confidence=1.0,
+        match_source=_PROF_PAGE_ONLY_SOURCE,
+    )
+
+
+def _split_page_authors(authors_text: str) -> list[str]:
+    """Best-effort author split from prof-page free-text. Conservative;
+    keeps original text if no clear delimiter detected."""
+    candidates = [
+        item.strip()
+        for item in authors_text.replace(";", ",").replace("、", ",").split(",")
+    ]
+    return [c for c in candidates if c]
 
 
 @dataclass(frozen=True, slots=True)
@@ -213,6 +262,7 @@ def run_homepage_paper_ingest(
 
                     cache = None if dry_run else PostgresTitleResolutionCache(conn)
                     unresolved_count = 0
+                    page_only_count = 0
                     for publication in publications:
                         resolved = resolve_paper_by_title(
                             publication.clean_title,
@@ -221,9 +271,17 @@ def run_homepage_paper_ingest(
                             web_search=None,
                             cache=cache,
                         )
-                        if resolved is None:
+                        is_page_only = resolved is None
+                        if is_page_only:
+                            # Preprint case (Paper Review §3.1 P4): no
+                            # external DB hit — create record from
+                            # page-only data; enrichment fills later.
                             unresolved_count += 1
-                            continue
+                            page_only_count += 1
+                            resolved = _synthesize_page_only_resolution(
+                                publication,
+                                canonical_name=prof["canonical_name"],
+                            )
 
                         derived_paper_id = _derive_paper_id(
                             publication.clean_title,
@@ -265,7 +323,11 @@ def run_homepage_paper_ingest(
                                 evidence_source_type="personal_homepage",
                                 evidence_page_id=None,
                                 evidence_api_source=None,
-                                match_reason=_LINK_MATCH_REASON,
+                                match_reason=(
+                                    _LINK_MATCH_REASON_PAGE_ONLY
+                                    if is_page_only
+                                    else _LINK_MATCH_REASON
+                                ),
                                 author_name_match_score=_AUTHOR_NAME_MATCH_SCORE,
                                 topic_consistency_score=None,
                                 institution_consistency_score=None,
