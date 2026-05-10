@@ -6,7 +6,8 @@ Per CLAUDE.md §14 / AGENTS.md §15. Every OpenSpec change is registered here. S
 
 | Change ID | Type | Capability | Source | Status | Weight | Risk | Agent Run | PR | Archive |
 |---|---|---|---|---|---|---|---|---|---|
-| prof-seed-admin-console | feat (new admin UI + schema + endpoint + pipeline trigger) | professor-seed-management | Audit §2 + §9.4 + Review §3.1 Theme 2 | proposed | Standard | low-medium | — (no run yet) | n/a | no |
+| prof-seed-admin-console | feat (new admin UI + schema + endpoint + pipeline trigger) | professor-seed-management | Audit §2 + §9.4 + Review §3.1 Theme 2 | Phase A complete; Phase B pending | Standard | low-medium | — (no run yet) | n/a | no |
+| prof-paper-patent-from-page-flow | feat (codify) + refactor (deprecate S2 discovery) + new patent extraction | paper-patent-from-prof-page | Paper Review §3.1 P4/P9/P10/P11/P15/P16 + Professor Review Theme 7.1 | proposed | Standard | medium | — (no run yet) | n/a | no |
 
 ## Notes
 
