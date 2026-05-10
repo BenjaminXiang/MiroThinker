@@ -115,28 +115,57 @@
 
 > Filled during implementation by the executing agent.
 
-### T1 — Database
-- Migration commit ref:
-- Test output:
+### T1 — Database (Phase A complete)
+- Migration commit ref: `7b13eb0`
+- Schema verification: `\d professor_seed` shows 8 columns (id / school /
+  department / seed_url / last_run_at / last_run_status / created_at /
+  updated_at); CHECK constraint enforces 5-value enum; 4 indices
+  (pkey, status filter, unique seed_url, school filter)
+- Smoke test: storage-helper roundtrip (create / list / get / update /
+  delete + URL uniqueness + CHECK reject) all passed via direct
+  psycopg connection
 
-### T2 — Endpoints
-- Endpoint code commit ref:
-- Test output (count of passing scenarios):
+### T2 — Endpoints (Phase A complete; trigger T2.5/T2.6 deferred)
+- Endpoint code commit ref: `7018676`
+- Test output: 15 passed, 1 warning (psycopg_pool DeprecationWarning,
+  pre-existing) in 4.78s — `apps/admin-console/tests/test_seeds_api.py`
+- Scenarios covered: department-level / school-wide / invalid URL
+  reject / blank school reject / list sorted / get 404 / update with
+  status fields ignored / update 404 / update duplicate URL 409 /
+  delete 204 / delete 404 / create duplicate URL 409 / whitespace
+  department NULL normalization
+- Trigger endpoint scenarios (3) await Phase B
 
-### T3 — Frontend
-- Frontend commit ref:
-- Screenshot (attached to PR):
+### T3 — Frontend (Phase A complete; trigger button disabled)
+- Frontend commit ref: `d2a3d4e`
+- Build verification: `npm run build` clean (tsc -b + vite build, 0
+  errors, ~6s); SPA bundle includes "Seed 索引" + "seed-page" CSS
+  classes (verified via grep on `dist/assets/index-*.{js,css}`)
+- Manual UI smoke: user added 2 seeds via http://localhost:8123/seeds
+  in browser session 2026-05-10:
+  * 深圳大学 / 计算机与软件学院 / `https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1` / never_run
+  * 香港中文大学（深圳） / 人工智能学院 / `https://sai.cuhk.edu.cn/teacher-search?...` / never_run
+- Variant C (Swiss Operations) design preserved: 4px top rule, italic
+  red accent on "索引", summary stat strip, filter pills, mono URL
+  pills, status raw-name suffix
 
-### T4 — Pipeline
-- Pipeline integration commit ref:
-- Test output:
+### T4 — Pipeline (Phase B; not started)
+- Pipeline integration commit ref: (Phase B)
+- Test output: (Phase B)
 
-### T5 — Cron
-- Cron commit ref:
-- Test output:
+### T5 — Cron (Phase B; not started)
+- Cron commit ref: (Phase B)
+- Test output: (Phase B)
 
-### T7 — Smoke
-- Local smoke test result:
+### T7 — Smoke (Phase A partial; Phase B trigger transition deferred)
+- Local smoke test result: admin-console started on
+  http://0.0.0.0:8123 (free port; 8000 occupied); `/api/health` HTTP
+  200 `{"status":"ok"}`; `/api/seeds` HTTP 200 returning 2 user-
+  entered rows; `/seeds` SPA route HTTP 200 + browser-rendered Variant
+  C UI confirmed by user 2026-05-10
+- Trigger transition (`never_run → in_progress → adapter_missing`)
+  not yet observed; awaits Phase B trigger endpoint + adapter
+  resolution wiring
 
 ## Failure modes that block archive
 
