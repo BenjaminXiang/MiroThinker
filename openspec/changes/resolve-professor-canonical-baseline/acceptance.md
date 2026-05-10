@@ -4,18 +4,18 @@ This file is filled in two passes: (1) when the change is proposed, the criteria
 
 ## 1. Audit doc tracked — debt `audit-doc-untracked-001`
 
-- [ ] `git ls-files | grep "Professor-Data-Agent-Requirements-Audit-2026-05-09.md"` returns the file path
-- [ ] File path is exactly `docs/Professor-Data-Agent-Requirements-Audit-2026-05-09.md` (no rename, no relocation)
-- [ ] Body content unchanged from working-tree state at proposal time (frontmatter extension via T1.2 is the only permitted edit; if T1.2 was skipped, the rationale is recorded in Evidence below)
-- [ ] One commit message names this change ID
+- [x] `git ls-files | grep "Professor-Data-Agent-Requirements-Audit-2026-05-09.md"` returns the file path (verified after T1 commit `212229d`)
+- [x] File path is exactly `docs/Professor-Data-Agent-Requirements-Audit-2026-05-09.md` (no rename, no relocation)
+- [x] Body content unchanged from working-tree state at proposal time (frontmatter extension via T1.2 is the only permitted edit)
+- [x] One commit message names this change ID (commit `212229d`)
 
 ## 2. PRD legacy marking — debt `professor-canonical-pivot-001`
 
-- [ ] `docs/Professor-Data-Agent-PRD.md` opens with frontmatter declaring `status: legacy` and `superseded_by: docs/Professor-Data-Agent-Requirements-Audit-2026-05-09.md`
-- [ ] `docs/index.md` Professor row reflects: Audit canonical / PRD legacy (status symbols match index conventions)
-- [ ] `CLAUDE.md §3` Source-of-truth docs Professor entry names the Audit as canonical and the PRD as legacy reference
-- [ ] No other section of `CLAUDE.md` is touched
-- [ ] No body section of `docs/Professor-Data-Agent-PRD.md` is rewritten or deleted
+- [x] `docs/Professor-Data-Agent-PRD.md` opens with frontmatter declaring `status: legacy` and `superseded_by: docs/Professor-Data-Agent-Requirements-Audit-2026-05-09.md`
+- [x] `docs/index.md` Professor row reflects: Audit canonical / PRD legacy (split into two rows; doc-layering tree also updated)
+- [x] `CLAUDE.md §3` Source-of-truth docs Professor entry names the Audit as canonical and the PRD as legacy reference
+- [x] No other section of `CLAUDE.md` is touched
+- [x] No body section of `docs/Professor-Data-Agent-PRD.md` is rewritten or deleted (only frontmatter prepended + a top-of-doc legacy notice added; original `# 教授数据采集智能体` heading and §一 onwards untouched)
 
 ## 3. Stale change disposed — debts `professor-prd-change-001` + `professor-prd-change-002`
 

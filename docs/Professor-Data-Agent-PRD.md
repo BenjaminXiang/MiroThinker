@@ -1,4 +1,18 @@
+---
+status: legacy
+superseded_by: docs/Professor-Data-Agent-Requirements-Audit-2026-05-09.md
+superseded_on: 2026-05-10
+governance:
+  change_id: resolve-professor-canonical-baseline
+  note: |
+    This PRD is retained as historical reference. For canonical Professor-domain
+    requirements, see the Audit doc above. The Audit's §0 anticipates eventual
+    reabsorption back into a PRD; until that change ships, this file is legacy.
+---
+
 # 教授数据采集智能体 — 产品需求文档
+
+> ⚠️ **Legacy（2026-05-10 起）**：本文档对教授域采集需求的解释已被 [`Professor-Data-Agent-Requirements-Audit-2026-05-09.md`](./Professor-Data-Agent-Requirements-Audit-2026-05-09.md) 取代（用户 2026-05-10 声明 + OpenSpec change `resolve-professor-canonical-baseline`）。本文档作为历史参考保留，**不再用于解释当前教授域采集需求**。Audit 文档自身 §0 计划在未来某次变更中把 §1–§7 沉淀回 PRD 后撤掉 Audit。
 
 > 本文档定义教授域的特有需求。通用架构、MiroThinker 实现映射、质量维度、更新发布规则见 [共享技术规范](./Data-Agent-Shared-Spec.md)。术语定义见 [术语表](./index.md#术语表)。
 

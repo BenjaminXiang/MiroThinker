@@ -28,7 +28,9 @@ Repo-local docs are the system of record. If important knowledge exists only in 
 
 - `docs/index.md` — documentation index, glossary, and **implementation-status matrix** (✅/🟡/🚧/📝). Read this first to distinguish authoritative docs from legacy/partial docs.
 - `docs/Data-Agent-Shared-Spec.md` — shared four-domain architecture, logical contracts, evidence/quality standards. Outranks domain-local convenience.
-- `docs/{Company,Professor,Paper,Patent}-Data-Agent-PRD.md` — domain-specific requirements (PRD).
+- `docs/{Company,Paper,Patent}-Data-Agent-PRD.md` — domain-specific requirements (PRD) for Company / Paper / Patent.
+- `docs/Professor-Data-Agent-Requirements-Audit-2026-05-09.md` — **Professor-domain canonical** (per user declaration 2026-05-10; OpenSpec change `resolve-professor-canonical-baseline`). Self-temporary; anticipates §1–§7 reabsorption back into a PRD as a future change.
+- `docs/Professor-Data-Agent-PRD.md` — Professor **legacy reference**; behavior superseded by the Audit doc above. Retained for historical context, not for explaining current Professor-domain requirements.
 - `docs/Agentic-RAG-PRD.md` — query classification A–G, semantic routing, multi-source recall/fusion/rerank.
 - `docs/Agentic-RAG-Operating-Guide.md` — current online `/api/chat` operating posture (M0.1–M6 dogfood + rollback + monitoring).
 - `docs/Multi-turn-Context-Manager-Design.md` — multi-turn reference resolution and cross-domain transitions; **partially implemented** (Postgres `SessionStore` + entity stack + `last_result_set` are in; full design is not). Verify against current code.
