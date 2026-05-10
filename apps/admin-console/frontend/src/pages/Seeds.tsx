@@ -1,0 +1,444 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Button,
+  Form,
+  Input,
+  message,
+  Modal,
+  Space,
+  Table,
+  Tag,
+  Tooltip,
+  Typography,
+} from "antd";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  PlusOutlined,
+  ThunderboltOutlined,
+} from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
+import {
+  createSeed,
+  deleteSeed,
+  fetchSeeds,
+  type Seed,
+  type SeedLastRunStatus,
+  type SeedPayload,
+  updateSeed,
+} from "../api";
+import "./Seeds.css";
+
+const { Title, Paragraph } = Typography;
+
+const STATUS_LABELS: Record<SeedLastRunStatus, string> = {
+  success: "成功",
+  failure: "失败",
+  in_progress: "运行中",
+  never_run: "未运行",
+  adapter_missing: "缺 adapter",
+};
+
+const STATUS_TAG_COLOR: Record<SeedLastRunStatus, string> = {
+  success: "success",
+  failure: "error",
+  in_progress: "processing",
+  never_run: "default",
+  adapter_missing: "orange",
+};
+
+type Filter = "all" | SeedLastRunStatus;
+
+function formatTimestamp(iso: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return d.toLocaleString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+export default function Seeds() {
+  const [seeds, setSeeds] = useState<Seed[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<Filter>("all");
+  const [editing, setEditing] = useState<Seed | "new" | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [form] = Form.useForm();
+  const [messageApi, contextHolder] = message.useMessage();
+
+  const reload = useCallback(async () => {
+    try {
+      const rows = await fetchSeeds();
+      setSeeds(rows);
+    } catch (err) {
+      messageApi.error(`加载失败: ${err instanceof Error ? err.message : err}`);
+    } finally {
+      setLoading(false);
+    }
+  }, [messageApi]);
+
+  useEffect(() => {
+    void reload();
+  }, [reload]);
+
+  // Poll every 10s while any seed is in_progress (per spec T3.6).
+  const hasInProgress = useMemo(
+    () => seeds.some((s) => s.last_run_status === "in_progress"),
+    [seeds],
+  );
+  useEffect(() => {
+    if (!hasInProgress) return;
+    const t = window.setInterval(() => void reload(), 10_000);
+    return () => window.clearInterval(t);
+  }, [hasInProgress, reload]);
+
+  const counts = useMemo(() => {
+    const c: Record<SeedLastRunStatus, number> = {
+      success: 0,
+      failure: 0,
+      in_progress: 0,
+      never_run: 0,
+      adapter_missing: 0,
+    };
+    for (const s of seeds) c[s.last_run_status] += 1;
+    return c;
+  }, [seeds]);
+
+  const visible = useMemo(
+    () => (filter === "all" ? seeds : seeds.filter((s) => s.last_run_status === filter)),
+    [seeds, filter],
+  );
+
+  const openAdd = () => {
+    form.resetFields();
+    setEditing("new");
+  };
+
+  const openEdit = (seed: Seed) => {
+    form.setFieldsValue({
+      school: seed.school,
+      department: seed.department ?? "",
+      seed_url: seed.seed_url,
+    });
+    setEditing(seed);
+  };
+
+  const closeModal = () => {
+    if (submitting) return;
+    setEditing(null);
+    form.resetFields();
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      const payload: SeedPayload = {
+        school: values.school.trim(),
+        department: values.department?.trim() || null,
+        seed_url: values.seed_url.trim(),
+      };
+      setSubmitting(true);
+      if (editing === "new") {
+        await createSeed(payload);
+        messageApi.success("已添加 seed");
+      } else if (editing) {
+        await updateSeed(editing.id, payload);
+        messageApi.success("已保存");
+      }
+      setEditing(null);
+      form.resetFields();
+      await reload();
+    } catch (err) {
+      // Form validation throws ValidationError without message; only show
+      // if it's an API/network error.
+      if (err instanceof Error) messageApi.error(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = (seed: Seed) => {
+    Modal.confirm({
+      title: "删除 seed？",
+      content: (
+        <div>
+          <p style={{ marginBottom: 8 }}>
+            <strong>{seed.school}</strong>
+            {seed.department ? ` · ${seed.department}` : " · school-wide"}
+          </p>
+          <p style={{ fontFamily: "var(--seed-font-mono)", fontSize: 12, color: "#888" }}>
+            {seed.seed_url}
+          </p>
+          <p style={{ marginTop: 12, color: "#d4380d" }}>
+            该操作不可逆。已发布的 professor / paper / patent 不会受影响。
+          </p>
+        </div>
+      ),
+      okText: "确认删除",
+      okButtonProps: { danger: true },
+      cancelText: "取消",
+      onOk: async () => {
+        try {
+          await deleteSeed(seed.id);
+          messageApi.success("已删除");
+          await reload();
+        } catch (err) {
+          messageApi.error(err instanceof Error ? err.message : "删除失败");
+          throw err;
+        }
+      },
+    });
+  };
+
+  const columns: ColumnsType<Seed> = [
+    {
+      title: "学校",
+      dataIndex: "school",
+      key: "school",
+      width: 160,
+      render: (school: string, _seed, idx) => (
+        <Space size="small" align="baseline">
+          <span className="seed-row-num">
+            {String(idx + 1).padStart(2, "0")}
+          </span>
+          <span className="seed-school-name">{school}</span>
+        </Space>
+      ),
+    },
+    {
+      title: "院系",
+      dataIndex: "department",
+      key: "department",
+      width: 220,
+      render: (dept: string | null) =>
+        dept ? (
+          <span>{dept}</span>
+        ) : (
+          <span className="seed-empty-dept">school-wide</span>
+        ),
+    },
+    {
+      title: "Seed URL",
+      dataIndex: "seed_url",
+      key: "seed_url",
+      ellipsis: { showTitle: true },
+      render: (url: string) => (
+        <a
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          className="seed-url-pill"
+          title={url}
+        >
+          {url}
+        </a>
+      ),
+    },
+    {
+      title: "上次抓取",
+      dataIndex: "last_run_at",
+      key: "last_run_at",
+      width: 160,
+      render: (iso: string | null) => (
+        <span className="seed-time-cell">{formatTimestamp(iso)}</span>
+      ),
+    },
+    {
+      title: "状态",
+      dataIndex: "last_run_status",
+      key: "last_run_status",
+      width: 160,
+      render: (status: SeedLastRunStatus) => (
+        <Tag color={STATUS_TAG_COLOR[status]} className="seed-status-tag">
+          {STATUS_LABELS[status]}
+          <span className="seed-status-raw">{status}</span>
+        </Tag>
+      ),
+    },
+    {
+      title: "操作",
+      key: "actions",
+      width: 240,
+      render: (_v, seed) => (
+        <Space size="small">
+          <Tooltip title="Pipeline 接入待 Phase B" placement="top">
+            <Button
+              size="small"
+              type="primary"
+              ghost
+              icon={<ThunderboltOutlined />}
+              disabled
+              className="seed-trigger-btn"
+            >
+              立即爬取
+            </Button>
+          </Tooltip>
+          <Button
+            size="small"
+            type="default"
+            icon={<EditOutlined />}
+            onClick={() => openEdit(seed)}
+          >
+            编辑
+          </Button>
+          <Button
+            size="small"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(seed)}
+          >
+            删除
+          </Button>
+        </Space>
+      ),
+    },
+  ];
+
+  const filterPills: Array<{ key: Filter; label: string; tone?: string }> = [
+    { key: "all", label: `全部 ${seeds.length}` },
+    { key: "success", label: `success ${counts.success}`, tone: "success" },
+    { key: "failure", label: `failure ${counts.failure}`, tone: "failure" },
+    { key: "in_progress", label: `运行中 ${counts.in_progress}`, tone: "progress" },
+    { key: "never_run", label: `未运行 ${counts.never_run}`, tone: "never" },
+    {
+      key: "adapter_missing",
+      label: `adapter 缺 ${counts.adapter_missing}`,
+      tone: "missing",
+    },
+  ];
+
+  return (
+    <div className="seed-page">
+      {contextHolder}
+      <header className="seed-page-head">
+        <div className="seed-head-section">
+          <div className="seed-eyebrow">Admin / Professor / Seed Registry</div>
+          <Title level={1} className="seed-h1">
+            Seed
+            <span className="seed-h1-accent">索引</span>
+          </Title>
+          <Paragraph className="seed-lede">
+            管理教师 roster 入口 URL ── 决定 pipeline 抓取哪些学校、哪些院系。
+          </Paragraph>
+        </div>
+        <div className="seed-head-summary">
+          <SummaryStat n={seeds.length} l="seed 总数" />
+          <SummaryStat n={counts.success} l="success" tone="success" />
+          <SummaryStat n={counts.failure} l="failure" tone="failure" />
+          <SummaryStat n={counts.in_progress} l="in progress" tone="progress" />
+          <SummaryStat n={counts.adapter_missing} l="adapter 缺失" tone="missing" />
+        </div>
+      </header>
+
+      <div className="seed-toolbar">
+        <Button
+          type="primary"
+          size="large"
+          icon={<PlusOutlined />}
+          onClick={openAdd}
+          className="seed-add-btn"
+        >
+          添加 seed
+        </Button>
+        <div className="seed-filters">
+          {filterPills.map((p) => (
+            <button
+              key={p.key}
+              className={`seed-pill seed-pill-${p.tone ?? "default"} ${
+                filter === p.key ? "seed-pill-active" : ""
+              }`}
+              onClick={() => setFilter(p.key)}
+              type="button"
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <Table<Seed>
+        rowKey="id"
+        columns={columns}
+        dataSource={visible}
+        loading={loading}
+        pagination={false}
+        rowClassName={(seed) =>
+          `seed-row seed-row-${seed.last_run_status}`
+        }
+      />
+
+      <footer className="seed-page-foot">
+        <span className="seed-foot-build">build phase A · ui only</span>
+        <span className="seed-foot-rule" />
+        <span className="seed-foot-note">
+          点击 <code>立即爬取</code> 在 Phase B 上线 ── 届时按钮亮起
+        </span>
+      </footer>
+
+      <Modal
+        title={editing === "new" ? "添加 seed" : "编辑 seed"}
+        open={editing !== null}
+        onCancel={closeModal}
+        onOk={handleSubmit}
+        okText={editing === "new" ? "添加" : "保存"}
+        cancelText="取消"
+        confirmLoading={submitting}
+        destroyOnHidden
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          requiredMark="optional"
+          autoComplete="off"
+        >
+          <Form.Item
+            label="学校"
+            name="school"
+            rules={[{ required: true, message: "请填写学校名称" }]}
+          >
+            <Input placeholder="SUSTech / SZU / 清华深研院" autoFocus />
+          </Form.Item>
+          <Form.Item
+            label="院系"
+            name="department"
+            extra="留空 = 全校统一 roster（如南科大）"
+          >
+            <Input placeholder="计算机与软件学院（可选）" />
+          </Form.Item>
+          <Form.Item
+            label="Seed URL"
+            name="seed_url"
+            rules={[
+              { required: true, message: "请填写 roster 页面 URL" },
+              { type: "url", message: "URL 格式无效（必须为 http(s)）" },
+            ]}
+            extra="教师 roster 页面 URL，pipeline 直接抓这里"
+          >
+            <Input placeholder="https://faculty.sustech.edu.cn" />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </div>
+  );
+}
+
+function SummaryStat({
+  n,
+  l,
+  tone,
+}: {
+  n: number;
+  l: string;
+  tone?: string;
+}) {
+  return (
+    <div className={`seed-sum-stat seed-sum-${tone ?? "default"}`}>
+      <div className="seed-sum-n">{n}</div>
+      <div className="seed-sum-l">{l}</div>
+    </div>
+  );
+}

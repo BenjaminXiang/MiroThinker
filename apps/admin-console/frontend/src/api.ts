@@ -538,3 +538,57 @@ export function exportDomain(
   if (ids && ids.length > 0) qs.set("ids", ids.join(","));
   window.open(`${BASE}/api/export/${domain}?${qs.toString()}`);
 }
+
+// --- Seeds (prof-seed-admin-console) ---
+
+export type SeedLastRunStatus =
+  | "success"
+  | "failure"
+  | "in_progress"
+  | "never_run"
+  | "adapter_missing";
+
+export interface Seed {
+  id: number;
+  school: string;
+  department: string | null;
+  seed_url: string;
+  last_run_at: string | null;
+  last_run_status: SeedLastRunStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SeedPayload {
+  school: string;
+  department: string | null;
+  seed_url: string;
+}
+
+export function fetchSeeds(): Promise<Seed[]> {
+  return fetchJSON("/api/seeds");
+}
+
+export function createSeed(payload: SeedPayload): Promise<Seed> {
+  return fetchJSON("/api/seeds", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateSeed(id: number, payload: SeedPayload): Promise<Seed> {
+  return fetchJSON(`/api/seeds/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteSeed(id: number): Promise<void> {
+  const resp = await fetch(`${BASE}/api/seeds/${id}`, { method: "DELETE" });
+  if (!resp.ok) {
+    const body = await resp.text().catch(() => "");
+    throw new Error(`API error: ${resp.status} ${resp.statusText} ${body}`);
+  }
+}

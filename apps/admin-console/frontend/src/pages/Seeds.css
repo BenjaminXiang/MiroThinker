@@ -1,0 +1,373 @@
+/* Seeds page — Variant C (Swiss Operations) adapted into the antd-based
+   admin console. Custom CSS scoped to .seed-* classnames so other pages
+   are untouched. */
+
+.seed-page {
+  --seed-accent: #ff3a2f;
+  --seed-bg: #fafaf7;
+  --seed-line: #e6e4dc;
+  --seed-line-faint: #f0eee6;
+  --seed-ink: #0d0d0d;
+  --seed-ink-soft: #404040;
+  --seed-ink-faint: #8a8a86;
+  --seed-success: #1ea34c;
+  --seed-failure: #e02020;
+  --seed-progress: #d99000;
+  --seed-never: #7a7a7a;
+  --seed-missing: #e85a16;
+  --seed-font-mono: "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* === HEADER ============================================================= */
+
+.seed-page-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 40px;
+  align-items: start;
+  padding: 28px 0;
+  margin-bottom: 24px;
+  border-top: 4px solid var(--seed-ink);
+  border-bottom: 1px solid var(--seed-line);
+}
+
+.seed-head-section {
+  max-width: 600px;
+}
+
+.seed-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--seed-ink-faint);
+  margin-bottom: 12px;
+}
+
+.seed-h1.ant-typography {
+  font-size: 56px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.04em;
+  line-height: 1 !important;
+  margin: 0 0 12px !important;
+  color: var(--seed-ink) !important;
+}
+
+.seed-h1-accent {
+  display: inline-block;
+  margin-left: 12px;
+  font-size: 44px;
+  font-weight: 300;
+  color: var(--seed-accent);
+  font-style: italic;
+  letter-spacing: -0.03em;
+}
+
+.seed-lede.ant-typography {
+  font-size: 15px !important;
+  line-height: 1.55 !important;
+  color: var(--seed-ink-soft) !important;
+  margin: 0 !important;
+  max-width: 480px;
+}
+
+.seed-head-summary {
+  display: grid;
+  grid-template-columns: repeat(5, auto);
+  gap: 16px 22px;
+  align-items: end;
+}
+
+.seed-sum-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--seed-line);
+  min-width: 64px;
+}
+
+.seed-sum-n {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.seed-sum-l {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--seed-ink-faint);
+  white-space: nowrap;
+}
+
+.seed-sum-success .seed-sum-n {
+  color: var(--seed-success);
+}
+.seed-sum-failure .seed-sum-n {
+  color: var(--seed-failure);
+}
+.seed-sum-progress .seed-sum-n {
+  color: var(--seed-progress);
+}
+.seed-sum-missing .seed-sum-n {
+  color: var(--seed-missing);
+}
+
+/* === TOOLBAR ============================================================ */
+
+.seed-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.seed-add-btn.ant-btn-primary {
+  background: var(--seed-ink) !important;
+  border-color: var(--seed-ink) !important;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  padding: 8px 18px;
+  height: 40px;
+  transition: all 0.16s ease;
+}
+
+.seed-add-btn.ant-btn-primary:hover {
+  background: var(--seed-accent) !important;
+  border-color: var(--seed-accent) !important;
+}
+
+.seed-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.seed-pill {
+  padding: 7px 14px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1.5px solid var(--seed-line);
+  background: #fff;
+  color: var(--seed-ink-soft);
+  border-radius: 999px;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+.seed-pill:hover {
+  border-color: var(--seed-ink);
+  color: var(--seed-ink);
+}
+
+.seed-pill-active {
+  background: var(--seed-ink);
+  color: #fff;
+  border-color: var(--seed-ink);
+}
+
+.seed-pill-success.seed-pill-active {
+  background: var(--seed-success);
+  border-color: var(--seed-success);
+}
+.seed-pill-failure.seed-pill-active {
+  background: var(--seed-failure);
+  border-color: var(--seed-failure);
+}
+.seed-pill-progress.seed-pill-active {
+  background: var(--seed-progress);
+  border-color: var(--seed-progress);
+}
+.seed-pill-never.seed-pill-active {
+  background: var(--seed-never);
+  border-color: var(--seed-never);
+}
+.seed-pill-missing.seed-pill-active {
+  background: var(--seed-missing);
+  border-color: var(--seed-missing);
+}
+
+/* === TABLE ============================================================== */
+
+.seed-page .ant-table {
+  background: #fff;
+  border: 1px solid var(--seed-line);
+}
+
+.seed-page .ant-table-thead > tr > th {
+  background: var(--seed-bg) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--seed-ink-faint) !important;
+  border-bottom: 2px solid var(--seed-ink) !important;
+  padding: 14px 16px !important;
+}
+
+.seed-page .ant-table-tbody > tr > td {
+  border-bottom: 1px solid var(--seed-line-faint) !important;
+  padding: 14px 16px !important;
+}
+
+.seed-page .ant-table-tbody > tr:hover > td {
+  background: var(--seed-bg) !important;
+}
+
+.seed-row-num {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--seed-ink-faint);
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
+}
+
+.seed-school-name {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--seed-ink);
+}
+
+.seed-empty-dept {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--seed-ink-faint);
+  font-weight: 600;
+}
+
+.seed-url-pill {
+  display: inline-block;
+  font-family: var(--seed-font-mono);
+  font-size: 12px;
+  color: var(--seed-ink-soft) !important;
+  padding: 3px 10px;
+  background: var(--seed-bg);
+  border: 1px solid var(--seed-line);
+  border-radius: 4px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: all 0.14s ease;
+}
+
+.seed-url-pill:hover {
+  border-color: var(--seed-ink);
+  color: var(--seed-ink) !important;
+  background: #fff;
+}
+
+.seed-time-cell {
+  font-family: var(--seed-font-mono);
+  font-size: 12px;
+  color: var(--seed-ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* === STATUS TAG ========================================================= */
+
+.seed-status-tag.ant-tag {
+  font-weight: 700;
+  font-size: 12px;
+  border-radius: 999px;
+  padding: 3px 11px;
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid currentColor;
+  background: transparent;
+}
+
+.seed-status-tag.ant-tag-success {
+  color: var(--seed-success) !important;
+  background: rgba(30, 163, 76, 0.08) !important;
+  border-color: rgba(30, 163, 76, 0.3) !important;
+}
+.seed-status-tag.ant-tag-error {
+  color: var(--seed-failure) !important;
+  background: rgba(224, 32, 32, 0.08) !important;
+  border-color: rgba(224, 32, 32, 0.3) !important;
+}
+.seed-status-tag.ant-tag-processing {
+  color: var(--seed-progress) !important;
+  background: rgba(217, 144, 0, 0.08) !important;
+  border-color: rgba(217, 144, 0, 0.3) !important;
+}
+.seed-status-tag.ant-tag-default {
+  color: var(--seed-never) !important;
+  background: rgba(122, 122, 122, 0.08) !important;
+  border-color: rgba(122, 122, 122, 0.3) !important;
+}
+.seed-status-tag.ant-tag-orange {
+  color: var(--seed-missing) !important;
+  background: rgba(232, 90, 22, 0.08) !important;
+  border-color: rgba(232, 90, 22, 0.3) !important;
+}
+
+.seed-status-raw {
+  font-family: var(--seed-font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+  margin-left: 2px;
+}
+
+/* === ACTIONS ============================================================ */
+
+.seed-trigger-btn.ant-btn[disabled] {
+  border-style: dashed !important;
+  opacity: 0.65;
+}
+
+.seed-trigger-btn.ant-btn-primary[disabled] {
+  color: var(--seed-ink-faint) !important;
+  background: var(--seed-bg) !important;
+  border-color: var(--seed-line) !important;
+}
+
+/* === FOOTER ============================================================= */
+
+.seed-page-foot {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--seed-line);
+  font-size: 11.5px;
+  color: var(--seed-ink-faint);
+}
+
+.seed-foot-build {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--seed-accent);
+}
+
+.seed-foot-rule {
+  flex: 1;
+  height: 1px;
+  background: var(--seed-line);
+}
+
+.seed-foot-note code {
+  font-family: var(--seed-font-mono);
+  font-size: 11px;
+  background: var(--seed-bg);
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid var(--seed-line);
+}
