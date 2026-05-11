@@ -249,7 +249,51 @@
 - Commit ref: filled at commit time.
 
 ### T7 — Quality status promotion
-- State machine commit ref:
+- New modules (T7.1 / T7.4):
+  - `apps/miroflow-agent/src/data_agents/paper/quality_promotion.py`:
+    pure-function state machine + `PaperEnrichmentSignals` boolean
+    view + `PromotionDecision` record. Exports V019 six-value enum
+    constants (`VALID_QUALITY_STATUSES`).
+  - `apps/miroflow-agent/src/data_agents/patent/quality_promotion.py`:
+    re-exports paper-side enum constants for inter-op; defines
+    `PatentEnrichmentSignals` and patent-specific promotion logic.
+- Promotion rules implemented (T7.2):
+  - `evaluate_paper_promotion`: all required + summary_zh OK →
+    `ready`; boilerplate rejected → terminal `rejected`; partial
+    enrichment → `partial`; otherwise → `needs_enrichment`. Also
+    handles current_status branches: `ready` is forward-monotonic;
+    `rejected` is terminal; `needs_review` parks until admin.
+  - `evaluate_patent_promotion`: xlsx_merged + all required →
+    `ready`; xlsx_merged with gaps → `partial`; page-only →
+    `needs_enrichment`. Same forward-monotonic / terminal /
+    review-park guarantees.
+- Admin override (T7.3): `apply_admin_override` on both modules
+  with three actions (`flag_for_review`, `approve`, `reject`).
+  `flag_for_review` is the only path that degrades `ready`;
+  patent-side `approve` works directly from `needs_enrichment`
+  (since patents have no external enrichment pathway).
+- Forward-monotonic invariant test:
+  `test_ready_does_not_auto_degrade_on_enrichment_loss` (paper) +
+  `test_ready_does_not_auto_degrade_on_signal_loss` (patent) —
+  passing all required, even `summary_zh_boilerplate_rejected=True`
+  signals don't drag a `ready` row backwards through the
+  enrichment-evaluation path. Only `apply_admin_override` can.
+- Identity-gate re-eval (V019 spec row `low_confidence → ready /
+  needs_review`): `apply_identity_gate_reevaluation` covers this
+  transition; no-op on any other current_status.
+- Unit tests: 31 total (19 paper-side
+  `tests/data_agents/paper/test_quality_promotion.py` + 12
+  patent-side `tests/data_agents/patent/test_quality_promotion.py`).
+  All passing.
+- Wiring TODO surfaced (not yet done in this change): the
+  promotion functions are pure and not yet wired into the paper /
+  patent ingest writers. Callers (`paper.homepage_ingest`,
+  `paper.enrichment`, `patent.homepage_ingest`,
+  `patent.exact_backfill`) will need updates to invoke
+  `evaluate_*_promotion` after their respective field-fill steps.
+  Wiring is a follow-up integration slice; the state machine is
+  the contract.
+- Commit ref: filled at commit time.
 
 ### T8 — End-to-end smoke
 - Real seed used:

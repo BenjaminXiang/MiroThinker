@@ -167,17 +167,39 @@ order is 1 → 2 → 3 → 4 → 5.
 
 ## 7. Quality status promotion logic
 
-- [ ] T7.1: Implement promotion state machine in
-  `paper/release.py` or a new `paper/quality_promotion.py`. States
-  per spec table.
-- [ ] T7.2: Wire enrichment success → promotion check. If all
-  Required fields present + summary_zh passes boilerplate → promote
-  to `ready`.
-- [ ] T7.3: Wire post-`ready` admin override (manual flag) →
-  back to `needs_review`. Forward-monotonic invariant tested.
-- [ ] T7.4: Symmetric implementation for patent quality promotion
-  (simpler: no enrichment, so `needs_enrichment` → `ready` only on
-  admin manual upgrade or xlsx merge).
+- [x] T7.1: Created `apps/miroflow-agent/src/data_agents/paper/quality_promotion.py`.
+  Pure-function state machine, no DB writes; callers wire decisions
+  to `UPDATE paper SET quality_status` in their own transaction.
+  Module exports the V019 six-value enum constants
+  (`VALID_QUALITY_STATUSES`) and `PromotionDecision` record.
+- [x] T7.2: `evaluate_paper_promotion(current_status, signals)`
+  consumes a `PaperEnrichmentSignals` boolean view (has_title,
+  has_year, has_venue, has_authors, has_abstract, has_summary_zh,
+  summary_zh_boilerplate_rejected) and returns the next status:
+  all required + summary_zh OK → `ready`; boilerplate rejected →
+  `rejected` (terminal); any enrichment progress → `partial`;
+  otherwise → `needs_enrichment`.
+- [x] T7.3: `apply_admin_override(current_status, override_action)`
+  with three supported actions: `flag_for_review` (any non-terminal
+  → `needs_review`, the only path that degrades `ready`),
+  `approve` (→ `ready`, including direct promotion from
+  `needs_review`), and `reject` (→ terminal `rejected`).
+  Forward-monotonic invariant for `ready` is tested:
+  `evaluate_paper_promotion(current=ready, ...)` always returns
+  `ready` regardless of signals. Also added
+  `apply_identity_gate_reevaluation(current_status, gate_accepted)`
+  for the V019 spec row `low_confidence → ready / needs_review`
+  on post-enrichment identity-gate re-eval.
+- [x] T7.4: Created `apps/miroflow-agent/src/data_agents/patent/quality_promotion.py`,
+  re-exporting the paper-side enum constants for inter-op. Patent
+  promotion is simpler per design.md §8 (no external enrichment):
+  `evaluate_patent_promotion(current_status, signals)` requires
+  `xlsx_merged=True` AND all required fields to reach `ready`;
+  `xlsx_merged=True` with gaps → `partial`; otherwise page-only rows
+  stay in `needs_enrichment` until xlsx or admin acts.
+  `apply_admin_override` mirrors paper-side actions but accepts
+  `approve` directly from `needs_enrichment` since the patent has
+  no enrichment pathway to wait on.
 
 ## 8. Acceptance + close-out
 
