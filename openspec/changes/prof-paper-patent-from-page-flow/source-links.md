@@ -122,21 +122,89 @@
 change itself)
 
 ### Refactored
-- `apps/miroflow-agent/src/data_agents/paper/hybrid.py` — discovery →
-  enrichment-only
+- `apps/miroflow-agent/src/data_agents/paper/hybrid.py` — left in
+  place for the deprecated S2 discovery path; enrichment-only
+  surface moved to a new sibling module (see "Created" below).
+  Strict rename / removal deferred to `paper-pipeline-cleanup`
+  follow-up (commit 85c4ab0).
 - `apps/miroflow-agent/src/data_agents/paper/pipeline.py` — S2
-  discovery deprecated
-- `apps/miroflow-agent/src/data_agents/paper/identity_gate.py` —
-  page-only short-circuit added
-- `apps/miroflow-agent/src/data_agents/paper/abstract_translator.py` —
-  prompt aligned + boilerplate judge added
+  discovery `run_paper_pipeline` deprecated via
+  `warnings.warn(..., stacklevel=2)` with module-level `_warned`
+  once-only guard (commit d245a53).
+- `apps/miroflow-agent/src/data_agents/paper/homepage_ingest.py` —
+  page-only fallback synthesis added (`_synthesize_page_only_resolution`,
+  `_split_page_authors`); link writes use
+  `match_reason="prof_page_declaration"` to distinguish page-only
+  attribution from external-resolved (commit fb351cf).
+- `apps/miroflow-agent/src/data_agents/professor/paper_identity_gate.py`
+  — page-only short-circuit `accept_page_only_attribution()` added
+  (commit 06b6455). Note: paper gate lives at `professor/`, not
+  `paper/`, to stay aligned with its only caller
+  `professor.paper_collector`; rename to `paper/identity_gate.py`
+  deferred (no functional benefit).
+- `apps/miroflow-agent/src/data_agents/paper/abstract_translator.py`
+  — `judge_summary_boilerplate()` binary LLM classifier added as a
+  separate prompt step; fail-open on transport/parse errors
+  (commit c964a97).
 
 ### Created (greenfield)
+- `apps/miroflow-agent/src/data_agents/paper/enrichment.py` —
+  `enrich_paper_with_hybrid_sources()` aggregator (Theme 7.1-
+  compliant enrichment-only surface; commit 85c4ab0).
 - `apps/miroflow-agent/src/data_agents/professor/homepage_patents.py`
+  — `PatentEntry` dataclass + `extract_patents_from_html()`
+  conservative-heuristic extractor (commit 38fb202).
 - `apps/miroflow-agent/src/data_agents/patent/homepage_ingest.py`
-- `apps/miroflow-agent/src/data_agents/patent/identity_gate.py`
+  — `run_homepage_patent_ingest()` + `_build_patent_row()` + V004
+  SQL upsert; routes title-only candidates to a
+  `data_quality_flag` pipeline_issue (commit 38fb202).
+- `apps/miroflow-agent/src/data_agents/professor/patent_identity_gate.py`
+  — `PatentIdentityCandidate` + `PatentIdentityDecision` +
+  `accept_page_only_attribution()` + `verify_xlsx_attribution()`
+  deterministic gate (no LLM; per design.md §8 patents have no
+  external enrichment; commit 06b6455).
 - `apps/miroflow-agent/src/data_agents/paper/quality_promotion.py`
-  (or extend `paper/release.py`)
+  — paper-side promotion state machine, pure functions; exports
+  V019 six-value enum + `PaperEnrichmentSignals` +
+  `evaluate_paper_promotion` + `apply_admin_override` +
+  `apply_identity_gate_reevaluation` (commit 7402324).
+- `apps/miroflow-agent/src/data_agents/patent/quality_promotion.py`
+  — patent-side promotion mirror; xlsx_merged + all-required →
+  `ready`, otherwise stays `needs_enrichment` until admin override
+  (commit 7402324).
+
+### Tests (greenfield)
+- `apps/miroflow-agent/tests/data_agents/paper/test_homepage_ingest_preprint.py`
+  — 10 tests (commit fb351cf).
+- `apps/miroflow-agent/tests/data_agents/paper/test_abstract_translator_boilerplate_judge.py`
+  — 13 tests (commit c964a97).
+- `apps/miroflow-agent/tests/data_agents/paper/test_quality_promotion.py`
+  — 19 tests (commit 7402324).
+- `apps/miroflow-agent/tests/data_agents/professor/test_homepage_patents.py`
+  — 11 tests (commit 38fb202).
+- `apps/miroflow-agent/tests/data_agents/professor/test_paper_identity_gate_page_only.py`
+  — 3 tests (commit 06b6455).
+- `apps/miroflow-agent/tests/data_agents/professor/test_patent_identity_gate.py`
+  — 12 tests (commit 06b6455).
+- `apps/miroflow-agent/tests/data_agents/patent/test_homepage_ingest.py`
+  — 10 tests (commit 38fb202).
+- `apps/miroflow-agent/tests/data_agents/patent/test_quality_promotion.py`
+  — 12 tests (commit 7402324).
+
+Total: 90 new tests, all passing.
+
+### Commit log for this change
+
+```
+7402324 feat(quality-status): paper + patent promotion state machines — T7
+c964a97 feat(paper): boilerplate-detection LLM judge for summary_zh — T6
+06b6455 feat(identity-gate): page-only short-circuit + symmetric patent gate — T5
+38fb202 feat(patent): prof-homepage Patents-section extraction + canonical ingest — T4
+fb351cf feat(paper): homepage_ingest preprint case — create paper from page-only data
+d245a53 feat(paper): deprecate run_paper_pipeline (S2 discovery path)
+85c4ab0 feat(paper): enrichment.py — Theme 7.1-compliant hybrid enrichment aggregator
+9d99006 spec(paper): add prof-paper-patent-from-page-flow OpenSpec change
+```
 
 ### Verified or extended (existing, may need minor additions)
 - `apps/miroflow-agent/src/data_agents/paper/homepage_ingest.py` —

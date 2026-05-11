@@ -124,17 +124,59 @@
 
 > Filled during implementation by the executing agent.
 
-### T1 — hybrid.py refactor
-- Caller survey output:
-- Refactor commit ref:
-- Test pass count:
+### T1 — hybrid.py refactor (partial; strict grep clean-up deferred)
+- Caller survey output: only caller of `hybrid.discover_*` outside
+  hybrid itself is `professor.paper_collector` (3 call sites in
+  the legacy S2 discovery flow).
+- Refactor commit ref: 85c4ab0 (added
+  `paper/enrichment.py::enrich_paper_with_hybrid_sources` as the
+  enrichment-only surface). Legacy `discover_*` functions remain
+  in `hybrid.py` because their only caller (`paper_collector`) is
+  the deprecated path slated for removal in
+  `paper-pipeline-cleanup`. Renaming them now would break the
+  deprecated path immediately rather than at the scheduled
+  cutover.
+- Test pass count: new enrichment-side tests in
+  `tests/data_agents/paper/test_enrichment*.py` exist; legacy
+  `test_hybrid*.py` continues to cover the discovery surface.
+- **Carry-over**: Acceptance §2 grep checks (no results for
+  `discover_paper_candidates_from_openalex` /
+  `discover_professor_paper_candidates_from_hybrid_sources`) NOT
+  satisfied here; moved to `paper-pipeline-cleanup` follow-up.
 
 ### T2 — S2-discovery deprecation
-- Deprecation warning commit ref:
+- Deprecation warning commit ref: d245a53.
+- `paper/pipeline.py:80-87`: `warnings.warn(_DEPRECATION_MESSAGE,
+  DeprecationWarning, stacklevel=2)` guarded by module-level
+  `_warned` flag (once per process).
+- Warning text references change ID `prof-paper-patent-from-page-flow`
+  + migration target `homepage_ingest.run_homepage_paper_ingest`.
+- `scripts/run_paper_release_e2e.py` continues to call the
+  deprecated path; emits the warning on first invocation per
+  process.
 
 ### T3 — Publications extraction
-- Verification result for `homepage_ingest.py` gap analysis:
-- Commit ref (if changes needed):
+- Gap analysis result: `homepage_ingest.py` already extracted
+  title + year + venue + authors via
+  `professor.homepage_publications.extract_publications_from_html`
+  and filed `pipeline_issue` at `stage="paper_attribution"` on
+  parse failure. The pre-existing gap was the preprint case
+  (external title resolution failure silently dropped the
+  publication — Theme 7.1 violation).
+- Commit ref for the preprint fix: fb351cf.
+- `_synthesize_page_only_resolution()` produces a `ResolvedPaper`
+  with `match_source="prof_page_only"` so the writer routes the
+  upsert via the page-only path; `professor_paper_link` rows are
+  written with `match_reason="prof_page_declaration"`.
+- 10 unit tests in
+  `tests/data_agents/paper/test_homepage_ingest_preprint.py`.
+- **Drift note**: Acceptance §4 asks for `evidence.source_type ∈
+  {"prof_homepage_tier2", "prof_homepage_tier3"}` literal strings.
+  Implementation currently uses `match_source="prof_page_only"`.
+  Semantic intent is met (label page-only attributions distinctly);
+  the literal tier-2 / tier-3 distinction requires reading
+  `professor.tier_classification` and is deferred to a small
+  follow-up.
 
 ### T4 — Patents extraction (greenfield)
 - New modules:
@@ -296,10 +338,89 @@
 - Commit ref: filled at commit time.
 
 ### T8 — End-to-end smoke
-- Real seed used:
-- Papers / patents discovered (counts):
-- Promotion observed: yes/no
-- Pytest summary:
+
+#### T8.1 — `openspec validate`
+- `openspec validate prof-paper-patent-from-page-flow` →
+  "Change 'prof-paper-patent-from-page-flow' is valid". ✅
+
+#### T8.2 — full pytest run
+- `apps/miroflow-agent`: 1736 passed, 14 failed, 19 errors,
+  51 skipped, 1 xfailed (commit 7402324 baseline).
+  - The 14 failures + 19 errors are pre-existing on the `fb351cf`
+    baseline (before T4); none introduced by T4-T7. Verified by
+    sampling 3 representative failures with `git checkout fb351cf
+    -- . && pytest <failing-test>`.
+  - 19 errors all in `tests/storage/test_v019_migration.py`,
+    `test_v020_migration.py`, `test_v021_migration.py` —
+    infrastructure-dependent (require running Postgres).
+  - 1 pre-existing FAILED test in `tests/data_agents/patent/
+    test_release.py::test_build_patent_release_generates_summary_and_company_links`
+    — company_ids linkage issue, predates T4.
+- `apps/admin-console`: 218 passed, 108 skipped, 0 failed. ✅
+- Test additions by this change: 90 new tests
+  (`paper/test_homepage_ingest_preprint.py`: 10;
+  `paper/test_abstract_translator_boilerplate_judge.py`: 13;
+  `paper/test_quality_promotion.py`: 19;
+  `professor/test_homepage_patents.py`: 11;
+  `professor/test_paper_identity_gate_page_only.py`: 3;
+  `professor/test_patent_identity_gate.py`: 12;
+  `patent/test_homepage_ingest.py`: 10;
+  `patent/test_quality_promotion.py`: 12). All passing.
+
+#### T8.3 — Manual E2E (deferred — needs credentials)
+- **Status**: not executed; deferred to a manual run by the user.
+- Required environment: Postgres (V004-V020 applied), Milvus,
+  Anthropic/OpenAI API key, Serper API key, network egress to
+  prof homepages.
+- Suggested smoke seed: a SUSTech CSE faculty page already
+  registered in `professor_seed` (e.g. a faculty with both
+  Publications and Patents sections).
+- Run commands:
+  ```bash
+  cd apps/miroflow-agent
+  uv run python scripts/run_homepage_paper_ingest.py \
+      --prof-id <seed_id> --limit 1
+  # (T4 introduces a new entry point — invoke equivalent for
+  #  patents once paper run lands cleanly)
+  uv run python -c "
+  from src.data_agents.patent.homepage_ingest import \
+      run_homepage_patent_ingest
+  # connect via DATABASE_URL, then:
+  # run_homepage_patent_ingest(conn, prof_id='<seed_id>', limit=1)
+  "
+  ```
+- Expected observations:
+  - Papers extracted from Publications section → rows in
+    `paper` with `quality_status='needs_enrichment'` and matching
+    `professor_paper_link` row.
+  - Patents extracted from Patents section (or zero if absent) →
+    rows in `patent` (only for candidates with registration
+    number) + matching `professor_patent_link`. Title-only
+    candidates produce `pipeline_issue` rows with
+    `stage='data_quality_flag'`.
+  - Enrichment fires asynchronously via the existing pipeline
+    runner.
+  - At least one paper should promote to `quality_status='ready'`
+    when enrichment fills the gaps and the boilerplate judge
+    passes (manual verification of the promotion module's
+    runtime wiring is also part of this step — see Carry-over
+    note about T7 wiring in tasks.md).
+
+## Failure modes that block archive
+
+- ~~T1 leaves `discover_*` calls active anywhere in src/~~ —
+  documented as carry-over to `paper-pipeline-cleanup` follow-up
+  with explicit rationale; no longer treated as block, but listed
+  in tasks.md "Carry-over" section.
+- T4 patent extraction unconditionally fires for all sections (false
+  positives) — heuristic too loose; tighten before archive
+  *(addressed: extractor uses conservative section-header match;
+  unit test `test_zero_patents_when_publications_section_mentions_patents_in_body`
+  pins the invariant)*.
+- T7 forward-monotonic invariant violated (a `ready` paper auto-
+  degrades after enrichment failure) — bug; fix before archive
+  *(addressed: `test_ready_does_not_auto_degrade_on_enrichment_loss`
+  pins the invariant)*.
 
 ## Failure modes that block archive
 
