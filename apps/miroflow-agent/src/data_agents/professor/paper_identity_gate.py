@@ -73,6 +73,12 @@ class PaperIdentityDecision:
     research topic aligns with the target professor's stated research
     directions. ``None`` when the LLM couldn't / didn't produce a score
     (e.g. parse error, missing field, or paper rejected outright).
+
+    Callers are responsible for filing a ``pipeline_issue`` with
+    ``stage="identity_gate"`` when ``not accepted and confidence < 0.5``
+    (per OpenSpec change ``prof-paper-patent-from-page-flow`` spec
+    Requirement "Identity gate semantics"). Decisions in the [0.5, 0.8)
+    band are LLM-uncertain rejects and do not warrant an issue row.
     """
 
     index: int
@@ -81,6 +87,40 @@ class PaperIdentityDecision:
     reasoning: str
     topic_consistency: float | None = None
     error: str | None = None
+
+
+# --- Page-only attribution short-circuit -----------------------------------
+#
+# Per spec Requirement "Identity gate semantics" + design.md §5
+# ("Page-only attribution → confidence 1.0 unconditional acceptance"):
+# when a paper candidate is sourced solely from the prof's own page (no
+# enrichment-side authorship information yet), the gate accepts at
+# confidence 1.0 without an LLM call. The prof maintains their own page;
+# their declaration alone is authoritative within the system's "科创检索
+# vs truth-checking" framing (design.md §4).
+
+PAGE_ONLY_REASONING = "prof_page_declaration"
+
+
+def accept_page_only_attribution(
+    candidate: PaperIdentityCandidate,
+) -> PaperIdentityDecision:
+    """Return an unconditional accept for a page-only paper candidate.
+
+    Use when the candidate has no enrichment-side authorship signals to
+    disambiguate against. The gate's job is same-person-vs-same-name,
+    and that question only becomes meaningful once we have an external
+    claim (e.g. an OpenAlex author list) to compare against. With a
+    page-only candidate, there is no such alternative claim — the prof's
+    page declares the paper as theirs, full stop.
+    """
+    return PaperIdentityDecision(
+        index=candidate.index,
+        accepted=True,
+        confidence=1.0,
+        reasoning=PAGE_ONLY_REASONING,
+        topic_consistency=None,
+    )
 
 
 def _render_candidates(candidates: list[PaperIdentityCandidate]) -> str:

@@ -167,8 +167,55 @@
 - Commit ref: filled at commit time.
 
 ### T5 — Identity gate
-- Paper gate verification:
-- Patent gate creation commit ref:
+- Paper gate verification (T5.1):
+  Audited `professor/paper_identity_gate.py` (current location; spec
+  referenced `paper/identity_gate.py` but the gate has always lived
+  under `professor/` and is consumed by `professor.paper_collector`).
+  - ≥ 0.8 → auto-accept: ✅ (`CONFIDENCE_THRESHOLD = 0.8` in
+    `_verify_single_batch`).
+  - [0.5, 0.8) → LLM judge fallback: ✅ implicit (LLM is the only
+    judge; design.md §4 accepts single-tier as equivalent).
+  - < 0.5 → reject + pipeline_issue: ⚠️ rejects via
+    `accepted=False`; pipeline_issue write is caller responsibility
+    (gate stays pure / DB-less). Documented in `PaperIdentityDecision`
+    docstring.
+  - Page-only attribution → 1.0: ❌ pre-T5; fixed in T5.2.
+- Paper gate short-circuit (T5.2): added
+  `accept_page_only_attribution(candidate)` in
+  `professor/paper_identity_gate.py`. Pure function, no LLM call,
+  returns `PaperIdentityDecision(accepted=True, confidence=1.0,
+  reasoning="prof_page_declaration")`. New constant
+  `PAGE_ONLY_REASONING` exported for caller use.
+- Patent gate creation (T5.3): new module
+  `professor/patent_identity_gate.py` with:
+  - `PatentIdentityCandidate` (index, title, patent_id, inventors)
+  - `PatentIdentityDecision` (index, accepted, confidence, reasoning)
+  - `accept_page_only_attribution(candidate)` — page-only short-circuit
+    parallel to paper side
+  - `verify_xlsx_attribution(candidate, *, professor_canonical_name,
+    name_variants=None)` — deterministic name-intersection scoring
+    for the future xlsx-merge path. No LLM step (design.md §8 forbids
+    external patent enrichment).
+- Unit tests added (T5.4): 15 tests total — 3 in
+  `tests/data_agents/professor/test_paper_identity_gate_page_only.py`
+  (paper-side page-only short-circuit) + 12 in
+  `tests/data_agents/professor/test_patent_identity_gate.py`
+  (patent-side page-only, xlsx exact match, name-variant matching
+  across scripts, same-name collision uncertain-reject, no-inventors
+  reject, no-name-match reject, substring-collision protection,
+  blank-canonical-name reject, decision-contract assertion for
+  pipeline_issue handoff).
+- Caveat surfaced: spec asked for files at `paper/identity_gate.py`
+  and `patent/identity_gate.py`; both gates actually live at
+  `professor/*_identity_gate.py` to stay aligned with the existing
+  callers (`paper_collector`, future `patent.exact_backfill`). No
+  rename done — moving the paper gate would force import surgery in
+  3+ files for no functional benefit. design.md §4 implies the
+  current location is acceptable.
+- Pre-existing failure outside slice:
+  `tests/data_agents/patent/test_release.py::test_build_patent_release_generates_summary_and_company_links`
+  continues to fail on `main`; not introduced by T5.
+- Commit ref: filled at commit time.
 
 ### T6 — summary_zh
 - Sample char count distribution (50 papers):

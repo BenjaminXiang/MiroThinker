@@ -91,19 +91,51 @@ order is 1 → 2 → 3 → 4 → 5.
 
 ## 5. Identity gate refinement
 
-- [ ] T5.1: Verify `apps/miroflow-agent/src/data_agents/paper/identity_gate.py`
+- [x] T5.1: Verify
+  `apps/miroflow-agent/src/data_agents/professor/paper_identity_gate.py`
+  (current location for the paper gate; spec referenced
+  `paper/identity_gate.py` but the implementation has always lived
+  under `professor/` and is imported by `professor.paper_collector`)
   satisfies spec Requirement "Identity gate semantics":
-  - Returns ≥ 0.8 → auto-accept
-  - Returns ∈ [0.5, 0.8) → LLM judge fallback
-  - Returns < 0.5 → reject + pipeline_issue
-  - Page-only attribution → confidence 1.0 unconditionally
-- [ ] T5.2: Adjust if needed. Common gap: page-only-attribution
-  short-circuit may not be present; add early-return.
-- [ ] T5.3: Create symmetric module
-  `apps/miroflow-agent/src/data_agents/patent/identity_gate.py`
-  mirroring paper-side semantics.
-- [ ] T5.4: Unit tests for both paper and patent gates: page-only
-  case, OpenAlex same-name case, low-confidence reject.
+  - Returns ≥ 0.8 → auto-accept ✅ (`CONFIDENCE_THRESHOLD = 0.8`
+    enforced in `_verify_single_batch` and via
+    `identity_verifier.CONFIDENCE_THRESHOLD`)
+  - Returns ∈ [0.5, 0.8) → LLM judge fallback ✅ (the LLM call is
+    the only judge; design.md §4 accepts the single-tier
+    implementation as functionally equivalent to the spec's
+    layered-judge framing)
+  - Returns < 0.5 → reject + pipeline_issue ⚠️ rejects via
+    `accepted=False`; the pipeline_issue write is a caller
+    responsibility (gate stays DB-less). Documented in the
+    `PaperIdentityDecision` docstring.
+  - Page-only attribution → confidence 1.0 unconditionally ❌ → fixed
+    in T5.2.
+- [x] T5.2: Added `accept_page_only_attribution(candidate)` to
+  `professor/paper_identity_gate.py`. Returns a pure
+  `PaperIdentityDecision(accepted=True, confidence=1.0,
+  reasoning="prof_page_declaration")` with no LLM call. The
+  short-circuit is now an explicit, testable surface; existing
+  `homepage_ingest` page-only flow does not yet call it (page-only
+  papers bypass the gate entirely there), but the function exists
+  so future code paths can be uniform with the gate contract.
+- [x] T5.3: Created
+  `apps/miroflow-agent/src/data_agents/professor/patent_identity_gate.py`
+  with `PatentIdentityCandidate`, `PatentIdentityDecision`,
+  `accept_page_only_attribution`, and `verify_xlsx_attribution`.
+  Patent-side has no LLM step (design.md §8 — patents have no
+  external enrichment); `verify_xlsx_attribution` is a deterministic
+  name-intersection helper for the future xlsx-merge path. Scoring:
+  single inventor exact match → 1.0; multi-inventor with one match →
+  0.9 (accept); same-name collision (multiple matches) → 0.5
+  (uncertain reject); no match → 0.0 (reject + caller pipeline_issue).
+- [x] T5.4: Unit tests added — 3 in
+  `tests/data_agents/professor/test_paper_identity_gate_page_only.py`
+  (page-only path; ORCID-irrelevant; index preserved) + 12 in
+  `tests/data_agents/professor/test_patent_identity_gate.py`
+  (page-only, xlsx exact match, name-variant matching across
+  scripts, same-name collision, no-inventors reject, no-name-match
+  reject, substring-collision protection, blank-canonical-name
+  reject, decision-contract assertion for pipeline_issue handoff).
 
 ## 6. summary_zh generation alignment
 
