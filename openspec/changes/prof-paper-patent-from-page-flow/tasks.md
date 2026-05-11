@@ -61,17 +61,17 @@ order is 1 → 2 → 3 → 4 → 5.
 
 ## 4. Implement Patents-section extraction (greenfield)
 
-- [ ] T4.1: Create
+- [x] T4.1: Create
   `apps/miroflow-agent/src/data_agents/professor/homepage_patents.py`
   parallel to `homepage_publications.py`. Implement
   `extract_patents_from_html(html: str) -> list[PatentEntry]` using
   conservative section-header matching (`专利 / Patents / Patent
   Applications / 发明专利 / 实用新型 / 外观`).
-- [ ] T4.2: Define `PatentEntry` dataclass (or reuse existing patent
+- [x] T4.2: Define `PatentEntry` dataclass (or reuse existing patent
   models): `title` (required), `patent_id` (optional),
   `application_date` / `grant_date` (optional), `inventors`
   (optional, list of strings).
-- [ ] T4.3: Create
+- [x] T4.3: Create
   `apps/miroflow-agent/src/data_agents/patent/homepage_ingest.py`
   parallel to `paper/homepage_ingest.py`:
   - Calls `extract_patents_from_html` per Tier 2 / Tier 3 page
@@ -79,9 +79,13 @@ order is 1 → 2 → 3 → 4 → 5.
     Requirement "Patent canonical upsert")
   - Writes `professor_patent_link` rows
   - Files `pipeline_issue` with `stage="data_quality_flag"` on
-    V004 NOT NULL constraint conflicts (e.g. patent_type is NOT NULL
-    in V004 but prof page rarely lists it)
-- [ ] T4.4: Add unit tests for: zero-patents-on-page (no issue);
+    V004 NOT NULL constraint conflicts. Concretely: V004 makes
+    `patent_number` NOT NULL UNIQUE, so candidates without a
+    registration number are recorded as `data_quality_flag`
+    pipeline_issues rather than inserted as canonical rows. The
+    spec scenario "prof-page patent without patent_id" remains
+    aspirational pending a V004 relaxation in a future change.
+- [x] T4.4: Add unit tests for: zero-patents-on-page (no issue);
   page with title-only patents; page with full patent_id; conflict
   with existing canonical patent_id.
 

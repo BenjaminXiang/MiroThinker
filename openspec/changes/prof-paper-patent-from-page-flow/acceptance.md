@@ -137,8 +137,34 @@
 - Commit ref (if changes needed):
 
 ### T4 — Patents extraction (greenfield)
-- New module commit ref:
-- Unit test pass count:
+- New modules:
+  - `apps/miroflow-agent/src/data_agents/professor/homepage_patents.py`
+    (T4.1 / T4.2 — `PatentEntry` + `extract_patents_from_html`)
+  - `apps/miroflow-agent/src/data_agents/patent/homepage_ingest.py`
+    (T4.3 — `run_homepage_patent_ingest` +
+    `_ingest_patents_for_professor` + `_build_patent_row` +
+    SQL upserts for `patent` and `professor_patent_link`)
+- Unit tests added (T4.4): 21 tests total — 11 in
+  `tests/data_agents/professor/test_homepage_patents.py`
+  (extractor) + 10 in
+  `tests/data_agents/patent/test_homepage_ingest.py`
+  (ingest helpers). Scenarios covered: zero-patents section, page
+  with title-only patents (→ `data_quality_flag` pipeline_issue,
+  no canonical insert), page with full patent_id (→ canonical
+  upsert + link), conflict with existing canonical patent_id (→
+  `ON CONFLICT (patent_number) DO UPDATE` without auto-degrading
+  `quality_status`).
+- Caveat surfaced to spec: V004 makes `patent.patent_number` NOT
+  NULL UNIQUE; spec scenario "prof-page patent without patent_id"
+  cannot be satisfied as written in V004. T4.3 routes such
+  candidates to a `data_quality_flag` pipeline_issue. A future
+  change must relax V004 (or add a placeholder column) to satisfy
+  the spec scenario literally.
+- Pre-existing test failure outside this slice:
+  `tests/data_agents/patent/test_release.py::test_build_patent_release_generates_summary_and_company_links`
+  fails on `main` already (company_ids linkage); not introduced
+  by T4.
+- Commit ref: filled at commit time.
 
 ### T5 — Identity gate
 - Paper gate verification:
