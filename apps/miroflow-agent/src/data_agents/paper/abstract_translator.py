@@ -1,4 +1,21 @@
-"""LLM-backed English abstract to Chinese summary translation."""
+"""LLM-backed English abstract to Chinese summary translation.
+
+Two-stage rejection (per OpenSpec change ``prof-paper-patent-from-page-flow``
+spec Requirement "summary_zh generation" + design.md §11):
+
+1. ``translate_abstract_to_zh`` produces a 200-400 字 paraphrase and
+   rejects obvious failure modes via a regex catalog
+   (``BOILERPLATE_KEYWORDS``) — cheap, catches known patterns.
+2. ``judge_summary_boilerplate`` is a second, deliberately separate
+   LLM call that classifies a candidate summary as informative vs.
+   topic-agnostic boilerplate. Use it on summaries that survive the
+   regex filter; callers MUST set ``summary_zh=NULL`` and
+   ``quality_status="rejected"`` when the judge returns ``True``.
+
+The judge fails open: on LLM transport / parse errors it returns
+``False`` so a transient outage doesn't silently null out every newly
+generated summary.
+"""
 
 from __future__ import annotations
 
@@ -16,6 +33,23 @@ _DEFAULT_TEMPERATURE = 0.2
 _DEFAULT_MAX_TOKENS = 700
 _MARKDOWN_FENCE_RE = re.compile(r"^\s*```[a-zA-Z]*\s*|\s*```\s*$", re.MULTILINE)
 _WHITESPACE_RE = re.compile(r"\s+")
+
+_JUDGE_DEFAULT_TEMPERATURE = 0.0
+_JUDGE_DEFAULT_MAX_TOKENS = 50
+_JUDGE_BOILERPLATE_VERDICT = "BOILERPLATE"
+_JUDGE_INFORMATIVE_VERDICT = "INFORMATIVE"
+
+_JUDGE_SYSTEM_PROMPT = (
+    "你是中文学术摘要质量判别器。判断给定的论文摘要是否为「无信息量的模板"
+    "化套话」(boilerplate)。\n"
+    "判别规则：\n"
+    "- 若摘要明确描述具体方法、具体数据/实验、具体结果或具体应用领域，"
+    "判为 INFORMATIVE。\n"
+    "- 若摘要全部使用「本文研究了一个重要问题」「提出了一种新方法」"
+    "「实验证明了有效性」等只能套在任意论文上的通用句式，判为 BOILERPLATE。\n"
+    "- 长度短并不等于 boilerplate；真正的判别标准是「换一篇论文还能照抄」。\n"
+    "- 单行输出，仅输出 BOILERPLATE 或 INFORMATIVE，不要其它字符。"
+)
 
 _SYSTEM_PROMPT = (
     "你是科技论文中文摘要助手。给定英文学术论文摘要，输出 200-400 字"
@@ -108,3 +142,64 @@ def _zh_char_ratio(text: str) -> float:
         return 0.0
     cjk_count = len(re.findall(r"[\u4e00-\u9fff]", stripped))
     return cjk_count / max(1, len(stripped))
+
+
+def judge_summary_boilerplate(
+    summary: str | None,
+    *,
+    llm_client: Any,
+    llm_model: str,
+    extra_body: dict[str, Any] | None = None,
+) -> bool:
+    """Return True iff the LLM judge classifies ``summary`` as boilerplate.
+
+    Spec contract (Requirement "summary_zh generation" Scenario
+    "Boilerplate-rejected summary"): callers MUST set
+    ``summary_zh=NULL`` and ``quality_status="rejected"`` when this
+    returns True.
+
+    Fails open: empty / whitespace inputs return False (nothing to
+    judge; the prior translation step already returned None for those);
+    LLM transport or parse errors also return False so a transient
+    outage doesn't mass-reject. Callers can re-run the judge on the
+    next cron pass for borderline cases.
+    """
+    candidate = (summary or "").strip()
+    if not candidate:
+        return False
+
+    try:
+        response = llm_client.chat.completions.create(
+            model=llm_model,
+            messages=[
+                {"role": "system", "content": _JUDGE_SYSTEM_PROMPT},
+                {"role": "user", "content": "\u5019\u9009\u6458\u8981\uff1a\n" + candidate},
+            ],
+            temperature=_JUDGE_DEFAULT_TEMPERATURE,
+            max_tokens=_JUDGE_DEFAULT_MAX_TOKENS,
+            extra_body=extra_body or {},
+        )
+        raw_text = (response.choices[0].message.content or "").strip()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Boilerplate judge LLM call failed: %s", exc)
+        return False
+
+    verdict = _parse_judge_verdict(raw_text)
+    return verdict == _JUDGE_BOILERPLATE_VERDICT
+
+
+def _parse_judge_verdict(text: str) -> str:
+    """Extract BOILERPLATE / INFORMATIVE token from the judge's reply.
+
+    The prompt asks for a single token, but LLMs sometimes return
+    quoted, punctuated, or explained variants. We accept the verdict if
+    EITHER token appears anywhere in the reply, with BOILERPLATE
+    winning on co-occurrence (conservative reject \u2014 when in doubt,
+    keep the summary; we only reject on explicit boilerplate verdict).
+    """
+    upper = (text or "").upper()
+    if _JUDGE_BOILERPLATE_VERDICT in upper:
+        return _JUDGE_BOILERPLATE_VERDICT
+    if _JUDGE_INFORMATIVE_VERDICT in upper:
+        return _JUDGE_INFORMATIVE_VERDICT
+    return _JUDGE_INFORMATIVE_VERDICT  # default: informative on parse miss

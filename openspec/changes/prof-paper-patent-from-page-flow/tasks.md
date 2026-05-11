@@ -139,14 +139,31 @@ order is 1 → 2 → 3 → 4 → 5.
 
 ## 6. summary_zh generation alignment
 
-- [ ] T6.1: Audit `apps/miroflow-agent/src/data_agents/paper/abstract_translator.py`
-  output: confirm 200-400 character paragraph form (per Paper Review
-  P2). Adjust prompt if outputs drift.
-- [ ] T6.2: Add boilerplate-detection LLM judge step (separate prompt;
-  binary classification). Failing outputs set `summary_zh=NULL` and
-  `quality_status=rejected`.
-- [ ] T6.3: Add unit tests for: typical abstract → passing summary;
-  generic LLM hallucination → boilerplate judge rejects.
+- [x] T6.1: Audited
+  `apps/miroflow-agent/src/data_agents/paper/abstract_translator.py`.
+  Current prompt explicitly targets `200-400 字 中文 paraphrase`,
+  matching spec P2. Validation band is 150-500 (lenient tolerance
+  around the 200-400 target) — outputs outside the tolerance are
+  rejected via `_validate_summary_zh`. Prompt already enforces no
+  Markdown / bullet, retains terminology, no direct translation. No
+  prompt drift; no changes needed.
+- [x] T6.2: Added `judge_summary_boilerplate(summary, *, llm_client,
+  llm_model, extra_body=None) -> bool` in `abstract_translator.py`.
+  Separate LLM call with a binary classifier prompt
+  (`_JUDGE_SYSTEM_PROMPT`); returns True only when the LLM emits the
+  literal `BOILERPLATE` token. Fails open on transport / parse errors
+  (returns False) so transient outages don't mass-reject. Empty /
+  whitespace inputs skip the LLM call entirely. Callers MUST set
+  `summary_zh=NULL` and `quality_status="rejected"` when this
+  returns True — caller-responsibility contract documented in the
+  function docstring (T7 wires this into the promotion logic).
+- [x] T6.3: Unit tests added — 13 tests total. 5 pre-existing
+  translator tests still pass; 13 new judge tests cover:
+  parse_judge_verdict (exact / case-insensitive / verbose /
+  co-occurrence / unknown), judge end-to-end
+  (boilerplate-true / substantive-false / fail-open / blank-input
+  short-circuit / markdown-fenced reply / temperature=0 invariant /
+  extra_body plumbing).
 
 ## 7. Quality status promotion logic
 

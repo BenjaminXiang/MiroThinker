@@ -218,8 +218,35 @@
 - Commit ref: filled at commit time.
 
 ### T6 — summary_zh
-- Sample char count distribution (50 papers):
-- Boilerplate judge commit ref:
+- Audit (T6.1): current
+  `paper/abstract_translator.py` prompt explicitly targets `200-400 字
+  中文 paraphrase`. Validation band 150-500 (lenient tolerance).
+  Outputs outside the band are rejected via `_validate_summary_zh`.
+  Existing 17-entry regex catalog `BOILERPLATE_KEYWORDS` continues to
+  catch known failure modes cheaply. No prompt drift detected; no
+  changes needed at this layer.
+- Boilerplate judge (T6.2): new
+  `judge_summary_boilerplate(summary, *, llm_client, llm_model,
+  extra_body=None) -> bool`. Separate LLM call with a binary
+  classifier prompt (`_JUDGE_SYSTEM_PROMPT`). Returns True only when
+  the LLM emits the `BOILERPLATE` token. Fail-open on
+  transport / parse errors (returns False). Blank inputs skip the LLM
+  call. Caller contract documented: callers MUST set
+  `summary_zh=NULL` and `quality_status="rejected"` on True
+  (T7 wires this).
+- Sample char-count distribution (50 papers): not yet measured — that
+  is an E2E task (T8.3) that requires running the pipeline against
+  a real seed. The prompt + validation band targets 200-400 by
+  construction; distribution verification will be filled at T8.
+- Unit tests added (T6.3): 13 new tests in
+  `tests/data_agents/paper/test_abstract_translator_boilerplate_judge.py`.
+  Scenarios: parse_judge_verdict (exact / case / verbose /
+  co-occurrence prefer BOILERPLATE / unknown-defaults-to-INFORMATIVE),
+  judge end-to-end (boilerplate-true, substantive-false, fail-open
+  on LLM error, blank-input short-circuit without LLM call,
+  markdown-fenced reply, temperature=0 invariant, extra_body
+  plumbing). 5 pre-existing translator tests still pass.
+- Commit ref: filled at commit time.
 
 ### T7 — Quality status promotion
 - State machine commit ref:
