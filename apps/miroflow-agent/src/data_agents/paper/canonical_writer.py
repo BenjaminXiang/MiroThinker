@@ -10,6 +10,7 @@ from psycopg import Connection
 from src.data_agents.normalization import build_stable_id
 from src.data_agents.storage.postgres.pipeline_run import require_real_run_id
 
+from .quality_promotion import NEEDS_REVIEW, VALID_QUALITY_STATUSES
 from .title_cleaner import clean_paper_title
 
 
@@ -40,6 +41,7 @@ def upsert_paper(
     canonical_source: str,
     run_id: UUID | str,
     title_resolution_source: str | None = None,
+    quality_status: str | None = None,
 ) -> PaperUpsertReport:
     """Upsert a canonical paper row keyed by a stable paper id."""
     run_id = require_real_run_id(run_id, writer_name="upsert_paper")
@@ -55,6 +57,7 @@ def upsert_paper(
     identity_status = _identity_status_for_title_resolution_source(
         title_resolution_source or canonical_source
     )
+    effective_quality_status = _normalize_quality_status(quality_status)
     paper_id = _build_paper_id(
         title_clean=normalized_title,
         doi=normalized_doi,
@@ -88,9 +91,10 @@ def upsert_paper(
             citation_count,
             canonical_source,
             identity_status,
+            quality_status,
             run_id
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT (paper_id) DO UPDATE
            SET title_clean          = EXCLUDED.title_clean,
                title_raw            = EXCLUDED.title_raw,
@@ -123,6 +127,7 @@ def upsert_paper(
             citation_count,
             canonical_source,
             identity_status,
+            effective_quality_status,
             run_id,
             now,
         ),
@@ -160,3 +165,13 @@ def _normalize_optional(value: object) -> str | None:
         return None
     text = str(value).strip()
     return text or None
+
+
+def _normalize_quality_status(value: str | None) -> str:
+    status = _normalize_optional(value) or NEEDS_REVIEW
+    if status not in VALID_QUALITY_STATUSES:
+        raise ValueError(
+            f"quality_status must be one of {sorted(VALID_QUALITY_STATUSES)}, "
+            f"got {status!r}"
+        )
+    return status

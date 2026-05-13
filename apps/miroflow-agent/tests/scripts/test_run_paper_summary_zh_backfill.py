@@ -98,6 +98,111 @@ def test_cli_dry_run_dispatches_without_paper_update(monkeypatch, tmp_path, caps
     assert report["dry_run"] is True
 
 
+def test_cli_boilerplate_summary_rejects_paper(monkeypatch, tmp_path, capsys):
+    cli = _import_cli()
+    conn = MagicMock()
+    select_cursor = MagicMock()
+    select_cursor.fetchall.return_value = [
+        {
+            "paper_id": "PAPER-1",
+            "title_clean": "A paper",
+            "title_raw": None,
+            "year": 2026,
+            "venue": "NeurIPS",
+            "authors_display": "A. Smith",
+            "abstract_clean": "This paper proposes a robust model for discovery.",
+            "summary_zh": None,
+            "quality_status": "needs_enrichment",
+        }
+    ]
+    conn.execute.return_value = select_cursor
+
+    monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
+    monkeypatch.setattr(cli, "_open_llm_client", lambda: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(
+        cli,
+        "open_pipeline_run",
+        lambda *_a, **_kw: "11111111-1111-1111-1111-111111111111",
+    )
+    monkeypatch.setattr(cli, "close_pipeline_run", lambda *_a, **_kw: None)
+    monkeypatch.setattr(
+        cli, "_resolve_checkpoint_path", lambda _resume, _run_id: tmp_path / "run.jsonl"
+    )
+    monkeypatch.setattr(cli, "translate_abstract_to_zh", lambda *_a, **_kw: "中" * 220)
+    monkeypatch.setattr(cli, "judge_summary_boilerplate", lambda *_a, **_kw: True)
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+
+    with _patch_argv(["run_paper_summary_zh_backfill.py", "--limit", "1"]):
+        cli.main()
+
+    update_calls = [
+        (call.args[0], call.args[1])
+        for call in conn.execute.call_args_list
+        if call.args and isinstance(call.args[0], str) and "UPDATE paper" in call.args[0]
+    ]
+    assert len(update_calls) == 1
+    sql, params = update_calls[0]
+    assert "summary_zh = NULL" in " ".join(sql.split())
+    assert "quality_status = %s" in sql
+    assert params[0] == "rejected"
+    report = json.loads(capsys.readouterr().out)
+    assert report["summaries_rejected"] == 1
+    assert report["summaries_written"] == 0
+
+
+def test_cli_successful_summary_promotes_paper_status(monkeypatch, tmp_path, capsys):
+    cli = _import_cli()
+    conn = MagicMock()
+    select_cursor = MagicMock()
+    select_cursor.fetchall.return_value = [
+        {
+            "paper_id": "PAPER-1",
+            "title_clean": "A paper",
+            "title_raw": None,
+            "year": 2026,
+            "venue": "NeurIPS",
+            "authors_display": "A. Smith",
+            "abstract_clean": "This paper proposes a robust model for discovery.",
+            "summary_zh": None,
+            "quality_status": "needs_enrichment",
+        }
+    ]
+    conn.execute.return_value = select_cursor
+
+    monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
+    monkeypatch.setattr(cli, "_open_llm_client", lambda: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(
+        cli,
+        "open_pipeline_run",
+        lambda *_a, **_kw: "11111111-1111-1111-1111-111111111111",
+    )
+    monkeypatch.setattr(cli, "close_pipeline_run", lambda *_a, **_kw: None)
+    monkeypatch.setattr(
+        cli, "_resolve_checkpoint_path", lambda _resume, _run_id: tmp_path / "run.jsonl"
+    )
+    monkeypatch.setattr(cli, "translate_abstract_to_zh", lambda *_a, **_kw: "中" * 220)
+    monkeypatch.setattr(cli, "judge_summary_boilerplate", lambda *_a, **_kw: False)
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+
+    with _patch_argv(["run_paper_summary_zh_backfill.py", "--limit", "1"]):
+        cli.main()
+
+    update_calls = [
+        (call.args[0], call.args[1])
+        for call in conn.execute.call_args_list
+        if call.args and isinstance(call.args[0], str) and "UPDATE paper" in call.args[0]
+    ]
+    assert len(update_calls) == 1
+    sql, params = update_calls[0]
+    assert "summary_zh = %s" in sql
+    assert "quality_status = %s" in sql
+    assert params[0] == "中" * 220
+    assert params[1] == "ready"
+    report = json.loads(capsys.readouterr().out)
+    assert report["summaries_written"] == 1
+    assert report["summaries_rejected"] == 0
+
+
 def test_cli_skips_already_chinese_abstract(monkeypatch, tmp_path):
     cli = _import_cli()
     conn = MagicMock()

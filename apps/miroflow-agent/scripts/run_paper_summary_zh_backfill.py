@@ -20,7 +20,13 @@ if str(_REPO_ROOT) not in sys.path:
 
 from src.data_agents.paper.abstract_translator import (  # noqa: E402
     _zh_char_ratio,
+    judge_summary_boilerplate,
     translate_abstract_to_zh,
+)
+from src.data_agents.paper.quality_promotion import (  # noqa: E402
+    NEEDS_ENRICHMENT,
+    PaperEnrichmentSignals,
+    evaluate_paper_promotion,
 )
 from src.data_agents.professor.llm_profiles import resolve_professor_llm_settings  # noqa: E402
 from src.data_agents.storage.postgres.pipeline_run import (  # noqa: E402
@@ -124,7 +130,8 @@ def _build_select_sql(
     if only_missing:
         conditions.append("(p.summary_zh IS NULL OR length(trim(p.summary_zh)) = 0)")
     sql = (
-        "SELECT p.paper_id, p.title_clean, p.title_raw, p.abstract_clean, p.summary_zh "
+        "SELECT p.paper_id, p.title_clean, p.title_raw, p.year, p.venue, "
+        "p.authors_display, p.abstract_clean, p.summary_zh, p.quality_status "
         "  FROM paper p "
         f" WHERE {' AND '.join(conditions)} "
         " ORDER BY p.paper_id"
@@ -140,17 +147,38 @@ def _persist_summary_zh(
     *,
     paper_id: str,
     summary_zh: str,
+    quality_status: str,
     run_id: str,
 ) -> None:
     conn.execute(
         """
         UPDATE paper
            SET summary_zh = %s,
+               quality_status = %s,
                updated_at = now(),
                run_id = %s
          WHERE paper_id = %s
         """,
-        (summary_zh, run_id, paper_id),
+        (summary_zh, quality_status, run_id, paper_id),
+    )
+
+
+def _reject_summary_zh(
+    conn: Any,
+    *,
+    paper_id: str,
+    run_id: str,
+) -> None:
+    conn.execute(
+        """
+        UPDATE paper
+           SET summary_zh = NULL,
+               quality_status = %s,
+               updated_at = now(),
+               run_id = %s
+         WHERE paper_id = %s
+        """,
+        ("rejected", run_id, paper_id),
     )
 
 
@@ -252,12 +280,59 @@ def main(argv: list[str] | None = None) -> None:
             continue
 
         if summary_zh:
+            is_boilerplate = judge_summary_boilerplate(
+                summary_zh,
+                llm_client=llm,
+                llm_model=llm_model,
+                extra_body=extra_body,
+            )
+            if is_boilerplate:
+                if not args.dry_run:
+                    try:
+                        _reject_summary_zh(
+                            conn,
+                            paper_id=paper_id,
+                            run_id=run_id,
+                        )
+                        conn.commit()
+                    except Exception as exc:  # noqa: BLE001
+                        logger.warning("Reject persist failed for paper %s: %s", paper_id, exc)
+                        report["papers_with_errors"] += 1
+                        try:
+                            conn.rollback()
+                        except Exception:
+                            pass
+                        _append_checkpoint(
+                            checkpoint_path,
+                            {
+                                "paper_id": paper_id,
+                                "status": "persist_error",
+                                "error": str(exc),
+                            },
+                        )
+                        continue
+                report["summaries_rejected"] += 1
+                _append_checkpoint(
+                    checkpoint_path,
+                    {"paper_id": paper_id, "status": "rejected_boilerplate"},
+                )
+                continue
+
+            promotion = evaluate_paper_promotion(
+                current_status=_current_quality_status(row),
+                signals=_paper_enrichment_signals(
+                    row,
+                    summary_zh=summary_zh,
+                    summary_zh_boilerplate_rejected=False,
+                ),
+            )
             if not args.dry_run:
                 try:
                     _persist_summary_zh(
                         conn,
                         paper_id=paper_id,
                         summary_zh=summary_zh,
+                        quality_status=promotion.next_status,
                         run_id=run_id,
                     )
                     conn.commit()
@@ -318,6 +393,27 @@ def main(argv: list[str] | None = None) -> None:
         )
 
     print(json.dumps(report, ensure_ascii=False))
+
+
+def _current_quality_status(row: dict[str, Any]) -> str:
+    return str(row.get("quality_status") or NEEDS_ENRICHMENT).strip() or NEEDS_ENRICHMENT
+
+
+def _paper_enrichment_signals(
+    row: dict[str, Any],
+    *,
+    summary_zh: str | None,
+    summary_zh_boilerplate_rejected: bool,
+) -> PaperEnrichmentSignals:
+    return PaperEnrichmentSignals(
+        has_title=bool(str(row.get("title_clean") or row.get("title_raw") or "").strip()),
+        has_year=row.get("year") is not None,
+        has_venue=bool(str(row.get("venue") or "").strip()),
+        has_authors=bool(str(row.get("authors_display") or "").strip()),
+        has_abstract=bool(str(row.get("abstract_clean") or "").strip()),
+        has_summary_zh=bool(str(summary_zh or "").strip()),
+        summary_zh_boilerplate_rejected=summary_zh_boilerplate_rejected,
+    )
 
 
 if __name__ == "__main__":

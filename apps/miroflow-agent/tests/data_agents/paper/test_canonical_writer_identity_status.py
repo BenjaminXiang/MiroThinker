@@ -12,6 +12,7 @@ def _upsert_with_source(
     source: str | None,
     *,
     canonical_source: str = "manual",
+    quality_status: str | None = None,
 ) -> tuple[str, tuple[object, ...]]:
     conn = MagicMock()
     conn.execute.return_value.fetchone.return_value = None
@@ -32,6 +33,7 @@ def _upsert_with_source(
         canonical_source=canonical_source,
         run_id=RUN_ID,
         title_resolution_source=source,
+        quality_status=quality_status,
     )
 
     insert_call = conn.execute.call_args_list[1]
@@ -49,3 +51,16 @@ def test_upsert_paper_marks_identity_unverified_for_llm_only_resolution():
     _, params = _upsert_with_source("llm_only")
 
     assert params[13] == "unverified"
+
+
+def test_upsert_paper_can_initialize_page_only_quality_status():
+    sql, params = _upsert_with_source(
+        "prof_page_only",
+        canonical_source="prof_page_only",
+        quality_status="needs_enrichment",
+    )
+
+    assert "quality_status" in sql
+    assert "updated_at" in sql
+    assert "quality_status" not in sql.split("DO UPDATE", maxsplit=1)[1]
+    assert params[14] == "needs_enrichment"

@@ -10,7 +10,6 @@ from __future__ import annotations
 import json
 import uuid
 from contextlib import contextmanager
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 from uuid import UUID
 
@@ -202,6 +201,44 @@ def test_happy_path_evidence_source_type_is_personal_homepage(tmp_path):
         assert kwargs.get("evidence_source_type") == "personal_homepage"
 
 
+def test_page_only_publication_initializes_needs_enrichment(tmp_path):
+    prof = _prof_row()
+    conn = _mock_conn_with_profs([prof])
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value="<html></html>",
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.extract_publications_from_html",
+        return_value=[_pub(clean_title="Unindexed Preprint", authors_text=None)],
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
+        return_value=None,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper"
+    ) as m_upsert_paper, patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
+        return_value=True,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest._file_pipeline_issue"
+    ):
+        m_upsert_paper.return_value = MagicMock(
+            paper_id="paper:page-only:x",
+            is_new=True,
+        )
+
+        run_homepage_paper_ingest(conn, resume_checkpoint_path=tmp_path / "c.jsonl")
+
+        assert m_upsert_paper.call_args.kwargs["canonical_source"] == "prof_page_only"
+        assert m_upsert_paper.call_args.kwargs["quality_status"] == "needs_enrichment"
+
+
 # ---------- Quality gates / pipeline_issue -----------------------------------
 
 
@@ -244,7 +281,7 @@ def test_publications_under_threshold_files_pipeline_issue(tmp_path):
         assert "publications_under_threshold" in issue_types_filed
 
 
-def test_all_titles_unresolvable_files_pipeline_issue(tmp_path):
+def test_all_titles_page_only_files_pipeline_issue(tmp_path):
     prof = _prof_row()
     conn = _mock_conn_with_profs([prof])
 
@@ -259,7 +296,7 @@ def test_all_titles_unresolvable_files_pipeline_issue(tmp_path):
         "src.data_agents.paper.homepage_ingest.extract_publications_from_html"
     ) as m_extract, patch(
         "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
-        return_value=None,  # all unresolvable
+        return_value=None,  # all external resolvers miss
     ), patch(
         "src.data_agents.paper.homepage_ingest._file_pipeline_issue"
     ) as m_issue:
@@ -268,7 +305,9 @@ def test_all_titles_unresolvable_files_pipeline_issue(tmp_path):
             conn, resume_checkpoint_path=tmp_path / "c.jsonl"
         )
 
-        assert report.papers_linked_total == 0
+        # T3 page-only fallback keeps prof-page declarations as canonical
+        # rows/links, while still filing an issue that enrichment is needed.
+        assert report.papers_linked_total == 5
         issue_types = [c.kwargs.get("issue_type") for c in m_issue.call_args_list]
         assert "all_titles_unresolvable" in issue_types
 

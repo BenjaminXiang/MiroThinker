@@ -24,6 +24,7 @@ from ..storage.postgres.title_resolution_cache import PostgresTitleResolutionCac
 from .canonical_writer import upsert_paper
 from .full_text_fetcher import fetch_and_extract_full_text
 from .homepage_http import fetch_homepage_html
+from .quality_promotion import NEEDS_ENRICHMENT
 from .title_resolver import ResolvedPaper, resolve_paper_by_title
 
 logger = logging.getLogger(__name__)
@@ -309,6 +310,7 @@ def run_homepage_paper_ingest(
                                 canonical_source=resolved.match_source,
                                 run_id=run_id,
                                 title_resolution_source=resolved.match_source,
+                                quality_status=NEEDS_ENRICHMENT,
                             )
                             actual_paper_id = getattr(
                                 paper_report,
