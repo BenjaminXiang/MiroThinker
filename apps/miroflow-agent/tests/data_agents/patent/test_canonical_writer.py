@@ -77,10 +77,10 @@ def test_record_to_patent_dict_marks_ready_when_required_fields_exist():
     assert payload["quality_status"] == "ready"
 
 
-def test_record_to_patent_dict_marks_needs_review_when_filing_date_missing():
+def test_record_to_patent_dict_marks_partial_when_xlsx_merge_has_gaps():
     payload = record_to_patent_dict(_record(filing_date=None))
 
-    assert payload["quality_status"] == "needs_review"
+    assert payload["quality_status"] == "partial"
 
 
 def test_upsert_patent_writes_applicants_parsed_as_jsonb_list():

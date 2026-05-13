@@ -13,6 +13,11 @@ from src.data_agents.publish import publish_jsonl
 from .import_xlsx import _split_tokens
 from .linkage import link_company_ids, link_professor_ids
 from .models import PatentImportRecord
+from .quality_promotion import (
+    NEEDS_ENRICHMENT,
+    PatentEnrichmentSignals,
+    evaluate_patent_promotion,
+)
 from .summary_llm import (
     PatentSummaryMethod,
     generate_patent_summary_text,
@@ -96,8 +101,12 @@ def build_patent_release(
             last_updated=generated_at,
             quality_status=_calculate_quality_status(
                 title_clean=title,
+                patent_number=record.patent_number,
+                patent_type=record.patent_type,
                 applicants_parsed=applicants,
+                inventors_parsed=inventors,
                 filing_date=record.filing_date,
+                grant_date=None,
             ),
         )
         patent_records.append(patent)
@@ -175,8 +184,12 @@ def record_to_patent_dict(record: PatentRecord) -> dict[str, object]:
         "identity_status": _identity_status_for_patent_number(record.patent_number),
         "quality_status": _calculate_quality_status(
             title_clean=record.title,
+            patent_number=record.patent_number,
+            patent_type=record.patent_type,
             applicants_parsed=applicants_parsed,
+            inventors_parsed=inventors_parsed,
             filing_date=filing_date,
+            grant_date=_date_from_iso(record.grant_date),
         ),
         "first_seen_at": record.last_updated,
         "updated_at": record.last_updated,
@@ -228,13 +241,25 @@ def _split_applicant_tokens(applicants: tuple[str, ...] | list[str]) -> list[str
 def _calculate_quality_status(
     *,
     title_clean: str | None,
+    patent_number: str | None,
+    patent_type: str | None,
     applicants_parsed: list[str],
+    inventors_parsed: list[str],
     filing_date: date | str | None,
+    grant_date: date | str | None,
 ) -> str:
-    first_applicant = applicants_parsed[0].strip() if applicants_parsed else ""
-    if (title_clean or "").strip() and first_applicant and filing_date:
-        return "ready"
-    return "needs_review"
+    decision = evaluate_patent_promotion(
+        current_status=NEEDS_ENRICHMENT,
+        signals=PatentEnrichmentSignals(
+            has_patent_number=bool((patent_number or "").strip()),
+            has_title=bool((title_clean or "").strip()),
+            has_patent_type=bool(_normalize_patent_type_for_canonical(patent_type)),
+            has_filing_or_grant_date=bool(filing_date or grant_date),
+            has_applicants_or_inventors=bool(applicants_parsed or inventors_parsed),
+            xlsx_merged=True,
+        ),
+    )
+    return decision.next_status
 
 
 def _date_from_iso(value: str | date | datetime | None) -> date | None:
