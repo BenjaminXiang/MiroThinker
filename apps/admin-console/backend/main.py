@@ -26,6 +26,10 @@ from backend.api.review import router as review_router
 from backend.api.seeds import router as seeds_router
 from backend.api.upload import router as upload_router
 from backend.api.domains import router as domains_router
+from backend.seed_cron import (
+    shutdown_seed_cron_scheduler,
+    start_seed_cron_scheduler,
+)
 
 app = FastAPI(title="深圳科创数据管理平台 - Admin Console")
 
@@ -40,6 +44,18 @@ app.add_middleware(
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.on_event("startup")
+def _start_seed_cron() -> None:
+    app.state.seed_cron_scheduler = start_seed_cron_scheduler()
+
+
+@app.on_event("shutdown")
+def _shutdown_seed_cron() -> None:
+    shutdown_seed_cron_scheduler(
+        getattr(app.state, "seed_cron_scheduler", None)
+    )
 
 
 # Register specific-prefix routers BEFORE the domain catch-all
