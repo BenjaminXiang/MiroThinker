@@ -35,12 +35,17 @@ format-md:
 [group('precommit')]
 precommit: lint sort-imports format-md format
 
-# Build admin-console React SPA into frontend/dist (refreshes the SPA served by 8088)
+# Build admin-console React SPA into frontend/dist (served by the admin backend).
 frontend-fresh:
     cd apps/admin-console/frontend && npm run build
 
+# Start current admin-console backend/API. Requires DATABASE_URL or DATABASE_URL_TEST.
+# Port 18088 is retired; use 18188 for the Phase B backend.
+admin-backend:
+    cd apps/admin-console && uv run --no-sync uvicorn backend.main:app --host 0.0.0.0 --port 18188
+
 # Start admin-console Vite dev server with HMR on port 5180.
-# Proxies /api to VITE_API_PROXY_TARGET, default http://localhost:18088.
+# Proxies /api to VITE_API_PROXY_TARGET, default http://localhost:18188.
 # Use this only when actively editing React code; otherwise rely on backend-served dist.
 frontend-dev:
-    cd apps/admin-console/frontend && npm run dev
+    cd apps/admin-console/frontend && VITE_API_PROXY_TARGET="${VITE_API_PROXY_TARGET:-http://localhost:18188}" npm run dev -- --host 0.0.0.0 --port 5180
