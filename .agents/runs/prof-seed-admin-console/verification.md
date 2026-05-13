@@ -321,3 +321,31 @@ Audit-trail retention decision:
 - Decision: retain both sets as real `miroflow_real` Phase B smoke evidence.
   They are tagged by `seed_id` and no longer appear on the seed management
   page, so they do not pollute current seed operations.
+
+## 2026-05-13 post-commit full-suite baseline
+
+Scope:
+
+- Record a broad-suite baseline after the Phase B + T7.5 commit stack.
+- Do not repair historical suite drift in this evidence slice.
+- Strip proxy environment variables before both commands:
+  `http_proxy`, `https_proxy`, `HTTP_PROXY`, `HTTPS_PROXY`, `all_proxy`,
+  and `ALL_PROXY`.
+
+Commands and outcomes:
+
+- `cd apps/miroflow-agent && uv run --no-sync pytest -q --tb=no`
+  - Full log: `/tmp/miroflow-agent-full-pytest-20260513.log`.
+  - Result: 13 failed, 1734 passed, 85 skipped, 1 xfailed, 1 warning,
+    1 error in 107.54s.
+  - Exit code: 1.
+  - Baseline remains red. The reported failing/error tests are in the
+    existing V021 migration, patent release, company/patent retrieval,
+    Milvus-lite retrieval, professor publish dedupe, and patent release
+    E2E areas; they are outside the Phase B seed-management and T7.5
+    quality-status wiring slices.
+
+- `cd apps/admin-console && uv run --no-sync pytest -q --tb=no`
+  - Full log: `/tmp/admin-console-full-pytest-20260513.log`.
+  - Result: 220 passed, 116 skipped, 12 warnings in 2.57s.
+  - Exit code: 0.
