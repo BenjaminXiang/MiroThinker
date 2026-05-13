@@ -565,6 +565,12 @@ export interface SeedPayload {
   seed_url: string;
 }
 
+export interface SeedTriggerResponse {
+  run_id: string;
+  seed_id: number;
+  status: "in_progress";
+}
+
 export function fetchSeeds(): Promise<Seed[]> {
   return fetchJSON("/api/seeds");
 }
@@ -591,4 +597,8 @@ export async function deleteSeed(id: number): Promise<void> {
     const body = await resp.text().catch(() => "");
     throw new Error(`API error: ${resp.status} ${resp.statusText} ${body}`);
   }
+}
+
+export function triggerSeed(id: number): Promise<SeedTriggerResponse> {
+  return fetchJSON(`/api/seeds/${id}/trigger`, { method: "POST" });
 }

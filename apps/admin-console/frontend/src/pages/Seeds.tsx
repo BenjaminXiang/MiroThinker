@@ -25,6 +25,7 @@ import {
   type Seed,
   type SeedLastRunStatus,
   type SeedPayload,
+  triggerSeed,
   updateSeed,
 } from "../api";
 import "./Seeds.css";
@@ -67,6 +68,7 @@ export default function Seeds() {
   const [filter, setFilter] = useState<Filter>("all");
   const [editing, setEditing] = useState<Seed | "new" | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [triggeringSeedId, setTriggeringSeedId] = useState<number | null>(null);
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -194,6 +196,26 @@ export default function Seeds() {
     });
   };
 
+  const handleTrigger = async (seed: Seed) => {
+    try {
+      setTriggeringSeedId(seed.id);
+      await triggerSeed(seed.id);
+      setSeeds((rows) =>
+        rows.map((row) =>
+          row.id === seed.id
+            ? { ...row, last_run_status: "in_progress" as const }
+            : row,
+        ),
+      );
+      messageApi.success("已开始爬取");
+    } catch (err) {
+      messageApi.error(err instanceof Error ? err.message : "触发失败");
+      await reload();
+    } finally {
+      setTriggeringSeedId(null);
+    }
+  };
+
   const columns: ColumnsType<Seed> = [
     {
       title: "学校",
@@ -263,38 +285,49 @@ export default function Seeds() {
       title: "操作",
       key: "actions",
       width: 240,
-      render: (_v, seed) => (
-        <Space size="small">
-          <Tooltip title="Pipeline 接入待 Phase B" placement="top">
+      render: (_v, seed) => {
+        const triggerDisabled = seed.last_run_status === "in_progress";
+        const tooltip =
+          seed.last_run_status === "adapter_missing"
+            ? "重新检测 adapter"
+            : seed.last_run_status === "in_progress"
+              ? "运行中"
+              : "立即爬取";
+        return (
+          <Space size="small">
+            <Tooltip title={tooltip} placement="top">
+              <Button
+                size="small"
+                type="primary"
+                ghost
+                icon={<ThunderboltOutlined />}
+                disabled={triggerDisabled}
+                loading={triggeringSeedId === seed.id}
+                onClick={() => void handleTrigger(seed)}
+                className="seed-trigger-btn"
+              >
+                立即爬取
+              </Button>
+            </Tooltip>
             <Button
               size="small"
-              type="primary"
-              ghost
-              icon={<ThunderboltOutlined />}
-              disabled
-              className="seed-trigger-btn"
+              type="default"
+              icon={<EditOutlined />}
+              onClick={() => openEdit(seed)}
             >
-              立即爬取
+              编辑
             </Button>
-          </Tooltip>
-          <Button
-            size="small"
-            type="default"
-            icon={<EditOutlined />}
-            onClick={() => openEdit(seed)}
-          >
-            编辑
-          </Button>
-          <Button
-            size="small"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(seed)}
-          >
-            删除
-          </Button>
-        </Space>
-      ),
+            <Button
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDelete(seed)}
+            >
+              删除
+            </Button>
+          </Space>
+        );
+      },
     },
   ];
 
@@ -372,11 +405,7 @@ export default function Seeds() {
       />
 
       <footer className="seed-page-foot">
-        <span className="seed-foot-build">build phase A · ui only</span>
-        <span className="seed-foot-rule" />
-        <span className="seed-foot-note">
-          点击 <code>立即爬取</code> 在 Phase B 上线 ── 届时按钮亮起
-        </span>
+        <span className="seed-foot-build">build phase B · trigger enabled</span>
       </footer>
 
       <Modal
