@@ -107,6 +107,17 @@ class Seed(BaseModel):
     updated_at: datetime
 
 
+class SeedTriggerClaim(BaseModel):
+    """Seed row returned after a successful trigger pre-claim."""
+
+    id: int
+    school: str
+    department: str | None
+    seed_url: str
+    last_run_status: SeedLastRunStatus
+    trigger_claimed: bool = False
+
+
 # --- DB helpers --------------------------------------------------------------
 #
 # The `conn` parameter is a psycopg.Connection obtained via FastAPI's
@@ -203,3 +214,48 @@ def delete_seed(conn: Any, seed_id: int) -> bool:
         deleted = cur.rowcount > 0
     conn.commit()
     return deleted
+
+
+def claim_seed_for_trigger(
+    conn: Any,
+    seed_id: int,
+    *,
+    allow_adapter_missing: bool = False,
+) -> SeedTriggerClaim | None:
+    """Lock a seed and synchronously flip it to in_progress for trigger.
+
+    Returns the current row without changing it when the status is
+    `in_progress` or `adapter_missing`; callers decide the HTTP response.
+    """
+    with _seed_cursor(conn) as cur:
+        cur.execute(
+            """
+            SELECT id, school, department, seed_url, last_run_status
+              FROM professor_seed
+             WHERE id = %s
+             FOR UPDATE
+            """,
+            (seed_id,),
+        )
+        row = cur.fetchone()
+        if row is None:
+            conn.rollback()
+            return None
+        if row["last_run_status"] == "in_progress":
+            conn.rollback()
+            return SeedTriggerClaim.model_validate(row)
+        if row["last_run_status"] == "adapter_missing" and not allow_adapter_missing:
+            conn.rollback()
+            return SeedTriggerClaim.model_validate(row)
+        cur.execute(
+            """
+            UPDATE professor_seed
+               SET last_run_status = 'in_progress',
+                   updated_at = now()
+             WHERE id = %s
+             RETURNING id, school, department, seed_url, last_run_status
+            """,
+            (seed_id,),
+        )
+        claimed = cur.fetchone()
+    return SeedTriggerClaim.model_validate({**claimed, "trigger_claimed": True})

@@ -14,6 +14,8 @@ import psycopg
 import pytest
 from fastapi.testclient import TestClient
 
+from backend.api import seeds as seeds_api
+
 pytestmark = pytest.mark.usefixtures("postgres_data_ready")
 
 
@@ -22,6 +24,47 @@ def _wipe_seeds(dsn: str) -> None:
     with psycopg.connect(pg_dsn) as conn, conn.cursor() as cur:
         cur.execute("DELETE FROM professor_seed")
         conn.commit()
+
+
+def _pg_dsn(dsn: str) -> str:
+    return dsn.replace("postgresql+psycopg://", "postgresql://", 1)
+
+
+def _set_seed_status(dsn: str, seed_id: int, status: str) -> None:
+    with psycopg.connect(_pg_dsn(dsn)) as conn:
+        conn.execute(
+            "UPDATE professor_seed SET last_run_status=%s WHERE id=%s",
+            (status, seed_id),
+        )
+        conn.commit()
+
+
+def _seed_status(dsn: str, seed_id: int) -> tuple[str, bool]:
+    with psycopg.connect(_pg_dsn(dsn)) as conn:
+        row = conn.execute(
+            """
+            SELECT last_run_status, last_run_at IS NOT NULL
+              FROM professor_seed
+             WHERE id = %s
+            """,
+            (seed_id,),
+        ).fetchone()
+    assert row is not None
+    return row[0], bool(row[1])
+
+
+def _pipeline_run_status(dsn: str, run_id: str) -> tuple[str, str, dict[str, Any]]:
+    with psycopg.connect(_pg_dsn(dsn)) as conn:
+        row = conn.execute(
+            """
+            SELECT run_kind, status, run_scope
+              FROM pipeline_run
+             WHERE run_id = %s
+            """,
+            (run_id,),
+        ).fetchone()
+    assert row is not None
+    return row[0], row[1], row[2]
 
 
 @pytest.fixture
@@ -251,3 +294,145 @@ def test_create_rejects_duplicate_seed_url(fresh_seeds: TestClient) -> None:
     )
     assert b.status_code == 409
     assert b.json()["detail"]["error"] == "seed_url_already_exists"
+
+
+# --- Trigger -----------------------------------------------------------------
+
+
+def test_trigger_sets_in_progress_and_schedules_single_seed_run(
+    fresh_seeds: TestClient,
+    postgres_data_ready: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    scheduled: list[tuple[int, str]] = []
+    monkeypatch.setattr(
+        seeds_api,
+        "_schedule_seed_run",
+        lambda seed_id, run_id: scheduled.append((seed_id, str(run_id))),
+    )
+    created = fresh_seeds.post(
+        "/api/seeds",
+        json={
+            "school": "SUSTech",
+            "department": None,
+            "seed_url": "https://www.sustech.edu.cn/zh/letter/",
+        },
+    ).json()
+
+    resp = fresh_seeds.post(f"/api/seeds/{created['id']}/trigger")
+
+    assert resp.status_code == 202, resp.text
+    body = resp.json()
+    assert body["seed_id"] == created["id"]
+    assert body["status"] == "in_progress"
+    assert scheduled == [(created["id"], body["run_id"])]
+    assert _seed_status(postgres_data_ready, created["id"]) == ("in_progress", False)
+    assert _pipeline_run_status(postgres_data_ready, body["run_id"]) == (
+        "roster_crawl",
+        "running",
+        {
+            "source": "admin-console",
+            "domain": "professor",
+            "action": "single_seed_trigger",
+            "seed_id": created["id"],
+            "school": "SUSTech",
+            "department": None,
+            "seed_url": created["seed_url"],
+        },
+    )
+
+
+def test_trigger_returns_409_when_seed_already_in_progress(
+    fresh_seeds: TestClient,
+    postgres_data_ready: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    scheduled: list[tuple[int, str]] = []
+    monkeypatch.setattr(
+        seeds_api,
+        "_schedule_seed_run",
+        lambda seed_id, run_id: scheduled.append((seed_id, str(run_id))),
+    )
+    created = fresh_seeds.post(
+        "/api/seeds",
+        json={
+            "school": "SUSTech",
+            "department": None,
+            "seed_url": "https://faculty.sustech.edu.cn/again",
+        },
+    ).json()
+    _set_seed_status(postgres_data_ready, created["id"], "in_progress")
+
+    resp = fresh_seeds.post(f"/api/seeds/{created['id']}/trigger")
+
+    assert resp.status_code == 409
+    assert resp.json() == {"error": "already_in_progress", "seed_id": created["id"]}
+    assert scheduled == []
+
+
+def test_trigger_returns_422_when_adapter_missing(
+    fresh_seeds: TestClient,
+    postgres_data_ready: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    scheduled: list[tuple[int, str]] = []
+    monkeypatch.setattr(
+        seeds_api,
+        "_schedule_seed_run",
+        lambda seed_id, run_id: scheduled.append((seed_id, str(run_id))),
+    )
+    created = fresh_seeds.post(
+        "/api/seeds",
+        json={
+            "school": "New School",
+            "department": "New Department",
+            "seed_url": "https://new.example.edu/faculty",
+        },
+    ).json()
+    _set_seed_status(postgres_data_ready, created["id"], "adapter_missing")
+
+    resp = fresh_seeds.post(f"/api/seeds/{created['id']}/trigger")
+
+    assert resp.status_code == 422
+    assert resp.json() == {
+        "error": "adapter_missing",
+        "seed_id": created["id"],
+        "school": "New School",
+        "department": "New Department",
+    }
+    assert scheduled == []
+
+
+def test_trigger_accepts_adapter_missing_seed_after_adapter_is_registered(
+    fresh_seeds: TestClient,
+    postgres_data_ready: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    scheduled: list[tuple[int, str]] = []
+    monkeypatch.setattr(
+        seeds_api,
+        "_schedule_seed_run",
+        lambda seed_id, run_id: scheduled.append((seed_id, str(run_id))),
+    )
+    created = fresh_seeds.post(
+        "/api/seeds",
+        json={
+            "school": "SUSTech",
+            "department": None,
+            "seed_url": "https://www.sustech.edu.cn/zh/letter/",
+        },
+    ).json()
+    _set_seed_status(postgres_data_ready, created["id"], "adapter_missing")
+
+    resp = fresh_seeds.post(f"/api/seeds/{created['id']}/trigger")
+
+    assert resp.status_code == 202, resp.text
+    body = resp.json()
+    assert body["seed_id"] == created["id"]
+    assert _seed_status(postgres_data_ready, created["id"]) == ("in_progress", False)
+    assert scheduled == [(created["id"], body["run_id"])]
+
+
+def test_trigger_returns_404_on_missing_seed(fresh_seeds: TestClient) -> None:
+    resp = fresh_seeds.post("/api/seeds/999999/trigger")
+    assert resp.status_code == 404
