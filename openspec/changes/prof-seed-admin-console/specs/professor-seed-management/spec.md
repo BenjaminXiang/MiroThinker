@@ -134,9 +134,10 @@ Behavior:
 - **AND** the endpoint MUST return HTTP 409 Conflict with body
   `{"error": "already_in_progress", "seed_id": <id>}`
 
-#### Scenario: Trigger on `adapter_missing` is blocked
+#### Scenario: Trigger on `adapter_missing` remains blocked while no adapter exists
 
 - **GIVEN** a seed with `last_run_status='adapter_missing'`
+- **AND** no adapter is currently registered for the seed URL
 - **WHEN** admin clicks "立即爬取"
 - **THEN** the endpoint MUST return HTTP 422 Unprocessable Entity with body
   `{"error": "adapter_missing", "seed_id": <id>, "school": <school>,
@@ -158,12 +159,18 @@ The system MUST use exactly these five string values for `last_run_status`:
   via `pipeline_issue` table (V006) cross-reference; not stored on
   `professor_seed`.
 - `adapter_missing` — the seed's (`school`, `department`) pair has no
-  registered per-school adapter; pipeline cannot run. This is set by the
-  adapter resolution step at the start of a pipeline run, before any
-  parsing happens.
+  registered per-school adapter at the time of evaluation; pipeline
+  cannot run. This is set by the adapter resolution step at the start of
+  a pipeline run, before any parsing happens.
 
 The system MUST NOT use any other value. New states require an explicit
 spec change.
+
+The trigger endpoint MUST re-check current adapter availability for seeds
+already marked `adapter_missing`. If a matching adapter has since been
+registered, the endpoint MUST accept the trigger and flip the seed to
+`in_progress`; if no adapter is available, it MUST keep returning the 422
+response above.
 
 #### Scenario: Cron skips `adapter_missing` seeds
 
@@ -225,8 +232,8 @@ The cron job MUST:
 - For each eligible seed, set `last_run_status='in_progress'` before
   enqueuing the pipeline task.
 - Respect a global concurrency cap (default: 4 concurrent seed runs) to
-  avoid overwhelming the data-agent runtime; cap is configurable via
-  Hydra.
+  avoid overwhelming the data-agent runtime; cap is configurable in the
+  admin-console runtime via `ADMIN_PROFESSOR_SEED_CONCURRENCY`.
 - NOT block waiting for runs to complete; cron returns after enqueueing.
 
 The cron job MUST coexist with manual triggers without race conditions:
@@ -253,14 +260,16 @@ the pipeline MUST:
 
 1. Set `last_run_status='adapter_missing'` on the seed row.
 2. Set `last_run_at` to the current timestamp.
-3. Write one entry to `pipeline_issue` (V006) with kind `adapter_missing`
-   and a structured payload `{seed_id, school, department}`.
+3. Write one entry to `pipeline_issue` (V006) with
+   `stage='adapter_missing'` and a structured payload
+   `{seed_id, school, department}`. Repeated runs for the same unresolved
+   condition MUST NOT fail on the open-issue uniqueness constraint.
 4. Return without invoking any parser, network call, or LLM.
 
-Adapter resolution rules are out of scope for this spec; the
-`prof-school-adapter-framework` change defines them. This spec only
-defines the *interface contract* — that the pipeline MUST gate on adapter
-existence and report the result via `last_run_status`.
+Adapter resolution may use the current registered adapter family and any
+future targeted school/department adapters. This spec only defines the
+*interface contract* — that the pipeline MUST gate on adapter existence
+and report the result via `last_run_status`.
 
 #### Scenario: New school added without adapter
 
@@ -269,14 +278,15 @@ existence and report the result via `last_run_status`.
 - **AND** no adapter is registered for `<NewSchoolName>`
 - **WHEN** admin clicks "立即爬取" or cron fires
 - **THEN** the seed's `last_run_status` becomes `adapter_missing`
-- **AND** `pipeline_issue` gains a new row with `kind='adapter_missing'`
+- **AND** `pipeline_issue` gains a new row with
+  `stage='adapter_missing'`
 - **AND** no Tier 2 / Tier 3 parsing or network calls are attempted
 
 #### Scenario: Adapter registered later
 
 - **GIVEN** a seed with `last_run_status='adapter_missing'`
 - **WHEN** a developer registers a new adapter matching the seed's
-  (school, department) pair
+  current URL family
 - **AND** admin clicks "立即爬取"
 - **THEN** the trigger endpoint accepts the request (returns HTTP 202)
 - **AND** the seed's `last_run_status` flips to `in_progress`

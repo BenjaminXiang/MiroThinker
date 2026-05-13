@@ -46,15 +46,20 @@ order: 1 → 2 → 3 → 4 → 5.
   `department` on POST / PUT
 - [x] T2.4: Implement `last_run_status` / `last_run_at` strip-from-
   request behavior on PUT (admin cannot mutate)
-- [ ] T2.5: Add `POST /api/seeds/{id}/trigger` endpoint:
+- [x] T2.5: Add `POST /api/seeds/{id}/trigger` endpoint:
   - Pre-check: if `last_run_status='in_progress'` → return HTTP 409
-  - Pre-check: if `last_run_status='adapter_missing'` → return HTTP 422
+  - Pre-check: if `last_run_status='adapter_missing'` and no adapter is
+    currently registered → return HTTP 422
+  - Pre-check: if `last_run_status='adapter_missing'` but an adapter has
+    since been registered → accept trigger and set `in_progress`
   - Otherwise: set `in_progress` synchronously, enqueue background task,
     return HTTP 202 with `{run_id, seed_id, status: in_progress}`
-  *(Phase B — depends on T4.1 pipeline entry point)*
-- [ ] T2.6: Wire the background task to the Professor pipeline's single-
+  *(Phase B complete: tests cover 202 / 409 / 422 / adapter-registered-
+  later / 404 behavior.)*
+- [x] T2.6: Wire the background task to the Professor pipeline's single-
   seed entry point (depends on Pipeline section)
-  *(Phase B)*
+  *(Phase B complete: admin-console schedules `run_single_seed` through
+  a bounded ThreadPoolExecutor.)*
 - [x] T2.7: Add API integration tests covering every scenario in the
   Requirements (including the three trigger scenarios + the schema
   scenarios + the CRUD scenarios)
@@ -78,8 +83,9 @@ order: 1 → 2 → 3 → 4 → 5.
   editable; status fields read-only)
 - [x] T3.4: Implement delete confirmation prompt
 - [x] T3.5: Implement 立即爬取 button per row:
-  - Disabled when `last_run_status='in_progress'` or
-    `last_run_status='adapter_missing'`
+  - Disabled when `last_run_status='in_progress'`
+  - Clickable for `adapter_missing`, so backend can re-check whether an
+    adapter has since been registered
   - On click, POST `/api/seeds/{id}/trigger` and update local state
   *(Phase A modification: button rendered but **always disabled** with
   tooltip "Pipeline 接入待 Phase B"; click handler not wired since
@@ -92,65 +98,66 @@ order: 1 → 2 → 3 → 4 → 5.
   red / yellow-spinner / gray / orange respectively)
 - [x] T3.8: Add route `/seeds` to the React router; link from
   admin console main nav (LinkOutlined icon, label "Seed 索引")
-- [ ] T3.9: Run `just frontend-fresh` and verify the SPA bundle ships
+- [x] T3.9: Run `just frontend-fresh` and verify the SPA bundle ships
   the new page
-  *(deferred: `npm run build` already verified bundle ships Seeds page
-  references — see commit `d2a3d4e`. `just frontend-fresh` runs the
-  same build with extra repo-aware steps; will run when Phase B ships.)*
+  *(Phase B complete: `just frontend-fresh` runs `npm run build` and
+  exits 0.)*
 
 ## 4. Pipeline integration
 
-- [ ] T4.1: Add a new entry point function `run_single_seed(seed_id:
-  int)` in `apps/miroflow-agent/src/data_agents/professor/pipeline.py`
-  (or equivalent) that:
+- [x] T4.1: Add a new entry point function `run_single_seed(seed_id:
+  int)` in `apps/miroflow-agent/src/data_agents/professor/seed_runner.py`
+  that:
   - Loads the seed row from `professor_seed`
   - Performs adapter resolution against (school, department) pair
   - If no adapter: sets `last_run_status='adapter_missing'` +
     `last_run_at=now()`; writes one `pipeline_issue` row with
-    `kind='adapter_missing'` and structured payload; returns
+    `stage='adapter_missing'` and structured payload; returns
   - Otherwise: runs the existing professor pipeline against `seed_url`,
     using upsert semantics on `professor` rows
   - On success: sets `last_run_status='success'` + `last_run_at=now()`
   - On uncaught exception: sets `last_run_status='failure'` +
     `last_run_at=now()`; writes `pipeline_issue` row
-  *(Phase B. Note: spec said `kind='adapter_missing'` but actual
-  `pipeline_issue.stage` column doesn't include that value — V023
-  migration extends `stage` CHECK constraint, see Phase B addendum.)*
-- [ ] T4.2: Adapter resolution stub: this change pre-creates an
+  *(Phase B complete. V023 extends `pipeline_issue.stage`, and issue
+  writes are idempotent against the existing open-issue uniqueness
+  constraint.)*
+- [x] T4.2: Adapter resolution stub: this change pre-creates an
   *interface* that returns `None` always, until
   `prof-school-adapter-framework` lands. Result: every seed will go to
   `adapter_missing` until the framework change ships. This is the
   intended MVP state.
-  *(Phase B. **Spec drift correction**: survey 2026-05-10 found the
+  *(Phase B complete. **Spec drift correction**: survey 2026-05-10 found the
   framework + 5 adapters already exist in `school_adapters.py` +
-  `roster.py:825-870`. T4.2 simplifies to "wire `find_matching_school_
-  adapter()` + None-path → `adapter_missing` write".)*
-- [ ] T4.3: Add Hydra config for global concurrency cap (default 4)
-  *(Phase B)*
-- [ ] T4.4: Pipeline integration test covering adapter_missing path
+  `roster.py`. T4.2 simplifies to "wire registered adapters + None-path
+  → `adapter_missing` write".)*
+- [x] T4.3: Add runtime config for global concurrency cap (default 4)
+  *(Phase B complete via `ADMIN_PROFESSOR_SEED_CONCURRENCY`; admin-console
+  does not use Hydra at runtime.)*
+- [x] T4.4: Pipeline integration test covering adapter_missing path
   (using the stub adapter resolver)
-  *(Phase B)*
-- [ ] T4.5: Pipeline integration test covering success path against a
+  *(Phase B complete.)*
+- [x] T4.5: Pipeline integration test covering success path against a
   fixture roster (using a fake adapter that returns 3 professors)
-  *(Phase B; can use real registered adapter instead of fake, given
-  framework already exists)*
+  *(Phase B complete; implemented as fake pipeline + injected writer to
+  isolate DB status semantics from real HTTP.)*
 
 ## 5. Cron
 
-- [ ] T5.1: Add a cron job using APScheduler (or equivalent) that
+- [x] T5.1: Add a cron job using APScheduler (or equivalent) that
   triggers monthly (1st @ 02:00 server local time)
-  *(Phase B)*
-- [ ] T5.2: Cron logic: iterate `professor_seed` ordered by `id` ASC;
+  *(Phase B complete.)*
+- [x] T5.2: Cron logic: iterate `professor_seed` ordered by `id` ASC;
   for each eligible seed (`last_run_status` not in
   `{in_progress, adapter_missing}`), enqueue a single-seed pipeline
   task respecting the global concurrency cap
-  *(Phase B)*
-- [ ] T5.3: Cron unit test covering: (a) skip in_progress; (b) skip
+  *(Phase B complete.)*
+- [x] T5.3: Cron unit test covering: (a) skip in_progress; (b) skip
   adapter_missing; (c) enqueue rest in id-order
-  *(Phase B)*
-- [ ] T5.4: Add Hydra config for cron schedule (default monthly 1st
+  *(Phase B complete.)*
+- [x] T5.4: Add runtime config for cron schedule (default monthly 1st
   02:00); make schedule configurable for testing
-  *(Phase B)*
+  *(Phase B complete via `ADMIN_PROFESSOR_SEED_CRON_*`; admin-console
+  does not use Hydra at runtime.)*
 
 ## 6. Acceptance + close-out
 
@@ -162,23 +169,28 @@ order: 1 → 2 → 3 → 4 → 5.
   `apps/miroflow-agent` and `apps/admin-console`)
   *(Phase A scope: `apps/admin-console` 15 seeds-API tests pass; full
   pytest pass for unrelated suites. Phase B will re-run after pipeline
-  + cron land.)*
+  + cron land. Phase B relevant integration tests passed:
+  `tests/test_seeds_api.py`, `tests/test_seed_cron.py`,
+  `tests/test_migration_v023.py`, and
+  `tests/postgres/test_run_single_seed.py`.)*
 - [x] T6.3: Manual smoke test: create one seed via admin UI, click
   trigger, observe `last_run_status` transitions in admin UI within 30s
   to `adapter_missing` (since no adapter framework yet)
   *(Phase A scope: 2 seeds (SZU CSE + CUHK SZ AI) entered via UI and
   persisted with `last_run_status='never_run'`; trigger button
-  disabled per Phase A. The "transition to adapter_missing" sub-test
-  awaits Phase B trigger wiring.)*
+  disabled per Phase A. Phase B test-DB smoke verified
+  `never_run -> in_progress -> adapter_missing` through HTTP trigger,
+  DB evidence, and browser-rendered `/seeds`.)*
 - [x] T6.4: Update `openspec/change-ledger.md` Status column to
   `tasks-complete-not-archived` once T1-T5 done; archive via
   `openspec archive prof-seed-admin-console` after stakeholder review
   *(Phase A: status updated to "Phase A complete; Phase B pending"
-  in commit `58c1cbd`. Full archive deferred until Phase B completes.)*
-- [ ] T6.5: Fill in `acceptance.md` evidence sections with commit refs
+  in commit `58c1cbd`. Phase B: status updated to
+  "Phase B complete; tasks-complete-not-archived". Archive still awaits
+  stakeholder review.)*
+- [x] T6.5: Fill in `acceptance.md` evidence sections with evidence rows
   and test output
-  *(partial: Phase A evidence filled in this close-out commit; Phase B
-  evidence will be filled when Phase B sub-changes ship.)*
+  *(Phase A and Phase B evidence filled.)*
 
 ## Out of this change's tasks
 

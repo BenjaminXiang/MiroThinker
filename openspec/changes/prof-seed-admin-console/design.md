@@ -72,11 +72,13 @@ poll picks up flagged seeds. Rejected because:
 
 | Option | Pro | Con | Recommendation |
 |---|---|---|---|
-| FastAPI `BackgroundTasks` | Built-in, no new dep | Dies with worker; no retry on crash | Use for MVP; pipeline runs are 1-5 min, acceptable |
+| ThreadPoolExecutor owned by admin-console process | Shared by manual trigger and cron; simple concurrency cap; no request-lifetime coupling | Dies with worker; no durable retry on crash | Use for MVP; pipeline runs are bounded and status is observable |
+| FastAPI `BackgroundTasks` | Built-in, no new dep | Request-scoped; harder to share with cron and cap globally | Rejected for Phase B |
 | Celery / RQ | Robust queue, retry semantics | New infra; not currently used in repo | Phase 2 if pipeline reliability becomes an issue |
-| In-process asyncio task | Simple | Same crash semantics as BackgroundTasks | Use for MVP |
+| In-process asyncio task | Simple | Same crash semantics as BackgroundTasks | Not selected; sync pipeline work belongs in bounded worker threads |
 
-Decision: **MVP uses FastAPI `BackgroundTasks`**. Spec is implementation-
+Decision: **MVP uses a process-local `ThreadPoolExecutor`** with
+`ADMIN_PROFESSOR_SEED_CONCURRENCY` defaulting to 4. Spec is implementation-
 agnostic (just says "async"); design.md records this choice for the
 implementer.
 
@@ -114,6 +116,13 @@ schedule.
 | External cron (host crontab calling FastAPI endpoint) | Phase 2 if HA needed |
 
 Spec is implementation-agnostic; this design doc records the choice.
+Schedule is configured in the admin-console process via environment
+variables:
+`ADMIN_PROFESSOR_SEED_CRON_ENABLED`,
+`ADMIN_PROFESSOR_SEED_CRON_DAY`,
+`ADMIN_PROFESSOR_SEED_CRON_HOUR`,
+`ADMIN_PROFESSOR_SEED_CRON_MINUTE`, and
+`ADMIN_PROFESSOR_SEED_CRON_TIMEZONE`.
 
 ## 6. Decision: Adapter resolution is *gated* in pipeline, not in trigger endpoint
 
@@ -138,11 +147,64 @@ seed's *current* `last_run_status`. So:
 - First-time click (`last_run_status='never_run'`): endpoint accepts,
   enqueues task, pipeline checks adapter, sets status to
   `adapter_missing`. Task wasted once.
-- Subsequent clicks: endpoint sees `adapter_missing` and rejects with
-  422 immediately.
+- Subsequent clicks: endpoint re-checks current adapter availability.
+  If no adapter is available, it rejects with 422 immediately; if an
+  adapter has since been registered, it accepts the trigger and flips the
+  seed back to `in_progress`.
 
 This is a 1-time penalty per (seed, adapter-missing-discovery) pair.
 Acceptable.
+
+## 6.1 Decision: New seed URLs enter an adapter onboarding loop
+
+**Source**: 2026-05-12 execution feedback: different schools and
+departments have materially different roster page structures; do not
+expect one crawler to solve all pages, and do not break currently
+working adapters while adding new ones.
+
+**Decision**: Adding a seed URL is an operations action, not proof that
+the crawler supports that URL. Each new seed follows this loop:
+
+1. Admin records the seed URL in `/seeds`.
+2. Preflight classifies the URL as one of:
+   - `supported`: matched adapter and non-empty roster extraction.
+   - `adapter_missing`: no registered adapter family matches the URL.
+   - `parser_low_quality`: adapter/generic path ran but extracted too few
+     or obvious non-person rows.
+   - `fetch_blocked`: URL family is known, but fetch failed because of
+     anti-scraping, JS challenge, timeout, or connection failure.
+3. Only `supported` seeds should proceed to real ingestion.
+4. `adapter_missing` enters the adapter development queue.
+5. `parser_low_quality` / `fetch_blocked` must be fixed with targeted
+   school/department adapters or remain blocked; they must not fall
+   through to broad generic parsing that creates dirty rows.
+
+**Adapter extension contract**:
+
+- A custom adapter is a small unit with:
+  `name`, `matcher(source_url)`, `extractor(html, institution,
+  department, source_url)`.
+- Matchers must be narrow enough to avoid taking over unrelated schools
+  or departments.
+- Extractors must emit `DiscoveredProfessorSeed` rows with structured
+  `name`, `institution`, `department`, `profile_url`, and `source_url`.
+- New adapters require:
+  - one fixture/unit test for the new page structure;
+  - one sibling regression test or targeted `-k` run proving existing
+    supported adapters still pass;
+  - one non-mutating preflight/smoke against the affected seed URL.
+
+**Status semantics after Phase B trigger wiring**:
+
+- No matching adapter: `run_single_seed` sets
+  `last_run_status='adapter_missing'` and writes
+  `pipeline_issue.stage='adapter_missing'`.
+- Matching adapter but fetch/parser fatal: `run_single_seed` sets
+  `last_run_status='failure'` and writes a `pipeline_issue` under the
+  actual failed stage, typically `discovery`.
+- The system deliberately does not add a sixth `last_run_status` for
+  `fetch_blocked`; the specific cause lives in `pipeline_issue` and
+  evidence snapshot.
 
 ## 7. Decision: Hard delete (no soft delete)
 
