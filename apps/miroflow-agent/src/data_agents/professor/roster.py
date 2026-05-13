@@ -400,6 +400,9 @@ def _extract_site_specific_hub_links(
     hostname = (parsed.hostname or "").lower()
 
     if hostname.endswith("szu.edu.cn"):
+        ceie_links = _extract_szu_ceie_teacher_category_links(soup, source_url)
+        if ceie_links:
+            return ceie_links
         return _extract_links_from_selectors(soup, ("ul.l18-q h4 a",))
     if hostname.endswith("pkusz.edu.cn"):
         return _extract_links_from_selectors(soup, ("div.szdw_jsdw .szdw_bd a",))
@@ -412,6 +415,27 @@ def _extract_site_specific_hub_links(
             ),
         )
     return []
+
+
+def _extract_szu_ceie_teacher_category_links(
+    soup: BeautifulSoup, source_url: str
+) -> list[tuple[str, str]]:
+    parsed = urlparse(source_url)
+    hostname = (parsed.hostname or "").lower()
+    path = parsed.path.rstrip("/").lower()
+    if hostname != "ceie.szu.edu.cn" or path != "/szdw/ysfc.htm":
+        return []
+    wanted_labels = {"院士风采", "杰出人才", "教授", "副教授", "讲师/助理教授"}
+    links: list[tuple[str, str]] = []
+    for anchor in soup.find_all("a", href=True):
+        label = anchor.get_text(" ", strip=True)
+        if label not in wanted_labels:
+            continue
+        href = str(anchor.get("href", "")).strip()
+        if not href:
+            continue
+        links.append((href, label))
+    return links
 
 
 def _extract_links_from_selectors(
@@ -713,6 +737,17 @@ def _matches_szu_teacher_family(source_url: str) -> bool:
     )
 
 
+def _matches_hitsz_college_teacher_family(source_url: str) -> bool:
+    parsed = urlparse(source_url)
+    hostname = (parsed.hostname or "").lower()
+    path = parsed.path.lower()
+    return (
+        hostname.endswith("hitsz.edu.cn")
+        and hostname != "homepage.hit.edu.cn"
+        and "/szll" in path
+    )
+
+
 def _matches_suat_teacher_family(source_url: str) -> bool:
     parsed = urlparse(source_url)
     hostname = (parsed.hostname or "").lower()
@@ -759,11 +794,28 @@ def _extract_szu_teacher_adapter_entries(
     source_url: str,
 ) -> list[DiscoveredProfessorSeed]:
     soup = BeautifulSoup(html, "html.parser")
-    candidate_links = _extract_szu_profile_links(soup)
+    candidate_links = _extract_szu_chemistry_profile_links(soup, source_url)
+    if not candidate_links:
+        candidate_links = _extract_szu_profile_links(soup)
     if not candidate_links:
         candidate_links = _extract_szu_markdown_profile_links(html)
     if not candidate_links:
         candidate_links = _extract_heading_profile_links(soup, source_url)
+    return _build_discovered_professor_seeds(
+        candidate_links,
+        institution=institution,
+        department=department,
+        source_url=source_url,
+    )
+
+
+def _extract_hitsz_college_adapter_entries(
+    html: str,
+    institution: str,
+    department: str | None,
+    source_url: str,
+) -> list[DiscoveredProfessorSeed]:
+    candidate_links = _extract_hitsz_college_profile_links(BeautifulSoup(html, "html.parser"))
     return _build_discovered_professor_seeds(
         candidate_links,
         institution=institution,
@@ -839,6 +891,11 @@ _SCHOOL_ROSTER_ADAPTERS: tuple[SchoolRosterAdapter, ...] = (
         name="szu-teacher-family",
         matcher=_matches_szu_teacher_family,
         extractor=_extract_szu_teacher_adapter_entries,
+    ),
+    SchoolRosterAdapter(
+        name="hitsz-college-teacher-family",
+        matcher=_matches_hitsz_college_teacher_family,
+        extractor=_extract_hitsz_college_adapter_entries,
     ),
     SchoolRosterAdapter(
         name="suat-teacher-family",
@@ -952,6 +1009,53 @@ def _extract_szu_profile_links(soup: BeautifulSoup) -> list[tuple[str, str]]:
             name = _extract_candidate_person_name(anchor.parent.get_text(" ", strip=True))
         if not name and isinstance(grandparent, Tag):
             name = _extract_candidate_person_name(grandparent.get_text(" ", strip=True))
+        if not name or not _is_likely_professor_name(name):
+            continue
+        links.append((href, name))
+    return links
+
+
+def _extract_szu_chemistry_profile_links(
+    soup: BeautifulSoup, source_url: str
+) -> list[tuple[str, str]]:
+    parsed = urlparse(source_url)
+    hostname = (parsed.hostname or "").lower()
+    path = parsed.path.lower()
+    if hostname != "chem.szu.edu.cn" or not path.startswith("/szdw/zyjs/"):
+        return []
+    source_stem = path.rsplit("/", 1)[-1].rsplit(".", 1)[0]
+    if not source_stem:
+        return []
+    links: list[tuple[str, str]] = []
+    for anchor in soup.find_all("a", href=True):
+        href = str(anchor.get("href", "")).strip()
+        if not href:
+            continue
+        href_path = urlparse(href).path.lower()
+        if not href_path.endswith((".htm", ".html")):
+            continue
+        if not (
+            href_path.startswith(f"{source_stem}/")
+            or f"/szdw/zyjs/{source_stem}/" in href_path
+        ):
+            continue
+        text = anchor.get_text(" ", strip=True)
+        name = _extract_candidate_person_name(text)
+        if not name or not _is_likely_professor_name(name):
+            continue
+        links.append((href, name))
+    return links
+
+
+def _extract_hitsz_college_profile_links(soup: BeautifulSoup) -> list[tuple[str, str]]:
+    links: list[tuple[str, str]] = []
+    for anchor in soup.find_all("a", href=True):
+        href = str(anchor.get("href", "")).strip()
+        hostname = (urlparse(href).hostname or "").lower()
+        if hostname != "faculty.hitsz.edu.cn":
+            continue
+        text = anchor.get_text(" ", strip=True)
+        name = _extract_candidate_person_name(text)
         if not name or not _is_likely_professor_name(name):
             continue
         links.append((href, name))

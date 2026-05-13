@@ -1305,6 +1305,51 @@ def test_extract_roster_entries_supports_hit_directory_markdown_summaries():
     ]
 
 
+def test_extract_roster_entries_supports_hitsz_college_faculty_links():
+    html = """
+    <html><body>
+      <a href="http://faculty.hitsz.edu.cn/wanjia">万佳 教授、博导</a>
+      <a href="https://faculty.hitsz.edu.cn/joannasiebert">Joanna Siebert 副教授、硕导</a>
+      <a href="/szll/qzjs.htm">全职教师</a>
+      <a href="/xkky.htm">科学研究</a>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="哈尔滨工业大学（深圳）",
+        department="计算机科学与技术学院",
+        source_url="http://cs.hitsz.edu.cn/szll1.htm",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("万佳", "http://faculty.hitsz.edu.cn/wanjia"),
+        ("Joanna Siebert", "https://faculty.hitsz.edu.cn/joannasiebert"),
+    ]
+
+
+def test_extract_roster_entries_supports_szu_chemistry_plain_name_links():
+    html = """
+    <html><body>
+      <a href="hxx/xzr/zxc.htm">周学昌</a>
+      <a href="hxx/tpjs/zxj.htm">张学记</a>
+      <a href="/index.htm">本站首页</a>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="深圳大学",
+        department="化学与环境工程学院",
+        source_url="https://chem.szu.edu.cn/szdw/zyjs/hxx.htm",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("周学昌", "https://chem.szu.edu.cn/szdw/zyjs/hxx/xzr/zxc.htm"),
+        ("张学记", "https://chem.szu.edu.cn/szdw/zyjs/hxx/tpjs/zxj.htm"),
+    ]
+
+
 def test_get_shared_playwright_state_stops_runtime_when_browser_launch_fails(monkeypatch):
     from src.data_agents.professor import discovery as discovery_module
 
@@ -2162,6 +2207,65 @@ def test_discover_professor_seeds_prefers_inline_seed_label_over_profile_page_no
     assert calls == ["https://www.sigs.tsinghua.edu.cn/llyys/main.htm"]
 
 
+@pytest.mark.parametrize(
+    ("seed_url", "institution", "department"),
+    [
+        ("https://www.sustech.edu.cn/zh/letter/", "南方科技大学", None),
+        ("https://math.szu.edu.cn/szdw/szyl.htm", "深圳大学", "数学科学学院"),
+    ],
+)
+def test_discover_professor_seeds_prefers_roster_entries_for_roster_like_urls(
+    monkeypatch,
+    seed_url,
+    institution,
+    department,
+):
+    seeds = [
+        ProfessorRosterSeed(
+            institution=institution,
+            department=department,
+            roster_url=seed_url,
+        )
+    ]
+    expected = [
+        DiscoveredProfessorSeed(
+            name="李华",
+            institution=institution,
+            department=department,
+            profile_url=f"{seed_url.rstrip('/')}/lihua.htm",
+            source_url=seed_url,
+        ),
+        DiscoveredProfessorSeed(
+            name="王五",
+            institution=institution,
+            department=department,
+            profile_url=f"{seed_url.rstrip('/')}/wangwu.htm",
+            source_url=seed_url,
+        ),
+    ]
+
+    monkeypatch.setattr(
+        "src.data_agents.professor.discovery._extract_name_from_profile_like_detail_page",
+        lambda *args, **kwargs: "师资列表",
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.discovery.extract_roster_entries",
+        lambda *args, **kwargs: expected,
+    )
+
+    result = discover_professor_seeds(
+        seeds=seeds,
+        fetch_html=lambda _url: "<html><body>个人简介 师资列表</body></html>",
+        limits=DiscoveryLimits(max_depth=1, max_candidate_links_per_page=8, max_pages_per_seed=4),
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        ("李华", f"{seed_url.rstrip('/')}/lihua.htm"),
+        ("王五", f"{seed_url.rstrip('/')}/wangwu.htm"),
+    ]
+    assert result.source_statuses[0].reason == "recursive_roster_discovery"
+
+
 def test_discover_professor_seeds_treats_root_homepage_with_person_seed_label_as_direct_profile(monkeypatch):
     seeds = [
         ProfessorRosterSeed(
@@ -2473,6 +2577,70 @@ def test_discover_professor_seeds_treats_info_detail_page_with_matching_seed_lab
         "https://ai.sztu.edu.cn/info/1332/6055.htm"
     ]
     assert calls == ["https://ai.sztu.edu.cn/info/1332/6055.htm"]
+
+
+def test_discover_professor_seeds_continues_ceie_category_pages_after_academician_page():
+    seed_url = "https://ceie.szu.edu.cn/szdw/ysfc.htm"
+    seeds = [
+        ProfessorRosterSeed(
+            institution="深圳大学",
+            department="电子与信息工程学院",
+            roster_url=seed_url,
+        )
+    ]
+    pages = {
+        seed_url: """
+        <html><body>
+          <div class="news_con">
+            <a href="../info/1016/1001.htm">毛军发 中国科学院院士</a>
+          </div>
+          <a href="js.htm">教授</a>
+          <a href="fjs.htm">副教授</a>
+          <a href="js_zljs.htm">讲师/助理教授</a>
+        </body></html>
+        """,
+        "https://ceie.szu.edu.cn/szdw/js.htm": """
+        <html><body>
+          <div class="news_con">
+            <a href="../info/1017/3136.htm">葛磊 特聘教授 办公室：粤海校区</a>
+          </div>
+        </body></html>
+        """,
+        "https://ceie.szu.edu.cn/szdw/fjs.htm": """
+        <html><body>
+          <div class="news_con">
+            <a href="../info/1018/6132.htm">肖宇航 副教授 办公室：致信楼</a>
+          </div>
+        </body></html>
+        """,
+        "https://ceie.szu.edu.cn/szdw/js_zljs.htm": """
+        <html><body>
+          <div class="news_con">
+            <a href="../info/1019/6322.htm">韩傲然 助理教授 办公室：汇研楼</a>
+          </div>
+        </body></html>
+        """,
+    }
+
+    result = discover_professor_seeds(
+        seeds=seeds,
+        fetch_html=lambda url: pages[url],
+        limits=DiscoveryLimits(max_depth=1, max_candidate_links_per_page=8, max_pages_per_seed=8),
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        ("毛军发", "https://ceie.szu.edu.cn/info/1016/1001.htm"),
+        ("葛磊", "https://ceie.szu.edu.cn/info/1017/3136.htm"),
+        ("肖宇航", "https://ceie.szu.edu.cn/info/1018/6132.htm"),
+        ("韩傲然", "https://ceie.szu.edu.cn/info/1019/6322.htm"),
+    ]
+    assert result.source_statuses[0].reason == "recursive_roster_discovery"
+    assert result.source_statuses[0].visited_urls == [
+        "https://ceie.szu.edu.cn/szdw/ysfc.htm",
+        "https://ceie.szu.edu.cn/szdw/js.htm",
+        "https://ceie.szu.edu.cn/szdw/fjs.htm",
+        "https://ceie.szu.edu.cn/szdw/js_zljs.htm",
+    ]
 
 
 def test_discover_professor_seeds_treats_root_homepage_with_personal_title_as_direct_profile():

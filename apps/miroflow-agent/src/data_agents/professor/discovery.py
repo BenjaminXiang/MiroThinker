@@ -1025,7 +1025,13 @@ def _discover_recursive_seed(
         )
         if entries:
             discovered.extend(entries)
-            continue
+            if not _should_continue_after_roster_entries(
+                seed_url=seed.roster_url,
+                current_url=current.url,
+                current_depth=current.depth,
+                html=html,
+            ):
+                continue
 
         prioritize_seed_fallback = _should_prioritize_seed_fallback(
             seed_url=seed.roster_url,
@@ -1161,6 +1167,25 @@ def _should_prioritize_seed_fallback(
     if _path_looks_like_roster_seed(canonical_path):
         return False
     return "首页" in title or title.startswith("home")
+
+
+def _should_continue_after_roster_entries(
+    *,
+    seed_url: str,
+    current_url: str,
+    current_depth: int,
+    html: str,
+) -> bool:
+    if current_depth != 0 or current_url != seed_url:
+        return False
+    parsed = urlparse(seed_url)
+    hostname = (parsed.hostname or "").lower()
+    path = parsed.path.rstrip("/").lower()
+    if hostname != "ceie.szu.edu.cn" or path != "/szdw/ysfc.htm":
+        return False
+    category_links = extract_roster_page_links(html, seed_url)
+    category_labels = {label for _url, label in category_links}
+    return bool({"教授", "副教授", "讲师/助理教授"} & category_labels)
 
 
 def _enqueue_seed_fallback_pages(
@@ -1574,6 +1599,44 @@ def _looks_like_labeled_direct_profile_seed_url(url: str) -> bool:
     return path.count("/") >= 2 and not path.startswith("/info/")
 
 
+def _looks_like_labeled_profile_detail_seed_url(url: str) -> bool:
+    parsed = urlparse(url)
+    path = parsed.path.lower().rstrip("/")
+    if not path:
+        return False
+    if any(
+        token in path
+        for token in (
+            "list",
+            "index",
+            "search",
+            "letter",
+            "directory",
+            "roster",
+            "faculty_members",
+            "jsjj",
+            "szdw",
+            "szll",
+            "jsml",
+            "jxjs",
+            "qbjs",
+            "news",
+            "notice",
+            "notices",
+            "event",
+            "events",
+            "article",
+            "articles",
+        )
+    ):
+        return False
+    leaf = path.rsplit("/", 1)[-1]
+    stem = leaf.rsplit(".", 1)[0]
+    return path.startswith("/info/") and leaf.endswith((".htm", ".html")) and any(
+        char.isdigit() for char in stem
+    )
+
+
 def _looks_like_root_homepage_direct_profile_seed(
     url: str,
     *,
@@ -1695,12 +1758,18 @@ def _resolve_direct_profile_seed_after_fetch(
     if seed_label and (direct_profile_like or root_homepage_like):
         return seed_label, "direct_profile_seed_fetched"
 
-    profile_like_name = _extract_name_from_profile_like_detail_page(
-        url=seed.roster_url,
-        html=html,
-        institution=institution,
-        department=seed.department,
-    )
+    profile_like_name = None
+    if (
+        direct_profile_like
+        or _looks_like_direct_profile_url(seed.roster_url)
+        or (seed_label and _looks_like_labeled_profile_detail_seed_url(seed.roster_url))
+    ):
+        profile_like_name = _extract_name_from_profile_like_detail_page(
+            url=seed.roster_url,
+            html=html,
+            institution=institution,
+            department=seed.department,
+        )
     if seed_label and profile_like_name and is_same_person_name_variant(seed_label, profile_like_name):
         return seed_label, "direct_profile_seed_fetched"
     if not seed_label and profile_like_name:
