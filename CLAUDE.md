@@ -229,6 +229,8 @@ Keep `CLAUDE.md` specific and compact. Remove stale generic rules. Link to deepe
 
 OpenSpec is the canonical source of truth for **system behavior** and **proposed behavior changes**. Existing `docs/` PRDs / Shared-Spec / Multi-turn design and existing `.agents/specs/` files are **legacy source material**. For capabilities not yet covered by OpenSpec, they may serve as the **temporary behavior baseline** until a touching change promotes that capability into OpenSpec. **No up-front migration is performed.**
 
+**Language rule:** All OpenSpec artifacts must be written in English — `openspec/specs/**`, `openspec/changes/**` (proposal, specs deltas, design, tasks, acceptance, source-links, agent-links, change-log), and any new spec-level documents created under this section. Conversational interaction (chat, casual instructions, ad-hoc notes) may remain in Chinese; only the committed OpenSpec documents must be English.
+
 ### 14.1 Authority and precedence (extends §3)
 
 ```text

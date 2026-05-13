@@ -535,6 +535,8 @@ Prefer deleting stale rules over adding compensating paragraphs. Keep detailed r
 
 CLAUDE.md §14 is the canonical statement of the discipline. This section operationalizes it for Codex.
 
+**Language rule (mirrors CLAUDE.md §14.1):** All OpenSpec artifacts written or edited by Codex must be in English — `openspec/specs/**`, `openspec/changes/**` (proposal, specs deltas, design, tasks, acceptance, source-links, agent-links, change-log), plus any `change-log.md` / `acceptance.md` evidence rows Codex appends under §15.3. `.agents/runs/<change-id>/` execution artifacts that are part of the OpenSpec record (implementation-plan, verification, review) follow the same rule. Inline code comments, commit messages, and reports to the user may remain Chinese or English per the user's preference; only the committed OpenSpec documents must be English.
+
 ### 15.1 Before editing code
 
 Identify the active `<change-id>` from the handoff or task contract.
