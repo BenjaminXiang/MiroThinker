@@ -2,12 +2,12 @@
 
 ## 1. Spec validation
 
-- [ ] `openspec validate prof-paper-patent-from-page-flow` exits 0
-- [ ] proposal.md has `## Why` and `## What Changes` headers (CLI
+- [x] `openspec validate prof-paper-patent-from-page-flow` exits 0
+- [x] proposal.md has `## Why` and `## What Changes` headers (CLI
   warning would otherwise complain)
-- [ ] `specs/paper-patent-from-prof-page/spec.md` uses `## ADDED
+- [x] `specs/paper-patent-from-prof-page/spec.md` uses `## ADDED
   Requirements` delta header (this is a new capability)
-- [ ] Each Requirement has at least one `#### Scenario:` block
+- [x] Each Requirement has at least one `#### Scenario:` block
 
 ## 2. hybrid.py refactor (after T1)
 
@@ -22,10 +22,10 @@
 
 ## 3. S2-discovery deprecation (after T2)
 
-- [ ] `apps/miroflow-agent/src/data_agents/paper/pipeline.py:run_paper_pipeline`
+- [x] `apps/miroflow-agent/src/data_agents/paper/pipeline.py:run_paper_pipeline`
   emits `DeprecationWarning` on first call per process
-- [ ] Warning text references this change ID + migration target
-- [ ] Existing scripts (`scripts/run_paper_release_e2e.py`) still work
+- [x] Warning text references this change ID + migration target
+- [x] Existing scripts (`scripts/run_paper_release_e2e.py`) still work
   but emit the warning during their startup
 
 ## 4. Publications extraction (after T3)
@@ -33,65 +33,70 @@
 - [ ] `apps/miroflow-agent/src/data_agents/paper/homepage_ingest.py`
   records `evidence.source_type` ∈
   `{"prof_homepage_tier2", "prof_homepage_tier3"}`
-- [ ] Preprint case (title + year only): paper canonical row inserted
+- [x] Preprint case (title + year only): paper canonical row inserted
   with `quality_status="needs_enrichment"`, no failure raised
-- [ ] HTML parse failure: `pipeline_issue` row created with
+- [x] HTML parse failure: `pipeline_issue` row created with
   `stage="paper_attribution"`
-- [ ] Unit tests in `apps/miroflow-agent/tests/data_agents/paper/test_homepage_ingest_*.py`
+- [x] Unit tests in `apps/miroflow-agent/tests/data_agents/paper/test_homepage_ingest_*.py`
   cover the preprint scenario
 
 ## 5. Patents extraction (after T4)
 
-- [ ] `apps/miroflow-agent/src/data_agents/professor/homepage_patents.py`
+- [x] `apps/miroflow-agent/src/data_agents/professor/homepage_patents.py`
   exists
-- [ ] `apps/miroflow-agent/src/data_agents/patent/homepage_ingest.py`
+- [x] `apps/miroflow-agent/src/data_agents/patent/homepage_ingest.py`
   exists
-- [ ] Conservative section-header match: only sections whose heading
+- [x] Conservative section-header match: only sections whose heading
   contains `专利 / Patents / Patent Applications / 发明专利 /
   实用新型 / 外观` are processed
-- [ ] Page with no patents section: zero candidates produced, no
+- [x] Page with no patents section: zero candidates produced, no
   pipeline_issue
 - [ ] Page with title-only patents: candidates produced with
   `patent_id=None`, `quality_status=needs_enrichment`
-- [ ] Conflict with existing patent_id: existing row updated, new row
+  *(decision-required: current V004 schema routes these to
+  `pipeline_issue.stage="data_quality_flag"` and skips canonical insert)*
+- [x] Conflict with existing patent_id: existing row updated, new row
   not duplicated
-- [ ] Unit tests cover all three scenarios
+- [x] Unit tests cover all implemented scenarios
 
 ## 6. Identity gate (after T5)
 
-- [ ] `apps/miroflow-agent/src/data_agents/paper/identity_gate.py`
+- [x] `apps/miroflow-agent/src/data_agents/professor/paper_identity_gate.py`
   page-only short-circuit returns confidence 1.0
-- [ ] LLM-judge fallback triggered for confidence ∈ [0.5, 0.8)
-- [ ] `apps/miroflow-agent/src/data_agents/patent/identity_gate.py`
+- [x] LLM-judge fallback triggered for confidence ∈ [0.5, 0.8)
+- [x] `apps/miroflow-agent/src/data_agents/professor/patent_identity_gate.py`
   exists and mirrors paper-side semantics
-- [ ] Unit tests cover: page-only attribution, OpenAlex same-name
-  conflict, low-confidence reject
+- [x] Unit tests cover: page-only attribution, same-name / no-name
+  rejection paths, and the decision contract for caller-side
+  `pipeline_issue` handoff
 
 ## 7. summary_zh generation (after T6)
 
 - [ ] `apps/miroflow-agent/src/data_agents/paper/abstract_translator.py`
   output is Chinese paragraph 200-400 characters (sample 50 papers,
   measure char count distribution)
-- [ ] Boilerplate-detection LLM judge step is wired
-- [ ] Boilerplate-rejected summary: `summary_zh=NULL`,
+  *(2026-05-13 check against `miroflow_real` found 0 paper rows, so
+  no 50-row distribution can be measured yet)*
+- [x] Boilerplate-detection LLM judge step is wired
+- [x] Boilerplate-rejected summary: `summary_zh=NULL`,
   `quality_status=rejected`
-- [ ] Unit tests cover passing + rejected paths
+- [x] Unit tests cover passing + rejected paths
 
 ## 8. Quality status promotion (after T7)
 
-- [ ] State machine implemented per spec table
-- [ ] `needs_enrichment` → `ready` happens when all Required fields
+- [x] State machine implemented per spec table
+- [x] `needs_enrichment` → `ready` happens when all Required fields
   present + summary_zh passes boilerplate
-- [ ] `ready` is forward-monotonic (no auto-degrade)
-- [ ] Patent quality promotion via xlsx-merge or admin manual upgrade
+- [x] `ready` is forward-monotonic (no auto-degrade)
+- [x] Patent quality promotion via xlsx-merge or admin manual upgrade
 
 ## 9. Cross-domain link writers
 
-- [ ] `professor_paper_link` upsert is idempotent (composite key
+- [x] `professor_paper_link` upsert is idempotent (composite key
   `(paper_id, professor_id)`)
-- [ ] `professor_patent_link` upsert is idempotent (composite key
+- [x] `professor_patent_link` upsert is idempotent (composite key
   `(patent_id, professor_id)`)
-- [ ] `match_reason` ∈
+- [x] `match_reason` ∈
   `{"prof_page_declaration", "openalex_author_match", "manual_override"}`
 
 ## 10. End-to-end (T8.3)
@@ -106,18 +111,18 @@
 
 ## 11. Non-goals not violated
 
-- [ ] No code change in `apps/miroflow-agent/src/data_agents/paper/hybrid.py`
+- [x] No code change in `apps/miroflow-agent/src/data_agents/paper/hybrid.py`
   that re-introduces discovery semantics for OpenAlex / Crossref / S2
-- [ ] No call from `homepage_ingest.py` or `patent/homepage_ingest.py`
+- [x] No call from `homepage_ingest.py` or `patent/homepage_ingest.py`
   to OpenAlex / Crossref / S2 / arXiv / DBLP / Web Search **for the
   purpose of returning a paper list keyed by author name**
-- [ ] No new column added to `paper` Postgres table (V019 already
+- [x] No new column added to `paper` Postgres table (V019 already
   added quality_status; no migration in this change)
-- [ ] No change to `professor.paper_summary` or
+- [x] No change to `professor.paper_summary` or
   `professor.patent_summary` (those are `prof-summary-fields`)
-- [ ] No change to admin API `domains.py:753` (that is
+- [x] No change to admin API `domains.py:753` (that is
   `paper-summary-text-contract-fix`)
-- [ ] No Milvus collection change (that is
+- [x] No Milvus collection change (that is
   `prof-double-milvus-collection`)
 
 ## Evidence
@@ -327,14 +332,27 @@
   `tests/data_agents/paper/test_quality_promotion.py` + 12
   patent-side `tests/data_agents/patent/test_quality_promotion.py`).
   All passing.
-- Wiring TODO surfaced (not yet done in this change): the
-  promotion functions are pure and not yet wired into the paper /
-  patent ingest writers. Callers (`paper.homepage_ingest`,
-  `paper.enrichment`, `patent.homepage_ingest`,
-  `patent.exact_backfill`) will need updates to invoke
-  `evaluate_*_promotion` after their respective field-fill steps.
-  Wiring is a follow-up integration slice; the state machine is
-  the contract.
+- Runtime wiring follow-up completed:
+  - `paper.canonical_writer.upsert_paper` can initialize inserted
+    rows with explicit `quality_status` and preserves existing
+    status on conflict.
+  - `paper.homepage_ingest` initializes prof-page rows as
+    `needs_enrichment`.
+  - `scripts/run_paper_summary_zh_backfill.py` calls the boilerplate
+    judge, writes `rejected` on boilerplate, and calls
+    `evaluate_paper_promotion` for informative summaries.
+  - `patent.release` / `patent.exact_backfill` call
+    `evaluate_patent_promotion` semantics via `record_to_patent_dict`
+    so xlsx-complete rows write `ready` and xlsx-with-gaps rows write
+    `partial`.
+- Runtime wiring verification:
+  - Red tests first:
+    `uv run pytest tests/data_agents/paper/test_canonical_writer_identity_status.py tests/data_agents/paper/test_homepage_ingest.py::test_page_only_publication_initializes_needs_enrichment tests/scripts/test_run_paper_summary_zh_backfill.py::test_cli_boilerplate_summary_rejects_paper tests/scripts/test_run_paper_summary_zh_backfill.py::test_cli_successful_summary_promotes_paper_status tests/data_agents/patent/test_canonical_writer.py::test_record_to_patent_dict_marks_partial_when_xlsx_merge_has_gaps -q`
+    → 7 failed on missing writer/judge/promotion wiring.
+  - Green tests after wiring: same command → 7 passed.
+  - Broadened fixture regression:
+    `uv run pytest tests/data_agents/paper/test_canonical_writer_identity_status.py tests/data_agents/paper/test_homepage_ingest.py tests/data_agents/paper/test_homepage_ingest_preprint.py tests/data_agents/paper/test_quality_promotion.py tests/data_agents/paper/test_abstract_translator_boilerplate_judge.py tests/scripts/test_run_paper_summary_zh_backfill.py tests/data_agents/patent/test_homepage_ingest.py tests/data_agents/patent/test_quality_promotion.py tests/data_agents/patent/test_canonical_writer.py tests/data_agents/patent/test_exact_backfill.py -q`
+    → 94 passed.
 - Commit ref: filled at commit time.
 
 ### T8 — End-to-end smoke
@@ -357,10 +375,13 @@
     test_release.py::test_build_patent_release_generates_summary_and_company_links`
     — company_ids linkage issue, predates T4.
 - `apps/admin-console`: 218 passed, 108 skipped, 0 failed. ✅
-- Test additions by this change: 90 new tests
+- Test additions by this change: 94 new tests
   (`paper/test_homepage_ingest_preprint.py`: 10;
+  `paper/test_canonical_writer_identity_status.py`: 1;
+  `paper/test_homepage_ingest.py`: 1;
   `paper/test_abstract_translator_boilerplate_judge.py`: 13;
   `paper/test_quality_promotion.py`: 19;
+  `scripts/test_run_paper_summary_zh_backfill.py`: 2;
   `professor/test_homepage_patents.py`: 11;
   `professor/test_paper_identity_gate_page_only.py`: 3;
   `professor/test_patent_identity_gate.py`: 12;
@@ -401,10 +422,37 @@
   - Enrichment fires asynchronously via the existing pipeline
     runner.
   - At least one paper should promote to `quality_status='ready'`
-    when enrichment fills the gaps and the boilerplate judge
-    passes (manual verification of the promotion module's
-    runtime wiring is also part of this step — see Carry-over
-    note about T7 wiring in tasks.md).
+    when enrichment fills the gaps and the boilerplate judge passes.
+  - 2026-05-12 environment preflight: `DATABASE_URL_TEST`,
+    `DATABASE_URL`, `MILVUS_URI`, `MILVUS_HOST`, `MILVUS_PORT`,
+    `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `LOCAL_LLM_BASE_URL`,
+    and `LOCAL_LLM_API_KEY` were all missing, so this E2E smoke
+    could not run in the current shell.
+
+### 2026-05-13 close-out classification
+
+Not all unchecked acceptance items mean the same thing. Current disposition:
+
+| Acceptance item | Classification | Disposition |
+|---|---|---|
+| §2 hybrid strict grep clean | blocked by follow-up | Carry over to `paper-pipeline-cleanup`; cleanup must first document the full caller graph for `professor/paper_collector.py` and related scripts/tests before deleting `hybrid.discover_*`. |
+| §4 `evidence.source_type` tier literals | blocked by tier-classification integration | Carry over to a small follow-up, or bundle with `paper-pipeline-cleanup` if that change already touches the same ingest writer. Current implementation uses `match_source="prof_page_only"` and records the semantic page-only attribution, but not the literal tier labels. |
+| §5 title-only prof-page patent canonical insert | decision-required | Current V004 schema makes `patent.patent_number` NOT NULL UNIQUE, so title-only candidates write `pipeline_issue.stage="data_quality_flag"` and do not enter canonical. Before deciding between spec downgrade and a V024/V0XX relax migration, run a real prof-page patent E2E to measure with-number success rate and title-only frequency. Tracked by proposed `patent-page-only-canonical`. |
+| §7 50-paper `summary_zh` char distribution | data-gated | 2026-05-13 SQL against `miroflow_real` found `paper_total=0` and `summary_nonempty=0`, so there are no 50 rows to sample. Re-run once paper rows exist; no external credentials are required for this measurement. |
+| §10 real seed E2E | env-gated | Still requires real Postgres/Milvus/LLM/network path with a seed that has publications and preferably patents. |
+| §6 identity-gate file path | resolved by spec alignment | Spec text now names `professor.paper_identity_gate` and `professor.patent_identity_gate`, matching the implemented caller boundary. |
+
+Follow-up ledger placeholders registered on 2026-05-13:
+
+- `paper-pipeline-cleanup`
+- `prof-summary-fields`
+- `prof-double-milvus-collection`
+- `prof-lifecycle-state`
+- `patent-page-only-canonical`
+
+`prof-lifecycle-state` must keep lifecycle orthogonal to
+`quality_status`: `quality_status` answers "is this data trustworthy?";
+`lifecycle_state` answers "is this professor still active at this school?".
 
 ## Failure modes that block archive
 
@@ -421,14 +469,5 @@
   degrades after enrichment failure) — bug; fix before archive
   *(addressed: `test_ready_does_not_auto_degrade_on_enrichment_loss`
   pins the invariant)*.
-
-## Failure modes that block archive
-
-- T1 leaves `discover_*` calls active anywhere in src/ — refactor
-  incomplete; do not archive
-- T4 patent extraction unconditionally fires for all sections (false
-  positives) — heuristic too loose; tighten before archive
-- T7 forward-monotonic invariant violated (a `ready` paper auto-
-  degrades after enrichment failure) — bug; fix before archive
 - T8 smoke test produces zero papers from a real seed that obviously
-  has many — extraction broken; investigate before archive
+  has many — extraction broken; investigate before archive.

@@ -189,7 +189,7 @@ plain INSERT when the candidate has no `patent_id`. Specifically:
 
 ### Requirement: Identity gate semantics (paper + patent)
 
-`paper_identity_gate` and `patent_identity_gate` MUST verify
+`professor.paper_identity_gate` and `professor.patent_identity_gate` MUST verify
 **same-person vs same-name only**. They MUST NOT verify content truth
 (whether the paper / patent actually exists in the world or contains
 truthful claims).

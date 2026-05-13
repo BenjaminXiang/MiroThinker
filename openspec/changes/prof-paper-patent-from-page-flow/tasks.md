@@ -223,6 +223,21 @@ order is 1 → 2 → 3 → 4 → 5.
   `apply_admin_override` mirrors paper-side actions but accepts
   `approve` directly from `needs_enrichment` since the patent has
   no enrichment pathway to wait on.
+- [x] T7.5: Runtime writer wiring landed after the initial pure-function
+  state machines:
+  - `paper.canonical_writer.upsert_paper` accepts an explicit
+    `quality_status` for insert-time initialization and preserves
+    existing status on conflict.
+  - `paper.homepage_ingest` initializes prof-page paper rows as
+    `needs_enrichment`.
+  - `scripts/run_paper_summary_zh_backfill.py` calls
+    `judge_summary_boilerplate`; boilerplate rows write
+    `summary_zh=NULL, quality_status='rejected'`; informative
+    summaries call `evaluate_paper_promotion` and write the next
+    status.
+  - `patent.release` / `patent.exact_backfill` now use
+    `evaluate_patent_promotion` so xlsx rows promote to `ready`
+    when complete and `partial` when merged with gaps.
 
 ## 8. Acceptance + close-out
 
@@ -272,11 +287,9 @@ change set, and where they belong:
   Belongs to a small follow-up (tracked in `tasks.md` §3 drift
   note). Current implementation uses `match_source="prof_page_only"`
   which captures the semantic but not the literal label.
-- **T7 wiring**: the new `quality_promotion` modules are pure
-  state machines. Wiring them into the actual ingest writers
-  (`paper.homepage_ingest`, `paper.enrichment`,
-  `patent.homepage_ingest`, `patent.exact_backfill`) is mechanical
-  integration that lives in a small follow-up change.
+- **T7 real E2E evidence**: runtime writer wiring is now covered by
+  fixture-level tests, but a real seed smoke still has to prove the
+  whole chain against Postgres + Milvus + LLM credentials.
 - **T8.3 (real E2E smoke)**: needs a manual run with credentials.
   Cannot be checked in.
 
