@@ -14,6 +14,10 @@ Per CLAUDE.md §14 / AGENTS.md §15. Every OpenSpec change is registered here. S
 | prof-lifecycle-state | feat (professor lifecycle separate from quality) | professor-lifecycle-state | Professor Audit Step 23a/23b + Review §9.2 | proposed | Standard | medium | — | n/a | no |
 | patent-page-only-canonical | feat (decide page-only patent canonical strategy) | patent-page-only-canonical | `prof-paper-patent-from-page-flow` T4 / V004 carry-over | proposed | Standard | medium | — | n/a | no |
 | paper-summary-text-contract-fix | bugfix (admin API contract drift) | paper-canonical-api-projection | Paper Review §3.1 P3 + audit drift item | archived 2026-05-10 | Lite | low | — | n/a | yes |
+| prof-admin-workbench | epic (parent): quality-status rework + admin audit workbench + fact extraction | professor-admin-workbench (3 child capabilities) | Brainstorming 2026-05-14 + live DB inspection (miroflow_real) | proposed | Epic | medium-high | — | n/a | no |
+| prof-quality-status-rework | feat/refactor (quality engine + canonical write + re-eval) | professor-quality-status | `prof-admin-workbench` child 1 | proposed | Standard | medium | — | n/a | no |
+| prof-fact-extraction-expansion | feat (structured facts + profile summary backfill) | professor-fact-extraction | `prof-admin-workbench` child 2 | proposed | Standard | medium | — | n/a | no |
+| prof-admin-workbench-ui | feat (admin API + workbench UI + action log) | professor-admin-workbench-ui | `prof-admin-workbench` child 3 | proposed | Standard | medium-high | — | n/a | no |
 
 ## Notes
 
@@ -25,6 +29,15 @@ Per CLAUDE.md §14 / AGENTS.md §15. Every OpenSpec change is registered here. S
   drafted. `prof-lifecycle-state` must model lifecycle separately from
   `quality_status`: quality answers whether data is trustworthy; lifecycle
   answers whether the person is still active at that school.
+- `prof-admin-workbench` registered 2026-05-14. Epic parent; carries
+  Epic-level `proposal.md` + `design.md` only. Three child changes
+  (`prof-quality-status-rework`, `prof-fact-extraction-expansion`,
+  `prof-admin-workbench-ui`), sequenced quality-first and then
+  data-first. Root cause: `canonical_writer` never writes
+  `quality_status`, so all 495 `miroflow_real` professors sit at the
+  `needs_review` default. The child changes are scaffolded; Child 1
+  implementation remains gated on child-spec review and a clean
+  implementation checkpoint.
 
 ## Archived
 

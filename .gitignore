@@ -283,3 +283,6 @@ milvus.db*
 
 # Root-level browser baseline screenshots (gstack/QA artifacts, not baselines-of-record)
 /baseline-*.png
+
+# Superpowers brainstorming visual-companion artifacts
+.superpowers/
