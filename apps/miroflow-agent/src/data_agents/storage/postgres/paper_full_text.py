@@ -29,17 +29,21 @@ def upsert_paper_full_text(
             intro,
             pdf_url,
             pdf_sha256,
+            pdf_byte_size,
+            raw_pdf_storage_ref,
             source,
             fetched_at,
             fetch_error,
             run_id
         )
-        VALUES (%s, %s, %s, %s, %s, %s, now(), %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, now(), %s, %s)
         ON CONFLICT (paper_id) DO UPDATE
            SET abstract = EXCLUDED.abstract,
                intro = EXCLUDED.intro,
                pdf_url = EXCLUDED.pdf_url,
                pdf_sha256 = EXCLUDED.pdf_sha256,
+               pdf_byte_size = EXCLUDED.pdf_byte_size,
+               raw_pdf_storage_ref = EXCLUDED.raw_pdf_storage_ref,
                source = EXCLUDED.source,
                fetched_at = now(),
                fetch_error = EXCLUDED.fetch_error,
@@ -51,6 +55,8 @@ def upsert_paper_full_text(
             extract.intro,
             extract.pdf_url,
             extract.pdf_sha256,
+            extract.pdf_byte_size,
+            extract.raw_pdf_storage_ref,
             extract.source,
             extract.fetch_error,
             run_id,

@@ -27,6 +27,32 @@ _DEFAULT_MODEL = "Qwen/Qwen3-Embedding-8B"
 _VECTOR_DIM = 4096
 
 
+def build_professor_identity_text(profile: EnrichedProfessorProfile) -> str:
+    parts = [
+        _labeled_text("Name", profile.name),
+        _labeled_text("English name", profile.name_en),
+        _labeled_text("Institution", profile.institution),
+        _labeled_text("Department", profile.department),
+        _labeled_text("Title", profile.title),
+        _labeled_text("Email", profile.email),
+        _labeled_text("Homepage", profile.homepage or profile.profile_url),
+    ]
+    return "\n".join(part for part in parts if part)
+
+
+def build_professor_research_text(profile: EnrichedProfessorProfile) -> str:
+    parts = [
+        _labeled_text(
+            "Research directions",
+            "、".join(_clean_text(item) for item in profile.research_directions if _clean_text(item)),
+        ),
+        _labeled_text("Profile summary", profile.profile_summary),
+        _labeled_text("Paper summary", profile.paper_summary),
+        _labeled_text("Patent summary", profile.patent_summary),
+    ]
+    return "\n".join(part for part in parts if part)
+
+
 class EmbeddingClient:
     def __init__(
         self,
@@ -94,9 +120,9 @@ class ProfessorVectorizer:
                 name="profile_summary", dtype=DataType.VARCHAR, max_length=2048
             ),
             FieldSchema(name="quality_status", dtype=DataType.VARCHAR, max_length=32),
-            FieldSchema(name="h_index", dtype=DataType.INT32, nullable=True),
-            FieldSchema(name="citation_count", dtype=DataType.INT64, nullable=True),
-            FieldSchema(name="paper_count", dtype=DataType.INT32, nullable=True),
+            FieldSchema(name="h_index", dtype=DataType.INT32),
+            FieldSchema(name="citation_count", dtype=DataType.INT64),
+            FieldSchema(name="paper_count", dtype=DataType.INT32),
             FieldSchema(
                 name="profile_vector", dtype=DataType.FLOAT_VECTOR, dim=_VECTOR_DIM
             ),
@@ -231,12 +257,28 @@ def build_professor_profile_payload(
         ),
         "profile_summary": profile.profile_summary,
         "quality_status": quality_status,
-        "h_index": profile.h_index,
-        "citation_count": profile.citation_count,
-        "paper_count": profile.paper_count,
+        "h_index": _metric_int(profile.h_index),
+        "citation_count": _metric_int(profile.citation_count),
+        "paper_count": _metric_int(profile.paper_count),
         "profile_vector": profile_vector,
         "direction_vector": direction_vector,
     }
+
+
+def _metric_int(value: int | None) -> int:
+    """Milvus stores 0 when canonical metrics are NULL; Postgres remains authoritative."""
+    return int(value) if value is not None else 0
+
+
+def _labeled_text(label: str, value: object) -> str:
+    text = _clean_text(value)
+    return f"{label}: {text}" if text else ""
+
+
+def _clean_text(value: object) -> str:
+    if value is None:
+        return ""
+    return " ".join(str(value).split())
 
 
 def _create_milvus_client(uri: str) -> Any:

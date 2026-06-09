@@ -31,6 +31,8 @@ def backfill_paper_chunks(
     limit=None,
     batch_size=32,
     resume_ids: set[str] | None = None,
+    paper_ids: set[str] | None = None,
+    changed_since=None,
 ) -> BackfillReport:
     started_at = time.monotonic()
     papers_processed = 0
@@ -53,6 +55,13 @@ def backfill_paper_chunks(
     )
     params: list[object] = []
     where_clauses: list[str] = []
+    if paper_ids:
+        placeholders = ", ".join(["%s"] * len(paper_ids))
+        where_clauses.append(f"p.paper_id IN ({placeholders})")
+        params.extend(sorted(paper_ids))
+    if changed_since is not None:
+        where_clauses.append("p.updated_at >= %s")
+        params.append(changed_since)
     if resume_ids:
         placeholders = ", ".join(["%s"] * len(resume_ids))
         where_clauses.append(f"p.paper_id NOT IN ({placeholders})")

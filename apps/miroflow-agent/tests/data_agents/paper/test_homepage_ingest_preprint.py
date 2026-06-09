@@ -27,6 +27,7 @@ def _make_publication(**overrides) -> HomepagePublication:
         year=None,
         source_url="https://example.test/prof",
         source_anchor=None,
+        pdf_url=None,
     )
     base.update(overrides)
     return HomepagePublication(**base)
@@ -120,6 +121,17 @@ def test_synthesize_preserves_venue_when_available():
     resolved = _synthesize_page_only_resolution(pub, canonical_name="李四")
     assert resolved.venue == "ICML 2026"
     assert resolved.year == 2026
+
+
+def test_synthesize_preserves_professor_page_pdf_url():
+    pub = _make_publication(
+        clean_title="Paper With Direct PDF",
+        pdf_url="https://example.test/prof/paper.pdf",
+    )
+
+    resolved = _synthesize_page_only_resolution(pub, canonical_name="李四")
+
+    assert resolved.pdf_url == "https://example.test/prof/paper.pdf"
 
 
 def test_synthesize_handles_missing_year():

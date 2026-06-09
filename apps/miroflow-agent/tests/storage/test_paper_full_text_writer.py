@@ -70,6 +70,8 @@ def test_upsert_paper_full_text_passes_all_fields():
         pdf_sha256="s" * 64,
         source="arxiv",
         fetch_error=None,
+        pdf_byte_size=12345,
+        raw_pdf_storage_ref="filesystem://raw-pdfs/ss.pdf",
     )
     upsert_paper_full_text(conn, paper_id="p1", extract=extract, run_id=_LEGACY_RUN_ID)
     # Params passed should include all extract fields in some order.
@@ -81,6 +83,8 @@ def test_upsert_paper_full_text_passes_all_fields():
     assert "u" in params
     assert "s" * 64 in params
     assert "arxiv" in params
+    assert 12345 in params
+    assert "filesystem://raw-pdfs/ss.pdf" in params
 
 
 def test_upsert_paper_full_text_handles_none_values():

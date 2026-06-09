@@ -18,6 +18,7 @@ import pytest
 from src.data_agents.paper.full_text_fetcher import FullTextExtract
 from src.data_agents.paper.homepage_ingest import (
     IngestReport,
+    _is_malformed_publication_title,
     run_homepage_paper_ingest,
 )
 from src.data_agents.paper.title_resolver import ResolvedPaper
@@ -33,12 +34,14 @@ def _prof_row(
     name: str = "Test Prof",
     institution: str = "南方科技大学",
     homepage_url: str = "https://example.edu/prof/x",
+    homepage_page_role: str | None = "official_profile",
 ) -> dict:
     return {
         "professor_id": prof_id or str(uuid.uuid4()),
         "canonical_name": name,
         "institution": institution,
         "homepage_url": homepage_url,
+        "homepage_page_role": homepage_page_role,
     }
 
 
@@ -47,6 +50,7 @@ def _pub(
     clean_title: str = "Deep Learning for Images",
     authors_text: str | None = "A. Smith, J. Doe",
     year: int | None = 2023,
+    pdf_url: str | None = None,
 ) -> HomepagePublication:
     return HomepagePublication(
         raw_title=f"[1] {clean_title} [J]",
@@ -56,6 +60,7 @@ def _pub(
         year=year,
         source_url="https://example.edu/prof/x",
         source_anchor=None,
+        pdf_url=pdf_url,
     )
 
 
@@ -162,8 +167,224 @@ def test_happy_path_single_prof_five_pubs_all_resolvable(tmp_path):
         assert m_close.call_args.kwargs.get("status") == "succeeded"
 
 
-def test_happy_path_evidence_source_type_is_personal_homepage(tmp_path):
-    """link writer must receive evidence_source_type='personal_homepage'."""
+def test_official_page_ingest_does_not_truncate_more_than_five_pubs(tmp_path):
+    prof = _prof_row()
+    conn = _mock_conn_with_profs([prof])
+    pubs = [_pub(clean_title=f"Official Paper {index}") for index in range(1, 8)]
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value="<html></html>",
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.extract_publications_from_html",
+        return_value=pubs,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title"
+    ) as m_resolve, patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper"
+    ) as m_upsert_paper, patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ) as m_upsert_link, patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
+        return_value=True,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_and_extract_full_text"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper_full_text"
+    ):
+        m_resolve.side_effect = [_resolved(title=pub.clean_title) for pub in pubs]
+        m_upsert_paper.return_value = MagicMock(paper_id="paper:doi:x", is_new=True)
+
+        report = run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "checkpoint.jsonl",
+        )
+
+        assert report.papers_linked_total == 7
+        assert m_resolve.call_count == 7
+        assert m_upsert_paper.call_count == 7
+        assert m_upsert_link.call_count == 7
+        for call in m_upsert_link.call_args_list:
+            assert call.kwargs["link_status"] == "verified"
+            assert call.kwargs["is_officially_listed"] is True
+
+
+def test_homepage_ingest_accepts_publication_extractor_injection(tmp_path):
+    prof = _prof_row(homepage_url="https://www.sigs.tsinghua.edu.cn/sample/main.htm")
+    conn = _mock_conn_with_profs([prof])
+    pubs = [_pub(clean_title="Source Grounded LLM Paper")]
+    seen: dict[str, str] = {}
+
+    def fake_publication_extractor(html: str, *, page_url: str):
+        seen["html"] = html
+        seen["page_url"] = page_url
+        return pubs
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value="<html>official page</html>",
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.extract_publications_from_html"
+    ) as m_default_extract, patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
+        return_value=_resolved(title="Source Grounded LLM Paper"),
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper"
+    ) as m_upsert_paper, patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ) as m_upsert_link, patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
+        return_value=True,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_and_extract_full_text"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper_full_text"
+    ):
+        m_upsert_paper.return_value = MagicMock(paper_id="paper:doi:x", is_new=True)
+
+        report = run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "checkpoint.jsonl",
+            publication_extractor=fake_publication_extractor,
+        )
+
+        assert report.papers_linked_total == 1
+        assert seen == {
+            "html": "<html>official page</html>",
+            "page_url": "https://www.sigs.tsinghua.edu.cn/sample/main.htm",
+        }
+        m_default_extract.assert_not_called()
+        assert m_upsert_link.called
+
+
+def test_homepage_ingest_disables_arxiv_title_search_for_bulk_titles(tmp_path):
+    prof = _prof_row()
+    conn = _mock_conn_with_profs([prof])
+    pub = _pub(clean_title="Official Homepage Paper")
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value="<html></html>",
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.extract_publications_from_html",
+        return_value=[pub],
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
+        return_value=None,
+    ) as m_resolve, patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
+        return_value=True,
+    ):
+        run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "checkpoint.jsonl",
+        )
+
+        assert m_resolve.call_args.kwargs["enable_arxiv_title_search"] is False
+
+
+def test_malformed_author_list_title_is_blocked_before_resolver(tmp_path):
+    prof = _prof_row()
+    conn = _mock_conn_with_profs([prof])
+    malformed_pub = HomepagePublication(
+        raw_title=(
+            "1- M. Abdelaziz, T. Wang, W. Anwaar, A. Elazab*. Robust attention "
+            "transfer neural networks for diagnosis of Alzheimer's disease from "
+            "structural magnetic resonance images, Engineering Applications of "
+            "Artificial Intelligence, 164, 113260, 2026"
+        ),
+        clean_title="M. Abdelaziz, T. Wang, W. Anwaar, A. Elazab",
+        authors_text=None,
+        venue_text=(
+            "Robust attention transfer neural networks for diagnosis of Alzheimer's "
+            "disease from structural magnetic resonance images"
+        ),
+        year=2026,
+        source_url="https://www.sigs.tsinghua.edu.cn/Ahmed%20Elazab/main.psp",
+        source_anchor=None,
+    )
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value="<html></html>",
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.extract_publications_from_html",
+        return_value=[malformed_pub],
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title"
+    ) as m_resolve, patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper"
+    ) as m_upsert_paper, patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ) as m_upsert_link, patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_and_extract_full_text"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper_full_text"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest._file_pipeline_issue"
+    ) as m_issue:
+        report = run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "checkpoint.jsonl",
+        )
+
+        assert report.papers_linked_total == 0
+        assert report.pipeline_issues_filed >= 1
+        issue_types = [call.kwargs["issue_type"] for call in m_issue.call_args_list]
+        assert "malformed_publication_title" in issue_types
+        m_resolve.assert_not_called()
+        m_upsert_paper.assert_not_called()
+        m_upsert_link.assert_not_called()
+
+
+def test_malformed_guard_allows_valid_comma_title_with_authors():
+    publication = _pub(
+        clean_title=(
+            "Gaussian Universal Features, Canonical Correlations, and Common "
+            "Information"
+        ),
+        authors_text="S.-L. Huang, L. Zheng, G. Wornell",
+        year=2018,
+    )
+
+    assert not _is_malformed_publication_title(publication)
+
+
+def test_malformed_guard_blocks_author_list_title_with_context():
+    publication = _pub(
+        clean_title=(
+            "Kevin Cheung, Jennifer Gloeckner Powers, Zhengqiao Zhao, and Gail "
+            "Rosen"
+        ),
+        authors_text=(
+            "Cullen CM, Kawalpreet K Aneja, Sinem Beyhan, Clara E. Cho"
+        ),
+        year=2020,
+    )
+
+    assert _is_malformed_publication_title(publication)
+
+
+def test_official_profile_evidence_source_type_is_tier2(tmp_path):
+    """link writer must preserve official profile page evidence as Tier 2."""
     prof = _prof_row()
     conn = _mock_conn_with_profs([prof])
 
@@ -198,7 +419,88 @@ def test_happy_path_evidence_source_type_is_personal_homepage(tmp_path):
 
         assert m_upsert_link.called
         kwargs = m_upsert_link.call_args.kwargs
-        assert kwargs.get("evidence_source_type") == "personal_homepage"
+        assert kwargs.get("evidence_source_type") == "prof_homepage_tier2"
+
+
+def test_personal_homepage_evidence_source_type_is_tier3(tmp_path):
+    """link writer must preserve personal/lab homepage evidence as Tier 3."""
+    prof = _prof_row(homepage_page_role="personal_homepage")
+    conn = _mock_conn_with_profs([prof])
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value="<html></html>",
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.extract_publications_from_html",
+        return_value=[_pub()],
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
+        return_value=_resolved(),
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper"
+    ) as m_upsert_paper, patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ) as m_upsert_link, patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
+        return_value=True,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_and_extract_full_text"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper_full_text"
+    ):
+        m_upsert_paper.return_value = MagicMock(paper_id="paper:doi:x", is_new=True)
+
+        run_homepage_paper_ingest(conn, resume_checkpoint_path=tmp_path / "c.jsonl")
+
+        assert m_upsert_link.called
+        kwargs = m_upsert_link.call_args.kwargs
+        assert kwargs.get("evidence_source_type") == "prof_homepage_tier3"
+
+
+def test_missing_homepage_tier_files_issue_without_generic_link(tmp_path):
+    prof = _prof_row(homepage_page_role=None)
+    conn = _mock_conn_with_profs([prof])
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value="<html></html>",
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.extract_publications_from_html",
+        return_value=[_pub()],
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title"
+    ) as m_resolve, patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper"
+    ) as m_upsert_paper, patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ) as m_upsert_link, patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_and_extract_full_text"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper_full_text"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest._file_pipeline_issue"
+    ) as m_issue:
+        report = run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "c.jsonl",
+        )
+
+        assert report.papers_linked_total == 0
+        assert report.pipeline_issues_filed == 1
+        assert m_issue.call_args.kwargs["issue_type"] == "missing_homepage_tier"
+        m_resolve.assert_not_called()
+        m_upsert_paper.assert_not_called()
+        m_upsert_link.assert_not_called()
 
 
 def test_page_only_publication_initializes_needs_enrichment(tmp_path):
@@ -478,6 +780,164 @@ def test_full_text_fetch_skipped_when_row_exists(tmp_path):
         assert report.full_text_fetched_total == 0
         m_fetch_full.assert_not_called()
         m_upsert_full.assert_not_called()
+
+
+def test_professor_page_pdf_link_attached_to_resolved_paper_for_full_text_fetch(
+    tmp_path,
+):
+    prof = _prof_row()
+    conn = _mock_conn_with_profs([prof])
+    pdf_url = "https://example.edu/prof/papers/deep-learning.pdf"
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value="<html></html>",
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.extract_publications_from_html",
+        return_value=[_pub(pdf_url=pdf_url)],
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
+        return_value=_resolved(),
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper"
+    ) as m_upsert_paper, patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
+        return_value=False,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_and_extract_full_text"
+    ) as m_fetch_full, patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper_full_text"
+    ):
+        m_upsert_paper.return_value = MagicMock(paper_id="paper:doi:x", is_new=True)
+        m_fetch_full.return_value = _full_text()
+
+        run_homepage_paper_ingest(conn, resume_checkpoint_path=tmp_path / "c.jsonl")
+
+        assert m_fetch_full.called
+        resolved_arg = m_fetch_full.call_args.args[0]
+        assert resolved_arg.pdf_url == pdf_url
+
+
+def test_professor_page_pdf_fetch_cap_files_issue_and_skips_extra_fetches(
+    tmp_path,
+):
+    prof = _prof_row()
+    conn = _mock_conn_with_profs([prof])
+    publications = [
+        _pub(clean_title=f"Direct PDF Paper {idx}", pdf_url=f"https://example.edu/p{idx}.pdf")
+        for idx in range(1, 4)
+    ]
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value="<html></html>",
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.extract_publications_from_html",
+        return_value=publications,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
+        side_effect=[_resolved(title=pub.clean_title) for pub in publications],
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper"
+    ) as m_upsert_paper, patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
+        return_value=False,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_and_extract_full_text",
+        return_value=_full_text(),
+    ) as m_fetch_full, patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper_full_text"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest._file_pipeline_issue"
+    ) as m_issue:
+        m_upsert_paper.return_value = MagicMock(paper_id="paper:doi:x", is_new=True)
+
+        report = run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "c.jsonl",
+            prof_page_pdf_fetch_cap=1,
+        )
+
+        assert m_fetch_full.call_count == 1
+        assert report.full_text_fetched_total == 1
+        assert report.pipeline_issues_filed == 2
+        assert [call.kwargs["issue_type"] for call in m_issue.call_args_list] == [
+            "pdf_fetch_cap_exceeded",
+            "pdf_fetch_cap_exceeded",
+        ]
+
+
+def test_professor_page_pdf_cap_violation_files_pipeline_issue(tmp_path):
+    prof = _prof_row()
+    conn = _mock_conn_with_profs([prof])
+    publications = [
+        _pub(clean_title="Bad Content Type PDF", pdf_url="https://example.edu/html.pdf"),
+        _pub(clean_title="Good PDF A", pdf_url="https://example.edu/a.pdf"),
+        _pub(clean_title="Good PDF B", pdf_url="https://example.edu/b.pdf"),
+    ]
+    failed_extract = FullTextExtract(
+        paper_id="paper:doi:10.1/x",
+        abstract=None,
+        intro=None,
+        pdf_url="https://example.edu/html.pdf",
+        pdf_sha256=None,
+        source="failed",
+        fetch_error="pdf_content_type_disallowed",
+    )
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value="<html></html>",
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.extract_publications_from_html",
+        return_value=publications,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
+        side_effect=[_resolved(title=pub.clean_title) for pub in publications],
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper"
+    ) as m_upsert_paper, patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
+        return_value=False,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_and_extract_full_text",
+        side_effect=[failed_extract, _full_text(), _full_text()],
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper_full_text"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest._file_pipeline_issue"
+    ) as m_issue:
+        m_upsert_paper.return_value = MagicMock(paper_id="paper:doi:x", is_new=True)
+
+        report = run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "c.jsonl",
+        )
+
+        assert report.full_text_fetched_total == 2
+        assert report.pipeline_issues_filed == 1
+        assert m_issue.call_args.kwargs["issue_type"] == "pdf_fetch_cap_violation"
+        assert m_issue.call_args.kwargs["details"]["fetch_error"] == (
+            "pdf_content_type_disallowed"
+        )
 
 
 # ---------- Resume -----------------------------------------------------------

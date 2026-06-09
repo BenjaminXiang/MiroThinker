@@ -4,8 +4,13 @@ from __future__ import annotations
 
 from src.data_agents.storage.milvus_collections import (
     PAPER_CHUNKS_COLLECTION,
+    PROFESSOR_IDENTITY_PROFILES_COLLECTION,
     drop_paper_chunks_collection,
+    drop_professor_identity_profiles_collection,
+    drop_professor_research_profiles_collection,
     ensure_paper_chunks_collection,
+    ensure_professor_identity_profiles_collection,
+    ensure_professor_research_profiles_collection,
 )
 
 
@@ -22,6 +27,62 @@ def _fresh_milvus():
 
 def test_constant_collection_name():
     assert PAPER_CHUNKS_COLLECTION == "paper_chunks"
+
+
+def _schema_field_names(client, collection_name: str) -> set[str]:
+    schema = client._delegate._collections[collection_name]["schema"]
+    return {field.name for field in schema.fields}
+
+
+def test_professor_split_collection_names_and_legacy_name_are_available():
+    import src.data_agents.storage.milvus_collections as mc
+
+    assert mc.PROFESSOR_PROFILES_COLLECTION == "professor_profiles"
+    assert mc.PROFESSOR_IDENTITY_PROFILES_COLLECTION == "professor_identity_profiles"
+    assert mc.PROFESSOR_RESEARCH_PROFILES_COLLECTION == "professor_research_profiles"
+
+
+def test_ensure_creates_professor_identity_collection_with_identity_vector():
+    client = _fresh_milvus()
+
+    ensure_professor_identity_profiles_collection(client)
+
+    assert client.has_collection(PROFESSOR_IDENTITY_PROFILES_COLLECTION)
+    fields = _schema_field_names(client, PROFESSOR_IDENTITY_PROFILES_COLLECTION)
+    assert {"id", "name", "institution", "department", "title", "identity_text"} <= fields
+    assert "identity_vector" in fields
+    assert "research_vector" not in fields
+
+
+def test_ensure_creates_professor_research_collection_with_research_vector():
+    client = _fresh_milvus()
+
+    ensure_professor_research_profiles_collection(client)
+
+    assert client.has_collection("professor_research_profiles")
+    fields = _schema_field_names(client, "professor_research_profiles")
+    assert {
+        "id",
+        "research_text",
+        "research_directions",
+        "profile_summary",
+        "paper_summary",
+        "patent_summary",
+    } <= fields
+    assert "research_vector" in fields
+    assert "identity_vector" not in fields
+
+
+def test_drop_removes_professor_split_collections():
+    client = _fresh_milvus()
+    ensure_professor_identity_profiles_collection(client)
+    ensure_professor_research_profiles_collection(client)
+
+    drop_professor_identity_profiles_collection(client)
+    drop_professor_research_profiles_collection(client)
+
+    assert not client.has_collection("professor_identity_profiles")
+    assert not client.has_collection("professor_research_profiles")
 
 
 def test_ensure_creates_collection_on_fresh_client():

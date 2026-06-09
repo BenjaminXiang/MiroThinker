@@ -111,6 +111,7 @@ def enrich_paper_metadata_from_crossref(
 
     year, publication_date = _extract_date(message)
     enrichment = PaperMetadataEnrichment(
+        doi=_normalize_optional_str(message.get("DOI")) or normalized_doi,
         abstract=_clean_abstract(message.get("abstract")),
         venue=_first_text(message.get("container-title"))
         or _first_text(message.get("short-container-title")),

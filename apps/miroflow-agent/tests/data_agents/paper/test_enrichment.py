@@ -7,10 +7,12 @@ Requirement.
 
 from __future__ import annotations
 
-import pytest
-
 from src.data_agents.paper.enrichment import enrich_paper_with_hybrid_sources
-from src.data_agents.paper.models import PaperMetadataEnrichment
+from src.data_agents.paper.models import (
+    PaperAuthorMetadata,
+    PaperIdentifierContradiction,
+    PaperMetadataEnrichment,
+)
 
 
 def _make(**overrides) -> PaperMetadataEnrichment:
@@ -28,6 +30,10 @@ def _make(**overrides) -> PaperMetadataEnrichment:
         reference_count=None,
         source_url=None,
         enrichment_sources=(),
+        authors=(),
+        doi=None,
+        arxiv_id=None,
+        identifier_contradictions=(),
     )
     base.update(overrides)
     return PaperMetadataEnrichment(**base)
@@ -108,11 +114,17 @@ def test_citation_count_is_openalex_only_even_when_others_have_it():
         citation_count=888,  # S2 claims 888 — must be ignored
         enrichment_sources=("semantic_scholar",),
     )
+    arxiv = _make(
+        citation_count=777,  # arXiv must never fill canonical citations
+        enrichment_sources=("arxiv",),
+    )
     result = enrich_paper_with_hybrid_sources(
         "10.1234/abc",
         openalex_lookup=lambda d: openalex,
         crossref_lookup=lambda d: crossref,
         semantic_scholar_lookup=lambda d: s2,
+        arxiv_id="2401.00001",
+        arxiv_lookup=lambda d: arxiv,
     )
     assert result is not None
     # OpenAlex returned None → no fallback to Crossref/S2 for citation
@@ -133,6 +145,163 @@ def test_s2_fills_tldr_when_others_lack_it():
     assert result is not None
     assert result.tldr == "Short TLDR summary."
     assert result.enrichment_sources == ("semantic_scholar",)
+
+
+def test_arxiv_fills_abstract_after_openalex_crossref_and_s2_miss():
+    openalex = _make(citation_count=12, enrichment_sources=("openalex",))
+    arxiv = _make(
+        abstract="Abstract from arXiv.",
+        venue="arXiv",
+        enrichment_sources=("arxiv",),
+    )
+    result = enrich_paper_with_hybrid_sources(
+        "10.1234/abc",
+        arxiv_id="2401.00001",
+        openalex_lookup=lambda d: openalex,
+        crossref_lookup=lambda d: None,
+        semantic_scholar_lookup=lambda d: None,
+        arxiv_lookup=lambda d: arxiv,
+    )
+
+    assert result is not None
+    assert result.abstract == "Abstract from arXiv."
+    assert result.venue == "arXiv"
+    assert result.citation_count == 12
+    assert result.enrichment_sources == ("openalex", "arxiv")
+
+
+def test_arxiv_only_identifier_can_produce_enrichment():
+    arxiv = _make(
+        abstract="arXiv-only abstract.",
+        venue="arXiv",
+        enrichment_sources=("arxiv",),
+    )
+    result = enrich_paper_with_hybrid_sources(
+        None,
+        arxiv_id="2401.00001",
+        arxiv_lookup=lambda d: arxiv,
+    )
+
+    assert result is not None
+    assert result.abstract == "arXiv-only abstract."
+    assert result.enrichment_sources == ("arxiv",)
+
+
+def test_author_merge_preserves_orcid_and_adds_lower_priority_authors():
+    openalex = _make(
+        authors=(
+            PaperAuthorMetadata(
+                display_name="Ada Lovelace",
+                orcid="https://orcid.org/0000-0001",
+                source="openalex",
+            ),
+        ),
+        enrichment_sources=("openalex",),
+    )
+    crossref = _make(
+        authors=(
+            PaperAuthorMetadata(display_name="Ada Lovelace", source="crossref"),
+            PaperAuthorMetadata(display_name="Charles Babbage", source="crossref"),
+        ),
+        enrichment_sources=("crossref",),
+    )
+
+    result = enrich_paper_with_hybrid_sources(
+        "10.1234/abc",
+        openalex_lookup=lambda d: openalex,
+        crossref_lookup=lambda d: crossref,
+        semantic_scholar_lookup=lambda d: None,
+    )
+
+    assert result is not None
+    assert result.authors == (
+        PaperAuthorMetadata(
+            display_name="Ada Lovelace",
+            orcid="https://orcid.org/0000-0001",
+            source="openalex",
+        ),
+        PaperAuthorMetadata(display_name="Charles Babbage", source="crossref"),
+    )
+
+
+def test_doi_contradiction_is_recorded_without_overwriting_canonical_identifier():
+    openalex = _make(
+        doi="10.1234/canonical",
+        abstract="OpenAlex abstract.",
+        enrichment_sources=("openalex",),
+    )
+    crossref = _make(
+        doi="10.1234/conflicting",
+        license="https://creativecommons.org/licenses/by/4.0/",
+        enrichment_sources=("crossref",),
+    )
+
+    result = enrich_paper_with_hybrid_sources(
+        "10.1234/canonical",
+        openalex_lookup=lambda d: openalex,
+        crossref_lookup=lambda d: crossref,
+        semantic_scholar_lookup=lambda d: None,
+    )
+
+    assert result is not None
+    assert result.doi == "10.1234/canonical"
+    assert result.identifier_contradictions == (
+        PaperIdentifierContradiction(
+            identifier_type="doi",
+            canonical_value="10.1234/canonical",
+            source_value="10.1234/conflicting",
+            source="crossref",
+        ),
+    )
+
+
+def test_arxiv_contradiction_is_recorded_without_overwriting_canonical_identifier():
+    arxiv = _make(
+        arxiv_id="2401.99999",
+        abstract="arXiv abstract.",
+        enrichment_sources=("arxiv",),
+    )
+
+    result = enrich_paper_with_hybrid_sources(
+        None,
+        arxiv_id="2401.00001",
+        arxiv_lookup=lambda d: arxiv,
+    )
+
+    assert result is not None
+    assert result.arxiv_id == "2401.00001"
+    assert result.identifier_contradictions == (
+        PaperIdentifierContradiction(
+            identifier_type="arxiv_id",
+            canonical_value="2401.00001",
+            source_value="2401.99999",
+            source="arxiv",
+        ),
+    )
+
+
+def test_matching_identifier_variants_do_not_record_contradictions():
+    openalex = _make(
+        doi="https://doi.org/10.1234/canonical",
+        enrichment_sources=("openalex",),
+    )
+    arxiv = _make(
+        arxiv_id="http://arxiv.org/abs/2401.00001",
+        abstract="arXiv abstract.",
+        enrichment_sources=("arxiv",),
+    )
+
+    result = enrich_paper_with_hybrid_sources(
+        "10.1234/canonical",
+        arxiv_id="2401.00001",
+        openalex_lookup=lambda d: openalex,
+        crossref_lookup=lambda d: None,
+        semantic_scholar_lookup=lambda d: None,
+        arxiv_lookup=lambda d: arxiv,
+    )
+
+    assert result is not None
+    assert result.identifier_contradictions == ()
 
 
 def test_returns_none_when_all_sources_empty():

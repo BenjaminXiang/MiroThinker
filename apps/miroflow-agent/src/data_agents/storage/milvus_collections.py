@@ -7,6 +7,8 @@ from math import sqrt
 
 PAPER_CHUNKS_COLLECTION = "paper_chunks"
 PROFESSOR_PROFILES_COLLECTION = "professor_profiles"
+PROFESSOR_IDENTITY_PROFILES_COLLECTION = "professor_identity_profiles"
+PROFESSOR_RESEARCH_PROFILES_COLLECTION = "professor_research_profiles"
 COMPANY_PROFILES_COLLECTION = "company_profiles"
 PATENT_PROFILES_COLLECTION = "patent_profiles"
 _VECTOR_DIM = 4096
@@ -265,9 +267,9 @@ def ensure_professor_profiles_collection(milvus_client) -> None:
             dtype=DataType.FLOAT_VECTOR,
             dim=_VECTOR_DIM,
         ),
-        FieldSchema(name="h_index", dtype=DataType.INT32, nullable=True),
-        FieldSchema(name="citation_count", dtype=DataType.INT64, nullable=True),
-        FieldSchema(name="paper_count", dtype=DataType.INT32, nullable=True),
+        FieldSchema(name="h_index", dtype=DataType.INT32),
+        FieldSchema(name="citation_count", dtype=DataType.INT64),
+        FieldSchema(name="paper_count", dtype=DataType.INT32),
     ]
     schema = CollectionSchema(
         fields=fields,
@@ -294,6 +296,137 @@ def drop_professor_profiles_collection(milvus_client) -> None:
     if not milvus_client.has_collection(PROFESSOR_PROFILES_COLLECTION):
         return
     milvus_client.drop_collection(collection_name=PROFESSOR_PROFILES_COLLECTION)
+
+
+def ensure_professor_identity_profiles_collection(milvus_client) -> None:
+    if milvus_client.has_collection(PROFESSOR_IDENTITY_PROFILES_COLLECTION):
+        return
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="pkg_resources is deprecated as an API.*",
+            category=UserWarning,
+            module="milvus_lite",
+        )
+        from pymilvus import CollectionSchema, DataType, FieldSchema
+
+    fields = [
+        FieldSchema(
+            name="id",
+            dtype=DataType.VARCHAR,
+            is_primary=True,
+            max_length=64,
+        ),
+        FieldSchema(name="name", dtype=DataType.VARCHAR, max_length=128),
+        FieldSchema(name="name_en", dtype=DataType.VARCHAR, max_length=128),
+        FieldSchema(name="institution", dtype=DataType.VARCHAR, max_length=256),
+        FieldSchema(name="department", dtype=DataType.VARCHAR, max_length=128),
+        FieldSchema(name="title", dtype=DataType.VARCHAR, max_length=64),
+        FieldSchema(name="profile_url", dtype=DataType.VARCHAR, max_length=512),
+        FieldSchema(name="identity_text", dtype=DataType.VARCHAR, max_length=4096),
+        FieldSchema(
+            name="identity_vector",
+            dtype=DataType.FLOAT_VECTOR,
+            dim=_VECTOR_DIM,
+        ),
+        FieldSchema(name="quality_status", dtype=DataType.VARCHAR, max_length=32),
+    ]
+    schema = CollectionSchema(
+        fields=fields,
+        description="Professor identity profiles for name and affiliation retrieval",
+    )
+    milvus_client.create_collection(
+        collection_name=PROFESSOR_IDENTITY_PROFILES_COLLECTION,
+        schema=schema,
+    )
+
+    index_params = milvus_client.prepare_index_params()
+    index_params.add_index(
+        field_name="identity_vector",
+        index_type="AUTOINDEX",
+        metric_type="COSINE",
+    )
+    milvus_client.create_index(
+        collection_name=PROFESSOR_IDENTITY_PROFILES_COLLECTION,
+        index_params=index_params,
+    )
+
+
+def drop_professor_identity_profiles_collection(milvus_client) -> None:
+    if not milvus_client.has_collection(PROFESSOR_IDENTITY_PROFILES_COLLECTION):
+        return
+    milvus_client.drop_collection(
+        collection_name=PROFESSOR_IDENTITY_PROFILES_COLLECTION
+    )
+
+
+def ensure_professor_research_profiles_collection(milvus_client) -> None:
+    if milvus_client.has_collection(PROFESSOR_RESEARCH_PROFILES_COLLECTION):
+        return
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="pkg_resources is deprecated as an API.*",
+            category=UserWarning,
+            module="milvus_lite",
+        )
+        from pymilvus import CollectionSchema, DataType, FieldSchema
+
+    fields = [
+        FieldSchema(
+            name="id",
+            dtype=DataType.VARCHAR,
+            is_primary=True,
+            max_length=64,
+        ),
+        FieldSchema(name="research_text", dtype=DataType.VARCHAR, max_length=4096),
+        FieldSchema(
+            name="research_directions",
+            dtype=DataType.VARCHAR,
+            max_length=2048,
+        ),
+        FieldSchema(name="profile_summary", dtype=DataType.VARCHAR, max_length=4096),
+        FieldSchema(name="paper_summary", dtype=DataType.VARCHAR, max_length=4096),
+        FieldSchema(name="patent_summary", dtype=DataType.VARCHAR, max_length=4096),
+        FieldSchema(name="quality_status", dtype=DataType.VARCHAR, max_length=32),
+        FieldSchema(name="h_index", dtype=DataType.INT32),
+        FieldSchema(name="citation_count", dtype=DataType.INT64),
+        FieldSchema(name="paper_count", dtype=DataType.INT32),
+        FieldSchema(
+            name="research_vector",
+            dtype=DataType.FLOAT_VECTOR,
+            dim=_VECTOR_DIM,
+        ),
+    ]
+    schema = CollectionSchema(
+        fields=fields,
+        description="Professor research profiles for expert and topic retrieval",
+    )
+    milvus_client.create_collection(
+        collection_name=PROFESSOR_RESEARCH_PROFILES_COLLECTION,
+        schema=schema,
+    )
+
+    index_params = milvus_client.prepare_index_params()
+    index_params.add_index(
+        field_name="research_vector",
+        index_type="AUTOINDEX",
+        metric_type="COSINE",
+    )
+    milvus_client.create_index(
+        collection_name=PROFESSOR_RESEARCH_PROFILES_COLLECTION,
+        index_params=index_params,
+    )
+
+
+def drop_professor_research_profiles_collection(milvus_client) -> None:
+    if not milvus_client.has_collection(PROFESSOR_RESEARCH_PROFILES_COLLECTION):
+        return
+    milvus_client.drop_collection(
+        collection_name=PROFESSOR_RESEARCH_PROFILES_COLLECTION
+    )
 
 
 def ensure_company_profiles_collection(milvus_client) -> None:

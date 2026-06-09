@@ -55,7 +55,7 @@ def _embedding_client() -> MagicMock:
         ),
         (
             {"h_index": None, "citation_count": None, "paper_count": None},
-            {"h_index": None, "citation_count": None, "paper_count": None},
+            {"h_index": 0, "citation_count": 0, "paper_count": 0},
         ),
     ],
 )

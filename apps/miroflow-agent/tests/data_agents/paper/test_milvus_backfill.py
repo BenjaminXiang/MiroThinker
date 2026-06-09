@@ -139,6 +139,42 @@ def test_backfill_skips_resume_ids():
     assert any("NOT IN" in s.upper() or "paper_id" in s for s in select_sqls)
 
 
+def test_backfill_can_target_specific_paper_ids():
+    conn = _fake_pg_conn_returning([_paper_row(paper_id="p_target")])
+    milvus = _fake_milvus_client()
+    embed = _fake_embedding_client()
+
+    report = backfill_paper_chunks(
+        conn,
+        milvus,
+        embed,
+        paper_ids={"p_target", "p_other"},
+    )
+
+    assert report.papers_processed == 1
+    sql, params = conn.execute.call_args.args
+    assert "p.paper_id IN" in sql
+    assert params == ["p_other", "p_target"]
+
+
+def test_backfill_can_select_papers_changed_since_updated_at():
+    conn = _fake_pg_conn_returning([_paper_row(paper_id="p_recent")])
+    milvus = _fake_milvus_client()
+    embed = _fake_embedding_client()
+
+    report = backfill_paper_chunks(
+        conn,
+        milvus,
+        embed,
+        changed_since="2026-05-23T00:00:00Z",
+    )
+
+    assert report.papers_processed == 1
+    sql, params = conn.execute.call_args.args
+    assert "p.updated_at >= %s" in sql
+    assert params == ["2026-05-23T00:00:00Z"]
+
+
 def test_backfill_paper_without_abstract_or_intro_gets_title_chunk():
     conn = _fake_pg_conn_returning([_paper_row(abstract=None, intro=None)])
     milvus = _fake_milvus_client()

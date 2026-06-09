@@ -2,15 +2,23 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
 import re
 import threading
 import time
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
-from typing import Protocol
-from urllib.parse import quote, urlparse
+from typing import Any, Protocol
+from urllib.parse import quote, quote_plus, urlparse
 
 import httpx  # noqa: F401
+
+from src.data_agents.providers.openalex import (
+    OPENALEX_RATE_LIMIT_CIRCUIT as _OPENALEX_RATE_LIMIT_CIRCUIT,
+    openalex_api_key as _openalex_api_key,
+    openalex_rate_limit_cooldown_seconds as _openalex_rate_limit_cooldown_seconds,
+    openalex_skip_without_api_key as _openalex_skip_without_api_key,
+)
 
 from .title_cleaner import clean_paper_title
 
@@ -19,6 +27,11 @@ logger = logging.getLogger(__name__)
 _TITLE_PUNCT_RE = re.compile(r"[^\w\s]", re.UNICODE)
 _WHITESPACE_RE = re.compile(r"\s+")
 _OPENALEX_ENDPOINT = "https://api.openalex.org/works"
+_CROSSREF_ENDPOINT = "https://api.crossref.org/works"
+_SEMANTIC_SCHOLAR_SEARCH_ENDPOINT = (
+    "https://api.semanticscholar.org/graph/v1/paper/search"
+)
+_DBLP_PUBLICATION_SEARCH_ENDPOINT = "https://dblp.org/search/publ/api"
 _ARXIV_ENDPOINT = "https://export.arxiv.org/api/query"
 _ATOM_NAMESPACE = {"atom": "http://www.w3.org/2005/Atom"}
 _OPENALEX_SELECT = ",".join(
@@ -34,7 +47,11 @@ _OPENALEX_SELECT = ",".join(
     ]
 )
 _CONFIDENCE_THRESHOLD = 0.85
-_DEFAULT_TIMEOUT = 30.0
+_DEFAULT_TIMEOUT = httpx.Timeout(connect=5.0, read=10.0, write=5.0, pool=5.0)
+_CROSSREF_MAILTO = "mirothinker-data-agent@example.com"
+_SEMANTIC_SCHOLAR_FIELDS = (
+    "paperId,title,abstract,year,publicationDate,venue,url,externalIds,authors"
+)
 _SCHOLARLY_DOMAINS = {
     "arxiv.org",
     "doi.org",
@@ -95,6 +112,9 @@ class _RateLimitGate:
 
 
 _OPENALEX_GATE = _RateLimitGate(0.1)
+_CROSSREF_GATE = _RateLimitGate(0.34)
+_SEMANTIC_SCHOLAR_GATE = _RateLimitGate(1.0)
+_DBLP_GATE = _RateLimitGate(0.2)
 _ARXIV_GATE = _RateLimitGate(3.0)
 
 
@@ -103,6 +123,7 @@ def resolve_paper_by_title(
     *,
     author_hint: str | None = None,
     year_hint: int | None = None,
+    enable_arxiv_title_search: bool = True,
     web_search=None,
     http_client=None,
     cache: TitleResolutionCache | None = None,
@@ -134,21 +155,70 @@ def resolve_paper_by_title(
             cache.set(cache_key, openalex_match)
         return openalex_match
 
-    arxiv_results = _search_arxiv_by_title(clean_title, http_client=http_client)
-    arxiv_match = _best_resolved_match(
-        arxiv_results,
-        converter=_arxiv_entry_to_resolved,
+    crossref_results = _search_crossref_by_title(clean_title, http_client=http_client)
+    crossref_match = _best_resolved_match(
+        crossref_results,
+        converter=_crossref_work_to_resolved,
         query_title=clean_title,
         author_hint=author_hint,
         year_hint=year_hint,
     )
     if (
-        arxiv_match is not None
-        and arxiv_match.match_confidence >= _CONFIDENCE_THRESHOLD
+        crossref_match is not None
+        and crossref_match.match_confidence >= _CONFIDENCE_THRESHOLD
     ):
         if cache is not None:
-            cache.set(cache_key, arxiv_match)
-        return arxiv_match
+            cache.set(cache_key, crossref_match)
+        return crossref_match
+
+    semantic_scholar_results = _search_semantic_scholar_by_title(
+        clean_title,
+        http_client=http_client,
+    )
+    semantic_scholar_match = _best_resolved_match(
+        semantic_scholar_results,
+        converter=_semantic_scholar_paper_to_resolved,
+        query_title=clean_title,
+        author_hint=author_hint,
+        year_hint=year_hint,
+    )
+    if (
+        semantic_scholar_match is not None
+        and semantic_scholar_match.match_confidence >= _CONFIDENCE_THRESHOLD
+    ):
+        if cache is not None:
+            cache.set(cache_key, semantic_scholar_match)
+        return semantic_scholar_match
+
+    dblp_results = _search_dblp_by_title(clean_title, http_client=http_client)
+    dblp_match = _best_resolved_match(
+        dblp_results,
+        converter=_dblp_hit_to_resolved,
+        query_title=clean_title,
+        author_hint=author_hint,
+        year_hint=year_hint,
+    )
+    if dblp_match is not None and dblp_match.match_confidence >= _CONFIDENCE_THRESHOLD:
+        if cache is not None:
+            cache.set(cache_key, dblp_match)
+        return dblp_match
+
+    if enable_arxiv_title_search:
+        arxiv_results = _search_arxiv_by_title(clean_title, http_client=http_client)
+        arxiv_match = _best_resolved_match(
+            arxiv_results,
+            converter=_arxiv_entry_to_resolved,
+            query_title=clean_title,
+            author_hint=author_hint,
+            year_hint=year_hint,
+        )
+        if (
+            arxiv_match is not None
+            and arxiv_match.match_confidence >= _CONFIDENCE_THRESHOLD
+        ):
+            if cache is not None:
+                cache.set(cache_key, arxiv_match)
+            return arxiv_match
 
     if web_search is None:
         return None
@@ -221,22 +291,45 @@ def _search_openalex_by_title(title: str, *, http_client=None) -> list[dict]:
     if not isinstance(title, str):
         raise TypeError("title must be a string")
 
+    api_key = _openalex_api_key()
+    if not api_key and _openalex_skip_without_api_key():
+        logger.debug("OpenAlex title search skipped because OPENALEX_API_KEY is unset")
+        return []
+
+    if not _OPENALEX_RATE_LIMIT_CIRCUIT.can_call():
+        logger.debug("OpenAlex title search skipped by temporary rate-limit circuit")
+        return []
+
     _OPENALEX_GATE.wait()
     client, owns_client = _ensure_client(http_client)
     try:
         # W13-14b Q-10: OpenAlex 拒 (a) search= 含双引号；(b) httpx 默认把 select 中的逗号
         # 编码成 %2C 也拒。改：raw URL，title 经 quote_plus 但保留 + 作分隔；select 不编码。
-        from urllib.parse import quote_plus
         title_q = quote_plus(title)
-        url = (
-            f"{_OPENALEX_ENDPOINT}?search={title_q}&per-page=5"
-            f"&select={_OPENALEX_SELECT}"
-        )
+        query_parts = [
+            f"search={title_q}",
+            "per-page=5",
+            f"select={_OPENALEX_SELECT}",
+        ]
+        if api_key:
+            query_parts.append(f"api_key={quote_plus(api_key)}")
+        url = f"{_OPENALEX_ENDPOINT}?{'&'.join(query_parts)}"
         response = client.get(url)
         response.raise_for_status()
         payload = response.json()
+        _OPENALEX_RATE_LIMIT_CIRCUIT.record_success()
         results = payload.get("results", [])
         return results if isinstance(results, list) else []
+    except httpx.HTTPStatusError as exc:
+        status_code = getattr(exc.response, "status_code", None)
+        if status_code == 429:
+            _OPENALEX_RATE_LIMIT_CIRCUIT.record_rate_limit(
+                _openalex_rate_limit_cooldown_seconds(
+                    getattr(exc.response, "headers", {}) or {}
+                )
+            )
+        logger.warning("OpenAlex search failed for %r: HTTP %s", title, status_code)
+        return []
     except TypeError:
         raise
     except Exception as exc:
@@ -281,6 +374,231 @@ def _openalex_work_to_resolved(
         venue=_openalex_venue(work.get("primary_location") or work.get("host_venue")),
         match_confidence=confidence,
         match_source="openalex",
+    )
+    return resolved, confidence
+
+
+def _search_crossref_by_title(title: str, *, http_client=None) -> list[dict]:
+    if not isinstance(title, str):
+        raise TypeError("title must be a string")
+
+    _CROSSREF_GATE.wait()
+    client, owns_client = _ensure_client(http_client)
+    try:
+        response = client.get(
+            _CROSSREF_ENDPOINT,
+            params={
+                "query.title": title,
+                "rows": 5,
+                "mailto": _CROSSREF_MAILTO,
+            },
+        )
+        response.raise_for_status()
+        payload = response.json()
+        message = payload.get("message") if isinstance(payload, dict) else None
+        if not isinstance(message, dict):
+            return []
+        items = message.get("items", [])
+        return items if isinstance(items, list) else []
+    except TypeError:
+        raise
+    except Exception as exc:
+        logger.warning("Crossref title search failed for %r: %s", title, exc)
+        return []
+    finally:
+        if owns_client:
+            client.close()
+
+
+def _crossref_work_to_resolved(
+    work: dict,
+    *,
+    query_title,
+    author_hint,
+    year_hint,
+) -> tuple[ResolvedPaper, float]:
+    if not isinstance(work, dict):
+        raise TypeError("work must be a dict")
+
+    title = _first_text(work.get("title")) or ""
+    authors = _crossref_authors(work.get("author"))
+    year, publication_date = _crossref_date(work)
+    source_year = year or _parse_year(publication_date[:4] if publication_date else None)
+    confidence = _confidence_with_hints(
+        _title_jaccard(query_title, title),
+        author_hint=author_hint,
+        year_hint=year_hint,
+        source_year=source_year,
+        source_authors=authors,
+    )
+    doi = _normalize_optional_str(work.get("DOI"))
+    resolved = ResolvedPaper(
+        title=clean_paper_title(title),
+        doi=doi,
+        openalex_id=None,
+        arxiv_id=None,
+        abstract=_clean_abstract(work.get("abstract")),
+        pdf_url=None,
+        authors=authors,
+        year=source_year,
+        venue=_first_text(work.get("container-title"))
+        or _first_text(work.get("short-container-title")),
+        match_confidence=confidence,
+        match_source="crossref",
+    )
+    return resolved, confidence
+
+
+def _search_semantic_scholar_by_title(title: str, *, http_client=None) -> list[dict]:
+    if not isinstance(title, str):
+        raise TypeError("title must be a string")
+
+    _SEMANTIC_SCHOLAR_GATE.wait()
+    client, owns_client = _ensure_client(http_client)
+    headers = _semantic_scholar_headers()
+    try:
+        request_kwargs: dict[str, Any] = {
+            "params": {
+                "query": title,
+                "limit": 5,
+                "fields": _SEMANTIC_SCHOLAR_FIELDS,
+            }
+        }
+        if headers:
+            request_kwargs["headers"] = headers
+        response = client.get(_SEMANTIC_SCHOLAR_SEARCH_ENDPOINT, **request_kwargs)
+        response.raise_for_status()
+        payload = response.json()
+        data = payload.get("data") if isinstance(payload, dict) else None
+        return data if isinstance(data, list) else []
+    except TypeError:
+        raise
+    except Exception as exc:
+        logger.warning("Semantic Scholar title search failed for %r: %s", title, exc)
+        return []
+    finally:
+        if owns_client:
+            client.close()
+
+
+def _semantic_scholar_paper_to_resolved(
+    paper: dict,
+    *,
+    query_title,
+    author_hint,
+    year_hint,
+) -> tuple[ResolvedPaper, float]:
+    if not isinstance(paper, dict):
+        raise TypeError("paper must be a dict")
+
+    title = clean_paper_title(paper.get("title"))
+    authors = _semantic_scholar_authors(paper.get("authors"))
+    year = _coerce_non_negative_int(paper.get("year")) or _parse_year(
+        str(paper.get("publicationDate") or "")[:4]
+    )
+    confidence = _confidence_with_hints(
+        _title_jaccard(query_title, title),
+        author_hint=author_hint,
+        year_hint=year_hint,
+        source_year=year,
+        source_authors=authors,
+    )
+    external_ids = paper.get("externalIds")
+    if not isinstance(external_ids, dict):
+        external_ids = {}
+    open_access_pdf = paper.get("openAccessPdf")
+    pdf_url = (
+        _normalize_optional_str(open_access_pdf.get("url"))
+        if isinstance(open_access_pdf, dict)
+        else None
+    )
+    resolved = ResolvedPaper(
+        title=title,
+        doi=_normalize_optional_str(external_ids.get("DOI")),
+        openalex_id=_strip_openalex_prefix(external_ids.get("OpenAlex")),
+        arxiv_id=_normalize_optional_str(external_ids.get("ArXiv")),
+        abstract=_normalize_optional_str(paper.get("abstract")),
+        pdf_url=pdf_url,
+        authors=authors,
+        year=year,
+        venue=_normalize_optional_str(paper.get("venue")),
+        match_confidence=confidence,
+        match_source="semantic_scholar",
+    )
+    return resolved, confidence
+
+
+def _search_dblp_by_title(title: str, *, http_client=None) -> list[dict]:
+    if not isinstance(title, str):
+        raise TypeError("title must be a string")
+
+    _DBLP_GATE.wait()
+    client, owns_client = _ensure_client(http_client)
+    try:
+        response = client.get(
+            _DBLP_PUBLICATION_SEARCH_ENDPOINT,
+            params={
+                "q": title,
+                "format": "json",
+                "h": 5,
+            },
+        )
+        response.raise_for_status()
+        payload = response.json()
+        result = payload.get("result") if isinstance(payload, dict) else None
+        hits = result.get("hits") if isinstance(result, dict) else None
+        raw_hits = hits.get("hit") if isinstance(hits, dict) else None
+        if isinstance(raw_hits, list):
+            return raw_hits
+        if isinstance(raw_hits, dict):
+            return [raw_hits]
+        return []
+    except TypeError:
+        raise
+    except Exception as exc:
+        logger.warning("DBLP title search failed for %r: %s", title, exc)
+        return []
+    finally:
+        if owns_client:
+            client.close()
+
+
+def _dblp_hit_to_resolved(
+    hit: dict,
+    *,
+    query_title,
+    author_hint,
+    year_hint,
+) -> tuple[ResolvedPaper, float]:
+    if not isinstance(hit, dict):
+        raise TypeError("hit must be a dict")
+
+    info = hit.get("info")
+    if not isinstance(info, dict):
+        info = {}
+    title = clean_paper_title(info.get("title"))
+    authors = _dblp_authors(info.get("authors"))
+    year = _parse_year(str(info.get("year") or ""))
+    confidence = _confidence_with_hints(
+        _title_jaccard(query_title, title),
+        author_hint=author_hint,
+        year_hint=year_hint,
+        source_year=year,
+        source_authors=authors,
+    )
+    resolved = ResolvedPaper(
+        title=title,
+        doi=_normalize_optional_str(info.get("doi")),
+        openalex_id=None,
+        arxiv_id=None,
+        abstract=None,
+        pdf_url=_normalize_optional_str(info.get("ee"))
+        or _normalize_optional_str(info.get("url")),
+        authors=authors,
+        year=year,
+        venue=_normalize_optional_str(info.get("venue")),
+        match_confidence=confidence,
+        match_source="dblp",
     )
     return resolved, confidence
 
@@ -500,6 +818,132 @@ def _openalex_venue(host_venue) -> str | None:
         source = host_venue
     venue = clean_paper_title(source.get("display_name") or host_venue.get("display_name"))
     return venue or None
+
+
+def _crossref_authors(value: object) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        return ()
+    authors: list[str] = []
+    for author in value:
+        if not isinstance(author, dict):
+            continue
+        given = _normalize_optional_str(author.get("given"))
+        family = _normalize_optional_str(author.get("family"))
+        if not given and not family:
+            continue
+        if _contains_cjk(given or "") or _contains_cjk(family or ""):
+            name = f"{family or ''}{given or ''}".strip()
+        else:
+            name = " ".join(part for part in (given, family) if part)
+        if name:
+            authors.append(name)
+    return tuple(authors)
+
+
+def _crossref_date(item: dict[str, object]) -> tuple[int | None, str | None]:
+    for key in ("published-online", "published-print", "issued"):
+        value = item.get(key)
+        if not isinstance(value, dict):
+            continue
+        date_parts = value.get("date-parts")
+        if (
+            not isinstance(date_parts, list)
+            or not date_parts
+            or not isinstance(date_parts[0], list)
+            or not date_parts[0]
+        ):
+            continue
+        parts = date_parts[0]
+        year = _coerce_non_negative_int(parts[0] if len(parts) >= 1 else None)
+        if year is None:
+            continue
+        month = _coerce_non_negative_int(parts[1] if len(parts) >= 2 else None) or 1
+        day = _coerce_non_negative_int(parts[2] if len(parts) >= 3 else None) or 1
+        return year, f"{year:04d}-{month:02d}-{day:02d}"
+    return None, None
+
+
+def _semantic_scholar_headers() -> dict[str, str]:
+    api_key = (
+        os.getenv("SEMANTIC_SCHOLAR_API_KEY", "").strip()
+        or os.getenv("S2_API_KEY", "").strip()
+    )
+    return {"x-api-key": api_key} if api_key else {}
+
+
+def _semantic_scholar_authors(value: object) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        return ()
+    authors: list[str] = []
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        name = _normalize_optional_str(item.get("name"))
+        if name:
+            authors.append(name)
+    return tuple(authors)
+
+
+def _dblp_authors(value: object) -> tuple[str, ...]:
+    if not isinstance(value, dict):
+        return ()
+    raw_authors = value.get("author")
+    if isinstance(raw_authors, (str, dict)):
+        raw_authors = [raw_authors]
+    if not isinstance(raw_authors, list):
+        return ()
+
+    authors: list[str] = []
+    for item in raw_authors:
+        if isinstance(item, str):
+            name = _normalize_optional_str(item)
+        elif isinstance(item, dict):
+            name = _normalize_optional_str(item.get("text")) or _normalize_optional_str(
+                item.get("@pid")
+            )
+        else:
+            name = None
+        if name:
+            authors.append(name)
+    return tuple(authors)
+
+
+def _first_text(value: object) -> str | None:
+    if isinstance(value, str):
+        return _normalize_optional_str(value)
+    if not isinstance(value, list):
+        return None
+    for item in value:
+        if text := _normalize_optional_str(item):
+            return text
+    return None
+
+
+def _clean_abstract(value: object) -> str | None:
+    text = _normalize_optional_str(value)
+    if not text:
+        return None
+    cleaned = re.sub(r"<[^>]+>", " ", text)
+    return _normalize_optional_str(_WHITESPACE_RE.sub(" ", cleaned))
+
+
+def _contains_cjk(value: str) -> bool:
+    return any("\u3400" <= char <= "\u9fff" for char in value)
+
+
+def _coerce_non_negative_int(value: object) -> int | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int) and value >= 0:
+        return value
+    return None
+
+
+def _normalize_optional_str(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    item = value.strip()
+    return item or None
 
 
 def _parse_year(value) -> int | None:

@@ -6,6 +6,7 @@ dispatch to orchestrator, and DATABASE_URL env handling.
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -79,6 +80,262 @@ def test_cli_dispatches_dry_run_flag(monkeypatch, tmp_path):
     cli.main()
     assert called_kwargs.get("dry_run") is True
     assert called_kwargs.get("limit") == 5
+
+
+def test_cli_dispatches_llm_publication_extraction(monkeypatch):
+    cli = _import_cli_module()
+    called_kwargs: dict = {}
+    sentinel_extractor = object()
+
+    def _fake_run(conn, **kwargs):
+        called_kwargs.update(kwargs)
+        from src.data_agents.paper.homepage_ingest import IngestReport
+        from uuid import UUID
+
+        return IngestReport(
+            run_id=UUID("00000000-0000-0000-0000-000000000000"),
+            profs_total=0,
+            profs_processed=0,
+            profs_skipped=0,
+            papers_linked_total=0,
+            full_text_fetched_total=0,
+            pipeline_issues_filed=0,
+            run_duration_seconds=0.0,
+        )
+
+    monkeypatch.setattr(cli, "run_homepage_paper_ingest", _fake_run)
+    monkeypatch.setattr(cli, "_open_database_connection", lambda url: MagicMock())
+    builder_kwargs: dict = {}
+
+    def _fake_build_llm_publication_extractor(profile, **kwargs):
+        builder_kwargs.update(kwargs)
+        return sentinel_extractor
+
+    monkeypatch.setattr(
+        cli,
+        "_build_llm_publication_extractor",
+        _fake_build_llm_publication_extractor,
+        raising=False,
+    )
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_homepage_paper_ingest.py",
+            "--dry-run",
+            "--llm-publication-extraction",
+        ],
+    )
+
+    cli.main()
+
+    assert called_kwargs.get("publication_extractor") is sentinel_extractor
+    assert builder_kwargs.get("force_llm") is False
+
+
+def test_cli_dispatches_force_llm_publication_extraction(monkeypatch):
+    cli = _import_cli_module()
+    called_kwargs: dict = {}
+    builder_kwargs: dict = {}
+    sentinel_extractor = object()
+
+    def _fake_run(conn, **kwargs):
+        called_kwargs.update(kwargs)
+        from src.data_agents.paper.homepage_ingest import IngestReport
+        from uuid import UUID
+
+        return IngestReport(
+            run_id=UUID("00000000-0000-0000-0000-000000000000"),
+            profs_total=0,
+            profs_processed=0,
+            profs_skipped=0,
+            papers_linked_total=0,
+            full_text_fetched_total=0,
+            pipeline_issues_filed=0,
+            run_duration_seconds=0.0,
+        )
+
+    def _fake_build_llm_publication_extractor(profile, **kwargs):
+        builder_kwargs.update(kwargs)
+        return sentinel_extractor
+
+    monkeypatch.setattr(cli, "run_homepage_paper_ingest", _fake_run)
+    monkeypatch.setattr(cli, "_open_database_connection", lambda url: MagicMock())
+    monkeypatch.setattr(
+        cli,
+        "_build_llm_publication_extractor",
+        _fake_build_llm_publication_extractor,
+        raising=False,
+    )
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_homepage_paper_ingest.py",
+            "--dry-run",
+            "--force-llm-publication-extraction",
+        ],
+    )
+
+    cli.main()
+
+    assert called_kwargs.get("publication_extractor") is sentinel_extractor
+    assert builder_kwargs.get("force_llm") is True
+
+
+def test_llm_publication_extractor_uses_model_specific_extra_body(monkeypatch):
+    cli = _import_cli_module()
+    captured_create_kwargs: dict = {}
+
+    class _FakeCompletions:
+        def create(self, **kwargs):
+            captured_create_kwargs.update(kwargs)
+            return SimpleNamespace(
+                choices=[
+                    SimpleNamespace(
+                        message=SimpleNamespace(content='{"items": []}')
+                    )
+                ]
+            )
+
+    fake_client = SimpleNamespace(
+        chat=SimpleNamespace(completions=_FakeCompletions())
+    )
+
+    monkeypatch.setitem(
+        sys.modules,
+        "openai",
+        SimpleNamespace(OpenAI=lambda **_kwargs: fake_client),
+    )
+    monkeypatch.setattr(
+        cli,
+        "resolve_professor_llm_settings",
+        lambda *_args, **_kwargs: {
+            "local_llm_base_url": "https://api.deepseek.com",
+            "local_llm_api_key": "test-key",
+            "local_llm_model": "deepseek-v4-pro",
+        },
+    )
+
+    extractor = cli._build_llm_publication_extractor(None, force_llm=True)
+    extractor(
+        (
+            "<main><h2>Publications</h2><p>J. Wang, M. Li. Robust neural "
+            "interface control for wearable robotics. IEEE Transactions on "
+            "Robotics, 2024.</p></main>"
+        ),
+        page_url="https://example.edu/faculty/wang",
+    )
+
+    assert captured_create_kwargs["model"] == "deepseek-v4-pro"
+    assert captured_create_kwargs["extra_body"] == {
+        "thinking": {"type": "disabled"}
+    }
+
+
+def test_llm_publication_extractor_retries_transient_create_failure(monkeypatch):
+    cli = _import_cli_module()
+    attempts = 0
+
+    class _FakeCompletions:
+        def create(self, **_kwargs):
+            nonlocal attempts
+            attempts += 1
+            if attempts == 1:
+                raise RuntimeError("temporary upstream disconnect")
+            return SimpleNamespace(
+                choices=[
+                    SimpleNamespace(
+                        message=SimpleNamespace(content='{"items": []}')
+                    )
+                ]
+            )
+
+    fake_client = SimpleNamespace(
+        chat=SimpleNamespace(completions=_FakeCompletions())
+    )
+
+    monkeypatch.setitem(
+        sys.modules,
+        "openai",
+        SimpleNamespace(OpenAI=lambda **_kwargs: fake_client),
+    )
+    monkeypatch.setattr(
+        cli,
+        "resolve_professor_llm_settings",
+        lambda *_args, **_kwargs: {
+            "local_llm_base_url": "https://api.deepseek.com",
+            "local_llm_api_key": "test-key",
+            "local_llm_model": "deepseek-v4-pro",
+        },
+    )
+    monkeypatch.setattr(
+        cli,
+        "_LLM_PUBLICATION_EXTRACTION_RETRY_BACKOFF_SECONDS",
+        (0.0, 0.0),
+        raising=False,
+    )
+
+    extractor = cli._build_llm_publication_extractor(None, force_llm=True)
+    extractor(
+        (
+            "<main><h2>Publications</h2><p>J. Wang, M. Li. Robust neural "
+            "interface control for wearable robotics. IEEE Transactions on "
+            "Robotics, 2024.</p></main>"
+        ),
+        page_url="https://example.edu/faculty/wang",
+    )
+
+    assert attempts == 2
+
+
+def test_cli_commits_successful_ingest(monkeypatch, capsys):
+    cli = _import_cli_module()
+    conn = MagicMock()
+
+    def _fake_run(conn_arg, **_kwargs):
+        assert conn_arg is conn
+        from src.data_agents.paper.homepage_ingest import IngestReport
+        from uuid import UUID
+
+        return IngestReport(
+            run_id=UUID("00000000-0000-0000-0000-000000000000"),
+            profs_total=1,
+            profs_processed=1,
+            profs_skipped=0,
+            papers_linked_total=1,
+            full_text_fetched_total=0,
+            pipeline_issues_filed=0,
+            run_duration_seconds=0.1,
+        )
+
+    monkeypatch.setattr(cli, "run_homepage_paper_ingest", _fake_run)
+    monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+    monkeypatch.setattr(sys, "argv", ["run_homepage_paper_ingest.py", "--limit", "1"])
+
+    assert cli.main() == 0
+    conn.commit.assert_called_once()
+    conn.rollback.assert_not_called()
+
+
+def test_cli_rolls_back_failed_ingest(monkeypatch):
+    cli = _import_cli_module()
+    conn = MagicMock()
+
+    def _fake_run(_conn, **_kwargs):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(cli, "run_homepage_paper_ingest", _fake_run)
+    monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+    monkeypatch.setattr(sys, "argv", ["run_homepage_paper_ingest.py", "--limit", "1"])
+
+    assert cli.main() == 1
+    conn.rollback.assert_called_once()
+    conn.commit.assert_not_called()
 
 
 def test_cli_dispatches_institution_filter(monkeypatch, tmp_path):

@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 import hashlib
 import json
+import logging
 from pathlib import Path
 import re
 import time
@@ -12,6 +13,11 @@ import unicodedata
 import requests
 
 from src.data_agents.normalization import normalize_person_name
+from src.data_agents.providers.openalex import (
+    OPENALEX_RATE_LIMIT_CIRCUIT,
+    openalex_rate_limit_cooldown_seconds,
+    openalex_request_params,
+)
 from src.data_agents.professor.institution_names import (
     get_institution_aliases,
     normalize_institution_text,
@@ -27,6 +33,7 @@ _CACHE_ROOT = (
 )
 _MAX_RETRIES = 2
 _REQUEST_TIMEOUT = (5, 20)
+logger = logging.getLogger(__name__)
 
 RequestParams = Mapping[str, str | int]
 RequestJson = Callable[[str, RequestParams], dict[str, object]]
@@ -196,9 +203,23 @@ def _request_json(url: str, params: RequestParams) -> dict[str, object]:
         if isinstance(payload, dict):
             return payload
 
+    request_params = openalex_request_params(params)
+    if request_params is None:
+        logger.debug("OpenAlex request skipped because OPENALEX_API_KEY is unset")
+        return _empty_openalex_payload(url)
+    if not OPENALEX_RATE_LIMIT_CIRCUIT.can_call():
+        logger.debug("OpenAlex request skipped by temporary rate-limit circuit")
+        return _empty_openalex_payload(url)
+
     response = None
     for attempt in range(_MAX_RETRIES):
-        response = requests.get(url, params=params, timeout=_REQUEST_TIMEOUT)
+        response = requests.get(url, params=request_params, timeout=_REQUEST_TIMEOUT)
+        if response.status_code == 429:
+            OPENALEX_RATE_LIMIT_CIRCUIT.record_rate_limit(
+                openalex_rate_limit_cooldown_seconds(
+                    getattr(response, "headers", {}) or {}
+                )
+            )
         if response.status_code < 500 and response.status_code != 429:
             break
         if attempt + 1 >= _MAX_RETRIES:
@@ -206,16 +227,34 @@ def _request_json(url: str, params: RequestParams) -> dict[str, object]:
         time.sleep(float(min(2**attempt, 4)))
     if response is None:
         raise RuntimeError(f"OpenAlex request did not run: {url}")
-    response.raise_for_status()
-    payload = response.json()
+    if response.status_code >= 400:
+        logger.warning(
+            "OpenAlex request failed for %s: HTTP %s",
+            url,
+            response.status_code,
+        )
+        return _empty_openalex_payload(url)
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        logger.warning("OpenAlex payload parse failed for %s: %s", url, exc)
+        return _empty_openalex_payload(url)
     if not isinstance(payload, dict):
-        raise ValueError(f"unexpected OpenAlex payload from {url}")
+        logger.warning("OpenAlex returned unexpected payload from %s", url)
+        return _empty_openalex_payload(url)
+    OPENALEX_RATE_LIMIT_CIRCUIT.record_success()
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     cache_path.write_text(
         json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
     return payload
+
+
+def _empty_openalex_payload(url: str) -> dict[str, object]:
+    if url.rstrip("/").endswith("/works") or url.rstrip("/").endswith("/authors"):
+        return {"results": []}
+    return {}
 
 
 def _author_to_candidate(
@@ -621,6 +660,7 @@ def enrich_paper_with_openalex(
         source_meta = {}
 
     enrichment = PaperMetadataEnrichment(
+        doi=_normalize_doi(payload.get("doi")) or normalized_doi,
         abstract=_decode_abstract(payload.get("abstract_inverted_index")),
         venue=_normalize_optional_str(source_meta.get("display_name")),
         publication_date=_normalize_optional_str(payload.get("publication_date")),

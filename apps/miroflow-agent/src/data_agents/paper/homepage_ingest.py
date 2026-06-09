@@ -3,18 +3,25 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import re
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
+from urllib.parse import urlparse
 from uuid import UUID
 
 import httpx
 
 from ..normalization import build_stable_id
 from ..professor.canonical_writer import _upsert_professor_paper_link
-from ..professor.homepage_publications import extract_publications_from_html
+from ..professor.homepage_publications import (
+    HomepagePublication,
+    _is_suspicious_rule_publication,
+    _looks_like_author_list,
+    extract_publications_from_html,
+)
 from ..storage.postgres.paper_full_text import (
     paper_full_text_exists,
     upsert_paper_full_text,
@@ -34,6 +41,18 @@ _AUTHOR_NAME_MATCH_SCORE = Decimal("1.0")
 _LINK_MATCH_REASON = "homepage_title_resolution"
 _LINK_MATCH_REASON_PAGE_ONLY = "prof_page_declaration"
 _PROF_PAGE_ONLY_SOURCE = "prof_page_only"
+_TIER2_PAGE_ROLES = frozenset({"official_profile", "official_publication_page"})
+_TIER3_PAGE_ROLES = frozenset({"personal_homepage", "lab_homepage"})
+_DEFAULT_PROF_PAGE_PDF_FETCH_CAP = 20
+_AUTHOR_INITIAL_HINT_RE = re.compile(r"\b[A-Z]\.")
+_PDF_FETCH_CAP_ERRORS = frozenset(
+    {
+        "pdf_too_large",
+        "timeout",
+        "pdf_content_type_disallowed",
+        "redirect_cap_exceeded",
+    }
+)
 
 
 def _synthesize_page_only_resolution(
@@ -64,7 +83,7 @@ def _synthesize_page_only_resolution(
         openalex_id=None,
         arxiv_id=None,
         abstract=None,
-        pdf_url=None,
+        pdf_url=getattr(publication, "pdf_url", None),
         authors=authors,
         year=publication.year,
         venue=publication.venue_text,
@@ -81,6 +100,52 @@ def _split_page_authors(authors_text: str) -> list[str]:
         for item in authors_text.replace(";", ",").replace("、", ",").split(",")
     ]
     return [c for c in candidates if c]
+
+
+def _attach_professor_page_pdf_url(
+    resolved: ResolvedPaper,
+    publication,
+) -> ResolvedPaper:
+    pdf_url = getattr(publication, "pdf_url", None)
+    if not pdf_url:
+        return resolved
+    return replace(resolved, pdf_url=pdf_url)
+
+
+def _homepage_evidence_source_type(prof: dict[str, Any]) -> str | None:
+    page_role = str(prof.get("homepage_page_role") or "").strip()
+    if page_role in _TIER2_PAGE_ROLES:
+        return "prof_homepage_tier2"
+    if page_role in _TIER3_PAGE_ROLES:
+        return "prof_homepage_tier3"
+    return None
+
+
+def _is_direct_professor_page_pdf(resolved: ResolvedPaper) -> bool:
+    if not resolved.pdf_url:
+        return False
+    parsed = urlparse(resolved.pdf_url)
+    hostname = (parsed.hostname or "").lower()
+    return not (hostname.endswith("arxiv.org") and parsed.path.startswith("/pdf/"))
+
+
+def _is_pdf_fetch_cap_error(fetch_error: str | None) -> bool:
+    return fetch_error in _PDF_FETCH_CAP_ERRORS
+
+
+def _is_malformed_publication_title(publication) -> bool:
+    if _is_suspicious_rule_publication(publication):
+        return True
+    clean_title = str(getattr(publication, "clean_title", "") or "").strip()
+    if not clean_title:
+        return True
+    has_explicit_author_syntax = (
+        any(mark in clean_title for mark in (",", "，", ";", "；", "*", "#", "†", "‡"))
+        or _AUTHOR_INITIAL_HINT_RE.search(clean_title) is not None
+    )
+    if not has_explicit_author_syntax or not _looks_like_author_list(clean_title):
+        return False
+    return not bool(str(getattr(publication, "authors_text", "") or "").strip())
 
 
 @dataclass(frozen=True, slots=True)
@@ -147,6 +212,8 @@ def run_homepage_paper_ingest(
     dry_run=False,
     resume_checkpoint_path: Path | None = None,
     prof_id: str | None = None,
+    prof_page_pdf_fetch_cap: int | None = _DEFAULT_PROF_PAGE_PDF_FETCH_CAP,
+    publication_extractor: Callable[..., list[HomepagePublication]] | None = None,
 ) -> IngestReport:
     started_at = time.monotonic()
     run_id = _DRY_RUN_SENTINEL_RUN_ID
@@ -156,7 +223,14 @@ def run_homepage_paper_ingest(
     full_text_fetched_total = 0
     pipeline_issues_filed = 0
     profs_with_errors = 0
+    prof_page_pdf_fetches_started = 0
     run_opened = False
+    active_publication_extractor = (
+        publication_extractor or extract_publications_from_html
+    )
+    publication_extraction_mode = (
+        "custom" if publication_extractor is not None else "rule"
+    )
 
     try:
         if not dry_run:
@@ -173,6 +247,7 @@ def run_homepage_paper_ingest(
                         if resume_checkpoint_path is not None
                         else None
                     ),
+                    "publication_extraction_mode": publication_extraction_mode,
                 },
                 triggered_by="homepage_paper_ingest",
             )
@@ -238,10 +313,36 @@ def run_homepage_paper_ingest(
                         profs_with_errors += 1
                         continue
 
-                    publications = extract_publications_from_html(
+                    publications = active_publication_extractor(
                         html,
                         page_url=prof["homepage_url"],
                     )
+                    evidence_source_type = _homepage_evidence_source_type(prof)
+                    if publications and evidence_source_type is None:
+                        pipeline_issues_filed += 1
+                        prof_pipeline_issues += 1
+                        prof_had_error = True
+                        checkpoint_status = "failed"
+                        if not dry_run:
+                            _file_pipeline_issue(
+                                conn,
+                                run_id=run_id,
+                                issue_type="missing_homepage_tier",
+                                professor_id=professor_id,
+                                message=(
+                                    "Professor homepage page_role is missing or "
+                                    "not mappable to paper evidence tier"
+                                ),
+                                details={
+                                    "homepage_url": prof["homepage_url"],
+                                    "homepage_page_role": prof.get(
+                                        "homepage_page_role"
+                                    ),
+                                    "publications_count": len(publications),
+                                },
+                            )
+                        continue
+
                     if 0 < len(publications) < 3:
                         pipeline_issues_filed += 1
                         prof_pipeline_issues += 1
@@ -265,10 +366,40 @@ def run_homepage_paper_ingest(
                     unresolved_count = 0
                     page_only_count = 0
                     for publication in publications:
+                        if _is_malformed_publication_title(publication):
+                            pipeline_issues_filed += 1
+                            prof_pipeline_issues += 1
+                            prof_had_error = True
+                            if not dry_run:
+                                _file_pipeline_issue(
+                                    conn,
+                                    run_id=run_id,
+                                    issue_type="malformed_publication_title",
+                                    professor_id=professor_id,
+                                    message=(
+                                        "Homepage publication clean_title looks like "
+                                        "an author list, so title resolution was "
+                                        "skipped"
+                                    ),
+                                    details={
+                                        "homepage_url": prof["homepage_url"],
+                                        "raw_title": getattr(
+                                            publication,
+                                            "raw_title",
+                                            None,
+                                        ),
+                                        "clean_title": publication.clean_title,
+                                        "authors_text": publication.authors_text,
+                                        "venue_text": publication.venue_text,
+                                    },
+                                )
+                            continue
+
                         resolved = resolve_paper_by_title(
                             publication.clean_title,
                             author_hint=prof["canonical_name"],
                             year_hint=publication.year,
+                            enable_arxiv_title_search=False,
                             web_search=None,
                             cache=cache,
                         )
@@ -283,6 +414,10 @@ def run_homepage_paper_ingest(
                                 publication,
                                 canonical_name=prof["canonical_name"],
                             )
+                        resolved = _attach_professor_page_pdf_url(
+                            resolved,
+                            publication,
+                        )
 
                         derived_paper_id = _derive_paper_id(
                             publication.clean_title,
@@ -322,7 +457,7 @@ def run_homepage_paper_ingest(
                                 professor_id=professor_id,
                                 paper_id=actual_paper_id,
                                 link_status="verified",
-                                evidence_source_type="personal_homepage",
+                                evidence_source_type=evidence_source_type,
                                 evidence_page_id=None,
                                 evidence_api_source=None,
                                 match_reason=(
@@ -340,12 +475,68 @@ def run_homepage_paper_ingest(
                         if paper_full_text_exists(conn, actual_paper_id):
                             continue
 
+                        is_prof_page_pdf = _is_direct_professor_page_pdf(resolved)
+                        if (
+                            is_prof_page_pdf
+                            and prof_page_pdf_fetch_cap is not None
+                            and prof_page_pdf_fetches_started >= prof_page_pdf_fetch_cap
+                        ):
+                            pipeline_issues_filed += 1
+                            prof_pipeline_issues += 1
+                            prof_had_error = True
+                            if not dry_run:
+                                _file_pipeline_issue(
+                                    conn,
+                                    run_id=run_id,
+                                    issue_type="pdf_fetch_cap_exceeded",
+                                    professor_id=professor_id,
+                                    message=(
+                                        "Professor-page PDF fetch cap exceeded for "
+                                        f"{resolved.pdf_url}"
+                                    ),
+                                    details={
+                                        "paper_id": actual_paper_id,
+                                        "paper_title": resolved.title,
+                                        "pdf_url": resolved.pdf_url,
+                                        "prof_page_pdf_fetch_cap": (
+                                            prof_page_pdf_fetch_cap
+                                        ),
+                                    },
+                                )
+                            continue
+                        if is_prof_page_pdf:
+                            prof_page_pdf_fetches_started += 1
+
                         extract = fetch_and_extract_full_text(
                             resolved,
                             paper_id=actual_paper_id,
                         )
                         if extract.fetch_error is None:
                             full_text_fetched_total += 1
+                        elif (
+                            is_prof_page_pdf
+                            and _is_pdf_fetch_cap_error(extract.fetch_error)
+                        ):
+                            pipeline_issues_filed += 1
+                            prof_pipeline_issues += 1
+                            prof_had_error = True
+                            if not dry_run:
+                                _file_pipeline_issue(
+                                    conn,
+                                    run_id=run_id,
+                                    issue_type="pdf_fetch_cap_violation",
+                                    professor_id=professor_id,
+                                    message=(
+                                        "Professor-page PDF fetch violated configured "
+                                        f"fetch policy for {resolved.pdf_url}"
+                                    ),
+                                    details={
+                                        "paper_id": actual_paper_id,
+                                        "paper_title": resolved.title,
+                                        "pdf_url": resolved.pdf_url,
+                                        "fetch_error": extract.fetch_error,
+                                    },
+                                )
                         if not dry_run:
                             upsert_paper_full_text(
                                 conn,
@@ -495,7 +686,8 @@ def _fetch_professors(
         "SELECT p.professor_id::text AS professor_id,",
         "       p.canonical_name,",
         "       COALESCE(primary_aff.institution, '') AS institution,",
-        "       sp.url AS homepage_url",
+        "       sp.url AS homepage_url,",
+        "       sp.page_role AS homepage_page_role",
         "  FROM professor p",
         "  LEFT JOIN LATERAL (",
         "    SELECT pa.institution",
@@ -534,6 +726,7 @@ def _fetch_professors(
                 "canonical_name": row[1],
                 "institution": row[2],
                 "homepage_url": row[3],
+                "homepage_page_role": row[4],
             }
         )
     return normalized_rows

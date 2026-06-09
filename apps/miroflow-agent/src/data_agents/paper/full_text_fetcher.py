@@ -7,15 +7,27 @@ import threading
 import time
 from dataclasses import dataclass
 from io import BytesIO
+from pathlib import Path
+from urllib.parse import urlparse
 
 import httpx
 from pdfminer.high_level import extract_text as pdfminer_extract_text
 
+from .raw_pdf_store import persist_raw_pdf_bytes
 from .title_resolver import ResolvedPaper
 
 logger = logging.getLogger(__name__)
 _DEFAULT_TIMEOUT = 60.0
 _MAX_PDF_BYTES = 30 * 1024 * 1024
+_MAX_REDIRECTS = 5
+_ALLOWED_PDF_CONTENT_TYPES = frozenset(
+    {
+        "application/pdf",
+        "application/x-pdf",
+        "application/octet-stream",
+        "binary/octet-stream",
+    }
+)
 _INTRO_MAX_CHARS = 3000
 _ABSTRACT_RE = re.compile(r"(?im)^[ \t]*abstract[ \t]*(?:[.:\-–—][ \t]*)?$")
 _INTRO_RE = re.compile(
@@ -57,6 +69,10 @@ class _OversizeError(Exception):
     pass
 
 
+class _UnsupportedContentTypeError(Exception):
+    pass
+
+
 class _PdfParseError(Exception):
     pass
 
@@ -70,6 +86,8 @@ class FullTextExtract:
     pdf_sha256: str | None
     source: str
     fetch_error: str | None
+    pdf_byte_size: int | None = None
+    raw_pdf_storage_ref: str | None = None
 
 
 def _find_section_anchor(text: str, pattern_kind: str) -> object | None:
@@ -115,6 +133,10 @@ def _download_pdf(url: str, *, http_client) -> tuple[bytes, str]:
     response = http_client.get(url, timeout=_DEFAULT_TIMEOUT)
     response.raise_for_status()
 
+    content_type = response.headers.get("Content-Type")
+    if content_type is not None and not _is_allowed_pdf_content_type(content_type):
+        raise _UnsupportedContentTypeError("pdf_content_type_disallowed")
+
     content_length = response.headers.get("Content-Length")
     if content_length is not None:
         try:
@@ -128,6 +150,11 @@ def _download_pdf(url: str, *, http_client) -> tuple[bytes, str]:
         raise _OversizeError("pdf_too_large")
 
     return (pdf_bytes, hashlib.sha256(pdf_bytes).hexdigest())
+
+
+def _is_allowed_pdf_content_type(content_type: str) -> bool:
+    media_type = content_type.split(";", 1)[0].strip().casefold()
+    return not media_type or media_type in _ALLOWED_PDF_CONTENT_TYPES
 
 
 def _extract_text_from_pdf_bytes(pdf_bytes: bytes) -> str:
@@ -147,7 +174,79 @@ def _make_http_client() -> httpx.Client:
         timeout=_DEFAULT_TIMEOUT,
         trust_env=False,
         follow_redirects=True,
+        max_redirects=_MAX_REDIRECTS,
     )
+
+
+def _is_arxiv_pdf_url(pdf_url: str | None) -> bool:
+    if not pdf_url:
+        return False
+    parsed = urlparse(pdf_url)
+    hostname = (parsed.hostname or "").lower()
+    return hostname.endswith("arxiv.org") and parsed.path.startswith("/pdf/")
+
+
+def _direct_professor_page_pdf_url(paper: ResolvedPaper) -> str | None:
+    if not paper.pdf_url or _is_arxiv_pdf_url(paper.pdf_url):
+        return None
+    return paper.pdf_url
+
+
+def _fetch_pdf_source(
+    pdf_url: str,
+    *,
+    paper_id: str,
+    source: str,
+    http_client,
+    raw_pdf_store_dir: str | Path | None = None,
+) -> tuple[FullTextExtract | None, str | None]:
+    try:
+        pdf_bytes, pdf_sha256 = _download_pdf(pdf_url, http_client=http_client)
+        raw_pdf_storage_ref = persist_raw_pdf_bytes(
+            pdf_bytes,
+            pdf_sha256,
+            storage_dir=raw_pdf_store_dir,
+        )
+        text = _extract_text_from_pdf_bytes(pdf_bytes)
+        if not text.strip():
+            return None, "pdf_empty_text"
+        abstract, intro = _split_abstract_intro(text)
+        return (
+            FullTextExtract(
+                paper_id=paper_id,
+                abstract=abstract,
+                intro=intro,
+                pdf_url=pdf_url,
+                pdf_sha256=pdf_sha256,
+                source=source,
+                fetch_error=None,
+                pdf_byte_size=len(pdf_bytes),
+                raw_pdf_storage_ref=raw_pdf_storage_ref,
+            ),
+            None,
+        )
+    except httpx.TimeoutException as exc:
+        logger.warning("Timed out fetching full text for %s: %s", paper_id, exc)
+        return None, "timeout"
+    except httpx.TooManyRedirects as exc:
+        logger.warning("Redirect cap exceeded fetching full text for %s: %s", paper_id, exc)
+        return None, "redirect_cap_exceeded"
+    except httpx.HTTPStatusError as exc:
+        error_tag = _http_error_tag(exc)
+        logger.warning("HTTP error fetching full text for %s: %s", paper_id, error_tag)
+        return None, error_tag
+    except httpx.RequestError as exc:
+        logger.warning("Network error fetching full text for %s: %s", paper_id, exc)
+        return None, "network"
+    except _OversizeError as exc:
+        logger.warning("Oversize PDF for %s: %s", paper_id, exc)
+        return None, "pdf_too_large"
+    except _UnsupportedContentTypeError as exc:
+        logger.warning("Unsupported PDF content type for %s: %s", paper_id, exc)
+        return None, "pdf_content_type_disallowed"
+    except _PdfParseError as exc:
+        logger.warning("PDF parse error for %s: %s", paper_id, exc)
+        return None, "pdf_parse_error"
 
 
 def fetch_and_extract_full_text(
@@ -155,51 +254,40 @@ def fetch_and_extract_full_text(
     *,
     paper_id: str,
     http_client: httpx.Client | None = None,
+    raw_pdf_store_dir: str | Path | None = None,
 ) -> FullTextExtract:
     client = http_client or _make_http_client()
     owns_client = http_client is None
     last_fetch_error = "no_arxiv_id"
 
     try:
+        professor_page_pdf_url = _direct_professor_page_pdf_url(paper)
+        if professor_page_pdf_url:
+            extract, fetch_error = _fetch_pdf_source(
+                professor_page_pdf_url,
+                paper_id=paper_id,
+                source="prof_page_pdf",
+                http_client=client,
+                raw_pdf_store_dir=raw_pdf_store_dir,
+            )
+            if extract is not None:
+                return extract
+            if fetch_error is not None:
+                last_fetch_error = fetch_error
+
         if paper.arxiv_id:
             arxiv_pdf_url = f"https://arxiv.org/pdf/{paper.arxiv_id}.pdf"
-            try:
-                pdf_bytes, pdf_sha256 = _download_pdf(arxiv_pdf_url, http_client=client)
-                text = _extract_text_from_pdf_bytes(pdf_bytes)
-                if not text.strip():
-                    last_fetch_error = "pdf_empty_text"
-                else:
-                    abstract, intro = _split_abstract_intro(text)
-                    return FullTextExtract(
-                        paper_id=paper_id,
-                        abstract=abstract,
-                        intro=intro,
-                        pdf_url=arxiv_pdf_url,
-                        pdf_sha256=pdf_sha256,
-                        source="arxiv",
-                        fetch_error=None,
-                    )
-            except httpx.TimeoutException as exc:
-                last_fetch_error = "timeout"
-                logger.warning("Timed out fetching full text for %s: %s", paper_id, exc)
-            except httpx.HTTPStatusError as exc:
-                last_fetch_error = _http_error_tag(exc)
-                logger.warning(
-                    "HTTP error fetching full text for %s: %s",
-                    paper_id,
-                    last_fetch_error,
-                )
-            except httpx.RequestError as exc:
-                last_fetch_error = "network"
-                logger.warning(
-                    "Network error fetching full text for %s: %s", paper_id, exc
-                )
-            except _OversizeError as exc:
-                last_fetch_error = "pdf_too_large"
-                logger.warning("Oversize PDF for %s: %s", paper_id, exc)
-            except _PdfParseError as exc:
-                last_fetch_error = "pdf_parse_error"
-                logger.warning("PDF parse error for %s: %s", paper_id, exc)
+            extract, fetch_error = _fetch_pdf_source(
+                arxiv_pdf_url,
+                paper_id=paper_id,
+                source="arxiv",
+                http_client=client,
+                raw_pdf_store_dir=raw_pdf_store_dir,
+            )
+            if extract is not None:
+                return extract
+            if fetch_error is not None:
+                last_fetch_error = fetch_error
 
         fallback_abstract = _clean_section_text(paper.abstract)
         if fallback_abstract is not None:

@@ -9,6 +9,7 @@ Requirements R1-R11. Organized by Unit:
 
 from __future__ import annotations
 
+import hashlib
 from unittest.mock import MagicMock, patch
 
 import httpx
@@ -23,6 +24,7 @@ from src.data_agents.paper.full_text_fetcher import (
     _make_http_client,
     _OversizeError,
     _PdfParseError,
+    _UnsupportedContentTypeError,
     _split_abstract_intro,
     fetch_and_extract_full_text,
 )
@@ -216,11 +218,20 @@ def test_find_section_anchor_returns_none_when_absent():
 # =============================================================================
 
 
-def _mock_response_bytes(body: bytes, content_length: int | None = None, status: int = 200):
+def _mock_response_bytes(
+    body: bytes,
+    content_length: int | None = None,
+    status: int = 200,
+    content_type: str | None = None,
+):
     resp = MagicMock(spec=_REAL_HTTPX_RESPONSE)
     resp.content = body
     resp.status_code = status
-    resp.headers = {"Content-Length": str(content_length)} if content_length is not None else {}
+    resp.headers = {}
+    if content_length is not None:
+        resp.headers["Content-Length"] = str(content_length)
+    if content_type is not None:
+        resp.headers["Content-Type"] = content_type
     if 200 <= status < 300:
         resp.raise_for_status.return_value = None
     else:
@@ -264,6 +275,15 @@ def test_download_pdf_oversize_via_content_length_header_raises():
     )
     with pytest.raises(_OversizeError):
         _download_pdf("https://arxiv.org/pdf/big.pdf", http_client=http)
+
+
+def test_download_pdf_rejects_disallowed_content_type():
+    body = b"<html>challenge page</html>"
+    http = _fake_http_client_returning(
+        _mock_response_bytes(body, content_length=len(body), content_type="text/html")
+    )
+    with pytest.raises(_UnsupportedContentTypeError):
+        _download_pdf("https://example.edu/paper.pdf", http_client=http)
 
 
 def test_download_pdf_oversize_post_hoc_raises():
@@ -352,6 +372,7 @@ def test_make_http_client_uses_trust_env_false_and_follow_redirects():
         _args, kwargs = ClientCls.call_args
         assert kwargs.get("trust_env") is False
         assert kwargs.get("follow_redirects") is True
+        assert kwargs.get("max_redirects") == 5
 
 
 # =============================================================================
@@ -380,7 +401,11 @@ def _paper_fixture(
     )
 
 
-def test_fetch_arxiv_happy_path():
+def _download_result(pdf_bytes: bytes = b"%PDF-1.4 ...") -> tuple[bytes, str]:
+    return pdf_bytes, hashlib.sha256(pdf_bytes).hexdigest()
+
+
+def test_fetch_arxiv_happy_path(tmp_path):
     """Download succeeds, pdfminer returns parseable text, split finds both."""
     canned = (
         "Title\n\nAbstract\nWe study the problem of X.\n\n"
@@ -392,10 +417,12 @@ def test_fetch_arxiv_happy_path():
     ) as m_dl, patch(
         "src.data_agents.paper.full_text_fetcher._extract_text_from_pdf_bytes"
     ) as m_ex:
-        m_dl.return_value = (b"%PDF-1.4 ...", "abc" * 21 + "def")  # 64-char hash-ish
+        m_dl.return_value = _download_result()
         m_ex.return_value = canned
         result = fetch_and_extract_full_text(
-            _paper_fixture(), paper_id="paper:arxiv:2310.12345"
+            _paper_fixture(),
+            paper_id="paper:arxiv:2310.12345",
+            raw_pdf_store_dir=tmp_path,
         )
         assert result.source == "arxiv"
         assert result.fetch_error is None
@@ -405,47 +432,224 @@ def test_fetch_arxiv_happy_path():
         assert result.paper_id == "paper:arxiv:2310.12345"
 
 
-def test_fetch_arxiv_pdf_url_format_uses_bare_id():
+def test_fetch_professor_page_pdf_happy_path(tmp_path):
+    canned = (
+        "Title\n\nAbstract\nProfessor page PDF abstract.\n\n"
+        "Introduction\nProfessor page PDF intro.\n\n"
+        "Methods\nM.\n"
+    )
+    pdf_url = "https://example.edu/prof/papers/direct-paper.pdf"
+    pdf_bytes, pdf_sha256 = _download_result()
+    with patch(
+        "src.data_agents.paper.full_text_fetcher._download_pdf"
+    ) as m_dl, patch(
+        "src.data_agents.paper.full_text_fetcher._extract_text_from_pdf_bytes"
+    ) as m_ex:
+        m_dl.return_value = (pdf_bytes, pdf_sha256)
+        m_ex.return_value = canned
+        result = fetch_and_extract_full_text(
+            _paper_fixture(arxiv_id=None, abstract=None, pdf_url=pdf_url),
+            paper_id="paper:prof-page:direct",
+            raw_pdf_store_dir=tmp_path,
+        )
+
+        assert m_dl.call_args.args[0] == pdf_url
+        assert result.source == "prof_page_pdf"
+        assert result.fetch_error is None
+        assert result.pdf_url == pdf_url
+        assert result.pdf_sha256 == pdf_sha256
+        assert result.abstract is not None and "Professor page PDF abstract" in result.abstract
+        assert result.intro is not None and "Professor page PDF intro" in result.intro
+
+
+def test_fetch_professor_page_pdf_persists_raw_blob_by_sha(tmp_path):
+    pdf_bytes = b"%PDF-1.4 direct professor page content"
+    pdf_sha256 = hashlib.sha256(pdf_bytes).hexdigest()
+    pdf_url = "https://example.edu/prof/papers/direct-paper.pdf"
+    with patch(
+        "src.data_agents.paper.full_text_fetcher._download_pdf"
+    ) as m_dl, patch(
+        "src.data_agents.paper.full_text_fetcher._extract_text_from_pdf_bytes"
+    ) as m_ex:
+        m_dl.return_value = (pdf_bytes, pdf_sha256)
+        m_ex.return_value = "Abstract\nBlob-backed abstract.\n\nIntroduction\nIntro.\n"
+
+        result = fetch_and_extract_full_text(
+            _paper_fixture(arxiv_id=None, abstract=None, pdf_url=pdf_url),
+            paper_id="paper:prof-page:blob",
+            raw_pdf_store_dir=tmp_path,
+        )
+
+        assert result.pdf_sha256 == pdf_sha256
+        assert result.pdf_byte_size == len(pdf_bytes)
+        assert result.raw_pdf_storage_ref is not None
+        assert pdf_sha256 in result.raw_pdf_storage_ref
+        assert len(list(tmp_path.rglob(f"{pdf_sha256}.pdf"))) == 1
+
+
+def test_fetch_reuses_same_raw_blob_for_duplicate_pdf_bytes(tmp_path):
+    pdf_bytes = b"%PDF-1.4 duplicate content"
+    pdf_sha256 = hashlib.sha256(pdf_bytes).hexdigest()
+    with patch(
+        "src.data_agents.paper.full_text_fetcher._download_pdf"
+    ) as m_dl, patch(
+        "src.data_agents.paper.full_text_fetcher._extract_text_from_pdf_bytes"
+    ) as m_ex:
+        m_dl.return_value = (pdf_bytes, pdf_sha256)
+        m_ex.return_value = "Abstract\nA.\n\nIntroduction\nI.\n"
+
+        first = fetch_and_extract_full_text(
+            _paper_fixture(
+                arxiv_id=None,
+                abstract=None,
+                pdf_url="https://example.edu/prof/a.pdf",
+            ),
+            paper_id="paper:a",
+            raw_pdf_store_dir=tmp_path,
+        )
+        second = fetch_and_extract_full_text(
+            _paper_fixture(
+                arxiv_id=None,
+                abstract=None,
+                pdf_url="https://example.edu/prof/b.pdf",
+            ),
+            paper_id="paper:b",
+            raw_pdf_store_dir=tmp_path,
+        )
+
+        assert second.raw_pdf_storage_ref == first.raw_pdf_storage_ref
+        assert len(list(tmp_path.rglob(f"{pdf_sha256}.pdf"))) == 1
+
+
+def test_fetch_prefers_direct_professor_page_pdf_over_arxiv(tmp_path):
+    pdf_url = "https://example.edu/prof/papers/direct-paper.pdf"
+    with patch(
+        "src.data_agents.paper.full_text_fetcher._download_pdf"
+    ) as m_dl, patch(
+        "src.data_agents.paper.full_text_fetcher._extract_text_from_pdf_bytes"
+    ) as m_ex:
+        m_dl.return_value = _download_result()
+        m_ex.return_value = "Abstract\nDirect.\n\nIntroduction\nIntro.\n"
+        result = fetch_and_extract_full_text(
+            _paper_fixture(arxiv_id="2310.12345", abstract=None, pdf_url=pdf_url),
+            paper_id="paper:prof-page:direct",
+            raw_pdf_store_dir=tmp_path,
+        )
+
+        assert m_dl.call_args.args[0] == pdf_url
+        assert result.source == "prof_page_pdf"
+
+
+def test_fetch_professor_page_pdf_timeout_marks_timeout():
+    with patch(
+        "src.data_agents.paper.full_text_fetcher._download_pdf"
+    ) as m_dl:
+        m_dl.side_effect = httpx.TimeoutException("slow")
+        result = fetch_and_extract_full_text(
+            _paper_fixture(
+                arxiv_id=None,
+                abstract=None,
+                pdf_url="https://example.edu/prof/papers/slow.pdf",
+            ),
+            paper_id="paper:prof-page:slow",
+        )
+
+        assert result.source == "failed"
+        assert result.fetch_error == "timeout"
+
+
+def test_fetch_professor_page_pdf_redirect_cap_marks_error():
+    with patch(
+        "src.data_agents.paper.full_text_fetcher._download_pdf"
+    ) as m_dl:
+        m_dl.side_effect = httpx.TooManyRedirects(
+            "too many redirects",
+            request=MagicMock(),
+        )
+        result = fetch_and_extract_full_text(
+            _paper_fixture(
+                arxiv_id=None,
+                abstract=None,
+                pdf_url="https://example.edu/prof/papers/loop.pdf",
+            ),
+            paper_id="paper:prof-page:loop",
+        )
+
+        assert result.source == "failed"
+        assert result.fetch_error == "redirect_cap_exceeded"
+
+
+def test_fetch_professor_page_pdf_bad_content_type_marks_cap_error():
+    with patch(
+        "src.data_agents.paper.full_text_fetcher._download_pdf"
+    ) as m_dl:
+        m_dl.side_effect = _UnsupportedContentTypeError("pdf_content_type_disallowed")
+        result = fetch_and_extract_full_text(
+            _paper_fixture(
+                arxiv_id=None,
+                abstract=None,
+                pdf_url="https://example.edu/prof/papers/html-challenge.pdf",
+            ),
+            paper_id="paper:prof-page:html",
+        )
+
+        assert result.source == "failed"
+        assert result.fetch_error == "pdf_content_type_disallowed"
+
+
+def test_fetch_arxiv_pdf_url_format_uses_bare_id(tmp_path):
     """URL must NOT include version suffix; callers pass bare arxiv_id."""
     with patch(
         "src.data_agents.paper.full_text_fetcher._download_pdf"
     ) as m_dl, patch(
         "src.data_agents.paper.full_text_fetcher._extract_text_from_pdf_bytes"
     ) as m_ex:
-        m_dl.return_value = (b"", "x" * 64)
+        m_dl.return_value = _download_result(b"")
         m_ex.return_value = "Abstract\nA.\n\nIntroduction\nI.\n\nRelated Work\nR."
         fetch_and_extract_full_text(
-            _paper_fixture(arxiv_id="2310.12345"), paper_id="p"
+            _paper_fixture(arxiv_id="2310.12345"),
+            paper_id="p",
+            raw_pdf_store_dir=tmp_path,
         )
         # First positional arg to _download_pdf is the URL
         url_arg = m_dl.call_args[0][0]
         assert url_arg == "https://arxiv.org/pdf/2310.12345.pdf"
 
 
-def test_fetch_arxiv_pdf_empty_text_marks_failed():
+def test_fetch_arxiv_pdf_empty_text_marks_failed(tmp_path):
     """PDF downloads but pdfminer returns empty → source=failed, pdf_empty_text."""
     with patch(
         "src.data_agents.paper.full_text_fetcher._download_pdf"
     ) as m_dl, patch(
         "src.data_agents.paper.full_text_fetcher._extract_text_from_pdf_bytes"
     ) as m_ex:
-        m_dl.return_value = (b"", "x" * 64)
+        m_dl.return_value = _download_result(b"")
         m_ex.return_value = ""  # image-only
-        result = fetch_and_extract_full_text(_paper_fixture(), paper_id="p")
+        result = fetch_and_extract_full_text(
+            _paper_fixture(),
+            paper_id="p",
+            raw_pdf_store_dir=tmp_path,
+        )
         assert result.source == "failed"
         assert result.fetch_error == "pdf_empty_text"
 
 
-def test_fetch_arxiv_pdf_parseable_but_no_sections_returns_arxiv_source_content_none():
+def test_fetch_arxiv_pdf_parseable_but_no_sections_returns_arxiv_source_content_none(
+    tmp_path,
+):
     """PDF parses but neither Abstract nor Introduction anchors match → still arxiv source, content None."""
     with patch(
         "src.data_agents.paper.full_text_fetcher._download_pdf"
     ) as m_dl, patch(
         "src.data_agents.paper.full_text_fetcher._extract_text_from_pdf_bytes"
     ) as m_ex:
-        m_dl.return_value = (b"", "x" * 64)
+        m_dl.return_value = _download_result(b"")
         m_ex.return_value = "Just body text. No section anchors to find."
-        result = fetch_and_extract_full_text(_paper_fixture(), paper_id="p")
+        result = fetch_and_extract_full_text(
+            _paper_fixture(),
+            paper_id="p",
+            raw_pdf_store_dir=tmp_path,
+        )
         assert result.source == "arxiv"
         assert result.abstract is None
         assert result.intro is None
@@ -468,16 +672,20 @@ def test_fetch_falls_back_to_openalex_abstract_when_arxiv_404():
         assert result.pdf_sha256 is None
 
 
-def test_fetch_falls_back_when_pdfminer_fails():
+def test_fetch_falls_back_when_pdfminer_fails(tmp_path):
     with patch(
         "src.data_agents.paper.full_text_fetcher._download_pdf"
     ) as m_dl, patch(
         "src.data_agents.paper.full_text_fetcher._extract_text_from_pdf_bytes"
     ) as m_ex:
-        m_dl.return_value = (b"", "x" * 64)
+        m_dl.return_value = _download_result(b"")
         m_ex.side_effect = _PdfParseError("corrupt")
         paper = _paper_fixture(abstract="Backup abstract.")
-        result = fetch_and_extract_full_text(paper, paper_id="p")
+        result = fetch_and_extract_full_text(
+            paper,
+            paper_id="p",
+            raw_pdf_store_dir=tmp_path,
+        )
         assert result.source == "openalex"
         assert result.abstract == "Backup abstract."
 
@@ -559,15 +767,19 @@ def test_fetch_arxiv_network_no_abstract_marks_network():
         assert result.fetch_error == "network"
 
 
-def test_fetch_arxiv_pdf_parse_error_no_abstract_marks_pdf_parse_error():
+def test_fetch_arxiv_pdf_parse_error_no_abstract_marks_pdf_parse_error(tmp_path):
     with patch(
         "src.data_agents.paper.full_text_fetcher._download_pdf"
     ) as m_dl, patch(
         "src.data_agents.paper.full_text_fetcher._extract_text_from_pdf_bytes"
     ) as m_ex:
-        m_dl.return_value = (b"", "x" * 64)
+        m_dl.return_value = _download_result(b"")
         m_ex.side_effect = _PdfParseError("corrupt")
-        result = fetch_and_extract_full_text(_paper_fixture(abstract=None), paper_id="p")
+        result = fetch_and_extract_full_text(
+            _paper_fixture(abstract=None),
+            paper_id="p",
+            raw_pdf_store_dir=tmp_path,
+        )
         assert result.source == "failed"
         assert result.fetch_error == "pdf_parse_error"
 

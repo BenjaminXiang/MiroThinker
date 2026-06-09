@@ -34,9 +34,9 @@ class Paper(BaseModel):
     authors_display: str | None = None
     authors_raw: list[dict[str, Any]] | dict[str, Any] | None = None
     citation_count: int | None = None
-    canonical_source: (
-        str  # 'openalex' | 'semantic_scholar' | 'crossref' | 'official_page' | 'manual'
-    )
+    # openalex | semantic_scholar | crossref | dblp | official_page | manual
+    # | prof_page_only | arxiv | web_search
+    canonical_source: str
     first_seen_at: datetime | None = None
     updated_at: datetime | None = None
     run_id: UUID | None = None  # Round 7.16 — pipeline_run that produced this row

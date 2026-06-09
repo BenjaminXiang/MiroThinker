@@ -151,15 +151,20 @@ def enrich_paper_metadata_from_semantic_scholar(
         _PAPER_LOOKUP_ENDPOINT.format(doi=normalized_doi),
         {
             "fields": (
-                "title,abstract,tldr,fieldsOfStudy,publicationDate,venue,url,"
+                "title,abstract,tldr,fieldsOfStudy,publicationDate,venue,url,externalIds,"
                 "isOpenAccess,openAccessPdf,citationCount,referenceCount"
             ),
         },
     )
     if not isinstance(payload, dict):
         return None
+    external_ids = payload.get("externalIds")
+    if not isinstance(external_ids, dict):
+        external_ids = {}
 
     enrichment = PaperMetadataEnrichment(
+        doi=_normalize_optional_str(external_ids.get("DOI")),
+        arxiv_id=_normalize_optional_str(external_ids.get("ArXiv")),
         abstract=_normalize_optional_str(payload.get("abstract")),
         venue=_normalize_optional_str(payload.get("venue")),
         publication_date=_normalize_optional_str(payload.get("publicationDate")),

@@ -23,8 +23,14 @@ from src.data_agents.paper.abstract_translator import (  # noqa: E402
     judge_summary_boilerplate,
     translate_abstract_to_zh,
 )
+from src.data_agents.paper.enrichment import enrich_paper_with_hybrid_sources  # noqa: E402
+from src.data_agents.paper.models import (  # noqa: E402
+    PaperIdentifierContradiction,
+    PaperMetadataEnrichment,
+)
 from src.data_agents.paper.quality_promotion import (  # noqa: E402
     NEEDS_ENRICHMENT,
+    NEEDS_REVIEW,
     PaperEnrichmentSignals,
     evaluate_paper_promotion,
 )
@@ -63,6 +69,32 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=None,
         help="Checkpoint JSONL path to skip already-processed paper_ids",
     )
+    parser.add_argument(
+        "--professor-id",
+        action="append",
+        default=[],
+        help="Restrict to papers linked to this professor_id; repeatable.",
+    )
+    parser.add_argument(
+        "--institution",
+        action="append",
+        default=[],
+        help="Restrict to papers linked to professors at this institution; repeatable.",
+    )
+    parser.add_argument(
+        "--paper-id",
+        action="append",
+        default=[],
+        help="Restrict to one paper_id; repeatable.",
+    )
+    parser.add_argument(
+        "--enrich-doi-metadata",
+        action="store_true",
+        help=(
+            "Before summary generation, use DOI enrichment to fill missing "
+            "abstract/venue/year/citation fields."
+        ),
+    )
     parser.add_argument("--dry-run", action="store_true", help="No DB writes")
     parser.add_argument("--log-level", default="INFO")
     return parser.parse_args(argv)
@@ -73,12 +105,14 @@ def _open_database_connection(url: str):
 
 
 def _open_llm_client():
+    import httpx
     from openai import OpenAI
 
     settings = resolve_professor_llm_settings("gemma4", include_profile=True)
     client = OpenAI(
         base_url=settings["local_llm_base_url"],
         api_key=settings["local_llm_api_key"] or "EMPTY",
+        http_client=httpx.Client(timeout=90.0, trust_env=False),
         timeout=90.0,
     )
     extra_body = {"chat_template_kwargs": {"enable_thinking": False}}
@@ -121,18 +155,48 @@ def _build_select_sql(
     *,
     only_missing: bool,
     limit: int | None,
+    professor_ids: tuple[str, ...] = (),
+    paper_ids: tuple[str, ...] = (),
+    institutions: tuple[str, ...] = (),
+    include_doi_enrichment: bool = False,
 ) -> tuple[str, tuple[Any, ...]]:
-    conditions = [
-        "p.abstract_clean IS NOT NULL",
-        "length(trim(p.abstract_clean)) > 0",
-    ]
+    if include_doi_enrichment:
+        conditions = [
+            "("
+            "(p.abstract_clean IS NOT NULL AND length(trim(p.abstract_clean)) > 0) "
+            "OR (p.doi IS NOT NULL AND length(trim(p.doi)) > 0) "
+            "OR (p.arxiv_id IS NOT NULL AND length(trim(p.arxiv_id)) > 0)"
+            ")",
+        ]
+    else:
+        conditions = [
+            "p.abstract_clean IS NOT NULL",
+            "length(trim(p.abstract_clean)) > 0",
+        ]
     params: list[Any] = []
     if only_missing:
         conditions.append("(p.summary_zh IS NULL OR length(trim(p.summary_zh)) = 0)")
+    join_sql = ""
+    if professor_ids or institutions:
+        join_sql = " JOIN professor_paper_link ppl ON ppl.paper_id = p.paper_id "
+    if institutions:
+        join_sql += (
+            " JOIN professor_affiliation pa ON pa.professor_id = ppl.professor_id "
+        )
+        conditions.append("pa.institution = ANY(%s)")
+        params.append(list(institutions))
+    if professor_ids:
+        conditions.append("ppl.professor_id = ANY(%s)")
+        params.append(list(professor_ids))
+    if paper_ids:
+        conditions.append("p.paper_id = ANY(%s)")
+        params.append(list(paper_ids))
     sql = (
-        "SELECT p.paper_id, p.title_clean, p.title_raw, p.year, p.venue, "
-        "p.authors_display, p.abstract_clean, p.summary_zh, p.quality_status "
+        "SELECT DISTINCT p.paper_id, p.title_clean, p.title_raw, p.doi, p.arxiv_id, "
+        "p.year, p.venue, p.authors_display, p.abstract_clean, p.summary_zh, "
+        "p.quality_status, p.citation_count "
         "  FROM paper p "
+        f"{join_sql}"
         f" WHERE {' AND '.join(conditions)} "
         " ORDER BY p.paper_id"
     )
@@ -140,6 +204,124 @@ def _build_select_sql(
         sql += " LIMIT %s"
         params.append(int(limit))
     return sql, tuple(params)
+
+
+def _metadata_updates_from_enrichment(
+    row: dict[str, Any],
+    enrichment: PaperMetadataEnrichment,
+) -> dict[str, Any]:
+    updates: dict[str, Any] = {}
+    if not str(row.get("abstract_clean") or "").strip() and enrichment.abstract:
+        updates["abstract_clean"] = enrichment.abstract
+    if not str(row.get("venue") or "").strip() and enrichment.venue:
+        updates["venue"] = enrichment.venue
+    if row.get("year") is None and enrichment.publication_date:
+        year = _year_from_publication_date(enrichment.publication_date)
+        if year is not None:
+            updates["year"] = year
+    if row.get("citation_count") is None and enrichment.citation_count is not None:
+        updates["citation_count"] = enrichment.citation_count
+    return updates
+
+
+def _persist_metadata_enrichment(
+    conn: Any,
+    *,
+    paper_id: str,
+    updates: dict[str, Any],
+    quality_status: str,
+    run_id: str,
+) -> None:
+    conn.execute(
+        """
+        UPDATE paper
+           SET abstract_clean = COALESCE(abstract_clean, %s),
+               venue = COALESCE(venue, %s),
+               year = COALESCE(year, %s),
+               citation_count = COALESCE(citation_count, %s),
+               quality_status = %s,
+               updated_at = now(),
+               run_id = %s
+         WHERE paper_id = %s
+        """,
+        (
+            updates.get("abstract_clean"),
+            updates.get("venue"),
+            updates.get("year"),
+            updates.get("citation_count"),
+            quality_status,
+            run_id,
+            paper_id,
+        ),
+    )
+
+
+def _file_identifier_contradiction_issue(
+    conn: Any,
+    *,
+    paper_id: str,
+    row: dict[str, Any],
+    enrichment: PaperMetadataEnrichment,
+    run_id: str,
+) -> int:
+    contradictions = tuple(enrichment.identifier_contradictions)
+    if not contradictions:
+        return 0
+    snapshot = {
+        "run_id": str(run_id),
+        "issue_type": "identifier_contradiction",
+        "paper_id": paper_id,
+        "title": row.get("title_clean") or row.get("title_raw"),
+        "canonical_doi": row.get("doi"),
+        "canonical_arxiv_id": row.get("arxiv_id"),
+        "enrichment_sources": enrichment.enrichment_sources,
+        "contradictions": [
+            _identifier_contradiction_to_dict(item) for item in contradictions
+        ],
+    }
+    cursor = conn.execute(
+        """
+        INSERT INTO pipeline_issue (
+            professor_id,
+            institution,
+            stage,
+            severity,
+            description,
+            evidence_snapshot,
+            reported_by
+        )
+        VALUES (NULL, %s, 'paper_quality', 'high', %s, %s::jsonb, %s)
+        ON CONFLICT DO NOTHING
+        """,
+        (
+            f"paper:{paper_id}",
+            f"[identifier_contradiction] {paper_id}",
+            json.dumps(snapshot, ensure_ascii=False),
+            "run_paper_summary_zh_backfill",
+        ),
+    )
+    return int(getattr(cursor, "rowcount", 0) or 0)
+
+
+def _identifier_contradiction_to_dict(
+    contradiction: PaperIdentifierContradiction,
+) -> dict[str, str]:
+    return {
+        "identifier_type": contradiction.identifier_type,
+        "canonical_value": contradiction.canonical_value,
+        "source_value": contradiction.source_value,
+        "source": contradiction.source,
+    }
+
+
+def _year_from_publication_date(value: str | None) -> int | None:
+    if not value:
+        return None
+    prefix = value.strip()[:4]
+    if not prefix.isdigit():
+        return None
+    year = int(prefix)
+    return year if 1800 <= year <= 2100 else None
 
 
 def _persist_summary_zh(
@@ -207,6 +389,10 @@ def main(argv: list[str] | None = None) -> None:
                 "only_missing": args.only_missing,
                 "limit": args.limit,
                 "resume": args.resume,
+                "professor_ids": args.professor_id,
+                "institutions": args.institution,
+                "paper_ids": args.paper_id,
+                "enrich_doi_metadata": args.enrich_doi_metadata,
                 "dry_run": args.dry_run,
             },
             triggered_by="run_paper_summary_zh_backfill",
@@ -221,7 +407,14 @@ def main(argv: list[str] | None = None) -> None:
     checkpoint_path = _resolve_checkpoint_path(None, run_id)
 
     llm, llm_model, extra_body = _open_llm_client()
-    sql, params = _build_select_sql(only_missing=args.only_missing, limit=args.limit)
+    sql, params = _build_select_sql(
+        only_missing=args.only_missing,
+        limit=args.limit,
+        professor_ids=tuple(args.professor_id or ()),
+        paper_ids=tuple(args.paper_id or ()),
+        institutions=tuple(args.institution or ()),
+        include_doi_enrichment=args.enrich_doi_metadata,
+    )
     rows = conn.execute(sql, params).fetchall()
 
     started_at = time.monotonic()
@@ -232,17 +425,97 @@ def main(argv: list[str] | None = None) -> None:
         "papers_skipped": 0,
         "summaries_written": 0,
         "summaries_rejected": 0,
+        "metadata_enrichment_attempted": 0,
+        "metadata_enriched": 0,
+        "identifier_contradictions": 0,
+        "pipeline_issues_inserted": 0,
         "papers_with_errors": 0,
         "dry_run": args.dry_run,
     }
 
     for row in rows:
-        paper_id = str(row["paper_id"])
+        row_dict = dict(row)
+        paper_id = str(row_dict["paper_id"])
         if paper_id in resume_ids:
             report["papers_skipped"] += 1
             continue
 
-        abstract = row.get("abstract_clean")
+        if (
+            args.enrich_doi_metadata
+            and not str(row_dict.get("abstract_clean") or "").strip()
+            and (
+                str(row_dict.get("doi") or "").strip()
+                or str(row_dict.get("arxiv_id") or "").strip()
+            )
+        ):
+            report["metadata_enrichment_attempted"] += 1
+            try:
+                has_identifier_contradiction = False
+                enrichment = enrich_paper_with_hybrid_sources(
+                    str(row_dict["doi"]) if row_dict.get("doi") else None,
+                    arxiv_id=(
+                        str(row_dict["arxiv_id"])
+                        if row_dict.get("arxiv_id")
+                        else None
+                    ),
+                )
+                if enrichment is not None:
+                    if enrichment.identifier_contradictions:
+                        has_identifier_contradiction = True
+                        row_dict["quality_status"] = NEEDS_REVIEW
+                        report["identifier_contradictions"] += len(
+                            enrichment.identifier_contradictions
+                        )
+                        if not args.dry_run:
+                            report[
+                                "pipeline_issues_inserted"
+                            ] += _file_identifier_contradiction_issue(
+                                conn,
+                                paper_id=paper_id,
+                                row=row_dict,
+                                enrichment=enrichment,
+                                run_id=run_id,
+                            )
+                    updates = _metadata_updates_from_enrichment(row_dict, enrichment)
+                    if updates:
+                        row_dict.update(updates)
+                        if has_identifier_contradiction:
+                            next_quality_status = NEEDS_REVIEW
+                        else:
+                            promotion = evaluate_paper_promotion(
+                                current_status=_current_quality_status(row_dict),
+                                signals=_paper_enrichment_signals(
+                                    row_dict,
+                                    summary_zh=row_dict.get("summary_zh"),
+                                    summary_zh_boilerplate_rejected=False,
+                                ),
+                            )
+                            next_quality_status = promotion.next_status
+                        if not args.dry_run:
+                            _persist_metadata_enrichment(
+                                conn,
+                                paper_id=paper_id,
+                                updates=updates,
+                                quality_status=next_quality_status,
+                                run_id=run_id,
+                            )
+                            conn.commit()
+                        row_dict["quality_status"] = next_quality_status
+                        report["metadata_enriched"] += 1
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Paper %s DOI enrichment crashed: %s", paper_id, exc)
+                report["papers_with_errors"] += 1
+                try:
+                    conn.rollback()
+                except Exception:
+                    pass
+                _append_checkpoint(
+                    checkpoint_path,
+                    {"paper_id": paper_id, "status": "metadata_error", "error": str(exc)},
+                )
+                continue
+
+        abstract = row_dict.get("abstract_clean")
         if not abstract or not str(abstract).strip():
             report["papers_skipped"] += 1
             _append_checkpoint(
@@ -319,12 +592,17 @@ def main(argv: list[str] | None = None) -> None:
                 continue
 
             promotion = evaluate_paper_promotion(
-                current_status=_current_quality_status(row),
+                current_status=_current_quality_status(row_dict),
                 signals=_paper_enrichment_signals(
-                    row,
+                    row_dict,
                     summary_zh=summary_zh,
                     summary_zh_boilerplate_rejected=False,
                 ),
+            )
+            next_quality_status = (
+                NEEDS_REVIEW
+                if _current_quality_status(row_dict) == NEEDS_REVIEW
+                else promotion.next_status
             )
             if not args.dry_run:
                 try:
@@ -332,7 +610,7 @@ def main(argv: list[str] | None = None) -> None:
                         conn,
                         paper_id=paper_id,
                         summary_zh=summary_zh,
-                        quality_status=promotion.next_status,
+                        quality_status=next_quality_status,
                         run_id=run_id,
                     )
                     conn.commit()

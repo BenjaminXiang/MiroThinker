@@ -48,10 +48,12 @@ def test_homepage_publication_dataclass_smoke():
         year=2023,
         source_url="https://example.edu/prof",
         source_anchor="https://doi.org/10.1/x",
+        pdf_url="https://example.edu/papers/some-title.pdf",
     )
     assert pub.clean_title == "Some Title"
     assert pub.year == 2023
     assert pub.source_anchor == "https://doi.org/10.1/x"
+    assert pub.pdf_url == "https://example.edu/papers/some-title.pdf"
 
 
 def test_homepage_publication_is_frozen():
@@ -66,6 +68,41 @@ def test_homepage_publication_is_frozen():
     )
     with pytest.raises((AttributeError, TypeError, Exception)):
         pub.clean_title = "mutated"  # frozen dataclass blocks this
+
+
+def test_extract_publications_preserves_relative_absolute_and_doi_adjacent_pdf_links():
+    html = """
+    <section>
+      <h2>Selected Publications</h2>
+      <ul>
+        <li>
+          A Robust Method for Scientific Discovery. A. Smith. NeurIPS 2024.
+          <a href="/papers/robust-method.pdf">PDF</a>
+        </li>
+        <li>
+          Efficient Systems for Laboratory Automation. B. Lee. ICRA 2023.
+          <a href="https://cdn.example.edu/lab-automation.PDF?download=1">Full text</a>
+        </li>
+        <li>
+          Trustworthy Models for Clinical Prediction. C. Wang. Nature 2022.
+          <a href="https://doi.org/10.1234/clinical">DOI</a>
+          <a href="./clinical-prediction.pdf">PDF</a>
+        </li>
+      </ul>
+    </section>
+    """
+
+    pubs = extract_publications_from_html(
+        html,
+        page_url="https://faculty.example.edu/profile/index.html",
+    )
+
+    assert [pub.pdf_url for pub in pubs] == [
+        "https://faculty.example.edu/papers/robust-method.pdf",
+        "https://cdn.example.edu/lab-automation.PDF?download=1",
+        "https://faculty.example.edu/profile/clinical-prediction.pdf",
+    ]
+    assert pubs[2].source_anchor == "https://doi.org/10.1234/clinical"
 
 
 # --- _strip_item_prefix ---
@@ -648,6 +685,115 @@ def test_split_title_authors_venue_handles_surname_initial_and_author_prefix():
     assert venue is not None and "Computational Fluid Dynamics" in venue
 
 
+def test_split_title_authors_venue_handles_sustech_surname_initial_ampersand_list():
+    title, authors, venue = _split_title_authors_venue(
+        _strip_item_prefix(
+            "5. Yang, Y. , Valencia, L. A. & Cui, B. Membrane curvature at "
+            "the ER-PM contact sites. Trends in cell biology (2025). "
+            "doi:10.1016/j.tcb.2025.10.002"
+        )
+    )
+
+    assert title == "Membrane curvature at the ER-PM contact sites"
+    assert authors is not None and "Yang" in authors
+    assert authors is not None and "Valencia" in authors
+    assert authors is not None and "Cui" in authors
+    assert venue is not None and "Trends in cell biology" in venue
+
+
+def test_split_title_authors_venue_handles_hyphenated_initial_author_list():
+    title, authors, venue = _split_title_authors_venue(
+        _strip_item_prefix(
+            "[5] Ri Wu# , Jonas B. Metternich#, Anna S. Kamenik#, Prince "
+            "Tiwari, Julian A. Harrison, Dennis Kessen, Hasan Akay, Lukas "
+            "R. Benzenberg, T.-W. Dominic Chan, Sereina Riniker*, Renato "
+            "Zenobi*. Determining the Gas-Phase Structures of α-Helical "
+            "Peptides from Shape, Microsolvation, and Intramolecular "
+            "Distance Data. Nat. Commun. 2023, 14, 2913."
+        )
+    )
+
+    assert title == (
+        "Determining the Gas-Phase Structures of α-Helical Peptides from "
+        "Shape, Microsolvation, and Intramolecular Distance Data"
+    )
+    assert authors is not None and "T.-W. Dominic Chan" in authors
+    assert authors is not None and "Renato Zenobi" in authors
+    assert venue is not None and "Nat. Commun" in venue
+
+
+def test_split_title_authors_venue_handles_hyphenated_initial_before_title():
+    title, authors, venue = _split_title_authors_venue(
+        _strip_item_prefix(
+            "1. Z. Yang*, A. Mameri*, C. Cattoglio, C. Lachance, A. J. "
+            "Florez Ariza, J. Luo, J. Humbert, D. Sudarshan, A. Banerjea, "
+            "M. Galloy, A. Fradet-Turcotte, J.-P. Lambert, J. A. Ranish, "
+            "J. Côté, E†. Nogales†, Structural insights into the human "
+            "NuA4/TIP60 acetyltransferase and chromatin remodeling complex. "
+            "Science (2024). Vol 385, Issue 6711, DOI: 10.1126/science.adl58162."
+        )
+    )
+
+    assert title == (
+        "Structural insights into the human NuA4/TIP60 acetyltransferase and "
+        "chromatin remodeling complex"
+    )
+    assert authors is not None and "J.-P. Lambert" in authors
+    assert authors is not None and "E. Nogales" in authors
+    assert venue is not None and "Science" in venue
+
+
+def test_split_title_authors_venue_handles_unicode_hyphen_author_names():
+    title, authors, venue = _split_title_authors_venue(
+        _strip_item_prefix(
+            "[11] Ri Wu , Xiangfeng Chen*, Wei‐Jing Wu, Ze Wang, Yik‐Ling "
+            "Winnie Hung, Hei‐Tung Wong, T‐W Dominic Chan*. Fine adjustment "
+            "of gas modifier loadings for separation of epimeric glycopeptides "
+            "using differential ion mobility spectrometry mass spectrometry. "
+            "Rapid Commun. Mass Spectrom, 2020, 34, 9, e8751."
+        )
+    )
+
+    assert title == (
+        "Fine adjustment of gas modifier loadings for separation of epimeric "
+        "glycopeptides using differential ion mobility spectrometry mass "
+        "spectrometry"
+    )
+    assert authors is not None and "Wei-Jing Wu" in authors
+    assert authors is not None and "T-W Dominic Chan" in authors
+    assert venue is not None and "Rapid Commun" in venue
+
+
+def test_split_title_authors_venue_strips_author_for_correspondence_tail():
+    title, authors, venue = _split_title_authors_venue(
+        _strip_item_prefix(
+            "7. Yang Y , Wu M. Rhythmicity and waves in the cortex of single "
+            "cells Author for correspondence : Phil Trans R Soc B. "
+            "2018;(373):1-11. doi:10.1098/rstb.2017.0116"
+        )
+    )
+
+    assert title == "Rhythmicity and waves in the cortex of single cells"
+    assert authors == "Yang Y, Wu M"
+    assert venue is not None and "Phil Trans R Soc B" in venue
+
+
+def test_extract_publications_drops_author_note_only_item():
+    html = """<!doctype html><html><body>
+    <h2>Publications</h2>
+    <ol>
+      <li>(*第一或共同第一作者，†通讯作者)</li>
+      <li>Activation of the helper NRC4 immune receptor forms a hexameric resistosome. Cell (2024).</li>
+    </ol>
+    </body></html>"""
+
+    pubs = extract_publications_from_html(html, page_url="https://x.edu")
+
+    assert [pub.clean_title for pub in pubs] == [
+        "Activation of the helper NRC4 immune receptor forms a hexameric resistosome"
+    ]
+
+
 # --- _normalize_title_for_dedup ---
 
 
@@ -898,7 +1044,7 @@ def test_extract_item_without_year_still_extracted():
     assert pubs[0].year is None
 
 
-def test_extract_caps_at_200_items():
+def test_extract_does_not_cap_official_publication_items():
     items = "\n".join(
         f"<li>Long Enough Item Title Number {i}. A 2023.</li>" for i in range(250)
     )
@@ -906,7 +1052,7 @@ def test_extract_caps_at_200_items():
     <h2>Publications</h2><ol>{items}</ol>
     </body></html>"""
     pubs = extract_publications_from_html(html, page_url="https://x.edu")
-    assert len(pubs) == 200
+    assert len(pubs) == 250
 
 
 def test_extract_malformed_html_does_not_raise():

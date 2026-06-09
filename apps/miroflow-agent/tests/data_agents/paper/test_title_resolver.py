@@ -20,13 +20,21 @@ import httpx
 import pytest
 
 from src.data_agents.paper.title_resolver import (
+    _OPENALEX_RATE_LIMIT_CIRCUIT,
     ResolvedPaper,
     _arxiv_entry_to_resolved,
+    _crossref_work_to_resolved,
+    _dblp_hit_to_resolved,
     _openalex_work_to_resolved,
+    _openalex_rate_limit_cooldown_seconds,
     _reconstruct_abstract_from_inverted_index,
     _search_arxiv_by_title,
+    _search_crossref_by_title,
+    _search_dblp_by_title,
     _search_openalex_by_title,
+    _search_semantic_scholar_by_title,
     _search_web_by_title,
+    _semantic_scholar_paper_to_resolved,
     _title_cache_key,
     _title_jaccard,
     resolve_paper_by_title,
@@ -276,7 +284,8 @@ def _fake_http_client_returning_sequence(responses):
     return client
 
 
-def test_openalex_search_returns_results_list():
+def test_openalex_search_returns_results_list(monkeypatch):
+    monkeypatch.setenv("OPENALEX_API_KEY", "test-key")
     works = [_openalex_work_fixture()]
     http = _fake_http_client_returning(_mock_openalex_response(works))
     results = _search_openalex_by_title("Deep Learning for Images", http_client=http)
@@ -284,14 +293,48 @@ def test_openalex_search_returns_results_list():
     assert results[0]["title"] == "Deep Learning for Images"
 
 
-def test_openalex_search_empty_results_returns_empty_list():
+def test_openalex_search_empty_results_returns_empty_list(monkeypatch):
+    monkeypatch.setenv("OPENALEX_API_KEY", "test-key")
     http = _fake_http_client_returning(_mock_openalex_response([]))
     assert (
         _search_openalex_by_title("anything", http_client=http) == []
     )
 
 
-def test_openalex_search_http_error_returns_empty_does_not_raise():
+def test_openalex_search_skips_without_api_key_by_default(monkeypatch):
+    monkeypatch.delenv("OPENALEX_API_KEY", raising=False)
+    monkeypatch.delenv("OPENALEX_KEY", raising=False)
+    monkeypatch.delenv("OPENALEX_SKIP_WITHOUT_API_KEY", raising=False)
+    http = _fake_http_client_returning(_mock_openalex_response([_openalex_work_fixture()]))
+
+    assert _search_openalex_by_title("anything", http_client=http) == []
+    http.get.assert_not_called()
+
+
+def test_openalex_search_can_allow_anonymous_for_explicit_tests(monkeypatch):
+    monkeypatch.delenv("OPENALEX_API_KEY", raising=False)
+    monkeypatch.delenv("OPENALEX_KEY", raising=False)
+    monkeypatch.setenv("OPENALEX_SKIP_WITHOUT_API_KEY", "0")
+    http = _fake_http_client_returning(_mock_openalex_response([]))
+
+    assert _search_openalex_by_title("anything", http_client=http) == []
+    http.get.assert_called_once()
+    assert "api_key=" not in http.get.call_args.args[0]
+
+
+def test_openalex_search_adds_api_key_query_param(monkeypatch):
+    monkeypatch.setenv("OPENALEX_API_KEY", "test key")
+    http = _fake_http_client_returning(_mock_openalex_response([]))
+
+    assert _search_openalex_by_title("anything", http_client=http) == []
+
+    url = http.get.call_args.args[0]
+    assert "api_key=test+key" in url
+    assert "select=id,doi,title" in url
+
+
+def test_openalex_search_http_error_returns_empty_does_not_raise(monkeypatch):
+    monkeypatch.setenv("OPENALEX_API_KEY", "test-key")
     resp = MagicMock(spec=_REAL_HTTPX_RESPONSE)
     resp.raise_for_status.side_effect = httpx.HTTPStatusError(
         "429", request=MagicMock(), response=MagicMock(status_code=429)
@@ -301,7 +344,39 @@ def test_openalex_search_http_error_returns_empty_does_not_raise():
     assert _search_openalex_by_title("anything", http_client=http) == []
 
 
-def test_openalex_search_json_decode_error_returns_empty():
+def test_openalex_search_circuit_suppresses_repeated_rate_limits(monkeypatch):
+    monkeypatch.setenv("OPENALEX_API_KEY", "test-key")
+    _OPENALEX_RATE_LIMIT_CIRCUIT.reset()
+
+    def _rate_limit_response():
+        resp = MagicMock(spec=_REAL_HTTPX_RESPONSE)
+        resp.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "429", request=MagicMock(), response=MagicMock(status_code=429)
+        )
+        return resp
+
+    http = _fake_http_client_returning_sequence(
+        [_rate_limit_response(), _rate_limit_response(), _rate_limit_response()]
+    )
+    try:
+        assert _search_openalex_by_title("first", http_client=http) == []
+        assert _search_openalex_by_title("second", http_client=http) == []
+        assert _search_openalex_by_title("third", http_client=http) == []
+        assert http.get.call_count == 3
+
+        assert _search_openalex_by_title("suppressed", http_client=http) == []
+        assert http.get.call_count == 3
+    finally:
+        _OPENALEX_RATE_LIMIT_CIRCUIT.reset()
+
+
+def test_openalex_rate_limit_cooldown_uses_response_headers():
+    assert _openalex_rate_limit_cooldown_seconds({"Retry-After": "42"}) == 42.0
+    assert _openalex_rate_limit_cooldown_seconds({"X-RateLimit-Reset": "120"}) == 120.0
+
+
+def test_openalex_search_json_decode_error_returns_empty(monkeypatch):
+    monkeypatch.setenv("OPENALEX_API_KEY", "test-key")
     resp = MagicMock(spec=_REAL_HTTPX_RESPONSE)
     resp.json.side_effect = ValueError("bad json")
     resp.raise_for_status.return_value = None
@@ -403,8 +478,9 @@ def test_openalex_work_to_resolved_strips_id_url_prefix():
     assert resolved.openalex_id == "W987"
 
 
-def test_openalex_owns_http_client_uses_trust_env_false():
+def test_openalex_owns_http_client_uses_trust_env_false(monkeypatch):
     """When no http_client is injected, create one with trust_env=False."""
+    monkeypatch.setenv("OPENALEX_API_KEY", "test-key")
     with patch("src.data_agents.paper.title_resolver.httpx.Client") as ClientCls:
         owned = MagicMock(spec=_REAL_HTTPX_CLIENT)
         owned.get.return_value = _mock_openalex_response([])
@@ -413,6 +489,8 @@ def test_openalex_owns_http_client_uses_trust_env_false():
         assert ClientCls.called
         _, kwargs = ClientCls.call_args
         assert kwargs.get("trust_env") is False
+        timeout = kwargs.get("timeout")
+        assert getattr(timeout, "read", timeout) <= 12.0
 
 
 # =============================================================================
@@ -445,6 +523,72 @@ def _mock_arxiv_response(text: str):
     resp.text = text
     resp.raise_for_status.return_value = None
     return resp
+
+
+def _mock_json_response(payload: dict):
+    resp = MagicMock(spec=_REAL_HTTPX_RESPONSE)
+    resp.json.return_value = payload
+    resp.raise_for_status.return_value = None
+    return resp
+
+
+def _crossref_work_fixture(
+    *,
+    title: str = "Communication Efficient Federated Learning with Adaptive Quantization",
+    year: int = 2022,
+) -> dict:
+    return {
+        "title": [title],
+        "DOI": "10.1145/3510587",
+        "URL": "https://doi.org/10.1145/3510587",
+        "issued": {"date-parts": [[year, 1, 1]]},
+        "container-title": ["ACM Transactions on Intelligent Systems and Technology"],
+        "abstract": "<jats:p>Federated learning abstract.</jats:p>",
+        "author": [
+            {"given": "Wenbo", "family": "Ding"},
+            {"given": "Yuzhu", "family": "Mao"},
+        ],
+    }
+
+
+def _semantic_scholar_paper_fixture(
+    *,
+    title: str = "Communication Efficient Federated Learning with Adaptive Quantization",
+    year: int = 2022,
+) -> dict:
+    return {
+        "paperId": "s2-paper-1",
+        "title": title,
+        "year": year,
+        "publicationDate": f"{year}-01-01",
+        "venue": "ACM Transactions on Intelligent Systems and Technology",
+        "url": "https://www.semanticscholar.org/paper/s2-paper-1",
+        "abstract": "Semantic Scholar abstract.",
+        "externalIds": {"DOI": "10.1145/3510587", "ArXiv": "2201.00001"},
+        "authors": [{"name": "Wenbo Ding"}, {"name": "Yuzhu Mao"}],
+    }
+
+
+def _dblp_hit_fixture(
+    *,
+    title: str = "Communication Efficient Federated Learning with Adaptive Quantization",
+    year: str = "2022",
+) -> dict:
+    return {
+        "info": {
+            "title": title,
+            "year": year,
+            "venue": "ACM Trans. Intell. Syst. Technol.",
+            "doi": "10.1145/3510587",
+            "url": "https://dblp.org/rec/journals/tist/MaoZYLSD22",
+            "authors": {
+                "author": [
+                    {"text": "Yuzhu Mao"},
+                    {"text": "Wenbo Ding"},
+                ],
+            },
+        }
+    }
 
 
 def test_arxiv_search_returns_entries():
@@ -557,6 +701,128 @@ def test_arxiv_entry_pdf_url_constructed_when_no_explicit_pdf_link():
 
 
 # =============================================================================
+# Unit 3b — Crossref / Semantic Scholar / DBLP title search
+# =============================================================================
+
+
+def test_crossref_title_search_returns_items():
+    http = _fake_http_client_returning(
+        _mock_json_response({"message": {"items": [_crossref_work_fixture()]}})
+    )
+
+    results = _search_crossref_by_title(
+        "Communication Efficient Federated Learning with Adaptive Quantization",
+        http_client=http,
+    )
+
+    assert len(results) == 1
+    _, kwargs = http.get.call_args
+    assert kwargs["params"]["query.title"].startswith("Communication Efficient")
+    assert kwargs["params"]["rows"] == 5
+    assert kwargs["params"]["mailto"]
+
+
+def test_crossref_work_to_resolved_happy_path():
+    resolved, confidence = _crossref_work_to_resolved(
+        _crossref_work_fixture(),
+        query_title="Communication Efficient Federated Learning with Adaptive Quantization",
+        author_hint="Ding",
+        year_hint=2022,
+    )
+
+    assert resolved.match_source == "crossref"
+    assert resolved.doi == "10.1145/3510587"
+    assert resolved.title == "Communication Efficient Federated Learning with Adaptive Quantization"
+    assert resolved.year == 2022
+    assert resolved.venue == "ACM Transactions on Intelligent Systems and Technology"
+    assert resolved.abstract == "Federated learning abstract."
+    assert resolved.authors == ("Wenbo Ding", "Yuzhu Mao")
+    assert confidence == 1.0
+
+
+def test_semantic_scholar_title_search_returns_papers():
+    http = _fake_http_client_returning(
+        _mock_json_response({"data": [_semantic_scholar_paper_fixture()]})
+    )
+
+    results = _search_semantic_scholar_by_title(
+        "Communication Efficient Federated Learning with Adaptive Quantization",
+        http_client=http,
+    )
+
+    assert len(results) == 1
+    _, kwargs = http.get.call_args
+    assert kwargs["params"]["query"].startswith("Communication Efficient")
+    assert kwargs["params"]["limit"] == 5
+    assert "externalIds" in kwargs["params"]["fields"]
+
+
+def test_semantic_scholar_paper_to_resolved_happy_path():
+    resolved, confidence = _semantic_scholar_paper_to_resolved(
+        _semantic_scholar_paper_fixture(),
+        query_title="Communication Efficient Federated Learning with Adaptive Quantization",
+        author_hint="Ding",
+        year_hint=2022,
+    )
+
+    assert resolved.match_source == "semantic_scholar"
+    assert resolved.doi == "10.1145/3510587"
+    assert resolved.arxiv_id == "2201.00001"
+    assert resolved.title == "Communication Efficient Federated Learning with Adaptive Quantization"
+    assert resolved.year == 2022
+    assert resolved.venue == "ACM Transactions on Intelligent Systems and Technology"
+    assert resolved.abstract == "Semantic Scholar abstract."
+    assert resolved.authors == ("Wenbo Ding", "Yuzhu Mao")
+    assert confidence == 1.0
+
+
+def test_dblp_title_search_returns_hits():
+    http = _fake_http_client_returning(
+        _mock_json_response({"result": {"hits": {"hit": [_dblp_hit_fixture()]}}})
+    )
+
+    results = _search_dblp_by_title(
+        "Communication Efficient Federated Learning with Adaptive Quantization",
+        http_client=http,
+    )
+
+    assert len(results) == 1
+    _, kwargs = http.get.call_args
+    assert kwargs["params"]["q"].startswith("Communication Efficient")
+    assert kwargs["params"]["format"] == "json"
+    assert kwargs["params"]["h"] == 5
+
+
+def test_dblp_hit_to_resolved_happy_path():
+    resolved, confidence = _dblp_hit_to_resolved(
+        _dblp_hit_fixture(),
+        query_title="Communication Efficient Federated Learning with Adaptive Quantization",
+        author_hint="Ding",
+        year_hint=2022,
+    )
+
+    assert resolved.match_source == "dblp"
+    assert resolved.doi == "10.1145/3510587"
+    assert resolved.title == "Communication Efficient Federated Learning with Adaptive Quantization"
+    assert resolved.year == 2022
+    assert resolved.venue == "ACM Trans. Intell. Syst. Technol."
+    assert resolved.authors == ("Yuzhu Mao", "Wenbo Ding")
+    assert confidence == 1.0
+
+
+def test_dblp_hit_to_resolved_rejects_author_only_title():
+    resolved, confidence = _dblp_hit_to_resolved(
+        _dblp_hit_fixture(title="Yuzhu Mao, Wenbo Ding"),
+        query_title="Communication Efficient Federated Learning with Adaptive Quantization",
+        author_hint="Ding",
+        year_hint=2022,
+    )
+
+    assert resolved.title == "Yuzhu Mao, Wenbo Ding"
+    assert confidence < 0.85
+
+
+# =============================================================================
 # Unit 4 — orchestrator resolve_paper_by_title
 # =============================================================================
 
@@ -616,12 +882,21 @@ def test_resolve_falls_through_to_arxiv_when_openalex_below_threshold():
     ) as m_oa, patch(
         "src.data_agents.paper.title_resolver._openalex_work_to_resolved"
     ) as m_oa_to_r, patch(
+        "src.data_agents.paper.title_resolver._search_crossref_by_title"
+    ) as m_cr, patch(
+        "src.data_agents.paper.title_resolver._search_semantic_scholar_by_title"
+    ) as m_s2, patch(
+        "src.data_agents.paper.title_resolver._search_dblp_by_title"
+    ) as m_dblp, patch(
         "src.data_agents.paper.title_resolver._search_arxiv_by_title"
     ) as m_ax, patch(
         "src.data_agents.paper.title_resolver._arxiv_entry_to_resolved"
     ) as m_ax_to_r:
         m_oa.return_value = [{"fake": "low"}]
         m_oa_to_r.return_value = (_resolved_fixture("openalex", 0.70), 0.70)
+        m_cr.return_value = []
+        m_s2.return_value = []
+        m_dblp.return_value = []
         m_ax.return_value = [{"fake": "arxiv_entry"}]
         m_ax_to_r.return_value = (_resolved_fixture("arxiv", 0.92), 0.92)
         result = resolve_paper_by_title("A Paper Title")
@@ -629,13 +904,130 @@ def test_resolve_falls_through_to_arxiv_when_openalex_below_threshold():
         assert result.match_source == "arxiv"
 
 
+def test_resolve_falls_through_to_crossref_before_s2_dblp_arxiv():
+    with patch(
+        "src.data_agents.paper.title_resolver._search_openalex_by_title"
+    ) as m_oa, patch(
+        "src.data_agents.paper.title_resolver._search_crossref_by_title"
+    ) as m_cr, patch(
+        "src.data_agents.paper.title_resolver._crossref_work_to_resolved"
+    ) as m_cr_to_r, patch(
+        "src.data_agents.paper.title_resolver._search_semantic_scholar_by_title"
+    ) as m_s2, patch(
+        "src.data_agents.paper.title_resolver._search_dblp_by_title"
+    ) as m_dblp, patch(
+        "src.data_agents.paper.title_resolver._search_arxiv_by_title"
+    ) as m_ax:
+        m_oa.return_value = []
+        m_cr.return_value = [{"fake": "crossref"}]
+        m_cr_to_r.return_value = (_resolved_fixture("crossref", 0.91), 0.91)
+
+        result = resolve_paper_by_title("A Paper Title")
+
+        assert result is not None
+        assert result.match_source == "crossref"
+        m_s2.assert_not_called()
+        m_dblp.assert_not_called()
+        m_ax.assert_not_called()
+
+
+def test_resolve_falls_through_to_semantic_scholar_when_crossref_below_threshold():
+    with patch(
+        "src.data_agents.paper.title_resolver._search_openalex_by_title"
+    ) as m_oa, patch(
+        "src.data_agents.paper.title_resolver._search_crossref_by_title"
+    ) as m_cr, patch(
+        "src.data_agents.paper.title_resolver._crossref_work_to_resolved"
+    ) as m_cr_to_r, patch(
+        "src.data_agents.paper.title_resolver._search_semantic_scholar_by_title"
+    ) as m_s2, patch(
+        "src.data_agents.paper.title_resolver._semantic_scholar_paper_to_resolved"
+    ) as m_s2_to_r, patch(
+        "src.data_agents.paper.title_resolver._search_dblp_by_title"
+    ) as m_dblp, patch(
+        "src.data_agents.paper.title_resolver._search_arxiv_by_title"
+    ) as m_ax:
+        m_oa.return_value = []
+        m_cr.return_value = [{"fake": "crossref-low"}]
+        m_cr_to_r.return_value = (_resolved_fixture("crossref", 0.70), 0.70)
+        m_s2.return_value = [{"fake": "s2"}]
+        m_s2_to_r.return_value = (_resolved_fixture("semantic_scholar", 0.92), 0.92)
+
+        result = resolve_paper_by_title("A Paper Title")
+
+        assert result is not None
+        assert result.match_source == "semantic_scholar"
+        m_dblp.assert_not_called()
+        m_ax.assert_not_called()
+
+
+def test_resolve_falls_through_to_dblp_before_arxiv():
+    with patch(
+        "src.data_agents.paper.title_resolver._search_openalex_by_title"
+    ) as m_oa, patch(
+        "src.data_agents.paper.title_resolver._search_crossref_by_title"
+    ) as m_cr, patch(
+        "src.data_agents.paper.title_resolver._search_semantic_scholar_by_title"
+    ) as m_s2, patch(
+        "src.data_agents.paper.title_resolver._search_dblp_by_title"
+    ) as m_dblp, patch(
+        "src.data_agents.paper.title_resolver._dblp_hit_to_resolved"
+    ) as m_dblp_to_r, patch(
+        "src.data_agents.paper.title_resolver._search_arxiv_by_title"
+    ) as m_ax:
+        m_oa.return_value = []
+        m_cr.return_value = []
+        m_s2.return_value = []
+        m_dblp.return_value = [{"fake": "dblp"}]
+        m_dblp_to_r.return_value = (_resolved_fixture("dblp", 0.90), 0.90)
+
+        result = resolve_paper_by_title("A Paper Title")
+
+        assert result is not None
+        assert result.match_source == "dblp"
+        m_ax.assert_not_called()
+
+
+def test_resolve_can_disable_arxiv_title_search_for_bulk_homepage_ingest():
+    with patch(
+        "src.data_agents.paper.title_resolver._search_openalex_by_title"
+    ) as m_oa, patch(
+        "src.data_agents.paper.title_resolver._search_crossref_by_title"
+    ) as m_cr, patch(
+        "src.data_agents.paper.title_resolver._search_semantic_scholar_by_title"
+    ) as m_s2, patch(
+        "src.data_agents.paper.title_resolver._search_dblp_by_title"
+    ) as m_dblp, patch(
+        "src.data_agents.paper.title_resolver._search_arxiv_by_title"
+    ) as m_ax:
+        m_oa.return_value = []
+        m_cr.return_value = []
+        m_s2.return_value = []
+        m_dblp.return_value = []
+        result = resolve_paper_by_title(
+            "A Paper Title",
+            enable_arxiv_title_search=False,
+        )
+        assert result is None
+        m_ax.assert_not_called()
+
+
 def test_resolve_returns_none_when_all_sources_miss_and_no_web_search():
     with patch(
         "src.data_agents.paper.title_resolver._search_openalex_by_title"
     ) as m_oa, patch(
+        "src.data_agents.paper.title_resolver._search_crossref_by_title"
+    ) as m_cr, patch(
+        "src.data_agents.paper.title_resolver._search_semantic_scholar_by_title"
+    ) as m_s2, patch(
+        "src.data_agents.paper.title_resolver._search_dblp_by_title"
+    ) as m_dblp, patch(
         "src.data_agents.paper.title_resolver._search_arxiv_by_title"
     ) as m_ax:
         m_oa.return_value = []
+        m_cr.return_value = []
+        m_s2.return_value = []
+        m_dblp.return_value = []
         m_ax.return_value = []
         result = resolve_paper_by_title("Very Obscure Paper Title")
         assert result is None
@@ -645,11 +1037,20 @@ def test_resolve_uses_web_search_when_provided_and_both_miss():
     with patch(
         "src.data_agents.paper.title_resolver._search_openalex_by_title"
     ) as m_oa, patch(
+        "src.data_agents.paper.title_resolver._search_crossref_by_title"
+    ) as m_cr, patch(
+        "src.data_agents.paper.title_resolver._search_semantic_scholar_by_title"
+    ) as m_s2, patch(
+        "src.data_agents.paper.title_resolver._search_dblp_by_title"
+    ) as m_dblp, patch(
         "src.data_agents.paper.title_resolver._search_arxiv_by_title"
     ) as m_ax, patch(
         "src.data_agents.paper.title_resolver._search_web_by_title"
     ) as m_web:
         m_oa.return_value = []
+        m_cr.return_value = []
+        m_s2.return_value = []
+        m_dblp.return_value = []
         m_ax.return_value = []
         m_web.return_value = _resolved_fixture("web_search", 0.88)
         web_provider = MagicMock()
@@ -663,11 +1064,20 @@ def test_resolve_web_search_not_called_when_web_search_is_none():
     with patch(
         "src.data_agents.paper.title_resolver._search_openalex_by_title"
     ) as m_oa, patch(
+        "src.data_agents.paper.title_resolver._search_crossref_by_title"
+    ) as m_cr, patch(
+        "src.data_agents.paper.title_resolver._search_semantic_scholar_by_title"
+    ) as m_s2, patch(
+        "src.data_agents.paper.title_resolver._search_dblp_by_title"
+    ) as m_dblp, patch(
         "src.data_agents.paper.title_resolver._search_arxiv_by_title"
     ) as m_ax, patch(
         "src.data_agents.paper.title_resolver._search_web_by_title"
     ) as m_web:
         m_oa.return_value = []
+        m_cr.return_value = []
+        m_s2.return_value = []
+        m_dblp.return_value = []
         m_ax.return_value = []
         result = resolve_paper_by_title("Title")
         assert result is None
@@ -709,9 +1119,18 @@ def test_resolve_does_not_cache_none_results():
     with patch(
         "src.data_agents.paper.title_resolver._search_openalex_by_title"
     ) as m_oa, patch(
+        "src.data_agents.paper.title_resolver._search_crossref_by_title"
+    ) as m_cr, patch(
+        "src.data_agents.paper.title_resolver._search_semantic_scholar_by_title"
+    ) as m_s2, patch(
+        "src.data_agents.paper.title_resolver._search_dblp_by_title"
+    ) as m_dblp, patch(
         "src.data_agents.paper.title_resolver._search_arxiv_by_title"
     ) as m_ax:
         m_oa.return_value = []
+        m_cr.return_value = []
+        m_s2.return_value = []
+        m_dblp.return_value = []
         m_ax.return_value = []
         result = resolve_paper_by_title("Obscure", cache=cache)
         assert result is None
@@ -732,11 +1151,20 @@ def test_resolve_web_search_provider_raising_does_not_propagate():
     with patch(
         "src.data_agents.paper.title_resolver._search_openalex_by_title"
     ) as m_oa, patch(
+        "src.data_agents.paper.title_resolver._search_crossref_by_title"
+    ) as m_cr, patch(
+        "src.data_agents.paper.title_resolver._search_semantic_scholar_by_title"
+    ) as m_s2, patch(
+        "src.data_agents.paper.title_resolver._search_dblp_by_title"
+    ) as m_dblp, patch(
         "src.data_agents.paper.title_resolver._search_arxiv_by_title"
     ) as m_ax, patch(
         "src.data_agents.paper.title_resolver._search_web_by_title"
     ) as m_web:
         m_oa.return_value = []
+        m_cr.return_value = []
+        m_s2.return_value = []
+        m_dblp.return_value = []
         m_ax.return_value = []
         m_web.side_effect = RuntimeError("quota exceeded")
         result = resolve_paper_by_title("Title", web_search=MagicMock())

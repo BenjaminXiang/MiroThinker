@@ -372,6 +372,7 @@ def test_request_json_retries_429_with_short_bounded_backoff(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path,
 ) -> None:
+    monkeypatch.setenv("OPENALEX_API_KEY", "test-key")
     calls: list[tuple[str, dict[str, object]]] = []
     sleeps: list[float] = []
 
@@ -389,9 +390,61 @@ def test_request_json_retries_429_with_short_bounded_backoff(
     monkeypatch.setattr(openalex, "_CACHE_ROOT", tmp_path / "paper_openalex_cache")
     monkeypatch.setattr(openalex.requests, "get", fake_get)
     monkeypatch.setattr(openalex.time, "sleep", sleeps.append)
+    openalex.OPENALEX_RATE_LIMIT_CIRCUIT.reset()
 
-    with pytest.raises(requests.HTTPError, match="429 Too Many Requests"):
-        openalex._request_json("https://api.openalex.org/authors", {"search": "高会军"})
+    try:
+        payload = openalex._request_json(
+            "https://api.openalex.org/authors",
+            {"search": "高会军"},
+        )
+    finally:
+        openalex.OPENALEX_RATE_LIMIT_CIRCUIT.reset()
 
+    assert payload == {"results": []}
     assert len(calls) == 2
     assert sleeps == [1.0]
+
+
+def test_request_json_adds_api_key_without_changing_cache_key(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    monkeypatch.setenv("OPENALEX_API_KEY", "test-key")
+    calls: list[tuple[str, dict[str, object]]] = []
+
+    class FakeResponse:
+        status_code = 200
+        headers = {}
+
+        def json(self) -> dict[str, object]:
+            return {"results": []}
+
+    def fake_get(url: str, params: dict[str, object], timeout: object) -> FakeResponse:
+        calls.append((url, params))
+        return FakeResponse()
+
+    monkeypatch.setattr(openalex, "_CACHE_ROOT", tmp_path / "paper_openalex_cache")
+    monkeypatch.setattr(openalex.requests, "get", fake_get)
+
+    first = openalex._request_json("https://api.openalex.org/authors", {"search": "丁文伯"})
+    second = openalex._request_json("https://api.openalex.org/authors", {"search": "丁文伯"})
+
+    assert first == {"results": []}
+    assert second == {"results": []}
+    assert len(calls) == 1
+    assert calls[0][1]["api_key"] == "test-key"
+
+
+def test_request_json_skips_without_api_key_by_default(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    monkeypatch.delenv("OPENALEX_API_KEY", raising=False)
+    monkeypatch.delenv("OPENALEX_KEY", raising=False)
+    monkeypatch.delenv("OPENALEX_SKIP_WITHOUT_API_KEY", raising=False)
+    monkeypatch.setattr(openalex, "_CACHE_ROOT", tmp_path / "paper_openalex_cache")
+    monkeypatch.setattr(openalex.requests, "get", lambda *a, **kw: None)
+
+    assert openalex._request_json("https://api.openalex.org/authors", {"search": "x"}) == {
+        "results": []
+    }
