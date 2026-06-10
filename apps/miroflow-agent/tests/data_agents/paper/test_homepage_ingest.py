@@ -49,6 +49,7 @@ def _pub(
     *,
     clean_title: str = "Deep Learning for Images",
     authors_text: str | None = "A. Smith, J. Doe",
+    venue_text: str | None = "NeurIPS",
     year: int | None = 2023,
     pdf_url: str | None = None,
 ) -> HomepagePublication:
@@ -56,7 +57,7 @@ def _pub(
         raw_title=f"[1] {clean_title} [J]",
         clean_title=clean_title,
         authors_text=authors_text,
-        venue_text="NeurIPS",
+        venue_text=venue_text,
         year=year,
         source_url="https://example.edu/prof/x",
         source_anchor=None,
@@ -165,6 +166,49 @@ def test_happy_path_single_prof_five_pubs_all_resolvable(tmp_path):
         assert m_upsert_full.call_count == 5
         m_close.assert_called_once()
         assert m_close.call_args.kwargs.get("status") == "succeeded"
+
+
+def test_checkpoint_append_happens_after_professor_commit(tmp_path):
+    prof = _prof_row()
+    conn = _mock_conn_with_profs([prof])
+    commit_counts_at_checkpoint: list[int] = []
+
+    def _record_checkpoint(*_args, **_kwargs):
+        commit_counts_at_checkpoint.append(conn.commit.call_count)
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run",
+        return_value=uuid.uuid4(),
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value="<html></html>",
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.extract_publications_from_html",
+        return_value=[_pub()],
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
+        return_value=_resolved(),
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper",
+        return_value=MagicMock(paper_id="paper:doi:x", is_new=True),
+    ), patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
+        return_value=True,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest._append_checkpoint_line",
+        side_effect=_record_checkpoint,
+    ):
+        run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "checkpoint.jsonl",
+        )
+
+    assert commit_counts_at_checkpoint == [2]
+    assert conn.commit.call_count == 3
 
 
 def test_official_page_ingest_does_not_truncate_more_than_five_pubs(tmp_path):
@@ -383,6 +427,240 @@ def test_malformed_guard_blocks_author_list_title_with_context():
     assert _is_malformed_publication_title(publication)
 
 
+def test_malformed_guard_blocks_author_only_titles_without_explicit_punctuation():
+    for title in (
+        "Yong Tian etc",
+        "Mingwang Wang etc",
+        "Zhihui Xu and Weiwei Zheng",
+        "Sun Wei and Xu Zhihui",
+    ):
+        publication = _pub(clean_title=title, authors_text=None, year=None)
+
+        assert _is_malformed_publication_title(publication), title
+
+
+@pytest.mark.parametrize(
+    "clean_title",
+    [
+        "PtolemaiosSarrigiannis",
+        "Chen* (2012)",
+        "D?bniak T, Duffy DL",
+        "andJianan Y. Qu*",
+        "Yang iu, Chao lu, Wiliam Wella lu, * Hongmei liu* and Decheng Wu*",
+        "Watkins SC, Demetris AJ, Hussey GS, Badylak SF, Turnquist HR",
+        "Reichenbach DK",
+    ],
+)
+def test_malformed_guard_blocks_sustech_author_fragment_titles(clean_title):
+    publication = _pub(
+        clean_title=clean_title,
+        authors_text=None,
+        venue_text="Journal of Clinical Investigation",
+        year=2024,
+    )
+
+    assert _is_malformed_publication_title(publication), clean_title
+
+
+@pytest.mark.parametrize(
+    ("clean_title", "venue_text"),
+    [
+        (
+            "Yuchen ji, Xiansong Lai",
+            "Fine-detailed Neural Indoor Scene Reconstruction with Multi-level "
+            "Hash Grid and Volumetric Features",
+        ),
+        (
+            "xujie zhang, Fuwei Zhao",
+            "DreamFit: Garment-Centric Human Generation via a Lightweight "
+            "Anything-Dressing Encoder",
+        ),
+        (
+            "Fan Yang and Yuhan Dong",
+            "Joint probabilistic shaping and nonlinear compensation for optical "
+            "fiber communication systems",
+        ),
+    ],
+)
+def test_malformed_guard_blocks_author_list_title_even_with_author_context(
+    clean_title,
+    venue_text,
+):
+    publication = _pub(
+        clean_title=clean_title,
+        authors_text=clean_title,
+        venue_text=venue_text,
+        year=2024,
+    )
+
+    assert _is_malformed_publication_title(publication), clean_title
+
+
+def test_malformed_guard_blocks_student_marked_author_list_with_mixed_context():
+    publication = _pub(
+        clean_title="Xu （学生）, T. Fan, M. Xu, L. Zeng",
+        authors_text="Y. F",
+        venue_text=(
+            "SpiderCNN: Deep Learning on Point Sets with Parameterized "
+            "Convolutional Filters, ECCV 2018 (全球计算机视觉三大会议之一，谷歌学术引用数 > 800 次)"
+        ),
+        year=2018,
+    )
+
+    assert _is_malformed_publication_title(publication)
+
+
+@pytest.mark.parametrize(
+    "clean_title",
+    [
+        "Book Chapters",
+        "Invited Talks",
+        "Manufacturing",
+        "Healthcare and Service Systems",
+        "Social Networks",
+        "Transportation and Disaster Management",
+        "Degree Source",
+        "In Chinese",
+        "SCI JCR Q1",
+        "JCR Q2",
+        "JCR: Q1/IF:11.446",
+        "JCR:Q1/IF:11.7",
+        "November 1",
+        "Nov. 1",
+        "中国注册会计师（内地）",
+        "中国香港注册会计师资格考试全科通过（可豁免 ACCA ）",
+        "美国注册会计师资格考试全科通过（加州）",
+        "年， ISBN 978-7-5608-4835-8 ， Page 164-173",
+        "pp. 154-169",
+        "38, 1821. [doi]",
+        "63, e202 303073",
+        "Ed., 2021, 60, 9875-9880",
+        "Soc. 2016, 138, 8774–8780",
+        "…, Lu, C, …",
+        "m resolution land cover mapping",
+        "a nd Miao Lixin",
+        "Xu （学生）, T. Fan, M. Xu, L. Zeng",
+        "Bagdi, P. R.; Zhang",
+    ],
+)
+def test_malformed_guard_blocks_section_headings_and_metadata_labels(clean_title):
+    publication = _pub(clean_title=clean_title, authors_text=None, venue_text=None)
+
+    assert _is_malformed_publication_title(publication), clean_title
+
+
+@pytest.mark.parametrize(
+    "clean_title",
+    [
+        "Personal and Ubiquitous Computing",
+        "Angew. Chem",
+        "Angew Chem Int Edit",
+        "Applied Health Economics and Health Policy",
+        "Periodica Polytechnica Architecture",
+        "Synfacts highlights",
+        "自然 · 通讯",
+    ],
+)
+def test_malformed_guard_blocks_short_venue_only_title(clean_title):
+    publication = _pub(
+        clean_title=clean_title,
+        authors_text="A. Smith, B. Chen",
+        venue_text=clean_title,
+        year=2024,
+    )
+
+    assert _is_malformed_publication_title(publication), clean_title
+
+
+@pytest.mark.parametrize(
+    ("clean_title", "venue_text"),
+    [
+        ("Personal and Ubiquitous Computing", "2004"),
+        ("Applied Health Economics and Health Policy", None),
+    ],
+)
+def test_malformed_guard_blocks_known_venue_only_title_without_matching_venue(
+    clean_title,
+    venue_text,
+):
+    publication = _pub(
+        clean_title=clean_title,
+        authors_text="A. Smith, B. Chen",
+        venue_text=venue_text,
+        year=2024,
+    )
+
+    assert _is_malformed_publication_title(publication), clean_title
+
+
+@pytest.mark.parametrize(
+    "clean_title",
+    [
+        "况漠, 缪立新, 况达, & 张志贤",
+        "况漠, 缪立新, & 林署青",
+        "张灿荣, 钟明, & 缪立新",
+        "陈进博, 戚铭尧, & 缪立新",
+    ],
+)
+def test_malformed_guard_blocks_chinese_author_list_titles(clean_title):
+    publication = _pub(
+        clean_title=clean_title,
+        authors_text=None,
+        venue_text="交通运输系统工程与信息",
+        year=2023,
+    )
+
+    assert _is_malformed_publication_title(publication), clean_title
+
+
+def test_malformed_guard_blocks_semicolon_author_fragment_with_author_context():
+    publication = _pub(
+        clean_title="Bagdi, P. R.; Zhang",
+        authors_text="S. Niu, H. Zhang, W. Xu",
+        venue_text="G.; Liu, J.; Yang, S.; Fang, X.* Nature Communications 2021",
+        year=2021,
+    )
+
+    assert _is_malformed_publication_title(publication)
+
+
+@pytest.mark.parametrize(
+    "clean_title",
+    [
+        "Backtesting",
+        "The Collider",
+        "Supercool sulfur",
+        "Tournaments",
+        "Emerging Planetarism",
+        "Intelligent Making and Robotic Structure",
+    ],
+)
+def test_malformed_guard_allows_valid_short_titles(clean_title):
+    publication = _pub(
+        clean_title=clean_title,
+        authors_text="A. Smith, B. Chen",
+        venue_text="Journal of Applied Research",
+        year=2023,
+    )
+
+    assert not _is_malformed_publication_title(publication), clean_title
+
+
+def test_malformed_guard_allows_valid_and_title_with_long_bibliographic_venue():
+    publication = _pub(
+        clean_title="Intelligent Making and Robotic Structure",
+        authors_text="Gao Yan, Guo Xin",
+        venue_text=(
+            "Periodica Polytechnica Architecture, Published by the Faculty of "
+            "Architecture of the Budapest University of Technology and Economics, "
+            "ISSN Number: 1789-3437, Budapest, Hungary, 2016"
+        ),
+        year=2016,
+    )
+
+    assert not _is_malformed_publication_title(publication)
+
+
 def test_official_profile_evidence_source_type_is_tier2(tmp_path):
     """link writer must preserve official profile page evidence as Tier 2."""
     prof = _prof_row()
@@ -527,9 +805,7 @@ def test_page_only_publication_initializes_needs_enrichment(tmp_path):
     ), patch(
         "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
         return_value=True,
-    ), patch(
-        "src.data_agents.paper.homepage_ingest._file_pipeline_issue"
-    ):
+    ), patch("src.data_agents.paper.homepage_ingest._file_pipeline_issue"):
         m_upsert_paper.return_value = MagicMock(
             paper_id="paper:page-only:x",
             is_new=True,
@@ -539,6 +815,114 @@ def test_page_only_publication_initializes_needs_enrichment(tmp_path):
 
         assert m_upsert_paper.call_args.kwargs["canonical_source"] == "prof_page_only"
         assert m_upsert_paper.call_args.kwargs["quality_status"] == "needs_enrichment"
+
+
+def test_cjk_homepage_titles_skip_external_resolution_in_bulk_ingest(tmp_path):
+    prof = _prof_row(name="夏文斌")
+    conn = _mock_conn_with_profs([prof])
+    pubs = [
+        _pub(clean_title="提升城市海外影响力让世界更加了解中国", authors_text=None, year=2024),
+        _pub(clean_title="共同富裕视角下教育公平问题研究", authors_text=None, year=2024),
+        _pub(clean_title="人才培养不能一味强调竞争", authors_text=None, year=2023),
+    ]
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value="<html></html>",
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.extract_publications_from_html",
+        return_value=pubs,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title"
+    ) as m_resolve, patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper"
+    ) as m_upsert_paper, patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
+        return_value=True,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest._file_pipeline_issue"
+    ) as m_issue:
+        m_upsert_paper.return_value = MagicMock(
+            paper_id="paper:page-only:cjk",
+            is_new=True,
+        )
+
+        report = run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "c.jsonl",
+        )
+
+        assert report.papers_linked_total == 3
+        m_resolve.assert_not_called()
+        assert m_upsert_paper.call_count == 3
+        assert [
+            call.kwargs["canonical_source"] for call in m_upsert_paper.call_args_list
+        ] == ["prof_page_only", "prof_page_only", "prof_page_only"]
+        m_issue.assert_not_called()
+
+
+def test_large_homepage_publication_lists_skip_realtime_external_resolution(tmp_path):
+    prof = _prof_row(name="肖国芝")
+    conn = _mock_conn_with_profs([prof])
+    pubs = [
+        _pub(
+            clean_title=f"Long Official Publication Title {index}",
+            authors_text="G. Xiao",
+            year=2024,
+        )
+        for index in range(81)
+    ]
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value="<html></html>",
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.extract_publications_from_html",
+        return_value=pubs,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title"
+    ) as m_resolve, patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper"
+    ) as m_upsert_paper, patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
+        return_value=False,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_and_extract_full_text"
+    ) as m_fetch_full_text, patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper_full_text"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest._file_pipeline_issue"
+    ) as m_issue:
+        m_upsert_paper.return_value = MagicMock(
+            paper_id="paper:page-only:large",
+            is_new=True,
+        )
+
+        report = run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "c.jsonl",
+        )
+
+        assert report.papers_linked_total == 81
+        m_resolve.assert_not_called()
+        assert m_upsert_paper.call_count == 81
+        assert {
+            call.kwargs["canonical_source"] for call in m_upsert_paper.call_args_list
+        } == {"prof_page_only"}
+        m_fetch_full_text.assert_not_called()
+        m_issue.assert_not_called()
 
 
 # ---------- Quality gates / pipeline_issue -----------------------------------

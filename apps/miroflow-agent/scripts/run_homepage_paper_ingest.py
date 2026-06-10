@@ -32,7 +32,8 @@ from src.data_agents.professor.llm_profiles import (  # noqa: E402
 )
 
 logger = logging.getLogger(__name__)
-_LLM_PUBLICATION_EXTRACTION_RETRY_BACKOFF_SECONDS = (2.0, 5.0)
+_LLM_PUBLICATION_EXTRACTION_TIMEOUT_SECONDS = 20.0
+_LLM_PUBLICATION_EXTRACTION_RETRY_BACKOFF_SECONDS = (1.0,)
 
 
 def _default_resume_checkpoint_path() -> Path:
@@ -55,8 +56,11 @@ def _build_llm_publication_extractor(profile_name: str, *, force_llm: bool = Fal
     client = OpenAI(
         base_url=settings["local_llm_base_url"],
         api_key=settings["local_llm_api_key"] or "EMPTY",
-        http_client=httpx.Client(timeout=90.0, trust_env=False),
-        timeout=90.0,
+        http_client=httpx.Client(
+            timeout=_LLM_PUBLICATION_EXTRACTION_TIMEOUT_SECONDS,
+            trust_env=False,
+        ),
+        timeout=_LLM_PUBLICATION_EXTRACTION_TIMEOUT_SECONDS,
         max_retries=0,
     )
     model = settings["local_llm_model"]

@@ -21,6 +21,9 @@ import pytest
 
 from src.data_agents.paper.title_resolver import (
     _OPENALEX_RATE_LIMIT_CIRCUIT,
+    _CROSSREF_FAILURE_CIRCUIT,
+    _DBLP_FAILURE_CIRCUIT,
+    _SEMANTIC_SCHOLAR_RATE_LIMIT_CIRCUIT,
     ResolvedPaper,
     _arxiv_entry_to_resolved,
     _crossref_work_to_resolved,
@@ -706,6 +709,7 @@ def test_arxiv_entry_pdf_url_constructed_when_no_explicit_pdf_link():
 
 
 def test_crossref_title_search_returns_items():
+    _CROSSREF_FAILURE_CIRCUIT.reset()
     http = _fake_http_client_returning(
         _mock_json_response({"message": {"items": [_crossref_work_fixture()]}})
     )
@@ -720,6 +724,24 @@ def test_crossref_title_search_returns_items():
     assert kwargs["params"]["query.title"].startswith("Communication Efficient")
     assert kwargs["params"]["rows"] == 5
     assert kwargs["params"]["mailto"]
+
+
+def test_crossref_title_search_circuit_suppresses_repeated_timeouts():
+    _CROSSREF_FAILURE_CIRCUIT.reset()
+
+    http = MagicMock(spec=_REAL_HTTPX_CLIENT)
+    http.get.side_effect = [
+        httpx.ConnectTimeout("timeout"),
+        httpx.ConnectTimeout("timeout"),
+    ]
+
+    try:
+        assert _search_crossref_by_title("first", http_client=http) == []
+        assert _search_crossref_by_title("second", http_client=http) == []
+        assert _search_crossref_by_title("third", http_client=http) == []
+        assert http.get.call_count == 2
+    finally:
+        _CROSSREF_FAILURE_CIRCUIT.reset()
 
 
 def test_crossref_work_to_resolved_happy_path():
@@ -741,6 +763,7 @@ def test_crossref_work_to_resolved_happy_path():
 
 
 def test_semantic_scholar_title_search_returns_papers():
+    _SEMANTIC_SCHOLAR_RATE_LIMIT_CIRCUIT.reset()
     http = _fake_http_client_returning(
         _mock_json_response({"data": [_semantic_scholar_paper_fixture()]})
     )
@@ -755,6 +778,23 @@ def test_semantic_scholar_title_search_returns_papers():
     assert kwargs["params"]["query"].startswith("Communication Efficient")
     assert kwargs["params"]["limit"] == 5
     assert "externalIds" in kwargs["params"]["fields"]
+
+
+def test_semantic_scholar_title_search_circuit_suppresses_repeated_429():
+    _SEMANTIC_SCHOLAR_RATE_LIMIT_CIRCUIT.reset()
+
+    resp = MagicMock(spec=_REAL_HTTPX_RESPONSE)
+    resp.raise_for_status.side_effect = httpx.HTTPStatusError(
+        "429", request=MagicMock(), response=MagicMock(status_code=429)
+    )
+    http = _fake_http_client_returning(resp)
+
+    try:
+        assert _search_semantic_scholar_by_title("first", http_client=http) == []
+        assert _search_semantic_scholar_by_title("second", http_client=http) == []
+        assert http.get.call_count == 1
+    finally:
+        _SEMANTIC_SCHOLAR_RATE_LIMIT_CIRCUIT.reset()
 
 
 def test_semantic_scholar_paper_to_resolved_happy_path():
@@ -777,6 +817,7 @@ def test_semantic_scholar_paper_to_resolved_happy_path():
 
 
 def test_dblp_title_search_returns_hits():
+    _DBLP_FAILURE_CIRCUIT.reset()
     http = _fake_http_client_returning(
         _mock_json_response({"result": {"hits": {"hit": [_dblp_hit_fixture()]}}})
     )
@@ -791,6 +832,96 @@ def test_dblp_title_search_returns_hits():
     assert kwargs["params"]["q"].startswith("Communication Efficient")
     assert kwargs["params"]["format"] == "json"
     assert kwargs["params"]["h"] == 5
+
+
+def test_dblp_title_search_skips_cjk_titles():
+    _DBLP_FAILURE_CIRCUIT.reset()
+    http = MagicMock(spec=_REAL_HTTPX_CLIENT)
+
+    assert _search_dblp_by_title("我国体育电子商务的现状调查与对策研究", http_client=http) == []
+    http.get.assert_not_called()
+
+
+def test_dblp_title_search_circuit_suppresses_repeated_429():
+    _DBLP_FAILURE_CIRCUIT.reset()
+
+    def _rate_limited_response():
+        resp = MagicMock(spec=_REAL_HTTPX_RESPONSE)
+        resp.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "429", request=MagicMock(), response=MagicMock(status_code=429)
+        )
+        return resp
+
+    http = _fake_http_client_returning_sequence(
+        [_rate_limited_response(), _rate_limited_response()]
+    )
+
+    try:
+        assert _search_dblp_by_title("first", http_client=http) == []
+        assert _search_dblp_by_title("second", http_client=http) == []
+        assert _search_dblp_by_title("third", http_client=http) == []
+        assert http.get.call_count == 2
+    finally:
+        _DBLP_FAILURE_CIRCUIT.reset()
+
+
+def test_dblp_title_search_circuit_suppresses_repeated_5xx():
+    _DBLP_FAILURE_CIRCUIT.reset()
+
+    def _server_error_response():
+        resp = MagicMock(spec=_REAL_HTTPX_RESPONSE)
+        resp.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "500", request=MagicMock(), response=MagicMock(status_code=500)
+        )
+        return resp
+
+    http = _fake_http_client_returning_sequence(
+        [_server_error_response(), _server_error_response()]
+    )
+
+    try:
+        assert _search_dblp_by_title("first", http_client=http) == []
+        assert _search_dblp_by_title("second", http_client=http) == []
+        assert _search_dblp_by_title("third", http_client=http) == []
+        assert http.get.call_count == 2
+    finally:
+        _DBLP_FAILURE_CIRCUIT.reset()
+
+
+def test_dblp_title_search_circuit_suppresses_repeated_timeouts():
+    _DBLP_FAILURE_CIRCUIT.reset()
+
+    http = MagicMock(spec=_REAL_HTTPX_CLIENT)
+    http.get.side_effect = [
+        httpx.ConnectTimeout("timeout"),
+        httpx.ConnectTimeout("timeout"),
+    ]
+
+    try:
+        assert _search_dblp_by_title("first", http_client=http) == []
+        assert _search_dblp_by_title("second", http_client=http) == []
+        assert _search_dblp_by_title("third", http_client=http) == []
+        assert http.get.call_count == 2
+    finally:
+        _DBLP_FAILURE_CIRCUIT.reset()
+
+
+def test_dblp_title_search_circuit_suppresses_repeated_transport_errors():
+    _DBLP_FAILURE_CIRCUIT.reset()
+
+    http = MagicMock(spec=_REAL_HTTPX_CLIENT)
+    http.get.side_effect = [
+        httpx.RemoteProtocolError("Server disconnected without sending a response."),
+        httpx.RemoteProtocolError("Server disconnected without sending a response."),
+    ]
+
+    try:
+        assert _search_dblp_by_title("first", http_client=http) == []
+        assert _search_dblp_by_title("second", http_client=http) == []
+        assert _search_dblp_by_title("third", http_client=http) == []
+        assert http.get.call_count == 2
+    finally:
+        _DBLP_FAILURE_CIRCUIT.reset()
 
 
 def test_dblp_hit_to_resolved_happy_path():

@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import httpx
 import pytest
 
 # Import the script as a module — scripts/ needs to be importable.
@@ -188,6 +189,7 @@ def test_cli_dispatches_force_llm_publication_extraction(monkeypatch):
 def test_llm_publication_extractor_uses_model_specific_extra_body(monkeypatch):
     cli = _import_cli_module()
     captured_create_kwargs: dict = {}
+    captured_openai_kwargs: dict = {}
 
     class _FakeCompletions:
         def create(self, **kwargs):
@@ -207,7 +209,10 @@ def test_llm_publication_extractor_uses_model_specific_extra_body(monkeypatch):
     monkeypatch.setitem(
         sys.modules,
         "openai",
-        SimpleNamespace(OpenAI=lambda **_kwargs: fake_client),
+        SimpleNamespace(
+            OpenAI=lambda **kwargs: captured_openai_kwargs.update(kwargs)
+            or fake_client
+        ),
     )
     monkeypatch.setattr(
         cli,
@@ -233,6 +238,16 @@ def test_llm_publication_extractor_uses_model_specific_extra_body(monkeypatch):
     assert captured_create_kwargs["extra_body"] == {
         "thinking": {"type": "disabled"}
     }
+    assert captured_openai_kwargs["timeout"] == (
+        cli._LLM_PUBLICATION_EXTRACTION_TIMEOUT_SECONDS
+    )
+    assert captured_openai_kwargs["max_retries"] == 0
+    assert isinstance(captured_openai_kwargs["http_client"], httpx.Client)
+    assert captured_openai_kwargs["http_client"].timeout.read == (
+        cli._LLM_PUBLICATION_EXTRACTION_TIMEOUT_SECONDS
+    )
+    assert captured_openai_kwargs["http_client"].trust_env is False
+    captured_openai_kwargs["http_client"].close()
 
 
 def test_llm_publication_extractor_retries_transient_create_failure(monkeypatch):

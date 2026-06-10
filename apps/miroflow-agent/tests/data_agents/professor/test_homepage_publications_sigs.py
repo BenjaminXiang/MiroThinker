@@ -3,6 +3,7 @@ from __future__ import annotations
 from src.data_agents.professor.homepage_publications import (
     HomepagePublication,
     _is_suspicious_rule_publication,
+    _split_compact_initial_connective_author_segment,
     _split_title_authors_venue,
     build_llm_publication_extraction_messages,
     extract_publications_from_html_with_llm_fallback,
@@ -623,6 +624,9 @@ def test_sigs_full_name_author_list_and_in_press_tail_are_not_title():
       IJCAI 2018 (CCF A)</p>
       <p>[42]. Chenxi Yuan , Yang Bai, Chun Yuan Bridge the Gap: High-level
       Semantic Planning for Image Captioning Coling, Coling2020 CCF B</p>
+      <p>[1] On Universal Features for High-Dimensional Learning and Inference.
+      accepted to Foundations and Trends in Communications and Information
+      Theory: Now Publishers. (ArXiv)</p>
     </main>
     """
 
@@ -634,11 +638,16 @@ def test_sigs_full_name_author_list_and_in_press_tail_are_not_title():
     assert [publication.clean_title for publication in publications] == [
         "Self-Adaptive Double bootstrapped DDPG",
         "Bridge the Gap: High-level Semantic Planning for Image Captioning",
+        "On Universal Features for High-Dimensional Learning and Inference",
     ]
     assert "Hanghao Wu" in (publications[0].authors_text or "")
     assert "Chun Yuan" in (publications[1].authors_text or "")
     assert "IJCAI 2018 (CCF A)" in (publications[0].venue_text or "")
     assert publications[1].venue_text == "Coling2020 CCF B"
+    assert "Foundations and Trends in Communications and Information Theory" in (
+        publications[2].venue_text or ""
+    )
+    assert "ArXiv" in (publications[2].venue_text or "")
     for publication in publications:
         assert not _is_suspicious_rule_publication(publication)
 
@@ -955,6 +964,48 @@ def test_sigs_chinese_author_period_splits_title_and_venue():
     assert "邱亨嘉" in publications[0].authors_text
     assert publications[0].venue_text is not None
     assert "中国卫生政策研究" in publications[0].venue_text
+    assert not _is_suspicious_rule_publication(publications[0])
+
+
+def test_sigs_chinese_single_author_et_al_period_splits_before_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>汪劲松等. 双组元液压自由活塞发动机的研究背景与可行性分析.
+      中国机械工程，2008。</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/xbz/main.htm",
+    )
+
+    assert len(publications) == 1
+    assert publications[0].clean_title == "双组元液压自由活塞发动机的研究背景与可行性分析"
+    assert publications[0].authors_text == "汪劲松"
+    assert publications[0].venue_text is not None
+    assert "中国机械工程" in publications[0].venue_text
+    assert not _is_suspicious_rule_publication(publications[0])
+
+
+def test_sigs_chinese_single_author_compact_period_splits_before_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>蔡中华.基于矩阵模型进行抗荧光干扰的蓝藻原位检测方法.湖泊科学</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/czh/main.htm",
+    )
+
+    assert len(publications) == 1
+    assert publications[0].clean_title == "基于矩阵模型进行抗荧光干扰的蓝藻原位检测方法"
+    assert publications[0].authors_text == "蔡中华"
+    assert publications[0].venue_text == "湖泊科学"
     assert not _is_suspicious_rule_publication(publications[0])
 
 
@@ -1482,6 +1533,10 @@ def test_sigs_title_internal_comma_before_period_journal_is_not_venue():
       Guoxiu Wang*, Fluorine Chemistry in Rechargeable Batteries:
       Challenges, Progress and Perspectives. Chemical Reviews, 2024,
       124 (6), 3494-3589.</p>
+      <p>G. M. Zhou, S. F. Pei, L. Li, D. W. Wang, S. G. Wang, K. Huang,
+      L. C. Yin, F. Li, H.-M. Cheng, A Graphene-Pure Sulphur Sandwich
+      Structure for Ultrafast, Long-Life Lithium–Sulphur Batteries, Adv. Mater,
+      2014, 26, 625–631.</p>
     </main>
     """
 
@@ -1494,11 +1549,17 @@ def test_sigs_title_internal_comma_before_period_journal_is_not_venue():
         (
             "Fluorine Chemistry in Rechargeable Batteries: Challenges, "
             "Progress and Perspectives"
-        )
+        ),
+        (
+            "A Graphene-Pure Sulphur Sandwich Structure for Ultrafast, "
+            "Long-Life Lithium–Sulphur Batteries"
+        ),
     ]
     assert "Baohua Li" in (publications[0].authors_text or "")
     assert "Chemical Reviews" in (publications[0].venue_text or "")
+    assert "Adv Mater" in (publications[1].venue_text or "")
     assert not _is_suspicious_rule_publication(publications[0])
+    assert not _is_suspicious_rule_publication(publications[1])
 
 
 def test_sigs_title_suffix_author_chain_is_suspicious_and_filters_noise():
@@ -2079,6 +2140,7 @@ def test_sigs_url_and_author_fragment_titles_are_suspicious_at_bridge_boundary()
         "Zhang Y. Serine/Arginine-rich Splicing Factor 2 Modulates Herpes",
         "Chem. Engineer. J",
         "Offshore wind resources. Energy. WOS:000445985300047, total cites 6",
+        "ORCID: 0000-0002-9903-3798",
         "Rui hua Luo, Keyi Zhong, Daoyi Chen, Guozhong Wu, Li Wang, "
         "Mucong Zi*, Microscopic influence mechanisms of pre-adsorbed "
         "polysaccharide on the nucleation and growth of methane hydrate on "
@@ -2173,6 +2235,22 @@ def test_sigs_chinese_author_marker_note_is_not_publication():
         )
 
         assert _is_suspicious_rule_publication(publication), title
+
+
+def test_sigs_orcid_identifier_line_is_not_publication():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>ORCID: 0000-0002-9903-3798</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/sample/main.htm",
+    )
+
+    assert publications == []
 
 
 def test_sigs_llm_fallback_rejects_author_only_titles_without_real_title():
@@ -2504,6 +2582,43 @@ def test_sigs_llm_fallback_repairs_split_title_words_from_line_breaks():
     ]
 
 
+def test_sigs_repairs_scientific_title_words_split_by_html_spacing():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>Long- l ife Li/polysulphide b atteries with high sul ph ur loading
+      enabled by l ightweight t hree- d imensional n itrogen/sulphur
+      c o d oped g raphene s ponge</p>
+      <p>Catalytic o xidation of Li 2 S on the s urface of m etal s ulphides
+      for Li-S b atteries</p>
+      <p>Effect m echanism of f low v elocity on i ron r elease from p ipe
+      s urfaces in d rinking w ater d istribution s ystems. T he 37 th IAHR
+      World Congress</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/sample/main.htm",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "Long-life Li/polysulphide batteries with high sulphur loading "
+            "enabled by lightweight three-dimensional nitrogen/sulphur codoped "
+            "graphene sponge"
+        ),
+        (
+            "Catalytic oxidation of Li 2 S on the surface of metal sulphides "
+            "for Li-S batteries"
+        ),
+        (
+            "Effect mechanism of flow velocity on iron release from pipe surfaces "
+            "in drinking water distribution systems"
+        ),
+    ]
+
+
 def test_sigs_research_topic_heading_is_not_publication():
     html = """
     <main>
@@ -2661,6 +2776,11 @@ def test_sigs_publication_heading_and_bio_prose_are_not_publications():
       重大计划首席科学家，已在国内外学术期刊上发表SCI收录论文493篇。</p>
       <p>此外，康飞宇教授还带领学科团队在天然石墨深加工、锌离子电池方面
       业绩突出，产生了显著的经济效益和社会效益。</p>
+      <p>杨诚老师长期从事面向电化学能源以及传感、封装方面应用的关键材料的研究工作。
+      着重研究金属微纳结构的形态演变规律和控制方法，提出了一系列以热力学非平衡态
+      条件为主要特征的实验手段。应用领域包括金属电化学电极、元器件封装、传感器等方面。</p>
+      <p>目前已发表专业论文170余篇、引用1万余次，获得中美国发明专利授权50余项、
+      成果转化6项。获得了日内瓦国际发明奖金奖、中国发明创新奖等荣誉。</p>
     </main>
     """
 
@@ -2686,6 +2806,21 @@ def test_sigs_person_names_external_pointers_and_mojibake_are_washed_out():
       <p>[5] EI Accession number: 202612345678</p>
       <p>[6] Ã©Ã¨â€™ malformed title</p>
       <p>[7] 具体发表情况详见： https://scholar.google.com/citations?user=9-7kE_QAAAAJ</p>
+      <p>[8] Wang R, Chan J. F-W, Wang S, Li H, Zhao J, Ip K-Y, Zuo Z,
+      Yuen K-K, Yuan S*, Sun H*, Chem. Sci., 2022, 13, 2238-2248
+      [Back cover]</p>
+      <p>[9] Nairan A.; Yang C.* et al. Advanced Functional Materials
+      2019, 29, 1903747 (featured as back cover)</p>
+      <p>[10] Zhao S.; Yang C.* et al. InfoMat, 2024, e12552</p>
+      <p>[11] Zhang Z.; Yang C.* et al. Small, 2023,19, 2300747</p>
+      <p>[12] Zhu H.; Yang C.* et al. Angewandte Chemie International Edition.
+      2022,62, e202212439</p>
+      <p>[13] Liang C.; Yang C.* et al. Small, 2022, 18, 2203663</p>
+      <p>[14] Yang C.* et al. Nature Communications 2015, 9150
+      (Highlighted by C&EN)</p>
+      <p>[15] Yang C.: “Applying Nanotechnology to Composite Materials ---
+      Multifunctionality & Mechanical Properties” VDM publishing house,
+      Saarbrücken, 2009, 199 pages. ISBN: 978-3-639-10882-8 （学术专著）</p>
     </main>
     """
 
@@ -2696,23 +2831,168 @@ def test_sigs_person_names_external_pointers_and_mojibake_are_washed_out():
 
     assert [publication.clean_title for publication in publications] == [
         "Spectrally Efficient Channel State Information Acquisition for Power "
-        "Line Communications: A Bayesian Compressive Sensing Perspective"
+        "Line Communications: A Bayesian Compressive Sensing Perspective",
+        "Applying Nanotechnology to Composite Materials --- Multifunctionality "
+        "& Mechanical Properties",
     ]
+
+
+def test_sigs_ercan_author_chain_extracts_real_title_and_filters_page_fragments():
+    html = """
+    <main>
+      <h2>Publications</h2>
+      <p>203. Elsevier, May 2016.</p>
+      <p>53-A, pp. 79-83, December 2014.</p>
+      <p>53. E. E. Kuruoglu, W. J. Fitzgerald and P. J. W. Rayner,
+      Near Optimal Detection of Signals in Impulsive Noise Modelled with a
+      Symmetric alpha-Stable Distribution, IEEE Communications Letters,
+      Vol. 2, No. 10, pp. 282-284, October 1998.</p>
+      <p>54. E. E. Kuruoglu, P. J. W. Rayner and W. J. Fitzgerald,
+      Least lp-norm Impulsive Noise Cancellation with Polynomial Filters,
+      Signal Processing, Vol. 69, No. 1, pp. 1-14, 1998.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/Ercan/main.htm",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "Near Optimal Detection of Signals in Impulsive Noise Modelled "
+            "with a Symmetric alpha-Stable Distribution"
+        ),
+        "Least lp-norm Impulsive Noise Cancellation with Polynomial Filters",
+    ]
+    assert "E. E. Kuruoglu" in (publications[0].authors_text or "")
+    assert "P. J. W. Rayner" in (publications[0].authors_text or "")
+    assert "IEEE Communications Letters" in (publications[0].venue_text or "")
+    assert "Signal Processing" in (publications[1].venue_text or "")
+
+
+def test_sigs_numbered_publication_split_across_paragraphs_is_merged():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>[1] Li Y, Xu W. A deep learning-based framework for intelligent
+      modeling: From architectural</p>
+      <p>sketch to 3D model[J]. Frontiers of Architectural Research,
+      2025 (In press).</p>
+      <p>[2] 黄舒弈, 徐卫国. 基于 3D 打印混凝土技术的建筑学交叉学科研究新路径探索[J].
+      建筑学报, 2024,</p>
+      <p>30(S2): 176-182.</p>
+      <p>[3] Huang S, Xu W, Anton A, Dillenburger B. Self-supporting
+      lamellae: Shape variation methods</p>
+      <p>for the 3D concrete printing of large overhang structures[J].
+      Additive Manufacturing, 2024.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/xwg/main.htm",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "A deep learning-based framework for intelligent modeling: From "
+        "architectural sketch to 3D model",
+        "基于 3D 打印混凝土技术的建筑学交叉学科研究新路径探索",
+        (
+            "Self-supporting lamellae: Shape variation methods for the 3D "
+            "concrete printing of large overhang structures"
+        ),
+    ]
+    assert "30(S2)" in (publications[1].venue_text or "")
+    assert "sketch to 3D model" not in {
+        publication.clean_title for publication in publications[1:]
+    }
+
+
+def test_sigs_numbered_publications_in_same_paragraph_are_split():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>[14] 徐卫国. 数字建筑设计与建造的发展前景[J]. 当代建筑,
+      2020, No.2(02): 20-22. [15] 徐卫国. 世界最大的混凝土
+      3D 打印步行桥[J]. 建筑技艺, 2019, 281(02): 6-9.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/xwg/main.htm",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "数字建筑设计与建造的发展前景",
+        "世界最大的混凝土 3D 打印步行桥",
+    ]
+    assert "当代建筑" in (publications[0].venue_text or "")
+    assert "建筑技艺" in (publications[1].venue_text or "")
 
 
 def test_sigs_non_publication_title_noise_is_suspicious_at_bridge_boundary():
     for title in (
         "Zhidong Jia",
+        "Yong Tian etc",
+        "Mingwang Wang etc",
+        "Zhihui Xu and Weiwei Zheng",
+        "Sun Wei and Xu Zhihui",
+        "在 Science, Nature Materials",
         "发表 SCI 论文 200 多篇，其中 Nature 论文 3 篇",
         "请见 https://www.sigs.tsinghua.edu.cn/sample/main.htm",
         "具体发表详见 https://scholar.google.com/citations?hl=en&user=Nm3ZGrQAAAAJ",
         "具体发表情况详见： https://scholar.google.com/citations?user=9-7kE_QAAAAJ",
+        "For the complete publication list, please refer to",
         "WOS:000123456789",
         "EI Accession number: 202612345678",
         "Ã©Ã¨â€™ malformed title",
+        "l Research Highlight 1#",
+        "Research Highlight 2#: Alberto Moscatelli (Chief Editor of Nature "
+        "Nanotechnology), A 2D material-based liquid crystal for "
+        "deep-ultraviolet light modulation (Research Briefing)",
+        "Reported by EurekAlert! (AAAS), etc",
+        "Reported by the EurekAlert! (AAAS), Nanowerk, Physorg, "
+        "Tsinghua News, etc",
         "As Corresponding Author",
         "Scientific Reports, IF/citations: 4/-, in press *",
         "杨 兵, * 高福平, 吴应湘",
+        "杨诚老师长期从事面向电化学能源以及传感、封装方面应用的关键材料的研究工作。"
+        "应用领域包括金属电化学电极、元器件封装、传感器等方面",
+        "目前已发表专业论文 170余篇、引用1万余次，获得中美国发明专利授权50余项、"
+        "成果转化6项。获得了日内瓦国际发明奖金奖、中国发明创新奖等荣誉",
+        "2022, 13, 2238-2248 [Back cover]",
+        "Advanced Functional Materials 2019, 29, 1903747 (featured as back cover)",
+        "35, 2207787. (Front Cover Article)",
+        "Advanced Functional Materials 2010, 20, 2580 (featured as frontispiece)",
+        "Commum., 2018, 9, 439",
+        "Nat. Commun., 2018, 9, 439",
+        "ACS Nano 2015, 9, 5636",
+        "Advanced Functional Materials2021, 31, 2105736",
+        "Chemical Reviews 2021, 121, 10, 5986-6056",
+        "Electrochemical Energy Reviews",
+        "Electrochemical Energy Reviews 2021, 4, 601-631",
+        "Nano Energy 2018, 51, 349",
+        "Nature Communications 2018, 9, 464",
+        "Nature Communications 2015, 9150 (Highlighted by C&EN)",
+        "et al. InfoMat",
+        "et al. Small",
+        "et al. Angewandte Chemie International Edition",
+        "Advanced Science",
+        "Advanced Energy Materials",
+        "Advanced Functional Materials",
+        "Advanced Materials",
+        "Chemical Reviews",
+        "Energy & Environmental Science",
+        "Energy & Environ. Sci",
+        "Energy Storage Materials",
+        "Journal of the American Chemical Society",
+        "Nano Energy",
+        "Nature Communications",
+        "Elsevier, May 2016",
+        "83, December 2014",
+        "Fitzgerald and P. J. W. Rayner",
     ):
         publication = HomepagePublication(
             raw_title=title,
@@ -2917,6 +3197,63 @@ def test_sigs_llm_fallback_rejects_hallucinated_items_and_filters_bad_rules():
     )
 
     assert publications == []
+
+
+def test_sigs_llm_fallback_rejects_venue_only_yang_items_but_keeps_book_title():
+    source_span = (
+        "Yang C.* et al. Nature Communications 2015, 9150 "
+        "(Highlighted by C&EN)"
+    )
+    book_span = (
+        "Yang C.: “Applying Nanotechnology to Composite Materials --- "
+        "Multifunctionality & Mechanical Properties” VDM publishing house, "
+        "Saarbrücken, 2009, 199 pages. ISBN: 978-3-639-10882-8 （学术专著）"
+    )
+    html = f"""
+    <main>
+      <h2>代表性论文</h2>
+      <p>{source_span}</p>
+      <p>{book_span}</p>
+    </main>
+    """
+
+    def yang_llm(_section_text: str, _page_url: str):
+        return [
+            {
+                "title": "Nature Communications 2015, 9150 (Highlighted by C&EN)",
+                "authors_text": "Yang C. et al",
+                "venue_text": None,
+                "year": 2015,
+                "source_span": source_span,
+                "confidence": 0.95,
+            },
+            {
+                "title": (
+                    "Applying Nanotechnology to Composite Materials --- "
+                    "Multifunctionality & Mechanical Properties"
+                ),
+                "authors_text": "Yang C",
+                "venue_text": (
+                    "VDM publishing house, Saarbrücken, 2009, 199 pages. "
+                    "ISBN: 978-3-639-10882-8 （学术专著）"
+                ),
+                "year": 2009,
+                "source_span": book_span,
+                "confidence": 0.95,
+            },
+        ]
+
+    publications = extract_publications_from_html_with_llm_fallback(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/yc/main.htm",
+        llm_extractor=yang_llm,
+        force_llm=True,
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "Applying Nanotechnology to Composite Materials --- Multifunctionality "
+        "& Mechanical Properties"
+    ]
 
 
 def test_sigs_llm_fallback_rejects_author_prefix_contaminated_titles():
@@ -3124,6 +3461,50 @@ def test_sigs_llm_fallback_rejects_chinese_author_prefix_titles():
 
     assert [publication.clean_title for publication in publications] == [
         "临床路径对医疗资源使用的效益-以腹腔镜胆囊切除手术患者为例"
+    ]
+
+
+def test_sigs_llm_fallback_rejects_chinese_intro_venue_fragment_title():
+    source_span = (
+        "干林教授在 Science, Nature Materials 等期刊发表多篇论文。"
+        "Atomic imaging of subsurface hydrogen and insight into the surface "
+        "reactivity of palladium hydrides. Nature Materials, 2024."
+    )
+    html = f"<main><h2>代表性论文</h2><p>{source_span}</p></main>"
+
+    def bad_then_good_llm(_section_text: str, _page_url: str):
+        return [
+            {
+                "title": "在 Science, Nature Materials",
+                "authors_text": None,
+                "venue_text": "Science, Nature Materials",
+                "year": None,
+                "source_span": source_span,
+                "confidence": 0.95,
+            },
+            {
+                "title": (
+                    "Atomic imaging of subsurface hydrogen and insight into the "
+                    "surface reactivity of palladium hydrides"
+                ),
+                "authors_text": None,
+                "venue_text": "Nature Materials",
+                "year": 2024,
+                "source_span": source_span,
+                "confidence": 0.95,
+            },
+        ]
+
+    publications = extract_publications_from_html_with_llm_fallback(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/gl1/main.htm",
+        llm_extractor=bad_then_good_llm,
+        force_llm=True,
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "Atomic imaging of subsurface hydrogen and insight into the surface "
+        "reactivity of palladium hydrides"
     ]
 
 
@@ -3343,3 +3724,1770 @@ def test_llm_fallback_preserves_safe_rule_results_while_fixing_suspicious_items(
         "Novel Optical Sensor Based on Photonic Crystal Structures",
         "High-performance polymer membranes for selective ion transport",
     ]
+
+
+def test_llm_fallback_skips_large_rule_publication_lists(monkeypatch):
+    items = [
+        (
+            f"<p>{index}. A. Author, B. Scientist. Reliable SUSTech "
+            f"Publication Title {index} for Batch Ingest. Journal of Testing, "
+            "2024.</p>"
+        )
+        for index in range(1, 82)
+    ]
+    html = "<main><h2>Publications</h2>" + "".join(items) + "</main>"
+    calls: list[str] = []
+
+    monkeypatch.setattr(
+        "src.data_agents.professor.homepage_publications."
+        "_should_use_llm_publication_fallback",
+        lambda **_kwargs: True,
+    )
+
+    def _llm_extractor(_section_text: str, page_url: str):
+        calls.append(page_url)
+        raise AssertionError("large rule-extracted lists should not call the LLM")
+
+    publications = extract_publications_from_html_with_llm_fallback(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/xiao-guozhi.html",
+        llm_extractor=_llm_extractor,
+    )
+
+    assert calls == []
+    assert len(publications) == 81
+    assert publications[0].clean_title == (
+        "Reliable SUSTech Publication Title 1 for Batch Ingest"
+    )
+
+
+def test_sigs_jcr_if_tail_after_comma_author_prefix_is_not_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>[6] Xi Cheng, Pingfa Feng, Long Zeng* , Approaching optimum sampling
+      by sectional error equivalence, M easurement (JCR Q1, IF5.2), 2024.</p>
+      <p>[17] Fei Liu, XiaoMing Zhu, PingFa Feng, Long Zeng* , Anomaly
+      Detection via Progressive Reconstruction and Hierarchical Feature Fusion,
+      Sensors (JCR Q2, IF3.9), MDPI, 2023.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/cl/main.htm",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "Approaching optimum sampling by sectional error equivalence",
+        "Anomaly Detection via Progressive Reconstruction and Hierarchical Feature Fusion",
+    ]
+    assert all("JCR" not in publication.clean_title for publication in publications)
+    assert all("IF" not in publication.clean_title for publication in publications)
+    assert "Long Zeng" in (publications[0].authors_text or "")
+    assert "Measurement" in (publications[0].venue_text or "").replace(" ", "")
+    assert "Sensors" in (publications[1].venue_text or "")
+
+
+def test_sigs_doi_only_metric_rows_are_suspicious_not_publications():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>40. DOI: 10.37188/lam.2025.040.(IF=10.6, JCR Q1)</p>
+      <p>116147. DOI: 10.1016/j.measurement.2024.116147.(IF=5.6,
+      JCR Q1, 中科院 2区)</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/lxh/main.htm",
+    )
+
+    assert publications == []
+
+
+def test_sigs_chinese_ampersand_author_year_prefix_splits_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>80. 杨朋 , & 缪立新 . (2012). 多载具自动化存取系统性能评价研究 .
+      工业工程 , 15(4), 21-27.</p>
+      <p>39. 李彬彬，欧进萍， Truss Spar平台垂荡响应频域分析，海洋工程，2009</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/mlx/main.htm",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "多载具自动化存取系统性能评价研究",
+        "Truss Spar平台垂荡响应频域分析",
+    ]
+    assert publications[0].authors_text == "杨朋, 缪立新"
+    assert publications[1].authors_text == "李彬彬, 欧进萍"
+    assert "工业工程" in (publications[0].venue_text or "")
+    assert "海洋工程" in (publications[1].venue_text or "")
+
+
+def test_sigs_split_connective_author_fragment_before_title_is_repaired():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>[56] Wang Chong # , Liu Kaiyuan # , Zhang Canrong *, a nd Miao
+      Lixin. Distributionally Robust Chance-Constrained Optimization for the
+      Integrated Berth Allocation and Quay Crane Assignment Problem.
+      Transportation Research Part B: Methodological, April 2024, 182:
+      102923.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/zcr/main.htm",
+    )
+
+    assert len(publications) == 1
+    assert publications[0].clean_title == (
+        "Distributionally Robust Chance-Constrained Optimization for the "
+        "Integrated Berth Allocation and Quay Crane Assignment Problem"
+    )
+    assert "Zhang Canrong" in (publications[0].authors_text or "")
+    assert "Miao Lixin" in (publications[0].authors_text or "")
+    assert "Transportation Research Part B" in (publications[0].venue_text or "")
+
+
+def test_sigs_student_marked_initial_author_chain_splits_before_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>[25] F. Yang （学生） , k. Wu, S. Y. Zhang, G. N. Jiang, Y. Liu,
+      F. Zheng, W. Zhang, C. J. Wang and L. Zeng , Class-Aware Contrastive
+      Semi-Supervised Learning, 2022 IEEE Computer Vision and Pattern
+      Recognition (CVPR2022, CCF-A).</p>
+      <p>[36] Y. F. Xu （学生） , T. Fan, M. Xu, L. Zeng . SpiderCNN: Deep
+      Learning on Point Sets with Parameterized Convolutional Filters, ECCV
+      2018 ( 全球计算机视觉三大会议之一 ，谷歌学术引用数 > 800 次 ).</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/cl/main.htm",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "Class-Aware Contrastive Semi-Supervised Learning",
+        "SpiderCNN: Deep Learning on Point Sets with Parameterized Convolutional Filters",
+    ]
+    assert "F. Yang" in (publications[0].authors_text or "")
+    assert "L. Zeng" in (publications[0].authors_text or "")
+    assert "Y. F. Xu" in (publications[1].authors_text or "")
+    assert "L. Zeng" in (publications[1].authors_text or "")
+    assert "CVPR2022" in (publications[0].venue_text or "")
+    assert "ECCV 2018" in (publications[1].venue_text or "")
+
+
+def test_sigs_metric_journal_tail_after_period_is_not_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>26. Yuchun Yang, Jie Pan, Zhichao Zhou, Jiapeng Wu, Yang Liu,
+      Jih-Gaw Lin, Yiguo Hong, Xiao-yan Li , Meng Li, Ji-Dong Gu. 2020.
+      Complex microbial nitrogen-cycling networks in three distinct
+      anammox-inoculated wastewater treatment systems. Water research
+      (IF: 11.236), 168, 115142.</p>
+      <p>35. Guang-Jie Zhou, Xiao-yan Li , Kenneth Mei Yee Leung. 2019.
+      Retinoids and oestrogenic endocrine disrupting chemicals in saline
+      sewage treatment plants: Removal efficiencies and ecological risks to
+      marine organisms. Environment international (IF: 9.621), 127, 103-113.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/lxy/main.htm",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "Complex microbial nitrogen-cycling networks in three distinct "
+            "anammox-inoculated wastewater treatment systems"
+        ),
+        (
+            "Retinoids and oestrogenic endocrine disrupting chemicals in saline "
+            "sewage treatment plants: Removal efficiencies and ecological risks "
+            "to marine organisms"
+        ),
+    ]
+    assert "Water research" in (publications[0].venue_text or "")
+    assert "Environment international" in (publications[1].venue_text or "")
+    assert all("IF" not in publication.clean_title for publication in publications)
+
+
+def test_sigs_chinese_and_english_author_prefix_splits_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>11. 毛献忠，祝倩， Wei Yong, 浙江沿海潜在区域地震海啸风险分析 ,
+      海洋学报， 2015 ， 37 （ 3 ）： 37-45 。</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/mxz/main.htm",
+    )
+
+    assert len(publications) == 1
+    assert publications[0].clean_title == "浙江沿海潜在区域地震海啸风险分析"
+    assert publications[0].authors_text == "毛献忠, 祝倩, Wei Yong"
+    assert "海洋学报" in (publications[0].venue_text or "")
+
+
+def test_sigs_repairs_split_information_theory_title_words():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>[8] Jie Hao, Jun Zhang, Shu-Tao Xia, Fang-Wei Fu, Yixian Yang.
+      C onstructions and weight distributions of optimal locally repairable
+      codes, IEEE Transactions on Communications (TCOM), vol. 70, no. 5,
+      pp. 2895-2908, May 2022.</p>
+      <p>[24] S.-T. Xia, F.-W. Fu, and S. Ling, A l ower b ound on the
+      p robability of u ndetected e rror for b inary c onstant w eight c odes.
+      IEEE Transactions on Information Theory, vol. 52, no. 9, 2006.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/xst/main.htm",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "Constructions and weight distributions of optimal locally repairable codes",
+        (
+            "A lower bound on the probability of undetected error for binary "
+            "constant weight codes"
+        ),
+    ]
+    assert "Shu-Tao Xia" in (publications[0].authors_text or "")
+    assert "IEEE Transactions on Communications" in (publications[0].venue_text or "")
+
+
+def test_sigs_chinese_author_ampersand_year_prefix_splits_all_authors():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>19. 沈欣炜, 郭庆来, 许银亮 & 孙宏斌 (2019), 考虑多能负荷不确定性的
+      区域综合能源系统鲁棒规划, 电力系统自动化, Vol. 43 No. 07, pp.
+      34-41.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/sxw/main.htm",
+    )
+
+    assert len(publications) == 1
+    assert publications[0].clean_title == "考虑多能负荷不确定性的区域综合能源系统鲁棒规划"
+    assert publications[0].authors_text == "沈欣炜, 郭庆来, 许银亮, 孙宏斌"
+    assert "电力系统自动化" in (publications[0].venue_text or "")
+
+
+def test_sigs_chinese_author_quote_prefix_splits_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>8) 杨舰、刘丹鹤“曼哈顿工程与科学家的社会责任”，《哈尔滨工业大学学报
+      （社会科学版）》 2005 年 4 期。 pp.1-7 。</p>
+      <p>44) 闫新芳，杨舰“洋务留学生伍光建与卡尔·皮尔逊的交往”，
+      《自然科学史研究》， 41 卷，第 2 期（ 2022 ）： 234-249.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/Yang Jian/main.htm",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "曼哈顿工程与科学家的社会责任",
+        "洋务留学生伍光建与卡尔·皮尔逊的交往",
+    ]
+    assert publications[0].authors_text == "杨舰, 刘丹鹤"
+    assert publications[1].authors_text == "闫新芳, 杨舰"
+    assert "哈尔滨工业大学学报" in (publications[0].venue_text or "")
+    assert "自然科学史研究" in (publications[1].venue_text or "")
+
+
+def test_sigs_metric_and_lowercase_continuation_fragments_are_not_publications():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>他引次数 14399 +</p>
+      <p>with Roger Zhan and Max Shen</p>
+      <p>from polytitanium-coagulated sludge as an adsorbent or photocatalyst
+      for pollutant removals</p>
+      <p>for Visible Light Driven High-Rate Photodegradation of Carbamazepine</p>
+      <p>based Nanosystem for Cancer Therapy and Antimicrobial Treatment:
+      A Review</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/lxy/main.htm",
+    )
+
+    assert publications == []
+
+
+def test_sigs_final_author_dot_prefixes_are_not_kept_in_titles():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>[ 5 ] B . Sun, G . Haunschild, C. Polanco, J. Ju, L. Lindsay,
+      G. Koblmüller, Y.K. Koh. Dislocation-induced thermal transport
+      anisotropy in single-crystal group-III nitride films. Nature Materials
+      2019, 18(2): 136-140.</p>
+      <p>[10] S.-X. Cao , A. Main, K.G. Wang. Robin-Neumann transmission
+      conditions for fluid-structure coupling: Embedded boundary implementation
+      and parameter analysis. International Journal for Numerical Methods in
+      Engineering. 2018;115(5):578-603.</p>
+      <p>[11] H. Chung, S.-X. Cao , M. Philen, P.S. Beran, K.G. Wang.
+      CFD-CSD coupled analysis of underwater propulsion using a biomimetic
+      fin-and-joint system. Computers & Fluids. 2018; 172(8): 54-66.</p>
+      <p>[13] Yong Wang* , Wenli Li, Brett Baker, Yingli Zhou, Lisheng He,
+      Antoine Danchin, Qingmei Li, Zhaoming. Carbon metabolism and adaptation
+      of hyperalkaliphilic microbes in serpentinizing spring of Manleluag,
+      the Philippines. Environ. Microbiol. Rep. 2022,14: 308-319</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/sample/main.htm",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "Dislocation-induced thermal transport anisotropy in single-crystal "
+            "group-III nitride films"
+        ),
+        (
+            "Robin-Neumann transmission conditions for fluid-structure coupling: "
+            "Embedded boundary implementation and parameter analysis"
+        ),
+        (
+            "CFD-CSD coupled analysis of underwater propulsion using a biomimetic "
+            "fin-and-joint system"
+        ),
+        (
+            "Carbon metabolism and adaptation of hyperalkaliphilic microbes in "
+            "serpentinizing spring of Manleluag, the Philippines"
+        ),
+    ]
+    assert "Y.K. Koh" in (publications[0].authors_text or "")
+    assert "K.G. Wang" in (publications[1].authors_text or "")
+    assert "K.G. Wang" in (publications[2].authors_text or "")
+    assert "Zhaoming" in (publications[3].authors_text or "")
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sigs_month_marker_between_authors_and_title_is_removed():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>Chen, X., Purohit, A., Dominguez, C.R., Carpin, S. and Zhang, P.,
+      2015, November. Drunkwalk: Collaborative and adaptive planning for
+      navigation of micro-aerial sensor swarms. In Proceedings of the 13th
+      ACM Conference on Embedded Networked Sensor Systems (pp. 295-308).</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/cxl/main.htm",
+    )
+
+    assert len(publications) == 1
+    assert publications[0].clean_title == (
+        "Drunkwalk: Collaborative and adaptive planning for navigation of "
+        "micro-aerial sensor swarms"
+    )
+    assert "P. Zhang" in (publications[0].authors_text or "")
+    assert "ACM Conference on Embedded Networked Sensor Systems" in (
+        publications[0].venue_text or ""
+    )
+    assert not _is_suspicious_rule_publication(publications[0])
+
+
+def test_sigs_marked_author_continuation_reaches_real_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>[2] Sun, Mingze& and Guo, Chen& and Jiang, Puhua& and Mao, Shiwei&,
+      Chen, Yurun& and Huang, Ruqi*, SRIF: Semantic Shape Registration
+      Empowered by Image Morphing and Flow Estimation, Siggraph Asia, 2024</p>
+      <p>[1] Chao Yu *, Akash Velu*, Eugene Vinitsky, Jiaxuan Gao, Yu Wang + ,
+      Alexandre Bayen + , Yi Wu + . The Surprising Effectiveness of PPO in
+      Cooperative Multi-agent Games. in Advances in Neural Information
+      Processing Systems (NeurIPS) , 2022.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/sample/main.htm",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "SRIF: Semantic Shape Registration Empowered by Image Morphing and "
+            "Flow Estimation"
+        ),
+        "The Surprising Effectiveness of PPO in Cooperative Multi-agent Games",
+    ]
+    assert "Yurun Chen" in (publications[0].authors_text or "")
+    assert "Ruqi Huang" in (publications[0].authors_text or "")
+    assert "Alexandre Bayen" in (publications[1].authors_text or "")
+    assert "Yi Wu" in (publications[1].authors_text or "")
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sigs_contribution_legend_is_not_publication():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>* Corresponding Author, & Student under my supervision.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/hrq/main.htm",
+    )
+
+    assert publications == []
+
+
+def test_sustech_chinese_supervision_legend_is_not_publication():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>* 本人指导的研究生</p>
+      <p>** 本人指导的本科生</p>
+      <p># 共同第一作者</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/sample.html",
+    )
+
+    assert publications == []
+
+
+def test_sustech_long_semicolon_author_chain_with_pinyin_tokens_reaches_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>6. Jiaqi Hu#; Gina Jinna Chen#*; Chenlong Xue; Pei Liang;
+      Yanqun Xiang; Chuanlun Zhang; XiaokengChi; Guoying Liu; Yanfang Ye;
+      DongyuCui; DeZhang; Xiaojunyu; Hong Dang; Wen Zhang; Junfan Chen;
+      Quan Tang; Penglai Guo; Ho-Pui Ho; Yuchao Li; Longqing Cong;
+      Perry Ping Shum*; RSPSSL A novel high-fidelity Raman spectral
+      preprocessing scheme to enhance biomedical applications and chemical
+      resolution visualization, Light: Science & Applications, 2024,
+      13(52): 1-21.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/jinnachen.html",
+    )
+
+    assert len(publications) == 1
+    assert publications[0].clean_title == (
+        "RSPSSL A novel high-fidelity Raman spectral preprocessing scheme to "
+        "enhance biomedical applications and chemical resolution visualization"
+    )
+    assert "Xiaokeng Chi" in (publications[0].authors_text or "")
+    assert "Xiaojunyu" in (publications[0].authors_text or "")
+    assert "Perry Ping Shum" in (publications[0].authors_text or "")
+    assert "Light: Science & Applications" in (publications[0].venue_text or "")
+    assert not _is_suspicious_rule_publication(publications[0])
+
+
+def test_sigs_long_ellipsis_author_chain_reaches_real_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>8) Lei, Y. # , Pakhira, S. # , Fujisawa, K., Wang, X.,
+      Iyiola, O. O., Perea López, N. s., Laura Elías, A.,
+      Pulickal Rajukumar, L., Zhou, C.; Kabius, B., … & Terrones, M.
+      Low-temperature Synthesis of Heterostructures of Transition Metal
+      Dichalcogenide Alloys (WxMo1-xS2) and Graphene with Superior Catalytic
+      Performance for Hydrogen Evolution. ACS nano 2017, 11 (5), 5103-5112.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="http://www.sigs.tsinghua.edu.cn/ly2_4216/main.htm",
+    )
+
+    assert len(publications) == 1
+    assert publications[0].clean_title == (
+        "Low-temperature Synthesis of Heterostructures of Transition Metal "
+        "Dichalcogenide Alloys (WxMo1-xS2) and Graphene with Superior Catalytic "
+        "Performance for Hydrogen Evolution"
+    )
+    assert "Terrones" in (publications[0].authors_text or "")
+    assert "ACS nano" in (publications[0].venue_text or "")
+    assert not _is_suspicious_rule_publication(publications[0])
+
+
+def test_sustech_diamond_bullet_author_period_prefix_splits_titles():
+    html = """
+    <main>
+      <h2>代表文章</h2>
+      <p>◆ Wang C, Chen X , Knierim JJ. Egocentric and allocentric
+      representations of space in the rodent brain. Curr Opin Neurobiol.
+      2019(60):12-20</p>
+      <p>◆Wang C*, Chen X *, Lee H, Deshmukh SS, Yoganarasimha D,
+      Savelli F, Knierim JJ. Egocentric Coding of External Items in the
+      Lateral Entorhinal Cortex；Science；362(6417):945-949；
+      (*Co-first author)</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/chenxiaojing.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "Egocentric and allocentric representations of space in the rodent brain",
+        "Egocentric Coding of External Items in the Lateral Entorhinal Cortex",
+    ]
+    assert "Wang C" in (publications[0].authors_text or "")
+    assert "Chen X" in (publications[1].authors_text or "")
+    assert "Science" in (publications[1].venue_text or "")
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_semicolon_author_chain_reaches_real_title():
+    html = """
+    <main>
+      <h2>代表论文</h2>
+      <p>(1) Xu, Binbin; Chen, Dafa; Ruan, Kaidong; Luo, Ming; Cai,
+      Yuanting; Qiu, Jia; Zhou, Wenhao; Cao, Bula; Lin, Zhenyang,
+      Sessler, L. Jonathan; Xia, Haiping*; Metal-centred planar
+      [15]annulenes, Nature, 2025, 641, 106.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/chendafa.html",
+    )
+
+    assert len(publications) == 1
+    assert publications[0].clean_title == "Metal-centred planar [15]annulenes"
+    assert "Dafa Chen" in (publications[0].authors_text or "")
+    assert "Haiping Xia" in (publications[0].authors_text or "")
+    assert "Nature" in (publications[0].venue_text or "")
+    assert not _is_suspicious_rule_publication(publications[0])
+
+
+def test_sustech_single_marked_author_semicolon_prefix_splits_title():
+    html = """
+    <main>
+      <h2>Selected Publications</h2>
+      <p>Xu*; Conjugated linker-boosted SAM molecule for inverted perovskite
+      solar cells; Joule, 2024.</p>
+      <p>Xu*; Overcoming Two Key Challenges in Monolithic Perovskite-Silicon
+      Tandem Solar Cell Development: Wide Bandgap and Textured Substrate-A
+      Comprehensive Review. Advanced Energy Materials, 2023.</p>
+      <p>Xu*; Bimetallic Phthalocyanine Catalyst for Ammonia Electrosynthesis
+      from Nitrate Reduction across All pH Ranges; Applied Catalysis B:
+      Environment and Energy, 2025.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/example.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "Conjugated linker-boosted SAM molecule for inverted perovskite solar cells",
+        (
+            "Overcoming Two Key Challenges in Monolithic Perovskite-Silicon Tandem "
+            "Solar Cell Development: Wide Bandgap and Textured Substrate-A "
+            "Comprehensive Review"
+        ),
+        (
+            "Bimetallic Phthalocyanine Catalyst for Ammonia Electrosynthesis "
+            "from Nitrate Reduction across All pH Ranges"
+        ),
+    ]
+    assert [publication.authors_text for publication in publications] == [
+        "Xu",
+        "Xu",
+        "Xu",
+    ]
+    assert "Joule" in (publications[0].venue_text or "")
+    assert "Advanced Energy Materials" in (publications[1].venue_text or "")
+    assert "Applied Catalysis B" in (publications[2].venue_text or "")
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_wos_author_period_continuation_reaches_real_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>3) An J, Zhao X, Wang Y, Noriega J, Gewirtz AT*, Zou J*.
+      Western-style diet impedes colonization and clearance of Citrobacter
+      rodentium. PLoS Pathog. 2021 Apr</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/anjunqing.html",
+    )
+
+    assert len(publications) == 1
+    assert publications[0].clean_title == (
+        "Western-style diet impedes colonization and clearance of Citrobacter "
+        "rodentium"
+    )
+    assert "Gewirtz AT" in (publications[0].authors_text or "")
+    assert "Zou J" in (publications[0].authors_text or "")
+    assert "PLoS Pathog" in (publications[0].venue_text or "")
+    assert not _is_suspicious_rule_publication(publications[0])
+
+
+def test_sustech_author_year_and_comma_pair_prefixes_do_not_become_titles():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>35. Li Z*, Chen B, Wei CJ. 2017, Is the Paleoproterozoic
+      Jiao-Liao-Ji Belt (North China Craton) a rift? International Journal
+      of Earth Sciences, 106: 355-375.</p>
+      <p>67. Chen B.*, He J.B., Chen .CJ. and Muhetaer Z., 2013.
+      Nd-Sr-Os isotopic data of the Baishiquan mafic-ultramafic complex
+      from East Tianshan, and implications for petrogenesis. Acta
+      Petrologica Sinica, 29( 1) : 294-302.</p>
+      <p>114. Chen B.*, Jahn, B-m., Zhai, M.G., 2003, Sr-Nd isotopic
+      characteristics of the Mesozoic magmatism in the Taihang-Yanshan
+      orogen, north China craton, and implications for Archean lithosphere
+      thinning. J. Geol. Soc., London, 160: 963-970.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/chenbin.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "Is the Paleoproterozoic Jiao-Liao-Ji Belt (North China Craton) a rift?",
+        (
+            "Nd-Sr-Os isotopic data of the Baishiquan mafic-ultramafic complex "
+            "from East Tianshan, and implications for petrogenesis"
+        ),
+        (
+            "Sr-Nd isotopic characteristics of the Mesozoic magmatism in the "
+            "Taihang-Yanshan orogen, north China craton, and implications for "
+            "Archean lithosphere thinning"
+        ),
+    ]
+    assert all(
+        not publication.clean_title.startswith(("2017", "CJ", "Jahn"))
+        for publication in publications
+    )
+    assert "Wei CJ" in (publications[0].authors_text or "")
+    assert "Muhetaer Z" in (publications[1].authors_text or "")
+    assert "M.G. Zhai" in (publications[2].authors_text or "")
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_dense_author_year_prefixes_reach_real_titles():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>63. Chen B*, Niu XL, Wang ZQ, Gao L., Wang C, 2013，
+      Geochronology, petrology, and geochemistry of the Yaojiazhuang
+      ultramafic-syenitic complex from the North China Craton. Science
+      China: Earth Sciences, 56(8): 1294-1307.</p>
+      <p>106. Chen B.*, Liu S.W., Geng Y.S., et al., 2006, Zircon U-Pb
+      ages, Hf isotopes and significance of the late Archean -
+      Paleoproterozoic granitoids from the Wutai-Luliang terrain, North
+      China. Acta Petrologica Sinica, 22: 296-304.</p>
+      <p>112. Chen, B.*, Jahn, B-m., 2004, Genesis of post-collisional
+      granitoids and basement nature of the Junggar Terrane, NW China:
+      Nd-Sr isotope and trace element evidence. J. Asian Earth Sciences,
+      23: 691-703.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/chenbin.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "Geochronology, petrology, and geochemistry of the Yaojiazhuang "
+            "ultramafic-syenitic complex from the North China Craton"
+        ),
+        (
+            "Zircon U-Pb ages, Hf isotopes and significance of the late Archean - "
+            "Paleoproterozoic granitoids from the Wutai-Luliang terrain, North China"
+        ),
+        (
+            "Genesis of post-collisional granitoids and basement nature of the "
+            "Junggar Terrane, NW China: Nd-Sr isotope and trace element evidence"
+        ),
+    ]
+    assert "Chen B" in (publications[0].authors_text or "")
+    assert "Wang C" in (publications[0].authors_text or "")
+    assert "Geng Y.S" in (publications[1].authors_text or "")
+    assert "B-m Jahn" in (publications[2].authors_text or "")
+    assert "Science China: Earth Sciences" in (publications[0].venue_text or "")
+    assert "Acta Petrologica Sinica" in (publications[1].venue_text or "")
+    assert "J. Asian Earth Sciences" in (publications[2].venue_text or "")
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_recruitment_tail_is_not_publication():
+    html = """
+    <main>
+      <h2>代表论文</h2>
+      <p>Chengchao Gu, Shuxiang Guo *, Chunying Li. A Novel Versatile
+      Mechanical Integrated Leg-Based Underwater Grasping Function for a
+      Bionic Amphibious Spherical Robot. Robotics and Autonomous Systems,
+      2026.</p>
+      <p>年薪36万起，海外博士后符合相关人才政策条件可以深圳市申请孔雀计划160-200万住房补贴</p>
+      <p>享受五险一金、餐补、过节费、免费体检等福利待遇</p>
+      <p>可申请硕士研究生导师，可独立申请课题。 应聘申请材料</p>
+      <p>详细的个人简历（附2名推荐人姓名及联系方式），含学习、工作和科研的经历</p>
+      <p>其他可以证明个人水平和能力的材料。 应聘方式</p>
+      <p>仿生水下多机器人集群作业控制招聘要求</p>
+      <p>具有相关专业的博士学位</p>
+      <p>具有高度责任心</p>
+      <p>良好的专业英语写作和报告能力博士后待遇</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/shuxiangguo.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "A Novel Versatile Mechanical Integrated Leg-Based Underwater Grasping "
+            "Function for a Bionic Amphibious Spherical Robot"
+        )
+    ]
+    assert "Shuxiang Guo" in (publications[0].authors_text or "")
+    assert "Robotics and Autonomous Systems" in (publications[0].venue_text or "")
+
+
+def test_sustech_semicolon_surname_given_chain_reaches_real_title():
+    html = """
+    <main>
+      <h2>代表论文</h2>
+      <p>Hanle Liu; Sarah; Brusseau, Mark L.; The influence of NAPL
+      distribution on the transport of PFOS in Co-contaminated media.
+      Journal of Hazardous Materials, 2024, 462, 132794.</p>
+      <p>Kewei Chen; Xingyuan Chen; James C. Stegen; Jorge A. Villa;
+      Bohrer, Gil; Song, Xuehang; Chang, Kuang-Yu; Kaufman, Matthew;
+      Liang, Xiuyu; Guo, Zhiling; Roden, Eric E.*; Zheng, Chunmiao*;
+      Vertical hydrologic exchange flows control methane emissions from
+      riverbed sediments. Environmental Science & Technology, 2023.</p>
+      <p>Rui Ma; Kewei Chen; Charles B. Andrews; Steven P. Loheide;
+      Audrey H. Sawyer; Xue Jiang; … & Guo, Zhilin; Zheng, Chunmiao*;
+      Methods for Quantifying Interactions Between Groundwater and
+      Surface Water. Annual Review of Environment and Resources, 2024.</p>
+      <p>Kuang, XingXing; Liu, Junguo*; Scanlon, Briget R.; Jiao,
+      Jiu Jimmy; ... & Guo, Zhilin; …& Zheng, Chunmiao*; The changing
+      nature of groundwater in the global water cycle. Science, 2024,
+      383(6686), eadf0630.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/guozhilin.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "The influence of NAPL distribution on the transport of PFOS in "
+            "Co-contaminated media"
+        ),
+        (
+            "Vertical hydrologic exchange flows control methane emissions from "
+            "riverbed sediments"
+        ),
+        (
+            "Methods for Quantifying Interactions Between Groundwater and "
+            "Surface Water"
+        ),
+        "The changing nature of groundwater in the global water cycle",
+    ]
+    assert "Hanle Liu" in (publications[0].authors_text or "")
+    assert "Mark L. Brusseau" in (publications[0].authors_text or "")
+    assert "Bohrer" in (publications[1].authors_text or "")
+    assert "Gil" in (publications[1].authors_text or "")
+    assert "Roden" in (publications[1].authors_text or "")
+    assert "Eric E" in (publications[1].authors_text or "")
+    assert "Zhilin Guo" in (publications[2].authors_text or "")
+    assert "Zhilin Guo" in (publications[3].authors_text or "")
+    assert "Chunmiao Zheng" in (publications[3].authors_text or "")
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_chinese_contribution_note_prefix_does_not_become_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>2. G. G. Liu#, Z. Gao#(#同等贡献作者), Q. Wang, X. Xi, Y. H. Hu,
+      M. R. Wang, C. Q. Liu, X. Lin, L. J. Deng, S. A. Yang, P. H. Zhou*,
+      Y. Yang*, Y. D. Chong*, B. Zhang*, Topological Chern vectors in
+      three-dimensional photonic crystals, Nature 609, 925-930 (2022).</p>
+      <p>15. F. Gao#, Z. Gao#(#同等贡献作者), X. Shi, Z. Yang, X. Lin, H. Xu,
+      J. D. Joannopoulos, M. Soljacic, H. Chen, L. Lu, Y. Chong, and B. Zhang,
+      Probing topological protection using a designer surface plasmon structure,
+      Nature Communications 7, 11619 (2016).</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/gaozhen.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "Topological Chern vectors in three-dimensional photonic crystals",
+        "Probing topological protection using a designer surface plasmon structure",
+    ]
+    assert all("同等贡献作者" not in publication.clean_title for publication in publications)
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_pubmed_author_particle_initial_fragment_reaches_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>25. Edd JF, Mishra A, Dubash TD, Herrera S, Mohammad R, Williams EK,
+      Hong X, Mutlu BR, Walsh JR, Machado de Carvalho F. Aldikacti B, Nieman LT,
+      Stott SL, Kapur R, Maheswaran S, Haber DA, Toner M. Microfluidic
+      concentration and separation of circulating tumor cell clusters from large
+      blood volumes. Lab Chip. 2020 Feb 7;20(3):558-567.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/hongxin.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "Microfluidic concentration and separation of circulating tumor cell "
+            "clusters from large blood volumes"
+        )
+    ]
+    assert "Machado de Carvalho F" in (publications[0].authors_text or "")
+    assert "Toner M" in (publications[0].authors_text or "")
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_english_contribution_legend_is_not_publication():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>* first/co-first authors; # corresponding/co-corresponding authors</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/hongxin.html",
+    )
+
+    assert publications == []
+
+
+def test_sustech_quoted_phrase_inside_pubmed_title_keeps_full_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>10. Jiang Z*, He J*, Zhang B*, Wang L, Long C, Zhao B, Yang Y, Du L,
+      Luo W#, Hu J#, Hong X#. A Potential "Anti-Warburg Effect" in Circulating
+      Tumor Cell-mediated Metastatic Progression? Aging Dis. 2024 Jan 11.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/hongxin.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            'A Potential "Anti-Warburg Effect" in Circulating Tumor '
+            "Cell-mediated Metastatic Progression?"
+        )
+    ]
+    assert publications[0].venue_text == "Aging Dis. 2024 Jan 11"
+    assert "Hong X" in (publications[0].authors_text or "")
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_ellipsis_joined_author_fragment_reaches_real_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>7. Zhu, Q., Zhao, X., Zhang, Y….Hu, Y., Chen, A., Xu, X., Li, G.,
+      Hou, Y., Liu, L., Liu, S., Fang, L., Chen, W.*, Wu, L.*. Single cell
+      multi-omics reveal intra-cell-line heterogeneity across human cancer
+      cell lines. Nature Communications,14(1), 8170 (2023).
+      https://doi.org/10.1038/s41467-023-43991-9</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/huyuhui.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "Single cell multi-omics reveal intra-cell-line heterogeneity across "
+            "human cancer cell lines"
+        )
+    ]
+    assert "Y….Hu" in (publications[0].authors_text or "")
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_lowercase_particle_author_fragment_reaches_real_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>35. Chen W, Ullmann R, Langnick C, Menzel C, Wotschofsky Z, Hu H,
+      Döring A, Hu Y, Kang H, Tzschach A, Hoeltzenbein M, Neitzel H, Markus S,
+      Wiedersberg E, Kistner G, van Ravenswaaij-Arts CM, Kleefstra T,
+      Kalscheuer VM, Ropers HH. Breakpoint analysis of balanced chromosome
+      rearrangements by next-generation paired-end sequencing. Eur J Hum Genet.
+      (2010) May;18(5):539-43.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/huyuhui.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "Breakpoint analysis of balanced chromosome rearrangements by "
+            "next-generation paired-end sequencing"
+        )
+    ]
+    assert "van Ravenswaaij-Arts CM" in (publications[0].authors_text or "")
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_split_latin_author_fragment_reaches_real_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>20. Tao Chen, Bin Zhang, Thomas Ziegenhals, Archana B. Prusty,
+      Sebastian Fro hler, Clemens Grimm, Yuhui Hu, Bernhard Schaefke,
+      Liang Fang, Min Zhang, Nadine Kraemer, Angela M. Kaindl*, Utz Fischer*,
+      and Wei Chen*. A missense mutation in SNRPElinked to non-syndromal
+      microcephaly interferes with U snRNP assembly and pre-mRNA splicing.
+      PLOS Genetics (2019) 15(10): e1008460.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/huyuhui.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "A missense mutation in SNRPElinked to non-syndromal microcephaly "
+            "interferes with U snRNP assembly and pre-mRNA splicing"
+        )
+    ]
+    assert "Sebastian Fro hler" in (publications[0].authors_text or "")
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_oxford_comma_title_after_author_prefix_is_preserved():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>32. Mehmet Somel, Song Guo, Ning Fu, Zheng Yan, Hai Yang Hu, Ying Xu,
+      Yuan Yuan, Zhibin Ning, Yuhui Hu, Corinna Menzel, Hao Hu, Michael Lachmann,
+      Rong Zeng, Wei Chen, and Philipp Khaitovich. MicroRNA, mRNA, and protein
+      expression link development and aging in human and macaque brain.
+      Genome Research (2010); 20:1207-1218.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/huyuhui.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "MicroRNA, mRNA, and protein expression link development and aging "
+            "in human and macaque brain"
+        )
+    ]
+    assert publications[0].venue_text == "Genome Research (2010); 20:1207-1218"
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_synfacts_highlight_fragments_are_not_publications():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>9357. Highlighted by “Synfacts 2016, 1020”. Highlighted by “Chin. J.
+      Org. Chem. 2016, 36, 2247”.</p>
+      <p>36. Taotao Li, Junhui Li, Wei Lin, and Xinyuan Liu*. Dual-Catalyzed
+      Enantioselective Remote C-H Functionalization Triggered by Radical
+      Trifluoromethylation of Alkenes: Highly Selective Formation of C-CF3 and
+      C-C Bonds. J. Fluorine Chem. 2017, 203, 210. Highlighted by Synfacts
+      2017, 13(10), 1042.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/liuxinyuan.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "Dual-Catalyzed Enantioselective Remote C-H Functionalization "
+            "Triggered by Radical Trifluoromethylation of Alkenes: Highly "
+            "Selective Formation of C-CF3 and C-C Bonds"
+        )
+    ]
+    assert all("Synfacts" not in publication.clean_title for publication in publications)
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_surname_given_ampersand_year_prefix_reaches_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>Bodomo, Adams & Yuxiu, Hu (2013). Ubiquitous Conversations.
+      Ubiquitous Learning: An International Journal. 5(1), 1-14</p>
+      <p>Hu, Yuxiu & Adams, Bodomo. (2007). Harbinglish: L1 Influence on the
+      Learning of English Among High School Students in China’s Harbin. Paper
+      presented at The Second Pearl River Delta English Studies Graduate
+      Student Conference at Shenzhen University. June 15-18, 2007.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/huyuxiu.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "Ubiquitous Conversations",
+        (
+            "Harbinglish: L1 Influence on the Learning of English Among High "
+            "School Students in China’s Harbin"
+        ),
+    ]
+    assert "Adams Bodomo" in (publications[0].authors_text or "")
+    assert "Yuxiu Hu" in (publications[0].authors_text or "")
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_long_semicolon_author_chain_reaches_title_after_final_semicolon():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>1. Qin, Siying#; Yin, Hang#; Yang, Celi; Dou, Yunfeng; Liu, Zhongmin;
+      Zhang, Peng; Yu, He; Huang, Yulong; Feng, Jing; Hao, Junfeng; Hao, Jia;
+      Deng, Lizong; Yan, Xiyun; Dong, Xiaoli; Zhao, Zhongxian; Jiang, Taijiao;
+      Wang, Hong-Wei; Luo, Shu-Jin; Xie, Can*; A magnetic protein biocompass,
+      Nature Materials, 2016, 15(2): 217. (研究性论文)</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/liuzhongmin.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "A magnetic protein biocompass"
+    ]
+    assert "Siying Qin" in (publications[0].authors_text or "")
+    assert "Can Xie" in (publications[0].authors_text or "")
+    assert publications[0].venue_text is not None
+    assert "Nature Materials" in publications[0].venue_text
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_title_internal_commas_are_preserved_before_venue():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>17. Chen T.; Hao, R.; Peng H.; Dai L., High-Performance, Stretchable,
+      Wire-Shaped Supercapacitors, Angew. Chem. Int. Ed., 2015, 54, 618-622.</p>
+      <p>18. Hao, R.; Zhang, B, Nanopipette-based, Electroplated Nanoelectrodes.
+      Anal. Chem., 2016, 88, 414-430.</p>
+      <p>27. Fan, Y.ǂ; Hao, R. ǂ; Zhang, B. Counting Single Redox Molecules
+      in a Nanoscale Electrochemical Cell. Anal.Chem. 2018, 90, 13837-13841.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/haorui.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "High-Performance, Stretchable, Wire-Shaped Supercapacitors",
+        "Nanopipette-based, Electroplated Nanoelectrodes",
+        "Counting Single Redox Molecules in a Nanoscale Electrochemical Cell",
+    ]
+    assert "R. Hao" in (publications[0].authors_text or "")
+    assert "R. Hao" in (publications[1].authors_text or "")
+    assert "R. Hao" in (publications[2].authors_text or "")
+    assert "B. Zhang" in (publications[2].authors_text or "")
+    assert "Angew. Chem. Int. Ed." in (publications[0].venue_text or "")
+    assert "Anal. Chem." in (publications[1].venue_text or "")
+    assert "Anal.Chem. 2018" in (publications[2].venue_text or "")
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_middle_dot_bullet_author_prefix_splits_titles():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>· B. Zhang#*, D. Ge#, Y. Liu*, K. Cai, M. Ba, X. Li, H. Chen, X. Ji,
+      X. Huang, G. Li, D. Zhou, High-resolution DNA size enrichment using a
+      magnetic nano-platform and application in noninvasive prenatal testing,
+      Analyst 2020, 145, 5733-5741.</p>
+      <p>· G. Li, W. Zheng, Y. Liu, D. Zhou, Novel encoding methods for
+      DNA-templated chemical libraries, Curr. Opin. Chem. Biol. 2015, 26,
+      25-33.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/liuying-2.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "High-resolution DNA size enrichment using a magnetic nano-platform "
+            "and application in noninvasive prenatal testing"
+        ),
+        "Novel encoding methods for DNA-templated chemical libraries",
+    ]
+    assert "B. Zhang" in (publications[0].authors_text or "")
+    assert "G. Li" in (publications[0].authors_text or "")
+    assert "G. Li" in (publications[1].authors_text or "")
+    assert "Analyst 2020" in (publications[0].venue_text or "")
+    assert "Curr. Opin. Chem. Biol." in (publications[1].venue_text or "")
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_parenthetical_author_role_prefix_splits_before_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>(Corresponding 1st author), F. Zhang#, X. Guo, W. Zeng, H. Zhang,
+      L. Zeng, J. Qu, B. Wu, X. Wan, C. R. Cantor, D. Ge*, High-resolution
+      DNA size enrichment using a magnetic nano-platform and application in
+      noninvasive prenatal testing, Analyst 2020, 145, 5733-5741.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/liuying-2.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "High-resolution DNA size enrichment using a magnetic nano-platform "
+            "and application in noninvasive prenatal testing"
+        )
+    ]
+    assert "F. Zhang" in (publications[0].authors_text or "")
+    assert "D. Ge" in (publications[0].authors_text or "")
+    assert "Analyst 2020" in (publications[0].venue_text or "")
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_lowercase_author_note_marker_prefix_splits_before_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>a Quan Gong, Jialin Wen* and Xumu Zhang*, Nickel-Catalyzed
+      Desymmetric Hydrogenation of Cyclohexadienones: An Eﬃcient Approach to
+      All-Carbon Quaternary Stereocenters, Angew. Chem. Int. Ed. 2019.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/sample.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "Nickel-Catalyzed Desymmetric Hydrogenation of Cyclohexadienones: "
+            "An Eﬃcient Approach to All-Carbon Quaternary Stereocenters"
+        )
+    ]
+    assert "Quan Gong" in (publications[0].authors_text or "")
+    assert "Xumu Zhang" in (publications[0].authors_text or "")
+    assert "Angew. Chem. Int. Ed. 2019" in (publications[0].venue_text or "")
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_volume_page_doi_fragments_are_not_publications():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>38, 1821. [doi]</p>
+      <p>144, 10162. [doi]</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/sample.html",
+    )
+
+    assert publications == []
+
+
+def test_sustech_fullwidth_dot_chinese_author_prefix_splits_title_and_venue():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>秦建强*．微纳米拓扑结构材料对移植细胞行为功能的影响．中国临床解剖学杂志，2013。</p>
+      <p>杨俊罗勇邱小忠武雷余磊陆云涛朴英杰秦建强*．FK506促进异体神经匀浆激活的巨噬细胞凋亡的实验研究．第一军医大学学报，2005,25(1)66-70</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/qinjianqiang.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "微纳米拓扑结构材料对移植细胞行为功能的影响",
+        "FK506促进异体神经匀浆激活的巨噬细胞凋亡的实验研究",
+    ]
+    assert publications[0].authors_text == "秦建强"
+    assert publications[1].authors_text == "杨俊罗勇邱小忠武雷余磊陆云涛朴英杰秦建强"
+    assert "中国临床解剖学杂志" in (publications[0].venue_text or "")
+    assert "第一军医大学学报" in (publications[1].venue_text or "")
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_parenthesized_author_markers_split_before_real_titles():
+    cases = [
+        (
+            "Yang Su (#), Yifan Luo(#), Peitao Zhang, Hong Lin, Weijie Pu, "
+            "Hongyun Zhang, Huifang Wang, Yi Hao, Yihang Xiao, Xiaozhe Zhang, "
+            "Xiayun Wei, Siyue Nie, Keren Zhang, Qiuyu Fu, Hao Chen, Niu Huang, "
+            "Yan Ren, Mingxuan Wu, Billy Kwok Chong Chow, Xing Chen, Wenfei Jin, "
+            "Fengchao Wang*, Li Zhao*, Feng Rao*, Glucose-induced CRL4COP1-p53 "
+            "axis amplifies glycometabolism to drive tumorigenesis, Molecular "
+            "Cell, 2023 Jun 6;83(13):2316-2331.",
+            "Glucose-induced CRL4COP1-p53 axis amplifies glycometabolism to drive tumorigenesis",
+            "Molecular Cell",
+        ),
+        (
+            "Su Y , Yang Y, Huang Y(*), Loss of ppr3, ppr4, ppr6 or ppr10 "
+            "perturbs iron homeostasis and leads to apoptotic cell death in "
+            "Schizosaccharomyces pombe, FEBS J, 2017, 284(2): 324-337.",
+            (
+                "Loss of ppr3, ppr4, ppr6 or ppr10 perturbs iron homeostasis "
+                "and leads to apoptotic cell death in Schizosaccharomyces pombe"
+            ),
+            "FEBS J",
+        ),
+        (
+            "Rao F(*), Lin H, Su Y , Cullin-RING Ligase Regulation by the COP9 "
+            "Signalosome: Structural Mechanisms and NewPhysiologic Players, "
+            "Adv Exp Med Biol, 2020;1217:47-60.",
+            (
+                "Cullin-RING Ligase Regulation by the COP9 Signalosome: "
+                "Structural Mechanisms and NewPhysiologic Players"
+            ),
+            "Adv Exp Med Biol",
+        ),
+        (
+            "Hong Lin(#), Yuan Yan(#), Yifan Luo(#), Wing Yan So(#), Xiayun Wei, "
+            "Xiaozhe Zhang, Xiaoli Yang, Jun Zhang, Yang Su , Xiuyan Yang, "
+            "Bobo Zhang, Kangjun Zhang, Nan Jiang, Billy Kwok Chong Chow, "
+            "Weiping Han, Fengchao Wang & Feng Rao*, IP6 -assisted CSN-COP1 "
+            "competition regulates a CRL4-ETV5 proteolytic checkpoint to "
+            "safeguard glucose-induced insulin secretion against hyperinsulinemia, "
+            "Nature Communications, 2021 Apr 28;12(1):2461.",
+            (
+                "IP6 -assisted CSN-COP1 competition regulates a CRL4-ETV5 "
+                "proteolytic checkpoint to safeguard glucose-induced insulin "
+                "secretion against hyperinsulinemia"
+            ),
+            "Nature Communications",
+        ),
+    ]
+
+    for raw, expected_title, expected_venue in cases:
+        title, authors, venue = _split_title_authors_venue(raw)
+
+        assert title == expected_title
+        assert authors is not None
+        assert "Yang Su" in authors or "Su Y" in authors or "Rao F" in authors
+        assert expected_venue in (venue or "")
+
+
+def test_sustech_semicolon_period_author_chain_keeps_title_after_final_author():
+    cases = [
+        (
+            "Ruan, K.; Lu, Z.; Rao, R.; Liu, j. -j.; Chen, D.; Xia, H. "
+            "Craig-Hückel Hybrid Aromatic Metalla-dehydro[11]annulenes "
+            "Constructed by a Formal [10+1] Cycloaddition Reaction. "
+            "Angew. Chem. Int. Ed. 2024, 63, e202316885.",
+            (
+                "Craig-Hückel Hybrid Aromatic Metalla-dehydro[11]annulenes "
+                "Constructed by a Formal [10+1] Cycloaddition Reaction"
+            ),
+            "Angew. Chem. Int. Ed. 2024",
+        ),
+        (
+            "Li, Q.; Hua, Y.; Tang, C.; Chen, D.; Luo, M.; Xia, H. "
+            "Isolation, Reactivity, and Tunable Properties of a Strained "
+            "Antiaromatic Osmacycle. J. Am. Chem. Soc. 2023, 145, 7580-7591.",
+            (
+                "Isolation, Reactivity, and Tunable Properties of a Strained "
+                "Antiaromatic Osmacycle"
+            ),
+            "J. Am. Chem. Soc. 2023",
+        ),
+    ]
+
+    for raw, expected_title, expected_venue in cases:
+        title, authors, venue = _split_title_authors_venue(raw)
+
+        assert title == expected_title
+        assert authors is not None
+        assert "H. Xia" in authors
+        assert expected_venue in (venue or "")
+
+
+def test_sustech_xiahaiping_semicolon_period_references_extract_clean_titles():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>4. Ruan, K.; Lu, Z.; Rao, R.; Liu, j. -j.; Chen, D.; Xia, H.
+      Craig-Hückel Hybrid Aromatic Metalla-dehydro[11]annulenes Constructed
+      by a Formal [10+1] Cycloaddition Reaction. Angew. Chem. Int. Ed. 2024,
+      63, e202316885.</p>
+      <p>8. Li, Q.; Hua, Y.; Tang, C.; Chen, D.; Luo, M.; Xia, H. Isolation,
+      Reactivity, and Tunable Properties of a Strained Antiaromatic Osmacycle.
+      J. Am. Chem. Soc. 2023, 145, 7580-7591.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/xiahaiping.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "Craig-Hückel Hybrid Aromatic Metalla-dehydro[11]annulenes "
+            "Constructed by a Formal [10+1] Cycloaddition Reaction"
+        ),
+        (
+            "Isolation, Reactivity, and Tunable Properties of a Strained "
+            "Antiaromatic Osmacycle"
+        ),
+    ]
+    assert all("H. Xia" in (publication.authors_text or "") for publication in publications)
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_no_space_author_suffix_after_title_splits_remainder():
+    raw = (
+        "Transannular [6+4] and Ambimodal Cycloaddition in the Biosynthesis "
+        "of Heronamide A .Yu, P.; Patel, A.; Houk, K. N.*J. Am. Chem. Soc. "
+        "2015, 137, 13518."
+    )
+
+    title, authors, venue = _split_title_authors_venue(raw)
+
+    assert title == (
+        "Transannular [6+4] and Ambimodal Cycloaddition in the Biosynthesis "
+        "of Heronamide A"
+    )
+    assert authors is not None
+    assert "Yu, P." in authors
+    assert "Patel, A." in authors
+    assert "Houk, K. N." in authors
+    assert "Am. Chem. Soc. 2015" in (venue or "")
+
+
+def test_sustech_marked_tail_author_before_colon_title_is_stripped():
+    raw = (
+        "[1]. Caichao Ye , Tao Feng, Weishu Liu*, Wenqing Zhang*. "
+        "Functional Unit: A New Perspective on Materials Science Research "
+        "Paradigms. Acc. Mater. Res. , 2025 , 6(8), 914-920."
+    )
+
+    title, authors, venue = _split_title_authors_venue(raw)
+
+    assert title == (
+        "Functional Unit: A New Perspective on Materials Science Research "
+        "Paradigms"
+    )
+    assert authors == "Caichao Ye, Tao Feng, Weishu Liu, Wenqing Zhang"
+    assert "Acc. Mater. Res" in (venue or "")
+
+
+def test_sustech_plus_marked_semicolon_author_chain_reaches_title():
+    raw = (
+        "14. Zhang, J.;+ Zhao, X.;+ Yang, J.-D.; Cheng, J.-P. "
+        "Diazaphospholene-catalyzed hydrodefluorination of polyfluoroarenes "
+        "with phenylsilane via concerted nucleophilic aromatic substitution. "
+        "J. Org. Chem. 2022, 87, 1, 294-300. "
+        "(+ Both authors contributed equally)"
+    )
+
+    title, authors, venue = _split_title_authors_venue(raw)
+
+    assert title == (
+        "Diazaphospholene-catalyzed hydrodefluorination of polyfluoroarenes "
+        "with phenylsilane via concerted nucleophilic aromatic substitution"
+    )
+    assert authors is not None
+    assert "J. Zhang" in authors
+    assert "X. Zhao" in authors
+    assert "J.-D. Yang" in authors
+    assert "J.-P. Cheng" in authors
+    assert "J. Org. Chem. 2022" in (venue or "")
+
+
+def test_sustech_lowercase_particle_surname_semicolon_chain_reaches_title():
+    raw = (
+        "5. Zhang, J.; Kwak, M. K.; van Wesel, L.; Choi, T.-L. "
+        "Degradation of postconsumer thermoset rubbers via photo-oxidation. "
+        "J. Am. Chem. Soc. 2025, 147 (47), 43973-43980."
+    )
+
+    title, authors, venue = _split_title_authors_venue(raw)
+
+    assert title == (
+        "Degradation of postconsumer thermoset rubbers via photo-oxidation"
+    )
+    assert authors is not None
+    assert "J. Zhang" in authors
+    assert "M. K. Kwak" in authors
+    assert "L. van Wesel" in authors
+    assert "T.-L. Choi" in authors
+    assert "J. Am. Chem. Soc. 2025" in (venue or "")
+
+
+def test_sustech_full_name_author_chain_before_comma_title_reaches_title():
+    raw = (
+        "10. Omar I. Awad, Bo Zhou*, Karim Harrath, K. Kadirgama, "
+        "Characteristics of NH3/H2 blend as carbon-free fuels: A review, "
+        "International Journal of Hydrogen Energy, Volume 48, 38077-38100, 2023"
+    )
+
+    title, authors, venue = _split_title_authors_venue(raw)
+
+    assert title == "Characteristics of NH3/H2 blend as carbon-free fuels: A review"
+    assert authors is not None
+    assert "Omar I. Awad" in authors
+    assert "Bo Zhou" in authors
+    assert "Karim Harrath" in authors
+    assert "K. Kadirgama" in authors
+    assert "International Journal of Hydrogen Energy" in (venue or "")
+
+
+def test_sustech_initial_surname_author_before_year_venue_title_reaches_title():
+    raw = (
+        "5. F. Zhang, L. Zhang, X. Wang, K. Liu, B. Huang, Y. Wang, "
+        "J. Li Observing reduced field fluctuation in interfacial engineered "
+        "organic-inorganic dielectric nanocomposite for enhanced breakdown "
+        "strength 2022 Appl. Phys. Lett. 121 243905 (IF:3.971)"
+    )
+
+    title, authors, venue = _split_title_authors_venue(raw)
+
+    assert title == (
+        "Observing reduced field fluctuation in interfacial engineered "
+        "organic-inorganic dielectric nanocomposite for enhanced breakdown strength"
+    )
+    assert authors is not None
+    assert "F. Zhang" in authors
+    assert "Y. Wang" in authors
+    assert "J. Li" in authors
+    assert "2022 Appl. Phys. Lett. 121 243905" in (venue or "")
+
+
+def test_sustech_multi_initial_surname_author_before_title_reaches_title():
+    raw = (
+        "7. F. Zhang, H. Fan, X. Deng, D. Edwards, J. I. Kilpatrick, "
+        "A. Kumar, D. Chen, X. Gao, Z. Fan, B. J. Rodriguez Boosting "
+        "polarization switching-induced current injection by mechanical force "
+        "in ferroelectric thin films 2021 ACS Appl. Mater. Interfaces, "
+        "13(22), 26180-261869 (IF:10.383)"
+    )
+
+    title, authors, venue = _split_title_authors_venue(raw)
+
+    assert title == (
+        "Boosting polarization switching-induced current injection by mechanical "
+        "force in ferroelectric thin films"
+    )
+    assert authors is not None
+    assert "B. J. Rodriguez" in authors
+    assert "2021 ACS Appl. Mater. Interfaces, 13(22)" in (venue or "")
+
+
+def test_sustech_connective_initial_authors_before_comma_title_reaches_title():
+    raw = (
+        "10. F. Zhang, Q. Miao, G. Tian, Z. Lu, L. Zhao, H. Fan, "
+        "X. Song, Z. Li, M. Zeng, X. Gao & J. Liu Unique nano-domain "
+        "structures in self-assembled BiFeO3 and Pb(Zr,Ti)O3 ferroelectric "
+        "nanocapacitors 2016 Nanotechnol. 27 015703 (IF:3.551)"
+    )
+
+    title, authors, venue = _split_title_authors_venue(raw)
+
+    assert title == (
+        "Unique nano-domain structures in self-assembled BiFeO3 and Pb(Zr, Ti)O3 "
+        "ferroelectric nanocapacitors"
+    )
+    assert authors is not None
+    assert "X. Gao" in authors
+    assert "J. Liu" in authors
+    assert "2016 Nanotechnol. 27 015703" in (venue or "")
+
+
+def test_sustech_compact_initial_connective_author_segment_splits_pair():
+    assert _split_compact_initial_connective_author_segment("X. Gao & J. Liu") == [
+        "X. Gao",
+        "J. Liu",
+    ]
+
+
+def test_sustech_full_name_and_author_period_prefix_reaches_title():
+    raw = (
+        "[7] Yu Zhang and Dit-Yan Yeung. A Regularization Approach to "
+        "Learning Task Relationships in Multitask Learning. ACM Transactions "
+        "on Knowledge Discovery from Data (TKDD), 8(3): article 12, 2014."
+    )
+
+    title, authors, venue = _split_title_authors_venue(raw)
+
+    assert title == "A Regularization Approach to Learning Task Relationships in Multitask Learning"
+    assert authors == "Yu Zhang, Dit-Yan Yeung"
+    assert "ACM Transactions on Knowledge Discovery from Data" in (venue or "")
+
+
+def test_sustech_missing_space_before_and_author_period_prefix_reaches_title():
+    raw = (
+        "[44] Yu Zhangand Dit-Yan Yeung. Multi-Task Boosting by Exploiting "
+        "Task Relationships.In:Proceedings of the European Conference on "
+        "Machine Learning and Principles andPractice of Knowledge Discovery "
+        "in Databases (ECML-PKDD), pp. 697–710, Bristol,UK, 24–28 September 2012."
+    )
+
+    title, authors, venue = _split_title_authors_venue(raw)
+
+    assert title == "Multi-Task Boosting by Exploiting Task Relationships"
+    assert authors == "Yu Zhang, Dit-Yan Yeung"
+    assert "ECML-PKDD" in (venue or "")
+
+
+def test_sustech_connective_full_name_author_before_title_reaches_title():
+    raw = (
+        "[53] Bin Cao, Sinno Jialin Pan, Yu Zhang, Dit-Yan Yeung, "
+        "and Qiang Yang. AdaptiveTransfer Learning. In:Proceedings of the "
+        "Twenty-Fourth AAAI Conference on ArtificialIntelligence (AAAI), "
+        "pp. 407–412, Atlanta, Georgia, USA, 11–15 July 2010."
+    )
+
+    title, authors, venue = _split_title_authors_venue(raw)
+
+    assert title == "AdaptiveTransfer Learning"
+    assert authors is not None
+    assert "Dit-Yan Yeung" in authors
+    assert "Qiang Yang" in authors
+    assert "AAAI" in (venue or "")
+
+
+def test_sustech_connective_full_name_with_middle_initial_before_title_reaches_title():
+    raw = (
+        "[46] Yu Zhang, Dit-Yan Yeung, and Eric P. Xing. Supervised "
+        "Probabilistic Robust Embedding with Sparse Noise. In:Proceedings "
+        "of the Twenty-Sixth AAAI Conference onArtificial Intelligence (AAAI), "
+        "pp. 1226–1232, Toronto, Ontario, Canada, 22–26 July2012."
+    )
+
+    title, authors, venue = _split_title_authors_venue(raw)
+
+    assert title == "Supervised Probabilistic Robust Embedding with Sparse Noise"
+    assert authors is not None
+    assert "Eric P. Xing" in authors
+    assert "AAAI" in (venue or "")
+
+
+def test_sustech_mixed_awards_list_does_not_override_publication_paragraphs():
+    html = """
+    <main>
+      <h2>From total 250 publications</h2>
+      <div>
+        <ul>
+          <li>Xiaohao Wu, School of Medicine Dean’s Fellowship, Stanford
+          University, $35,000, 2024</li>
+          <li>Donghao Gan, ASBMR Young Investigator Award, 2023</li>
+        </ul>
+        <p>1. Walke W, Xiao G, and Goldman D. A dual function
+        activity-dependent, muscle-specific enhancer from rat nicotinic
+        acetylcholine receptor d-subunit gene. J Biol Chem. 1996.</p>
+        <p>2. Xiao G, Cui Y, Ducy P, Karsenty G, and Franceschi RT.
+        Ascorbic acid-dependent activation of the osteocalcin promoter in
+        MC3T3-E1 preosteoblasts. Mol Endocrinol. 1997.</p>
+        <p>Donghao Gan, ASBMR Young Investigator Award, 2023</p>
+        <p>钟一鸣，博士研究生国家奖学金, 2023</p>
+      </div>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/english-xiao-guozhi.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "A dual function activity-dependent, muscle-specific enhancer from "
+            "rat nicotinic acetylcholine receptor d-subunit gene"
+        ),
+        (
+            "Ascorbic acid-dependent activation of the osteocalcin promoter in "
+            "MC3T3-E1 preosteoblasts"
+        ),
+    ]
+    assert all("Award" not in publication.clean_title for publication in publications)
+
+
+def test_sustech_concatenated_middle_author_continues_to_real_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>John Yianni, PtolemaiosSarrigiannis, Jimmy Liu Jiang and Xiong-xiong
+      He, A wavelet-based correlation analysis framework to study
+      cerebro-muscular activity in essential tremor, Complexity, 2019.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/liujiang.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "A wavelet-based correlation analysis framework to study "
+            "cerebro-muscular activity in essential tremor"
+        )
+    ]
+    assert "Ptolemaios Sarrigiannis" in (publications[0].authors_text or "")
+    assert "Xiong-xiong He" in (publications[0].authors_text or "")
+    assert "Complexity" in (publications[0].venue_text or "")
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_pubmed_author_list_period_prefix_reaches_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>Watkins SC, Demetris AJ, Hussey GS, Badylak SF, Turnquist HR. Graft
+      IL-33 regulates infiltrating macrophages to protect against chronic
+      rejection. J Clin Invest. 2018.</p>
+      <p>Matta BM, Reichenbach DK, Zhang X, Mathews L, Koehn BH, Dwyer GK,
+      Lott JM, Uhl FM, Pfeifer D, Feser CJ, Rolandi M, Turnquist HR.
+      Peri-alloHCT IL-33 administration expands recipient T regulatory cells
+      that protect mice against acute GVHD. Blood. 2016.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/liuquan.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        (
+            "Graft IL-33 regulates infiltrating macrophages to protect against "
+            "chronic rejection"
+        ),
+        (
+            "Peri-alloHCT IL-33 administration expands recipient T regulatory "
+            "cells that protect mice against acute GVHD"
+        ),
+    ]
+    assert "Watkins SC" in (publications[0].authors_text or "")
+    assert "Reichenbach DK" in (publications[1].authors_text or "")
+    assert "J Clin Invest" in (publications[0].venue_text or "")
+    assert "Blood" in (publications[1].venue_text or "")
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_author_only_fragments_are_not_publications():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>Chen* (2012)</p>
+      <p>andJianan Y. Qu*</p>
+      <p>Yang iu, Chao lu, Wiliam Wella lu, * Hongmei liu* and Decheng Wu*</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/liuhongmei.html",
+    )
+
+    assert publications == []

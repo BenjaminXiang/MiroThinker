@@ -18,6 +18,7 @@ from ..normalization import build_stable_id
 from ..professor.canonical_writer import _upsert_professor_paper_link
 from ..professor.homepage_publications import (
     HomepagePublication,
+    _COMMON_ROMANIZED_CHINESE_SURNAMES,
     _is_suspicious_rule_publication,
     _looks_like_author_list,
     extract_publications_from_html,
@@ -44,7 +45,56 @@ _PROF_PAGE_ONLY_SOURCE = "prof_page_only"
 _TIER2_PAGE_ROLES = frozenset({"official_profile", "official_publication_page"})
 _TIER3_PAGE_ROLES = frozenset({"personal_homepage", "lab_homepage"})
 _DEFAULT_PROF_PAGE_PDF_FETCH_CAP = 20
+_BULK_EXTERNAL_RESOLUTION_MAX_PUBLICATIONS = 80
+_BULK_TITLE_RESOLUTION_TIMEOUT = httpx.Timeout(
+    connect=2.0,
+    read=3.0,
+    write=2.0,
+    pool=2.0,
+)
 _AUTHOR_INITIAL_HINT_RE = re.compile(r"\b[A-Z]\.")
+_AUTHOR_LIST_DELIMITER_RE = re.compile(r"\s*(?:[,，;；]|\band\b|&)\s*", re.I)
+_CJK_RE = re.compile(r"[\u3400-\u9fff]")
+_JCR_QUARTILE_LABEL_RE = re.compile(r"^(?:SCI\s*)?JCR\s*Q[1-4]$", re.I)
+_JCR_METRIC_LABEL_RE = re.compile(
+    r"^(?:SCI\s*)?JCR\s*:?\s*Q[1-4](?:\s*/?\s*IF\s*:?\s*[\d.]+)?$",
+    re.I,
+)
+_MONTH_DAY_LABEL_RE = re.compile(
+    r"^(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|"
+    r"Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|"
+    r"Dec(?:ember)?)\.?\s+\d{1,2}$",
+    re.I,
+)
+_QUALIFICATION_TITLE_RE = re.compile(
+    r"(注册会计师|资格考试|全科通过|可豁免|\bACCA\b)",
+    re.I,
+)
+_BIBLIOGRAPHIC_FRAGMENT_TITLE_RE = re.compile(
+    r"^(?:pp?\.?\s*)?\d+\s*[-–]\s*\d+$"
+    r"|^(?:年|[,，])\s*[,，]?\s*ISBN\b.*\bPage\b"
+    r"|^.*\bISBN\b.*\bPage\b.*$"
+    r"|^\d{1,5}\s*[,，]\s*\d{1,6}\s*\.?\s*\[?\s*doi\s*\]?$"
+    r"|^\d{1,5}\s*[,，]\s*e[0-9A-Za-z]+(?:\s+[0-9A-Za-z]+)?$"
+    r"|^[A-Za-z]{1,12}\.?\s*[,，]\s*(?:19|20)\d{2}\s*[,，]\s*\d{1,5}\s*[,，]\s*\d+\s*[-–]\s*\d+$"
+    r"|^[A-Za-z]{1,12}\.?\s+(?:19|20)\d{2}\s*[,，]\s*\d{1,5}\s*[,，]\s*\d+\s*[-–]\s*\d+$",
+    re.I,
+)
+_ELLIPSIS_AUTHOR_FRAGMENT_RE = re.compile(r"^(?:…|\.\.\.).*(?:[,，].*){2,}$")
+_LOWERCASE_CONTINUATION_FRAGMENT_RE = re.compile(
+    r"^[a-z]\s+[a-z][A-Za-z-]+(?:\s+[A-Za-z][A-Za-z-]+){2,}$"
+)
+_AUTHOR_YEAR_FRAGMENT_RE = re.compile(
+    r"^[A-Z][A-Za-z'’-]{1,40}[*#†‡]?\s*[\(（](?:19|20)\d{2}[\)）]$"
+)
+_CONCATENATED_AUTHOR_FRAGMENT_RE = re.compile(r"^[A-Z][a-z]{1,24}[A-Z][a-z]{1,24}$")
+_SEMICOLON_SURNAME_INITIAL_AUTHOR_FRAGMENT_RE = re.compile(
+    r"^[A-Z][A-Za-z?'’-]{1,40}\s*[,，]\s*(?:[A-Z]\.?\s*){1,5}"
+    r"[;；]\s*[A-Z][A-Za-z?'’-]{1,40}$"
+)
+_NO_SPACE_AND_AUTHOR_FRAGMENT_RE = re.compile(
+    r"^and[A-Z][A-Za-z'’-]+(?:\s+[A-Z]\.?)?(?:\s+[A-Z][A-Za-z'’-]+)?[*#†‡]*$"
+)
 _PDF_FETCH_CAP_ERRORS = frozenset(
     {
         "pdf_too_large",
@@ -53,6 +103,48 @@ _PDF_FETCH_CAP_ERRORS = frozenset(
         "redirect_cap_exceeded",
     }
 )
+_NON_PUBLICATION_LABEL_TITLES = frozenset(
+    {
+        "book chapters",
+        "degree source",
+        "in chinese",
+        "invited talks",
+        "manufacturing",
+        "social networks",
+        "transportation and disaster management",
+        "healthcare and service systems",
+    }
+)
+_KNOWN_VENUE_ONLY_TITLES = frozenset(
+    {
+        "angew. chem",
+        "acs applied energy materials",
+        "acs applied materials & interfaces",
+        "acs energy letters",
+        "advanced energy materials",
+        "advanced functional materials",
+        "advanced materials",
+        "angew chem int edit",
+        "applied health economics and health policy",
+        "cell reports physical science",
+        "chemical communications",
+        "chemical engineering journal",
+        "energy & environmental science",
+        "energy storage materials",
+        "journal of the american chemical society",
+        "nano letters",
+        "nature communications",
+        "periodica polytechnica architecture",
+        "personal and ubiquitous computing",
+        "synfacts highlights",
+        "the journal of physical chemistry letters",
+        "自然 · 通讯",
+    }
+)
+
+
+class _SkipCurrentProfessor(Exception):
+    """Internal sentinel for handled per-professor early exits."""
 
 
 def _synthesize_page_only_resolution(
@@ -102,6 +194,18 @@ def _split_page_authors(authors_text: str) -> list[str]:
     return [c for c in candidates if c]
 
 
+def _should_skip_external_title_resolution(
+    publication,
+    *,
+    publication_count: int,
+) -> bool:
+    # CJK homepage titles are low-coverage in Crossref/S2/DBLP and can turn
+    # large official publication lists into provider-bound batch stalls.
+    if bool(_CJK_RE.search(str(publication.clean_title or ""))):
+        return True
+    return publication_count > _BULK_EXTERNAL_RESOLUTION_MAX_PUBLICATIONS
+
+
 def _attach_professor_page_pdf_url(
     resolved: ResolvedPaper,
     publication,
@@ -139,6 +243,14 @@ def _is_malformed_publication_title(publication) -> bool:
     clean_title = str(getattr(publication, "clean_title", "") or "").strip()
     if not clean_title:
         return True
+    if _is_non_publication_label_title(clean_title):
+        return True
+    if _is_author_fragment_title(clean_title):
+        return True
+    if _is_short_venue_only_title(publication):
+        return True
+    if _is_author_list_title_with_titleish_context(publication):
+        return True
     has_explicit_author_syntax = (
         any(mark in clean_title for mark in (",", "，", ";", "；", "*", "#", "†", "‡"))
         or _AUTHOR_INITIAL_HINT_RE.search(clean_title) is not None
@@ -146,6 +258,168 @@ def _is_malformed_publication_title(publication) -> bool:
     if not has_explicit_author_syntax or not _looks_like_author_list(clean_title):
         return False
     return not bool(str(getattr(publication, "authors_text", "") or "").strip())
+
+
+def _is_non_publication_label_title(title: str) -> bool:
+    normalized = _normalize_guard_title(title)
+    return (
+        normalized.casefold() in _NON_PUBLICATION_LABEL_TITLES
+        or _JCR_QUARTILE_LABEL_RE.fullmatch(normalized) is not None
+        or _JCR_METRIC_LABEL_RE.fullmatch(normalized) is not None
+        or _MONTH_DAY_LABEL_RE.fullmatch(normalized) is not None
+        or _QUALIFICATION_TITLE_RE.search(normalized) is not None
+        or _BIBLIOGRAPHIC_FRAGMENT_TITLE_RE.fullmatch(normalized) is not None
+        or _ELLIPSIS_AUTHOR_FRAGMENT_RE.fullmatch(normalized) is not None
+        or _LOWERCASE_CONTINUATION_FRAGMENT_RE.fullmatch(normalized) is not None
+        or _looks_like_cjk_author_list_title(normalized)
+    )
+
+
+def _is_author_fragment_title(title: str) -> bool:
+    normalized = _normalize_guard_title(title)
+    if _AUTHOR_YEAR_FRAGMENT_RE.fullmatch(normalized):
+        return True
+    if _CONCATENATED_AUTHOR_FRAGMENT_RE.fullmatch(normalized):
+        return True
+    if _SEMICOLON_SURNAME_INITIAL_AUTHOR_FRAGMENT_RE.fullmatch(normalized):
+        return True
+    if _NO_SPACE_AND_AUTHOR_FRAGMENT_RE.fullmatch(normalized):
+        return True
+    if _looks_like_pubmed_author_segment(normalized):
+        return True
+    return _looks_like_pubmed_author_list(normalized)
+
+
+def _looks_like_pubmed_author_list(title: str) -> bool:
+    normalized = re.sub(r"\s+", " ", title).strip()
+    if "," not in normalized and "，" not in normalized:
+        return False
+    parts = [
+        part.strip()
+        for part in re.split(r"\s*[,，]\s*", normalized)
+        if part.strip()
+    ]
+    if len(parts) < 2:
+        return False
+    return all(_looks_like_pubmed_author_segment(part) for part in parts)
+
+
+def _looks_like_pubmed_author_segment(title: str) -> bool:
+    normalized = re.sub(r"[*#†‡]", "", title)
+    normalized = re.sub(r"\s+", " ", normalized).strip()
+    if not normalized or re.search(r"[,，;；:：()（）\d]", normalized):
+        return False
+    if len(normalized.split()) != 2:
+        return False
+    return (
+        re.fullmatch(
+            r"[A-Z][A-Za-z?'’-]{1,40}\s+(?:[A-Z]{1,5}|(?:[A-Z]\.?\s*){1,5})",
+            normalized,
+        )
+        is not None
+    )
+
+
+def _is_short_venue_only_title(publication) -> bool:
+    clean_title = str(getattr(publication, "clean_title", "") or "").strip()
+    venue_text = str(getattr(publication, "venue_text", "") or "").strip()
+    normalized_title = _normalize_guard_title(clean_title).casefold()
+    if normalized_title in _KNOWN_VENUE_ONLY_TITLES:
+        return True
+    if not clean_title or not venue_text:
+        return False
+    normalized_venue = _normalize_guard_title(venue_text).casefold()
+    if normalized_title != normalized_venue:
+        return False
+    if re.search(r"[:：?？]", clean_title):
+        return False
+    word_count = len(re.findall(r"[A-Za-z][A-Za-z'&-]*", clean_title))
+    cjk_count = len(re.findall(r"[\u4e00-\u9fff]", clean_title))
+    return 2 <= word_count <= 8 or 4 <= cjk_count <= 18
+
+
+def _normalize_guard_title(value: str) -> str:
+    return re.sub(r"\s+", " ", value or "").strip(" .:：;；")
+
+
+def _is_author_list_title_with_titleish_context(publication) -> bool:
+    clean_title = str(getattr(publication, "clean_title", "") or "").strip()
+    venue_text = str(getattr(publication, "venue_text", "") or "").strip()
+    if not clean_title:
+        return False
+    if "学生" in clean_title:
+        return bool(
+            re.search(r"[,，;；]", clean_title)
+            or _AUTHOR_INITIAL_HINT_RE.search(clean_title)
+        )
+    if not _looks_like_titleish_context_text(venue_text):
+        return False
+    return _looks_like_short_author_sequence(clean_title)
+
+
+def _looks_like_titleish_context_text(text: str) -> bool:
+    normalized = re.sub(r"\s+", " ", text).strip()
+    if len(normalized) < 32:
+        return False
+    if re.search(r"[\u4e00-\u9fff]", normalized):
+        return len(normalized) >= 12 and any(
+            marker in normalized
+            for marker in ("研究", "模型", "方法", "系统", "设计", "分析")
+        )
+    words = re.findall(r"[A-Za-z][A-Za-z'’-]*", normalized)
+    return len(words) >= 5 or ":" in normalized
+
+
+def _looks_like_short_author_sequence(title: str) -> bool:
+    normalized = re.sub(r"[（）()【】\\[\\]{}]", " ", title)
+    normalized = re.sub(r"[*#†‡]", " ", normalized)
+    normalized = re.sub(r"\s+", " ", normalized).strip(" ,，;；.")
+    if len(normalized) > 100:
+        return False
+    if not _AUTHOR_LIST_DELIMITER_RE.search(normalized):
+        return False
+    parts = [
+        part.strip()
+        for part in _AUTHOR_LIST_DELIMITER_RE.split(normalized)
+        if part.strip()
+    ]
+    if not 2 <= len(parts) <= 6:
+        return False
+    if not all(_looks_like_simple_person_name(part) for part in parts):
+        return False
+    if re.search(r"[,，;；]", normalized):
+        return True
+    return any(_has_common_romanized_chinese_surname(part) for part in parts)
+
+
+def _looks_like_cjk_author_list_title(title: str) -> bool:
+    if not re.search(r"[,，、;；&＆]", title):
+        return False
+    normalized = re.sub(r"[（）()【】\[\]{}]", " ", title)
+    parts = [
+        part.strip()
+        for part in re.split(r"\s*(?:[,，、;；]|&|＆)\s*", normalized)
+        if part.strip()
+    ]
+    if not 2 <= len(parts) <= 8:
+        return False
+    return all(re.fullmatch(r"[\u4e00-\u9fff]{2,4}", part) for part in parts)
+
+
+def _looks_like_simple_person_name(text: str) -> bool:
+    normalized = re.sub(r"\s+", " ", text).strip(" .")
+    tokens = re.findall(r"[A-Za-z][A-Za-z'’-]*", normalized)
+    if len(tokens) != 2:
+        return False
+    return all(1 < len(token) <= 30 for token in tokens)
+
+
+def _has_common_romanized_chinese_surname(text: str) -> bool:
+    tokens = [
+        re.sub(r"[^A-Za-z'’-]", "", token).casefold()
+        for token in re.findall(r"[A-Za-z][A-Za-z'’-]*", text)
+    ]
+    return any(token in _COMMON_ROMANIZED_CHINESE_SURNAMES for token in tokens)
 
 
 @dataclass(frozen=True, slots=True)
@@ -252,6 +526,7 @@ def run_homepage_paper_ingest(
                 triggered_by="homepage_paper_ingest",
             )
             run_opened = True
+            _commit_if_available(conn)
 
         resume_set = _load_resume_set(resume_checkpoint_path)
         professors = _fetch_professors(
@@ -302,16 +577,7 @@ def run_homepage_paper_ingest(
                                 message=str(exc),
                                 details={"homepage_url": prof["homepage_url"]},
                             )
-                        _append_checkpoint_line(
-                            resume_checkpoint_path,
-                            prof_id=professor_id,
-                            status=checkpoint_status,
-                            papers_linked=prof_papers_linked,
-                            pipeline_issues=prof_pipeline_issues,
-                            dry_run=dry_run,
-                        )
-                        profs_with_errors += 1
-                        continue
+                        raise _SkipCurrentProfessor()
 
                     publications = active_publication_extractor(
                         html,
@@ -365,185 +631,209 @@ def run_homepage_paper_ingest(
                     cache = None if dry_run else PostgresTitleResolutionCache(conn)
                     unresolved_count = 0
                     page_only_count = 0
-                    for publication in publications:
-                        if _is_malformed_publication_title(publication):
-                            pipeline_issues_filed += 1
-                            prof_pipeline_issues += 1
-                            prof_had_error = True
-                            if not dry_run:
-                                _file_pipeline_issue(
-                                    conn,
-                                    run_id=run_id,
-                                    issue_type="malformed_publication_title",
-                                    professor_id=professor_id,
-                                    message=(
-                                        "Homepage publication clean_title looks like "
-                                        "an author list, so title resolution was "
-                                        "skipped"
-                                    ),
-                                    details={
-                                        "homepage_url": prof["homepage_url"],
-                                        "raw_title": getattr(
-                                            publication,
-                                            "raw_title",
-                                            None,
+                    with httpx.Client(
+                        timeout=_BULK_TITLE_RESOLUTION_TIMEOUT,
+                        trust_env=False,
+                    ) as title_http_client:
+                        for publication in publications:
+                            if _is_malformed_publication_title(publication):
+                                pipeline_issues_filed += 1
+                                prof_pipeline_issues += 1
+                                prof_had_error = True
+                                if not dry_run:
+                                    _file_pipeline_issue(
+                                        conn,
+                                        run_id=run_id,
+                                        issue_type="malformed_publication_title",
+                                        professor_id=professor_id,
+                                        message=(
+                                            "Homepage publication clean_title looks like "
+                                            "an author list, so title resolution was "
+                                            "skipped"
                                         ),
-                                        "clean_title": publication.clean_title,
-                                        "authors_text": publication.authors_text,
-                                        "venue_text": publication.venue_text,
-                                    },
-                                )
-                            continue
+                                        details={
+                                            "homepage_url": prof["homepage_url"],
+                                            "raw_title": getattr(
+                                                publication,
+                                                "raw_title",
+                                                None,
+                                            ),
+                                            "clean_title": publication.clean_title,
+                                            "authors_text": publication.authors_text,
+                                            "venue_text": publication.venue_text,
+                                        },
+                                    )
+                                continue
 
-                        resolved = resolve_paper_by_title(
-                            publication.clean_title,
-                            author_hint=prof["canonical_name"],
-                            year_hint=publication.year,
-                            enable_arxiv_title_search=False,
-                            web_search=None,
-                            cache=cache,
-                        )
-                        is_page_only = resolved is None
-                        if is_page_only:
-                            # Preprint case (Paper Review §3.1 P4): no
-                            # external DB hit — create record from
-                            # page-only data; enrichment fills later.
-                            unresolved_count += 1
-                            page_only_count += 1
-                            resolved = _synthesize_page_only_resolution(
+                            skip_external_resolution = (
+                                _should_skip_external_title_resolution(
+                                    publication,
+                                    publication_count=len(publications),
+                                )
+                            )
+                            resolved = (
+                                None
+                                if skip_external_resolution
+                                else resolve_paper_by_title(
+                                    publication.clean_title,
+                                    author_hint=prof["canonical_name"],
+                                    year_hint=publication.year,
+                                    enable_arxiv_title_search=False,
+                                    web_search=None,
+                                    http_client=title_http_client,
+                                    cache=cache,
+                                )
+                            )
+                            is_page_only = resolved is None
+                            if is_page_only:
+                                # Preprint case (Paper Review §3.1 P4): no
+                                # external DB hit — create record from
+                                # page-only data; enrichment fills later.
+                                if not skip_external_resolution:
+                                    unresolved_count += 1
+                                page_only_count += 1
+                                resolved = _synthesize_page_only_resolution(
+                                    publication,
+                                    canonical_name=prof["canonical_name"],
+                                )
+                            resolved = _attach_professor_page_pdf_url(
+                                resolved,
                                 publication,
-                                canonical_name=prof["canonical_name"],
-                            )
-                        resolved = _attach_professor_page_pdf_url(
-                            resolved,
-                            publication,
-                        )
-
-                        derived_paper_id = _derive_paper_id(
-                            publication.clean_title,
-                            resolved_doi=resolved.doi,
-                            resolved_arxiv_id=resolved.arxiv_id,
-                        )
-                        papers_linked_total += 1
-                        prof_papers_linked += 1
-
-                        actual_paper_id = derived_paper_id
-                        if not dry_run:
-                            paper_report = upsert_paper(
-                                conn,
-                                title_clean=publication.clean_title,
-                                title_raw=resolved.title,
-                                doi=resolved.doi,
-                                arxiv_id=resolved.arxiv_id,
-                                openalex_id=resolved.openalex_id,
-                                semantic_scholar_id=None,
-                                year=resolved.year,
-                                venue=resolved.venue,
-                                abstract_clean=resolved.abstract,
-                                authors_display=_authors_display(resolved.authors),
-                                citation_count=None,
-                                canonical_source=resolved.match_source,
-                                run_id=run_id,
-                                title_resolution_source=resolved.match_source,
-                                quality_status=NEEDS_ENRICHMENT,
-                            )
-                            actual_paper_id = getattr(
-                                paper_report,
-                                "paper_id",
-                                derived_paper_id,
-                            )
-                            _upsert_professor_paper_link(
-                                conn,
-                                professor_id=professor_id,
-                                paper_id=actual_paper_id,
-                                link_status="verified",
-                                evidence_source_type=evidence_source_type,
-                                evidence_page_id=None,
-                                evidence_api_source=None,
-                                match_reason=(
-                                    _LINK_MATCH_REASON_PAGE_ONLY
-                                    if is_page_only
-                                    else _LINK_MATCH_REASON
-                                ),
-                                author_name_match_score=_AUTHOR_NAME_MATCH_SCORE,
-                                topic_consistency_score=None,
-                                institution_consistency_score=None,
-                                is_officially_listed=True,
-                                run_id=run_id,
                             )
 
-                        if paper_full_text_exists(conn, actual_paper_id):
-                            continue
+                            derived_paper_id = _derive_paper_id(
+                                publication.clean_title,
+                                resolved_doi=resolved.doi,
+                                resolved_arxiv_id=resolved.arxiv_id,
+                            )
+                            papers_linked_total += 1
+                            prof_papers_linked += 1
 
-                        is_prof_page_pdf = _is_direct_professor_page_pdf(resolved)
-                        if (
-                            is_prof_page_pdf
-                            and prof_page_pdf_fetch_cap is not None
-                            and prof_page_pdf_fetches_started >= prof_page_pdf_fetch_cap
-                        ):
-                            pipeline_issues_filed += 1
-                            prof_pipeline_issues += 1
-                            prof_had_error = True
+                            actual_paper_id = derived_paper_id
                             if not dry_run:
-                                _file_pipeline_issue(
+                                paper_report = upsert_paper(
                                     conn,
+                                    title_clean=publication.clean_title,
+                                    title_raw=resolved.title,
+                                    doi=resolved.doi,
+                                    arxiv_id=resolved.arxiv_id,
+                                    openalex_id=resolved.openalex_id,
+                                    semantic_scholar_id=None,
+                                    year=resolved.year,
+                                    venue=resolved.venue,
+                                    abstract_clean=resolved.abstract,
+                                    authors_display=_authors_display(resolved.authors),
+                                    citation_count=None,
+                                    canonical_source=resolved.match_source,
                                     run_id=run_id,
-                                    issue_type="pdf_fetch_cap_exceeded",
+                                    title_resolution_source=resolved.match_source,
+                                    quality_status=NEEDS_ENRICHMENT,
+                                )
+                                actual_paper_id = getattr(
+                                    paper_report,
+                                    "paper_id",
+                                    derived_paper_id,
+                                )
+                                _upsert_professor_paper_link(
+                                    conn,
                                     professor_id=professor_id,
-                                    message=(
-                                        "Professor-page PDF fetch cap exceeded for "
-                                        f"{resolved.pdf_url}"
+                                    paper_id=actual_paper_id,
+                                    link_status="verified",
+                                    evidence_source_type=evidence_source_type,
+                                    evidence_page_id=None,
+                                    evidence_api_source=None,
+                                    match_reason=(
+                                        _LINK_MATCH_REASON_PAGE_ONLY
+                                        if is_page_only
+                                        else _LINK_MATCH_REASON
                                     ),
-                                    details={
-                                        "paper_id": actual_paper_id,
-                                        "paper_title": resolved.title,
-                                        "pdf_url": resolved.pdf_url,
-                                        "prof_page_pdf_fetch_cap": (
-                                            prof_page_pdf_fetch_cap
+                                    author_name_match_score=_AUTHOR_NAME_MATCH_SCORE,
+                                    topic_consistency_score=None,
+                                    institution_consistency_score=None,
+                                    is_officially_listed=True,
+                                    run_id=run_id,
+                                )
+
+                            if paper_full_text_exists(conn, actual_paper_id):
+                                continue
+
+                            if (
+                                is_page_only
+                                and len(publications)
+                                > _BULK_EXTERNAL_RESOLUTION_MAX_PUBLICATIONS
+                            ):
+                                continue
+
+                            is_prof_page_pdf = _is_direct_professor_page_pdf(resolved)
+                            if (
+                                is_prof_page_pdf
+                                and prof_page_pdf_fetch_cap is not None
+                                and prof_page_pdf_fetches_started
+                                >= prof_page_pdf_fetch_cap
+                            ):
+                                pipeline_issues_filed += 1
+                                prof_pipeline_issues += 1
+                                prof_had_error = True
+                                if not dry_run:
+                                    _file_pipeline_issue(
+                                        conn,
+                                        run_id=run_id,
+                                        issue_type="pdf_fetch_cap_exceeded",
+                                        professor_id=professor_id,
+                                        message=(
+                                            "Professor-page PDF fetch cap exceeded for "
+                                            f"{resolved.pdf_url}"
                                         ),
-                                    },
-                                )
-                            continue
-                        if is_prof_page_pdf:
-                            prof_page_pdf_fetches_started += 1
+                                        details={
+                                            "paper_id": actual_paper_id,
+                                            "paper_title": resolved.title,
+                                            "pdf_url": resolved.pdf_url,
+                                            "prof_page_pdf_fetch_cap": (
+                                                prof_page_pdf_fetch_cap
+                                            ),
+                                        },
+                                    )
+                                continue
+                            if is_prof_page_pdf:
+                                prof_page_pdf_fetches_started += 1
 
-                        extract = fetch_and_extract_full_text(
-                            resolved,
-                            paper_id=actual_paper_id,
-                        )
-                        if extract.fetch_error is None:
-                            full_text_fetched_total += 1
-                        elif (
-                            is_prof_page_pdf
-                            and _is_pdf_fetch_cap_error(extract.fetch_error)
-                        ):
-                            pipeline_issues_filed += 1
-                            prof_pipeline_issues += 1
-                            prof_had_error = True
-                            if not dry_run:
-                                _file_pipeline_issue(
-                                    conn,
-                                    run_id=run_id,
-                                    issue_type="pdf_fetch_cap_violation",
-                                    professor_id=professor_id,
-                                    message=(
-                                        "Professor-page PDF fetch violated configured "
-                                        f"fetch policy for {resolved.pdf_url}"
-                                    ),
-                                    details={
-                                        "paper_id": actual_paper_id,
-                                        "paper_title": resolved.title,
-                                        "pdf_url": resolved.pdf_url,
-                                        "fetch_error": extract.fetch_error,
-                                    },
-                                )
-                        if not dry_run:
-                            upsert_paper_full_text(
-                                conn,
+                            extract = fetch_and_extract_full_text(
+                                resolved,
                                 paper_id=actual_paper_id,
-                                extract=extract,
-                                run_id=run_id,
                             )
+                            if extract.fetch_error is None:
+                                full_text_fetched_total += 1
+                            elif (
+                                is_prof_page_pdf
+                                and _is_pdf_fetch_cap_error(extract.fetch_error)
+                            ):
+                                pipeline_issues_filed += 1
+                                prof_pipeline_issues += 1
+                                prof_had_error = True
+                                if not dry_run:
+                                    _file_pipeline_issue(
+                                        conn,
+                                        run_id=run_id,
+                                        issue_type="pdf_fetch_cap_violation",
+                                        professor_id=professor_id,
+                                        message=(
+                                            "Professor-page PDF fetch violated configured "
+                                            f"fetch policy for {resolved.pdf_url}"
+                                        ),
+                                        details={
+                                            "paper_id": actual_paper_id,
+                                            "paper_title": resolved.title,
+                                            "pdf_url": resolved.pdf_url,
+                                            "fetch_error": extract.fetch_error,
+                                        },
+                                    )
+                            if not dry_run:
+                                upsert_paper_full_text(
+                                    conn,
+                                    paper_id=actual_paper_id,
+                                    extract=extract,
+                                    run_id=run_id,
+                                )
 
                     if publications and unresolved_count == len(publications):
                         pipeline_issues_filed += 1
@@ -558,6 +848,8 @@ def run_homepage_paper_ingest(
                                 message="All homepage publication titles were unresolvable",
                                 details={"publications_count": len(publications)},
                             )
+                except _SkipCurrentProfessor:
+                    pass
                 except Exception as exc:  # noqa: BLE001
                     prof_had_error = True
                     checkpoint_status = "failed"
@@ -578,6 +870,8 @@ def run_homepage_paper_ingest(
                             details={"homepage_url": prof["homepage_url"]},
                         )
 
+            if not dry_run:
+                _commit_if_available(conn)
             if prof_had_error:
                 profs_with_errors += 1
             _append_checkpoint_line(
@@ -596,6 +890,7 @@ def run_homepage_paper_ingest(
                 run_id,
                 status="failed",
             )
+            _commit_if_available(conn)
         raise
     except Exception as exc:
         if run_opened:
@@ -605,6 +900,7 @@ def run_homepage_paper_ingest(
                 status="failed",
                 error_summary={"msg": str(exc)},
             )
+            _commit_if_available(conn)
         raise
     else:
         if run_opened:
@@ -615,6 +911,7 @@ def run_homepage_paper_ingest(
                 items_processed=profs_processed,
                 items_failed=profs_with_errors,
             )
+            _commit_if_available(conn)
 
     return IngestReport(
         run_id=run_id,
@@ -632,6 +929,12 @@ def _authors_display(authors: tuple[str, ...]) -> str | None:
     if not authors:
         return None
     return ", ".join(author for author in authors if author)
+
+
+def _commit_if_available(conn) -> None:
+    commit = getattr(conn, "commit", None)
+    if callable(commit):
+        commit()
 
 
 def _append_checkpoint_line(

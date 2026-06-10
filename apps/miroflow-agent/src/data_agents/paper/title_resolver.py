@@ -111,11 +111,76 @@ class _RateLimitGate:
             self._last_called_at = now
 
 
+class _TemporaryFailureCircuit:
+    def __init__(
+        self,
+        *,
+        threshold: int,
+        cooldown_seconds: float,
+        label: str,
+    ) -> None:
+        self._threshold = threshold
+        self._cooldown_seconds = cooldown_seconds
+        self._label = label
+        self._lock = threading.Lock()
+        self._failure_count = 0
+        self._disabled_until: float | None = None
+
+    def can_call(self) -> bool:
+        with self._lock:
+            if self._disabled_until is None:
+                return True
+            now = time.monotonic()
+            if now < self._disabled_until:
+                return False
+            self._disabled_until = None
+            self._failure_count = 0
+            return True
+
+    def record_success(self) -> None:
+        with self._lock:
+            self._failure_count = 0
+            self._disabled_until = None
+
+    def record_failure(self) -> None:
+        with self._lock:
+            self._failure_count += 1
+            if self._failure_count < self._threshold:
+                return
+            self._disabled_until = time.monotonic() + self._cooldown_seconds
+            logger.warning(
+                "%s title search temporarily disabled for %.0fs after %d consecutive failures",
+                self._label,
+                self._cooldown_seconds,
+                self._failure_count,
+            )
+
+    def reset(self) -> None:
+        with self._lock:
+            self._failure_count = 0
+            self._disabled_until = None
+
+
 _OPENALEX_GATE = _RateLimitGate(0.1)
 _CROSSREF_GATE = _RateLimitGate(0.34)
 _SEMANTIC_SCHOLAR_GATE = _RateLimitGate(1.0)
 _DBLP_GATE = _RateLimitGate(0.2)
 _ARXIV_GATE = _RateLimitGate(3.0)
+_CROSSREF_FAILURE_CIRCUIT = _TemporaryFailureCircuit(
+    threshold=2,
+    cooldown_seconds=300.0,
+    label="Crossref",
+)
+_SEMANTIC_SCHOLAR_RATE_LIMIT_CIRCUIT = _TemporaryFailureCircuit(
+    threshold=1,
+    cooldown_seconds=600.0,
+    label="Semantic Scholar",
+)
+_DBLP_FAILURE_CIRCUIT = _TemporaryFailureCircuit(
+    threshold=2,
+    cooldown_seconds=300.0,
+    label="DBLP",
+)
 
 
 def resolve_paper_by_title(
@@ -382,6 +447,10 @@ def _search_crossref_by_title(title: str, *, http_client=None) -> list[dict]:
     if not isinstance(title, str):
         raise TypeError("title must be a string")
 
+    if not _CROSSREF_FAILURE_CIRCUIT.can_call():
+        logger.debug("Crossref title search skipped by temporary circuit")
+        return []
+
     _CROSSREF_GATE.wait()
     client, owns_client = _ensure_client(http_client)
     try:
@@ -395,11 +464,16 @@ def _search_crossref_by_title(title: str, *, http_client=None) -> list[dict]:
         )
         response.raise_for_status()
         payload = response.json()
+        _CROSSREF_FAILURE_CIRCUIT.record_success()
         message = payload.get("message") if isinstance(payload, dict) else None
         if not isinstance(message, dict):
             return []
         items = message.get("items", [])
         return items if isinstance(items, list) else []
+    except (httpx.TimeoutException, httpx.NetworkError) as exc:
+        _CROSSREF_FAILURE_CIRCUIT.record_failure()
+        logger.warning("Crossref title search failed for %r: %s", title, exc)
+        return []
     except TypeError:
         raise
     except Exception as exc:
@@ -453,6 +527,10 @@ def _search_semantic_scholar_by_title(title: str, *, http_client=None) -> list[d
     if not isinstance(title, str):
         raise TypeError("title must be a string")
 
+    if not _SEMANTIC_SCHOLAR_RATE_LIMIT_CIRCUIT.can_call():
+        logger.debug("Semantic Scholar title search skipped by temporary circuit")
+        return []
+
     _SEMANTIC_SCHOLAR_GATE.wait()
     client, owns_client = _ensure_client(http_client)
     headers = _semantic_scholar_headers()
@@ -469,8 +547,19 @@ def _search_semantic_scholar_by_title(title: str, *, http_client=None) -> list[d
         response = client.get(_SEMANTIC_SCHOLAR_SEARCH_ENDPOINT, **request_kwargs)
         response.raise_for_status()
         payload = response.json()
+        _SEMANTIC_SCHOLAR_RATE_LIMIT_CIRCUIT.record_success()
         data = payload.get("data") if isinstance(payload, dict) else None
         return data if isinstance(data, list) else []
+    except httpx.HTTPStatusError as exc:
+        status_code = getattr(exc.response, "status_code", None)
+        if status_code == 429:
+            _SEMANTIC_SCHOLAR_RATE_LIMIT_CIRCUIT.record_failure()
+        logger.warning(
+            "Semantic Scholar title search failed for %r: HTTP %s",
+            title,
+            status_code,
+        )
+        return []
     except TypeError:
         raise
     except Exception as exc:
@@ -532,6 +621,14 @@ def _search_dblp_by_title(title: str, *, http_client=None) -> list[dict]:
     if not isinstance(title, str):
         raise TypeError("title must be a string")
 
+    if _contains_cjk(title):
+        logger.debug("DBLP title search skipped for CJK title")
+        return []
+
+    if not _DBLP_FAILURE_CIRCUIT.can_call():
+        logger.debug("DBLP title search skipped by temporary circuit")
+        return []
+
     _DBLP_GATE.wait()
     client, owns_client = _ensure_client(http_client)
     try:
@@ -545,6 +642,7 @@ def _search_dblp_by_title(title: str, *, http_client=None) -> list[dict]:
         )
         response.raise_for_status()
         payload = response.json()
+        _DBLP_FAILURE_CIRCUIT.record_success()
         result = payload.get("result") if isinstance(payload, dict) else None
         hits = result.get("hits") if isinstance(result, dict) else None
         raw_hits = hits.get("hit") if isinstance(hits, dict) else None
@@ -552,6 +650,16 @@ def _search_dblp_by_title(title: str, *, http_client=None) -> list[dict]:
             return raw_hits
         if isinstance(raw_hits, dict):
             return [raw_hits]
+        return []
+    except httpx.HTTPStatusError as exc:
+        status_code = getattr(exc.response, "status_code", None)
+        if isinstance(status_code, int) and (status_code == 429 or status_code >= 500):
+            _DBLP_FAILURE_CIRCUIT.record_failure()
+        logger.warning("DBLP title search failed for %r: HTTP %s", title, status_code)
+        return []
+    except httpx.TransportError as exc:
+        _DBLP_FAILURE_CIRCUIT.record_failure()
+        logger.warning("DBLP title search failed for %r: %s", title, exc)
         return []
     except TypeError:
         raise

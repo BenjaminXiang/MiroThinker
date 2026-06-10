@@ -25,10 +25,10 @@
 - [x] 4.1 Run Ahmed dry-run and record publication count, title correctness, resolver hits, page-only count, and issue count.
 - [x] 4.2 Run Ahmed real paper/link bridge when DB and provider prerequisites are available.
 - [x] 4.3 Run Ahmed summary backfill and targeted paper Milvus refresh when prerequisites are available.
-- [ ] 4.4 Run a random SIGS 10-professor sample and record per-professor parse/ingest/enrichment outcomes.
-- [ ] 4.5 Run full SIGS with a resume checkpoint after Ahmed and sample acceptance.
+- [x] 4.4 Run a random SIGS 10-professor sample and record per-professor parse/ingest/enrichment outcomes.
+- [x] 4.5 Run full SIGS with a resume checkpoint after Ahmed and sample acceptance.
 - [x] 4.6 Run a cross-institution parser quality audit and record non-SIGS suspicious/low-recall findings.
-- [ ] 4.7 Validate sampled SIGS records in both frontend detail pages and backend retrieval/chat recall after Milvus refresh.
+- [x] 4.7 Validate sampled SIGS records in both frontend detail pages and backend retrieval/chat recall after Milvus refresh.
 
 ## 5. Acceptance And Reporting
 
