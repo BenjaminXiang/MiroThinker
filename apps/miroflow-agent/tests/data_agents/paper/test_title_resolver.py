@@ -1217,7 +1217,19 @@ def test_resolve_web_search_not_called_when_web_search_is_none():
 
 def test_resolve_cache_hit_skips_all_searches():
     cache = _FakeCache()
-    cached_paper = _resolved_fixture("openalex", 0.95)
+    cached_paper = ResolvedPaper(
+        title="Cached Paper",
+        doi="10.1/x",
+        openalex_id="W1",
+        arxiv_id=None,
+        abstract="abs",
+        pdf_url=None,
+        authors=("A",),
+        year=2023,
+        venue="X",
+        match_confidence=0.95,
+        match_source="openalex",
+    )
     key = _title_cache_key("Cached Paper")
     cache.store[key] = cached_paper
     with patch(
@@ -1229,6 +1241,106 @@ def test_resolve_cache_hit_skips_all_searches():
         assert result is cached_paper
         m_oa.assert_not_called()
         m_ax.assert_not_called()
+
+
+def test_resolve_cache_hit_with_author_conflict_falls_back_to_live_search():
+    cache = _FakeCache()
+    key = _title_cache_key("Shared Paper Title")
+    cache.store[key] = ResolvedPaper(
+        title="Shared Paper Title",
+        doi="10.1/alice",
+        openalex_id="W-alice",
+        arxiv_id=None,
+        abstract="cached",
+        pdf_url=None,
+        authors=("Alice Smith",),
+        year=2023,
+        venue="Journal A",
+        match_confidence=1.0,
+        match_source="openalex",
+    )
+    live_result = ResolvedPaper(
+        title="Shared Paper Title",
+        doi="10.1/bob",
+        openalex_id="W-bob",
+        arxiv_id=None,
+        abstract="live",
+        pdf_url=None,
+        authors=("Bob Jones",),
+        year=2023,
+        venue="Journal B",
+        match_confidence=1.0,
+        match_source="openalex",
+    )
+
+    with patch(
+        "src.data_agents.paper.title_resolver._search_openalex_by_title"
+    ) as m_oa, patch(
+        "src.data_agents.paper.title_resolver._openalex_work_to_resolved"
+    ) as m_oa_to_r:
+        m_oa.return_value = [{"fake": "work"}]
+        m_oa_to_r.return_value = (live_result, live_result.match_confidence)
+
+        result = resolve_paper_by_title(
+            "Shared Paper Title",
+            author_hint="Bob Jones",
+            year_hint=2023,
+            cache=cache,
+        )
+
+    assert result is live_result
+    assert len(cache.set_calls) == 1
+    assert cache.store[key] is live_result
+
+
+def test_resolve_cache_hit_with_year_conflict_falls_back_to_live_search():
+    cache = _FakeCache()
+    key = _title_cache_key("Versioned Paper")
+    cache.store[key] = ResolvedPaper(
+        title="Versioned Paper",
+        doi="10.1/old",
+        openalex_id="W-old",
+        arxiv_id=None,
+        abstract="cached",
+        pdf_url=None,
+        authors=("A. Author",),
+        year=2018,
+        venue="Journal A",
+        match_confidence=1.0,
+        match_source="openalex",
+    )
+    live_result = ResolvedPaper(
+        title="Versioned Paper",
+        doi="10.1/new",
+        openalex_id="W-new",
+        arxiv_id=None,
+        abstract="live",
+        pdf_url=None,
+        authors=("A. Author",),
+        year=2024,
+        venue="Journal A",
+        match_confidence=1.0,
+        match_source="openalex",
+    )
+
+    with patch(
+        "src.data_agents.paper.title_resolver._search_openalex_by_title"
+    ) as m_oa, patch(
+        "src.data_agents.paper.title_resolver._openalex_work_to_resolved"
+    ) as m_oa_to_r:
+        m_oa.return_value = [{"fake": "work"}]
+        m_oa_to_r.return_value = (live_result, live_result.match_confidence)
+
+        result = resolve_paper_by_title(
+            "Versioned Paper",
+            author_hint="A. Author",
+            year_hint=2024,
+            cache=cache,
+        )
+
+    assert result is live_result
+    assert len(cache.set_calls) == 1
+    assert cache.store[key] is live_result
 
 
 def test_resolve_cache_set_on_miss_then_hit():

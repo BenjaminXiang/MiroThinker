@@ -156,6 +156,7 @@ def test_domains_paper_detail_transmits_v011_fields() -> None:
     payload = get_domain_object(DomainEnum.paper, "PAPER-V011", conn=conn)
 
     core_facts = payload["core_facts"]
+    assert core_facts["abstract"] == "A test abstract."
     assert core_facts["pdf_url"] == "https://example.test/paper.pdf"
     assert core_facts["pdf_sha256"] == "a" * 64
     assert core_facts["full_text_source"] == "openalex"

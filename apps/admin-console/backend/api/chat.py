@@ -316,9 +316,23 @@ def _extract_a_name(query: str, target_domain: str) -> str:
         title = title.replace("专利", "").strip(" ：，。")
         return title[:80]
     if target_domain == "paper":
-        title = re.sub(r"^(介绍)?\s*论文\s*", "", query)
-        title = re.sub(r"(的作者是谁|的研究内容|的深圳作者有哪些|最近发了什么论文|有哪些论文|论文列表)$", "", title)
-        title = title.strip(" ：，。")
+        if match := re.search(r"《(?P<title>[^》]+)》", query):
+            return match.group("title").strip()[:100]
+        title = re.sub(
+            r"^\s*(?:请|帮我|麻烦)?\s*(?:介绍|查找|查一下|查询|找|看看|看一下)?\s*"
+            r"(?:论文|paper)?\s*",
+            "",
+            query,
+            flags=re.IGNORECASE,
+        )
+        title = re.sub(
+            r"(?:的)?(?:作者是谁|摘要和作者|作者和摘要|研究内容|主要内容|摘要|作者|讲了什么|讲的是什么|"
+            r"深圳作者有哪些|最近发了什么论文|有哪些论文|论文列表|论文|paper)$",
+            "",
+            title,
+            flags=re.IGNORECASE,
+        )
+        title = title.strip(" ：，。?？\"'“”‘’《》")
         return title[:100]
     if target_domain == "professor":
         return _extract_professor_name(query)
@@ -1675,6 +1689,58 @@ def _enrich_paper_topic_rows(conn: Any, rows: list[dict]) -> list[dict]:
     return enriched
 
 
+def _dedupe_topic_rows(domain: str, rows: list[dict]) -> list[dict]:
+    id_key = domain_id_key(domain)
+    ordered_keys: list[str] = []
+    by_key: dict[str, dict] = {}
+
+    for index, row in enumerate(rows):
+        key = _topic_row_dedupe_key(domain, row, id_key=id_key) or f"__row_{index}"
+        if key not in by_key:
+            ordered_keys.append(key)
+            by_key[key] = dict(row)
+            continue
+        by_key[key] = _merge_topic_duplicate_row(by_key[key], row)
+
+    return [by_key[key] for key in ordered_keys]
+
+
+def _topic_row_dedupe_key(domain: str, row: dict, *, id_key: str) -> str:
+    if domain == "paper":
+        title = str(row.get("title_clean") or row.get("title") or "").strip()
+        normalized_title = re.sub(r"\W+", "", title.lower(), flags=re.UNICODE)
+        if len(normalized_title) >= 8:
+            return f"title:{normalized_title}"
+    object_id = str(row.get(id_key) or row.get("id") or "").strip()
+    return f"id:{object_id}" if object_id else ""
+
+
+def _merge_topic_duplicate_row(existing: dict, candidate: dict) -> dict:
+    existing_score = _topic_row_score(existing)
+    candidate_score = _topic_row_score(candidate)
+    primary, secondary = (
+        (candidate, existing)
+        if candidate_score > existing_score
+        else (existing, candidate)
+    )
+    merged = dict(primary)
+    for key, value in secondary.items():
+        if not _has_topic_row_value(merged.get(key)) and _has_topic_row_value(value):
+            merged[key] = value
+    return merged
+
+
+def _topic_row_score(row: dict) -> float:
+    value = row.get("score")
+    if isinstance(value, (int, float)):
+        return float(value)
+    return -1.0
+
+
+def _has_topic_row_value(value: Any) -> bool:
+    return value is not None and value != "" and value != []
+
+
 def _lookup_domain_by_topic(conn: Any, *, domain: str, topic: str, limit: int) -> list[dict]:
     if domain == "company" and not chat_use_retrieval_service():
         return _lookup_companies_by_topic(conn, topic=topic)[:limit]
@@ -1713,6 +1779,7 @@ def _lookup_domain_by_topic(conn: Any, *, domain: str, topic: str, limit: int) -
         rows = _evidence_list_from_retrieval(results)
         if domain == "paper":
             rows = _enrich_paper_topic_rows(conn, rows)
+        rows = _dedupe_topic_rows(domain, rows)
         return rows
     except Exception as exc:
         logger.warning("%s retrieval failed for topic %r: %s", domain, topic, exc)

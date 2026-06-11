@@ -51,6 +51,14 @@ The bridge MAY enable LLM-assisted publication extraction as a post-collection o
 
 The bridge's title resolver MUST use a conservative multi-source title cascade. Official professor-page entries remain the relationship evidence, while external sources only resolve or enrich paper metadata. The resolver MUST try OpenAlex, Crossref, Semantic Scholar, DBLP, arXiv, and optional web search in order, skipping rate-limited or failing sources without blocking later sources. A result MUST NOT be accepted unless normalized title similarity and available year/author hints meet the resolver confidence threshold.
 
+For admin-triggered full professor seed runs, a successful roster/profile run MUST enqueue or run the shared homepage paper ingest bridge for that same seed with professor-owned homepage pages included. Preview and sample seed runs MUST NOT run the full paper bridge automatically. The follow-up MUST remain in the shared paper ingest path rather than in school-specific roster crawlers.
+
+When a source page URL is first recorded as an official profile or official publication page, later same-URL personal homepage or lab homepage discoveries MUST NOT downgrade the stored `source_page.page_role`. This preserves the evidence tier used by the shared paper bridge.
+
+Homepage publication links written by the shared bridge MUST preserve source-page traceability. When a listed publication comes from a professor homepage or a same-root second-hop publication page, the bridge MUST resolve or create the corresponding professor-owned `source_page` row and store its `page_id` in `professor_paper_link.evidence_page_id`. The bridge MUST NOT create professor source pages for arbitrary cross-site publication URLs.
+
+Paper topic-search chat responses MUST deduplicate retrieval chunk hits by canonical paper ID before presenting answers, citations, and structured payload objects. When duplicate chunks for the same paper are retrieved, the response MUST keep one paper object and prefer the stronger score/snippet metadata.
+
 #### Scenario: Ahmed paper bridge writes verified links
 
 - **GIVEN** Ahmed Elazab's SIGS official profile page has parseable official publication entries
@@ -77,6 +85,38 @@ The bridge's title resolver MUST use a conservative multi-source title cascade. 
 - **AND** it attempts DBLP before arXiv and optional web search when Crossref and Semantic Scholar are missing or below threshold
 - **AND** a rate-limited or failing source returns no candidates without blocking later sources
 - **AND** author-list-like titles remain below the confidence threshold and are not accepted automatically
+
+#### Scenario: Full seed success triggers shared paper bridge
+
+- **GIVEN** an admin background seed task finishes a full professor seed run successfully
+- **WHEN** the seed task completes
+- **THEN** it runs the shared homepage paper ingest for the same `seed_id`
+- **AND** owned homepage pages are included
+- **AND** preview or sample seed runs do not run the full paper bridge automatically
+- **AND** school-specific roster crawlers do not implement their own paper title resolution or enrichment logic
+
+#### Scenario: Stored official page role is not downgraded
+
+- **GIVEN** a `source_page` URL has already been stored with `page_role='official_profile'` or `page_role='official_publication_page'`
+- **WHEN** the same URL is later upserted as `personal_homepage` or `lab_homepage`
+- **THEN** the stored `page_role` remains the official role
+- **AND** homepage paper ingest can still map the page to the stronger evidence tier
+
+#### Scenario: Second-hop publication page preserves relation evidence
+
+- **GIVEN** a professor-owned homepage links to a same-root publication page
+- **WHEN** the shared homepage paper ingest bridge fetches that second-hop page and extracts publications from it
+- **THEN** the second-hop URL is stored as a professor-owned `source_page`
+- **AND** each relation extracted from that page stores the second-hop `page_id` in `professor_paper_link.evidence_page_id`
+- **AND** cross-site publication URLs are not inserted as professor source pages
+
+#### Scenario: Paper topic-search chat results are unique by paper
+
+- **GIVEN** Milvus returns multiple chunks for the same paper during a paper topic search
+- **WHEN** `/api/chat` builds the paper-topic answer
+- **THEN** each paper appears at most once in citations
+- **AND** each paper appears at most once in `structured_payload.matched_objects`
+- **AND** the retained row prefers the highest score and available snippet metadata
 
 ### Requirement: Enrichment and summary preserve source truth
 

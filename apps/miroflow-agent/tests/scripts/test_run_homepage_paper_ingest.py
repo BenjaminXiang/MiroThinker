@@ -81,6 +81,122 @@ def test_cli_dispatches_dry_run_flag(monkeypatch, tmp_path):
     cli.main()
     assert called_kwargs.get("dry_run") is True
     assert called_kwargs.get("limit") == 5
+    assert called_kwargs.get("include_owned_homepage_pages") is True
+
+
+def test_cli_can_dispatch_official_profile_pages_only(monkeypatch):
+    cli = _import_cli_module()
+    called_kwargs: dict = {}
+
+    def _fake_run(conn, **kwargs):
+        called_kwargs.update(kwargs)
+        from src.data_agents.paper.homepage_ingest import IngestReport
+        from uuid import UUID
+
+        return IngestReport(
+            run_id=UUID("00000000-0000-0000-0000-000000000000"),
+            profs_total=0,
+            profs_processed=0,
+            profs_skipped=0,
+            papers_linked_total=0,
+            full_text_fetched_total=0,
+            pipeline_issues_filed=0,
+            run_duration_seconds=0.0,
+        )
+
+    monkeypatch.setattr(cli, "run_homepage_paper_ingest", _fake_run)
+    monkeypatch.setattr(cli, "_open_database_connection", lambda url: MagicMock())
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_homepage_paper_ingest.py",
+            "--dry-run",
+            "--official-profile-pages-only",
+        ],
+    )
+
+    cli.main()
+
+    assert called_kwargs.get("include_owned_homepage_pages") is False
+
+
+def test_cli_dispatches_include_owned_homepage_pages_flag(monkeypatch):
+    cli = _import_cli_module()
+    called_kwargs: dict = {}
+
+    def _fake_run(conn, **kwargs):
+        called_kwargs.update(kwargs)
+        from src.data_agents.paper.homepage_ingest import IngestReport
+        from uuid import UUID
+
+        return IngestReport(
+            run_id=UUID("00000000-0000-0000-0000-000000000000"),
+            profs_total=0,
+            profs_processed=0,
+            profs_skipped=0,
+            papers_linked_total=0,
+            full_text_fetched_total=0,
+            pipeline_issues_filed=0,
+            run_duration_seconds=0.0,
+        )
+
+    monkeypatch.setattr(cli, "run_homepage_paper_ingest", _fake_run)
+    monkeypatch.setattr(cli, "_open_database_connection", lambda url: MagicMock())
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_homepage_paper_ingest.py",
+            "--dry-run",
+            "--include-owned-homepage-pages",
+        ],
+    )
+
+    cli.main()
+
+    assert called_kwargs.get("include_owned_homepage_pages") is True
+
+
+def test_cli_dispatches_external_resolution_budget(monkeypatch):
+    cli = _import_cli_module()
+    called_kwargs: dict = {}
+
+    def _fake_run(conn, **kwargs):
+        called_kwargs.update(kwargs)
+        from src.data_agents.paper.homepage_ingest import IngestReport
+        from uuid import UUID
+
+        return IngestReport(
+            run_id=UUID("00000000-0000-0000-0000-000000000000"),
+            profs_total=0,
+            profs_processed=0,
+            profs_skipped=0,
+            papers_linked_total=0,
+            full_text_fetched_total=0,
+            pipeline_issues_filed=0,
+            run_duration_seconds=0.0,
+        )
+
+    monkeypatch.setattr(cli, "run_homepage_paper_ingest", _fake_run)
+    monkeypatch.setattr(cli, "_open_database_connection", lambda url: MagicMock())
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_homepage_paper_ingest.py",
+            "--dry-run",
+            "--external-resolution-max-per-professor",
+            "3",
+        ],
+    )
+
+    cli.main()
+
+    assert called_kwargs.get("external_resolution_max_per_professor") == 3
 
 
 def test_cli_dispatches_llm_publication_extraction(monkeypatch):
@@ -306,6 +422,65 @@ def test_llm_publication_extractor_retries_transient_create_failure(monkeypatch)
     assert attempts == 2
 
 
+def test_llm_publication_extractor_breaks_after_consecutive_failures(monkeypatch):
+    cli = _import_cli_module()
+    attempts = 0
+
+    class _FakeCompletions:
+        def create(self, **_kwargs):
+            nonlocal attempts
+            attempts += 1
+            raise TimeoutError("upstream timed out")
+
+    fake_client = SimpleNamespace(
+        chat=SimpleNamespace(completions=_FakeCompletions())
+    )
+
+    monkeypatch.setitem(
+        sys.modules,
+        "openai",
+        SimpleNamespace(OpenAI=lambda **_kwargs: fake_client),
+    )
+    monkeypatch.setattr(
+        cli,
+        "resolve_professor_llm_settings",
+        lambda *_args, **_kwargs: {
+            "local_llm_base_url": "https://api.deepseek.com",
+            "local_llm_api_key": "test-key",
+            "local_llm_model": "deepseek-v4-pro",
+        },
+    )
+    monkeypatch.setattr(
+        cli,
+        "_LLM_PUBLICATION_EXTRACTION_RETRY_BACKOFF_SECONDS",
+        (),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        cli,
+        "_LLM_PUBLICATION_EXTRACTION_MAX_CONSECUTIVE_FAILURES",
+        1,
+        raising=False,
+    )
+    html = (
+        "<main><h2>Publications</h2><p>J. Wang, M. Li. Robust neural "
+        "interface control for wearable robotics. IEEE Transactions on "
+        "Robotics, 2024.</p></main>"
+    )
+
+    extractor = cli._build_llm_publication_extractor(None, force_llm=True)
+    first = extractor(html, page_url="https://example.edu/faculty/wang")
+    second = extractor(html, page_url="https://example.edu/faculty/li")
+
+    assert attempts == 1
+    assert [publication.clean_title for publication in first] == [
+        "Robust neural interface control for wearable robotics"
+    ]
+    assert [publication.clean_title for publication in second] == [
+        "Robust neural interface control for wearable robotics"
+    ]
+
+
 def test_cli_commits_successful_ingest(monkeypatch, capsys):
     cli = _import_cli_module()
     conn = MagicMock()
@@ -388,6 +563,51 @@ def test_cli_dispatches_institution_filter(monkeypatch, tmp_path):
     )
     cli.main()
     assert called_kwargs.get("institution") == "南方科技大学"
+
+
+def test_cli_dispatches_department_and_seed_filters(monkeypatch):
+    cli = _import_cli_module()
+    called_kwargs: dict = {}
+
+    def _fake_run(conn, **kwargs):
+        called_kwargs.update(kwargs)
+        from src.data_agents.paper.homepage_ingest import IngestReport
+        from uuid import UUID
+
+        return IngestReport(
+            run_id=UUID("00000000-0000-0000-0000-000000000000"),
+            profs_total=0,
+            profs_processed=0,
+            profs_skipped=0,
+            papers_linked_total=0,
+            full_text_fetched_total=0,
+            pipeline_issues_filed=0,
+            run_duration_seconds=0.0,
+        )
+
+    monkeypatch.setattr(cli, "run_homepage_paper_ingest", _fake_run)
+    monkeypatch.setattr(cli, "_open_database_connection", lambda url: MagicMock())
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_homepage_paper_ingest.py",
+            "--institution",
+            "南方科技大学",
+            "--department",
+            "计算机科学与工程系",
+            "--seed-id",
+            "42",
+            "--dry-run",
+        ],
+    )
+
+    cli.main()
+
+    assert called_kwargs.get("institution") == "南方科技大学"
+    assert called_kwargs.get("department") == "计算机科学与工程系"
+    assert called_kwargs.get("seed_id") == "42"
 
 
 def test_cli_dispatches_resume_flag_with_explicit_path(monkeypatch, tmp_path):

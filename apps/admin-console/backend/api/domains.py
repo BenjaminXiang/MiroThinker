@@ -730,6 +730,7 @@ def _row_to_released_object(
             "authors": row.get("authors_display"),
             "year": row.get("year"),
             "venue": row.get("venue"),
+            "abstract": row.get("abstract_clean"),
             "doi": row.get("doi"),
             "arxiv_id": row.get("arxiv_id"),
             "openalex_id": row.get("openalex_id"),

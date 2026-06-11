@@ -145,7 +145,8 @@ def lookup_paper(conn: Any, *, title: str) -> list[dict]:
     like = f"%{title}%"
     return conn.execute(
         """
-        SELECT paper_id, title_clean, year, venue, abstract_clean, citation_count,
+        SELECT paper_id, title_clean, year, venue, authors_display,
+               abstract_clean, summary_zh, citation_count,
                count(*) OVER ()::int AS total_count
           FROM paper
          WHERE paper_id = %s OR title_clean ILIKE %s OR doi = %s
@@ -190,7 +191,21 @@ def answer_paper_profile(paper: dict) -> str:
     title = paper.get("title_clean") or paper.get("title") or paper.get("paper_id")
     year = paper.get("year") or "年份未知"
     venue = paper.get("venue") or "来源未知"
-    return f"{title} 是一篇 {year} 年发表于 {venue} 的论文。"
+    parts = [f"{title} 是一篇 {year} 年发表于 {venue} 的论文。"]
+    if authors := _compact_text(paper.get("authors_display")):
+        parts.append(f"作者：{authors}。")
+    if summary := _compact_text(paper.get("summary_zh") or paper.get("abstract_clean")):
+        parts.append(f"摘要：{summary}")
+    return "".join(parts)
+
+
+def _compact_text(value: Any, *, max_chars: int = 700) -> str:
+    if not isinstance(value, str):
+        return ""
+    text = re.sub(r"\s+", " ", value).strip()
+    if len(text) <= max_chars:
+        return text
+    return text[: max_chars - 1].rstrip() + "…"
 
 
 def answer_patent_profile(patent: dict) -> str:

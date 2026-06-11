@@ -201,7 +201,12 @@ def resolve_paper_by_title(
     cache_key = _title_cache_key(clean_title)
     if cache is not None:
         cached = cache.get(cache_key)
-        if cached is not None:
+        if cached is not None and _cached_resolution_matches_context(
+            cached,
+            query_title=clean_title,
+            author_hint=author_hint,
+            year_hint=year_hint,
+        ):
             return cached
 
     openalex_results = _search_openalex_by_title(clean_title, http_client=http_client)
@@ -884,12 +889,96 @@ def _confidence_with_hints(
     confidence = base_confidence
     if year_hint is not None and source_year == year_hint:
         confidence += 0.05
-    normalized_hint = (author_hint or "").strip().casefold()
-    if normalized_hint and any(
-        normalized_hint in author.casefold() for author in source_authors
-    ):
+    if _author_hint_matches_any_source_author(author_hint, source_authors):
         confidence += 0.05
     return min(confidence, 1.0)
+
+
+def _cached_resolution_matches_context(
+    cached: ResolvedPaper,
+    *,
+    query_title: str,
+    author_hint: str | None,
+    year_hint: int | None,
+) -> bool:
+    if cached.match_confidence < _CONFIDENCE_THRESHOLD:
+        return False
+    if _title_jaccard(query_title, cached.title) < _CONFIDENCE_THRESHOLD:
+        return False
+    if (
+        year_hint is not None
+        and cached.year is not None
+        and abs(cached.year - year_hint) > 1
+    ):
+        return False
+    return not _author_hint_definitively_conflicts(author_hint, cached.authors)
+
+
+def _author_hint_matches_any_source_author(
+    author_hint: str | None,
+    source_authors: tuple[str, ...],
+) -> bool:
+    hint = (author_hint or "").strip()
+    if not hint or not source_authors:
+        return False
+    return any(_author_hint_matches_source_author(hint, author) for author in source_authors)
+
+
+def _author_hint_matches_source_author(author_hint: str, source_author: str) -> bool:
+    normalized_hint = _normalize_author_name(author_hint)
+    normalized_author = _normalize_author_name(source_author)
+    if not normalized_hint or not normalized_author:
+        return False
+    if len(normalized_hint) >= 3 and normalized_hint in normalized_author:
+        return True
+    if len(normalized_author) >= 3 and normalized_author in normalized_hint:
+        return True
+    hint_tokens = set(_author_name_tokens(author_hint))
+    author_tokens = set(_author_name_tokens(source_author))
+    if len(hint_tokens) >= 2 and len(author_tokens) >= 2:
+        return hint_tokens == author_tokens or hint_tokens.issubset(author_tokens)
+    return False
+
+
+def _author_hint_definitively_conflicts(
+    author_hint: str | None,
+    source_authors: tuple[str, ...],
+) -> bool:
+    hint = (author_hint or "").strip()
+    if not hint or not source_authors:
+        return False
+    if _author_hint_matches_any_source_author(hint, source_authors):
+        return False
+    if _contains_cjk(hint):
+        return any(_contains_cjk(author) for author in source_authors)
+    return _has_strong_latin_author_form(hint) and any(
+        _has_strong_latin_author_form(author) for author in source_authors
+    )
+
+
+def _has_strong_latin_author_form(value: str) -> bool:
+    return len(_strong_latin_author_tokens(value)) >= 2
+
+
+def _strong_latin_author_tokens(value: str) -> tuple[str, ...]:
+    return tuple(
+        token
+        for token in _author_name_tokens(value)
+        if len(token) >= 2 and token.isascii() and token.isalpha()
+    )
+
+
+def _author_name_tokens(value: str) -> tuple[str, ...]:
+    normalized = _normalize_author_name(value)
+    if not normalized:
+        return ()
+    return tuple(normalized.split())
+
+
+def _normalize_author_name(value: str) -> str:
+    lowered = value.casefold()
+    without_punct = _TITLE_PUNCT_RE.sub(" ", lowered)
+    return _WHITESPACE_RE.sub(" ", without_punct).strip()
 
 
 def _ensure_client(client):

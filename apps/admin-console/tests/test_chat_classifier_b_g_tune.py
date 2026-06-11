@@ -285,6 +285,26 @@ def test_deterministic_english_paper_title_is_not_patent_number(
     assert result["name"] == "Image Super-Resolution Using Deep Convolutional Networks"
 
 
+def test_deterministic_paper_title_query_strips_wrappers_and_summary_suffix(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class _UnexpectedOpenAI:
+        def __init__(self, **_kwargs) -> None:
+            raise AssertionError("deterministic A paper query should not call LLM")
+
+    monkeypatch.delenv("CHAT_QUERY_CLASSIFIER", raising=False)
+    monkeypatch.setattr(chat_module, "OpenAI", _UnexpectedOpenAI)
+
+    result = chat_module._classify_query_with_llm(
+        "查找论文《Communication Efficient Federated Learning with Adaptive Quantization》的摘要和作者。"
+    )
+
+    assert result is not None
+    assert result["type"] == "A"
+    assert result["target_domain"] == "paper"
+    assert result["name"] == "Communication Efficient Federated Learning with Adaptive Quantization"
+
+
 def test_deterministic_ambiguous_paper_title_question_routes_to_g(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -574,3 +594,236 @@ def test_b_paper_topic_search_allows_non_ready_candidates_with_caveat(
     assert "质量门尚未完全完成" in response.answer_text
     assert response.structured_payload["matched_objects"][0]["quality_status"] == "needs_review"
     assert service.calls[0]["filter_by_quality_status"] is False
+
+
+def test_b_paper_topic_search_deduplicates_chunk_hits_by_paper_id(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class _FakeRetrievalService:
+        def retrieve(self, **_kwargs):
+            return [
+                chat_module.Evidence(
+                    object_type="paper",
+                    object_id="PAPER-1",
+                    score=0.62,
+                    snippet="Short duplicate chunk",
+                    source_url=None,
+                    metadata={"paper_id": "PAPER-1", "quality_status": "ready"},
+                ),
+                chat_module.Evidence(
+                    object_type="paper",
+                    object_id="PAPER-2",
+                    score=0.58,
+                    snippet="Another paper chunk",
+                    source_url=None,
+                    metadata={"paper_id": "PAPER-2", "quality_status": "ready"},
+                ),
+                chat_module.Evidence(
+                    object_type="paper",
+                    object_id="PAPER-1",
+                    score=0.91,
+                    snippet="Fuller duplicate chunk with better score and summary",
+                    source_url=None,
+                    metadata={"paper_id": "PAPER-1", "quality_status": "ready"},
+                ),
+            ]
+
+    class _FakeRows:
+        def fetchall(self):
+            return [
+                {
+                    "paper_id": "PAPER-1",
+                    "title_clean": "Hybrid Model Predictive Control",
+                    "year": 2021,
+                    "venue": "IEEE",
+                    "quality_status": "ready",
+                },
+                {
+                    "paper_id": "PAPER-2",
+                    "title_clean": "Grid Inverter Control",
+                    "year": 2022,
+                    "venue": "ACM",
+                    "quality_status": "ready",
+                },
+            ]
+
+    class _FakeConn:
+        def execute(self, _sql, _params):
+            return _FakeRows()
+
+    monkeypatch.setattr(
+        chat_module,
+        "_classify_query_with_llm",
+        lambda _query: {
+            "type": "B",
+            "topic": "模型预测控制",
+            "name": "",
+            "target_domain": "paper",
+            "reason": "paper semantic search",
+        },
+    )
+    monkeypatch.setattr(chat_module, "chat_use_retrieval_service", lambda: True)
+    monkeypatch.setattr(
+        chat_module, "get_retrieval_service", lambda: _FakeRetrievalService()
+    )
+
+    response = chat_module.chat(
+        chat_module.ChatRequest(query="找模型预测控制相关论文"),
+        response=Response(),
+        conn=_FakeConn(),
+    )
+
+    citation_ids = [citation.id for citation in response.citations]
+    object_ids = [
+        row["paper_id"] for row in response.structured_payload["matched_objects"]
+    ]
+
+    assert citation_ids == ["PAPER-1", "PAPER-2"]
+    assert object_ids == ["PAPER-1", "PAPER-2"]
+    assert response.structured_payload["match_count"] == 2
+    assert response.structured_payload["matched_objects"][0]["score"] == 0.91
+    assert "Fuller duplicate chunk" in response.answer_text
+
+
+def test_b_paper_topic_search_deduplicates_different_ids_by_title(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class _FakeRetrievalService:
+        def retrieve(self, **_kwargs):
+            return [
+                chat_module.Evidence(
+                    object_type="paper",
+                    object_id="PAPER-A",
+                    score=0.40,
+                    snippet="Lower score duplicate",
+                    source_url=None,
+                    metadata={"paper_id": "PAPER-A", "quality_status": "ready"},
+                ),
+                chat_module.Evidence(
+                    object_type="paper",
+                    object_id="PAPER-B",
+                    score=0.82,
+                    snippet="Higher score duplicate",
+                    source_url=None,
+                    metadata={"paper_id": "PAPER-B", "quality_status": "ready"},
+                ),
+            ]
+
+    class _FakeRows:
+        def fetchall(self):
+            return [
+                {
+                    "paper_id": "PAPER-A",
+                    "title_clean": "Adversarial Decoupling for Face Recognition",
+                    "year": 2021,
+                    "venue": "IEEE",
+                    "quality_status": "ready",
+                },
+                {
+                    "paper_id": "PAPER-B",
+                    "title_clean": "Adversarial Decoupling for Face Recognition",
+                    "year": 2021,
+                    "venue": "IEEE",
+                    "quality_status": "ready",
+                },
+            ]
+
+    class _FakeConn:
+        def execute(self, _sql, _params):
+            return _FakeRows()
+
+    monkeypatch.setattr(
+        chat_module,
+        "_classify_query_with_llm",
+        lambda _query: {
+            "type": "B",
+            "topic": "人脸识别",
+            "name": "",
+            "target_domain": "paper",
+            "reason": "paper semantic search",
+        },
+    )
+    monkeypatch.setattr(chat_module, "chat_use_retrieval_service", lambda: True)
+    monkeypatch.setattr(
+        chat_module, "get_retrieval_service", lambda: _FakeRetrievalService()
+    )
+
+    response = chat_module.chat(
+        chat_module.ChatRequest(query="找人脸识别相关论文"),
+        response=Response(),
+        conn=_FakeConn(),
+    )
+
+    matched = response.structured_payload["matched_objects"]
+    assert [row["paper_id"] for row in matched] == ["PAPER-B"]
+    assert matched[0]["score"] == 0.82
+    assert "Higher score duplicate" in response.answer_text
+    assert "Lower score duplicate" not in response.answer_text
+
+
+def test_lookup_paper_selects_summary_and_authors_for_profile() -> None:
+    class _FakeRows:
+        def fetchall(self):
+            return []
+
+    class _FakeConn:
+        def __init__(self) -> None:
+            self.sql = ""
+
+        def execute(self, sql, _params):
+            self.sql = sql
+            return _FakeRows()
+
+    conn = _FakeConn()
+
+    chat_module._lookup_paper(
+        conn,
+        title="Communication Efficient Federated Learning with Adaptive Quantization",
+    )
+
+    assert "summary_zh" in conn.sql
+    assert "authors_display" in conn.sql
+
+
+def test_a_paper_profile_answer_surfaces_summary_and_authors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        chat_module,
+        "_classify_query_with_llm",
+        lambda _query: {
+            "type": "A",
+            "topic": "",
+            "name": "Communication Efficient Federated Learning with Adaptive Quantization",
+            "target_domain": "paper",
+            "reason": "test",
+        },
+    )
+    monkeypatch.setattr(
+        chat_module,
+        "_lookup_paper",
+        lambda _conn, *, title: [
+            {
+                "paper_id": "PAPER-35204DCCD66B",
+                "title_clean": title,
+                "year": 2022,
+                "venue": "ACM Transactions on Intelligent Systems and Technology",
+                "authors_display": "Yuzhu Mao, Wenbo Ding",
+                "summary_zh": "本文研究自适应量化下的通信高效联邦学习。",
+                "abstract_clean": "This paper studies communication efficient federated learning.",
+                "citation_count": None,
+            }
+        ],
+    )
+
+    response = chat_module.chat(
+        chat_module.ChatRequest(
+            query="查找论文《Communication Efficient Federated Learning with Adaptive Quantization》的摘要和作者。"
+        ),
+        response=Response(),
+        conn=object(),
+    )
+
+    assert response.query_type == "A_paper_profile"
+    assert "作者：Yuzhu Mao, Wenbo Ding" in response.answer_text
+    assert "摘要：本文研究自适应量化下的通信高效联邦学习。" in response.answer_text

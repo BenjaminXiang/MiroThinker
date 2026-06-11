@@ -12,6 +12,11 @@
 - [x] 2.3 Implement bridge guard and ensure `professor_paper_link` uses `link_status='verified'`, `is_officially_listed=true`, and page-tier evidence.
 - [x] 2.4 Wire homepage paper ingest and CLI to optionally use the validated LLM publication extractor.
 - [x] 2.5 Add Crossref, Semantic Scholar, and DBLP title-level resolver cascade before arXiv/web fallback, with conservative confidence tests and DBLP canonical-source storage support.
+- [x] 2.6 Add shared homepage fetch fast-fail/raw-text fallback so blocked profile pages do not require school-specific paper parsing code.
+- [x] 2.7 Run shared homepage paper ingest automatically after successful admin-triggered full seed runs, and preserve official source-page roles on same-URL homepage discoveries.
+- [x] 2.8 Ensure shared homepage paper ingest writes source-page evidence for second-hop publication pages and preserves `professor_paper_link.evidence_page_id`.
+- [x] 2.9 Move LLM-assisted homepage publication extraction into a shared paper module and wire admin full-seed follow-up to use it without putting LLM work back in the seed write loop.
+- [x] 2.10 Add SYSU cross-institution parser/adapter guardrails for SIC partial-representative-output headings and AM stale HTTP seed fallback.
 
 ## 3. Summary, Full-Text, And Index Follow-Up
 
@@ -29,6 +34,9 @@
 - [x] 4.5 Run full SIGS with a resume checkpoint after Ahmed and sample acceptance.
 - [x] 4.6 Run a cross-institution parser quality audit and record non-SIGS suspicious/low-recall findings.
 - [x] 4.7 Validate sampled SIGS records in both frontend detail pages and backend retrieval/chat recall after Milvus refresh.
+- [x] 4.8 Deduplicate paper topic-search chat results by paper ID so multiple Milvus chunks do not produce duplicate citations or matched objects.
+- [x] 4.9 Deduplicate paper topic-search chat results by normalized title so cross-source duplicate paper IDs do not produce duplicate citations or matched objects.
+- [x] 4.10 Record the 2026-06-10 seed 37/38/39 summary backfill, targeted Milvus refresh, frontend detail validation, exact paper chat, and paper semantic recall evidence.
 
 ## 5. Acceptance And Reporting
 
