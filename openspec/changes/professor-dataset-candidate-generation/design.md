@@ -113,6 +113,27 @@ searches to fill paper_summary gaps. The user explicitly rejected making that a
 Professor core requirement because many public sources are incomplete or
 ambiguous.
 
+### 6. Parallel cleaning is bounded dry-run generation, not direct writes
+
+Large existing dirty datasets should use bounded parallel candidate dry-run to
+exercise DeepSeek-backed cleanup at useful throughput. Parallelism belongs in
+candidate generation, not write mode. The output must remain the same evidence
+JSON that serial generation produces, so the existing write-mode evidence gate
+and post-write verification remain load-bearing.
+
+Workers must not share the main `psycopg` connection. The safe implementation is
+to keep bucket loading on the main connection, then process eligible bucket rows
+with a worker connection factory. Each row task opens its own connection or uses
+an isolated connection supplied by the factory, generates candidate/rejection
+evidence, closes the connection, and returns a result tagged with the original
+bucket row index. The aggregator then restores deterministic bucket order before
+building lane summaries.
+
+DeepSeek pressure should be controlled independently from row worker count. The
+candidate CLI should expose worker concurrency and provider concurrency/interval
+controls, and the provider client should reuse the existing file-lock based
+provider limiter already used by company enrichment paths.
+
 ## Risks / Trade-offs
 
 - [LLM variance] Generated summaries or translations may be shallow or
@@ -128,7 +149,8 @@ ambiguous.
   review-before-write candidates.
 - [Cost and runtime] Thousands of blockers can make generation expensive.
   Mitigation: lane filters, bucket limits, batch sizes, checkpointable evidence,
-  provider failure counts, and rerunnable selection hashes.
+  provider failure counts, provider rate limits, bounded worker concurrency,
+  and rerunnable selection hashes.
 - [Stale residual-risk issues] Existing residual-risk rows may remain after
   successful remediation. Mitigation: final post-write verification and later
   issue-resolution tooling should close or supersede resolved residual risks.
@@ -150,6 +172,9 @@ ambiguous.
    it to an operator-provided path.
 9. Run bounded real dry-runs against `miroflow_real`, record evidence, then run
    write mode only when the operator accepts the candidate evidence.
+10. Add bounded parallel candidate dry-run for the same evidence shape, using
+    independent worker connections and provider rate limits before scaling
+    DeepSeek cleaning beyond small samples.
 
 Rollback is operational: candidate-generation dry-run files can be discarded;
 write-mode remediation remains guarded by the existing run id, dry-run evidence,

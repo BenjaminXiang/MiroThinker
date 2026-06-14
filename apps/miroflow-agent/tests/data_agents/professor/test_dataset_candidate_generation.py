@@ -4,6 +4,7 @@ from src.data_agents.professor.core_profile_paper_quality_audit import (
     DatasetClosureBucketRow,
     DatasetClosureBuckets,
 )
+from src.data_agents.professor import dataset_candidate_generation as module
 from src.data_agents.professor.dataset_candidate_generation import (
     CandidateProviderFailure,
     CandidateRejection,
@@ -107,6 +108,73 @@ def test_candidate_generation_report_counts_candidates_failures_and_skips() -> N
     assert duplicate.affected_professor_ids == ("PROF-DUP-1",)
     assert duplicate.affected_paper_ids == ("PAPER-CANON", "PAPER-OLD")
     assert duplicate.rejections[0]["reason"] == "ambiguous_fuzzy_match"
+
+
+def test_parallel_candidate_generation_uses_worker_connections_and_preserves_order(
+    monkeypatch,
+) -> None:
+    buckets = DatasetClosureBuckets(
+        bucket_limit=2,
+        summary={
+            "ready_summary_lt_200": {
+                "total": 2,
+                "sampled": 2,
+                "truncated": False,
+                "remediation_lane": "profile_summary_repair",
+            }
+        },
+        rows=[
+            DatasetClosureBucketRow(
+                blocker_type="ready_summary_lt_200",
+                entity_type="professor",
+                remediation_lane="profile_summary_repair",
+                professor_id="PROF-PAR-1",
+                automatic_eligibility=True,
+            ),
+            DatasetClosureBucketRow(
+                blocker_type="ready_summary_lt_200",
+                entity_type="professor",
+                remediation_lane="profile_summary_repair",
+                professor_id="PROF-PAR-2",
+                automatic_eligibility=True,
+            ),
+        ],
+    )
+    worker_connections: list[_FakeWorkerConn] = []
+    generated_conn_labels: list[str] = []
+
+    def connection_factory() -> _FakeWorkerConn:
+        conn = _FakeWorkerConn(label=f"worker-{len(worker_connections) + 1}")
+        worker_connections.append(conn)
+        return conn
+
+    def fake_generate_candidate_for_row(**kwargs):
+        generated_conn_labels.append(kwargs["conn"].label)
+        assert kwargs["conn"].label != "main"
+        return _valid_profile_candidate(kwargs["row"].professor_id)
+
+    monkeypatch.setattr(
+        module,
+        "_generate_candidate_for_row",
+        fake_generate_candidate_for_row,
+    )
+
+    report = module.build_candidate_generation_report_for_buckets_parallel(
+        connection_factory=connection_factory,
+        buckets=buckets,
+        lanes=("profile_summary_repair",),
+        providers_factory=lambda: module.CandidateGenerationProviders(
+            provider_name="fake-llm"
+        ),
+        candidate_concurrency=2,
+    )
+
+    lane = report.lanes[0]
+    assert lane.candidate_count == 2
+    assert lane.provider_failure_count == 0
+    assert lane.affected_professor_ids == ("PROF-PAR-1", "PROF-PAR-2")
+    assert generated_conn_labels == ["worker-1", "worker-2"]
+    assert [conn.closed for conn in worker_connections] == [True, True]
 
 
 def test_profile_summary_input_assembly_collects_grounded_sources() -> None:
@@ -864,3 +932,12 @@ def _paper_input(
         link_status="verified",
         match_reason=match_reason,
     )
+
+
+class _FakeWorkerConn:
+    def __init__(self, *, label: str) -> None:
+        self.label = label
+        self.closed = False
+
+    def close(self) -> None:
+        self.closed = True

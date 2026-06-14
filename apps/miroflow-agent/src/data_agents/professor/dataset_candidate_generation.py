@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict, dataclass, replace
 from typing import Any, Callable, Literal, Sequence
 
@@ -85,6 +86,14 @@ _WHITESPACE_RE = re.compile(r"\s+")
 ProfileSummaryProvider = Callable[["ProfileSummaryInput"], Any]
 ResearchOverviewTranslator = Callable[[str], Any]
 ProfessorPaperSummaryProvider = Callable[["ProfessorPaperSummaryGenerationInput"], Any]
+
+
+@dataclass(frozen=True, slots=True)
+class CandidateGenerationProviders:
+    provider_name: str | None = None
+    profile_summary_provider: ProfileSummaryProvider | None = None
+    research_translator: ResearchOverviewTranslator | None = None
+    paper_summary_provider: ProfessorPaperSummaryProvider | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -1063,6 +1072,102 @@ def build_candidate_generation_report_for_buckets(
         rejections=tuple(rejections),
         lanes=normalized_lanes,
     )
+
+
+def build_candidate_generation_report_for_buckets_parallel(
+    *,
+    connection_factory: Callable[[], Any],
+    buckets: DatasetClosureBuckets,
+    lanes: Sequence[CandidateLaneName],
+    providers_factory: Callable[[], CandidateGenerationProviders],
+    candidate_concurrency: int = 1,
+) -> DatasetCandidateGenerationReport:
+    normalized_lanes = tuple(_normalize_lane(lane) for lane in lanes)
+    max_workers = max(1, int(candidate_concurrency))
+    indexed_results: list[
+        tuple[int, CandidateLike | CandidateRejection | CandidateProviderFailure]
+    ] = []
+    futures = {}
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        for row_index, row in enumerate(buckets.rows):
+            lane = _normalize_lane(row.remediation_lane)
+            if lane not in normalized_lanes:
+                continue
+            if not row.automatic_eligibility:
+                indexed_results.append(
+                    (
+                        row_index,
+                        CandidateRejection(
+                            lane=lane,
+                            professor_id=row.professor_id,
+                            paper_id=row.paper_id,
+                            duplicate_group_id=row.duplicate_group_id,
+                            reason=row.skip_reason or "not_automatically_eligible",
+                            next_action="manual_review_or_source_recollection",
+                            evidence=row.evidence or {},
+                        ),
+                    )
+                )
+                continue
+            future = executor.submit(
+                _generate_candidate_for_row_with_worker_connection,
+                row_index=row_index,
+                row=row,
+                lane=lane,
+                connection_factory=connection_factory,
+                providers_factory=providers_factory,
+            )
+            futures[future] = row_index
+
+        for future in as_completed(futures):
+            indexed_results.append(future.result())
+
+    candidates: list[CandidateLike] = []
+    provider_failures: list[CandidateProviderFailure] = []
+    rejections: list[CandidateRejection] = []
+    for _row_index, result in sorted(indexed_results, key=lambda item: item[0]):
+        if isinstance(result, CandidateProviderFailure):
+            provider_failures.append(result)
+        elif isinstance(result, CandidateRejection):
+            rejections.append(result)
+        else:
+            candidates.append(result)
+
+    return build_candidate_generation_report(
+        buckets,
+        candidates=tuple(candidates),
+        provider_failures=tuple(provider_failures),
+        rejections=tuple(rejections),
+        lanes=normalized_lanes,
+    )
+
+
+def _generate_candidate_for_row_with_worker_connection(
+    *,
+    row_index: int,
+    row: Any,
+    lane: CandidateLaneName,
+    connection_factory: Callable[[], Any],
+    providers_factory: Callable[[], CandidateGenerationProviders],
+) -> tuple[int, CandidateLike | CandidateRejection | CandidateProviderFailure]:
+    conn = connection_factory()
+    try:
+        providers = providers_factory()
+        result = _generate_candidate_for_row(
+            conn=conn,
+            row=row,
+            lane=lane,
+            profile_summary_provider=providers.profile_summary_provider,
+            research_translator=providers.research_translator,
+            paper_summary_provider=providers.paper_summary_provider,
+            provider_name=providers.provider_name,
+        )
+        return row_index, result
+    finally:
+        close = getattr(conn, "close", None)
+        if callable(close):
+            close()
 
 
 def enrich_buckets_with_candidate_write_evidence(

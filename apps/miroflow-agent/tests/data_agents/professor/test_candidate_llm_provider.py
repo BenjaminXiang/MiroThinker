@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import sys
+import types
 from types import SimpleNamespace
 
 import pytest
@@ -145,6 +147,39 @@ def test_candidate_llm_provider_missing_credentials_is_typed_failure() -> None:
     assert exc_info.value.retryable is True
     assert exc_info.value.provider_metadata["llm_profile"] == "deepseekv4pro"
     assert exc_info.value.provider_metadata["model"] == "deepseek-v4-pro"
+
+
+def test_candidate_llm_provider_wraps_openai_client_with_deepseek_limiter(
+    monkeypatch,
+) -> None:
+    from src.data_agents.company import provider_rate_limit
+
+    wrapped_calls: list[tuple[object, str]] = []
+
+    class FakeOpenAI:
+        def __init__(self, **kwargs) -> None:
+            self.kwargs = kwargs
+            self.chat = SimpleNamespace(completions=SimpleNamespace())
+
+    class FakeHttpxClient:
+        def __init__(self, **kwargs) -> None:
+            self.kwargs = kwargs
+
+    monkeypatch.setitem(sys.modules, "openai", types.SimpleNamespace(OpenAI=FakeOpenAI))
+    monkeypatch.setitem(sys.modules, "httpx", types.SimpleNamespace(Client=FakeHttpxClient))
+    monkeypatch.setattr(
+        provider_rate_limit,
+        "wrap_openai_client",
+        lambda client, provider_key: wrapped_calls.append((client, provider_key))
+        or client,
+    )
+
+    provider = ProfessorCandidateLLMProvider(
+        settings=_settings(task_type="profile_summary_synthesis"),
+    )
+
+    assert isinstance(provider.client, FakeOpenAI)
+    assert wrapped_calls == [(provider.client, "deepseek")]
 
 
 def _settings(

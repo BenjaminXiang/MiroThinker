@@ -82,3 +82,12 @@
 - [x] 11.4 Run bounded real-provider dry-runs for profile summary synthesis, English research overview translation, and Professor paper summary synthesis.
 - [x] 11.5 Run a bounded duplicate Paper merge candidate dry-run to preserve four-lane coverage.
 - [x] 11.6 Run targeted regression tests, Ruff, OpenSpec validation, and update acceptance/verification evidence.
+
+## 12. Parallel Candidate Dry-Run Cleaning
+
+- [x] 12.1 Add RED tests proving CLI `candidate-dry-run` accepts bounded candidate concurrency and provider limiter options.
+- [x] 12.2 Add RED tests proving parallel candidate generation uses worker connection factories instead of sharing the main connection.
+- [x] 12.3 Implement a deterministic parallel candidate report builder that preserves serial report shape, ordering, failure accounting, and write-mode handoff.
+- [x] 12.4 Wire CLI `--candidate-concurrency`, provider max concurrency, and provider minimum interval options while keeping serial behavior as the default for deterministic tests.
+- [x] 12.5 Reuse the existing provider limiter for DeepSeek-backed real providers so provider pressure is bounded independently from worker count.
+- [x] 12.6 Run targeted tests, Ruff, OpenSpec validation, and a bounded DeepSeek dry-run sample before any write-mode cleanup.

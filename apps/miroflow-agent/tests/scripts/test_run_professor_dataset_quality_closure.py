@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import io
+import os
 import sys
 import types
 from pathlib import Path
@@ -285,6 +286,110 @@ def test_cli_parse_args_defaults_candidate_provider_mode_to_real() -> None:
     args = cli._parse_args(["--mode", "candidate-dry-run"])
 
     assert args.provider_mode == "real"
+
+
+def test_cli_parse_args_accepts_parallel_candidate_and_provider_limiter_options() -> None:
+    cli = _import_cli()
+
+    args = cli._parse_args(
+        [
+            "--mode",
+            "candidate-dry-run",
+            "--candidate-concurrency",
+            "4",
+            "--provider-max-concurrency",
+            "3",
+            "--provider-min-interval-seconds",
+            "0.2",
+        ]
+    )
+
+    assert args.candidate_concurrency == 4
+    assert args.provider_max_concurrency == 3
+    assert args.provider_min_interval_seconds == 0.2
+
+
+def test_cli_candidate_dry_run_parallel_uses_connection_factory_and_provider_limiter(
+    monkeypatch,
+) -> None:
+    cli = _import_cli()
+    buckets = DatasetClosureBuckets(
+        bucket_limit=2,
+        summary={
+            "ready_summary_lt_200": {
+                "total": 2,
+                "sampled": 2,
+                "truncated": False,
+                "remediation_lane": "profile_summary_repair",
+            }
+        },
+        rows=[],
+    )
+    providers = cli.CandidateLLMProviderBundle(
+        provider_name="deepseek-v4-pro",
+        profile_summary_provider=lambda _profile_input: "profile",
+        research_translator=lambda _source_text: "research",
+        paper_summary_provider=lambda _generation_input: "paper",
+    )
+
+    monkeypatch.delenv("COMPANY_DEEPSEEK_MAX_CONCURRENCY", raising=False)
+    monkeypatch.delenv("COMPANY_DEEPSEEK_MIN_INTERVAL_SECONDS", raising=False)
+    monkeypatch.setattr(cli, "load_buckets", lambda _conn, bucket_limit: buckets)
+    monkeypatch.setattr(
+        cli,
+        "_build_candidate_llm_providers",
+        lambda **_kwargs: providers,
+        raising=False,
+    )
+
+    def fail_serial_builder(**_kwargs):
+        raise AssertionError("parallel candidate dry-run must not use serial builder")
+
+    def fake_parallel_builder(**kwargs):
+        assert kwargs["connection_factory"] is connection_factory
+        assert kwargs["buckets"] is buckets
+        assert kwargs["lanes"] == ("profile_summary_repair",)
+        assert kwargs["candidate_concurrency"] == 3
+        provider_bundle = kwargs["providers_factory"]()
+        assert provider_bundle.provider_name == "deepseek-v4-pro"
+        assert provider_bundle.profile_summary_provider is providers.profile_summary_provider
+        assert provider_bundle.research_translator is providers.research_translator
+        assert provider_bundle.paper_summary_provider is providers.paper_summary_provider
+        return build_candidate_generation_report(
+            buckets,
+            lanes=("profile_summary_repair",),
+        )
+
+    def connection_factory():
+        return "WORKER-CONN"
+
+    monkeypatch.setattr(
+        cli,
+        "build_candidate_generation_report_for_buckets",
+        fail_serial_builder,
+    )
+    monkeypatch.setattr(
+        cli,
+        "build_candidate_generation_report_for_buckets_parallel",
+        fake_parallel_builder,
+        raising=False,
+    )
+
+    exit_code = cli.run(
+        conn="CONN",
+        lanes=("profile_summary_repair",),
+        bucket_limit=2,
+        mode="candidate-dry-run",
+        output=io.StringIO(),
+        candidate_concurrency=3,
+        candidate_connection_factory=connection_factory,
+        provider_max_concurrency=4,
+        provider_min_interval_seconds=0.2,
+    )
+
+    assert exit_code == 0
+    assert os.environ["COMPANY_DEEPSEEK_MAX_CONCURRENCY"] == "4"
+    assert os.environ["COMPANY_DEEPSEEK_MIN_INTERVAL_SECONDS"] == "0.2"
 
 
 def test_cli_write_mode_without_evidence_is_rejected() -> None:

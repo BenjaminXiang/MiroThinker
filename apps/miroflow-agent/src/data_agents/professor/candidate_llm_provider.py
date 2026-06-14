@@ -142,8 +142,9 @@ class ProfessorCandidateLLMProvider:
             return None
         from openai import OpenAI
         import httpx
+        from src.data_agents.company.provider_rate_limit import wrap_openai_client
 
-        return OpenAI(
+        client = OpenAI(
             base_url=self.settings.base_url,
             api_key=self.settings.api_key,
             http_client=httpx.Client(
@@ -152,6 +153,10 @@ class ProfessorCandidateLLMProvider:
             ),
             timeout=self.settings.timeout_seconds,
             max_retries=self.settings.retry_budget,
+        )
+        return wrap_openai_client(
+            client,
+            provider_key=_provider_rate_limit_key(self.settings),
         )
 
     def _call_candidate_json(
@@ -388,3 +393,10 @@ def _usage_metadata(response: Any) -> dict[str, Any]:
 
 def _hash_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _provider_rate_limit_key(settings: ProfessorCandidateLLMTaskSettings) -> str:
+    marker = f"{settings.llm_profile} {settings.base_url} {settings.model}".lower()
+    if "deepseek" in marker:
+        return "deepseek"
+    return settings.llm_profile.strip().lower() or "default"

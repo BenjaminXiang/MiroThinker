@@ -1,0 +1,34 @@
+{
+  "linked_coverage": {
+    "linked_total": 49814,
+    "verified_linked_total": 47851
+  },
+  "orphan_papers": 0,
+  "paper_field_coverage": {
+    "abstract_clean_missing": 39358,
+    "abstract_clean_present": 10456,
+    "arxiv_id_missing": 49809,
+    "arxiv_id_present": 5,
+    "authors_display_missing": 331,
+    "authors_display_present": 49483,
+    "canonical_source_missing": 0,
+    "canonical_source_present": 49814,
+    "doi_missing": 36311,
+    "doi_present": 13503,
+    "openalex_id_missing": 38691,
+    "openalex_id_present": 11123,
+    "quality_status_missing": 0,
+    "quality_status_present": 49814,
+    "semantic_scholar_id_missing": 49814,
+    "semantic_scholar_id_present": 0,
+    "summary_zh_missing": 39433,
+    "summary_zh_present": 10381,
+    "title_clean_missing": 0,
+    "title_clean_present": 49814,
+    "title_raw_missing": 0,
+    "title_raw_present": 49814,
+    "total": 49814,
+    "venue_missing": 4328,
+    "venue_present": 45486
+  }
+}

@@ -9,7 +9,7 @@ import json
 import os
 from pathlib import Path
 import sys
-from typing import Sequence, TextIO
+from typing import Any, Callable, Sequence, TextIO
 
 from dotenv import load_dotenv
 import psycopg
@@ -26,7 +26,9 @@ from src.data_agents.professor.core_profile_paper_quality_audit import (  # noqa
     load_dataset_closure_buckets,
 )
 from src.data_agents.professor.dataset_candidate_generation import (  # noqa: E402
+    CandidateGenerationProviders,
     build_candidate_generation_report_for_buckets,
+    build_candidate_generation_report_for_buckets_parallel,
     enrich_buckets_with_candidate_write_evidence,
     format_candidate_generation_report,
 )
@@ -56,6 +58,14 @@ class CandidateLLMProviderBundle:
     research_translator: object | None
     paper_summary_provider: object | None
 
+    def to_generation_providers(self) -> CandidateGenerationProviders:
+        return CandidateGenerationProviders(
+            provider_name=self.provider_name,
+            profile_summary_provider=self.profile_summary_provider,
+            research_translator=self.research_translator,
+            paper_summary_provider=self.paper_summary_provider,
+        )
+
 
 def load_buckets(conn, *, bucket_limit: int):
     professor_metrics = load_baseline_professor_metrics(conn)
@@ -84,33 +94,57 @@ def run(
     llm_profile: str | None = None,
     provider_timeout_seconds: float | None = None,
     provider_retry_budget: int | None = None,
+    candidate_concurrency: int = 1,
+    candidate_connection_factory: Callable[[], Any] | None = None,
+    provider_max_concurrency: int | None = None,
+    provider_min_interval_seconds: float | None = None,
 ) -> int:
     if mode == "candidate-dry-run":
         buckets = load_buckets(conn, bucket_limit=bucket_limit)
-        provider_bundle = (
-            _build_candidate_llm_providers(
-                provider_name=provider_name,
-                llm_profile=llm_profile,
-                timeout_seconds=provider_timeout_seconds,
-                retry_budget=provider_retry_budget,
-            )
-            if provider_mode == "real"
-            else CandidateLLMProviderBundle(
+        _apply_provider_rate_limit_overrides(
+            provider_max_concurrency=provider_max_concurrency,
+            provider_min_interval_seconds=provider_min_interval_seconds,
+        )
+
+        def build_provider_bundle() -> CandidateLLMProviderBundle:
+            if provider_mode == "real":
+                return _build_candidate_llm_providers(
+                    provider_name=provider_name,
+                    llm_profile=llm_profile,
+                    timeout_seconds=provider_timeout_seconds,
+                    retry_budget=provider_retry_budget,
+                )
+            return CandidateLLMProviderBundle(
                 provider_name=provider_name or "deterministic",
                 profile_summary_provider=None,
                 research_translator=None,
                 paper_summary_provider=None,
             )
-        )
-        report = build_candidate_generation_report_for_buckets(
-            conn=conn,
-            buckets=buckets,
-            lanes=lanes,
-            profile_summary_provider=provider_bundle.profile_summary_provider,
-            research_translator=provider_bundle.research_translator,
-            paper_summary_provider=provider_bundle.paper_summary_provider,
-            provider_name=provider_bundle.provider_name,
-        )
+
+        if candidate_concurrency > 1:
+            if candidate_connection_factory is None:
+                raise ValueError(
+                    "candidate_connection_factory is required when "
+                    "candidate_concurrency > 1"
+                )
+            report = build_candidate_generation_report_for_buckets_parallel(
+                connection_factory=candidate_connection_factory,
+                buckets=buckets,
+                lanes=lanes,
+                providers_factory=lambda: build_provider_bundle().to_generation_providers(),
+                candidate_concurrency=candidate_concurrency,
+            )
+        else:
+            provider_bundle = build_provider_bundle()
+            report = build_candidate_generation_report_for_buckets(
+                conn=conn,
+                buckets=buckets,
+                lanes=lanes,
+                profile_summary_provider=provider_bundle.profile_summary_provider,
+                research_translator=provider_bundle.research_translator,
+                paper_summary_provider=provider_bundle.paper_summary_provider,
+                provider_name=provider_bundle.provider_name,
+            )
         rendered = format_candidate_generation_report(report)
         if candidate_output is not None:
             candidate_output_path = Path(candidate_output)
@@ -295,7 +329,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         sys.stderr.write("DATABASE_URL or --database-url is required.\n")
         return 2
     lanes = _resolve_lanes(args.lane)
-    with psycopg.connect(resolve_dsn(dsn), row_factory=dict_row) as conn:
+    resolved_dsn = resolve_dsn(dsn)
+    with psycopg.connect(resolved_dsn, row_factory=dict_row) as conn:
         return run(
             conn=conn,
             lanes=lanes,
@@ -310,6 +345,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             llm_profile=args.llm_profile,
             provider_timeout_seconds=args.provider_timeout_seconds,
             provider_retry_budget=args.provider_retry_budget,
+            candidate_concurrency=args.candidate_concurrency,
+            candidate_connection_factory=lambda: psycopg.connect(
+                resolved_dsn,
+                row_factory=dict_row,
+            ),
+            provider_max_concurrency=args.provider_max_concurrency,
+            provider_min_interval_seconds=args.provider_min_interval_seconds,
         )
 
 
@@ -405,6 +447,24 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         default=None,
         help="Optional retry budget override for real candidate LLM calls.",
     )
+    parser.add_argument(
+        "--candidate-concurrency",
+        type=int,
+        default=1,
+        help="Candidate dry-run worker concurrency. Values above 1 use worker connections.",
+    )
+    parser.add_argument(
+        "--provider-max-concurrency",
+        type=int,
+        default=None,
+        help="Optional DeepSeek provider max concurrency override for candidate dry-run.",
+    )
+    parser.add_argument(
+        "--provider-min-interval-seconds",
+        type=float,
+        default=None,
+        help="Optional DeepSeek provider minimum interval override for candidate dry-run.",
+    )
     return parser.parse_args(argv)
 
 
@@ -451,6 +511,23 @@ def _build_candidate_llm_providers(
         research_translator=research_provider.translate_research_overview,
         paper_summary_provider=paper_provider.generate_paper_summary,
     )
+
+
+def _apply_provider_rate_limit_overrides(
+    *,
+    provider_max_concurrency: int | None = None,
+    provider_min_interval_seconds: float | None = None,
+) -> dict[str, int | float]:
+    overrides: dict[str, int | float] = {}
+    if provider_max_concurrency is not None:
+        value = max(1, int(provider_max_concurrency))
+        os.environ["COMPANY_DEEPSEEK_MAX_CONCURRENCY"] = str(value)
+        overrides["deepseek_max_concurrency"] = value
+    if provider_min_interval_seconds is not None:
+        value = max(0.0, float(provider_min_interval_seconds))
+        os.environ["COMPANY_DEEPSEEK_MIN_INTERVAL_SECONDS"] = str(value)
+        overrides["deepseek_min_interval_seconds"] = value
+    return overrides
 
 
 def _load_write_mode_evidence_and_buckets(

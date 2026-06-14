@@ -52,11 +52,16 @@ Minimum expected command classes:
 | `.agents/runs/professor-dataset-candidate-generation/candidate-dry-run-real-provider-research-bucket12-translation-dotenv.json` | Real-provider English research overview translation succeeded with `candidate_count=12`, `provider_failure_count=0`, one `llm_translation` candidate carrying self-check evidence, provider metadata, prompt hash, and response hash. |
 | `.agents/runs/professor-dataset-candidate-generation/candidate-dry-run-real-provider-paper-summary-bucket1-dotenv.json` | Real-provider Professor paper summary synthesis succeeded with `candidate_count=1`, `provider_failure_count=0`, self-check evidence, provider metadata, prompt hash, and response hash. |
 | `.agents/runs/professor-dataset-candidate-generation/candidate-dry-run-duplicate-merge-bucket1-dotenv.json` | Duplicate Paper merge candidate lane remained covered with `candidate_count=1`, `provider_failure_count=0`, `candidate_status=needs_review`, and `write_recommendation=review_before_write`. |
+| `uv run pytest -n0 tests/data_agents/professor/test_candidate_llm_provider.py tests/data_agents/professor/test_dataset_candidate_generation.py tests/data_agents/professor/test_dataset_quality_closure.py tests/scripts/test_run_professor_dataset_quality_closure.py` | Passed after parallel dry-run update, `54 passed in 7.09s`. |
+| `.agents/runs/professor-dataset-candidate-generation/candidate-dry-run-parallel-llm-bucket20.json` | Bounded parallel real-provider dry-run passed with worker concurrency `4`, provider max concurrency `4`, provider interval `0.05s`, and no provider failures. Lane counts: profile `20/20`, research `20/20`, paper summary `11/20` with `9` duplicate-link rejections, duplicate merge `20/20`. |
+| `.agents/runs/professor-dataset-candidate-generation/core-profile-paper-quality-audit-full-summary.json` | Read-only full closure audit summary recorded `10,337` current closure bucket rows, including `441` short ready profile summaries, `2,510` missing Chinese research overviews, `2,200` missing Professor paper summaries, and `5,186` duplicate verified Paper title/year groups. The full row-level artifact was generated locally but is not tracked to avoid committing a production-data dump. |
+| `.agents/runs/professor-dataset-candidate-generation/paper-bad-title-cleanup-readonly-full.txt` | Read-only full `paper.title_clean` guard scan examined `49,814` rows and rejected `1,597` as implausible title pollution; no `--apply` write was executed. |
+| `.agents/runs/professor-dataset-candidate-generation/paper-table-field-coverage.json` | Read-only full Paper field coverage found `49,814` linked Papers, `0` orphan Papers, `39,358` missing `abstract_clean`, `39,433` missing `summary_zh`, and `36,311` missing DOI. |
 
 ## Skipped Checks
 
 - No broad write-mode remediation was executed.
-- Broad full-dataset real-provider generation was not executed; verification is
-  intentionally bounded to small lane samples before any write-mode remediation.
+- Broad full-dataset real-provider candidate generation was not executed;
+  verification used a bounded parallel sample before any write-mode remediation.
 - Frontend/API detail route checks were not run because this slice did not
   write remediation data.

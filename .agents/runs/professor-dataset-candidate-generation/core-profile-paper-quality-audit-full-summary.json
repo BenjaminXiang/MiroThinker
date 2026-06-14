@@ -1,0 +1,84 @@
+{
+  "readiness": "blocked",
+  "blockers": [
+    "ready_summary_lt_200:441",
+    "missing_research_overview_zh:2510",
+    "missing_professor_paper_summary:2200",
+    "duplicate_verified_paper_title_year_groups:5186"
+  ],
+  "professor_metrics": {
+    "has_research_source_label": 2512,
+    "missing_research_overview_zh": 2510,
+    "professors_with_verified_missing_paper_summary": 2200,
+    "professors_with_verified_papers": 2202,
+    "ready": 1407,
+    "ready_summary_lt_200": 441,
+    "research_overview_storage_available": true,
+    "summary_lt_150": 928,
+    "summary_lt_200": 1435,
+    "total": 3387
+  },
+  "paper_metrics": {
+    "canonical_source_distribution": {
+      "arxiv": 2,
+      "crossref": 2337,
+      "dblp": 79,
+      "manual": 306,
+      "openalex": 11012,
+      "prof_page_only": 34111,
+      "semantic_scholar": 4
+    },
+    "duplicate_affected_professors": 821,
+    "duplicate_groups_with_enriched_row": 5186,
+    "duplicate_title_year_groups": 5186,
+    "linked_missing_abstract": 37400,
+    "linked_missing_summary_zh": 37475,
+    "linked_papers": 47851,
+    "linked_with_pdf": 493,
+    "quality_status_distribution": {
+      "needs_enrichment": 34620,
+      "needs_review": 305,
+      "partial": 3371,
+      "ready": 9461,
+      "rejected": 94
+    },
+    "verified_links": 49482
+  },
+  "closure_summary": {
+    "duplicate_verified_paper_title_year_groups": {
+      "remediation_lane": "duplicate_paper_merge",
+      "sampled": 5186,
+      "total": 5186,
+      "truncated": false
+    },
+    "missing_professor_paper_summary": {
+      "remediation_lane": "professor_paper_summary_generation",
+      "sampled": 2200,
+      "total": 2200,
+      "truncated": false
+    },
+    "missing_research_overview_zh": {
+      "remediation_lane": "research_overview_backfill",
+      "sampled": 2510,
+      "total": 2510,
+      "truncated": false
+    },
+    "ready_summary_lt_200": {
+      "remediation_lane": "profile_summary_repair",
+      "sampled": 441,
+      "total": 441,
+      "truncated": false
+    }
+  },
+  "closure_row_count": 10337,
+  "duplicate_skip_reasons": [
+    {
+      "skip_reason": null,
+      "count": 5125
+    },
+    {
+      "skip_reason": "ambiguous_fuzzy_match",
+      "count": 61
+    }
+  ]
+}

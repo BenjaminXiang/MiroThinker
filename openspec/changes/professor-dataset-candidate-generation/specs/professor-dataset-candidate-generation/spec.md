@@ -33,6 +33,45 @@ or a provider failure that produced no output.
 - **THEN** it MUST NOT update Professor rows, Paper rows, profile sections,
   merge aliases, quality status, pipeline issues, or vector indexes
 
+### Requirement: Candidate dry-run can generate LLM candidates in parallel
+
+The system MUST support bounded parallel candidate generation for large dirty
+Professor datasets. Parallel candidate dry-run MUST preserve the same report
+schema, read-only behavior, selection hashes, provider failure accounting, and
+write-mode handoff semantics as serial candidate dry-run.
+
+Parallel workers MUST NOT share a mutable database connection. Each worker MUST
+use an independent worker connection or pre-fetched row input. LLM provider calls
+MUST be rate-limitable with explicit concurrency controls so DeepSeek-backed
+cleaning can scale without unbounded provider pressure.
+
+#### Scenario: Parallel candidate dry-run preserves report shape
+
+- **WHEN** candidate generation runs with `candidate_concurrency > 1`
+- **THEN** the output report includes the same lane counts, candidate rows,
+  provider failures, validation failures, skipped rows, samples, write evidence,
+  and selection hashes as the serial builder for the same inputs
+- **AND** candidates remain ordered deterministically by the original bucket
+  order and lane grouping
+- **AND** the report remains directly consumable by the existing write-mode
+  evidence gate
+
+#### Scenario: Parallel candidate dry-run uses independent worker connections
+
+- **WHEN** parallel candidate generation needs database-backed inputs for a row
+- **THEN** each worker obtains its own connection from the configured connection
+  factory
+- **AND** the main dry-run connection is not shared across worker threads
+- **AND** worker connections are closed after row processing completes
+
+#### Scenario: Provider pressure is bounded
+
+- **WHEN** real DeepSeek-backed candidate generation runs in parallel
+- **THEN** the operator can configure candidate worker concurrency, provider
+  max concurrency, and provider minimum interval
+- **AND** provider request failures remain first-class dry-run evidence rather
+  than causing silent deterministic fallback or direct writes
+
 ### Requirement: Profile-summary candidates are Chinese and grounded
 
 The system MUST generate `candidate_profile_summary` values only from official

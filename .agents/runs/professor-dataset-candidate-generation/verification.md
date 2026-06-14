@@ -488,10 +488,193 @@ uv run ruff check \
 
 Result: passed, `All checks passed!`.
 
+### RED: Parallel candidate dry-run gaps
+
+Command:
+
+```bash
+cd apps/miroflow-agent
+uv run pytest -n0 tests/scripts/test_run_professor_dataset_quality_closure.py -k "parallel_candidate or provider_limiter"
+uv run pytest -n0 tests/data_agents/professor/test_dataset_candidate_generation.py -k "parallel_candidate_generation"
+```
+
+Result: failed as expected before implementation. CLI parsing rejected
+`--candidate-concurrency`, `--provider-max-concurrency`, and
+`--provider-min-interval-seconds`; `run()` rejected the new parallel kwargs;
+and `dataset_candidate_generation` did not expose
+`build_candidate_generation_report_for_buckets_parallel`.
+
+### Parallel candidate dry-run focused tests
+
+Command:
+
+```bash
+cd apps/miroflow-agent
+uv run pytest -n0 tests/scripts/test_run_professor_dataset_quality_closure.py -k "parallel_candidate or provider_limiter"
+uv run pytest -n0 tests/data_agents/professor/test_dataset_candidate_generation.py -k "parallel_candidate_generation"
+uv run pytest -n0 tests/data_agents/professor/test_candidate_llm_provider.py -k "wraps_openai_client"
+```
+
+Result: passed. The CLI accepts parallel candidate and provider limiter
+options, parallel generation uses worker connection factories and closes worker
+connections, and the Professor DeepSeek-backed provider client is wrapped by
+the shared provider rate limiter.
+
+### Parallel candidate dry-run regression suite
+
+Command:
+
+```bash
+cd apps/miroflow-agent
+uv run pytest -n0 \
+  tests/data_agents/professor/test_candidate_llm_provider.py \
+  tests/data_agents/professor/test_dataset_candidate_generation.py \
+  tests/data_agents/professor/test_dataset_quality_closure.py \
+  tests/scripts/test_run_professor_dataset_quality_closure.py
+```
+
+Result: passed, `54 passed in 7.09s`.
+
+### Parallel candidate dry-run Ruff
+
+Command:
+
+```bash
+cd apps/miroflow-agent
+uv run ruff check \
+  src/data_agents/professor/candidate_llm_provider.py \
+  src/data_agents/professor/dataset_candidate_generation.py \
+  scripts/run_professor_dataset_quality_closure.py \
+  tests/data_agents/professor/test_candidate_llm_provider.py \
+  tests/data_agents/professor/test_dataset_candidate_generation.py \
+  tests/scripts/test_run_professor_dataset_quality_closure.py
+```
+
+Result: passed, `All checks passed!`.
+
+### Parallel candidate dry-run OpenSpec validation
+
+Command:
+
+```bash
+openspec validate "professor-dataset-candidate-generation" --strict
+```
+
+Result: passed, `Change 'professor-dataset-candidate-generation' is valid`.
+
+### Bounded parallel real-provider dry-run
+
+Command:
+
+```bash
+cd apps/miroflow-agent
+uv run python scripts/run_professor_dataset_quality_closure.py \
+  --database-url 'postgresql://miroflow:miroflow@localhost:15432/miroflow_real' \
+  --mode candidate-dry-run \
+  --lane profile_summary_repair \
+  --lane research_overview_backfill \
+  --lane professor_paper_summary_generation \
+  --lane duplicate_paper_merge \
+  --bucket-limit 20 \
+  --candidate-concurrency 4 \
+  --provider-max-concurrency 4 \
+  --provider-min-interval-seconds 0.05 \
+  --candidate-output /home/longxiang/MiroThinker/.agents/runs/professor-dataset-candidate-generation/candidate-dry-run-parallel-llm-bucket20.json \
+  --provider-timeout-seconds 90 \
+  --provider-retry-budget 0
+```
+
+Result: passed. Output artifact:
+`.agents/runs/professor-dataset-candidate-generation/candidate-dry-run-parallel-llm-bucket20.json`.
+
+Summary:
+
+| Lane | Input | Candidate | Validation Failures | Provider Failures | Skipped |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `profile_summary_repair` | 20 | 20 | 0 | 0 | 0 |
+| `research_overview_backfill` | 20 | 20 | 0 | 0 | 0 |
+| `professor_paper_summary_generation` | 20 | 11 | 0 | 0 | 9 |
+| `duplicate_paper_merge` | 20 | 20 | 0 | 0 | 0 |
+
+The `professor_paper_summary_generation` skipped rows were all
+`duplicate_verified_paper_links`, confirming duplicate Paper cleanup must
+precede broad Professor paper-summary writes for those rows.
+
+### Read-only full closure audit
+
+Command:
+
+```bash
+cd apps/miroflow-agent
+uv run python scripts/run_professor_core_profile_paper_quality_audit.py \
+  --database-url 'postgresql://miroflow:miroflow@localhost:15432/miroflow_real' \
+  --include-buckets \
+  --bucket-limit 100000 \
+  > /home/longxiang/MiroThinker/.agents/runs/professor-dataset-candidate-generation/core-profile-paper-quality-audit-full-buckets.json
+```
+
+Result: exited `1` as expected because readiness is `blocked`; the command was
+read-only and wrote the local full row-level audit artifact. The committed
+summary artifact is
+`.agents/runs/professor-dataset-candidate-generation/core-profile-paper-quality-audit-full-summary.json`;
+the full row-level artifact is kept local and untracked to avoid committing a
+production-data dump. Summary:
+
+| Blocker | Total rows |
+| --- | ---: |
+| `ready_summary_lt_200` | 441 |
+| `missing_research_overview_zh` | 2510 |
+| `missing_professor_paper_summary` | 2200 |
+| `duplicate_verified_paper_title_year_groups` | 5186 |
+
+The artifact expanded all `10,337` current closure bucket rows with no
+truncation.
+
+### Read-only full Paper title guard scan
+
+Command:
+
+```bash
+cd apps/miroflow-agent
+uv run python scripts/run_bad_title_cleanup.py \
+  --database-url 'postgresql://miroflow:miroflow@localhost:15432/miroflow_real' \
+  --confirm-real-db \
+  > /home/longxiang/MiroThinker/.agents/runs/professor-dataset-candidate-generation/paper-bad-title-cleanup-readonly-full.txt
+```
+
+Result: passed. The script examined `49,814` existing `paper.title_clean` rows,
+rejected `1,597` as implausible title pollution, and did not execute
+`--apply`.
+
+### Read-only full Paper field coverage
+
+Command:
+
+```bash
+cd apps/miroflow-agent
+uv run python - <<'PY' > /home/longxiang/MiroThinker/.agents/runs/professor-dataset-candidate-generation/paper-table-field-coverage.json
+# one-off read-only aggregate SQL query
+PY
+```
+
+Result: passed. Summary:
+
+| Metric | Count |
+| --- | ---: |
+| Total Paper rows | 49814 |
+| Orphan Paper rows | 0 |
+| Missing `abstract_clean` | 39358 |
+| Missing `summary_zh` | 39433 |
+| Missing DOI | 36311 |
+| Missing venue | 4328 |
+| Present OpenAlex id | 11123 |
+| Present Semantic Scholar id | 0 |
+
 ## Updated skipped checks
 
 - No broad write-mode remediation was executed.
-- No full-dataset real-provider generation was executed; real-provider evidence
-  is intentionally bounded to small lane samples.
+- No full-dataset real-provider candidate generation was executed;
+  real-provider evidence is bounded to lane samples before broad write-mode
+  remediation.
 - Frontend/API detail route checks were not run because this slice did not
   write remediation data.

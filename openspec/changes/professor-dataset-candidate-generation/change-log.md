@@ -51,3 +51,27 @@
   `.agents/runs/professor-dataset-candidate-generation/candidate-dry-run-duplicate-merge-bucket1-dotenv.json`;
   this lane remains deterministic/manual-review oriented and does not require
   a real LLM provider.
+- Added bounded parallel candidate dry-run support. The CLI now accepts
+  `--candidate-concurrency`, `--provider-max-concurrency`, and
+  `--provider-min-interval-seconds`; parallel candidate generation uses worker
+  connection factories and preserves the serial candidate evidence shape.
+- Reused the existing provider rate limiter for Professor DeepSeek-backed
+  candidate providers so provider pressure is bounded independently from row
+  worker concurrency.
+- Recorded a bounded parallel real-provider dry-run artifact at
+  `.agents/runs/professor-dataset-candidate-generation/candidate-dry-run-parallel-llm-bucket20.json`.
+  The run used worker concurrency `4`, provider max concurrency `4`, and
+  provider interval `0.05s`; profile and research lanes produced `20/20`
+  candidates, paper summary produced `11/20` candidates with `9`
+  duplicate-link rejections, and duplicate merge produced `20/20` candidates.
+- Recorded read-only full current-data audit artifacts:
+  `.agents/runs/professor-dataset-candidate-generation/core-profile-paper-quality-audit-full-summary.json`,
+  `.agents/runs/professor-dataset-candidate-generation/paper-bad-title-cleanup-readonly-full.txt`,
+  and
+  `.agents/runs/professor-dataset-candidate-generation/paper-table-field-coverage.json`.
+  These show the current Paper dirty-data problem is systemic: `5,186`
+  duplicate verified Paper title/year groups, `37,400+` verified linked Papers
+  missing abstracts or Chinese summaries, and `1,597` implausible existing
+  `paper.title_clean` rows found by the title guard. The full row-level bucket
+  artifact was generated locally but is not tracked to avoid committing a
+  production-data dump. No write-mode remediation was executed.
