@@ -12,9 +12,11 @@ from dataclasses import asdict
 from pathlib import Path
 
 import psycopg
+from dotenv import load_dotenv
 from psycopg.rows import dict_row
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(PROJECT_ROOT / ".env")
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -104,6 +106,40 @@ def _load_resume_ids(path: Path | None) -> set[str]:
                 resume_ids.add(entity_id)
                 break
     return resume_ids
+
+
+def _load_paper_id_file(path: Path | None) -> set[str]:
+    if path is None:
+        return set()
+    if not path.exists():
+        raise FileNotFoundError(f"paper id file not found: {path}")
+
+    paper_ids: set[str] = set()
+    for line_number, raw_line in enumerate(path.read_text().splitlines(), start=1):
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.startswith("{"):
+            try:
+                payload = json.loads(line)
+            except json.JSONDecodeError:
+                logger.warning(
+                    "Skipping corrupt paper id line %d in %s",
+                    line_number,
+                    path,
+                )
+                continue
+            if not isinstance(payload, dict):
+                continue
+            status = payload.get("status")
+            if isinstance(status, str) and status.lower() != "written":
+                continue
+            entity_id = payload.get("paper_id") or payload.get("id")
+            if isinstance(entity_id, str) and entity_id.strip():
+                paper_ids.add(entity_id.strip())
+            continue
+        paper_ids.add(line)
+    return paper_ids
 
 
 _PROFESSOR_COLLECTION = PROFESSOR_PROFILES_COLLECTION
@@ -851,6 +887,14 @@ def _parse_args() -> argparse.Namespace:
         help="Restrict paper backfill to a specific paper_id. Repeatable.",
     )
     parser.add_argument(
+        "--paper-id-file",
+        type=Path,
+        help=(
+            "Restrict paper backfill to paper ids listed in a file. "
+            "Accepts one id per line or JSONL with paper_id/id and optional status."
+        ),
+    )
+    parser.add_argument(
         "--company-id",
         action="append",
         dest="company_ids",
@@ -962,6 +1006,12 @@ def main() -> int:
     if include_ids and domain != "professor":
         raise SystemExit("--id is currently supported only with --domain professor")
     paper_ids = set(args.paper_ids or [])
+    if args.paper_id_file is not None:
+        if domain != "paper":
+            raise SystemExit(
+                "--paper-id-file is currently supported only with --domain paper"
+            )
+        paper_ids.update(_load_paper_id_file(args.paper_id_file))
     if paper_ids and domain != "paper":
         raise SystemExit("--paper-id is currently supported only with --domain paper")
     company_ids = set(args.company_ids or [])

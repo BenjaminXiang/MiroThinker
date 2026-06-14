@@ -127,7 +127,6 @@ def test_pipeline_ops_summarizes_progress_failures_issues_and_actions() -> None:
     assert ops.issue_samples[0].source_rows == [1620, 1621]
     assert [action.action for action in ops.actions] == [
         "review_issues",
-        "retrieval_validation",
         "milvus_backfill",
     ]
 
@@ -192,3 +191,29 @@ def test_pipeline_ops_does_not_prompt_retrieval_validation_for_dry_run() -> None
     ops = dashboard._pipeline_ops(conn)
 
     assert ops.actions == []
+
+
+def test_pipeline_ops_does_not_prompt_global_retrieval_validation_for_company_upload() -> None:
+    conn = _OpsConn(
+        run_rows=[
+            _run(
+                "11111111-1111-1111-1111-111111111111",
+                run_kind="import_xlsx",
+                status="succeeded",
+                scope={
+                    "domain": "company",
+                    "source": "admin-console-upload",
+                    "result_summary": {
+                        "enrichment": {
+                            "batch_id": "55555555-5555-5555-5555-555555555555",
+                            "status": "queued",
+                        },
+                    },
+                },
+            ),
+        ]
+    )
+
+    ops = dashboard._pipeline_ops(conn)
+
+    assert all(action.action != "retrieval_validation" for action in ops.actions)

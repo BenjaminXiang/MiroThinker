@@ -1,5 +1,80 @@
 # Verification: prof-seed-admin-console
 
+## 2026-05-23 P1 close-out recheck
+
+Scope:
+- Close the remaining T1.4 migration-test task.
+- Re-run current P1 E2E gates before considering
+  `prof-seed-admin-console` complete for the P0-P10 goal.
+
+Commands and outcomes:
+
+- `get_goal`
+  - Result: active goal returned for thread
+    `019e5565-62a3-74a3-b946-20c4b64d3e67`; objective is the P0-P10
+    staged execution plan. The previous `no such table: thread_goals`
+    error did not recur.
+
+- `DATABASE_URL_TEST=postgresql+psycopg://miroflow:miroflow@localhost:15432/miroflow_test_mock uv run --no-sync pytest tests/test_migration_v022.py -q`
+  - Workdir: `apps/admin-console`
+  - Result: 2 passed, 4 warnings.
+  - Coverage: V022 upgrade/downgrade/upgrade idempotency, expected
+    `professor_seed` columns, status CHECK rejection, and expected
+    indexes.
+
+- `DATABASE_URL_TEST=postgresql+psycopg://miroflow:miroflow@localhost:15432/miroflow_test_mock uv run --no-sync pytest tests/test_migration_v022.py tests/test_migration_v023.py tests/test_seeds_api.py tests/test_seed_cron.py -q`
+  - Workdir: `apps/admin-console`
+  - Result: 27 passed, 6 warnings.
+
+- `DATABASE_URL_TEST=postgresql+psycopg://miroflow:miroflow@localhost:15432/miroflow_test_mock uv run --no-sync pytest tests/postgres/test_run_single_seed.py -q -n0`
+  - Workdir: `apps/miroflow-agent`
+  - Result: 4 passed.
+
+- `just frontend-fresh`
+  - Workdir: `apps/admin-console`
+  - Result: TypeScript + Vite production build succeeded. Vite emitted
+    the existing large chunk warning only.
+
+- `DATABASE_URL=postgresql://miroflow:miroflow@localhost:15432/miroflow_test_mock uv run --no-sync alembic upgrade head`
+  - Workdir: `apps/miroflow-agent`
+  - Result: upgraded test DB from base through V024.
+
+- `DATABASE_URL=postgresql+psycopg://miroflow:miroflow@localhost:15432/miroflow_test_mock ADMIN_PROFESSOR_SEED_CRON_ENABLED=0 CHAT_USE_RETRIEVAL_SERVICE=0 uv run --no-sync uvicorn backend.main:app --host 127.0.0.1 --port 18189`
+  - Workdir: `apps/admin-console`
+  - Result: admin backend served on `http://127.0.0.1:18189`.
+
+- HTTP E2E smoke against `http://127.0.0.1:18189`
+  - `GET /api/health` -> 200 `{"status":"ok"}`.
+  - `POST /api/seeds` with `NoAdapter University` and
+    `https://example.com/no-adapter-seed-1779552630` -> 201, seed id `1`,
+    status `never_run`.
+  - `POST /api/seeds/1/trigger` -> 202, run id
+    `f9f764db-f88b-4532-957b-ade044ee32d8`, status `in_progress`.
+  - Poll `GET /api/seeds/1` -> status became `adapter_missing`;
+    `last_run_at` populated.
+
+- DB E2E evidence check
+  - Query matched one `pipeline_issue` row with
+    `stage='adapter_missing'`, `reported_by='professor_seed_runner'`,
+    `seed_id='1'`, and run id
+    `f9f764db-f88b-4532-957b-ade044ee32d8`.
+  - Matching `pipeline_run` was `status='failed'`,
+    `items_processed=0`, `items_failed=1`.
+
+- Browser smoke
+  - `AGENT_BROWSER_SESSION_NAME=mirothinker-p1-seeds agent-browser open http://127.0.0.1:18189/seeds`
+  - `AGENT_BROWSER_SESSION_NAME=mirothinker-p1-seeds agent-browser wait --text 'NoAdapter University'`
+  - `AGENT_BROWSER_SESSION_NAME=mirothinker-p1-seeds agent-browser get count 'tbody tr'`
+    -> 1.
+  - Page text showed `ADAPTER 缺失` summary count `1` and row status
+    `缺 adapter / adapter_missing`.
+  - Screenshot: `/tmp/mirothinker-p1-seeds-smoke.png`.
+
+- OpenAPI smoke
+  - `http://127.0.0.1:18189/openapi.json` included
+    `GET/POST /api/seeds`, `GET/PUT/DELETE /api/seeds/{seed_id}`, and
+    `POST /api/seeds/{seed_id}/trigger`.
+
 ## 2026-05-12 seed validation preflight
 
 Scope:
@@ -219,6 +294,49 @@ Real local runtime:
 - Started current admin backend against `miroflow_real` on
   `http://0.0.0.0:18188` with:
   `DATABASE_URL=postgresql+psycopg://miroflow:miroflow@localhost:15432/miroflow_real CHAT_USE_RETRIEVAL_SERVICE=0 uv run --no-sync uvicorn backend.main:app --host 0.0.0.0 --port 18188`.
+
+## 2026-05-13 SIGS seed live repair
+
+Scope:
+- Repair the live failed seed trigger for
+  `https://www.sigs.tsinghua.edu.cn/7644/list.htm`.
+- Verify the admin trigger path against `miroflow_real`, not only unit tests.
+
+Root cause:
+- `run_professor_pipeline` discovered `250` SIGS teachers successfully.
+- Canonical writeback failed because `connect()` returns `dict_row` by
+  default, while `professor.canonical_writer.upsert_source_page_for_url`
+  accessed `row[0]`. A transaction-local probe reproduced `KeyError: 0`
+  before the fix.
+
+Commands and outcomes:
+
+- `uv run --no-sync python - <<'PY' ... run_professor_pipeline(SIGS seed) ... PY`
+  - Result: `discovered_professor_count=250`, `failed_roster_fetch_count=0`,
+    `reason='sigs_teacher_api'`.
+
+- `DATABASE_URL=postgresql://miroflow:miroflow@localhost:15432/miroflow_real uv run --no-sync python - <<'PY' ... upsert_source_page_for_url probe ... PY`
+  - Red result before fix: `KeyError: 0`.
+
+- `DATABASE_URL=postgresql://miroflow:miroflow@localhost:15432/miroflow_test_profile_raw_text DATABASE_URL_TEST=postgresql+psycopg://miroflow:miroflow@localhost:15432/miroflow_test_profile_raw_text uv run --no-sync pytest tests/professor/test_canonical_writer.py -q -n0`
+  - Result: `9 passed, 30 warnings`.
+
+- `DATABASE_URL=postgresql://miroflow:miroflow@localhost:15432/miroflow_test_profile_raw_text DATABASE_URL_TEST=postgresql+psycopg://miroflow:miroflow@localhost:15432/miroflow_test_profile_raw_text uv run --no-sync pytest tests/postgres/test_run_single_seed.py -q -n0`
+  - Result: `4 passed`.
+
+- `uv run --no-sync pytest tests/data_agents/professor/test_roster_validation.py::test_discover_professor_seeds_uses_sigs_api_without_html_fetch -q -n0`
+  - Result: `1 passed`.
+
+- Live admin trigger:
+  - Restarted backend on `http://0.0.0.0:18188`.
+  - `POST /api/seeds/8/trigger` -> HTTP 202.
+  - Run `1f6a8f23-7c82-4d00-96cf-8db3c3d5a633` ->
+    `status='succeeded'`, `items_processed=250`, `items_failed=0`.
+  - `GET /api/seeds/8` -> `last_run_status='success'`.
+  - Post-run quality query -> `250/250` rows with `profile_raw_text`,
+    `250/250` rows with official profile page, `246/250` primary
+    affiliations with title, and zero new seed-runner issues for the run.
+
 - `curl -sS http://127.0.0.1:18188/api/health`
   - Result: `{"status":"ok"}`.
 - `curl -sS http://127.0.0.1:18188/api/seeds`

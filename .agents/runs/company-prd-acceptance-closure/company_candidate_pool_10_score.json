@@ -1,0 +1,20 @@
+{
+  "label_csv": "../../.agents/runs/company-prd-acceptance-closure/company_candidate_pool_10_unlabeled.csv",
+  "query_count": 10,
+  "answerable_queries": 0,
+  "corpus_gap_queries": 0,
+  "uncertain_queries": 0,
+  "unlabeled_queries": 10,
+  "corpus_coverage_rate": null,
+  "top5_hit_queries_on_answerable": 0,
+  "top5_hit_rate_on_answerable": null,
+  "top1_hit_queries_on_answerable": 0,
+  "top1_hit_rate_on_answerable": null,
+  "candidate_pool_hit_queries": 0,
+  "judged_top5_results": 0,
+  "hit_top5_results": 0,
+  "precision_at_5_on_answerable": null,
+  "partial_top5_results": 0,
+  "retrieval_missed_answerable_queries": [],
+  "pilot_top5_pass_if_representative": false
+}

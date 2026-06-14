@@ -102,6 +102,8 @@ class ProfessorPatentLink(BaseModel):
     link_role: ProfessorPatentLinkRole
     link_status: LinkStatus = LinkStatus.candidate
     evidence_source_type: ProfessorPatentEvidenceKind
+    evidence_url: str | None = None
+    evidence_anchor: str | None = None
     match_reason: str | None = None
     verified_by: VerifiedBy | None = None
     verified_at: datetime | None = None

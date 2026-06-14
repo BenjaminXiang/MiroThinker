@@ -1,0 +1,4 @@
+- [x] 1. Add a RED frontend test proving the professor list renders `summary_fields.profile_summary`.
+- [x] 2. Add a professor-only summary preview column to `DomainList.tsx` using the existing API payload.
+- [x] 3. Verify frontend tests and TypeScript build for the admin console.
+- [x] 4. Record live verification that `/api/professor` returns summaries and `/professor` renders them for review.

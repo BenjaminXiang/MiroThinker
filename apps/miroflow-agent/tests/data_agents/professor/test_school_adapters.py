@@ -1,11 +1,10 @@
-import os
-
-from src.data_agents.professor.models import DiscoveredProfessorSeed
 from src.data_agents.professor.school_adapters import (
     SchoolRosterAdapter,
     find_matching_school_adapter,
     school_adapter_bypass_enabled,
 )
+from src.data_agents.professor.adapter_resolution import resolve_seed_adapter_name
+from src.data_agents.professor.models import ProfessorRosterSeed
 
 
 def test_find_matching_school_adapter_returns_first_match():
@@ -56,3 +55,22 @@ def test_find_matching_school_adapter_returns_none_without_match():
         (adapter,),
         bypass=False,
     ) is None
+
+
+def test_sysu_seed_url_families_resolve_to_faculty_staff_adapter():
+    expected = {
+        "https://sece.sysu.edu.cn/szll/index.htm": "sysu-sece-faculty",
+        "https://sic.sysu.edu.cn/members/index.htm": "sysu-sic-members",
+        "https://am.sysu.edu.cn/szdw/index.htm": "sysu-am-teacher",
+    }
+    for url, adapter_name in expected.items():
+        assert (
+            resolve_seed_adapter_name(
+                ProfessorRosterSeed(
+                    institution="中山大学（深圳）",
+                    department="测试学院",
+                    roster_url=url,
+                )
+            )
+            == adapter_name
+        )

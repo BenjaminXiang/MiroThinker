@@ -18,6 +18,7 @@ import Chat from "./pages/Chat";
 import PipelineRuns from "./pages/PipelineRuns";
 import PipelineIssues from "./pages/PipelineIssues";
 import Seeds from "./pages/Seeds";
+import CompanyEnrichmentBatch from "./pages/CompanyEnrichmentBatch";
 
 const { Sider, Content } = Layout;
 
@@ -74,6 +75,10 @@ export default function App() {
             <Route path="/seeds" element={<Seeds />} />
             <Route path="/pipeline-runs" element={<PipelineRuns />} />
             <Route path="/pipeline-runs/:runId" element={<PipelineRuns />} />
+            <Route
+              path="/company-enrichment-batches/:batchId"
+              element={<CompanyEnrichmentBatch />}
+            />
             <Route path="/pipeline-issues" element={<PipelineIssues />} />
             <Route path="/:domain" element={<DomainList />} />
             <Route path="/:domain/:id" element={<RecordDetail />} />

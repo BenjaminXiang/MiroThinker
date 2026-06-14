@@ -84,6 +84,12 @@ def test_enrich_paper_metadata_from_crossref_by_doi() -> None:
                 "license": [{"URL": "https://creativecommons.org/licenses/by/4.0/"}],
                 "funder": [{"name": "NSFC"}, {"name": "National Key R&D Program of China"}],
                 "reference-count": 77,
+                "link": [
+                    {
+                        "URL": "https://publisher.example.org/paper.pdf",
+                        "content-type": "application/pdf",
+                    }
+                ],
                 "URL": "https://doi.org/10.1109/example",
             }
         }
@@ -101,5 +107,6 @@ def test_enrich_paper_metadata_from_crossref_by_doi() -> None:
     assert enrichment.license == "https://creativecommons.org/licenses/by/4.0/"
     assert enrichment.funders == ("NSFC", "National Key R&D Program of China")
     assert enrichment.reference_count == 77
+    assert enrichment.pdf_url == "https://publisher.example.org/paper.pdf"
     assert enrichment.source_url == "https://doi.org/10.1109/example"
     assert enrichment.enrichment_sources == ("crossref",)

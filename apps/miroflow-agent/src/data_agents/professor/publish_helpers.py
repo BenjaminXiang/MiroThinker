@@ -25,6 +25,7 @@ DEFAULT_OFFICIAL_DOMAIN_SUFFIXES = (
     "suat-sz.edu.cn",
     "sysu.edu.cn",
     "sztu.edu.cn",
+    "uestc.edu.cn",
 )
 
 

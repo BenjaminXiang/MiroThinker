@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from backend.deps import get_pg_conn
 from src.data_agents.canonical.company import (
     Company,
+    CompanyApplicationScenario,
     CompanySignalEvent,
     CompanySnapshot,
     CompanyTeamMember,
@@ -145,6 +146,63 @@ WHERE cse.company_id = %s
 ORDER BY cse.event_date DESC, cse.created_at DESC NULLS LAST, cse.event_id DESC
 """
 
+RECENT_EVENTS_SQL = """
+SELECT
+    cse.*
+FROM company_signal_event cse
+WHERE cse.company_id = %s
+  AND cse.status = 'active'
+ORDER BY cse.event_date DESC, cse.created_at DESC NULLS LAST, cse.event_id DESC
+LIMIT 20
+"""
+
+COMPANY_PRODUCTS_SQL = """
+SELECT
+    cp.product_id,
+    cp.canonical_name,
+    cp.short_description,
+    cp.official_product_url,
+    cp.product_category,
+    cp.target_customers,
+    cp.application_scenarios,
+    cp.technical_tags,
+    cp.quality_status,
+    cp.confidence::float AS confidence,
+    cp.last_refreshed_at
+FROM company_product cp
+WHERE cp.company_id = %s
+  AND cp.quality_status = 'ready'
+ORDER BY cp.confidence DESC NULLS LAST, cp.last_refreshed_at DESC NULLS LAST
+LIMIT 20
+"""
+
+COMPANY_APPLICATION_SCENARIOS_SQL = """
+SELECT
+    cas.*
+FROM company_application_scenario cas
+WHERE cas.company_id = %s
+  AND cas.quality_status = 'ready'
+ORDER BY cas.confidence DESC NULLS LAST, cas.last_refreshed_at DESC NULLS LAST
+LIMIT 20
+"""
+
+COMPANY_SOURCE_RECORDS_SQL = """
+SELECT
+    n.news_id,
+    n.source_url,
+    n.source_domain,
+    n.source_adapter,
+    n.title,
+    n.summary_clean,
+    n.fetched_at,
+    n.confidence::float AS confidence
+FROM company_news_item n
+WHERE n.company_id = %s
+  AND n.is_company_confirmed = true
+ORDER BY n.fetched_at DESC, n.created_at DESC
+LIMIT 20
+"""
+
 INDUSTRY_FACETS_SQL = """
 SELECT
     latest_snapshot.industry,
@@ -191,12 +249,41 @@ class CompanySnapshotSummary(BaseModel):
     snapshot_created_at: datetime | None = None
 
 
+class CompanyProductDetail(BaseModel):
+    product_id: str
+    canonical_name: str
+    short_description: str | None = None
+    official_product_url: str | None = None
+    product_category: str | None = None
+    target_customers: list[str] = Field(default_factory=list)
+    application_scenarios: list[str] = Field(default_factory=list)
+    technical_tags: list[str] = Field(default_factory=list)
+    quality_status: str
+    confidence: float
+    last_refreshed_at: datetime | None = None
+
+
+class CompanySourceRecord(BaseModel):
+    news_id: UUID
+    source_url: str
+    source_domain: str
+    source_adapter: str | None = None
+    title: str
+    summary_clean: str | None = None
+    fetched_at: datetime
+    confidence: float
+
+
 class CompanyDetailResponse(BaseModel):
     company: Company
     latest_snapshot: CompanySnapshot | None = None
     all_snapshots: list[CompanySnapshotSummary]
     team_members: list[CompanyTeamMember]
     funding_events: list[CompanySignalEvent]
+    recent_events: list[CompanySignalEvent]
+    products: list[CompanyProductDetail]
+    application_scenarios: list[CompanyApplicationScenario]
+    source_records: list[CompanySourceRecord]
 
 
 class IndustryFacet(BaseModel):
@@ -346,6 +433,22 @@ def get_company_detail(
         conn.execute(FUNDING_EVENTS_SQL, (company_id,)).fetchall(),
         CompanySignalEvent,
     )
+    recent_events = _rows_to_models(
+        conn.execute(RECENT_EVENTS_SQL, (company_id,)).fetchall(),
+        CompanySignalEvent,
+    )
+    products = _rows_to_models(
+        conn.execute(COMPANY_PRODUCTS_SQL, (company_id,)).fetchall(),
+        CompanyProductDetail,
+    )
+    application_scenarios = _rows_to_models(
+        conn.execute(COMPANY_APPLICATION_SCENARIOS_SQL, (company_id,)).fetchall(),
+        CompanyApplicationScenario,
+    )
+    source_records = _rows_to_models(
+        conn.execute(COMPANY_SOURCE_RECORDS_SQL, (company_id,)).fetchall(),
+        CompanySourceRecord,
+    )
 
     return CompanyDetailResponse(
         company=company,
@@ -353,6 +456,10 @@ def get_company_detail(
         all_snapshots=all_snapshots,
         team_members=team_members,
         funding_events=funding_events,
+        recent_events=recent_events,
+        products=products,
+        application_scenarios=application_scenarios,
+        source_records=source_records,
     )
 
 
@@ -477,6 +584,24 @@ ORDER BY
 """
 
 PROFESSOR_TOP_PAPERS_SQL = """
+WITH resolved_links AS (
+    SELECT
+        COALESCE(pma.canonical_paper_id, ppl.paper_id) AS resolved_paper_id,
+        ppl.topic_consistency_score,
+        ppl.link_status,
+        ppl.match_reason,
+        ppl.rejected_reason,
+        ppl.verified_by,
+        ppl.verified_at,
+        ppl.evidence_api_source,
+        ppl.evidence_page_id,
+        ppl.is_officially_listed
+    FROM professor_paper_link ppl
+    LEFT JOIN paper_merge_alias pma ON pma.old_paper_id = ppl.paper_id
+    WHERE ppl.professor_id = %s
+      AND ppl.link_status = %s
+),
+ranked_papers AS (
 SELECT
     p.paper_id,
     p.title_clean,
@@ -493,17 +618,47 @@ SELECT
     ppl.verified_at,
     ppl.evidence_api_source,
     ep.url AS evidence_page_url,
-    ppl.is_officially_listed
-FROM professor_paper_link ppl
-JOIN paper p ON p.paper_id = ppl.paper_id
+    ppl.is_officially_listed,
+    row_number() OVER (
+        PARTITION BY
+            lower(regexp_replace(COALESCE(p.title_clean, ''), '\\s+', '', 'g')),
+            p.year
+        ORDER BY
+            CASE WHEN p.canonical_source = 'prof_page_only' THEN 1 ELSE 0 END,
+            ppl.is_officially_listed DESC,
+            ppl.topic_consistency_score DESC NULLS LAST,
+            p.citation_count DESC NULLS LAST,
+            p.paper_id ASC
+    ) AS duplicate_rank
+FROM resolved_links ppl
+JOIN paper p ON p.paper_id = ppl.resolved_paper_id
 LEFT JOIN source_page ep ON ep.page_id = ppl.evidence_page_id
-WHERE ppl.professor_id = %s
-  AND ppl.link_status = %s
+WHERE COALESCE(p.identity_status, 'unverified') NOT IN ('rejected', 'merged')
+)
+SELECT
+    paper_id,
+    title_clean,
+    year,
+    venue,
+    citation_count,
+    authors_display,
+    canonical_source,
+    topic_consistency_score,
+    link_status,
+    match_reason,
+    rejected_reason,
+    verified_by,
+    verified_at,
+    evidence_api_source,
+    evidence_page_url,
+    is_officially_listed
+FROM ranked_papers
+WHERE duplicate_rank = 1
 ORDER BY
-    ppl.topic_consistency_score DESC NULLS LAST,
-    p.citation_count DESC NULLS LAST,
-    p.year DESC NULLS LAST,
-    p.title_clean ASC
+    topic_consistency_score DESC NULLS LAST,
+    citation_count DESC NULLS LAST,
+    year DESC NULLS LAST,
+    title_clean ASC
 LIMIT 20
 """
 

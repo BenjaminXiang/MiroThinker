@@ -31,8 +31,27 @@ def test_is_obvious_non_person_name_does_not_block_legitimate_name_with_news_sub
     assert not is_obvious_non_person_name("李新闻")
 
 
+def test_is_obvious_non_person_name_does_not_block_short_cjk_name_with_topic_substring():
+    assert not is_obvious_non_person_name("黄哲学")
+
+
 @pytest.mark.parametrize("title", ["Teaching", "工作履历"])
 def test_is_obvious_non_person_name_recognizes_direct_profile_nav_titles(title: str):
+    assert is_obvious_non_person_name(title)
+
+
+@pytest.mark.parametrize(
+    "title",
+    [
+        "个人简历",
+        "教育经历",
+        "研究成果",
+        "奖励荣誉",
+        "学术兼职",
+        "代表性论文",
+    ],
+)
+def test_is_obvious_non_person_name_recognizes_sigs_tab_section_titles(title: str):
     assert is_obvious_non_person_name(title)
 
 
@@ -72,6 +91,19 @@ def test_is_obvious_non_person_name_recognizes_zh_cms_section_labels(label: str)
     ],
 )
 def test_is_obvious_non_person_name_recognizes_english_nav_titles(label: str):
+    assert is_obvious_non_person_name(label)
+
+
+@pytest.mark.parametrize(
+    "label",
+    [
+        "Deep Bit lab",
+        "Highlighted News",
+        "Lab Introduction",
+        "Yuan Luo's Homepage",
+    ],
+)
+def test_is_obvious_non_person_name_recognizes_cuhk_mypage_labels(label: str):
     assert is_obvious_non_person_name(label)
 
 
@@ -133,6 +165,30 @@ def test_select_canonical_name_falls_back_to_roster_name_when_extracted_is_nav_n
     assert select_canonical_name(roster_name="靳玉乐", extracted_name="导航") == "靳玉乐"
     assert select_canonical_name(roster_name="陈向兵", extracted_name="学部概况") == "陈向兵"
     assert select_canonical_name(roster_name="Huthanance", extracted_name="概况") == "Huthanance"
+    assert select_canonical_name(roster_name="Ercan S. Kuruoglu", extracted_name="教育经历") == "Ercan S. Kuruoglu"
+
+
+@pytest.mark.parametrize(
+    ("roster_name", "extracted_name"),
+    [
+        ("赵展展", "面包屑"),
+        ("Loïc MARSOT", "友情链接"),
+        ("李明", "未开通"),
+        ("BRESAR, Miha", "学院概况"),
+    ],
+)
+def test_select_canonical_name_never_lets_sentinel_titles_override_roster_label(
+    roster_name: str, extracted_name: str
+):
+    assert (
+        select_canonical_name(roster_name=roster_name, extracted_name=extracted_name)
+        == roster_name
+    )
+
+
+def test_select_canonical_name_keeps_roster_name_when_extracted_identity_conflicts():
+    assert select_canonical_name(roster_name="白志勇", extracted_name="仪器申请") == "白志勇"
+    assert select_canonical_name(roster_name="白志勇", extracted_name="王五") == "白志勇"
 
 
 def test_select_canonical_name_normalizes_bom_prefixed_names():
@@ -148,6 +204,24 @@ def test_select_canonical_name_prefers_roster_when_extracted_name_is_profile_blo
     )
 
     assert select_canonical_name(roster_name="常瑞华", extracted_name=extracted_name) == "常瑞华"
+
+
+@pytest.mark.parametrize(
+    ("roster_name", "extracted_name"),
+    [
+        ("Yuan Luo", "Deep Bit lab"),
+        ("Yuan Luo", "Highlighted News"),
+        ("Yuan Luo", "Lab Introduction"),
+        ("Yuan Luo", "Yuan Luo's Homepage"),
+    ],
+)
+def test_select_canonical_name_prefers_roster_over_cuhk_mypage_labels(
+    roster_name: str, extracted_name: str
+):
+    assert (
+        select_canonical_name(roster_name=roster_name, extracted_name=extracted_name)
+        == roster_name
+    )
 
 
 # Round 7.18 — patterns observed in miroflow_real that slipped past earlier guard.
@@ -205,3 +279,7 @@ def test_is_obvious_non_person_name_keeps_short_middot_personal_names():
     """Short · names (Uyghur/Tibetan personal names) must not be rejected."""
     assert not is_obvious_non_person_name("吾买尔·阿卜杜拉")
     assert not is_obvious_non_person_name("次仁·卓玛")
+
+
+def test_is_obvious_non_person_name_rejects_not_open_placeholder():
+    assert is_obvious_non_person_name("未开通")

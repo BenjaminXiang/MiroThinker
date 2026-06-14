@@ -77,6 +77,19 @@ def test_get_related_supported_pairs_join_canonical_tables(
     assert conn.calls[0][1] == (source_id, 50)
 
 
+def test_get_related_professor_papers_excludes_rejected_paper_rows():
+    conn = _FakeConn([{"paper_id": "PAPER-1", "link_status": "verified"}])
+
+    _service(conn).get_related_objects(
+        source_domain="professor",
+        source_id="PROF-1",
+        target_domain="paper",
+    )
+
+    assert "identity_status, 'unverified') != 'rejected'" in conn.calls[0][0]
+    assert "quality_status, 'needs_enrichment') != 'rejected'" in conn.calls[0][0]
+
+
 def test_get_related_same_domain_returns_empty_without_query():
     conn = _FakeConn([{"paper_id": "PAPER-1"}])
 

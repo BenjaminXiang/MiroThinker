@@ -29,6 +29,7 @@ def _make(**overrides) -> PaperMetadataEnrichment:
         oa_status=None,
         reference_count=None,
         source_url=None,
+        pdf_url=None,
         enrichment_sources=(),
         authors=(),
         doi=None,
@@ -147,6 +148,54 @@ def test_s2_fills_tldr_when_others_lack_it():
     assert result.enrichment_sources == ("semantic_scholar",)
 
 
+def test_pdf_url_fills_when_abstract_sources_miss():
+    openalex = _make(
+        abstract=None,
+        venue="VenueA",
+        enrichment_sources=("openalex",),
+    )
+    s2 = _make(
+        pdf_url="https://example.org/open.pdf",
+        enrichment_sources=("semantic_scholar",),
+    )
+
+    result = enrich_paper_with_hybrid_sources(
+        "10.1234/abc",
+        openalex_lookup=lambda d: openalex,
+        crossref_lookup=lambda d: None,
+        semantic_scholar_lookup=lambda d: s2,
+    )
+
+    assert result is not None
+    assert result.abstract is None
+    assert result.pdf_url == "https://example.org/open.pdf"
+    assert result.enrichment_sources == ("openalex", "semantic_scholar")
+
+
+def test_unpaywall_fills_pdf_url_after_primary_sources_miss():
+    unpaywall = _make(
+        pdf_url="https://repository.example.org/paper.pdf",
+        source_url="https://repository.example.org/paper",
+        oa_status="green",
+        enrichment_sources=("unpaywall",),
+    )
+
+    result = enrich_paper_with_hybrid_sources(
+        "10.1234/abc",
+        openalex_lookup=lambda d: _make(enrichment_sources=("openalex",)),
+        crossref_lookup=lambda d: None,
+        semantic_scholar_lookup=lambda d: None,
+        unpaywall_lookup=lambda d: unpaywall,
+    )
+
+    assert result is not None
+    assert result.abstract is None
+    assert result.pdf_url == "https://repository.example.org/paper.pdf"
+    assert result.source_url == "https://repository.example.org/paper"
+    assert result.oa_status == "green"
+    assert result.enrichment_sources == ("openalex", "unpaywall")
+
+
 def test_arxiv_fills_abstract_after_openalex_crossref_and_s2_miss():
     openalex = _make(citation_count=12, enrichment_sources=("openalex",))
     arxiv = _make(
@@ -185,6 +234,33 @@ def test_arxiv_only_identifier_can_produce_enrichment():
     assert result is not None
     assert result.abstract == "arXiv-only abstract."
     assert result.enrichment_sources == ("arxiv",)
+
+
+def test_openalex_id_only_identifier_can_produce_enrichment():
+    captured: list[str] = []
+    openalex = _make(
+        abstract="OpenAlex-id abstract.",
+        venue="OpenAlex Venue",
+        citation_count=17,
+        enrichment_sources=("openalex",),
+    )
+
+    def fake_openalex_id_lookup(openalex_id: str) -> PaperMetadataEnrichment | None:
+        captured.append(openalex_id)
+        return openalex
+
+    result = enrich_paper_with_hybrid_sources(
+        None,
+        openalex_id="https://openalex.org/W123",
+        openalex_id_lookup=fake_openalex_id_lookup,
+    )
+
+    assert captured == ["W123"]
+    assert result is not None
+    assert result.abstract == "OpenAlex-id abstract."
+    assert result.venue == "OpenAlex Venue"
+    assert result.citation_count == 17
+    assert result.enrichment_sources == ("openalex",)
 
 
 def test_author_merge_preserves_orcid_and_adds_lower_priority_authors():

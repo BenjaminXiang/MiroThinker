@@ -151,9 +151,20 @@ class EducationExperience(SharedBaseModel):
     end_year: int | None = Field(default=None, ge=1900, le=2100)
 
 
+class CompanyWorkExperience(SharedBaseModel):
+    description: NonEmptyStr
+    organization: OptionalNonEmptyStr = None
+    role: OptionalNonEmptyStr = None
+    start_year: int | None = Field(default=None, ge=1900, le=2100)
+    end_year: int | None = Field(default=None, ge=1900, le=2100)
+
+
 class CompanyKeyPerson(SharedBaseModel):
     name: NonEmptyStr
     role: NonEmptyStr
+    description: OptionalNonEmptyStr = None
+    education_structured: list[EducationExperience] = Field(default_factory=list)
+    work_experience: list[CompanyWorkExperience] = Field(default_factory=list)
 
 
 class ProfessorRecord(SharedBaseModel):
@@ -233,11 +244,15 @@ class CompanyRecord(SharedBaseModel):
     id: NonEmptyStr
     name: NonEmptyStr
     normalized_name: NonEmptyStr
+    credit_code: OptionalNonEmptyStr = None
     industry: NonEmptyStr
+    legal_representative: OptionalNonEmptyStr = None
+    registered_capital: OptionalNonEmptyStr = None
     website: OptionalNonEmptyStr = None
     key_personnel: list[CompanyKeyPerson] = Field(default_factory=list)
     profile_summary: NonEmptyStr
     technology_route_summary: NonEmptyStr
+    patent_count: int | None = Field(default=None, ge=0)
     evidence: list[Evidence] = Field(min_length=1)
     last_updated: datetime
     quality_status: QualityStatus = "needs_review"
@@ -254,11 +269,15 @@ class CompanyRecord(SharedBaseModel):
             core_facts={
                 "name": self.name,
                 "normalized_name": self.normalized_name,
+                "credit_code": self.credit_code,
                 "industry": self.industry,
+                "legal_representative": self.legal_representative,
+                "registered_capital": self.registered_capital,
                 "website": self.website,
                 "key_personnel": [
                     person.model_dump(mode="json") for person in self.key_personnel
                 ],
+                "patent_count": self.patent_count,
             },
             summary_fields={
                 "profile_summary": self.profile_summary,

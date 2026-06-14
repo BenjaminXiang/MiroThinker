@@ -23,7 +23,7 @@ def _load_script():
     return _load_module("run_professor_phase_a_machine_audit", script_path)
 
 
-def test_phase_a_machine_audit_fills_identity_and_paper_verification(tmp_path, monkeypatch) -> None:
+def test_phase_a_machine_audit_fills_identity_and_retired_paper_verification(tmp_path, monkeypatch) -> None:
     module = _load_script()
     rerun_ok = tmp_path / "001_ok"
     rerun_bad = tmp_path / "002_bad"
@@ -107,25 +107,6 @@ def test_phase_a_machine_audit_fills_identity_and_paper_verification(tmp_path, m
     )
     output_dir = tmp_path / "machine_audit"
 
-    def fake_discover_best_hybrid_result(**kwargs):
-        if kwargs["name"] == "吴亚北":
-            return module.ProfessorPaperDiscoveryResult(
-                professor_id="PROF-1",
-                professor_name="Yabei Wu",
-                institution="南方科技大学",
-                author_id="https://openalex.org/A1",
-                h_index=15,
-                citation_count=708,
-                paper_count=70,
-                source="openalex",
-                school_matched=True,
-                fallback_used=False,
-                name_disambiguation_conflict=False,
-                papers=[],
-            )
-        return None
-
-    monkeypatch.setattr(module, "_discover_best_hybrid_result", fake_discover_best_hybrid_result)
     monkeypatch.setattr(
         module.sys,
         "argv",
@@ -145,12 +126,20 @@ def test_phase_a_machine_audit_fills_identity_and_paper_verification(tmp_path, m
     first, second = payload["items"]
     assert first["manual"]["identity_correct"] is True
     assert first["manual"]["paper_matches_judged"] == 2
-    assert first["manual"]["paper_matches_correct"] == 2
-    assert first["machine_audit"]["paper_verification"]["accepted"] is True
+    assert first["manual"]["paper_matches_correct"] == 0
+    assert first["machine_audit"]["paper_verification"]["accepted"] is False
+    assert (
+        first["machine_audit"]["paper_verification"]["reason"]
+        == "legacy_paper_discovery_retired"
+    )
     assert second["manual"]["identity_correct"] is True
     assert second["manual"]["paper_matches_judged"] == 3
     assert second["manual"]["paper_matches_correct"] == 0
     assert second["machine_audit"]["paper_verification"]["accepted"] is False
+    assert (
+        second["machine_audit"]["paper_verification"]["reason"]
+        == "legacy_paper_discovery_retired"
+    )
 
 
 def test_phase_a_machine_audit_uses_profile_selector_when_present(
@@ -224,24 +213,6 @@ def test_phase_a_machine_audit_uses_profile_selector_when_present(
     )
     output_dir = tmp_path / "machine_audit"
 
-    def fake_discover_best_hybrid_result(**kwargs):
-        assert kwargs["name"] == "乙老师"
-        return module.ProfessorPaperDiscoveryResult(
-            professor_id="PROF-2",
-            professor_name="乙老师",
-            institution="南方科技大学",
-            author_id="https://openalex.org/A2",
-            h_index=9,
-            citation_count=88,
-            paper_count=6,
-            source="openalex",
-            school_matched=True,
-            fallback_used=False,
-            name_disambiguation_conflict=False,
-            papers=[],
-        )
-
-    monkeypatch.setattr(module, "_discover_best_hybrid_result", fake_discover_best_hybrid_result)
     monkeypatch.setattr(
         module.sys,
         "argv",
@@ -261,10 +232,14 @@ def test_phase_a_machine_audit_uses_profile_selector_when_present(
     [item] = payload["items"]
     assert item["machine_audit"]["profile_name"] == "乙老师"
     assert item["manual"]["paper_matches_judged"] == 1
-    assert item["manual"]["paper_matches_correct"] == 1
+    assert item["manual"]["paper_matches_correct"] == 0
+    assert (
+        item["machine_audit"]["paper_verification"]["reason"]
+        == "legacy_paper_discovery_retired"
+    )
 
 
-def test_phase_a_machine_audit_accepts_strong_non_school_matched_openalex_result(
+def test_phase_a_machine_audit_retires_strong_non_school_matched_openalex_verification(
     tmp_path, monkeypatch
 ) -> None:
     module = _load_script()
@@ -322,23 +297,6 @@ def test_phase_a_machine_audit_accepts_strong_non_school_matched_openalex_result
     )
     output_dir = tmp_path / "machine_audit"
 
-    def fake_discover_best_hybrid_result(**kwargs):
-        return module.ProfessorPaperDiscoveryResult(
-            professor_id="PROF-3",
-            professor_name="Yao Zhou",
-            institution="Another Institution",
-            author_id="https://openalex.org/A3",
-            h_index=57,
-            citation_count=14746,
-            paper_count=316,
-            source="openalex",
-            school_matched=False,
-            fallback_used=False,
-            name_disambiguation_conflict=False,
-            papers=[],
-        )
-
-    monkeypatch.setattr(module, "_discover_best_hybrid_result", fake_discover_best_hybrid_result)
     monkeypatch.setattr(
         module.sys,
         "argv",
@@ -357,5 +315,9 @@ def test_phase_a_machine_audit_accepts_strong_non_school_matched_openalex_result
     payload = json.loads((output_dir / "phase_a_machine_audit.json").read_text(encoding="utf-8"))
     [item] = payload["items"]
     assert item["manual"]["paper_matches_judged"] == 5
-    assert item["manual"]["paper_matches_correct"] == 5
-    assert item["machine_audit"]["paper_verification"]["accepted"] is True
+    assert item["manual"]["paper_matches_correct"] == 0
+    assert item["machine_audit"]["paper_verification"]["accepted"] is False
+    assert (
+        item["machine_audit"]["paper_verification"]["reason"]
+        == "legacy_paper_discovery_retired"
+    )

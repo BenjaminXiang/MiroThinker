@@ -47,19 +47,20 @@ def test_translate_abstract_to_zh_returns_valid_summary():
     assert llm.chat.completions.create.call_count == 1
 
 
-def test_translate_abstract_to_zh_skips_empty_or_chinese_input():
-    llm = _llm_with_outputs([])
+def test_translate_abstract_to_zh_skips_empty_and_summarizes_chinese_input():
+    summary = _valid_summary("该研究围绕中文摘要来源中的核心问题展开，")
+    llm = _llm_with_outputs([summary])
 
     assert translate_abstract_to_zh("", llm_client=llm, llm_model="gemma") is None
     assert (
         translate_abstract_to_zh(
-            "这是一段已经是中文的摘要，介绍方法、结果和应用场景。",
+            "本文提出一种用于智能制造质量检测的深度学习方法，能够提升缺陷识别准确率，并在多条产线数据上验证了泛化能力。",
             llm_client=llm,
             llm_model="gemma",
         )
-        is None
+        == summary
     )
-    assert llm.chat.completions.create.call_count == 0
+    assert llm.chat.completions.create.call_count == 1
 
 
 def test_translate_abstract_to_zh_retries_invalid_length_once():
@@ -74,6 +75,31 @@ def test_translate_abstract_to_zh_retries_invalid_length_once():
 
     assert result == valid_summary
     assert llm.chat.completions.create.call_count == 2
+
+
+def test_translate_abstract_to_zh_accepts_detailed_six_hundred_char_summary():
+    summary = (
+        "为了提升虚拟现实（VR）用户的视觉体验，VR360视频需要比传统视频更高的分辨率与画质。目前主流的VR360投影格式"
+        "包括等距柱状投影（ERP）和立方体贴图投影（CMP），这些格式在投影至三维球面进行渲染时，对码率分配提出了新的"
+        "挑战。传统的处理方式通常根据像素位置经验性地为编码单元分配固定量化参数（QP），这种方法缺乏精确性与合理性，"
+        "限制了编码性能。针对这一问题，本研究提出了一种全新的熵平衡优化（EEO）方法，旨在提升VR360视频的编码效率。"
+        "该方法通过开发球面码率均衡策略，在视频编码的率失真优化过程中获取块级拉格朗日乘子（λ），并根据该参数动态确定"
+        "每个编码块的最佳QP值。基于EEO方法，研究进一步针对ERP和CMP格式分别开发了EEOA-ERP与EEOA-CMP两种算法。"
+        "实验结果表明，两种算法在全内帧（AI）、低延迟（LD）及随机访问（RA）配置下均取得了显著的BD-Rate节省，性能优于"
+        "HM16.17平台。具体而言，在低延迟配置下，EEOA-ERP较现有先进算法WSU-ERP实现了0.37%的BD-Rate节省；在随机访问"
+        "配置下，EEOA-CMP在相同测试条件下较HM16.17 VR CMP实现了2.6%的客观质量提升。"
+    )
+    assert 500 < len(summary) < 650
+    llm = _llm_with_outputs([summary])
+
+    result = translate_abstract_to_zh(
+        "A long technical abstract about VR 360-degree video coding.",
+        llm_client=llm,
+        llm_model="gemma",
+    )
+
+    assert result == summary
+    assert llm.chat.completions.create.call_count == 1
 
 
 def test_translate_abstract_to_zh_returns_none_on_llm_error():

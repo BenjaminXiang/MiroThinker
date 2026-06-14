@@ -26,7 +26,6 @@ SeedLastRunStatus = Literal[
     "never_run",
     "adapter_missing",
 ]
-
 VALID_LAST_RUN_STATUSES: tuple[str, ...] = (
     "success",
     "failure",
@@ -103,6 +102,7 @@ class Seed(BaseModel):
     seed_url: str
     last_run_at: datetime | None
     last_run_status: SeedLastRunStatus
+    failure_class: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -130,10 +130,64 @@ class SeedTriggerClaim(BaseModel):
 # cursor so both call sites see the same shape.
 
 
-_SELECT_COLUMNS = (
+_RETURNING_COLUMNS = (
     "id, school, department, seed_url, last_run_at, last_run_status, "
     "created_at, updated_at"
 )
+_SELECT_COLUMNS = """
+    id,
+    school,
+    department,
+    seed_url,
+    COALESCE(
+        (
+            SELECT COALESCE(latest_pr.finished_at, latest_pr.started_at, latest_pr.created_at)
+              FROM pipeline_run latest_pr
+             WHERE latest_pr.run_scope->>'domain' = 'professor'
+               AND latest_pr.run_scope->>'action' IN ('single_seed_trigger', 'single_seed_run')
+               AND latest_pr.run_scope->>'seed_id' = professor_seed.id::text
+             ORDER BY latest_pr.started_at DESC NULLS LAST,
+                      latest_pr.created_at DESC NULLS LAST,
+                      latest_pr.run_id DESC
+             LIMIT 1
+        ),
+        professor_seed.last_run_at
+    ) AS last_run_at,
+    COALESCE(
+        (
+            SELECT CASE latest_pr.status
+                       WHEN 'failed' THEN 'failure'
+                       WHEN 'succeeded' THEN 'success'
+                       WHEN 'running' THEN 'in_progress'
+                   END
+              FROM pipeline_run latest_pr
+             WHERE latest_pr.run_scope->>'domain' = 'professor'
+               AND latest_pr.run_scope->>'action' IN ('single_seed_trigger', 'single_seed_run')
+               AND latest_pr.run_scope->>'seed_id' = professor_seed.id::text
+             ORDER BY latest_pr.started_at DESC NULLS LAST,
+                      latest_pr.created_at DESC NULLS LAST,
+                      latest_pr.run_id DESC
+             LIMIT 1
+        ),
+        professor_seed.last_run_status
+    ) AS last_run_status,
+    created_at,
+    updated_at,
+    (
+        SELECT COALESCE(
+                   pr.error_summary->>'failure_class',
+                   pr.run_scope->>'failure_class'
+               )
+          FROM pipeline_run pr
+         WHERE pr.run_scope->>'domain' = 'professor'
+           AND pr.run_scope->>'action' IN ('single_seed_trigger', 'single_seed_run')
+           AND pr.run_scope->>'seed_id' = professor_seed.id::text
+         ORDER BY pr.started_at DESC NULLS LAST,
+                  pr.created_at DESC NULLS LAST,
+                  pr.run_id DESC
+         LIMIT 1
+    ) AS failure_class
+    """
 
 
 def _seed_cursor(conn: Any) -> Any:
@@ -175,7 +229,7 @@ def create_seed(conn: Any, payload: SeedCreate) -> Seed:
     sql = (
         "INSERT INTO professor_seed (school, department, seed_url) "
         "VALUES (%s, %s, %s) "
-        f"RETURNING {_SELECT_COLUMNS}"
+        f"RETURNING {_RETURNING_COLUMNS}"
     )
     with _seed_cursor(conn) as cur:
         cur.execute(
@@ -192,7 +246,7 @@ def update_seed(conn: Any, seed_id: int, payload: SeedUpdate) -> Seed | None:
         "UPDATE professor_seed "
         "SET school = %s, department = %s, seed_url = %s, updated_at = now() "
         "WHERE id = %s "
-        f"RETURNING {_SELECT_COLUMNS}"
+        f"RETURNING {_RETURNING_COLUMNS}"
     )
     with _seed_cursor(conn) as cur:
         cur.execute(

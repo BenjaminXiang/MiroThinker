@@ -1,0 +1,1312 @@
+{
+  "sampled_rows": 100,
+  "default_visible_count": 18,
+  "review_gated_count": 82,
+  "sample": [
+    {
+      "company_id": "COMP-15ef7c731ef6",
+      "company_name": "每开创新科技",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-42471dd61406",
+      "fact_name": "近距离开锁",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-15ef7c731ef6",
+      "company_name": "每开创新科技",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-f6e5d107e10f",
+      "fact_name": "钥匙分享",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-15ef7c731ef6",
+      "company_name": "每开创新科技",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-abbaadd425b6",
+      "fact_name": "时效密码",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-15ef7c731ef6",
+      "company_name": "每开创新科技",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-a1ead16b7187",
+      "fact_name": "临时密码",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-15ef7c731ef6",
+      "company_name": "每开创新科技",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-14d553f28168",
+      "fact_name": "权限管理",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-15ef7c731ef6",
+      "company_name": "每开创新科技",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-13846a596869",
+      "fact_name": "远程开锁",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-0c2f94b34e56",
+      "company_name": "映刻科技",
+      "fact_type": "product",
+      "fact_id": "PROD-a4a33f6206be",
+      "fact_name": "滴墨AI",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-54fd4dd036ff",
+      "company_name": "深圳迈塔兰斯科技",
+      "fact_type": "product",
+      "fact_id": "PROD-f6323a9ac0e4",
+      "fact_name": "可见光",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-54fd4dd036ff",
+      "company_name": "深圳迈塔兰斯科技",
+      "fact_type": "product",
+      "fact_id": "PROD-ba6db64dd67e",
+      "fact_name": "MetaToF®发射及接收",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-40b2fff69ff7",
+      "company_name": "方晶科技",
+      "fact_type": "product",
+      "fact_id": "PROD-a1626fd50dd6",
+      "fact_name": "光电耦合器",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-15ef7c731ef6",
+      "company_name": "每开创新科技",
+      "fact_type": "product",
+      "fact_id": "PROD-ba0cfe1d2b36",
+      "fact_name": "每开APP",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-40b2fff69ff7",
+      "company_name": "方晶科技",
+      "fact_type": "product",
+      "fact_id": "PROD-f77759a508ab",
+      "fact_name": "晶体管",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-58a0ad4cfd6f",
+      "company_name": "泊吧智能",
+      "fact_type": "product",
+      "fact_id": "PROD-b4736d3ea399",
+      "fact_name": "3D·AR360°全景智能驾驶辅助系统",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-54fd4dd036ff",
+      "company_name": "深圳迈塔兰斯科技",
+      "fact_type": "product",
+      "fact_id": "PROD-e922812d5304",
+      "fact_name": "MetaStruclight®结构光发射与接收",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-40b2fff69ff7",
+      "company_name": "方晶科技",
+      "fact_type": "product",
+      "fact_id": "PROD-010cea544175",
+      "fact_name": "闪光灯（Flash LED",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-8bc58b40fd9d",
+      "company_name": "怪猪科技",
+      "fact_type": "product",
+      "fact_id": "PROD-cf77602b842f",
+      "fact_name": "电影验票通道闸机",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-0c33016e8091",
+      "company_name": "闪极科技（深圳）",
+      "fact_type": "product",
+      "fact_id": "PROD-9a0d0124ed17",
+      "fact_name": "氮化镓充电器65W (2C1A",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-54fd4dd036ff",
+      "company_name": "深圳迈塔兰斯科技",
+      "fact_type": "product",
+      "fact_id": "PROD-5cc1ba230d9a",
+      "fact_name": "折超混合超透镜系统",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-8bc58b40fd9d",
+      "company_name": "怪猪科技",
+      "fact_type": "product",
+      "fact_id": "PROD-ce32365ba03b",
+      "fact_name": "无人值守专用通道闸机",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-40b2fff69ff7",
+      "company_name": "方晶科技",
+      "fact_type": "product",
+      "fact_id": "PROD-0a7e1cb1ed21",
+      "fact_name": "二极管系列",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-40b2fff69ff7",
+      "company_name": "方晶科技",
+      "fact_type": "product",
+      "fact_id": "PROD-249715019798",
+      "fact_name": "场效应管（MOSFET",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-58a0ad4cfd6f",
+      "company_name": "泊吧智能",
+      "fact_type": "product",
+      "fact_id": "PROD-9eb77bce00f7",
+      "fact_name": "天双360全景泊车影像系统",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-0c33016e8091",
+      "company_name": "闪极科技（深圳）",
+      "fact_type": "product",
+      "fact_id": "PROD-531c7679166b",
+      "fact_name": "氮化镓充电器90W (2C1A",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-0c33016e8091",
+      "company_name": "闪极科技（深圳）",
+      "fact_type": "product",
+      "fact_id": "PROD-8eeabbeffa87",
+      "fact_name": "氮化镓充电器100W (3C1A",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-8700bc405596",
+      "company_name": "森歌数据技术",
+      "fact_type": "product",
+      "fact_id": "PROD-71593e9c89f5",
+      "fact_name": "森镜 SenJing",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-050c3c2b6dd0",
+      "company_name": "华弘数库科技",
+      "fact_type": "product",
+      "fact_id": "PROD-6a903a3cb304",
+      "fact_name": "智慧通行方案",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-8bc58b40fd9d",
+      "company_name": "怪猪科技",
+      "fact_type": "product",
+      "fact_id": "PROD-7099165d8a6f",
+      "fact_name": "前台和卖品收银收款pos机",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-8bc58b40fd9d",
+      "company_name": "怪猪科技",
+      "fact_type": "product",
+      "fact_id": "PROD-9650a18ffcf4",
+      "fact_name": "双触屏收款机",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-e9592c2e2f18",
+      "company_name": "深圳博瑞汇科技",
+      "fact_type": "product",
+      "fact_id": "PROD-db6f93ed4489",
+      "fact_name": "设备仓储备件管理系统",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-58e803df99c6",
+      "company_name": "深圳威科未来科技",
+      "fact_type": "product",
+      "fact_id": "PROD-7d49c7431a51",
+      "fact_name": "女娲云教室",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-0c33016e8091",
+      "company_name": "闪极科技（深圳）",
+      "fact_type": "product",
+      "fact_id": "PROD-e3811d0bcabc",
+      "fact_name": "氮化镓充电器",
+      "quality_status": "needs_review",
+      "confidence": 1.0,
+      "source_tiers": [
+        "iyiou"
+      ],
+      "default_visible_by_policy": true
+    },
+    {
+      "company_id": "COMP-03215767f7fc",
+      "company_name": "广东锐志教育科技",
+      "fact_type": "product",
+      "fact_id": "PROD-156765ffa096",
+      "fact_name": "3D打印教育解决方案",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-64ea2bfe73b8",
+      "company_name": "希奥端（深圳）计算技术",
+      "fact_type": "product",
+      "fact_id": "PROD-4d068522017d",
+      "fact_name": "AI/HPC重算力集群完整解决方案",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-64ea2bfe73b8",
+      "company_name": "希奥端（深圳）计算技术",
+      "fact_type": "product",
+      "fact_id": "PROD-08979890c5f4",
+      "fact_name": "Server-Class CPU",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-0696d91754ed",
+      "company_name": "帕西尼感知科技（深圳）",
+      "fact_type": "product",
+      "fact_id": "PROD-b9571e419097",
+      "fact_name": "ITPU多维触觉传感技术",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-0696d91754ed",
+      "company_name": "帕西尼感知科技（深圳）",
+      "fact_type": "product",
+      "fact_id": "PROD-ddc3427b7caa",
+      "fact_name": "DexH13 GEN2",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-64ea2bfe73b8",
+      "company_name": "希奥端（深圳）计算技术",
+      "fact_type": "product",
+      "fact_id": "PROD-77768759063c",
+      "fact_name": "ArmV9架构CPU芯片",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-2693c0aa88e3",
+      "company_name": "广东鹏行智能",
+      "fact_type": "product",
+      "fact_id": "PROD-38456c899dba",
+      "fact_name": "智能机器马",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-f6e1afc8e7ef",
+      "company_name": "尉尔（深圳）智能驱动",
+      "fact_type": "product",
+      "fact_id": "PROD-e8d02c2c084b",
+      "fact_name": "小功率伺服驱动控制器原型机",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-edf2ab684eeb",
+      "company_name": "寻界科技（深圳）",
+      "fact_type": "product",
+      "fact_id": "PROD-15438a78e74f",
+      "fact_name": "电脑及家用游戏机周边外设",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "iyiou"
+      ],
+      "default_visible_by_policy": true
+    },
+    {
+      "company_id": "COMP-3d081262df03",
+      "company_name": "小蚁数智科技",
+      "fact_type": "product",
+      "fact_id": "PROD-8710d1f80d6a",
+      "fact_name": "全场景私域互动CEM服务",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-663f61243e01",
+      "company_name": "宠会说社区（深圳）信息技术",
+      "fact_type": "product",
+      "fact_id": "PROD-8ea737038383",
+      "fact_name": "宠物短视频社区服务平台",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "iyiou"
+      ],
+      "default_visible_by_policy": true
+    },
+    {
+      "company_id": "COMP-580760c3af77",
+      "company_name": "安菲翁科技",
+      "fact_type": "product",
+      "fact_id": "PROD-8d8886113eda",
+      "fact_name": "Amphion AI Voice Platform",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-8862584f8c8d",
+      "company_name": "富创优越科技",
+      "fact_type": "product",
+      "fact_id": "PROD-2c2c6709e733",
+      "fact_name": "电子制造服务",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "pitchhub_36kr"
+      ],
+      "default_visible_by_policy": true
+    },
+    {
+      "company_id": "COMP-32b3c0a83596",
+      "company_name": "小质科技（深圳）",
+      "fact_type": "product",
+      "fact_id": "PROD-54476f1cc251",
+      "fact_name": "ProtonBase",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-bc16dd54ba13",
+      "company_name": "引力（深圳）智能机器人",
+      "fact_type": "product",
+      "fact_id": "PROD-c106ac71fb2a",
+      "fact_name": "AIOT智能穿戴项目",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "pitchhub_36kr"
+      ],
+      "default_visible_by_policy": true
+    },
+    {
+      "company_id": "COMP-8586a9a9402f",
+      "company_name": "安特狗航天航空科技",
+      "fact_type": "product",
+      "fact_id": "PROD-5c34282d231e",
+      "fact_name": "antg-X6超轻型单人飞行卡丁车",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-b23879f2afdf",
+      "company_name": "字语未来（深圳）智能科技",
+      "fact_type": "product",
+      "fact_id": "PROD-968174b7c68b",
+      "fact_name": "字语智能（Get智能创作",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-8923d71ac1a7",
+      "company_name": "奇勃（深圳）科技",
+      "fact_type": "product",
+      "fact_id": "PROD-bc7fa08b65e5",
+      "fact_name": "清洁机器人",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-644b2d6096fa",
+      "company_name": "安智光电科技",
+      "fact_type": "product",
+      "fact_id": "PROD-250122b0c7bd",
+      "fact_name": "影像启动传感器",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-7bbe6a692490",
+      "company_name": "全世萝卜机器人应用科技",
+      "fact_type": "product",
+      "fact_id": "PROD-7e370a328646",
+      "fact_name": "通用型服务机器人",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-1998f9b7f2ea",
+      "company_name": "安杰信息科技",
+      "fact_type": "product",
+      "fact_id": "PROD-fc92b5f1bc28",
+      "fact_name": "电梯管理智能化系统",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web",
+        "pitchhub_36kr"
+      ],
+      "default_visible_by_policy": true
+    },
+    {
+      "company_id": "COMP-a830afb573e8",
+      "company_name": "创晟半导体（深圳）",
+      "fact_type": "product",
+      "fact_id": "PROD-f861fd47cec0",
+      "fact_name": "Mozart series",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-0cf17fa46ea3",
+      "company_name": "千纳成材料科技",
+      "fact_type": "product",
+      "fact_id": "PROD-c6972e877730",
+      "fact_name": "激光锡球焊用锡球",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-606eb59bca82",
+      "company_name": "仙瞬科技",
+      "fact_type": "product",
+      "fact_id": "PROD-2c23e428d500",
+      "fact_name": "Digiwindow光学方案",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "iyiou"
+      ],
+      "default_visible_by_policy": true
+    },
+    {
+      "company_id": "COMP-663f61243e01",
+      "company_name": "宠会说社区（深圳）信息技术",
+      "fact_type": "product",
+      "fact_id": "PROD-491b6b104bf0",
+      "fact_name": "宠会说",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-dea8e1f974c4",
+      "company_name": "共达地创新技术（深圳）",
+      "fact_type": "product",
+      "fact_id": "PROD-e7658a13059f",
+      "fact_name": "自动化AI训练平台",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-6f91c205afe8",
+      "company_name": "亿家亿伴智能科技",
+      "fact_type": "product",
+      "fact_id": "PROD-2bdeb9dc5cf4",
+      "fact_name": "爱小伴",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-dea8e1f974c4",
+      "company_name": "共达地创新技术（深圳）",
+      "fact_type": "product",
+      "fact_id": "PROD-83ac84751b78",
+      "fact_name": "AI开发训练平台",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-6f91c205afe8",
+      "company_name": "亿家亿伴智能科技",
+      "fact_type": "product",
+      "fact_id": "PROD-362300dd36d8",
+      "fact_name": "AI儿童语伴机",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-47471c725c77",
+      "company_name": "劢微机器人科技（深圳）",
+      "fact_type": "product",
+      "fact_id": "PROD-24ab0f528a96",
+      "fact_name": "平衡重式MW-E系列无人叉车",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-0cf17fa46ea3",
+      "company_name": "千纳成材料科技",
+      "fact_type": "product",
+      "fact_id": "PROD-327700e8e178",
+      "fact_name": "BGA锡球",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-b5765e07b89a",
+      "company_name": "中农美蔬（深圳）科技",
+      "fact_type": "product",
+      "fact_id": "PROD-1f710e3b562f",
+      "fact_name": "美味番茄等蔬菜水果新品种",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "pitchhub_36kr"
+      ],
+      "default_visible_by_policy": true
+    },
+    {
+      "company_id": "COMP-47471c725c77",
+      "company_name": "劢微机器人科技（深圳）",
+      "fact_type": "product",
+      "fact_id": "PROD-0f8257160180",
+      "fact_name": "搬运机器人",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "iyiou"
+      ],
+      "default_visible_by_policy": true
+    },
+    {
+      "company_id": "COMP-8ed85d2c2d59",
+      "company_name": "不停科技",
+      "fact_type": "product",
+      "fact_id": "PROD-83d3d00952a2",
+      "fact_name": "智能炒菜机器人",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-0696d91754ed",
+      "company_name": "帕西尼感知科技（深圳）",
+      "fact_type": "product",
+      "fact_id": "PROD-7bd169bce0d8",
+      "fact_name": "TORA-ONE",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-606eb59bca82",
+      "company_name": "仙瞬科技",
+      "fact_type": "product",
+      "fact_id": "PROD-0392438f5929",
+      "fact_name": "Digiwindow™",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web",
+        "official_site"
+      ],
+      "default_visible_by_policy": true
+    },
+    {
+      "company_id": "COMP-0696d91754ed",
+      "company_name": "帕西尼感知科技（深圳）",
+      "fact_type": "product",
+      "fact_id": "PROD-b9d568c4be58",
+      "fact_name": "PX-6AX",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-8586a9a9402f",
+      "company_name": "安特狗航天航空科技",
+      "fact_type": "product",
+      "fact_id": "PROD-89f01c213763",
+      "fact_name": "ANTG-X6飞行器",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-f0950ec9d70f",
+      "company_name": "国关智能技术",
+      "fact_type": "product",
+      "fact_id": "PROD-b064f9fa1c67",
+      "fact_name": "AI+数字化心理健康产品",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-ecc0cd2b755d",
+      "company_name": "云尚通信技术（深圳）",
+      "fact_type": "product",
+      "fact_id": "PROD-7104d21bedab",
+      "fact_name": "高性能高通安卓智能主板",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "fact_type": "product",
+      "fact_id": "PROD-caf5ddcecf42",
+      "fact_name": "海外红人营销AI智能体",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web",
+        "iyiou"
+      ],
+      "default_visible_by_policy": true
+    },
+    {
+      "company_id": "COMP-bea1521092a1",
+      "company_name": "噜咔博士科技",
+      "fact_type": "product",
+      "fact_id": "PROD-0c95316ed915",
+      "fact_name": "噜咔博士AI拍学机",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-f95585c55bb0",
+      "company_name": "厚时人工智能",
+      "fact_type": "product",
+      "fact_id": "PROD-1ffbe7c5bedf",
+      "fact_name": "ChimerAI",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-bea1521092a1",
+      "company_name": "噜咔博士科技",
+      "fact_type": "product",
+      "fact_id": "PROD-786bf5e3bee4",
+      "fact_name": "AI拍学机",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-349200873eaf",
+      "company_name": "壹指通（深圳）科技控股",
+      "fact_type": "product",
+      "fact_id": "PROD-7ba2eed04454",
+      "fact_name": "智能活体指纹收款机",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-8586a9a9402f",
+      "company_name": "安特狗航天航空科技",
+      "fact_type": "product",
+      "fact_id": "PROD-a1f9c53eaaa6",
+      "fact_name": "AnTGOne",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-0dd6b7b967cd",
+      "company_name": "南科佳安机器人科技",
+      "fact_type": "product",
+      "fact_id": "PROD-7751dc30a629",
+      "fact_name": "磨抛工作站",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-0dd6b7b967cd",
+      "company_name": "南科佳安机器人科技",
+      "fact_type": "product",
+      "fact_id": "PROD-55ac86bf20dc",
+      "fact_name": "伺服控制器",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "iyiou"
+      ],
+      "default_visible_by_policy": true
+    },
+    {
+      "company_id": "COMP-e372939bd625",
+      "company_name": "偲百创（深圳）科技",
+      "fact_type": "product",
+      "fact_id": "PROD-78f07f27a997",
+      "fact_name": "SPT1G95ADD1",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-0dd6b7b967cd",
+      "company_name": "南科佳安机器人科技",
+      "fact_type": "product",
+      "fact_id": "PROD-76e54fd8bb2b",
+      "fact_name": "力传感器",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-0dd6b7b967cd",
+      "company_name": "南科佳安机器人科技",
+      "fact_type": "product",
+      "fact_id": "PROD-a6e8d72da16c",
+      "fact_name": "机器人电控柜",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-04d42897fcfb",
+      "company_name": "不止技术",
+      "fact_type": "product",
+      "fact_id": "PROD-7b58801fc074",
+      "fact_name": "不止VP350 机械旋转式二维DTOF激光雷达",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-c5ca849eebd6",
+      "company_name": "乾位智通（深圳）技术",
+      "fact_type": "product",
+      "fact_id": "PROD-2831f5cd039c",
+      "fact_name": "UWB精准定位系统",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-c4c34bc461d2",
+      "company_name": "光魔科技（深圳）",
+      "fact_type": "product",
+      "fact_id": "PROD-a2ff15b040b5",
+      "fact_name": "白日梦",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-30e533b7cacf",
+      "company_name": "博茨科技",
+      "fact_type": "product",
+      "fact_id": "PROD-217ecc5d302b",
+      "fact_name": "博茨工业自动化母机",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-f95585c55bb0",
+      "company_name": "厚时人工智能",
+      "fact_type": "product",
+      "fact_id": "PROD-e690158a3934",
+      "fact_name": "CHIMER AI",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "iyiou"
+      ],
+      "default_visible_by_policy": true
+    },
+    {
+      "company_id": "COMP-ecc0cd2b755d",
+      "company_name": "云尚通信技术（深圳）",
+      "fact_type": "product",
+      "fact_id": "PROD-38556bc0de80",
+      "fact_name": "边缘计算机",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-04d42897fcfb",
+      "company_name": "不止技术",
+      "fact_type": "product",
+      "fact_id": "PROD-d3a406d1d690",
+      "fact_name": "激光雷达",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "pitchhub_36kr"
+      ],
+      "default_visible_by_policy": true
+    },
+    {
+      "company_id": "COMP-d753ef187a43",
+      "company_name": "中科时代（深圳）计算机系统",
+      "fact_type": "product",
+      "fact_id": "PROD-7f48d0662399",
+      "fact_name": "MetaOS",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web",
+        "official_site"
+      ],
+      "default_visible_by_policy": true
+    },
+    {
+      "company_id": "COMP-bea1521092a1",
+      "company_name": "噜咔博士科技",
+      "fact_type": "product",
+      "fact_id": "PROD-7eeeaa505568",
+      "fact_name": "Snap AI拍学机",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-d753ef187a43",
+      "company_name": "中科时代（深圳）计算机系统",
+      "fact_type": "product",
+      "fact_id": "PROD-265f9430436a",
+      "fact_name": "awCenter",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-2ddf2be5348b",
+      "company_name": "天空飞车智能科技",
+      "fact_type": "product",
+      "fact_id": "PROD-bc2c271bfe07",
+      "fact_name": "城市空中交通飞行器智能网联运营系统",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-d753ef187a43",
+      "company_name": "中科时代（深圳）计算机系统",
+      "fact_type": "product",
+      "fact_id": "PROD-9c06fb6866cb",
+      "fact_name": "SRE系列IO产品",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-c0bfe2f78354",
+      "company_name": "奇历士技术（深圳）",
+      "fact_type": "product",
+      "fact_id": "PROD-1e3c794480de",
+      "fact_name": "高性能低成本ADC产品及IP",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "pitchhub_36kr"
+      ],
+      "default_visible_by_policy": true
+    },
+    {
+      "company_id": "COMP-10047ff88d61",
+      "company_name": "奇朵智能设备",
+      "fact_type": "product",
+      "fact_id": "PROD-c792e2c6c074",
+      "fact_name": "「十万个为什么」AI 儿童探索相机",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-db0aaac71165",
+      "company_name": "中研创科技",
+      "fact_type": "product",
+      "fact_id": "PROD-3fa84af7fa65",
+      "fact_name": "纳米级二氧化钛",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "iyiou"
+      ],
+      "default_visible_by_policy": true
+    },
+    {
+      "company_id": "COMP-d753ef187a43",
+      "company_name": "中科时代（深圳）计算机系统",
+      "fact_type": "product",
+      "fact_id": "PROD-cf0c7750e6cc",
+      "fact_name": "SV35",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    },
+    {
+      "company_id": "COMP-606eb59bca82",
+      "company_name": "仙瞬科技",
+      "fact_type": "product",
+      "fact_id": "PROD-e043af5af607",
+      "fact_name": "AR智能眼镜",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web",
+        "iyiou"
+      ],
+      "default_visible_by_policy": true
+    },
+    {
+      "company_id": "COMP-644b2d6096fa",
+      "company_name": "安智光电科技",
+      "fact_type": "product",
+      "fact_id": "PROD-5a9fbd489acf",
+      "fact_name": "视觉防夹传感器",
+      "quality_status": "needs_review",
+      "confidence": 0.95,
+      "source_tiers": [
+        "generic_web"
+      ],
+      "default_visible_by_policy": false
+    }
+  ]
+}

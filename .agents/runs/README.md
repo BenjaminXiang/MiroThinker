@@ -7,6 +7,7 @@ This directory is the **execution workspace** for OpenSpec changes, introduced i
 ```text
 .agents/runs/<change-id>/
 ├── implementation-plan.md      Claude-owned executable plan (slices, file-level scope, TDD steps)
+├── verification-contract.md    pre-implementation RED/GREEN contract and Superpowers mode
 ├── slices/                     per-slice notes
 │   ├── 001-<slug>.md
 │   └── 002-<slug>.md
@@ -22,6 +23,8 @@ The `<change-id>` is the same identifier used in `openspec/changes/<change-id>/`
 `.agents/runs/<change-id>/` is an **execution artifact**. It may narrow the implementation slice but **cannot override** OpenSpec or the legacy behavior baseline (CLAUDE.md §14.1).
 
 If implementation reveals the OpenSpec change is wrong, update OpenSpec first (`proposal.md`, `specs/`, `tasks.md`, `change-log.md`), then update the execution plan here.
+
+`verification-contract.md` is written before production-code edits for behavior-affecting work. It decides what RED is, what GREEN means, and whether Superpowers TDD, eval-first, trace-debug-first, or baseline-only execution is allowed. Superpowers may execute the discipline, but must not independently choose the RED artifact.
 
 ## Relationship to existing `.agents/` subdirectories
 

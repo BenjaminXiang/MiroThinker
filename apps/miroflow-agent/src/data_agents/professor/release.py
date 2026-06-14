@@ -19,6 +19,11 @@ from src.data_agents.publish import publish_jsonl
 
 from .enrichment import normalize_text
 from .models import MergedProfessorProfileRecord
+from .profile_summary_contract import (
+    OPERATOR_META_KEYWORDS,
+    contains_operator_meta_language,
+    extract_profile_fact_sentences,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -243,29 +248,24 @@ def _build_rule_based_summaries(
         title=title,
     )
     directions = _normalize_research_directions(profile.research_directions)
+    fact_sentences = extract_profile_fact_sentences(
+        profile.profile_raw_text,
+        max_sentences=4,
+    )
     if directions:
         direction_text = "、".join(directions[:5])
         profile_summary_base = (
             f"{name}现任{affiliation_text}，研究方向包括{direction_text}。"
-            "当前画像以高校官网教师目录与个人资料页为主锚点，优先保留可核验事实字段。"
         )
     else:
-        profile_summary_base = (
-            f"{name}现任{affiliation_text}。"
-            "当前公开资料以高校官网教师目录与个人资料页为主，研究方向信息仍在持续补全。"
-        )
+        profile_summary_base = f"{name}现任{affiliation_text}。"
+    if fact_sentences:
+        profile_summary_base = f"{profile_summary_base}{''.join(fact_sentences)}"
     profile_summary = _ensure_summary_length(
-        profile_summary_base
-        + (
-            "已同步整理身份、院系、职称与研究方向等结构化字段，"
-            "能够支持按学校和方向的细粒度检索。"
-        ),
-        min_length=200,
+        profile_summary_base,
+        min_length=120,
         max_length=300,
-        padding_sentences=(
-            "该版本强调“官网证据优先、辅助来源补充”的采集原则，确保身份锚点稳定可靠。",
-            "在论文和企业域完成联动前，摘要仅覆盖已验证信息，不对缺失经历或成果做主观推断。",
-        ),
+        padding_sentences=tuple(fact_sentences),
     )
     return ProfessorSummaries(
         profile_summary=profile_summary,
@@ -394,8 +394,10 @@ def _ensure_summary_length(
         summary = f"{summary}。"
 
     index = 0
-    while len(summary) < min_length:
+    while len(summary) < min_length and padding_sentences:
         sentence = padding_sentences[min(index, len(padding_sentences) - 1)]
+        if sentence in summary:
+            break
         summary = f"{summary}{sentence}"
         index += 1
 
@@ -412,14 +414,15 @@ def _ensure_summary_length(
 
 
 def _coerce_profile_summary(text: str) -> str:
+    # Defensive backstop; frequent hits mean the upstream generator/fallback contract regressed.
+    if contains_operator_meta_language(text):
+        for keyword in OPERATOR_META_KEYWORDS:
+            text = text.replace(keyword, "")
     return _ensure_summary_length(
         text,
-        min_length=200,
+        min_length=120,
         max_length=300,
-        padding_sentences=(
-            "该摘要遵循官网优先与证据可追溯原则，仅保留已验证字段。",
-            "在跨域联动完成前，系统会持续补充并校验研究方向与成果信息。",
-        ),
+        padding_sentences=(),
     )
 
 

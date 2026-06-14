@@ -1,9 +1,18 @@
 from __future__ import annotations
 
+import pytest
 import requests
 
 from src.data_agents.professor import openalex_metrics
 from src.data_agents.professor.openalex_metrics import fetch_metrics
+
+
+@pytest.fixture(autouse=True)
+def _openalex_key(monkeypatch):
+    monkeypatch.setenv("OPENALEX_API_KEY", "test-key")
+    openalex_metrics.OPENALEX_RATE_LIMIT_CIRCUIT.reset()
+    yield
+    openalex_metrics.OPENALEX_RATE_LIMIT_CIRCUIT.reset()
 
 
 class FakeResponse:
@@ -163,6 +172,18 @@ def test_fetch_metrics_without_identifiers_does_not_call_http() -> None:
     client = FakeClient([])
 
     metrics = fetch_metrics(http_client=client)
+
+    assert metrics.source == "openalex_unmatched"
+    assert client.calls == []
+
+
+def test_fetch_metrics_skips_without_openalex_api_key(monkeypatch) -> None:
+    monkeypatch.delenv("OPENALEX_API_KEY", raising=False)
+    monkeypatch.delenv("OPENALEX_KEY", raising=False)
+    monkeypatch.delenv("OPENALEX_SKIP_WITHOUT_API_KEY", raising=False)
+    client = FakeClient([])
+
+    metrics = fetch_metrics(openalex_author_id="A1", http_client=client)
 
     assert metrics.source == "openalex_unmatched"
     assert client.calls == []

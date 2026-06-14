@@ -87,6 +87,32 @@ def test_upsert_paper_full_text_passes_all_fields():
     assert "filesystem://raw-pdfs/ss.pdf" in params
 
 
+def test_upsert_paper_full_text_strips_nul_bytes_from_text_fields():
+    conn = MagicMock()
+    extract = FullTextExtract(
+        paper_id="p1",
+        abstract="abs\x00tract",
+        intro="in\x00tro",
+        pdf_url="https://example.com/a\x00.pdf",
+        pdf_sha256="s" * 64,
+        source="prof_page_pdf",
+        fetch_error=None,
+        raw_pdf_storage_ref="filesystem://raw\x00-pdfs/a.pdf",
+    )
+
+    upsert_paper_full_text(conn, paper_id="p1", extract=extract, run_id=_LEGACY_RUN_ID)
+
+    params = conn.execute.call_args[0][1]
+    assert "abs\x00tract" not in params
+    assert "in\x00tro" not in params
+    assert "https://example.com/a\x00.pdf" not in params
+    assert "filesystem://raw\x00-pdfs/a.pdf" not in params
+    assert "abstract" in params
+    assert "intro" in params
+    assert "https://example.com/a.pdf" in params
+    assert "filesystem://raw-pdfs/a.pdf" in params
+
+
 def test_upsert_paper_full_text_handles_none_values():
     conn = MagicMock()
     extract = FullTextExtract(

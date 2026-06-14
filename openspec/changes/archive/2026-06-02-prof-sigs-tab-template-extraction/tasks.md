@@ -1,0 +1,10 @@
+- [x] 1. Add RED regression tests for SIGS tab parsing using Ahmed Elazab and at least one sibling SIGS template.
+- [x] 2. Implement deterministic SIGS tab section extraction in the Professor profile extraction boundary.
+- [x] 3. Map SIGS section content to research-direction candidates and structured fact candidates without weakening title guards.
+- [x] 4. Verify narrow Professor tests and relevant fact/profile extraction tests.
+- [x] 5. Run a post-fix random SIGS sample crawl and report extracted fields for user review.
+- [x] 6. Add RED regression tests for SIGS field-quality issues found in sample validation.
+- [x] 7. Improve SIGS education and work parsing for Chinese date-before and date-after formats.
+- [x] 8. Tighten SIGS research-topic extraction to avoid publication, project, conference, and narrative fragments.
+- [x] 9. Improve SIGS publication title extraction and filtering for author-prefixed official lines.
+- [x] 10. Verify targeted tests, lint, and a post-fix SIGS sample re-check.

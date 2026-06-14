@@ -12,6 +12,8 @@ from src.data_agents.professor.discovery import _should_refresh_cached_html
 from src.data_agents.professor.homepage_crawler import (
     _extract_official_link_targets,
     _extract_official_publication_signals,
+    _extract_follow_candidate_link_infos,
+    _extract_sigs_tab_homepage_output,
     _parse_extraction_output,
     _FetchedPage,
     _sanitize_page_content,
@@ -36,6 +38,83 @@ def _make_profile(**kwargs) -> EnrichedProfessorProfile:
     )
     defaults.update(kwargs)
     return EnrichedProfessorProfile(**defaults)
+
+
+_SIGS_AHMED_TAB_HTML = """
+<html><body>
+  <div class="teacher_right">
+    <h1 class="news_title">Ahmed Elazab</h1>
+    <div class="carrer">
+      <span class="f5">助理教授</span><span class="dh">，</span><span class="f37">博士生导师</span>
+    </div>
+    <p class="news_text"><span>邮箱：</span><span class="email">ahmedelazab@sz.tsinghua.edu.cn</span></p>
+    <div class="sudy-tab">
+      <ul class="tab-menu">
+        <li><span>个人简历</span></li>
+        <li><span>教学</span></li>
+        <li><span>研究领域</span></li>
+        <li><span>研究成果</span></li>
+        <li><span>奖励荣誉</span></li>
+      </ul>
+      <ul class="tab-list">
+        <li>
+          <div class="post" id="jyjl">
+            <h3 class="tit"><span class="title">教育经历</span></h3>
+            <div class="con"><p>09/2012-01/2017, University of Chinese Academy of Sciences, Pattern Recognition &amp; Intelligent Systems, PhD</p></div>
+          </div>
+          <div class="post" id="gzjl">
+            <h3 class="tit"><span class="title">工作经历</span></h3>
+            <div class="con"><p>08/2017 -04/2020, Postdoctoral Fellow, Shenzhen University</p><p>11/2025 – now Assistant Professor, Tsinghua SIGS</p></div>
+          </div>
+          <div class="post" id="xsjz">
+            <h3 class="tit"><span class="title">学术兼职</span></h3>
+            <div class="con"><p>1. PeerJ Computer Science, PeerJ Publisher, Academic Editor (June 2020 till now)</p></div>
+          </div>
+        </li>
+        <li></li>
+        <li>
+          <div class="post" id="yjly">
+            <h3 class="tit"><span class="title">研究领域</span></h3>
+            <div class="con"><p>My research focuses on developing trustworthy artificial intelligence for medical image analysis, with a special emphasis on brain disease diagnosis and prognosis. I integrate advanced machine and deep learning techniques with multi-modal neuroimaging data fusion to build robust computer-aided detection and diagnosis systems. A core aspect of my work involves applying pattern recognition and neural informatics to uncover disease-specific biomarkers, while simultaneously prioritizing explainable AI to ensure clinical interpretability and trust.</p></div>
+          </div>
+        </li>
+        <li>
+          <div class="post" id="dbxlw">
+            <h3 class="tit"><span class="title">代表性论文</span></h3>
+            <div class="con"><p>1- A. Elazab, C. Wang. Improved Alzheimer's disease diagnosis using multimodal sparse similarity feature selection and auxiliary data, Biomedical Signal Processing and Control, 2026.</p></div>
+          </div>
+        </li>
+        <li>
+          <div class="post" id="jxry">
+            <h3 class="tit"><span class="title">荣誉奖项</span></h3>
+            <div class="con"><p>1. Best paper award of the 2023 International Workshop on Computational Mathematics Modeling in Cancer Analysis, MICCAI (co-author).</p></div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</body></html>
+"""
+
+
+def test_extract_follow_candidate_link_infos_supports_markdown_personal_homepage_links():
+    markdown = """
+    Title: BRESAR, Miha | 香港中文大学（深圳）数据科学学院
+    URL Source: https://sds.cuhk.edu.cn/teacher/2238
+    Markdown Content:
+    ## BRESAR, Miha 助理教授
+    [个人网站](https://sites.google.com/view/mihabresar)
+    [学院新闻](https://sds.cuhk.edu.cn/news)
+    """
+
+    links = _extract_follow_candidate_link_infos(
+        markdown,
+        "https://sds.cuhk.edu.cn/teacher/2238",
+    )
+
+    assert [(link.url, link.text) for link in links] == [
+        ("https://sites.google.com/view/mihabresar", "个人网站")
+    ]
 
 
 class TestExtractSameDomainLinks:
@@ -120,6 +199,366 @@ def test_parse_extraction_output_drops_invalid_partial_entries():
 
     assert [item.school for item in output.education_structured] == ["MIT", "Stanford"]
     assert [item.organization for item in output.work_experience] == ["微软亚洲研究院", "Google"]
+
+
+@pytest.mark.asyncio
+async def test_crawl_homepage_extracts_sigs_tab_sections_without_llm_facts():
+    llm_response = json.dumps(
+        {
+            "research_directions": [],
+            "education_structured": [],
+            "work_experience": [],
+            "awards": [],
+            "academic_positions": [],
+        }
+    )
+
+    def mock_fetch(url: str, timeout: float = 20.0):
+        from src.data_agents.professor.discovery import HtmlFetchResult
+
+        return HtmlFetchResult(
+            html=_SIGS_AHMED_TAB_HTML,
+            used_browser=False,
+            blocked_by_anti_scraping=False,
+            request_error=None,
+            browser_error=None,
+        )
+
+    mock_llm = MagicMock()
+    mock_llm.chat.completions.create.return_value = MagicMock(
+        choices=[MagicMock(message=MagicMock(content=f"```json\n{llm_response}\n```"))]
+    )
+
+    result = await crawl_homepage(
+        profile=_make_profile(
+            name="Ahmed Elazab",
+            institution="清华大学深圳国际研究生院",
+            homepage="https://www.sigs.tsinghua.edu.cn/Ahmed%20Elazab/main.psp",
+            profile_url="https://www.sigs.tsinghua.edu.cn/Ahmed%20Elazab/main.psp",
+            roster_source="https://www.sigs.tsinghua.edu.cn/teacherHome/teacherList.do",
+        ),
+        fetch_html_fn=mock_fetch,
+        llm_client=mock_llm,
+        llm_model="test-model",
+    )
+
+    assert result.success
+    assert "trustworthy artificial intelligence" in result.profile.research_directions
+    assert "medical image analysis" in result.profile.research_directions
+    assert result.profile.education_structured[0].school == (
+        "University of Chinese Academy of Sciences"
+    )
+    assert result.profile.education_structured[0].degree == "PhD"
+    assert result.profile.work_experience[0].organization == "Shenzhen University"
+    assert result.profile.work_experience[0].role == "Postdoctoral Fellow"
+    assert any(
+        "PeerJ Computer Science" in item for item in result.profile.academic_positions
+    )
+    assert any("Best paper award" in item for item in result.profile.awards)
+    assert result.profile.official_top_papers
+
+
+@pytest.mark.asyncio
+async def test_crawl_homepage_follows_github_pages_personal_site_into_publication_page():
+    official_url = "https://school.example.edu/faculty/alice"
+    personal_url = "https://alice-research.github.io/"
+    publications_url = "https://alice-research.github.io/publications/"
+    html_by_url = {
+        official_url: f"""
+        <html><body>
+          <h1>Alice Zhang</h1>
+          <p>研究方向：Robotics</p>
+          <a href="{personal_url}">GitHub Pages</a>
+        </body></html>
+        """,
+        personal_url: f"""
+        <html><body>
+          <h1>Alice Zhang Lab</h1>
+          <p>Research interests: federated robotics and adaptive sensing.</p>
+          <a href="{publications_url}">Publications</a>
+        </body></html>
+        """,
+        publications_url: """
+        <html><body>
+          <h2>Selected Publications</h2>
+          <ul>
+            <li>Communication Efficient Federated Robotics with Adaptive Quantization. IEEE Robotics and Automation Letters, 2024.</li>
+          </ul>
+        </body></html>
+        """,
+    }
+    fetched_urls: list[str] = []
+
+    def mock_fetch(url: str, timeout: float = 20.0):
+        from src.data_agents.professor.discovery import HtmlFetchResult
+
+        del timeout
+        fetched_urls.append(url)
+        return HtmlFetchResult(
+            html=html_by_url.get(url, ""),
+            used_browser=False,
+            blocked_by_anti_scraping=False,
+            request_error=None,
+            browser_error=None,
+        )
+
+    profile = _make_profile(
+        name="Alice Zhang",
+        institution="Example University",
+        department="School of Engineering",
+        homepage=None,
+        profile_url=official_url,
+        roster_source="https://school.example.edu/faculty",
+    )
+    follow_response = json.dumps({"links": []})
+    extract_response = json.dumps(
+        {
+            "research_directions": ["federated robotics", "adaptive sensing"],
+            "education_structured": [],
+            "work_experience": [],
+            "awards": [],
+            "academic_positions": [],
+        }
+    )
+    mock_llm = MagicMock()
+    mock_llm.chat.completions.create.side_effect = [
+        MagicMock(
+            choices=[
+                MagicMock(message=MagicMock(content=f"```json\n{follow_response}\n```"))
+            ]
+        ),
+        MagicMock(
+            choices=[
+                MagicMock(message=MagicMock(content=f"```json\n{extract_response}\n```"))
+            ]
+        ),
+    ]
+
+    result = await crawl_homepage(
+        profile=profile,
+        fetch_html_fn=mock_fetch,
+        llm_client=mock_llm,
+        llm_model="test-model",
+    )
+
+    assert result.success
+    assert personal_url in fetched_urls
+    assert publications_url in fetched_urls
+    assert result.pages_fetched == 3
+    assert "federated robotics" in result.profile.research_directions
+    assert "adaptive sensing" in result.profile.research_directions
+    assert "Robotics" in result.profile.research_directions
+    assert [paper.title for paper in result.profile.official_top_papers] == [
+        "Communication Efficient Federated Robotics with Adaptive Quantization"
+    ]
+    assert result.profile.publication_evidence_urls == [publications_url]
+    assert result.profile.field_provenance[
+        f"source_page_role:{personal_url}"
+    ] == "personal_homepage"
+    assert result.profile.field_provenance[
+        f"source_page_role:{publications_url}"
+    ] == "personal_homepage"
+
+
+def test_extract_sigs_tab_homepage_output_parses_chinese_date_fact_lines():
+    html = """
+    <html><body><div class="teacher_right"><div class="sudy-tab">
+      <ul class="tab-menu"><li><span>个人简历</span></li></ul>
+      <ul class="tab-list"><li>
+        <div class="post"><h3 class="tit"><span class="title">教育经历</span></h3>
+          <div class="con">
+            <p>2015 年 7 月 -2020 年 6 月 清华大学 土木工程 博士</p>
+            <p>2011 年 7 月 -2015 年 6 月 清华大学 土木工程 学士</p>
+          </div>
+        </div>
+        <div class="post"><h3 class="tit"><span class="title">工作经历</span></h3>
+          <div class="con">
+            <p>2025年6月-至今 清华大学深圳国际研究生院 助理教授</p>
+            <p>2020 年 7 月 - 2025 年 5 月 香港大学 博士后</p>
+          </div>
+        </div>
+      </li></ul>
+    </div></div></body></html>
+    """
+
+    output = _extract_sigs_tab_homepage_output(
+        html, "https://www.sigs.tsinghua.edu.cn/gyt2/main.htm"
+    )
+
+    assert output.education_structured[0].school == "清华大学"
+    assert output.education_structured[0].field == "土木工程"
+    assert output.education_structured[0].degree == "博士"
+    assert output.education_structured[0].start_year == 2015
+    assert output.education_structured[0].end_year == 2020
+    assert output.work_experience[0].organization == "清华大学深圳国际研究生院"
+    assert output.work_experience[0].role == "助理教授"
+    assert output.work_experience[0].start_year == 2025
+    assert output.work_experience[0].end_year is None
+
+
+def test_extract_sigs_tab_homepage_output_splits_compound_sigs_fact_lines():
+    html = """
+    <html><body><div class="teacher_right"><div class="sudy-tab">
+      <ul class="tab-menu"><li><span>个人简历</span></li></ul>
+      <ul class="tab-list"><li>
+        <div class="post"><h3 class="tit"><span class="title">教育经历</span></h3>
+          <div class="con">
+            <p>2010 年 1 月 -2013 年 8 月， 美国新墨西哥州立大学 电气工程 博士； 2007 年 8 月- 2009 年 12 月， 哈尔滨工业大学 控制科学与工程 硕士； 2003 年 8 月- 2007 年 7 月， 哈尔滨工业大学 控制科学与工程 学士；</p>
+          </div>
+        </div>
+        <div class="post"><h3 class="tit"><span class="title">工作经历</span></h3>
+          <div class="con">
+            <p>2020 年 7 月 至今，清华大学深圳国际研究生院，清华伯克利深圳学院，信息学科，副教授</p>
+            <p>2018 年 - 至今，清华大学，教授</p>
+          </div>
+        </div>
+      </li></ul>
+    </div></div></body></html>
+    """
+
+    output = _extract_sigs_tab_homepage_output(
+        html, "https://www.sigs.tsinghua.edu.cn/xyl/main.htm"
+    )
+
+    assert [(item.school, item.field, item.degree) for item in output.education_structured] == [
+        ("美国新墨西哥州立大学", "电气工程", "博士"),
+        ("哈尔滨工业大学", "控制科学与工程", "硕士"),
+        ("哈尔滨工业大学", "控制科学与工程", "学士"),
+    ]
+    assert output.work_experience[0].organization == "清华大学深圳国际研究生院"
+    assert output.work_experience[0].role == "副教授"
+    assert output.work_experience[0].start_year == 2020
+    assert output.work_experience[0].end_year is None
+    assert output.work_experience[1].organization == "清华大学"
+    assert output.work_experience[1].role == "教授"
+    assert output.work_experience[1].start_year == 2018
+    assert output.work_experience[1].end_year is None
+
+
+def test_extract_sigs_tab_homepage_output_parses_degree_first_fact_lines():
+    html = """
+    <html><body><div class="teacher_right"><div class="sudy-tab">
+      <ul class="tab-menu"><li><span>个人简历</span></li></ul>
+      <ul class="tab-list"><li>
+        <div class="post"><h3 class="tit"><span class="title">教育经历</span></h3>
+          <div class="con">
+            <p>2005 年 08 月 -2009 年 12 月，博士，美国北卡罗来纳州立大学电气工程专业</p>
+            <p>2002 年 09 月 -2005 年 07 月，硕士，清华大学信息与通信工程专业</p>
+          </div>
+        </div>
+        <div class="post"><h3 class="tit"><span class="title">工作经历</span></h3>
+          <div class="con">
+            <p>2019 年 09 月至今，副教授，清华大学深圳国际研究生院</p>
+            <p>2015 年 9 月 - 2018 年 8 月 ，电气与计算机工程系，美国卡内基梅隆大学，兼职教员</p>
+          </div>
+        </div>
+      </li></ul>
+    </div></div></body></html>
+    """
+
+    output = _extract_sigs_tab_homepage_output(
+        html, "https://www.sigs.tsinghua.edu.cn/dyh/main.htm"
+    )
+
+    assert output.education_structured[0].school == "美国北卡罗来纳州立大学"
+    assert output.education_structured[0].field == "电气工程专业"
+    assert output.education_structured[0].degree == "博士"
+    assert output.education_structured[1].school == "清华大学"
+    assert output.education_structured[1].field == "信息与通信工程专业"
+    assert output.work_experience[0].organization == "清华大学深圳国际研究生院"
+    assert output.work_experience[0].role == "副教授"
+    assert output.work_experience[1].organization == "美国卡内基梅隆大学"
+    assert output.work_experience[1].role == "兼职教员"
+
+
+def test_extract_sigs_tab_homepage_output_parses_tilde_and_adjacent_date_ranges():
+    html = """
+    <html><body><div class="teacher_right"><div class="sudy-tab">
+      <ul class="tab-menu"><li><span>个人简历</span></li></ul>
+      <ul class="tab-list"><li>
+        <div class="post"><h3 class="tit"><span class="title">教育经历</span></h3>
+          <div class="con">
+            <p>2003年09月～2008年07月，清华大学，光学工程专业，工学博士，导师：金国藩</p>
+            <p>2018年09月–2023年06月，荷兰莱顿大学，产业生态学专业，博士 2015年09月–2018年06月，重庆大学，管理科学与工程专业，硕士</p>
+          </div>
+        </div>
+        <div class="post"><h3 class="tit"><span class="title">工作经历</span></h3>
+          <div class="con">
+            <p>2019年08月～今，清华大学深圳国际研究生院，先进制造学部，副研究员</p>
+            <p>2026年02月–至今，清华大学 深圳国际研究生院 ，助理教授 2023年04月–2026年02月，国际应用系统分析研究所，研究员</p>
+          </div>
+        </div>
+      </li></ul>
+    </div></div></body></html>
+    """
+
+    output = _extract_sigs_tab_homepage_output(
+        html, "https://www.sigs.tsinghua.edu.cn/nk/main.htm"
+    )
+
+    assert [(item.school, item.field, item.degree) for item in output.education_structured] == [
+        ("清华大学", "光学工程专业", "工学博士"),
+        ("荷兰莱顿大学", "产业生态学专业", "博士"),
+        ("重庆大学", "管理科学与工程专业", "硕士"),
+    ]
+    assert [(item.organization, item.role) for item in output.work_experience] == [
+        ("清华大学深圳国际研究生院", "副研究员"),
+        ("清华大学 深圳国际研究生院", "助理教授"),
+        ("国际应用系统分析研究所", "研究员"),
+    ]
+
+
+def test_extract_official_publication_signals_sigs_author_prefix_yields_title():
+    pages = [
+        _FetchedPage(
+            url="https://www.sigs.tsinghua.edu.cn/Ahmed%20Elazab/main.psp",
+            html="""
+            <html><body>
+            <div class="post">
+              <h3 class="tit"><span class="title">代表性论文</span></h3>
+              <div class="con">
+                <p>1- M. Abdelaziz, T. Wang, W. Anwaar, A. Elazab *, Robust attention transfer neural networks for diagnosis of Alzheimer's disease from structural magnetic resonance images, Engineering Applications of Artificial Intelligence, 164, 113260, 2026.</p>
+                <p>All publications: https://sites.google.com/view/mihabresar</p>
+              </div>
+            </div>
+            </body></html>
+            """,
+            publication_candidate=False,
+        )
+    ]
+
+    signals = _extract_official_publication_signals(pages)
+
+    assert [paper.title for paper in signals.top_papers] == [
+        "Robust attention transfer neural networks for diagnosis of Alzheimer's disease from structural magnetic resonance images"
+    ]
+
+
+def test_extract_official_publication_signals_sigs_author_period_lines_yield_titles():
+    pages = [
+        _FetchedPage(
+            url="https://www.sigs.tsinghua.edu.cn/zy2/main.htm",
+            html="""
+            <html><body>
+            <div class="post">
+              <h3 class="tit"><span class="title">代表性论文</span></h3>
+              <div class="con">
+                <p>[1 ] Yuhang Zhang, Xu Han, Tianxi Wei, Xiaoyong Zhao, Yi Zhang* . (2023) Techno-environmental-economical performance of allocating multiple energy storage resources for multi-scale and multi-type urban forms towards low carbon district. Sustainable Cities and Society, 2023, 104974.</p>
+                <p>[2] Zhaoming Wang, Li Zhang, Jingzhou Li, Guodan Wei, Yuhan Dong, and H.Y. Fu. Fluorescent concentrator based MISO-NOMA for visible light communications. Optics Letters, 2022, 47(4): 902-905.</p>
+              </div>
+            </div>
+            </body></html>
+            """,
+            publication_candidate=False,
+        )
+    ]
+
+    signals = _extract_official_publication_signals(pages)
+
+    assert [paper.title for paper in signals.top_papers[:2]] == [
+        "Techno-environmental-economical performance of allocating multiple energy storage resources for multi-scale and multi-type urban forms towards low carbon district",
+        "Fluorescent concentrator based MISO-NOMA for visible light communications",
+    ]
 
 
 def test_parse_extraction_output_salvages_first_json_object_from_mixed_output():
@@ -347,6 +786,23 @@ def test_should_refresh_stale_sigs_cached_profile_without_publication_items():
     assert _should_refresh_cached_html("http://www.sigs.tsinghua.edu.cn/wlm/main.htm", html)
 
 
+def test_should_refresh_suat_roster_cache_with_visualsitebuilder_profile_ids():
+    html = """
+    <html><body>
+      <ul class="list2">
+        <li class="item">
+          <a href="../info/1012/1395.htm" title="李慧敏">李慧敏 教研助理教授</a>
+        </li>
+      </ul>
+      <script>
+        _showDynClickBatch(['dynclicks_u10_1395'],[1395],"wbnews",1978015886)
+      </script>
+    </body></html>
+    """
+
+    assert _should_refresh_cached_html("https://cme.suat-sz.edu.cn/szdw/dsjs.htm", html)
+
+
 def test_extract_official_publication_signals_excludes_reviewer_lines_with_publication_heading():
     pages = [
         _FetchedPage(
@@ -544,13 +1000,33 @@ class TestCrawlHomepage:
             ensure_ascii=False,
         )
 
-        calls: list[str] = []
+        calls: list[dict[str, object]] = []
 
-        def mock_fetch(url: str, timeout: float = 20.0):
+        def mock_fetch(
+            url: str,
+            timeout: float = 20.0,
+            *,
+            method: str = "GET",
+            data: dict[str, str] | None = None,
+            headers: dict[str, str] | None = None,
+        ):
             from src.data_agents.professor.discovery import HtmlFetchResult
 
-            calls.append(url)
-            html = dynamic_body if "TeacherHome/teacherBody.do" in url else main_html
+            calls.append({
+                "url": url,
+                "method": method,
+                "data": data,
+                "headers": headers,
+            })
+            html = (
+                dynamic_body
+                if (
+                    "TeacherHome/teacherBody.do" in url
+                    and method == "POST"
+                    and data == {"id": "cc01a95e2af64116a28ba2c3e5ba36bc"}
+                )
+                else main_html
+            )
             return HtmlFetchResult(
                 html=html,
                 used_browser=False,
@@ -588,13 +1064,32 @@ class TestCrawlHomepage:
         )
 
         assert result.success
-        assert any("TeacherHome/teacherBody.do" in call for call in calls)
+        body_calls = [
+            call for call in calls if "TeacherHome/teacherBody.do" in str(call["url"])
+        ]
+        assert body_calls == [
+            {
+                "url": "https://homepage.hit.edu.cn/TeacherHome/teacherBody.do",
+                "method": "POST",
+                "data": {"id": "cc01a95e2af64116a28ba2c3e5ba36bc"},
+                "headers": {
+                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+                },
+            }
+        ]
         assert result.profile.research_directions == ["宽带移动通信", "卫星通信与无线网络"]
         assert [
             paper.title for paper in result.profile.official_top_papers
         ] == [
             "Confidence Based Asynchronous Integrated Communication and Localization Networks Using IR-UWB Signals"
         ]
+        assert result.profile.profile_raw_text is not None
+        assert "研究方向" in result.profile.profile_raw_text
+        assert "宽带移动通信、卫星通信与无线网络" in result.profile.profile_raw_text
+        assert "代表性论文" in result.profile.profile_raw_text
+        assert "Confidence Based Asynchronous Integrated Communication" in (
+            result.profile.profile_raw_text
+        )
 
     async def test_recovers_structured_research_directions_when_llm_omits_them(self):
         main_html = """
@@ -729,6 +1224,15 @@ class TestCrawlHomepage:
             "Microstructure-mediated phase transition mechanics in ferroic materials",
             "Elastic coupling in metal-insulator transition functional ceramics",
         ]
+        assert result.profile.profile_raw_text is not None
+        assert "陈伟津" in result.profile.profile_raw_text
+        assert "累计发表研究论文 86 篇" in result.profile.profile_raw_text
+        assert "Microstructure-mediated phase transition mechanics" not in (
+            result.profile.profile_raw_text
+        )
+        assert "Elastic coupling in metal-insulator transition" not in (
+            result.profile.profile_raw_text
+        )
 
     async def test_recurses_from_official_profile_to_llm_selected_personal_homepage_and_publication_page(self):
         pages = {
@@ -815,10 +1319,263 @@ class TestCrawlHomepage:
         assert result.profile.publication_evidence_urls == [
             "https://satoshi.example.com/publications.html"
         ]
+        assert result.profile.field_provenance[
+            "source_page_role:https://satoshi.example.com/"
+        ] == "personal_homepage"
+        assert result.profile.field_provenance[
+            "source_page_role:https://satoshi.example.com/publications.html"
+        ] == "personal_homepage"
         assert result.profile.official_paper_count == 86
         assert [paper.title for paper in result.profile.official_top_papers] == [
             "Transllama: LLM-based simultaneous translation system",
             "LLaST: Improved End-to-end Speech Translation System Leveraged by Large Language Models",
+        ]
+        assert result.profile.profile_raw_text is not None
+        assert "Satoshi Nakamura" in result.profile.profile_raw_text
+        assert "Transllama: LLM-based simultaneous translation system" not in (
+            result.profile.profile_raw_text
+        )
+        assert "https://satoshi.example.com/publications.html" not in (
+            result.profile.profile_raw_text
+        )
+
+    async def test_recurses_to_personal_homepage_with_inline_publications(self):
+        pages = {
+            "https://sai.cuhk.edu.cn/teacher/105": """
+            <html><body>
+            <h1>LI, Mei</h1>
+            <a href="https://meili.example.com/">个人主页</a>
+            </body></html>
+            """,
+            "https://meili.example.com/": """
+            <html><body>
+            <h1>Mei Li</h1>
+            <h2>Selected Publications</h2>
+            <ul>
+              <li>Adaptive Systems for Trustworthy Federated Learning</li>
+              <li>Efficient Quantization for Collaborative Edge Intelligence</li>
+            </ul>
+            </body></html>
+            """,
+        }
+
+        link_plan_response = json.dumps({
+            "links": [
+                {
+                    "url": "https://meili.example.com/",
+                    "category": "personal_homepage",
+                    "priority": 1,
+                    "should_follow": True,
+                    "reason": "官方页明确给出个人主页",
+                }
+            ]
+        }, ensure_ascii=False)
+        extraction_response = json.dumps({
+            "title": "助理教授",
+            "department": "人工智能学院",
+            "research_directions": ["联邦学习"],
+            "education_structured": [],
+            "work_experience": [],
+            "awards": [],
+            "academic_positions": [],
+        }, ensure_ascii=False)
+
+        def mock_fetch(url: str, timeout: float = 20.0):
+            from src.data_agents.professor.discovery import HtmlFetchResult
+
+            return HtmlFetchResult(
+                html=pages[url],
+                used_browser=False,
+                blocked_by_anti_scraping=False,
+                request_error=None,
+                browser_error=None,
+            )
+
+        mock_llm = MagicMock()
+        mock_llm.chat.completions.create.side_effect = [
+            MagicMock(choices=[MagicMock(message=MagicMock(content="```json\n" + link_plan_response + "\n```"))]),
+            MagicMock(choices=[MagicMock(message=MagicMock(content="```json\n" + extraction_response + "\n```"))]),
+        ]
+
+        profile = _make_profile(
+            name="LI, Mei",
+            institution="香港中文大学（深圳）",
+            department="人工智能学院",
+            homepage="https://sai.cuhk.edu.cn/teacher/105",
+            profile_url="https://sai.cuhk.edu.cn/teacher/105",
+        )
+        result = await crawl_homepage(
+            profile=profile,
+            fetch_html_fn=mock_fetch,
+            llm_client=mock_llm,
+            llm_model="test-model",
+        )
+
+        assert result.success
+        assert result.pages_fetched == 2
+        assert result.profile.publication_evidence_urls == [
+            "https://meili.example.com/"
+        ]
+        assert result.profile.field_provenance[
+            "source_page_role:https://meili.example.com/"
+        ] == "personal_homepage"
+        assert [paper.title for paper in result.profile.official_top_papers] == [
+            "Adaptive Systems for Trustworthy Federated Learning",
+            "Efficient Quantization for Collaborative Edge Intelligence",
+        ]
+
+    async def test_recurses_same_root_profile_subpages_from_personal_homepage(self):
+        pages = {
+            "https://sai.cuhk.edu.cn/teacher/106": """
+            <html><body>
+            <h1>CHEN, Ada</h1>
+            <a href="https://ada.example.com/">Personal Homepage</a>
+            </body></html>
+            """,
+            "https://ada.example.com/": """
+            <html><body>
+            <h1>Ada Chen</h1>
+            <nav>
+              <a href="/research">Research</a>
+              <a href="/projects">Projects</a>
+              <a href="/publications">Publications</a>
+              <a href="/news">News</a>
+              <a href="https://elsewhere.example.com/research">External Research</a>
+            </nav>
+            </body></html>
+            """,
+            "https://ada.example.com/research": """
+            <html><body>
+            <h2>Research</h2>
+            <p>My group studies privacy-preserving robotics for eldercare.</p>
+            </body></html>
+            """,
+            "https://ada.example.com/projects": """
+            <html><body>
+            <h2>Projects</h2>
+            <p>The CareBot project deploys assistive robots in hospitals.</p>
+            </body></html>
+            """,
+            "https://ada.example.com/publications": """
+            <html><body>
+            <h2>Selected Publications</h2>
+            <ul>
+              <li>Privacy Preserving Robot Learning for Assistive Care</li>
+            </ul>
+            </body></html>
+            """,
+            "https://ada.example.com/news": """
+            <html><body><p>Sitewide news should not be followed.</p></body></html>
+            """,
+            "https://elsewhere.example.com/research": """
+            <html><body><p>Cross-site research should not be followed.</p></body></html>
+            """,
+        }
+
+        link_plan_response = json.dumps({
+            "links": [
+                {
+                    "url": "https://ada.example.com/",
+                    "category": "personal_homepage",
+                    "priority": 1,
+                    "should_follow": True,
+                    "reason": "官方页明确给出个人主页",
+                }
+            ]
+        }, ensure_ascii=False)
+        extraction_response = json.dumps({
+            "title": "助理教授",
+            "department": "人工智能学院",
+            "research_directions": ["机器人学习"],
+            "education_structured": [],
+            "work_experience": [],
+            "awards": [],
+            "academic_positions": [],
+        }, ensure_ascii=False)
+
+        fetched_urls: list[str] = []
+
+        def mock_fetch(url: str, timeout: float = 20.0):
+            from src.data_agents.professor.discovery import HtmlFetchResult
+
+            fetched_urls.append(url)
+            return HtmlFetchResult(
+                html=pages[url],
+                used_browser=False,
+                blocked_by_anti_scraping=False,
+                request_error=None,
+                browser_error=None,
+            )
+
+        mock_llm = MagicMock()
+        mock_llm.chat.completions.create.side_effect = [
+            MagicMock(
+                choices=[
+                    MagicMock(
+                        message=MagicMock(
+                            content=f"```json\n{link_plan_response}\n```"
+                        )
+                    )
+                ]
+            ),
+            MagicMock(
+                choices=[
+                    MagicMock(
+                        message=MagicMock(
+                            content=f"```json\n{extraction_response}\n```"
+                        )
+                    )
+                ]
+            ),
+        ]
+
+        result = await crawl_homepage(
+            profile=_make_profile(
+                name="CHEN, Ada",
+                institution="香港中文大学（深圳）",
+                department="人工智能学院",
+                homepage="https://sai.cuhk.edu.cn/teacher/106",
+                profile_url="https://sai.cuhk.edu.cn/teacher/106",
+            ),
+            fetch_html_fn=mock_fetch,
+            llm_client=mock_llm,
+            llm_model="test-model",
+        )
+
+        extraction_prompt = mock_llm.chat.completions.create.call_args_list[1].kwargs[
+            "messages"
+        ][1]["content"]
+
+        assert result.success
+        assert fetched_urls[:2] == [
+            "https://sai.cuhk.edu.cn/teacher/106",
+            "https://ada.example.com/",
+        ]
+        assert set(fetched_urls[2:]) == {
+            "https://ada.example.com/research",
+            "https://ada.example.com/projects",
+            "https://ada.example.com/publications",
+        }
+        assert "https://ada.example.com/news" not in fetched_urls
+        assert "https://elsewhere.example.com/research" not in fetched_urls
+        assert "privacy-preserving robotics for eldercare" in extraction_prompt
+        assert "CareBot project deploys assistive robots" in extraction_prompt
+        assert "Privacy Preserving Robot Learning" in extraction_prompt
+        assert result.profile.profile_raw_text is not None
+        assert "privacy-preserving robotics for eldercare" in (
+            result.profile.profile_raw_text
+        )
+        assert "CareBot project deploys assistive robots" in (
+            result.profile.profile_raw_text
+        )
+        assert "Privacy Preserving Robot Learning" not in (
+            result.profile.profile_raw_text
+        )
+        assert result.profile.publication_evidence_urls == [
+            "https://ada.example.com/publications"
+        ]
+        assert [paper.title for paper in result.profile.official_top_papers] == [
+            "Privacy Preserving Robot Learning for Assistive Care"
         ]
 
     async def test_only_follows_llm_selected_anchored_targets_from_official_page(self):
@@ -927,19 +1684,23 @@ class TestCrawlHomepage:
         ]
         assert result.profile.official_paper_count == 86
 
-    async def test_planning_failure_does_not_fallback_to_external_personal_homepage(self):
+    async def test_planning_failure_falls_back_to_explicit_external_personal_homepage(self):
         pages = {
             "https://official.example.edu/faculty/alice": """
                 <html><body>
                 <h1>Alice Zhang</h1>
-                <a href="https://alice.example.com">个人主页</a>
+                <a href="https://alice.example.com">个人网站</a>
+                <a href="https://random.example.net/news">更多链接</a>
                 </body></html>
             """,
             "https://alice.example.com": """
                 <html><body>
                 <h1>Alice Zhang</h1>
-                <p>这个外部主页不应该在规划失败时被自动跟进。</p>
+                <p>这个外部主页由教师本人维护，包含 richer research details。</p>
                 </body></html>
+            """,
+            "https://random.example.net/news": """
+                <html><body><p>Unrelated external news.</p></body></html>
             """,
         }
         extraction_response = json.dumps({
@@ -986,8 +1747,253 @@ class TestCrawlHomepage:
         )
 
         assert result.success
-        assert fetched_urls == ["https://official.example.edu/faculty/alice"]
-        assert "https://alice.example.com" not in result.profile.evidence_urls
+        assert fetched_urls == [
+            "https://official.example.edu/faculty/alice",
+            "https://alice.example.com",
+        ]
+        assert "https://alice.example.com" in result.profile.evidence_urls
+        assert "https://random.example.net/news" not in result.profile.evidence_urls
+        assert (
+            result.profile.field_provenance[
+                "source_page_role:https://alice.example.com"
+            ]
+            == "personal_homepage"
+        )
+
+    async def test_planning_failure_falls_back_to_institutional_personal_homepage(self):
+        pages = {
+            "https://www.sustech.edu.cn/zh/faculties/alice.html": """
+                <html><body>
+                <h1>Alice Zhang</h1>
+                <a href="https://faculty.sustech.edu.cn/alice/">个人主页</a>
+                </body></html>
+            """,
+            "https://faculty.sustech.edu.cn/alice/": """
+                <html><body>
+                <h1>Alice Zhang Lab</h1>
+                <p>Research interests include trustworthy machine learning.</p>
+                </body></html>
+            """,
+        }
+        extraction_response = json.dumps({
+            "title": "助理教授",
+            "department": "人工智能学院",
+            "research_directions": ["可信机器学习"],
+            "education_structured": [],
+            "work_experience": [],
+            "awards": [],
+            "academic_positions": [],
+        }, ensure_ascii=False)
+
+        fetched_urls: list[str] = []
+
+        def mock_fetch(url: str, timeout: float = 20.0):
+            from src.data_agents.professor.discovery import HtmlFetchResult
+            fetched_urls.append(url)
+            return HtmlFetchResult(
+                html=pages[url],
+                used_browser=False,
+                blocked_by_anti_scraping=False,
+                request_error=None,
+                browser_error=None,
+            )
+
+        mock_llm = MagicMock()
+        mock_llm.chat.completions.create.side_effect = [
+            MagicMock(choices=[MagicMock(message=MagicMock(content="not valid json"))]),
+            MagicMock(choices=[MagicMock(message=MagicMock(content=f"```json\n{extraction_response}\n```"))]),
+        ]
+
+        profile = _make_profile(
+            name="Alice Zhang",
+            institution="南方科技大学",
+            department="人工智能学院",
+            homepage="https://www.sustech.edu.cn/zh/faculties/alice.html",
+            profile_url="https://www.sustech.edu.cn/zh/faculties/alice.html",
+        )
+        result = await crawl_homepage(
+            profile=profile,
+            fetch_html_fn=mock_fetch,
+            llm_client=mock_llm,
+            llm_model="test-model",
+        )
+
+        assert result.success
+        assert fetched_urls == [
+            "https://www.sustech.edu.cn/zh/faculties/alice.html",
+            "https://faculty.sustech.edu.cn/alice/",
+        ]
+        assert "https://faculty.sustech.edu.cn/alice/" in result.profile.evidence_urls
+        assert result.profile.field_provenance[
+            "source_page_role:https://faculty.sustech.edu.cn/alice/"
+        ] == "personal_homepage"
+
+    async def test_szu_planning_failure_follows_personal_homepage_not_school_homepage(self):
+        pages = {
+            "https://math.szu.edu.cn/info/1012/1001.htm": """
+                <html><body>
+                <h1>张三</h1>
+                <a href="https://www.szu.edu.cn/">学校主页</a>
+                <a href="https://math.szu.edu.cn/">学院主页</a>
+                <a href="https://faculty.szu.edu.cn/zhangsan/">个人主页</a>
+                </body></html>
+            """,
+            "https://faculty.szu.edu.cn/zhangsan/": """
+                <html><body>
+                <h1>张三课题组</h1>
+                <p>研究方向：组合优化。</p>
+                </body></html>
+            """,
+        }
+        extraction_response = json.dumps({
+            "title": "教授",
+            "department": "数学科学学院",
+            "research_directions": ["组合优化"],
+            "education_structured": [],
+            "work_experience": [],
+            "awards": [],
+            "academic_positions": [],
+        }, ensure_ascii=False)
+
+        fetched_urls: list[str] = []
+
+        def mock_fetch(url: str, timeout: float = 20.0):
+            from src.data_agents.professor.discovery import HtmlFetchResult
+            fetched_urls.append(url)
+            return HtmlFetchResult(
+                html=pages[url],
+                used_browser=False,
+                blocked_by_anti_scraping=False,
+                request_error=None,
+                browser_error=None,
+            )
+
+        mock_llm = MagicMock()
+        mock_llm.chat.completions.create.side_effect = [
+            MagicMock(choices=[MagicMock(message=MagicMock(content="not valid json"))]),
+            MagicMock(choices=[MagicMock(message=MagicMock(content=f"```json\n{extraction_response}\n```"))]),
+        ]
+
+        profile = _make_profile(
+            name="张三",
+            institution="深圳大学",
+            department="数学科学学院",
+            homepage="https://math.szu.edu.cn/info/1012/1001.htm",
+            profile_url="https://math.szu.edu.cn/info/1012/1001.htm",
+        )
+        result = await crawl_homepage(
+            profile=profile,
+            fetch_html_fn=mock_fetch,
+            llm_client=mock_llm,
+            llm_model="test-model",
+        )
+
+        assert result.success
+        assert fetched_urls == [
+            "https://math.szu.edu.cn/info/1012/1001.htm",
+            "https://faculty.szu.edu.cn/zhangsan/",
+        ]
+        assert "https://www.szu.edu.cn/" not in result.profile.evidence_urls
+        assert "https://math.szu.edu.cn/" not in result.profile.evidence_urls
+        assert result.profile.field_provenance[
+            "source_page_role:https://faculty.szu.edu.cn/zhangsan/"
+        ] == "personal_homepage"
+
+    async def test_suat_planner_filters_school_homepage_and_recruitment_links(self):
+        pages = {
+            "https://msee.suat-sz.edu.cn/info/1010/1093.htm": """
+                <html><body>
+                <h1>成会明</h1>
+                <a href="https://suat-sz.edu.cn/">学校主页</a>
+                <a href="https://msee.suat-sz.edu.cn/zpxx/ktzzp.htm">课题组招聘</a>
+                <p>研究方向：先进储能材料。</p>
+                </body></html>
+            """,
+            "https://suat-sz.edu.cn/": """
+                <html><body><h1>深圳理工大学</h1></body></html>
+            """,
+            "https://msee.suat-sz.edu.cn/zpxx/ktzzp.htm": """
+                <html><body><h1>课题组招聘</h1></body></html>
+            """,
+        }
+        follow_response = json.dumps(
+            {
+                "links": [
+                    {
+                        "url": "https://suat-sz.edu.cn/",
+                        "category": "personal_homepage",
+                        "should_follow": True,
+                        "priority": 1,
+                    },
+                    {
+                        "url": "https://msee.suat-sz.edu.cn/zpxx/ktzzp.htm",
+                        "category": "lab_or_group",
+                        "should_follow": True,
+                        "priority": 2,
+                    },
+                ]
+            },
+            ensure_ascii=False,
+        )
+        extraction_response = json.dumps(
+            {
+                "title": "院士",
+                "department": "材料科学与能源工程学院",
+                "research_directions": ["先进储能材料"],
+                "education_structured": [],
+                "work_experience": [],
+                "awards": [],
+                "academic_positions": [],
+            },
+            ensure_ascii=False,
+        )
+
+        fetched_urls: list[str] = []
+
+        def mock_fetch(url: str, timeout: float = 20.0):
+            from src.data_agents.professor.discovery import HtmlFetchResult
+
+            fetched_urls.append(url)
+            return HtmlFetchResult(
+                html=pages[url],
+                used_browser=False,
+                blocked_by_anti_scraping=False,
+                request_error=None,
+                browser_error=None,
+            )
+
+        mock_llm = MagicMock()
+        mock_llm.chat.completions.create.side_effect = [
+            MagicMock(
+                choices=[
+                    MagicMock(message=MagicMock(content=f"```json\n{follow_response}\n```"))
+                ]
+            ),
+            MagicMock(
+                choices=[
+                    MagicMock(message=MagicMock(content=f"```json\n{extraction_response}\n```"))
+                ]
+            ),
+        ]
+
+        profile = _make_profile(
+            name="成会明",
+            institution="深圳理工大学",
+            department="材料科学与能源工程学院",
+            homepage="https://msee.suat-sz.edu.cn/info/1010/1093.htm",
+            profile_url="https://msee.suat-sz.edu.cn/info/1010/1093.htm",
+        )
+        result = await crawl_homepage(
+            profile=profile,
+            fetch_html_fn=mock_fetch,
+            llm_client=mock_llm,
+            llm_model="test-model",
+        )
+
+        assert result.success
+        assert fetched_urls == ["https://msee.suat-sz.edu.cn/info/1010/1093.htm"]
+        assert "https://suat-sz.edu.cn/" not in result.profile.evidence_urls
+        assert "https://msee.suat-sz.edu.cn/zpxx/ktzzp.htm" not in result.profile.evidence_urls
 
     async def test_link_planner_receives_official_cv_and_academic_profile_candidates(self):
         main_html = """
@@ -1066,6 +2072,98 @@ class TestCrawlHomepage:
             "https://ae.sysu.edu.cn/files/lihw_cv.pdf"
         ]
         assert result.pages_fetched == 1
+
+    async def test_crawl_homepage_collects_yjsjy_secondary_academic_urls(self):
+        source_url = (
+            "https://yjsjy.uestc.edu.cn/gmis/jcsjgl/dsfc/dsgrjj/12345?yxsh=28"
+        )
+        faculty_url = "https://faculty.uestc.edu.cn/huangye/zh_CN/index.htm"
+        main_html = f"""
+        <html><body>
+          <div id="mcontent"><div class="news_list"><table class="box">
+            <tr><td>姓名</td><td><span id="Labeldsxm">黄野</span></td></tr>
+            <tr><td>职称</td><td><span id="Labelzc">教授</span></td></tr>
+            <tr><td>Google Scholar</td><td><a href="https://scholar.google.com/citations?user=abc123">Scholar</a></td></tr>
+            <tr><td>DBLP</td><td><a href="https://dblp.org/pid/12/3456.html">DBLP profile</a></td></tr>
+            <tr><td>教师主页</td><td><a href="{faculty_url}">学院教师主页</a></td></tr>
+            <tr><td>个人简介</td><td>更多成果见 https://staff.uestc.edu.cn/huangye 。代表性成果 DOI: https://doi.org/10.1145/1234567.7654321</td></tr>
+          </table></div></div>
+        </body></html>
+        """
+        link_plan_response = json.dumps({"links": []}, ensure_ascii=False)
+        extraction_response = json.dumps(
+            {
+                "title": "教授",
+                "department": "计算机技术",
+                "research_directions": ["网络空间安全"],
+                "education_structured": [],
+                "work_experience": [],
+                "awards": [],
+                "academic_positions": [],
+            },
+            ensure_ascii=False,
+        )
+
+        def mock_fetch(url: str, timeout: float = 20.0):
+            from src.data_agents.professor.discovery import HtmlFetchResult
+
+            html = (
+                "<html><body><h1>黄野</h1><p>Faculty profile</p></body></html>"
+                if url == faculty_url
+                else main_html
+            )
+            return HtmlFetchResult(
+                html=html,
+                used_browser=False,
+                blocked_by_anti_scraping=False,
+                request_error=None,
+                browser_error=None,
+            )
+
+        mock_llm = MagicMock()
+        mock_llm.chat.completions.create.side_effect = [
+            MagicMock(
+                choices=[
+                    MagicMock(
+                        message=MagicMock(
+                            content=f"```json\n{link_plan_response}\n```"
+                        )
+                    )
+                ]
+            ),
+            MagicMock(
+                choices=[
+                    MagicMock(
+                        message=MagicMock(
+                            content=f"```json\n{extraction_response}\n```"
+                        )
+                    )
+                ]
+            ),
+        ]
+
+        result = await crawl_homepage(
+            profile=_make_profile(
+                name="黄野",
+                institution="电子科技大学（深圳）高等研究院",
+                department="计算机技术",
+                homepage=source_url,
+                profile_url=source_url,
+            ),
+            fetch_html_fn=mock_fetch,
+            llm_client=mock_llm,
+            llm_model="test-model",
+        )
+
+        assert result.success
+        assert result.profile.scholarly_profile_urls == [
+            "https://scholar.google.com/citations?user=abc123",
+            "https://dblp.org/pid/12/3456.html",
+            faculty_url,
+            "https://staff.uestc.edu.cn/huangye",
+            "https://doi.org/10.1145/1234567.7654321",
+        ]
+        assert result.profile.publication_evidence_urls == []
 
     async def test_collects_official_orcid_and_cv_links_from_profile_page(self):
         main_html = """
@@ -2000,6 +3098,81 @@ class TestCrawlHomepage:
 
         assert result.success
         assert result.profile.name_en is None
+
+    async def test_sztu_fragment_profile_raw_text_is_scoped_before_merging(self):
+        main_html = """
+        <html><body>
+        <div class="teacher-details">
+          <div class="team-item" id="prof-duhemin">
+            <h3>杜鹤民</h3>
+            <p>教授</p>
+            <p>代表性论文：Designing Mediated Social Touch for Mobile Communication:
+            From Hand Gestures to Touch Signals. International Journal of
+            Human-Computer Studies, 2026.</p>
+          </div>
+          <div class="team-item" id="prof-liumo">
+            <h3>刘墨</h3>
+            <p>助理教授</p>
+            <p>研究方向：交互设计、智能产品设计。</p>
+          </div>
+        </div>
+        </body></html>
+        """
+
+        llm_response = json.dumps({
+            "title": "助理教授",
+            "department": "创意设计学院",
+            "research_directions": ["交互设计"],
+            "education_structured": [],
+            "work_experience": [],
+            "awards": [],
+            "academic_positions": [],
+        })
+
+        def mock_fetch(url: str, timeout: float = 20.0):
+            from src.data_agents.professor.discovery import HtmlFetchResult
+
+            return HtmlFetchResult(
+                html=main_html,
+                used_browser=False,
+                blocked_by_anti_scraping=False,
+                request_error=None,
+                browser_error=None,
+            )
+
+        mock_llm = MagicMock()
+        mock_llm.chat.completions.create.return_value = MagicMock(
+            choices=[MagicMock(message=MagicMock(content=f"```json\n{llm_response}\n```"))]
+        )
+
+        profile = _make_profile(
+            name="刘墨",
+            institution="深圳技术大学",
+            department="创意设计学院",
+            homepage=(
+                "https://design.sztu.edu.cn/xygk/szdw/jytd.htm"
+                "#prof-%E5%88%98%E5%A2%A8"
+            ),
+            profile_url=(
+                "https://design.sztu.edu.cn/xygk/szdw/jytd.htm"
+                "#prof-%E5%88%98%E5%A2%A8"
+            ),
+        )
+
+        result = await crawl_homepage(
+            profile=profile,
+            fetch_html_fn=mock_fetch,
+            llm_client=mock_llm,
+            llm_model="test-model",
+        )
+
+        assert result.success
+        assert result.profile.profile_raw_text is not None
+        assert "刘墨" in result.profile.profile_raw_text
+        assert "杜鹤民" not in result.profile.profile_raw_text
+        assert "International Journal of Human-Computer Studies" not in (
+            result.profile.profile_raw_text
+        )
 
     async def test_invalid_llm_name_en_design_school_is_dropped(self):
         main_html = """

@@ -1,0 +1,10 @@
+{
+  "resolved_companies": 1024,
+  "resolved_with_xlsx_description": 1024,
+  "product_rows": 2347,
+  "companies_with_products": 667,
+  "scenario_rows": 1144,
+  "companies_with_scenarios": 342,
+  "xlsx_desc_without_product": 357,
+  "xlsx_desc_without_scenario": 682
+}

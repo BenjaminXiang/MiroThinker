@@ -2,12 +2,19 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from src.data_agents.providers.rerank import RerankResult
 from src.data_agents.service.retrieval import Evidence, RetrievalService
 from src.data_agents.storage.milvus_collections import (
     COMPANY_PROFILES_COLLECTION,
     PATENT_PROFILES_COLLECTION,
 )
+
+
+@pytest.fixture(autouse=True)
+def _disable_quality_status_filter(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("FILTER_BY_QUALITY_STATUS", "0")
 
 
 def _fake_embedding_client():
@@ -106,6 +113,31 @@ def test_retrieve_company_metadata_contains_industry_and_city():
 
     assert results[0].metadata["industry"] == "机器人"
     assert results[0].metadata["hq_city"] == "深圳"
+
+
+def test_retrieve_company_snippet_keeps_enrichment_after_long_profile():
+    long_profile = "这是一段较长的公司简介。" * 80
+    enriched_profile = (
+        long_profile
+        + "\n产品/服务：Semacare - AI 心电诊断系统；"
+        + "产品结构：医院/临床机构 远程心电诊断 AI 自动诊断；"
+        + "最近动态：2026-05-01 funding 完成A轮融资。 A轮 数千万人民币 力合科创"
+    )
+    row = _company_ann_row("COMP-1", 0.91)
+    row["entity"]["profile_summary"] = enriched_profile
+    svc = RetrievalService(
+        pg_conn_factory=lambda: MagicMock(),
+        milvus_client=_fake_milvus_with_domains({COMPANY_PROFILES_COLLECTION: [row]}),
+        embedding_client=_fake_embedding_client(),
+        reranker=_fake_reranker(),
+    )
+
+    results = svc.retrieve("旭宏医疗产品和融资", domains=("company",))
+
+    assert "Semacare" in results[0].snippet
+    assert "医院/临床机构" in results[0].snippet
+    assert "远程心电诊断" in results[0].snippet
+    assert "数千万人民币" in results[0].snippet
 
 
 def test_retrieve_patent_returns_evidence():

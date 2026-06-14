@@ -1,0 +1,444 @@
+{
+  "generated_at": "2026-05-28T09:28:05.012813+00:00",
+  "batch_id": "142120fe-bc2c-486b-9955-573e06160cce",
+  "selection": {
+    "official_rows_in_window": 54,
+    "cleanup_candidates": 25,
+    "quality_status": "needs_review",
+    "source_scope": "official-site product rows only; Yiou/PitchHub source URLs excluded"
+  },
+  "before_counts": {
+    "company_product": 198,
+    "company_product_evidence": 399,
+    "related_scenarios": 0
+  },
+  "candidates": [
+    {
+      "product_id": "PROD-9998ff22d3ab",
+      "company_id": "COMP-15cafc91251c",
+      "company_name": "梭芯智能",
+      "canonical_name": "BobbinAbout",
+      "short_description": "com ▸ See domain $3,795 BobbinAbout.",
+      "official_product_url": "https://www.bobbincontrol.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:05:49.545963+00:00",
+      "evidence_text": "com ▸ See domain $3,795 BobbinAbout.",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "domain_sale_page",
+        "noise_page_peer"
+      ]
+    },
+    {
+      "product_id": "PROD-cf44caa650d1",
+      "company_id": "COMP-15cafc91251c",
+      "company_name": "梭芯智能",
+      "canonical_name": "BobbinControl",
+      "short_description": "BobbinControl.",
+      "official_product_url": "https://www.bobbincontrol.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:05:49.545963+00:00",
+      "evidence_text": "BobbinControl.",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "noise_page_peer"
+      ]
+    },
+    {
+      "product_id": "PROD-6d7af8c10431",
+      "company_id": "COMP-15cafc91251c",
+      "company_name": "梭芯智能",
+      "canonical_name": "BobbinControl.com",
+      "short_description": "This domain is for sale: $1,995",
+      "official_product_url": "https://www.bobbincontrol.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:05:49.545963+00:00",
+      "evidence_text": "BobbinControl.com This domain is for sale: $1,995 Buy now for $1,995 or pay $83.13 per month for 24 months ▸ Buy now Processing or ▸ Start payment plan Processing Make 24 monthly payments Pay 0% interest Start using the domain today. See details Make 24 monthly payments Pay 0% interest Start using the domain today. See details This domain is for sale: $1,995 ▸ Buy now Processing or ▸ Start payment",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "domain_sale_page",
+        "noise_page_peer"
+      ]
+    },
+    {
+      "product_id": "PROD-7ddaf8652090",
+      "company_id": "COMP-15cafc91251c",
+      "company_name": "梭芯智能",
+      "canonical_name": "BobbinTrace",
+      "short_description": "com ▸ See domain $4,395 BobbinTrace.",
+      "official_product_url": "https://www.bobbincontrol.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:05:49.545963+00:00",
+      "evidence_text": "com ▸ See domain $4,395 BobbinTrace.",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "domain_sale_page",
+        "noise_page_peer"
+      ]
+    },
+    {
+      "product_id": "PROD-935eab172afa",
+      "company_id": "COMP-15cafc91251c",
+      "company_name": "梭芯智能",
+      "canonical_name": "BobbinWinder",
+      "short_description": "See more FAQs Your Web address means everything – watch our video see why Your Web address means everything watch our video see why Other domains you might like BobbinWinder.",
+      "official_product_url": "https://www.bobbincontrol.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:05:49.545963+00:00",
+      "evidence_text": "See more FAQs Your Web address means everything – watch our video see why Your Web address means everything watch our video see why Other domains you might like BobbinWinder.",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "domain_sale_page",
+        "noise_page_peer"
+      ]
+    },
+    {
+      "product_id": "PROD-1be409026530",
+      "company_id": "COMP-15cafc91251c",
+      "company_name": "梭芯智能",
+      "canonical_name": "GoDaddy",
+      "short_description": "FAQs See more FAQs How do I transfer to another registrar such as GoDaddy? Yes, you can transfer your domain to any registrar or hosting company once you have purchased it.",
+      "official_product_url": "https://www.bobbincontrol.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:05:49.545963+00:00",
+      "evidence_text": "FAQs See more FAQs How do I transfer to another registrar such as GoDaddy? Yes, you can transfer your domain to any registrar or hosting company once you have purchased it.",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "domain_sale_page",
+        "noise_name",
+        "noise_page_peer"
+      ]
+    },
+    {
+      "product_id": "PROD-7ad2e1b650c8",
+      "company_id": "COMP-15cafc91251c",
+      "company_name": "梭芯智能",
+      "canonical_name": "HugeDomains",
+      "short_description": "30-day money back guarantee HugeDomains provides a 100% satisfaction guarantee on every domain name that we sell through our website.",
+      "official_product_url": "https://www.bobbincontrol.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:05:49.545963+00:00",
+      "evidence_text": "30-day money back guarantee HugeDomains provides a 100% satisfaction guarantee on every domain name that we sell through our website.",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "domain_sale_page",
+        "noise_name",
+        "noise_page_peer"
+      ]
+    },
+    {
+      "product_id": "PROD-bc2779828d94",
+      "company_id": "COMP-15cafc91251c",
+      "company_name": "梭芯智能",
+      "canonical_name": "NameBright",
+      "short_description": "How do I get the domain after the purchase? Once you purchase the domain we will push it into an account for you at our registrar, NameBright.",
+      "official_product_url": "https://www.bobbincontrol.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:05:49.545963+00:00",
+      "evidence_text": "How do I get the domain after the purchase? Once you purchase the domain we will push it into an account for you at our registrar, NameBright.",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "domain_sale_page",
+        "noise_name",
+        "noise_page_peer"
+      ]
+    },
+    {
+      "product_id": "PROD-5b809c5c8003",
+      "company_id": "COMP-15cafc91251c",
+      "company_name": "梭芯智能",
+      "canonical_name": "PayPal",
+      "short_description": "Additionally, you may checkout with PayPal or Escrow.",
+      "official_product_url": "https://www.bobbincontrol.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:05:49.545963+00:00",
+      "evidence_text": "Additionally, you may checkout with PayPal or Escrow.",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "noise_name",
+        "noise_page_peer"
+      ]
+    },
+    {
+      "product_id": "PROD-166085f527f0",
+      "company_id": "COMP-15cafc91251c",
+      "company_name": "梭芯智能",
+      "canonical_name": "WhoIs",
+      "short_description": "How do I keep my personal information private? If you wish the domain ownership information to be private, add WhoIs Privacy Protection to your domain.",
+      "official_product_url": "https://www.bobbincontrol.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:05:49.545963+00:00",
+      "evidence_text": "How do I keep my personal information private? If you wish the domain ownership information to be private, add WhoIs Privacy Protection to your domain.",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "domain_sale_page",
+        "noise_name",
+        "noise_page_peer"
+      ]
+    },
+    {
+      "product_id": "PROD-ff54338c4ca6",
+      "company_id": "COMP-52ec0a5ec825",
+      "company_name": "贝格迈思（深圳）技术",
+      "canonical_name": "产品介绍",
+      "short_description": "国际领先的数据智能技术创新应用的国家高新技术企业，致力于利用新型硬件技术革新和软件技术进步，打造新型智能数据库BigInsights。",
+      "official_product_url": "http://www.bigmath.com",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:19:49.241129+00:00",
+      "evidence_text": "产品介绍 国际领先的数据智能技术创新应用的国家高新技术企业，致力于利用新型硬件技术革新和软件技术进步，打造新型智能数据库BigInsights。 贝格迈思自主研发面向快数据的企业级分布式智能数据库系统“明睿智能数据库系统BigInsights”，利用新型硬件革新和软件技术进步，具备自适应异构智能内存计算的极高性能、融合大模型人工智能技术、AI自诊断调优及自治的极高智能、金融级高可用、全密态计算存储传输的极高安全能力，核心技术包括异构智能内存计算一体机BrightMachine、\n                            异构智能计算引擎BrightOS、分布式内存智能数据库AiSQL、向量数据引擎、大模型驱动智能计算、数据压缩可查询和加密可检索技术等。满足从核心交易到复杂计算及分析的企业级业务需求。BigInsights针对高速高并发的实时处理及分析应用场景具有高效性能及适用",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "noise_name"
+      ]
+    },
+    {
+      "product_id": "PROD-41d77597ccf0",
+      "company_id": "COMP-66446a8a4c02",
+      "company_name": "十方运动科技",
+      "canonical_name": "AndreaGaleazzi",
+      "short_description": "com @AndreaGaleazzi \"È la bicicletta perfetta per l'uso urbano.",
+      "official_product_url": "https://www.tenways.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:26:40.067728+00:00",
+      "evidence_text": "com @AndreaGaleazzi \"È la bicicletta perfetta per l'uso urbano.",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "testimonial_social_handle"
+      ]
+    },
+    {
+      "product_id": "PROD-0fa4c9e675f2",
+      "company_id": "COMP-66446a8a4c02",
+      "company_name": "十方运动科技",
+      "canonical_name": "AvisExpress",
+      "short_description": "\" Italy CGO800S French Avis Express - Testeur High-Tech @AvisExpress \"C'est l'expérience de roulage la plus agréable que j'ai eue sur un vélo électrique.",
+      "official_product_url": "https://www.tenways.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:26:40.067728+00:00",
+      "evidence_text": "\" Italy CGO800S French Avis Express - Testeur High-Tech @AvisExpress \"C'est l'expérience de roulage la plus agréable que j'ai eue sur un vélo électrique.",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "testimonial_social_handle"
+      ]
+    },
+    {
+      "product_id": "PROD-9c3380f14008",
+      "company_id": "COMP-66446a8a4c02",
+      "company_name": "十方运动科技",
+      "canonical_name": "BrightNL",
+      "short_description": "\" Germany CGO800S Dutch Bright @BrightNL \"Zoveel aandacht voor detail in deze betaalbare prijsklasse.",
+      "official_product_url": "https://www.tenways.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:26:40.067728+00:00",
+      "evidence_text": "\" Germany CGO800S Dutch Bright @BrightNL \"Zoveel aandacht voor detail in deze betaalbare prijsklasse.",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "testimonial_social_handle"
+      ]
+    },
+    {
+      "product_id": "PROD-1bca10fec674",
+      "company_id": "COMP-66446a8a4c02",
+      "company_name": "十方运动科技",
+      "canonical_name": "FedericoDallaPalma",
+      "short_description": "\" Netherlands AGO X French TaytechTV @TaytechTV \"Tenways AGO X - Un vélo électrique HAUT DE GAMME urbain et POLYVALENT !!\" France AGO X Italian Federico Dalla Palma @FedericoDallaPalma \"Un insieme di innovazione design e。",
+      "official_product_url": "https://www.tenways.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:26:40.067728+00:00",
+      "evidence_text": "\" Netherlands AGO X French TaytechTV @TaytechTV \"Tenways AGO X - Un vélo électrique HAUT DE GAMME urbain et POLYVALENT !!\" France AGO X Italian Federico Dalla Palma @FedericoDallaPalma \"Un insieme di innovazione design efficienza aerodinamica e componenti di grande qualità.",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "testimonial_social_handle"
+      ]
+    },
+    {
+      "product_id": "PROD-d1e145f1dcb9",
+      "company_id": "COMP-66446a8a4c02",
+      "company_name": "十方运动科技",
+      "canonical_name": "ManuelAgostini",
+      "short_description": "\" Germany AGO T Italian Manuel Agostini @ManuelAgostini “La migliore e-bike che abbia mai provato, è smart e ha anche il navigatore integrato” Italy CGO009 Dutch Bright @BrightNL “Inderdaad de mate van hoe goed Tenways f。",
+      "official_product_url": "https://www.tenways.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:26:40.067728+00:00",
+      "evidence_text": "\" Germany AGO T Italian Manuel Agostini @ManuelAgostini “La migliore e-bike che abbia mai provato, è smart e ha anche il navigatore integrato” Italy CGO009 Dutch Bright @BrightNL “Inderdaad de mate van hoe goed Tenways fietsen te onderhouden zijn is echt een unique selling point.",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "testimonial_social_handle"
+      ]
+    },
+    {
+      "product_id": "PROD-e2e9532c0f1d",
+      "company_id": "COMP-66446a8a4c02",
+      "company_name": "十方运动科技",
+      "canonical_name": "TaytechTV",
+      "short_description": "\" Netherlands AGO X French TaytechTV @TaytechTV \"Tenways AGO X - Un vélo électrique HAUT DE GAMME urbain et POLYVALENT !!\" France AGO X Italian Federico Dalla Palma @FedericoDallaPalma \"Un insieme di innovazione design e。",
+      "official_product_url": "https://www.tenways.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:26:40.067728+00:00",
+      "evidence_text": "\" Netherlands AGO X French TaytechTV @TaytechTV \"Tenways AGO X - Un vélo électrique HAUT DE GAMME urbain et POLYVALENT !!\" France AGO X Italian Federico Dalla Palma @FedericoDallaPalma \"Un insieme di innovazione design efficienza aerodinamica e componenti di grande qualità.",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "testimonial_social_handle"
+      ]
+    },
+    {
+      "product_id": "PROD-7fbbc638d8d0",
+      "company_id": "COMP-66446a8a4c02",
+      "company_name": "十方运动科技",
+      "canonical_name": "TwiceTheBikes",
+      "short_description": "\" Germany CGO600 Plus Dutch Twice The Bikes @TwiceTheBikes \"A stylish, well-built urban e-bike with smooth power delivery.",
+      "official_product_url": "https://www.tenways.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:26:40.067728+00:00",
+      "evidence_text": "\" Germany CGO600 Plus Dutch Twice The Bikes @TwiceTheBikes \"A stylish, well-built urban e-bike with smooth power delivery.",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "testimonial_social_handle"
+      ]
+    },
+    {
+      "product_id": "PROD-858dd1456be6",
+      "company_id": "COMP-71d81700c2e4",
+      "company_name": "索菲丝智能科技（深圳）",
+      "canonical_name": "GET A FREE QUOTE",
+      "short_description": "Submit your request today and get a free solution plan and quote within 24 hours.",
+      "official_product_url": "http://www.surobopilot.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:26:46.651787+00:00",
+      "evidence_text": "GET A FREE QUOTE Submit your request today and get a free solution plan and quote within 24 hours. Name E-mail Message Send message",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "noise_name",
+        "cta_or_footer_noise"
+      ]
+    },
+    {
+      "product_id": "PROD-5062dee03b93",
+      "company_id": "COMP-71f8a7b2cd2e",
+      "company_name": "天陆海导航设备技术",
+      "canonical_name": "系统定制化能力",
+      "short_description": "系统定制化能力 针对客户的不同应用场景及领域，比如：自动驾驶、无人机、无人舰艇等，进行多传感器融合定制开发； 产品的功能、性能、可靠性及一致性达到汽车级乃至军工级标准； 帮助客户解决行业痛点，为客户提供高性价比产品； 了解更多",
+      "official_product_url": "http://www.i-nav.com.cn/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:33:25.576087+00:00",
+      "evidence_text": "系统定制化能力 针对客户的不同应用场景及领域，比如：自动驾驶、无人机、无人舰艇等，进行多传感器融合定制开发； 产品的功能、性能、可靠性及一致性达到汽车级乃至军工级标准； 帮助客户解决行业痛点，为客户提供高性价比产品； 了解更多 掌握高精度 高可靠性导航算法 掌握惯性器件标定技术，利用算法补偿器件性能不足； 掌握惯导/卫导松耦合、紧耦合以及深耦合技术； 掌握捷联惯导动态对准技术，实现惯导/卫导/里程计等多传感器数据融合技术； 了解更多",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "noise_name"
+      ]
+    },
+    {
+      "product_id": "PROD-d0dd60629583",
+      "company_id": "COMP-8d9ff6fc5e4c",
+      "company_name": "清闲智能创新（深圳）",
+      "canonical_name": "PayPal",
+      "short_description": "com +60 15236124896 Shipping Policy Privacy Policy Terms of Service Intellectual Property Rights American Express Diners Club Discover JCB Maestro Mastercard PayPal Visa Google Pay Apple Pay Klarna _{region} ( _{language。",
+      "official_product_url": "https://libernovo.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:33:40.157466+00:00",
+      "evidence_text": "com +60 15236124896 Shipping Policy Privacy Policy Terms of Service Intellectual Property Rights American Express Diners Club Discover JCB Maestro Mastercard PayPal Visa Google Pay Apple Pay Klarna _{region} ( _{language} ) Choose Your Country or Region _{area} _{area} _{region} (_{language}) Shipping Policy Privacy Policy Terms of Service Intellectual Property Rights © 2026 LiberNovo All rights r",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "noise_name"
+      ]
+    },
+    {
+      "product_id": "PROD-d8d65107dd26",
+      "company_id": "COMP-8ecaa632bc62",
+      "company_name": "明阳奇智能科技",
+      "canonical_name": "LinkedIn",
+      "short_description": "Tel：+86 755 8966 6210 LinkedIn Shop Online Tuya Expo Smart Home Total Solution Copyright @ 2026 .",
+      "official_product_url": "http://www.myqsmarts.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:37:18.818014+00:00",
+      "evidence_text": "Tel：+86 755 8966 6210 LinkedIn Shop Online Tuya Expo Smart Home Total Solution Copyright @ 2026 .",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "noise_name",
+        "cta_or_footer_noise"
+      ]
+    },
+    {
+      "product_id": "PROD-2a922760ab49",
+      "company_id": "COMP-d5533a98f9e8",
+      "company_name": "安百纳智能实业",
+      "canonical_name": "JavaScript",
+      "short_description": "You need to enable JavaScript to run this app.",
+      "official_product_url": "http://www.a-bene.com/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:45:22.222490+00:00",
+      "evidence_text": "You need to enable JavaScript to run this app.",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "javascript_placeholder",
+        "noise_name",
+        "noise_page_peer"
+      ]
+    },
+    {
+      "product_id": "PROD-eaa947901f53",
+      "company_id": "COMP-dea8e1f974c4",
+      "company_name": "共达地创新技术（深圳）",
+      "canonical_name": "JavaScript",
+      "short_description": "You need to enable JavaScript to run this app.",
+      "official_product_url": "http://www.gddi.com.cn",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:50:29.366390+00:00",
+      "evidence_text": "You need to enable JavaScript to run this app.",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "javascript_placeholder",
+        "noise_name",
+        "noise_page_peer"
+      ]
+    },
+    {
+      "product_id": "PROD-893049e02139",
+      "company_id": "COMP-e82bd050b907",
+      "company_name": "深圳扬奇医芯智能科技",
+      "canonical_name": "JavaScript",
+      "short_description": "We're sorry but 扬奇智能 doesn't work properly without JavaScript enabled.",
+      "official_product_url": "https://www.jancsitech.net/",
+      "quality_status": "needs_review",
+      "created_at": "2026-05-28T08:50:38.041943+00:00",
+      "evidence_text": "We're sorry but 扬奇智能 doesn't work properly without JavaScript enabled.",
+      "evidence_count": 1,
+      "cleanup_reasons": [
+        "javascript_placeholder",
+        "noise_name",
+        "noise_page_peer"
+      ]
+    }
+  ],
+  "deleted_product_ids": [
+    "PROD-cf44caa650d1",
+    "PROD-6d7af8c10431",
+    "PROD-7ad2e1b650c8",
+    "PROD-5b809c5c8003",
+    "PROD-1be409026530",
+    "PROD-bc2779828d94",
+    "PROD-166085f527f0",
+    "PROD-935eab172afa",
+    "PROD-7ddaf8652090",
+    "PROD-9998ff22d3ab",
+    "PROD-ff54338c4ca6",
+    "PROD-7fbbc638d8d0",
+    "PROD-9c3380f14008",
+    "PROD-e2e9532c0f1d",
+    "PROD-1bca10fec674",
+    "PROD-0fa4c9e675f2",
+    "PROD-41d77597ccf0",
+    "PROD-d1e145f1dcb9",
+    "PROD-858dd1456be6",
+    "PROD-5062dee03b93",
+    "PROD-d0dd60629583",
+    "PROD-d8d65107dd26",
+    "PROD-2a922760ab49",
+    "PROD-eaa947901f53",
+    "PROD-893049e02139"
+  ],
+  "after_counts": {
+    "company_product": 173,
+    "company_product_evidence": 374
+  }
+}

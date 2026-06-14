@@ -6,7 +6,7 @@ compatibility: Requires openspec CLI.
 metadata:
   author: openspec
   version: "1.0"
-  generatedBy: "1.2.0"
+  generatedBy: "1.3.1"
 ---
 
 Implement tasks from an OpenSpec change.
@@ -39,7 +39,7 @@ Implement tasks from an OpenSpec change.
    ```
 
    This returns:
-   - Context file paths (varies by schema - could be proposal/specs/design/tasks or spec/tests/implementation/docs)
+   - `contextFiles`: artifact ID -> array of concrete file paths (varies by schema - could be proposal/specs/design/tasks or spec/tests/implementation/docs)
    - Progress (total, complete, remaining)
    - Task list with status
    - Dynamic instruction based on current state
@@ -51,25 +51,40 @@ Implement tasks from an OpenSpec change.
 
 4. **Read context files**
 
-   Read the files listed in `contextFiles` from the apply instructions output.
+   Read every file path listed under `contextFiles` from the apply instructions output.
    The files depend on the schema being used:
    - **spec-driven**: proposal, specs, design, tasks
    - Other schemas: follow the contextFiles from CLI output
 
-5. **Show current progress**
+5. **Read the verification contract**
+
+   Check `.agents/runs/<name>/verification-contract.md`.
+
+   - If it exists, read it before any production-code edits.
+   - If it is missing and the change is behavior-affecting, pause and create/update it from `.agents/runs/verification-contract.template.md` before implementation.
+   - If the change is not behavior-affecting, state that OpenSpec/Superpowers verification contract is not applicable and why.
+
+   The contract decides the allowed Superpowers mode, RED artifact, oracle strength, affected context/dependencies, mock policy, and GREEN criteria. Do not invoke or follow Superpowers TDD blindly. For Agentic RAG/chat, routing, prompt, memory, tool-choice, policy, or badcase work, a unit test alone is not enough; use the eval, trace, integration, policy, or contract RED named by the verification contract.
+
+6. **Show current progress**
 
    Display:
    - Schema being used
    - Progress: "N/M tasks complete"
    - Remaining tasks overview
    - Dynamic instruction from CLI
+   - Verification contract status and selected RED/GREEN boundary
+   - Oracle/context/mock status from the verification contract
 
-6. **Implement tasks (loop until done or blocked)**
+7. **Implement tasks (loop until done or blocked)**
 
    For each pending task:
    - Show which task is being worked on
+   - Run or inspect the declared RED artifact when the verification contract requires pre-implementation RED evidence
    - Make the code changes required
    - Keep changes minimal and focused
+   - Preserve the verification contract's RED/GREEN boundary; do not weaken tests, evals, schemas, evidence checks, or guardrails to pass
+   - Do not accept weak oracle, mock-only, or single-example GREEN evidence when the contract requires stronger verification
    - Mark task complete in the tasks file: `- [ ]` → `- [x]`
    - Continue to next task
 
@@ -79,7 +94,7 @@ Implement tasks from an OpenSpec change.
    - Error or blocker encountered → report and wait for guidance
    - User interrupts
 
-7. **On completion or pause, show status**
+8. **On completion or pause, show status**
 
    Display:
    - Tasks completed this session
@@ -141,8 +156,10 @@ What would you like to do?
 **Guardrails**
 - Keep going through tasks until done or blocked
 - Always read context files before starting (from the apply instructions output)
+- Always read or create the verification contract before behavior-affecting production-code edits
 - If task is ambiguous, pause and ask before implementing
 - If implementation reveals issues, pause and suggest artifact updates
+- If RED/GREEN criteria are wrong or missing, update OpenSpec and the verification contract before changing code further
 - Keep code changes minimal and scoped to each task
 - Update task checkbox immediately after completing each task
 - Pause on errors, blockers, or unclear requirements - don't guess

@@ -670,6 +670,45 @@ def _anchored_disambiguation_confidence(result: ProfessorPaperDiscoveryResult) -
     return 0.95
 
 
+def _has_official_linked_result_signal(
+    result: ProfessorPaperDiscoveryResult | None,
+) -> bool:
+    return bool(
+        result
+        and (
+            result.papers
+            or result.paper_count
+            or result.h_index
+            or result.citation_count
+            or result.author_id
+        )
+    )
+
+
+def _call_official_linked_provider(
+    provider: Any,
+    *,
+    provider_name: str,
+    **kwargs: Any,
+) -> ProfessorPaperDiscoveryResult | None:
+    try:
+        result = provider(**kwargs)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "official-linked paper discovery failed via %s: %s",
+            provider_name,
+            exc,
+        )
+        return None
+    if isinstance(result, ProfessorPaperDiscoveryResult):
+        return result
+    logger.warning(
+        "official-linked paper discovery returned unexpected result via %s",
+        provider_name,
+    )
+    return None
+
+
 def _discover_official_linked_orcid_result(
     *,
     scholarly_profile_urls: list[str],
@@ -680,13 +719,15 @@ def _discover_official_linked_orcid_result(
     for url in scholarly_profile_urls:
         if "orcid.org" not in url.lower():
             continue
-        result = discover_professor_paper_candidates_from_orcid(
+        result = _call_official_linked_provider(
+            discover_professor_paper_candidates_from_orcid,
+            provider_name="orcid",
             professor_id=professor_id,
             professor_name=professor_name,
             institution=institution,
             orcid_url=url,
         )
-        if result.papers or result.paper_count:
+        if _has_official_linked_result_signal(result):
             return result
     return None
 
@@ -702,13 +743,15 @@ def _discover_official_linked_scholar_result(
         lowered = url.lower()
         if "scholar.google" not in lowered:
             continue
-        result = discover_professor_paper_candidates_from_google_scholar_profile(
+        result = _call_official_linked_provider(
+            discover_professor_paper_candidates_from_google_scholar_profile,
+            provider_name="google_scholar_profile",
             professor_id=professor_id,
             professor_name=professor_name,
             institution=institution,
             profile_url=url,
         )
-        if result.papers or result.paper_count or result.h_index or result.citation_count:
+        if _has_official_linked_result_signal(result):
             return result
     return None
 
@@ -721,15 +764,17 @@ def _discover_official_linked_cv_result(
     institution: str,
 ) -> ProfessorPaperDiscoveryResult | None:
     for url in cv_urls:
-        if not url.lower().endswith(".pdf"):
+        if not url.lower().split("?", maxsplit=1)[0].endswith(".pdf"):
             continue
-        result = discover_professor_paper_candidates_from_cv_pdf(
+        result = _call_official_linked_provider(
+            discover_professor_paper_candidates_from_cv_pdf,
+            provider_name="cv_pdf",
             professor_id=professor_id,
             professor_name=professor_name,
             institution=institution,
             cv_url=url,
         )
-        if result.papers or result.paper_count or result.h_index or result.citation_count:
+        if _has_official_linked_result_signal(result):
             return result
     return None
 

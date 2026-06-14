@@ -3,10 +3,12 @@ from __future__ import annotations
 import io
 import logging
 import asyncio
+import hashlib
+from contextlib import contextmanager
 from uuid import UUID
 
 import pytest
-from fastapi import UploadFile
+from fastapi import HTTPException, UploadFile
 from openpyxl import Workbook
 
 from backend.api import upload
@@ -33,9 +35,15 @@ class _FakeUploadConn:
         sql_lower = sql.lower()
         if sql_lower.startswith("insert into pipeline_run"):
             return _FakeResult([{"run_id": RUN_ID}])
+        if sql_lower.startswith("update pipeline_run"):
+            return _FakeResult([])
         if sql_lower.startswith("insert into source_page"):
             return _FakeResult([{"page_id": PAGE_ID}])
         if sql_lower.startswith("insert into pipeline_issue"):
+            return _FakeResult([])
+        if sql_lower.startswith("select pg_advisory_xact_lock"):
+            return _FakeResult([])
+        if "from pipeline_run" in sql_lower and "file_content_hash" in sql_lower:
             return _FakeResult([])
         if sql_lower.startswith("select count"):
             return _FakeResult([{"total": 7}])
@@ -62,7 +70,7 @@ def test_upload_records_source_page_and_schedules_async_task(
         return _DummyTask()
 
     monkeypatch.setattr(upload.asyncio, "create_task", fake_create_task)
-    monkeypatch.setattr(upload.tempfile, "gettempdir", lambda: str(tmp_path))
+    monkeypatch.setenv("MIROTHINKER_ADMIN_UPLOAD_DIR", str(tmp_path / "admin-uploads"))
     conn = _FakeUploadConn()
 
     response = asyncio.run(
@@ -90,6 +98,8 @@ def test_upload_records_source_page_and_schedules_async_task(
     assert str(RUN_ID) in params["url"]
     assert params["filename"] == "paper.xlsx"
     assert params["task_id"] == RUN_ID
+    assert str(tmp_path / "admin-uploads" / "paper") in params["upload_path"]
+    assert str(RUN_ID) in params["upload_path"]
 
 
 def test_upload_dry_run_records_scope_and_schedules_dry_run_task(
@@ -104,7 +114,7 @@ def test_upload_dry_run_records_scope_and_schedules_dry_run_task(
         return _DummyTask()
 
     monkeypatch.setattr(upload.asyncio, "create_task", fake_create_task)
-    monkeypatch.setattr(upload.tempfile, "gettempdir", lambda: str(tmp_path))
+    monkeypatch.setenv("MIROTHINKER_ADMIN_UPLOAD_DIR", str(tmp_path / "admin-uploads"))
     conn = _FakeUploadConn()
 
     response = asyncio.run(
@@ -123,6 +133,87 @@ def test_upload_dry_run_records_scope_and_schedules_dry_run_task(
     pipeline_call = next(call for call in conn.calls if "INSERT INTO pipeline_run" in call[0])
     assert isinstance(pipeline_call[1], tuple)
     assert '"dry_run": true' in pipeline_call[1][1]
+
+
+def test_upload_rejects_file_larger_than_configured_limit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_create_task(coro):
+        coro.close()
+        raise AssertionError("oversized uploads must be rejected before scheduling")
+
+    monkeypatch.setattr(upload.asyncio, "create_task", fake_create_task)
+    monkeypatch.setenv("MIROTHINKER_ADMIN_UPLOAD_MAX_BYTES", "4")
+    conn = _FakeUploadConn()
+
+    with pytest.raises(HTTPException) as exc_info:
+        asyncio.run(
+            upload._handle_upload(
+                domain="company",
+                file=UploadFile(file=io.BytesIO(b"12345"), filename="company.xlsx"),
+                conn=conn,
+            )
+        )
+
+    assert exc_info.value.status_code == 413
+    assert exc_info.value.detail["code"] == "upload_too_large"
+    assert exc_info.value.detail["max_bytes"] == 4
+    assert not conn.calls
+
+
+def test_company_upload_rejects_active_duplicate_file_hash(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    created_coroutines = []
+    content = b"xlsx bytes"
+    digest = hashlib.sha256(content).hexdigest()
+
+    class DuplicateConn(_FakeUploadConn):
+        def execute(self, query: str, params: object = None) -> _FakeResult:
+            sql = " ".join(query.split())
+            sql_lower = sql.lower()
+            self.calls.append((sql, params))
+            if "from pipeline_run" in sql_lower and "file_content_hash" in sql_lower:
+                assert isinstance(params, dict)
+                assert params["domain"] == "company"
+                assert params["file_content_hash"] == digest
+                return _FakeResult(
+                    [
+                        {
+                            "run_id": RUN_ID,
+                            "status": "running",
+                            "run_kind": "import_xlsx",
+                            "filename": "company.xlsx",
+                            "upload_path": "/data/uploads/company.xlsx",
+                            "active_batch_id": None,
+                            "active_batch_status": None,
+                        }
+                    ]
+                )
+            return super().execute(query, params)
+
+    def fake_create_task(coro):
+        created_coroutines.append(coro)
+        coro.close()
+        return _DummyTask()
+
+    monkeypatch.setattr(upload.asyncio, "create_task", fake_create_task)
+    monkeypatch.setenv("MIROTHINKER_ADMIN_UPLOAD_DIR", str(tmp_path / "admin-uploads"))
+
+    with pytest.raises(HTTPException) as exc:
+        asyncio.run(
+            upload._handle_upload(
+                domain="company",
+                file=UploadFile(file=io.BytesIO(content), filename="company.xlsx"),
+                conn=DuplicateConn(),
+            )
+        )
+
+    assert exc.value.status_code == 409
+    assert exc.value.detail["code"] == "duplicate_upload_active"
+    assert exc.value.detail["active_task_id"] == str(RUN_ID)
+    assert created_coroutines == []
 
 
 def test_upload_pipeline_task_logs_failure_without_reraising(
@@ -246,6 +337,157 @@ def test_company_upload_dispatch_runs_real_pipeline_wrapper(
     assert calls == [(RUN_ID, tmp_path / "company.xlsx")]
 
 
+def test_company_upload_pipeline_enqueues_batch_scoped_enrichment(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    imported_reports: list[dict] = []
+    loaded_batches: list[UUID] = []
+    created_batches: list[dict] = []
+    scheduled_batches: list[dict] = []
+
+    class _Report:
+        records_new_company = 1
+        records_updated_company = 1
+        records_failed = 0
+        records_parsed = 2
+        batch_id = UUID("44444444-4444-4444-4444-444444444444")
+        team_members_inserted = 1
+        funding_events_inserted = 1
+        lineage_rows = 2
+
+    def fake_import_company_xlsx_to_postgres(*args, **kwargs):
+        imported_reports.append({"args": args, "kwargs": kwargs})
+        return _Report()
+
+    def fake_load_company_ids_for_import_batch(*, dsn, batch_id):
+        loaded_batches.append(batch_id)
+        return ["COMP-1", "COMP-2"]
+
+    class _BatchResult:
+        batch_id = UUID("55555555-5555-5555-5555-555555555555")
+        companies_total = 2
+        companies_selected = 2
+
+    def fake_create_enrichment_batch(conn, **kwargs):
+        created_batches.append(kwargs)
+        return _BatchResult()
+
+    def fake_schedule_company_enrichment_batch(**kwargs):
+        scheduled_batches.append(kwargs)
+
+    monkeypatch.setattr(upload, "_resolve_upload_dsn", lambda: "postgresql://fake/test")
+    monkeypatch.setattr(upload, "_ensure_admin_upload_seed", lambda **_kwargs: None)
+    monkeypatch.setattr(
+        "src.data_agents.company.canonical_import.import_company_xlsx_to_postgres",
+        fake_import_company_xlsx_to_postgres,
+    )
+    monkeypatch.setattr(
+        upload,
+        "_load_company_ids_for_import_batch",
+        fake_load_company_ids_for_import_batch,
+    )
+    monkeypatch.setattr(upload, "_open_enrichment_connection", lambda _dsn: object())
+    monkeypatch.setattr(upload, "create_enrichment_batch", fake_create_enrichment_batch)
+    monkeypatch.setattr(
+        upload,
+        "_schedule_company_enrichment_batch",
+        fake_schedule_company_enrichment_batch,
+    )
+
+    summary = upload._run_company_upload_pipeline(
+        task_id=RUN_ID,
+        upload_path=tmp_path / "company.xlsx",
+    )
+
+    assert imported_reports
+    assert loaded_batches == [_Report.batch_id]
+    assert created_batches == [
+        {
+            "upload_task_id": RUN_ID,
+            "import_batch_id": _Report.batch_id,
+            "company_ids": ["COMP-1", "COMP-2"],
+            "run_scope": {
+                "source": "admin-console-upload",
+                "domain": "company",
+                "import_batch_id": str(_Report.batch_id),
+            },
+            "triggered_by": "admin-console",
+        }
+    ]
+    assert summary["company_ids_for_enrichment"] == 2
+    assert summary["enrichment"] == {
+        "status": "queued",
+        "batch_id": "55555555-5555-5555-5555-555555555555",
+        "companies_total": 2,
+        "companies_selected": 2,
+    }
+    assert scheduled_batches == [
+        {
+            "dsn": "postgresql://fake/test",
+            "batch_id": UUID("55555555-5555-5555-5555-555555555555"),
+        }
+    ]
+
+
+def test_company_upload_enrichment_accepts_context_managed_connection(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    connections: list[object] = []
+    commits: list[object] = []
+    closed = []
+    scheduled_batches: list[dict] = []
+
+    class _Conn:
+        def commit(self) -> None:
+            commits.append(self)
+
+    @contextmanager
+    def fake_connection(_dsn):
+        conn = _Conn()
+        connections.append(conn)
+        try:
+            yield conn
+        finally:
+            closed.append(conn)
+
+    class _BatchResult:
+        batch_id = UUID("55555555-5555-5555-5555-555555555555")
+        companies_total = 2
+        companies_selected = 2
+
+    def fake_create_enrichment_batch(conn, **kwargs):
+        assert conn is connections[0]
+        assert kwargs["upload_task_id"] == RUN_ID
+        assert kwargs["company_ids"] == ["COMP-1", "COMP-2"]
+        return _BatchResult()
+
+    monkeypatch.setattr(upload, "_open_enrichment_connection", fake_connection)
+    monkeypatch.setattr(upload, "create_enrichment_batch", fake_create_enrichment_batch)
+    monkeypatch.setattr(
+        upload,
+        "_schedule_company_enrichment_batch",
+        lambda **kwargs: scheduled_batches.append(kwargs),
+    )
+
+    summary = upload._enqueue_company_upload_enrichment(
+        dsn="postgresql://fake/test",
+        task_id=RUN_ID,
+        import_batch_id=UUID("44444444-4444-4444-4444-444444444444"),
+        company_ids=["COMP-1", "COMP-2"],
+    )
+
+    assert summary["status"] == "queued"
+    assert commits == connections
+    assert closed == connections
+    assert scheduled_batches == [
+        {
+            "dsn": "postgresql://fake/test",
+            "batch_id": UUID("55555555-5555-5555-5555-555555555555"),
+        }
+    ]
+
+
 def test_company_upload_dispatch_uses_dry_run_wrapper(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path,
@@ -303,6 +545,111 @@ def test_company_upload_dry_run_reports_missing_company_name_rows(tmp_path) -> N
             "severity": "medium",
             "description": "1 company rows are missing company_name",
             "recommended_action": "Fill company_name in the source Excel rows before import.",
+        }
+    ]
+
+
+def test_company_upload_dry_run_includes_canonical_preflight(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    monkeypatch.setattr(upload, "_load_existing_company_ids_for_preflight", lambda: None)
+    monkeypatch.setattr(
+        upload,
+        "_load_duplicate_upload_preflight",
+        lambda _digest: {
+            "duplicate_lookup": "available",
+            "is_duplicate_upload": True,
+            "prior_import_batches": 1,
+            "prior_admin_upload_runs": 1,
+        },
+    )
+    workbook_path = tmp_path / "company.xlsx"
+    wb = Workbook()
+    ws = wb.active
+    ws.append(["公司名称", "项目名称", "网址", "产品简介", "应用场景"])
+    ws.append(
+        [
+            "深圳甲科技有限公司",
+            "甲科技",
+            "https://same.example.com/a",
+            "甲科技平台提供工业巡检能力。",
+            "工业巡检",
+        ]
+    )
+    ws.append(
+        [
+            "深圳乙科技有限公司",
+            "乙科技",
+            "https://same.example.com/b",
+            "乙科技平台提供设备监测能力。",
+            "设备监测",
+        ]
+    )
+    wb.save(workbook_path)
+
+    summary = upload._run_company_upload_dry_run(upload_path=workbook_path)
+
+    preflight = summary["canonical_preflight"]
+    assert preflight["records_parsed"] == 2
+    assert preflight["identity_conflict_count"] == 2
+    assert preflight["field_coverage"]["product_intro"] == 2
+    assert preflight["field_coverage"]["application_scenarios_raw"] == 2
+    assert summary["duplicate_upload_preflight"]["is_duplicate_upload"] is True
+
+
+def test_company_upload_enrichment_autorun_defaults_to_run(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    popen_calls = []
+    runner_records = []
+
+    class _Proc:
+        pid = 24680
+
+    class _Conn:
+        def commit(self) -> None:
+            pass
+
+        def close(self) -> None:
+            pass
+
+    def fake_popen(*args, **kwargs):
+        popen_calls.append((args, kwargs))
+        return _Proc()
+
+    monkeypatch.delenv("COMPANY_UPLOAD_ENRICHMENT_AUTORUN", raising=False)
+    monkeypatch.setenv("MIROTHINKER_COMPANY_ENRICHMENT_LOG_DIR", str(tmp_path / "logs"))
+    monkeypatch.setattr(upload.subprocess, "Popen", fake_popen)
+    monkeypatch.setattr(upload, "_open_enrichment_connection", lambda _dsn: _Conn())
+    monkeypatch.setattr(
+        upload,
+        "record_batch_runner_started",
+        lambda conn, **kwargs: runner_records.append(kwargs),
+    )
+
+    upload._schedule_company_enrichment_batch(
+        dsn="postgresql://fake/test",
+        batch_id=UUID("55555555-5555-5555-5555-555555555555"),
+    )
+
+    assert len(popen_calls) == 1
+    command = popen_calls[0][0][0]
+    assert command[:3] == [
+        upload.sys.executable,
+        str(upload._miroflow_agent_root() / "scripts" / "run_company_upload_enrichment_batch.py"),
+        "--batch-id",
+    ]
+    kwargs = popen_calls[0][1]
+    assert kwargs["stderr"] == upload.subprocess.STDOUT
+    assert kwargs["stdout"].name.endswith(".log")
+    assert (tmp_path / "logs").as_posix() in kwargs["stdout"].name
+    assert runner_records == [
+        {
+            "batch_id": UUID("55555555-5555-5555-5555-555555555555"),
+            "runner_pid": 24680,
+            "runner_log_path": kwargs["stdout"].name,
         }
     ]
 

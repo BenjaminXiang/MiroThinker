@@ -14,15 +14,17 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-_PROFILE_MIN_LENGTH = 200
-_PROFILE_MAX_LENGTH = 300
+_PROFILE_MIN_LENGTH = 500
+_PROFILE_MAX_LENGTH = 1800
 _TECH_ROUTE_MIN_LENGTH = 300
-_TECH_ROUTE_MAX_LENGTH = 500
+_TECH_ROUTE_MAX_LENGTH = 900
+_MIN_SOURCE_MATERIAL_CHARS = 60
 _DEFAULT_TEMPERATURE = 0.2
 _DEFAULT_MAX_TOKENS = 1200
 
 _MARKDOWN_FENCE_RE = re.compile(r"^\s*```[a-zA-Z]*\s*|\s*```\s*$", re.MULTILINE)
 _WHITESPACE_RE = re.compile(r"\s+")
+_SENTENCE_BOUNDARY_CHARS = ("。", "！", "？", "；", ";", "!", "?")
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,13 +32,14 @@ class NarrativeResult:
     profile_summary: str
     technology_route_summary: str
     error: str | None
+    blockers: tuple[str, ...] = ()
 
 
 _SYSTEM_PROMPT = (
     "你是深圳科创平台的企业画像合成助手。根据提供的企业基本信息（行业、所在城市、原始介绍），"
     "合成两段中文文本：\n"
-    "1. profile_summary（200-300字）：企业画像，包含主营业务、行业定位、创立背景。\n"
-    "2. technology_route_summary（300-500字）：技术路线、核心产品、研发方向、行业地位。\n"
+    "1. profile_summary（700-1600字）：企业画像，包含主营业务、行业定位、创立背景、产品线、客户或应用场景、融资或团队线索。\n"
+    "2. technology_route_summary（400-800字）：技术路线、核心产品、研发方向、行业地位。\n"
     "规则：\n"
     "- 只使用提供的内容，不要编造未出现的事实。\n"
     "- 中文，连贯叙述，不要 bullet。\n"
@@ -51,6 +54,9 @@ def build_user_prompt(
     industry: str | None,
     hq_city: str | None,
     description: str | None,
+    business: str | None = None,
+    products: list[dict[str, Any]] | None = None,
+    source_materials: list[dict[str, Any]] | None = None,
 ) -> str:
     return "\n".join(
         [
@@ -58,12 +64,75 @@ def build_user_prompt(
             f"公司名称：{company_name or '未填写'}",
             f"行业：{industry or '行业未填写'}",
             f"所在城市：{hq_city or '城市未填写'}",
+            f"业务描述：{business or '业务未填写'}",
             "原始介绍：",
             (description or "").strip(),
+            "",
+            "## 产品和业务材料",
+            _format_products(products),
+            "",
+            "## 已接受来源材料",
+            _format_source_materials(source_materials),
             "",
             "请严格输出 JSON，不要输出 Markdown 或解释文字。",
         ]
     )
+
+
+def _format_products(products: list[dict[str, Any]] | None) -> str:
+    if not products:
+        return "暂无结构化产品。"
+    lines: list[str] = []
+    for index, product in enumerate(products[:12], start=1):
+        name = _normalize_text(product.get("name") or product.get("product_name"))
+        description = _normalize_text(
+            product.get("description") or product.get("short_description")
+        )
+        category = _normalize_text(product.get("product_category"))
+        tags = _normalize_sequence(product.get("technical_tags"))
+        customers = _normalize_sequence(product.get("target_customers"))
+        scenarios = _normalize_sequence(product.get("application_scenarios"))
+        parts = [
+            f"产品{index}：{name or '未命名产品'}",
+            f"简介：{description}" if description else "",
+            f"类别：{category}" if category else "",
+            f"技术标签：{'、'.join(tags)}" if tags else "",
+            f"目标客户：{'、'.join(customers)}" if customers else "",
+            f"应用场景：{'、'.join(scenarios)}" if scenarios else "",
+        ]
+        lines.append("；".join(part for part in parts if part))
+    return "\n".join(lines)
+
+
+def _format_source_materials(source_materials: list[dict[str, Any]] | None) -> str:
+    if not source_materials:
+        return "暂无已接受外部来源材料。"
+    lines: list[str] = []
+    for index, material in enumerate(source_materials[:16], start=1):
+        tier = _normalize_text(material.get("source_tier") or material.get("tier"))
+        title = _normalize_text(material.get("title"))
+        url = _normalize_text(material.get("url") or material.get("source_url"))
+        trust_reason = _normalize_text(material.get("trust_reason"))
+        text = _normalize_text(
+            material.get("text")
+            or material.get("captured_text")
+            or material.get("summary")
+            or material.get("body")
+        )
+        lines.append(
+            "\n".join(
+                part
+                for part in (
+                    f"来源{index}：{tier or 'unknown'}",
+                    f"标题：{title}" if title else "",
+                    f"URL：{url}" if url else "",
+                    f"可信原因：{trust_reason}" if trust_reason else "",
+                    f"正文摘录：{text[:1600]}" if text else "",
+                )
+                if part
+            )
+        )
+    return "\n".join(lines)
 
 
 def _strip_markdown_fences(text: str) -> str:
@@ -75,6 +144,23 @@ def _normalize_text(value: Any) -> str:
     text = _strip_markdown_fences(text)
     text = text.strip().strip('"').strip("'")
     return _WHITESPACE_RE.sub(" ", text).strip()
+
+
+def _normalize_sequence(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        candidates = re.split(r"[,，;；、\n]+", value)
+    elif isinstance(value, (list, tuple, set)):
+        candidates = list(value)
+    else:
+        candidates = [value]
+    result: list[str] = []
+    for item in candidates:
+        text = _normalize_text(item)
+        if text:
+            result.append(text)
+    return result[:12]
 
 
 def _call_llm(
@@ -136,6 +222,43 @@ def _validate_field(
     return None
 
 
+def _fit_field_length(
+    text: str,
+    *,
+    min_length: int,
+    max_length: int,
+) -> str:
+    """Fit an LLM narrative field to storage/display limits without inventing text."""
+    if len(text) <= max_length:
+        return text
+    boundary = max(
+        (text.rfind(marker, 0, max_length + 1) for marker in _SENTENCE_BOUNDARY_CHARS),
+        default=-1,
+    )
+    if boundary + 1 >= min_length:
+        return text[: boundary + 1].strip()
+    return text[:max_length].strip()
+
+
+def _fit_payload_lengths(
+    *,
+    profile_summary: str,
+    technology_route_summary: str,
+) -> tuple[str, str]:
+    return (
+        _fit_field_length(
+            profile_summary,
+            min_length=_PROFILE_MIN_LENGTH,
+            max_length=_PROFILE_MAX_LENGTH,
+        ),
+        _fit_field_length(
+            technology_route_summary,
+            min_length=_TECH_ROUTE_MIN_LENGTH,
+            max_length=_TECH_ROUTE_MAX_LENGTH,
+        ),
+    )
+
+
 def _validate_payload(
     *,
     profile_summary: str,
@@ -164,11 +287,14 @@ def _split_prompt(
     industry: str | None,
     hq_city: str | None,
     description: str | None,
+    business: str | None,
+    products: list[dict[str, Any]] | None,
+    source_materials: list[dict[str, Any]] | None,
 ) -> tuple[str, str]:
     if field_name == "profile_summary":
-        requirement = "生成 200-300 字中文企业画像，包含主营业务、行业定位、创立背景。"
+        requirement = "生成 700-1600 字中文企业画像，包含主营业务、行业定位、创立背景、产品线、客户或应用场景、融资或团队线索。"
     else:
-        requirement = "生成 300-500 字中文技术路线摘要，包含技术路线、核心产品、研发方向、行业地位。"
+        requirement = "生成 400-800 字中文技术路线摘要，包含技术路线、核心产品、研发方向、行业地位。"
     system_prompt = (
         "你是深圳科创平台的企业画像合成助手。只使用提供的信息，不编造事实；"
         "中文连贯叙述，不要 bullet，不要 Markdown。"
@@ -179,8 +305,15 @@ def _split_prompt(
             f"公司名称：{company_name or '未填写'}",
             f"行业：{industry or '行业未填写'}",
             f"所在城市：{hq_city or '城市未填写'}",
+            f"业务描述：{business or '业务未填写'}",
             "原始介绍：",
             (description or "").strip(),
+            "",
+            "产品和业务材料：",
+            _format_products(products),
+            "",
+            "已接受来源材料：",
+            _format_source_materials(source_materials),
             "",
             "只输出正文文本，不要输出 JSON。",
         ]
@@ -194,6 +327,9 @@ def _generate_split_fields(
     industry: str | None,
     hq_city: str | None,
     description: str | None,
+    business: str | None,
+    products: list[dict[str, Any]] | None,
+    source_materials: list[dict[str, Any]] | None,
     llm_client: Any,
     llm_model: str,
     extra_body: dict[str, Any] | None,
@@ -206,6 +342,9 @@ def _generate_split_fields(
             industry=industry,
             hq_city=hq_city,
             description=description,
+            business=business,
+            products=products,
+            source_materials=source_materials,
         )
         profile_summary = _normalize_text(
             _call_llm(
@@ -222,6 +361,9 @@ def _generate_split_fields(
             industry=industry,
             hq_city=hq_city,
             description=description,
+            business=business,
+            products=products,
+            source_materials=source_materials,
         )
         technology_route_summary = _normalize_text(
             _call_llm(
@@ -231,6 +373,10 @@ def _generate_split_fields(
                 user_prompt=tech_prompt,
                 extra_body=extra_body,
             )
+        )
+        profile_summary, technology_route_summary = _fit_payload_lengths(
+            profile_summary=profile_summary,
+            technology_route_summary=technology_route_summary,
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning("Split narrative fallback failed for company %s: %s", company_name, exc)
@@ -263,6 +409,9 @@ def generate_company_narrative(
     industry: str | None,
     hq_city: str | None,
     description: str | None,
+    business: str | None = None,
+    products: list[dict[str, Any]] | None = None,
+    source_materials: list[dict[str, Any]] | None = None,
     llm_client: Any,
     llm_model: str,
     extra_body: dict[str, Any] | None = None,
@@ -272,11 +421,17 @@ def generate_company_narrative(
     Returns empty fields with an error string on LLM, parsing, or validation
     failure. JSON parse/key failures fall back to two single-field prompts.
     """
-    if len((description or "").strip()) < 30:
+    if _source_material_length(
+        description=description,
+        business=business,
+        products=products,
+        source_materials=source_materials,
+    ) < _MIN_SOURCE_MATERIAL_CHARS:
         return NarrativeResult(
             profile_summary="",
             technology_route_summary="",
-            error="short_input",
+            error="sparse_material",
+            blockers=("sparse_material",),
         )
 
     user_prompt = build_user_prompt(
@@ -284,6 +439,9 @@ def generate_company_narrative(
         industry=industry,
         hq_city=hq_city,
         description=description,
+        business=business,
+        products=products,
+        source_materials=source_materials,
     )
     last_error: str | None = None
     for attempt in range(2):
@@ -291,7 +449,7 @@ def generate_company_narrative(
         if attempt:
             retry_suffix = (
                 "\n\n上次输出不符合长度或格式要求。请重新输出严格 JSON，"
-                "profile_summary 必须 200-300 字，technology_route_summary 必须 300-500 字。"
+                "profile_summary 必须 700-1600 字，technology_route_summary 必须 400-800 字。"
             )
         try:
             raw_text = _call_llm(
@@ -322,6 +480,9 @@ def generate_company_narrative(
                 industry=industry,
                 hq_city=hq_city,
                 description=description,
+                business=business,
+                products=products,
+                source_materials=source_materials,
                 llm_client=llm_client,
                 llm_model=llm_model,
                 extra_body=extra_body,
@@ -331,6 +492,10 @@ def generate_company_narrative(
         profile_summary = _normalize_text(payload.get("profile_summary"))
         technology_route_summary = _normalize_text(
             payload.get("technology_route_summary")
+        )
+        profile_summary, technology_route_summary = _fit_payload_lengths(
+            profile_summary=profile_summary,
+            technology_route_summary=technology_route_summary,
         )
         validation_error = _validate_payload(
             profile_summary=profile_summary,
@@ -349,3 +514,40 @@ def generate_company_narrative(
         technology_route_summary="",
         error=last_error,
     )
+
+
+def _source_material_length(
+    *,
+    description: str | None,
+    business: str | None,
+    products: list[dict[str, Any]] | None,
+    source_materials: list[dict[str, Any]] | None,
+) -> int:
+    parts = [_normalize_text(description), _normalize_text(business)]
+    for product in products or []:
+        parts.extend(
+            [
+                _normalize_text(product.get("name") or product.get("product_name")),
+                _normalize_text(
+                    product.get("description") or product.get("short_description")
+                ),
+                _normalize_text(product.get("product_category")),
+                " ".join(_normalize_sequence(product.get("target_customers"))),
+                " ".join(_normalize_sequence(product.get("application_scenarios"))),
+                " ".join(_normalize_sequence(product.get("technical_tags"))),
+            ]
+        )
+    for material in source_materials or []:
+        parts.extend(
+            [
+                _normalize_text(material.get("title")),
+                _normalize_text(material.get("trust_reason")),
+                _normalize_text(
+                    material.get("text")
+                    or material.get("captured_text")
+                    or material.get("summary")
+                    or material.get("body")
+                ),
+            ]
+        )
+    return sum(len(part) for part in parts if part)

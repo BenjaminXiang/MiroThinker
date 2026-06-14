@@ -27,6 +27,8 @@ Field-level fallback priority (per spec Requirement
   funders         : Crossref only
   reference_count : OpenAlex / Crossref / Semantic Scholar (max wins)
   source_url      : first non-empty across sources
+  pdf_url         : first non-empty OpenAlex / Crossref / Semantic Scholar /
+                    Unpaywall / arXiv PDF URL
 
 This is consistent with `apps/miroflow-agent/src/data_agents/paper/openalex.py`
 + `crossref.py` + `semantic_scholar.py` existing per-source enrichment
@@ -37,7 +39,9 @@ helpers; the aggregator below merges their output into a single
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import Callable
+from typing import Any, Callable
+
+import requests
 
 from .arxiv import enrich_paper_metadata_from_arxiv
 from .crossref import enrich_paper_metadata_from_crossref
@@ -48,17 +52,22 @@ from .models import (
 )
 from .openalex import enrich_paper_with_openalex
 from .semantic_scholar import enrich_paper_metadata_from_semantic_scholar
+from .unpaywall import enrich_paper_metadata_from_unpaywall
 
 EnrichmentLookup = Callable[[str], PaperMetadataEnrichment | None]
+_OPENALEX_WORKS_ENDPOINT = "https://api.openalex.org/works"
 
 
 def enrich_paper_with_hybrid_sources(
     doi: str | None,
     *,
     arxiv_id: str | None = None,
+    openalex_id: str | None = None,
     openalex_lookup: EnrichmentLookup | None = None,
+    openalex_id_lookup: EnrichmentLookup | None = None,
     crossref_lookup: EnrichmentLookup | None = None,
     semantic_scholar_lookup: EnrichmentLookup | None = None,
+    unpaywall_lookup: EnrichmentLookup | None = None,
     arxiv_lookup: EnrichmentLookup | None = None,
 ) -> PaperMetadataEnrichment | None:
     """Enrich a paper canonical row by DOI lookup across multiple sources.
@@ -75,15 +84,38 @@ def enrich_paper_with_hybrid_sources(
     lookup_doi = doi.strip() if doi and doi.strip() else None
     normalized_doi = _normalize_doi(doi)
     normalized_arxiv_id = _normalize_arxiv_id(arxiv_id)
-    if normalized_doi is None and normalized_arxiv_id is None:
+    normalized_openalex_id = _normalize_openalex_id(openalex_id)
+    if (
+        normalized_doi is None
+        and normalized_arxiv_id is None
+        and normalized_openalex_id is None
+    ):
         return None
 
     fetch_openalex = openalex_lookup or enrich_paper_with_openalex
+    fetch_openalex_id = openalex_id_lookup or enrich_paper_with_openalex_id
     fetch_crossref = crossref_lookup or enrich_paper_metadata_from_crossref
     fetch_s2 = semantic_scholar_lookup or enrich_paper_metadata_from_semantic_scholar
+    fetch_unpaywall = unpaywall_lookup or enrich_paper_metadata_from_unpaywall
     fetch_arxiv = arxiv_lookup or enrich_paper_metadata_from_arxiv
 
     merged: PaperMetadataEnrichment | None = None
+    if normalized_openalex_id is not None:
+        try:
+            openalex_id_result = fetch_openalex_id(normalized_openalex_id)
+        except Exception:  # noqa: BLE001 — enrichment must never raise
+            openalex_id_result = None
+        if openalex_id_result is not None:
+            merged = _merge_enrichment(
+                merged,
+                _with_identifier_contradictions(
+                    openalex_id_result,
+                    canonical_doi=normalized_doi,
+                    canonical_arxiv_id=normalized_arxiv_id,
+                ),
+                omit_citation=False,
+            )
+
     if lookup_doi is not None and normalized_doi is not None:
         # Source 1: OpenAlex (primary)
         try:
@@ -133,7 +165,23 @@ def enrich_paper_with_hybrid_sources(
                 omit_citation=True,
             )
 
-    # Source 4: arXiv (fills gaps by arXiv id; never overrides stronger data)
+        # Source 4: Unpaywall (open-access PDF/OA metadata only)
+        try:
+            unpaywall_result = fetch_unpaywall(lookup_doi)
+        except Exception:  # noqa: BLE001
+            unpaywall_result = None
+        if unpaywall_result is not None:
+            merged = _merge_enrichment(
+                merged,
+                _with_identifier_contradictions(
+                    unpaywall_result,
+                    canonical_doi=normalized_doi,
+                    canonical_arxiv_id=normalized_arxiv_id,
+                ),
+                omit_citation=True,
+            )
+
+    # Source 5: arXiv (fills gaps by arXiv id; never overrides stronger data)
     if normalized_arxiv_id is not None:
         try:
             arxiv_result = fetch_arxiv(normalized_arxiv_id)
@@ -151,6 +199,55 @@ def enrich_paper_with_hybrid_sources(
             )
 
     return merged
+
+
+def enrich_paper_with_openalex_id(
+    openalex_id: str,
+    *,
+    request_json: Callable[[str], Any] | None = None,
+) -> PaperMetadataEnrichment | None:
+    normalized_id = _normalize_openalex_id(openalex_id)
+    if normalized_id is None:
+        return None
+    fetch_json = request_json or _request_openalex_json
+    try:
+        payload = fetch_json(f"{_OPENALEX_WORKS_ENDPOINT}/{normalized_id}")
+    except Exception:  # noqa: BLE001 — enrichment must never raise
+        return None
+    if not isinstance(payload, dict):
+        return None
+
+    primary_location = payload.get("primary_location")
+    if not isinstance(primary_location, dict):
+        primary_location = {}
+    source_meta = primary_location.get("source")
+    if not isinstance(source_meta, dict):
+        source_meta = {}
+
+    enrichment = PaperMetadataEnrichment(
+        doi=_normalize_doi(payload.get("doi")),
+        abstract=_decode_openalex_abstract(payload.get("abstract_inverted_index")),
+        venue=_normalize_optional_str(source_meta.get("display_name")),
+        publication_date=_normalize_optional_str(payload.get("publication_date")),
+        citation_count=_coerce_non_negative_int(payload.get("cited_by_count")),
+        fields_of_study=_extract_openalex_concepts(payload.get("concepts")),
+        oa_status=_extract_openalex_oa_status(payload),
+        source_url=(
+            _normalize_optional_str(primary_location.get("landing_page_url"))
+            or f"https://openalex.org/{normalized_id}"
+        ),
+        pdf_url=_extract_openalex_pdf_url(payload),
+        enrichment_sources=("openalex",),
+    )
+    if not _enrichment_has_content(enrichment):
+        return None
+    return enrichment
+
+
+def _request_openalex_json(url: str) -> Any:
+    response = requests.get(url, timeout=20)
+    response.raise_for_status()
+    return response.json()
 
 
 def _merge_enrichment(
@@ -185,6 +282,7 @@ def _merge_enrichment(
         oa_status=base.oa_status or incoming.oa_status,
         reference_count=_max_int(base.reference_count, incoming.reference_count),
         source_url=base.source_url or incoming.source_url,
+        pdf_url=base.pdf_url or incoming.pdf_url,
         enrichment_sources=_merge_unique_strings(
             base.enrichment_sources, incoming.enrichment_sources
         ),
@@ -351,3 +449,109 @@ def _normalize_arxiv_id(value: object) -> str | None:
             item = item[len(prefix) :]
             break
     return item.removesuffix(".pdf").lower()
+
+
+def _normalize_openalex_id(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    item = value.strip()
+    if not item:
+        return None
+    if item.startswith("https://openalex.org/"):
+        item = item.rsplit("/", 1)[-1]
+    if item.startswith("http://openalex.org/"):
+        item = item.rsplit("/", 1)[-1]
+    return item if item.startswith("W") else None
+
+
+def _normalize_optional_str(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    item = value.strip()
+    return item or None
+
+
+def _coerce_non_negative_int(value: object) -> int | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int) and value >= 0:
+        return value
+    return None
+
+
+def _decode_openalex_abstract(value: object) -> str | None:
+    if not isinstance(value, dict) or not value:
+        return None
+    positioned_tokens: list[tuple[int, str]] = []
+    for token, positions in value.items():
+        if not isinstance(token, str) or not isinstance(positions, list):
+            continue
+        for position in positions:
+            if isinstance(position, int) and position >= 0:
+                positioned_tokens.append((position, token))
+    if not positioned_tokens:
+        return None
+    return " ".join(token for _, token in sorted(positioned_tokens))
+
+
+def _extract_openalex_concepts(value: object) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        return ()
+    fields: list[str] = []
+    for concept in value:
+        if not isinstance(concept, dict):
+            continue
+        name = _normalize_optional_str(concept.get("display_name"))
+        if name and name not in fields:
+            fields.append(name)
+    return tuple(fields)
+
+
+def _extract_openalex_oa_status(payload: dict[str, object]) -> str | None:
+    open_access = payload.get("open_access")
+    if not isinstance(open_access, dict):
+        return None
+    return _normalize_optional_str(open_access.get("oa_status"))
+
+
+def _enrichment_has_content(value: PaperMetadataEnrichment) -> bool:
+    return any(
+        (
+            value.doi,
+            value.arxiv_id,
+            value.abstract,
+            value.venue,
+            value.publication_date,
+            value.citation_count is not None,
+            value.fields_of_study,
+            value.tldr,
+            value.license,
+            value.funders,
+            value.oa_status,
+            value.reference_count is not None,
+            value.source_url,
+            value.pdf_url,
+            value.authors,
+        )
+    )
+
+
+def _extract_openalex_pdf_url(payload: dict[str, object]) -> str | None:
+    primary_location = payload.get("primary_location")
+    if isinstance(primary_location, dict):
+        if pdf_url := _normalize_optional_str(primary_location.get("pdf_url")):
+            return pdf_url
+
+    best_oa_location = payload.get("best_oa_location")
+    if isinstance(best_oa_location, dict):
+        if pdf_url := _normalize_optional_str(best_oa_location.get("pdf_url")):
+            return pdf_url
+
+    locations = payload.get("locations")
+    if isinstance(locations, list):
+        for location in locations:
+            if not isinstance(location, dict):
+                continue
+            if pdf_url := _normalize_optional_str(location.get("pdf_url")):
+                return pdf_url
+    return None

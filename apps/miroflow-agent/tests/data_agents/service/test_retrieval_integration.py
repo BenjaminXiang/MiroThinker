@@ -13,12 +13,19 @@ from __future__ import annotations
 import warnings
 from unittest.mock import MagicMock
 
+import pytest
+
 from src.data_agents.providers.rerank import RerankResult
 from src.data_agents.service.retrieval import Evidence, RetrievalService
 from src.data_agents.storage.milvus_collections import (
     PAPER_CHUNKS_COLLECTION,
     ensure_paper_chunks_collection,
 )
+
+
+@pytest.fixture(autouse=True)
+def _disable_quality_status_filter(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("FILTER_BY_QUALITY_STATUS", "0")
 
 
 def _milvus_client():

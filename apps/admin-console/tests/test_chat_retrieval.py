@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
+from fastapi import Response
 import pytest
 
 from backend import deps as deps_module
@@ -147,6 +148,32 @@ def test_unit2_evidence_adapter_maps_paper():
 
 def test_unit2_evidence_adapter_empty_list():
     assert chat_module._evidence_list_from_retrieval([]) == []
+
+
+def test_company_retrieval_evidence_block_preserves_enrichment_context():
+    evidence_text, citation_map = chat_module._build_evidence_blocks(
+        {
+            "retrieval_evidence": [
+                {
+                    "type": "company",
+                    "id": "COMP-SEM",
+                    "title": "深圳旭宏医疗科技",
+                    "industry": "医疗健康",
+                    "snippet": (
+                        "产品/服务：Semacare - AI 心电诊断系统；"
+                        "产品结构：医院/临床机构 远程心电诊断 AI 自动诊断；"
+                        "最近动态：2026-05-01 funding 完成A轮融资。 A轮 数千万人民币 力合科创"
+                    ),
+                }
+            ]
+        }
+    )
+
+    assert citation_map == {"1": "COMP-SEM"}
+    assert "Semacare" in evidence_text
+    assert "医院/临床机构" in evidence_text
+    assert "远程心电诊断" in evidence_text
+    assert "数千万人民币" in evidence_text
 
 
 def test_unit2_citation_validator_valid_passes_through():
@@ -369,6 +396,97 @@ def test_unit4_d_route_merges_prof_paper_company(monkeypatch):
     assert "company" in types_seen
 
 
+def test_unit4_d_route_retrieves_professor_and_paper_domains_separately(monkeypatch):
+    """D-route must not let professor hits crowd paper hits out of a shared top-k."""
+    monkeypatch.setenv("CHAT_USE_RETRIEVAL_SERVICE", "on")
+
+    fake_service = MagicMock()
+
+    def _retrieve(*, domains, **_kwargs):
+        if domains == ("professor",):
+            return [
+                _evidence(
+                    object_type="professor",
+                    object_id="PROF-XIA",
+                    metadata={"name": "陈晓非", "institution": "南方科技大学"},
+                )
+            ]
+        if domains == ("paper",):
+            return [
+                _evidence(
+                    object_type="paper",
+                    object_id="PAPER-XIA-1",
+                    metadata={"title": "Seismic Wave Propagation Modeling"},
+                )
+            ]
+        return [_evidence(object_type="professor", object_id="PROF-CROWDED")]
+
+    fake_service.retrieve.side_effect = _retrieve
+    monkeypatch.setattr(chat_module, "get_retrieval_service", lambda: fake_service)
+    monkeypatch.setattr(chat_module, "_lookup_companies_by_topic", lambda _conn, *, topic: [])
+
+    merged = chat_module._lookup_cross_domain_evidence(
+        MagicMock(),
+        topic="研究方向和论文情况",
+        raw_query="南方科技大学陈晓非教授的研究方向和论文情况",
+    )
+
+    assert [call.kwargs["domains"] for call in fake_service.retrieve.call_args_list] == [
+        ("professor",),
+        ("paper",),
+    ]
+    assert {row["type"] for row in merged} == {"professor", "paper"}
+
+
+def test_unit4_d_route_hydrates_sparse_professor_retrieval_metadata(monkeypatch):
+    """RetrievalService profile vectors may not carry display name/institution."""
+    monkeypatch.setenv("CHAT_USE_RETRIEVAL_SERVICE", "on")
+
+    fake_service = MagicMock()
+    fake_service.retrieve.side_effect = [
+        [_evidence(object_type="professor", object_id="PROF-XIA", metadata={})],
+        [],
+    ]
+    monkeypatch.setattr(chat_module, "get_retrieval_service", lambda: fake_service)
+    monkeypatch.setattr(chat_module, "_lookup_companies_by_topic", lambda _conn, *, topic: [])
+
+    class _Rows:
+        def fetchall(self):
+            return [
+                {
+                    "professor_id": "PROF-XIA",
+                    "canonical_name": "陈晓非",
+                    "canonical_name_en": "Xiaofei Chen",
+                    "institution": "南方科技大学",
+                    "title": "讲席教授",
+                    "discipline_family": "地球物理",
+                    "h_index": 88,
+                    "citation_count": 12345,
+                    "paper_count": 260,
+                }
+            ]
+
+    class _Conn:
+        def execute(self, sql, params):
+            assert "p.professor_id = %s" in sql
+            assert params == ("PROF-XIA",)
+            return _Rows()
+
+    merged = chat_module._lookup_cross_domain_evidence(
+        _Conn(),
+        topic="研究方向和论文情况",
+        raw_query="南方科技大学陈晓非教授的研究方向和论文情况",
+    )
+
+    assert merged[0]["canonical_name"] == "陈晓非"
+    assert merged[0]["institution"] == "南方科技大学"
+    assert "陈晓非 — 南方科技大学" in chat_module._answer_cross_domain(
+        "研究方向和论文情况",
+        merged,
+        [],
+    )
+
+
 def test_unit4_d_route_flag_off_only_companies(monkeypatch):
     if not hasattr(chat_module, "_lookup_cross_domain_evidence"):
         pytest.skip("Implementation uses different helper name.")
@@ -387,6 +505,157 @@ def test_unit4_d_route_flag_off_only_companies(monkeypatch):
     fake_service.retrieve.assert_not_called()
     types_seen = {m.get("type") for m in merged}
     assert types_seen == {"company"}
+
+
+def test_d_cross_domain_chat_returns_retrieval_citations(monkeypatch):
+    """D route should surface professor/paper RetrievalService evidence in the response."""
+    monkeypatch.setenv("CHAT_USE_RETRIEVAL_SERVICE", "on")
+    monkeypatch.setenv("CHAT_LLM_SYNTHESIS", "off")
+    monkeypatch.setattr(
+        chat_module,
+        "_classify_query_with_llm",
+        lambda _query: {
+            "type": "D",
+            "topic": "研究方向和论文情况",
+            "name": "",
+            "target_domain": "professor",
+            "reason": "professor plus paper cross-domain query",
+        },
+    )
+    monkeypatch.setattr(chat_module, "_lookup_companies_by_topic", lambda _conn, *, topic: [])
+
+    class _FakeSessionStore:
+        def __init__(self) -> None:
+            self.session = chat_module.SessionContext(session_id="d-cross-domain-test")
+
+        def get_or_create(self, session_id):
+            return self.session
+
+        def persist(self, ctx):
+            self.session = ctx.model_copy(deep=True)
+
+    monkeypatch.setattr(chat_module, "_SESSION_STORE", _FakeSessionStore())
+
+    fake_service = MagicMock()
+
+    def _retrieve(*, query, **_kwargs):
+        if "陈晓非" not in query or "南方科技大学" not in query:
+            return []
+        return [
+            _evidence(
+                object_type="professor",
+                object_id="PROF-XIA",
+                score=0.93,
+                snippet="研究方向包括地震学和地球物理。",
+                metadata={
+                    "name": "陈晓非",
+                    "institution": "南方科技大学",
+                    "title": "教授",
+                },
+            ),
+            _evidence(
+                object_type="paper",
+                object_id="PAPER-XIA-1",
+                score=0.88,
+                snippet="论文围绕地震波传播建模。",
+                metadata={
+                    "title": "Seismic Wave Propagation Modeling",
+                    "paper_id": "PAPER-XIA-1",
+                    "year": 2024,
+                    "venue": "Geophysics",
+                },
+            ),
+        ]
+
+    fake_service.retrieve.side_effect = _retrieve
+    monkeypatch.setattr(chat_module, "get_retrieval_service", lambda: fake_service)
+
+    response = chat_module.chat(
+        chat_module.ChatRequest(query="南方科技大学陈晓非教授的研究方向和论文情况"),
+        response=Response(),
+        conn=MagicMock(),
+    )
+
+    assert response.query_type == "D_cross_domain_topic"
+    assert {citation.type for citation in response.citations} == {"professor", "paper"}
+    assert {citation.id for citation in response.citations} == {
+        "PROF-XIA",
+        "PAPER-XIA-1",
+    }
+    assert {
+        row["type"] for row in response.structured_payload["retrieval_evidence"]
+    } == {"professor", "paper"}
+
+
+def test_d_cross_domain_chat_surfaces_paper_when_professors_fill_top_slots(monkeypatch):
+    """Paper evidence should be rendered even when professor evidence appears first."""
+    monkeypatch.setenv("CHAT_USE_RETRIEVAL_SERVICE", "on")
+    monkeypatch.setenv("CHAT_LLM_SYNTHESIS", "off")
+    monkeypatch.setattr(
+        chat_module,
+        "_classify_query_with_llm",
+        lambda _query: {
+            "type": "D",
+            "topic": "研究方向和论文情况",
+            "name": "",
+            "target_domain": "professor",
+            "reason": "professor plus paper cross-domain query",
+        },
+    )
+    monkeypatch.setattr(chat_module, "_lookup_companies_by_topic", lambda _conn, *, topic: [])
+
+    class _FakeSessionStore:
+        def __init__(self) -> None:
+            self.session = chat_module.SessionContext(session_id="d-paper-slots-test")
+
+        def get_or_create(self, session_id):
+            return self.session
+
+        def persist(self, ctx):
+            self.session = ctx.model_copy(deep=True)
+
+    monkeypatch.setattr(chat_module, "_SESSION_STORE", _FakeSessionStore())
+
+    fake_service = MagicMock()
+
+    def _retrieve(*, domains, **_kwargs):
+        if domains == ("professor",):
+            return [
+                _evidence(
+                    object_type="professor",
+                    object_id=f"PROF-{idx}",
+                    metadata={"name": f"教授{idx}", "institution": "南方科技大学"},
+                )
+                for idx in range(5)
+            ]
+        if domains == ("paper",):
+            return [
+                _evidence(
+                    object_type="paper",
+                    object_id="PAPER-XIA-1",
+                    snippet="论文围绕地震波传播建模。",
+                    metadata={
+                        "title": "Seismic Wave Propagation Modeling",
+                        "paper_id": "PAPER-XIA-1",
+                        "year": 2024,
+                        "venue": "Geophysics",
+                    },
+                )
+            ]
+        return []
+
+    fake_service.retrieve.side_effect = _retrieve
+    monkeypatch.setattr(chat_module, "get_retrieval_service", lambda: fake_service)
+
+    response = chat_module.chat(
+        chat_module.ChatRequest(query="南方科技大学陈晓非教授的研究方向和论文情况"),
+        response=Response(),
+        conn=MagicMock(),
+    )
+
+    assert "paper" in {citation.type for citation in response.citations}
+    assert "Seismic Wave Propagation Modeling" in response.answer_text
+    assert "▎ 论文" in response.answer_text
 
 
 # ============================================================================

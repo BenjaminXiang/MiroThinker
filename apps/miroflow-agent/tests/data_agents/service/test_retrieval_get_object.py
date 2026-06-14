@@ -66,6 +66,8 @@ def test_get_paper_by_id():
 
     assert result["paper_id"] == "PAPER-1"
     assert "FROM paper" in conn.calls[0][0]
+    assert "identity_status, 'unverified') != 'rejected'" in conn.calls[0][0]
+    assert "quality_status, 'needs_enrichment') != 'rejected'" in conn.calls[0][0]
 
 
 def test_get_patent_by_id():

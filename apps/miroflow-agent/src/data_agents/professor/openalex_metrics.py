@@ -9,6 +9,12 @@ from typing import Any, Literal
 
 import requests
 
+from src.data_agents.providers.openalex import (
+    OPENALEX_RATE_LIMIT_CIRCUIT,
+    openalex_rate_limit_cooldown_seconds,
+    openalex_request_params,
+)
+
 logger = logging.getLogger(__name__)
 
 _OPENALEX_AUTHORS_ENDPOINT = "https://api.openalex.org/authors"
@@ -114,10 +120,18 @@ def _request_json(
     params: dict[str, str | int],
     timeout: float,
 ) -> dict[str, Any] | None:
+    request_params = openalex_request_params(params)
+    if request_params is None:
+        logger.debug("OpenAlex metrics skipped because OPENALEX_API_KEY is unset")
+        return None
+    if not OPENALEX_RATE_LIMIT_CIRCUIT.can_call():
+        logger.debug("OpenAlex metrics skipped by temporary rate-limit circuit")
+        return None
+
     response = None
     for attempt in range(_MAX_ATTEMPTS):
         try:
-            response = client.get(url, params=params, timeout=timeout)
+            response = client.get(url, params=request_params, timeout=timeout)
         except requests.Timeout as exc:
             if attempt + 1 >= _MAX_ATTEMPTS:
                 logger.warning("OpenAlex metrics timeout for %s: %s", url, exc)
@@ -132,6 +146,12 @@ def _request_json(
         if status_code == 404:
             return None
         if status_code in _RETRY_STATUS_CODES:
+            if status_code == 429:
+                OPENALEX_RATE_LIMIT_CIRCUIT.record_rate_limit(
+                    openalex_rate_limit_cooldown_seconds(
+                        getattr(response, "headers", {}) or {}
+                    )
+                )
             if attempt + 1 >= _MAX_ATTEMPTS:
                 logger.warning(
                     "OpenAlex metrics fetch exhausted retries for %s: HTTP %s",
@@ -155,6 +175,7 @@ def _request_json(
             logger.warning("OpenAlex metrics payload parse failed for %s: %s", url, exc)
             return None
         if isinstance(payload, dict):
+            OPENALEX_RATE_LIMIT_CIRCUIT.record_success()
             return payload
         return None
     return None

@@ -99,7 +99,7 @@
 | `summary_text` | 是 | 用于 embedding 的完整摘要文本 |
 | `keywords` | 否 | 关键词 |
 | `citation_count` | 否 | 引用数 |
-| `pdf_path` | 否 | PDF 路径或抓取标识 |
+| `pdf_path` | 否 | PDF 存储引用；具体格式由 `paper-pdf-fulltext-ingest` 约定（见 §5.4.1） |
 | `evidence` | 是 | 来源列表 |
 | `last_updated` | 是 | 最后更新时间 |
 
@@ -235,6 +235,40 @@ Enrichment 是 fire-and-forget 异步：discovery + canonical upsert 完成即�
 1. 有 PDF 或可抓取全文时，优先基于全文生成摘要
 2. 无全文时，可基于 abstract 生成降级摘要
 3. 不论全文还是 abstract，都要产出用户可读的 `summary_zh`
+
+### 5.4.1 全文抓取扩展：教授主页 PDF
+
+> 2026-05-13 增。锁定 *来源优先级* 与 *MVP 用途*；下载、存储、解析、
+> 失败处置、成本上限等实现细节由 OpenSpec change
+> `paper-pdf-fulltext-ingest` 约定。
+
+**现状**：`V011 paper_full_text` + `paper/full_text_fetcher.py` 已能从
+PDF URL 抽 abstract / intro 入库（默认源为 arXiv，30 MB 上限，速率限制
+3 秒/次）。教授主页直接挂出的 PDF 链接尚未作为发现源。
+
+**全文来源优先级**（高→低）：
+
+1. **教授主页直挂 PDF**：Tier 2 / Tier 3 页面 `<a href="*.pdf">` 或
+   `Content-Type: application/pdf` 的链接。最高优先级 —— 作者公开承认的
+   代表作，归属信号最强。
+2. **enrichment 阶段外部源**：arXiv / OpenAlex / Crossref。`full_text_
+   fetcher.py` 现役覆盖此层。
+3. **不主动**走 sci-hub 或第三方镜像 —— 法务红线。
+
+**MVP 用途**：`summary_zh` 与 `professor.profile_summary` 生成时全文优于
+abstract；Milvus `paper_chunks` 全文重切片 / 引文图谱抽取放 Phase 2 评估。
+
+**存储**：抽取出的结构化文本与 metadata 入 Postgres（沿用 `paper_full_text`，
+未来按 design 扩 sections）；原始 PDF 按内容哈希（`pdf_sha256`）持久化到
+filesystem 或对象存储；DB 不存 bytea。
+
+**实现细节由 `paper-pdf-fulltext-ingest` 约定**——包括但不限于：
+
+- 解析器选型 —— pdfminer 现役保留；是否换 PyMuPDF / GROBID 由 design 决定
+- size / count / total run cap 的具体数值（design 起步建议：单 PDF ≤ 50 MB，
+  单 professor ≤ 20 篇，单 run total ≤ 5 GB）
+- `pipeline_issue.stage='pdf_fetch'` 新增（与 `data_quality_flag` 区分）
+- 触发时机：异步 enrichment 路径，不阻塞 seed trigger
 
 ### 5.5 LLM 与 Python 清洗分工
 

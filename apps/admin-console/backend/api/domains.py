@@ -12,6 +12,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from backend.deps import get_pg_conn
+from src.data_agents.company.enrichment_batch import review_enrichment_item
+from src.data_agents.professor.canonical_writer import set_professor_lifecycle_state
 from src.data_agents.storage.postgres.pipeline_run import (
     close_pipeline_run,
     open_pipeline_run,
@@ -44,6 +46,19 @@ class UpdateRecordRequest(BaseModel):
     quality_status: (
         Literal["ready", "needs_review", "low_confidence", "needs_enrichment"] | None
     ) = None
+
+
+class ProfessorLifecycleUpdateRequest(BaseModel):
+    lifecycle_state: Literal["active", "archived", "merged_to_other_school"]
+    actor: str = "admin-console"
+    note: str | None = None
+    lifecycle_merged_into_id: str | None = None
+
+
+class CompanyEnrichmentReviewRequest(BaseModel):
+    action: Literal["accept", "reject", "needs_review"]
+    actor: str = "admin-console"
+    note: str | None = None
 
 
 class RelatedResponse(BaseModel):
@@ -126,10 +141,14 @@ SELECT
     p.identity_status,
     p.quality_status,
     p.merged_into_id,
+    p.lifecycle_state,
+    p.lifecycle_merged_into_id,
     p.profile_summary,
     p.h_index,
     p.citation_count,
-    p.paper_count,
+    COALESCE(p.paper_count, active_paper_counts.active_paper_count) AS paper_count,
+    active_paper_counts.active_paper_count,
+    verified_paper_counts.verified_paper_count,
     p.metrics_computed_at,
     p.metrics_source,
     p.last_refreshed_at,
@@ -162,6 +181,18 @@ LEFT JOIN LATERAL (
       AND pf.fact_type = 'research_topic'
       AND pf.status = 'active'
 ) research_topic_counts ON TRUE
+LEFT JOIN LATERAL (
+    SELECT count(*)::int AS active_paper_count
+    FROM professor_paper_link ppl
+    WHERE ppl.professor_id = p.professor_id
+      AND ppl.link_status IN ('verified', 'candidate')
+) active_paper_counts ON TRUE
+LEFT JOIN LATERAL (
+    SELECT count(*)::int AS verified_paper_count
+    FROM professor_paper_link ppl
+    WHERE ppl.professor_id = p.professor_id
+      AND ppl.link_status = 'verified'
+) verified_paper_counts ON TRUE
 LEFT JOIN source_page sp ON sp.page_id = p.primary_official_profile_page_id
 """
 
@@ -181,9 +212,13 @@ SELECT
     c.identity_status,
     c.quality_status,
     c.merged_into_id,
+    c.profile_summary,
+    c.technology_route_summary,
     c.last_refreshed_at,
     c.created_at,
     c.updated_at,
+    latest_snapshot.import_batch_id,
+    latest_snapshot.source_row_number,
     latest_snapshot.project_name,
     latest_snapshot.industry,
     latest_snapshot.sub_industry,
@@ -213,9 +248,233 @@ SELECT
     latest_snapshot.latest_investors_raw,
     latest_snapshot.team_raw,
     latest_snapshot.snapshot_created_at,
+    COALESCE(products.products_json, '[]'::jsonb) AS products_json,
+    COALESCE(application_scenarios.application_scenarios_json, '[]'::jsonb)
+        AS application_scenarios_json,
+    COALESCE(recent_events.recent_events_json, '[]'::jsonb) AS recent_events_json,
+    COALESCE(source_records.source_records_json, '[]'::jsonb) AS source_records_json,
     count(*) OVER() AS total_count
 FROM company c
 {LATEST_COMPANY_SNAPSHOT_LATERAL_SQL}
+LEFT JOIN LATERAL (
+    SELECT jsonb_agg(
+        jsonb_build_object(
+            'product_id', cp.product_id,
+            'name', cp.canonical_name,
+            'description', cp.short_description,
+            'source_url', COALESCE(cp.official_product_url, product_evidence.primary_source_url),
+            'source_type', product_evidence.primary_source_tier,
+            'source_tier', product_evidence.primary_source_tier,
+            'source_tiers', COALESCE(product_evidence.source_tiers, ARRAY[]::text[]),
+            'fetched_at', product_evidence.latest_evidence_at,
+            'quality_status', cp.quality_status,
+            'confidence', cp.confidence,
+            'product_category', cp.product_category,
+            'target_customers', cp.target_customers,
+            'application_scenarios', cp.application_scenarios,
+            'technical_tags', cp.technical_tags,
+            'evidence', COALESCE(product_evidence.evidence_json, '[]'::jsonb)
+        )
+        ORDER BY cp.confidence DESC NULLS LAST, cp.last_refreshed_at DESC NULLS LAST
+    ) AS products_json
+    FROM company_product cp
+    LEFT JOIN LATERAL (
+        SELECT jsonb_agg(
+            jsonb_build_object(
+                'field_name', e.field_name,
+                'source_url', e.source_url,
+                'source_type', e.source_tier,
+                'source_tier', e.source_tier,
+                'source_page_id', e.source_page_id,
+                'evidence_span', e.evidence_span,
+                'confidence', e.confidence,
+                'created_at', e.created_at
+            )
+            ORDER BY e.confidence DESC NULLS LAST, e.created_at DESC NULLS LAST
+        ) AS evidence_json,
+        COALESCE(
+            array_agg(DISTINCT e.source_tier)
+                FILTER (WHERE e.source_tier IS NOT NULL),
+            ARRAY[]::text[]
+        ) AS source_tiers,
+        (
+            array_agg(e.source_url ORDER BY e.confidence DESC NULLS LAST, e.created_at DESC NULLS LAST)
+                FILTER (WHERE e.source_url IS NOT NULL AND e.source_url != '')
+        )[1] AS primary_source_url,
+        (
+            array_agg(e.source_tier ORDER BY e.confidence DESC NULLS LAST, e.created_at DESC NULLS LAST)
+                FILTER (WHERE e.source_tier IS NOT NULL AND e.source_tier != '')
+        )[1] AS primary_source_tier,
+        max(e.created_at) AS latest_evidence_at
+        FROM company_product_evidence e
+        WHERE e.product_id = cp.product_id
+    ) product_evidence ON TRUE
+    WHERE cp.company_id = c.company_id
+      AND (
+          cp.quality_status = 'ready'
+          OR (
+              cp.quality_status = 'needs_review'
+              AND COALESCE(cp.confidence, 1.0) >= 0.60
+              AND EXISTS (
+                  SELECT 1
+                  FROM company_product_evidence publishable_evidence
+                  WHERE publishable_evidence.product_id = cp.product_id
+                    AND COALESCE(publishable_evidence.source_tier, '') IN (
+                        'xlsx', 'official', 'official_site', 'iyiou', 'pitchhub_36kr'
+                    )
+              )
+          )
+      )
+) products ON TRUE
+LEFT JOIN LATERAL (
+    SELECT jsonb_agg(
+        jsonb_build_object(
+            'scenario_id', cas.scenario_id,
+            'scenario_name', cas.scenario_name,
+            'scenario_category', cas.scenario_category,
+            'description', cas.description,
+            'target_customer', cas.target_customer,
+            'related_product_id', cas.related_product_id,
+            'source_url', COALESCE(cas.source_url, scenario_evidence.primary_source_url),
+            'source_type', scenario_evidence.primary_source_tier,
+            'source_tier', scenario_evidence.primary_source_tier,
+            'source_tiers', COALESCE(scenario_evidence.source_tiers, ARRAY[]::text[]),
+            'fetched_at', scenario_evidence.latest_evidence_at,
+            'quality_status', cas.quality_status,
+            'confidence', cas.confidence,
+            'evidence', COALESCE(scenario_evidence.evidence_json, '[]'::jsonb)
+        )
+        ORDER BY cas.confidence DESC NULLS LAST, cas.last_refreshed_at DESC NULLS LAST
+    ) AS application_scenarios_json
+    FROM company_application_scenario cas
+    LEFT JOIN LATERAL (
+        SELECT jsonb_agg(
+            jsonb_build_object(
+                'field_name', e.field_name,
+                'source_url', e.source_url,
+                'source_type', e.source_tier,
+                'source_tier', e.source_tier,
+                'source_page_id', e.source_page_id,
+                'evidence_span', e.evidence_span,
+                'confidence', e.confidence,
+                'created_at', e.created_at
+            )
+            ORDER BY e.confidence DESC NULLS LAST, e.created_at DESC NULLS LAST
+        ) AS evidence_json,
+        COALESCE(
+            array_agg(DISTINCT e.source_tier)
+                FILTER (WHERE e.source_tier IS NOT NULL),
+            ARRAY[]::text[]
+        ) AS source_tiers,
+        (
+            array_agg(e.source_url ORDER BY e.confidence DESC NULLS LAST, e.created_at DESC NULLS LAST)
+                FILTER (WHERE e.source_url IS NOT NULL AND e.source_url != '')
+        )[1] AS primary_source_url,
+        (
+            array_agg(e.source_tier ORDER BY e.confidence DESC NULLS LAST, e.created_at DESC NULLS LAST)
+                FILTER (WHERE e.source_tier IS NOT NULL AND e.source_tier != '')
+        )[1] AS primary_source_tier,
+        max(e.created_at) AS latest_evidence_at
+        FROM company_application_scenario_evidence e
+        WHERE e.scenario_id = cas.scenario_id
+    ) scenario_evidence ON TRUE
+    WHERE cas.company_id = c.company_id
+      AND (
+          cas.quality_status = 'ready'
+          OR (
+              cas.quality_status = 'needs_review'
+              AND COALESCE(cas.confidence, 1.0) >= 0.60
+              AND EXISTS (
+                  SELECT 1
+                  FROM company_application_scenario_evidence publishable_evidence
+                  WHERE publishable_evidence.scenario_id = cas.scenario_id
+                    AND COALESCE(publishable_evidence.source_tier, '') IN (
+                        'xlsx', 'official', 'official_site', 'iyiou', 'pitchhub_36kr'
+                    )
+              )
+          )
+      )
+) application_scenarios ON TRUE
+LEFT JOIN LATERAL (
+    SELECT jsonb_agg(
+        jsonb_build_object(
+            'event_id', cse.event_id,
+            'event_type', cse.event_type,
+            'event_date', cse.event_date,
+            'summary', cse.event_summary,
+            'confidence', cse.confidence,
+            'status', cse.status,
+            'source_type',
+                CASE
+                    WHEN news.news_id IS NOT NULL THEN COALESCE(news.source_adapter, news.source_domain)
+                    ELSE 'xlsx_import'
+                END,
+            'source_tier',
+                COALESCE(
+                    news.source_domain_tier,
+                    CASE
+                        WHEN latest_snapshot.import_batch_id IS NOT NULL
+                          OR latest_snapshot.source_row_number IS NOT NULL
+                        THEN 'xlsx'
+                    END
+                ),
+            'source_url',
+                COALESCE(
+                    news.source_url,
+                    cse.event_subject_normalized->>'source_url',
+                    CASE
+                        WHEN latest_snapshot.source_row_number IS NOT NULL
+                        THEN 'xlsx://company/' || c.company_id || '/row/' || latest_snapshot.source_row_number::text
+                    END
+                ),
+            'source_file',
+                CASE
+                    WHEN news.news_id IS NULL
+                     AND (
+                         latest_snapshot.import_batch_id IS NOT NULL
+                         OR latest_snapshot.source_row_number IS NOT NULL
+                     )
+                    THEN CONCAT(
+                        'import_batch_id=', COALESCE(latest_snapshot.import_batch_id::text, ''),
+                        ';source_row_number=', COALESCE(latest_snapshot.source_row_number::text, '')
+                    )
+                END,
+            'fetched_at', COALESCE(news.fetched_at, latest_snapshot.snapshot_created_at),
+            'normalized', cse.event_subject_normalized
+        )
+        ORDER BY cse.event_date DESC, cse.created_at DESC NULLS LAST
+    ) AS recent_events_json
+    FROM (
+        SELECT *
+        FROM company_signal_event cse
+        WHERE cse.company_id = c.company_id
+          AND cse.status = 'active'
+        ORDER BY cse.event_date DESC, cse.created_at DESC NULLS LAST
+        LIMIT 10
+    ) cse
+    LEFT JOIN company_news_item news ON news.news_id = cse.primary_news_id
+) recent_events ON TRUE
+LEFT JOIN LATERAL (
+    SELECT jsonb_agg(
+        jsonb_build_object(
+            'source_type', COALESCE(n.source_adapter, n.source_domain),
+            'source_tier', n.source_domain_tier,
+            'source_url', n.source_url,
+            'fetched_at', n.fetched_at,
+            'snippet', n.summary_clean,
+            'confidence', n.confidence
+        )
+        ORDER BY n.fetched_at DESC
+    ) AS source_records_json
+    FROM (
+        SELECT *
+        FROM company_news_item n
+        WHERE n.company_id = c.company_id
+          AND n.is_company_confirmed = true
+        ORDER BY n.fetched_at DESC
+        LIMIT 10
+    ) n
+) source_records ON TRUE
 """
 
 PAPER_SELECT_SQL = """
@@ -374,6 +633,7 @@ DOMAIN_DEFAULT_ORDER = {
 DOMAIN_SUPPORTED_FILTERS = {
     "professor": {
         "quality_status",
+        "lifecycle_state",
         "institution",
         "department",
         "title",
@@ -458,6 +718,14 @@ DOMAIN_FILTER_OPTIONS_SQL = {
                 ELSE 'ready'
             END AS value
         FROM professor p
+        ORDER BY value ASC
+        LIMIT 1000
+    """,
+    ("professor", "lifecycle_state"): """
+        SELECT DISTINCT p.lifecycle_state AS value
+        FROM professor p
+        WHERE p.lifecycle_state IS NOT NULL
+          AND p.lifecycle_state != ''
         ORDER BY value ASC
         LIMIT 1000
     """,
@@ -585,6 +853,58 @@ def _json_value(value: Any) -> Any:
     return value
 
 
+def _json_list(value: Any) -> list[Any]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+        except json.JSONDecodeError:
+            return []
+        return parsed if isinstance(parsed, list) else []
+    if isinstance(value, list):
+        return value
+    return []
+
+
+def _company_evidence(row: dict[str, Any]) -> list[dict[str, Any]]:
+    evidence: list[dict[str, Any]] = []
+    import_batch_id = row.get("import_batch_id")
+    source_row_number = row.get("source_row_number")
+    if import_batch_id is not None or source_row_number is not None:
+        source_id_parts = []
+        if import_batch_id is not None:
+            source_id_parts.append(f"import_batch_id={import_batch_id}")
+        if source_row_number is not None:
+            source_id_parts.append(f"source_row_number={source_row_number}")
+        evidence.append(
+            {
+                "source_type": "xlsx_import",
+                "source_tier": "xlsx",
+                "source_url": None,
+                "source_file": ";".join(source_id_parts),
+                "fetched_at": _json_value(row.get("snapshot_created_at")),
+                "snippet": row.get("description") or row.get("business"),
+                "confidence": 1.0,
+            }
+        )
+    for item in _json_list(row.get("source_records_json")):
+        if not isinstance(item, dict):
+            continue
+        evidence.append(
+            {
+                "source_type": item.get("source_type") or "company_source",
+                "source_tier": item.get("source_tier"),
+                "source_url": item.get("source_url"),
+                "source_file": None,
+                "fetched_at": str(_json_value(item.get("fetched_at"))),
+                "snippet": item.get("snippet"),
+                "confidence": _json_value(item.get("confidence")),
+            }
+        )
+    return evidence
+
+
 def _last_updated(row: dict[str, Any], *field_names: str) -> str:
     for field_name in field_names:
         value = row.get(field_name)
@@ -666,7 +986,9 @@ def _row_to_released_object(
             "citation_count": row.get("citation_count"),
             "paper_count": row.get("paper_count"),
             "research_topic_count": row.get("research_topic_count"),
-            "verified_paper_count": row.get("paper_count"),
+            "verified_paper_count": row.get("verified_paper_count")
+            if row.get("verified_paper_count") is not None
+            else row.get("paper_count"),
             "aliases": row.get("aliases") or [],
         }
         return {
@@ -678,6 +1000,8 @@ def _row_to_released_object(
             "evidence": _professor_evidence(row) if include_evidence else [],
             "last_updated": _last_updated(row, "last_refreshed_at", "updated_at"),
             "quality_status": _row_quality_status(row, _derive_identity_quality(row)),
+            "lifecycle_state": row.get("lifecycle_state") or "active",
+            "lifecycle_merged_into_id": row.get("lifecycle_merged_into_id"),
         }
 
     if domain == "company":
@@ -704,6 +1028,11 @@ def _row_to_released_object(
             "reported_patent_count": row.get("reported_patent_count"),
             "team_raw": row.get("team_raw"),
             "aliases": row.get("aliases") or [],
+            "products": _json_list(row.get("products_json")),
+            "application_scenarios": _json_list(
+                row.get("application_scenarios_json")
+            ),
+            "recent_events": _json_list(row.get("recent_events_json")),
         }
         return {
             "id": row["company_id"],
@@ -711,11 +1040,12 @@ def _row_to_released_object(
             "display_name": display_name,
             "core_facts": _json_value(core_facts),
             "summary_fields": {
-                "profile_summary": row.get("description"),
+                "profile_summary": row.get("profile_summary") or row.get("description"),
                 "evaluation_summary": row.get("remarks"),
-                "technology_route_summary": row.get("business"),
+                "technology_route_summary": row.get("technology_route_summary")
+                or row.get("business"),
             },
-            "evidence": [],
+            "evidence": _company_evidence(row) if include_evidence else [],
             "last_updated": _last_updated(
                 row, "last_refreshed_at", "updated_at", "snapshot_created_at"
             ),
@@ -822,23 +1152,26 @@ def _add_quality_condition(
         conditions.append("1 = 0")
         return
 
+    if value in QUALITY_STATUSES:
+        column = {
+            "professor": "p.quality_status",
+            "company": "c.quality_status",
+            "paper": "p.quality_status",
+            "patent": "patent.quality_status",
+        }[domain]
+        params["filter_quality_status"] = value
+        conditions.append(f"{column} = %(filter_quality_status)s")
+        return
+
     if domain == "professor":
-        if value == "ready":
-            conditions.append("p.identity_status = 'resolved'")
-        elif value == "needs_review":
-            conditions.append("p.identity_status = 'needs_review'")
-        elif value == "inactive":
+        if value == "inactive":
             conditions.append("p.identity_status = 'inactive'")
         elif value == "merged":
             conditions.append("p.identity_status IN ('merged', 'merged_into')")
         else:
             conditions.append("1 = 0")
     elif domain == "company":
-        if value == "ready":
-            conditions.append("c.identity_status = 'resolved'")
-        elif value == "needs_review":
-            conditions.append("c.identity_status = 'needs_review'")
-        elif value == "inactive":
+        if value == "inactive":
             conditions.append("c.identity_status = 'inactive'")
         elif value == "merged":
             conditions.append("c.identity_status IN ('merged', 'merged_into')")
@@ -852,15 +1185,7 @@ def _add_quality_condition(
         else:
             conditions.append("1 = 0")
     elif domain == "patent":
-        if value == "ready":
-            conditions.append(
-                "COALESCE(patent.status, '') NOT IN "
-                "('inactive', 'needs_review', 'low_confidence', 'needs_enrichment')"
-            )
-        elif value in QUALITY_STATUSES - {"ready"}:
-            params["quality_status"] = value
-            conditions.append("patent.status = %(quality_status)s")
-        elif value == "inactive":
+        if value == "inactive":
             conditions.append("patent.status = 'inactive'")
         else:
             conditions.append("1 = 0")
@@ -903,6 +1228,9 @@ def _add_filter_conditions(
         elif domain == "professor" and field == "discipline_family":
             params[param_name] = value
             conditions.append("p.discipline_family = %(filter_discipline_family)s")
+        elif domain == "professor" and field == "lifecycle_state":
+            params[param_name] = value
+            conditions.append("p.lifecycle_state = %(filter_lifecycle_state)s")
         elif domain == "professor" and field == "research_topic":
             params[param_name] = value
             conditions.append(
@@ -973,9 +1301,17 @@ def _add_query_condition(
             (
                 c.canonical_name ILIKE %(like_pattern)s
                 OR c.registered_name ILIKE %(like_pattern)s
+                OR latest_snapshot.project_name ILIKE %(like_pattern)s
+                OR latest_snapshot.company_name_xlsx ILIKE %(like_pattern)s
                 OR EXISTS (
                     SELECT 1
-                    FROM unnest(c.aliases) AS alias
+                    FROM jsonb_array_elements_text(
+                        CASE
+                            WHEN jsonb_typeof(c.aliases) = 'array'
+                            THEN c.aliases
+                            ELSE '[]'::jsonb
+                        END
+                    ) AS alias
                     WHERE alias ILIKE %(like_pattern)s
                 )
             )
@@ -1039,8 +1375,12 @@ def _query_domain_rows(
         "page_size": page_size,
     }
     parsed_filters = parsed_filters or {}
-    has_quality_filter = "quality_status" in parsed_filters
-    conditions = [] if object_id is None and has_quality_filter else _base_conditions(domain)
+    derived_quality_filter = parsed_filters.get("quality_status") in {"inactive", "merged"}
+    conditions = (
+        []
+        if object_id is None and derived_quality_filter
+        else _base_conditions(domain)
+    )
 
     if object_id is not None:
         params["object_id"] = object_id
@@ -1085,6 +1425,8 @@ def _get_released_object(
     *,
     include_evidence: bool = False,
 ) -> dict[str, Any] | None:
+    if domain == "paper":
+        object_id = _resolve_paper_detail_id(conn, object_id)
     rows, _ = _query_domain_rows(
         conn,
         domain=domain,
@@ -1100,6 +1442,21 @@ def _get_released_object(
         if metadata:
             row.update(metadata)
     return _row_to_released_object(domain, row, include_evidence=include_evidence)
+
+
+def _resolve_paper_detail_id(conn: Any, object_id: str) -> str:
+    row = _fetchone(
+        conn,
+        """
+        SELECT canonical_paper_id
+          FROM paper_merge_alias
+         WHERE old_paper_id = %(paper_id)s
+        """,
+        {"paper_id": object_id},
+    )
+    if row and row.get("canonical_paper_id"):
+        return str(row["canonical_paper_id"])
+    return object_id
 
 
 def _open_admin_run(conn: Any, *, domain: str, object_id: str, action: str) -> Any:
@@ -1270,10 +1627,28 @@ def _apply_company_update(
         "hq_city": "hq_city",
         "hq_district": "hq_district",
         "is_shenzhen": "is_shenzhen",
+        "profile_summary": "profile_summary",
+        "technology_route_summary": "technology_route_summary",
     }
     for field, column in field_map.items():
         if field in core:
             _set_clause(clauses, params, column, f"core_{field}", core[field])
+    if "profile_summary" in summary:
+        _set_clause(
+            clauses,
+            params,
+            "profile_summary",
+            "summary_profile_summary",
+            _str_or_none(summary["profile_summary"]),
+        )
+    if "technology_route_summary" in summary:
+        _set_clause(
+            clauses,
+            params,
+            "technology_route_summary",
+            "summary_technology_route_summary",
+            _str_or_none(summary["technology_route_summary"]),
+        )
     if body.quality_status is not None:
         _set_clause(
             clauses,
@@ -1301,18 +1676,9 @@ def _apply_company_update(
     for field, column in {
         "industry": "industry",
         "business": "business",
-        "profile_summary": "description",
     }.items():
         if field in core:
             _set_clause(snapshot_clauses, snapshot_params, column, f"snap_{field}", core[field])
-    if "profile_summary" in summary:
-        _set_clause(
-            snapshot_clauses,
-            snapshot_params,
-            "description",
-            "summary_profile_summary",
-            summary["profile_summary"],
-        )
     if "evaluation_summary" in summary:
         _set_clause(
             snapshot_clauses,
@@ -1530,9 +1896,12 @@ def list_domain(
     sort_by: str = "display_name",
     sort_order: Literal["asc", "desc"] = "asc",
     filters: str = "",
+    quality_status: str = "",
     conn: Any = Depends(get_pg_conn),
 ) -> PaginatedResponse:
     parsed_filters = _parse_filters(filters)
+    if quality_status:
+        parsed_filters = {**parsed_filters, "quality_status": quality_status}
     rows, total = _query_domain_rows(
         conn,
         domain=domain.value,
@@ -1554,6 +1923,58 @@ def list_domain(
     )
 
 
+@router.patch("/professor/{professor_id}/lifecycle")
+def update_professor_lifecycle(
+    professor_id: str,
+    body: ProfessorLifecycleUpdateRequest,
+    conn: Any = Depends(get_pg_conn),
+) -> dict[str, Any]:
+    obj = _get_released_object(conn, "professor", professor_id, include_evidence=True)
+    if obj is None:
+        raise HTTPException(status_code=404, detail="Object not found")
+
+    run_id = _open_admin_run(
+        conn,
+        domain="professor",
+        object_id=professor_id,
+        action="set_lifecycle_state",
+    )
+    try:
+        set_professor_lifecycle_state(
+            conn,
+            professor_id=professor_id,
+            lifecycle_state=body.lifecycle_state,
+            lifecycle_merged_into_id=body.lifecycle_merged_into_id,
+            actor=body.actor,
+            note=body.note,
+        )
+        _finish_admin_run(conn, run_id, status="succeeded")
+    except ValueError as exc:
+        _finish_admin_run(
+            conn,
+            run_id,
+            status="failed",
+            error_summary={"message": str(exc)},
+        )
+        detail = str(exc)
+        status_code = 404 if "not found" in detail else 422
+        raise HTTPException(status_code=status_code, detail=detail) from exc
+    except Exception as exc:
+        logger.exception("Failed to update professor lifecycle %s", professor_id)
+        _finish_admin_run(
+            conn,
+            run_id,
+            status="failed",
+            error_summary={"message": str(exc)},
+        )
+        raise
+
+    updated = _get_released_object(conn, "professor", professor_id, include_evidence=True)
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Object not found")
+    return updated
+
+
 @router.get("/{domain}/filters/{field}", response_model=FilterOptionsResponse)
 def get_filter_options(
     domain: DomainEnum,
@@ -1571,6 +1992,30 @@ def get_filter_options(
     return FilterOptionsResponse(
         options=[str(row["value"]) for row in rows if row.get("value") not in {None, ""}]
     )
+
+
+@router.post("/company/{company_id}/enrichment/{target_type}/{target_id}/review")
+def review_company_enrichment_item(
+    company_id: str,
+    target_type: Literal["product", "scenario"],
+    target_id: str,
+    body: CompanyEnrichmentReviewRequest,
+    conn: Any = Depends(get_pg_conn),
+) -> dict[str, Any]:
+    try:
+        result = review_enrichment_item(
+            conn,
+            target_type=target_type,
+            target_id=target_id,
+            action=body.action,
+            actor=body.actor,
+            note=body.note,
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    if result["company_id"] != company_id:
+        raise HTTPException(status_code=404, detail="Enrichment item not found")
+    return result
 
 
 @router.get("/{domain}/{object_id}")
@@ -1595,6 +2040,15 @@ def update_domain_object(
     obj = _get_released_object(conn, domain.value, object_id, include_evidence=True)
     if obj is None:
         raise HTTPException(status_code=404, detail="Object not found")
+
+    if domain == DomainEnum.professor and body.quality_status is not None:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "professor_quality_requires_mark_endpoint",
+                "mark_endpoint": f"/api/admin/professor/{object_id}/mark",
+            },
+        )
 
     if body.core_facts is None and body.summary_fields is None and body.quality_status is None:
         return obj
@@ -1664,6 +2118,9 @@ def _related_papers_for_professor(conn: Any, professor_id: str) -> list[dict[str
           AND ppl.link_status IN ('verified', 'candidate')
           AND COALESCE(admin_run.run_scope->>'action', '') != 'delete'
         ORDER BY
+            CASE WHEN p.quality_status = 'ready' THEN 0 ELSE 1 END,
+            CASE WHEN NULLIF(p.summary_zh, '') IS NOT NULL THEN 0 ELSE 1 END,
+            CASE WHEN NULLIF(p.abstract_clean, '') IS NOT NULL THEN 0 ELSE 1 END,
             ppl.topic_consistency_score DESC NULLS LAST,
             p.citation_count DESC NULLS LAST,
             p.year DESC NULLS LAST,

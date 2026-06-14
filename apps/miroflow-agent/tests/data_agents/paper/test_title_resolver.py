@@ -20,12 +20,15 @@ import httpx
 import pytest
 
 from src.data_agents.paper.title_resolver import (
+    _OPENALEX_FAILURE_CIRCUIT,
+    _OPENALEX_FAILURE_COOLDOWN_SECONDS,
     _OPENALEX_RATE_LIMIT_CIRCUIT,
     _CROSSREF_FAILURE_CIRCUIT,
     _DBLP_FAILURE_CIRCUIT,
     _SEMANTIC_SCHOLAR_RATE_LIMIT_CIRCUIT,
     ResolvedPaper,
     _arxiv_entry_to_resolved,
+    _best_resolved_match,
     _crossref_work_to_resolved,
     _dblp_hit_to_resolved,
     _openalex_work_to_resolved,
@@ -325,7 +328,7 @@ def test_openalex_search_can_allow_anonymous_for_explicit_tests(monkeypatch):
     assert "api_key=" not in http.get.call_args.args[0]
 
 
-def test_openalex_search_adds_api_key_query_param(monkeypatch):
+def test_openalex_search_sends_api_key_query_param_not_header(monkeypatch):
     monkeypatch.setenv("OPENALEX_API_KEY", "test key")
     http = _fake_http_client_returning(_mock_openalex_response([]))
 
@@ -334,6 +337,7 @@ def test_openalex_search_adds_api_key_query_param(monkeypatch):
     url = http.get.call_args.args[0]
     assert "api_key=test+key" in url
     assert "select=id,doi,title" in url
+    assert "headers" not in http.get.call_args.kwargs
 
 
 def test_openalex_search_http_error_returns_empty_does_not_raise(monkeypatch):
@@ -385,6 +389,41 @@ def test_openalex_search_json_decode_error_returns_empty(monkeypatch):
     resp.raise_for_status.return_value = None
     http = _fake_http_client_returning(resp)
     assert _search_openalex_by_title("anything", http_client=http) == []
+
+
+def test_openalex_search_uses_fast_per_request_timeout_with_injected_client(monkeypatch):
+    monkeypatch.setenv("OPENALEX_API_KEY", "test-key")
+    http = _fake_http_client_returning(_mock_openalex_response([]))
+
+    assert _search_openalex_by_title("anything", http_client=http) == []
+
+    timeout = http.get.call_args.kwargs["timeout"]
+    assert getattr(timeout, "read", timeout) <= 6.0
+
+
+def test_openalex_search_timeout_circuit_suppresses_repeated_timeouts(monkeypatch):
+    monkeypatch.setenv("OPENALEX_API_KEY", "test-key")
+    _OPENALEX_FAILURE_CIRCUIT.reset()
+    http = _fake_http_client_returning_sequence(
+        [
+            httpx.ReadTimeout("timeout"),
+            httpx.ReadTimeout("timeout"),
+            _mock_openalex_response([_openalex_work_fixture()]),
+        ]
+    )
+    try:
+        assert _search_openalex_by_title("first", http_client=http) == []
+        assert _search_openalex_by_title("second", http_client=http) == []
+        assert http.get.call_count == 2
+
+        assert _search_openalex_by_title("suppressed", http_client=http) == []
+        assert http.get.call_count == 2
+    finally:
+        _OPENALEX_FAILURE_CIRCUIT.reset()
+
+
+def test_openalex_timeout_circuit_stays_disabled_for_long_batch_window():
+    assert _OPENALEX_FAILURE_COOLDOWN_SECONDS >= 1800.0
 
 
 def test_openalex_work_to_resolved_happy_path():
@@ -517,6 +556,19 @@ _ARXIV_ATOM_FIXTURE = """<?xml version="1.0" encoding="UTF-8"?>
 
 _ARXIV_ATOM_EMPTY = """<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
+</feed>
+"""
+
+_PFEDGPA_ARXIV_ATOM_FIXTURE = """<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <entry>
+    <id>http://arxiv.org/abs/2409.05701v1</id>
+    <title>pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning</title>
+    <summary>We propose diffusion-based generative parameter aggregation.</summary>
+    <published>2024-09-09T00:00:00Z</published>
+    <author><name>Test Author</name></author>
+    <link rel="related" type="application/pdf" href="http://arxiv.org/pdf/2409.05701v1"/>
+  </entry>
 </feed>
 """
 
@@ -663,6 +715,29 @@ def test_arxiv_entry_to_resolved_happy_path():
     assert confidence == 1.0
 
 
+def test_arxiv_entry_to_resolved_covers_pfedgpa_pdf() -> None:
+    title = (
+        "pFedGPA: Diffusion-based Generative Parameter Aggregation for "
+        "Personalized Federated Learning"
+    )
+    http = _fake_http_client_returning(
+        _mock_arxiv_response(_PFEDGPA_ARXIV_ATOM_FIXTURE)
+    )
+    entries = _search_arxiv_by_title(title, http_client=http)
+
+    resolved, confidence = _arxiv_entry_to_resolved(
+        entries[0],
+        query_title=title,
+        author_hint=None,
+        year_hint=2024,
+    )
+
+    assert confidence == 1.0
+    assert resolved.match_source == "arxiv"
+    assert resolved.arxiv_id == "2409.05701"
+    assert resolved.pdf_url == "http://arxiv.org/pdf/2409.05701v1"
+
+
 def test_arxiv_entry_to_resolved_strips_version_suffix():
     """arxiv returns `2310.12345v3`; our arxiv_id must be `2310.12345`."""
     http = _fake_http_client_returning(_mock_arxiv_response(_ARXIV_ATOM_FIXTURE))
@@ -760,6 +835,84 @@ def test_crossref_work_to_resolved_happy_path():
     assert resolved.abstract == "Federated learning abstract."
     assert resolved.authors == ("Wenbo Ding", "Yuzhu Mao")
     assert confidence == 1.0
+
+
+def test_crossref_component_supplement_is_below_auto_accept_threshold():
+    work = {
+        **_crossref_work_fixture(
+            title=(
+                "Impact of Ship Emissions on Air Quality in the Greater Bay Area "
+                "in China under the Latest Global Marine Fuel Regulation"
+            )
+        ),
+        "DOI": "10.1021/acs.est.3c03950.s001",
+        "type": "component",
+        "issued": {"date-parts": [[None]]},
+        "container-title": [],
+        "relation": {
+            "is-component-of": [
+                {
+                    "id-type": "doi",
+                    "id": "10.1021/acs.est.3c03950",
+                    "asserted-by": "object",
+                }
+            ]
+        },
+    }
+
+    resolved, confidence = _crossref_work_to_resolved(
+        work,
+        query_title=(
+            "Impact of ship emissions on air quality in the greater bay area "
+            "in china under the latest global marine fuel regulation"
+        ),
+        author_hint=None,
+        year_hint=None,
+    )
+
+    assert resolved.doi == "10.1021/acs.est.3c03950.s001"
+    assert confidence < 0.85
+
+
+def test_crossref_best_match_prefers_main_article_over_component_supplement():
+    component = {
+        **_crossref_work_fixture(
+            title=(
+                "Impact of Ship Emissions on Air Quality in the Greater Bay Area "
+                "in China under the Latest Global Marine Fuel Regulation"
+            )
+        ),
+        "DOI": "10.1021/acs.est.3c03950.s001",
+        "type": "component",
+        "issued": {"date-parts": [[None]]},
+        "relation": {"is-component-of": [{"id-type": "doi", "id": "10.1021/acs.est.3c03950"}]},
+    }
+    article = {
+        **_crossref_work_fixture(
+            title=(
+                "Impact of Ship Emissions on Air Quality in the Greater Bay Area "
+                "in China under the Latest Global Marine Fuel Regulation"
+            ),
+            year=2023,
+        ),
+        "DOI": "10.1021/acs.est.3c03950",
+        "type": "journal-article",
+        "container-title": ["Environmental Science & Technology"],
+    }
+
+    resolved = _best_resolved_match(
+        [component, article],
+        converter=_crossref_work_to_resolved,
+        query_title=(
+            "Impact of ship emissions on air quality in the greater bay area "
+            "in china under the latest global marine fuel regulation"
+        ),
+        author_hint=None,
+        year_hint=None,
+    )
+
+    assert resolved is not None
+    assert resolved.doi == "10.1021/acs.est.3c03950"
 
 
 def test_semantic_scholar_title_search_returns_papers():
@@ -1053,13 +1206,73 @@ def test_resolve_falls_through_to_crossref_before_s2_dblp_arxiv():
         m_cr.return_value = [{"fake": "crossref"}]
         m_cr_to_r.return_value = (_resolved_fixture("crossref", 0.91), 0.91)
 
-        result = resolve_paper_by_title("A Paper Title")
+        result = resolve_paper_by_title(
+            "A Paper Title",
+            enable_arxiv_title_search=False,
+        )
 
         assert result is not None
         assert result.match_source == "crossref"
         m_s2.assert_not_called()
         m_dblp.assert_not_called()
         m_ax.assert_not_called()
+
+
+def test_resolve_supplements_crossref_match_with_arxiv_pdf_when_available():
+    crossref = ResolvedPaper(
+        title="pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning",
+        doi="10.1609/aaai.v39i17.33980",
+        openalex_id=None,
+        arxiv_id=None,
+        abstract=None,
+        pdf_url=None,
+        authors=("Y. Author",),
+        year=2025,
+        venue="AAAI",
+        match_confidence=1.0,
+        match_source="crossref",
+    )
+    arxiv = ResolvedPaper(
+        title="pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning",
+        doi=None,
+        openalex_id=None,
+        arxiv_id="2409.05701",
+        abstract="arxiv abstract",
+        pdf_url="http://arxiv.org/pdf/2409.05701v1",
+        authors=("Y. Author",),
+        year=2024,
+        venue="arXiv",
+        match_confidence=0.99,
+        match_source="arxiv",
+    )
+    with patch(
+        "src.data_agents.paper.title_resolver._search_openalex_by_title"
+    ) as m_oa, patch(
+        "src.data_agents.paper.title_resolver._search_crossref_by_title"
+    ) as m_cr, patch(
+        "src.data_agents.paper.title_resolver._crossref_work_to_resolved"
+    ) as m_cr_to_r, patch(
+        "src.data_agents.paper.title_resolver._search_arxiv_by_title"
+    ) as m_ax, patch(
+        "src.data_agents.paper.title_resolver._arxiv_entry_to_resolved"
+    ) as m_ax_to_r, patch(
+        "src.data_agents.paper.title_resolver._search_semantic_scholar_by_title"
+    ) as m_s2:
+        m_oa.return_value = []
+        m_cr.return_value = [{"fake": "crossref"}]
+        m_cr_to_r.return_value = (crossref, crossref.match_confidence)
+        m_ax.return_value = [{"fake": "arxiv"}]
+        m_ax_to_r.return_value = (arxiv, arxiv.match_confidence)
+
+        result = resolve_paper_by_title(crossref.title)
+
+        assert result is not None
+        assert result.match_source == "crossref"
+        assert result.doi == "10.1609/aaai.v39i17.33980"
+        assert result.arxiv_id == "2409.05701"
+        assert result.pdf_url == "http://arxiv.org/pdf/2409.05701v1"
+        assert result.abstract == "arxiv abstract"
+        m_s2.assert_not_called()
 
 
 def test_resolve_falls_through_to_semantic_scholar_when_crossref_below_threshold():
@@ -1141,6 +1354,53 @@ def test_resolve_can_disable_arxiv_title_search_for_bulk_homepage_ingest():
         )
         assert result is None
         m_ax.assert_not_called()
+
+
+def test_resolve_can_disable_openalex_title_search_for_bulk_backfills():
+    with patch(
+        "src.data_agents.paper.title_resolver._search_openalex_by_title"
+    ) as m_oa, patch(
+        "src.data_agents.paper.title_resolver._search_crossref_by_title"
+    ) as m_cr, patch(
+        "src.data_agents.paper.title_resolver._crossref_work_to_resolved"
+    ) as m_cr_to_r:
+        m_cr.return_value = [{"fake": "crossref"}]
+        m_cr_to_r.return_value = (_resolved_fixture("crossref", 0.91), 0.91)
+
+        result = resolve_paper_by_title(
+            "A Paper Title",
+            enable_openalex_title_search=False,
+        )
+
+        assert result is not None
+        assert result.match_source == "crossref"
+        m_oa.assert_not_called()
+
+
+def test_resolve_can_disable_dblp_title_search_for_non_cs_bulk_backfills():
+    with patch(
+        "src.data_agents.paper.title_resolver._search_openalex_by_title"
+    ) as m_oa, patch(
+        "src.data_agents.paper.title_resolver._search_crossref_by_title"
+    ) as m_cr, patch(
+        "src.data_agents.paper.title_resolver._search_semantic_scholar_by_title"
+    ) as m_s2, patch(
+        "src.data_agents.paper.title_resolver._search_dblp_by_title"
+    ) as m_dblp, patch(
+        "src.data_agents.paper.title_resolver._search_arxiv_by_title"
+    ) as m_ax:
+        m_oa.return_value = []
+        m_cr.return_value = []
+        m_s2.return_value = []
+        m_ax.return_value = []
+
+        result = resolve_paper_by_title(
+            "A Non CS Paper Title",
+            enable_dblp_title_search=False,
+        )
+
+        assert result is None
+        m_dblp.assert_not_called()
 
 
 def test_resolve_returns_none_when_all_sources_miss_and_no_web_search():
@@ -1240,6 +1500,104 @@ def test_resolve_cache_hit_skips_all_searches():
         result = resolve_paper_by_title("Cached Paper", cache=cache)
         assert result is cached_paper
         m_oa.assert_not_called()
+        m_ax.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("source", "kwargs"),
+    [
+        ("openalex", {"enable_openalex_title_search": False}),
+        ("dblp", {"enable_dblp_title_search": False}),
+        ("arxiv", {"enable_arxiv_title_search": False}),
+    ],
+)
+def test_resolve_cache_hit_ignores_disabled_provider_sources(source, kwargs):
+    cache = _FakeCache()
+    cached_paper = _resolved_fixture(source, 1.0)
+    cached_paper = ResolvedPaper(
+        title="Cached Provider Paper",
+        doi=cached_paper.doi,
+        openalex_id=cached_paper.openalex_id,
+        arxiv_id=cached_paper.arxiv_id,
+        abstract=cached_paper.abstract,
+        pdf_url=cached_paper.pdf_url,
+        authors=cached_paper.authors,
+        year=cached_paper.year,
+        venue=cached_paper.venue,
+        match_confidence=cached_paper.match_confidence,
+        match_source=source,
+    )
+    cache.store[_title_cache_key("Cached Provider Paper")] = cached_paper
+
+    with patch(
+        "src.data_agents.paper.title_resolver._search_openalex_by_title"
+    ) as m_oa, patch(
+        "src.data_agents.paper.title_resolver._search_crossref_by_title"
+    ) as m_cr, patch(
+        "src.data_agents.paper.title_resolver._search_semantic_scholar_by_title"
+    ) as m_s2, patch(
+        "src.data_agents.paper.title_resolver._search_dblp_by_title"
+    ) as m_dblp, patch(
+        "src.data_agents.paper.title_resolver._search_arxiv_by_title"
+    ) as m_ax:
+        m_oa.return_value = []
+        m_cr.return_value = []
+        m_s2.return_value = []
+        m_dblp.return_value = []
+        m_ax.return_value = []
+
+        result = resolve_paper_by_title("Cached Provider Paper", cache=cache, **kwargs)
+
+    assert result is None
+
+
+def test_resolve_cache_only_disabled_provider_source_returns_none():
+    cache = _FakeCache()
+    cached_paper = _resolved_fixture("dblp", 1.0)
+    cache.store[_title_cache_key("Cached DBLP Paper")] = ResolvedPaper(
+        title="Cached DBLP Paper",
+        doi=cached_paper.doi,
+        openalex_id=cached_paper.openalex_id,
+        arxiv_id=cached_paper.arxiv_id,
+        abstract=cached_paper.abstract,
+        pdf_url=cached_paper.pdf_url,
+        authors=cached_paper.authors,
+        year=cached_paper.year,
+        venue=cached_paper.venue,
+        match_confidence=cached_paper.match_confidence,
+        match_source="dblp",
+    )
+
+    result = resolve_paper_by_title(
+        "Cached DBLP Paper",
+        cache=cache,
+        cache_only=True,
+        enable_dblp_title_search=False,
+    )
+
+    assert result is None
+
+
+def test_resolve_cache_only_miss_skips_all_searches():
+    cache = _FakeCache()
+    with patch(
+        "src.data_agents.paper.title_resolver._search_openalex_by_title"
+    ) as m_oa, patch(
+        "src.data_agents.paper.title_resolver._search_crossref_by_title"
+    ) as m_cr, patch(
+        "src.data_agents.paper.title_resolver._search_semantic_scholar_by_title"
+    ) as m_s2, patch(
+        "src.data_agents.paper.title_resolver._search_dblp_by_title"
+    ) as m_dblp, patch(
+        "src.data_agents.paper.title_resolver._search_arxiv_by_title"
+    ) as m_ax:
+        result = resolve_paper_by_title("Cached Paper", cache=cache, cache_only=True)
+
+        assert result is None
+        m_oa.assert_not_called()
+        m_cr.assert_not_called()
+        m_s2.assert_not_called()
+        m_dblp.assert_not_called()
         m_ax.assert_not_called()
 
 

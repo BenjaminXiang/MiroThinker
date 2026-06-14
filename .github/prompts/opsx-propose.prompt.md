@@ -9,6 +9,8 @@ I'll create a change with artifacts:
 - design.md (how)
 - tasks.md (implementation steps)
 
+For behavior-affecting work, I will also create `.agents/runs/<change-name>/verification-contract.md` to define the RED artifact, GREEN criteria, and allowed Superpowers mode before implementation.
+
 When ready to implement, run /opsx:apply
 
 ---
@@ -32,7 +34,16 @@ When ready to implement, run /opsx:apply
    ```
    This creates a scaffolded change at `openspec/changes/<name>/` with `.openspec.yaml`.
 
-3. **Get the artifact build order**
+3. **Prepare the verification contract**
+
+   If the change is behavior-affecting or may use Superpowers TDD/debugging:
+   - Create `.agents/runs/<name>/` if needed
+   - Create `.agents/runs/<name>/verification-contract.md` from `.agents/runs/verification-contract.template.md`
+   - Fill in change type, Superpowers mode, RED artifact type/path, expected failing reason, oracle strength, affected context/dependencies, mock policy, GREEN criteria, and forbidden shortcuts
+
+   Do not let Superpowers choose the RED artifact independently. OpenSpec plus the verification contract define what RED and GREEN mean.
+
+4. **Get the artifact build order**
    ```bash
    openspec status --change "<name>" --json
    ```
@@ -40,7 +51,7 @@ When ready to implement, run /opsx:apply
    - `applyRequires`: array of artifact IDs needed before implementation (e.g., `["tasks"]`)
    - `artifacts`: list of all artifacts with their status and dependencies
 
-4. **Create artifacts in sequence until apply-ready**
+5. **Create artifacts in sequence until apply-ready**
 
    Use the **TodoWrite tool** to track progress through the artifacts.
 
@@ -72,7 +83,7 @@ When ready to implement, run /opsx:apply
       - Use **AskUserQuestion tool** to clarify
       - Then continue with creation
 
-5. **Show final status**
+6. **Show final status**
    ```bash
    openspec status --change "<name>"
    ```
@@ -97,6 +108,7 @@ After completing all artifacts, summarize:
 
 **Guardrails**
 - Create ALL artifacts needed for implementation (as defined by schema's `apply.requires`)
+- For behavior-affecting work, create the verification contract before claiming the change is ready for implementation
 - Always read dependency artifacts before creating a new one
 - If context is critically unclear, ask the user - but prefer making reasonable decisions to keep momentum
 - If a change with that name already exists, ask if user wants to continue it or create a new one

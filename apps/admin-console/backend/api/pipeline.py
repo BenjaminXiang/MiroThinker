@@ -1,18 +1,20 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 import subprocess
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from backend.deps import get_pg_conn
+from src.data_agents.company.enrichment_batch import build_miss_reason_buckets
 from src.data_agents.storage.postgres.pipeline_run import (
     close_pipeline_run,
     open_pipeline_run,
@@ -166,8 +168,75 @@ class PipelineRunSourcePage(BaseModel):
     fetched_at: datetime | None = None
 
 
+class CompanyEnrichmentCompanyDiagnostic(BaseModel):
+    company_id: str
+    status: str
+    current_stage: str | None = None
+    miss_reason: str | None = None
+    last_error: str | None = None
+    query_count: int = 0
+    source_result_count: int = 0
+    accepted_source_count: int = 0
+    rejected_source_count: int = 0
+    product_count: int = 0
+    scenario_count: int = 0
+    official_product_count: int = 0
+    funding_event_count: int = 0
+    vector_refreshed: bool = False
+    stage_status: dict[str, Any] = Field(default_factory=dict)
+    updated_at: datetime | None = None
+
+
+class CompanyEnrichmentBatchStatus(BaseModel):
+    batch_id: str
+    status: str
+    current_stage: str | None = None
+    progress_percent: float = 0.0
+    companies_total: int
+    companies_selected: int
+    companies_processed: int
+    companies_succeeded: int
+    companies_failed: int
+    query_count: int = 0
+    source_result_count: int = 0
+    accepted_source_count: int = 0
+    rejected_source_count: int = 0
+    product_count: int = 0
+    scenario_count: int = 0
+    official_product_count: int = 0
+    funding_event_count: int = 0
+    vector_refreshed_count: int = 0
+    llm_failure_count: int = 0
+    status_counts: dict[str, int] = Field(default_factory=dict)
+    current_stage_counts: dict[str, int] = Field(default_factory=dict)
+    miss_reasons: dict[str, int] = Field(default_factory=dict)
+    official_failure_reasons: dict[str, int] = Field(default_factory=dict)
+    rejected_candidate_reasons: dict[str, int] = Field(default_factory=dict)
+    source_counts_by_adapter: dict[str, dict[str, int]] = Field(default_factory=dict)
+    runner_pid: int | None = None
+    runner_log_path: str | None = None
+    runner_heartbeat_at: datetime | None = None
+    runner_last_seen_at: datetime | None = None
+    runner_is_stale: bool = False
+    last_completed_company_id: str | None = None
+    miss_reason_buckets: dict[str, int] = Field(default_factory=dict)
+    quality_report: dict[str, Any] = Field(default_factory=dict)
+    company_diagnostics: list[CompanyEnrichmentCompanyDiagnostic] = Field(
+        default_factory=list
+    )
+    company_diagnostics_truncated: bool = False
+    last_error: str | None = None
+    created_at: datetime
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    updated_at: datetime
+
+
 class PipelineRunDetail(PipelineRunItem):
     source_pages: list[PipelineRunSourcePage] = Field(default_factory=list)
+    company_enrichment_batches: list[CompanyEnrichmentBatchStatus] = Field(
+        default_factory=list
+    )
 
 
 class PipelineRunActionResponse(BaseModel):
@@ -175,6 +244,21 @@ class PipelineRunActionResponse(BaseModel):
     status: str
     domain: str
     parent_run_id: str
+
+
+CompanyEnrichmentStagePreset = Literal[
+    "trusted_xlsx",
+    "high_trust_sources",
+    "full",
+]
+
+
+class CompanyEnrichmentBatchStartRequest(BaseModel):
+    limit: int | None = Field(default=100, ge=1, le=10000)
+    chunk_size: int = Field(default=20, ge=1, le=500)
+    stage_preset: CompanyEnrichmentStagePreset = "high_trust_sources"
+    include_failed: bool = False
+    skip_milvus: bool = False
 
 
 def _anomaly_flags(row: dict[str, Any]) -> list[str]:
@@ -307,6 +391,294 @@ def get_pipeline_run(
         """,
         {"run_id": run_id},
     ).fetchall()
+    company_enrichment_batches = conn.execute(
+        """
+        WITH batch_rows AS (
+            SELECT
+                batch_id,
+                status,
+                current_stage,
+                companies_total,
+                companies_selected,
+                companies_processed,
+                companies_succeeded,
+                companies_failed,
+                last_error,
+                created_at,
+                started_at,
+                finished_at,
+                updated_at,
+                runner_pid,
+                runner_log_path,
+                runner_heartbeat_at,
+                runner_last_seen_at,
+                last_completed_company_id,
+                miss_reason_buckets,
+                quality_report
+              FROM company_enrichment_batch
+             WHERE upload_task_id = %(run_id)s
+        ),
+        state_rollup AS (
+            SELECT
+                s.batch_id,
+                COALESCE(sum(s.query_count), 0)::int AS query_count,
+                COALESCE(sum(s.source_result_count), 0)::int AS source_result_count,
+                COALESCE(sum(s.accepted_source_count), 0)::int AS accepted_source_count,
+                COALESCE(sum(s.rejected_source_count), 0)::int AS rejected_source_count,
+                COALESCE(sum(s.product_count), 0)::int AS product_count,
+                COALESCE(sum(s.scenario_count), 0)::int AS scenario_count,
+                COALESCE(sum(s.official_product_count), 0)::int AS official_product_count,
+                COALESCE(sum(s.event_count), 0)::int AS funding_event_count,
+                count(*) FILTER (WHERE s.milvus_refreshed_at IS NOT NULL)::int
+                    AS vector_refreshed_count
+              FROM company_enrichment_company_state s
+              JOIN batch_rows b ON b.batch_id = s.batch_id
+             GROUP BY s.batch_id
+        ),
+        status_counts AS (
+            SELECT batch_id, jsonb_object_agg(status_bucket, status_count) AS payload
+              FROM (
+                SELECT
+                    s.batch_id,
+                    COALESCE(NULLIF(BTRIM(s.status), ''), 'unknown') AS status_bucket,
+                    count(*)::int AS status_count
+                  FROM company_enrichment_company_state s
+                  JOIN batch_rows b ON b.batch_id = s.batch_id
+                 GROUP BY s.batch_id, COALESCE(NULLIF(BTRIM(s.status), ''), 'unknown')
+              ) grouped
+             GROUP BY batch_id
+        ),
+        current_stage_counts AS (
+            SELECT batch_id, jsonb_object_agg(stage_bucket, stage_count) AS payload
+              FROM (
+                SELECT
+                    s.batch_id,
+                    COALESCE(NULLIF(BTRIM(s.current_stage), ''), 'unknown')
+                        AS stage_bucket,
+                    count(*)::int AS stage_count
+                  FROM company_enrichment_company_state s
+                  JOIN batch_rows b ON b.batch_id = s.batch_id
+                 GROUP BY
+                    s.batch_id,
+                    COALESCE(NULLIF(BTRIM(s.current_stage), ''), 'unknown')
+              ) grouped
+             GROUP BY batch_id
+        ),
+        miss_reasons AS (
+            SELECT batch_id, jsonb_object_agg(reason, reason_count) AS payload
+              FROM (
+                SELECT
+                    s.batch_id,
+                    NULLIF(BTRIM(s.miss_reason), '') AS reason,
+                    count(*)::int AS reason_count
+                  FROM company_enrichment_company_state s
+                  JOIN batch_rows b ON b.batch_id = s.batch_id
+                 WHERE NULLIF(BTRIM(s.miss_reason), '') IS NOT NULL
+                 GROUP BY s.batch_id, NULLIF(BTRIM(s.miss_reason), '')
+              ) grouped
+             GROUP BY batch_id
+        ),
+        official_failure_reasons AS (
+            SELECT batch_id, jsonb_object_agg(reason, reason_count) AS payload
+              FROM (
+                SELECT batch_id, reason, count(*)::int AS reason_count
+                  FROM (
+                    SELECT
+                        s.batch_id,
+                        COALESCE(
+                            NULLIF(
+                                BTRIM(
+                                    s.stage_status #>> '{official_product_capture,miss_reason}'
+                                ),
+                                ''
+                            ),
+                            NULLIF(
+                                BTRIM(
+                                    s.stage_status #>> '{official_product_capture,last_error}'
+                                ),
+                                ''
+                            ),
+                            NULLIF(BTRIM(s.miss_reason), '')
+                        ) AS reason
+                      FROM company_enrichment_company_state s
+                      JOIN batch_rows b ON b.batch_id = s.batch_id
+                     WHERE s.stage_status ? 'official_product_capture'
+                  ) candidates
+                 WHERE reason IS NOT NULL
+                 GROUP BY batch_id, reason
+              ) grouped
+             GROUP BY batch_id
+        ),
+        rejected_candidate_reasons AS (
+            SELECT batch_id, jsonb_object_agg(reason, reason_count) AS payload
+              FROM (
+                SELECT
+                    s.batch_id,
+                    reason.key AS reason,
+                    sum((reason.value)::int)::int AS reason_count
+                  FROM company_enrichment_company_state s
+                  JOIN batch_rows b ON b.batch_id = s.batch_id
+                  CROSS JOIN LATERAL jsonb_each_text(
+                    COALESCE(
+                        s.stage_status #>
+                            '{source_product_extract,rejected_facts,rejected_candidate_reasons}',
+                        '{}'::jsonb
+                    )
+                  ) AS reason(key, value)
+                 GROUP BY s.batch_id, reason.key
+              ) grouped
+             GROUP BY batch_id
+        ),
+        source_counts AS (
+            SELECT batch_id, jsonb_object_agg(source_adapter, payload) AS payload
+              FROM (
+                SELECT
+                    a.batch_id,
+                    COALESCE(NULLIF(BTRIM(a.source_adapter), ''), 'unknown')
+                        AS source_adapter,
+                    jsonb_build_object(
+                        'query_count', count(*)::int,
+                        'result_count', COALESCE(sum(a.result_count), 0)::int,
+                        'accepted_count', COALESCE(sum(a.accepted_count), 0)::int,
+                        'rejected_count', COALESCE(sum(
+                            a.rejected_offsite
+                            + a.rejected_irrelevant_path
+                            + a.rejected_name_mismatch
+                        ), 0)::int
+                    ) AS payload
+                  FROM company_enrichment_search_audit a
+                  JOIN batch_rows b ON b.batch_id = a.batch_id
+                 GROUP BY
+                    a.batch_id,
+                    COALESCE(NULLIF(BTRIM(a.source_adapter), ''), 'unknown')
+              ) grouped
+             GROUP BY batch_id
+        ),
+        llm_rollup AS (
+            SELECT
+                s.batch_id,
+                COALESCE(sum(
+                    COALESCE(
+                        NULLIF(
+                            stage.value #>>
+                                '{llm_task_outcome,structured_output_failures}',
+                            ''
+                        )::int,
+                        0
+                    )
+                ), 0)::int AS llm_failure_count
+              FROM company_enrichment_company_state s
+              JOIN batch_rows b ON b.batch_id = s.batch_id
+              CROSS JOIN LATERAL jsonb_each(s.stage_status) AS stage(key, value)
+             GROUP BY s.batch_id
+        ),
+        company_diagnostics AS (
+            SELECT
+                b.batch_id,
+                COALESCE(
+                    jsonb_agg(
+                        jsonb_build_object(
+                            'company_id', s.company_id,
+                            'status', s.status,
+                            'current_stage', s.current_stage,
+                            'miss_reason', s.miss_reason,
+                            'last_error', s.last_error,
+                            'query_count', s.query_count,
+                            'source_result_count', s.source_result_count,
+                            'accepted_source_count', s.accepted_source_count,
+                            'rejected_source_count', s.rejected_source_count,
+                            'product_count', s.product_count,
+                            'scenario_count', s.scenario_count,
+                            'official_product_count', s.official_product_count,
+                            'funding_event_count', s.event_count,
+                            'vector_refreshed', s.milvus_refreshed_at IS NOT NULL,
+                            'stage_status', s.stage_status,
+                            'updated_at', s.updated_at
+                        )
+                        ORDER BY
+                            CASE s.status
+                                WHEN 'failed' THEN 0
+                                WHEN 'partial' THEN 1
+                                WHEN 'running' THEN 2
+                                ELSE 3
+                            END,
+                            s.updated_at DESC NULLS LAST,
+                            s.company_id ASC
+                    ) FILTER (WHERE s.company_id IS NOT NULL),
+                    '[]'::jsonb
+                ) AS payload,
+                (COALESCE(max(s.total_count), 0) > 50) AS truncated
+              FROM batch_rows b
+              LEFT JOIN LATERAL (
+                SELECT s.*, count(*) OVER ()::int AS total_count
+                  FROM company_enrichment_company_state s
+                 WHERE s.batch_id = b.batch_id
+                 ORDER BY
+                    CASE s.status
+                        WHEN 'failed' THEN 0
+                        WHEN 'partial' THEN 1
+                        WHEN 'running' THEN 2
+                        ELSE 3
+                    END,
+                    s.updated_at DESC NULLS LAST,
+                    s.company_id ASC
+                 LIMIT 50
+              ) s ON TRUE
+             GROUP BY b.batch_id
+        )
+        SELECT
+            b.batch_id,
+            b.status,
+            b.current_stage,
+            b.companies_total,
+            b.companies_selected,
+            b.companies_processed,
+            b.companies_succeeded,
+            b.companies_failed,
+            COALESCE(sr.query_count, 0) AS query_count,
+            COALESCE(sr.source_result_count, 0) AS source_result_count,
+            COALESCE(sr.accepted_source_count, 0) AS accepted_source_count,
+            COALESCE(sr.rejected_source_count, 0) AS rejected_source_count,
+            COALESCE(sr.product_count, 0) AS product_count,
+            COALESCE(sr.scenario_count, 0) AS scenario_count,
+            COALESCE(sr.official_product_count, 0) AS official_product_count,
+            COALESCE(sr.funding_event_count, 0) AS funding_event_count,
+            COALESCE(sr.vector_refreshed_count, 0) AS vector_refreshed_count,
+            COALESCE(lr.llm_failure_count, 0) AS llm_failure_count,
+            COALESCE(sc.payload, '{}'::jsonb) AS status_counts,
+            COALESCE(csc.payload, '{}'::jsonb) AS current_stage_counts,
+            COALESCE(mr.payload, '{}'::jsonb) AS miss_reasons,
+            COALESCE(ofr.payload, '{}'::jsonb) AS official_failure_reasons,
+            COALESCE(rcr.payload, '{}'::jsonb) AS rejected_candidate_reasons,
+            COALESCE(src.payload, '{}'::jsonb) AS source_counts_by_adapter,
+            COALESCE(cd.payload, '[]'::jsonb) AS company_diagnostics,
+            COALESCE(cd.truncated, false) AS company_diagnostics_truncated,
+            b.last_error,
+            b.created_at,
+            b.started_at,
+            b.finished_at,
+            b.updated_at,
+            b.runner_pid,
+            b.runner_log_path,
+            b.runner_heartbeat_at,
+            b.runner_last_seen_at,
+            b.last_completed_company_id,
+            COALESCE(b.miss_reason_buckets, '{}'::jsonb) AS miss_reason_buckets,
+            COALESCE(b.quality_report, '{}'::jsonb) AS quality_report
+          FROM batch_rows b
+          LEFT JOIN state_rollup sr ON sr.batch_id = b.batch_id
+          LEFT JOIN llm_rollup lr ON lr.batch_id = b.batch_id
+          LEFT JOIN status_counts sc ON sc.batch_id = b.batch_id
+          LEFT JOIN current_stage_counts csc ON csc.batch_id = b.batch_id
+          LEFT JOIN miss_reasons mr ON mr.batch_id = b.batch_id
+          LEFT JOIN official_failure_reasons ofr ON ofr.batch_id = b.batch_id
+          LEFT JOIN rejected_candidate_reasons rcr ON rcr.batch_id = b.batch_id
+          LEFT JOIN source_counts src ON src.batch_id = b.batch_id
+          LEFT JOIN company_diagnostics cd ON cd.batch_id = b.batch_id
+         ORDER BY b.created_at DESC, b.batch_id ASC
+        """,
+        {"run_id": run_id},
+    ).fetchall()
     item = _pipeline_run_item(row)
     return PipelineRunDetail(
         **item.model_dump(),
@@ -320,6 +692,177 @@ def get_pipeline_run(
             )
             for page in source_pages
         ],
+        company_enrichment_batches=[
+            _company_enrichment_batch_status(batch)
+            for batch in company_enrichment_batches
+        ],
+    )
+
+
+@router.get(
+    "/company-enrichment-batches/{batch_id}",
+    response_model=CompanyEnrichmentBatchStatus,
+)
+def get_company_enrichment_batch(
+    batch_id: UUID,
+    conn: Any = Depends(get_pg_conn),
+) -> CompanyEnrichmentBatchStatus:
+    row = _load_company_enrichment_batch_status_row(conn, batch_id=batch_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="Company enrichment batch not found")
+    return _company_enrichment_batch_status(row)
+
+
+@router.post(
+    "/company-enrichment-batches/{batch_id}/start",
+    response_model=PipelineRunActionResponse,
+)
+async def start_company_enrichment_batch(
+    batch_id: UUID,
+    request: CompanyEnrichmentBatchStartRequest,
+    conn: Any = Depends(get_pg_conn),
+) -> PipelineRunActionResponse:
+    row = conn.execute(
+        """
+        SELECT batch_id, status, upload_task_id, companies_selected
+          FROM company_enrichment_batch
+         WHERE batch_id = %(batch_id)s
+         LIMIT 1
+        """,
+        {"batch_id": batch_id},
+    ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Company enrichment batch not found")
+    status = str(_row_value(row, "status", 1))
+    if status == "running":
+        raise HTTPException(status_code=400, detail="Company enrichment batch is already running")
+
+    parent_run_id = _row_value(row, "upload_task_id", 2)
+    options = request.model_dump()
+    task_id = open_pipeline_run(
+        conn,
+        run_kind="backfill_real",
+        run_scope={
+            "source": "admin-console",
+            "domain": "company",
+            "action": "company_enrichment_batch",
+            "batch_id": str(batch_id),
+            "options": options,
+        },
+        parent_run_id=parent_run_id,
+        triggered_by="admin-console",
+    )
+    _commit_if_supported(conn)
+
+    task = asyncio.create_task(
+        _run_company_enrichment_batch_task(
+            task_id=task_id,
+            batch_id=batch_id,
+            parent_run_id=parent_run_id,
+            **options,
+        )
+    )
+    task.add_done_callback(_log_background_task_failure)
+
+    return PipelineRunActionResponse(
+        task_id=str(task_id),
+        status="scheduled",
+        domain="company",
+        parent_run_id=str(parent_run_id or ""),
+    )
+
+
+@router.post(
+    "/company-enrichment-batches/{batch_id}/restart-stale",
+    response_model=PipelineRunActionResponse,
+)
+async def restart_stale_company_enrichment_batch(
+    batch_id: UUID,
+    request: CompanyEnrichmentBatchStartRequest,
+    conn: Any = Depends(get_pg_conn),
+) -> PipelineRunActionResponse:
+    row = conn.execute(
+        """
+        SELECT
+            batch_id, status, upload_task_id, companies_selected,
+            runner_heartbeat_at
+          FROM company_enrichment_batch
+         WHERE batch_id = %(batch_id)s
+         LIMIT 1
+        """,
+        {"batch_id": batch_id},
+    ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Company enrichment batch not found")
+    status = str(_row_value(row, "status", 1))
+    heartbeat_at = _row_value(row, "runner_heartbeat_at", 4)
+    if status == "running" and not _is_runner_stale(
+        status=status,
+        heartbeat_at=heartbeat_at,
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Company enrichment batch is still receiving heartbeat",
+        )
+    if status == "running":
+        conn.execute(
+            """
+            UPDATE company_enrichment_batch
+               SET status = 'failed',
+                   current_stage = 'failed',
+                   last_error = COALESCE(last_error, 'stale_runner_restart'),
+                   finished_at = COALESCE(finished_at, now()),
+                   updated_at = now()
+             WHERE batch_id = %(batch_id)s
+            """,
+            {"batch_id": batch_id},
+        )
+        conn.execute(
+            """
+            UPDATE company_enrichment_company_state
+               SET status = 'failed',
+                   last_error = COALESCE(last_error, 'stale_runner_restart'),
+                   finished_at = COALESCE(finished_at, now()),
+                   updated_at = now()
+             WHERE batch_id = %(batch_id)s
+               AND status = 'running'
+            """,
+            {"batch_id": batch_id},
+        )
+
+    parent_run_id = _row_value(row, "upload_task_id", 2)
+    options = request.model_dump()
+    options["include_failed"] = True
+    task_id = open_pipeline_run(
+        conn,
+        run_kind="backfill_real",
+        run_scope={
+            "source": "admin-console",
+            "domain": "company",
+            "action": "company_enrichment_batch_restart_stale",
+            "batch_id": str(batch_id),
+            "options": options,
+        },
+        parent_run_id=parent_run_id,
+        triggered_by="admin-console",
+    )
+    _commit_if_supported(conn)
+
+    task = asyncio.create_task(
+        _run_company_enrichment_batch_task(
+            task_id=task_id,
+            batch_id=batch_id,
+            parent_run_id=parent_run_id,
+            **options,
+        )
+    )
+    task.add_done_callback(_log_background_task_failure)
+
+    return PipelineRunActionResponse(
+        task_id=str(task_id),
+        status="scheduled",
+        domain="company",
+        parent_run_id=str(parent_run_id or ""),
     )
 
 
@@ -424,6 +967,15 @@ async def trigger_retrieval_validation(
             detail="Retrieval validation requires a finished import run",
         )
     domain = _pipeline_run_domain(parent.run_scope)
+    if domain == "company":
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Company XLSX uploads use company enrichment batches for post-import "
+                "processing; global retrieval validation is not available for company "
+                "upload runs."
+            ),
+        )
     task_id = open_pipeline_run(
         conn,
         run_kind="answer_readiness_eval",
@@ -456,6 +1008,358 @@ async def trigger_retrieval_validation(
     )
 
 
+def _load_company_enrichment_batch_status_row(
+    conn: Any,
+    *,
+    batch_id: UUID,
+) -> Any | None:
+    return conn.execute(
+        """
+        WITH batch_rows AS (
+            SELECT
+                batch_id, status, current_stage, companies_total,
+                companies_selected, companies_processed, companies_succeeded,
+                companies_failed, last_error, created_at, started_at,
+                finished_at, updated_at, runner_pid, runner_log_path,
+                runner_heartbeat_at, runner_last_seen_at,
+                last_completed_company_id, miss_reason_buckets, quality_report
+              FROM company_enrichment_batch
+             WHERE batch_id = %(batch_id)s
+        ),
+        state_rollup AS (
+            SELECT
+                s.batch_id,
+                COALESCE(sum(s.query_count), 0)::int AS query_count,
+                COALESCE(sum(s.source_result_count), 0)::int AS source_result_count,
+                COALESCE(sum(s.accepted_source_count), 0)::int AS accepted_source_count,
+                COALESCE(sum(s.rejected_source_count), 0)::int AS rejected_source_count,
+                COALESCE(sum(s.product_count), 0)::int AS product_count,
+                COALESCE(sum(s.scenario_count), 0)::int AS scenario_count,
+                COALESCE(sum(s.official_product_count), 0)::int AS official_product_count,
+                COALESCE(sum(s.event_count), 0)::int AS funding_event_count,
+                count(*) FILTER (WHERE s.milvus_refreshed_at IS NOT NULL)::int
+                    AS vector_refreshed_count
+              FROM company_enrichment_company_state s
+              JOIN batch_rows b ON b.batch_id = s.batch_id
+             GROUP BY s.batch_id
+        ),
+        status_counts AS (
+            SELECT batch_id, jsonb_object_agg(status_bucket, status_count) AS payload
+              FROM (
+                SELECT s.batch_id,
+                       COALESCE(NULLIF(BTRIM(s.status), ''), 'unknown')
+                           AS status_bucket,
+                       count(*)::int AS status_count
+                  FROM company_enrichment_company_state s
+                  JOIN batch_rows b ON b.batch_id = s.batch_id
+                 GROUP BY s.batch_id,
+                          COALESCE(NULLIF(BTRIM(s.status), ''), 'unknown')
+              ) grouped
+             GROUP BY batch_id
+        ),
+        current_stage_counts AS (
+            SELECT batch_id, jsonb_object_agg(stage_bucket, stage_count) AS payload
+              FROM (
+                SELECT s.batch_id,
+                       COALESCE(NULLIF(BTRIM(s.current_stage), ''), 'unknown')
+                           AS stage_bucket,
+                       count(*)::int AS stage_count
+                  FROM company_enrichment_company_state s
+                  JOIN batch_rows b ON b.batch_id = s.batch_id
+                 GROUP BY s.batch_id,
+                          COALESCE(NULLIF(BTRIM(s.current_stage), ''), 'unknown')
+              ) grouped
+             GROUP BY batch_id
+        ),
+        miss_reasons AS (
+            SELECT batch_id, jsonb_object_agg(reason, reason_count) AS payload
+              FROM (
+                SELECT s.batch_id,
+                       NULLIF(BTRIM(s.miss_reason), '') AS reason,
+                       count(*)::int AS reason_count
+                  FROM company_enrichment_company_state s
+                  JOIN batch_rows b ON b.batch_id = s.batch_id
+                 WHERE NULLIF(BTRIM(s.miss_reason), '') IS NOT NULL
+                 GROUP BY s.batch_id, NULLIF(BTRIM(s.miss_reason), '')
+             ) grouped
+             GROUP BY batch_id
+        ),
+        official_failure_reasons AS (
+            SELECT batch_id, jsonb_object_agg(reason, reason_count) AS payload
+              FROM (
+                SELECT batch_id, reason, count(*)::int AS reason_count
+                  FROM (
+                    SELECT
+                        s.batch_id,
+                        COALESCE(
+                            NULLIF(
+                                BTRIM(
+                                    s.stage_status #>> '{official_product_capture,miss_reason}'
+                                ),
+                                ''
+                            ),
+                            NULLIF(
+                                BTRIM(
+                                    s.stage_status #>> '{official_product_capture,last_error}'
+                                ),
+                                ''
+                            ),
+                            NULLIF(BTRIM(s.miss_reason), '')
+                        ) AS reason
+                      FROM company_enrichment_company_state s
+                      JOIN batch_rows b ON b.batch_id = s.batch_id
+                     WHERE s.stage_status ? 'official_product_capture'
+                  ) candidates
+                 WHERE reason IS NOT NULL
+                 GROUP BY batch_id, reason
+              ) grouped
+             GROUP BY batch_id
+        ),
+        rejected_candidate_reasons AS (
+            SELECT batch_id, jsonb_object_agg(reason, reason_count) AS payload
+              FROM (
+                SELECT
+                    s.batch_id,
+                    reason.key AS reason,
+                    sum((reason.value)::int)::int AS reason_count
+                  FROM company_enrichment_company_state s
+                  JOIN batch_rows b ON b.batch_id = s.batch_id
+                  CROSS JOIN LATERAL jsonb_each_text(
+                    COALESCE(
+                        s.stage_status #>
+                            '{source_product_extract,rejected_facts,rejected_candidate_reasons}',
+                        '{}'::jsonb
+                    )
+                  ) AS reason(key, value)
+                 GROUP BY s.batch_id, reason.key
+              ) grouped
+             GROUP BY batch_id
+        ),
+        source_counts AS (
+            SELECT batch_id, jsonb_object_agg(source_adapter, payload) AS payload
+              FROM (
+                SELECT
+                    a.batch_id,
+                    COALESCE(NULLIF(BTRIM(a.source_adapter), ''), 'unknown')
+                        AS source_adapter,
+                    jsonb_build_object(
+                        'query_count', count(*)::int,
+                        'result_count', COALESCE(sum(a.result_count), 0)::int,
+                        'accepted_count', COALESCE(sum(a.accepted_count), 0)::int,
+                        'rejected_count', COALESCE(sum(
+                            a.rejected_offsite
+                            + a.rejected_irrelevant_path
+                            + a.rejected_name_mismatch
+                        ), 0)::int
+                    ) AS payload
+                  FROM company_enrichment_search_audit a
+                  JOIN batch_rows b ON b.batch_id = a.batch_id
+                 GROUP BY
+                    a.batch_id,
+                    COALESCE(NULLIF(BTRIM(a.source_adapter), ''), 'unknown')
+              ) grouped
+             GROUP BY batch_id
+        ),
+        llm_rollup AS (
+            SELECT
+                s.batch_id,
+                COALESCE(sum(
+                    COALESCE(
+                        NULLIF(
+                            stage.value #>>
+                                '{llm_task_outcome,structured_output_failures}',
+                            ''
+                        )::int,
+                        0
+                    )
+                ), 0)::int AS llm_failure_count
+              FROM company_enrichment_company_state s
+              JOIN batch_rows b ON b.batch_id = s.batch_id
+              CROSS JOIN LATERAL jsonb_each(s.stage_status) AS stage(key, value)
+             GROUP BY s.batch_id
+        ),
+        company_diagnostics AS (
+            SELECT
+                b.batch_id,
+                COALESCE(
+                    jsonb_agg(
+                        jsonb_build_object(
+                            'company_id', s.company_id,
+                            'status', s.status,
+                            'current_stage', s.current_stage,
+                            'miss_reason', s.miss_reason,
+                            'last_error', s.last_error,
+                            'query_count', s.query_count,
+                            'source_result_count', s.source_result_count,
+                            'accepted_source_count', s.accepted_source_count,
+                            'rejected_source_count', s.rejected_source_count,
+                            'product_count', s.product_count,
+                            'scenario_count', s.scenario_count,
+                            'official_product_count', s.official_product_count,
+                            'funding_event_count', s.event_count,
+                            'vector_refreshed', s.milvus_refreshed_at IS NOT NULL,
+                            'stage_status', s.stage_status,
+                            'updated_at', s.updated_at
+                        )
+                        ORDER BY
+                            CASE s.status
+                                WHEN 'failed' THEN 0
+                                WHEN 'partial' THEN 1
+                                WHEN 'running' THEN 2
+                                ELSE 3
+                            END,
+                            s.updated_at DESC NULLS LAST,
+                            s.company_id ASC
+                    ) FILTER (WHERE s.company_id IS NOT NULL),
+                    '[]'::jsonb
+                ) AS payload,
+                (COALESCE(max(s.total_count), 0) > 50) AS truncated
+              FROM batch_rows b
+              LEFT JOIN LATERAL (
+                SELECT s.*, count(*) OVER ()::int AS total_count
+                  FROM company_enrichment_company_state s
+                 WHERE s.batch_id = b.batch_id
+                 ORDER BY
+                    CASE s.status
+                        WHEN 'failed' THEN 0
+                        WHEN 'partial' THEN 1
+                        WHEN 'running' THEN 2
+                        ELSE 3
+                    END,
+                    s.updated_at DESC NULLS LAST,
+                    s.company_id ASC
+                 LIMIT 50
+              ) s ON TRUE
+             GROUP BY b.batch_id
+        )
+        SELECT
+            b.batch_id, b.status, b.current_stage, b.companies_total,
+            b.companies_selected, b.companies_processed, b.companies_succeeded,
+            b.companies_failed,
+            COALESCE(sr.query_count, 0) AS query_count,
+            COALESCE(sr.source_result_count, 0) AS source_result_count,
+            COALESCE(sr.accepted_source_count, 0) AS accepted_source_count,
+            COALESCE(sr.rejected_source_count, 0) AS rejected_source_count,
+            COALESCE(sr.product_count, 0) AS product_count,
+            COALESCE(sr.scenario_count, 0) AS scenario_count,
+            COALESCE(sr.official_product_count, 0) AS official_product_count,
+            COALESCE(sr.funding_event_count, 0) AS funding_event_count,
+            COALESCE(sr.vector_refreshed_count, 0) AS vector_refreshed_count,
+            COALESCE(lr.llm_failure_count, 0) AS llm_failure_count,
+            COALESCE(sc.payload, '{}'::jsonb) AS status_counts,
+            COALESCE(csc.payload, '{}'::jsonb) AS current_stage_counts,
+            COALESCE(mr.payload, '{}'::jsonb) AS miss_reasons,
+            COALESCE(ofr.payload, '{}'::jsonb) AS official_failure_reasons,
+            COALESCE(rcr.payload, '{}'::jsonb) AS rejected_candidate_reasons,
+            COALESCE(src.payload, '{}'::jsonb) AS source_counts_by_adapter,
+            COALESCE(cd.payload, '[]'::jsonb) AS company_diagnostics,
+            COALESCE(cd.truncated, false) AS company_diagnostics_truncated,
+            b.last_error, b.created_at, b.started_at, b.finished_at, b.updated_at,
+            b.runner_pid, b.runner_log_path, b.runner_heartbeat_at,
+            b.runner_last_seen_at, b.last_completed_company_id,
+            COALESCE(b.miss_reason_buckets, '{}'::jsonb) AS miss_reason_buckets,
+            COALESCE(b.quality_report, '{}'::jsonb) AS quality_report
+          FROM batch_rows b
+          LEFT JOIN state_rollup sr ON sr.batch_id = b.batch_id
+          LEFT JOIN llm_rollup lr ON lr.batch_id = b.batch_id
+          LEFT JOIN status_counts sc ON sc.batch_id = b.batch_id
+          LEFT JOIN current_stage_counts csc ON csc.batch_id = b.batch_id
+          LEFT JOIN miss_reasons mr ON mr.batch_id = b.batch_id
+          LEFT JOIN official_failure_reasons ofr ON ofr.batch_id = b.batch_id
+          LEFT JOIN rejected_candidate_reasons rcr ON rcr.batch_id = b.batch_id
+          LEFT JOIN source_counts src ON src.batch_id = b.batch_id
+          LEFT JOIN company_diagnostics cd ON cd.batch_id = b.batch_id
+         LIMIT 1
+        """,
+        {"batch_id": batch_id},
+    ).fetchone()
+
+
+def _company_enrichment_batch_status(batch: Any) -> CompanyEnrichmentBatchStatus:
+    selected = int(_row_value(batch, "companies_selected", 4) or 0)
+    processed = int(_row_value(batch, "companies_processed", 5) or 0)
+    progress = round((processed / selected) * 100, 2) if selected else 0.0
+    miss_reasons = _int_map(_row_value(batch, "miss_reasons", 20))
+    official_failure_reasons = _int_map(
+        _row_value(batch, "official_failure_reasons", 21)
+    )
+    rejected_candidate_reasons = _int_map(
+        _row_value(batch, "rejected_candidate_reasons", 22)
+    )
+    miss_reason_buckets = _int_map(
+        _row_value_or(batch, "miss_reason_buckets", 36, {})
+    )
+    if not miss_reason_buckets:
+        miss_reason_buckets = build_miss_reason_buckets(
+            miss_reasons=miss_reasons,
+            official_failure_reasons=official_failure_reasons,
+            rejected_candidate_reasons=rejected_candidate_reasons,
+        )
+    quality_report = _json_object(_row_value_or(batch, "quality_report", 37, {}))
+    if not quality_report:
+        quality_report = _company_enrichment_quality_report(
+            batch=batch,
+            processed=processed,
+            selected=selected,
+            miss_reason_buckets=miss_reason_buckets,
+        )
+    runner_heartbeat_at = _row_value_or(batch, "runner_heartbeat_at", 33, None)
+    return CompanyEnrichmentBatchStatus(
+        batch_id=str(_row_value(batch, "batch_id", 0)),
+        status=str(_row_value(batch, "status", 1)),
+        current_stage=_row_value(batch, "current_stage", 2),
+        progress_percent=progress,
+        companies_total=int(_row_value(batch, "companies_total", 3) or 0),
+        companies_selected=selected,
+        companies_processed=processed,
+        companies_succeeded=int(_row_value(batch, "companies_succeeded", 6) or 0),
+        companies_failed=int(_row_value(batch, "companies_failed", 7) or 0),
+        query_count=int(_row_value(batch, "query_count", 8) or 0),
+        source_result_count=int(_row_value(batch, "source_result_count", 9) or 0),
+        accepted_source_count=int(_row_value(batch, "accepted_source_count", 10) or 0),
+        rejected_source_count=int(_row_value(batch, "rejected_source_count", 11) or 0),
+        product_count=int(_row_value(batch, "product_count", 12) or 0),
+        scenario_count=int(_row_value(batch, "scenario_count", 13) or 0),
+        official_product_count=int(_row_value(batch, "official_product_count", 14) or 0),
+        funding_event_count=int(_row_value(batch, "funding_event_count", 15) or 0),
+        vector_refreshed_count=int(_row_value(batch, "vector_refreshed_count", 16) or 0),
+        llm_failure_count=int(_row_value(batch, "llm_failure_count", 17) or 0),
+        status_counts=_int_map(_row_value(batch, "status_counts", 18)),
+        current_stage_counts=_int_map(_row_value(batch, "current_stage_counts", 19)),
+        miss_reasons=miss_reasons,
+        official_failure_reasons=official_failure_reasons,
+        rejected_candidate_reasons=rejected_candidate_reasons,
+        source_counts_by_adapter=_nested_int_map(
+            _row_value(batch, "source_counts_by_adapter", 23)
+        ),
+        runner_pid=_optional_int(_row_value_or(batch, "runner_pid", 31, None)),
+        runner_log_path=_row_value_or(batch, "runner_log_path", 32, None),
+        runner_heartbeat_at=runner_heartbeat_at,
+        runner_last_seen_at=_row_value_or(batch, "runner_last_seen_at", 34, None),
+        runner_is_stale=_is_runner_stale(
+            status=str(_row_value(batch, "status", 1)),
+            heartbeat_at=runner_heartbeat_at,
+        ),
+        last_completed_company_id=_row_value_or(
+            batch, "last_completed_company_id", 35, None
+        ),
+        miss_reason_buckets=miss_reason_buckets,
+        quality_report=quality_report,
+        company_diagnostics=[
+            CompanyEnrichmentCompanyDiagnostic.model_validate(diagnostic)
+            for diagnostic in _json_list(_row_value(batch, "company_diagnostics", 24))
+        ],
+        company_diagnostics_truncated=bool(
+            _row_value(batch, "company_diagnostics_truncated", 25)
+        ),
+        last_error=_row_value(batch, "last_error", 26),
+        created_at=_row_value(batch, "created_at", 27),
+        started_at=_row_value(batch, "started_at", 28),
+        finished_at=_row_value(batch, "finished_at", 29),
+        updated_at=_row_value(batch, "updated_at", 30),
+    )
+
+
 def _pipeline_run_item(row: Any) -> PipelineRunItem:
     return PipelineRunItem(
         run_id=str(_row_value(row, "run_id", 0)),
@@ -475,12 +1379,93 @@ def _row_value(row: Any, key: str, index: int) -> Any:
     return row[key] if isinstance(row, dict) else row[index]
 
 
+def _row_value_or(row: Any, key: str, index: int, default: Any) -> Any:
+    if isinstance(row, dict):
+        return row.get(key, default)
+    try:
+        return row[index]
+    except IndexError:
+        return default
+
+
+def _company_enrichment_quality_report(
+    *,
+    batch: Any,
+    processed: int,
+    selected: int,
+    miss_reason_buckets: dict[str, int],
+) -> dict[str, Any]:
+    diagnostics = _json_list(_row_value(batch, "company_diagnostics", 24))
+    failed_samples = [
+        {
+            "company_id": str(item.get("company_id") or ""),
+            "status": str(item.get("status") or ""),
+            "reason": item.get("miss_reason") or item.get("last_error"),
+        }
+        for item in diagnostics
+        if isinstance(item, dict)
+        and str(item.get("status") or "") in {"failed", "partial"}
+    ][:5]
+    return {
+        "headline": f"{processed}/{selected} companies processed",
+        "companies_selected": selected,
+        "companies_processed": processed,
+        "companies_succeeded": int(_row_value(batch, "companies_succeeded", 6) or 0),
+        "companies_failed": int(_row_value(batch, "companies_failed", 7) or 0),
+        "product_count": int(_row_value(batch, "product_count", 12) or 0),
+        "scenario_count": int(_row_value(batch, "scenario_count", 13) or 0),
+        "funding_event_count": int(_row_value(batch, "funding_event_count", 15) or 0),
+        "accepted_source_count": int(_row_value(batch, "accepted_source_count", 10) or 0),
+        "rejected_source_count": int(_row_value(batch, "rejected_source_count", 11) or 0),
+        "miss_reason_buckets": dict(miss_reason_buckets),
+        "failed_company_samples": failed_samples,
+    }
+
+
+def _is_runner_stale(*, status: str, heartbeat_at: datetime | None) -> bool:
+    if status != "running" or heartbeat_at is None:
+        return False
+    if heartbeat_at.tzinfo is None:
+        normalized = heartbeat_at.replace(tzinfo=timezone.utc)
+    else:
+        normalized = heartbeat_at.astimezone(timezone.utc)
+    age_seconds = (datetime.now(timezone.utc) - normalized).total_seconds()
+    return age_seconds > 7200
+
+
 def _json_object(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
 def _optional_json_object(value: Any) -> dict[str, Any] | None:
     return value if isinstance(value, dict) else None
+
+
+def _json_list(value: Any) -> list[Any]:
+    return value if isinstance(value, list) else []
+
+
+def _int_map(value: Any) -> dict[str, int]:
+    if not isinstance(value, dict):
+        return {}
+    result: dict[str, int] = {}
+    for key, raw in value.items():
+        try:
+            result[str(key)] = int(raw or 0)
+        except (TypeError, ValueError):
+            continue
+    return result
+
+
+def _nested_int_map(value: Any) -> dict[str, dict[str, int]]:
+    if not isinstance(value, dict):
+        return {}
+    result: dict[str, dict[str, int]] = {}
+    for key, raw in value.items():
+        if not isinstance(raw, dict):
+            continue
+        result[str(key)] = _int_map(raw)
+    return result
 
 
 def _optional_int(value: Any) -> int | None:
@@ -718,6 +1703,155 @@ def _run_retrieval_validation_command(
     }
 
 
+async def _run_company_enrichment_batch_task(
+    *,
+    task_id: UUID,
+    batch_id: UUID,
+    parent_run_id: UUID | str | None,
+    limit: int | None,
+    chunk_size: int,
+    stage_preset: CompanyEnrichmentStagePreset,
+    include_failed: bool,
+    skip_milvus: bool,
+) -> None:
+    try:
+        summary = await asyncio.to_thread(
+            _run_company_enrichment_batch_command,
+            batch_id=batch_id,
+            limit=limit,
+            chunk_size=chunk_size,
+            stage_preset=stage_preset,
+            include_failed=include_failed,
+            skip_milvus=skip_milvus,
+        )
+    except Exception as exc:
+        logger.exception("Company enrichment batch task failed before command execution")
+        _close_company_enrichment_batch_run(
+            task_id,
+            parent_run_id=parent_run_id,
+            status="failed",
+            items_processed=0,
+            items_failed=1,
+            result_summary={
+                "domain": "company",
+                "action": "company_enrichment_batch",
+                "batch_id": str(batch_id),
+                "company_enrichment_status": "failed",
+                "error": str(exc),
+            },
+            error_summary={"message": str(exc)},
+        )
+        return
+
+    report = summary.get("report") if isinstance(summary.get("report"), dict) else {}
+    returncode = int(summary.get("returncode") or 0)
+    report_status = str(report.get("status") or "")
+    status = "succeeded" if returncode == 0 and report_status == "succeeded" else "partial"
+    if returncode != 0:
+        status = "failed"
+    processed = _optional_int(report.get("companies_processed")) or _optional_int(
+        report.get("companies_selected")
+    ) or 0
+    failed = 0 if status == "succeeded" else 1
+    _close_company_enrichment_batch_run(
+        task_id,
+        parent_run_id=parent_run_id,
+        status=status,
+        items_processed=processed,
+        items_failed=failed,
+        result_summary={
+            **summary,
+            "domain": "company",
+            "action": "company_enrichment_batch",
+            "batch_id": str(batch_id),
+            "company_enrichment_status": status,
+        },
+        error_summary=None
+        if status == "succeeded"
+        else {"message": str(summary.get("stderr") or "Company enrichment failed")},
+    )
+
+
+def _run_company_enrichment_batch_command(
+    *,
+    batch_id: UUID,
+    limit: int | None,
+    chunk_size: int,
+    stage_preset: CompanyEnrichmentStagePreset,
+    include_failed: bool,
+    skip_milvus: bool,
+) -> dict[str, Any]:
+    agent_dir = _repo_root() / "apps" / "miroflow-agent"
+    env = os.environ.copy()
+    if not env.get("DATABASE_URL") and env.get("DATABASE_URL_TEST"):
+        env["DATABASE_URL"] = env["DATABASE_URL_TEST"]
+    timeout = int(env.get("ADMIN_COMPANY_ENRICHMENT_TIMEOUT_SECONDS", "7200"))
+    command = [
+        "uv",
+        "run",
+        "python",
+        "scripts/run_company_upload_enrichment_batch.py",
+        "--batch-id",
+        str(batch_id),
+        "--chunk-size",
+        str(chunk_size),
+        *_company_enrichment_stage_args(stage_preset),
+    ]
+    if limit is not None:
+        command.extend(["--limit", str(limit)])
+    if include_failed:
+        command.append("--include-failed")
+    if skip_milvus:
+        command.append("--skip-milvus")
+    try:
+        result = subprocess.run(
+            command,
+            cwd=agent_dir,
+            env=env,
+            text=True,
+            capture_output=True,
+            timeout=timeout,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        stdout = exc.stdout if isinstance(exc.stdout, str) else ""
+        stderr = exc.stderr if isinstance(exc.stderr, str) else ""
+        return {
+            "command": " ".join(command),
+            "returncode": 124,
+            "report": _parse_json_line(stdout),
+            "stdout": stdout[-8000:],
+            "stderr": stderr[-4000:],
+        }
+    return {
+        "command": " ".join(command),
+        "returncode": result.returncode,
+        "report": _parse_json_line(result.stdout),
+        "stdout": result.stdout[-8000:],
+        "stderr": result.stderr[-4000:],
+    }
+
+
+def _company_enrichment_stage_args(
+    stage_preset: CompanyEnrichmentStagePreset,
+) -> list[str]:
+    if stage_preset == "trusted_xlsx":
+        return ["--skip-live-web"]
+    if stage_preset == "high_trust_sources":
+        return ["--skip-generic-serper"]
+    return []
+
+
+def _parse_json_line(stdout: str) -> dict[str, Any]:
+    for line in reversed((stdout or "").strip().splitlines()):
+        try:
+            payload = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        return payload if isinstance(payload, dict) else {}
+    return {}
+
+
 def _parse_retrieval_validation_log(log_text: str) -> dict[str, Any]:
     gates: list[dict[str, Any]] = []
     current_gate: dict[str, Any] | None = None
@@ -856,6 +1990,68 @@ def _close_retrieval_validation_run(
             )
     except Exception:
         logger.exception("Failed to close retrieval validation pipeline run %s", task_id)
+
+
+def _close_company_enrichment_batch_run(
+    task_id: UUID,
+    *,
+    parent_run_id: UUID | str | None,
+    status: str,
+    items_processed: int,
+    items_failed: int,
+    result_summary: dict[str, Any],
+    error_summary: dict[str, Any] | None = None,
+) -> None:
+    try:
+        from psycopg.types.json import Jsonb
+        from src.data_agents.storage.postgres.connection import connect
+
+        with connect(_resolve_admin_dsn()) as conn:
+            conn.execute(
+                """
+                UPDATE pipeline_run
+                   SET run_scope = COALESCE(run_scope, '{}'::jsonb) || %s::jsonb
+                 WHERE run_id = %s
+                """,
+                (Jsonb({"result_summary": result_summary}), task_id),
+            )
+            if parent_run_id:
+                conn.execute(
+                    """
+                    UPDATE pipeline_run
+                       SET run_scope = COALESCE(run_scope, '{}'::jsonb)
+                           || jsonb_build_object(
+                                'result_summary',
+                                COALESCE(run_scope->'result_summary', '{}'::jsonb)
+                                || jsonb_build_object(
+                                     'company_enrichment_batch_report',
+                                     %s::jsonb
+                                   )
+                              )
+                     WHERE run_id = %s
+                    """,
+                    (
+                        Jsonb(
+                            {
+                                "run_id": str(task_id),
+                                "status": status,
+                                "batch_id": result_summary.get("batch_id"),
+                                "report": result_summary.get("report") or {},
+                            }
+                        ),
+                        parent_run_id,
+                    ),
+                )
+            close_pipeline_run(
+                conn,
+                task_id,
+                status=status,
+                items_processed=items_processed,
+                items_failed=items_failed,
+                error_summary=error_summary,
+            )
+    except Exception:
+        logger.exception("Failed to close company enrichment pipeline run %s", task_id)
 
 
 def _resolve_admin_dsn() -> str:

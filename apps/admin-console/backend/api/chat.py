@@ -58,7 +58,10 @@ from backend.services.chat_context import (
     result_ids_by_domain,
 )
 from backend.storage.chat_session import SessionStore
-from src.data_agents.professor.llm_profiles import resolve_professor_llm_settings
+from src.data_agents.professor.llm_profiles import (
+    build_non_thinking_extra_body,
+    resolve_professor_llm_settings,
+)
 from src.data_agents.service.retrieval import Evidence
 
 router = APIRouter(prefix="/api")
@@ -75,9 +78,12 @@ _CHAT_SYNTHESIS_SYSTEM_PROMPT = (
     "(3) 回答用中文，简洁自然，不要列 bullet。"
     '(4) 如果证据不足，直说"证据不足以回答"。'
 )
-_CHAT_SYNTHESIS_EXTRA_BODY = {
-    "chat_template_kwargs": {"enable_thinking": False}
-}
+
+
+def _chat_synthesis_extra_body(model_name: str | None) -> dict[str, Any]:
+    return build_non_thinking_extra_body(model_name)
+
+
 _SCHOLARLY_DOMAINS = frozenset(
     {
         "arxiv.org",
@@ -98,8 +104,27 @@ _SCHOLARLY_DOMAINS = frozenset(
 )
 
 
+def _configured_admin_frontend_base_url() -> str:
+    return (
+        os.environ.get("ADMIN_CONSOLE_PUBLIC_BASE_URL")
+        or os.environ.get("ADMIN_FRONTEND_BASE_URL")
+        or os.environ.get("FRONTEND_PUBLIC_BASE_URL")
+        or ""
+    ).rstrip("/")
+
+
+def _local_record_detail_url(domain: str, record_id: str) -> str:
+    path = f"/{domain}/{record_id}"
+    base_url = _configured_admin_frontend_base_url()
+    return f"{base_url}{path}" if base_url else path
+
+
+def _local_paper_detail_url(paper_id: str) -> str:
+    return _local_record_detail_url("paper", paper_id)
+
+
 # --- Round 11 v3: LLM query classifier ---
-# gemma4 categorizes the user query into one of A/B/C/D/E/F/G.
+# The configured LLM categorizes the user query into one of A/B/C/D/E/F/G.
 # UNKNOWN lets the rule engine try, then fall through.
 
 QueryType = Literal["A", "B", "C", "D", "E", "F", "G", "UNKNOWN"]
@@ -272,16 +297,20 @@ def _strip_topic_switch_prefix(query: str) -> str:
     return _TOPIC_SWITCH_PREFIX_RE.sub("", query.strip(), count=1)
 
 
+def _normalize_query_for_rules(query: str) -> str:
+    return re.sub(r"[\s?？。！!]+$", "", query.strip())
+
+
 def _clean_classifier_topic(query: str) -> str:
     topic = _strip_topic_switch_prefix(query)
-    topic = re.sub(r"^(查一下|我想找|找几篇|有没有|有哪些|哪些|深圳有哪些|深圳哪些|中国成熟的)", "", topic)
+    topic = re.sub(r"^(查找|查询|查一下|我想找|找几篇|有没有|有哪些|哪些|深圳有哪些|深圳哪些|中国成熟的)", "", topic)
     topic = re.sub(r"(有哪些|有谁|有什么|推荐|供应商|厂商|企业|公司|教授|专家|学者|团队|论文|专利|方向|领域|代表论文)$", "", topic)
     topic = re.sub(r"^(公司|企业|厂商|供应商|高校教授|教授|专家|学者|团队)\s*", "", topic)
     topic = re.sub(r"^(做|研究|关于|和)\s*", "", topic)
     topic = re.sub(r"(的深圳|深圳高校|深圳|中国|近两年|方向上|方向的)", "", topic)
     topic = re.sub(r"(有哪些|有谁|有什么|推荐|供应商|厂商|企业|公司|教授|专家|学者|团队|论文|专利|方向|领域|代表论文)$", "", topic)
     topic = topic.strip(" ，、的")
-    return topic[:20] or query.strip()[:20]
+    return topic[:80] or query.strip()[:80]
 
 
 def _infer_classifier_target_domain(query: str, *, default: str = "professor") -> str:
@@ -298,13 +327,34 @@ def _infer_classifier_target_domain(query: str, *, default: str = "professor") -
 
 
 def _extract_professor_name(query: str) -> str:
-    if re.search(r"(哪些|有哪些|有没有|有谁).*(教授|研究员)", query) or re.search(
-        r"(教授|研究员)有哪些$", query
+    q = _normalize_query_for_rules(query)
+    q_without_intro = re.sub(
+        r"^(?:介绍(?:一下)?|查询|查一下|了解(?:一下)?)\s*",
+        "",
+        q,
+    )
+    if re.search(r"(哪些|有哪些|有没有|有谁).*(教授|研究员)", q) or re.search(
+        r"(教授|研究员)有哪些$", q
     ):
         return ""
-    match = re.search(r"(?P<name>[\u4e00-\u9fff]{2,4})\s*(教授|研究员)", query)
+    match = re.search(
+        r"^(?:教授|研究员)?\s*(?P<name>[\u4e00-\u9fff]{2,4}?)(?:\s*(?:教授|研究员))?$",
+        q_without_intro,
+    )
+    if match:
+        return match.group("name")
+    match = re.search(r"(?P<name>[\u4e00-\u9fff]{2,4}?)\s*(教授|研究员)", q_without_intro)
     if match and not re.search(r"(哪些|有哪些|做|研究|高校|深圳|的)$", match.group("name")):
         return match.group("name")
+    if re.search(r"(研究方向|研究领域|论文情况|论文)", q) and re.search(
+        r"(大学|学院|研究院|高校)",
+        q,
+    ):
+        match = re.match(r"(?P<name>[\u4e00-\u9fff]{2,4})[\s，,：:]+", q)
+        if match:
+            candidate = match.group("name")
+            if not re.search(r"(大学|学院|研究院|高校)", candidate):
+                return candidate
     return ""
 
 
@@ -317,7 +367,7 @@ def _extract_a_name(query: str, target_domain: str) -> str:
         return title[:80]
     if target_domain == "paper":
         if match := re.search(r"《(?P<title>[^》]+)》", query):
-            return match.group("title").strip()[:100]
+            return match.group("title").strip()[:240]
         title = re.sub(
             r"^\s*(?:请|帮我|麻烦)?\s*(?:介绍|查找|查一下|查询|找|看看|看一下)?\s*"
             r"(?:论文|paper)?\s*",
@@ -325,15 +375,20 @@ def _extract_a_name(query: str, target_domain: str) -> str:
             query,
             flags=re.IGNORECASE,
         )
+        title = title.strip(" ：，。?？\"'“”‘’《》")
         title = re.sub(
-            r"(?:的)?(?:作者是谁|摘要和作者|作者和摘要|研究内容|主要内容|摘要|作者|讲了什么|讲的是什么|"
-            r"深圳作者有哪些|最近发了什么论文|有哪些论文|论文列表|论文|paper)$",
+            r"(?:这篇|这本|该)?(?:论文|文章|paper)?(?:的)?(?:作者是谁|摘要是什么|摘要和作者|作者和摘要|"
+            r"研究内容|主要内容|摘要|作者|主要讲什么|讲了什么|讲的是什么|"
+            r"讲什么|主要解决什么问题|主要解决了什么问题|解决什么问题|解决了什么问题|"
+            r"主要解决什么|贡献是什么|核心贡献是什么|方法是什么|主要方法是什么|"
+            r"是什么|是啥|主要是什么|介绍一下|深圳作者有哪些|最近发了什么论文|有哪些论文|"
+            r"论文列表|论文|paper)$",
             "",
             title,
             flags=re.IGNORECASE,
         )
         title = title.strip(" ：，。?？\"'“”‘’《》")
-        return title[:100]
+        return title[:240]
     if target_domain == "professor":
         return _extract_professor_name(query)
     company = query.strip()
@@ -347,7 +402,7 @@ def _extract_a_name(query: str, target_domain: str) -> str:
 
 
 def _classify_query_by_rules(query: str) -> dict[str, str] | None:
-    q = _strip_topic_switch_prefix(query)
+    q = _normalize_query_for_rules(_strip_topic_switch_prefix(query))
     if not q:
         return None
     if _CLASSIFIER_OUT_OF_SCOPE_RE.search(q):
@@ -407,9 +462,16 @@ def _classify_query_by_rules(query: str) -> dict[str, str] | None:
             target_domain="patent",
             reason="ambiguous patent title deterministic rule",
         )
+    if re.search(r"(方向|领域|主题|相关)\s*的?\s*(论文|文章|paper)s?$", q, re.IGNORECASE):
+        return _classifier_response(
+            "B",
+            topic=_clean_classifier_topic(q),
+            target_domain="paper",
+            reason="paper topic deterministic rule",
+        )
     if q.startswith("论文 ") or q.startswith("介绍论文 ") or (
-        "论文" in q and re.search(r"[A-Za-z][A-Za-z0-9: -]{8,}", q)
-    ) or re.search(r"[A-Za-z][A-Za-z0-9: -]{12,}\s*的(研究内容|作者)", q):
+        "论文" in q and re.search(r"[A-Za-z][^\u4e00-\u9fff]{8,}", q)
+    ) or re.search(r"[A-Za-z][^\u4e00-\u9fff]{12,}\s*的(研究内容|作者|摘要)", q):
         return _classifier_response(
             "A",
             name=_extract_a_name(q, "paper"),
@@ -435,26 +497,6 @@ def _classify_query_by_rules(query: str) -> dict[str, str] | None:
             target_domain="company",
             reason="exact company deterministic rule",
         )
-    professor_name = _extract_professor_name(q)
-    if professor_name:
-        return _classifier_response(
-            "A",
-            name=professor_name,
-            target_domain="professor",
-            reason="exact professor deterministic rule",
-        )
-    if any(hint in q for hint in _SZ_INSTITUTION_HINTS) and re.search(
-        r"[\u4e00-\u9fff]{2,4}(教授|研究员)", q
-    ):
-        professor_name = _extract_professor_name(q)
-        if professor_name:
-            return _classifier_response(
-                "A",
-                name=professor_name,
-                target_domain="professor",
-                reason="institution-qualified professor deterministic rule",
-            )
-
     if re.search(r"^(介绍)?\s*[\u4e00-\u9fffA-Za-z0-9]{2,12}\s*(是谁|的相关信息)$", q):
         name = re.sub(r"^(介绍)\s*", "", q)
         name = re.sub(r"(是谁|的相关信息)$", "", name).strip()
@@ -474,6 +516,25 @@ def _classify_query_by_rules(query: str) -> dict[str, str] | None:
             target_domain=target_domain,
             reason="ambiguous person intro deterministic rule",
         )
+    professor_name = _extract_professor_name(q)
+    if professor_name:
+        return _classifier_response(
+            "A",
+            name=professor_name,
+            target_domain="professor",
+            reason="exact professor deterministic rule",
+        )
+    if any(hint in q for hint in _SZ_INSTITUTION_HINTS) and re.search(
+        r"[\u4e00-\u9fff]{2,4}(教授|研究员)", q
+    ):
+        professor_name = _extract_professor_name(q)
+        if professor_name:
+            return _classifier_response(
+                "A",
+                name=professor_name,
+                target_domain="professor",
+                reason="institution-qualified professor deterministic rule",
+            )
 
     if re.search(r"(哪些|有哪些|有没有|查一下|找|推荐|供应商|厂商|专家|代表论文)", q) or re.search(
         r"(深圳)?做.+的?(企业|公司|厂商|论文)", q
@@ -502,7 +563,7 @@ def _classify_query_with_llm(query: str) -> dict[str, str] | None:
         return rule_response
     if os.environ.get("CHAT_QUERY_CLASSIFIER", "on").lower() == "off":
         return None
-    settings = resolve_professor_llm_settings("gemma4", include_profile=True)
+    settings = resolve_professor_llm_settings(None, include_profile=True)
     _clear_proxy_env()
     client = OpenAI(
         base_url=settings["local_llm_base_url"],
@@ -518,7 +579,7 @@ def _classify_query_with_llm(query: str) -> dict[str, str] | None:
             ],
             temperature=0.0,
             max_tokens=160,
-            extra_body=_CHAT_SYNTHESIS_EXTRA_BODY,
+            extra_body=_chat_synthesis_extra_body(settings["local_llm_model"]),
         )
         text = resp.choices[0].message.content or ""
         text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip(), flags=re.MULTILINE)
@@ -703,6 +764,11 @@ def _evidence_list_from_retrieval(results: list[Evidence]) -> list[dict]:
                     "business": metadata.get("business")
                     or metadata.get("description")
                     or metadata.get("profile_summary"),
+                    "description": metadata.get("description"),
+                    "profile_summary": metadata.get("profile_summary"),
+                    "technology_route_summary": metadata.get(
+                        "technology_route_summary"
+                    ),
                 }
             )
             continue
@@ -757,36 +823,189 @@ def _e_route_filter_scholarly_organics(organics: list[dict]) -> list[dict]:
 
 
 def _lookup_companies_by_topic(conn: Any, *, topic: str) -> list[dict]:
-    like = f"%{topic}%"
+    term_groups = _company_topic_term_groups(topic)
+    funding_query = _is_company_funding_query(topic)
+    predicates: list[str] = []
+    params: list[str] = []
+    for group in term_groups:
+        group_predicates = []
+        for term in group:
+            group_predicates.append("search.search_text ILIKE %s")
+            params.append(f"%{term}%")
+        if group_predicates:
+            predicates.append("(" + " OR ".join(group_predicates) + ")")
+    if not predicates:
+        predicates.append("search.search_text ILIKE %s")
+        params.append(f"%{topic}%")
+    funding_predicate = (
+        "AND (latest.latest_funding_time IS NOT NULL OR events.funding_event_count > 0)"
+        if funding_query
+        else ""
+    )
+    order_clause = (
+        "latest.latest_funding_time DESC NULLS LAST, "
+        "events.latest_event_date DESC NULLS LAST, "
+        "c.canonical_name"
+        if funding_query
+        else "c.canonical_name"
+    )
     return conn.execute(
-        """
+        f"""
         SELECT c.company_id, c.canonical_name,
                latest.industry, latest.business,
+               latest.latest_funding_round,
+               latest.latest_funding_time,
+               latest.latest_funding_amount_raw,
+               COALESCE(products.product_snippet, scenarios.scenario_snippet, events.event_snippet) AS snippet,
                count(*) OVER ()::int AS total_count
           FROM company c
           JOIN LATERAL (
-            SELECT cs.industry, cs.business, cs.description
+            SELECT cs.industry, cs.business, cs.description,
+                   cs.latest_funding_round,
+                   cs.latest_funding_time,
+                   cs.latest_funding_amount_raw
               FROM company_snapshot cs
              WHERE cs.company_id = c.company_id
              ORDER BY cs.snapshot_created_at DESC NULLS LAST
              LIMIT 1
           ) latest ON true
+          LEFT JOIN LATERAL (
+            SELECT string_agg(
+                       concat_ws(
+                           ' ',
+                           cp.canonical_name,
+                           cp.short_description,
+                           cp.product_category,
+                           cp.target_customers,
+                           cp.application_scenarios,
+                           cp.technical_tags
+                       ),
+                       ' '
+                   ) AS product_text,
+                   (array_agg(
+                       concat_ws('：', cp.canonical_name, cp.short_description)
+                       ORDER BY cp.confidence DESC NULLS LAST,
+                                cp.last_refreshed_at DESC NULLS LAST
+                   ))[1] AS product_snippet
+              FROM company_product cp
+             WHERE cp.company_id = c.company_id
+               AND cp.quality_status = 'ready'
+          ) products ON true
+          LEFT JOIN LATERAL (
+            SELECT string_agg(
+                       concat_ws(
+                           ' ',
+                           cas.scenario_name,
+                           cas.scenario_category,
+                           cas.description,
+                           cas.target_customer
+                       ),
+                       ' '
+                   ) AS scenario_text,
+                   (array_agg(
+                       concat_ws('：', cas.scenario_name, cas.description)
+                       ORDER BY cas.confidence DESC NULLS LAST,
+                                cas.last_refreshed_at DESC NULLS LAST
+                   ))[1] AS scenario_snippet
+              FROM company_application_scenario cas
+             WHERE cas.company_id = c.company_id
+               AND cas.quality_status = 'ready'
+          ) scenarios ON true
+          LEFT JOIN LATERAL (
+            SELECT string_agg(
+                       concat_ws(' ', cse.event_date::text, cse.event_type, cse.event_summary),
+                       ' '
+                   ) AS event_text,
+                   max(cse.event_date) AS latest_event_date,
+                   count(*) FILTER (WHERE cse.event_type = 'funding') AS funding_event_count,
+                   (array_agg(
+                       concat_ws(' ', cse.event_date::text, cse.event_type, cse.event_summary)
+                       ORDER BY cse.event_date DESC NULLS LAST,
+                                cse.created_at DESC NULLS LAST
+                   ))[1] AS event_snippet
+              FROM company_signal_event cse
+             WHERE cse.company_id = c.company_id
+               AND cse.status = 'active'
+          ) events ON true
+          CROSS JOIN LATERAL (
+            SELECT concat_ws(
+                ' ',
+                latest.industry,
+                latest.business,
+                latest.description,
+                c.profile_summary,
+                c.technology_route_summary,
+                products.product_text,
+                scenarios.scenario_text,
+                events.event_text
+            ) AS search_text
+          ) search
          WHERE c.is_shenzhen = true
+           AND c.identity_status != 'inactive'
+           {funding_predicate}
            AND (
-             latest.industry ILIKE %s
-             OR latest.business ILIKE %s
-             OR latest.description ILIKE %s
+             {" AND ".join(predicates)}
            )
-         ORDER BY c.canonical_name
+         ORDER BY {order_clause}
          LIMIT 15
         """,
-        (like, like, like),
+        tuple(params),
     ).fetchall()
 
 
-def _answer_cross_domain(topic: str, profs: list[dict], companies: list[dict]) -> str:
+def _company_lookup_topic(topic: str, raw_query: str) -> str:
+    raw_query = raw_query.strip()
+    topic = topic.strip()
+    if raw_query and raw_query not in topic:
+        return f"{topic} {raw_query}".strip()
+    return topic or raw_query
+
+
+def _is_company_funding_query(topic: str) -> bool:
+    return bool(re.search(r"(融资|募资|投资|最新轮次|最近.*轮|[ABCD]\+?轮)", topic, re.IGNORECASE))
+
+
+def _company_topic_term_groups(topic: str) -> list[list[str]]:
+    normalized = topic.strip()
+    groups: list[list[str]] = []
+    if re.search(r"(医疗|医药|健康|临床|心电)", normalized):
+        groups.append(["医疗", "医药", "健康", "临床", "心电"])
+    if re.search(r"\bAI\b|人工智能|智能", normalized, re.IGNORECASE):
+        groups.append(["AI", "人工智能", "智能"])
+
+    for token in re.split(r"[\s,，、]+", normalized):
+        cleaned = token.strip(" ：，。；;")
+        cleaned = re.sub(r"(最近|融资|募资|投资|深圳|哪些|有哪些|有谁|有什么|公司|企业|厂商|供应商|团队|做|找|的)", "", cleaned)
+        if not cleaned or len(cleaned) < 2:
+            continue
+        if cleaned.upper() == "AI":
+            group = ["AI", "人工智能", "智能"]
+        else:
+            group = [cleaned]
+        if group not in groups:
+            groups.append(group)
+
+    deduped: list[list[str]] = []
+    seen: set[tuple[str, ...]] = set()
+    for group in groups:
+        key = tuple(group)
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(group)
+    return deduped[:4]
+
+
+def _answer_cross_domain(
+    topic: str,
+    profs: list[dict],
+    companies: list[dict],
+    papers: list[dict] | None = None,
+) -> str:
     """D — 3-section cross-domain summary."""
+    papers = papers or []
     p_total = profs[0].get("total_count", len(profs)) if profs else 0
+    paper_total = papers[0].get("total_count", len(papers)) if papers else 0
     c_total = companies[0].get("total_count", len(companies)) if companies else 0
     lines = [f"深圳 {topic} 生态全景："]
     lines.append("")
@@ -796,6 +1015,21 @@ def _answer_cross_domain(topic: str, profs: list[dict], companies: list[dict]) -
             lines.append(f"  • {r['canonical_name']} — {r['institution']}")
         if p_total > 5:
             lines.append(f"  ... 还有 {p_total - 5} 位")
+    else:
+        lines.append("  （本地库未命中）")
+    lines.append("")
+    lines.append(f"▎ 论文（{paper_total} 篇）：")
+    if papers:
+        for r in papers[:5]:
+            title = r.get("title") or r.get("title_clean") or r.get("paper_id") or ""
+            bits = [str(title)]
+            if r.get("year"):
+                bits.append(str(r["year"]))
+            if r.get("venue"):
+                bits.append(str(r["venue"]))
+            lines.append(f"  • {' — '.join(bit for bit in bits if bit)}")
+        if paper_total > 5:
+            lines.append(f"  ... 还有 {paper_total - 5} 篇")
     else:
         lines.append("  （本地库未命中）")
     lines.append("")
@@ -824,7 +1058,7 @@ _KNOWLEDGE_QA_SYSTEM = (
 
 def _answer_knowledge_qa_fallback(query: str) -> tuple[str, str | None]:
     try:
-        settings = resolve_professor_llm_settings("gemma4", include_profile=True)
+        settings = resolve_professor_llm_settings(None, include_profile=True)
         client = OpenAI(
             base_url=settings["local_llm_base_url"],
             api_key=settings["local_llm_api_key"] or "EMPTY",
@@ -838,7 +1072,7 @@ def _answer_knowledge_qa_fallback(query: str) -> tuple[str, str | None]:
             ],
             temperature=0.3,
             max_tokens=400,
-            extra_body=_CHAT_SYNTHESIS_EXTRA_BODY,
+            extra_body=_chat_synthesis_extra_body(settings["local_llm_model"]),
         )
         answer = (resp.choices[0].message.content or "").strip()
         if not answer:
@@ -1042,7 +1276,8 @@ _INSTITUTION_KEYS_BY_LEN = sorted(
 
 
 _Q_PROFILE_RE = re.compile(
-    r"介绍\s*(?:(?P<inst>[\u4e00-\u9fff]{2,15}?)\s*的\s*)?(?P<name>[\u4e00-\u9fff]{2,5})$"
+    r"(?:介绍(?:一下)?|查询|查一下|了解(?:一下)?)\s*(?:教授|研究员)?\s*(?:(?P<inst>[\u4e00-\u9fff]{2,15}?)\s*的\s*)?"
+    r"(?P<name>[\u4e00-\u9fff]{2,5}?)(?:\s*(?:教授|研究员))?$"
 )
 _Q_TOPIC_LIST_RE = re.compile(
     r"(?P<inst>[\u4e00-\u9fff]{2,15}?)\s*做\s*(?P<topic>.{2,30}?)\s*的?\s*(教授|老师|学者)"
@@ -1059,6 +1294,16 @@ _Q_PROF_PAPERS_RE = re.compile(
 )
 _Q_PROF_TOPICS_RE = re.compile(
     r"^(?P<name>[\u4e00-\u9fff A-Za-z.-]{2,20}?)\s*的\s*(研究方向|研究领域|研究)\s*(是什么|有哪些)?\s*$"
+)
+_Q_PROF_PROFILE_DETAIL_RE = re.compile(
+    r"^(?:介绍(?:一下)?|查询|查一下|了解(?:一下)?)?\s*"
+    r"(?P<subject>[\u4e00-\u9fff A-Za-z.()（）-]{2,40}?)\s*的\s*"
+    r"(?:研究方向|研究领域|论文情况|论文|相关信息)\s*(?:是什么|有哪些)?\s*$"
+)
+_Q_PAPER_RELATED_PROFESSORS_RE = re.compile(
+    r"^(?P<paper_id>PAPER-[A-Z0-9]+)\s*(?:这篇论文|论文)?\s*的\s*"
+    r"(?:关联|相关)?\s*(?:教授|老师|学者)\s*(?:是谁|有哪些)?\s*$",
+    re.IGNORECASE,
 )
 
 
@@ -1308,6 +1553,41 @@ def _resolve_institution(fragment: str) -> tuple[str, ...] | None:
     return None
 
 
+def _parse_professor_papers_subject(
+    fragment: str,
+) -> tuple[str, tuple[str, ...] | None]:
+    subject = _normalize_query_for_rules(fragment)
+    subject = re.sub(
+        r"^(?:介绍(?:一下)?|查询|查一下|了解(?:一下)?)\s*",
+        "",
+        subject,
+    )
+    institutions = _resolve_institution(subject)
+    subject = re.sub(r"\s*(?:教授|研究员|老师|学者)\s*$", "", subject).strip()
+    if institutions is not None:
+        subject = _strip_resolved_institution_from_subject(subject, institutions)
+    subject = subject.strip(" 的：:，,、")
+    if match := re.search(r"(?P<name>[\u4e00-\u9fff]{2,5})$", subject):
+        return match.group("name"), institutions
+    return subject, institutions
+
+
+def _strip_resolved_institution_from_subject(
+    subject: str,
+    institutions: tuple[str, ...],
+) -> str:
+    candidates = sorted(
+        {*_INSTITUTION_KEYS_BY_LEN, *institutions},
+        key=len,
+        reverse=True,
+    )
+    for candidate in candidates:
+        if candidate and candidate in subject:
+            subject = subject.replace(candidate, "", 1)
+            break
+    return subject.strip()
+
+
 def _should_handle_professor_profile_rule(
     *, inst_fragment: str, name: str, institutions: tuple[str, ...] | None
 ) -> bool:
@@ -1461,7 +1741,7 @@ def _lookup_professors_by_topic(
         )
 
     filters: dict[str, str] = {}
-    if len(institutions) == 1:
+    if institutions:
         filters["institution"] = institutions[0]
     try:
         retrieval_service = get_retrieval_service()
@@ -1472,7 +1752,18 @@ def _lookup_professors_by_topic(
             candidate_limit=30,
             final_top_k=limit,
         )
-        return _evidence_list_from_retrieval(results)
+        rows = _evidence_list_from_retrieval(results)
+        normalized_rows = _normalize_professor_topic_rows(
+            conn,
+            rows,
+            institutions=institutions,
+            limit=limit,
+        )
+        if normalized_rows:
+            return normalized_rows
+        return _lookup_professors_by_topic_sql(
+            conn, institutions=institutions, topic=topic, limit=limit
+        )
     except Exception as exc:
         logger.warning("Professor retrieval failed for topic %r: %s", topic, exc)
         return _lookup_professors_by_topic_sql(
@@ -1480,19 +1771,124 @@ def _lookup_professors_by_topic(
         )
 
 
-def _lookup_cross_domain_evidence(conn: Any, *, topic: str) -> list[dict]:
+def _normalize_professor_topic_rows(
+    conn: Any,
+    rows: list[dict],
+    *,
+    institutions: tuple[str, ...],
+    limit: int,
+) -> list[dict]:
+    allowed_institutions = set(institutions)
+    normalized: list[dict] = []
+    for row in _hydrate_cross_domain_evidence(conn, rows):
+        if row.get("type") not in (None, "professor"):
+            continue
+        professor_id = str(row.get("professor_id") or row.get("id") or "").strip()
+        canonical_name = str(
+            row.get("canonical_name") or row.get("title") or ""
+        ).strip()
+        institution = str(row.get("institution") or "").strip()
+        if not professor_id or not canonical_name or canonical_name == professor_id:
+            continue
+        if allowed_institutions and institution not in allowed_institutions:
+            continue
+        normalized.append({
+            **row,
+            "type": "professor",
+            "id": professor_id,
+            "professor_id": professor_id,
+            "title": canonical_name,
+            "canonical_name": canonical_name,
+            "institution": institution,
+            "matched_topics": row.get("matched_topics") or [],
+        })
+    total_count = len(normalized)
+    for row in normalized:
+        row["total_count"] = total_count
+    return normalized[:limit]
+
+
+def _cross_domain_retrieval_query(topic: str, raw_query: str = "") -> str:
+    topic = topic.strip()
+    raw_query = raw_query.strip()
+    if raw_query and raw_query not in topic:
+        return f"{topic} {raw_query}".strip()
+    return topic or raw_query
+
+
+def _hydrate_cross_domain_evidence(conn: Any, rows: list[dict]) -> list[dict]:
+    hydrated: list[dict] = []
+    for row in rows:
+        if row.get("type") != "professor":
+            hydrated.append(row)
+            continue
+
+        professor_id = str(row.get("professor_id") or row.get("id") or "")
+        needs_name = not row.get("canonical_name")
+        needs_institution = not row.get("institution")
+        if not professor_id or not (needs_name or needs_institution):
+            hydrated.append(row)
+            continue
+
+        try:
+            prof = _lookup_professor_by_id(conn, professor_id=professor_id)
+        except Exception as exc:
+            logger.warning(
+                "Cross-domain professor hydration failed for %s: %s",
+                professor_id,
+                exc,
+            )
+            hydrated.append(row)
+            continue
+
+        if not prof:
+            hydrated.append(row)
+            continue
+
+        canonical_name = row.get("canonical_name") or prof.get("canonical_name")
+        institution = row.get("institution") or prof.get("institution")
+        hydrated.append(
+            {
+                **row,
+                "title": row.get("title") or canonical_name or professor_id,
+                "canonical_name": canonical_name or professor_id,
+                "institution": institution or "",
+                "academic_title": row.get("academic_title") or prof.get("title"),
+                "discipline_family": row.get("discipline_family")
+                or prof.get("discipline_family"),
+                "h_index": row.get("h_index") or prof.get("h_index"),
+                "citation_count": row.get("citation_count")
+                or prof.get("citation_count"),
+                "paper_count": row.get("paper_count") or prof.get("paper_count"),
+            }
+        )
+
+    return _enrich_paper_topic_rows(conn, hydrated)
+
+
+def _lookup_cross_domain_evidence(
+    conn: Any, *, topic: str, raw_query: str = ""
+) -> list[dict]:
     company_rows = _lookup_companies_by_topic(conn, topic=topic)
     merged: list[dict] = []
     if chat_use_retrieval_service():
-        try:
-            results = get_retrieval_service().retrieve(
-                query=topic,
-                domains=("professor", "paper"),
-                final_top_k=5,
-            )
-        except Exception as exc:
-            logger.warning("Cross-domain retrieval failed for topic %r: %s", topic, exc)
-        else:
+        retrieval_query = _cross_domain_retrieval_query(topic, raw_query)
+        retrieval_service = get_retrieval_service()
+        for domains in (("professor",), ("paper",)):
+            try:
+                results = retrieval_service.retrieve(
+                    query=retrieval_query,
+                    domains=domains,
+                    final_top_k=5,
+                )
+            except Exception as exc:
+                logger.warning(
+                    "Cross-domain retrieval failed for topic %r domains %s: %s",
+                    retrieval_query,
+                    domains,
+                    exc,
+                )
+                continue
             merged.extend(_evidence_list_from_retrieval(results))
 
     for row in company_rows:
@@ -1522,7 +1918,7 @@ def _lookup_cross_domain_evidence(conn: Any, *, topic: str) -> list[dict]:
             continue
         seen.add(key)
         deduped.append(row)
-    return deduped
+    return _hydrate_cross_domain_evidence(conn, deduped)
 
 
 def _prof_research_topics(conn: Any, professor_id: str) -> list[str]:
@@ -1634,7 +2030,10 @@ def _answer_domain_topic_list(domain: str, topic: str, rows: list[dict]) -> str:
             or row.get("patent_number")
             or row.get("id")
         )
-        snippet = row.get("industry") or row.get("snippet") or row.get("business") or ""
+        if domain == "company":
+            snippet = row.get("snippet") or row.get("industry") or row.get("business") or ""
+        else:
+            snippet = row.get("industry") or row.get("snippet") or row.get("business") or ""
         suffix = f" — {snippet[:60]}" if snippet else ""
         lines.append(f"  • {title}{suffix}")
     remaining = total - min(len(rows), 10)
@@ -1656,7 +2055,7 @@ def _enrich_paper_topic_rows(conn: Any, rows: list[dict]) -> list[dict]:
     try:
         db_rows = conn.execute(
             f"""
-            SELECT paper_id, title_clean, year, venue, quality_status
+            SELECT paper_id, title_clean, year, venue, identity_status, quality_status
               FROM paper
              WHERE paper_id IN ({placeholders})
             """,
@@ -1682,11 +2081,32 @@ def _enrich_paper_topic_rows(conn: Any, rows: list[dict]) -> list[dict]:
                 "title_clean": title,
                 "year": row.get("year") or db_row.get("year"),
                 "venue": row.get("venue") or db_row.get("venue"),
+                "identity_status": row.get("identity_status")
+                or db_row.get("identity_status"),
                 "quality_status": row.get("quality_status")
                 or db_row.get("quality_status"),
             }
         )
     return enriched
+
+
+def _filter_topic_rows_for_user_answer(
+    domain: str,
+    rows: list[dict],
+    *,
+    ready_only: bool = False,
+) -> list[dict]:
+    if domain != "paper":
+        return rows
+    filtered = [
+        row
+        for row in rows
+        if row.get("quality_status") != "rejected"
+        and row.get("identity_status") != "rejected"
+    ]
+    if not ready_only:
+        return filtered
+    return [row for row in filtered if row.get("quality_status") == "ready"]
 
 
 def _dedupe_topic_rows(domain: str, rows: list[dict]) -> list[dict]:
@@ -1741,9 +2161,17 @@ def _has_topic_row_value(value: Any) -> bool:
     return value is not None and value != "" and value != []
 
 
-def _lookup_domain_by_topic(conn: Any, *, domain: str, topic: str, limit: int) -> list[dict]:
+def _lookup_domain_by_topic(
+    conn: Any,
+    *,
+    domain: str,
+    topic: str,
+    limit: int,
+    raw_query: str = "",
+) -> list[dict]:
     if domain == "company" and not chat_use_retrieval_service():
-        return _lookup_companies_by_topic(conn, topic=topic)[:limit]
+        lookup_topic = _company_lookup_topic(topic, raw_query)
+        return _lookup_companies_by_topic(conn, topic=lookup_topic)[:limit]
     if domain == "professor":
         return _lookup_professors_by_topic(
             conn,
@@ -1752,7 +2180,8 @@ def _lookup_domain_by_topic(conn: Any, *, domain: str, topic: str, limit: int) -
             limit=limit,
         )
     if domain == "company":
-        sql_rows = _lookup_companies_by_topic(conn, topic=topic)[:limit]
+        lookup_topic = _company_lookup_topic(topic, raw_query)
+        sql_rows = _lookup_companies_by_topic(conn, topic=lookup_topic)[:limit]
         if sql_rows:
             return [
                 {
@@ -1762,11 +2191,39 @@ def _lookup_domain_by_topic(conn: Any, *, domain: str, topic: str, limit: int) -
                     "canonical_name": row.get("canonical_name"),
                     "industry": row.get("industry"),
                     "business": row.get("business"),
+                    "snippet": row.get("snippet"),
+                    "latest_funding_round": row.get("latest_funding_round"),
+                    "latest_funding_time": row.get("latest_funding_time"),
+                    "latest_funding_amount_raw": row.get("latest_funding_amount_raw"),
                     "total_count": row.get("total_count"),
                 }
                 for row in sql_rows
             ]
     if not chat_use_retrieval_service():
+        return []
+    if domain == "paper":
+        for ready_only in (True, False):
+            try:
+                results = get_retrieval_service().retrieve(
+                    query=topic,
+                    domains=(domain,),
+                    candidate_limit=30,
+                    final_top_k=limit,
+                    filter_by_quality_status=ready_only,
+                )
+            except Exception as exc:
+                logger.warning("%s retrieval failed for topic %r: %s", domain, topic, exc)
+                return []
+            rows = _evidence_list_from_retrieval(results)
+            rows = _enrich_paper_topic_rows(conn, rows)
+            rows = _filter_topic_rows_for_user_answer(
+                domain,
+                rows,
+                ready_only=ready_only,
+            )
+            rows = _dedupe_topic_rows(domain, rows)
+            if rows or not ready_only:
+                return rows
         return []
     try:
         results = get_retrieval_service().retrieve(
@@ -1774,11 +2231,9 @@ def _lookup_domain_by_topic(conn: Any, *, domain: str, topic: str, limit: int) -
             domains=(domain,),
             candidate_limit=30,
             final_top_k=limit,
-            filter_by_quality_status=False if domain == "paper" else None,
+            filter_by_quality_status=None,
         )
         rows = _evidence_list_from_retrieval(results)
-        if domain == "paper":
-            rows = _enrich_paper_topic_rows(conn, rows)
         rows = _dedupe_topic_rows(domain, rows)
         return rows
     except Exception as exc:
@@ -2019,38 +2474,15 @@ def _build_c_fallback_a_response(
                         url=f"/browse#company/{company['company_id']}",
                     )
                 ],
-                structured_payload={
-                    "company_id": company["company_id"],
-                    "canonical_name": company["canonical_name"],
-                    "industry": company.get("industry"),
-                    "business": company.get("business"),
-                    "description": company.get("description"),
-                },
+                structured_payload=_company_profile_payload(company),
             )
     if target_domain == "paper":
         papers = _lookup_paper(conn, title=query)
-        if len(papers) == 1:
-            paper = papers[0]
-            return _build_chat_response(
+        if paper := _select_exact_paper_profile_match(query, papers):
+            return _build_paper_profile_response(
                 conn=conn,
                 query=query,
-                query_type="A_paper_profile",
-                answer_text=_answer_paper_profile(paper),
-                citations=[
-                    ChatCitation(
-                        type="paper",
-                        id=paper["paper_id"],
-                        label=paper.get("title_clean") or paper["paper_id"],
-                        url=f"/browse#paper/{paper['paper_id']}",
-                    )
-                ],
-                structured_payload={
-                    "paper_id": paper["paper_id"],
-                    "title": paper.get("title_clean"),
-                    "year": paper.get("year"),
-                    "venue": paper.get("venue"),
-                    "citation_count": paper.get("citation_count"),
-                },
+                paper=paper,
             )
     if target_domain == "patent":
         patents = _lookup_patent(conn, query=query)
@@ -2252,6 +2684,69 @@ def _paper_clarification(name: str, papers: list[dict]) -> ClarificationPayload 
     )
 
 
+def _select_exact_paper_profile_match(name: str, papers: list[dict]) -> dict | None:
+    if not papers:
+        return None
+    if len(papers) == 1:
+        return papers[0]
+
+    query_key = _paper_lookup_title_key(name)
+    if not query_key:
+        return None
+    exact = [
+        paper
+        for paper in papers
+        if _paper_lookup_title_key(
+            str(paper.get("title_clean") or paper.get("title") or "")
+        )
+        == query_key
+    ]
+    if not exact:
+        partial = [
+            paper
+            for paper in papers
+            if _paper_lookup_title_key_matches_query(
+                _paper_lookup_title_key(
+                    str(paper.get("title_clean") or paper.get("title") or "")
+                ),
+                query_key,
+            )
+        ]
+        if not partial:
+            return None
+        return sorted(partial, key=_paper_profile_match_rank, reverse=True)[0]
+    return sorted(exact, key=_paper_profile_match_rank, reverse=True)[0]
+
+
+def _paper_lookup_title_key(value: str) -> str:
+    return "".join(char.casefold() for char in value if char.isalnum())
+
+
+def _paper_lookup_title_key_matches_query(candidate_key: str, query_key: str) -> bool:
+    if not candidate_key:
+        return False
+    if candidate_key == query_key:
+        return True
+    return (
+        len(query_key) >= 32
+        and len(candidate_key) > len(query_key)
+        and query_key in candidate_key
+    )
+
+
+def _paper_profile_match_rank(paper: dict) -> tuple[int, int, int, int, int]:
+    has_summary = 1 if str(paper.get("summary_zh") or "").strip() else 0
+    has_abstract = 1 if str(paper.get("abstract_clean") or "").strip() else 0
+    has_authors = 1 if str(paper.get("authors_display") or "").strip() else 0
+    citation_count = paper.get("citation_count")
+    if not isinstance(citation_count, int):
+        citation_count = -1
+    year = paper.get("year")
+    if not isinstance(year, int):
+        year = -1
+    return (has_summary, has_abstract, has_authors, citation_count, year)
+
+
 def _answer_ambiguous_patents(name: str, patents: list[dict]) -> str:
     lines = [
         f"找到 {len(patents)} 件与 {name!r} 匹配的专利，请选择具体对象：",
@@ -2320,13 +2815,22 @@ def _build_company_profile_response(
             )
         ],
         structured_payload={
-            "company_id": company["company_id"],
-            "canonical_name": company["canonical_name"],
-            "industry": company.get("industry"),
-            "business": company.get("business"),
-            "description": company.get("description"),
+            **_company_profile_payload(company),
         },
     )
+
+
+def _company_profile_payload(company: dict) -> dict[str, Any]:
+    return {
+        "company_id": company["company_id"],
+        "canonical_name": company["canonical_name"],
+        "industry": company.get("industry"),
+        "business": company.get("business"),
+        "description": company.get("description"),
+        "products": company.get("products") or [],
+        "application_scenarios": company.get("application_scenarios") or [],
+        "recent_events": company.get("recent_events") or [],
+    }
 
 
 def _build_paper_profile_response(
@@ -2345,7 +2849,7 @@ def _build_paper_profile_response(
                 type="paper",
                 id=paper["paper_id"],
                 label=paper.get("title_clean") or paper["paper_id"],
-                url=f"/browse#paper/{paper['paper_id']}",
+                url=_local_paper_detail_url(paper["paper_id"]),
             )
         ],
         structured_payload={
@@ -2685,10 +3189,21 @@ def _build_evidence_blocks(
                     parts.append(str(item["venue"]))
                 summary = "，".join(parts)
             elif evidence_type == "company":
-                summary = (
-                    f"{item.get('title') or item.get('canonical_name') or '企业未知'}，"
-                    f"{item.get('industry') or '行业未知'}"
-                )
+                company_parts = [
+                    item.get("title") or item.get("canonical_name") or "企业未知",
+                    item.get("industry") or "行业未知",
+                    item.get("snippet")
+                    or item.get("business")
+                    or item.get("profile_summary")
+                    or item.get("technology_route_summary"),
+                ]
+                if item.get("latest_funding_round"):
+                    company_parts.append(f"最新融资轮次：{item['latest_funding_round']}")
+                if item.get("latest_funding_time"):
+                    company_parts.append(f"最新融资时间：{item['latest_funding_time']}")
+                if item.get("latest_funding_amount_raw"):
+                    company_parts.append(f"最新融资金额：{item['latest_funding_amount_raw']}")
+                summary = "，".join(str(part) for part in company_parts if part)
             elif evidence_type == "patent":
                 summary = (
                     f"{item.get('patent_number') or item.get('id') or '编号未知'}，"
@@ -2742,10 +3257,10 @@ def _call_gemma_synthesis(
     timeout: float,
 ) -> str:
     _clear_proxy_env()
-    llm_settings = resolve_professor_llm_settings("gemma4")
+    llm_settings = resolve_professor_llm_settings(None)
     api_key = llm_settings.get("local_llm_api_key")
     if not api_key:
-        raise ValueError("missing local_llm_api_key for gemma4")
+        raise ValueError("missing local_llm_api_key for configured LLM")
     client = OpenAI(
         base_url=llm_settings["local_llm_base_url"],
         api_key=api_key,
@@ -2763,7 +3278,7 @@ def _call_gemma_synthesis(
                 ),
             },
         ],
-        extra_body=_CHAT_SYNTHESIS_EXTRA_BODY,
+        extra_body=_chat_synthesis_extra_body(llm_settings["local_llm_model"]),
     )
     return _extract_chat_completion_text(response)
 
@@ -2893,11 +3408,82 @@ def _lookup_verified_papers_for_prof(conn: Any, *, professor_id: str) -> list[di
           FROM professor_paper_link ppl
           JOIN paper p ON p.paper_id = ppl.paper_id
          WHERE ppl.professor_id = %s AND ppl.link_status = 'verified'
+           AND COALESCE(p.identity_status, 'unverified') != 'rejected'
+           AND COALESCE(p.quality_status, 'needs_enrichment') != 'rejected'
          ORDER BY p.year DESC NULLS LAST, p.citation_count DESC NULLS LAST
          LIMIT 20
         """,
         (professor_id,),
     ).fetchall()
+
+
+def _lookup_paper_related_professors(conn: Any, *, paper_id: str) -> list[dict]:
+    return conn.execute(
+        """
+        SELECT p.professor_id,
+               p.canonical_name,
+               p.canonical_name_en,
+               pa.institution,
+               pa.title,
+               p.discipline_family,
+               p.h_index,
+               p.citation_count,
+               p.paper_count,
+               ppl.topic_consistency_score,
+               count(*) OVER ()::int AS total_count
+          FROM professor_paper_link ppl
+          JOIN professor p ON p.professor_id = ppl.professor_id
+          LEFT JOIN LATERAL (
+            SELECT pa_inner.institution, pa_inner.title
+              FROM professor_affiliation pa_inner
+             WHERE pa_inner.professor_id = p.professor_id
+               AND pa_inner.is_primary = true
+             LIMIT 1
+          ) pa ON true
+         WHERE ppl.paper_id = %s
+           AND ppl.link_status IN ('verified', 'candidate')
+           AND p.identity_status = 'resolved'
+         ORDER BY
+           CASE ppl.link_status WHEN 'verified' THEN 0 ELSE 1 END,
+           ppl.topic_consistency_score DESC NULLS LAST,
+           p.canonical_name ASC
+         LIMIT 20
+        """,
+        (paper_id,),
+    ).fetchall()
+
+
+def _query_asks_paper_related_professors(query: str) -> bool:
+    return bool(re.search(r"(关联|相关)?\s*(教授|老师|学者)\s*(是谁|有哪些)?", query))
+
+
+def _build_paper_related_professors_response(
+    *,
+    conn: Any,
+    query: str,
+    paper_id: str,
+    paper_title: str | None = None,
+) -> ChatResponse:
+    rows = _lookup_paper_related_professors(conn, paper_id=paper_id)
+    evidence_rows = [_related_row_to_chat_row("professor", row) for row in rows]
+    source = SessionEntity(kind="paper", id=paper_id, label=paper_title or paper_id)
+    return _build_chat_response(
+        conn=conn,
+        query=query,
+        query_type="C_cross_domain_related",
+        answer_text=_answer_c_related_objects(source, "professor", evidence_rows),
+        citations=_chat_citations_from_result_rows(evidence_rows),
+        structured_payload={
+            "source_domain": "paper",
+            "source_id": paper_id,
+            "source_label": source.label,
+            "target_domain": "professor",
+            "paper_id": paper_id,
+            "retrieval_evidence": evidence_rows,
+            "related_professors": evidence_rows[:10],
+            "match_count": len(evidence_rows),
+        },
+    )
 
 
 def _answer_prof_papers(prof: dict, rows: list[dict]) -> str:
@@ -3048,7 +3634,7 @@ def chat(
             samesite="lax",
         )
     raw_query = payload.query.strip()
-    query = _rewrite_query_with_context(raw_query, session)
+    query = _normalize_query_for_rules(_rewrite_query_with_context(raw_query, session))
 
     def _record_and_return(chat_resp: ChatResponse) -> ChatResponse:
         """Persist session context derived from this response."""
@@ -3129,6 +3715,16 @@ def chat(
                 )
         if hint.startswith("PAPER"):
             papers = _lookup_paper(conn, title=hint)
+            if _query_asks_paper_related_professors(query):
+                paper_title = papers[0].get("title_clean") if papers else None
+                return _record_and_return(
+                    _build_paper_related_professors_response(
+                        conn=conn,
+                        query=raw_query,
+                        paper_id=hint,
+                        paper_title=paper_title,
+                    )
+                )
             if len(papers) == 1:
                 return _record_and_return(
                     _build_paper_profile_response(
@@ -3181,14 +3777,57 @@ def chat(
     if hint_response := _handle_entity_id_hint():
         return hint_response
 
+    if m := _Q_PAPER_RELATED_PROFESSORS_RE.match(query):
+        return _record_and_return(
+            _build_paper_related_professors_response(
+                conn=conn,
+                query=raw_query,
+                paper_id=m.group("paper_id"),
+            )
+        )
+
     if looks_like_narrowing_query(query):
         if narrowed_response := _handle_d_narrowing():
             return narrowed_response
 
+    if m := _Q_PROF_PROFILE_DETAIL_RE.search(query):
+        name, institutions = _parse_professor_papers_subject(m.group("subject"))
+        if institutions is not None and name:
+            profs = _lookup_professor(conn, name=name, institutions=institutions)
+            if len(profs) == 1:
+                prof = profs[0]
+                topics = _prof_research_topics(conn, prof["professor_id"])
+                n_papers = _prof_paper_count(conn, prof["professor_id"])
+                return _record_and_return(_build_chat_response(
+                    conn=conn,
+                    query=raw_query,
+                    query_type="A_prof_profile",
+                    answer_text=_answer_prof_profile(prof, topics, n_papers),
+                    citations=[
+                        ChatCitation(
+                            type="professor",
+                            id=prof["professor_id"],
+                            label=f"{prof['canonical_name']} - {prof.get('institution') or '单位未知'}",
+                            url=f"/browse#professor/{prof['professor_id']}",
+                        )
+                    ],
+                    structured_payload={
+                        "professor_id": prof["professor_id"],
+                        "canonical_name": prof["canonical_name"],
+                        "canonical_name_en": prof.get("canonical_name_en"),
+                        "institution": prof.get("institution"),
+                        "title": prof.get("title"),
+                        "discipline_family": prof.get("discipline_family"),
+                        "research_topics": topics,
+                        "verified_paper_count": n_papers,
+                        **_professor_metric_payload(prof),
+                    },
+                ))
+
     # Pattern D' (v2): "<name>的研究方向" — follow-up on a pinned professor
     if m := _Q_PROF_TOPICS_RE.search(query):
-        name = m.group("name").strip()
-        profs = _lookup_professor(conn, name=name, institutions=None)
+        name, institutions = _parse_professor_papers_subject(m.group("name"))
+        profs = _lookup_professor(conn, name=name, institutions=institutions)
         if len(profs) == 1:
             prof = profs[0]
             topics = _prof_research_topics(conn, prof["professor_id"])
@@ -3219,8 +3858,8 @@ def chat(
 
     # Pattern D (v2): "<name>的论文" — follow-up on a pinned professor
     if m := _Q_PROF_PAPERS_RE.search(query):
-        name = m.group("name").strip()
-        profs = _lookup_professor(conn, name=name, institutions=None)
+        name, institutions = _parse_professor_papers_subject(m.group("name"))
+        profs = _lookup_professor(conn, name=name, institutions=institutions)
         if len(profs) == 1:
             prof = profs[0]
             papers = _lookup_verified_papers_for_prof(
@@ -3251,7 +3890,7 @@ def chat(
                             type="paper",
                             id=p["paper_id"],
                             label=f"{p.get('year') or '?'} · {p['title_clean'][:80]}",
-                            url=f"/browse#paper/{p['paper_id']}",
+                            url=_local_paper_detail_url(p["paper_id"]),
                         )
                         for p in papers[:10]
                     ],
@@ -3492,39 +4131,18 @@ def chat(
                                 url=f"/browse#company/{company['company_id']}",
                             )
                         ],
-                        structured_payload={
-                            "company_id": company["company_id"],
-                            "canonical_name": company["canonical_name"],
-                            "industry": company.get("industry"),
-                            "business": company.get("business"),
-                            "description": company.get("description"),
-                        },
+                        structured_payload=_company_profile_payload(company),
                     ))
             elif target_domain == "paper":
                 papers = _lookup_paper(conn, title=name)
-                if len(papers) == 1:
-                    paper = papers[0]
-                    return _record_and_return(_build_chat_response(
-                        conn=conn,
-                        query=raw_query,
-                        query_type="A_paper_profile",
-                        answer_text=_answer_paper_profile(paper),
-                        citations=[
-                            ChatCitation(
-                                type="paper",
-                                id=paper["paper_id"],
-                                label=paper.get("title_clean") or paper["paper_id"],
-                                url=f"/browse#paper/{paper['paper_id']}",
-                            )
-                        ],
-                        structured_payload={
-                            "paper_id": paper["paper_id"],
-                            "title": paper.get("title_clean"),
-                            "year": paper.get("year"),
-                            "venue": paper.get("venue"),
-                            "citation_count": paper.get("citation_count"),
-                        },
-                    ))
+                if paper := _select_exact_paper_profile_match(name, papers):
+                    return _record_and_return(
+                        _build_paper_profile_response(
+                            conn=conn,
+                            query=raw_query,
+                            paper=paper,
+                        )
+                    )
             elif target_domain == "patent":
                 patents = _lookup_patent(conn, query=name)
                 if len(patents) == 1:
@@ -3587,7 +4205,11 @@ def chat(
             if target_domain not in _TARGET_DOMAINS:
                 target_domain = "professor"
             rows = _lookup_domain_by_topic(
-                conn, domain=target_domain, topic=topic, limit=20
+                conn,
+                domain=target_domain,
+                topic=topic,
+                limit=20,
+                raw_query=raw_query,
             )
             if target_domain != "professor":
                 id_key = domain_id_key(target_domain)
@@ -3659,8 +4281,11 @@ def chat(
             if narrowed_response := _handle_d_narrowing(topic):
                 return narrowed_response
             # 跨域聚合: 教授 + 企业（专利留下一轮，目前 patent 表空）
-            evidence = _lookup_cross_domain_evidence(conn, topic=topic)
+            evidence = _lookup_cross_domain_evidence(
+                conn, topic=topic, raw_query=raw_query
+            )
             profs = [row for row in evidence if row.get("type") == "professor"]
+            papers = [row for row in evidence if row.get("type") == "paper"]
             companies = [row for row in evidence if row.get("type") == "company"]
             citations: list[ChatCitation] = []
             for r in profs[:5]:
@@ -3675,24 +4300,24 @@ def chat(
                     label=f"{r['canonical_name']} - {r.get('industry') or ''}",
                     url=f"/browse#company/{r['company_id']}",
                 ))
-            for r in evidence[:5]:
-                if r.get("type") == "paper":
-                    citations.append(ChatCitation(
-                        type="paper",
-                        id=r["paper_id"],
-                        label=f"{r.get('year') or '?'} · {r.get('title') or r['paper_id']}",
-                        url=r.get("url") or f"/browse#paper/{r['paper_id']}",
-                    ))
+            for r in papers[:5]:
+                citations.append(ChatCitation(
+                    type="paper",
+                    id=r["paper_id"],
+                    label=f"{r.get('year') or '?'} · {r.get('title') or r['paper_id']}",
+                    url=_local_paper_detail_url(r["paper_id"]),
+                ))
             return _record_and_return(_build_chat_response(
                 query=raw_query,
                 conn=conn,
                 query_type="D_cross_domain_topic",
-                answer_text=_answer_cross_domain(topic, profs, companies),
+                answer_text=_answer_cross_domain(topic, profs, companies, papers),
                 citations=citations,
                 structured_payload={
                     "topic": topic,
                     "classifier_reason": reason,
                     "prof_count": profs[0].get("total_count", len(profs)) if profs else 0,
+                    "paper_count": papers[0].get("total_count", len(papers)) if papers else 0,
                     "company_count": companies[0].get("total_count", len(companies)) if companies else 0,
                     "retrieval_evidence": evidence,
                 },
@@ -3798,7 +4423,7 @@ def chat(
                             type="paper",
                             id=paper["paper_id"],
                             label=paper.get("title_clean") or paper["paper_id"],
-                            url=f"/browse#paper/{paper['paper_id']}",
+                            url=_local_paper_detail_url(paper["paper_id"]),
                         )
                         for paper in papers[:10]
                     ],

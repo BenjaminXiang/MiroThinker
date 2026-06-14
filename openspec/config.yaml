@@ -1,20 +1,21 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  This repository uses OpenSpec + Superpowers.
+  OpenSpec defines behavior, scope, acceptance, and verification intent.
+  Superpowers provides execution discipline, but must not independently choose RED or GREEN.
+  For behavior-affecting work, create or update .agents/runs/<change-id>/verification-contract.md before production-code edits.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - State whether the change is behavior-affecting and which capability owns the behavior contract.
+    - Do not let implementation methodology define behavior; behavior must come from OpenSpec requirements.
+  design:
+    - Identify the verification surface: unit, contract, integration, scenario eval, trace replay, policy eval, or baseline.
+    - For Agentic RAG/chat, routing, prompt, memory, tool-choice, policy, or badcase work, do not rely on unit tests alone.
+    - Identify oracle strength, affected context/dependencies, and mock boundaries for behavior-affecting work.
+  tasks:
+    - Include an early task to create or update .agents/runs/<change-id>/verification-contract.md for behavior-affecting work.
+    - For deterministic modules, RED may be unit or contract tests.
+    - For agentic behavior and badcase work, RED must be scenario eval, trace replay, integration, policy, or contract evidence.
+    - Include verification tasks for the declared RED artifact, relevant regressions, and any browser/API/state or real-interaction checks required by the verification contract.

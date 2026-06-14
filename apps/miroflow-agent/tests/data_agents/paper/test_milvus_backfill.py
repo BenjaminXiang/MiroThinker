@@ -46,6 +46,8 @@ def _paper_row(
     abstract_clean: str | None = None,
     summary_zh: str | None = None,
     intro: str | None = None,
+    identity_status: str = "confirmed",
+    quality_status: str = "ready",
 ) -> dict:
     return {
         "paper_id": paper_id,
@@ -56,6 +58,8 @@ def _paper_row(
         "abstract_clean": abstract_clean,
         "abstract": abstract,
         "intro": intro,
+        "identity_status": identity_status,
+        "quality_status": quality_status,
     }
 
 
@@ -197,6 +201,54 @@ def test_backfill_prefers_summary_zh_for_abstract_chunk():
     abstract_chunks = [row for row in inserted if row["chunk_type"] == "abstract"]
     assert abstract_chunks
     assert abstract_chunks[0]["content_text"] == summary_zh
+
+
+def test_backfill_deletes_non_indexable_paper_without_reinserting():
+    conn = _fake_pg_conn_returning(
+        [
+            _paper_row(
+                paper_id="PAPER-MERGED",
+                identity_status="merged",
+                quality_status="rejected",
+            )
+        ]
+    )
+    milvus = _fake_milvus_client()
+    embed = _fake_embedding_client()
+
+    report = backfill_paper_chunks(conn, milvus, embed)
+
+    assert report.papers_processed == 0
+    assert report.papers_skipped == 1
+    milvus.delete.assert_called_once()
+    delete_filter = milvus.delete.call_args.kwargs["filter"]
+    assert "PAPER-MERGED" in delete_filter
+    milvus.insert.assert_not_called()
+    embed.embed_batch.assert_not_called()
+
+
+def test_backfill_deletes_partial_paper_even_when_summary_exists():
+    conn = _fake_pg_conn_returning(
+        [
+            _paper_row(
+                paper_id="PAPER-PARTIAL",
+                summary_zh="中文摘要内容。" * 20,
+                quality_status="partial",
+            )
+        ]
+    )
+    milvus = _fake_milvus_client()
+    embed = _fake_embedding_client()
+
+    report = backfill_paper_chunks(conn, milvus, embed)
+
+    assert report.papers_processed == 0
+    assert report.papers_skipped == 1
+    milvus.delete.assert_called_once()
+    delete_filter = milvus.delete.call_args.kwargs["filter"]
+    assert "PAPER-PARTIAL" in delete_filter
+    milvus.insert.assert_not_called()
+    embed.embed_batch.assert_not_called()
 
 
 def test_backfill_empty_title_paper_skipped_or_counted_as_error():

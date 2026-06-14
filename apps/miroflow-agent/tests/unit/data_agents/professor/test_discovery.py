@@ -65,6 +65,39 @@ def test_discover_professor_seeds_uses_cuhk_teacher_search_pagination():
     assert result.source_statuses[0].visited_urls == calls
 
 
+def test_discover_professor_seeds_rejects_cuhk_breadcrumb_rows():
+    seed = ProfessorRosterSeed(
+        institution="香港中文大学（深圳）",
+        department="人工智能学院",
+        roster_url="https://sai.cuhk.edu.cn/teacher-search",
+    )
+    pages = {
+        "https://sai.cuhk.edu.cn/teacher-search": """
+<html><body>
+  <div class="list-title">
+    <a href="/teacher-search">面包屑</a>
+  </div>
+  <div class="list-title">
+    <a href="/teacher/154">赵展展</a>
+  </div>
+</body></html>
+""",
+        "https://sai.cuhk.edu.cn/teacher-search?page=1": "<html><body></body></html>",
+    }
+
+    def fake_fetch_html(url: str) -> str:
+        return pages[url]
+
+    result = discover_professor_seeds(
+        seeds=[seed],
+        fetch_html=fake_fetch_html,
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        ("赵展展", "https://sai.cuhk.edu.cn/teacher/154"),
+    ]
+
+
 def test_discover_professor_seeds_fetches_labeled_direct_profile_seed_before_resolving():
     seed = ProfessorRosterSeed(
         institution="香港中文大学（深圳）",

@@ -221,19 +221,22 @@ Stop for re-planning before editing if the task touches:
 Use installed skills/plugins by phase, not all at once.
 
 ```text
-No skill          tiny local fixes, narrow doc edits, obvious changes.
-ce-work           ordinary bounded implementation.
-ce-debug          repeated failures, hard-to-reproduce bugs, provider/integration errors.
-ce-code-review    explicit review requests.
-ce-doc-review     explicit documentation review requests.
-agent-browser     admin-console chat checks, UI walkthroughs, browser tests, screenshots.
-pattern-repair    systemic bugs, repeated issues, escaped defects, patch-only risk.
+No skill              tiny local fixes, narrow doc edits, obvious changes.
+OpenSpec              behavior contract, change scope, acceptance, and RED/GREEN contract.
+Superpowers           execution discipline: brainstorming, planning, debugging, TDD, review, finish.
+agent-browser         admin-console chat checks, UI walkthroughs, browser tests, screenshots.
+pattern-repair        systemic bugs, repeated issues, escaped defects, patch-only risk.
+compound-engineering  explicit-only; use only when the user asks for CE/Compound/ce-*.
 ```
+
+OpenSpec owns expected behavior and verification intent. Superpowers may execute the workflow, but it must not independently choose what counts as RED or GREEN for behavior-affecting work.
 
 Anti-overlap rules:
 
 - Use at most one planning framework before implementation.
-- Skills do not override user instructions, safety constraints, project invariants, or tests.
+- Skills do not override user instructions, safety constraints, OpenSpec, project invariants, or tests.
+- Treat TDD as a local deterministic-unit discipline, not the default strategy for vibe coding, agent behavior, or systemic repair.
+- Do not invoke or follow Superpowers TDD blindly. Use it only inside the RED/GREEN boundary defined by the active OpenSpec change and `.agents/runs/<change-id>/verification-contract.md`.
 - If a named skill is unavailable, continue with the closest plain workflow and report that.
 
 ---
@@ -587,6 +590,7 @@ If the requested change is behavior-affecting and **no OpenSpec change exists**,
 openspec/changes/<id>/tasks.md           tick slice items as completed
 openspec/changes/<id>/acceptance.md      record verification evidence per requirement / scenario
 openspec/changes/<id>/change-log.md      append entries when scope, requirements, or design shift mid-implementation
+.agents/runs/<id>/verification-contract.md pre-implementation RED/GREEN contract and Superpowers mode
 .agents/runs/<id>/verification.md        executed commands, outputs, and skipped-check rationale
 ```
 
@@ -616,3 +620,9 @@ If not behavior-affecting, state it explicitly:
 ### 15.5 `.agents/specs/` is frozen
 
 Do not create new files under `.agents/specs/`. Existing files are read-only historical context. New design contracts go to `openspec/changes/<id>/design.md`; execution detail goes to `.agents/runs/<id>/`. The Claude-owned design-contract artifact described in §2 / §13 has been split per CLAUDE.md §14.4.
+
+### 15.6 Superpowers TDD boundary
+
+Detailed policy lives in `openspec/specs/development-methodology/spec.md`; hook setup lives in `.agents/harness/openspec-superpowers.md`.
+
+For behavior-affecting work, create or update `.agents/runs/<change-id>/verification-contract.md` before production-code edits. Superpowers may execute RED-GREEN-REFACTOR, but the RED artifact must come from OpenSpec or the verification contract. For Agentic RAG/chat, routing, prompt, memory, tool-choice, policy, or badcase work, a unit test alone is not sufficient GREEN evidence.

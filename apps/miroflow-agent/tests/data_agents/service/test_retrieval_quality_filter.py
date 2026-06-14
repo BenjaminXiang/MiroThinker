@@ -11,9 +11,10 @@ from src.data_agents.storage.milvus_collections import (
     COMPANY_PROFILES_COLLECTION,
     PAPER_CHUNKS_COLLECTION,
     PATENT_PROFILES_COLLECTION,
+    PROFESSOR_IDENTITY_PROFILES_COLLECTION,
 )
 
-_PROFESSOR_COLLECTION = "professor_profiles"
+_PROFESSOR_COLLECTION = PROFESSOR_IDENTITY_PROFILES_COLLECTION
 _COLLECTION_BY_DOMAIN = {
     "professor": _PROFESSOR_COLLECTION,
     "paper": PAPER_CHUNKS_COLLECTION,
@@ -43,8 +44,13 @@ class _FakeResult:
 
 
 class _QualityStatusConn:
-    def __init__(self, statuses: dict[str, dict[str, str]]) -> None:
+    def __init__(
+        self,
+        statuses: dict[str, dict[str, str]],
+        lifecycles: dict[str, str] | None = None,
+    ) -> None:
         self.statuses = statuses
+        self.lifecycles = lifecycles or {}
         self.calls: list[tuple[str, tuple[Any, ...]]] = []
 
     def execute(self, query: str, params: tuple[Any, ...]) -> _FakeResult:
@@ -52,6 +58,20 @@ class _QualityStatusConn:
         self.calls.append((sql, params))
         for domain, table_name in _TABLE_BY_DOMAIN.items():
             if f"from {table_name}" in sql:
+                if domain == "professor" and "lifecycle_state" in sql:
+                    return _FakeResult(
+                        [
+                            {
+                                "object_id": object_id,
+                                "quality_status": status,
+                                "lifecycle_state": self.lifecycles.get(
+                                    object_id, "active"
+                                ),
+                            }
+                            for object_id, status in self.statuses[domain].items()
+                            if object_id in params
+                        ]
+                    )
                 return _FakeResult(
                     [
                         {"object_id": object_id, "quality_status": status}
@@ -162,7 +182,9 @@ def test_default_quality_status_filter_keeps_only_ready(
 ) -> None:
     monkeypatch.delenv("FILTER_BY_QUALITY_STATUS", raising=False)
 
-    results = _service(domain).retrieve("query", domains=(domain,), final_top_k=10)
+    query = "张三是谁" if domain == "professor" else "query"
+
+    results = _service(domain).retrieve(query, domains=(domain,), final_top_k=10)
 
     assert [result.object_id for result in results] == [_IDS_BY_DOMAIN[domain][0]]
     assert results[0].metadata["quality_status"] == "ready"
@@ -175,13 +197,107 @@ def test_quality_status_filter_can_be_disabled(
 ) -> None:
     monkeypatch.setenv("FILTER_BY_QUALITY_STATUS", "0")
 
-    results = _service(domain).retrieve("query", domains=(domain,), final_top_k=10)
+    query = "张三是谁" if domain == "professor" else "query"
+
+    results = _service(domain).retrieve(query, domains=(domain,), final_top_k=10)
 
     assert [result.object_id for result in results] == list(_IDS_BY_DOMAIN[domain])
     assert [result.metadata["quality_status"] for result in results] == [
         "ready",
         "needs_review",
     ]
+
+
+def test_professor_lifecycle_defaults_to_active_when_quality_filter_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("FILTER_BY_QUALITY_STATUS", "0")
+    statuses = {
+        domain: {
+            _IDS_BY_DOMAIN[domain][0]: "ready",
+            _IDS_BY_DOMAIN[domain][1]: "ready",
+        }
+        for domain in _IDS_BY_DOMAIN
+    }
+    lifecycles = {"PROF-READY": "active", "PROF-REVIEW": "archived"}
+    service = RetrievalService(
+        pg_conn_factory=lambda: _QualityStatusConn(statuses, lifecycles),
+        milvus_client=_fake_milvus("professor"),
+        embedding_client=_fake_embedding_client(),
+        reranker=_fake_reranker(),
+    )
+
+    results = service.retrieve(
+        "张三是谁",
+        domains=("professor",),
+        final_top_k=10,
+    )
+
+    assert [result.object_id for result in results] == ["PROF-READY"]
+    assert results[0].metadata["lifecycle_state"] == "active"
+
+
+def test_professor_lifecycle_filter_can_request_archived_records(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("FILTER_BY_QUALITY_STATUS", "0")
+    statuses = {
+        domain: {
+            _IDS_BY_DOMAIN[domain][0]: "ready",
+            _IDS_BY_DOMAIN[domain][1]: "ready",
+        }
+        for domain in _IDS_BY_DOMAIN
+    }
+    lifecycles = {"PROF-READY": "active", "PROF-REVIEW": "archived"}
+    service = RetrievalService(
+        pg_conn_factory=lambda: _QualityStatusConn(statuses, lifecycles),
+        milvus_client=_fake_milvus("professor"),
+        embedding_client=_fake_embedding_client(),
+        reranker=_fake_reranker(),
+    )
+
+    results = service.retrieve(
+        "张三是谁",
+        domains=("professor",),
+        filters={"lifecycle_state": "archived"},
+        final_top_k=10,
+    )
+
+    assert [result.object_id for result in results] == ["PROF-REVIEW"]
+    assert results[0].metadata["lifecycle_state"] == "archived"
+
+
+def test_professor_lifecycle_filter_can_request_merged_records(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("FILTER_BY_QUALITY_STATUS", "0")
+    statuses = {
+        domain: {
+            _IDS_BY_DOMAIN[domain][0]: "ready",
+            _IDS_BY_DOMAIN[domain][1]: "ready",
+        }
+        for domain in _IDS_BY_DOMAIN
+    }
+    lifecycles = {
+        "PROF-READY": "active",
+        "PROF-REVIEW": "merged_to_other_school",
+    }
+    service = RetrievalService(
+        pg_conn_factory=lambda: _QualityStatusConn(statuses, lifecycles),
+        milvus_client=_fake_milvus("professor"),
+        embedding_client=_fake_embedding_client(),
+        reranker=_fake_reranker(),
+    )
+
+    results = service.retrieve(
+        "张三是谁",
+        domains=("professor",),
+        filters={"lifecycle_state": "merged_to_other_school"},
+        final_top_k=10,
+    )
+
+    assert [result.object_id for result in results] == ["PROF-REVIEW"]
+    assert results[0].metadata["lifecycle_state"] == "merged_to_other_school"
 
 
 def test_quality_status_filter_argument_overrides_environment(
@@ -201,3 +317,34 @@ def test_quality_status_filter_argument_overrides_environment(
         "ready",
         "needs_review",
     ]
+
+
+def test_rejected_candidates_are_never_returned_when_filter_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("FILTER_BY_QUALITY_STATUS", "0")
+    domain = "paper"
+    ready_id, review_id = _IDS_BY_DOMAIN[domain]
+    statuses = {
+        item: {
+            ready_id if item == domain else _IDS_BY_DOMAIN[item][0]: "ready",
+            review_id if item == domain else _IDS_BY_DOMAIN[item][1]: "rejected",
+        }
+        for item in _IDS_BY_DOMAIN
+    }
+    service = RetrievalService(
+        pg_conn_factory=lambda: _QualityStatusConn(statuses),
+        milvus_client=_fake_milvus(domain),
+        embedding_client=_fake_embedding_client(),
+        reranker=_fake_reranker(),
+    )
+
+    results = service.retrieve(
+        "query",
+        domains=(domain,),
+        final_top_k=10,
+        filter_by_quality_status=False,
+    )
+
+    assert [result.object_id for result in results] == [ready_id]
+    assert all(result.metadata["quality_status"] != "rejected" for result in results)

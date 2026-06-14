@@ -7,6 +7,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 
 _KEY_FILE_BY_ENV: dict[str, str] = {
@@ -15,6 +16,7 @@ _KEY_FILE_BY_ENV: dict[str, str] = {
     "DASHSCOPE_API_KEY": ".dashscope_api_key",
     "ONLINE_LLM_API_KEY": ".dashscope_api_key",
     "ARK_API_KEY": ".ark_api_key",
+    "DEEPSEEK_API_KEY": ".deepseek_api_key",
 }
 
 
@@ -113,6 +115,42 @@ _LLM_PROFILES: dict[str, _LLMProfile] = {
             api_key_env="ARK_API_KEY",
         ),
     ),
+    "deepseekv4flash": _LLMProfile(
+        local=_LLMEndpoint(
+            base_url="https://api.deepseek.com",
+            model="deepseek-v4-flash",
+            api_key_env="DEEPSEEK_API_KEY",
+        ),
+        online=_LLMEndpoint(
+            base_url="https://api.deepseek.com",
+            model="deepseek-v4-flash",
+            api_key_env="DEEPSEEK_API_KEY",
+        ),
+    ),
+    "deepseekv4lite": _LLMProfile(
+        local=_LLMEndpoint(
+            base_url="https://api.deepseek.com",
+            model="deepseek-v4-lite",
+            api_key_env="DEEPSEEK_API_KEY",
+        ),
+        online=_LLMEndpoint(
+            base_url="https://api.deepseek.com",
+            model="deepseek-v4-lite",
+            api_key_env="DEEPSEEK_API_KEY",
+        ),
+    ),
+    "deepseekv4pro": _LLMProfile(
+        local=_LLMEndpoint(
+            base_url="https://api.deepseek.com",
+            model="deepseek-v4-pro",
+            api_key_env="DEEPSEEK_API_KEY",
+        ),
+        online=_LLMEndpoint(
+            base_url="https://api.deepseek.com",
+            model="deepseek-v4-pro",
+            api_key_env="DEEPSEEK_API_KEY",
+        ),
+    ),
 }
 
 
@@ -127,9 +165,23 @@ _PROFILE_ALIASES: dict[str, str] = {
     "volc": "ark",
     "volces": "ark",
     "doubao": "ark",
+    "deepseek": "deepseekv4pro",
+    "deepseek4": "deepseekv4pro",
+    "deepseekv4": "deepseekv4pro",
+    "deepseekpro": "deepseekv4pro",
+    "deepseekflash": "deepseekv4flash",
+    "deepseeklite": "deepseekv4lite",
 }
 
-_DEFAULT_PROFILE = "gemma4"
+_DEFAULT_PROFILE = "deepseekv4pro"
+
+
+def build_non_thinking_extra_body(model_name: str | None) -> dict[str, Any]:
+    """Return provider-compatible non-thinking request extras for chat completions."""
+    normalized = (model_name or "").strip().lower()
+    if normalized.startswith("deepseek-v4"):
+        return {"thinking": {"type": "disabled"}}
+    return {"chat_template_kwargs": {"enable_thinking": False}}
 
 
 def _normalize_profile_name(profile_name: str | None) -> str:
@@ -188,6 +240,7 @@ def resolve_professor_llm_settings(
     default_profile: str = _DEFAULT_PROFILE,
     strict: bool = False,
     include_profile: bool = False,
+    apply_endpoint_env_overrides: bool = True,
 ) -> dict[str, str]:
     """Resolve local and online LLM defaults with env override support."""
     resolved_profile = resolve_professor_llm_profile_name(
@@ -200,17 +253,28 @@ def resolve_professor_llm_settings(
     local = profile.local
     online = profile.online
 
+    if apply_endpoint_env_overrides:
+        local_base_url = os.getenv("LOCAL_LLM_BASE_URL", local.base_url)
+        local_model = os.getenv("LOCAL_LLM_MODEL", local.model)
+        local_api_key = local.resolve_api_key("LOCAL_LLM_API_KEY")
+        online_base_url = os.getenv("ONLINE_LLM_BASE_URL", online.base_url)
+        online_model = os.getenv("ONLINE_LLM_MODEL", online.model)
+        online_api_key = online.resolve_api_key("ONLINE_LLM_API_KEY")
+    else:
+        local_base_url = local.base_url
+        local_model = local.model
+        local_api_key = local.resolve_api_key(local.api_key_env)
+        online_base_url = online.base_url
+        online_model = online.model
+        online_api_key = online.resolve_api_key(online.api_key_env)
+
     settings = {
-        "local_llm_base_url": os.getenv(
-            "LOCAL_LLM_BASE_URL", local.base_url
-        ),
-        "local_llm_model": os.getenv("LOCAL_LLM_MODEL", local.model),
-        "local_llm_api_key": local.resolve_api_key("LOCAL_LLM_API_KEY"),
-        "online_llm_base_url": os.getenv(
-            "ONLINE_LLM_BASE_URL", online.base_url
-        ),
-        "online_llm_model": os.getenv("ONLINE_LLM_MODEL", online.model),
-        "online_llm_api_key": online.resolve_api_key("ONLINE_LLM_API_KEY"),
+        "local_llm_base_url": local_base_url,
+        "local_llm_model": local_model,
+        "local_llm_api_key": local_api_key,
+        "online_llm_base_url": online_base_url,
+        "online_llm_model": online_model,
+        "online_llm_api_key": online_api_key,
     }
     if include_profile:
         settings["llm_profile"] = resolved_profile

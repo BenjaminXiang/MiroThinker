@@ -371,3 +371,46 @@
   border-radius: 3px;
   border: 1px solid var(--seed-line);
 }
+
+/* === TRIGGER MODAL ====================================================== */
+
+.seed-trigger-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.seed-trigger-identity {
+  display: grid;
+  gap: 6px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--seed-line);
+}
+
+.seed-trigger-identity code {
+  font-family: var(--seed-font-mono);
+  font-size: 12px;
+  color: var(--seed-ink-soft);
+  background: var(--seed-bg);
+  border: 1px solid var(--seed-line);
+  border-radius: 4px;
+  padding: 6px 8px;
+  overflow-wrap: anywhere;
+}
+
+.seed-trigger-mode {
+  width: 100%;
+}
+
+.seed-trigger-mode .ant-radio-button-wrapper {
+  text-align: center;
+  min-width: 92px;
+}
+
+.seed-trigger-limit-form .ant-form-item {
+  margin-bottom: 0;
+}
+
+.seed-trigger-limit {
+  width: 160px;
+}

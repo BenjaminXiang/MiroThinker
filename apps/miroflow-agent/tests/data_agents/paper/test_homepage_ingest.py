@@ -10,22 +10,38 @@ from __future__ import annotations
 import json
 import uuid
 from contextlib import contextmanager
+from io import BytesIO
 from unittest.mock import MagicMock, patch
 from uuid import UUID
 
 import httpx
 import pytest
+from openpyxl import Workbook
 
+from src.data_agents.paper import homepage_ingest
 from src.data_agents.paper.full_text_fetcher import FullTextExtract
 from src.data_agents.paper.homepage_ingest import (
     IngestReport,
+    _extract_publications_from_homepage_source_pages,
     _fetch_professors,
+    _file_pipeline_issue,
+    _filter_homepage_ingest_professor_rows,
+    _find_existing_canonical_homepage_paper,
+    _find_existing_linked_paper_for_page_only,
+    _extract_publications_from_single_source_page,
     _is_malformed_publication_title,
+    _load_resume_set,
     _normalize_homepage_publication_for_ingest,
     run_homepage_paper_ingest,
 )
 from src.data_agents.paper.title_resolver import ResolvedPaper
-from src.data_agents.professor.homepage_publications import HomepagePublication
+from src.data_agents.professor.homepage_source_filter import (
+    is_homepage_publication_ingest_url,
+)
+from src.data_agents.professor.homepage_publications import (
+    HomepagePublication,
+    extract_publications_from_html,
+)
 
 
 # ---------- Fixtures ---------------------------------------------------------
@@ -35,6 +51,8 @@ def _prof_row(
     *,
     prof_id: str | None = None,
     name: str = "Test Prof",
+    name_en: str | None = None,
+    aliases: list[str] | None = None,
     institution: str = "南方科技大学",
     homepage_url: str = "https://example.edu/prof/x",
     homepage_page_role: str | None = "official_profile",
@@ -44,6 +62,8 @@ def _prof_row(
     return {
         "professor_id": prof_id or str(uuid.uuid4()),
         "canonical_name": name,
+        "canonical_name_en": name_en,
+        "aliases": aliases or [],
         "institution": institution,
         "homepage_url": homepage_url,
         "homepage_page_role": homepage_page_role,
@@ -58,6 +78,7 @@ def _pub(
     authors_text: str | None = "A. Smith, J. Doe",
     venue_text: str | None = "NeurIPS",
     year: int | None = 2023,
+    source_anchor: str | None = None,
     pdf_url: str | None = None,
     source_url: str = "https://example.edu/prof/x",
 ) -> HomepagePublication:
@@ -68,7 +89,7 @@ def _pub(
         venue_text=venue_text,
         year=year,
         source_url=source_url,
-        source_anchor=None,
+        source_anchor=source_anchor,
         pdf_url=pdf_url,
     )
 
@@ -90,6 +111,10 @@ def _resolved(
         match_confidence=0.93,
         match_source="openalex",
     )
+
+
+def _resolved_unless_cache_only(*_args, **kwargs) -> ResolvedPaper | None:
+    return None if kwargs.get("cache_only") else _resolved()
 
 
 def _full_text() -> FullTextExtract:
@@ -120,12 +145,75 @@ def _mock_conn_with_profs(prof_rows: list[dict]):
     return conn
 
 
+def test_homepage_ingest_filters_non_person_cuhk_mypage_rows_before_fetch():
+    rows = [
+        _prof_row(
+            prof_id="PROF-HIGHLIGHTED-NEWS",
+            name="Highlighted News",
+            homepage_url="https://mypage.cuhk.edu.cn/academics/noel/index-chs.html",
+            homepage_page_role="personal_homepage",
+        ),
+        _prof_row(
+            prof_id="PROF-DEEP-BIT",
+            name="Deep Bit lab",
+            homepage_url="https://mypage.cuhk.edu.cn/academics/lizhen/",
+            homepage_page_role="personal_homepage",
+        ),
+        _prof_row(
+            prof_id="PROF-BRESAR",
+            name="BRESAR, Miha",
+            homepage_url="https://sites.google.com/view/mihabresar",
+            homepage_page_role="personal_homepage",
+        ),
+    ]
+
+    filtered = _filter_homepage_ingest_professor_rows(rows)
+
+    assert [row["professor_id"] for row in filtered] == ["PROF-BRESAR"]
+
+
+def test_homepage_ingest_filters_profile_title_publication_body_pollution():
+    rows = [
+        _prof_row(
+            prof_id="PROF-CHEN",
+            name="陈刚",
+            homepage_url="https://mypage.cuhk.edu.cn/academics/example/",
+            homepage_page_role="personal_homepage",
+        )
+        | {
+            "affiliation_title": (
+                "Modified Peptide Nucleic Acids And Their Use. Inventors: "
+                "1) Gitali DEVI"
+            )
+        },
+        _prof_row(
+            prof_id="PROF-BRESAR",
+            name="BRESAR, Miha",
+            homepage_url="https://sites.google.com/view/mihabresar",
+            homepage_page_role="personal_homepage",
+        )
+        | {"affiliation_title": "助理教授"},
+    ]
+
+    filtered = _filter_homepage_ingest_professor_rows(rows)
+
+    assert [row["professor_id"] for row in filtered] == ["PROF-BRESAR"]
+
+
 class _FetchRows:
     def __init__(self, rows: list[tuple]):
         self._rows = rows
 
     def fetchall(self) -> list[tuple]:
         return self._rows
+
+
+class _FetchOne:
+    def __init__(self, row):
+        self._row = row
+
+    def fetchone(self):
+        return self._row
 
 
 class _SelectorConn:
@@ -187,6 +275,13 @@ class _SelectorConn:
                     "PROF-1",
                     "Test Prof",
                     "南方科技大学",
+                    "https://faculty.sustech.edu.cn/xingxy",
+                    "personal_homepage",
+                ),
+                (
+                    "PROF-1",
+                    "Test Prof",
+                    "南方科技大学",
                     "https://scholar.google.com/citations?user=test",
                     "personal_homepage",
                 ),
@@ -202,6 +297,27 @@ class _SelectorConn:
                     "Test Prof",
                     "南方科技大学",
                     "https://chaogou.github.io/cv/联系邮箱：",
+                    "personal_homepage",
+                ),
+                (
+                    "PROF-1",
+                    "Test Prof",
+                    "南方科技大学",
+                    "https://design.sztu.edu.cn/xygk/szdw/jytd.htm#prof-%E6%9D%9C%E9%B9%A4%E6%B0%91",
+                    "official_profile",
+                ),
+                (
+                    "PROF-1",
+                    "Test Prof",
+                    "南方科技大学",
+                    "http://www.sztu.edu.cn/",
+                    "personal_homepage",
+                ),
+                (
+                    "PROF-1",
+                    "Test Prof",
+                    "南方科技大学",
+                    "https://inspirehep.net/authors/1234567",
                     "personal_homepage",
                 ),
             ]
@@ -235,14 +351,166 @@ def test_fetch_professors_can_include_owned_homepage_publication_pages():
         "https://example.edu/prof/publications",
         "https://lab.example.edu/test-prof",
         "https://people.example.edu/test-prof",
+        "https://faculty.sustech.edu.cn/xingxy",
+        "https://design.sztu.edu.cn/xygk/szdw/jytd.htm#prof-%E6%9D%9C%E9%B9%A4%E6%B0%91",
     ]
     assert [row["homepage_page_role"] for row in rows] == [
         "official_profile",
         "official_publication_page",
         "lab_homepage",
         "personal_homepage",
+        "personal_homepage",
+        "official_profile",
     ]
     assert "owner_scope_ref = p.professor_id::text" in conn.executed[0][0]
+
+
+def test_fetch_professors_skips_stale_same_host_non_primary_personal_homepages():
+    conn = _SelectorConn()
+
+    _fetch_professors(
+        conn,
+        institution=None,
+        limit=None,
+        prof_id=None,
+        include_owned_homepage_pages=True,
+    )
+
+    sql = conn.executed[0][0]
+    assert "LEFT JOIN source_page primary_sp" in sql
+    assert "sp.page_id = p.primary_official_profile_page_id" in sql
+    assert "sp.page_role <> 'personal_homepage'" in sql
+    assert "sp.url_host IS DISTINCT FROM primary_sp.url_host" in sql
+
+
+def test_fetch_professors_skips_known_unproductive_official_page_when_owned_page_exists():
+    conn = MagicMock()
+    conn.execute.return_value.fetchall.return_value = [
+        (
+            "PROF-CSSE-1",
+            "尹剑飞",
+            "深圳大学",
+            uuid.uuid4(),
+            "https://csse.szu.edu.cn/pages/user/index?id=554",
+            "official_profile",
+            "尹剑飞 代表性学术论文：Paper One. Journal, 2024.",
+        ),
+        (
+            "PROF-CSSE-1",
+            "尹剑飞",
+            "深圳大学",
+            uuid.uuid4(),
+            "https://bigdata.szu.edu.cn/info/1009/1063.htm",
+            "personal_homepage",
+            "尹剑飞 代表性学术论文：Paper One. Journal, 2024.",
+        ),
+        (
+            "PROF-CSSE-2",
+            "何汝艳",
+            "深圳大学",
+            uuid.uuid4(),
+            "https://csse.szu.edu.cn/pages/user/index?id=1187",
+            "official_profile",
+            "何汝艳 视觉智能研究中心 遥感图像处理与应用",
+        ),
+    ]
+
+    rows = _fetch_professors(
+        conn,
+        institution=None,
+        department=None,
+        seed_id=5,
+        limit=None,
+        prof_id=None,
+        include_owned_homepage_pages=True,
+    )
+
+    assert [row["homepage_url"] for row in rows] == [
+        "https://bigdata.szu.edu.cn/info/1009/1063.htm",
+        "https://csse.szu.edu.cn/pages/user/index?id=1187",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("url", "expected"),
+    [
+        ("https://people.example.edu/test-prof", True),
+        ("http://zenghp.org/", True),
+        ("https://jianwei.cuhk.edu.cn/", True),
+        ("http://faculty.sustech.edu.cn/chenxf/", True),
+        ("https://faculty.sustech.edu.cn/xingxy", True),
+        ("https://faculty.sustech.edu.cn/?tagid=xingxy&iscss=1&snapid=1", True),
+        ("https://faculty.sustech.edu.cn/", False),
+        ("https://faculty.sustech.edu.cn/?cat=4", False),
+        ("https://faculty.sustech.edu.cn/zh", False),
+        ("https://faculty.sustech.edu.cn/zh/", False),
+        (
+            "https://design.sztu.edu.cn/xygk/szdw/jytd.htm#prof-%E6%9D%9C%E9%B9%A4%E6%B0%91",
+            False,
+        ),
+        ("http://www.sztu.edu.cn/", False),
+        ("https://sztu.edu.cn/", False),
+        ("https://scholar.google.com/citations?user=abc", False),
+        ("https://www.researchgate.net/profile/Beichen-Ding", False),
+        ("https://orcid.org/0000-0001-2345-6789", False),
+        ("https://dblp.org/pid/12/3456.html", False),
+        ("https://inspirehep.net/authors/1234567", False),
+        ("ResearchGate https://www.researchgate.net/profile/Beichen-Ding", False),
+        ("https://scholar.google.com/citations?user=abc Google Scholar", False),
+    ],
+)
+def test_homepage_publication_ingest_url_filter_keeps_owned_pages_not_roster_noise(
+    url,
+    expected,
+):
+    assert is_homepage_publication_ingest_url(url) is expected
+
+
+def test_fetch_professors_keeps_scoped_official_fragment_with_profile_raw_text():
+    conn = MagicMock()
+    conn.execute.return_value.fetchall.return_value = [
+        (
+            "PROF-DESIGN-1",
+            "杜鹤民",
+            "深圳技术大学",
+            uuid.uuid4(),
+            "https://design.sztu.edu.cn/xygk/szdw/jytd.htm#prof-%E6%9D%9C%E9%B9%A4%E6%B0%91",
+            "official_profile",
+            "杜鹤民 - 教授 代表性论文：Scoped Design Paper. Journal, 2024.",
+        )
+    ]
+
+    rows = _fetch_professors(
+        conn,
+        institution=None,
+        department=None,
+        seed_id=47,
+        limit=None,
+        prof_id=None,
+        include_owned_homepage_pages=True,
+    )
+
+    assert [row["professor_id"] for row in rows] == ["PROF-DESIGN-1"]
+    assert rows[0]["profile_raw_text"].startswith("杜鹤民 - 教授")
+
+
+def test_filter_keeps_official_publication_fragment_for_fetch_scope():
+    rows = [
+        _prof_row(
+            prof_id="PROF-DESIGN-FRAGMENT",
+            name="刘墨",
+            homepage_url=(
+                "https://design.sztu.edu.cn/xygk/szdw/jytd.htm"
+                "#prof-%E5%88%98%E5%A2%A8"
+            ),
+            homepage_page_role="official_publication_page",
+            profile_raw_text=None,
+        )
+    ]
+
+    filtered = _filter_homepage_ingest_professor_rows(rows)
+
+    assert [row["professor_id"] for row in filtered] == ["PROF-DESIGN-FRAGMENT"]
 
 
 def test_fetch_professors_filters_department_and_seed_via_affiliation_run_scope():
@@ -261,6 +529,7 @@ def test_fetch_professors_filters_department_and_seed_via_affiliation_run_scope(
     assert rows == []
     sql, params = conn.execute.call_args.args
     assert "latest_seed_run AS (" in sql
+    assert "(COALESCE(pr.run_scope->>'trigger_mode', '') = 'full') DESC" in sql
     assert "seed_professors AS (" in sql
     assert "JOIN latest_seed_run lr ON lr.run_id = pa.run_id" in sql
     assert "JOIN seed_professors seed_scope" in sql
@@ -291,6 +560,7 @@ def test_fetch_professors_applies_department_and_seed_to_owned_page_scope():
 
     sql, params = conn.execute.call_args.args
     assert "WITH latest_seed_run AS (" in sql
+    assert "(COALESCE(pr.run_scope->>'trigger_mode', '') = 'full') DESC" in sql
     assert "seed_professors AS (" in sql
     assert "selected_professors AS (" in sql
     assert "JOIN seed_professors seed_scope" in sql
@@ -315,7 +585,7 @@ def test_happy_path_single_prof_five_pubs_all_resolvable(tmp_path):
     prof = _prof_row()
     conn = _mock_conn_with_profs([prof])
 
-    pubs = [_pub(clean_title=f"Paper {i}") for i in range(5)]
+    pubs = [_pub(clean_title=f"Resolvable Paper Title {i}") for i in range(5)]
 
     with patch(
         "src.data_agents.paper.homepage_ingest.open_pipeline_run"
@@ -361,6 +631,147 @@ def test_happy_path_single_prof_five_pubs_all_resolvable(tmp_path):
         assert m_upsert_full.call_count == 5
         m_close.assert_called_once()
         assert m_close.call_args.kwargs.get("status") == "succeeded"
+
+
+def test_scoped_fragment_profile_uses_stored_raw_text_without_fetching_whole_page(
+    tmp_path,
+):
+    prof = _prof_row(
+        prof_id="PROF-DESIGN-1",
+        name="杜鹤民",
+        institution="深圳技术大学",
+        homepage_url="https://design.sztu.edu.cn/xygk/szdw/jytd.htm#prof-%E6%9D%9C%E9%B9%A4%E6%B0%91",
+        homepage_page_role="official_profile",
+        profile_raw_text=(
+            "杜鹤民 - 教授\n"
+            "代表性论文：Scoped Design Paper. Journal of Design, 2024."
+        ),
+    )
+    conn = _mock_conn_with_profs([prof])
+
+    def fake_publication_extractor(html: str, *, page_url: str):
+        assert html == prof["profile_raw_text"]
+        assert page_url == prof["homepage_url"]
+        return [_pub(clean_title="Scoped Design Paper", source_url=page_url)]
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run",
+        return_value=uuid.uuid4(),
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html"
+    ) as m_fetch_html:
+        report = run_homepage_paper_ingest(
+            conn,
+            dry_run=True,
+            resume_checkpoint_path=tmp_path / "checkpoint.jsonl",
+            publication_extractor=fake_publication_extractor,
+            external_resolution_max_per_professor=0,
+        )
+
+    assert report.profs_processed == 1
+    assert report.papers_linked_total == 1
+    m_fetch_html.assert_not_called()
+
+
+def test_scoped_fragment_profile_rejects_raw_text_for_another_professor(
+    tmp_path,
+):
+    prof = _prof_row(
+        prof_id="PROF-DESIGN-LIUMO",
+        name="刘墨",
+        institution="深圳技术大学",
+        homepage_url=(
+            "https://design.sztu.edu.cn/xygk/szdw/jytd.htm"
+            "#prof-%E5%88%98%E5%A2%A8"
+        ),
+        homepage_page_role="official_profile",
+        profile_raw_text=(
+            "杜鹤民 - 教授\n"
+            "代表性论文：Designing Mediated Social Touch for Mobile Communication: "
+            "From Hand Gestures to Touch Signals. International Journal of "
+            "Human-Computer Studies, 2026."
+        ),
+    )
+    conn = _mock_conn_with_profs([prof])
+    seen: dict[str, str] = {}
+
+    def fake_publication_extractor(html: str, *, page_url: str):
+        seen["html"] = html
+        seen["page_url"] = page_url
+        return []
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run",
+        return_value=uuid.uuid4(),
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value="<div class='team-item'><h3>刘墨</h3><p>交互设计</p></div>",
+    ) as m_fetch_html:
+        report = run_homepage_paper_ingest(
+            conn,
+            dry_run=True,
+            resume_checkpoint_path=tmp_path / "checkpoint.jsonl",
+            publication_extractor=fake_publication_extractor,
+            external_resolution_max_per_professor=0,
+        )
+
+    assert report.profs_processed == 1
+    assert report.papers_linked_total == 0
+    m_fetch_html.assert_called_once_with(prof["homepage_url"])
+    assert "杜鹤民" not in seen["html"]
+    assert seen["page_url"] == prof["homepage_url"]
+
+
+def test_known_unproductive_csse_profile_uses_stored_raw_text_without_fetching(
+    tmp_path,
+):
+    prof = _prof_row(
+        prof_id="PROF-CSSE-RAW",
+        name="尹剑飞",
+        institution="深圳大学",
+        homepage_url="https://csse.szu.edu.cn/pages/user/index?id=554",
+        homepage_page_role="official_profile",
+        profile_raw_text=(
+            "尹剑飞\n"
+            "代表性学术论文：Wireless Sensor Network Node Localization Algorithm "
+            "Based on SDP and ESDP. CECNet, 2013."
+        ),
+    )
+    conn = _mock_conn_with_profs([prof])
+
+    def fake_publication_extractor(html: str, *, page_url: str):
+        assert html == prof["profile_raw_text"]
+        assert page_url == prof["homepage_url"]
+        return [
+            _pub(
+                clean_title="Wireless Sensor Network Node Localization Algorithm Based on SDP and ESDP",
+                source_url=page_url,
+            )
+        ]
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run",
+        return_value=uuid.uuid4(),
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html"
+    ) as m_fetch_html:
+        report = run_homepage_paper_ingest(
+            conn,
+            dry_run=True,
+            resume_checkpoint_path=tmp_path / "checkpoint.jsonl",
+            publication_extractor=fake_publication_extractor,
+            external_resolution_max_per_professor=0,
+        )
+
+    assert report.profs_processed == 1
+    assert report.papers_linked_total == 1
+    m_fetch_html.assert_not_called()
 
 
 def test_checkpoint_append_happens_after_professor_commit(tmp_path):
@@ -548,8 +959,8 @@ def test_homepage_ingest_uses_selected_source_page_id_as_relation_evidence(tmp_p
 def test_homepage_ingest_follows_same_root_publication_page(tmp_path):
     second_hop_page_id = UUID("22222222-2222-2222-2222-222222222222")
     prof = _prof_row(
-        prof_id="PROF-SUSTECH-TANGB",
-        homepage_url="https://faculty.sustech.edu.cn/tangb/",
+        prof_id="PROF-PERSONAL-TANGB",
+        homepage_url="https://people.example.edu/tangb/",
         homepage_page_role="personal_homepage",
     )
     conn = _mock_conn_with_profs([prof])
@@ -567,14 +978,14 @@ def test_homepage_ingest_follows_same_root_publication_page(tmp_path):
     """
     pub = _pub(
         clean_title="Reliable Publication from Publication Page",
-        source_url="https://faculty.sustech.edu.cn/tangb/pub.html",
+        source_url="https://people.example.edu/tangb/pub.html",
     )
 
     def fake_publication_extractor(html: str, *, page_url: str):
-        if page_url == "https://faculty.sustech.edu.cn/tangb/":
+        if page_url == "https://people.example.edu/tangb/":
             assert html == homepage_html
             return []
-        assert page_url == "https://faculty.sustech.edu.cn/tangb/pub.html"
+        assert page_url == "https://people.example.edu/tangb/pub.html"
         assert html == publication_html
         return [pub]
 
@@ -610,8 +1021,8 @@ def test_homepage_ingest_follows_same_root_publication_page(tmp_path):
 
         assert report.papers_linked_total == 1
         assert [call.args[0] for call in m_fetch_html.call_args_list] == [
-            "https://faculty.sustech.edu.cn/tangb/",
-            "https://faculty.sustech.edu.cn/tangb/pub.html",
+            "https://people.example.edu/tangb/",
+            "https://people.example.edu/tangb/pub.html",
         ]
         assert m_upsert_paper.call_args.kwargs["title_clean"] == (
             "Reliable Publication from Publication Page"
@@ -624,16 +1035,311 @@ def test_homepage_ingest_follows_same_root_publication_page(tmp_path):
         )
         m_upsert_source_page.assert_called_once()
         assert m_upsert_source_page.call_args.kwargs["url"] == (
-            "https://faculty.sustech.edu.cn/tangb/pub.html"
+            "https://people.example.edu/tangb/pub.html"
         )
         assert m_upsert_source_page.call_args.kwargs["page_role"] == (
             "personal_homepage"
         )
         assert m_upsert_source_page.call_args.kwargs["owner_scope_kind"] == "professor"
         assert m_upsert_source_page.call_args.kwargs["owner_scope_ref"] == (
-            "PROF-SUSTECH-TANGB"
+            "PROF-PERSONAL-TANGB"
         )
         assert m_upsert_source_page.call_args.kwargs["is_official_source"] is False
+
+
+def test_homepage_ingest_follows_szu_bigdata_publication_info_page(tmp_path):
+    second_hop_page_id = UUID("33333333-3333-3333-3333-333333333333")
+    prof = _prof_row(
+        prof_id="PROF-SZU-BIGDATA",
+        name="陈梓楠",
+        institution="深圳大学",
+        homepage_url="https://bigdata.szu.edu.cn/kycg/lwfb.htm",
+        homepage_page_role="personal_homepage",
+    )
+    conn = _mock_conn_with_profs([prof])
+    homepage_html = """
+    <html><body>
+      <a href="/info/1016/1211.htm" title="2020年代表性论文">2020年代表性论文</a>
+      <a href="/info/1001/9999.htm" title="学院新闻">学院新闻</a>
+    </body></html>
+    """
+    publication_html = """
+    <html><body>
+      <table>
+        <tr><th>序号</th><th>论文名称</th><th>期刊</th><th>时间</th><th>作者</th></tr>
+        <tr><td>1</td><td>Robust graph analytics for urban big data</td><td>TKDD</td><td>2020</td><td>陈梓楠</td></tr>
+      </table>
+    </body></html>
+    """
+    pub = _pub(
+        clean_title="Robust graph analytics for urban big data",
+        authors_text="陈梓楠",
+        source_url="https://bigdata.szu.edu.cn/info/1016/1211.htm",
+        year=2020,
+    )
+
+    def fake_publication_extractor(html: str, *, page_url: str):
+        if page_url == "https://bigdata.szu.edu.cn/kycg/lwfb.htm":
+            assert html == homepage_html
+            return []
+        assert page_url == "https://bigdata.szu.edu.cn/info/1016/1211.htm"
+        assert html == publication_html
+        return [pub]
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html"
+    ) as m_fetch_html, patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
+        return_value=_resolved(title="Robust graph analytics for urban big data"),
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper"
+    ) as m_upsert_paper, patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ) as m_upsert_link, patch(
+        "src.data_agents.paper.homepage_ingest.upsert_source_page_for_url",
+        return_value=second_hop_page_id,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
+        return_value=True,
+    ):
+        m_fetch_html.side_effect = [homepage_html, publication_html]
+        m_upsert_paper.return_value = MagicMock(paper_id="paper:title:x", is_new=True)
+
+        report = run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "checkpoint.jsonl",
+            publication_extractor=fake_publication_extractor,
+        )
+
+        assert report.papers_linked_total == 1
+        assert [call.args[0] for call in m_fetch_html.call_args_list] == [
+            "https://bigdata.szu.edu.cn/kycg/lwfb.htm",
+            "https://bigdata.szu.edu.cn/info/1016/1211.htm",
+        ]
+        assert m_upsert_link.call_args.kwargs["evidence_page_id"] == (
+            second_hop_page_id
+        )
+
+
+def test_homepage_ingest_follows_all_szu_bigdata_publication_year_pages(tmp_path):
+    prof = _prof_row(
+        prof_id="PROF-SZU-BIGDATA-MULTIYEAR",
+        name="黄哲学",
+        name_en="Joshua Zhexue Huang",
+        institution="深圳大学",
+        homepage_url="https://bigdata.szu.edu.cn/kycg/lwfb.htm",
+        homepage_page_role="official_publication_page",
+    )
+    conn = _mock_conn_with_profs([prof])
+    year_urls = [
+        "https://bigdata.szu.edu.cn/info/1016/1312.htm",
+        "https://bigdata.szu.edu.cn/info/1016/1244.htm",
+        "https://bigdata.szu.edu.cn/info/1016/1211.htm",
+        "https://bigdata.szu.edu.cn/info/1016/1068.htm",
+        "https://bigdata.szu.edu.cn/info/1016/1210.htm",
+    ]
+    homepage_html = """
+    <html><body>
+      <a href="/info/1016/1312.htm" title="2023年论文发表情况">2023年论文发表情况</a>
+      <a href="/info/1016/1244.htm" title="2022高水平论文">2022高水平论文</a>
+      <a href="/info/1016/1211.htm" title="2021年代表性论文">2021年代表性论文</a>
+      <a href="/info/1016/1068.htm" title="2020年代表性论文">2020年代表性论文</a>
+      <a href="/info/1016/1210.htm" title="2019年代表性论文">2019年代表性论文</a>
+    </body></html>
+    """
+    publications_by_url = {
+        url: _pub(
+            clean_title=f"Representative BigData Paper {index}",
+            authors_text="Joshua Zhexue Huang, Xiaojun Chen",
+            source_url=url,
+            year=2024 - index,
+        )
+        for index, url in enumerate(year_urls, start=1)
+    }
+
+    def fake_publication_extractor(html: str, *, page_url: str):
+        if page_url == "https://bigdata.szu.edu.cn/kycg/lwfb.htm":
+            assert html == homepage_html
+            return []
+        assert html == f"<html><body>{page_url}</body></html>"
+        return [publications_by_url[page_url]]
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html"
+    ) as m_fetch_html, patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
+        side_effect=lambda title, **kwargs: _resolved(title=title),
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper"
+    ) as m_upsert_paper, patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_source_page_for_url",
+        return_value=UUID("44444444-4444-4444-4444-444444444444"),
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
+        return_value=True,
+    ):
+        m_fetch_html.side_effect = [
+            homepage_html,
+            *(f"<html><body>{url}</body></html>" for url in year_urls),
+        ]
+        m_upsert_paper.side_effect = [
+            MagicMock(paper_id=f"paper:title:{index}", is_new=True)
+            for index in range(len(year_urls))
+        ]
+
+        report = run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "checkpoint.jsonl",
+            publication_extractor=fake_publication_extractor,
+        )
+
+        assert report.papers_linked_total == len(year_urls)
+        assert [call.args[0] for call in m_fetch_html.call_args_list] == [
+            "https://bigdata.szu.edu.cn/kycg/lwfb.htm",
+            *year_urls,
+        ]
+
+
+def test_homepage_ingest_filters_szu_bigdata_aggregate_pages_by_author(tmp_path):
+    prof = _prof_row(
+        prof_id="PROF-SZU-BIGDATA-AGGREGATE",
+        name="Muhammad Saqib Nawaz",
+        institution="深圳大学",
+        homepage_url="https://bigdata.szu.edu.cn/kycg/lwfb.htm",
+        homepage_page_role="official_publication_page",
+    )
+    conn = _mock_conn_with_profs([prof])
+    homepage_html = """
+    <html><body>
+      <a href="/info/1016/1067.htm" title="2018年代表性论文">2018年代表性论文</a>
+    </body></html>
+    """
+    publication_html = "<html><body>aggregate publications</body></html>"
+    matching_pub = _pub(
+        clean_title="A paper by the current professor",
+        authors_text="Muhammad Saqib Nawaz, A. Smith",
+        source_url="https://bigdata.szu.edu.cn/info/1016/1067.htm",
+        year=2018,
+    )
+    other_professor_pub = _pub(
+        clean_title="A paper by another big data center professor",
+        authors_text="Joshua Zhexue Huang, Xiaojun Chen",
+        source_url="https://bigdata.szu.edu.cn/info/1016/1067.htm",
+        year=2018,
+    )
+
+    def fake_publication_extractor(html: str, *, page_url: str):
+        if page_url == "https://bigdata.szu.edu.cn/kycg/lwfb.htm":
+            assert html == homepage_html
+            return []
+        assert page_url == "https://bigdata.szu.edu.cn/info/1016/1067.htm"
+        assert html == publication_html
+        return [matching_pub, other_professor_pub]
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html"
+    ) as m_fetch_html, patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
+        side_effect=lambda title, **kwargs: _resolved(title=title),
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper"
+    ) as m_upsert_paper, patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ) as m_upsert_link, patch(
+        "src.data_agents.paper.homepage_ingest.upsert_source_page_for_url",
+        return_value=UUID("55555555-5555-5555-5555-555555555555"),
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
+        return_value=True,
+    ):
+        m_fetch_html.side_effect = [homepage_html, publication_html]
+        m_upsert_paper.return_value = MagicMock(paper_id="paper:title:x", is_new=True)
+
+        report = run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "checkpoint.jsonl",
+            publication_extractor=fake_publication_extractor,
+        )
+
+        assert report.papers_linked_total == 1
+        assert m_upsert_link.call_count == 1
+        assert m_upsert_paper.call_args.kwargs["title_clean"] == (
+            "A paper by the current professor"
+        )
+
+
+def test_szu_bigdata_publication_page_uses_xlsx_attachment_titles(monkeypatch):
+    html = """
+    <html><body>
+      <article>
+        <h1>2020年代表性论文</h1>
+        <p>2020-12-31 10:34:22 来源：系统管理员</p>
+        <p>附件【<a href="/system/_content/download.jsp?wbfileid=abc">
+          2020年代表性论文.xlsx
+        </a>】已下载 次</p>
+      </article>
+    </body></html>
+    """
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.append(["2020年代表性论文"])
+    sheet.append(["序号", "题目", "期刊名", "年份", "作者"])
+    sheet.append(
+        [
+            1,
+            "Discriminative Streaming Network Embedding",
+            "Knowl. Based Syst.",
+            "2020",
+            "Qi, Yiyan; Cheng, Jiefeng; Chen, Xiaojun",
+        ]
+    )
+    sheet.append(
+        [
+            2,
+            "Top-k relevant semantic place retrieval on spatiotemporal RDF data",
+            "VLDB J.",
+            "2020",
+            "Dingming Wu, Hao Zhou, Jieming Shi",
+        ]
+    )
+    buffer = BytesIO()
+    workbook.save(buffer)
+
+    monkeypatch.setattr(
+        homepage_ingest,
+        "_fetch_szu_bigdata_attachment_bytes",
+        lambda _url, *, referer_url: buffer.getvalue(),
+    )
+
+    augmented_html = homepage_ingest._augment_szu_bigdata_publication_attachment_text(
+        html,
+        page_url="https://bigdata.szu.edu.cn/info/1016/1068.htm",
+    )
+
+    publications = extract_publications_from_html(
+        augmented_html,
+        page_url="https://bigdata.szu.edu.cn/info/1016/1068.htm",
+    )
+
+    titles = {publication.clean_title for publication in publications}
+    assert "Discriminative Streaming Network Embedding" in titles
+    assert (
+        "Top-k relevant semantic place retrieval on spatiotemporal RDF data" in titles
+    )
 
 
 def test_homepage_ingest_does_not_follow_second_hop_pdf_pages(tmp_path):
@@ -704,7 +1410,7 @@ def test_homepage_ingest_does_not_follow_second_hop_pdf_pages(tmp_path):
 
 def test_homepage_ingest_second_hop_read_error_is_nonfatal(tmp_path):
     prof = _prof_row(
-        homepage_url="https://faculty.sustech.edu.cn/tangb/",
+        homepage_url="https://people.example.edu/tangb/",
         homepage_page_role="personal_homepage",
     )
     conn = _mock_conn_with_profs([prof])
@@ -716,11 +1422,11 @@ def test_homepage_ingest_second_hop_read_error_is_nonfatal(tmp_path):
     """
     main_pub = _pub(
         clean_title="Reliable Publication from Profile Page",
-        source_url="https://faculty.sustech.edu.cn/tangb/",
+        source_url="https://people.example.edu/tangb/",
     )
 
     def fake_publication_extractor(html: str, *, page_url: str):
-        assert page_url == "https://faculty.sustech.edu.cn/tangb/"
+        assert page_url == "https://people.example.edu/tangb/"
         assert html == homepage_html
         return [main_pub]
 
@@ -755,14 +1461,100 @@ def test_homepage_ingest_second_hop_read_error_is_nonfatal(tmp_path):
 
         assert report.papers_linked_total == 1
         assert [call.args[0] for call in m_fetch_html.call_args_list] == [
-            "https://faculty.sustech.edu.cn/tangb/",
-            "https://faculty.sustech.edu.cn/tangb/pub.html",
+            "https://people.example.edu/tangb/",
+            "https://people.example.edu/tangb/pub.html",
         ]
+
+
+def test_homepage_source_extraction_reports_second_hop_page_outcomes():
+    homepage_html = """
+    <html><body>
+      <a href="pub.html">Publications</a>
+      <a href="empty.html">Selected Publications</a>
+      <a href="https://other.example.edu/publications.html">Publications</a>
+    </body></html>
+    """
+    publication_html = "<html><body><h2>Publications</h2></body></html>"
+    empty_html = """
+    <html><body>
+      <h2>Selected Publications</h2>
+      <p>Published more than 50 papers and led multiple research projects.</p>
+    </body></html>
+    """
+
+    def fake_publication_extractor(_html: str, *, page_url: str):
+        if page_url.endswith("/pub.html"):
+            return [
+                _pub(
+                    clean_title="Second Hop Publication",
+                    source_url="https://people.example.edu/tangb/pub.html",
+                )
+            ]
+        return []
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html"
+    ) as m_fetch_html:
+        m_fetch_html.side_effect = [publication_html, empty_html]
+
+        report = _extract_publications_from_homepage_source_pages(
+            homepage_html,
+            page_url="https://people.example.edu/tangb/",
+            publication_extractor=fake_publication_extractor,
+            use_rule_diagnostics=False,
+        )
+
+    outcomes = {outcome.page_url: outcome for outcome in report.page_outcomes}
+    assert outcomes["https://people.example.edu/tangb/"].status == "processed"
+    assert outcomes["https://people.example.edu/tangb/pub.html"].status == "processed"
+    assert (
+        outcomes["https://people.example.edu/tangb/pub.html"].publications_extracted
+        == 1
+    )
+    assert outcomes["https://people.example.edu/tangb/empty.html"].status == (
+        "zero_extraction"
+    )
+    assert outcomes["https://other.example.edu/publications.html"].status == "skipped"
+    assert outcomes[
+        "https://other.example.edu/publications.html"
+    ].skip_reason == "outside_personal_site_root"
+
+
+def test_homepage_source_extraction_reports_second_hop_fetch_failed():
+    homepage_html = """
+    <html><body>
+      <a href="pub.html">Publications</a>
+    </body></html>
+    """
+
+    def fake_publication_extractor(_html: str, *, page_url: str):
+        assert page_url == "https://people.example.edu/tangb/"
+        return []
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html"
+    ) as m_fetch_html:
+        m_fetch_html.side_effect = httpx.ReadError("second hop disconnected")
+
+        report = _extract_publications_from_homepage_source_pages(
+            homepage_html,
+            page_url="https://people.example.edu/tangb/",
+            publication_extractor=fake_publication_extractor,
+            use_rule_diagnostics=False,
+        )
+
+    outcomes = {outcome.page_url: outcome for outcome in report.page_outcomes}
+    assert outcomes["https://people.example.edu/tangb/pub.html"].status == (
+        "fetch_failed"
+    )
+    assert outcomes[
+        "https://people.example.edu/tangb/pub.html"
+    ].fetch_error_type == "ReadError"
 
 
 def test_homepage_ingest_dedupes_publications_across_second_hop_pages(tmp_path):
     prof = _prof_row(
-        homepage_url="https://faculty.sustech.edu.cn/tangb/",
+        homepage_url="https://people.example.edu/tangb/",
         homepage_page_role="personal_homepage",
     )
     conn = _mock_conn_with_profs([prof])
@@ -778,17 +1570,17 @@ def test_homepage_ingest_dedupes_publications_across_second_hop_pages(tmp_path):
     """
     first_pub = _pub(
         clean_title="Duplicate Publication Title",
-        source_url="https://faculty.sustech.edu.cn/tangb/",
+        source_url="https://people.example.edu/tangb/",
     )
     second_pub = _pub(
         clean_title="Duplicate Publication Title",
-        source_url="https://faculty.sustech.edu.cn/tangb/pub.html",
+        source_url="https://people.example.edu/tangb/pub.html",
     )
 
     def fake_publication_extractor(_html: str, *, page_url: str):
-        if page_url == "https://faculty.sustech.edu.cn/tangb/":
+        if page_url == "https://people.example.edu/tangb/":
             return [first_pub]
-        if page_url == "https://faculty.sustech.edu.cn/tangb/pub.html":
+        if page_url == "https://people.example.edu/tangb/pub.html":
             return [second_pub]
         raise AssertionError(page_url)
 
@@ -826,7 +1618,7 @@ def test_homepage_ingest_dedupes_publications_across_second_hop_pages(tmp_path):
 
 def test_homepage_ingest_does_not_follow_cross_root_publication_links(tmp_path):
     prof = _prof_row(
-        homepage_url="https://faculty.sustech.edu.cn/tangb/",
+        homepage_url="https://people.example.edu/tangb/",
         homepage_page_role="personal_homepage",
     )
     conn = _mock_conn_with_profs([prof])
@@ -863,14 +1655,14 @@ def test_homepage_ingest_does_not_follow_cross_root_publication_links(tmp_path):
 
         assert report.papers_linked_total == 0
         assert [call.args[0] for call in m_fetch_html.call_args_list] == [
-            "https://faculty.sustech.edu.cn/tangb/"
+            "https://people.example.edu/tangb/"
         ]
         m_resolve.assert_not_called()
         m_upsert_paper.assert_not_called()
         m_upsert_link.assert_not_called()
 
 
-def test_homepage_ingest_disables_arxiv_title_search_for_bulk_titles(tmp_path):
+def test_homepage_ingest_uses_full_title_cascade_for_homepage_titles(tmp_path):
     prof = _prof_row()
     conn = _mock_conn_with_profs([prof])
     pub = _pub(clean_title="Official Homepage Paper")
@@ -897,7 +1689,7 @@ def test_homepage_ingest_disables_arxiv_title_search_for_bulk_titles(tmp_path):
             resume_checkpoint_path=tmp_path / "checkpoint.jsonl",
         )
 
-        assert m_resolve.call_args.kwargs["enable_arxiv_title_search"] is False
+        assert m_resolve.call_args.kwargs["enable_arxiv_title_search"] is True
 
 
 def test_malformed_author_list_title_is_blocked_before_resolver(tmp_path):
@@ -1092,6 +1884,58 @@ def test_malformed_guard_blocks_author_only_titles_without_explicit_punctuation(
 @pytest.mark.parametrize(
     "clean_title",
     [
+        "A representative result of my works is the article Planar Carrollean dynamics",
+        "Highlighted in SUSTech News",
+        "Highlighted in X-MOL",
+        "Associate Editor",
+    ],
+)
+def test_malformed_guard_blocks_homepage_prose_and_highlight_noise(clean_title):
+    publication = _pub(clean_title=clean_title, authors_text=None, year=None)
+
+    assert _is_malformed_publication_title(publication), clean_title
+
+
+@pytest.mark.parametrize(
+    "clean_title",
+    [
+        "30万元, 在研, 主持",
+        "2022中国博士后科学基金会博士后国际交流引进计划",
+        "国家重点研发计划：服务机器人云服务平台，任务负责人",
+        "2023年，入选CCF Fellow",
+        "山东省重点研发计划：智能装卸车机器人系统关键技术研究与应用，项目负责人",
+    ],
+)
+def test_malformed_guard_blocks_suat_project_honor_and_talent_plan_noise(
+    clean_title,
+):
+    publication = _pub(clean_title=clean_title, authors_text=None, year=None)
+
+    assert _is_malformed_publication_title(publication), clean_title
+
+
+@pytest.mark.parametrize(
+    "clean_title",
+    [
+        "近五年的研究工作集中在协作与人机交互方面",
+        "创意向善 设计为众/Innovation for good - Design for all",
+        "当前研究兴趣主要集中在数据驱动设计、人工智能辅助设计和可持续设计方面",
+        "International Journal of Human-Computer Studies",
+        "International Journal of Human–Computer Studies",
+        "ACM Transactions on Evolutionary Learning and Optimization",
+        "The Waterfront of Toronto, Canada",
+        "ICML/NeurIPS/ICLR",
+    ],
+)
+def test_malformed_guard_blocks_seed47_profile_pollution_titles(clean_title):
+    publication = _pub(clean_title=clean_title, authors_text=None, year=None)
+
+    assert _is_malformed_publication_title(publication), clean_title
+
+
+@pytest.mark.parametrize(
+    "clean_title",
+    [
         "PtolemaiosSarrigiannis",
         "Chen* (2012)",
         "D?bniak T, Duffy DL",
@@ -1201,9 +2045,28 @@ def test_malformed_guard_blocks_student_marked_author_list_with_mixed_context():
         "Lang S u n",
         "etc. Logical Relation Inference and Multiview Information Interaction "
         "for Domain Adaptation Person Re-Identification",
+        "2019年代表性论文序号论文名称期刊时间作者 1 A distributed data "
+        "management system to support large-scale data analysis The Journal "
+        "of Systems & Software 2019 黄哲学",
     ],
 )
 def test_malformed_guard_blocks_section_headings_and_metadata_labels(clean_title):
+    publication = _pub(clean_title=clean_title, authors_text=None, venue_text=None)
+
+    assert _is_malformed_publication_title(publication), clean_title
+
+
+@pytest.mark.parametrize(
+    "clean_title",
+    [
+        "Best Paper",
+        "TPC Co-Chair",
+        "更新时间：2024-03-19",
+    ],
+)
+def test_malformed_guard_blocks_szu_seed18_award_role_and_update_metadata(
+    clean_title,
+):
     publication = _pub(clean_title=clean_title, authors_text=None, venue_text=None)
 
     assert _is_malformed_publication_title(publication), clean_title
@@ -1334,6 +2197,26 @@ def test_malformed_guard_blocks_patent_rows_even_when_title_is_long():
     assert _is_malformed_publication_title(publication)
 
 
+def test_malformed_guard_blocks_us_patent_publication_record():
+    publication = HomepagePublication(
+        raw_title=(
+            "Techniques for current sensing for single-inductor multiple-output "
+            "(simo) regulators” US Patent 16,553,759"
+        ),
+        clean_title=(
+            "Techniques for current sensing for single-inductor multiple-output "
+            "(simo) regulators” US Patent 16,553,759"
+        ),
+        authors_text=None,
+        venue_text=None,
+        year=2024,
+        source_url="https://mypage.cuhk.edu.cn/academics/example/",
+        source_anchor=None,
+    )
+
+    assert _is_malformed_publication_title(publication)
+
+
 @pytest.mark.parametrize(
     "clean_title",
     [
@@ -1354,6 +2237,28 @@ def test_malformed_guard_allows_valid_short_titles(clean_title):
     )
 
     assert not _is_malformed_publication_title(publication), clean_title
+
+
+def test_malformed_guard_allows_context_supported_page_only_short_title():
+    publication = _pub(
+        clean_title="Unindexed Preprint",
+        authors_text=None,
+        venue_text="Working paper",
+        year=2024,
+    )
+
+    assert not _is_malformed_publication_title(publication)
+
+
+def test_malformed_guard_blocks_site_footer_navigation_tail():
+    title = (
+        "人才培养对外合作文化建设招贤纳士版权所有© 2013-2020："
+        "深圳大学南校区计算机与软件学院粤ICP备12345号分享关注官微"
+        "更多大数据内容 0755-26530821 23123122"
+    )
+    publication = _pub(clean_title=title, authors_text=None, venue_text=None, year=None)
+
+    assert _is_malformed_publication_title(publication)
 
 
 def test_malformed_guard_allows_valid_and_title_with_long_bibliographic_venue():
@@ -1548,7 +2453,196 @@ def test_page_only_publication_initializes_needs_enrichment(tmp_path):
         assert m_upsert_paper.call_args.kwargs["quality_status"] == "needs_enrichment"
 
 
-def test_cjk_homepage_titles_skip_external_resolution_in_bulk_ingest(tmp_path):
+def test_page_only_publication_reuses_existing_same_title_year_link(tmp_path):
+    prof = _prof_row(prof_id="PROF-DUP")
+
+    class _DuplicateReuseConn:
+        def __init__(self):
+            self.executed: list[tuple[str, tuple]] = []
+
+        def execute(self, query: str, params: tuple = ()):
+            self.executed.append((query, params))
+            if "SELECT p.professor_id" in query:
+                return _FetchRows([prof])
+            if "FROM professor_paper_link" in query:
+                return _FetchOne({"paper_id": "PAPER-IDENTIFIED"})
+            return _FetchOne(None)
+
+        @contextmanager
+        def transaction(self, savepoint: bool = False):  # noqa: ARG002
+            yield
+
+    conn = _DuplicateReuseConn()
+    publication = _pub(
+        clean_title="Graph Neural Networks for Materials Discovery",
+        authors_text=None,
+        year=2023,
+    )
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value="<html></html>",
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.extract_publications_from_html",
+        return_value=[publication],
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
+        return_value=None,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper"
+    ) as m_upsert_paper, patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ) as m_upsert_link, patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
+        return_value=True,
+    ), patch("src.data_agents.paper.homepage_ingest._file_pipeline_issue"):
+        report = run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "c.jsonl",
+        )
+
+    assert report.papers_linked_total == 1
+    m_upsert_paper.assert_not_called()
+    assert m_upsert_link.call_args.kwargs["paper_id"] == "PAPER-IDENTIFIED"
+    assert m_upsert_link.call_args.kwargs["evidence_source_type"] == "prof_homepage_tier2"
+    assert m_upsert_link.call_args.kwargs["is_officially_listed"] is True
+    assert any("FROM professor_paper_link" in sql for sql, _ in conn.executed)
+    assert any("ppl.link_status = 'verified'" in sql for sql, _ in conn.executed)
+
+
+def test_page_only_publication_reuses_existing_canonical_title_year_author(tmp_path):
+    prof = _prof_row(prof_id="PROF-GLOBAL-CANON")
+
+    class _CanonicalReuseConn:
+        def __init__(self):
+            self.executed: list[tuple[str, tuple]] = []
+
+        def execute(self, query: str, params: tuple = ()):
+            self.executed.append((query, params))
+            if "SELECT p.professor_id" in query:
+                return _FetchRows([prof])
+            if "FROM professor_paper_link" in query:
+                return _FetchOne(None)
+            if "FROM paper p" in query and "authors_display" in query:
+                return _FetchOne({"paper_id": "PAPER-CANON"})
+            return _FetchOne(None)
+
+        @contextmanager
+        def transaction(self, savepoint: bool = False):  # noqa: ARG002
+            yield
+
+    conn = _CanonicalReuseConn()
+    publication = _pub(
+        clean_title="Graph Neural Networks for Materials Discovery",
+        authors_text="A. Smith, B. Chen",
+        year=2023,
+    )
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value="<html></html>",
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.extract_publications_from_html",
+        return_value=[publication],
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
+        return_value=None,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper"
+    ) as m_upsert_paper, patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ) as m_upsert_link, patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
+        return_value=True,
+    ), patch("src.data_agents.paper.homepage_ingest._file_pipeline_issue"):
+        report = run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "c.jsonl",
+        )
+
+    assert report.papers_linked_total == 1
+    m_upsert_paper.assert_not_called()
+    assert m_upsert_link.call_args.kwargs["paper_id"] == "PAPER-CANON"
+    assert any("authors_display" in sql for sql, _ in conn.executed)
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "expected_sql", "expected_param"),
+    [
+        (
+            {"doi": "10.1016/J.NEUCOM.2018.01.001", "arxiv_id": None},
+            "lower(p.doi) = %s",
+            "10.1016/j.neucom.2018.01.001",
+        ),
+        (
+            {"doi": None, "arxiv_id": "2409.05701"},
+            "lower(p.arxiv_id) = %s",
+            "2409.05701",
+        ),
+    ],
+)
+def test_find_existing_canonical_homepage_paper_uses_identifier_keys(
+    kwargs: dict[str, str | None],
+    expected_sql: str,
+    expected_param: str,
+) -> None:
+    class _IdentifierLookupConn:
+        def __init__(self) -> None:
+            self.executed: list[tuple[str, tuple]] = []
+
+        def execute(self, query: str, params: tuple = ()):
+            self.executed.append((query, params))
+            return _FetchOne({"paper_id": "PAPER-CANON"})
+
+    conn = _IdentifierLookupConn()
+
+    paper_id = _find_existing_canonical_homepage_paper(
+        conn,
+        clean_title="pFedGPA",
+        year=2024,
+        authors=(),
+        **kwargs,
+    )
+
+    assert paper_id == "PAPER-CANON"
+    sql, params = conn.executed[0]
+    assert expected_sql in sql
+    assert expected_param in params
+
+
+def test_page_only_existing_paper_lookup_resolves_merge_alias() -> None:
+    class _AliasLookupConn:
+        def __init__(self) -> None:
+            self.executed: list[tuple[str, tuple]] = []
+
+        def execute(self, query: str, params: tuple = ()):
+            self.executed.append((query, params))
+            return _FetchOne({"paper_id": "PAPER-CANON"})
+
+    conn = _AliasLookupConn()
+
+    paper_id = _find_existing_linked_paper_for_page_only(
+        conn,
+        professor_id="PROF-AHMED",
+        clean_title="Improved Alzheimer's disease diagnosis",
+        year=2018,
+    )
+
+    assert paper_id == "PAPER-CANON"
+    sql = " ".join(conn.executed[0][0].split()).lower()
+    assert "paper_merge_alias" in sql
+    assert "coalesce(pma.canonical_paper_id, p.paper_id) as paper_id" in sql
+
+
+def test_cjk_homepage_titles_use_shared_external_resolution(tmp_path):
     prof = _prof_row(name="夏文斌")
     conn = _mock_conn_with_profs([prof])
     pubs = [
@@ -1568,7 +2662,8 @@ def test_cjk_homepage_titles_skip_external_resolution_in_bulk_ingest(tmp_path):
         "src.data_agents.paper.homepage_ingest.extract_publications_from_html",
         return_value=pubs,
     ), patch(
-        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title"
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
+        side_effect=_resolved_unless_cache_only,
     ) as m_resolve, patch(
         "src.data_agents.paper.homepage_ingest.upsert_paper"
     ) as m_upsert_paper, patch(
@@ -1590,15 +2685,17 @@ def test_cjk_homepage_titles_skip_external_resolution_in_bulk_ingest(tmp_path):
         )
 
         assert report.papers_linked_total == 3
-        m_resolve.assert_not_called()
+        assert m_resolve.call_count == 3
         assert m_upsert_paper.call_count == 3
         assert [
             call.kwargs["canonical_source"] for call in m_upsert_paper.call_args_list
-        ] == ["prof_page_only", "prof_page_only", "prof_page_only"]
+        ] == ["openalex", "openalex", "openalex"]
         m_issue.assert_not_called()
 
 
-def test_large_homepage_publication_lists_skip_realtime_external_resolution(tmp_path):
+def test_large_homepage_publication_lists_use_shared_external_resolution_by_default(
+    tmp_path,
+):
     prof = _prof_row(name="肖国芝")
     conn = _mock_conn_with_profs([prof])
     pubs = [
@@ -1621,14 +2718,15 @@ def test_large_homepage_publication_lists_skip_realtime_external_resolution(tmp_
         "src.data_agents.paper.homepage_ingest.extract_publications_from_html",
         return_value=pubs,
     ), patch(
-        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title"
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
+        return_value=_resolved(),
     ) as m_resolve, patch(
         "src.data_agents.paper.homepage_ingest.upsert_paper"
     ) as m_upsert_paper, patch(
         "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
     ), patch(
         "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
-        return_value=False,
+        return_value=True,
     ), patch(
         "src.data_agents.paper.homepage_ingest.fetch_and_extract_full_text"
     ) as m_fetch_full_text, patch(
@@ -1647,16 +2745,16 @@ def test_large_homepage_publication_lists_skip_realtime_external_resolution(tmp_
         )
 
         assert report.papers_linked_total == 81
-        m_resolve.assert_not_called()
+        assert m_resolve.call_count == 81
         assert m_upsert_paper.call_count == 81
         assert {
             call.kwargs["canonical_source"] for call in m_upsert_paper.call_args_list
-        } == {"prof_page_only"}
+        } == {"openalex"}
         m_fetch_full_text.assert_not_called()
         m_issue.assert_not_called()
 
 
-def test_homepage_ingest_caps_realtime_external_resolution_per_professor(tmp_path):
+def test_homepage_ingest_does_not_cap_realtime_external_resolution_by_default(tmp_path):
     prof = _prof_row(name="高产老师")
     conn = _mock_conn_with_profs([prof])
     pubs = [
@@ -1700,11 +2798,11 @@ def test_homepage_ingest_caps_realtime_external_resolution_per_professor(tmp_pat
         )
 
         assert report.papers_linked_total == 20
-        assert m_resolve.call_count == 12
+        assert m_resolve.call_count == 20
         assert [
             call.kwargs["canonical_source"]
             for call in m_upsert_paper.call_args_list
-        ] == ["openalex"] * 12 + ["prof_page_only"] * 8
+        ] == ["openalex"] * 20
 
 
 def test_homepage_ingest_accepts_external_resolution_budget_override(tmp_path):
@@ -1731,7 +2829,7 @@ def test_homepage_ingest_accepts_external_resolution_budget_override(tmp_path):
         return_value=pubs,
     ), patch(
         "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
-        return_value=_resolved(),
+        side_effect=_resolved_unless_cache_only,
     ) as m_resolve, patch(
         "src.data_agents.paper.homepage_ingest.upsert_paper"
     ) as m_upsert_paper, patch(
@@ -1752,12 +2850,60 @@ def test_homepage_ingest_accepts_external_resolution_budget_override(tmp_path):
         )
 
         assert report.papers_linked_total == 5
-        assert m_resolve.call_count == 2
+        assert m_resolve.call_count == 5
+        assert [
+            call.kwargs["cache_only"] for call in m_resolve.call_args_list
+        ] == [False, False, True, True, True]
         assert m_upsert_link.call_count == 5
         assert [
             call.kwargs["canonical_source"]
             for call in m_upsert_paper.call_args_list
         ] == ["openalex"] * 2 + ["prof_page_only"] * 3
+
+
+def test_homepage_ingest_resolution_budget_zero_still_uses_cache(tmp_path):
+    prof = _prof_row(name="缓存老师")
+    conn = _mock_conn_with_profs([prof])
+    pubs = [_pub(clean_title="Cached Official Publication Title")]
+    cached_resolution = _resolved(title="Cached Official Publication Title")
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value="<html></html>",
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.extract_publications_from_html",
+        return_value=pubs,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
+        return_value=cached_resolution,
+    ) as m_resolve, patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper"
+    ) as m_upsert_paper, patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ) as m_upsert_link, patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
+        return_value=True,
+    ), patch("src.data_agents.paper.homepage_ingest._file_pipeline_issue"):
+        m_upsert_paper.return_value = MagicMock(
+            paper_id="paper:cached",
+            is_new=True,
+        )
+
+        report = run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "c.jsonl",
+            external_resolution_max_per_professor=0,
+        )
+
+        assert report.papers_linked_total == 1
+        assert m_resolve.call_count == 1
+        assert m_resolve.call_args.kwargs["cache_only"] is True
+        assert m_upsert_paper.call_args.kwargs["canonical_source"] == "openalex"
+        assert m_upsert_link.call_count == 1
 
 
 def test_homepage_ingest_external_resolution_budget_spans_owned_pages(
@@ -1790,7 +2936,7 @@ def test_homepage_ingest_external_resolution_budget_spans_owned_pages(
         ],
     ), patch(
         "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
-        return_value=_resolved(),
+        side_effect=_resolved_unless_cache_only,
     ) as m_resolve, patch(
         "src.data_agents.paper.homepage_ingest.upsert_paper"
     ) as m_upsert_paper, patch(
@@ -1811,7 +2957,11 @@ def test_homepage_ingest_external_resolution_budget_spans_owned_pages(
         )
 
         assert report.papers_linked_total == 2
-        assert m_resolve.call_count == 1
+        assert m_resolve.call_count == 2
+        assert [call.kwargs["cache_only"] for call in m_resolve.call_args_list] == [
+            False,
+            True,
+        ]
         assert [
             call.kwargs["canonical_source"]
             for call in m_upsert_paper.call_args_list
@@ -1911,6 +3061,221 @@ def test_publications_under_threshold_files_pipeline_issue(tmp_path):
         assert "publications_under_threshold" in issue_types_filed
 
 
+def test_zero_publications_with_detected_section_files_pipeline_issue(tmp_path):
+    prof = _prof_row()
+    conn = _mock_conn_with_profs([prof])
+
+    html = """
+    <html><body>
+      <h2>Publications</h2>
+      <p>Published more than 50 papers and led multiple research projects.</p>
+    </body></html>
+    """
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value=html,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest._file_pipeline_issue"
+    ) as m_issue:
+        report = run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "c.jsonl",
+        )
+
+        assert report.papers_linked_total == 0
+        assert report.pipeline_issues_filed >= 1
+        issue_types = [c.kwargs.get("issue_type") for c in m_issue.call_args_list]
+        assert "publication_section_zero_extraction" in issue_types
+        issue_details = [
+            c.kwargs.get("details")
+            for c in m_issue.call_args_list
+            if c.kwargs.get("issue_type") == "publication_section_zero_extraction"
+        ][0]
+        assert issue_details["pages"][0]["page_url"] == prof["homepage_url"]
+        assert issue_details["pages"][0]["sections_detected"] == 1
+
+
+def test_count_only_publication_claim_files_sparse_source_issue_without_papers(
+    tmp_path,
+):
+    prof = _prof_row(
+        name="夏林中",
+        institution="深圳信息职业技术大学",
+        homepage_url="https://zd.suit-sz.edu.cn/info/1013/2674.htm",
+    )
+    conn = _mock_conn_with_profs([prof])
+    html = """
+    <html><body>
+      <div class="v_news_content">
+        <p>夏林中，男，博士，教授。本人先后承担国家基金委、
+        省基金委等教科研项目10余项，在国内外期刊发表高水平论文60余篇，
+        申请专利17项，软件著作权10项。</p>
+      </div>
+    </body></html>
+    """
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value=html,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title"
+    ) as m_resolve, patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper"
+    ) as m_upsert_paper, patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ) as m_upsert_link, patch(
+        "src.data_agents.paper.homepage_ingest._file_pipeline_issue"
+    ) as m_issue:
+        report = run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "c.jsonl",
+        )
+
+        assert report.papers_linked_total == 0
+        assert report.pipeline_issues_filed == 1
+        issue_types = [c.kwargs.get("issue_type") for c in m_issue.call_args_list]
+        assert "publication_source_sparse_count_only" in issue_types
+        issue_details = [
+            c.kwargs.get("details")
+            for c in m_issue.call_args_list
+            if c.kwargs.get("issue_type") == "publication_source_sparse_count_only"
+        ][0]
+        assert issue_details["homepage_url"] == prof["homepage_url"]
+        assert "发表高水平论文60余篇" in issue_details["claim_snippet"]
+        m_resolve.assert_not_called()
+        m_upsert_paper.assert_not_called()
+        m_upsert_link.assert_not_called()
+
+
+def test_count_only_publication_claim_ignores_sziit_sidebar_template_counts(
+    tmp_path,
+):
+    prof = _prof_row(
+        name="郭婷",
+        institution="深圳信息职业技术大学",
+        homepage_url="https://zd.suit-sz.edu.cn/info/1013/1273.htm",
+    )
+    conn = _mock_conn_with_profs([prof])
+    html = """
+    <html><body>
+      <div class="leftwrap">
+        <p>夏林中，男，博士，教授。在国内外期刊发表高水平论文60余篇，
+        申请专利17项，软件著作权10项。</p>
+      </div>
+      <div class="v_news_content">
+        <p>郭婷，中德学院工业机器人技术专业教师。近年来参与欧洲第五框架下
+        2项欧盟项目，1项市级教研课题。</p>
+      </div>
+    </body></html>
+    """
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value=html,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest._file_pipeline_issue"
+    ) as m_issue:
+        report = run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "c.jsonl",
+        )
+
+        assert report.papers_linked_total == 0
+        assert report.pipeline_issues_filed == 0
+        m_issue.assert_not_called()
+
+
+def test_custom_zero_publication_extractor_preserves_rule_diagnostics(tmp_path):
+    prof = _prof_row()
+    conn = _mock_conn_with_profs([prof])
+
+    html = """
+    <html><body>
+      <h2>Publications</h2>
+      <p>Published more than 50 papers and led multiple research projects.</p>
+    </body></html>
+    """
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value=html,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest._file_pipeline_issue"
+    ) as m_issue:
+        report = run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "c.jsonl",
+            publication_extractor=lambda _html, *, page_url: [],
+        )
+
+        assert report.papers_linked_total == 0
+        assert report.pipeline_issues_filed >= 1
+        issue_types = [c.kwargs.get("issue_type") for c in m_issue.call_args_list]
+        assert "publication_section_zero_extraction" in issue_types
+
+
+def test_custom_zero_publication_extractor_falls_back_to_rule_publications():
+    html = """
+    <html><body>
+      <h2>Publications</h2>
+      <ol>
+        <li>Rule Fallback Paper for Mechanical Systems. Journal of Mechanical Systems, 2024.</li>
+      </ol>
+    </body></html>
+    """
+
+    publications, zero_pages = _extract_publications_from_single_source_page(
+        html,
+        page_url="https://yjsjy.uestc.edu.cn/gmis/jcsjgl/dsfc/dsgrjj/20492?yxsh=28",
+        publication_extractor=lambda _html, *, page_url: [],
+        use_rule_diagnostics=False,
+    )
+
+    assert [pub.clean_title for pub in publications] == [
+        "Rule Fallback Paper for Mechanical Systems"
+    ]
+    assert zero_pages == []
+
+
+def test_file_pipeline_issue_refreshes_existing_open_issue_evidence():
+    conn = MagicMock()
+    select_result = MagicMock()
+    select_result.fetchone.return_value = ("existing-issue-id",)
+    conn.execute.return_value = select_result
+
+    _file_pipeline_issue(
+        conn,
+        run_id=UUID("11111111-1111-1111-1111-111111111111"),
+        issue_type="publication_section_zero_extraction",
+        professor_id="PROF-1",
+        message="Detected publication section but extracted zero publication records",
+        details={"homepage_url": "https://example.edu/prof"},
+    )
+
+    assert conn.execute.call_count == 2
+    assert "SELECT issue_id" in conn.execute.call_args_list[0].args[0]
+    update_sql = conn.execute.call_args_list[1].args[0]
+    assert "UPDATE pipeline_issue" in update_sql
+    assert "evidence_snapshot" in update_sql
+
+
 def test_all_titles_page_only_files_pipeline_issue(tmp_path):
     prof = _prof_row()
     conn = _mock_conn_with_profs([prof])
@@ -1940,6 +3305,55 @@ def test_all_titles_page_only_files_pipeline_issue(tmp_path):
         assert report.papers_linked_total == 5
         issue_types = [c.kwargs.get("issue_type") for c in m_issue.call_args_list]
         assert "all_titles_unresolvable" in issue_types
+
+
+def test_page_only_publication_preserves_doi_source_anchor(tmp_path):
+    prof = _prof_row()
+    conn = _mock_conn_with_profs([prof])
+    publication = _pub(
+        clean_title=(
+            "Root hair developmental regulators orchestrate synthetic biology "
+            "circuits in plants"
+        ),
+        source_anchor="https://doi.org/10.1038/s41467-024-54417-5",
+    )
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value="<html></html>",
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.extract_publications_from_html",
+        return_value=[publication],
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
+        return_value=None,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper"
+    ) as m_upsert_paper, patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
+        return_value=True,
+    ), patch("src.data_agents.paper.homepage_ingest._file_pipeline_issue"):
+        m_upsert_paper.return_value = MagicMock(
+            paper_id="paper:doi:10.1038/s41467-024-54417-5",
+            is_new=True,
+        )
+
+        report = run_homepage_paper_ingest(
+            conn,
+            resume_checkpoint_path=tmp_path / "c.jsonl",
+        )
+
+        assert report.papers_linked_total == 1
+        assert m_upsert_paper.call_args.kwargs["doi"] == (
+            "10.1038/s41467-024-54417-5"
+        )
+        assert m_upsert_paper.call_args.kwargs["canonical_source"] == "prof_page_only"
 
 
 def test_homepage_fetch_error_files_pipeline_issue(tmp_path):
@@ -2328,6 +3742,50 @@ def test_professor_page_pdf_cap_violation_files_pipeline_issue(tmp_path):
 
 
 # ---------- Resume -----------------------------------------------------------
+
+
+def test_resume_set_excludes_zero_link_success_without_pipeline_issues(tmp_path):
+    checkpoint = tmp_path / "c.jsonl"
+    checkpoint.write_text(
+        json.dumps(
+            {
+                "prof_id": "11111111-1111-1111-1111-111111111111",
+                "homepage_url": "https://example.edu/prof/zero",
+                "resume_key": (
+                    "11111111-1111-1111-1111-111111111111|"
+                    "https://example.edu/prof/zero"
+                ),
+                "status": "succeeded",
+                "papers_linked": 0,
+                "pipeline_issues": 0,
+            }
+        )
+        + "\n"
+    )
+
+    assert _load_resume_set(checkpoint) == set()
+
+
+def test_resume_set_keeps_success_with_linked_papers(tmp_path):
+    checkpoint = tmp_path / "c.jsonl"
+    resume_key = (
+        "11111111-1111-1111-1111-111111111111|https://example.edu/prof/linked"
+    )
+    checkpoint.write_text(
+        json.dumps(
+            {
+                "prof_id": "11111111-1111-1111-1111-111111111111",
+                "homepage_url": "https://example.edu/prof/linked",
+                "resume_key": resume_key,
+                "status": "succeeded",
+                "papers_linked": 2,
+                "pipeline_issues": 0,
+            }
+        )
+        + "\n"
+    )
+
+    assert _load_resume_set(checkpoint) == {resume_key}
 
 
 def test_resume_skips_already_processed_homepage_rows(tmp_path):

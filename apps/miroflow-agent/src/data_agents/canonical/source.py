@@ -92,6 +92,33 @@ class SourcePage(BaseModel):
     run_id: UUID | None = None  # Round 7.16 — pipeline_run that produced this row
 
 
+class HomepageRecursionPageLedger(BaseModel):
+    """One row of `homepage_recursion_page_ledger`."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    ledger_id: UUID | None = None
+    run_id: UUID
+    professor_id: str
+    parent_source_page_id: UUID | None = None
+    source_page_id: UUID | None = None
+    url: str
+    normalized_url: str
+    page_role: str
+    discovery_source: str
+    recursion_depth: int
+    status: str
+    skip_reason: str | None = None
+    fetch_error_type: str | None = None
+    fetch_error_message: str | None = None
+    http_status: int | None = None
+    publications_extracted: int = 0
+    sections_detected: int = 0
+    heading_texts: list[str] = Field(default_factory=list)
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
 class PipelineRun(BaseModel):
     """One row of `pipeline_run`."""
 
@@ -113,6 +140,7 @@ class PipelineRun(BaseModel):
 
 
 __all__ = [
+    "HomepageRecursionPageLedger",
     "ImportBatch",
     "PipelineRun",
     "SeedRegistry",

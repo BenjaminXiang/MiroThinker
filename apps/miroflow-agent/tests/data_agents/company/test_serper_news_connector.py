@@ -7,10 +7,12 @@ import requests
 
 from src.data_agents.company.news_connectors.serper import (
     SerperNewsConnector,
+    SerperSearchConnector,
     _build_query,
     _extract_text,
     _normalize_site_filters,
     _parse_serper_date,
+    build_generic_identity_queries,
 )
 
 
@@ -86,6 +88,70 @@ def test_http_200_parses_news_items_to_records():
         2026, 5, 1, 1, 30, tzinfo=timezone.utc
     )
     assert records[1].published_at == datetime(2026, 4, 30, tzinfo=timezone.utc)
+
+
+def test_search_connector_parses_organic_items_for_site_filtered_sources():
+    session = MagicMock()
+    session.post.return_value = _Response(
+        {
+            "organic": [
+                {
+                    "title": "旭宏医疗_深圳旭宏医疗科技有限公司_亿欧数据",
+                    "link": "https://data.iyiou.com/company/details/d3b449/profile",
+                    "snippet": "旭宏医疗是一家医疗科技公司。",
+                }
+            ]
+        }
+    )
+    connector = SerperSearchConnector(
+        "serper-key",
+        session=session,
+        site_filters=("data.iyiou.com",),
+    )
+
+    records = connector.fetch("深圳旭宏医疗科技有限公司", date(2026, 1, 1))
+
+    assert len(records) == 1
+    assert records[0].company_id == "深圳旭宏医疗科技有限公司"
+    assert records[0].title == "旭宏医疗_深圳旭宏医疗科技有限公司_亿欧数据"
+    assert records[0].source_url == "https://data.iyiou.com/company/details/d3b449/profile"
+    assert records[0].summary == "旭宏医疗是一家医疗科技公司。"
+    assert session.post.call_args.args[0] == "https://google.serper.dev/search"
+    payload = session.post.call_args.kwargs["json"]
+    assert payload["q"] == "深圳旭宏医疗科技有限公司 site:data.iyiou.com"
+    assert "tbs" not in payload
+
+
+def test_serper_connector_reuses_recent_query_cache(
+    monkeypatch,
+    tmp_path,
+):
+    session = MagicMock()
+    session.post.return_value = _Response(
+        {
+            "organic": [
+                {
+                    "title": "旭宏医疗_深圳旭宏医疗科技有限公司_亿欧数据",
+                    "link": "https://data.iyiou.com/company/details/d3b449/profile",
+                    "snippet": "旭宏医疗是一家医疗科技公司。",
+                }
+            ]
+        }
+    )
+    monkeypatch.setenv("MIROTHINKER_COMPANY_SOURCE_CACHE_DIR", str(tmp_path))
+    connector = SerperSearchConnector(
+        "serper-key",
+        session=session,
+        site_filters=("data.iyiou.com",),
+    )
+
+    first = connector.fetch("深圳旭宏医疗科技有限公司", date(2026, 1, 1))
+    second = connector.fetch("深圳旭宏医疗科技有限公司", date(2026, 1, 1))
+
+    assert len(first) == 1
+    assert len(second) == 1
+    assert session.post.call_count == 1
+    assert list(tmp_path.glob("*.json"))
 
 
 def test_http_5xx_returns_empty_and_logs_warning(caplog):
@@ -215,6 +281,7 @@ def test_query_contains_site_filters_and_limits_tail():
     assert (
         " (融资 OR 发布 OR 收购 OR 上市 OR 任命 OR 中标 OR 产品) -招聘 -招标公告" in query
     )
+    assert payload["tbs"].startswith("qdr:")
 
 
 def test_site_filters_skip_non_matching_serper_items():
@@ -317,6 +384,48 @@ def test_fetch_article_text_skips_waf_like_pages_and_keeps_snippet():
     assert records[0].raw_text == "这是简短摘要。"
 
 
+def test_fetch_article_text_uses_reader_fallback_when_direct_fetch_fails():
+    session = MagicMock()
+    session.post.return_value = _Response(
+        {
+            "organic": [
+                {
+                    "title": "旭宏医疗| 项目信息 - 创投平台",
+                    "link": "https://pitchhub.36kr.com/project/1678475362006017",
+                    "snippet": "搜索摘要",
+                }
+            ]
+        }
+    )
+    session.get.side_effect = [
+        _Response({}, error=requests.exceptions.SSLError("ssl eof")),
+        _Response(
+            {},
+            text=(
+                "Title: 旭宏医疗 | 项目信息-36氪\n\n"
+                "## 项目简介\n深圳旭宏医疗科技有限公司是一家海归创业的高科技企业。\n"
+                "## 融资历史\nA轮 2020-07 数千万人民币 力合科创"
+            ),
+        ),
+    ]
+    connector = SerperSearchConnector(
+        "serper-key",
+        session=session,
+        site_filters=("pitchhub.36kr.com",),
+        fetch_article_content=True,
+        reader_fallback_prefix="https://r.jina.ai/http://r.jina.ai/http://",
+    )
+
+    records = connector.fetch("深圳旭宏医疗科技有限公司", date(2026, 1, 1))
+
+    assert records[0].summary.startswith("Title: 旭宏医疗")
+    assert "融资历史" in records[0].raw_text
+    assert session.get.call_args_list[1].args[0] == (
+        "https://r.jina.ai/http://r.jina.ai/http://"
+        "https://pitchhub.36kr.com/project/1678475362006017"
+    )
+
+
 def test_normalize_site_filters_removes_protocol_and_subpath():
     assert _normalize_site_filters(("https://Data.IYIOU.com/abc", "  ", "www.abc.com/path")) == (
         "abc.com",
@@ -348,9 +457,13 @@ def test_query_contains_canonical_name_noise_filters_and_qdr():
     connector.fetch("深圳示例科技", datetime.now(timezone.utc).date() - timedelta(days=7))
 
     payload = session.post.call_args.kwargs["json"]
-    assert payload["q"] == (
-        "深圳示例科技 (融资 OR 发布 OR 收购 OR 上市 OR 任命 OR 中标) -招聘 -招标公告"
-    )
+    assert payload["q"] == "深圳示例科技"
+    assert "融资" not in payload["q"]
+    assert "发布" not in payload["q"]
+    assert "产品" not in payload["q"]
+    assert "招聘" not in payload["q"]
+    assert "创始人" not in payload["q"]
+    assert "医疗AI" not in payload["q"]
     assert payload["tbs"] == "qdr:w"
     assert payload["num"] == 10
     assert payload["hl"] == "zh-cn"
@@ -359,3 +472,20 @@ def test_query_contains_canonical_name_noise_filters_and_qdr():
         "X-API-KEY": "serper-key",
         "Content-Type": "application/json",
     }
+
+
+def test_build_generic_identity_queries_uses_trusted_names_without_keyword_tails():
+    queries = build_generic_identity_queries(
+        "深圳旭宏医疗科技有限公司",
+        registered_name="深圳旭宏医疗科技有限公司",
+        xlsx_company_name="深圳旭宏医疗科技有限公司",
+        project_name="旭宏医疗",
+        aliases=("旭宏医疗", "旭宏医疗 王博洋", "医疗AI", "融资动态"),
+    )
+
+    assert queries == ["深圳旭宏医疗科技有限公司", "旭宏医疗"]
+    assert all(" " not in query for query in queries)
+    assert all("融资" not in query for query in queries)
+    assert all("产品" not in query for query in queries)
+    assert all("创始" not in query for query in queries)
+    assert all("医疗AI" not in query for query in queries)

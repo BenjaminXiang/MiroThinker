@@ -49,7 +49,8 @@ def backfill_paper_chunks(
 
     sql = (
         "SELECT p.paper_id, p.title_clean AS title, p.year, p.venue, "
-        "       p.summary_zh, p.abstract_clean, pft.abstract, pft.intro "
+        "       p.summary_zh, p.abstract_clean, p.identity_status, "
+        "       p.quality_status, pft.abstract, pft.intro "
         "FROM paper p "
         "LEFT JOIN paper_full_text pft ON pft.paper_id = p.paper_id"
     )
@@ -82,6 +83,18 @@ def backfill_paper_chunks(
 
         for row in batch_rows:
             paper_id = row["paper_id"]
+            if not _is_indexable_paper(row):
+                try:
+                    _delete_paper_chunks(milvus_client, paper_id)
+                    papers_skipped += 1
+                except Exception as exc:
+                    papers_with_errors += 1
+                    logger.warning(
+                        "Milvus cleanup failed for non-indexable paper %s: %s",
+                        paper_id,
+                        exc,
+                    )
+                continue
             chunks = chunk_paper(
                 paper_id=paper_id,
                 title=row["title"] or "",
@@ -130,10 +143,7 @@ def backfill_paper_chunks(
 
         try:
             for paper_id in sorted(set(batch_paper_ids)):
-                milvus_client.delete(
-                    collection_name=PAPER_CHUNKS_COLLECTION,
-                    filter=f"paper_id == '{paper_id}'",
-                )
+                _delete_paper_chunks(milvus_client, paper_id)
             milvus_client.insert(
                 collection_name=PAPER_CHUNKS_COLLECTION,
                 data=payload,
@@ -163,6 +173,19 @@ def backfill_paper_chunks(
 
 def _paper_embedding_abstract(row: dict) -> str | None:
     return row.get("summary_zh") or row.get("abstract_clean") or row.get("abstract")
+
+
+def _is_indexable_paper(row: dict) -> bool:
+    identity_status = str(row.get("identity_status") or "unverified").strip()
+    quality_status = str(row.get("quality_status") or "needs_enrichment").strip()
+    return identity_status not in {"rejected", "merged"} and quality_status == "ready"
+
+
+def _delete_paper_chunks(milvus_client, paper_id: str) -> None:
+    milvus_client.delete(
+        collection_name=PAPER_CHUNKS_COLLECTION,
+        filter=f"paper_id == '{paper_id}'",
+    )
 
 
 def _chunk_to_row(chunk: PaperChunk, vector: list[float]) -> dict[str, object]:

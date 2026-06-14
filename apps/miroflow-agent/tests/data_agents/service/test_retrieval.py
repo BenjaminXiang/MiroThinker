@@ -17,6 +17,13 @@ from src.data_agents.service.retrieval import (
     Evidence,
     RetrievalService,
 )
+from src.data_agents.storage.milvus_collections import (
+    PROFESSOR_IDENTITY_PROFILES_COLLECTION,
+    PROFESSOR_RESEARCH_PROFILES_COLLECTION,
+)
+
+_PROFESSOR_IDENTITY_COLLECTION = PROFESSOR_IDENTITY_PROFILES_COLLECTION
+_PROFESSOR_RESEARCH_COLLECTION = PROFESSOR_RESEARCH_PROFILES_COLLECTION
 
 # =============================================================================
 # Evidence dataclass
@@ -124,6 +131,43 @@ def _prof_ann_row(object_id: str, score: float):
     }
 
 
+def _prof_identity_ann_row(object_id: str, score: float):
+    return {
+        "id": object_id,
+        "entity": {
+            "id": object_id,
+            "name": "张三",
+            "name_en": "San Zhang",
+            "institution": "南方科技大学",
+            "department": "计算机科学与工程系",
+            "title": "教授",
+            "profile_url": "https://example.edu/prof/zhangsan",
+            "identity_text": "张三 南方科技大学 计算机科学与工程系 教授",
+            "quality_status": "ready",
+        },
+        "distance": score,
+    }
+
+
+def _prof_research_ann_row(object_id: str, score: float):
+    return {
+        "id": object_id,
+        "entity": {
+            "id": object_id,
+            "research_text": "具身智能 机器人学习 多模态感知",
+            "research_directions": "[\"具身智能\", \"机器人学习\"]",
+            "profile_summary": "长期研究具身智能和机器人学习。",
+            "paper_summary": "近年论文聚焦机器人策略学习。",
+            "patent_summary": "相关专利覆盖机器人控制。",
+            "quality_status": "ready",
+            "h_index": 21,
+            "citation_count": 3456,
+            "paper_count": 87,
+        },
+        "distance": score,
+    }
+
+
 def _paper_ann_row(chunk_id: str, paper_id: str, score: float, year: int = 2023):
     return {
         "id": chunk_id,
@@ -140,6 +184,39 @@ def _paper_ann_row(chunk_id: str, paper_id: str, score: float, year: int = 2023)
     }
 
 
+class _FakeResult:
+    def __init__(self, rows: list[dict]) -> None:
+        self._rows = rows
+
+    def fetchall(self) -> list[dict]:
+        return list(self._rows)
+
+
+class _PaperTitleConn:
+    def __init__(self, rows: list[dict]) -> None:
+        self._rows = rows
+        self.calls: list[tuple[str, tuple]] = []
+
+    def execute(self, query: str, params: tuple):
+        sql = " ".join(query.split()).lower()
+        self.calls.append((sql, params))
+        if "regexp_replace(lower(coalesce(title_clean" in sql:
+            return _FakeResult(list(self._rows))
+        if "from paper" in sql and "quality_status" in sql:
+            object_ids = set(params)
+            return _FakeResult(
+                [
+                    {
+                        "object_id": row["paper_id"],
+                        "quality_status": row.get("quality_status", "ready"),
+                    }
+                    for row in self._rows
+                    if row["paper_id"] in object_ids
+                ]
+            )
+        return _FakeResult([])
+
+
 # =============================================================================
 # Happy paths
 # =============================================================================
@@ -150,7 +227,7 @@ def test_retrieve_single_domain_professor_happy_path():
         pg_conn_factory=lambda: MagicMock(),
         milvus_client=_fake_milvus_with_domains(
             {
-                "professor_profiles": [
+                _PROFESSOR_IDENTITY_COLLECTION: [
                     _prof_ann_row("p1", 0.9),
                     _prof_ann_row("p2", 0.8),
                     _prof_ann_row("p3", 0.7),
@@ -161,7 +238,7 @@ def test_retrieve_single_domain_professor_happy_path():
         reranker=_fake_reranker(),
     )
     results = svc.retrieve(
-        "query text",
+        "张三是谁",
         domains=("professor",),
         candidate_limit=30,
         final_top_k=10,
@@ -176,16 +253,17 @@ def test_retrieve_single_domain_professor_happy_path():
 
 
 def test_retrieve_single_domain_paper_happy_path():
+    milvus = _fake_milvus_with_domains(
+        {
+            "paper_chunks": [
+                _paper_ann_row(f"p{i}:abstract:0", f"p{i}", 0.9 - i * 0.1)
+                for i in range(3)
+            ]
+        }
+    )
     svc = RetrievalService(
         pg_conn_factory=lambda: MagicMock(),
-        milvus_client=_fake_milvus_with_domains(
-            {
-                "paper_chunks": [
-                    _paper_ann_row(f"p{i}:abstract:0", f"p{i}", 0.9 - i * 0.1)
-                    for i in range(3)
-                ]
-            }
-        ),
+        milvus_client=milvus,
         embedding_client=_fake_embedding_client(),
         reranker=_fake_reranker(),
     )
@@ -199,6 +277,380 @@ def test_retrieve_single_domain_paper_happy_path():
     assert results[0].object_id == "p0"
     # snippet should be chunk content_text, not chunk_id
     assert "Abstract text" in results[0].snippet
+    assert milvus.search.call_args.kwargs["anns_field"] == "content_vector"
+
+
+def test_retrieve_paper_exact_title_candidate_preempts_ann_noise():
+    title = "High-speed silicon photonic Mach-Zehnder modulator at 2 μm"
+    conn = _PaperTitleConn(
+        [
+            {
+                "paper_id": "PAPER-EXACT",
+                "title_clean": title,
+                "year": 2024,
+                "venue": "Optics Express",
+                "abstract_clean": None,
+                "summary_zh": None,
+                "quality_status": "ready",
+            }
+        ]
+    )
+    milvus = _fake_milvus_with_domains(
+        {"paper_chunks": [_paper_ann_row("PAPER-NOISE:abstract:0", "PAPER-NOISE", 0.99)]}
+    )
+    reranker = _fake_reranker(order=[1, 0])
+    svc = RetrievalService(
+        pg_conn_factory=lambda: conn,
+        milvus_client=milvus,
+        embedding_client=_fake_embedding_client(),
+        reranker=reranker,
+    )
+
+    results = svc.retrieve(title, domains=("paper",), final_top_k=2)
+
+    assert [result.object_id for result in results] == ["PAPER-EXACT", "PAPER-NOISE"]
+    assert results[0].metadata["retrieval_source"] == "paper_title_exact"
+    assert results[0].metadata["title_clean"] == title
+    assert results[0].metadata["chunk_type"] == "title"
+    assert title in results[0].snippet
+    assert any(
+        "regexp_replace(lower(coalesce(title_clean" in sql
+        for sql, _params in conn.calls
+    )
+
+
+def test_retrieve_paper_exact_title_strips_main_point_question_suffix():
+    title = "Manipulating coordination environment for a high-voltage aqueous copper-chlorine battery"
+    conn = _PaperTitleConn(
+        [
+            {
+                "paper_id": "PAPER-SUAT",
+                "title_clean": title,
+                "year": 2023,
+                "venue": "Nature Communications",
+                "abstract_clean": "English abstract.",
+                "summary_zh": "这是一段中文论文解读。",
+                "quality_status": "ready",
+                "citation_count": 1,
+            }
+        ]
+    )
+    svc = RetrievalService(
+        pg_conn_factory=lambda: conn,
+        milvus_client=_fake_milvus_with_domains({"paper_chunks": []}),
+        embedding_client=_fake_embedding_client(),
+        reranker=_fake_reranker(),
+    )
+
+    results = svc.retrieve(f"{title} 这篇论文主要讲什么？", domains=("paper",), final_top_k=2)
+
+    assert [result.object_id for result in results] == ["PAPER-SUAT"]
+    assert results[0].metadata["retrieval_source"] == "paper_title_exact"
+    assert results[0].metadata["snippet_source"] == "summary_zh"
+
+
+def test_retrieve_paper_exact_title_strips_cn_paper_abstract_suffix():
+    title = (
+        "Environmental Exposure and Childhood Atopic Dermatitis in Shanghai: "
+        "A Season-Stratified Time-Series Analysis"
+    )
+    conn = _PaperTitleConn(
+        [
+            {
+                "paper_id": "PAPER-AD",
+                "title_clean": title,
+                "year": 2021,
+                "venue": "Dermatology",
+                "abstract_clean": "English abstract.",
+                "summary_zh": "这是一段环境暴露与儿童特应性皮炎论文解读。",
+                "quality_status": "ready",
+                "citation_count": 1,
+            }
+        ]
+    )
+    svc = RetrievalService(
+        pg_conn_factory=lambda: conn,
+        milvus_client=_fake_milvus_with_domains({"paper_chunks": []}),
+        embedding_client=_fake_embedding_client(),
+        reranker=_fake_reranker(),
+    )
+
+    results = svc.retrieve(
+        "Environmental Exposure and Childhood Atopic Dermatitis in Shanghai 这篇论文的摘要",
+        domains=("paper",),
+        final_top_k=2,
+    )
+
+    assert [result.object_id for result in results] == ["PAPER-AD"]
+    assert results[0].metadata["retrieval_source"] == "paper_title_exact"
+    assert results[0].metadata["snippet_source"] == "summary_zh"
+
+
+def test_retrieve_paper_title_prefix_query_matches_full_long_title():
+    title = (
+        "OctGLP-Net: Learning Octree-Structured Context Entropy Model With "
+        "Global-Local Perception for Point Cloud Geometry Compression"
+    )
+    conn = _PaperTitleConn(
+        [
+            {
+                "paper_id": "PAPER-SYSU",
+                "title_clean": title,
+                "year": 2026,
+                "venue": "IEEE Transactions on Intelligent Transportation Systems",
+                "abstract_clean": "English abstract.",
+                "summary_zh": "这是一段点云压缩论文解读。",
+                "quality_status": "ready",
+                "citation_count": 1,
+            }
+        ]
+    )
+    svc = RetrievalService(
+        pg_conn_factory=lambda: conn,
+        milvus_client=_fake_milvus_with_domains({"paper_chunks": []}),
+        embedding_client=_fake_embedding_client(),
+        reranker=_fake_reranker(),
+    )
+
+    results = svc.retrieve(
+        "OctGLP-Net Learning Octree-Structured Context Entropy Model 这篇论文主要讲什么？",
+        domains=("paper",),
+        final_top_k=2,
+    )
+
+    assert [result.object_id for result in results] == ["PAPER-SYSU"]
+    assert results[0].metadata["retrieval_source"] == "paper_title_exact"
+    assert results[0].metadata["title_clean"] == title
+    assert results[0].metadata["snippet_source"] == "summary_zh"
+
+
+def test_retrieve_paper_title_prefix_query_strips_what_is_suffix():
+    title = (
+        "Designing Mediated Social Touch for Mobile Communication: "
+        "From Hand Gestures to Touch Signals"
+    )
+    conn = _PaperTitleConn(
+        [
+            {
+                "paper_id": "PAPER-SZTU",
+                "title_clean": title,
+                "year": 2025,
+                "venue": "International Journal of Human-Computer Studies",
+                "abstract_clean": None,
+                "summary_zh": None,
+                "quality_status": "needs_enrichment",
+                "citation_count": 1,
+            }
+        ]
+    )
+    svc = RetrievalService(
+        pg_conn_factory=lambda: conn,
+        milvus_client=_fake_milvus_with_domains({"paper_chunks": []}),
+        embedding_client=_fake_embedding_client(),
+        reranker=_fake_reranker(),
+    )
+
+    results = svc.retrieve(
+        "Designing Mediated Social Touch for Mobile Communication 这篇论文是什么",
+        domains=("paper",),
+        final_top_k=2,
+        filter_by_quality_status=False,
+    )
+
+    assert [result.object_id for result in results] == ["PAPER-SZTU"]
+    assert results[0].metadata["retrieval_source"] == "paper_title_exact"
+    assert results[0].metadata["snippet_source"] == "title"
+
+
+def test_retrieve_paper_exact_title_strips_paper_domain_prefix_and_summary_suffix():
+    title = (
+        "Non-Iridium Based Electrocatalyst for Durable Acidic Oxygen Evolution "
+        "Reaction in Proton Exchange Membrane Water Electrolysis"
+    )
+    conn = _PaperTitleConn(
+        [
+            {
+                "paper_id": "PAPER-NATURE-MATERIALS",
+                "title_clean": title,
+                "year": 2022,
+                "venue": "Nature Materials",
+                "abstract_clean": "English abstract.",
+                "summary_zh": "这是一段中文论文解读。",
+                "quality_status": "ready",
+                "citation_count": 920,
+            }
+        ]
+    )
+    svc = RetrievalService(
+        pg_conn_factory=lambda: conn,
+        milvus_client=_fake_milvus_with_domains({"paper_chunks": []}),
+        embedding_client=_fake_embedding_client(),
+        reranker=_fake_reranker(),
+    )
+
+    results = svc.retrieve(
+        f"论文 {title} 的摘要是什么",
+        domains=("paper",),
+        final_top_k=2,
+    )
+
+    assert [result.object_id for result in results] == ["PAPER-NATURE-MATERIALS"]
+    assert results[0].metadata["retrieval_source"] == "paper_title_exact"
+    assert results[0].metadata["snippet_source"] == "summary_zh"
+
+
+def test_retrieve_paper_exact_title_allows_partial_rows_with_summary_under_ready_filter():
+    title = (
+        "Control of polymorphism in solution-processed organic thin film "
+        "transistors by self-assembled monolayers"
+    )
+    conn = _PaperTitleConn(
+        [
+            {
+                "paper_id": "PAPER-INTRO-SUMMARY",
+                "title_clean": title,
+                "year": 2020,
+                "venue": "Science China Chemistry",
+                "abstract_clean": None,
+                "summary_zh": "这是一段基于论文正文引言生成的中文解读。",
+                "quality_status": "partial",
+                "citation_count": 12,
+            }
+        ]
+    )
+    svc = RetrievalService(
+        pg_conn_factory=lambda: conn,
+        milvus_client=_fake_milvus_with_domains({"paper_chunks": []}),
+        embedding_client=_fake_embedding_client(),
+        reranker=_fake_reranker(),
+    )
+
+    results = svc.retrieve(
+        f"论文 {title} 的摘要是什么",
+        domains=("paper",),
+        final_top_k=2,
+        filter_by_quality_status=True,
+    )
+
+    assert [result.object_id for result in results] == ["PAPER-INTRO-SUMMARY"]
+    assert results[0].metadata["retrieval_source"] == "paper_title_exact"
+    assert results[0].metadata["snippet_source"] == "summary_zh"
+    assert results[0].metadata["quality_status"] == "partial"
+
+
+def test_retrieve_paper_exact_title_filters_partial_rows_without_summary_under_ready_filter():
+    title = "Sparse title-only paper row that still needs enrichment"
+    conn = _PaperTitleConn(
+        [
+            {
+                "paper_id": "PAPER-PARTIAL-TITLE-ONLY",
+                "title_clean": title,
+                "year": 2020,
+                "venue": None,
+                "abstract_clean": None,
+                "summary_zh": None,
+                "quality_status": "partial",
+                "citation_count": 1,
+            }
+        ]
+    )
+    svc = RetrievalService(
+        pg_conn_factory=lambda: conn,
+        milvus_client=_fake_milvus_with_domains({"paper_chunks": []}),
+        embedding_client=_fake_embedding_client(),
+        reranker=_fake_reranker(),
+    )
+
+    results = svc.retrieve(
+        f"论文 {title} 的摘要是什么",
+        domains=("paper",),
+        final_top_k=2,
+        filter_by_quality_status=True,
+    )
+
+    assert results == []
+
+
+def test_retrieve_paper_exact_title_prefers_rich_duplicate_record():
+    title = "Mendelian randomization analyses reveal causal relationships between the human microbiome and longevity"
+    conn = _PaperTitleConn(
+        [
+            {
+                "paper_id": "PAPER-SPARSE",
+                "title_clean": title,
+                "year": 2023,
+                "venue": "Nature Aging",
+                "abstract_clean": None,
+                "summary_zh": None,
+                "quality_status": "ready",
+                "citation_count": 999,
+            },
+            {
+                "paper_id": "PAPER-RICH",
+                "title_clean": title,
+                "year": 2023,
+                "venue": "Nature Aging",
+                "abstract_clean": "English abstract.",
+                "summary_zh": "中文摘要。",
+                "quality_status": "ready",
+                "citation_count": 1,
+            },
+        ]
+    )
+    svc = RetrievalService(
+        pg_conn_factory=lambda: conn,
+        milvus_client=_fake_milvus_with_domains({"paper_chunks": []}),
+        embedding_client=_fake_embedding_client(),
+        reranker=_fake_reranker(),
+    )
+
+    results = svc.retrieve(title, domains=("paper",), final_top_k=2)
+
+    assert [result.object_id for result in results] == ["PAPER-RICH", "PAPER-SPARSE"]
+    assert results[0].snippet == "中文摘要。"
+    assert results[0].metadata["snippet_source"] == "summary_zh"
+
+
+def test_retrieve_paper_exact_title_excludes_rejected_rows():
+    title = "A distributed data management system to support large-scale data analysis"
+    conn = _PaperTitleConn(
+        [
+            {
+                "paper_id": "PAPER-BAD",
+                "title_clean": title,
+                "year": 2019,
+                "venue": None,
+                "abstract_clean": None,
+                "summary_zh": None,
+                "quality_status": "rejected",
+                "identity_status": "rejected",
+                "citation_count": 999,
+            },
+            {
+                "paper_id": "PAPER-GOOD",
+                "title_clean": title,
+                "year": 2019,
+                "venue": "The Journal of Systems & Software",
+                "abstract_clean": "English abstract.",
+                "summary_zh": "中文摘要。",
+                "quality_status": "ready",
+                "identity_status": "confirmed",
+                "citation_count": 1,
+            },
+        ]
+    )
+    svc = RetrievalService(
+        pg_conn_factory=lambda: conn,
+        milvus_client=_fake_milvus_with_domains({"paper_chunks": []}),
+        embedding_client=_fake_embedding_client(),
+        reranker=_fake_reranker(),
+    )
+
+    results = svc.retrieve(title, domains=("paper",), final_top_k=2)
+
+    assert [result.object_id for result in results] == ["PAPER-GOOD"]
+    assert any("identity_status" in sql for sql, _params in conn.calls)
+    assert any("quality_status" in sql for sql, _params in conn.calls)
 
 
 def test_retrieve_two_domain_merges_candidates():
@@ -206,7 +658,9 @@ def test_retrieve_two_domain_merges_candidates():
         pg_conn_factory=lambda: MagicMock(),
         milvus_client=_fake_milvus_with_domains(
             {
-                "professor_profiles": [_prof_ann_row(f"prof{i}", 0.9 - i * 0.05) for i in range(5)],
+                _PROFESSOR_IDENTITY_COLLECTION: [
+                    _prof_ann_row(f"prof{i}", 0.9 - i * 0.05) for i in range(5)
+                ],
                 "paper_chunks": [
                     _paper_ann_row(f"p{i}:abstract:0", f"paper{i}", 0.85 - i * 0.05) for i in range(5)
                 ],
@@ -216,7 +670,7 @@ def test_retrieve_two_domain_merges_candidates():
         reranker=_fake_reranker(),
     )
     results = svc.retrieve(
-        "query",
+        "张三是谁",
         domains=("professor", "paper"),
         final_top_k=10,
     )
@@ -269,12 +723,12 @@ def test_retrieve_filter_drops_non_matching_candidates():
     rows[1]["entity"]["institution"] = "南方科技大学"
     svc = RetrievalService(
         pg_conn_factory=lambda: MagicMock(),
-        milvus_client=_fake_milvus_with_domains({"professor_profiles": rows}),
+        milvus_client=_fake_milvus_with_domains({_PROFESSOR_IDENTITY_COLLECTION: rows}),
         embedding_client=_fake_embedding_client(),
         reranker=_fake_reranker(),
     )
     results = svc.retrieve(
-        "query",
+        "张三是谁",
         domains=("professor",),
         filters={"institution": "南方科技大学"},
     )
@@ -321,7 +775,10 @@ def test_retrieve_rerank_exception_falls_back_to_ann_order():
 
 def test_retrieve_one_domain_milvus_failure_other_domain_survives():
     def _mixed_search(*, collection_name, data, **kwargs):
-        if collection_name == "professor_profiles":
+        if collection_name in {
+            _PROFESSOR_IDENTITY_COLLECTION,
+            _PROFESSOR_RESEARCH_COLLECTION,
+        }:
             raise RuntimeError("milvus professor collection down")
         if collection_name == "paper_chunks":
             return _milvus_search_result(
@@ -337,7 +794,7 @@ def test_retrieve_one_domain_milvus_failure_other_domain_survives():
         embedding_client=_fake_embedding_client(),
         reranker=_fake_reranker(),
     )
-    results = svc.retrieve("query", domains=("professor", "paper"))
+    results = svc.retrieve("张三是谁", domains=("professor", "paper"))
     # Paper results survive
     assert len(results) >= 3
     assert all(r.object_type == "paper" for r in results)
@@ -472,6 +929,83 @@ def test_retrieve_empty_result_not_cached():
 
 
 # =============================================================================
+# Professor split retrieval routing
+# =============================================================================
+
+
+def test_professor_identity_query_routes_to_identity_collection_with_label():
+    milvus = _fake_milvus_with_domains(
+        {_PROFESSOR_IDENTITY_COLLECTION: [_prof_identity_ann_row("PROF-ID", 0.93)]}
+    )
+    svc = RetrievalService(
+        pg_conn_factory=lambda: MagicMock(),
+        milvus_client=milvus,
+        embedding_client=_fake_embedding_client(),
+        reranker=_fake_reranker(),
+    )
+
+    results = svc.retrieve("张三教授是谁", domains=("professor",), final_top_k=10)
+
+    assert [result.object_id for result in results] == ["PROF-ID"]
+    assert milvus.search.call_args.kwargs["collection_name"] == _PROFESSOR_IDENTITY_COLLECTION
+    assert milvus.search.call_args.kwargs["anns_field"] == "identity_vector"
+    assert results[0].metadata["collection_name"] == _PROFESSOR_IDENTITY_COLLECTION
+    assert results[0].metadata["professor_retrieval_index"] == "identity"
+    assert results[0].source_url == "https://example.edu/prof/zhangsan"
+
+
+def test_professor_research_query_routes_to_research_collection_with_label():
+    milvus = _fake_milvus_with_domains(
+        {_PROFESSOR_RESEARCH_COLLECTION: [_prof_research_ann_row("PROF-RES", 0.91)]}
+    )
+    svc = RetrievalService(
+        pg_conn_factory=lambda: MagicMock(),
+        milvus_client=milvus,
+        embedding_client=_fake_embedding_client(),
+        reranker=_fake_reranker(),
+    )
+
+    results = svc.retrieve("找做具身智能的教授", domains=("professor",), final_top_k=10)
+
+    assert [result.object_id for result in results] == ["PROF-RES"]
+    assert milvus.search.call_args.kwargs["collection_name"] == _PROFESSOR_RESEARCH_COLLECTION
+    assert milvus.search.call_args.kwargs["anns_field"] == "research_vector"
+    assert "具身智能" in results[0].snippet
+    assert results[0].metadata["collection_name"] == _PROFESSOR_RESEARCH_COLLECTION
+    assert results[0].metadata["professor_retrieval_index"] == "research"
+
+
+def test_professor_ambiguous_query_searches_both_collections_and_preserves_labels():
+    milvus = _fake_milvus_with_domains(
+        {
+            _PROFESSOR_IDENTITY_COLLECTION: [_prof_identity_ann_row("PROF-ID", 0.93)],
+            _PROFESSOR_RESEARCH_COLLECTION: [_prof_research_ann_row("PROF-RES", 0.91)],
+        }
+    )
+    svc = RetrievalService(
+        pg_conn_factory=lambda: MagicMock(),
+        milvus_client=milvus,
+        embedding_client=_fake_embedding_client(),
+        reranker=_fake_reranker(),
+    )
+
+    results = svc.retrieve("张三教授的具身智能方向", domains=("professor",), final_top_k=10)
+
+    searched = [call.kwargs["collection_name"] for call in milvus.search.call_args_list]
+    assert searched == [_PROFESSOR_IDENTITY_COLLECTION, _PROFESSOR_RESEARCH_COLLECTION]
+    assert [call.kwargs["anns_field"] for call in milvus.search.call_args_list] == [
+        "identity_vector",
+        "research_vector",
+    ]
+    assert {
+        result.metadata["professor_retrieval_index"] for result in results
+    } == {"identity", "research"}
+    assert {
+        result.metadata["collection_name"] for result in results
+    } == {_PROFESSOR_IDENTITY_COLLECTION, _PROFESSOR_RESEARCH_COLLECTION}
+
+
+# =============================================================================
 # Concurrent ANN search
 # =============================================================================
 
@@ -488,7 +1022,7 @@ def test_retrieve_concurrent_ann_across_domains():
         time.sleep(0.2)  # simulate wire latency
         with lock:
             search_finished.append(collection_name)
-        if collection_name == "professor_profiles":
+        if collection_name == _PROFESSOR_IDENTITY_COLLECTION:
             return _milvus_search_result([_prof_ann_row("p1", 0.9)])
         if collection_name == "paper_chunks":
             return _milvus_search_result([_paper_ann_row("p1:abstract:0", "p1", 0.85)])
@@ -503,7 +1037,7 @@ def test_retrieve_concurrent_ann_across_domains():
         reranker=_fake_reranker(),
     )
     t0 = time.monotonic()
-    svc.retrieve("query", domains=("professor", "paper"))
+    svc.retrieve("张三是谁", domains=("professor", "paper"))
     elapsed = time.monotonic() - t0
     # If serial, elapsed ≥ 0.4s. If concurrent, ≥ 0.2s but < 0.4s (plus overhead).
     # Give generous headroom for slow CI: require < 0.38s as the concurrency threshold.

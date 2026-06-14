@@ -18,6 +18,7 @@ import pytest
 from src.data_agents.paper.full_text_fetcher import (
     FullTextExtract,
     _MAX_PDF_BYTES,
+    _clean_section_text,
     _download_pdf,
     _extract_text_from_pdf_bytes,
     _find_section_anchor,
@@ -169,6 +170,10 @@ def test_split_neither_present():
 
 def test_split_empty_text():
     assert _split_abstract_intro("") == (None, None)
+
+
+def test_clean_section_text_strips_postgres_unsafe_control_chars():
+    assert _clean_section_text("ab\x00stract\x1f text\fnext") == "abstract text\nnext"
 
 
 def test_split_ignores_inline_mentions_of_word_abstract():

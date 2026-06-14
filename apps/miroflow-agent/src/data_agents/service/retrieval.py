@@ -4,15 +4,19 @@ import hashlib
 import json
 import logging
 import os
+import re
 from contextlib import contextmanager, nullcontext
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Literal, Protocol
 
+from ..paper.title_cleaner import clean_paper_title
 from ..storage.milvus_collections import (
     COMPANY_PROFILES_COLLECTION,
     PAPER_CHUNKS_COLLECTION,
     PATENT_PROFILES_COLLECTION,
+    PROFESSOR_IDENTITY_PROFILES_COLLECTION,
+    PROFESSOR_RESEARCH_PROFILES_COLLECTION,
 )
 
 logger = logging.getLogger(__name__)
@@ -21,12 +25,37 @@ _VALID_DOMAINS = {"professor", "paper", "company", "patent"}
 _Domain = Literal["professor", "paper", "company", "patent"]
 _MAX_RELATED_LIMIT = 200
 _PROFESSOR_COLLECTION = "professor_profiles"
+_PROFESSOR_IDENTITY_INDEX = "identity"
+_PROFESSOR_RESEARCH_INDEX = "research"
 _PROFESSOR_OUTPUT_FIELDS = [
     "id",
     "name",
     "institution",
     "department",
     "profile_summary",
+    "h_index",
+    "citation_count",
+    "paper_count",
+]
+_PROFESSOR_IDENTITY_OUTPUT_FIELDS = [
+    "id",
+    "name",
+    "name_en",
+    "institution",
+    "department",
+    "title",
+    "profile_url",
+    "identity_text",
+    "quality_status",
+]
+_PROFESSOR_RESEARCH_OUTPUT_FIELDS = [
+    "id",
+    "research_text",
+    "research_directions",
+    "profile_summary",
+    "paper_summary",
+    "patent_summary",
+    "quality_status",
     "h_index",
     "citation_count",
     "paper_count",
@@ -64,6 +93,71 @@ _QUALITY_STATUS_LOOKUP: dict[str, tuple[str, str]] = {
     "company": ("company", "company_id"),
     "patent": ("patent", "patent_id"),
 }
+_PROFESSOR_DEFAULT_LIFECYCLE_STATE = "active"
+_PROFESSOR_IDENTITY_QUERY_MARKERS = (
+    "是谁",
+    "什么人",
+    "简介",
+    "介绍",
+    "主页",
+    "邮箱",
+    "联系方式",
+    "任职",
+    "职称",
+    "在哪",
+    "个人信息",
+    "profile",
+    "homepage",
+    "email",
+    "affiliation",
+)
+_PROFESSOR_RESEARCH_QUERY_MARKERS = (
+    "研究",
+    "方向",
+    "领域",
+    "课题",
+    "专家",
+    "找",
+    "推荐",
+    "做",
+    "从事",
+    "擅长",
+    "论文",
+    "专利",
+    "技术",
+    "算法",
+    "模型",
+    "智能",
+    "机器人",
+    "材料",
+    "芯片",
+    "expert",
+    "research",
+    "works on",
+)
+_PAPER_TITLE_EXACT_SCORE = 1.0
+_PAPER_TITLE_EXACT_LIMIT = 5
+_PAPER_TITLE_KEY_MIN_CHARS = 16
+_PAPER_TITLE_KEY_MIN_TOKENS = 3
+_PAPER_TITLE_PARTIAL_KEY_MIN_CHARS = 32
+_PAPER_TITLE_PARTIAL_KEY_MIN_TOKENS = 5
+_PAPER_TITLE_QUERY_SUFFIX_RE = re.compile(
+    r"\s*(?:这篇|这份|该)?(?:论文|文章|paper)(?:的)?"
+    r"(?:主要|大概|具体)?"
+    r"(?:(?:讲|讲了|说|说明|介绍|研究|讨论|解决)"
+    r"(?:了)?(?:什么|啥|哪些内容)?|是(?:什么|啥)|什么|介绍一下).*$",
+    re.IGNORECASE,
+)
+_PAPER_TITLE_QUERY_PREFIX_RE = re.compile(
+    r"^\s*(?:请问|帮我|查询|查一下)?\s*(?:论文|文章|paper)\s*[:：]?\s+",
+    re.IGNORECASE,
+)
+_PAPER_TITLE_QUERY_ABSTRACT_SUFFIX_RE = re.compile(
+    r"\s*(?:(?:这篇|这份|该)?(?:论文|文章|paper)(?:的)?)?"
+    r"(?:的)?(?:中文)?(?:摘要|解读|总结)"
+    r"(?:是(?:什么|啥))?[？?!.。！]*\s*$",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,6 +168,14 @@ class Evidence:
     snippet: str
     source_url: str | None
     metadata: dict
+
+
+@dataclass(frozen=True, slots=True)
+class _SearchTarget:
+    collection_name: str
+    output_fields: list[str]
+    anns_field: str | None = None
+    professor_index: str | None = None
 
 
 class RetrievalCache(Protocol):
@@ -139,12 +241,18 @@ class RetrievalService:
             filter_by_quality_status = (
                 os.environ.get("FILTER_BY_QUALITY_STATUS", "1") != "0"
             )
-        filters_key = self._compute_filters_key(
-            {
-                **(filters or {}),
-                "__quality_status_filter_enabled": filter_by_quality_status,
-            }
+        professor_lifecycle_state = (
+            _PROFESSOR_DEFAULT_LIFECYCLE_STATE
+            if "professor" in domains and not (filters and "lifecycle_state" in filters)
+            else None
         )
+        cache_filters = {
+            **(filters or {}),
+            "__quality_status_filter_enabled": filter_by_quality_status,
+        }
+        if professor_lifecycle_state is not None:
+            cache_filters["__professor_lifecycle_state"] = professor_lifecycle_state
+        filters_key = self._compute_filters_key(cache_filters)
         if self._cache is not None:
             cached = self._cache.get(query, domains, filters_key)
             if cached is not None:
@@ -168,6 +276,7 @@ class RetrievalService:
                         executor.submit(
                             self._search_domain,
                             domain=domain,
+                            query=query,
                             vectors=vectors,
                             candidate_limit=candidate_limit,
                         ),
@@ -187,10 +296,18 @@ class RetrievalService:
                 evidence = self._row_to_evidence(domain, row)
                 if evidence is not None:
                     candidates.append(evidence)
+        if "paper" in domains:
+            candidates.extend(
+                self._paper_title_exact_candidates(
+                    query,
+                    limit=max(_PAPER_TITLE_EXACT_LIMIT, min(candidate_limit, 10)),
+                )
+            )
 
         candidates = self._annotate_quality_status(
             candidates,
             filter_ready_only=filter_by_quality_status,
+            professor_lifecycle_state=professor_lifecycle_state,
         )
 
         if filters:
@@ -229,6 +346,12 @@ class RetrievalService:
                         metadata=candidate.metadata,
                     )
                 )
+
+        results = self._promote_exact_paper_title_matches(
+            results,
+            candidates,
+            final_top_k=final_top_k,
+        )
 
         if self._cache is not None and results:
             self._cache.set(query, domains, filters_key, results)
@@ -314,6 +437,8 @@ class RetrievalService:
                 SELECT *
                   FROM paper
                  WHERE paper_id = %s
+                   AND COALESCE(identity_status, 'unverified') != 'rejected'
+                   AND COALESCE(quality_status, 'needs_enrichment') != 'rejected'
                  LIMIT 1
             """
         if domain == "company":
@@ -356,6 +481,8 @@ class RetrievalService:
               JOIN paper p ON p.paper_id = ppl.paper_id
              WHERE ppl.professor_id = %s
                AND ppl.link_status = 'verified'
+               AND COALESCE(p.identity_status, 'unverified') != 'rejected'
+               AND COALESCE(p.quality_status, 'needs_enrichment') != 'rejected'
              ORDER BY
                    ppl.topic_consistency_score DESC NULLS LAST,
                    p.citation_count DESC NULLS LAST,
@@ -475,19 +602,56 @@ class RetrievalService:
         self,
         *,
         domain: str,
+        query: str,
         vectors: list[list[float]],
         candidate_limit: int,
     ) -> list[dict]:
-        collection_name, output_fields = self._domain_search_config(domain)
+        if domain == "professor":
+            rows: list[dict] = []
+            for target in self._professor_search_targets(query):
+                rows.extend(
+                    self._search_collection(
+                        domain=domain,
+                        target=target,
+                        vectors=vectors,
+                        candidate_limit=candidate_limit,
+                    )
+                )
+            return rows
+
+        return self._search_collection(
+            domain=domain,
+            target=self._domain_search_config(domain),
+            vectors=vectors,
+            candidate_limit=candidate_limit,
+        )
+
+    def _search_collection(
+        self,
+        *,
+        domain: str,
+        target: _SearchTarget,
+        vectors: list[list[float]],
+        candidate_limit: int,
+    ) -> list[dict]:
+        kwargs = {}
+        if target.anns_field:
+            kwargs["anns_field"] = target.anns_field
         try:
             response = self._milvus_client.search(
-                collection_name=collection_name,
+                collection_name=target.collection_name,
                 data=vectors,
                 limit=candidate_limit,
-                output_fields=output_fields,
+                output_fields=target.output_fields,
+                **kwargs,
             )
         except Exception as exc:
-            logger.warning("Milvus search failed for domain %s: %s", domain, exc)
+            logger.warning(
+                "Milvus search failed for domain %s collection %s: %s",
+                domain,
+                target.collection_name,
+                exc,
+            )
             return []
 
         if not response:
@@ -495,7 +659,18 @@ class RetrievalService:
         first_query_rows = response[0]
         if not isinstance(first_query_rows, list):
             return []
-        return first_query_rows
+        if domain != "professor":
+            return first_query_rows
+
+        annotated_rows: list[dict] = []
+        for row in first_query_rows:
+            if not isinstance(row, dict):
+                continue
+            annotated = dict(row)
+            annotated["__collection_name"] = target.collection_name
+            annotated["__professor_retrieval_index"] = target.professor_index
+            annotated_rows.append(annotated)
+        return annotated_rows
 
     def _row_to_evidence(self, domain: str, row: dict) -> Evidence | None:
         entity = dict(row.get("entity") or {})
@@ -503,15 +678,29 @@ class RetrievalService:
 
         if domain == "professor":
             object_id = str(entity.get("id") or row.get("id") or "")
-            profile_summary = str(entity.get("profile_summary") or "")
+            snippet = str(
+                entity.get("research_text")
+                or entity.get("identity_text")
+                or entity.get("profile_summary")
+                or entity.get("paper_summary")
+                or entity.get("patent_summary")
+                or ""
+            )
             name = str(entity.get("name") or "")
             metadata = dict(entity)
+            metadata["ann_score"] = raw_score
+            collection_name = row.get("__collection_name")
+            professor_index = row.get("__professor_retrieval_index")
+            if collection_name:
+                metadata["collection_name"] = collection_name
+            if professor_index:
+                metadata["professor_retrieval_index"] = professor_index
             return Evidence(
                 object_type="professor",
                 object_id=object_id,
                 score=raw_score,
-                snippet=profile_summary[:500] or name,
-                source_url=entity.get("homepage_url"),
+                snippet=snippet[:500] or name,
+                source_url=entity.get("profile_url") or entity.get("homepage_url"),
                 metadata=metadata,
             )
 
@@ -541,7 +730,7 @@ class RetrievalService:
                 or entity.get("technology_route_summary")
                 or entity.get("description")
                 or name
-            )[:500]
+            )[:1800]
             return Evidence(
                 object_type="company",
                 object_id=object_id,
@@ -569,20 +758,290 @@ class RetrievalService:
 
         return None
 
-    def _domain_search_config(self, domain: str) -> tuple[str, list[str]]:
+    def _paper_title_exact_candidates(self, query: str, *, limit: int) -> list[Evidence]:
+        query_title = self._paper_title_query_text(query)
+        title_key = self._paper_title_match_key(query_title)
+        if title_key is None:
+            return []
+        query_tokens = self._paper_title_tokens(query_title)
+        like_pattern = self._paper_title_like_pattern(query_title)
+        if like_pattern is None:
+            return []
+
+        try:
+            with self._pg_connection() as conn:
+                rows = conn.execute(
+                    """
+                    SELECT paper_id,
+                           title_clean,
+                           title_raw,
+                           year,
+                           venue,
+                           abstract_clean,
+                           summary_zh,
+                           doi,
+                           identity_status,
+                           quality_status,
+                           citation_count
+                      FROM paper
+                     WHERE paper_id IS NOT NULL
+                       AND COALESCE(identity_status, 'unverified') != 'rejected'
+                       AND COALESCE(quality_status, 'needs_enrichment') != 'rejected'
+                       AND (
+                            regexp_replace(lower(coalesce(title_clean, title_raw, '')), '\\s+', '', 'g') = %s
+                            OR coalesce(title_clean, title_raw, '') ILIKE %s
+                       )
+                     ORDER BY
+                           CASE
+                             WHEN regexp_replace(lower(coalesce(title_clean, title_raw, '')), '\\s+', '', 'g') = %s
+                             THEN 0
+                             ELSE 1
+                           END,
+                           citation_count DESC NULLS LAST,
+                           year DESC NULLS LAST,
+                           paper_id ASC
+                     LIMIT %s
+                    """,
+                    (title_key, like_pattern, title_key, max(1, int(limit))),
+                ).fetchall()
+        except Exception as exc:
+            logger.warning("Paper title exact lookup failed for query %r: %s", query, exc)
+            return []
+
+        candidates: list[Evidence] = []
+        for row in rows:
+            row_dict = dict(row)
+            if row_dict.get("identity_status") == "rejected":
+                continue
+            if row_dict.get("quality_status") == "rejected":
+                continue
+            title = str(row_dict.get("title_clean") or row_dict.get("title_raw") or "")
+            candidate_key = self._paper_title_match_key(title)
+            if not self._paper_title_key_matches_query(
+                candidate_key,
+                title_key,
+                query_tokens=query_tokens,
+            ):
+                continue
+            paper_id = str(row_dict.get("paper_id") or "")
+            if not paper_id:
+                continue
+            snippet, snippet_source = self._paper_title_snippet(row_dict, title)
+            candidates.append(
+                Evidence(
+                    object_type="paper",
+                    object_id=paper_id,
+                    score=_PAPER_TITLE_EXACT_SCORE,
+                    snippet=snippet[:1800],
+                    source_url=self._doi_url(row_dict.get("doi")),
+                    metadata={
+                        "year": row_dict.get("year"),
+                        "venue": row_dict.get("venue"),
+                        "chunk_type": "title",
+                        "chunk_id": f"{paper_id}:title:exact",
+                        "ann_score": _PAPER_TITLE_EXACT_SCORE,
+                        "retrieval_source": "paper_title_exact",
+                        "title_clean": title,
+                        "snippet_source": snippet_source,
+                        "quality_status": row_dict.get("quality_status"),
+                        "citation_count": row_dict.get("citation_count"),
+                    },
+                )
+            )
+        candidates.sort(key=self._paper_title_candidate_rank, reverse=True)
+        return candidates
+
+    @classmethod
+    def _promote_exact_paper_title_matches(
+        cls,
+        results: list[Evidence],
+        candidates: list[Evidence],
+        *,
+        final_top_k: int,
+    ) -> list[Evidence]:
+        exact_matches = [
+            candidate
+            for candidate in candidates
+            if candidate.object_type == "paper"
+            and candidate.metadata.get("retrieval_source") == "paper_title_exact"
+        ]
+        if not exact_matches:
+            return results
+
+        promoted: list[Evidence] = []
+        seen: set[tuple[str, str]] = set()
+        for candidate in exact_matches + results:
+            key = (candidate.object_type, candidate.object_id)
+            if key in seen:
+                continue
+            seen.add(key)
+            promoted.append(candidate)
+            if len(promoted) >= final_top_k:
+                break
+        return promoted
+
+    @classmethod
+    def _paper_title_match_key(cls, value: str) -> str | None:
+        cleaned = clean_paper_title(value)
+        tokens = cls._paper_title_tokens(cleaned)
+        key = "".join(tokens).casefold()
+        if (
+            len(key) < _PAPER_TITLE_KEY_MIN_CHARS
+            or len(tokens) < _PAPER_TITLE_KEY_MIN_TOKENS
+        ):
+            return None
+        return key
+
+    @staticmethod
+    def _paper_title_key_matches_query(
+        candidate_key: str | None,
+        query_key: str,
+        *,
+        query_tokens: list[str],
+    ) -> bool:
+        if candidate_key is None:
+            return False
+        if candidate_key == query_key:
+            return True
+        if (
+            len(query_key) < _PAPER_TITLE_PARTIAL_KEY_MIN_CHARS
+            or len(query_tokens) < _PAPER_TITLE_PARTIAL_KEY_MIN_TOKENS
+        ):
+            return False
+        return len(candidate_key) > len(query_key) and query_key in candidate_key
+
+    @staticmethod
+    def _paper_title_query_text(value: str) -> str:
+        cleaned = clean_paper_title(value)
+        stripped = _PAPER_TITLE_QUERY_PREFIX_RE.sub("", cleaned, count=1).strip()
+        stripped = _PAPER_TITLE_QUERY_ABSTRACT_SUFFIX_RE.sub("", stripped).strip()
+        stripped = _PAPER_TITLE_QUERY_SUFFIX_RE.sub("", stripped).strip()
+        return stripped or cleaned
+
+    @classmethod
+    def _paper_title_like_pattern(cls, value: str) -> str | None:
+        tokens = cls._paper_title_tokens(clean_paper_title(value))
+        if len(tokens) < _PAPER_TITLE_KEY_MIN_TOKENS:
+            return None
+        return "%" + "%".join(tokens) + "%"
+
+    @staticmethod
+    def _paper_title_tokens(value: str) -> list[str]:
+        return re.findall(r"[^\W_]+", value, flags=re.UNICODE)
+
+    @staticmethod
+    def _paper_title_snippet(row: dict, title: str) -> tuple[str, str]:
+        for source in ("summary_zh", "abstract_clean"):
+            value = row.get(source)
+            if isinstance(value, str) and value.strip():
+                return value.strip(), source
+        return title, "title"
+
+    @staticmethod
+    def _paper_title_candidate_rank(candidate: Evidence) -> tuple[int, int, int, int]:
+        snippet_source = candidate.metadata.get("snippet_source")
+        source_rank = {"summary_zh": 2, "abstract_clean": 1}.get(snippet_source, 0)
+        quality_rank = 1 if candidate.metadata.get("quality_status") == "ready" else 0
+        citation_count = candidate.metadata.get("citation_count")
+        if not isinstance(citation_count, int):
+            citation_count = -1
+        year = candidate.metadata.get("year")
+        if not isinstance(year, int):
+            year = -1
+        return (source_rank, quality_rank, citation_count, year)
+
+    @staticmethod
+    def _doi_url(value: object) -> str | None:
+        if not isinstance(value, str):
+            return None
+        doi = value.strip()
+        if not doi:
+            return None
+        if doi.startswith("http://") or doi.startswith("https://"):
+            return doi
+        return f"https://doi.org/{doi}"
+
+    def _domain_search_config(self, domain: str) -> _SearchTarget:
         if domain == "professor":
-            return _PROFESSOR_COLLECTION, _PROFESSOR_OUTPUT_FIELDS
+            return _SearchTarget(
+                collection_name=_PROFESSOR_COLLECTION,
+                output_fields=_PROFESSOR_OUTPUT_FIELDS,
+                anns_field="profile_vector",
+            )
         if domain == "paper":
-            return PAPER_CHUNKS_COLLECTION, _PAPER_OUTPUT_FIELDS
+            return _SearchTarget(
+                collection_name=PAPER_CHUNKS_COLLECTION,
+                output_fields=_PAPER_OUTPUT_FIELDS,
+                anns_field="content_vector",
+            )
         if domain == "company":
-            return COMPANY_PROFILES_COLLECTION, _COMPANY_OUTPUT_FIELDS
-        return PATENT_PROFILES_COLLECTION, _PATENT_OUTPUT_FIELDS
+            return _SearchTarget(
+                collection_name=COMPANY_PROFILES_COLLECTION,
+                output_fields=_COMPANY_OUTPUT_FIELDS,
+            )
+        return _SearchTarget(
+            collection_name=PATENT_PROFILES_COLLECTION,
+            output_fields=_PATENT_OUTPUT_FIELDS,
+        )
+
+    def _professor_search_targets(self, query: str) -> tuple[_SearchTarget, ...]:
+        intent = self._professor_query_intent(query)
+        identity_target = _SearchTarget(
+            collection_name=PROFESSOR_IDENTITY_PROFILES_COLLECTION,
+            output_fields=_PROFESSOR_IDENTITY_OUTPUT_FIELDS,
+            anns_field="identity_vector",
+            professor_index=_PROFESSOR_IDENTITY_INDEX,
+        )
+        research_target = _SearchTarget(
+            collection_name=PROFESSOR_RESEARCH_PROFILES_COLLECTION,
+            output_fields=_PROFESSOR_RESEARCH_OUTPUT_FIELDS,
+            anns_field="research_vector",
+            professor_index=_PROFESSOR_RESEARCH_INDEX,
+        )
+        if intent == _PROFESSOR_IDENTITY_INDEX:
+            return (identity_target,)
+        if intent == _PROFESSOR_RESEARCH_INDEX:
+            return (research_target,)
+        return (identity_target, research_target)
+
+    @classmethod
+    def _professor_query_intent(cls, query: str) -> str:
+        normalized = query.strip().lower()
+        has_identity_signal = any(
+            marker in normalized for marker in _PROFESSOR_IDENTITY_QUERY_MARKERS
+        ) or cls._contains_named_professor_reference(query)
+        has_research_signal = any(
+            marker in normalized for marker in _PROFESSOR_RESEARCH_QUERY_MARKERS
+        )
+
+        if has_identity_signal and not has_research_signal:
+            return _PROFESSOR_IDENTITY_INDEX
+        if has_research_signal and not has_identity_signal:
+            return _PROFESSOR_RESEARCH_INDEX
+        return "ambiguous"
+
+    @staticmethod
+    def _contains_named_professor_reference(query: str) -> bool:
+        professor_at = query.find("教授")
+        if professor_at <= 0:
+            return False
+
+        prefix = query[:professor_at]
+        chars: list[str] = []
+        for char in reversed(prefix):
+            if "\u4e00" <= char <= "\u9fff":
+                chars.append(char)
+                continue
+            break
+        candidate = "".join(reversed(chars))
+        return 2 <= len(candidate) <= 4
 
     def _annotate_quality_status(
         self,
         candidates: list[Evidence],
         *,
         filter_ready_only: bool,
+        professor_lifecycle_state: str | None,
     ) -> list[Evidence]:
         if not candidates:
             return []
@@ -597,19 +1056,36 @@ class RetrievalService:
         statuses = self._fetch_quality_statuses(ids_by_domain)
         annotated: list[Evidence] = []
         for candidate in candidates:
-            status = statuses.get((candidate.object_type, candidate.object_id))
-            if filter_ready_only and status != "ready":
+            status_info = statuses.get((candidate.object_type, candidate.object_id), {})
+            status = status_info.get("quality_status")
+            if status == "rejected":
+                continue
+            if (
+                filter_ready_only
+                and status != "ready"
+                and not self._allow_non_ready_exact_paper(candidate)
+            ):
                 continue
             if status is not None:
                 candidate.metadata["quality_status"] = status
+            if candidate.object_type == "professor":
+                lifecycle_state = status_info.get(
+                    "lifecycle_state", _PROFESSOR_DEFAULT_LIFECYCLE_STATE
+                )
+                if (
+                    professor_lifecycle_state is not None
+                    and lifecycle_state != professor_lifecycle_state
+                ):
+                    continue
+                candidate.metadata["lifecycle_state"] = lifecycle_state
             annotated.append(candidate)
         return annotated
 
     def _fetch_quality_statuses(
         self,
         ids_by_domain: dict[str, set[str]],
-    ) -> dict[tuple[str, str], str]:
-        statuses: dict[tuple[str, str], str] = {}
+    ) -> dict[tuple[str, str], dict[str, str]]:
+        statuses: dict[tuple[str, str], dict[str, str]] = {}
         if not ids_by_domain:
             return statuses
 
@@ -621,20 +1097,42 @@ class RetrievalService:
                     table_name, id_column = _QUALITY_STATUS_LOOKUP[domain]
                     sorted_ids = sorted(object_ids)
                     placeholders = ", ".join(["%s"] * len(sorted_ids))
-                    rows = conn.execute(
-                        f"SELECT {id_column} AS object_id, quality_status "
-                        f"FROM {table_name} WHERE {id_column} IN ({placeholders})",
-                        tuple(sorted_ids),
-                    ).fetchall()
+                    if domain == "professor":
+                        rows = conn.execute(
+                            f"SELECT {id_column} AS object_id, "
+                            "quality_status, "
+                            "COALESCE(lifecycle_state, 'active') AS lifecycle_state "
+                            f"FROM {table_name} "
+                            f"WHERE {id_column} IN ({placeholders})",
+                            tuple(sorted_ids),
+                        ).fetchall()
+                    else:
+                        rows = conn.execute(
+                            f"SELECT {id_column} AS object_id, quality_status "
+                            f"FROM {table_name} WHERE {id_column} IN ({placeholders})",
+                            tuple(sorted_ids),
+                        ).fetchall()
                     for row in rows:
                         row_dict = dict(row)
                         object_id = row_dict.get("object_id")
                         status = row_dict.get("quality_status")
                         if object_id is not None and status is not None:
-                            statuses[(domain, str(object_id))] = str(status)
+                            payload = {"quality_status": str(status)}
+                            lifecycle_state = row_dict.get("lifecycle_state")
+                            if lifecycle_state is not None:
+                                payload["lifecycle_state"] = str(lifecycle_state)
+                            statuses[(domain, str(object_id))] = payload
         except Exception as exc:
             logger.warning("Failed to fetch retrieval quality_status values: %s", exc)
         return statuses
+
+    @staticmethod
+    def _allow_non_ready_exact_paper(candidate: Evidence) -> bool:
+        if candidate.object_type != "paper":
+            return False
+        if candidate.metadata.get("retrieval_source") != "paper_title_exact":
+            return False
+        return candidate.metadata.get("snippet_source") in {"summary_zh", "abstract_clean"}
 
     def _apply_filters(
         self,

@@ -41,15 +41,26 @@ def build_company_release(
         if not industry:
             continue
         summaries = build_rule_based_summaries(record)
+        profile_summary = (
+            (record.profile_summary or "").strip() or summaries.profile_summary
+        )
+        technology_route_summary = (
+            (record.technology_route_summary or "").strip()
+            or summaries.technology_route_summary
+        )
         company = CompanyRecord(
             id=build_stable_id("comp", record.normalized_name),
             name=record.name,
             normalized_name=record.normalized_name,
+            credit_code=record.credit_code,
             industry=industry,
+            legal_representative=record.legal_representative,
+            registered_capital=record.registered_capital,
             website=record.website,
             key_personnel=extract_key_personnel(record),
-            profile_summary=summaries.profile_summary,
-            technology_route_summary=summaries.technology_route_summary,
+            profile_summary=profile_summary,
+            technology_route_summary=technology_route_summary,
+            patent_count=record.patent_count,
             evidence=[
                 build_evidence(
                     source_type="xlsx_import",

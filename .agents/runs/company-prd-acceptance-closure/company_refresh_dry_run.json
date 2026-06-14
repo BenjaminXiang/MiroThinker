@@ -1,0 +1,41 @@
+{
+  "dry_run": true,
+  "selection_reasons": [
+    "explicit_company_ids"
+  ],
+  "stale_days": 30,
+  "selected_count": 2,
+  "selected_company_ids": [
+    "COMP-302ee093a2d1",
+    "COMP-54fd4dd036ff"
+  ],
+  "sample": [
+    {
+      "company_id": "COMP-302ee093a2d1",
+      "canonical_name": "湾测技术",
+      "last_refreshed_at": "2026-05-28T22:50:27.414358+00:00",
+      "missing_profile_summary": false,
+      "missing_technology_route_summary": false
+    },
+    {
+      "company_id": "COMP-54fd4dd036ff",
+      "canonical_name": "深圳迈塔兰斯科技",
+      "last_refreshed_at": "2026-05-28T22:50:27.414358+00:00",
+      "missing_profile_summary": false,
+      "missing_technology_route_summary": false
+    }
+  ],
+  "enabled_stages": [
+    "baseline_readiness",
+    "xlsx_team_synthesis",
+    "official_site_capture",
+    "yiou_pitchhub_capture",
+    "generic_source_judgment",
+    "multi_source_synthesis",
+    "touched_vector_refresh"
+  ],
+  "writes": {
+    "business_fact_tables": 0,
+    "vectors": 0
+  }
+}

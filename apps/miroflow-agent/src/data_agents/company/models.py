@@ -29,6 +29,7 @@ class FinancingEvent:
 class CompanyImportRecord:
     name: str
     normalized_name: str
+    credit_code: str | None = None
     sequence_no: str | None = None
     project_name: str | None = None
     industry: str | None = None
@@ -39,6 +40,8 @@ class CompanyImportRecord:
     legal_representative: str | None = None
     registered_capital: str | None = None
     description: str | None = None
+    profile_summary: str | None = None
+    technology_route_summary: str | None = None
     team_raw: str | None = None
     registered_address: str | None = None
     contact_phone: str | None = None
@@ -67,6 +70,8 @@ class CompanyImportRecord:
             self.legal_representative,
             self.registered_capital,
             self.description,
+            self.profile_summary,
+            self.technology_route_summary,
             self.team_raw,
             self.registered_address,
             self.contact_phone,
@@ -75,6 +80,7 @@ class CompanyImportRecord:
             self.established_date,
             self.sequence_no,
             self.project_name,
+            self.credit_code,
         )
         score = sum(1 for value in scalar_values if value)
         if self.is_high_tech is not None:

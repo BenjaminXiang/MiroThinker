@@ -100,6 +100,8 @@ class _FakeDomainsConn:
         sql = " ".join(query.split())
         self.calls.append(sql)
         sql_lower = sql.lower()
+        if "from paper_merge_alias" in sql_lower:
+            return _FakeResult([])
         if "paper_title_resolution_cache" in sql_lower:
             return _FakeResult(
                 [
@@ -175,7 +177,7 @@ def test_domains_paper_detail_returns_summary_zh_column_value() -> None:
     # aliased to abstract_clean which was the bug).
     assert payload["summary_fields"]["summary_text"] == "中文摘要来自数据库。"
     assert payload["summary_fields"]["summary_zh"] == "中文摘要来自数据库。"
-    assert "p.summary_zh" in conn.calls[0]
+    assert any("p.summary_zh" in sql for sql in conn.calls)
 
 
 def test_domains_paper_detail_returns_none_for_missing_summary_zh() -> None:

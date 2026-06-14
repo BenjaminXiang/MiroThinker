@@ -24,13 +24,13 @@ def _classify_with_payload(
     payload: str,
     query: str = "请处理这个内部分类测试",
 ):
-    def _fake_settings(profile_name: str, *, include_profile: bool = False):
-        assert profile_name == "gemma4"
+    def _fake_settings(profile_name: str | None, *, include_profile: bool = False):
+        assert profile_name is None
         assert include_profile is True
         return {
             "local_llm_base_url": "http://127.0.0.1:8000/v1",
             "local_llm_api_key": "test-key",
-            "local_llm_model": "gemma-4b-it",
+            "local_llm_model": "deepseek-v4-pro",
         }
 
     class _FakeOpenAI:
@@ -41,7 +41,8 @@ def _classify_with_payload(
             self.chat = SimpleNamespace(completions=self)
 
         def create(self, **kwargs):
-            assert kwargs["model"] == "gemma-4b-it"
+            assert kwargs["model"] == "deepseek-v4-pro"
+            assert kwargs["extra_body"] == {"thinking": {"type": "disabled"}}
             return SimpleNamespace(
                 choices=[
                     SimpleNamespace(

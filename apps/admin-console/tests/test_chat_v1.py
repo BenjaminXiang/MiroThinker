@@ -76,8 +76,8 @@ def test_chat_v1_profile_uses_llm_synthesis_and_returns_citation_map(
         "resolve_professor_llm_settings",
         lambda profile_name: {
             "local_llm_base_url": "http://127.0.0.1:8000/v1",
-            "local_llm_api_key": "gemma-secret",
-            "local_llm_model": "gemma-4b-it",
+            "local_llm_api_key": "deepseek-secret",
+            "local_llm_model": "deepseek-v4-pro",
         },
     )
 
@@ -129,18 +129,136 @@ def test_chat_v1_profile_uses_llm_synthesis_and_returns_citation_map(
     assert _FakeOpenAI.init_calls == [
         {
             "base_url": "http://127.0.0.1:8000/v1",
-            "api_key": "gemma-secret",
+            "api_key": "deepseek-secret",
             "timeout": 3.0,
         }
     ]
-    assert _FakeOpenAI.create_calls[0]["model"] == "gemma-4b-it"
+    assert _FakeOpenAI.create_calls[0]["model"] == "deepseek-v4-pro"
     assert _FakeOpenAI.create_calls[0]["extra_body"] == {
-        "chat_template_kwargs": {"enable_thinking": False}
+        "thinking": {"type": "disabled"}
     }
     assert "用户问题: 介绍清华的丁文伯" in _FakeOpenAI.create_calls[0]["messages"][1]["content"]
     assert "http_proxy" not in os.environ
     assert "https_proxy" not in os.environ
     assert "all_proxy" not in os.environ
+
+
+def test_chat_profile_accepts_introduce_once_professor_variant(monkeypatch) -> None:
+    monkeypatch.setattr(
+        chat_module,
+        "_lookup_professor",
+        lambda conn, *, name, institutions: [
+            {
+                "professor_id": "PROF-LIXUAN",
+                "canonical_name": "李轩",
+                "canonical_name_en": None,
+                "institution": "电子科技大学（深圳）高等研究院",
+                "title": "研究员",
+                "discipline_family": "electrical_engineering",
+            }
+        ]
+        if name == "李轩"
+        else [],
+    )
+    monkeypatch.setattr(
+        chat_module,
+        "_prof_research_topics",
+        lambda conn, professor_id: ["宽禁带碳化硅基功率器件", "封装及应用研究"],
+    )
+    monkeypatch.setattr(chat_module, "_prof_paper_count", lambda conn, professor_id: 12)
+
+    response = chat_module.chat(
+        chat_module.ChatRequest(query="介绍一下李轩教授"),
+        response=Response(),
+        conn=object(),
+    )
+
+    assert response.query_type == "A_prof_profile"
+    assert response.structured_payload["professor_id"] == "PROF-LIXUAN"
+    assert response.structured_payload["verified_paper_count"] == 12
+    assert "宽禁带碳化硅基功率器件" in response.answer_text
+
+
+def test_chat_profile_accepts_name_institution_research_and_papers_query(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        chat_module,
+        "_lookup_professor",
+        lambda conn, *, name, institutions: [
+            {
+                "professor_id": "PROF-LIXUAN",
+                "canonical_name": "李轩",
+                "canonical_name_en": None,
+                "institution": "电子科技大学（深圳）高等研究院",
+                "title": "研究员",
+                "discipline_family": "electrical_engineering",
+            }
+        ]
+        if name == "李轩"
+        else [],
+    )
+    monkeypatch.setattr(
+        chat_module,
+        "_prof_research_topics",
+        lambda conn, professor_id: ["宽禁带碳化硅基功率器件", "封装及应用研究"],
+    )
+    monkeypatch.setattr(chat_module, "_prof_paper_count", lambda conn, professor_id: 12)
+
+    response = chat_module.chat(
+        chat_module.ChatRequest(query="李轩 电子科技大学深圳高等研究院 的研究方向和论文情况是什么？"),
+        response=Response(),
+        conn=object(),
+    )
+
+    assert response.query_type == "A_prof_profile"
+    assert response.structured_payload["professor_id"] == "PROF-LIXUAN"
+    assert response.structured_payload["verified_paper_count"] == 12
+    assert "封装及应用研究" in response.answer_text
+
+
+def test_chat_profile_accepts_institution_prefixed_research_direction_query(
+    monkeypatch,
+) -> None:
+    lookup_calls: list[tuple[str, tuple[str, ...] | None]] = []
+
+    def lookup_professor(conn, *, name, institutions):
+        lookup_calls.append((name, institutions))
+        if name == "夏树涛" and institutions == ("清华大学深圳国际研究生院", "清华大学深圳研究生院"):
+            return [
+                {
+                    "professor_id": "PROF-XIASHUTAO",
+                    "canonical_name": "夏树涛",
+                    "canonical_name_en": None,
+                    "institution": "清华大学深圳国际研究生院",
+                    "title": "教授",
+                    "discipline_family": "information_theory",
+                }
+            ]
+        return []
+
+    monkeypatch.setattr(chat_module, "_lookup_professor", lookup_professor)
+    monkeypatch.setattr(
+        chat_module,
+        "_prof_research_topics",
+        lambda conn, professor_id: ["信息论", "编码"],
+    )
+    monkeypatch.setattr(chat_module, "_prof_paper_count", lambda conn, professor_id: 211)
+
+    response = chat_module.chat(
+        chat_module.ChatRequest(query="介绍清华大学深圳国际研究生院夏树涛的研究方向"),
+        response=Response(),
+        conn=object(),
+    )
+
+    assert response.query_type == "A_prof_profile"
+    assert response.structured_payload["professor_id"] == "PROF-XIASHUTAO"
+    assert response.structured_payload["research_topics"] == ["信息论", "编码"]
+    assert "夏树涛" in response.answer_text
+    assert lookup_calls[0] == (
+        "夏树涛",
+        ("清华大学深圳国际研究生院", "清华大学深圳研究生院"),
+    )
 
 
 def test_chat_v1_patent_falls_back_to_template_and_files_pipeline_issue(

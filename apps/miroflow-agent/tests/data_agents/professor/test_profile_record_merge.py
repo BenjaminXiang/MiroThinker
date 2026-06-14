@@ -29,7 +29,20 @@ def _extracted_profile(name: str) -> ExtractedProfessorProfile:
     )
 
 
-@pytest.mark.parametrize("junk_name", ["师资", "师资队伍", "首页", "南燕新闻", "中山大学"])
+@pytest.mark.parametrize(
+    "junk_name",
+    [
+        "师资",
+        "师资队伍",
+        "首页",
+        "南燕新闻",
+        "中山大学",
+        "活动风采",
+        "面包屑",
+        "友情链接",
+        "未开通",
+    ],
+)
 def test_build_profile_record_prefers_roster_name_when_extracted_name_is_navigation_junk(
     junk_name: str,
 ):

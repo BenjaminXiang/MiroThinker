@@ -9,12 +9,10 @@ The entry point `run_homepage_patent_ingest` walks the same professor
 roster as `paper.homepage_ingest.run_homepage_paper_ingest`, fetches each
 prof's homepage HTML, calls
 `professor.homepage_patents.extract_patents_from_html`, and persists
-candidates that satisfy V004 NOT NULL constraints (i.e. carry a
-`patent_id` / registration number). Candidates without a patent_id are
-recorded as `pipeline_issue` rows with `stage="data_quality_flag"` —
-they remain visible for human review but are not inserted as canonical
-patents because V004 makes `patent_number` NOT NULL UNIQUE, and Phase B
-of this change does not migrate that constraint.
+candidates as canonical patent rows. Candidates with a registration
+number still hard-match on `patent_number`; title-only candidates use a
+stable page/title `patent_id` with `patent_number=NULL` and start as
+`needs_enrichment`.
 """
 
 from __future__ import annotations
@@ -215,26 +213,21 @@ def _ingest_patents_for_professor(
     issues_filed = 0
 
     for entry in entries:
-        if entry.patent_id is None:
-            # V004 makes patent_number NOT NULL UNIQUE — title-only
-            # candidates cannot satisfy that constraint, so we file a
-            # data_quality_flag issue and move on. The candidate is not
-            # lost; admin sees it in the issue log.
+        if not entry.title.strip():
             skipped_no_id += 1
             issues_filed += 1
             if not dry_run:
                 _file_pipeline_issue(
                     conn,
-                    issue_type="patent_missing_registration_number",
+                    issue_type="patent_malformed_candidate",
                     professor_id=professor_id,
                     stage=_PIPELINE_STAGE_DATA_QUALITY,
                     severity="low",
-                    message="Patent candidate lacks registration number (patent_number)",
+                    message="Patent candidate has a blank title",
                     details={
-                        "title": entry.title,
+                        "patent_id": entry.patent_id,
                         "source_url": entry.source_url,
                         "source_anchor": entry.source_anchor,
-                        "inventors": list(entry.inventors),
                     },
                 )
             continue
@@ -242,14 +235,23 @@ def _ingest_patents_for_professor(
         row = _build_patent_row(
             entry,
             canonical_name=canonical_name,
+            professor_id=professor_id,
             run_id=run_id,
         )
         if not dry_run:
-            actual_patent_id = _upsert_patent_canonical(conn, row=row)
+            actual_patent_id = _upsert_patent_canonical(
+                conn,
+                row=row,
+                professor_id=professor_id,
+                evidence_url=entry.source_url,
+                evidence_anchor=entry.source_anchor,
+            )
             _upsert_professor_patent_link(
                 conn,
                 professor_id=professor_id,
                 patent_id=actual_patent_id,
+                evidence_url=entry.source_url,
+                evidence_anchor=entry.source_anchor,
                 match_reason=_LINK_MATCH_REASON_PAGE_ONLY,
                 verified_by="rule_auto",
             )
@@ -268,20 +270,21 @@ def _build_patent_row(
     entry: PatentEntry,
     *,
     canonical_name: str | None,
+    professor_id: str | None = None,
     run_id: UUID | str,
 ) -> dict[str, Any]:
-    """Build a V004/V019/V020 patent-table row from a homepage entry.
-
-    Caller must have checked `entry.patent_id is not None` first.
-    """
-    if entry.patent_id is None:
-        raise ValueError(
-            "_build_patent_row called without patent_id; ingest must skip "
-            "title-only candidates upstream"
+    """Build a patent-table row from a homepage entry."""
+    patent_number = entry.patent_id.strip().upper() if entry.patent_id else None
+    if patent_number:
+        internal_patent_id = build_stable_id("PAT", patent_number)
+    else:
+        internal_patent_id = build_stable_id(
+            "PAT-PAGE",
+            _title_only_patent_natural_key(
+                entry,
+                professor_id=professor_id,
+            ),
         )
-
-    patent_number = entry.patent_id.strip().upper()
-    internal_patent_id = build_stable_id("PAT", patent_number)
 
     inventors = (
         list(entry.inventors)
@@ -319,7 +322,34 @@ def _build_patent_row(
     }
 
 
-def _upsert_patent_canonical(conn, *, row: dict[str, Any]) -> str:
+def _title_only_patent_natural_key(
+    entry: PatentEntry,
+    *,
+    professor_id: str | None,
+) -> str:
+    title_key = " ".join(entry.title.strip().casefold().split())
+    source_url_key = (entry.source_url or "").strip().casefold()
+    source_anchor_key = (entry.source_anchor or "").strip().casefold()
+    professor_key = (professor_id or "").strip().casefold()
+    return "|".join(
+        (
+            "prof_page_title_only",
+            professor_key,
+            source_url_key,
+            source_anchor_key,
+            title_key,
+        )
+    )
+
+
+def _upsert_patent_canonical(
+    conn,
+    *,
+    row: dict[str, Any],
+    professor_id: str,
+    evidence_url: str | None,
+    evidence_anchor: str | None,
+) -> str:
     """INSERT ... ON CONFLICT (patent_number) DO UPDATE the patent row.
 
     Conflict key is `patent_number` rather than `patent_id` so that
@@ -329,6 +359,20 @@ def _upsert_patent_canonical(conn, *, row: dict[str, Any]) -> str:
     upsert with patent_id hard match".
     """
     run_id = require_real_run_id(row["run_id"], writer_name="patent.homepage_ingest")
+
+    if row["patent_number"] is None:
+        return _upsert_title_only_patent_canonical(conn, row=row, run_id=run_id)
+
+    promoted_patent_id = _promote_title_only_patent_if_match(
+        conn,
+        row=row,
+        run_id=run_id,
+        professor_id=professor_id,
+        evidence_url=evidence_url,
+        evidence_anchor=evidence_anchor,
+    )
+    if promoted_patent_id is not None:
+        return promoted_patent_id
 
     result = conn.execute(
         """
@@ -405,11 +449,157 @@ def _upsert_patent_canonical(conn, *, row: dict[str, Any]) -> str:
     return str(result[0] if not isinstance(result, dict) else result["patent_id"])
 
 
+def _promote_title_only_patent_if_match(
+    conn,
+    *,
+    row: dict[str, Any],
+    run_id: UUID,
+    professor_id: str,
+    evidence_url: str | None,
+    evidence_anchor: str | None,
+) -> str | None:
+    result = conn.execute(
+        """
+        WITH candidate AS (
+            SELECT patent.patent_id
+              FROM patent
+              JOIN professor_patent_link AS ppl
+                ON ppl.patent_id = patent.patent_id
+             WHERE ppl.professor_id = %s
+               AND patent.patent_number IS NULL
+               AND patent.title_clean = %s
+               AND ppl.evidence_url IS NOT DISTINCT FROM %s
+               AND ppl.evidence_anchor IS NOT DISTINCT FROM %s
+               AND NOT EXISTS (
+                   SELECT 1
+                     FROM patent AS numbered
+                    WHERE numbered.patent_number = %s
+               )
+             ORDER BY patent.updated_at DESC
+             LIMIT 1
+        )
+        UPDATE patent
+           SET patent_number    = %s,
+               inventors_raw    = COALESCE(%s, patent.inventors_raw),
+               inventors_parsed = COALESCE(%s, patent.inventors_parsed),
+               filing_date      = COALESCE(%s, patent.filing_date),
+               grant_date       = COALESCE(%s, patent.grant_date),
+               run_id           = %s,
+               updated_at       = %s
+          FROM candidate
+         WHERE patent.patent_id = candidate.patent_id
+        RETURNING patent.patent_id
+        """,
+        (
+            professor_id,
+            row["title_clean"],
+            evidence_url or None,
+            evidence_anchor or None,
+            row["patent_number"],
+            row["patent_number"],
+            row["inventors_raw"],
+            Jsonb(row["inventors_parsed"]),
+            row["filing_date"],
+            row["grant_date"],
+            run_id,
+            row["updated_at"],
+        ),
+    ).fetchone()
+    if result is None:
+        return None
+    return str(result[0] if not isinstance(result, dict) else result["patent_id"])
+
+
+def _upsert_title_only_patent_canonical(
+    conn,
+    *,
+    row: dict[str, Any],
+    run_id: UUID,
+) -> str:
+    """INSERT ... ON CONFLICT (patent_id) DO UPDATE title-only page rows."""
+    result = conn.execute(
+        """
+        INSERT INTO patent (
+            patent_id,
+            patent_number,
+            title_clean,
+            title_raw,
+            title_en,
+            applicants_raw,
+            applicants_parsed,
+            inventors_raw,
+            inventors_parsed,
+            filing_date,
+            publication_date,
+            grant_date,
+            patent_type,
+            status,
+            abstract_clean,
+            technology_effect,
+            ipc_codes,
+            summary_text,
+            summary_text_method,
+            identity_status,
+            quality_status,
+            run_id,
+            first_seen_at,
+            updated_at
+        )
+        VALUES (
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+        )
+        ON CONFLICT (patent_id) DO UPDATE
+           SET patent_number       = COALESCE(EXCLUDED.patent_number, patent.patent_number),
+               title_clean         = COALESCE(NULLIF(EXCLUDED.title_clean, ''), patent.title_clean),
+               inventors_raw       = COALESCE(EXCLUDED.inventors_raw, patent.inventors_raw),
+               inventors_parsed    = COALESCE(EXCLUDED.inventors_parsed, patent.inventors_parsed),
+               filing_date         = COALESCE(EXCLUDED.filing_date, patent.filing_date),
+               grant_date          = COALESCE(EXCLUDED.grant_date, patent.grant_date),
+               run_id              = EXCLUDED.run_id,
+               updated_at          = EXCLUDED.updated_at
+        RETURNING patent_id
+        """,
+        (
+            row["patent_id"],
+            row["patent_number"],
+            row["title_clean"],
+            row["title_raw"],
+            row["title_en"],
+            row["applicants_raw"],
+            Jsonb(row["applicants_parsed"]),
+            row["inventors_raw"],
+            Jsonb(row["inventors_parsed"]),
+            row["filing_date"],
+            row["publication_date"],
+            row["grant_date"],
+            row["patent_type"],
+            row["status"],
+            row["abstract_clean"],
+            row["technology_effect"],
+            row["ipc_codes"],
+            row["summary_text"],
+            row["summary_text_method"],
+            row["identity_status"],
+            row["quality_status"],
+            run_id,
+            row["first_seen_at"],
+            row["updated_at"],
+        ),
+    ).fetchone()
+
+    if result is None:
+        raise RuntimeError("title-only patent upsert did not return patent_id")
+    return str(result[0] if not isinstance(result, dict) else result["patent_id"])
+
+
 def _upsert_professor_patent_link(
     conn,
     *,
     professor_id: str,
     patent_id: str,
+    evidence_url: str | None,
+    evidence_anchor: str | None,
     match_reason: str,
     verified_by: str | None,
 ) -> None:
@@ -422,14 +612,18 @@ def _upsert_professor_patent_link(
             link_role,
             link_status,
             evidence_source_type,
+            evidence_url,
+            evidence_anchor,
             match_reason,
             verified_by,
             verified_at
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT (professor_id, patent_id, link_role) DO UPDATE
            SET link_status          = EXCLUDED.link_status,
                evidence_source_type = EXCLUDED.evidence_source_type,
+               evidence_url         = COALESCE(EXCLUDED.evidence_url, professor_patent_link.evidence_url),
+               evidence_anchor      = COALESCE(EXCLUDED.evidence_anchor, professor_patent_link.evidence_anchor),
                match_reason         = EXCLUDED.match_reason,
                verified_by          = COALESCE(EXCLUDED.verified_by, professor_patent_link.verified_by),
                verified_at          = COALESCE(EXCLUDED.verified_at, professor_patent_link.verified_at),
@@ -441,6 +635,8 @@ def _upsert_professor_patent_link(
             _LINK_ROLE_INVENTOR,
             "verified",
             _LINK_EVIDENCE_SOURCE,
+            evidence_url or None,
+            evidence_anchor or None,
             match_reason,
             verified_by,
             verified_at,

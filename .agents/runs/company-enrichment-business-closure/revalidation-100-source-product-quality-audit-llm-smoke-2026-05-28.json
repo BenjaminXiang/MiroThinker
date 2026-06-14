@@ -1,0 +1,231 @@
+{
+  "batch_id": "382fb63b-1a81-4ff2-8841-95ab87c717b1",
+  "dry_run": true,
+  "apply_rejections": false,
+  "promote_ready": false,
+  "llm_verify": true,
+  "totals": {
+    "audited": 5,
+    "llm_verified": 5,
+    "llm_failed": 0
+  },
+  "decision_counts": {
+    "needs_review": 5
+  },
+  "risk_counts": {
+    "medium": 5
+  },
+  "reason_counts": {
+    "llm_not_actual_product": 1,
+    "llm_company_identity_no": 2,
+    "llm_fact_belongs_no": 2
+  },
+  "warning_counts": {
+    "llm_low_confidence": 5
+  },
+  "llm_status_counts": {
+    "verified": 5
+  },
+  "updated_counts": {
+    "rejected": 0,
+    "ready": 0
+  },
+  "items": [
+    {
+      "product_id": "PROD-345ffaad466b",
+      "company_id": "COMP-02a26304c3a6",
+      "company_name": "深圳新视智科技术",
+      "product_name": "AI工业视觉智能化解决方案",
+      "source_url": "https://pitchhub.36kr.com/project/1713089670146562",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "needs_review",
+      "recommended_status": "needs_review",
+      "risk_level": "medium",
+      "reasons": [],
+      "warnings": [
+        "llm_low_confidence"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "新视智科技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "9a717356-d819-4a68-9b18-fa8b279ad8d2",
+      "llm_verifier": {
+        "status": "verified",
+        "model": "gemma-4-26b-a4b-it",
+        "company_identity_match": "yes",
+        "matched_company_name_or_alias": "深圳新视智科技术有限公司",
+        "source_section_type": "project_introduction",
+        "fact_belongs_to_company": "yes",
+        "is_actual_product_or_service": "yes",
+        "evidence_quote": "新视智科专注于机器视觉、人工智能、大数据等新一代信息技术的研发并赋能智能制造，为企业客户提供领先的AI工业视觉智能化解决方案。",
+        "confidence": 0.0,
+        "reason": "The source text explicitly identifies '深圳新视智科技术有限公司' (matching the XLSX baseline) and states that they provide 'AI工业视觉智能化解决方案' (AI Industrial Vision Intelligence Solutions) as a core business offering. The candidate name is a valid service description provided by the company.",
+        "raw_decision": "ready_candidate"
+      }
+    },
+    {
+      "product_id": "PROD-c9aa2b731346",
+      "company_id": "COMP-06dc6a30b7a8",
+      "company_name": "深圳夸夸菁领科技",
+      "product_name": "数智员工",
+      "source_url": "https://data.iyiou.com/company/details/23ecd6f663411f8298bc9752ade49544/profile?source=iyiou.trz",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "needs_review",
+      "recommended_status": "needs_review",
+      "risk_level": "medium",
+      "reasons": [],
+      "warnings": [
+        "llm_low_confidence"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "夸夸菁领科技",
+        "夸夸菁领"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "db8940ad-a426-4a4c-8d16-1920d10c836d",
+      "llm_verifier": {
+        "status": "verified",
+        "model": "gemma-4-26b-a4b-it",
+        "company_identity_match": "yes",
+        "matched_company_name_or_alias": "夸夸菁领科技",
+        "source_section_type": "company_profile",
+        "fact_belongs_to_company": "yes",
+        "is_actual_product_or_service": "yes",
+        "evidence_quote": "旗下“数智员工”依托大模型并集成人类关键能力，旨在通用大模型在人力资源行业的应用，以大模型为基础底座进行深度开发",
+        "confidence": 0.0,
+        "reason": "The external source explicitly states that '数智员工' (Digital Intelligent Employee) is a product under the company '夸夸菁领' (Kuakua Jingling). This aligns with the company's description in the XLSX baseline regarding providing AI-driven intelligent solutions and digital twins/assistants. The candidate is a specific product name and not a generic term.",
+        "raw_decision": "ready_candidate"
+      }
+    },
+    {
+      "product_id": "PROD-0c6a21c497e2",
+      "company_id": "COMP-09b40e9b3e92",
+      "company_name": "奇普乐芯片技术",
+      "product_name": "器和射频等Chiplets组成一个不断增长的生态系统",
+      "source_url": "https://pitchhub.36kr.com/project/1958597544449030",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "needs_review",
+      "recommended_status": "needs_review",
+      "risk_level": "medium",
+      "reasons": [
+        "llm_not_actual_product"
+      ],
+      "warnings": [
+        "llm_low_confidence"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "奇普乐芯片技术"
+      ],
+      "product_name_valid": false,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "d4094065-e300-49ee-a470-0ec1a115ec7a",
+      "llm_verifier": {
+        "status": "verified",
+        "model": "gemma-4-26b-a4b-it",
+        "company_identity_match": "yes",
+        "matched_company_name_or_alias": "深圳市奇普乐芯片技术有限公司",
+        "source_section_type": "project_introduction",
+        "fact_belongs_to_company": "yes",
+        "is_actual_product_or_service": "no",
+        "evidence_quote": "奇普乐™利用拥有自主知识产权的可编程硅基板，可以轻松将市面上几乎所有的主流半导体厂商研发生产的传感器、存储器、微处理器和射频等Chiplets组成一个不断增长的生态系统；",
+        "confidence": 0.0,
+        "reason": "The candidate product name '器和射频等Chiplets组成一个不断增长的生态系统' is a sentence fragment extracted from the middle of a descriptive sentence. It is not a valid product or service name, but rather a part of a clause describing the company's capability/ecosystem.",
+        "raw_decision": "reject"
+      }
+    },
+    {
+      "product_id": "PROD-4b731c975b27",
+      "company_id": "COMP-1495c56536af",
+      "company_name": "深圳微控无线科技",
+      "product_name": "GPRS/NBIOT DTU及相关智能硬件",
+      "source_url": "https://pitchhub.36kr.com/project/2012751699166729",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "needs_review",
+      "recommended_status": "needs_review",
+      "risk_level": "medium",
+      "reasons": [
+        "llm_company_identity_no",
+        "llm_fact_belongs_no"
+      ],
+      "warnings": [
+        "llm_low_confidence"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "微控无线科技",
+        "微控"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "61318622-3057-4c58-ad39-378cbde15e22",
+      "llm_verifier": {
+        "status": "verified",
+        "model": "gemma-4-26b-a4b-it",
+        "company_identity_match": "no",
+        "matched_company_name_or_alias": "no",
+        "source_section_type": "project_introduction",
+        "fact_belongs_to_company": "no",
+        "is_actual_product_or_service": "yes",
+        "evidence_quote": "我们的产品包括Lora模块及相关智能硬件、GPRS/NBIOT DTU及相关智能硬件...",
+        "confidence": 0.0,
+        "reason": "The external source is about a completely different company, '山东一二三物联网科技有限公司' (Shandong 123IoT Technology Co., Ltd.), whereas the trusted baseline is '深圳微控无线科技有限公司' (Shenzhen Weikong Wireless Technology Co., Ltd.). The candidate product belongs to the source company, not the baseline company.",
+        "raw_decision": "reject"
+      }
+    },
+    {
+      "product_id": "PROD-cab5b35d4135",
+      "company_id": "COMP-1495c56536af",
+      "company_name": "深圳微控无线科技",
+      "product_name": "Lora模块及相关智能硬件",
+      "source_url": "https://pitchhub.36kr.com/project/2012751699166729",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "needs_review",
+      "recommended_status": "needs_review",
+      "risk_level": "medium",
+      "reasons": [
+        "llm_company_identity_no",
+        "llm_fact_belongs_no"
+      ],
+      "warnings": [
+        "llm_low_confidence"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "微控无线科技",
+        "微控"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "61318622-3057-4c58-ad39-378cbde15e22",
+      "llm_verifier": {
+        "status": "verified",
+        "model": "gemma-4-26b-a4b-it",
+        "company_identity_match": "no",
+        "matched_company_name_or_alias": "no",
+        "source_section_type": "project_introduction",
+        "fact_belongs_to_company": "no",
+        "is_actual_product_or_service": "yes",
+        "evidence_quote": "我们的产品包括Lora模块及相关智能硬件",
+        "confidence": 0.0,
+        "reason": "The external source is about a completely different company named '山东一二三物联网科技有限公司' (Shandong 123IoT Technology Co., Ltd.), whereas the trusted baseline is '深圳微控无线科技' (Shenzhen Weikong Wireless Technology Co., Ltd.). The candidate product belongs to the source company, not the baseline company.",
+        "raw_decision": "reject"
+      }
+    }
+  ]
+}

@@ -54,6 +54,7 @@ def test_backfill_company_domain_writes_payload():
     assert report["companies_with_errors"] == 0
     payload = milvus.upsert.call_args.kwargs["data"][0]
     assert milvus.upsert.call_args.kwargs["collection_name"] == "company_profiles"
+    milvus.flush.assert_called_once_with(collection_name="company_profiles")
     assert payload["id"] == "COMP-001"
     assert payload["description"] == "Builds autonomy systems for drones."
     assert payload["profile_vector"] == [0.1] * 4096
@@ -77,9 +78,41 @@ def test_backfill_company_domain_uses_latest_snapshot_join_and_inactive_filter()
     sql = conn.execute.call_args.args[0]
     params = conn.execute.call_args.args[1]
     assert "company_snapshot" in sql
+    assert "company_product" in sql
+    assert "company_application_scenario" in sql
+    assert "cp.quality_status = 'ready'" in sql
+    assert "cp.quality_status = 'needs_review'" in sql
+    assert "company_product_evidence publishable_evidence" in sql
+    assert "cas.quality_status = 'ready'" in sql
+    assert "cas.quality_status = 'needs_review'" in sql
+    assert "company_application_scenario_evidence publishable_evidence" in sql
+    assert "'xlsx', 'official', 'official_site', 'iyiou', 'pitchhub_36kr'" in sql
+    assert "target_customers" in sql
+    assert "technical_tags" in sql
+    assert "company_signal_event" in sql
     assert "identity_status != 'inactive'" in sql
     assert "company_id NOT IN" in sql
     assert params == ["COMP-skip", 5]
+
+
+def test_backfill_company_domain_filters_company_ids():
+    cli = _import_cli_module()
+    conn = _fake_pg_conn_returning([])
+    milvus = MagicMock()
+    milvus.has_collection.return_value = True
+    embed = MagicMock()
+
+    cli._backfill_company_domain(
+        conn,
+        milvus,
+        embed,
+        company_ids={"COMP-002", "COMP-001"},
+    )
+
+    sql = conn.execute.call_args.args[0]
+    params = conn.execute.call_args.args[1]
+    assert "c.company_id IN (%s, %s)" in sql
+    assert params == ["COMP-001", "COMP-002"]
 
 
 def test_backfill_company_domain_counts_embedding_errors():
@@ -121,17 +154,31 @@ def test_cli_dispatches_company_domain(monkeypatch):
             "2",
             "--batch-size",
             "1",
+            "--company-id",
+            "COMP-001",
         ],
     )
 
     assert cli.main() == 0
     assert called[0]["limit"] == 2
     assert called[0]["batch_size"] == 1
+    assert called[0]["company_ids"] == {"COMP-001"}
 
 
 def test_cli_company_dry_run_outputs_expected_json(monkeypatch, capsys):
     cli = _import_cli_module()
-    monkeypatch.setattr(sys, "argv", ["run_milvus_backfill.py", "--domain", "company", "--dry-run"])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_milvus_backfill.py",
+            "--domain",
+            "company",
+            "--dry-run",
+            "--milvus-uri",
+            ":memory:",
+        ],
+    )
 
     assert cli.main() == 0
     payload = json.loads(capsys.readouterr().out)
@@ -139,3 +186,30 @@ def test_cli_company_dry_run_outputs_expected_json(monkeypatch, capsys):
     assert payload["collection"] == "company_profiles"
     assert "profile_vector" in payload["expected_fields"]
     assert "technology_route_summary" in payload["missing_fields"]
+
+
+def test_file_milvus_uri_defaults_to_real_client(monkeypatch):
+    cli = _import_cli_module()
+    monkeypatch.delenv("MILVUS_USE_REAL_CLIENT", raising=False)
+
+    cli._prepare_milvus_client_env("/tmp/company-milvus.db")
+
+    assert cli.os.environ["MILVUS_USE_REAL_CLIENT"] == "1"
+
+
+def test_memory_milvus_uri_keeps_test_compat(monkeypatch):
+    cli = _import_cli_module()
+    monkeypatch.delenv("MILVUS_USE_REAL_CLIENT", raising=False)
+
+    cli._prepare_milvus_client_env(":memory:")
+
+    assert "MILVUS_USE_REAL_CLIENT" not in cli.os.environ
+
+
+def test_explicit_milvus_client_env_is_preserved(monkeypatch):
+    cli = _import_cli_module()
+    monkeypatch.setenv("MILVUS_USE_REAL_CLIENT", "0")
+
+    cli._prepare_milvus_client_env("/tmp/company-milvus.db")
+
+    assert cli.os.environ["MILVUS_USE_REAL_CLIENT"] == "0"

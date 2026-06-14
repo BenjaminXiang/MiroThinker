@@ -11,7 +11,8 @@ from src.data_agents.normalization import build_stable_id
 from src.data_agents.storage.postgres.pipeline_run import require_real_run_id
 
 from .quality_promotion import NEEDS_REVIEW, VALID_QUALITY_STATUSES
-from .title_cleaner import clean_paper_title
+from .text_sanitizer import sanitize_optional_text_for_postgres
+from .title_cleaner import clean_reference_like_paper_title
 
 
 _WHITESPACE_RE = re.compile(r"\s+")
@@ -46,7 +47,7 @@ def upsert_paper(
     """Upsert a canonical paper row keyed by a stable paper id."""
     run_id = require_real_run_id(run_id, writer_name="upsert_paper")
 
-    normalized_title = clean_paper_title(title_clean)
+    normalized_title = clean_reference_like_paper_title(title_clean)
     if not normalized_title:
         raise ValueError("title_clean must be non-empty")
 
@@ -109,6 +110,18 @@ def upsert_paper(
                citation_count       = COALESCE(EXCLUDED.citation_count, paper.citation_count),
                canonical_source     = EXCLUDED.canonical_source,
                identity_status      = EXCLUDED.identity_status,
+               quality_status       = CASE
+                   WHEN paper.quality_status IN ('rejected', 'ready', 'needs_review')
+                       THEN paper.quality_status
+                   WHEN EXCLUDED.quality_status = 'rejected'
+                       THEN EXCLUDED.quality_status
+                   WHEN EXCLUDED.quality_status = 'ready'
+                       THEN EXCLUDED.quality_status
+                   WHEN EXCLUDED.quality_status = 'partial'
+                        AND paper.quality_status IN ('needs_enrichment', 'low_confidence')
+                       THEN EXCLUDED.quality_status
+                   ELSE paper.quality_status
+               END,
                run_id               = COALESCE(EXCLUDED.run_id, paper.run_id),
                updated_at           = %s
         """,
@@ -163,8 +176,7 @@ def _identity_status_for_title_resolution_source(source: str | None) -> str:
 def _normalize_optional(value: object) -> str | None:
     if value is None:
         return None
-    text = str(value).strip()
-    return text or None
+    return sanitize_optional_text_for_postgres(str(value))
 
 
 def _normalize_quality_status(value: str | None) -> str:

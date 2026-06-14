@@ -1,0 +1,53 @@
+{
+  "generated_at": "2026-06-01T02:33:39.292997+00:00",
+  "summary_counts": {
+    "resolved_companies": 1024,
+    "missing_profile_summary": 0,
+    "missing_technology_route_summary": 0,
+    "ready_companies": 1024,
+    "needs_review_companies": 0
+  },
+  "business_counts": {
+    "product_rows": 4096,
+    "companies_with_products": 1003,
+    "scenario_rows": 2993,
+    "companies_with_scenarios": 775,
+    "signal_rows": 846,
+    "companies_with_signals": 579,
+    "news_rows": 4702,
+    "companies_with_news": 928
+  },
+  "review_counts": [
+    {
+      "table_name": "product",
+      "status": "needs_review",
+      "row_count": 1639
+    },
+    {
+      "table_name": "product",
+      "status": "ready",
+      "row_count": 2457
+    },
+    {
+      "table_name": "scenario",
+      "status": "needs_review",
+      "row_count": 866
+    },
+    {
+      "table_name": "scenario",
+      "status": "ready",
+      "row_count": 2127
+    },
+    {
+      "table_name": "signal",
+      "status": "active",
+      "row_count": 846
+    }
+  ],
+  "evidence_counts": {
+    "products_without_evidence": 0,
+    "scenarios_without_evidence": 0,
+    "signal_events_without_source": 575
+  },
+  "missing_summary_samples": []
+}

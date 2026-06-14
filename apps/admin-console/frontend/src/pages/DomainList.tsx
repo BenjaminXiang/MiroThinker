@@ -32,12 +32,22 @@ import {
   batchDelete,
   exportDomain,
   uploadFile,
+  checkActiveDuplicateUpload,
+  type ActiveDuplicateUploadResponse,
   type ReleasedObject,
 } from "../api";
 import QualityTag from "../components/QualityTag";
+import LifecycleTag from "../components/LifecycleTag";
 
 const { Title } = Typography;
 const { Search } = Input;
+
+function displayValue(value: unknown): string {
+  if (value == null || value === "") return "-";
+  if (Array.isArray(value)) return value.join(", ");
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+}
 
 const DOMAIN_LABELS: Record<string, string> = {
   professor: "教授",
@@ -66,6 +76,7 @@ const DOMAIN_COLUMNS: Record<string, { title: string; key: string }[]> = {
 // Domain-specific filterable fields (field key → label)
 const DOMAIN_FILTERS: Record<string, { key: string; label: string }[]> = {
   professor: [
+    { key: "lifecycle_state", label: "生命周期" },
     { key: "institution", label: "院校" },
     { key: "department", label: "院系" },
     { key: "title", label: "职称" },
@@ -85,6 +96,54 @@ const QUALITY_OPTIONS = [
   { value: "low_confidence", label: "低置信度" },
   { value: "needs_enrichment", label: "需补充" },
 ];
+
+async function sha256FileHex(file: File): Promise<string | null> {
+  const subtle = globalThis.crypto?.subtle;
+  if (!subtle) return null;
+  const buffer = await file.arrayBuffer();
+  const digest = await subtle.digest("SHA-256", buffer);
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function activeDuplicateMessage(
+  duplicate: ActiveDuplicateUploadResponse
+): string {
+  const filename = duplicate.filename ? `“${duplicate.filename}”` : "同一个 Excel 文件";
+  return `${filename}正在后台处理中，已拒绝重复上传。`;
+}
+
+export function uploadFailureMessage(error: unknown): string {
+  const text = error instanceof Error ? error.message : String(error ?? "");
+  if (text.includes("duplicate_upload_active")) {
+    return "同一个 Excel 文件正在后台处理中，已拒绝重复上传。";
+  }
+  if (
+    text.includes("upload_too_large") ||
+    text.includes("Request Entity Too Large") ||
+    text.includes("API error: 413")
+  ) {
+    const maxMib = uploadLimitMibFromErrorText(text);
+    return maxMib
+      ? `文件过大，系统当前上传上限约 ${maxMib} MiB。请压缩文件或联系管理员调大入口 nginx 的 client_max_body_size 后重试。`
+      : "文件过大，当前入口代理拒绝了上传。请联系管理员调大 nginx 的 client_max_body_size 后重试。";
+  }
+  return "上传失败，请检查文件格式";
+}
+
+function uploadLimitMibFromErrorText(text: string): string | null {
+  const jsonStart = text.indexOf("{");
+  if (jsonStart < 0) return null;
+  try {
+    const parsed = JSON.parse(text.slice(jsonStart));
+    const detail = parsed?.detail;
+    const maxMib = detail?.max_mib;
+    return maxMib === undefined || maxMib === null ? null : String(maxMib);
+  } catch {
+    return null;
+  }
+}
 
 export default function DomainList() {
   const { domain = "professor" } = useParams();
@@ -207,6 +266,20 @@ export default function DomainList() {
   const handleUpload = async (file: File, dryRun: boolean) => {
     setUploading(true);
     try {
+      if (domain === "company" || domain === "patent") {
+        const fileHash = await sha256FileHex(file);
+        if (fileHash) {
+          const duplicate = await checkActiveDuplicateUpload(domain, fileHash);
+          if (duplicate.is_active_duplicate) {
+            message.warning(activeDuplicateMessage(duplicate));
+            setUploadModalOpen(false);
+            if (duplicate.active_task_id) {
+              navigate(`/pipeline-runs/${duplicate.active_task_id}`);
+            }
+            return;
+          }
+        }
+      }
       const resp = await uploadFile(domain as "company" | "patent", file, {
         dryRun,
       });
@@ -216,8 +289,11 @@ export default function DomainList() {
       setUploadModalOpen(false);
       navigate(`/pipeline-runs/${resp.task_id}`);
       load();
-    } catch {
-      message.error("上传失败，请检查文件格式");
+    } catch (error) {
+      const text = error instanceof Error ? error.message : "";
+      const failure = uploadFailureMessage(error);
+      if (text.includes("duplicate_upload_active")) message.warning(failure);
+      else message.error(failure);
     } finally {
       setUploading(false);
     }
@@ -236,13 +312,33 @@ export default function DomainList() {
             : ("ascend" as const)
           : undefined,
     },
+    ...(domain === "professor"
+      ? [
+          {
+            title: "摘要",
+            key: "profile_summary",
+            width: 360,
+            render: (_: unknown, record: ReleasedObject) => {
+              const summary = displayValue(
+                record.summary_fields?.profile_summary
+              );
+              return (
+                <Typography.Paragraph
+                  ellipsis={summary === "-" ? false : { rows: 2, tooltip: summary }}
+                  style={{ marginBottom: 0, maxWidth: 360 }}
+                >
+                  {summary}
+                </Typography.Paragraph>
+              );
+            },
+          },
+        ]
+      : []),
     ...(DOMAIN_COLUMNS[domain] ?? []).map((col) => ({
       title: col.title,
       key: col.key,
       render: (_: unknown, record: ReleasedObject) => {
-        const val = record.core_facts[col.key];
-        if (Array.isArray(val)) return val.join(", ");
-        return val != null ? String(val) : "-";
+        return displayValue(record.core_facts[col.key]);
       },
     })),
     {
@@ -253,6 +349,18 @@ export default function DomainList() {
         <QualityTag status={record.quality_status} />
       ),
     },
+    ...(domain === "professor"
+      ? [
+          {
+            title: "生命周期",
+            key: "lifecycle_state",
+            width: 110,
+            render: (_: unknown, record: ReleasedObject) => (
+              <LifecycleTag status={record.lifecycle_state} />
+            ),
+          },
+        ]
+      : []),
     {
       title: "操作",
       key: "actions",

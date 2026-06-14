@@ -12,7 +12,7 @@ Requirement "Quality status promotion logic" (V019 six-value enum):
 | (initial) → needs_enrichment   | New paper from prof-page with gaps   |
 | needs_enrichment → ready       | All required fields + summary_zh OK   |
 | needs_enrichment → partial     | Enrichment partially succeeded        |
-| needs_enrichment → rejected    | Boilerplate judge rejects summary_zh  |
+| needs_enrichment → partial     | Boilerplate judge rejects summary_zh retry |
 | ready → needs_review           | Admin manual flag                     |
 | low_confidence → ready /
   needs_review                   | Identity-gate post-enrichment re-eval |
@@ -20,9 +20,10 @@ Requirement "Quality status promotion logic" (V019 six-value enum):
 Forward-monotonic invariant (design.md §12): once a row reaches
 ``ready`` it does NOT auto-degrade on a later enrichment failure. Only
 admin intervention or detected contradiction can take it back to
-``needs_review``. ``rejected`` is a terminal state for the current
-canonical row; re-extraction MAY produce a fresh candidate that
-upserts on title, but the LLM judge runs again on that.
+``needs_review``. ``rejected`` is reserved for row-level invalidity
+such as admin rejection or identity/contradiction gates. A generated
+summary rejection clears ``summary_zh`` but keeps the canonical row
+retryable because DOI/page evidence may still be valid.
 """
 
 from __future__ import annotations
@@ -114,10 +115,20 @@ def evaluate_paper_promotion(
     if current_status == NEEDS_REVIEW:
         return PromotionDecision(NEEDS_REVIEW, reason="awaiting_admin")
 
-    # Boilerplate judge already rejected → terminal rejection regardless
-    # of what other signals say. summary_zh was set NULL by the caller.
+    # Boilerplate judge rejected only the generated Chinese summary.
+    # Keep the canonical row retryable; callers clear summary_zh.
     if signals.summary_zh_boilerplate_rejected:
-        return PromotionDecision(REJECTED, reason="boilerplate_rejected")
+        enriched_fields = sum(
+            [
+                signals.has_year,
+                signals.has_venue,
+                signals.has_authors,
+                signals.has_abstract,
+            ]
+        )
+        if enriched_fields >= 1:
+            return PromotionDecision(PARTIAL, reason="summary_rejected_needs_retry")
+        return PromotionDecision(NEEDS_ENRICHMENT, reason="summary_rejected_no_enrichment")
 
     required_present = all(
         [

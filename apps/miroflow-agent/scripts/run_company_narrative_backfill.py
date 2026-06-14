@@ -11,6 +11,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+import httpx
 import psycopg
 from psycopg.rows import dict_row
 
@@ -22,7 +23,7 @@ from src.data_agents.company.narrative_enrichment import (  # noqa: E402
     NarrativeResult,
     generate_company_narrative,
 )
-from src.data_agents.professor.llm_profiles import resolve_professor_llm_settings  # noqa: E402
+from src.data_agents.company.llm_routing import resolve_company_llm_task_settings  # noqa: E402
 from src.data_agents.storage.postgres.pipeline_run import (  # noqa: E402
     close_pipeline_run,
     open_pipeline_run,
@@ -33,7 +34,7 @@ logger = logging.getLogger("run_company_narrative_backfill")
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Backfill company narrative summary fields via Gemma4.",
+        description="Backfill company narrative summary fields via the configured LLM.",
     )
     parser.add_argument("--limit", type=int, default=None, help="Max companies to process")
     only_group = parser.add_mutually_exclusive_group()
@@ -69,14 +70,14 @@ def _open_database_connection(url: str):
 def _open_llm_client():
     from openai import OpenAI
 
-    settings = resolve_professor_llm_settings("gemma4", include_profile=True)
+    settings = resolve_company_llm_task_settings("multi_source_profile_synthesis")
     client = OpenAI(
-        base_url=settings["local_llm_base_url"],
-        api_key=settings["local_llm_api_key"] or "EMPTY",
-        timeout=90.0,
+        base_url=settings.base_url,
+        api_key=settings.api_key or "EMPTY",
+        http_client=httpx.Client(timeout=settings.timeout_seconds, trust_env=False),
+        timeout=settings.timeout_seconds,
     )
-    extra_body = {"chat_template_kwargs": {"enable_thinking": False}}
-    return client, settings["local_llm_model"], extra_body
+    return client, settings.model, settings.extra_body
 
 
 def _resolve_checkpoint_path(resume_arg: str | None, run_id: str) -> Path:

@@ -13,6 +13,9 @@ from src.data_agents.professor.cross_domain import PaperLink
 from src.data_agents.professor.paper_collector import (
     _discover_best_hybrid_result,
     _discovered_to_raw_paper,
+    _discover_official_linked_cv_result,
+    _discover_official_linked_orcid_result,
+    _discover_official_linked_scholar_result,
     _merge_directions,
     _parse_directions_response,
     build_staging_records,
@@ -1304,6 +1307,94 @@ async def test_enrich_from_papers_uses_official_linked_google_scholar_when_hybri
     assert [paper.title for paper in result.top_papers] == ["Auction-based spectrum sharing"]
     assert result.staging_records[0].source == "official_linked_google_scholar"
     assert result.staging_records[0].source_url == "https://scholar.google.com/citations?user=QQq52JcAAAAJ"
+
+
+def test_official_linked_providers_return_none_on_provider_errors(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setattr(
+        "src.data_agents.professor.paper_collector.discover_professor_paper_candidates_from_orcid",
+        lambda **_kwargs: (_ for _ in ()).throw(RuntimeError("orcid down")),
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.paper_collector.discover_professor_paper_candidates_from_google_scholar_profile",
+        lambda **_kwargs: (_ for _ in ()).throw(RuntimeError("scholar blocked")),
+    )
+    monkeypatch.setattr(
+        "src.data_agents.professor.paper_collector.discover_professor_paper_candidates_from_cv_pdf",
+        lambda **_kwargs: (_ for _ in ()).throw(RuntimeError("pdf fetch failed")),
+    )
+
+    assert (
+        _discover_official_linked_orcid_result(
+            scholarly_profile_urls=["https://orcid.org/0000-0001-7223-1754"],
+            professor_id="PROF-001",
+            professor_name="李海文",
+            institution="中山大学（深圳）",
+        )
+        is None
+    )
+    assert (
+        _discover_official_linked_scholar_result(
+            scholarly_profile_urls=[
+                "https://scholar.google.com/citations?user=QQq52JcAAAAJ"
+            ],
+            professor_id="PROF-001",
+            professor_name="黄建伟",
+            institution="香港中文大学（深圳）",
+        )
+        is None
+    )
+    assert (
+        _discover_official_linked_cv_result(
+            cv_urls=["https://jianwei.cuhk.edu.cn/Files/CV.pdf"],
+            professor_id="PROF-001",
+            professor_name="黄建伟",
+            institution="香港中文大学（深圳）",
+        )
+        is None
+    )
+
+
+def test_official_linked_cv_helper_accepts_pdf_url_with_query_string(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    cv_url = "https://jianwei.cuhk.edu.cn/Files/CV.pdf?download=1"
+    calls: list[str] = []
+    cv_result = ProfessorPaperDiscoveryResult(
+        professor_id="PROF-001",
+        professor_name="黄建伟",
+        institution="香港中文大学（深圳）",
+        author_id=cv_url,
+        h_index=None,
+        citation_count=None,
+        paper_count=1,
+        source="official_linked_cv",
+        school_matched=True,
+        fallback_used=False,
+        name_disambiguation_conflict=False,
+        candidate_count=1,
+        papers=[],
+    )
+
+    def fake_cv(**kwargs):
+        calls.append(kwargs["cv_url"])
+        return cv_result
+
+    monkeypatch.setattr(
+        "src.data_agents.professor.paper_collector.discover_professor_paper_candidates_from_cv_pdf",
+        fake_cv,
+    )
+
+    result = _discover_official_linked_cv_result(
+        cv_urls=["https://jianwei.cuhk.edu.cn/profile", cv_url],
+        professor_id="PROF-001",
+        professor_name="黄建伟",
+        institution="香港中文大学（深圳）",
+    )
+
+    assert result is cv_result
+    assert calls == [cv_url]
 
 
 def test_discover_best_hybrid_result_passes_registry_backed_institution_id(

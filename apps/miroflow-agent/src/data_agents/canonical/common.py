@@ -88,6 +88,8 @@ class PaperAuthorMatch(str, Enum):
 
     official_publication_page = "official_publication_page"
     personal_homepage = "personal_homepage"
+    prof_homepage_tier2 = "prof_homepage_tier2"
+    prof_homepage_tier3 = "prof_homepage_tier3"
     cv_pdf = "cv_pdf"
     official_external_profile = "official_external_profile"
     academic_api_with_affiliation_match = "academic_api_with_affiliation_match"

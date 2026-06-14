@@ -67,6 +67,53 @@ def _pipeline_run_status(dsn: str, run_id: str) -> tuple[str, str, dict[str, Any
     return row[0], row[1], row[2]
 
 
+def _insert_failed_seed_run(
+    dsn: str,
+    *,
+    seed_id: int,
+    failure_class: str,
+) -> None:
+    with psycopg.connect(_pg_dsn(dsn)) as conn:
+        conn.execute(
+            """
+            INSERT INTO pipeline_run (
+                run_kind, run_scope, started_at, finished_at, status,
+                triggered_by, error_summary
+            )
+            VALUES (
+                'roster_crawl',
+                jsonb_build_object(
+                    'source', 'admin-console',
+                    'domain', 'professor',
+                    'action', 'single_seed_trigger',
+                    'seed_id', %s
+                ),
+                now(),
+                now(),
+                'failed',
+                'test',
+                jsonb_build_object('failure_class', %s::text)
+            )
+            """,
+            (seed_id, failure_class),
+        )
+        conn.commit()
+
+
+def _capture_scheduled() -> tuple[list[dict[str, Any]], Any]:
+    scheduled: list[dict[str, Any]] = []
+
+    def schedule_seed_run(**kwargs: Any) -> None:
+        scheduled.append(
+            {
+                **kwargs,
+                "run_id": str(kwargs["run_id"]),
+            }
+        )
+
+    return scheduled, schedule_seed_run
+
+
 @pytest.fixture
 def fresh_seeds(postgres_client: TestClient, postgres_data_ready: str) -> TestClient:
     _wipe_seeds(postgres_data_ready)
@@ -296,6 +343,63 @@ def test_create_rejects_duplicate_seed_url(fresh_seeds: TestClient) -> None:
     assert b.json()["detail"]["error"] == "seed_url_already_exists"
 
 
+def test_list_seeds_surfaces_latest_failure_class(
+    fresh_seeds: TestClient,
+    postgres_data_ready: str,
+) -> None:
+    created = fresh_seeds.post(
+        "/api/seeds",
+        json={
+            "school": "SUSTech",
+            "department": None,
+            "seed_url": "https://faculty.sustech.edu.cn/failure-class",
+        },
+    ).json()
+    _set_seed_status(postgres_data_ready, created["id"], "success")
+    _insert_failed_seed_run(
+        postgres_data_ready,
+        seed_id=created["id"],
+        failure_class="fetch_blocked",
+    )
+
+    resp = fresh_seeds.get("/api/seeds")
+
+    assert resp.status_code == 200, resp.text
+    row = next(seed for seed in resp.json() if seed["id"] == created["id"])
+    assert row["failure_class"] == "fetch_blocked"
+
+
+def test_list_seeds_allows_manual_interruption_failure_class(
+    fresh_seeds: TestClient,
+    postgres_data_ready: str,
+) -> None:
+    created = fresh_seeds.post(
+        "/api/seeds",
+        json={
+            "school": "SZU",
+            "department": "计算机与软件学院",
+            "seed_url": "https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1",
+        },
+    ).json()
+    _set_seed_status(postgres_data_ready, created["id"], "success")
+    _insert_failed_seed_run(
+        postgres_data_ready,
+        seed_id=created["id"],
+        failure_class="manual_interruption",
+    )
+
+    resp = fresh_seeds.get("/api/seeds")
+    single = fresh_seeds.get(f"/api/seeds/{created['id']}")
+
+    assert resp.status_code == 200, resp.text
+    assert single.status_code == 200, single.text
+    row = next(seed for seed in resp.json() if seed["id"] == created["id"])
+    assert row["last_run_status"] == "failure"
+    assert row["failure_class"] == "manual_interruption"
+    assert single.json()["last_run_status"] == "failure"
+    assert single.json()["failure_class"] == "manual_interruption"
+
+
 # --- Trigger -----------------------------------------------------------------
 
 
@@ -304,12 +408,8 @@ def test_trigger_sets_in_progress_and_schedules_single_seed_run(
     postgres_data_ready: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    scheduled: list[tuple[int, str]] = []
-    monkeypatch.setattr(
-        seeds_api,
-        "_schedule_seed_run",
-        lambda seed_id, run_id: scheduled.append((seed_id, str(run_id))),
-    )
+    scheduled, schedule_seed_run = _capture_scheduled()
+    monkeypatch.setattr(seeds_api, "_schedule_seed_run", schedule_seed_run)
     created = fresh_seeds.post(
         "/api/seeds",
         json={
@@ -325,7 +425,14 @@ def test_trigger_sets_in_progress_and_schedules_single_seed_run(
     body = resp.json()
     assert body["seed_id"] == created["id"]
     assert body["status"] == "in_progress"
-    assert scheduled == [(created["id"], body["run_id"])]
+    assert scheduled == [
+        {
+            "seed_id": created["id"],
+            "run_id": body["run_id"],
+            "trigger_mode": "full",
+            "limit": None,
+        }
+    ]
     assert _seed_status(postgres_data_ready, created["id"]) == ("in_progress", False)
     assert _pipeline_run_status(postgres_data_ready, body["run_id"]) == (
         "roster_crawl",
@@ -338,8 +445,123 @@ def test_trigger_sets_in_progress_and_schedules_single_seed_run(
             "school": "SUSTech",
             "department": None,
             "seed_url": created["seed_url"],
+            "trigger_mode": "full",
+            "limit": None,
         },
     )
+
+
+def test_trigger_sample_records_limit_and_schedules_bounded_run(
+    fresh_seeds: TestClient,
+    postgres_data_ready: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    scheduled, schedule_seed_run = _capture_scheduled()
+    monkeypatch.setattr(seeds_api, "_schedule_seed_run", schedule_seed_run)
+    created = fresh_seeds.post(
+        "/api/seeds",
+        json={
+            "school": "SUSTech",
+            "department": None,
+            "seed_url": "https://faculty.sustech.edu.cn/sample",
+        },
+    ).json()
+
+    resp = fresh_seeds.post(
+        f"/api/seeds/{created['id']}/trigger",
+        json={"mode": "sample", "limit": 3},
+    )
+
+    assert resp.status_code == 202, resp.text
+    body = resp.json()
+    assert scheduled == [
+        {
+            "seed_id": created["id"],
+            "run_id": body["run_id"],
+            "trigger_mode": "sample",
+            "limit": 3,
+        }
+    ]
+    assert _pipeline_run_status(postgres_data_ready, body["run_id"])[2] == {
+        "source": "admin-console",
+        "domain": "professor",
+        "action": "single_seed_trigger",
+        "seed_id": created["id"],
+        "school": "SUSTech",
+        "department": None,
+        "seed_url": created["seed_url"],
+        "trigger_mode": "sample",
+        "limit": 3,
+    }
+
+
+def test_trigger_preview_schedules_non_writing_run(
+    fresh_seeds: TestClient,
+    postgres_data_ready: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    scheduled, schedule_seed_run = _capture_scheduled()
+    monkeypatch.setattr(seeds_api, "_schedule_seed_run", schedule_seed_run)
+    created = fresh_seeds.post(
+        "/api/seeds",
+        json={
+            "school": "SUSTech",
+            "department": None,
+            "seed_url": "https://faculty.sustech.edu.cn/preview",
+        },
+    ).json()
+
+    resp = fresh_seeds.post(
+        f"/api/seeds/{created['id']}/trigger",
+        json={"mode": "preview"},
+    )
+
+    assert resp.status_code == 202, resp.text
+    body = resp.json()
+    assert scheduled == [
+        {
+            "seed_id": created["id"],
+            "run_id": body["run_id"],
+            "trigger_mode": "preview",
+            "limit": None,
+        }
+    ]
+    assert _pipeline_run_status(postgres_data_ready, body["run_id"])[2][
+        "trigger_mode"
+    ] == "preview"
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"mode": "sample"},
+        {"mode": "sample", "limit": 0},
+        {"mode": "sample", "limit": -1},
+        {"mode": "sample", "limit": 1001},
+    ],
+)
+def test_trigger_rejects_invalid_sample_limits(
+    fresh_seeds: TestClient,
+    postgres_data_ready: str,
+    monkeypatch: pytest.MonkeyPatch,
+    payload: dict[str, Any],
+) -> None:
+    scheduled, schedule_seed_run = _capture_scheduled()
+    monkeypatch.setattr(seeds_api, "_schedule_seed_run", schedule_seed_run)
+    created = fresh_seeds.post(
+        "/api/seeds",
+        json={
+            "school": "SUSTech",
+            "department": None,
+            "seed_url": f"https://faculty.sustech.edu.cn/invalid-{payload.get('limit', 'missing')}",
+        },
+    ).json()
+
+    resp = fresh_seeds.post(f"/api/seeds/{created['id']}/trigger", json=payload)
+
+    assert resp.status_code == 422
+    assert scheduled == []
+    assert _seed_status(postgres_data_ready, created["id"]) == ("never_run", False)
 
 
 def test_trigger_returns_409_when_seed_already_in_progress(
@@ -347,12 +569,8 @@ def test_trigger_returns_409_when_seed_already_in_progress(
     postgres_data_ready: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    scheduled: list[tuple[int, str]] = []
-    monkeypatch.setattr(
-        seeds_api,
-        "_schedule_seed_run",
-        lambda seed_id, run_id: scheduled.append((seed_id, str(run_id))),
-    )
+    scheduled, schedule_seed_run = _capture_scheduled()
+    monkeypatch.setattr(seeds_api, "_schedule_seed_run", schedule_seed_run)
     created = fresh_seeds.post(
         "/api/seeds",
         json={
@@ -375,12 +593,8 @@ def test_trigger_returns_422_when_adapter_missing(
     postgres_data_ready: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    scheduled: list[tuple[int, str]] = []
-    monkeypatch.setattr(
-        seeds_api,
-        "_schedule_seed_run",
-        lambda seed_id, run_id: scheduled.append((seed_id, str(run_id))),
-    )
+    scheduled, schedule_seed_run = _capture_scheduled()
+    monkeypatch.setattr(seeds_api, "_schedule_seed_run", schedule_seed_run)
     created = fresh_seeds.post(
         "/api/seeds",
         json={
@@ -408,12 +622,8 @@ def test_trigger_accepts_adapter_missing_seed_after_adapter_is_registered(
     postgres_data_ready: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    scheduled: list[tuple[int, str]] = []
-    monkeypatch.setattr(
-        seeds_api,
-        "_schedule_seed_run",
-        lambda seed_id, run_id: scheduled.append((seed_id, str(run_id))),
-    )
+    scheduled, schedule_seed_run = _capture_scheduled()
+    monkeypatch.setattr(seeds_api, "_schedule_seed_run", schedule_seed_run)
     created = fresh_seeds.post(
         "/api/seeds",
         json={
@@ -430,7 +640,14 @@ def test_trigger_accepts_adapter_missing_seed_after_adapter_is_registered(
     body = resp.json()
     assert body["seed_id"] == created["id"]
     assert _seed_status(postgres_data_ready, created["id"]) == ("in_progress", False)
-    assert scheduled == [(created["id"], body["run_id"])]
+    assert scheduled == [
+        {
+            "seed_id": created["id"],
+            "run_id": body["run_id"],
+            "trigger_mode": "full",
+            "limit": None,
+        }
+    ]
 
 
 def test_trigger_returns_404_on_missing_seed(fresh_seeds: TestClient) -> None:

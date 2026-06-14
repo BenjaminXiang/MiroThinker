@@ -174,6 +174,7 @@ def enrich_paper_metadata_from_semantic_scholar(
         oa_status=_extract_oa_status(payload),
         reference_count=_coerce_non_negative_int(payload.get("referenceCount")),
         source_url=_normalize_optional_str(payload.get("url")),
+        pdf_url=_extract_open_access_pdf_url(payload.get("openAccessPdf")),
         enrichment_sources=("semantic_scholar",),
     )
     if not _has_enrichment_content(enrichment):
@@ -338,6 +339,12 @@ def _extract_oa_status(payload: dict[str, object]) -> str | None:
     return None
 
 
+def _extract_open_access_pdf_url(value: object) -> str | None:
+    if not isinstance(value, dict):
+        return None
+    return _normalize_optional_str(value.get("url"))
+
+
 def _has_enrichment_content(enrichment: PaperMetadataEnrichment) -> bool:
     return any(
         (
@@ -350,6 +357,7 @@ def _has_enrichment_content(enrichment: PaperMetadataEnrichment) -> bool:
             enrichment.oa_status,
             enrichment.reference_count is not None,
             enrichment.source_url,
+            enrichment.pdf_url,
         )
     )
 

@@ -6,7 +6,7 @@ compatibility: Requires openspec CLI.
 metadata:
   author: openspec
   version: "1.0"
-  generatedBy: "1.2.0"
+  generatedBy: "1.3.1"
 ---
 
 Archive a completed change in the experimental workflow.
@@ -50,7 +50,17 @@ Archive a completed change in the experimental workflow.
 
    **If no tasks file exists:** Proceed without task-related warning.
 
-4. **Assess delta spec sync state**
+4. **Check verification contract and GREEN evidence**
+
+   Check `.agents/runs/<name>/verification-contract.md` and `.agents/runs/<name>/verification.md`.
+
+   - If the verification contract exists, summarize the selected change type, Superpowers mode, RED artifact, oracle strength, context/dependency surface, mock policy, and GREEN criteria.
+   - If the verification contract is missing for a behavior-affecting change, warn that the OpenSpec/Superpowers RED boundary was not recorded.
+   - If verification evidence is missing or does not mention the declared RED artifact, relevant regression checks, and required browser/API/state or real-interaction checks, warn that GREEN evidence is incomplete.
+
+   Prompt for confirmation before archiving with missing verification-contract or GREEN evidence warnings.
+
+5. **Assess delta spec sync state**
 
    Check for delta specs at `openspec/changes/<name>/specs/`. If none exist, proceed without sync prompt.
 
@@ -65,7 +75,7 @@ Archive a completed change in the experimental workflow.
 
    If user chooses sync, use Task tool (subagent_type: "general-purpose", prompt: "Use Skill tool to invoke openspec-sync-specs for change '<name>'. Delta spec analysis: <include the analyzed delta spec summary>"). Proceed to archive regardless of choice.
 
-5. **Perform the archive**
+6. **Perform the archive**
 
    Create the archive directory if it doesn't exist:
    ```bash
@@ -82,13 +92,14 @@ Archive a completed change in the experimental workflow.
    mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
    ```
 
-6. **Display summary**
+7. **Display summary**
 
    Show archive completion summary including:
    - Change name
    - Schema that was used
    - Archive location
    - Whether specs were synced (if applicable)
+   - Verification-contract / GREEN evidence status
    - Note about any warnings (incomplete artifacts/tasks)
 
 **Output On Success**
@@ -108,6 +119,7 @@ All artifacts complete. All tasks complete.
 - Always prompt for change selection if not provided
 - Use artifact graph (openspec status --json) for completion checking
 - Don't block archive on warnings - just inform and confirm
+- Warn before archiving behavior-affecting work without a verification contract or GREEN evidence
 - Preserve .openspec.yaml when moving to archive (it moves with the directory)
 - Show clear summary of what happened
 - If sync is requested, use openspec-sync-specs approach (agent-driven)

@@ -31,6 +31,7 @@ class PaperMetadataEnrichment:
     oa_status: str | None = None
     reference_count: int | None = None
     source_url: str | None = None
+    pdf_url: str | None = None
     enrichment_sources: tuple[str, ...] = ()
     authors: tuple[PaperAuthorMetadata, ...] = ()
     doi: str | None = None

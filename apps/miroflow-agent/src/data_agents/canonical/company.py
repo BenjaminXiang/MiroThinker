@@ -154,6 +154,12 @@ class CompanyTeamMember(BaseModel):
     raw_role: str | None = None
     raw_intro: str | None = None
     normalized_name: str | None = None
+    structured_background: str | None = None
+    structured_experience_highlights: list[str] = Field(default_factory=list)
+    structured_relevance: str | None = None
+    structured_confidence: Decimal | None = None
+    structured_evidence_span: str | None = None
+    structured_raw_text: str | None = None
     resolution_status: str = "unresolved"
     resolved_professor_id: str | None = None
     resolution_confidence: Decimal | None = None
@@ -209,6 +215,85 @@ class CompanyNewsItem(BaseModel):
     is_company_confirmed: bool = False
     refresh_run_id: UUID | None = None
     confidence: Decimal
+    source_adapter: str | None = None
+    extraction_diagnostics: dict[str, Any] = Field(default_factory=dict)
+    created_at: datetime | None = None
+
+
+# ============================================================================
+# company_product
+# ============================================================================
+
+
+class CompanyProduct(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    product_id: str
+    company_id: str
+    canonical_name: str
+    short_description: str | None = None
+    official_product_url: str | None = None
+    product_category: str | None = None
+    target_customers: list[str] = Field(default_factory=list)
+    application_scenarios: list[str] = Field(default_factory=list)
+    technical_tags: list[str] = Field(default_factory=list)
+    quality_status: str = "needs_review"
+    confidence: Decimal
+    first_seen_at: datetime | None = None
+    last_refreshed_at: datetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class CompanyProductEvidence(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    evidence_id: UUID | None = None
+    product_id: str
+    field_name: str
+    source_page_id: UUID | None = None
+    source_url: str
+    evidence_span: str
+    confidence: Decimal
+    extractor_version: str
+    created_at: datetime | None = None
+
+
+# ============================================================================
+# company_application_scenario
+# ============================================================================
+
+
+class CompanyApplicationScenario(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    scenario_id: str
+    company_id: str
+    related_product_id: str | None = None
+    scenario_name: str
+    scenario_category: str | None = None
+    description: str | None = None
+    target_customer: str | None = None
+    source_url: str | None = None
+    quality_status: str = "needs_review"
+    confidence: Decimal
+    first_seen_at: datetime | None = None
+    last_refreshed_at: datetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class CompanyApplicationScenarioEvidence(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    evidence_id: UUID | None = None
+    scenario_id: str
+    field_name: str
+    source_page_id: UUID | None = None
+    source_url: str
+    evidence_span: str
+    confidence: Decimal
+    extractor_version: str
     created_at: datetime | None = None
 
 
@@ -238,6 +323,8 @@ class CompanySignalEvent(BaseModel):
 
 __all__ = [
     "Company",
+    "CompanyApplicationScenario",
+    "CompanyApplicationScenarioEvidence",
     "CompanyFact",
     "CompanyNewsItem",
     "CompanySignalEvent",

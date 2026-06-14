@@ -81,6 +81,35 @@ def test_discover_professor_paper_candidates_from_openalex_selects_exact_name_au
     assert paper.professor_ids == ("PROF-1",)
 
 
+def test_enrich_paper_with_openalex_extracts_primary_pdf_url():
+    def fake_request_json(url: str, params: dict[str, object]) -> dict[str, object]:
+        assert url == "https://api.openalex.org/works/doi:10.1234/example"
+        assert params == {}
+        return {
+            "doi": "https://doi.org/10.1234/example",
+            "publication_date": "2026-01-01",
+            "cited_by_count": 4,
+            "abstract_inverted_index": None,
+            "open_access": {"oa_status": "gold"},
+            "primary_location": {
+                "landing_page_url": "https://publisher.example.org/paper",
+                "pdf_url": "https://publisher.example.org/paper.pdf",
+                "source": {"display_name": "Example Journal"},
+            },
+        }
+
+    enrichment = openalex.enrich_paper_with_openalex(
+        "10.1234/example",
+        request_json=fake_request_json,
+    )
+
+    assert enrichment is not None
+    assert enrichment.abstract is None
+    assert enrichment.venue == "Example Journal"
+    assert enrichment.pdf_url == "https://publisher.example.org/paper.pdf"
+    assert enrichment.oa_status == "gold"
+
+
 def test_discover_professor_paper_candidates_from_openalex_prefers_institution_matched_author():
     def fake_request_json(url: str, params: dict[str, object]) -> dict[str, object]:
         if url.endswith("/authors"):

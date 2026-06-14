@@ -215,6 +215,8 @@ Do not declare done unless contract scope is implemented, relevant checks passed
 
 Use skills/plugins as targeted harness components, not always-on rituals. Keep at most one planning framework before implementation; don't chain them. Keep detailed plugin command catalogs outside this file (`.agents/harness/skills.md` or tool-specific docs). Deterministic requirements belong in hooks, permissions, lint, tests, CI, or secret scans whenever possible.
 
+OpenSpec defines intended behavior and verification intent. Superpowers provides execution discipline only. For behavior-affecting work, do not let Superpowers TDD choose the RED artifact independently; define it first in the active OpenSpec change and `.agents/runs/<change-id>/verification-contract.md`.
+
 Use targeted parallelism only when slices have clear file/interface boundaries, independent verification, and an obvious merge order. Prefer separate branches or git worktrees for multi-agent / multi-session work. One active writer per slice.
 
 ## 12. Protected files
@@ -324,3 +326,12 @@ The Claude-owned design-contract role previously held by `.agents/specs/<slug>.m
 ### 14.6 Phase status
 
 This is **Phase 0**: only the OpenSpec scaffolding, this section, the AGENTS.md companion (§15), `.agents/runs/`, and the empty `change-ledger.md` / `debt-register.md` are introduced. Phase 1+ work — capability migration of Agentic-RAG-PRD, `docs/` reorganization to `docs/product` / `docs/adr` / `docs/legacy`, `.agents/specs/` cleanup, populating ledgers — requires its own OpenSpec change and is **not** implicitly authorized by §14.
+
+### 14.7 OpenSpec + Superpowers execution boundary
+
+Before handing behavior-affecting implementation to Codex, create or update `.agents/runs/<change-id>/verification-contract.md`. The contract classifies the change, selects the RED artifact, defines GREEN, and states the allowed Superpowers mode.
+
+- Deterministic modules, schemas, validators, serializers, storage adapters, and tool wrappers may use full Superpowers TDD when the contract selects unit or contract tests as RED.
+- Agentic RAG/chat, routing, prompt, memory, tool-choice, policy, and badcase work must be eval-first or trace-debug-first; a unit test alone is not enough.
+- Refactors require a baseline/golden/regression proof of unchanged behavior rather than new behavior-oriented TDD.
+- If implementation reveals the selected RED/GREEN boundary is wrong, update OpenSpec and the verification contract before changing production code further.

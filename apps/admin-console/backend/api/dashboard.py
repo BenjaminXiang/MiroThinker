@@ -327,7 +327,7 @@ def _pipeline_actions(rows: list[Any], open_issue_count: int) -> list[PipelineAc
         summary = _json_object(scope.get("result_summary"))
         if (
             run_kind == "import_xlsx"
-            and domain in {"company", "patent", "paper", "professor"}
+            and domain in {"patent", "paper", "professor"}
             and scope.get("dry_run") is not True
             and "retrieval_validation_report" not in summary
             and not _has_successful_child(rows, run_id, "retrieval_validation")

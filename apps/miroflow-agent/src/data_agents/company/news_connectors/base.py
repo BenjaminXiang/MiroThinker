@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime, time, timezone
 from typing import Any, Protocol
 
@@ -16,6 +16,8 @@ class NewsRecord:
     summary: str | None
     published_at: datetime | None
     raw_text: str | None
+    source_adapter: str | None = None
+    extraction_diagnostics: dict[str, Any] = field(default_factory=dict)
 
 
 class NewsConnector(Protocol):

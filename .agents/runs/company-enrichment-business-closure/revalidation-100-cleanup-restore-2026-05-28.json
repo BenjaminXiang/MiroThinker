@@ -1,0 +1,21 @@
+{
+  "reason": "restore BioFord trademark product after overly strict follow-up cleanup replay",
+  "restored_product": {
+    "product_id": "PROD-7074e066e6a1",
+    "company_id": "COMP-8e3331e62f7a",
+    "canonical_name": "BioFord™",
+    "short_description": "首页 BioFord™️ AI 计算服务 AI 大模型和算法开发服务 AI & 生信计算服务 关于津渡 联系我们 EN",
+    "official_product_url": "http://www.oxtium.com/",
+    "quality_status": "needs_review",
+    "confidence": "0.75"
+  },
+  "evidence_sample": [
+    {
+      "field_name": "short_description",
+      "source_url": "http://www.oxtium.com/",
+      "evidence_span": "BioFord™️ AI 计算服务 AI 大模型和算法开发服务 AI & 生信计算服务",
+      "confidence": "0.75",
+      "extractor_version": "official_product_capture.v1"
+    }
+  ]
+}

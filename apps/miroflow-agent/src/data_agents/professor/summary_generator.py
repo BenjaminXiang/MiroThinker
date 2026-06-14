@@ -12,6 +12,11 @@ from dataclasses import dataclass
 from typing import Any
 
 from .models import EnrichedProfessorProfile
+from .profile_summary_contract import (
+    OPERATOR_META_KEYWORDS,
+    contains_operator_meta_language,
+    extract_profile_fact_sentences,
+)
 from .translation_spec import LLM_EXTRA_BODY
 
 logger = logging.getLogger(__name__)
@@ -34,7 +39,7 @@ BOILERPLATE_KEYWORDS = frozenset({
     "若需生成符合学术规范",
     "若要生成高质量的学术摘要",
     "请补充以下关键维度信息",
-})
+}) | OPERATOR_META_KEYWORDS
 
 _JSON_FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)\s*```", re.DOTALL)
 
@@ -64,6 +69,13 @@ def _ensure_sentence(value: str) -> str:
     if text.endswith(("。", "！", "？")):
         return text
     return f"{text}。"
+
+
+def _summary_part(value: str) -> str:
+    sentence = _ensure_sentence(value)
+    if contains_operator_meta_language(sentence):
+        return ""
+    return sentence
 
 
 def _dedupe_preserve_order(values: list[str]) -> list[str]:
@@ -105,10 +117,6 @@ def _ensure_summary_length(
         if len(joined) >= min_length:
             return joined
 
-    fallback_tail = (
-        "该摘要基于当前已核验的身份、研究方向与成果字段生成，可用于后续检索与人工复核。"
-    )
-    segments.append(fallback_tail)
     return _coerce_summary_length("".join(segments).strip(), min_length=min_length, max_length=max_length)
 
 
@@ -118,7 +126,17 @@ def _build_fallback_profile_summary(profile: EnrichedProfessorProfile) -> str:
 
     if profile.research_directions:
         directions = "、".join(_dedupe_preserve_order(profile.research_directions)[:5])
-        parts.append(f"研究方向聚焦{directions}，相关描述来自官网结构化字段与个人资料页正文。")
+        parts.append(f"研究方向包括{directions}。")
+
+    source_text = ""
+    if profile.profile_raw_text:
+        source_text = profile.profile_raw_text
+    elif profile.official_anchor_profile and profile.official_anchor_profile.bio_text:
+        source_text = profile.official_anchor_profile.bio_text
+    fact_sentences = extract_profile_fact_sentences(source_text, max_sentences=4)
+    for sentence in fact_sentences:
+        if sentence not in parts:
+            parts.append(sentence)
 
     metric_fragments: list[str] = []
     if profile.paper_count:
@@ -160,15 +178,24 @@ def _build_fallback_profile_summary(profile: EnrichedProfessorProfile) -> str:
         if recent_roles:
             parts.append(f"关键履历涵盖{recent_roles}。")
 
-    base = "".join(_ensure_sentence(part) for part in parts if part.strip())
-    return _ensure_summary_length(
+    base = "".join(part for part in (_summary_part(part) for part in parts) if part)
+    summary = _ensure_summary_length(
         base,
-        min_length=200,
+        min_length=150,
         max_length=300,
-        padding_sentences=(
-            "摘要仅汇总当前已验证的身份、方向与成果信息，不对缺失经历做推断。",
-            "现阶段可直接支撑按学校、院系与研究方向的细粒度检索与人工复核。",
-        ),
+        padding_sentences=tuple(fact_sentences),
+    )
+    if not contains_operator_meta_language(summary):
+        return summary
+    safe_sentences = (
+        sentence
+        for sentence in re.split(r"(?<=[。！？])", summary)
+        if sentence.strip() and not contains_operator_meta_language(sentence)
+    )
+    return _coerce_summary_length(
+        "".join(safe_sentences),
+        min_length=150,
+        max_length=300,
     )
 
 
@@ -228,6 +255,8 @@ def validate_profile_summary(summary: str) -> bool:
         return False
     length = len(summary)
     if length < 200 or length > 300:
+        return False
+    if contains_operator_meta_language(summary):
         return False
     if any(kw in summary for kw in BOILERPLATE_KEYWORDS):
         return False

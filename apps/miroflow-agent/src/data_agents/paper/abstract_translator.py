@@ -1,4 +1,4 @@
-"""LLM-backed English abstract to Chinese summary translation.
+"""LLM-backed paper abstract to Chinese summary generation.
 
 Two-stage rejection (per OpenSpec change ``prof-paper-patent-from-page-flow``
 spec Requirement "summary_zh generation" + design.md §11):
@@ -9,8 +9,9 @@ spec Requirement "summary_zh generation" + design.md §11):
 2. ``judge_summary_boilerplate`` is a second, deliberately separate
    LLM call that classifies a candidate summary as informative vs.
    topic-agnostic boilerplate. Use it on summaries that survive the
-   regex filter; callers MUST set ``summary_zh=NULL`` and
-   ``quality_status="rejected"`` when the judge returns ``True``.
+   regex filter; callers MUST set ``summary_zh=NULL`` and recompute a
+   non-terminal retryable ``quality_status`` when the judge returns
+   ``True``.
 
 The judge fails open: on LLM transport / parse errors it returns
 ``False`` so a transient outage doesn't silently null out every newly
@@ -28,7 +29,7 @@ from src.data_agents.professor.summary_generator import BOILERPLATE_KEYWORDS
 logger = logging.getLogger(__name__)
 
 _MIN_SUMMARY_ZH_LENGTH = 150
-_MAX_SUMMARY_ZH_LENGTH = 500
+_MAX_SUMMARY_ZH_LENGTH = 650
 _DEFAULT_TEMPERATURE = 0.2
 _DEFAULT_MAX_TOKENS = 700
 _MARKDOWN_FENCE_RE = re.compile(r"^\s*```[a-zA-Z]*\s*|\s*```\s*$", re.MULTILINE)
@@ -52,8 +53,8 @@ _JUDGE_SYSTEM_PROMPT = (
 )
 
 _SYSTEM_PROMPT = (
-    "你是科技论文中文摘要助手。给定英文学术论文摘要，输出 200-400 字"
-    "中文 paraphrase（不直译，提炼核心方法 + 结果 + 应用领域）。\n"
+    "你是科技论文中文摘要助手。给定英文或中文学术论文摘要，输出 200-400 字"
+    "中文 paraphrase（英文需翻译并提炼，中文需改写并提炼核心方法 + 结果 + 应用领域）。\n"
     "规则：\n"
     "- 保持事实准确，不增不减\n"
     "- 中文流畅，避免直译欧化句式\n"
@@ -71,15 +72,15 @@ def translate_abstract_to_zh(
     extra_body: dict[str, Any] | None = None,
     max_retries: int = 1,
 ) -> str | None:
-    """Translate an English abstract into a validated Chinese summary.
+    """Translate or summarize a paper abstract into a validated Chinese summary.
 
-    Empty inputs and already-Chinese abstracts are skipped by returning None.
-    LLM failures or invalid outputs also return None; callers own checkpointing.
+    Empty inputs are skipped by returning None. English abstracts are translated and
+    condensed; Chinese abstracts are condensed/paraphrased into the same summary
+    contract. LLM failures or invalid outputs also return None; callers own
+    checkpointing.
     """
     source_text = (text or "").strip()
     if not source_text:
-        return None
-    if _zh_char_ratio(source_text) > 0.6:
         return None
 
     last_error: str | None = None
@@ -97,7 +98,7 @@ def translate_abstract_to_zh(
                     {"role": "system", "content": _SYSTEM_PROMPT},
                     {
                         "role": "user",
-                        "content": "英文摘要：\n" + source_text + retry_suffix,
+                        "content": "论文摘要：\n" + source_text + retry_suffix,
                     },
                 ],
                 temperature=_DEFAULT_TEMPERATURE,
@@ -155,7 +156,7 @@ def judge_summary_boilerplate(
 
     Spec contract (Requirement "summary_zh generation" Scenario
     "Boilerplate-rejected summary"): callers MUST set
-    ``summary_zh=NULL`` and ``quality_status="rejected"`` when this
+    ``summary_zh=NULL`` and keep the paper row retryable when this
     returns True.
 
     Fails open: empty / whitespace inputs return False (nothing to

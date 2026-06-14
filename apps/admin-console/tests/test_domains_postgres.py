@@ -10,6 +10,7 @@ import pytest
 
 from fastapi import HTTPException
 
+from backend.api import domains as domains_api
 from backend.api.domains import (
     DomainEnum,
     UpdateRecordRequest,
@@ -18,6 +19,7 @@ from backend.api.domains import (
     get_filter_options,
     get_related_objects,
     list_domain,
+    review_company_enrichment_item,
     update_domain_object,
 )
 from backend.services.data_helpers import _list_professors
@@ -47,6 +49,8 @@ def _base_records() -> dict[str, dict[str, Any]]:
             "discipline_family": "computer_science",
             "identity_status": "resolved",
             "merged_into_id": None,
+            "lifecycle_state": "active",
+            "lifecycle_merged_into_id": None,
             "profile_summary": "Analytical engine researcher.",
             "h_index": 12,
             "citation_count": 1200,
@@ -80,9 +84,13 @@ def _base_records() -> dict[str, dict[str, Any]]:
             "country": "China",
             "identity_status": "resolved",
             "merged_into_id": None,
+            "profile_summary": None,
+            "technology_route_summary": None,
             "last_refreshed_at": NOW,
             "created_at": NOW,
             "updated_at": NOW,
+            "import_batch_id": 7,
+            "source_row_number": 4,
             "project_name": "Analytical Engine",
             "industry": "AI",
             "sub_industry": "Systems",
@@ -112,6 +120,88 @@ def _base_records() -> dict[str, dict[str, Any]]:
             "latest_investors_raw": None,
             "team_raw": None,
             "snapshot_created_at": NOW,
+            "products_json": [
+                {
+                    "product_id": "PROD-TEST",
+                    "name": "旭宏医疗",
+                    "description": "AI心电智能筛查服务。",
+                    "source_url": "https://pitchhub.36kr.com/project/1678475362006017",
+                    "quality_status": "needs_review",
+                    "product_category": "心电诊断系统",
+                    "target_customers": ["医院/临床机构"],
+                    "application_scenarios": ["远程心电诊断"],
+                    "technical_tags": ["AI自动诊断"],
+                    "source_type": "pitchhub_36kr",
+                    "source_tier": "pitchhub_36kr",
+                    "source_tiers": ["pitchhub_36kr"],
+                    "fetched_at": NOW.isoformat(),
+                    "evidence": [
+                        {
+                            "field_name": "short_description",
+                            "source_url": "https://pitchhub.36kr.com/project/1678475362006017",
+                            "source_type": "pitchhub_36kr",
+                            "source_tier": "pitchhub_36kr",
+                            "evidence_span": "AI心电智能筛查服务",
+                            "confidence": 0.8,
+                        }
+                    ],
+                }
+            ],
+            "application_scenarios_json": [
+                {
+                    "scenario_id": "SCEN-TEST",
+                    "scenario_name": "远程心电诊断",
+                    "scenario_category": "医疗诊断",
+                    "description": "支持临床远程心电诊断及监护。",
+                    "target_customer": "医院/临床机构",
+                    "source_url": "https://pitchhub.36kr.com/project/1678475362006017",
+                    "quality_status": "needs_review",
+                    "source_type": "pitchhub_36kr",
+                    "source_tier": "pitchhub_36kr",
+                    "source_tiers": ["pitchhub_36kr"],
+                    "fetched_at": NOW.isoformat(),
+                    "evidence": [
+                        {
+                            "field_name": "description",
+                            "source_url": "https://pitchhub.36kr.com/project/1678475362006017",
+                            "source_type": "pitchhub_36kr",
+                            "source_tier": "pitchhub_36kr",
+                            "evidence_span": "临床远程心电诊断及监护",
+                            "confidence": 0.78,
+                        }
+                    ],
+                }
+            ],
+            "recent_events_json": [
+                {
+                    "event_id": "22222222-2222-2222-2222-222222222222",
+                    "event_type": "funding",
+                    "event_date": "2026-05-01",
+                    "summary": "旭宏医疗完成天使轮融资。",
+                    "status": "active",
+                    "source_url": "https://pitchhub.36kr.com/project/1678475362006017",
+                    "source_type": "pitchhub_36kr",
+                    "source_tier": "pitchhub_36kr",
+                    "source_file": None,
+                    "fetched_at": NOW.isoformat(),
+                    "normalized": {
+                        "round": "天使轮",
+                        "amount": None,
+                        "investors": [],
+                        "source_url": "https://pitchhub.36kr.com/project/1678475362006017",
+                    },
+                }
+            ],
+            "source_records_json": [
+                {
+                    "source_type": "pitchhub_36kr",
+                    "source_tier": "pitchhub_36kr",
+                    "source_url": "https://pitchhub.36kr.com/project/1678475362006017",
+                    "fetched_at": NOW.isoformat(),
+                    "snippet": "项目简介：AI心电智能筛查服务。",
+                    "confidence": 0.8,
+                }
+            ],
             "total_count": 1,
         },
         "paper": {
@@ -137,6 +227,58 @@ def _base_records() -> dict[str, dict[str, Any]]:
             "linked_professor_count": 1,
             "verified_professor_count": 1,
             "total_count": 1,
+        },
+        "paper_partial": {
+            "paper_id": "PAPER-PARTIAL",
+            "title_clean": "Partial Paper",
+            "title_raw": "Partial Paper",
+            "doi": None,
+            "arxiv_id": None,
+            "openalex_id": None,
+            "semantic_scholar_id": None,
+            "year": 2026,
+            "venue": "DraftConf",
+            "abstract_clean": None,
+            "summary_zh": None,
+            "authors_display": "Ada Lovelace",
+            "authors_raw": None,
+            "citation_count": 100,
+            "canonical_source": "manual",
+            "quality_status": "needs_review",
+            "pdf_url": None,
+            "first_seen_at": NOW,
+            "updated_at": NOW,
+            "run_id": RUN_ID,
+            "admin_action": None,
+            "linked_professor_count": 1,
+            "verified_professor_count": 1,
+            "total_count": 2,
+        },
+        "paper_ready": {
+            "paper_id": "PAPER-READY",
+            "title_clean": "Ready Paper With Summary",
+            "title_raw": "Ready Paper With Summary",
+            "doi": None,
+            "arxiv_id": None,
+            "openalex_id": None,
+            "semantic_scholar_id": None,
+            "year": 2025,
+            "venue": "ReadyConf",
+            "abstract_clean": "A complete abstract.",
+            "summary_zh": "一段可展示的中文摘要。",
+            "authors_display": "Ada Lovelace",
+            "authors_raw": None,
+            "citation_count": 1,
+            "canonical_source": "manual",
+            "quality_status": "ready",
+            "pdf_url": None,
+            "first_seen_at": NOW,
+            "updated_at": NOW,
+            "run_id": RUN_ID,
+            "admin_action": None,
+            "linked_professor_count": 1,
+            "verified_professor_count": 1,
+            "total_count": 2,
         },
         "patent": {
             "patent_id": "PAT-TEST",
@@ -182,6 +324,7 @@ class _FakePostgresConn:
         self.records = _base_records()
         self.calls: list[tuple[str, Any]] = []
         self.run_scopes: list[dict[str, Any]] = []
+        self.paper_aliases: dict[str, str] = {}
 
     def execute(
         self,
@@ -196,7 +339,37 @@ class _FakePostgresConn:
             scope = json.loads(params[1]) if isinstance(params, tuple) else {}
             self.run_scopes.append(scope)
             return _FakeResult([{"run_id": RUN_ID}])
+        if sql_lower.startswith("insert into professor_admin_action"):
+            return _FakeResult([])
+        if sql_lower.startswith("insert into company_enrichment_review_action"):
+            return _FakeResult([])
         if sql_lower.startswith("update pipeline_run"):
+            return _FakeResult([])
+        if sql_lower.startswith("select canonical_paper_id") and "from paper_merge_alias" in sql_lower:
+            paper_id = params.get("paper_id") if isinstance(params, dict) else None
+            canonical_paper_id = self.paper_aliases.get(str(paper_id))
+            return _FakeResult(
+                [{"canonical_paper_id": canonical_paper_id}]
+                if canonical_paper_id
+                else []
+            )
+        if sql_lower.startswith("select quality_status") and "from company_product" in sql_lower:
+            return _FakeResult(
+                [{"quality_status": "needs_review", "company_id": "COMP-TEST"}]
+            )
+        if sql_lower.startswith("select quality_status") and "from company_application_scenario" in sql_lower:
+            return _FakeResult(
+                [{"quality_status": "needs_review", "company_id": "COMP-TEST"}]
+            )
+        if sql_lower.startswith("update company_product"):
+            self.records["company"]["products_json"][0]["quality_status"] = params[
+                "new_status"
+            ]
+            return _FakeResult([])
+        if sql_lower.startswith("update company_application_scenario"):
+            self.records["company"]["application_scenarios_json"][0][
+                "quality_status"
+            ] = params["new_status"]
             return _FakeResult([])
         if sql_lower.startswith("update professor_affiliation"):
             self._update_professor_affiliation(params)
@@ -218,6 +391,20 @@ class _FakePostgresConn:
             return _FakeResult([])
         if "select distinct" in sql_lower and " as value" in sql_lower:
             return _FakeResult([{"value": self._filter_option_value(sql_lower)}])
+        if sql_lower.startswith("select lifecycle_state, lifecycle_merged_into_id"):
+            row = self.records["professor"]
+            object_id = params[0] if isinstance(params, tuple) else None
+            if object_id != row["professor_id"]:
+                return _FakeResult([])
+            return _FakeResult(
+                [
+                    {
+                        "lifecycle_state": row["lifecycle_state"],
+                        "lifecycle_merged_into_id": row["lifecycle_merged_into_id"],
+                        "updated_at": row["updated_at"],
+                    }
+                ]
+            )
 
         domain = self._domain_from_sql(sql_lower)
         if domain is None:
@@ -260,6 +447,30 @@ class _FakePostgresConn:
             return []
         if not is_relation_query and not self._is_active(domain):
             return []
+        if domain == "professor" and "active_paper_counts.active_paper_count" in sql_lower:
+            record["active_paper_count"] = 2
+            record["verified_paper_count"] = 1
+            if record.get("paper_count") is None:
+                record["paper_count"] = record["active_paper_count"]
+        if (
+            domain == "paper"
+            and "join professor_paper_link ppl on ppl.paper_id = p.paper_id"
+            in sql_lower
+        ):
+            rows = [
+                copy.deepcopy(self.records["paper_partial"]),
+                copy.deepcopy(self.records["paper_ready"]),
+            ]
+            if "case when p.quality_status = 'ready'" in sql_lower:
+                rows.sort(
+                    key=lambda row: (
+                        row.get("quality_status") != "ready",
+                        not row.get("summary_zh"),
+                        not row.get("abstract_clean"),
+                        -(row.get("citation_count") or 0),
+                    )
+                )
+            return rows
         record["total_count"] = 1
         return [record]
 
@@ -288,10 +499,20 @@ class _FakePostgresConn:
         sql_lower: str,
         params: dict[str, Any] | tuple[Any, ...] | None,
     ) -> None:
-        assert isinstance(params, dict)
         row = self.records["professor"]
+        if isinstance(params, tuple):
+            if "lifecycle_state = %s" in sql_lower:
+                row["lifecycle_state"] = params[0]
+                row["lifecycle_merged_into_id"] = params[1]
+                return
+            raise AssertionError(f"Unexpected tuple params for professor update: {params!r}")
+        assert isinstance(params, dict)
         if "identity_status = 'inactive'" in sql_lower:
             row["identity_status"] = "inactive"
+        if "lifecycle_state" in params:
+            row["lifecycle_state"] = params["lifecycle_state"]
+        if "lifecycle_merged_into_id" in params:
+            row["lifecycle_merged_into_id"] = params["lifecycle_merged_into_id"]
         if "identity_status" in params:
             row["identity_status"] = params["identity_status"]
         if "core_name" in params:
@@ -326,6 +547,12 @@ class _FakePostgresConn:
             row["identity_status"] = params["identity_status"]
         if "core_name" in params:
             row["canonical_name"] = params["core_name"]
+        if "summary_profile_summary" in params:
+            row["profile_summary"] = params["summary_profile_summary"]
+        if "summary_technology_route_summary" in params:
+            row["technology_route_summary"] = params[
+                "summary_technology_route_summary"
+            ]
 
     def _update_company_snapshot(
         self,
@@ -399,7 +626,94 @@ def test_list_domain_returns_released_object_shape(
     payload = response.model_dump(mode="json")
     assert payload["total"] == 1
     assert payload["items"][0]["id"] == object_id
-    assert set(payload["items"][0]) == RELEASED_KEYS
+    expected_keys = set(RELEASED_KEYS)
+    if domain == "professor":
+        expected_keys.update({"lifecycle_state", "lifecycle_merged_into_id"})
+    assert set(payload["items"][0]) == expected_keys
+
+
+@pytest.mark.parametrize(
+    ("domain", "column"),
+    [
+        ("professor", "p.quality_status"),
+        ("company", "c.quality_status"),
+        ("paper", "p.quality_status"),
+        ("patent", "patent.quality_status"),
+    ],
+)
+def test_quality_filter_uses_canonical_quality_status_column(
+    fake_pg_conn: _FakePostgresConn,
+    domain: str,
+    column: str,
+) -> None:
+    list_domain(
+        DomainEnum(domain),
+        page=1,
+        page_size=20,
+        sort_by="display_name",
+        sort_order="asc",
+        filters=json.dumps({"quality_status": "needs_review"}),
+        conn=fake_pg_conn,
+    )
+
+    sql, params = fake_pg_conn.calls[-1]
+    assert f"{column} = %(filter_quality_status)s" in sql
+    assert params["filter_quality_status"] == "needs_review"
+    assert "identity_status = 'needs_review'" not in sql
+
+
+def test_list_domain_accepts_top_level_quality_status_query_param(
+    fake_pg_conn: _FakePostgresConn,
+) -> None:
+    list_domain(
+        DomainEnum.paper,
+        page=1,
+        page_size=20,
+        sort_by="display_name",
+        sort_order="asc",
+        quality_status="ready",
+        conn=fake_pg_conn,
+    )
+
+    sql, params = fake_pg_conn.calls[-1]
+    assert "p.quality_status = %(filter_quality_status)s" in sql
+    assert params["filter_quality_status"] == "ready"
+
+
+def test_company_search_uses_jsonb_alias_expansion(
+    fake_pg_conn: _FakePostgresConn,
+) -> None:
+    list_domain(
+        DomainEnum.company,
+        q="深圳迈塔兰斯科技",
+        page=1,
+        page_size=20,
+        sort_by="display_name",
+        sort_order="asc",
+        conn=fake_pg_conn,
+    )
+
+    sql = fake_pg_conn.calls[-1][0]
+    assert "jsonb_array_elements_text" in sql
+    assert "unnest(c.aliases)" not in sql
+
+
+def test_company_search_includes_latest_xlsx_project_name(
+    fake_pg_conn: _FakePostgresConn,
+) -> None:
+    list_domain(
+        DomainEnum.company,
+        q="Analytical Engine",
+        page=1,
+        page_size=20,
+        sort_by="display_name",
+        sort_order="asc",
+        conn=fake_pg_conn,
+    )
+
+    sql = fake_pg_conn.calls[-1][0]
+    assert "latest_snapshot.project_name ILIKE" in sql
+    assert "latest_snapshot.company_name_xlsx ILIKE" in sql
 
 
 @pytest.mark.parametrize(
@@ -419,7 +733,126 @@ def test_get_domain_object_returns_released_object_shape(
     payload = get_domain_object(DomainEnum(domain), object_id, conn=fake_pg_conn)
     assert payload["id"] == object_id
     assert payload["object_type"] == domain
-    assert set(payload) == RELEASED_KEYS
+    expected_keys = set(RELEASED_KEYS)
+    if domain == "professor":
+        expected_keys.update({"lifecycle_state", "lifecycle_merged_into_id"})
+    assert set(payload) == expected_keys
+
+
+def test_professor_released_object_exposes_lifecycle_separate_from_quality(
+    fake_pg_conn: _FakePostgresConn,
+) -> None:
+    fake_pg_conn.records["professor"]["quality_status"] = "ready"
+    fake_pg_conn.records["professor"]["lifecycle_state"] = "archived"
+
+    payload = get_domain_object(DomainEnum.professor, "PROF-TEST", conn=fake_pg_conn)
+
+    assert payload["quality_status"] == "ready"
+    assert payload["lifecycle_state"] == "archived"
+    assert payload["lifecycle_merged_into_id"] is None
+
+
+def test_professor_domain_detail_falls_back_to_linked_paper_counts(
+    fake_pg_conn: _FakePostgresConn,
+) -> None:
+    fake_pg_conn.records["professor"]["paper_count"] = None
+
+    payload = get_domain_object(DomainEnum.professor, "PROF-TEST", conn=fake_pg_conn)
+
+    assert payload["core_facts"]["paper_count"] == 2
+    assert payload["core_facts"]["verified_paper_count"] == 1
+    sql = fake_pg_conn.calls[0][0]
+    assert "active_paper_counts.active_paper_count" in sql
+    assert "verified_paper_counts.verified_paper_count" in sql
+
+
+def test_paper_domain_detail_resolves_merge_alias(
+    fake_pg_conn: _FakePostgresConn,
+) -> None:
+    fake_pg_conn.paper_aliases["PAPER-OLD"] = "PAPER-TEST"
+
+    payload = get_domain_object(DomainEnum.paper, "PAPER-OLD", conn=fake_pg_conn)
+
+    assert payload["id"] == "PAPER-TEST"
+    assert payload["display_name"] == "Notes on the Analytical Engine"
+    assert fake_pg_conn.calls[0][1] == {"paper_id": "PAPER-OLD"}
+    assert fake_pg_conn.calls[1][1]["object_id"] == "PAPER-TEST"
+
+
+def test_company_released_object_exposes_products_events_and_source_evidence(
+    fake_pg_conn: _FakePostgresConn,
+) -> None:
+    payload = get_domain_object(DomainEnum.company, "COMP-TEST", conn=fake_pg_conn)
+
+    assert payload["core_facts"]["products"][0]["name"] == "旭宏医疗"
+    assert payload["core_facts"]["products"][0]["product_category"] == "心电诊断系统"
+    assert payload["core_facts"]["products"][0]["application_scenarios"] == ["远程心电诊断"]
+    assert payload["core_facts"]["products"][0]["source_tier"] == "pitchhub_36kr"
+    assert (
+        payload["core_facts"]["products"][0]["evidence"][0]["evidence_span"]
+        == "AI心电智能筛查服务"
+    )
+    assert payload["core_facts"]["application_scenarios"][0]["scenario_name"] == "远程心电诊断"
+    assert (
+        payload["core_facts"]["application_scenarios"][0]["evidence"][0]["source_tier"]
+        == "pitchhub_36kr"
+    )
+    assert payload["core_facts"]["recent_events"][0]["event_type"] == "funding"
+    assert payload["core_facts"]["recent_events"][0]["summary"] == "旭宏医疗完成天使轮融资。"
+    assert payload["core_facts"]["recent_events"][0]["status"] == "active"
+    assert payload["core_facts"]["recent_events"][0]["normalized"]["round"] == "天使轮"
+    assert payload["core_facts"]["recent_events"][0]["source_tier"] == "pitchhub_36kr"
+    assert payload["evidence"][0]["source_type"] == "xlsx_import"
+    assert payload["evidence"][0]["source_tier"] == "xlsx"
+    assert "import_batch_id=7" in payload["evidence"][0]["source_file"]
+    assert any(
+        item["source_type"] == "pitchhub_36kr"
+        and item["source_url"] == "https://pitchhub.36kr.com/project/1678475362006017"
+        for item in payload["evidence"]
+    )
+    assert "'status', cse.status" in fake_pg_conn.calls[0][0]
+
+
+def test_company_release_sql_uses_source_confidence_publication_policy(
+    fake_pg_conn: _FakePostgresConn,
+) -> None:
+    get_domain_object(DomainEnum.company, "COMP-TEST", conn=fake_pg_conn)
+
+    company_sql = fake_pg_conn.calls[0][0]
+    assert "FROM company_product cp" in company_sql
+    assert "cp.quality_status = 'ready' OR" in company_sql
+    assert "cp.quality_status = 'needs_review'" in company_sql
+    assert "company_product_evidence publishable_evidence" in company_sql
+    assert "'xlsx', 'official', 'official_site', 'iyiou', 'pitchhub_36kr'" in company_sql
+    assert "FROM company_application_scenario cas" in company_sql
+    assert "cas.quality_status = 'ready' OR" in company_sql
+    assert "cas.quality_status = 'needs_review'" in company_sql
+    assert "company_application_scenario_evidence publishable_evidence" in company_sql
+    assert "'evidence', COALESCE(product_evidence.evidence_json" in company_sql
+    assert "'evidence', COALESCE(scenario_evidence.evidence_json" in company_sql
+
+
+def test_update_professor_lifecycle_records_admin_run_and_audit(
+    fake_pg_conn: _FakePostgresConn,
+) -> None:
+    payload = domains_api.update_professor_lifecycle(
+        "PROF-TEST",
+        domains_api.ProfessorLifecycleUpdateRequest(
+            lifecycle_state="archived",
+            actor="ops",
+            note="Historical school roster entry.",
+        ),
+        conn=fake_pg_conn,
+    )
+
+    assert payload["id"] == "PROF-TEST"
+    assert payload["quality_status"] == "ready"
+    assert payload["lifecycle_state"] == "archived"
+    assert fake_pg_conn.run_scopes[-1]["action"] == "set_lifecycle_state"
+    assert any(
+        sql.startswith("INSERT INTO professor_admin_action")
+        for sql, _params in fake_pg_conn.calls
+    )
 
 
 @pytest.mark.parametrize(
@@ -462,7 +895,31 @@ def test_get_related_objects_joins_canonical_relations(
     payload = response.model_dump(mode="json")
     assert payload[bucket]
     assert payload[bucket][0]["object_type"] == expected_type
-    assert set(payload[bucket][0]) == RELEASED_KEYS
+    expected_keys = set(RELEASED_KEYS)
+    if expected_type == "professor":
+        expected_keys.update({"lifecycle_state", "lifecycle_merged_into_id"})
+    assert set(payload[bucket][0]) == expected_keys
+
+
+def test_professor_related_papers_prioritize_ready_with_summary_and_abstract(
+    fake_pg_conn: _FakePostgresConn,
+) -> None:
+    response = get_related_objects(DomainEnum.professor, "PROF-TEST", conn=fake_pg_conn)
+    payload = response.model_dump(mode="json")
+
+    assert [paper["id"] for paper in payload["papers"]] == [
+        "PAPER-READY",
+        "PAPER-PARTIAL",
+    ]
+    first = payload["papers"][0]
+    assert first["quality_status"] == "ready"
+    assert first["summary_fields"]["summary_zh"]
+    assert first["core_facts"]["abstract"]
+    assert "openalex_id" in first["core_facts"]
+    sql = fake_pg_conn.calls[-3][0]
+    assert "CASE WHEN p.quality_status = 'ready'" in sql
+    assert "CASE WHEN NULLIF(p.summary_zh, '') IS NOT NULL" in sql
+    assert "CASE WHEN NULLIF(p.abstract_clean, '') IS NOT NULL" in sql
 
 
 def test_professor_domains_total_matches_data_api_for_same_institution(
@@ -538,6 +995,127 @@ def test_patch_paper_summary_zh_updates_summary_zh_not_abstract(
     )
     assert "summary_zh = %(summary_zh)s" in update_sql
     assert "abstract_clean = %(summary_zh)s" not in update_sql
+
+
+def test_patch_professor_quality_status_requires_admin_mark_endpoint(
+    fake_pg_conn: _FakePostgresConn,
+) -> None:
+    with pytest.raises(HTTPException) as exc_info:
+        update_domain_object(
+            DomainEnum.professor,
+            "PROF-TEST",
+            conn=fake_pg_conn,
+            body=UpdateRecordRequest(quality_status="ready"),
+        )
+
+    assert exc_info.value.status_code == 409
+    assert exc_info.value.detail["error"] == "professor_quality_requires_mark_endpoint"
+    assert not any(
+        sql.startswith("UPDATE professor SET") for sql, _params in fake_pg_conn.calls
+    )
+
+
+def test_patch_company_quality_status_keeps_generic_contract(
+    fake_pg_conn: _FakePostgresConn,
+) -> None:
+    response = update_domain_object(
+        DomainEnum.company,
+        "COMP-TEST",
+        conn=fake_pg_conn,
+        body=UpdateRecordRequest(quality_status="ready"),
+    )
+
+    assert response["quality_status"] == "ready"
+    assert any(
+        sql.startswith("UPDATE company SET") for sql, _params in fake_pg_conn.calls
+    )
+
+
+def test_patch_company_summary_updates_company_summary_columns_not_xlsx_snapshot(
+    fake_pg_conn: _FakePostgresConn,
+) -> None:
+    original_description = fake_pg_conn.records["company"]["description"]
+    original_business = fake_pg_conn.records["company"]["business"]
+
+    response = update_domain_object(
+        DomainEnum.company,
+        "COMP-TEST",
+        conn=fake_pg_conn,
+        body=UpdateRecordRequest(
+            summary_fields={
+                "profile_summary": "这是合成后的长公司简介。",
+                "technology_route_summary": "这是合成后的技术路线。",
+            }
+        ),
+    )
+
+    assert response["summary_fields"]["profile_summary"] == "这是合成后的长公司简介。"
+    assert response["summary_fields"]["technology_route_summary"] == "这是合成后的技术路线。"
+    assert fake_pg_conn.records["company"]["description"] == original_description
+    assert fake_pg_conn.records["company"]["business"] == original_business
+    update_company_calls = [
+        params
+        for sql, params in fake_pg_conn.calls
+        if sql.startswith("UPDATE company SET")
+    ]
+    assert update_company_calls
+    assert update_company_calls[-1]["summary_profile_summary"] == "这是合成后的长公司简介。"
+    assert (
+        update_company_calls[-1]["summary_technology_route_summary"]
+        == "这是合成后的技术路线。"
+    )
+    assert not any(
+        sql.startswith("UPDATE company_snapshot")
+        for sql, _params in fake_pg_conn.calls
+    )
+
+
+def test_review_company_product_accepts_row_and_records_audit(
+    fake_pg_conn: _FakePostgresConn,
+) -> None:
+    response = review_company_enrichment_item(
+        company_id="COMP-TEST",
+        target_type="product",
+        target_id="PROD-TEST",
+        conn=fake_pg_conn,
+        body=domains_api.CompanyEnrichmentReviewRequest(
+            action="accept",
+            actor="ops",
+            note="Verified.",
+        ),
+    )
+
+    assert response["target_type"] == "product"
+    assert response["target_id"] == "PROD-TEST"
+    assert response["previous_status"] == "needs_review"
+    assert response["new_status"] == "ready"
+    assert any(
+        "INSERT INTO company_enrichment_review_action" in sql
+        for sql, _params in fake_pg_conn.calls
+    )
+
+
+def test_review_company_scenario_rejects_row_and_records_audit(
+    fake_pg_conn: _FakePostgresConn,
+) -> None:
+    response = review_company_enrichment_item(
+        company_id="COMP-TEST",
+        target_type="scenario",
+        target_id="SCEN-TEST",
+        conn=fake_pg_conn,
+        body=domains_api.CompanyEnrichmentReviewRequest(
+            action="reject",
+            actor="ops",
+            note="Not supported by source.",
+        ),
+    )
+
+    assert response["target_type"] == "scenario"
+    assert response["new_status"] == "rejected"
+    assert any(
+        "UPDATE company_application_scenario" in sql
+        for sql, _params in fake_pg_conn.calls
+    )
 
 
 def test_patch_patent_summary_text_updates_summary_text_not_abstract(

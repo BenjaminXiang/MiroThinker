@@ -116,6 +116,7 @@ def test_enrich_paper_metadata_from_semantic_scholar_by_doi():
     assert enrichment.fields_of_study == ("Education", "Political Science")
     assert enrichment.tldr == "课程思政治理路径综述。"
     assert enrichment.oa_status == "open"
+    assert enrichment.pdf_url == "https://example.org/open.pdf"
     assert enrichment.source_url == "https://www.semanticscholar.org/paper/618beb097e1266e339db5ae81a75a8908dbe8a6b"
     assert enrichment.enrichment_sources == ("semantic_scholar",)
 

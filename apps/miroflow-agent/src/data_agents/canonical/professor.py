@@ -29,6 +29,8 @@ class Professor(BaseModel):
     primary_official_profile_page_id: UUID | None = None
     identity_status: IdentityStatus = IdentityStatus.resolved
     merged_into_id: str | None = None
+    lifecycle_state: Literal["active", "archived", "merged_to_other_school"] = "active"
+    lifecycle_merged_into_id: str | None = None
     first_seen_at: datetime | None = None
     last_refreshed_at: datetime | None = None
     created_at: datetime | None = None

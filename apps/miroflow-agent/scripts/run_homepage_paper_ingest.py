@@ -114,6 +114,14 @@ def _parse_args() -> argparse.Namespace:
             "Use a small value such as 3-5 for bulk fast-mode seed reruns."
         ),
     )
+    parser.add_argument(
+        "--disable-arxiv-title-search",
+        action="store_true",
+        help=(
+            "Disable arXiv title search in the shared resolver cascade. "
+            "Use only for fast-mode reruns where title recall is less important."
+        ),
+    )
     parser.add_argument("--log-level", default="INFO")
     return parser.parse_args()
 
@@ -166,6 +174,7 @@ def main() -> int:
             external_resolution_max_per_professor=(
                 args.external_resolution_max_per_professor
             ),
+            enable_arxiv_title_search=not args.disable_arxiv_title_search,
         )
         commit = getattr(conn, "commit", None)
         if callable(commit):

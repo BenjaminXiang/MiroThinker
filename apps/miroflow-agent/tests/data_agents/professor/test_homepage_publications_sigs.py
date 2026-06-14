@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from src.data_agents.professor.homepage_publications import (
     HomepagePublication,
     _is_suspicious_rule_publication,
@@ -1322,6 +1324,23 @@ def test_sigs_titlecase_title_after_comma_author_list_is_not_author_tail():
     assert publications[0].venue_text == "ECCV 2022"
 
 
+def test_initial_connective_author_comma_prefix_reaches_real_title():
+    raw = (
+        "[2].T.W. Wu and Y.L. Ma, Doubly heavy tetraquark multiplets as heavy "
+        "antiquark-diquark symmetry partners of heavy baryons, Phys.Rev.D 107 "
+        "(2023) 7, L071501."
+    )
+
+    title, authors, venue = _split_title_authors_venue(raw)
+
+    assert title == (
+        "Doubly heavy tetraquark multiplets as heavy antiquark-diquark symmetry "
+        "partners of heavy baryons"
+    )
+    assert authors == "T.W. Wu, Y.L. Ma"
+    assert venue == "Phys.Rev.D 107 (2023) 7, L071501"
+
+
 def test_sigs_dense_initial_author_chain_splits_before_real_title():
     html = """
     <main>
@@ -1585,20 +1604,7 @@ def test_sigs_title_suffix_author_chain_is_suspicious_and_filters_noise():
         page_url="http://www.sigs.tsinghua.edu.cn/zxl/main.htm",
     )
 
-    assert [publication.clean_title for publication in publications] == [
-        (
-            "Intrinsic Half-Metallicity in 2D Ternary Chalcogenides with High "
-            "Critical Temperature and Controllable Magnetization Direction "
-            "Shuqing Zhang, Runzhang Xu, Wenhui Duan, Xiaolong Zou* Adv"
-        ),
-        (
-            "Morphology and surface chemistry engineering toward pH-universal "
-            "catalysts for hydrogen evolution at high current density Yuting "
-            "Luo, Lei Tang, Usman Khan, Qiangmin Yu, Hui-Ming Cheng, Xiaolong "
-            "Zou*, Bilu Liu*"
-        ),
-    ]
-    assert all(_is_suspicious_rule_publication(pub) for pub in publications)
+    assert publications == []
 
 
 def test_sigs_llm_fallback_fixes_title_suffix_author_chain():
@@ -2930,6 +2936,32 @@ def test_sigs_numbered_publications_in_same_paragraph_are_split():
     ]
     assert "当代建筑" in (publications[0].venue_text or "")
     assert "建筑技艺" in (publications[1].venue_text or "")
+
+
+def test_sigs_english_numbered_publications_in_same_paragraph_are_split():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>[4].T.W. Wu, M.Z. Liu and L.S. Geng，Excited K meson,
+      Kc(4180), with hidden charm as a DDbarK bound state,
+      Phys.Rev.D 103 (2021) 3, L031501 [5].T.W. Wu, M.Z. Liu,
+      L.S. Geng et al. DK,DDK, and DDDK molecules- understanding
+      the nature of the Ds0(2317), Phys.Rev.D 100 (2019) 3, 034029.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://science.sysu.edu.cn/teacher/WuTianwei",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "Kc(4180), with hidden charm as a DDbarK bound state",
+        "DK, DDK, and DDDK molecules-understanding the nature of the Ds0(2317)",
+    ]
+    assert "Phys.Rev.D 103" in (publications[0].venue_text or "")
+    assert "[5]" not in (publications[0].venue_text or "")
+    assert "Phys.Rev.D 100" in (publications[1].venue_text or "")
 
 
 def test_sigs_non_publication_title_noise_is_suspicious_at_bridge_boundary():
@@ -5372,6 +5404,79 @@ def test_sustech_connective_full_name_with_middle_initial_before_title_reaches_t
     assert "AAAI" in (venue or "")
 
 
+def test_sustech_number_comma_item_prefix_is_stripped_from_title():
+    raw = "1,Tumbling Down the Rabbit Hole: How do Assisting Exploration Strategies Facilitate Grey-box Fuzzing?"
+
+    title, authors, venue = _split_title_authors_venue(raw)
+
+    assert title == (
+        "Tumbling Down the Rabbit Hole: How do Assisting Exploration Strategies "
+        "Facilitate Grey-box Fuzzing?"
+    )
+    assert authors is None
+    assert venue is None
+
+
+def test_sustech_title_author_list_before_in_proceedings_reaches_title():
+    raw = (
+        "MOAT: Towards Safe BPF Kernel Extension Hongyi Lu, Shuai Wang*, "
+        "Yechang Wu, Wanning He, and Fengwei Zhang* In Proceedings of the "
+        "USENIX Security Symposium (USENIX Security'24), Philadelphia, PA, "
+        "August 2024."
+    )
+
+    title, authors, venue = _split_title_authors_venue(raw)
+
+    assert title == "MOAT: Towards Safe BPF Kernel Extension"
+    assert authors is not None
+    assert "Hongyi Lu" in authors
+    assert "Fengwei Zhang" in authors
+    assert "USENIX Security" in (venue or "")
+
+
+def test_sustech_parenthesized_year_author_list_before_title_reaches_title():
+    raw = (
+        "1. Liu Z*, Yang j*, Long Y*, Zhang C*, Wang D, Zhang X, Dong W, Zhao L, "
+        "Liu C, Zhai J#, Wang E#. (2023) Single-nucleus transcriptomes reveal "
+        "spatiotemporal symbiotic perception and early response in Medicago. "
+        "Nature Plants . 10.1038/s41477-023-01524-8."
+    )
+
+    title, authors, venue = _split_title_authors_venue(raw)
+
+    assert title == (
+        "Single-nucleus transcriptomes reveal spatiotemporal symbiotic perception "
+        "and early response in Medicago"
+    )
+    assert authors is not None
+    assert "Liu Z" in authors
+    assert "Zhai J" in authors
+    assert "Nature Plants" in (venue or "")
+
+
+def test_sustech_long_author_list_period_title_reaches_title():
+    raw = (
+        "Fan Pan1, Qifan Zhou*,1, Ming Yan1, Sidi Yang1, Ruiyu Hu, Yongzhi Chen, "
+        "Yuanmei Wen, Yang Chao, Cailing Xie, Weixin Ou, Yingjun Li, "
+        "Hongmin Zhang*, Deyin Guo*, Xumu Zhang*. Development of pyrimidone "
+        "derivatives as nonpeptidic and noncovalent 3-chymotrypsin-like protease "
+        "(3CLpro) inhibitors with anti-coronavirus activities. Bioorganic "
+        "Chemistry, 2024, 154, 107988."
+    )
+
+    title, authors, venue = _split_title_authors_venue(raw)
+
+    assert title == (
+        "Development of pyrimidone derivatives as nonpeptidic and noncovalent "
+        "3-chymotrypsin-like protease (3CLpro) inhibitors with anti-coronavirus "
+        "activities"
+    )
+    assert authors is not None
+    assert "Qifan Zhou" in authors
+    assert "Xumu Zhang" in authors
+    assert "Bioorganic Chemistry" in (venue or "")
+
+
 def test_sustech_mixed_awards_list_does_not_override_publication_paragraphs():
     html = """
     <main>
@@ -5491,3 +5596,333 @@ def test_sustech_author_only_fragments_are_not_publications():
     )
 
     assert publications == []
+
+
+def test_sustech_inline_academic_outputs_label_splits_numbered_publications():
+    html = """
+    <main>
+      <p><strong>学术成果/论文发表</strong>1. Li Z, Wang Y. Scalable
+      membrane separation for lithium recovery. Journal of Materials
+      Chemistry A, 2024. 2. Zhang Q, Chen R. Stable photocatalytic hydrogen
+      evolution from polymer heterojunctions. Advanced Science, 2023.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/sustech-audit.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "Scalable membrane separation for lithium recovery",
+        "Stable photocatalytic hydrogen evolution from polymer heterojunctions",
+    ]
+    assert "Li Z" in (publications[0].authors_text or "")
+    assert "Journal of Materials Chemistry A" in (publications[0].venue_text or "")
+    assert publications[0].year == 2024
+    assert "Zhang Q" in (publications[1].authors_text or "")
+    assert "Advanced Science" in (publications[1].venue_text or "")
+    assert publications[1].year == 2023
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_sustech_academic_outputs_parenthetical_heading_collects_following_numbered_paragraphs():
+    html = """
+    <main>
+      <div class="w clearfix introduce-main teacher_inner">
+        <div class="message-right fr">
+          <p><span><strong>学术成果（发表论著或者论文或者专利）：</strong></span></p>
+          <p><br/></p>
+          <p>Book (chapter):</p>
+          <p>1. Yi Liu &amp; Zhenzhong Zeng*; Wind energy. In The Palgrave
+          Handbook of Global Sustainability. (Cham: Springer International
+          Publishing, 2022).</p>
+          <p>L iteratures:</p>
+          <p>1. Lili Liang; Shijing Liang &amp; Zhenzhong Zeng*; Extreme climate
+          sparks record boreal wildfires and carbon surge in 2023; The
+          Innovation; 2024. https://doi.org/10.1016/j.xinn.2024.100645</p>
+          <p>2. Zurui Ao; Zhenzhong Zeng*; A national-scale assessment of land
+          surface changes from satellite observations; Remote Sensing of
+          Environment; 2023.</p>
+        </div>
+      </div>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/cengzhenzhong.html",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "Wind energy",
+        "Extreme climate sparks record boreal wildfires and carbon surge in 2023",
+        "A national-scale assessment of land surface changes from satellite observations",
+    ]
+    assert publications[0].year == 2022
+    assert "Zhenzhong Zeng" in (publications[0].authors_text or "")
+    assert publications[1].year == 2024
+    assert publications[1].venue_text == "The Innovation; 2024"
+    assert publications[2].year == 2023
+    assert publications[2].venue_text == "Remote Sensing of Environment; 2023"
+    assert all(not _is_suspicious_rule_publication(pub) for pub in publications)
+
+
+def test_homepage_publications_moves_single_abbreviated_venue_token_out_of_title():
+    html = """
+    <main>
+      <h2>Publications</h2>
+      <p>1. Zhang X, Li Y. Graphene sheets embedded carbon film prepared by
+      electron irradiation in electron cyclotron resonance plasma, Appl.
+      Physics Letters, 2012.</p>
+      <p>2. Zhang X, Li Y. Influence of UV irradiation for low frictional
+      performance of CNx coatings, Lubr. Sci., 2012, 24(3):129.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://example.edu/prof/publications",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "Graphene sheets embedded carbon film prepared by electron irradiation "
+        "in electron cyclotron resonance plasma",
+        "Influence of UV irradiation for low frictional performance of CNx coatings",
+    ]
+    assert "Appl. Physics Letters" in (publications[0].venue_text or "")
+    assert "Lubr. Sci" in (publications[1].venue_text or "")
+
+
+def test_homepage_publications_skips_patent_entries_in_mixed_outputs_section():
+    html = """
+    <main>
+      <h2>Publications and Patents</h2>
+      <p>1. Patent: Adaptive quantization device for federated learning,
+      CN202410123456.7.</p>
+      <p>2. A. Zhang, B. Chen. Communication Efficient Federated Learning
+      with Adaptive Quantization. ACM Transactions on Intelligent Systems and
+      Technology, 2022.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://example.edu/prof/publications",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "Communication Efficient Federated Learning with Adaptive Quantization"
+    ]
+    assert "Patent" not in publications[0].raw_title
+
+
+def test_homepage_publications_skips_preprint_label_as_title():
+    html = """
+    <main>
+      <h2>Publications</h2>
+      <p>1. Zhang X, Li Y. In arXiv preprint. arXiv preprint, 2024.</p>
+      <p>2. Zhang X, Li Y. Federated Optimization with Adaptive Compression.
+      IEEE Transactions on Signal Processing, 2024.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://example.edu/prof/publications",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "Federated Optimization with Adaptive Compression"
+    ]
+
+
+def test_homepage_publications_skips_proceedings_label_as_title():
+    html = """
+    <main>
+      <h2>Publications</h2>
+      <p>1. Zhang X, Li Y. In Proceedings of the AAAI Conference on
+      Artificial Intelligence (AAAI), 2025.</p>
+      <p>2. Zhang X, Li Y. Federated Optimization with Adaptive Compression.
+      In Proceedings of the AAAI Conference on Artificial Intelligence (AAAI),
+      2024.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://example.edu/prof/publications",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "Federated Optimization with Adaptive Compression"
+    ]
+    assert "AAAI" in (publications[0].venue_text or "")
+
+
+def test_homepage_publications_skips_in_venue_label_as_title():
+    html = """
+    <main>
+      <h2>Publications</h2>
+      <p>1. Zhang X, Li Y. In IEEE Transactions on Circuits and Systems for
+      Video Technology (T-CSVT).</p>
+      <p>2. Zhang X, Li Y. Efficient Neural Video Compression.
+      In IEEE Transactions on Circuits and Systems for Video Technology
+      (T-CSVT), 2024.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://example.edu/prof/publications",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "Efficient Neural Video Compression"
+    ]
+    assert "T-CSVT" in (publications[0].venue_text or "")
+
+
+@pytest.mark.parametrize(
+    "raw_text",
+    [
+        "IJCV * 1, AIJ * 1, TIP * 4, TVCG * 1",
+        "Lang S u n",
+        "and Bingding Huan g*",
+        "2016 Aug 26;10 Suppl 3:71. doi: 10.1186/s12918-016-0315-y",
+        "2016 Jun 1;6:26942. doi: 10.1038/srep26942",
+        "In publications marked with '**', authors are ordered alphabetically, "
+        "as is a convention of theory papers (Wikipedia). In the other "
+        "publications, authors are ordered by contribution",
+    ],
+)
+def test_homepage_publications_skips_metric_and_author_fragment_titles(raw_text):
+    html = f"""
+    <main>
+      <h2>Publications</h2>
+      <p>{raw_text}</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://faculty.example.edu/person",
+    )
+
+    assert publications == []
+
+
+@pytest.mark.parametrize(
+    ("raw_text", "expected_title"),
+    [
+        ("** Fair Division with Prioritized Agents", "Fair Division with Prioritized Agents"),
+        (
+            "** Approximability Landscape of Welfare Maximization within Fair Allocations",
+            "Approximability Landscape of Welfare Maximization within Fair Allocations",
+        ),
+    ],
+)
+def test_homepage_publications_strips_leading_contribution_markers(
+    raw_text,
+    expected_title,
+):
+    html = f"""
+    <main>
+      <h2>Publications</h2>
+      <p>{raw_text}</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://faculty.example.edu/person",
+    )
+
+    assert [publication.clean_title for publication in publications] == [expected_title]
+
+
+def test_homepage_publications_strips_etc_author_prefix_before_real_title():
+    html = """
+    <main>
+      <h2>Publications</h2>
+      <p>etc. Logical Relation Inference and Multiview Information Interaction
+      for Domain Adaptation Person Re-Identification</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://faculty.example.edu/person",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "Logical Relation Inference and Multiview Information Interaction "
+        "for Domain Adaptation Person Re-Identification"
+    ]
+
+
+@pytest.mark.parametrize(
+    "raw_text",
+    [
+        "Hasan Y ? lmaz",
+        "Wenbo Zhu §",
+        "Hasan Y ? lmaz, Wenbo Zhu §",
+    ],
+)
+def test_homepage_publications_skips_mojibake_and_section_marker_author_fragments(
+    raw_text,
+):
+    html = f"""
+    <main>
+      <h2>Publications</h2>
+      <p>{raw_text}</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://faculty.example.edu/person",
+    )
+
+    assert publications == []
+
+
+def test_homepage_publications_strips_section_marker_author_before_real_title():
+    html = """
+    <main>
+      <h2>Publications</h2>
+      <p>Wenbo Zhu §. Robust Visual Tracking under Occlusion.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://faculty.example.edu/person",
+    )
+
+    assert [publication.clean_title for publication in publications] == [
+        "Robust Visual Tracking under Occlusion"
+    ]
+    assert publications[0].authors_text == "Wenbo Zhu"
+
+
+def test_sustech_semicolon_authors_title_venue_year_uses_second_segment_as_title():
+    html = """
+    <main>
+      <h2>代表性论文</h2>
+      <p>陈达发; 金属中心平面大环化合物; Nature; 2025.</p>
+    </main>
+    """
+
+    publications = extract_publications_from_html(
+        html,
+        page_url="https://www.sustech.edu.cn/zh/faculties/sustech-audit.html",
+    )
+
+    assert len(publications) == 1
+    publication = publications[0]
+    assert publication.clean_title == "金属中心平面大环化合物"
+    assert publication.authors_text == "陈达发"
+    assert publication.venue_text == "Nature; 2025"
+    assert publication.year == 2025
+    assert not _is_suspicious_rule_publication(publication)

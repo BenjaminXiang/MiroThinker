@@ -62,5 +62,17 @@ def test_upsert_paper_can_initialize_page_only_quality_status():
 
     assert "quality_status" in sql
     assert "updated_at" in sql
-    assert "quality_status" not in sql.split("DO UPDATE", maxsplit=1)[1]
     assert params[14] == "needs_enrichment"
+
+
+def test_upsert_paper_conflict_updates_quality_status_monotonically():
+    sql, _params = _upsert_with_source(
+        "openalex",
+        canonical_source="openalex",
+        quality_status="partial",
+    )
+
+    update_sql = sql.split("DO UPDATE", maxsplit=1)[1]
+    assert "quality_status" in update_sql
+    assert "paper.quality_status IN ('rejected', 'ready', 'needs_review')" in update_sql
+    assert "EXCLUDED.quality_status = 'partial'" in update_sql

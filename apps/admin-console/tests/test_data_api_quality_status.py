@@ -63,6 +63,10 @@ def _company_row() -> dict[str, Any]:
         "aliases": [],
         "identity_status": "resolved",
         "quality_status": "low_confidence",
+        "profile_summary": None,
+        "technology_route_summary": None,
+        "description": None,
+        "business": None,
         "last_refreshed_at": NOW,
         "updated_at": NOW,
         "snapshot_created_at": NOW,
@@ -119,6 +123,49 @@ def test_get_company_detail_returns_quality_status() -> None:
 
     assert payload["quality_status"] == "low_confidence"
     assert "c.quality_status" in conn.calls[0]
+
+
+def test_get_company_detail_prefers_synthesized_summary_fields() -> None:
+    row = {
+        **_company_row(),
+        "profile_summary": "long synthesized company profile",
+        "technology_route_summary": "synthesized technology route",
+        "description": "short XLSX description",
+        "business": "raw XLSX business",
+    }
+    conn = _DomainDetailConn(row)
+
+    payload = _get_with_conn("company", "COMP-QS", conn)
+
+    assert (
+        payload["summary_fields"]["profile_summary"]
+        == "long synthesized company profile"
+    )
+    assert (
+        payload["summary_fields"]["technology_route_summary"]
+        == "synthesized technology route"
+    )
+    assert "c.profile_summary" in conn.calls[0]
+    assert "c.technology_route_summary" in conn.calls[0]
+
+
+def test_get_company_detail_falls_back_to_xlsx_snapshot_summaries() -> None:
+    row = {
+        **_company_row(),
+        "profile_summary": None,
+        "technology_route_summary": None,
+        "description": "trusted XLSX description",
+        "business": "trusted XLSX business",
+    }
+    conn = _DomainDetailConn(row)
+
+    payload = _get_with_conn("company", "COMP-QS", conn)
+
+    assert payload["summary_fields"]["profile_summary"] == "trusted XLSX description"
+    assert (
+        payload["summary_fields"]["technology_route_summary"]
+        == "trusted XLSX business"
+    )
 
 
 def test_get_paper_detail_returns_quality_status() -> None:

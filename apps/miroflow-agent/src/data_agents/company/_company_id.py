@@ -5,6 +5,26 @@ from urllib.parse import urlsplit
 
 from ..normalization import normalize_company_name
 
+_SHARED_IDENTITY_HOSTS = {
+    "mp.weixin.qq.com",
+    "weixin.qq.com",
+    "weibo.com",
+    "m.weibo.cn",
+    "qcc.com",
+    "tianyancha.com",
+    "aiqicha.baidu.com",
+    "baike.baidu.com",
+    "linkedin.com",
+    "github.com",
+    "gitlab.com",
+    "gitee.com",
+    "zhihu.com",
+    "36kr.com",
+    "pitchhub.36kr.com",
+    "iyiou.com",
+    "data.iyiou.com",
+}
+
 
 def generate_company_id(
     *, unified_credit_code: str | None, website: str | None, registered_name: str
@@ -15,7 +35,7 @@ def generate_company_id(
         return _build_company_id(key)
 
     host = _extract_host(website)
-    if host:
+    if host and not _is_shared_identity_host(host):
         return _build_company_id(host)
 
     normalized_name = normalize_company_name(registered_name or "")
@@ -43,6 +63,16 @@ def _extract_host(website: str | None) -> str | None:
         return None
 
     return _clean(parsed.hostname.lower() if parsed.hostname else None)
+
+
+def _is_shared_identity_host(host: str | None) -> bool:
+    cleaned = _clean(host)
+    if not cleaned:
+        return False
+    normalized = cleaned.lower()
+    if normalized.startswith("www."):
+        normalized = normalized[4:]
+    return normalized in _SHARED_IDENTITY_HOSTS
 
 
 def _clean(value: str | None) -> str | None:

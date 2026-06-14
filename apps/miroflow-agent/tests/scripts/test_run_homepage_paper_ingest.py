@@ -199,6 +199,74 @@ def test_cli_dispatches_external_resolution_budget(monkeypatch):
     assert called_kwargs.get("external_resolution_max_per_professor") == 3
 
 
+def test_cli_enables_arxiv_title_search_by_default(monkeypatch):
+    cli = _import_cli_module()
+    called_kwargs: dict = {}
+
+    def _fake_run(conn, **kwargs):
+        called_kwargs.update(kwargs)
+        from src.data_agents.paper.homepage_ingest import IngestReport
+        from uuid import UUID
+
+        return IngestReport(
+            run_id=UUID("00000000-0000-0000-0000-000000000000"),
+            profs_total=0,
+            profs_processed=0,
+            profs_skipped=0,
+            papers_linked_total=0,
+            full_text_fetched_total=0,
+            pipeline_issues_filed=0,
+            run_duration_seconds=0.0,
+        )
+
+    monkeypatch.setattr(cli, "run_homepage_paper_ingest", _fake_run)
+    monkeypatch.setattr(cli, "_open_database_connection", lambda url: MagicMock())
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+    monkeypatch.setattr(sys, "argv", ["run_homepage_paper_ingest.py", "--dry-run"])
+
+    cli.main()
+
+    assert called_kwargs.get("enable_arxiv_title_search") is True
+
+
+def test_cli_can_disable_arxiv_title_search_for_fast_mode(monkeypatch):
+    cli = _import_cli_module()
+    called_kwargs: dict = {}
+
+    def _fake_run(conn, **kwargs):
+        called_kwargs.update(kwargs)
+        from src.data_agents.paper.homepage_ingest import IngestReport
+        from uuid import UUID
+
+        return IngestReport(
+            run_id=UUID("00000000-0000-0000-0000-000000000000"),
+            profs_total=0,
+            profs_processed=0,
+            profs_skipped=0,
+            papers_linked_total=0,
+            full_text_fetched_total=0,
+            pipeline_issues_filed=0,
+            run_duration_seconds=0.0,
+        )
+
+    monkeypatch.setattr(cli, "run_homepage_paper_ingest", _fake_run)
+    monkeypatch.setattr(cli, "_open_database_connection", lambda url: MagicMock())
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_homepage_paper_ingest.py",
+            "--dry-run",
+            "--disable-arxiv-title-search",
+        ],
+    )
+
+    cli.main()
+
+    assert called_kwargs.get("enable_arxiv_title_search") is False
+
+
 def test_cli_dispatches_llm_publication_extraction(monkeypatch):
     cli = _import_cli_module()
     called_kwargs: dict = {}

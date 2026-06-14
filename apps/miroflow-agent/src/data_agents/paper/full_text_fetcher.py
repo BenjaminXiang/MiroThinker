@@ -14,6 +14,7 @@ import httpx
 from pdfminer.high_level import extract_text as pdfminer_extract_text
 
 from .raw_pdf_store import persist_raw_pdf_bytes
+from .text_sanitizer import sanitize_text_for_postgres
 from .title_resolver import ResolvedPaper
 
 logger = logging.getLogger(__name__)
@@ -315,10 +316,44 @@ def fetch_and_extract_full_text(
             client.close()
 
 
+def fetch_pdf_url_full_text(
+    pdf_url: str,
+    *,
+    paper_id: str,
+    source: str,
+    http_client: httpx.Client | None = None,
+    raw_pdf_store_dir: str | Path | None = None,
+) -> FullTextExtract:
+    client = http_client or _make_http_client()
+    owns_client = http_client is None
+    try:
+        extract, fetch_error = _fetch_pdf_source(
+            pdf_url,
+            paper_id=paper_id,
+            source=source,
+            http_client=client,
+            raw_pdf_store_dir=raw_pdf_store_dir,
+        )
+        if extract is not None:
+            return extract
+        return FullTextExtract(
+            paper_id=paper_id,
+            abstract=None,
+            intro=None,
+            pdf_url=pdf_url,
+            pdf_sha256=None,
+            source="failed",
+            fetch_error=fetch_error or "pdf_extract_failed",
+        )
+    finally:
+        if owns_client:
+            client.close()
+
+
 def _clean_section_text(text: str | None) -> str | None:
     if text is None:
         return None
-    cleaned = text.strip().replace("\f", "\n")
+    cleaned = sanitize_text_for_postgres(text.strip())
     return cleaned or None
 
 

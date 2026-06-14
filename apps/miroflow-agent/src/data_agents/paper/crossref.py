@@ -124,6 +124,7 @@ def enrich_paper_metadata_from_crossref(
             _normalize_optional_str(message.get("URL"))
             or f"https://doi.org/{normalized_doi}"
         ),
+        pdf_url=_extract_pdf_url(message.get("link")),
         enrichment_sources=("crossref",),
     )
     if not _has_enrichment_content(enrichment):
@@ -307,6 +308,20 @@ def _normalize_query_name(name: str) -> str:
     return normalized or name.strip()
 
 
+def _extract_pdf_url(value: object) -> str | None:
+    if not isinstance(value, list):
+        return None
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        content_type = _normalize_optional_str(item.get("content-type")) or ""
+        if "pdf" not in content_type.casefold():
+            continue
+        if url := _normalize_optional_str(item.get("URL")):
+            return url
+    return None
+
+
 def _contains_cjk(value: str) -> bool:
     return any("\u3400" <= char <= "\u9fff" for char in value)
 
@@ -337,6 +352,7 @@ def _has_enrichment_content(enrichment: PaperMetadataEnrichment) -> bool:
             enrichment.funders,
             enrichment.reference_count is not None,
             enrichment.source_url,
+            enrichment.pdf_url,
         )
     )
 

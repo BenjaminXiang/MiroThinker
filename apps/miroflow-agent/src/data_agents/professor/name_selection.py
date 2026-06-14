@@ -24,6 +24,8 @@ JUNK_NAME_TITLES = {
     "教师队伍",
     "全部教师",
     "教研团队",
+    "活动风采",
+    "仪器申请",
     "教研序列",
     "研究序列",
     "教辅序列",
@@ -46,6 +48,23 @@ JUNK_NAME_TITLES = {
     "院长寄语",
     "优质教育",
     "“师说”教授专访",
+    "个人简历",
+    "个人简介",
+    "教育经历",
+    "教育背景",
+    "工作经历",
+    "研究方向",
+    "研究领域",
+    "研究成果",
+    "学术成果",
+    "奖励荣誉",
+    "荣誉奖项",
+    "主要荣誉",
+    "学术兼职",
+    "代表性论文",
+    "代表性著作",
+    "主要专利成果",
+    "教学",
     "工作履历",
     "专任教师",
     "专职教师",
@@ -73,6 +92,29 @@ JUNK_NAME_TITLES = {
     "人才计划",
     "人才培养",
     "组织架构",
+    "中心介绍",
+    "交流合作",
+    "发展沿革",
+    "合作伙伴",
+    "校友",
+    "校友会",
+    "教工",
+    "未开通",
+    "相关教师",
+    "友情链接",
+    "面包屑",
+    "登录",
+    "党团工作",
+    "党的建设",
+    "团建工作",
+    "科研实践",
+    "科研方向",
+    "就业指导",
+    "书记｜院长信箱",
+    "书记|院长信箱",
+}
+LEGITIMATE_SHORT_CJK_NAME_EXCEPTIONS = {
+    "黄哲学",
 }
 EXACT_NON_PERSON_TITLES = {
     "教授",
@@ -80,11 +122,28 @@ EXACT_NON_PERSON_TITLES = {
     "助理教授",
     "讲席教授",
     "特聘教授",
+    "杰出教授",
+    "工程师",
+    "产业导师",
     "研究员",
     "副研究员",
     "讲师",
     "导师",
     "院士",
+    "院长",
+    "副院长",
+    "执行院长",
+    "常务副院长",
+    "书记",
+    "副书记",
+    "主任",
+    "副主任",
+    "系主任",
+    "副系主任",
+    "所长",
+    "副所长",
+    "中心主任",
+    "外事专员",
 }
 
 JUNK_NAME_TITLES_CASEFOLD = {
@@ -105,7 +164,16 @@ JUNK_NAME_TITLES_CASEFOLD = {
     "english string",
     "job openings admission alumni",
     "highly cited chinese researchers",
+    "highlighted news",
+    "lab introduction",
 }
+JUNK_NAME_SUFFIXES_CASEFOLD = (
+    " lab",
+    " laboratory",
+    " news",
+    " homepage",
+    "'s homepage",
+)
 JUNK_NAME_KEYWORDS = (
     "概况",
     "导航",
@@ -159,6 +227,7 @@ JUNK_NAME_SUFFIXES = (
     "服务",
     "工作",
     "活动",
+    "风采",
     "文字学",
     "文艺学",
     "哲学",
@@ -218,13 +287,36 @@ _FIELD_LABEL_MARKERS = (
 # pollution (e.g. "Prof. Dr. Anita Zehrer·MCI The Entrepreneurial ...").
 # Short · names (Uyghur/Tibetan personal names like 吾买尔·阿卜杜拉) must pass.
 _LONG_MIDDOT_THRESHOLD = 30
+_PAPER_EVIDENCE_TITLE_POLLUTION_MARKERS = (
+    "inventor:",
+    "inventors:",
+    "us patent",
+    "u.s. patent",
+    "patent no",
+    "patent number",
+    "cn patent",
+    "pct/",
+    "modified peptide nucleic acids and their use",
+    "授权发明专利",
+    "发明专利",
+    "专利号",
+)
+_PAPER_EVIDENCE_TITLE_POLLUTION_RE = re.compile(
+    r"\b(?:19|20)\d{2}\b.*\b(?:vol\.?|pp\.?|doi|journal|proceedings)\b"
+    r"|[.;]\s*(?:inventors?|authors?)\s*:",
+    re.IGNORECASE,
+)
 
 
 def _normalize_text(value: str | None) -> str | None:
     if value is None:
         return None
     normalized = " ".join(
-        value.replace("\ufeff", "").replace("\u3000", " ").split()
+        value.replace("\x00", "")
+        .replace("\ufeff", "")
+        .replace("\u200b", "")
+        .replace("\u3000", " ")
+        .split()
     ).strip()
     return normalized or None
 
@@ -275,7 +367,13 @@ def is_obvious_non_person_name(value: str | None) -> bool:
         return True
     if normalized in EXACT_NON_PERSON_TITLES:
         return True
-    if normalized.casefold() in JUNK_NAME_TITLES_CASEFOLD:
+    bracket_stripped = re.sub(r"[（(][^()（）]*[）)]$", "", normalized).strip()
+    if bracket_stripped in EXACT_NON_PERSON_TITLES:
+        return True
+    casefolded = normalized.casefold()
+    if casefolded in JUNK_NAME_TITLES_CASEFOLD:
+        return True
+    if len(normalized.split()) >= 2 and casefolded.endswith(JUNK_NAME_SUFFIXES_CASEFOLD):
         return True
     if _looks_like_journal_or_topic_name(normalized):
         return True
@@ -285,6 +383,8 @@ def is_obvious_non_person_name(value: str | None) -> bool:
         return True
     if len(normalized) > 12:
         return False
+    if normalized in LEGITIMATE_SHORT_CJK_NAME_EXCEPTIONS:
+        return False
     if any(keyword in normalized for keyword in JUNK_NAME_KEYWORDS):
         return True
     if normalized.startswith(JUNK_NAME_PREFIXES):
@@ -292,6 +392,30 @@ def is_obvious_non_person_name(value: str | None) -> bool:
     if normalized.endswith(JUNK_NAME_SUFFIXES):
         return True
     return False
+
+
+def looks_like_professor_paper_evidence_title_pollution(value: str | None) -> bool:
+    normalized = _normalize_text(value)
+    if not normalized:
+        return False
+    casefolded = normalized.casefold()
+    if any(marker in casefolded for marker in _PAPER_EVIDENCE_TITLE_POLLUTION_MARKERS):
+        return True
+    if len(normalized) >= 40 and _PAPER_EVIDENCE_TITLE_POLLUTION_RE.search(normalized):
+        return True
+    return False
+
+
+def is_unsafe_professor_paper_evidence_identity(
+    canonical_name: str | None,
+    *,
+    affiliation_title: str | None = None,
+) -> bool:
+    if is_obvious_non_person_name(canonical_name):
+        return True
+    if looks_like_profile_blob(canonical_name):
+        return True
+    return looks_like_professor_paper_evidence_title_pollution(affiliation_title)
 
 
 def looks_like_profile_blob(value: str | None) -> bool:
@@ -340,4 +464,4 @@ def select_canonical_name(
         return roster
     if is_same_person_name_variant(roster, extracted):
         return choose_richer_name(extracted, roster)
-    return extracted
+    return roster

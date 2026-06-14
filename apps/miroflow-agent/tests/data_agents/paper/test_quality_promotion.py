@@ -67,16 +67,16 @@ def test_promotes_to_ready_when_all_required_fields_present():
     assert decision.reason == "all_required_fields_present"
 
 
-def test_boilerplate_rejection_takes_precedence_over_required_fields():
-    """Even if everything else is filled, a boilerplate-judge reject
-    drives the row to terminal `rejected` and the caller nulls the
-    summary."""
+def test_boilerplate_rejection_keeps_canonical_row_retryable():
+    """A boilerplate-judge reject only rejects the generated summary.
+    The canonical paper remains retryable because DOI/page evidence may
+    still be valid and useful for later enrichment."""
     decision = evaluate_paper_promotion(
         current_status=NEEDS_ENRICHMENT,
         signals=_all_fields_present(boilerplate_rejected=True),
     )
-    assert decision.next_status == REJECTED
-    assert decision.reason == "boilerplate_rejected"
+    assert decision.next_status == PARTIAL
+    assert decision.reason == "summary_rejected_needs_retry"
 
 
 def test_partial_when_some_enrichment_fields_present():

@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Button,
+  Checkbox,
   Form,
   Input,
+  InputNumber,
   message,
   Modal,
+  Radio,
   Space,
   Table,
   Tag,
@@ -23,8 +26,10 @@ import {
   deleteSeed,
   fetchSeeds,
   type Seed,
+  type SeedFailureClass,
   type SeedLastRunStatus,
   type SeedPayload,
+  type SeedTriggerMode,
   triggerSeed,
   updateSeed,
 } from "../api";
@@ -38,6 +43,14 @@ const STATUS_LABELS: Record<SeedLastRunStatus, string> = {
   in_progress: "运行中",
   never_run: "未运行",
   adapter_missing: "缺 adapter",
+};
+const FAILURE_CLASS_LABELS: Record<SeedFailureClass, string> = {
+  adapter_missing: "缺 adapter",
+  fetch_blocked: "抓取受阻",
+  manual_interruption: "人工中断",
+  parser_low_quality: "解析低质",
+  pipeline_exception: "运行异常",
+  success: "成功",
 };
 
 const STATUS_TAG_COLOR: Record<SeedLastRunStatus, string> = {
@@ -67,6 +80,10 @@ export default function Seeds() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>("all");
   const [editing, setEditing] = useState<Seed | "new" | null>(null);
+  const [triggering, setTriggering] = useState<Seed | null>(null);
+  const [triggerMode, setTriggerMode] = useState<SeedTriggerMode>("sample");
+  const [triggerLimit, setTriggerLimit] = useState<number | null>(3);
+  const [fullConfirmed, setFullConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [triggeringSeedId, setTriggeringSeedId] = useState<number | null>(null);
   const [form] = Form.useForm();
@@ -135,6 +152,21 @@ export default function Seeds() {
     form.resetFields();
   };
 
+  const openTrigger = (seed: Seed) => {
+    setTriggering(seed);
+    setTriggerMode("sample");
+    setTriggerLimit(3);
+    setFullConfirmed(false);
+  };
+
+  const closeTriggerModal = () => {
+    if (triggeringSeedId !== null) return;
+    setTriggering(null);
+    setTriggerMode("sample");
+    setTriggerLimit(3);
+    setFullConfirmed(false);
+  };
+
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
@@ -196,10 +228,23 @@ export default function Seeds() {
     });
   };
 
-  const handleTrigger = async (seed: Seed) => {
+  const handleTrigger = async () => {
+    if (!triggering) return;
+    if (triggerMode === "sample" && (!triggerLimit || triggerLimit <= 0)) {
+      messageApi.error("sample 需要正数 limit");
+      return;
+    }
+    if (triggerMode === "full" && !fullConfirmed) {
+      messageApi.error("请确认 full run");
+      return;
+    }
+    const seed = triggering;
     try {
       setTriggeringSeedId(seed.id);
-      await triggerSeed(seed.id);
+      await triggerSeed(seed.id, {
+        mode: triggerMode,
+        limit: triggerMode === "sample" ? triggerLimit : null,
+      });
       setSeeds((rows) =>
         rows.map((row) =>
           row.id === seed.id
@@ -208,6 +253,7 @@ export default function Seeds() {
         ),
       );
       messageApi.success("已开始爬取");
+      closeTriggerModal();
     } catch (err) {
       messageApi.error(err instanceof Error ? err.message : "触发失败");
       await reload();
@@ -274,12 +320,22 @@ export default function Seeds() {
       dataIndex: "last_run_status",
       key: "last_run_status",
       width: 160,
-      render: (status: SeedLastRunStatus) => (
-        <Tag color={STATUS_TAG_COLOR[status]} className="seed-status-tag">
-          {STATUS_LABELS[status]}
-          <span className="seed-status-raw">{status}</span>
-        </Tag>
-      ),
+      render: (status: SeedLastRunStatus, seed) => {
+        const label =
+          status === "failure" && seed.failure_class
+            ? FAILURE_CLASS_LABELS[seed.failure_class]
+            : STATUS_LABELS[status];
+        const raw =
+          status === "failure" && seed.failure_class
+            ? seed.failure_class
+            : status;
+        return (
+          <Tag color={STATUS_TAG_COLOR[status]} className="seed-status-tag">
+            {label}
+            <span className="seed-status-raw">{raw}</span>
+          </Tag>
+        );
+      },
     },
     {
       title: "操作",
@@ -303,10 +359,10 @@ export default function Seeds() {
                 icon={<ThunderboltOutlined />}
                 disabled={triggerDisabled}
                 loading={triggeringSeedId === seed.id}
-                onClick={() => void handleTrigger(seed)}
+                onClick={() => openTrigger(seed)}
                 className="seed-trigger-btn"
               >
-                立即爬取
+                触发
               </Button>
             </Tooltip>
             <Button
@@ -450,6 +506,61 @@ export default function Seeds() {
             <Input placeholder="https://faculty.sustech.edu.cn" />
           </Form.Item>
         </Form>
+      </Modal>
+      <Modal
+        title="触发 seed"
+        open={triggering !== null}
+        onCancel={closeTriggerModal}
+        onOk={() => void handleTrigger()}
+        okText={triggerMode === "full" ? "确认 full run" : "开始"}
+        cancelText="取消"
+        confirmLoading={triggeringSeedId !== null}
+        destroyOnHidden
+      >
+        {triggering ? (
+          <div className="seed-trigger-modal">
+            <div className="seed-trigger-identity">
+              <strong>{triggering.school}</strong>
+              <span>
+                {triggering.department ? ` · ${triggering.department}` : " · school-wide"}
+              </span>
+              <code>{triggering.seed_url}</code>
+            </div>
+            <Radio.Group
+              value={triggerMode}
+              onChange={(e) => {
+                setTriggerMode(e.target.value);
+                setFullConfirmed(false);
+              }}
+              className="seed-trigger-mode"
+            >
+              <Radio.Button value="sample">sample</Radio.Button>
+              <Radio.Button value="preview">preview</Radio.Button>
+              <Radio.Button value="full">full</Radio.Button>
+            </Radio.Group>
+            {triggerMode === "sample" ? (
+              <Form layout="vertical" className="seed-trigger-limit-form">
+                <Form.Item label="limit" required>
+                  <InputNumber
+                    min={1}
+                    max={1000}
+                    value={triggerLimit}
+                    onChange={(value) => setTriggerLimit(value)}
+                    className="seed-trigger-limit"
+                  />
+                </Form.Item>
+              </Form>
+            ) : null}
+            {triggerMode === "full" ? (
+              <Checkbox
+                checked={fullConfirmed}
+                onChange={(e) => setFullConfirmed(e.target.checked)}
+              >
+                确认执行 full run
+              </Checkbox>
+            ) : null}
+          </div>
+        ) : null}
       </Modal>
     </div>
   );

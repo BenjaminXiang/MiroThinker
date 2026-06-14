@@ -84,6 +84,8 @@ export interface ReleasedObject {
   evidence: Evidence[];
   last_updated: string;
   quality_status: string;
+  lifecycle_state?: "active" | "archived" | "merged_to_other_school";
+  lifecycle_merged_into_id?: string | null;
 }
 
 export interface Evidence {
@@ -99,6 +101,51 @@ export interface RelatedResponse {
   papers: ReleasedObject[];
   patents: ReleasedObject[];
   companies: ReleasedObject[];
+}
+
+export interface AdminProfessorIssueReason {
+  rule_id: string | null;
+  stage: string | null;
+  severity: string | null;
+  description: string | null;
+}
+
+export interface AdminProfessorSections {
+  identity: Record<string, unknown>;
+  contact: Record<string, unknown>;
+  research_output: {
+    research_overview?: string | null;
+    facts?: Record<string, unknown>[];
+    papers?: Record<string, unknown>[];
+    patents?: Record<string, unknown>[];
+    paper_summary?: string | null;
+    patent_summary?: string | null;
+  };
+  experience: {
+    status: "populated" | "not_extracted";
+    affiliations?: Record<string, unknown>[];
+  };
+  cleaned_summary: Record<string, unknown>;
+  sources_evidence: {
+    sources?: Record<string, unknown>[];
+    admin_actions?: Record<string, unknown>[];
+  };
+  quality_diagnosis: {
+    status: string;
+    reasons: AdminProfessorIssueReason[];
+    open_issue_count: number;
+  };
+}
+
+export interface AdminProfessorDetail {
+  professor_id: string;
+  sections: AdminProfessorSections;
+}
+
+export interface AdminProfessorMarkResponse {
+  professor_id: string;
+  action: "confirm_ready" | "send_to_review" | "flag_recrawl";
+  quality_status: string;
 }
 
 export interface FilterOptionsResponse {
@@ -120,6 +167,17 @@ export interface UploadResponse {
   task_id: string;
   source_page_id: string;
   dry_run: boolean;
+}
+
+export interface ActiveDuplicateUploadResponse {
+  is_active_duplicate: boolean;
+  file_content_hash: string;
+  active_task_id: string | null;
+  active_status: string | null;
+  active_batch_id: string | null;
+  active_batch_status: string | null;
+  filename: string | null;
+  message: string | null;
 }
 
 async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
@@ -182,6 +240,12 @@ export function fetchRelated(
   return fetchJSON(`/api/${domain}/${id}/related`);
 }
 
+export function fetchAdminProfessorDetail(
+  id: string
+): Promise<AdminProfessorDetail> {
+  return fetchJSON(`/api/admin/professor/${id}`);
+}
+
 // --- Mutations ---
 
 export function updateRecord(
@@ -198,6 +262,48 @@ export function updateRecord(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+}
+
+export function markAdminProfessor(
+  id: string,
+  body: {
+    action: "confirm_ready" | "send_to_review" | "flag_recrawl";
+    actor?: string;
+    note?: string;
+  }
+): Promise<AdminProfessorMarkResponse> {
+  return fetchJSON(`/api/admin/professor/${id}/mark`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+export function reviewCompanyEnrichmentItem(
+  companyId: string,
+  targetType: "product" | "scenario",
+  targetId: string,
+  body: {
+    action: "accept" | "reject" | "needs_review";
+    actor?: string;
+    note?: string;
+  }
+): Promise<{
+  company_id: string;
+  target_type: string;
+  target_id: string;
+  action: string;
+  previous_status: string | null;
+  new_status: string;
+}> {
+  return fetchJSON(
+    `/api/company/${companyId}/enrichment/${targetType}/${targetId}/review`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }
+  );
 }
 
 export function deleteRecord(domain: string, id: string): Promise<void> {
@@ -243,6 +349,14 @@ export function uploadFile(
   });
 }
 
+export function checkActiveDuplicateUpload(
+  domain: "company" | "patent",
+  fileContentHash: string
+): Promise<ActiveDuplicateUploadResponse> {
+  const qs = new URLSearchParams({ file_content_hash: fileContentHash });
+  return fetchJSON(`/api/upload/${domain}/active-duplicate?${qs.toString()}`);
+}
+
 // --- Pipeline runs ---
 
 export interface PipelineRunSourcePage {
@@ -251,6 +365,68 @@ export interface PipelineRunSourcePage {
   title: string | null;
   clean_text_path: string | null;
   fetched_at: string | null;
+}
+
+export interface CompanyEnrichmentCompanyDiagnostic {
+  company_id: string;
+  status: string;
+  current_stage: string | null;
+  miss_reason: string | null;
+  last_error: string | null;
+  query_count: number;
+  source_result_count: number;
+  accepted_source_count: number;
+  rejected_source_count: number;
+  product_count: number;
+  scenario_count: number;
+  official_product_count: number;
+  funding_event_count: number;
+  vector_refreshed: boolean;
+  stage_status: Record<string, unknown>;
+  updated_at: string | null;
+}
+
+export interface CompanyEnrichmentBatchStatus {
+  batch_id: string;
+  status: string;
+  current_stage: string | null;
+  progress_percent: number;
+  companies_total: number;
+  companies_selected: number;
+  companies_processed: number;
+  companies_succeeded: number;
+  companies_failed: number;
+  query_count: number;
+  source_result_count: number;
+  accepted_source_count: number;
+  rejected_source_count: number;
+  product_count: number;
+  scenario_count: number;
+  official_product_count: number;
+  funding_event_count: number;
+  vector_refreshed_count: number;
+  llm_failure_count: number;
+  status_counts: Record<string, number>;
+  current_stage_counts: Record<string, number>;
+  miss_reasons: Record<string, number>;
+  official_failure_reasons: Record<string, number>;
+  rejected_candidate_reasons: Record<string, number>;
+  source_counts_by_adapter: Record<string, Record<string, number>>;
+  runner_pid: number | null;
+  runner_log_path: string | null;
+  runner_heartbeat_at: string | null;
+  runner_last_seen_at: string | null;
+  runner_is_stale: boolean;
+  last_completed_company_id: string | null;
+  miss_reason_buckets: Record<string, number>;
+  quality_report: Record<string, unknown>;
+  company_diagnostics: CompanyEnrichmentCompanyDiagnostic[];
+  company_diagnostics_truncated: boolean;
+  last_error: string | null;
+  created_at: string;
+  started_at: string | null;
+  finished_at: string | null;
+  updated_at: string;
 }
 
 export interface PipelineRun {
@@ -268,6 +444,7 @@ export interface PipelineRun {
 
 export interface PipelineRunDetail extends PipelineRun {
   source_pages: PipelineRunSourcePage[];
+  company_enrichment_batches?: CompanyEnrichmentBatchStatus[];
 }
 
 export interface PipelineRunListResponse {
@@ -299,6 +476,49 @@ export function fetchPipelineRuns(params: {
 
 export function fetchPipelineRun(runId: string): Promise<PipelineRunDetail> {
   return fetchJSON(`/api/pipeline/runs/${runId}`);
+}
+
+export function fetchCompanyEnrichmentBatch(
+  batchId: string
+): Promise<CompanyEnrichmentBatchStatus> {
+  return fetchJSON(`/api/pipeline/company-enrichment-batches/${batchId}`);
+}
+
+export function startCompanyEnrichmentBatch(
+  batchId: string,
+  body: {
+    limit?: number | null;
+    chunk_size?: number;
+    stage_preset?: "trusted_xlsx" | "high_trust_sources" | "full";
+    include_failed?: boolean;
+    skip_milvus?: boolean;
+  }
+): Promise<PipelineRunActionResponse> {
+  return fetchJSON(`/api/pipeline/company-enrichment-batches/${batchId}/start`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+export function restartStaleCompanyEnrichmentBatch(
+  batchId: string,
+  body: {
+    limit?: number | null;
+    chunk_size?: number;
+    stage_preset?: "trusted_xlsx" | "high_trust_sources" | "full";
+    include_failed?: boolean;
+    skip_milvus?: boolean;
+  }
+): Promise<PipelineRunActionResponse> {
+  return fetchJSON(
+    `/api/pipeline/company-enrichment-batches/${batchId}/restart-stale`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }
+  );
 }
 
 export function triggerMilvusBackfill(
@@ -547,6 +767,14 @@ export type SeedLastRunStatus =
   | "in_progress"
   | "never_run"
   | "adapter_missing";
+export type SeedFailureClass =
+  | "adapter_missing"
+  | "fetch_blocked"
+  | "manual_interruption"
+  | "parser_low_quality"
+  | "pipeline_exception"
+  | "success";
+export type SeedTriggerMode = "full" | "sample" | "preview";
 
 export interface Seed {
   id: number;
@@ -555,6 +783,7 @@ export interface Seed {
   seed_url: string;
   last_run_at: string | null;
   last_run_status: SeedLastRunStatus;
+  failure_class: SeedFailureClass | null;
   created_at: string;
   updated_at: string;
 }
@@ -569,6 +798,11 @@ export interface SeedTriggerResponse {
   run_id: string;
   seed_id: number;
   status: "in_progress";
+}
+
+export interface SeedTriggerRequest {
+  mode: SeedTriggerMode;
+  limit?: number | null;
 }
 
 export function fetchSeeds(): Promise<Seed[]> {
@@ -599,6 +833,13 @@ export async function deleteSeed(id: number): Promise<void> {
   }
 }
 
-export function triggerSeed(id: number): Promise<SeedTriggerResponse> {
-  return fetchJSON(`/api/seeds/${id}/trigger`, { method: "POST" });
+export function triggerSeed(
+  id: number,
+  payload: SeedTriggerRequest = { mode: "full" }
+): Promise<SeedTriggerResponse> {
+  return fetchJSON(`/api/seeds/${id}/trigger`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
 }

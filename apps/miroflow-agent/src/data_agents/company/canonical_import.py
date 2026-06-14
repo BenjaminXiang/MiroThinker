@@ -13,20 +13,23 @@ from openpyxl import load_workbook
 from psycopg import Connection
 from psycopg.types.json import Jsonb
 
-from ..normalization import normalize_company_name, normalize_person_name
+from ..normalization import normalize_company_name
 from ..storage.postgres.connection import connect
 from ..storage.postgres.pipeline_run import require_real_run_id
-from ._company_id import generate_company_id
-from .team_parser import parse_team_raw
+from ._company_id import _extract_host, _is_shared_identity_host, generate_company_id
+from .team_parser import structure_team_raw_with_llm
+from .team_persistence import persist_structured_team_members
 
 
 HEADER_ALIASES: dict[str, str] = {
     "序号": "sequence_no",
     "项目名称": "project_name",
+    "行业": "industry",
     "行业领域": "industry",
     "子领域": "sub_industry",
     "业务": "business",
     "地区": "region",
+    "省份地区": "region",
     "投资轮次": "latest_funding_round",
     "投资时间": "latest_funding_time_raw",
     "投资金额": "latest_funding_amount_raw",
@@ -43,14 +46,24 @@ HEADER_ALIASES: dict[str, str] = {
     "备注": "remarks",
     "公司名称": "company_name_xlsx",
     "企业名称": "company_name_xlsx",
+    "统一社会信用代码": "unified_credit_code",
+    "社会信用代码": "unified_credit_code",
+    "信用代码": "unified_credit_code",
     "国别": "country_xlsx",
     "成立日期": "established_date",
+    "成立时间": "established_date",
     "网址": "website_xlsx",
     "法人代表": "legal_representative",
+    "法定代表人": "legal_representative",
     "团队": "team_raw",
+    "企业类型": "company_type",
     "注册地址": "registered_address",
     "企业联系电话": "contact_phone",
+    "邮箱": "contact_email",
     "联系邮箱": "contact_email",
+    "产品简介": "product_intro",
+    "产品特点": "product_features",
+    "应用场景": "application_scenarios_raw",
     "成立年限": "years_established",
     "参保人数": "reported_insured_count",
     "股东数": "reported_shareholder_count",
@@ -92,6 +105,12 @@ class ImportReport:
     team_members_inserted: int
     funding_events_inserted: int
     lineage_rows: int
+
+
+@dataclass(frozen=True, slots=True)
+class XlsxBaselineReadiness:
+    quality_status: str
+    blockers: tuple[str, ...]
 
 
 @dataclass(slots=True)
@@ -296,6 +315,134 @@ def _load_merged_rows(
         workbook.close()
 
 
+def build_company_import_preflight(
+    xlsx_path: Path,
+    *,
+    existing_company_ids: set[str] | frozenset[str] | None = None,
+    existing_companies: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Build a no-write canonical identity and field-coverage report for an upload."""
+    rows_read, merged_rows = _load_merged_rows(xlsx_path)
+    existing_ids = set(existing_company_ids or frozenset())
+    if existing_companies:
+        existing_ids.update(str(company_id) for company_id in existing_companies)
+    generated_groups: dict[str, list[dict[str, Any]]] = {}
+    field_coverage: dict[str, int] = {}
+    shared_domain_rows: list[dict[str, Any]] = []
+    unresolved_identity_rows: list[dict[str, Any]] = []
+    overlap_diff_rows: list[dict[str, Any]] = []
+
+    for merged_row in merged_rows:
+        values = merged_row.values
+        for key, value in values.items():
+            if _has_meaningful_baseline_value(value):
+                field_coverage[key] = field_coverage.get(key, 0) + 1
+
+        name = values.get("company_name_xlsx") or ""
+        host = _extract_host(values.get("website_xlsx"))
+        row_summary: dict[str, Any] = {
+            "source_row_number": merged_row.source_row_number,
+            "source_row_numbers": list(merged_row.source_row_numbers),
+            "company_name": name,
+            "normalized_name": normalize_company_name(name),
+            "website_host": host,
+        }
+        try:
+            generated_id = generate_company_id(
+                unified_credit_code=values.get("unified_credit_code"),
+                website=values.get("website_xlsx"),
+                registered_name=name,
+            )
+        except ValueError as exc:
+            row_summary["reason"] = str(exc)
+            unresolved_identity_rows.append(row_summary)
+            continue
+        row_summary["generated_company_id"] = generated_id
+        generated_groups.setdefault(generated_id, []).append(row_summary)
+        if _is_shared_identity_host(host):
+            shared_domain_rows.append(row_summary)
+        existing = (existing_companies or {}).get(generated_id)
+        if existing:
+            diffs = _existing_company_diffs(values, existing)
+            if diffs:
+                overlap_diff_rows.append(
+                    {
+                        "generated_company_id": generated_id,
+                        "source_row_number": merged_row.source_row_number,
+                        "company_name": name,
+                        "diffs": diffs,
+                    }
+                )
+
+    duplicate_groups = [
+        rows for rows in generated_groups.values() if len(rows) > 1
+    ]
+    identity_conflicts = [
+        rows
+        for rows in duplicate_groups
+        if len(
+            {
+                str(row.get("normalized_name") or row.get("company_name") or "").strip()
+                for row in rows
+                if row.get("normalized_name") or row.get("company_name")
+            }
+        )
+        > 1
+    ]
+    conflict_rows = [row for rows in identity_conflicts for row in rows]
+    matched_count = sum(1 for company_id in generated_groups if company_id in existing_ids)
+    new_count = len(generated_groups) - matched_count
+
+    return {
+        "rows_read": rows_read,
+        "records_parsed": len(merged_rows),
+        "generated_company_ids": len(generated_groups),
+        "new_company_count": new_count,
+        "matched_existing_count": matched_count,
+        "existing_match_lookup": "available" if existing_company_ids is not None else "not_run",
+        "duplicate_generated_company_id_groups": len(duplicate_groups),
+        "duplicate_generated_company_id_rows": sum(len(rows) for rows in duplicate_groups),
+        "identity_conflict_count": len(conflict_rows),
+        "identity_conflict_groups": len(identity_conflicts),
+        "identity_conflict_samples": conflict_rows[:20],
+        "unresolved_identity_count": len(unresolved_identity_rows),
+        "unresolved_identity_samples": unresolved_identity_rows[:20],
+        "overlap_diff_count": len(overlap_diff_rows),
+        "overlap_diff_samples": overlap_diff_rows[:20],
+        "shared_domain_risk_count": len(shared_domain_rows),
+        "shared_domain_risk_samples": shared_domain_rows[:20],
+        "field_coverage": dict(sorted(field_coverage.items())),
+    }
+
+
+def _existing_company_diffs(
+    values: dict[str, str | None],
+    existing: dict[str, Any],
+) -> dict[str, dict[str, str]]:
+    comparisons = {
+        "registered_name": (
+            existing.get("registered_name") or existing.get("canonical_name"),
+            values.get("company_name_xlsx"),
+        ),
+        "website": (existing.get("website"), values.get("website_xlsx")),
+    }
+    diffs: dict[str, dict[str, str]] = {}
+    for field, (existing_value, incoming_value) in comparisons.items():
+        existing_text = str(existing_value or "").strip()
+        incoming_text = str(incoming_value or "").strip()
+        if not existing_text or not incoming_text:
+            continue
+        if existing_text == incoming_text:
+            continue
+        if field == "registered_name" and normalize_company_name(existing_text) == normalize_company_name(incoming_text):
+            continue
+        diffs[field] = {
+            "existing": existing_text,
+            "incoming": incoming_text,
+        }
+    return diffs
+
+
 def _detect_header_row(sheet, max_header_scan_rows: int) -> tuple[int, dict[int, str]]:
     best_row_index = 0
     best_mapping: dict[int, str] = {}
@@ -463,6 +610,62 @@ def _insert_import_batch(
     return row["batch_id"]
 
 
+_BASELINE_READINESS_FIELDS = (
+    "industry",
+    "sub_industry",
+    "business",
+    "region",
+    "description",
+    "website_xlsx",
+    "latest_funding_round",
+    "latest_funding_time_raw",
+    "latest_funding_amount_raw",
+    "latest_funding_cny_wan",
+    "latest_investors_raw",
+    "team_raw",
+    "reported_patent_count",
+    "reported_news_count",
+    "reported_funding_round_count",
+    "reported_total_funding_raw",
+    "reported_valuation_raw",
+    "project_name",
+    "registered_address",
+    "registered_capital",
+)
+
+
+def _has_meaningful_baseline_value(value: object) -> bool:
+    if value is None:
+        return False
+    text = str(value).strip()
+    return bool(text) and text not in _MISSING_MARKERS
+
+
+def _evaluate_xlsx_baseline_readiness(
+    values: dict[str, str | None],
+    *,
+    identity_status: str = "resolved",
+    has_latest_snapshot: bool = True,
+) -> XlsxBaselineReadiness:
+    blockers: list[str] = []
+    if identity_status != "resolved":
+        blockers.append("unresolved_identity")
+    if not has_latest_snapshot:
+        blockers.append("missing_latest_snapshot")
+    if not _has_meaningful_baseline_value(values.get("company_name_xlsx")):
+        blockers.append("missing_company_name")
+    if not any(
+        _has_meaningful_baseline_value(values.get(key))
+        for key in _BASELINE_READINESS_FIELDS
+    ):
+        blockers.append("missing_meaningful_baseline_field")
+
+    return XlsxBaselineReadiness(
+        quality_status="ready" if not blockers else "needs_review",
+        blockers=tuple(blockers),
+    )
+
+
 def _upsert_company(
     conn: Connection,
     *,
@@ -480,7 +683,7 @@ def _upsert_company(
         raise ValueError(f"unable to normalize company name: {registered_name}")
 
     company_id = generate_company_id(
-        unified_credit_code=None,
+        unified_credit_code=values.get("unified_credit_code"),
         website=values.get("website_xlsx"),
         registered_name=registered_name,
     )
@@ -498,11 +701,13 @@ def _upsert_company(
             city or "",
         )
     )
+    readiness = _evaluate_xlsx_baseline_readiness(values)
 
     conn.execute(
         """
         INSERT INTO company (
             company_id,
+            unified_credit_code,
             canonical_name,
             registered_name,
             website,
@@ -512,23 +717,31 @@ def _upsert_company(
             is_shenzhen,
             country,
             identity_status,
+            quality_status,
             first_seen_batch_id,
             first_seen_at,
             last_refreshed_at,
             run_id
         )
         VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, now(), now(), %s
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, now(), now(), %s
         )
         ON CONFLICT (company_id) DO UPDATE
         SET last_refreshed_at = EXCLUDED.last_refreshed_at,
+            unified_credit_code = COALESCE(company.unified_credit_code, EXCLUDED.unified_credit_code),
             website = COALESCE(company.website, EXCLUDED.website),
             registered_name = COALESCE(company.registered_name, EXCLUDED.registered_name),
+            quality_status = CASE
+                WHEN EXCLUDED.quality_status = 'ready' THEN 'ready'
+                WHEN company.quality_status IS NULL THEN EXCLUDED.quality_status
+                ELSE company.quality_status
+            END,
             run_id = EXCLUDED.run_id,
             updated_at = now()
         """,
         (
             company_id,
+            values.get("unified_credit_code"),
             canonical_name,
             registered_name,
             values.get("website_xlsx"),
@@ -538,6 +751,7 @@ def _upsert_company(
             is_shenzhen,
             values.get("country_xlsx") or "国内",
             "resolved",
+            readiness.quality_status,
             batch_id,
             run_id,
         ),
@@ -685,33 +899,18 @@ def _insert_team_members(
     snapshot_id: UUID,
     team_raw: str | None,
 ) -> int:
-    inserted = 0
-    for member_order, member in enumerate(parse_team_raw(team_raw), start=1):
-        conn.execute(
-            """
-            INSERT INTO company_team_member (
-                company_id,
-                snapshot_id,
-                member_order,
-                raw_name,
-                raw_role,
-                raw_intro,
-                normalized_name
-            )
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """,
-            (
-                company_id,
-                snapshot_id,
-                member_order,
-                member.raw_name,
-                member.raw_role,
-                member.raw_intro,
-                normalize_person_name(member.raw_name),
-            ),
-        )
-        inserted += 1
-    return inserted
+    members = structure_team_raw_with_llm(
+        team_raw,
+        company_name=company_id,
+        llm_client=None,
+        llm_model="fallback",
+    )
+    return persist_structured_team_members(
+        conn,
+        company_id=company_id,
+        snapshot_id=snapshot_id,
+        members=members,
+    )
 
 
 def _upsert_funding_event(

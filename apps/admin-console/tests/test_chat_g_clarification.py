@@ -254,6 +254,48 @@ def test_paper_entity_id_hint_bypasses_g(
     assert called["classifier"] is False
 
 
+def test_exact_english_paper_summary_query_cleans_title(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seen: dict[str, str] = {}
+    monkeypatch.setenv("ADMIN_CONSOLE_PUBLIC_BASE_URL", "http://100.64.0.4:5180/")
+
+    def lookup_paper(_conn, *, title: str) -> list[dict[str, Any]]:
+        seen["title"] = title
+        return [
+            {
+                "paper_id": "PAPER-35204DCCD66B",
+                "title_clean": "Communication Efficient Federated Learning with Adaptive Quantization",
+                "year": 2022,
+                "venue": "ACM Transactions on Intelligent Systems and Technology",
+                "citation_count": None,
+            }
+        ]
+
+    monkeypatch.setattr(chat_module, "_lookup_paper", lookup_paper)
+
+    response = chat_module.chat(
+        chat_module.ChatRequest(
+            query=(
+                "请介绍论文 Communication Efficient Federated Learning with "
+                "Adaptive Quantization 的摘要"
+            ),
+        ),
+        response=Response(),
+        conn=object(),
+    )
+
+    assert seen["title"] == (
+        "Communication Efficient Federated Learning with Adaptive Quantization"
+    )
+    assert response.query_type == "A_paper_profile"
+    assert response.citations[0].id == "PAPER-35204DCCD66B"
+    assert response.citations[0].url == (
+        "http://100.64.0.4:5180/paper/PAPER-35204DCCD66B"
+    )
+    assert "browse#paper" not in str(response.citations[0].url)
+
+
 def test_g_patent_query_returns_patent_clarification(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

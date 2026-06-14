@@ -1,0 +1,10 @@
+{
+  "query_count": 10,
+  "row_count": 244,
+  "queries_with_candidates": 10,
+  "output_csv": "/home/longxiang/MiroThinker/.agents/runs/company-prd-acceptance-closure/company_candidate_pool_10_unlabeled.csv",
+  "retrieval_top_k": 20,
+  "lexical_limit": 30,
+  "pool_limit": 25,
+  "allow_fallback_reranker": false
+}

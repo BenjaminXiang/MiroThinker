@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
+from backend.api.admin_professors import router as admin_professors_router
 from backend.api.batch import router as batch_router
 from backend.api.chat import router as chat_router
 from backend.api.data import router as data_router
@@ -69,6 +70,7 @@ app.include_router(review_router)
 app.include_router(chat_router)
 app.include_router(pipeline_issues_router)
 app.include_router(seeds_router)
+app.include_router(admin_professors_router)
 app.include_router(domains_router)
 
 

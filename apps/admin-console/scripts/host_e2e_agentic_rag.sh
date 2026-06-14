@@ -153,15 +153,18 @@ import socket
 from urllib.parse import urlparse
 
 from openai import OpenAI
-from src.data_agents.professor.llm_profiles import resolve_professor_llm_settings
+from src.data_agents.professor.llm_profiles import (
+    build_non_thinking_extra_body,
+    resolve_professor_llm_settings,
+)
 
-s = resolve_professor_llm_settings("gemma4", include_profile=True)
+s = resolve_professor_llm_settings(None, include_profile=True)
 base_url = s.get("local_llm_base_url") or ""
 model = s.get("local_llm_model") or ""
 api_key = s.get("local_llm_api_key") or ""
 parsed = urlparse(base_url)
 port = parsed.port or (443 if parsed.scheme == "https" else 80 if parsed.scheme == "http" else None)
-print("profile=gemma4")
+print("profile=", s.get("llm_profile"))
 print("base_url_scheme=", parsed.scheme)
 print("base_url_host=", parsed.hostname)
 print("base_url_port=", port)
@@ -186,7 +189,7 @@ try:
         messages=[{"role": "user", "content": "ping"}],
         temperature=0.0,
         max_tokens=8,
-        extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+        extra_body=build_non_thinking_extra_body(model),
     )
     print("openai_probe=OK")
     print("openai_text=", (resp.choices[0].message.content or "")[:120].replace("\n", " "))

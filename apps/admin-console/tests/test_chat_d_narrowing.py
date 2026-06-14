@@ -71,6 +71,143 @@ def test_professor_list_pushes_last_result_set(
     assert ctx.last_result_set["professor"] == ["PROF-001", "PROF-002"]
 
 
+def test_institution_topic_list_hydrates_and_filters_retrieval_rows(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    store = _FakeSessionStore()
+    monkeypatch.setenv("CHAT_LLM_SYNTHESIS", "on")
+    monkeypatch.setattr(chat_module, "_SESSION_STORE", store)
+    monkeypatch.setattr(chat_module, "chat_use_retrieval_service", lambda: True)
+
+    class _FakeRetrievalService:
+        def retrieve(self, **kwargs: Any):
+            assert kwargs["query"] == "信息论编码"
+            assert kwargs["domains"] == ("professor",)
+            assert kwargs["filters"] == {"institution": "清华大学深圳国际研究生院"}
+            return [
+                chat_module.Evidence(
+                    object_type="professor",
+                    object_id="PROF-TSINGHUA",
+                    score=0.91,
+                    snippet="信息论编码",
+                    source_url=None,
+                    metadata={"name": "", "institution": ""},
+                ),
+                chat_module.Evidence(
+                    object_type="professor",
+                    object_id="PROF-SZU",
+                    score=0.88,
+                    snippet="信息论编码",
+                    source_url=None,
+                    metadata={"name": "深圳大学候选", "institution": "深圳大学"},
+                ),
+            ]
+
+    def lookup_by_id(_conn: Any, *, professor_id: str):
+        return {
+            "PROF-TSINGHUA": {
+                "professor_id": "PROF-TSINGHUA",
+                "canonical_name": "夏树涛",
+                "institution": "清华大学深圳国际研究生院",
+                "title": "教授",
+                "discipline_family": "信息科学",
+                "h_index": 12,
+                "citation_count": 345,
+                "paper_count": 67,
+            },
+            "PROF-SZU": {
+                "professor_id": "PROF-SZU",
+                "canonical_name": "深圳大学候选",
+                "institution": "深圳大学",
+                "title": "教授",
+                "discipline_family": "信息科学",
+                "h_index": 10,
+                "citation_count": 200,
+                "paper_count": 40,
+            },
+        }.get(professor_id)
+
+    monkeypatch.setattr(chat_module, "get_retrieval_service", lambda: _FakeRetrievalService())
+    monkeypatch.setattr(chat_module, "_lookup_professor_by_id", lookup_by_id)
+
+    response = chat_module.chat(
+        chat_module.ChatRequest(query="找清华大学深圳国际研究生院做信息论编码的教授"),
+        response=Response(),
+        conn=object(),
+    )
+
+    assert response.query_type == "A_prof_list_by_topic"
+    assert "夏树涛" in response.answer_text
+    assert "深圳大学候选" not in response.answer_text
+    assert response.citations[0].label == "夏树涛 - 清华大学深圳国际研究生院"
+    assert response.structured_payload["matched_professors"] == [
+        {
+            "professor_id": "PROF-TSINGHUA",
+            "canonical_name": "夏树涛",
+            "institution": "清华大学深圳国际研究生院",
+            "matched_topics": [],
+            "h_index": 12,
+            "citation_count": 345,
+            "paper_count": 67,
+        }
+    ]
+
+
+def test_institution_topic_list_falls_back_to_sql_when_retrieval_rows_filter_empty(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    store = _FakeSessionStore()
+    monkeypatch.setenv("CHAT_LLM_SYNTHESIS", "on")
+    monkeypatch.setattr(chat_module, "_SESSION_STORE", store)
+    monkeypatch.setattr(chat_module, "chat_use_retrieval_service", lambda: True)
+
+    class _FakeRetrievalService:
+        def retrieve(self, **kwargs: Any):
+            assert kwargs["query"] == "信息论编码"
+            assert kwargs["filters"] == {"institution": "清华大学深圳国际研究生院"}
+            return [
+                chat_module.Evidence(
+                    object_type="professor",
+                    object_id="PROF-SZU",
+                    score=0.88,
+                    snippet="信息论编码",
+                    source_url=None,
+                    metadata={"name": "深圳大学候选", "institution": "深圳大学"},
+                )
+            ]
+
+    monkeypatch.setattr(chat_module, "get_retrieval_service", lambda: _FakeRetrievalService())
+    monkeypatch.setattr(
+        chat_module,
+        "_lookup_professors_by_topic_sql",
+        lambda _conn, *, institutions, topic, limit: [
+            {
+                "professor_id": "PROF-TSINGHUA",
+                "canonical_name": "夏树涛",
+                "institution": "清华大学深圳国际研究生院",
+                "matched_topics": ["• 信息论编码"],
+                "h_index": 12,
+                "citation_count": 345,
+                "paper_count": 67,
+                "total_count": 1,
+            }
+        ],
+    )
+
+    response = chat_module.chat(
+        chat_module.ChatRequest(query="找清华大学深圳国际研究生院做信息论编码的教授"),
+        response=Response(),
+        conn=object(),
+    )
+
+    assert response.query_type == "A_prof_list_by_topic"
+    assert "夏树涛" in response.answer_text
+    assert "深圳大学候选" not in response.answer_text
+    assert response.structured_payload["matched_professors"][0]["matched_topics"] == [
+        "• 信息论编码"
+    ]
+
+
 def test_d_narrowing_filters_last_result_set(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

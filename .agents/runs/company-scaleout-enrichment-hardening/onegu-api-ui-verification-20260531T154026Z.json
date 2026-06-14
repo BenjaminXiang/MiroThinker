@@ -1,0 +1,25 @@
+{
+  "company_id": "COMP-17d68ddf7fd6",
+  "checks": [
+    {
+      "base": "http://127.0.0.1:18188",
+      "id": "COMP-17d68ddf7fd6",
+      "display_name": "一股科技",
+      "products_count": 1,
+      "scenarios_count": 8,
+      "first_product_name": "友心积分商城",
+      "first_scenario_name": "提升用户粘性",
+      "quality_status": "ready"
+    },
+    {
+      "base": "http://127.0.0.1:5180",
+      "id": "COMP-17d68ddf7fd6",
+      "display_name": "一股科技",
+      "products_count": 1,
+      "scenarios_count": 8,
+      "first_product_name": "友心积分商城",
+      "first_scenario_name": "提升用户粘性",
+      "quality_status": "ready"
+    }
+  ]
+}

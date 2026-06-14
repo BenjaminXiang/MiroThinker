@@ -6,6 +6,7 @@ from uuid import UUID
 from psycopg import Connection
 
 from src.data_agents.paper.full_text_fetcher import FullTextExtract
+from src.data_agents.paper.text_sanitizer import sanitize_text_for_postgres
 from src.data_agents.storage.postgres.pipeline_run import require_real_run_id
 
 logger = logging.getLogger(__name__)
@@ -51,17 +52,21 @@ def upsert_paper_full_text(
         """,
         (
             paper_id,
-            extract.abstract,
-            extract.intro,
-            extract.pdf_url,
+            _strip_nul_bytes(extract.abstract),
+            _strip_nul_bytes(extract.intro),
+            _strip_nul_bytes(extract.pdf_url),
             extract.pdf_sha256,
             extract.pdf_byte_size,
-            extract.raw_pdf_storage_ref,
+            _strip_nul_bytes(extract.raw_pdf_storage_ref),
             extract.source,
-            extract.fetch_error,
+            _strip_nul_bytes(extract.fetch_error),
             run_id,
         ),
     )
+
+
+def _strip_nul_bytes(value: str | None) -> str | None:
+    return sanitize_text_for_postgres(value)
 
 
 def paper_full_text_exists(conn: Connection, paper_id: str) -> bool:

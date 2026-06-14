@@ -19,7 +19,13 @@ _DOMAIN_ALIASES = {
 }
 
 _LIST_FILTER_PARAMS = {
-    "professors": {"institution", "department", "title", "discipline_family"},
+    "professors": {
+        "institution",
+        "department",
+        "title",
+        "discipline_family",
+        "lifecycle_state",
+    },
     "companies": {"industry", "hq_city", "is_shenzhen"},
     "papers": {"year", "venue"},
     "patents": {"patent_type"},

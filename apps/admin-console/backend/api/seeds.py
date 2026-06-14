@@ -6,13 +6,14 @@ import logging
 import os
 from concurrent.futures import Future, ThreadPoolExecutor
 from functools import lru_cache
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 import psycopg
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
+from psycopg.rows import dict_row
 
 from backend.deps import get_pg_conn
 from backend.storage.seeds import (
@@ -34,6 +35,26 @@ router = APIRouter(prefix="/api")
 logger = logging.getLogger(__name__)
 
 _DEFAULT_SEED_CONCURRENCY = 4
+_MAX_SEED_TRIGGER_LIMIT = 1000
+
+SeedTriggerMode = Literal["full", "sample", "preview"]
+
+
+class SeedTriggerRequest(BaseModel):
+    mode: SeedTriggerMode = "full"
+    limit: int | None = Field(default=None)
+
+    @model_validator(mode="after")
+    def _validate_mode_limit(self) -> "SeedTriggerRequest":
+        if self.limit is not None and (
+            self.limit <= 0 or self.limit > _MAX_SEED_TRIGGER_LIMIT
+        ):
+            raise ValueError(
+                f"limit must be between 1 and {_MAX_SEED_TRIGGER_LIMIT}"
+            )
+        if self.mode == "sample" and self.limit is None:
+            raise ValueError("sample mode requires limit")
+        return self
 
 
 class SeedTriggerResponse(BaseModel):
@@ -122,9 +143,16 @@ def delete_seed_endpoint(
 )
 async def trigger_seed_endpoint(
     seed_id: int,
+    payload: SeedTriggerRequest | None = Body(default=None),
     conn: Any = Depends(get_pg_conn),
 ) -> SeedTriggerResponse | JSONResponse:
-    outcome = trigger_seed_run(conn, seed_id)
+    request = payload or SeedTriggerRequest()
+    outcome = trigger_seed_run(
+        conn,
+        seed_id,
+        trigger_mode=request.mode,
+        limit=request.limit,
+    )
     if outcome["status_code"] == status.HTTP_404_NOT_FOUND:
         raise HTTPException(status_code=404, detail=f"seed {seed_id} not found")
     if outcome["status_code"] != status.HTTP_202_ACCEPTED:
@@ -139,6 +167,8 @@ def trigger_seed_run(
     conn: Any,
     seed_id: int,
     *,
+    trigger_mode: SeedTriggerMode = "full",
+    limit: int | None = None,
     schedule_seed_run: Any | None = None,
 ) -> dict[str, Any]:
     existing = get_seed(conn, seed_id)
@@ -182,12 +212,19 @@ def trigger_seed_run(
             "school": seed.school,
             "department": seed.department,
             "seed_url": seed.seed_url,
+            "trigger_mode": trigger_mode,
+            "limit": limit,
         },
         triggered_by="admin-console",
     )
     conn.commit()
     scheduler = schedule_seed_run or _schedule_seed_run
-    scheduler(seed_id=seed.id, run_id=run_id)
+    scheduler(
+        seed_id=seed.id,
+        run_id=run_id,
+        trigger_mode=trigger_mode,
+        limit=limit,
+    )
     return {
         "status_code": status.HTTP_202_ACCEPTED,
         "content": {
@@ -211,22 +248,140 @@ def _seed_has_registered_adapter(seed: Seed) -> bool:
     )
 
 
-def _schedule_seed_run(*, seed_id: int, run_id: UUID | str) -> None:
+def _schedule_seed_run(
+    *,
+    seed_id: int,
+    run_id: UUID | str,
+    trigger_mode: SeedTriggerMode = "full",
+    limit: int | None = None,
+) -> None:
     future = _seed_run_executor().submit(
         _run_seed_task,
         seed_id=seed_id,
         run_id=str(run_id),
+        trigger_mode=trigger_mode,
+        limit=limit,
     )
     future.add_done_callback(_log_background_task_failure)
 
 
-def _run_seed_task(*, seed_id: int, run_id: str) -> None:
+def _run_seed_task(
+    *,
+    seed_id: int,
+    run_id: str,
+    trigger_mode: SeedTriggerMode = "full",
+    limit: int | None = None,
+) -> None:
     from src.data_agents.professor.seed_runner import run_single_seed
     from src.data_agents.storage.postgres.connection import resolve_dsn
 
     raw_dsn = os.environ.get("DATABASE_URL") or os.environ.get("DATABASE_URL_TEST")
     dsn = resolve_dsn(raw_dsn)
-    run_single_seed(seed_id, dsn=dsn, run_id=run_id)
+    result = run_single_seed(
+        seed_id=seed_id,
+        dsn=dsn,
+        run_id=run_id,
+        trigger_mode=trigger_mode,
+        limit=limit,
+    )
+    if not _should_run_quality_closure_after_seed(
+        result,
+        trigger_mode=trigger_mode,
+        limit=limit,
+    ):
+        return
+    try:
+        _run_seed_quality_closure_for_seed(
+            dsn=dsn,
+            seed_id=seed_id,
+            run_id=run_id,
+            trigger_mode=trigger_mode,
+            limit=limit,
+        )
+    except Exception:
+        logger.exception(
+            "Professor core profile-paper quality closure failed after "
+            "successful seed run %s",
+            seed_id,
+        )
+
+
+def _should_run_quality_closure_after_seed(
+    result: Any,
+    *,
+    trigger_mode: SeedTriggerMode,
+    limit: int | None,
+) -> bool:
+    from src.data_agents.professor.core_profile_paper_quality_closure import (
+        should_run_seed_quality_closure,
+    )
+
+    return should_run_seed_quality_closure(
+        seed_status=getattr(result, "status", None),
+        trigger_mode=trigger_mode,
+        limit=limit,
+    )
+
+
+def _run_seed_quality_closure_for_seed(
+    *,
+    dsn: str,
+    seed_id: int,
+    run_id: str,
+    trigger_mode: SeedTriggerMode,
+    limit: int | None,
+) -> None:
+    from src.data_agents.professor import core_profile_paper_quality_closure
+
+    with psycopg.connect(dsn, row_factory=dict_row) as conn:
+        report = core_profile_paper_quality_closure.run_seed_quality_closure(
+            conn=conn,
+            seed_id=seed_id,
+            run_id=run_id,
+            trigger_mode=trigger_mode,
+            limit=limit,
+            dsn=dsn,
+            publication_extractor=_build_seed_followup_publication_extractor(),
+            commit_after_stage=True,
+        )
+        conn.commit()
+    logger.info(
+        "Professor core profile-paper quality closure for seed %s finished "
+        "with status=%s stage_counts=%s",
+        seed_id,
+        report.status,
+        report.stage_counts,
+    )
+
+
+def _build_seed_followup_publication_extractor():
+    if _env_flag_disabled("ADMIN_SEED_LLM_PUBLICATION_EXTRACTION"):
+        return None
+
+    from src.data_agents.paper.llm_publication_extractor import (
+        build_llm_publication_extractor,
+    )
+
+    profile_name = os.environ.get("ADMIN_SEED_LLM_PUBLICATION_PROFILE", "gemma4")
+    force_llm = _env_flag_enabled("ADMIN_SEED_FORCE_LLM_PUBLICATION_EXTRACTION")
+    try:
+        return build_llm_publication_extractor(profile_name, force_llm=force_llm)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "LLM publication extractor unavailable for seed follow-up; "
+            "falling back to rule extraction (%s: %s)",
+            exc.__class__.__name__,
+            exc,
+        )
+        return None
+
+
+def _env_flag_disabled(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in {"0", "false", "no", "off"}
+
+
+def _env_flag_enabled(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 @lru_cache(maxsize=1)

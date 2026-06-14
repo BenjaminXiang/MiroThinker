@@ -1,0 +1,20 @@
+{
+  "checks": [
+    {
+      "company_id": "COMP-ad30bd150f20",
+      "display_name": "万勋科技（深圳）",
+      "products_count": 1,
+      "scenarios_count": 2,
+      "first_product_name": "Pliabot®柔韧技术",
+      "first_scenario_name": "艰险繁复作业替代"
+    },
+    {
+      "company_id": "COMP-17d68ddf7fd6",
+      "display_name": "一股科技",
+      "products_count": 1,
+      "scenarios_count": 8,
+      "first_product_name": "友心积分商城",
+      "first_scenario_name": "提升用户粘性"
+    }
+  ]
+}

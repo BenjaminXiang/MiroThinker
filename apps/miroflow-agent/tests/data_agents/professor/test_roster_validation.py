@@ -4,21 +4,34 @@ import threading
 import types
 import pytest
 import json
+from pathlib import Path
 from urllib.parse import quote
 
+from src.data_agents.professor.adapter_resolution import resolve_seed_adapter_name
 from src.data_agents.professor.discovery import (
     DiscoveryLimits,
     discover_professor_seeds,
     fetch_html_with_fallback,
+    get_allowed_registered_domains,
 )
 from src.data_agents.professor.models import DiscoveredProfessorSeed, ProfessorRosterSeed
 from src.data_agents.professor.parser import parse_roster_seed_markdown
-from src.data_agents.professor.roster import extract_roster_entries, extract_roster_page_links
+from src.data_agents.professor.roster import (
+    extract_roster_entries,
+    extract_roster_page_links,
+    extract_szu_csse_roster_card_profile,
+)
 from src.data_agents.professor.validator import (
     SeedDocumentValidationError,
     validate_roster_discovery_document,
     validate_roster_seed_document,
 )
+
+_SYSU_FIXTURE_DIR = Path(__file__).with_name("fixtures") / "sysu"
+
+
+def _load_sysu_fixture(name: str) -> str:
+    return (_SYSU_FIXTURE_DIR / name).read_text(encoding="utf-8")
 
 
 @pytest.fixture(autouse=True)
@@ -250,9 +263,182 @@ def test_extract_roster_entries_uses_suat_adapter_before_site_specific_path(monk
     ]
 
 
+def test_extract_roster_entries_uses_suit_sziit_adapter_for_teacher_list(monkeypatch):
+    from src.data_agents.professor import roster as roster_module
+
+    monkeypatch.setattr(
+        roster_module,
+        "_extract_site_specific_html_profile_links",
+        lambda soup, source_url: (_ for _ in ()).throw(
+            AssertionError("site-specific fallback should be skipped")
+        ),
+    )
+
+    entries = roster_module.extract_roster_entries(
+        html="""
+        <ul class="teacher-list">
+          <li class="clearfix">
+            <a href="../info/1013/2674.htm" target="_blank" title="夏林中" class="avatar">
+              <img src="/teacher.png">
+            </a>
+            <div class="content">
+              <h3 class="name">
+                <a href="../info/1013/2674.htm" target="_blank" title="夏林中">夏林中</a>
+              </h3>
+            </div>
+          </li>
+          <li class="clearfix">
+            <a href="../info/1013/2673.htm" target="_blank" title="陈敏娜" class="avatar">
+              <img src="/teacher2.png">
+            </a>
+            <div class="content">
+              <h3 class="name">
+                <a href="../info/1013/2673.htm" target="_blank" title="陈敏娜">陈敏娜</a>
+              </h3>
+            </div>
+          </li>
+        </ul>
+        """,
+        institution="深圳信息职业技术大学",
+        department="中德机器人学院",
+        source_url="https://zd.suit-sz.edu.cn/jyjx/jsfc.htm",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("夏林中", "https://zd.suit-sz.edu.cn/info/1013/2674.htm"),
+        ("陈敏娜", "https://zd.suit-sz.edu.cn/info/1013/2673.htm"),
+    ]
+
+
+def test_extract_roster_entries_uses_uestc_yjsjy_adapter_for_mentor_list(monkeypatch):
+    from src.data_agents.professor import roster as roster_module
+
+    monkeypatch.setattr(
+        roster_module,
+        "_extract_site_specific_html_profile_links",
+        lambda soup, source_url: (_ for _ in ()).throw(
+            AssertionError("site-specific fallback should be skipped")
+        ),
+    )
+
+    entries = roster_module.extract_roster_entries(
+        html="""
+        <html>
+          <body>
+            <a href="/gmis/jcsjgl/dsfc/dsgrjj/10364?yxsh=28">10364 张小松</a>
+            <a href="/gmis/jcsjgl/dsfc/dsgrjj/10368?yxsh=28">10368 蒲晓蓉</a>
+            <a href="/gmis/jcsjgl/dsfc/index/#28">电子科技大学（深圳）高等研究院</a>
+          </body>
+        </html>
+        """,
+        institution="电子科技大学（深圳）高等研究院",
+        department="计算机技术",
+        source_url="https://yjsjy.uestc.edu.cn/gmis/jcsjgl/dsfc?yxsh=28&zydm=085404",
+    )
+
+    assert [(entry.name, entry.profile_url, entry.source_url) for entry in entries] == [
+        (
+            "张小松",
+            "https://yjsjy.uestc.edu.cn/gmis/jcsjgl/dsfc/dsgrjj/10364?yxsh=28",
+            "https://yjsjy.uestc.edu.cn/gmis/jcsjgl/dsfc?yxsh=28&zydm=085404",
+        ),
+        (
+            "蒲晓蓉",
+            "https://yjsjy.uestc.edu.cn/gmis/jcsjgl/dsfc/dsgrjj/10368?yxsh=28",
+            "https://yjsjy.uestc.edu.cn/gmis/jcsjgl/dsfc?yxsh=28&zydm=085404",
+        ),
+    ]
+
+
+def test_extract_roster_entries_uses_suat_title_names_for_spaced_chinese_cards():
+    html = """
+    <html><body>
+      <nav>
+        <a class="di_bl" href="../xygk/zzjg.htm" title="组织架构">组织架构</a>
+        <a class="on" href="qb.htm" title="全部">全部</a>
+      </nav>
+      <a class="flex" href="../info/1151/2121.htm" title="康 乐">
+        <div>康 乐</div><p>讲席教授</p><span>查看更多</span>
+      </a>
+      <a class="flex" href="../info/1151/2124.htm" title="胡 强">
+        <div>胡 强</div><p>系主任、讲席教授</p><span>查看更多</span>
+      </a>
+      <a class="flex" href="../info/1151/2127.htm" title="赵 勇">
+        <div>赵 勇</div><p>讲席教授</p><span>查看更多</span>
+      </a>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="深圳理工大学",
+        department="合成生物学院",
+        source_url="https://synbio.suat-sz.edu.cn/szll2/qb.htm",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("康乐", "https://synbio.suat-sz.edu.cn/info/1151/2121.htm"),
+        ("胡强", "https://synbio.suat-sz.edu.cn/info/1151/2124.htm"),
+        ("赵勇", "https://synbio.suat-sz.edu.cn/info/1151/2127.htm"),
+    ]
+
+
+def test_extract_roster_entries_uses_suat_title_names_without_role_or_alias_false_positives():
+    html = """
+    <html><body>
+      <div class="con">
+        <a class="item" href="#p1" title="教研序列">教研序列</a>
+        <a class="item" href="#p2" title="特聘教授">特聘教授</a>
+      </div>
+      <div class="item">
+        <a href="info/1010/1093.htm" title="成会明">
+          成会明 院士，深圳理工大学广东省院士工作站教授 Huiming Cheng
+        </a>
+        <a class="info1" href="info/1010/1093.htm" title="成会明">院士，深圳理工大学广东省院士工作站教授</a>
+        <a class="info1" href="info/1010/1093.htm" title="成会明">Huiming Cheng</a>
+      </div>
+      <div class="item">
+        <a href="info/1010/1094.htm" title="王大伟">
+          王大伟 副院长、讲席教授 Dawei Wang, Deputy Dean, Chair Professor
+        </a>
+        <a class="info1" href="info/1010/1094.htm" title="王大伟">副院长、讲席教授</a>
+        <a class="info1" href="info/1010/1094.htm" title="王大伟">Dawei Wang, Deputy Dean, Chair Professor</a>
+      </div>
+      <div class="item">
+        <a href="https://www.siat.ac.cn/jgsz2016/jgdh2016/kybm2016/xjclkxygcyjs2019/xianrenlingdao2019/" title="孙蓉">
+          孙蓉 先进材料科学与工程研究所 所长
+        </a>
+      </div>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="深圳理工大学",
+        department="材料科学与能源工程学院",
+        source_url="https://msee.suat-sz.edu.cn/szdw.htm",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("成会明", "https://msee.suat-sz.edu.cn/info/1010/1093.htm"),
+        ("王大伟", "https://msee.suat-sz.edu.cn/info/1010/1094.htm"),
+        (
+            "孙蓉",
+            "https://www.siat.ac.cn/jgsz2016/jgdh2016/kybm2016/xjclkxygcyjs2019/xianrenlingdao2019/",
+        ),
+    ]
+
+
+def test_suat_msee_seed_allows_siat_official_profiles():
+    allowed = get_allowed_registered_domains("https://msee.suat-sz.edu.cn/szdw.htm")
+
+    assert "suat-sz.edu.cn" in allowed
+    assert "siat.ac.cn" in allowed
+
+
 def test_extract_roster_entries_deduplicates_by_professor_identity():
     html = """
-<html><body>
+    <html><body>
   <ul>
     <li><a href="/faculty/lihua">李华</a></li>
     <li><a href="/teacher/lihua_profile">李华</a></li>
@@ -730,6 +916,430 @@ def test_extract_roster_page_links_prefers_szu_subcollege_teacher_pages():
     ]
 
 
+def test_extract_roster_page_links_filters_csse_navigation_labels_from_szu_hub():
+    markdown = """
+* [计算机与软件学院](https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1)
+* [学院概况](https://csse.szu.edu.cn/pages/about/index)
+* [研究所/中心](https://csse.szu.edu.cn/pages/research/index)
+* [视觉智能研究中心](https://csse.szu.edu.cn/pages/research/vision)
+* [教学系](https://csse.szu.edu.cn/pages/department/index)
+"""
+
+    links = extract_roster_page_links(markdown, "https://www.szu.edu.cn/yxjg/xbxy.htm")
+
+    assert links == [
+        (
+            "https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1",
+            "计算机与软件学院",
+        )
+    ]
+
+
+def test_extract_roster_page_links_prioritizes_szu_csse_teacher_team_categories():
+    html = """
+    <html><body>
+      <nav>
+        <a href="/pages/about/index">学院概况</a>
+        <a href="/pages/news/index">讲座报告</a>
+        <a href="/pages/culture/index">文化建设</a>
+        <a href="/pages/research/index">科学研究</a>
+      </nav>
+      <section class="teacher-team-filter">
+        <a href="/pages/teacherTeam/index?zc=12">讲席教授</a>
+        <a href="/pages/teacherTeam/index?zc=13">特聘教授</a>
+        <a href="/pages/teacherTeam/index?zc=1">教授</a>
+        <a href="/pages/teacherTeam/index?zc=2">副教授</a>
+        <a href="/pages/teacherTeam/index?zc=3">助理教授</a>
+        <a href="/pages/teacherTeam/index?zc=5">研究员</a>
+        <a href="/pages/teacherTeam/index?zc=4">讲师</a>
+        <a href="/pages/teacherTeam/index?zc=10">副研究员</a>
+        <a href="/pages/teacherTeam/index?zc=9">研究/辅助管理</a>
+        <a href="/pages/teacherTeam/index?zc=7">博士后</a>
+        <a href="/pages/news/index">学院新闻</a>
+        <a href="https://aisc.szu.edu.cn/info/1001/2001.htm">讲座报告</a>
+      </section>
+    </body></html>
+    """
+
+    links = extract_roster_page_links(
+        html,
+        "https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1",
+    )
+
+    assert links == [
+        ("https://csse.szu.edu.cn/pages/teacherTeam/index?zc=12", "讲席教授"),
+        ("https://csse.szu.edu.cn/pages/teacherTeam/index?zc=13", "特聘教授"),
+        ("https://csse.szu.edu.cn/pages/teacherTeam/index?zc=2", "副教授"),
+        ("https://csse.szu.edu.cn/pages/teacherTeam/index?zc=3", "助理教授"),
+        ("https://csse.szu.edu.cn/pages/teacherTeam/index?zc=5", "研究员"),
+        ("https://csse.szu.edu.cn/pages/teacherTeam/index?zc=4", "讲师"),
+        ("https://csse.szu.edu.cn/pages/teacherTeam/index?zc=10", "副研究员"),
+        ("https://csse.szu.edu.cn/pages/teacherTeam/index?zc=9", "研究/辅助管理"),
+        ("https://csse.szu.edu.cn/pages/teacherTeam/index?zc=7", "博士后"),
+    ]
+
+
+def test_extract_roster_entries_rejects_szu_csse_navigation_labels():
+    html = """
+    <html><body>
+      <a href="https://aisc.szu.edu.cn/info/1001/2001.htm">讲座报告</a>
+      <a href="https://aisc.szu.edu.cn/info/1001/2002.htm">文化建设</a>
+      <a href="https://aisc.szu.edu.cn/info/1001/2003.htm">科学研究</a>
+      <a href="/pages/about/index">学院概况</a>
+      <a href="/pages/teacherTeam/index?zc=2">副教授</a>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="深圳大学",
+        department="计算机与软件学院",
+        source_url="https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1",
+    )
+
+    assert entries == []
+
+
+def test_extract_roster_entries_accepts_only_szu_csse_user_profiles():
+    html = """
+    <html><body>
+      <a href="/pages/user/index?id=579">张三 教授</a>
+      <a href="https://csse.szu.edu.cn/pages/user/index?id=589">李四 副教授</a>
+      <a href="https://aisc.szu.edu.cn/info/1054/1408.htm">王五</a>
+      <a href="/info/1010/3001.htm">赵六</a>
+      <a href="/pages/user/index?id=abc">钱七</a>
+      <a href="/pages/user/index">孙八</a>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="深圳大学",
+        department="计算机与软件学院",
+        source_url="https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("张三", "https://csse.szu.edu.cn/pages/user/index?id=579"),
+        ("李四", "https://csse.szu.edu.cn/pages/user/index?id=589"),
+    ]
+
+
+def test_discover_professor_seeds_continues_szu_csse_teacher_team_categories_after_noisy_root():
+    seed_url = "https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1"
+    associate_url = "https://csse.szu.edu.cn/pages/teacherTeam/index?zc=2"
+    assistant_url = "https://csse.szu.edu.cn/pages/teacherTeam/index?zc=3"
+    seeds = [
+        ProfessorRosterSeed(
+            institution="深圳大学",
+            department="计算机与软件学院",
+            roster_url=seed_url,
+        )
+    ]
+    pages = {
+        seed_url: """
+        <html><body>
+          <nav>
+            <a href="https://aisc.szu.edu.cn/info/1001/2001.htm">讲座报告</a>
+            <a href="/pages/culture/index">文化建设</a>
+          </nav>
+          <section>
+            <a href="/pages/teacherTeam/index?zc=1">教授</a>
+            <a href="/pages/teacherTeam/index?zc=2">副教授</a>
+            <a href="/pages/teacherTeam/index?zc=3">助理教授</a>
+          </section>
+        </body></html>
+        """,
+        associate_url: """
+        <html><body>
+          <div class="news_box">
+            <div class="news_title"><a href="/pages/user/index?id=579">张三 副教授</a></div>
+            <div class="news_title"><a href="https://aisc.szu.edu.cn/info/1054/1408.htm">王五</a></div>
+          </div>
+        </body></html>
+        """,
+        assistant_url: """
+        <html><body>
+          <div class="news_box">
+            <div class="news_title"><a href="/pages/user/index?id=589">李四 助理教授</a></div>
+            <div class="news_title"><a href="/info/1010/3002.htm">赵六</a></div>
+          </div>
+        </body></html>
+        """,
+    }
+
+    result = discover_professor_seeds(
+        seeds=seeds,
+        fetch_html=pages.__getitem__,
+        limits=DiscoveryLimits(max_depth=1, max_candidate_links_per_page=8, max_pages_per_seed=4),
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        ("张三", "https://csse.szu.edu.cn/pages/user/index?id=579"),
+        ("李四", "https://csse.szu.edu.cn/pages/user/index?id=589"),
+    ]
+    assert result.source_statuses[0].visited_urls == [
+        seed_url,
+        associate_url,
+        assistant_url,
+    ]
+
+
+def test_discover_professor_seeds_keeps_szu_csse_reader_links_inside_teacher_team():
+    seed_url = "https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1"
+    associate_url = "https://csse.szu.edu.cn/pages/teacherTeam/index?zc=2"
+    seeds = [
+        ProfessorRosterSeed(
+            institution="深圳大学",
+            department="计算机与软件学院",
+            roster_url=seed_url,
+        )
+    ]
+    pages = {
+        seed_url: """
+* [首页](https://csse.szu.edu.cn/)
+* [学院概况](https://csse.szu.edu.cn/pages/university/index)
+* [人工智能与数字经济广东省实验室（深圳）](https://aisc.szu.edu.cn/)
+* [组织架构](https://csse.szu.edu.cn/pages/organization/index)
+* [教授](https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1)
+* [副教授](https://csse.szu.edu.cn/pages/teacherTeam/index?zc=2)
+""",
+        associate_url: """
+* [张三 副教授](https://csse.szu.edu.cn/pages/user/index?id=579)
+* [文化建设](https://aisc.szu.edu.cn/info/1054/1408.htm)
+""",
+    }
+
+    result = discover_professor_seeds(
+        seeds=seeds,
+        fetch_html=pages.__getitem__,
+        limits=DiscoveryLimits(
+            max_depth=1,
+            max_candidate_links_per_page=8,
+            max_pages_per_seed=8,
+        ),
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        ("张三", "https://csse.szu.edu.cn/pages/user/index?id=579")
+    ]
+    assert result.source_statuses[0].visited_urls == [
+        seed_url,
+        associate_url,
+    ]
+
+
+def test_extract_roster_entries_infers_szu_csse_reader_homepage_names():
+    html = """
+院士
+
+陈国良
+
+![Image 15](https://csse.szu.edu.cn/attachment/userimg/chen.jpg)
+
+中国科学院院士
+
+![Image 16](https://csse.szu.edu.cn/attachment/userimg/chen.jpg)
+
+[HOMEPAGE](https://csse.szu.edu.cn/pages/user/index?id=617)
+
+梁中明
+
+![Image 17](https://csse.szu.edu.cn/attachment/userimg/leung.jpg)
+
+加拿大三院院士
+
+![Image 18](https://csse.szu.edu.cn/attachment/userimg/leung.jpg)
+
+[HOMEPAGE](https://csse.szu.edu.cn/pages/user/index?id=1077)
+
+vleung@szu.edu.cn
+
+王熙照
+
+![Image 19](https://csse.szu.edu.cn/attachment/userimg/wang.jpg)
+
+学院教授委员会主任
+
+大数据技术与应用研究所
+
+机器学习、不确定性建模
+
+![Image 20](https://csse.szu.edu.cn/attachment/userimg/wang.jpg)
+
+[HOMEPAGE](https://csse.szu.edu.cn/pages/user/index?id=616)
+"""
+
+    entries = extract_roster_entries(
+        html,
+        institution="深圳大学",
+        department="计算机与软件学院",
+        source_url="https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("陈国良", "https://csse.szu.edu.cn/pages/user/index?id=617"),
+        ("梁中明", "https://csse.szu.edu.cn/pages/user/index?id=1077"),
+        ("王熙照", "https://csse.szu.edu.cn/pages/user/index?id=616"),
+    ]
+
+
+def test_extract_szu_csse_roster_card_profile_builds_official_sparse_profile():
+    markdown = """
+Title: 深圳大学计算机与软件学院
+
+URL Source: https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1
+
+Markdown Content:
+院士
+
+陈国良
+
+![Image 15](https://csse.szu.edu.cn/attachment/userimg/chen.jpg)
+
+中国科学院院士
+
+![Image 16](https://csse.szu.edu.cn/attachment/userimg/chen.jpg)
+
+[HOMEPAGE](https://csse.szu.edu.cn/pages/user/index?id=617)
+
+梁中明
+
+![Image 17](https://csse.szu.edu.cn/attachment/base64/leung.jpg)
+
+加拿大三院院士
+
+![Image 18](https://csse.szu.edu.cn/attachment/base64/leung.jpg)
+
+[HOMEPAGE](https://csse.szu.edu.cn/pages/user/index?id=1077)
+
+ vleung@szu.edu.cn ![Image 19](https://csse.szu.edu.cn/image/teacher_image/documents@2x.png)
+"""
+    seed = DiscoveredProfessorSeed(
+        name="梁中明",
+        institution="深圳大学",
+        department="计算机与软件学院",
+        profile_url="https://csse.szu.edu.cn/pages/user/index?id=1077",
+        source_url="https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1",
+    )
+
+    profile = extract_szu_csse_roster_card_profile(markdown, seed)
+
+    assert profile is not None
+    assert profile.name == "梁中明"
+    assert profile.title == "加拿大三院院士"
+    assert profile.email == "vleung@szu.edu.cn"
+    assert profile.homepage_url == "https://csse.szu.edu.cn/pages/user/index?id=1077"
+    assert profile.profile_raw_text is not None
+    assert "加拿大三院院士" in profile.profile_raw_text
+    assert "官方师资列表：https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1" in (
+        profile.profile_raw_text
+    )
+
+
+def test_extract_szu_csse_roster_card_profile_uses_category_title_when_card_lacks_role():
+    markdown = """
+Title: 深圳大学计算机与软件学院
+
+URL Source: https://csse.szu.edu.cn/pages/teacherTeam/index?zc=3
+
+Markdown Content:
+刘涵
+
+![Image 1](https://csse.szu.edu.cn/attachment/userimg/liuhan.jpg)
+
+软件工程研究中心
+
+机器学习、自然语言处理
+
+[HOMEPAGE](https://csse.szu.edu.cn/pages/user/index?id=1001)
+
+han.liu@szu.edu.cn ![Image 2](https://csse.szu.edu.cn/image/teacher_image/documents@2x.png)
+"""
+    seed = DiscoveredProfessorSeed(
+        name="刘涵",
+        institution="深圳大学",
+        department="计算机与软件学院",
+        profile_url="https://csse.szu.edu.cn/pages/user/index?id=1001",
+        source_url="https://csse.szu.edu.cn/pages/teacherTeam/index?zc=3",
+    )
+
+    profile = extract_szu_csse_roster_card_profile(markdown, seed)
+
+    assert profile is not None
+    assert profile.title == "副教授"
+    assert profile.research_directions == ("机器学习、自然语言处理",)
+
+
+def test_extract_szu_csse_roster_card_profile_uses_assistant_professor_category_title():
+    markdown = """
+Title: 深圳大学计算机与软件学院
+
+URL Source: https://csse.szu.edu.cn/pages/teacherTeam/index?zc=5
+
+Markdown Content:
+刘涵
+
+![Image 1](https://csse.szu.edu.cn/attachment/userimg/liuhan.jpg)
+
+软件工程研究中心
+
+机器学习、自然语言处理
+
+[HOMEPAGE](https://csse.szu.edu.cn/pages/user/index?id=1001)
+
+han.liu@szu.edu.cn ![Image 2](https://csse.szu.edu.cn/image/teacher_image/documents@2x.png)
+"""
+    seed = DiscoveredProfessorSeed(
+        name="刘涵",
+        institution="深圳大学",
+        department="计算机与软件学院",
+        profile_url="https://csse.szu.edu.cn/pages/user/index?id=1001",
+        source_url="https://csse.szu.edu.cn/pages/teacherTeam/index?zc=5",
+    )
+
+    profile = extract_szu_csse_roster_card_profile(markdown, seed)
+
+    assert profile is not None
+    assert profile.title == "助理教授"
+
+
+def test_extract_roster_entries_rejects_szu_csse_research_assistant_label_as_name():
+    markdown = """
+Title: 深圳大学计算机与软件学院
+
+URL Source: https://csse.szu.edu.cn/pages/teacherTeam/index?zc=9
+
+Markdown Content:
+研究助理
+
+![Image 1](https://csse.szu.edu.cn/attachment/userimg/assistant.jpg)
+
+[HOMEPAGE](https://csse.szu.edu.cn/pages/user/index?id=1281)
+
+chenqt@szu.edu.cn ![Image 2](https://csse.szu.edu.cn/image/teacher_image/documents@2x.png)
+
+秦建斌
+
+![Image 3](https://csse.szu.edu.cn/attachment/userimg/qin.jpg)
+
+高性能计算研究所常务副所长
+
+[HOMEPAGE](https://csse.szu.edu.cn/pages/user/index?id=1051)
+"""
+
+    entries = extract_roster_entries(
+        markdown,
+        institution="深圳大学",
+        department="计算机与软件学院",
+        source_url="https://csse.szu.edu.cn/pages/teacherTeam/index?zc=9",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("秦建斌", "https://csse.szu.edu.cn/pages/user/index?id=1051")
+    ]
+
+
 def test_extract_roster_entries_prefers_pkusz_ece_teacher_cards_over_navigation_links():
     html = """
 <html><body>
@@ -802,6 +1412,58 @@ def test_extract_roster_entries_skips_szu_template_teacher_pages_without_real_pr
     )
 
     assert entries == []
+
+
+def test_extract_roster_entries_rejects_cpoe_audience_and_navigation_info_links():
+    markdown = """
+Title: 师资队伍-深圳大学物理与光电工程学院
+
+Markdown Content:
+* [中心介绍](https://cpoe.szu.edu.cn/info/1001/1001.htm)
+* [交流合作](https://cpoe.szu.edu.cn/info/1001/1002.htm)
+* [发展沿革](https://cpoe.szu.edu.cn/info/1001/1003.htm)
+* [考生](https://cpoe.szu.edu.cn/info/1001/1004.htm)
+* [访客](https://cpoe.szu.edu.cn/info/1001/1005.htm)
+* [张三](https://cpoe.szu.edu.cn/info/1046/2001.htm)
+"""
+
+    entries = extract_roster_entries(
+        html=markdown,
+        institution="深圳大学",
+        department="物理与光电工程学院",
+        source_url="https://cpoe.szu.edu.cn/szdw.jsp?urltype=tree.TreeTempUrl&wbtreeid=1111",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("张三", "https://cpoe.szu.edu.cn/info/1046/2001.htm")
+    ]
+
+
+def test_extract_roster_entries_rejects_cpoe_seed_11_non_person_info_links():
+    markdown = """
+Title: 师资队伍-深圳大学物理与光电工程学院
+
+Markdown Content:
+* [廉洁之窗](https://cpoe.szu.edu.cn/info/1001/1101.htm)
+* [奖学助贷](https://cpoe.szu.edu.cn/info/1001/1102.htm)
+* [校友](https://cpoe.szu.edu.cn/info/1001/1103.htm)
+* [基本介绍](https://cpoe.szu.edu.cn/info/1001/1104.htm)
+* [游戏机](https://cpoe.szu.edu.cn/info/1001/1105.htm)
+* [中心介绍](https://cpoe.szu.edu.cn/info/1001/1106.htm)
+* [交流合作](https://cpoe.szu.edu.cn/info/1001/1107.htm)
+* [李四](https://cpoe.szu.edu.cn/info/1046/2002.htm)
+"""
+
+    entries = extract_roster_entries(
+        html=markdown,
+        institution="深圳大学",
+        department="物理与光电工程学院",
+        source_url="https://cpoe.szu.edu.cn/szdw.jsp?urltype=tree.TreeTempUrl&wbtreeid=1111",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("李四", "https://cpoe.szu.edu.cn/info/1046/2002.htm")
+    ]
 
 
 def test_extract_roster_entries_supports_szu_relative_info_profile_links():
@@ -1163,6 +1825,41 @@ def test_extract_roster_entries_prefers_sztu_heading_profiles_over_navigation_li
     ]
 
 
+def test_extract_roster_entries_rejects_sztu_sgim_section_links_as_people():
+    html = """
+    <html><body>
+      <div class="right n_shizi">
+        <ul>
+          <li><a href="../../info/1273/4101.htm">党的建设</a></li>
+          <li><a href="../../info/1273/4102.htm">团建工作</a></li>
+          <li><a href="../../info/1273/4103.htm">就业指导</a></li>
+          <li><a href="../../info/1273/4104.htm">科研方向</a></li>
+          <li><a href="../../info/1273/4113.htm">
+            <div class="box">
+              <div class="con">
+                <h4>王宏志</h4>
+                <h6>教授</h6>
+                <p>研究方向：智能制造装备。</p>
+              </div>
+            </div>
+          </a></li>
+        </ul>
+      </div>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="深圳技术大学",
+        department="中德智能制造学院",
+        source_url="https://sgim.sztu.edu.cn/szdw2022/jytd/jxsjzzjqzdh.htm",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("王宏志", "https://sgim.sztu.edu.cn/info/1273/4113.htm")
+    ]
+
+
 def test_extract_roster_entries_uses_sztu_detail_pages_wrapping_profile_cards():
     html = """
     <html><body>
@@ -1251,6 +1948,55 @@ def test_extract_roster_entries_skips_ise_overview_page_without_direct_teacher_c
     ]
 
 
+def test_extract_roster_page_links_supports_sysu_ise_mixed_case_category_links():
+    html = """
+    <html><body>
+      <nav>
+        <a href="/about/school">学院简介</a>
+        <a href="/teachers">师资介绍</a>
+        <a href="/teacher">教师名录</a>
+        <a href="/Faculty/Post-doctor">博士后</a>
+        <a href="/Faculty/Engineer">实验技术人员</a>
+        <a href="/faculty/Researcher">专职科研人员</a>
+        <a href="/faculty/Retired-Teacher">荣休人员</a>
+      </nav>
+    </body></html>
+    """
+
+    links = extract_roster_page_links(html, "http://ise.sysu.edu.cn/teachers")
+
+    assert links == [
+        ("http://ise.sysu.edu.cn/teacher", "教师名录"),
+        ("http://ise.sysu.edu.cn/Faculty/Post-doctor", "博士后"),
+        ("http://ise.sysu.edu.cn/Faculty/Engineer", "实验技术人员"),
+        ("http://ise.sysu.edu.cn/faculty/Researcher", "专职科研人员"),
+    ]
+
+
+def test_extract_roster_page_links_supports_sysu_stale_faculty_category_links():
+    html = """
+    <html><head><title>页面未找到 | 中山大学网络空间安全学院</title></head><body>
+      <nav>
+        <a href="/">首页</a>
+        <a href="/about">学院概况</a>
+        <a href="/teacher">师资队伍</a>
+        <a href="/teacher">专任教师</a>
+        <a href="/faculty/researcher">博士后</a>
+        <a href="/faculty/technician">实验技术人员</a>
+        <a href="/news">新闻动态</a>
+      </nav>
+    </body></html>
+    """
+
+    links = extract_roster_page_links(html, "https://scst.sysu.edu.cn/faculty")
+
+    assert links == [
+        ("https://scst.sysu.edu.cn/teacher", "专任教师"),
+        ("https://scst.sysu.edu.cn/faculty/researcher", "博士后"),
+        ("https://scst.sysu.edu.cn/faculty/technician", "实验技术人员"),
+    ]
+
+
 def test_extract_roster_entries_skips_pkusz_ece_alpha_directory_pages_without_teacher_cards():
     html = """
     <html><body>
@@ -1310,6 +2056,8 @@ def test_extract_roster_entries_supports_hitsz_college_faculty_links():
     <html><body>
       <a href="http://faculty.hitsz.edu.cn/wanjia">万佳 教授、博导</a>
       <a href="https://faculty.hitsz.edu.cn/joannasiebert">Joanna Siebert 副教授、硕导</a>
+      <a href="http://homepage.hit.edu.cn/daimingzhihit?lang=zh">代明志 教授</a>
+      <a href="https://homepage.hit.edu.cn/noFound.html">未开通</a>
       <a href="/szll/qzjs.htm">全职教师</a>
       <a href="/xkky.htm">科学研究</a>
     </body></html>
@@ -1323,8 +2071,9 @@ def test_extract_roster_entries_supports_hitsz_college_faculty_links():
     )
 
     assert [(entry.name, entry.profile_url) for entry in entries] == [
-        ("万佳", "http://faculty.hitsz.edu.cn/wanjia"),
+        ("万佳", "https://faculty.hitsz.edu.cn/wanjia"),
         ("Joanna Siebert", "https://faculty.hitsz.edu.cn/joannasiebert"),
+        ("代明志", "https://homepage.hit.edu.cn/daimingzhihit?lang=zh"),
     ]
 
 
@@ -1538,6 +2287,80 @@ def test_fetch_html_with_fallback_reports_browser_runtime_failures_explicitly():
     assert result.browser_error == (
         "playwright browser runtime unavailable | reader transport unavailable"
     )
+
+
+def test_fetch_html_with_fallback_encodes_unicode_profile_url_before_request():
+    captured: dict[str, str] = {}
+
+    class FakeResponse:
+        status_code = 200
+        encoding = "utf-8"
+        apparent_encoding = "utf-8"
+        text = "<html><body>profile</body></html>"
+
+        def raise_for_status(self) -> None:
+            return None
+
+    def request_get(url: str, timeout: float):
+        captured["url"] = url
+        return FakeResponse()
+
+    result = fetch_html_with_fallback(
+        "http://www.sigs.tsinghua.edu.cn/Xiaodong CHEN（cxd）/main.htm",
+        request_get=request_get,
+        browser_fetch=lambda _url, _timeout: "",
+        reader_fetch=lambda _url, _timeout: "",
+    )
+
+    assert result.html == "<html><body>profile</body></html>"
+    assert captured["url"] == (
+        "http://www.sigs.tsinghua.edu.cn/"
+        "Xiaodong%20CHEN%EF%BC%88cxd%EF%BC%89/main.htm"
+    )
+
+
+def test_request_with_env_fallback_forces_ipv4_for_known_ipv6_broken_hosts(monkeypatch):
+    from src.data_agents.professor import discovery as discovery_module
+
+    calls: list[tuple[bool, bool]] = []
+
+    class FakeResponse:
+        status_code = 200
+        encoding = "utf-8"
+        apparent_encoding = "utf-8"
+        text = "<html><body>profile</body></html>"
+
+        def raise_for_status(self) -> None:
+            return None
+
+    def fake_request_with_trust_env(
+        method,
+        url,
+        *,
+        timeout,
+        headers,
+        trust_env,
+        force_ipv4,
+        **kwargs,
+    ):
+        calls.append((trust_env, force_ipv4))
+        return FakeResponse()
+
+    monkeypatch.setattr(
+        discovery_module,
+        "_request_with_trust_env",
+        fake_request_with_trust_env,
+    )
+
+    response = discovery_module._request_with_env_fallback(
+        "get",
+        "https://sece.sysu.edu.cn/szll/js/zngz/1413872.htm",
+        timeout=3.0,
+        headers={},
+    )
+
+    assert response.text == "<html><body>profile</body></html>"
+    assert calls == [(False, True)]
 
 
 def test_fetch_html_with_fallback_uses_browser_when_request_get_raises_tls_error():
@@ -1853,6 +2676,49 @@ def test_fetch_html_with_fallback_reports_blocked_200_request_error():
     )
 
 
+def test_fetch_html_with_fallback_treats_tokenized_empty_200_as_anti_scraping():
+    class FakeResponse:
+        status_code = 200
+        encoding = "utf-8"
+        apparent_encoding = "utf-8"
+        text = (
+            "<html><head><script>$_ts=window['$_ts'];"
+            "$_ts.cd='token';</script></head><body></body></html>"
+        )
+
+        def raise_for_status(self) -> None:
+            return None
+
+    result = fetch_html_with_fallback(
+        "https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1",
+        request_get=lambda _url, _timeout: FakeResponse(),
+        browser_fetch=lambda _url, _timeout: "",
+        reader_fetch=lambda _url, _timeout: "* [张三](https://csse.szu.edu.cn/info/1001/1001.htm)",
+    )
+
+    assert result.html == "* [张三](https://csse.szu.edu.cn/info/1001/1001.htm)"
+    assert result.request_error == "200 blocked (anti-scraping detected)"
+    assert result.blocked_by_anti_scraping is True
+
+
+def test_fetch_html_with_fallback_skips_empty_browser_dom_after_blocked_direct():
+    request_response = requests.Response()
+    request_response.status_code = 412
+    request_response._content = "precondition failed".encode("utf-8")
+    request_response.url = "https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1"
+
+    result = fetch_html_with_fallback(
+        "https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1",
+        request_get=lambda _url, _timeout: request_response,
+        browser_fetch=lambda _url, _timeout: "<html><head></head><body></body></html>",
+        reader_fetch=lambda _url, _timeout: "* [张三](https://csse.szu.edu.cn/info/1001/1001.htm)",
+    )
+
+    assert result.fetch_method == "reader"
+    assert result.html == "* [张三](https://csse.szu.edu.cn/info/1001/1001.htm)"
+    assert result.browser_error == "browser returned empty page"
+
+
 def test_fetch_html_with_fallback_ignores_cache_when_fetchers_are_injected(tmp_path, monkeypatch):
     from src.data_agents.professor import discovery as discovery_module
 
@@ -1877,6 +2743,193 @@ def test_fetch_html_with_fallback_ignores_cache_when_fetchers_are_injected(tmp_p
     assert cache_file.read_text(encoding="utf-8") == json.dumps(
         {"url": "https://sai.cuhk.edu.cn/teacher-search", "content": "stale"}
     )
+
+
+def test_fetch_html_with_fallback_ignores_blocked_cached_html(tmp_path, monkeypatch):
+    from src.data_agents.professor import discovery as discovery_module
+
+    url = "https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1"
+    monkeypatch.setattr(discovery_module, "_cache_dir", lambda: tmp_path)
+    cache_file = discovery_module._cache_path(url)
+    cache_file.write_text(
+        json.dumps(
+            {
+                "url": url,
+                "content": (
+                    "<html><head><script>$_ts=window['$_ts'];"
+                    "$_ts.cd='token';</script></head><body></body></html>"
+                ),
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        discovery_module,
+        "_requests_get",
+        lambda _url, _timeout: (_ for _ in ()).throw(
+            requests.exceptions.SSLError("tls handshake failure")
+        ),
+    )
+    monkeypatch.setattr(discovery_module, "_render_html_with_playwright", lambda _url, _timeout: "")
+    monkeypatch.setattr(
+        discovery_module,
+        "_render_text_with_reader",
+        lambda _url, _timeout: "* [张三](https://csse.szu.edu.cn/info/1001/1001.htm)",
+    )
+
+    result = fetch_html_with_fallback(url)
+
+    assert result.html == "* [张三](https://csse.szu.edu.cn/info/1001/1001.htm)"
+    assert result.request_error == "tls handshake failure"
+
+
+def test_fetch_html_with_fallback_ignores_reader_error_cached_html(tmp_path, monkeypatch):
+    from src.data_agents.professor import discovery as discovery_module
+
+    url = "https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1"
+    monkeypatch.setattr(discovery_module, "_cache_dir", lambda: tmp_path)
+    cache_file = discovery_module._cache_path(url)
+    cache_file.write_text(
+        json.dumps(
+            {
+                "url": url,
+                "content": (
+                    "Title: \n\n"
+                    "URL Source: https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1\n\n"
+                    "Warning: Target URL returned error 412: Precondition Failed\n\n"
+                    "Markdown Content:"
+                ),
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    class FakeResponse:
+        status_code = 200
+        encoding = "utf-8"
+        apparent_encoding = "utf-8"
+        text = '<html><body><a href="/info/1001/1001.htm">张三</a></body></html>'
+
+        def raise_for_status(self) -> None:
+            return None
+
+    monkeypatch.setattr(discovery_module, "_requests_get", lambda _url, _timeout: FakeResponse())
+
+    result = fetch_html_with_fallback(url)
+
+    assert result.fetch_method == "direct"
+    assert "张三" in (result.html or "")
+    cached_payload = json.loads(cache_file.read_text(encoding="utf-8"))
+    assert "张三" in cached_payload["content"]
+
+
+def test_fetch_html_with_fallback_reader_does_not_return_reader_error_cache(
+    tmp_path, monkeypatch
+):
+    from src.data_agents.professor import discovery as discovery_module
+
+    url = "https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1"
+    monkeypatch.setattr(discovery_module, "_cache_dir", lambda: tmp_path)
+    cache_file = discovery_module._cache_path(url)
+    cache_file.write_text(
+        json.dumps(
+            {
+                "url": url,
+                "content": (
+                    "Title: \n\n"
+                    "URL Source: https://csse.szu.edu.cn/pages/teacherTeam/index?zc=1\n\n"
+                    "Warning: Target URL returned error 412: Precondition Failed\n\n"
+                    "Markdown Content:"
+                ),
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        discovery_module,
+        "_requests_get",
+        lambda _url, _timeout: (_ for _ in ()).throw(
+            requests.exceptions.SSLError("tls handshake failure")
+        ),
+    )
+    monkeypatch.setattr(discovery_module, "_render_html_with_playwright", lambda _url, _timeout: "")
+
+    def reader_response(*_args, **_kwargs):
+        response = requests.Response()
+        response.status_code = 500
+        response._content = b"reader unavailable"
+        response.url = f"https://r.jina.ai/http://{url}"
+        return response
+
+    monkeypatch.setattr(discovery_module, "_request_with_env_fallback", reader_response)
+
+    result = fetch_html_with_fallback(url)
+
+    assert result.html is None
+    assert result.fetch_method is None
+    assert result.request_error == "tls handshake failure"
+    assert "500 Server Error" in (result.browser_error or "")
+
+
+def test_render_text_with_reader_uses_jina_direct_url_prefix(tmp_path, monkeypatch):
+    from src.data_agents.professor import discovery as discovery_module
+
+    requested_urls: list[str] = []
+    target_url = "https://csse.szu.edu.cn/pages/user/index?id=617"
+
+    class FakeResponse:
+        status_code = 200
+        text = "Title: 陈国良\n\nMarkdown Content:\n陈国良"
+
+        def raise_for_status(self) -> None:
+            return None
+
+    def fake_request(method: str, url: str, **_kwargs):
+        requested_urls.append(url)
+        return FakeResponse()
+
+    monkeypatch.setattr(discovery_module, "_cache_dir", lambda: tmp_path)
+    monkeypatch.setattr(discovery_module, "_request_with_env_fallback", fake_request)
+
+    result = discovery_module._render_text_with_reader(target_url, timeout=5.0)
+
+    assert "陈国良" in result
+    assert requested_urls == [
+        "https://r.jina.ai/https://csse.szu.edu.cn/pages/user/index?id=617"
+    ]
+
+
+def test_render_text_with_reader_does_not_hold_rate_lock_during_network_call(
+    tmp_path, monkeypatch
+):
+    from src.data_agents.professor import discovery as discovery_module
+
+    lock_was_held_during_request: list[bool] = []
+
+    class FakeResponse:
+        status_code = 200
+        text = "Title: 张三\n\nMarkdown Content:\n张三"
+
+        def raise_for_status(self) -> None:
+            return None
+
+    def fake_request(*_args, **_kwargs):
+        acquired = discovery_module._READER_SERIAL_LOCK.acquire(blocking=False)
+        lock_was_held_during_request.append(not acquired)
+        if acquired:
+            discovery_module._READER_SERIAL_LOCK.release()
+        return FakeResponse()
+
+    monkeypatch.setattr(discovery_module, "_cache_dir", lambda: tmp_path)
+    monkeypatch.setattr(discovery_module, "_request_with_env_fallback", fake_request)
+
+    result = discovery_module._render_text_with_reader(
+        "https://csse.szu.edu.cn/pages/user/index?id=617",
+        timeout=5.0,
+    )
+
+    assert "张三" in result
+    assert lock_was_held_during_request == [False]
 
 
 def test_fetch_html_with_fallback_refreshes_stale_teacher_search_reader_cache(tmp_path, monkeypatch):
@@ -1910,6 +2963,60 @@ def test_fetch_html_with_fallback_refreshes_stale_teacher_search_reader_cache(tm
     )
 
     assert "黄建伟" in (result.html or "")
+    cached_payload = json.loads(cache_file.read_text(encoding="utf-8"))
+    assert cached_payload["content"] == fresh_html.strip()
+
+
+def test_fetch_html_with_fallback_refreshes_stale_sztu_category_cache(tmp_path, monkeypatch):
+    from src.data_agents.professor import discovery as discovery_module
+
+    url = "https://ai.sztu.edu.cn/szdw/jytd/jxjs.htm"
+    monkeypatch.setattr(discovery_module, "_cache_dir", lambda: tmp_path)
+    cache_file = discovery_module._cache_path(url)
+    cache_file.write_text(
+        json.dumps(
+            {
+                "url": url,
+                "content": """
+                <html><body>
+                  <div class="list_teacher"><div class="list_pic_box">
+                    <div class="item"><a href="../../info/1332/6055.htm">梁永生 讲席教授</a></div>
+                  </div></div>
+                </body></html>
+                """,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    fresh_html = """
+    <html><body>
+      <div class="list_teacher"><div class="list_pic_box">
+        <div class="item"><a href="../../info/1332/6055.htm">梁永生 讲席教授</a></div>
+      </div></div>
+      <nav>
+        <a href="tpjs.htm">特聘教授</a>
+        <a href="js.htm">教授</a>
+        <a href="fjs.htm">副教授</a>
+        <a href="zljs.htm">助理教授</a>
+      </nav>
+    </body></html>
+    """
+
+    class FakeResponse:
+        status_code = 200
+        encoding = "utf-8"
+        apparent_encoding = "utf-8"
+        text = fresh_html
+
+        def raise_for_status(self) -> None:
+            return None
+
+    monkeypatch.setattr(discovery_module, "_requests_get", lambda _url, _timeout: FakeResponse())
+
+    result = fetch_html_with_fallback(url)
+
+    assert "特聘教授" in (result.html or "")
     cached_payload = json.loads(cache_file.read_text(encoding="utf-8"))
     assert cached_payload["content"] == fresh_html.strip()
 
@@ -2088,6 +3195,69 @@ def test_discover_professor_seeds_uses_hit_api_endpoint():
     ]
     assert result.source_statuses[0].status == "resolved"
     assert result.source_statuses[0].reason == "hit_teacher_api"
+
+
+def test_discover_professor_seeds_filters_hit_api_placeholder_records():
+    seeds = [
+        ProfessorRosterSeed(
+            institution="哈尔滨工业大学（深圳）",
+            department=None,
+            roster_url=(
+                "https://homepage.hit.edu.cn/school-dept?id=1&browseName="
+                "%E6%A0%A1%E5%86%85%E5%8D%95%E4%BD%8D&browseEnName=DEPARTMENT"
+            ),
+        )
+    ]
+
+    def fail_fetch_html(_: str) -> str:
+        raise AssertionError("html fetch should not be used for HIT api discovery")
+
+    def fake_fetch_json(url: str, payload: dict[str, object]) -> object:
+        if url.endswith("executeBrowseAllOfSchoolDepartSz.do"):
+            return [
+                {
+                    "id": "999903600000",
+                    "deptname": "计算机科学与技术学院（深圳）",
+                    "parentid": "999903600015",
+                    "value": 4,
+                }
+            ]
+        if url.endswith("getUserInfoByDeptId.do"):
+            return [
+                {
+                    "userName": "王轩",
+                    "department": "计算机科学与技术学院（深圳）",
+                    "url": "wangxuan",
+                },
+                {
+                    "userName": "未开通",
+                    "department": "计算机科学与技术学院（深圳）",
+                    "url": "zhangchunkai",
+                },
+                {
+                    "userName": "相关教师",
+                    "department": "计算机科学与技术学院（深圳）",
+                    "url": "joannasiebert",
+                },
+                {
+                    "userName": "王开阳",
+                    "department": "计算机科学与技术学院（深圳）",
+                    "url": "noFound.html",
+                },
+            ]
+        raise AssertionError(f"unexpected url: {url}")
+
+    result = discover_professor_seeds(
+        seeds=seeds,
+        fetch_html=fail_fetch_html,
+        fetch_json=fake_fetch_json,
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        ("王轩", "https://homepage.hit.edu.cn/wangxuan?lang=zh")
+    ]
+    assert result.source_statuses[0].status == "resolved"
+    assert result.source_statuses[0].discovered_professor_count == 1
 
 
 def test_validate_roster_discovery_document_aggregates_duplicates_and_fetch_failures():
@@ -2625,7 +3795,7 @@ def test_discover_professor_seeds_continues_ceie_category_pages_after_academicia
     result = discover_professor_seeds(
         seeds=seeds,
         fetch_html=lambda url: pages[url],
-        limits=DiscoveryLimits(max_depth=1, max_candidate_links_per_page=8, max_pages_per_seed=8),
+        limits=DiscoveryLimits(max_depth=1, max_candidate_links_per_page=8, max_pages_per_seed=10),
     )
 
     assert [(item.name, item.profile_url) for item in result.professors] == [
@@ -2640,6 +3810,841 @@ def test_discover_professor_seeds_continues_ceie_category_pages_after_academicia
         "https://ceie.szu.edu.cn/szdw/js.htm",
         "https://ceie.szu.edu.cn/szdw/fjs.htm",
         "https://ceie.szu.edu.cn/szdw/js_zljs.htm",
+    ]
+
+
+def test_discover_professor_seeds_continues_sztu_teacher_category_pages_after_current_page():
+    seed_url = "https://ai.sztu.edu.cn/szdw/jytd/jxjs.htm"
+    seeds = [
+        ProfessorRosterSeed(
+            institution="深圳技术大学",
+            department="人工智能学院",
+            roster_url=seed_url,
+        )
+    ]
+    pages = {
+        seed_url: """
+        <html><body>
+          <div class="list_teacher">
+            <div class="list_pic_box">
+              <div class="item"><a href="../../info/1332/6055.htm">梁永生 讲席教授</a></div>
+            </div>
+          </div>
+          <nav>
+            <a href="tpjs.htm">特聘教授</a>
+            <a href="js.htm">教授</a>
+            <a href="jzjs.htm">兼职教授</a>
+            <a href="fjs.htm">副教授</a>
+            <a href="zljs.htm">助理教授</a>
+            <a href="yjy.htm">研究员</a>
+            <a href="bsh.htm">博士后</a>
+            <a href="cyds.htm">产业导师</a>
+          </nav>
+        </body></html>
+        """,
+        "https://ai.sztu.edu.cn/szdw/jytd/tpjs.htm": """
+        <html><body>
+          <div class="list_teacher"><div class="list_pic_box">
+            <div class="item"><a href="../../info/1332/6057.htm">刘清侠 教授</a></div>
+          </div></div>
+        </body></html>
+        """,
+        "https://ai.sztu.edu.cn/szdw/jytd/js.htm": """
+        <html><body>
+          <div class="s_team_main"><ul>
+            <li><a href="../../info/1012/1160.htm">宁存政 教授</a></li>
+          </ul></div>
+        </body></html>
+        """,
+        "https://ai.sztu.edu.cn/szdw/jytd/fjs.htm": """
+        <html><body>
+          <div class="s_team_main"><ul>
+            <li><a href="../../info/1012/1161.htm">张三 副教授</a></li>
+          </ul></div>
+        </body></html>
+        """,
+        "https://ai.sztu.edu.cn/szdw/jytd/zljs.htm": """
+        <html><body>
+          <div class="s_team_main"><ul>
+            <li><a href="../../info/1012/1162.htm">李四 助理教授</a></li>
+          </ul></div>
+        </body></html>
+        """,
+        "https://ai.sztu.edu.cn/szdw/jytd/jzjs.htm": """
+        <html><body>
+          <div class="s_team_main"><ul>
+            <li><a href="../../info/1012/1163.htm">王五 兼职教授</a></li>
+          </ul></div>
+        </body></html>
+        """,
+        "https://ai.sztu.edu.cn/szdw/jytd/yjy.htm": """
+        <html><body>
+          <div class="s_team_main"><ul>
+            <li><a href="../../info/1012/1164.htm">赵六 研究员</a></li>
+          </ul></div>
+        </body></html>
+        """,
+        "https://ai.sztu.edu.cn/szdw/jytd/bsh.htm": """
+        <html><body>
+          <div class="s_team_main"><ul>
+            <li><a href="../../info/1012/1165.htm">孙七 博士后</a></li>
+          </ul></div>
+        </body></html>
+        """,
+        "https://ai.sztu.edu.cn/szdw/jytd/cyds.htm": """
+        <html><body>
+          <div class="s_team_main"><ul>
+            <li><a href="../../info/1012/1166.htm">周八 产业导师</a></li>
+          </ul></div>
+        </body></html>
+        """,
+    }
+
+    result = discover_professor_seeds(
+        seeds=seeds,
+        fetch_html=lambda url: pages[url],
+        limits=DiscoveryLimits(max_depth=1, max_candidate_links_per_page=8, max_pages_per_seed=10),
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        ("梁永生", "https://ai.sztu.edu.cn/info/1332/6055.htm"),
+        ("刘清侠", "https://ai.sztu.edu.cn/info/1332/6057.htm"),
+        ("宁存政", "https://ai.sztu.edu.cn/info/1012/1160.htm"),
+        ("张三", "https://ai.sztu.edu.cn/info/1012/1161.htm"),
+        ("李四", "https://ai.sztu.edu.cn/info/1012/1162.htm"),
+    ]
+    assert result.failed_fetch_urls == []
+    assert result.source_statuses[0].visited_urls == [
+        seed_url,
+        "https://ai.sztu.edu.cn/szdw/jytd/tpjs.htm",
+        "https://ai.sztu.edu.cn/szdw/jytd/js.htm",
+        "https://ai.sztu.edu.cn/szdw/jytd/fjs.htm",
+        "https://ai.sztu.edu.cn/szdw/jytd/zljs.htm",
+    ]
+
+
+def test_discover_professor_seeds_continues_icoc_allowed_sztu_category_pages_only():
+    seed_url = "https://icoc.sztu.edu.cn/szdw/jytd/jxjs.htm"
+    seeds = [
+        ProfessorRosterSeed(
+            institution="深圳技术大学",
+            department="集成电路与光电芯片学院",
+            roster_url=seed_url,
+        )
+    ]
+    pages = {
+        seed_url: """
+        <html><body>
+          <div class="list_teacher"><div class="list_pic_box">
+            <div class="item"><a href="../../info/1332/6055.htm">梁永生 讲席教授</a></div>
+          </div></div>
+          <nav>
+            <a href="tpjs.htm">特聘教授</a>
+            <a href="js.htm">教授</a>
+            <a href="jzjs.htm">兼职教授</a>
+            <a href="fjs.htm">副教授</a>
+            <a href="zljs.htm">助理教授</a>
+            <a href="yjy.htm">研究员</a>
+            <a href="bsh.htm">博士后</a>
+            <a href="cyds.htm">产业导师</a>
+          </nav>
+        </body></html>
+        """,
+        "https://icoc.sztu.edu.cn/szdw/jytd/tpjs.htm": """
+        <html><body><div class="s_team_main"><ul>
+          <li><a href="../../info/1012/1160.htm">刘清侠 特聘教授</a></li>
+        </ul></div></body></html>
+        """,
+        "https://icoc.sztu.edu.cn/szdw/jytd/js.htm": """
+        <html><body><div class="s_team_main"><ul>
+          <li><a href="../../info/1012/1161.htm">宁存政 教授</a></li>
+        </ul></div></body></html>
+        """,
+        "https://icoc.sztu.edu.cn/szdw/jytd/fjs.htm": """
+        <html><body><div class="s_team_main"><ul>
+          <li><a href="../../info/1012/1162.htm">张三 副教授</a></li>
+        </ul></div></body></html>
+        """,
+        "https://icoc.sztu.edu.cn/szdw/jytd/zljs.htm": """
+        <html><body><div class="s_team_main"><ul>
+          <li><a href="../../info/1012/1163.htm">李四 助理教授</a></li>
+        </ul></div></body></html>
+        """,
+        "https://icoc.sztu.edu.cn/szdw/jytd/yjy.htm": """
+        <html><body><div class="s_team_main"><ul>
+          <li><a href="../../info/1012/1164.htm">赵六 研究员</a></li>
+        </ul></div></body></html>
+        """,
+        "https://icoc.sztu.edu.cn/szdw/jytd/bsh.htm": """
+        <html><body><div class="s_team_main"><ul>
+          <li><a href="../../info/1012/1165.htm">孙七 博士后</a></li>
+        </ul></div></body></html>
+        """,
+        "https://icoc.sztu.edu.cn/szdw/jytd/jzjs.htm": """
+        <html><body><div class="s_team_main"><ul>
+          <li><a href="../../info/1012/1166.htm">王五 兼职教授</a></li>
+        </ul></div></body></html>
+        """,
+        "https://icoc.sztu.edu.cn/szdw/jytd/cyds.htm": """
+        <html><body><div class="s_team_main"><ul>
+          <li><a href="../../info/1012/1167.htm">周八 产业导师</a></li>
+        </ul></div></body></html>
+        """,
+    }
+
+    result = discover_professor_seeds(
+        seeds=seeds,
+        fetch_html=lambda url: pages[url],
+        limits=DiscoveryLimits(max_depth=1, max_candidate_links_per_page=8, max_pages_per_seed=10),
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        ("梁永生", "https://icoc.sztu.edu.cn/info/1332/6055.htm"),
+        ("刘清侠", "https://icoc.sztu.edu.cn/info/1012/1160.htm"),
+        ("宁存政", "https://icoc.sztu.edu.cn/info/1012/1161.htm"),
+        ("张三", "https://icoc.sztu.edu.cn/info/1012/1162.htm"),
+        ("李四", "https://icoc.sztu.edu.cn/info/1012/1163.htm"),
+        ("赵六", "https://icoc.sztu.edu.cn/info/1012/1164.htm"),
+        ("孙七", "https://icoc.sztu.edu.cn/info/1012/1165.htm"),
+    ]
+    assert result.source_statuses[0].visited_urls == [
+        seed_url,
+        "https://icoc.sztu.edu.cn/szdw/jytd/tpjs.htm",
+        "https://icoc.sztu.edu.cn/szdw/jytd/js.htm",
+        "https://icoc.sztu.edu.cn/szdw/jytd/fjs.htm",
+        "https://icoc.sztu.edu.cn/szdw/jytd/zljs.htm",
+        "https://icoc.sztu.edu.cn/szdw/jytd/yjy.htm",
+        "https://icoc.sztu.edu.cn/szdw/jytd/bsh.htm",
+    ]
+
+
+def test_discover_professor_seeds_continues_suat_teacher_category_pages_after_all_page():
+    seed_url = "https://synbio.suat-sz.edu.cn/szll2/qb.htm"
+    seeds = [
+        ProfessorRosterSeed(
+            institution="深圳理工大学",
+            department="合成生物学院",
+            roster_url=seed_url,
+        )
+    ]
+    pages = {
+        seed_url: """
+        <html><body>
+          <nav>
+            <a href="qb.htm">全部</a>
+            <a href="js.htm">教授</a>
+            <a href="jcjs.htm">杰出教授</a>
+            <a href="fjs.htm">副教授</a>
+            <a href="qnjs.htm">青年教师</a>
+          </nav>
+          <a class="flex" href="../info/1151/2121.htm" title="康 乐">
+            <div>康 乐</div><p>讲席教授</p>
+          </a>
+        </body></html>
+        """,
+        "https://synbio.suat-sz.edu.cn/szll2/js.htm": """
+        <html><body>
+          <a class="flex" href="../info/1151/2124.htm" title="胡 强">
+            <div>胡 强</div><p>教授</p>
+          </a>
+        </body></html>
+        """,
+        "https://synbio.suat-sz.edu.cn/szll2/fjs.htm": """
+        <html><body>
+          <a class="flex" href="../info/1151/2127.htm" title="赵 勇">
+            <div>赵 勇</div><p>副教授</p>
+          </a>
+        </body></html>
+        """,
+        "https://synbio.suat-sz.edu.cn/szll2/jcjs.htm": """
+        <html><body>
+          <a class="flex" href="../info/1151/2129.htm" title="李 七">
+            <div>李 七</div><p>杰出教授</p>
+          </a>
+        </body></html>
+        """,
+        "https://synbio.suat-sz.edu.cn/szll2/qnjs.htm": """
+        <html><body>
+          <a class="flex" href="../info/1151/2128.htm" title="钱 六">
+            <div>钱 六</div><p>青年教师</p>
+          </a>
+        </body></html>
+        """,
+    }
+
+    result = discover_professor_seeds(
+        seeds=seeds,
+        fetch_html=lambda url: pages[url],
+        limits=DiscoveryLimits(max_depth=1, max_candidate_links_per_page=8, max_pages_per_seed=8),
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        ("康乐", "https://synbio.suat-sz.edu.cn/info/1151/2121.htm"),
+        ("胡强", "https://synbio.suat-sz.edu.cn/info/1151/2124.htm"),
+        ("李七", "https://synbio.suat-sz.edu.cn/info/1151/2129.htm"),
+        ("赵勇", "https://synbio.suat-sz.edu.cn/info/1151/2127.htm"),
+        ("钱六", "https://synbio.suat-sz.edu.cn/info/1151/2128.htm"),
+    ]
+    assert result.failed_fetch_urls == []
+    assert result.source_statuses[0].visited_urls == [
+        seed_url,
+        "https://synbio.suat-sz.edu.cn/szll2/js.htm",
+        "https://synbio.suat-sz.edu.cn/szll2/jcjs.htm",
+        "https://synbio.suat-sz.edu.cn/szll2/fjs.htm",
+        "https://synbio.suat-sz.edu.cn/szll2/qnjs.htm",
+    ]
+
+
+def test_discover_professor_seeds_continues_suat_synbio_roster_pagination_pages():
+    seed_url = "https://synbio.suat-sz.edu.cn/szll2/qb.htm"
+    seeds = [
+        ProfessorRosterSeed(
+            institution="深圳理工大学",
+            department="合成生物学院",
+            roster_url=seed_url,
+        )
+    ]
+    pages = {
+        seed_url: """
+        <html><body>
+          <a class="flex" href="../info/1151/2121.htm" title="康 乐">
+            <div>康 乐</div><p>讲席教授</p>
+          </a>
+          <div class="pages">
+            <a href="qb/1.htm">下一页</a>
+          </div>
+        </body></html>
+        """,
+        "https://synbio.suat-sz.edu.cn/szll2/qb/1.htm": """
+        <html><body>
+          <a class="flex" href="../../info/1151/2124.htm" title="胡 强">
+            <div>胡 强</div><p>教授</p>
+          </a>
+        </body></html>
+        """,
+    }
+
+    result = discover_professor_seeds(
+        seeds=seeds,
+        fetch_html=lambda url: pages[url],
+        limits=DiscoveryLimits(max_depth=1, max_candidate_links_per_page=8, max_pages_per_seed=4),
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        ("康乐", "https://synbio.suat-sz.edu.cn/info/1151/2121.htm"),
+        ("胡强", "https://synbio.suat-sz.edu.cn/info/1151/2124.htm"),
+    ]
+    assert result.failed_fetch_urls == []
+    assert result.source_statuses[0].visited_urls == [
+        seed_url,
+        "https://synbio.suat-sz.edu.cn/szll2/qb/1.htm",
+    ]
+
+
+def test_extract_roster_page_links_supports_suat_biomed_numeric_pagination():
+    html = """
+    <html><body>
+      <a href="../info/1052/1124.htm">
+        宋冰 副院长、讲席教授 songbing@suat-sz.edu.cn 深圳理工大学生物医学工程学院
+      </a>
+      <div class="pages">
+        <a href="jxky/1.htm">2</a>
+        <a href="jxky/2.htm">3</a>
+        <a href="jxky/3.htm">4</a>
+        <a href="jxky/1.htm">下页</a>
+      </div>
+    </body></html>
+    """
+
+    links = extract_roster_page_links(
+        html,
+        "https://suat-sz.edu.cn/swyxgcxy/szll/jxky.htm",
+    )
+
+    assert links == [
+        ("https://suat-sz.edu.cn/swyxgcxy/szll/jxky/1.htm", "2"),
+        ("https://suat-sz.edu.cn/swyxgcxy/szll/jxky/2.htm", "3"),
+        ("https://suat-sz.edu.cn/swyxgcxy/szll/jxky/3.htm", "4"),
+    ]
+
+
+def test_discover_professor_seeds_continues_suat_biomed_pagination_after_entries():
+    seed_url = "https://suat-sz.edu.cn/swyxgcxy/szll/jxky.htm"
+    page2_url = "https://suat-sz.edu.cn/swyxgcxy/szll/jxky/1.htm"
+    pages = {
+        seed_url: """
+        <html><body>
+          <a href="../info/1052/1124.htm">
+            宋冰 副院长、讲席教授 songbing@suat-sz.edu.cn 深圳理工大学生物医学工程学院
+          </a>
+          <a href="../info/1052/1121.htm">
+            吴景龙 讲席教授、博士生导师 wujinglong@suat-sz.edu.cn 深圳理工大学生物医学工程学院
+          </a>
+          <a href="jxky/1.htm">2</a>
+          <a href="jxky/1.htm">下页</a>
+        </body></html>
+        """,
+        page2_url: """
+        <html><body>
+          <a href="/swyxgcxy/info/1052/1134.htm">
+            胡庆茂 教学名师 huqingmao@suat-sz.edu.cn 深圳理工大学生物医学工程学院
+          </a>
+        </body></html>
+        """,
+    }
+    visited: list[str] = []
+
+    def fetch_html(url: str) -> str:
+        visited.append(url)
+        return pages[url]
+
+    result = discover_professor_seeds(
+        [
+            ProfessorRosterSeed(
+                institution="深圳理工大学",
+                department="生物医学工程学院",
+                roster_url=seed_url,
+            )
+        ],
+        fetch_html=fetch_html,
+        limits=DiscoveryLimits(max_depth=1, max_pages_per_seed=4),
+    )
+
+    assert visited == [seed_url, page2_url]
+    assert [(prof.name, prof.profile_url) for prof in result.professors] == [
+        ("宋冰", "https://suat-sz.edu.cn/swyxgcxy/info/1052/1124.htm"),
+        ("吴景龙", "https://suat-sz.edu.cn/swyxgcxy/info/1052/1121.htm"),
+        ("胡庆茂", "https://suat-sz.edu.cn/swyxgcxy/info/1052/1134.htm"),
+    ]
+
+
+def test_discover_professor_seeds_continues_suit_sziit_roster_pagination_after_first_page():
+    seed_url = "https://zd.suit-sz.edu.cn/jyjx/jsfc.htm"
+    seeds = [
+        ProfessorRosterSeed(
+            institution="深圳信息职业技术大学",
+            department="中德机器人学院",
+            roster_url=seed_url,
+        )
+    ]
+    pages = {
+        seed_url: """
+        <html><body>
+          <ul class="teacher-list">
+            <li><h3 class="name"><a href="../info/1013/2674.htm">夏林中</a></h3></li>
+          </ul>
+          <div class="pages"><a href="/jyjx/jsfc/1.htm">下一页</a></div>
+        </body></html>
+        """,
+        "https://zd.suit-sz.edu.cn/jyjx/jsfc/1.htm": """
+        <html><body>
+          <ul class="teacher-list">
+            <li><h3 class="name"><a href="../../info/1013/2673.htm">陈敏娜</a></h3></li>
+          </ul>
+        </body></html>
+        """,
+    }
+
+    result = discover_professor_seeds(
+        seeds=seeds,
+        fetch_html=lambda url: pages[url],
+        limits=DiscoveryLimits(max_depth=1, max_candidate_links_per_page=8, max_pages_per_seed=4),
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        ("夏林中", "https://zd.suit-sz.edu.cn/info/1013/2674.htm"),
+        ("陈敏娜", "https://zd.suit-sz.edu.cn/info/1013/2673.htm"),
+    ]
+    assert result.failed_fetch_urls == []
+    assert result.source_statuses[0].visited_urls == [
+        seed_url,
+        "https://zd.suit-sz.edu.cn/jyjx/jsfc/1.htm",
+    ]
+
+
+def test_discover_professor_seeds_reports_cpoe_filter_only_page_as_unresolved():
+    seed_url = "https://cpoe.szu.edu.cn/szdw.jsp?urltype=tree.TreeTempUrl&wbtreeid=1014"
+    seeds = [
+        ProfessorRosterSeed(
+            institution="深圳大学",
+            department="物理与光电工程学院",
+            roster_url=seed_url,
+        )
+    ]
+    html = """
+    <html><head><title>师资队伍-物理与光电工程学院</title></head><body>
+      <div class="filter">
+        <a href="szdw.jsp?zc=all">职称</a>
+        <a href="szdw.jsp?zc=professor">教授</a>
+        <a href="szdw.jsp?zc=associate">副教授</a>
+        <a href="szdw.jsp?dept=physics">基础物理部</a>
+        <a href="szdw.jsp?dept=innovation">创新部</a>
+      </div>
+    </body></html>
+    """
+
+    result = discover_professor_seeds(
+        seeds=seeds,
+        fetch_html=lambda url: html if url == seed_url else (_ for _ in ()).throw(KeyError(url)),
+        limits=DiscoveryLimits(max_depth=1, max_candidate_links_per_page=8, max_pages_per_seed=4),
+    )
+
+    assert result.professors == []
+    assert result.source_statuses[0].status == "unresolved"
+    assert result.source_statuses[0].reason == "no_professor_entries_found"
+    assert result.source_statuses[0].discovered_professor_count == 0
+
+
+def test_extract_roster_page_links_filters_cpoe_category_only_links():
+    html = """
+    <html><head><title>师资队伍-物理与光电工程学院</title></head><body>
+      <div class="filter">
+        <a href="szdw.jsp?zc=all">职称</a>
+        <a href="szdw.jsp?zc=professor">教授</a>
+        <a href="szdw.jsp?zc=associate">副教授</a>
+        <a href="szdw.jsp?dept=physics">基础物理部</a>
+        <a href="szdw.jsp?dept=innovation">创新部</a>
+      </div>
+    </body></html>
+    """
+
+    links = extract_roster_page_links(
+        html,
+        "https://cpoe.szu.edu.cn/szdw.jsp?urltype=tree.TreeTempUrl&wbtreeid=1014",
+    )
+
+    assert links == []
+
+
+def test_extract_roster_page_links_rejects_cpoe_seed_11_non_person_navigation_links():
+    markdown = """
+Title: 师资队伍-深圳大学物理与光电工程学院
+
+Markdown Content:
+* [廉洁之窗](https://cpoe.szu.edu.cn/info/1001/1101.htm)
+* [奖学助贷](https://cpoe.szu.edu.cn/info/1001/1102.htm)
+* [校友](https://cpoe.szu.edu.cn/info/1001/1103.htm)
+* [基本介绍](https://cpoe.szu.edu.cn/info/1001/1104.htm)
+* [游戏机](https://cpoe.szu.edu.cn/info/1001/1105.htm)
+* [中心介绍](https://cpoe.szu.edu.cn/info/1001/1106.htm)
+* [交流合作](https://cpoe.szu.edu.cn/info/1001/1107.htm)
+"""
+
+    links = extract_roster_page_links(
+        markdown,
+        "https://cpoe.szu.edu.cn/szdw.jsp?urltype=tree.TreeTempUrl&wbtreeid=1014",
+    )
+
+    assert links == []
+
+
+def test_extract_roster_entries_supports_cpoe_teacherfeature_records():
+    payload = {
+        "teacherData": [
+            {
+                "teacherName": "张明",
+                "teacherUrl": "szxq.jsp?urltype=tp.TpTeacherDetail&teacherid=1201&wbtreeid=1014",
+            },
+            {
+                "name": "李华",
+                "url": "/szxq.jsp?urltype=tp.TpTeacherDetail&teacherid=1202&wbtreeid=1014",
+            },
+            {
+                "teacherName": "交流合作",
+                "teacherUrl": "info/1001/1107.htm",
+            },
+            {
+                "teacherName": "廉洁之窗",
+                "teacherUrl": "info/1001/1101.htm",
+            },
+        ]
+    }
+
+    entries = extract_roster_entries(
+        json.dumps(payload, ensure_ascii=False),
+        institution="深圳大学",
+        department="物理与光电工程学院",
+        source_url="https://cpoe.szu.edu.cn/system/resource/tsites/teacherfeature.jsp?type=1",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        (
+            "张明",
+            "https://cpoe.szu.edu.cn/szxq.jsp?urltype=tp.TpTeacherDetail&teacherid=1201&wbtreeid=1014",
+        ),
+        (
+            "李华",
+            "https://cpoe.szu.edu.cn/szxq.jsp?urltype=tp.TpTeacherDetail&teacherid=1202&wbtreeid=1014",
+        ),
+    ]
+
+
+def test_extract_roster_entries_supports_live_cpoe_root_teacherfeature_records():
+    payload = {
+        "teacherData": [
+            {
+                "name": "白志勇",
+                "url": (
+                    "http://cpoe.szu.edu.cn?urltype=tp.TpTeacherDetail"
+                    "&wbtreeid=&id=1779754310756143105&dm=baizhiyong&language="
+                ),
+            },
+        ]
+    }
+
+    entries = extract_roster_entries(
+        json.dumps(payload, ensure_ascii=False),
+        institution="深圳大学",
+        department="物理与光电工程学院",
+        source_url=(
+            "https://cpoe.szu.edu.cn/system/resource/teacherfeature/search/"
+            "queryteacher.jsp?columnId=1111"
+        ),
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        (
+            "白志勇",
+            "https://cpoe.szu.edu.cn/szxq.jsp?urltype=tp.TpTeacherDetail"
+            "&wbtreeid=1111&id=1779754310756143105&dm=baizhiyong&language=",
+        )
+    ]
+
+
+def test_discover_professor_seeds_follows_cpoe_teacherfeature_endpoint():
+    seed_url = "https://cpoe.szu.edu.cn/szdw.jsp?urltype=tree.TreeTempUrl&wbtreeid=1014"
+    endpoint_url = (
+        "https://cpoe.szu.edu.cn/system/resource/tsites/teacherfeature.jsp"
+        "?type=1&wbtreeid=1014"
+    )
+    shell_html = """
+    <html><body>
+      <nav>
+        <a href="info/1001/1101.htm">廉洁之窗</a>
+        <a href="info/1001/1107.htm">交流合作</a>
+      </nav>
+      <script>
+        var endpoint = "/system/resource/tsites/teacherfeature.jsp?type=1&wbtreeid=1014";
+      </script>
+    </body></html>
+    """
+    endpoint_payload = {
+        "teacherData": [
+            {
+                "teacherName": "王强",
+                "teacherUrl": "szxq.jsp?urltype=tp.TpTeacherDetail&teacherid=2201&wbtreeid=1014",
+            },
+            {
+                "teacherName": "交流合作",
+                "teacherUrl": "info/1001/1107.htm",
+            },
+        ]
+    }
+    pages = {
+        seed_url: shell_html,
+        endpoint_url: json.dumps(endpoint_payload, ensure_ascii=False),
+    }
+
+    result = discover_professor_seeds(
+        seeds=[
+            ProfessorRosterSeed(
+                institution="深圳大学",
+                department="物理与光电工程学院",
+                roster_url=seed_url,
+            )
+        ],
+        fetch_html=lambda url: pages[url],
+        limits=DiscoveryLimits(max_depth=1, max_candidate_links_per_page=8, max_pages_per_seed=4),
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        (
+            "王强",
+            "https://cpoe.szu.edu.cn/szxq.jsp?urltype=tp.TpTeacherDetail&teacherid=2201&wbtreeid=1014",
+        )
+    ]
+    assert result.source_statuses[0].visited_urls == [seed_url, endpoint_url]
+
+
+def test_discover_professor_seeds_builds_live_cpoe_queryteacher_endpoint():
+    seed_url = "https://cpoe.szu.edu.cn/szdw.jsp?urltype=tree.TreeTempUrl&wbtreeid=1111"
+    endpoint_url = (
+        "https://cpoe.szu.edu.cn/system/resource/teacherfeature/search/queryteacher.jsp"
+        "?viewUniqueId=1102361&viewId=1102361&siteOwner=1977496157"
+        "&columnId=1111&pageNumber=12&viewMode=10&publicType=1"
+        "&pageindex=1&pagesize=12"
+    )
+    shell_html = """
+    <html><body>
+      <nav>
+        <a href="jgsz/jxjg.htm">教学机构</a>
+        <a href="kxyj/kycg.htm">科研成果</a>
+      </nav>
+      <script type="text/javascript">
+        var tsites_load_data_options = {
+          "viewUniqueId": 1102361,
+          "showlang": "0",
+          "lineId": "110236117D01D9482CD4A37A66BEAE03F7EBBF1",
+          "viewId": 1102361,
+          "publicType": 1,
+          "siteOwner": 1977496157,
+          "columnId": 1111,
+          "pageNumber": 12,
+          "viewMode": 10
+        };
+      </script>
+    </body></html>
+    """
+    endpoint_payload = {
+        "teacherData": [
+            {
+                "name": "白志勇",
+                "url": (
+                    "http://cpoe.szu.edu.cn?urltype=tp.TpTeacherDetail"
+                    "&wbtreeid=&id=1779754310756143105&dm=baizhiyong&language="
+                ),
+            },
+            {"name": "科研成果", "url": "https://cpoe.szu.edu.cn/kxyj/kycg.htm"},
+        ]
+    }
+    pages = {
+        seed_url: shell_html,
+        endpoint_url: json.dumps(endpoint_payload, ensure_ascii=False),
+    }
+
+    result = discover_professor_seeds(
+        seeds=[
+            ProfessorRosterSeed(
+                institution="深圳大学",
+                department="物理与光电工程学院",
+                roster_url=seed_url,
+            )
+        ],
+        fetch_html=lambda url: pages[url],
+        limits=DiscoveryLimits(max_depth=1, max_candidate_links_per_page=8, max_pages_per_seed=4),
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        (
+            "白志勇",
+            "https://cpoe.szu.edu.cn/szxq.jsp?urltype=tp.TpTeacherDetail"
+            "&wbtreeid=1111&id=1779754310756143105&dm=baizhiyong&language=",
+        )
+    ]
+    assert result.source_statuses[0].visited_urls == [seed_url, endpoint_url]
+
+
+def test_discover_professor_seeds_paginates_live_cpoe_queryteacher_endpoint():
+    seed_url = "https://cpoe.szu.edu.cn/szdw.jsp?urltype=tree.TreeTempUrl&wbtreeid=1111"
+    endpoint_url = (
+        "https://cpoe.szu.edu.cn/system/resource/teacherfeature/search/queryteacher.jsp"
+        "?viewUniqueId=1102361&viewId=1102361&siteOwner=1977496157"
+        "&columnId=1111&pageNumber=12&viewMode=10&publicType=1"
+        "&pageindex=1&pagesize=12"
+    )
+    endpoint_page_2 = endpoint_url.replace("pageindex=1", "pageindex=2")
+    endpoint_page_3 = endpoint_url.replace("pageindex=1", "pageindex=3")
+    shell_html = """
+    <html><body>
+      <script type="text/javascript">
+        var tsites_load_data_options = {
+          "viewUniqueId": 1102361,
+          "viewId": 1102361,
+          "publicType": 1,
+          "siteOwner": 1977496157,
+          "columnId": 1111,
+          "pageNumber": 12,
+          "viewMode": 10
+        };
+      </script>
+    </body></html>
+    """
+    pages = {
+        seed_url: shell_html,
+        endpoint_url: json.dumps(
+            {
+                "pageindex": 1,
+                "totalpage": 3,
+                "teacherData": [
+                    {
+                        "name": "白志勇",
+                        "url": (
+                            "http://cpoe.szu.edu.cn?urltype=tp.TpTeacherDetail"
+                            "&wbtreeid=&id=1779754310756143105&dm=baizhiyong&language="
+                        ),
+                    }
+                ],
+            },
+            ensure_ascii=False,
+        ),
+        endpoint_page_2: json.dumps(
+            {
+                "pageindex": 2,
+                "totalpage": 3,
+                "teacherData": [
+                    {
+                        "name": "陈光",
+                        "url": (
+                            "http://cpoe.szu.edu.cn?urltype=tp.TpTeacherDetail"
+                            "&wbtreeid=&id=1779754310756143106&dm=chenguang&language="
+                        ),
+                    }
+                ],
+            },
+            ensure_ascii=False,
+        ),
+        endpoint_page_3: json.dumps(
+            {
+                "pageindex": 3,
+                "totalpage": 3,
+                "teacherData": [
+                    {
+                        "name": "李明",
+                        "url": (
+                            "http://cpoe.szu.edu.cn?urltype=tp.TpTeacherDetail"
+                            "&wbtreeid=&id=1779754310756143107&dm=liming&language="
+                        ),
+                    }
+                ],
+            },
+            ensure_ascii=False,
+        ),
+    }
+
+    result = discover_professor_seeds(
+        seeds=[
+            ProfessorRosterSeed(
+                institution="深圳大学",
+                department="物理与光电工程学院",
+                roster_url=seed_url,
+            )
+        ],
+        fetch_html=lambda url: pages[url],
+        limits=DiscoveryLimits(max_depth=2, max_candidate_links_per_page=8, max_pages_per_seed=6),
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        (
+            "白志勇",
+            "https://cpoe.szu.edu.cn/szxq.jsp?urltype=tp.TpTeacherDetail"
+            "&wbtreeid=1111&id=1779754310756143105&dm=baizhiyong&language=",
+        ),
+        (
+            "陈光",
+            "https://cpoe.szu.edu.cn/szxq.jsp?urltype=tp.TpTeacherDetail"
+            "&wbtreeid=1111&id=1779754310756143106&dm=chenguang&language=",
+        ),
+        (
+            "李明",
+            "https://cpoe.szu.edu.cn/szxq.jsp?urltype=tp.TpTeacherDetail"
+            "&wbtreeid=1111&id=1779754310756143107&dm=liming&language=",
+        ),
+    ]
+    assert result.source_statuses[0].visited_urls == [
+        seed_url,
+        endpoint_url,
+        endpoint_page_2,
+        endpoint_page_3,
     ]
 
 
@@ -2851,6 +4856,362 @@ def test_discover_professor_seeds_tries_pkusz_fallback_urls_when_seed_path_is_st
     assert result.source_statuses[0].status == "resolved"
 
 
+def test_discover_professor_seeds_tries_sysu_teacher_fallback_when_seed_path_is_stale():
+    seeds = [
+        ProfessorRosterSeed(
+            institution="中山大学（深圳）",
+            department="先进制造学院",
+            roster_url="https://am.sysu.edu.cn/szdw/index.htm",
+        )
+    ]
+    pages = {
+        "https://am.sysu.edu.cn/teacher": """
+        <html><body>
+          <div class="members listzc">
+            <div class="memberblock">
+              <h3><a href="/teacher/DingBeichen">丁北辰</a></h3>
+            </div>
+            <div class="memberblock">
+              <h3><a href="/teacher/FengJianshe">冯建设</a></h3>
+            </div>
+          </div>
+        </body></html>
+        """,
+    }
+
+    def fake_fetch(url: str) -> str:
+        if url == "https://am.sysu.edu.cn/szdw/index.htm":
+            raise RuntimeError("404 stale seed")
+        return pages[url]
+
+    result = discover_professor_seeds(
+        seeds=seeds,
+        fetch_html=fake_fetch,
+        limits=DiscoveryLimits(
+            max_depth=1,
+            max_candidate_links_per_page=8,
+            max_pages_per_seed=4,
+        ),
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        ("丁北辰", "https://am.sysu.edu.cn/teacher/DingBeichen"),
+        ("冯建设", "https://am.sysu.edu.cn/teacher/FengJianshe"),
+    ]
+    assert result.source_statuses[0].visited_urls == [
+        "https://am.sysu.edu.cn/szdw/index.htm",
+        "https://am.sysu.edu.cn/teacher",
+    ]
+
+
+def test_discover_professor_seeds_prefers_sysu_teacher_fallback_over_stale_szdw_entries():
+    seeds = [
+        ProfessorRosterSeed(
+            institution="中山大学（深圳）",
+            department="先进制造学院",
+            roster_url="https://am.sysu.edu.cn/szdw/index.htm",
+        )
+    ]
+    pages = {
+        "https://am.sysu.edu.cn/szdw/index.htm": """
+        <html><body>
+          <ul class="listteacher">
+            <li><a href="/szdw/fjs/1420377.htm">丁北辰副教授</a></li>
+            <li><a href="/szdw/fjs/1414283.htm">冯建设教授</a></li>
+          </ul>
+        </body></html>
+        """,
+        "https://am.sysu.edu.cn/teacher": """
+        <html><body>
+          <div class="members listzc">
+            <div class="memberblock">
+              <h3><a href="/teacher/DingBeichen">丁北辰</a></h3>
+            </div>
+            <div class="memberblock">
+              <h3><a href="/teacher/FengJianshe">冯建设</a></h3>
+            </div>
+          </div>
+        </body></html>
+        """,
+    }
+    calls: list[str] = []
+
+    def fake_fetch(url: str) -> str:
+        calls.append(url)
+        return pages[url]
+
+    result = discover_professor_seeds(
+        seeds=seeds,
+        fetch_html=fake_fetch,
+        limits=DiscoveryLimits(
+            max_depth=1,
+            max_candidate_links_per_page=8,
+            max_pages_per_seed=4,
+        ),
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        ("丁北辰", "https://am.sysu.edu.cn/teacher/DingBeichen"),
+        ("冯建设", "https://am.sysu.edu.cn/teacher/FengJianshe"),
+    ]
+    assert calls == [
+        "https://am.sysu.edu.cn/szdw/index.htm",
+        "https://am.sysu.edu.cn/teacher",
+    ]
+
+
+def test_discover_professor_seeds_tries_sysu_teacher_fallback_for_http_am_seed():
+    seeds = [
+        ProfessorRosterSeed(
+            institution="中山大学（深圳）",
+            department="先进制造学院",
+            roster_url="http://am.sysu.edu.cn/szdw/index.htm",
+        )
+    ]
+    pages = {
+        "https://am.sysu.edu.cn/teacher": """
+        <html><body>
+          <div class="members listzc">
+            <div class="memberblock">
+              <h3><a href="/teacher/DingBeichen">丁北辰</a></h3>
+            </div>
+          </div>
+        </body></html>
+        """,
+    }
+
+    def fake_fetch(url: str) -> str:
+        if url == "http://am.sysu.edu.cn/szdw/index.htm":
+            raise RuntimeError("404 stale seed")
+        return pages[url]
+
+    result = discover_professor_seeds(
+        seeds=seeds,
+        fetch_html=fake_fetch,
+        limits=DiscoveryLimits(
+            max_depth=1,
+            max_candidate_links_per_page=8,
+            max_pages_per_seed=4,
+        ),
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        ("丁北辰", "https://am.sysu.edu.cn/teacher/DingBeichen"),
+    ]
+    assert result.source_statuses[0].visited_urls == [
+        "http://am.sysu.edu.cn/szdw/index.htm",
+        "https://am.sysu.edu.cn/teacher",
+    ]
+
+
+def test_discover_professor_seeds_tries_sysu_sece_fallback_when_redirect_shell_is_unusable():
+    seeds = [
+        ProfessorRosterSeed(
+            institution="中山大学（深圳）",
+            department="电子与通信工程学院",
+            roster_url="http://sece.sysu.edu.cn/szll/index.htm",
+        )
+    ]
+    final_url = "https://sece.sysu.edu.cn/szll/js/zngz/index.htm"
+    pages = {
+        final_url: """
+        <html><body>
+          <div class="mainright">
+            <div class="cont">
+              <ul class="listteacher">
+                <li><a href="/teacher/2001.htm">罗锴教授</a></li>
+                <li><a href="/teacher/2002.htm">王涛副教授</a></li>
+              </ul>
+            </div>
+          </div>
+        </body></html>
+        """,
+    }
+
+    def fake_fetch(url: str) -> str:
+        if url == "http://sece.sysu.edu.cn/szll/index.htm":
+            raise RuntimeError("empty redirect shell")
+        return pages[url]
+
+    result = discover_professor_seeds(
+        seeds=seeds,
+        fetch_html=fake_fetch,
+        limits=DiscoveryLimits(
+            max_depth=1,
+            max_candidate_links_per_page=8,
+            max_pages_per_seed=4,
+        ),
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        ("罗锴", "https://sece.sysu.edu.cn/teacher/2001.htm"),
+        ("王涛", "https://sece.sysu.edu.cn/teacher/2002.htm"),
+    ]
+    assert result.source_statuses[0].visited_urls == [
+        "http://sece.sysu.edu.cn/szll/index.htm",
+        final_url,
+    ]
+
+
+def test_discover_professor_seeds_tries_sysu_sece_fallback_for_two_hop_redirect_shell():
+    seed_url = "http://sece.sysu.edu.cn/szll/index.htm"
+    redirect_url = "http://sece.sysu.edu.cn/szll/js/index.htm"
+    final_url = "https://sece.sysu.edu.cn/szll/js/zngz/index.htm"
+    seeds = [
+        ProfessorRosterSeed(
+            institution="中山大学（深圳）",
+            department="电子与通信工程学院",
+            roster_url=seed_url,
+        )
+    ]
+    pages = {
+        seed_url: """
+        <html><body><script>
+          window.location.replace("js/index.htm");
+        </script></body></html>
+        """,
+        redirect_url: """
+        <html><body><script>
+          window.location.replace("zngz/index.htm");
+        </script></body></html>
+        """,
+        final_url: """
+        <html><body>
+          <div class="mainright">
+            <div class="cont">
+              <h3>教授</h3>
+              <ul class="listteacher">
+                <li><a href="1413872.htm">罗锴 教授</a></li>
+                <li><a href="1361653.htm">王涛 副教授</a></li>
+              </ul>
+            </div>
+          </div>
+        </body></html>
+        """,
+    }
+
+    result = discover_professor_seeds(
+        seeds=seeds,
+        fetch_html=pages.__getitem__,
+        limits=DiscoveryLimits(
+            max_depth=1,
+            max_candidate_links_per_page=8,
+            max_pages_per_seed=4,
+        ),
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        ("罗锴", "https://sece.sysu.edu.cn/szll/js/zngz/1413872.htm"),
+        ("王涛", "https://sece.sysu.edu.cn/szll/js/zngz/1361653.htm"),
+    ]
+    assert final_url in result.source_statuses[0].visited_urls
+
+
+def test_discover_professor_seeds_prioritizes_sysu_sece_fallback_from_navigation_shell():
+    seed_url = "http://sece.sysu.edu.cn/szll/index.htm"
+    intermediate_url = "https://sece.sysu.edu.cn/szll/js/index.htm"
+    final_url = "https://sece.sysu.edu.cn/szll/js/zngz/index.htm"
+    seeds = [
+        ProfessorRosterSeed(
+            institution="中山大学（深圳）",
+            department="电子与通信工程学院",
+            roster_url=seed_url,
+        )
+    ]
+    pages = {
+        seed_url: """
+        Title: 中山大学电子与通信工程学院
+
+        Markdown Content:
+        * [学院概况](https://sece.sysu.edu.cn/about/index.htm)
+        * [学院简介](https://sece.sysu.edu.cn/about/about01/index.htm)
+        * [师资力量](https://sece.sysu.edu.cn/szll/index.htm)
+            * [专任教师](https://sece.sysu.edu.cn/szll/js/index.htm)
+        * [人才引进](https://sece.sysu.edu.cn/talent/talent01/index.htm)
+        """,
+        intermediate_url: """
+        <html><body><script>
+          window.location.replace("zngz/index.htm");
+        </script></body></html>
+        """,
+        final_url: """
+        <html><body>
+          <div class="mainright">
+            <div class="cont">
+              <ul class="listteacher">
+                <li><a href="1413872.htm">罗锴 教授</a></li>
+                <li><a href="1361653.htm">王涛 副教授</a></li>
+              </ul>
+            </div>
+          </div>
+        </body></html>
+        """,
+        "https://sece.sysu.edu.cn/about/index.htm": "<html><body>学院概况</body></html>",
+        "https://sece.sysu.edu.cn/about/about01/index.htm": "<html><body>学院简介</body></html>",
+        "https://sece.sysu.edu.cn/talent/talent01/index.htm": "<html><body>招聘</body></html>",
+    }
+
+    result = discover_professor_seeds(
+        seeds=seeds,
+        fetch_html=pages.__getitem__,
+        limits=DiscoveryLimits(
+            max_depth=1,
+            max_candidate_links_per_page=8,
+            max_pages_per_seed=4,
+        ),
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        ("罗锴", "https://sece.sysu.edu.cn/szll/js/zngz/1413872.htm"),
+        ("王涛", "https://sece.sysu.edu.cn/szll/js/zngz/1361653.htm"),
+    ]
+    assert result.source_statuses[0].visited_urls[:2] == [seed_url, final_url]
+
+
+def test_discover_professor_seeds_tries_sysu_teacher_fallback_for_scst_stale_faculty_url():
+    seeds = [
+        ProfessorRosterSeed(
+            institution="中山大学（深圳）",
+            department="网络空间安全学院",
+            roster_url="https://scst.sysu.edu.cn/faculty",
+        )
+    ]
+    pages = {
+        "https://scst.sysu.edu.cn/teacher": """
+        <html><body>
+          <div class="members listzc">
+            <div class="memberblock">
+              <h3><a href="/teacher/301">王三</a></h3>
+            </div>
+          </div>
+        </body></html>
+        """,
+    }
+
+    def fake_fetch(url: str) -> str:
+        if url == "https://scst.sysu.edu.cn/faculty":
+            raise RuntimeError("404 stale seed")
+        return pages[url]
+
+    result = discover_professor_seeds(
+        seeds=seeds,
+        fetch_html=fake_fetch,
+        limits=DiscoveryLimits(
+            max_depth=1,
+            max_candidate_links_per_page=8,
+            max_pages_per_seed=4,
+        ),
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        ("王三", "https://scst.sysu.edu.cn/teacher/301")
+    ]
+    assert result.source_statuses[0].visited_urls == [
+        "https://scst.sysu.edu.cn/faculty",
+        "https://scst.sysu.edu.cn/teacher",
+    ]
+
+
 def test_extract_roster_page_links_filters_sustech_navigation_noise():
     markdown = """
 ### [院系设置](https://www.sustech.edu.cn/zh/letter/#)
@@ -2985,6 +5346,149 @@ Markdown Content:
         ("李海洲", "https://sai.cuhk.edu.cn/teacher/102"),
         ("荆炳义", "https://sai.cuhk.edu.cn/teacher/162"),
     ]
+
+
+def test_extract_roster_entries_rejects_cuhk_breadcrumb_teacher_links():
+    markdown = """
+Title: 教师搜索 | 人工智能学院
+
+Markdown Content:
+* [面包屑](https://sai.cuhk.edu.cn/teacher/154)
+* [李海洲](https://sai.cuhk.edu.cn/teacher/102)
+"""
+    html = """
+    <html><body>
+      <div class="list-title"><a href="/teacher/154">面包屑</a></div>
+      <div class="list-title"><a href="/teacher/102">李海洲</a></div>
+    </body></html>
+    """
+
+    markdown_entries = extract_roster_entries(
+        html=markdown,
+        institution="香港中文大学（深圳）",
+        department="人工智能学院",
+        source_url="https://sai.cuhk.edu.cn/teacher-search",
+    )
+    html_entries = extract_roster_entries(
+        html=html,
+        institution="香港中文大学（深圳）",
+        department="人工智能学院",
+        source_url="https://sai.cuhk.edu.cn/teacher-search",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in markdown_entries] == [
+        ("李海洲", "https://sai.cuhk.edu.cn/teacher/102")
+    ]
+    assert [(entry.name, entry.profile_url) for entry in html_entries] == [
+        ("李海洲", "https://sai.cuhk.edu.cn/teacher/102")
+    ]
+
+
+def test_extract_roster_entries_accepts_cuhk_teacher_search_markdown_myweb_profile_links():
+    markdown = """
+Title: 教师搜索 | 理工学院
+
+Markdown Content:
+* [学院概况](https://sse.cuhk.edu.cn/node/411)
+* [学术科研](https://sse.cuhk.edu.cn/research)
+* [黄建伟](https://myweb.cuhk.edu.cn/jwhuang/)
+* [王五](https://sse.cuhk.edu.cn/teacher/555)
+"""
+
+    entries = extract_roster_entries(
+        html=markdown,
+        institution="香港中文大学（深圳）",
+        department="理工学院",
+        source_url="https://sse.cuhk.edu.cn/teacher-search",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("黄建伟", "https://myweb.cuhk.edu.cn/jwhuang/"),
+        ("王五", "https://sse.cuhk.edu.cn/teacher/555"),
+    ]
+
+
+def test_extract_roster_entries_accepts_cuhk_sse_person_owned_subdomain_profiles():
+    markdown = """
+Title: 教师搜索 | 理工学院
+
+Markdown Content:
+* [学院概况](https://sse.cuhk.edu.cn/node/411)
+* [黄建伟](https://jianwei.cuhk.edu.cn/)
+* [王五](https://sse.cuhk.edu.cn/teacher/555)
+"""
+
+    entries = extract_roster_entries(
+        html=markdown,
+        institution="香港中文大学（深圳）",
+        department="理工学院",
+        source_url="https://sse.cuhk.edu.cn/teacher-search",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("黄建伟", "https://jianwei.cuhk.edu.cn/"),
+        ("王五", "https://sse.cuhk.edu.cn/teacher/555"),
+    ]
+
+
+def test_extract_roster_entries_rejects_cuhk_sse_myweb_lab_and_news_links():
+    markdown = """
+Title: 教师搜索 | 理工学院
+
+Markdown Content:
+* [Deep Bit lab](https://myweb.cuhk.edu.cn/deepbitlab/)
+* [Highlighted News](https://myweb.cuhk.edu.cn/sse-news/)
+* [Lab Introduction](https://myweb.cuhk.edu.cn/lab-introduction/)
+* [Yuan Luo's Homepage](https://myweb.cuhk.edu.cn/yuanluo-homepage/)
+* [黄建伟](https://myweb.cuhk.edu.cn/jwhuang/)
+"""
+
+    entries = extract_roster_entries(
+        html=markdown,
+        institution="香港中文大学（深圳）",
+        department="理工学院",
+        source_url="https://sse.cuhk.edu.cn/teacher-search",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("黄建伟", "https://myweb.cuhk.edu.cn/jwhuang/")
+    ]
+
+
+def test_discover_professor_seeds_rejects_cuhk_sso_login_page_as_direct_profile():
+    seeds = [
+        ProfessorRosterSeed(
+            institution="香港中文大学（深圳）",
+            department="理工学院",
+            roster_url="https://myweb.cuhk.edu.cn/jwhuang/",
+            label=None,
+        )
+    ]
+
+    html = """
+    <html>
+      <head><title>登录 - CUHK(SZ)</title></head>
+      <body>
+        <main>
+          <h1>登录</h1>
+          <form action="/cas/login">
+            <input name="username" />
+            <input name="password" type="password" />
+          </form>
+        </main>
+      </body>
+    </html>
+    """
+
+    result = discover_professor_seeds(
+        seeds=seeds,
+        fetch_html=lambda url: html,
+        limits=DiscoveryLimits(max_depth=1, max_candidate_links_per_page=8, max_pages_per_seed=4),
+    )
+
+    assert result.professors == []
+    assert result.source_statuses[0].status == "unresolved"
+    assert result.source_statuses[0].reason == "no_professor_entries_found"
 
 
 def test_extract_roster_entries_supports_sysu_drupal_teacher_cards():
@@ -3193,6 +5697,489 @@ def test_extract_roster_entries_strips_trailing_title_suffixes_from_chinese_name
     assert [(entry.name, entry.profile_url) for entry in entries] == [
         ("罗锴", "https://sece.sysu.edu.cn/teacher/2001"),
         ("王涛", "https://sece.sysu.edu.cn/teacher/2002"),
+    ]
+
+
+def test_extract_roster_entries_supports_sysu_sece_listteacher_cards():
+    html = """
+    <html><body>
+      <div class="mainright">
+        <div class="cont">
+          <ul class="listteacher">
+            <li><a href="/teacher/2001.htm">罗锴教授</a></li>
+            <li><a href="/teacher/2002.htm">王涛副教授</a></li>
+          </ul>
+        </div>
+      </div>
+      <nav><a href="/news/index.htm">学院新闻</a></nav>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="中山大学（深圳）",
+        department="电子与通信工程学院",
+        source_url="https://sece.sysu.edu.cn/szll/js/zngz/index.htm",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("罗锴", "https://sece.sysu.edu.cn/teacher/2001.htm"),
+        ("王涛", "https://sece.sysu.edu.cn/teacher/2002.htm"),
+    ]
+
+
+def test_extract_roster_entries_supports_sysu_sic_member_category_links():
+    source_url = "https://sic.sysu.edu.cn/members/t01/index.htm"
+
+    entries = extract_roster_entries(
+        html=_load_sysu_fixture("sic_member_category.html"),
+        institution="中山大学（深圳）",
+        department="集成电路学院",
+        source_url=source_url,
+    )
+
+    assert resolve_seed_adapter_name(
+        ProfessorRosterSeed(
+            institution="中山大学（深圳）",
+            department="集成电路学院",
+            roster_url="https://sic.sysu.edu.cn/members/index.htm",
+        )
+    ) == "sysu-sic-members"
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("王美琪", "https://sic.sysu.edu.cn/members/t01/1409794.htm"),
+        ("李一鸣", "https://sic.sysu.edu.cn/members/t02/1409801.htm"),
+    ]
+
+
+def test_extract_roster_entries_supports_sysu_am_members_cards():
+    html = """
+    <html><body>
+      <div class="members listzc">
+        <div class="memberblock">
+          <h3><a href="/teacher/HuangHan">黄含</a><span>教授</span></h3>
+          <p>先进制造方向</p>
+        </div>
+        <div class="memberblock">
+          <h3><a href="/teacher/DingBeichen">丁北辰</a><span>副教授</span></h3>
+          <p>智能制造方向</p>
+        </div>
+      </div>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="中山大学（深圳）",
+        department="先进制造学院",
+        source_url="https://am.sysu.edu.cn/teacher",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("黄含", "https://am.sysu.edu.cn/teacher/HuangHan"),
+        ("丁北辰", "https://am.sysu.edu.cn/teacher/DingBeichen"),
+    ]
+
+
+def test_extract_roster_entries_supports_sysu_am_live_memberblock_cards_with_email():
+    source_url = "https://am.sysu.edu.cn/teacher"
+
+    entries = extract_roster_entries(
+        html=_load_sysu_fixture("am_live_memberblock.html"),
+        institution="中山大学（深圳）",
+        department="先进制造学院",
+        source_url=source_url,
+    )
+
+    assert resolve_seed_adapter_name(
+        ProfessorRosterSeed(
+            institution="中山大学（深圳）",
+            department="先进制造学院",
+            roster_url="https://am.sysu.edu.cn/szdw/index.htm",
+        )
+    ) == "sysu-am-teacher"
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("黄含", "https://am.sysu.edu.cn/teacher/HuangHan"),
+        ("丁北辰", "https://am.sysu.edu.cn/teacher/DingBeichen"),
+    ]
+
+
+def test_extract_roster_entries_sysu_science_rejects_friend_link_heading():
+    entries = extract_roster_entries(
+        html=_load_sysu_fixture("science_friend_links.html"),
+        institution="中山大学（深圳）",
+        department="理学院",
+        source_url="https://science.sysu.edu.cn/faculty",
+    )
+
+    assert entries == []
+
+
+def test_extract_roster_entries_supports_sztu_sgim_content_cards_with_latin_name():
+    html = """
+    <html><body>
+      <div class="main container">
+        <div class="right">
+          <div class="content-list">
+            <div class="item"><a href="../../info/1273/4113.htm">王红志 教授</a></div>
+            <div class="item"><a href="../../info/1273/4150.htm">高文科 副教授</a></div>
+            <div class="item"><a href="../../info/1273/4200.htm">UMER SHARIF 助理教授</a></div>
+          </div>
+        </div>
+      </div>
+      <nav><a href="/xygk/index.htm">学院概况</a></nav>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="深圳技术大学",
+        department="中德智能制造学院",
+        source_url="https://sgim.sztu.edu.cn/szdw2022/jytd/jxsjzzjqzdh.htm",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("王红志", "https://sgim.sztu.edu.cn/info/1273/4113.htm"),
+        ("高文科", "https://sgim.sztu.edu.cn/info/1273/4150.htm"),
+        ("UMER SHARIF", "https://sgim.sztu.edu.cn/info/1273/4200.htm"),
+    ]
+
+
+def test_extract_roster_entries_rejects_sztu_sgim_admin_support_cards():
+    html = """
+    <html><body>
+      <div class="main container">
+        <div class="right">
+          <div class="content-list">
+            <div class="item"><a href="../../info/1273/4113.htm">王红志 教授</a></div>
+            <div class="item"><a href="../../info/1273/4301.htm">刘小梅 校企合作专员（副院长）</a></div>
+            <div class="item"><a href="../../info/1273/4302.htm">张三 教务员</a></div>
+            <div class="item"><a href="../../info/1273/4303.htm">李四 书记</a></div>
+          </div>
+        </div>
+      </div>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="深圳技术大学",
+        department="中德智能制造学院",
+        source_url="https://sgim.sztu.edu.cn/szdw2022/jytd/jxsjzzjqzdh.htm",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("王红志", "https://sgim.sztu.edu.cn/info/1273/4113.htm")
+    ]
+
+
+def test_extract_roster_entries_supports_sztu_icoc_and_ai_info_card_templates():
+    html = """
+    <html><body>
+      <div class="list_teacher">
+        <div class="list_pic_box">
+          <div class="item"><a href="../../info/1332/6055.htm">梁永生 讲席教授</a></div>
+          <div class="item"><a href="../../info/1332/6057.htm">刘清侠 教授</a></div>
+        </div>
+      </div>
+      <div class="s_team_main">
+        <ul>
+          <li><a href="../../info/1012/1160.htm">宁存政 讲席教授</a></li>
+        </ul>
+      </div>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="深圳技术大学",
+        department="人工智能学院",
+        source_url="https://ai.sztu.edu.cn/szdw/jytd/jxjs.htm",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("梁永生", "https://ai.sztu.edu.cn/info/1332/6055.htm"),
+        ("刘清侠", "https://ai.sztu.edu.cn/info/1332/6057.htm"),
+        ("宁存政", "https://ai.sztu.edu.cn/info/1012/1160.htm"),
+    ]
+
+
+def test_extract_roster_entries_rejects_sztu_icoc_inline_nav_records_but_keeps_profiles_and_categories():
+    html = """
+    <html><body>
+      <script>
+      var navData = [
+        {"showTitle":"科学研究","url":"kxyj.htm"},
+        {"showTitle":"党团建设","url":"dtjs.htm"},
+        {"showTitle":"合作交流","url":"hzjl.htm"},
+        {"showTitle":"精品课程","url":"jpkc.htm"},
+        {"showTitle":"工程师","url":"jzjs.htm"},
+        {"showTitle":"产业导师","url":"cyds.htm"},
+        {"showTitle":"陈一","fields":{"gw":"教授"},"url":"../../info/1010/2001.htm"}
+      ];
+      </script>
+      <nav>
+        <a href="js.htm">教授</a>
+        <a href="fjs.htm">副教授</a>
+      </nav>
+    </body></html>
+    """
+    source_url = "https://icoc.sztu.edu.cn/szdw/jytd/js.htm"
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="深圳技术大学",
+        department="集成电路与光电芯片学院",
+        source_url=source_url,
+    )
+    category_links = extract_roster_page_links(html, source_url)
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("陈一", "https://icoc.sztu.edu.cn/info/1010/2001.htm")
+    ]
+    assert category_links == [
+        ("https://icoc.sztu.edu.cn/szdw/jytd/fjs.htm", "副教授")
+    ]
+
+
+def test_extract_roster_entries_supports_sztu_cep_scoped_szdw_list():
+    html = """
+    <html><body>
+      <nav><a href="/info/9999/1000.htm">学院新闻</a></nav>
+      <div class="main_bd clearfix">
+        <div class="szdw fr">
+          <ul>
+            <li><a href="../../info/1052/1045.htm">贺贤土 院士</a></li>
+            <li><a href="../../info/1053/1049.htm">张华 教授</a></li>
+          </ul>
+        </div>
+      </div>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="深圳技术大学",
+        department="工程物理学院",
+        source_url="https://cep.sztu.edu.cn/szdw/szdw.htm",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("贺贤土", "https://cep.sztu.edu.cn/info/1052/1045.htm"),
+        ("张华", "https://cep.sztu.edu.cn/info/1053/1049.htm"),
+    ]
+
+
+def test_extract_roster_entries_rejects_suat_navigation_cards():
+    html = """
+    <html><body>
+      <div class="list2">
+        <div class="item">
+          <a href="/kxyj/xsjz.htm" title="学术讲座">学术讲座 教授论坛</a>
+        </div>
+        <div class="item">
+          <a href="/xssh/xszz.htm" title="学生组织">学生组织 博士协会</a>
+        </div>
+        <div class="item">
+          <a href="/info/1010/1093.htm" title="成会明 院士">成会明 院士</a>
+        </div>
+      </div>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="深圳理工大学",
+        department="材料科学与能源工程学院",
+        source_url="https://msee.suat-sz.edu.cn/szdw.htm",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("成会明", "https://msee.suat-sz.edu.cn/info/1010/1093.htm")
+    ]
+
+
+def test_extract_roster_entries_skips_suat_profile_detail_navigation_links():
+    html = """
+    <html><body>
+      <div class="v_news_content">
+        <h1>成会明</h1>
+        <p>成会明 院士，主要从事新型储能材料与器件研发。</p>
+      </div>
+      <nav>
+        <a href="/xygk/ztjs.htm">总体介绍</a>
+        <a href="/kxyj/xsjz.htm">学术讲座</a>
+        <a href="/xssh/xszz.htm">学生组织</a>
+      </nav>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="深圳理工大学",
+        department="材料科学与能源工程学院",
+        source_url="https://msee.suat-sz.edu.cn/info/1010/1093.htm",
+    )
+
+    assert entries == []
+
+
+def test_extract_roster_entries_rejects_suat_javascript_profile_cards():
+    html = """
+    <html><body>
+      <div class="item">
+        <a href="JavaScript:;" title="杜莉">
+          <span class="name">杜莉</span>
+          <span class="lab">行政人员</span>
+        </a>
+      </div>
+      <div class="item">
+        <a href="../info/1011/1107.htm" title="张祥勇">
+          <span class="name">张祥勇</span>
+          <span class="lab">博士后</span>
+        </a>
+      </div>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="深圳理工大学",
+        department="材料科学与能源工程学院",
+        source_url="https://msee.suat-sz.edu.cn/szdw/xzxl.htm",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("张祥勇", "https://msee.suat-sz.edu.cn/info/1011/1107.htm")
+    ]
+
+
+def test_extract_roster_entries_rejects_only_javascript_profile_cards():
+    html = """
+    <html><body>
+      <div class="m-tabcon-person">
+        <a class="con" href="JavaScript:;" title="杜莉">
+          <div class="txt1">
+            <div class="name"><b>杜莉</b></div>
+            <div class="name">职务：人事/综合</div>
+            <div class="name">邮箱：duli@suat-sz.edu.cn</div>
+          </div>
+        </a>
+      </div>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="深圳理工大学",
+        department="材料科学与能源工程学院",
+        source_url="https://msee.suat-sz.edu.cn/szdw/xzxl.htm",
+    )
+
+    assert entries == []
+
+
+def test_extract_roster_entries_rejects_suat_category_nav_when_no_valid_profile_cards():
+    html = """
+    <html><body>
+      <nav>
+        <a href="/xygk/ztjs.htm">总体介绍</a>
+        <a href="/kxyj/xsjz.htm">学术讲座</a>
+        <a href="/kxyj/kycg.htm">科研成果</a>
+        <a href="/xssh/xszz.htm">学生组织</a>
+      </nav>
+      <div class="m-tabcon-person">
+        <a class="con" href="JavaScript:;" title="杜莉">
+          <div class="txt1">
+            <div class="name"><b>杜莉</b></div>
+            <div class="name">职务：人事/综合</div>
+            <div class="name">邮箱：duli@suat-sz.edu.cn</div>
+          </div>
+        </a>
+      </div>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="深圳理工大学",
+        department="材料科学与能源工程学院",
+        source_url="https://msee.suat-sz.edu.cn/szdw/xzxl.htm",
+    )
+
+    assert entries == []
+
+
+def test_extract_roster_entries_skips_sztu_profile_detail_navigation_links():
+    html = """
+    <html><body>
+      <div class="v_news_content">
+        <h1>姚志富</h1>
+        <p>姚志富 副教授，主要从事智能制造装备研究。</p>
+      </div>
+      <nav>
+        <a href="/dtgz2022/ddjs.htm">党的建设</a>
+        <a href="/kysj2022/kyfx/znjqr.htm">科研方向</a>
+        <a href="/sj_yzxx.htm">书记｜院长信箱</a>
+      </nav>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="深圳技术大学",
+        department="中德智能制造学院",
+        source_url="https://sgim.sztu.edu.cn/info/1273/4170.htm",
+    )
+
+    assert entries == []
+
+
+def test_extract_roster_entries_supports_sztu_design_cards_without_profile_links():
+    html = """
+    <html><body>
+      <div class="team-part active">
+        <div class="team-item">
+          <h3 class="team-item__name">王海涛</h3>
+          <div class="team-item__title">教授</div>
+        </div>
+        <div class="team-item">
+          <h3 class="team-item__name">董瑞</h3>
+          <div class="team-item__title">副教授</div>
+        </div>
+      </div>
+      <div class="team-part">
+        <div class="team-item">
+          <h3 class="team-item__name">李晓</h3>
+          <div class="team-item__title">助理教授</div>
+        </div>
+        <div class="team-item">
+          <h3 class="team-item__name">历史团队</h3>
+          <div class="team-item__title">归档</div>
+        </div>
+      </div>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="深圳技术大学",
+        department="创意设计学院",
+        source_url="https://design.sztu.edu.cn/xygk/szdw/jytd.htm",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        (
+            "王海涛",
+            "https://design.sztu.edu.cn/xygk/szdw/jytd.htm#prof-%E7%8E%8B%E6%B5%B7%E6%B6%9B",
+        ),
+        (
+            "董瑞",
+            "https://design.sztu.edu.cn/xygk/szdw/jytd.htm#prof-%E8%91%A3%E7%91%9E",
+        ),
+        (
+            "李晓",
+            "https://design.sztu.edu.cn/xygk/szdw/jytd.htm#prof-%E6%9D%8E%E6%99%93",
+        ),
     ]
 
 

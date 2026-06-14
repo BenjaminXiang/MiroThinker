@@ -25,6 +25,8 @@ EXPECTED_RECENT_CHAIN = {
     "V038": ("V037", "V038_allow_company_signal_event_needs_review.py"),
     "V039": ("V038", "V039_add_company_upload_hardening_fields.py"),
     "V040": ("V039", "V040_allow_dblp_paper_canonical_source.py"),
+    "V041": ("V040", "V041_add_homepage_recursion_page_ledger.py"),
+    "V042": ("V041", "V042_add_professor_profile_section_paper_merge_alias.py"),
 }
 
 

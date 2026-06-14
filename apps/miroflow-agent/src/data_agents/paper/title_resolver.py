@@ -48,6 +48,8 @@ _OPENALEX_SELECT = ",".join(
 )
 _CONFIDENCE_THRESHOLD = 0.85
 _DEFAULT_TIMEOUT = httpx.Timeout(connect=5.0, read=10.0, write=5.0, pool=5.0)
+_OPENALEX_TITLE_TIMEOUT = httpx.Timeout(connect=3.0, read=5.0, write=3.0, pool=3.0)
+_OPENALEX_FAILURE_COOLDOWN_SECONDS = 1800.0
 _CROSSREF_MAILTO = "mirothinker-data-agent@example.com"
 _SEMANTIC_SCHOLAR_FIELDS = (
     "paperId,title,abstract,year,publicationDate,venue,url,externalIds,authors"
@@ -164,8 +166,13 @@ class _TemporaryFailureCircuit:
 _OPENALEX_GATE = _RateLimitGate(0.1)
 _CROSSREF_GATE = _RateLimitGate(0.34)
 _SEMANTIC_SCHOLAR_GATE = _RateLimitGate(1.0)
-_DBLP_GATE = _RateLimitGate(0.2)
+_DBLP_GATE = _RateLimitGate(1.5)
 _ARXIV_GATE = _RateLimitGate(3.0)
+_OPENALEX_FAILURE_CIRCUIT = _TemporaryFailureCircuit(
+    threshold=2,
+    cooldown_seconds=_OPENALEX_FAILURE_COOLDOWN_SECONDS,
+    label="OpenAlex",
+)
 _CROSSREF_FAILURE_CIRCUIT = _TemporaryFailureCircuit(
     threshold=2,
     cooldown_seconds=300.0,
@@ -188,10 +195,13 @@ def resolve_paper_by_title(
     *,
     author_hint: str | None = None,
     year_hint: int | None = None,
+    enable_openalex_title_search: bool = True,
+    enable_dblp_title_search: bool = True,
     enable_arxiv_title_search: bool = True,
     web_search=None,
     http_client=None,
     cache: TitleResolutionCache | None = None,
+    cache_only: bool = False,
 ) -> ResolvedPaper | None:
     if not isinstance(clean_title, str):
         raise TypeError("clean_title must be a string")
@@ -201,29 +211,41 @@ def resolve_paper_by_title(
     cache_key = _title_cache_key(clean_title)
     if cache is not None:
         cached = cache.get(cache_key)
-        if cached is not None and _cached_resolution_matches_context(
-            cached,
+        if (
+            cached is not None
+            and _cached_match_source_enabled(
+                cached,
+                enable_openalex_title_search=enable_openalex_title_search,
+                enable_dblp_title_search=enable_dblp_title_search,
+                enable_arxiv_title_search=enable_arxiv_title_search,
+            )
+            and _cached_resolution_matches_context(
+                cached,
+                query_title=clean_title,
+                author_hint=author_hint,
+                year_hint=year_hint,
+            )
+        ):
+            return cached
+    if cache_only:
+        return None
+
+    if enable_openalex_title_search:
+        openalex_results = _search_openalex_by_title(clean_title, http_client=http_client)
+        openalex_match = _best_resolved_match(
+            openalex_results,
+            converter=_openalex_work_to_resolved,
             query_title=clean_title,
             author_hint=author_hint,
             year_hint=year_hint,
+        )
+        if (
+            openalex_match is not None
+            and openalex_match.match_confidence >= _CONFIDENCE_THRESHOLD
         ):
-            return cached
-
-    openalex_results = _search_openalex_by_title(clean_title, http_client=http_client)
-    openalex_match = _best_resolved_match(
-        openalex_results,
-        converter=_openalex_work_to_resolved,
-        query_title=clean_title,
-        author_hint=author_hint,
-        year_hint=year_hint,
-    )
-    if (
-        openalex_match is not None
-        and openalex_match.match_confidence >= _CONFIDENCE_THRESHOLD
-    ):
-        if cache is not None:
-            cache.set(cache_key, openalex_match)
-        return openalex_match
+            if cache is not None:
+                cache.set(cache_key, openalex_match)
+            return openalex_match
 
     crossref_results = _search_crossref_by_title(clean_title, http_client=http_client)
     crossref_match = _best_resolved_match(
@@ -237,6 +259,14 @@ def resolve_paper_by_title(
         crossref_match is not None
         and crossref_match.match_confidence >= _CONFIDENCE_THRESHOLD
     ):
+        crossref_match = _supplement_resolved_with_arxiv(
+            crossref_match,
+            query_title=clean_title,
+            author_hint=author_hint,
+            year_hint=year_hint,
+            enable_arxiv_title_search=enable_arxiv_title_search,
+            http_client=http_client,
+        )
         if cache is not None:
             cache.set(cache_key, crossref_match)
         return crossref_match
@@ -260,18 +290,22 @@ def resolve_paper_by_title(
             cache.set(cache_key, semantic_scholar_match)
         return semantic_scholar_match
 
-    dblp_results = _search_dblp_by_title(clean_title, http_client=http_client)
-    dblp_match = _best_resolved_match(
-        dblp_results,
-        converter=_dblp_hit_to_resolved,
-        query_title=clean_title,
-        author_hint=author_hint,
-        year_hint=year_hint,
-    )
-    if dblp_match is not None and dblp_match.match_confidence >= _CONFIDENCE_THRESHOLD:
-        if cache is not None:
-            cache.set(cache_key, dblp_match)
-        return dblp_match
+    if enable_dblp_title_search:
+        dblp_results = _search_dblp_by_title(clean_title, http_client=http_client)
+        dblp_match = _best_resolved_match(
+            dblp_results,
+            converter=_dblp_hit_to_resolved,
+            query_title=clean_title,
+            author_hint=author_hint,
+            year_hint=year_hint,
+        )
+        if (
+            dblp_match is not None
+            and dblp_match.match_confidence >= _CONFIDENCE_THRESHOLD
+        ):
+            if cache is not None:
+                cache.set(cache_key, dblp_match)
+            return dblp_match
 
     if enable_arxiv_title_search:
         arxiv_results = _search_arxiv_by_title(clean_title, http_client=http_client)
@@ -311,6 +345,62 @@ def resolve_paper_by_title(
             cache.set(cache_key, web_match)
         return web_match
     return None
+
+
+def _supplement_resolved_with_arxiv(
+    resolved: ResolvedPaper,
+    *,
+    query_title: str,
+    author_hint: str | None,
+    year_hint: int | None,
+    enable_arxiv_title_search: bool,
+    http_client,
+) -> ResolvedPaper:
+    if not enable_arxiv_title_search:
+        return resolved
+    if resolved.arxiv_id and resolved.pdf_url:
+        return resolved
+
+    arxiv_results = _search_arxiv_by_title(query_title, http_client=http_client)
+    arxiv_match = _best_resolved_match(
+        arxiv_results,
+        converter=_arxiv_entry_to_resolved,
+        query_title=query_title,
+        author_hint=author_hint,
+        year_hint=year_hint,
+    )
+    if arxiv_match is None or arxiv_match.match_confidence < _CONFIDENCE_THRESHOLD:
+        return resolved
+
+    return ResolvedPaper(
+        title=resolved.title or arxiv_match.title,
+        doi=resolved.doi or arxiv_match.doi,
+        openalex_id=resolved.openalex_id or arxiv_match.openalex_id,
+        arxiv_id=resolved.arxiv_id or arxiv_match.arxiv_id,
+        abstract=resolved.abstract or arxiv_match.abstract,
+        pdf_url=resolved.pdf_url or arxiv_match.pdf_url,
+        authors=resolved.authors or arxiv_match.authors,
+        year=resolved.year or arxiv_match.year,
+        venue=resolved.venue or arxiv_match.venue,
+        match_confidence=resolved.match_confidence,
+        match_source=resolved.match_source,
+    )
+
+
+def _cached_match_source_enabled(
+    cached: ResolvedPaper,
+    *,
+    enable_openalex_title_search: bool,
+    enable_dblp_title_search: bool,
+    enable_arxiv_title_search: bool,
+) -> bool:
+    if cached.match_source == "openalex":
+        return enable_openalex_title_search
+    if cached.match_source == "dblp":
+        return enable_dblp_title_search
+    if cached.match_source == "arxiv":
+        return enable_arxiv_title_search
+    return True
 
 
 def _title_jaccard(a: str, b: str) -> float:
@@ -370,6 +460,10 @@ def _search_openalex_by_title(title: str, *, http_client=None) -> list[dict]:
         logger.debug("OpenAlex title search skipped by temporary rate-limit circuit")
         return []
 
+    if not _OPENALEX_FAILURE_CIRCUIT.can_call():
+        logger.debug("OpenAlex title search skipped by temporary failure circuit")
+        return []
+
     _OPENALEX_GATE.wait()
     client, owns_client = _ensure_client(http_client)
     try:
@@ -384,10 +478,12 @@ def _search_openalex_by_title(title: str, *, http_client=None) -> list[dict]:
         if api_key:
             query_parts.append(f"api_key={quote_plus(api_key)}")
         url = f"{_OPENALEX_ENDPOINT}?{'&'.join(query_parts)}"
-        response = client.get(url)
+        request_kwargs = {"timeout": _OPENALEX_TITLE_TIMEOUT}
+        response = client.get(url, **request_kwargs)
         response.raise_for_status()
         payload = response.json()
         _OPENALEX_RATE_LIMIT_CIRCUIT.record_success()
+        _OPENALEX_FAILURE_CIRCUIT.record_success()
         results = payload.get("results", [])
         return results if isinstance(results, list) else []
     except httpx.HTTPStatusError as exc:
@@ -399,6 +495,10 @@ def _search_openalex_by_title(title: str, *, http_client=None) -> list[dict]:
                 )
             )
         logger.warning("OpenAlex search failed for %r: HTTP %s", title, status_code)
+        return []
+    except (httpx.TimeoutException, httpx.TransportError) as exc:
+        _OPENALEX_FAILURE_CIRCUIT.record_failure()
+        logger.warning("OpenAlex search failed for %r: %s", title, exc)
         return []
     except TypeError:
         raise
@@ -511,6 +611,8 @@ def _crossref_work_to_resolved(
         source_authors=authors,
     )
     doi = _normalize_optional_str(work.get("DOI"))
+    if _crossref_is_component_or_supplement(work, doi):
+        confidence = min(confidence, 0.80)
     resolved = ResolvedPaper(
         title=clean_paper_title(title),
         doi=doi,
@@ -526,6 +628,16 @@ def _crossref_work_to_resolved(
         match_source="crossref",
     )
     return resolved, confidence
+
+
+def _crossref_is_component_or_supplement(work: dict[str, object], doi: str | None) -> bool:
+    work_type = _normalize_optional_str(work.get("type"))
+    if work_type == "component":
+        return True
+    relation = work.get("relation")
+    if isinstance(relation, dict) and relation.get("is-component-of"):
+        return True
+    return bool(doi and re.search(r"\.s\d+$", doi, re.IGNORECASE))
 
 
 def _search_semantic_scholar_by_title(title: str, *, http_client=None) -> list[dict]:

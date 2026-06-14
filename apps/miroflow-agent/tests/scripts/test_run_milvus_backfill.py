@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+import types
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -33,7 +34,20 @@ def test_cli_help_exits_zero(capsys):
     assert "--resume" in captured.out
     assert "--id" in captured.out
     assert "--paper-id" in captured.out
+    assert "--paper-id-file" in captured.out
     assert "--changed-since" in captured.out
+
+
+def test_cli_loads_app_env_file_on_import(monkeypatch):
+    calls: list[Path | None] = []
+    fake_dotenv = types.SimpleNamespace(
+        load_dotenv=lambda path=None: calls.append(Path(path) if path else None)
+    )
+    monkeypatch.setitem(sys.modules, "dotenv", fake_dotenv)
+
+    _import_cli_module()
+
+    assert _SCRIPT_PATH.resolve().parents[1] / ".env" in calls
 
 
 def test_cli_dispatches_paper_domain(monkeypatch, tmp_path):
@@ -122,6 +136,64 @@ def test_cli_passes_paper_ids_and_changed_since_to_paper_backfill(monkeypatch):
 
     assert called_kwargs["paper_ids"] == {"PAPER-1", "PAPER-2"}
     assert called_kwargs["changed_since"] == "2026-05-23T00:00:00Z"
+
+
+def test_cli_passes_paper_ids_from_file_to_paper_backfill(monkeypatch, tmp_path):
+    cli = _import_cli_module()
+    paper_id_file = tmp_path / "paper-ids.jsonl"
+    paper_id_file.write_text(
+        "PAPER-TEXT\n"
+        '{"paper_id": "PAPER-WRITTEN", "status": "written"}\n'
+        '{"id": "PAPER-ID-FALLBACK"}\n'
+        '{"paper_id": "PAPER-REJECTED", "status": "rejected"}\n'
+        '{"paper_id": "PAPER-SKIPPED", "status": "skipped"}\n'
+        '{"paper_id": "PAPER-ERROR", "status": "error"}\n'
+        "\n"
+    )
+    called_kwargs: dict = {}
+
+    def _fake_backfill(conn, milvus, embed, **kwargs):
+        called_kwargs.update(kwargs)
+        from src.data_agents.paper.milvus_backfill import BackfillReport
+
+        return BackfillReport(
+            papers_total=0,
+            papers_processed=0,
+            papers_skipped=0,
+            chunks_inserted=0,
+            papers_with_errors=0,
+            duration_seconds=0.0,
+        )
+
+    monkeypatch.setattr(cli, "backfill_paper_chunks", _fake_backfill)
+    monkeypatch.setattr(cli, "_open_database_connection", lambda url: MagicMock())
+    monkeypatch.setattr(cli, "_open_milvus_client", lambda uri: MagicMock())
+    monkeypatch.setattr(cli, "_open_embedding_client", lambda: MagicMock())
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_milvus_backfill.py",
+            "--domain",
+            "paper",
+            "--paper-id",
+            "PAPER-CLI",
+            "--paper-id-file",
+            str(paper_id_file),
+            "--milvus-uri",
+            ":memory:",
+        ],
+    )
+
+    cli.main()
+
+    assert called_kwargs["paper_ids"] == {
+        "PAPER-CLI",
+        "PAPER-TEXT",
+        "PAPER-WRITTEN",
+        "PAPER-ID-FALLBACK",
+    }
 
 
 def test_cli_dispatches_professor_domain(monkeypatch):

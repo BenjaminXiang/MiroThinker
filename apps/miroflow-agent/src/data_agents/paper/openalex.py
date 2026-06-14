@@ -671,6 +671,7 @@ def enrich_paper_with_openalex(
             _normalize_optional_str(primary_location.get("landing_page_url"))
             or f"https://doi.org/{normalized_doi}"
         ),
+        pdf_url=_extract_pdf_url(payload),
         enrichment_sources=("openalex",),
     )
     if not _enrichment_has_content(enrichment):
@@ -702,6 +703,27 @@ def _extract_oa_status(payload: dict[str, object]) -> str | None:
     return item or None
 
 
+def _extract_pdf_url(payload: dict[str, object]) -> str | None:
+    primary_location = payload.get("primary_location")
+    if isinstance(primary_location, dict):
+        if pdf_url := _normalize_optional_str(primary_location.get("pdf_url")):
+            return pdf_url
+
+    best_oa_location = payload.get("best_oa_location")
+    if isinstance(best_oa_location, dict):
+        if pdf_url := _normalize_optional_str(best_oa_location.get("pdf_url")):
+            return pdf_url
+
+    locations = payload.get("locations")
+    if isinstance(locations, list):
+        for location in locations:
+            if not isinstance(location, dict):
+                continue
+            if pdf_url := _normalize_optional_str(location.get("pdf_url")):
+                return pdf_url
+    return None
+
+
 def _enrichment_has_content(enrichment: PaperMetadataEnrichment) -> bool:
     return any(
         getattr(enrichment, field) is not None
@@ -714,6 +736,7 @@ def _enrichment_has_content(enrichment: PaperMetadataEnrichment) -> bool:
             "fields_of_study",
             "oa_status",
             "source_url",
+            "pdf_url",
         )
     )
 

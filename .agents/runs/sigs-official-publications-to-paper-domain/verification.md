@@ -20,10 +20,40 @@
   - Result: 14 passed.
 - `uv run ruff check src/data_agents/professor/homepage_publications.py src/data_agents/paper/homepage_ingest.py tests/data_agents/professor/test_homepage_publications_sigs.py tests/data_agents/professor/test_homepage_publications.py tests/data_agents/paper/test_homepage_ingest.py`
   - Result: passed.
+- `UV_CACHE_DIR=/tmp/codex-uv-cache uv run --no-sync pytest tests/data_agents/professor/test_homepage_publications.py tests/data_agents/paper/test_homepage_ingest.py tests/scripts/test_run_homepage_paper_ingest.py tests/data_agents/paper/test_title_resolver.py -q -n0 --no-cov`
+  - Result: 326 passed on 2026-06-10 after shared cross-institution parser hardening and shared title-resolution default changes.
+- `UV_CACHE_DIR=/tmp/codex-uv-cache uv run --no-sync ruff check src/data_agents/professor/homepage_publications.py src/data_agents/paper/homepage_ingest.py scripts/run_homepage_paper_ingest.py tests/data_agents/professor/test_homepage_publications.py tests/data_agents/paper/test_homepage_ingest.py tests/scripts/test_run_homepage_paper_ingest.py`
+  - Result: passed on 2026-06-10.
+- `UV_CACHE_DIR=/tmp/codex-uv-cache uv run --no-sync pytest tests/data_agents/professor/test_homepage_publications.py -q -n0 --no-cov`
+  - Result: 107 passed on 2026-06-10. This includes patent-topic preservation, `(Patent)` record rejection, and short labeled `profile_raw_text` publication-section regressions.
+- `UV_CACHE_DIR=/tmp/codex-uv-cache uv run --no-sync pytest tests/data_agents/professor/test_roster_validation.py::test_discover_professor_seeds_filters_hit_api_placeholder_records tests/data_agents/professor/test_roster_validation.py::test_discover_professor_seeds_uses_hit_api_endpoint tests/data_agents/professor/test_roster_validation.py::test_extract_roster_entries_supports_hitsz_college_faculty_links -q -n0 --no-cov`
+  - Result: 3 passed on 2026-06-10.
+- `UV_CACHE_DIR=/tmp/codex-uv-cache uv run --no-sync pytest tests/data_agents/professor/test_profile_extraction.py tests/data_agents/professor/test_profile_record_merge.py tests/data_agents/professor/test_roster_validation.py tests/data_agents/professor/test_homepage_crawler.py tests/data_agents/professor/test_homepage_publications.py tests/data_agents/paper/test_homepage_ingest.py tests/data_agents/paper/test_homepage_http.py tests/scripts/test_run_homepage_paper_ingest.py -q -n0 --no-cov`
+  - Result: 607 passed on 2026-06-10.
+- `UV_CACHE_DIR=/tmp/codex-uv-cache uv run --no-sync ruff check src/data_agents/professor/homepage_publications.py src/data_agents/professor/discovery.py tests/data_agents/professor/test_homepage_publications.py tests/data_agents/professor/test_roster_validation.py`
+  - Result: passed on 2026-06-10.
+- `DATABASE_URL=postgresql://miroflow:miroflow@localhost:15432/miroflow_real UV_CACHE_DIR=/tmp/codex-uv-cache uv run --no-sync alembic current`
+  - Result: passed on 2026-06-10 and returned `V040 (head)`.
 - `git diff --check -- apps/miroflow-agent/src/data_agents/professor/homepage_publications.py apps/miroflow-agent/src/data_agents/paper/homepage_ingest.py apps/miroflow-agent/tests/data_agents/professor/test_homepage_publications_sigs.py apps/miroflow-agent/tests/data_agents/professor/test_homepage_publications.py apps/miroflow-agent/tests/data_agents/paper/test_homepage_ingest.py openspec/changes/sigs-official-publications-to-paper-domain`
   - Result: passed.
 - `openspec validate sigs-official-publications-to-paper-domain --strict`
   - Result: passed.
+- `UV_CACHE_DIR=/tmp/codex-uv-cache uv run --no-sync pytest tests/scripts/test_run_paper_summary_zh_backfill.py tests/data_agents/paper/test_homepage_ingest.py tests/data_agents/paper/test_title_quality.py tests/data_agents/professor/test_homepage_publications_shenzhen_cms.py -q -n0 --no-cov`
+  - Result: 261 passed on 2026-06-12 after the usable-abstract filter fix and parser/title-quality hardening.
+- `UV_CACHE_DIR=/tmp/codex-uv-cache uv run --no-sync pytest tests/data_agents/service/test_retrieval.py tests/data_agents/service/test_retrieval_quality_filter.py tests/data_agents/service/test_retrieval_get_object.py tests/data_agents/service/test_retrieval_get_related.py tests/data_agents/service/test_retrieval_company_patent.py tests/data_agents/service/test_retrieval_integration.py -q -n0 --no-cov`
+  - Result: 63 passed on 2026-06-12 after adding conservative paper exact-title fallback and duplicate-richness ranking.
+- `UV_CACHE_DIR=/tmp/codex-uv-cache uv run --no-sync ruff check src/data_agents/service/retrieval.py tests/data_agents/service/test_retrieval.py`
+  - Result: passed on 2026-06-12.
+- `UV_CACHE_DIR=/tmp/codex-uv-cache uv run --no-sync pytest tests/test_chat_classifier_b_g_tune.py tests/test_chat_g_clarification.py tests/test_chat_c_handler.py -q`
+  - Result: 48 passed on 2026-06-12 after Unicode/long exact paper title routing and rich duplicate selection fixes.
+- `UV_CACHE_DIR=/tmp/codex-uv-cache uv run --no-sync ruff check backend/api/chat.py tests/test_chat_classifier_b_g_tune.py`
+  - Result: passed on 2026-06-12.
+- Live RetrievalService smoke with real DB, live Milvus socket, real embedding, and real reranker.
+  - Result: `PAPER-35204DCCD66B`, `PAPER-2DE014B7A228`, `PAPER-675F4466FF67`, and `PAPER-01A4EE78C30A` were all recalled at rank 1 for exact paper-title queries.
+- Live `/api/chat` smoke against restarted backend `http://localhost:18188`.
+  - Result: Ding, SUSTech, and HITSZ exact paper-title queries returned `A_paper_profile` and the expected paper IDs; Ding and SUSTech answers included `summary_zh`.
+- `agent-browser` frontend validation on `http://localhost:5180`.
+  - Result: `/paper/PAPER-35204DCCD66B` and `/paper/PAPER-2DE014B7A228` showed status "就绪", title, authors, English abstract, and Chinese summary. `/paper/PAPER-01A4EE78C30A` showed title, authors, year, venue, canonical source `prof_page_only`, and related professor; it remained needs-enrichment because no abstract is available.
 
 ## Runtime Evidence
 
@@ -70,10 +100,21 @@
   - Scope completed before stop: 4/10 professors. No database writes.
   - Result: Su Ping 13 candidates / 13 resolver hits / 11 abstracts; Kang Feiyu 0 candidates and `no_publications_extracted`; Peng Deli 7 candidates / 6 resolver hits / 1 page-only fallback / 3 abstracts; Qiu Hengjia 14 candidates / 11 resolver hits / 3 page-only fallbacks / 9 abstracts.
   - Stop reason: external resolver latency plus arXiv timeout / 429 responses made the unbounded full-sample dry-run unsuitable for this interactive cleanup pass. No bad titles entered resolver after the final parser guard hardening.
+- Shared parser live probe after cross-institution hardening:
+  - URL: `https://homepage.hit.edu.cn/qinjingkai`
+  - Result: 1 detected publication section, 9 parsed publications, and no titles containing obvious student/recruitment prose such as `PhD`, `博士生`, or research-group plan text.
+- HITSZ read-only homepage-paper dry-runs after shared parser hardening:
+  - Seed 20 command: `DATABASE_URL=... UV_CACHE_DIR=/tmp/codex-uv-cache timeout 1200 uv run --no-sync python scripts/run_homepage_paper_ingest.py --dry-run --seed-id 20 --external-resolution-max-per-professor 0 --log-level WARNING`
+  - Seed 20 result: 31 professors processed, 581 candidate papers linked, 8 pipeline issues, and no writes because `--dry-run` was used.
+  - Seed 19 command: `DATABASE_URL=... UV_CACHE_DIR=/tmp/codex-uv-cache timeout 1800 uv run --no-sync python scripts/run_homepage_paper_ingest.py --dry-run --seed-id 19 --external-resolution-max-per-professor 0 --log-level WARNING`
+  - Seed 19 result: 101 professors processed, 1805 candidate papers linked, 19 pipeline issues, and no writes because `--dry-run` was used. The prior dry-run baseline linked 1884 candidates, so stricter shared false-positive filtering removed 79 candidates before resolver/write.
+- 2026-06-12 live collection and index evidence:
+  - Summary backfill run `07ddcda8-7e36-4272-9f30-9c42ecb9dc0c` processed 158 remaining abstract-bearing papers, wrote 115 `summary_zh` rows, rejected 43 by quality gate, and skipped 48.
+  - SUSTech paper ingest run `08473b7b-c7f2-419d-a85f-e1997ce9dd11` processed 1,040 professor rows and linked 12,066 candidate papers.
+  - HITSZ seed 19 run `87f776ed-078c-4c6f-8936-d3ea7f9c2a46` processed 100 professor rows and linked 1,851 papers; HITSZ seed 20 run `b914ddaa-e09d-4b83-8a16-9edba49007d3` processed 31 professor rows and linked 555 papers.
+  - Full paper Milvus rebuild processed 46,318 papers, inserted 55,815 chunks, and reported 0 errors. Professor refresh populated 3,348 identity profiles and 3,348 research profiles.
 
 ## Blocked / Skipped
 
-- Random SIGS sample resolver/write rollout:
-  - Still not accepted. Parser/fallback sample is clean, but only 4/10 resolver dry-run rows completed and no real random-sample paper/link write was run.
-- Full SIGS 250-professor rollout:
-  - Skipped until bounded sample resolver/write validation passes and a resume checkpoint is prepared.
+- Some cross-institution page-only paper rows remain `needs_enrichment` when the official profile supplies only title/authors/venue and no abstract. This is intentional source-truth preservation; summaries are not fabricated from title-only evidence.
+- SZU CSSE seed 5 and several low-paper-coverage departments remain source-limited or blocked by official site behavior per subagent audits. They are not part of the SIGS checkpoint closure and need separate seed-specific source-discovery/custom-crawler slices.

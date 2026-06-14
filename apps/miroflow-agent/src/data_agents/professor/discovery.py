@@ -2,19 +2,22 @@ from __future__ import annotations
 
 import atexit
 import contextvars
+from contextlib import contextmanager
 import hashlib
 import json
 import re
+import socket
 from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
 import threading
 import time
 from typing import Any, Callable
-from urllib.parse import parse_qsl, urlencode, urljoin, urlparse, urlunparse
+from urllib.parse import ParseResult, parse_qsl, quote, urlencode, urljoin, urlparse, urlunparse
 
 from bs4 import BeautifulSoup
 import requests
+import urllib3.util.connection as urllib3_connection
 
 from .name_selection import is_obvious_non_person_name, is_same_person_name_variant, normalize_name_key
 from .profile import extract_professor_profile
@@ -28,6 +31,8 @@ from .roster import (
 
 FetchHtml = Callable[[str], str]
 FetchJson = Callable[[str, dict[str, object]], object]
+
+_CHINESE_CHAR_RE = re.compile(r"[\u3400-\u4DBF\u4E00-\u9FFF]")
 
 _SEED_FALLBACK_URLS: dict[str, tuple[str, ...]] = {
     "https://www.sustech.edu.cn/zh/letter/": (
@@ -55,11 +60,33 @@ _SEED_FALLBACK_URLS: dict[str, tuple[str, ...]] = {
     "https://sa.sysu.edu.cn/zh-hans/teacher/faculty": (
         "https://ab.sysu.edu.cn/zh-hans/teacher/faculty",
     ),
+    "http://sece.sysu.edu.cn/szll/index.htm": (
+        "https://sece.sysu.edu.cn/szll/js/zngz/index.htm",
+    ),
+    "https://sece.sysu.edu.cn/szll/index.htm": (
+        "https://sece.sysu.edu.cn/szll/js/zngz/index.htm",
+    ),
+    "https://am.sysu.edu.cn/szdw/index.htm": (
+        "https://am.sysu.edu.cn/teacher",
+    ),
+    "http://am.sysu.edu.cn/szdw/index.htm": (
+        "https://am.sysu.edu.cn/teacher",
+    ),
+    "https://scst.sysu.edu.cn/faculty": (
+        "https://scst.sysu.edu.cn/teacher",
+    ),
 }
+_SEED_FALLBACK_PREFERRED_URLS: frozenset[str] = frozenset(
+    {
+        "http://am.sysu.edu.cn/szdw/index.htm",
+        "https://am.sysu.edu.cn/szdw/index.htm",
+    }
+)
 _SEED_OFFICIAL_DOMAIN_SUFFIXES: dict[str, tuple[str, ...]] = {
     "https://www.pkusz.edu.cn/szdw.htm": ("pkusz.edu.cn", "pku.edu.cn"),
     "http://sa.sysu.edu.cn/zh-hans/teacher/faculty": ("sysu.edu.cn",),
     "https://sa.sysu.edu.cn/zh-hans/teacher/faculty": ("sysu.edu.cn",),
+    "https://msee.suat-sz.edu.cn/szdw.htm": ("siat.ac.cn",),
 }
 _HOST_DIRECT_MIN_INTERVAL_SECONDS: dict[str, float] = {
     "med.szu.edu.cn": 1.2,
@@ -109,6 +136,26 @@ _PERSONAL_HOMEPAGE_NAV_HINTS = (
     "cv",
     "publications",
 )
+_IPV4_ONLY_DIRECT_HOSTS: set[str] = {
+    "sece.sysu.edu.cn",
+}
+_SZTU_CACHE_REFRESH_CATEGORY_PATHS: dict[str, set[str]] = {
+    "ai.sztu.edu.cn": {
+        "/szdw/jytd/tpjs.htm",
+        "/szdw/jytd/js.htm",
+        "/szdw/jytd/fjs.htm",
+        "/szdw/jytd/zljs.htm",
+    },
+    "icoc.sztu.edu.cn": {
+        "/szdw/jytd/tpjs.htm",
+        "/szdw/jytd/js.htm",
+        "/szdw/jytd/fjs.htm",
+        "/szdw/jytd/zljs.htm",
+        "/szdw/jytd/yjy.htm",
+        "/szdw/jytd/bsh.htm",
+    },
+}
+_ADDRESS_FAMILY_LOCK = threading.Lock()
 
 
 _DIRECT_PROFILE_CONTENT_CLASS_HINTS = (
@@ -267,11 +314,16 @@ def fetch_html_with_fallback(
     browser_fetch: Callable[[str, float], str] | None = None,
     reader_fetch: Callable[[str, float], str] | None = None,
 ) -> HtmlFetchResult:
+    url = _quote_fetch_url(url)
     fetch_policy = _resolve_fetch_policy(url)
     use_cache = request_get is None and browser_fetch is None and reader_fetch is None
     if use_cache:
         cached_html = _load_cached_html(url)
-        if cached_html is not None and not _should_refresh_cached_html(url, cached_html):
+        if (
+            cached_html is not None
+            and not _should_refresh_cached_html(url, cached_html)
+            and not _is_blocked_response(200, cached_html)
+        ):
             return HtmlFetchResult(
                 html=cached_html,
                 used_browser=False,
@@ -297,7 +349,9 @@ def fetch_html_with_fallback(
             rendered_html = None
         else:
             if rendered_html and rendered_html.strip():
-                if _is_blocked_response(200, rendered_html):
+                if _is_empty_rendered_page(rendered_html):
+                    browser_error = "browser returned empty page"
+                elif _is_blocked_response(200, rendered_html):
                     browser_error = "browser returned blocked page"
                 else:
                     if use_cache:
@@ -444,6 +498,16 @@ def get_registered_domain(url: str) -> str:
     return ".".join(labels[-2:])
 
 
+def _quote_fetch_url(url: str) -> str:
+    parsed = urlparse(url)
+    if not parsed.scheme or not parsed.netloc:
+        return url
+    path = quote(parsed.path, safe="/%")
+    query = quote(parsed.query, safe="=&?/:;+,%")
+    fragment = quote(parsed.fragment, safe="=&?/:;+,%")
+    return urlunparse(parsed._replace(path=path, query=query, fragment=fragment))
+
+
 def get_allowed_registered_domains(seed_url: str) -> tuple[str, ...]:
     domains = {get_registered_domain(seed_url)}
     domains.update(_SEED_OFFICIAL_DOMAIN_SUFFIXES.get(seed_url, ()))
@@ -475,10 +539,10 @@ def _default_fetch_json(url: str, payload: dict[str, object]) -> object:
 
 def _render_text_with_reader(url: str, timeout: float) -> str:
     cached_html = _load_cached_html(url)
-    if cached_html is not None:
+    if cached_html is not None and not _is_blocked_response(200, cached_html):
         return cached_html
 
-    reader_url = f"https://r.jina.ai/http://{url}"
+    reader_url = _reader_url_for(url)
     last_error: Exception | None = None
     global _last_reader_request_started_at
     for attempt in range(3):
@@ -488,21 +552,21 @@ def _render_text_with_reader(url: str, timeout: float) -> str:
             )
             if remaining_delay > 0:
                 time.sleep(remaining_delay)
-            response = _request_with_env_fallback(
-                "get",
-                reader_url,
-                timeout=(
-                    _READER_CONNECT_TIMEOUT_SECONDS,
-                    max(timeout, 40.0),
-                ),
-                headers={
-                    "User-Agent": (
-                        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                        "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-                    )
-                },
-            )
             _last_reader_request_started_at = time.monotonic()
+        response = _request_with_env_fallback(
+            "get",
+            reader_url,
+            timeout=(
+                _READER_CONNECT_TIMEOUT_SECONDS,
+                max(timeout, 40.0),
+            ),
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+                )
+            },
+        )
         if response.status_code == 429 and attempt < 2:
             time.sleep(10 * (attempt + 1))
             continue
@@ -518,14 +582,21 @@ def _render_text_with_reader(url: str, timeout: float) -> str:
                 time.sleep(10 * (attempt + 1))
                 continue
             break
+        if _is_reader_error_response(text):
+            last_error = RuntimeError("reader returned target URL error response")
+            break
         _store_cached_html(url, text)
         return text
 
     cached_html = _load_cached_html(url)
-    if cached_html is not None:
+    if cached_html is not None and not _is_blocked_response(200, cached_html):
         return cached_html
     assert last_error is not None
     raise last_error
+
+
+def _reader_url_for(url: str) -> str:
+    return f"https://r.jina.ai/{url.strip()}"
 
 
 def _requests_get(url: str, timeout: float) -> requests.Response:
@@ -551,6 +622,7 @@ def _request_with_env_fallback(
     **kwargs: Any,
 ) -> requests.Response:
     direct_error: requests.RequestException | None = None
+    force_ipv4 = _should_force_ipv4_direct_request(url)
     try:
         return _request_with_trust_env(
             method,
@@ -558,6 +630,7 @@ def _request_with_env_fallback(
             timeout=timeout,
             headers=headers,
             trust_env=False,
+            force_ipv4=force_ipv4,
             **kwargs,
         )
     except requests.RequestException as exc:
@@ -570,6 +643,7 @@ def _request_with_env_fallback(
             timeout=timeout,
             headers=headers,
             trust_env=True,
+            force_ipv4=force_ipv4,
             **kwargs,
         )
     except requests.RequestException:
@@ -584,22 +658,14 @@ def _request_with_trust_env(
     timeout: float | tuple[float, float],
     headers: dict[str, str] | None,
     trust_env: bool,
+    force_ipv4: bool,
     **kwargs: Any,
 ) -> requests.Response:
     if not trust_env:
         _wait_for_direct_host_rate_limit(url)
-    with requests.Session() as session:
-        session.trust_env = trust_env
-        response = session.request(
-            method=method,
-            url=url,
-            timeout=timeout,
-            headers=headers,
-            **kwargs,
-        )
-        if not trust_env and _is_direct_rate_limited_response(url, response):
-            time.sleep(max(_HOST_DIRECT_MIN_INTERVAL_SECONDS.get((urlparse(url).hostname or "").lower(), 0.0), 1.2))
-            _wait_for_direct_host_rate_limit(url)
+    with _request_address_family(force_ipv4):
+        with requests.Session() as session:
+            session.trust_env = trust_env
             response = session.request(
                 method=method,
                 url=url,
@@ -607,7 +673,40 @@ def _request_with_trust_env(
                 headers=headers,
                 **kwargs,
             )
-        return response
+            if not trust_env and _is_direct_rate_limited_response(url, response):
+                time.sleep(max(_HOST_DIRECT_MIN_INTERVAL_SECONDS.get((urlparse(url).hostname or "").lower(), 0.0), 1.2))
+                _wait_for_direct_host_rate_limit(url)
+                response = session.request(
+                    method=method,
+                    url=url,
+                    timeout=timeout,
+                    headers=headers,
+                    **kwargs,
+                )
+            return response
+
+
+def _should_force_ipv4_direct_request(url: str) -> bool:
+    hostname = (urlparse(url).hostname or "").lower()
+    return hostname in _IPV4_ONLY_DIRECT_HOSTS
+
+
+@contextmanager
+def _request_address_family(force_ipv4: bool):
+    if not force_ipv4:
+        yield
+        return
+
+    def allowed_gai_family() -> socket.AddressFamily:
+        return socket.AF_INET
+
+    with _ADDRESS_FAMILY_LOCK:
+        previous_allowed_gai_family = urllib3_connection.allowed_gai_family
+        urllib3_connection.allowed_gai_family = allowed_gai_family
+        try:
+            yield
+        finally:
+            urllib3_connection.allowed_gai_family = previous_allowed_gai_family
 
 
 def _wait_for_direct_host_rate_limit(url: str) -> None:
@@ -668,6 +767,10 @@ def _should_refresh_cached_html(url: str, content: str) -> bool:
     lowered = content.lower()
     if "teacher-search" in path and lowered.startswith("title:"):
         return "/teacher/" not in lowered
+    if _is_stale_sztu_roster_category_cache(parsed, content):
+        return True
+    if _is_stale_suat_visualsitebuilder_roster_cache(parsed, content):
+        return True
     if parsed.netloc.endswith("sigs.tsinghua.edu.cn") and path.endswith("/main.htm"):
         marker_index = content.find("代表性论文")
         if marker_index >= 0:
@@ -675,6 +778,56 @@ def _should_refresh_cached_html(url: str, content: str) -> bool:
             section = content[marker_index:next_section_index if next_section_index >= 0 else None]
             if "目前已发表学术论文" in section and not re.search(r"\[\d+\]|\b\d+\)", section):
                 return True
+    return False
+
+
+def _is_stale_sztu_roster_category_cache(parsed_url: ParseResult, content: str) -> bool:
+    hostname = (parsed_url.hostname or "").lower()
+    path = parsed_url.path.rstrip("/").lower()
+    allowed_paths = _SZTU_CACHE_REFRESH_CATEGORY_PATHS.get(hostname)
+    if allowed_paths is None:
+        return False
+    if path != "/szdw/jytd/jxjs.htm":
+        return False
+    if _sztu_cached_content_has_allowed_category_links(parsed_url, content, allowed_paths):
+        return False
+    return bool(extract_roster_entries(content, "深圳技术大学", None, parsed_url.geturl()))
+
+
+def _is_stale_suat_visualsitebuilder_roster_cache(
+    parsed_url: ParseResult,
+    content: str,
+) -> bool:
+    hostname = (parsed_url.hostname or "").lower()
+    path = parsed_url.path.rstrip("/").lower()
+    if not hostname.endswith("suat-sz.edu.cn"):
+        return False
+    if not any(token in path for token in ("/szdw", "/szll", "/faculty")):
+        return False
+    lowered = content.lower()
+    if "_showdynclickbatch" not in lowered or "dynclicks_u" not in lowered:
+        return False
+    return bool(extract_roster_entries(content, "深圳理工大学", None, parsed_url.geturl()))
+
+
+def _sztu_cached_content_has_allowed_category_links(
+    parsed_url: ParseResult,
+    content: str,
+    allowed_paths: set[str],
+) -> bool:
+    source_url = parsed_url.geturl()
+    source_host = (parsed_url.hostname or "").lower()
+    soup = BeautifulSoup(content, "html.parser")
+    for anchor in soup.find_all("a", href=True):
+        href = str(anchor.get("href", "")).strip()
+        if not href:
+            continue
+        absolute_url = urljoin(source_url, href)
+        parsed_href = urlparse(absolute_url)
+        if (parsed_href.hostname or "").lower() != source_host:
+            continue
+        if parsed_href.path.rstrip("/").lower() in allowed_paths:
+            return True
     return False
 
 
@@ -701,10 +854,44 @@ def _decode_response_text(response: requests.Response) -> str:
 
 def _is_blocked_response(status_code: int, html: str) -> bool:
     lowered = html.lower()
-    return status_code in {401, 403, 412, 429, 503} or any(
+    return (
+        status_code in {401, 403, 412, 429, 503}
+        or _is_tokenized_empty_challenge_response(status_code, html)
+        or _is_reader_error_response(html)
+        or _is_empty_rendered_page(html)
+        or any(
         marker in lowered
         for marker in ("access denied", "forbidden", "captcha", "just a moment", "bot verification")
+        )
     )
+
+
+def _is_empty_rendered_page(html: str) -> bool:
+    soup = BeautifulSoup(html, "html.parser")
+    if soup.find_all("a", href=True):
+        return False
+    return not soup.get_text(" ", strip=True)
+
+
+def _is_reader_error_response(html: str) -> bool:
+    lowered = html.strip().lower()
+    return (
+        lowered.startswith("title:")
+        and "url source:" in lowered
+        and "warning: target url returned error" in lowered
+        and "markdown content:" in lowered
+    )
+
+
+def _is_tokenized_empty_challenge_response(status_code: int, html: str) -> bool:
+    if status_code not in {200, 202}:
+        return False
+    if "$_ts" not in html:
+        return False
+    if _CHINESE_CHAR_RE.search(html):
+        return False
+    soup = BeautifulSoup(html, "html.parser")
+    return not soup.find_all("a", href=True)
 
 
 def _render_html_with_playwright(url: str, timeout: float) -> str:
@@ -1017,13 +1204,19 @@ def _discover_recursive_seed(
                 failed_fetch_urls=failed_fetch_urls,
             )
 
+        prioritize_seed_fallback = _should_prioritize_seed_fallback(
+            seed_url=seed.roster_url,
+            current_url=current.url,
+            current_depth=current.depth,
+            html=html,
+        )
         entries = extract_roster_entries(
             html=html,
             institution=institution,
             department=current.department,
             source_url=current.url,
         )
-        if entries:
+        if entries and not prioritize_seed_fallback:
             discovered.extend(entries)
             if not _should_continue_after_roster_entries(
                 seed_url=seed.roster_url,
@@ -1033,12 +1226,6 @@ def _discover_recursive_seed(
             ):
                 continue
 
-        prioritize_seed_fallback = _should_prioritize_seed_fallback(
-            seed_url=seed.roster_url,
-            current_url=current.url,
-            current_depth=current.depth,
-            html=html,
-        )
         if prioritize_seed_fallback:
             _enqueue_seed_fallback_pages(
                 queue=queue,
@@ -1048,6 +1235,25 @@ def _discover_recursive_seed(
                 current_depth=current.depth,
                 department=current.department,
             )
+
+        candidate_links: list[tuple[str, str]] = []
+        if not prioritize_seed_fallback and current.depth < limits.max_depth:
+            candidate_links = extract_roster_page_links(html, current.url)
+            if _should_enqueue_seed_fallback_for_redirect_shell(
+                seed_url=seed.roster_url,
+                current_url=current.url,
+                current_depth=current.depth,
+                entries_found=bool(entries),
+                links=candidate_links,
+            ):
+                _enqueue_seed_fallback_pages(
+                    queue=queue,
+                    visited_set=visited_set,
+                    seed_url=seed.roster_url,
+                    current_url=current.url,
+                    current_depth=current.depth,
+                    department=current.department,
+                )
 
         if current.depth >= limits.max_depth:
             if not prioritize_seed_fallback:
@@ -1066,7 +1272,7 @@ def _discover_recursive_seed(
         else:
             candidates = _bounded_candidates(
                 seed_url=seed.roster_url,
-                links=extract_roster_page_links(html, current.url),
+                links=candidate_links,
                 current_department=current.department,
                 max_candidates=limits.max_candidate_links_per_page,
             )
@@ -1154,6 +1360,8 @@ def _should_prioritize_seed_fallback(
         return False
     if seed_url not in _SEED_FALLBACK_URLS:
         return False
+    if seed_url in _SEED_FALLBACK_PREFERRED_URLS:
+        return True
     seed_path = urlparse(seed_url).path.rstrip("/")
     if not _path_looks_like_roster_seed(seed_path):
         return False
@@ -1176,16 +1384,94 @@ def _should_continue_after_roster_entries(
     current_depth: int,
     html: str,
 ) -> bool:
+    if _is_szu_cpoe_teacherfeature_discovery_url(current_url):
+        return bool(extract_roster_page_links(html, current_url))
     if current_depth != 0 or current_url != seed_url:
         return False
     parsed = urlparse(seed_url)
     hostname = (parsed.hostname or "").lower()
     path = parsed.path.rstrip("/").lower()
+    if hostname == "csse.szu.edu.cn" and path == "/pages/teacherteam/index":
+        return bool(extract_roster_page_links(html, seed_url))
     if hostname != "ceie.szu.edu.cn" or path != "/szdw/ysfc.htm":
-        return False
+        if not _is_school_family_roster_continuation_seed(hostname, path):
+            return False
+        return bool(extract_roster_page_links(html, seed_url))
     category_links = extract_roster_page_links(html, seed_url)
     category_labels = {label for _url, label in category_links}
     return bool({"教授", "副教授", "讲师/助理教授"} & category_labels)
+
+
+def _is_szu_cpoe_teacherfeature_discovery_url(current_url: str) -> bool:
+    parsed = urlparse(current_url)
+    hostname = (parsed.hostname or "").lower()
+    path = parsed.path.lower()
+    return hostname == "cpoe.szu.edu.cn" and (
+        "teacherfeature.jsp" in path
+        or "/teacherfeature/search/queryteacher.jsp" in path
+    )
+
+
+def _is_school_family_roster_continuation_seed(hostname: str, path: str) -> bool:
+    if hostname.endswith("sztu.edu.cn"):
+        return any(token in path for token in ("/szdw/", "/szdw2022/", "/xygk/szdw/"))
+    if hostname.endswith("suat-sz.edu.cn"):
+        return any(token in path for token in ("/szll", "/szdw", "/faculty"))
+    if hostname.endswith("suit-sz.edu.cn"):
+        return "/jyjx/jsfc" in path
+    return False
+
+
+def _should_enqueue_seed_fallback_for_redirect_shell(
+    *,
+    seed_url: str,
+    current_url: str,
+    current_depth: int,
+    entries_found: bool,
+    links: list[tuple[str, str]],
+) -> bool:
+    if current_depth != 0 or current_url != seed_url:
+        return False
+    if entries_found or seed_url not in _SEED_FALLBACK_URLS:
+        return False
+    if not links:
+        return False
+    if all(label == "redirect" for _url, label in links):
+        return True
+    fallback_urls = _SEED_FALLBACK_URLS[seed_url]
+    return any(
+        _link_points_to_configured_fallback_parent(url, label, fallback_url)
+        for url, label in links
+        for fallback_url in fallback_urls
+    )
+
+
+def _link_points_to_configured_fallback_parent(
+    url: str,
+    label: str,
+    fallback_url: str,
+) -> bool:
+    if not _label_looks_like_teacher_directory(label):
+        return False
+    parsed = urlparse(url)
+    fallback = urlparse(fallback_url)
+    if (parsed.hostname or "").lower() != (fallback.hostname or "").lower():
+        return False
+    parent_path = parsed.path
+    if parent_path.endswith("/index.htm"):
+        parent_path = parent_path.removesuffix("index.htm")
+    elif not parent_path.endswith("/"):
+        parent_path = parent_path.rsplit("/", 1)[0] + "/"
+    if len(parent_path) <= 1:
+        return False
+    return fallback.path.startswith(parent_path)
+
+
+def _label_looks_like_teacher_directory(label: str) -> bool:
+    normalized = _normalize_text(label).lower()
+    if not normalized:
+        return False
+    return any(token in normalized for token in ("教师", "师资", "faculty", "teacher"))
 
 
 def _enqueue_seed_fallback_pages(
@@ -1410,7 +1696,11 @@ def _build_professor_seeds_from_records(
         raw_url = _normalize_text(str(record.get(url_key, "")).strip())
         if not raw_name or not raw_url:
             continue
+        if is_obvious_non_person_name(raw_name):
+            continue
         profile_url = url_formatter(raw_url) if url_formatter else urljoin(source_url, raw_url)
+        if _is_placeholder_profile_url(profile_url):
+            continue
         discovered.append(
             DiscoveredProfessorSeed(
                 name=raw_name,
@@ -1423,6 +1713,12 @@ def _build_professor_seeds_from_records(
             )
         )
     return _dedupe_professors(discovered)
+
+
+def _is_placeholder_profile_url(profile_url: str) -> bool:
+    parsed = urlparse(profile_url)
+    path = parsed.path.rstrip("/").casefold()
+    return path in {"/nofound", "/nofound.html"} or path.endswith("/nofound.html")
 
 
 def _extract_json_list(payload: object) -> list[object]:

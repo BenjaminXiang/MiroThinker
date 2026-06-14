@@ -32,7 +32,10 @@ logger = logging.getLogger("miroflow_agent")
 class OpenAIClient(BaseClient):
     def _create_client(self) -> Union[AsyncOpenAI, OpenAI]:
         """Create LLM client"""
-        http_client_args = {"headers": {"x-upstream-session-id": self.task_id}}
+        http_client_args = {
+            "headers": {"x-upstream-session-id": self.task_id},
+            "trust_env": False,
+        }
         if self.async_client:
             return AsyncOpenAI(
                 api_key=self.api_key,
@@ -146,7 +149,9 @@ class OpenAIClient(BaseClient):
             if self.repetition_penalty != 1.0:
                 params["extra_body"]["repetition_penalty"] = self.repetition_penalty
 
-            if "deepseek-v3-1" in self.model_name:
+            if "deepseek-v4" in self.model_name and "thinking" not in params["extra_body"]:
+                params["extra_body"]["thinking"] = {"type": "disabled"}
+            elif "deepseek-v3-1" in self.model_name:
                 params["extra_body"]["thinking"] = {"type": "enabled"}
 
             # auto-detect if we need to continue from the last assistant message

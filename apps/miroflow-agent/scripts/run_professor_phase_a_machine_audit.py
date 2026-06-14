@@ -14,9 +14,6 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.data_agents.paper.models import ProfessorPaperDiscoveryResult
-from src.data_agents.professor.paper_collector import _discover_best_hybrid_result
-
 
 def _load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
@@ -120,45 +117,18 @@ def _paper_verification(
             "name_disambiguation_conflict": False,
         }
 
-    result = _discover_best_hybrid_result(
-        name=name,
-        name_en=str(profile.get("name_en") or "").strip() or None,
-        institution=institution,
-        institution_en=None,
-        professor_id=str(item.get("audit_id") or name),
-        homepage_url=homepage_url,
-    )
-    if result is None:
-        return {
-            "accepted": False,
-            "judged": judged,
-            "correct": 0,
-            "reason": "no_verified_paper_match",
-            "source": None,
-            "school_matched": False,
-            "fallback_used": False,
-            "name_disambiguation_conflict": False,
-        }
-
-    # Mirror production discovery semantics: a returned hybrid result has already
-    # passed the weak-result filter, so strong non-school-matched OpenAlex hits
-    # remain acceptable as long as they are not fallback/conflict cases.
-    accepted = bool(
-        result.source == "openalex"
-        and not result.fallback_used
-        and not result.name_disambiguation_conflict
-    )
+    _ = (name, institution, homepage_url)
     return {
-        "accepted": accepted,
+        "accepted": False,
         "judged": judged,
-        "correct": judged if accepted else 0,
-        "reason": "accepted" if accepted else "weak_or_fallback_paper_match",
-        "source": result.source,
-        "school_matched": result.school_matched,
-        "fallback_used": result.fallback_used,
-        "name_disambiguation_conflict": result.name_disambiguation_conflict,
-        "author_id": result.author_id,
-        "paper_count": result.paper_count,
+        "correct": 0,
+        "reason": "legacy_paper_discovery_retired",
+        "source": None,
+        "school_matched": False,
+        "fallback_used": False,
+        "name_disambiguation_conflict": False,
+        "author_id": None,
+        "paper_count": None,
     }
 
 

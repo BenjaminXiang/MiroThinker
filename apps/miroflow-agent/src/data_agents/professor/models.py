@@ -6,6 +6,25 @@ from pydantic import BaseModel
 from .cross_domain import CompanyLink, PaperLink, PatentLink
 
 
+class EducationEntry(BaseModel):
+    """Structured education history entry."""
+
+    school: str
+    degree: str | None = None
+    field: str | None = None
+    start_year: int | None = None
+    end_year: int | None = None
+
+
+class WorkEntry(BaseModel):
+    """Structured work experience entry."""
+
+    organization: str
+    role: str | None = None
+    start_year: int | None = None
+    end_year: int | None = None
+
+
 @dataclass(frozen=True, slots=True)
 class ProfessorRosterSeed:
     institution: str | None
@@ -35,10 +54,19 @@ class ExtractedProfessorProfile:
     office: str | None
     research_directions: tuple[str, ...]
     source_urls: tuple[str, ...]
+    profile_raw_text: str | None = None
+    education_structured: tuple[EducationEntry, ...] = ()
+    work_experience: tuple[WorkEntry, ...] = ()
+    awards: tuple[str, ...] = ()
+    academic_positions: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "research_directions", tuple(self.research_directions))
         object.__setattr__(self, "source_urls", tuple(self.source_urls))
+        object.__setattr__(self, "education_structured", tuple(self.education_structured))
+        object.__setattr__(self, "work_experience", tuple(self.work_experience))
+        object.__setattr__(self, "awards", tuple(self.awards))
+        object.__setattr__(self, "academic_positions", tuple(self.academic_positions))
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,11 +86,20 @@ class MergedProfessorProfileRecord:
     skip_reason: str | None
     error: str | None
     roster_source: str
+    profile_raw_text: str | None = None
+    education_structured: tuple[EducationEntry, ...] = ()
+    work_experience: tuple[WorkEntry, ...] = ()
+    awards: tuple[str, ...] = ()
+    academic_positions: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "source_urls", tuple(self.source_urls))
         object.__setattr__(self, "evidence", tuple(self.evidence))
         object.__setattr__(self, "research_directions", tuple(self.research_directions))
+        object.__setattr__(self, "education_structured", tuple(self.education_structured))
+        object.__setattr__(self, "work_experience", tuple(self.work_experience))
+        object.__setattr__(self, "awards", tuple(self.awards))
+        object.__setattr__(self, "academic_positions", tuple(self.academic_positions))
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -81,27 +118,12 @@ class MergedProfessorProfileRecord:
             "skip_reason": self.skip_reason,
             "error": self.error,
             "roster_source": self.roster_source,
+            "profile_raw_text": self.profile_raw_text,
+            "education_structured": [item.model_dump() for item in self.education_structured],
+            "work_experience": [item.model_dump() for item in self.work_experience],
+            "awards": list(self.awards),
+            "academic_positions": list(self.academic_positions),
         }
-
-
-class EducationEntry(BaseModel):
-    """Structured education history entry."""
-
-    school: str
-    degree: str | None = None
-    field: str | None = None
-    start_year: int | None = None
-    end_year: int | None = None
-
-
-class WorkEntry(BaseModel):
-    """Structured work experience entry."""
-
-    organization: str
-    role: str | None = None
-    start_year: int | None = None
-    end_year: int | None = None
-
 
 class OfficialAnchorProfile(BaseModel):
     """Official anchor facts extracted only from the main official teacher page."""
@@ -153,7 +175,10 @@ class EnrichedProfessorProfile(BaseModel):
     projects: list[str] = []
     company_roles: list[CompanyLink] = []
     patent_ids: list[PatentLink] = []
+    profile_raw_text: str | None = None
     profile_summary: str = ""
+    paper_summary: str | None = None
+    patent_summary: str | None = None
     enrichment_source: str = "regex_only"  # "regex_only" | "paper_enriched" | "agent_local" | "agent_online"
     evidence_urls: list[str] = []
     field_provenance: dict[str, str] = {}

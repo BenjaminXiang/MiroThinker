@@ -1,0 +1,53 @@
+{
+  "milvus_uri": "/home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db",
+  "filter_by_quality_status": true,
+  "candidate_limit": 20,
+  "final_top_k": 5,
+  "checks": [
+    {
+      "category": "product",
+      "query": "深圳惟德精准医疗科技 肺部经皮介入手术机器人 产品是什么 技术特点",
+      "expected_company_id": "COMP-2640a0f609b5",
+      "status": "failed",
+      "hit_rank": null,
+      "top_results": []
+    },
+    {
+      "category": "target_customer",
+      "query": "深圳迈塔兰斯科技 平面超透镜 目标客户 AR VR 消费电子 安防监控",
+      "expected_company_id": "COMP-54fd4dd036ff",
+      "status": "failed",
+      "hit_rank": null,
+      "top_results": []
+    },
+    {
+      "category": "scenario",
+      "query": "拨云见日（深圳）智能科技 应用场景 线下作业无人化 工厂",
+      "expected_company_id": "COMP-37013bba3132",
+      "status": "failed",
+      "hit_rank": null,
+      "top_results": []
+    },
+    {
+      "category": "recent_financing",
+      "query": "不停科技 最近融资 B++轮 近5000万美元 长线资本 创世伙伴CCV",
+      "expected_company_id": "COMP-8ed85d2c2d59",
+      "status": "failed",
+      "hit_rank": null,
+      "top_results": []
+    },
+    {
+      "category": "profile_summary",
+      "query": "一股科技 公司简介 友心 积分商城 CRM 数据挖掘 供应链",
+      "expected_company_id": "COMP-17d68ddf7fd6",
+      "status": "failed",
+      "hit_rank": null,
+      "top_results": []
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "passed": 0,
+    "failed": 5
+  }
+}

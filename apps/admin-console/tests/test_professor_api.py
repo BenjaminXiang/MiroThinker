@@ -2,10 +2,20 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
+from backend.services.data_helpers import PROFESSOR_TOP_PAPERS_SQL
+
 from .conftest import _load_postgres_dependencies
 
 
 TSINGHUA_SIGS = "清华大学深圳国际研究生院"
+
+
+def test_professor_detail_active_papers_sql_resolves_aliases_and_deduplicates() -> None:
+    sql = " ".join(PROFESSOR_TOP_PAPERS_SQL.split()).lower()
+
+    assert "paper_merge_alias" in sql
+    assert "coalesce(pma.canonical_paper_id, ppl.paper_id)" in sql
+    assert "duplicate_rank = 1" in sql
 
 
 def _find_professor_with_facts_and_papers(pg_dsn: str) -> tuple[str, str]:
@@ -116,6 +126,91 @@ def test_professor_detail_includes_facts_and_papers(
     assert len(payload["candidate_papers"]) <= 20
     assert payload["source_pages_used"] >= 1
     assert payload["affiliations"][0]["is_primary"] is True
+
+
+def test_professor_domain_detail_exposes_lifecycle_separate_from_quality(
+    professor_postgres_client: TestClient,
+    professor_data_ready: str,
+) -> None:
+    professor_id, _ = _find_professor_with_facts_and_papers(professor_data_ready)
+
+    response = professor_postgres_client.get(f"/api/professor/{professor_id}")
+    assert response.status_code == 200
+
+    payload = response.json()
+    assert payload["id"] == professor_id
+    assert payload["object_type"] == "professor"
+    assert payload["lifecycle_state"] == "active"
+    assert payload["lifecycle_merged_into_id"] is None
+    assert "quality_status" in payload
+
+
+def test_filter_professor_domain_by_lifecycle_state(
+    professor_postgres_client: TestClient,
+    professor_data_ready: str,
+) -> None:
+    professor_id, _ = _find_professor_with_facts_and_papers(professor_data_ready)
+    psycopg, _, _, _ = _load_postgres_dependencies()
+    with psycopg.connect(professor_data_ready) as conn:
+        conn.execute(
+            """
+            UPDATE professor
+               SET lifecycle_state = 'archived',
+                   lifecycle_merged_into_id = NULL
+             WHERE professor_id = %s
+            """,
+            (professor_id,),
+        )
+        conn.commit()
+
+    response = professor_postgres_client.get(
+        "/api/professor",
+        params={"filters": '{"lifecycle_state": "archived"}'},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total"] >= 1
+    assert all(item["lifecycle_state"] == "archived" for item in payload["items"])
+    assert professor_id in {item["id"] for item in payload["items"]}
+
+
+def test_update_professor_lifecycle_records_audit_action(
+    professor_postgres_client: TestClient,
+    professor_data_ready: str,
+) -> None:
+    professor_id, _ = _find_professor_with_facts_and_papers(professor_data_ready)
+
+    response = professor_postgres_client.patch(
+        f"/api/professor/{professor_id}/lifecycle",
+        json={
+            "lifecycle_state": "archived",
+            "actor": "ops",
+            "note": "No longer listed in current school roster.",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["id"] == professor_id
+    assert payload["lifecycle_state"] == "archived"
+    assert payload["lifecycle_merged_into_id"] is None
+    assert payload["quality_status"] == "ready"
+
+    psycopg, _, _, _ = _load_postgres_dependencies()
+    with psycopg.connect(professor_data_ready) as conn:
+        row = conn.execute(
+            """
+            SELECT action, actor, note
+              FROM professor_admin_action
+             WHERE professor_id = %s
+             ORDER BY created_at DESC
+             LIMIT 1
+            """,
+            (professor_id,),
+        ).fetchone()
+    assert row is not None
+    assert row[0] == "set_lifecycle_state"
+    assert row[1] == "ops"
+    assert "No longer listed in current school roster." in row[2]
 
 
 def test_professor_detail_404(professor_postgres_client: TestClient) -> None:

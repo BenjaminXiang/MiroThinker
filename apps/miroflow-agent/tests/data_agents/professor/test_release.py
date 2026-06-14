@@ -13,6 +13,15 @@ from src.data_agents.professor.release import (
 
 
 TIMESTAMP = datetime(2026, 4, 1, tzinfo=timezone.utc)
+OPERATOR_META_MARKERS = (
+    "当前画像",
+    "可核验事实字段",
+    "持续补全",
+    "已同步整理",
+    "细粒度检索",
+    "采集原则",
+    "不对缺失经历",
+)
 
 
 def _merged_record(
@@ -64,7 +73,9 @@ def test_build_professor_release_generates_contract_valid_record_with_fallback_s
     assert professor.id == release_result_again.professor_records[0].id
     assert professor.profile_summary
     assert "李志" in professor.profile_summary
-    assert 200 <= len(professor.profile_summary) <= 300
+    assert "机器学习" in professor.profile_summary
+    assert not any(marker in professor.profile_summary for marker in OPERATOR_META_MARKERS)
+    assert len(professor.profile_summary) <= 300
     assert any(item.source_type == "official_site" for item in professor.evidence)
     assert any(item.source_type == "public_web" for item in professor.evidence)
     assert professor.email == "lizhi@sustech.edu.cn"
@@ -132,7 +143,11 @@ def test_build_professor_release_supports_custom_summarizer_and_reports_skips():
     assert "PROFILE::王五" in records_by_name["王五"].profile_summary
     assert records_by_name["钱七"].department is None
     assert records_by_name["钱七"].title is None
-    assert 200 <= len(records_by_name["王五"].profile_summary) <= 300
+    assert not any(
+        marker in records_by_name["王五"].profile_summary
+        for marker in OPERATOR_META_MARKERS
+    )
+    assert len(records_by_name["王五"].profile_summary) <= 300
     assert release_result.report.input_profile_count == 4
     assert release_result.report.released_record_count == 3
     assert release_result.report.skipped_record_count == 1
@@ -245,3 +260,15 @@ def test_fallback_profile_summary_stays_generic_when_department_and_title_missin
     profile_summary = release_result.professor_records[0].profile_summary
     assert "南方科技大学" in profile_summary
     assert "相关院系" not in profile_summary
+
+
+def test_rule_based_profile_summary_excludes_operator_meta_language():
+    release_result = build_professor_release(
+        profiles=[_merged_record(name="吴日", department="化学系", title="助理教授")],
+        official_domain_suffixes=("sustech.edu.cn",),
+        now=TIMESTAMP,
+    )
+
+    summary = release_result.professor_records[0].profile_summary
+    assert "吴日" in summary
+    assert not any(marker in summary for marker in OPERATOR_META_MARKERS)
