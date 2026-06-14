@@ -1,0 +1,141 @@
+{
+  "bucket_limit": 1,
+  "closure_selection_hash": "e9641e5f493bfde20309512ab4c70581f5a7b5587d355b96082915d7ae7283c6",
+  "dry_run": true,
+  "lanes": [
+    {
+      "affected_paper_ids": [
+        "PAPER-39FBE370CED6",
+        "PAPER-CC0FCC5198C5"
+      ],
+      "affected_professor_ids": [
+        "PROF-00248146798C"
+      ],
+      "blocker_type": "duplicate_verified_paper_title_year_groups",
+      "candidate_count": 1,
+      "dataset_input_count": 5186,
+      "input_count": 1,
+      "lane": "duplicate_paper_merge",
+      "provider_failure_count": 0,
+      "provider_failures": [],
+      "rejections": [],
+      "samples": [
+        {
+          "candidate_status": "needs_review",
+          "duplicate_group_id": "PROF-00248146798C:2022:in-situgrowthofultrathinsulfurmicro-crystalonmxe",
+          "lane": "duplicate_paper_merge",
+          "paper_ids": [
+            "PAPER-39FBE370CED6",
+            "PAPER-CC0FCC5198C5"
+          ],
+          "professor_id": "PROF-00248146798C",
+          "quality_flags": [
+            "missing_source_page_provenance"
+          ],
+          "source_confidence": "weak",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "needs_review",
+              "duplicate_group_id": "PROF-00248146798C:2022:in-situgrowthofultrathinsulfurmicro-crystalonmxe",
+              "evidence_type": "doi_match",
+              "lane": "duplicate_paper_merge",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [
+                  "missing_source_page_provenance"
+                ],
+                "review_required": true,
+                "source_confidence": "weak"
+              },
+              "provider_metadata": {},
+              "quality_flags": [
+                "missing_source_page_provenance"
+              ],
+              "source_confidence": "weak",
+              "validation_rules": [
+                "safe_identifier_or_author_supported_merge"
+              ],
+              "write_recommendation": "review_before_write"
+            },
+            "canonical_paper_id": "PAPER-39FBE370CED6",
+            "confidence": 0.99,
+            "evidence_type": "doi_match",
+            "merge_reason": "dataset_candidate_generation:doi_match",
+            "old_paper_ids": [
+              "PAPER-CC0FCC5198C5"
+            ],
+            "paper_ids": [
+              "PAPER-39FBE370CED6",
+              "PAPER-CC0FCC5198C5"
+            ],
+            "source_page_provenance": []
+          },
+          "write_recommendation": "review_before_write"
+        }
+      ],
+      "skipped_count": 0,
+      "validation_failure_count": 0,
+      "validation_failures": [],
+      "validation_rules": [
+        "safe_identifier_or_author_supported_merge"
+      ],
+      "write_evidence_rows": [
+        {
+          "candidate_status": "needs_review",
+          "duplicate_group_id": "PROF-00248146798C:2022:in-situgrowthofultrathinsulfurmicro-crystalonmxe",
+          "lane": "duplicate_paper_merge",
+          "paper_ids": [
+            "PAPER-39FBE370CED6",
+            "PAPER-CC0FCC5198C5"
+          ],
+          "professor_id": "PROF-00248146798C",
+          "quality_flags": [
+            "missing_source_page_provenance"
+          ],
+          "source_confidence": "weak",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "needs_review",
+              "duplicate_group_id": "PROF-00248146798C:2022:in-situgrowthofultrathinsulfurmicro-crystalonmxe",
+              "evidence_type": "doi_match",
+              "lane": "duplicate_paper_merge",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [
+                  "missing_source_page_provenance"
+                ],
+                "review_required": true,
+                "source_confidence": "weak"
+              },
+              "provider_metadata": {},
+              "quality_flags": [
+                "missing_source_page_provenance"
+              ],
+              "source_confidence": "weak",
+              "validation_rules": [
+                "safe_identifier_or_author_supported_merge"
+              ],
+              "write_recommendation": "review_before_write"
+            },
+            "canonical_paper_id": "PAPER-39FBE370CED6",
+            "confidence": 0.99,
+            "evidence_type": "doi_match",
+            "merge_reason": "dataset_candidate_generation:doi_match",
+            "old_paper_ids": [
+              "PAPER-CC0FCC5198C5"
+            ],
+            "paper_ids": [
+              "PAPER-39FBE370CED6",
+              "PAPER-CC0FCC5198C5"
+            ],
+            "source_page_provenance": []
+          },
+          "write_recommendation": "review_before_write"
+        }
+      ]
+    }
+  ],
+  "mode": "candidate_dry_run",
+  "selection_hash": "19930acd845008b2cb8bde27d795101d873cdeab541a9043555d663557321391",
+  "write_allowed": false
+}

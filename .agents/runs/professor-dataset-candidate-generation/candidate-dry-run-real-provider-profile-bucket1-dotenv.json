@@ -1,0 +1,160 @@
+{
+  "bucket_limit": 1,
+  "closure_selection_hash": "cb2a6f6dcda2c0d9e083f0e8243419b7185e8c238cfdf0826f422356a56b7998",
+  "dry_run": true,
+  "lanes": [
+    {
+      "affected_paper_ids": [],
+      "affected_professor_ids": [
+        "PROF-019A6958E272"
+      ],
+      "blocker_type": "ready_summary_lt_200",
+      "candidate_count": 1,
+      "dataset_input_count": 441,
+      "input_count": 1,
+      "lane": "profile_summary_repair",
+      "provider_failure_count": 0,
+      "provider_failures": [],
+      "rejections": [],
+      "samples": [
+        {
+          "candidate_status": "needs_review",
+          "duplicate_group_id": null,
+          "lane": "profile_summary_repair",
+          "paper_ids": [],
+          "professor_id": "PROF-019A6958E272",
+          "quality_flags": [
+            "profile_summary_length_out_of_range"
+          ],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "needs_review",
+              "generation_method": "llm_synthesis",
+              "input_facts": [
+                "research_topic:计算机视觉",
+                "research_topic:工业视觉应用",
+                "research_topic:深度学习",
+                "research_topic:具身智能"
+              ],
+              "lane": "profile_summary_repair",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [
+                  "profile_summary_length_out_of_range"
+                ],
+                "review_required": true,
+                "source_confidence": "strong",
+                "task_type": "profile_summary_synthesis"
+              },
+              "provider_metadata": {
+                "attempt_count": 1,
+                "completion_tokens": 304,
+                "finish_reason": "stop",
+                "llm_profile": "deepseekv4pro",
+                "model": "deepseek-v4-pro",
+                "prompt_hash": "5677184d1d7808bb57405bf69879c77e976d99fddf2eaff7d5b4fcef91d4146c",
+                "prompt_tokens": 2065,
+                "provider": "deepseek-v4-pro",
+                "raw_response_hash": "9e1333621cde2ff40c101ee301e09ce0c98475a90d331f884ea7c74babeef435",
+                "retry_budget": 0,
+                "task_type": "profile_summary_synthesis",
+                "timeout_seconds": 60.0
+              },
+              "quality_flags": [
+                "profile_summary_length_out_of_range"
+              ],
+              "source_confidence": "strong",
+              "source_ids": [
+                "af2863d6-cfa7-4955-bfd9-619a4b096848"
+              ],
+              "source_text_hashes": [
+                "88c7014258d2c95d8f2bd9037cf1cf285385ab74d97915761a5e9cf345358119"
+              ],
+              "validation_rules": [
+                "profile_summary_200_300_zh_contract"
+              ],
+              "write_recommendation": "review_before_write"
+            },
+            "candidate_profile_summary": "邵明文，深圳理工大学人工智能研究院特聘教授，博士生导师。2005年获西安交通大学理学博士学位，先后在清华大学从事博士后研究、香港中文大学担任访问学者。兼任中国人工智能学会粒计算与知识发现专业委员会常务委员，中国计算机学会人工智能与模式识别、计算机视觉专委会委员，中国图象图形学学会机器视觉专委会委员。入选全球前2%科学家榜单及全球终身科学影响力榜单，担任国际期刊《Knowledge-Based Systems》副主编。 研究聚焦深度学习、计算机视觉、具身智能与工业视觉应用。在图像生成与编辑方向，探索基于扩散模型的文生图、文生视频及3D内容生成；在三维视觉方向，研究稀疏视角与退化场景下的三维重建与神经渲染；在工业视觉检测方向，利用深度学习方法解决产品表面缺陷检测难题。近年来在CVPR、ICCV、NeurIPS、IEEE TIP、IEEE TVCG等顶级会议与期刊发表论文180余篇，其中SCI收录140余篇，含4篇高被引论文。主持国家自然科学基金项目5项、省部级项目6项，获辽宁省自然科学三等奖、青岛市科技进步一等奖。"
+          },
+          "write_recommendation": "review_before_write"
+        }
+      ],
+      "skipped_count": 0,
+      "validation_failure_count": 0,
+      "validation_failures": [],
+      "validation_rules": [
+        "profile_summary_200_300_zh_contract"
+      ],
+      "write_evidence_rows": [
+        {
+          "candidate_status": "needs_review",
+          "duplicate_group_id": null,
+          "lane": "profile_summary_repair",
+          "paper_ids": [],
+          "professor_id": "PROF-019A6958E272",
+          "quality_flags": [
+            "profile_summary_length_out_of_range"
+          ],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "needs_review",
+              "generation_method": "llm_synthesis",
+              "input_facts": [
+                "research_topic:计算机视觉",
+                "research_topic:工业视觉应用",
+                "research_topic:深度学习",
+                "research_topic:具身智能"
+              ],
+              "lane": "profile_summary_repair",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [
+                  "profile_summary_length_out_of_range"
+                ],
+                "review_required": true,
+                "source_confidence": "strong",
+                "task_type": "profile_summary_synthesis"
+              },
+              "provider_metadata": {
+                "attempt_count": 1,
+                "completion_tokens": 304,
+                "finish_reason": "stop",
+                "llm_profile": "deepseekv4pro",
+                "model": "deepseek-v4-pro",
+                "prompt_hash": "5677184d1d7808bb57405bf69879c77e976d99fddf2eaff7d5b4fcef91d4146c",
+                "prompt_tokens": 2065,
+                "provider": "deepseek-v4-pro",
+                "raw_response_hash": "9e1333621cde2ff40c101ee301e09ce0c98475a90d331f884ea7c74babeef435",
+                "retry_budget": 0,
+                "task_type": "profile_summary_synthesis",
+                "timeout_seconds": 60.0
+              },
+              "quality_flags": [
+                "profile_summary_length_out_of_range"
+              ],
+              "source_confidence": "strong",
+              "source_ids": [
+                "af2863d6-cfa7-4955-bfd9-619a4b096848"
+              ],
+              "source_text_hashes": [
+                "88c7014258d2c95d8f2bd9037cf1cf285385ab74d97915761a5e9cf345358119"
+              ],
+              "validation_rules": [
+                "profile_summary_200_300_zh_contract"
+              ],
+              "write_recommendation": "review_before_write"
+            },
+            "candidate_profile_summary": "邵明文，深圳理工大学人工智能研究院特聘教授，博士生导师。2005年获西安交通大学理学博士学位，先后在清华大学从事博士后研究、香港中文大学担任访问学者。兼任中国人工智能学会粒计算与知识发现专业委员会常务委员，中国计算机学会人工智能与模式识别、计算机视觉专委会委员，中国图象图形学学会机器视觉专委会委员。入选全球前2%科学家榜单及全球终身科学影响力榜单，担任国际期刊《Knowledge-Based Systems》副主编。 研究聚焦深度学习、计算机视觉、具身智能与工业视觉应用。在图像生成与编辑方向，探索基于扩散模型的文生图、文生视频及3D内容生成；在三维视觉方向，研究稀疏视角与退化场景下的三维重建与神经渲染；在工业视觉检测方向，利用深度学习方法解决产品表面缺陷检测难题。近年来在CVPR、ICCV、NeurIPS、IEEE TIP、IEEE TVCG等顶级会议与期刊发表论文180余篇，其中SCI收录140余篇，含4篇高被引论文。主持国家自然科学基金项目5项、省部级项目6项，获辽宁省自然科学三等奖、青岛市科技进步一等奖。"
+          },
+          "write_recommendation": "review_before_write"
+        }
+      ]
+    }
+  ],
+  "mode": "candidate_dry_run",
+  "selection_hash": "3f640f7c61e0bfdbed7cf1ce84a34ecfd5cc483f916659c4a8a699828b91f76e",
+  "write_allowed": false
+}

@@ -1,0 +1,112 @@
+{
+  "bucket_limit": 1,
+  "closure_selection_hash": "55f657c89f1ade5ae854f732550b3cb918996a22111739489343b4b9b3e49391",
+  "dry_run": true,
+  "lanes": [
+    {
+      "affected_paper_ids": [],
+      "affected_professor_ids": [
+        "PROF-000003A9EBC4"
+      ],
+      "blocker_type": "missing_research_overview_zh",
+      "candidate_count": 1,
+      "dataset_input_count": 2510,
+      "input_count": 1,
+      "lane": "research_overview_backfill",
+      "provider_failure_count": 0,
+      "provider_failures": [],
+      "rejections": [],
+      "samples": [
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-000003A9EBC4",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "6f87ba42db14d13040a01925383c6b552601213ba9cadf16a05b61a1c404e8a1",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "超分辨成像、计算光学成像、定量相位成像",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "超分辨成像、计算光学成像、定量相位成像",
+            "source_language": "zh",
+            "source_span": "超分辨成像、计算光学成像、定量相位成像",
+            "source_text_hash": "6f87ba42db14d13040a01925383c6b552601213ba9cadf16a05b61a1c404e8a1"
+          },
+          "write_recommendation": "auto_write_candidate"
+        }
+      ],
+      "skipped_count": 0,
+      "validation_failure_count": 0,
+      "validation_failures": [],
+      "validation_rules": [
+        "research_overview_zh_source_grounded"
+      ],
+      "write_evidence_rows": [
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-000003A9EBC4",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "6f87ba42db14d13040a01925383c6b552601213ba9cadf16a05b61a1c404e8a1",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "超分辨成像、计算光学成像、定量相位成像",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "超分辨成像、计算光学成像、定量相位成像",
+            "source_language": "zh",
+            "source_span": "超分辨成像、计算光学成像、定量相位成像",
+            "source_text_hash": "6f87ba42db14d13040a01925383c6b552601213ba9cadf16a05b61a1c404e8a1"
+          },
+          "write_recommendation": "auto_write_candidate"
+        }
+      ]
+    }
+  ],
+  "mode": "candidate_dry_run",
+  "selection_hash": "b4ac1d8e1694ff22ffafef75a8b6e419988f6bc0f903aa1a324de12f6c6af2f6",
+  "write_allowed": false
+}

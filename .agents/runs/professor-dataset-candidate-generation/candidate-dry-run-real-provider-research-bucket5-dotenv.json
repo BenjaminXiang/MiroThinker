@@ -1,0 +1,428 @@
+{
+  "bucket_limit": 5,
+  "closure_selection_hash": "906b693c776906ec4b8ecfe6a71239757e54645a97df787369c117dfe6de9c5d",
+  "dry_run": true,
+  "lanes": [
+    {
+      "affected_paper_ids": [],
+      "affected_professor_ids": [
+        "PROF-000003A9EBC4",
+        "PROF-000E83C9344A",
+        "PROF-0012FFC9DEC2",
+        "PROF-00248146798C",
+        "PROF-00270A689C15"
+      ],
+      "blocker_type": "missing_research_overview_zh",
+      "candidate_count": 5,
+      "dataset_input_count": 2510,
+      "input_count": 5,
+      "lane": "research_overview_backfill",
+      "provider_failure_count": 0,
+      "provider_failures": [],
+      "rejections": [],
+      "samples": [
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-000003A9EBC4",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "6f87ba42db14d13040a01925383c6b552601213ba9cadf16a05b61a1c404e8a1",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "超分辨成像、计算光学成像、定量相位成像",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "超分辨成像、计算光学成像、定量相位成像",
+            "source_language": "zh",
+            "source_span": "超分辨成像、计算光学成像、定量相位成像",
+            "source_text_hash": "6f87ba42db14d13040a01925383c6b552601213ba9cadf16a05b61a1c404e8a1"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-000E83C9344A",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "81bc4a8a9db18db2525c817222e0a50c79331e1fb94a027c2d4645a0f077e902",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "1、大学体育课程与教学改革 2、篮球教学与训练 3、体育政策与体育产业 二、",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "1、大学体育课程与教学改革 2、篮球教学与训练 3、体育政策与体育产业 二、",
+            "source_language": "zh",
+            "source_span": "1、大学体育课程与教学改革 2、篮球教学与训练 3、体育政策与体育产业 二、",
+            "source_text_hash": "81bc4a8a9db18db2525c817222e0a50c79331e1fb94a027c2d4645a0f077e902"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-0012FFC9DEC2",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "e9accc6c0b5b6226ee6dc8b14651212951ad3ede435d21ba4b33e14c1171eb99",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "金属酶是自然界中至关重要的分子机器，维系着生命和环境的正常运转，例如固氮酶催化氮气固定、细胞色素 P450 参与药物代谢、以及超氧化物歧化酶清除活性氧。虽然它们在自然界中展现出极高的催化效率，但其非天然功能的潜力尚未被充分挖掘，仍有待更广泛地造福人类社会。通过定向进化等手段对金属酶进行重塑，我们不仅有望实现药物、农药和精细化工产品的绿色合成，还能实现对蛋白质等大分子的快速、精准修饰，从而推动生物医药、食品和化工等领域的深刻变革。毛润泽博士实验室通过整合化学、生物学与人工智能，致力于开发创新的生物催化策略，解决合成、催化和生物分子工程中的重大挑战。通过结合合成化学、合成生物学、计算化学和计算生物学的跨学科方法，我们旨在重新设计并扩展自然的生物合成法则，开拓未知的催化反应空间。 毛润泽博士已在酶催化及合成领域发表高水平学术",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "金属酶是自然界中至关重要的分子机器，维系着生命和环境的正常运转，例如固氮酶催化氮气固定、细胞色素 P450 参与药物代谢、以及超氧化物歧化酶清除活性氧。虽然它们在自然界中展现出极高的催化效率，但其非天然功能的潜力尚未被充分挖掘，仍有待更广泛地造福人类社会。通过定向进化等手段对金属酶进行重塑，我们不仅有望实现药物、农药和精细化工产品的绿色合成，还能实现对蛋白质等大分子的快速、精准修饰，从而推动生物医药、食品和化工等领域的深刻变革。毛润泽博士实验室通过整合化学、生物学与人工智能，致力于开发创新的生物催化策略，解决合成、催化和生物分子工程中的重大挑战。通过结合合成化学、合成生物学、计算化学和计算生物学的跨学科方法，我们旨在重新设计并扩展自然的生物合成法则，开拓未知的催化反应空间。 毛润泽博士已在酶催化及合成领域发表高水平学术",
+            "source_language": "zh",
+            "source_span": "金属酶是自然界中至关重要的分子机器，维系着生命和环境的正常运转，例如固氮酶催化氮气固定、细胞色素 P450 参与药物代谢、以及超氧化物歧化酶清除活性氧。虽然它们在自然界中展现出极高的催化效率，但其非天然功能的潜力尚未被充分挖掘，仍有待更广泛地造福人类社会。通过定向进化等手段对金属酶进行重塑，我们不仅有望实现药物、农药和精细化工产品的绿色合成，还能实现对蛋白质等大分子的快速、精准修饰，从而推动生物医药、食品和化工等领域的深刻变革。毛润泽博士实验室通过整合化学、生物学与人工智能，致力于开发创新的生物催化策略，解决合成、催化和生物分子工程中的重大挑战。通过结合合成化学、合成生物学、计算化学和计算生物学的跨学科方法，我们旨在重新设计并扩展自然的生物合成法则，开拓未知的催化反应空间。 毛润泽博士已在酶催化及合成领域发表高水平学术",
+            "source_text_hash": "e9accc6c0b5b6226ee6dc8b14651212951ad3ede435d21ba4b33e14c1171eb99"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-00248146798C",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "ed40d019056eae27b21c7b6931afc4ab0aa3567261754dd3173ebf8b7d0910ba",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "为电化学储能材料 及 器件 与电池回收 ，已",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "为电化学储能材料 及 器件 与电池回收 ，已",
+            "source_language": "zh",
+            "source_span": "为电化学储能材料 及 器件 与电池回收 ，已",
+            "source_text_hash": "ed40d019056eae27b21c7b6931afc4ab0aa3567261754dd3173ebf8b7d0910ba"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-00270A689C15",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "4609637b1bdd341ecd458877eaf3f1e6ae5a3e44fb33c9a455e3b88b3c0982f2",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "有机/高分子半导体材料与器件应用研究 电子器件物理机制解析与关键技术探索 微纳器件制备方法及其集成工艺研究 科研",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "有机/高分子半导体材料与器件应用研究 电子器件物理机制解析与关键技术探索 微纳器件制备方法及其集成工艺研究 科研",
+            "source_language": "zh",
+            "source_span": "有机/高分子半导体材料与器件应用研究 电子器件物理机制解析与关键技术探索 微纳器件制备方法及其集成工艺研究 科研",
+            "source_text_hash": "4609637b1bdd341ecd458877eaf3f1e6ae5a3e44fb33c9a455e3b88b3c0982f2"
+          },
+          "write_recommendation": "auto_write_candidate"
+        }
+      ],
+      "skipped_count": 0,
+      "validation_failure_count": 0,
+      "validation_failures": [],
+      "validation_rules": [
+        "research_overview_zh_source_grounded"
+      ],
+      "write_evidence_rows": [
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-000003A9EBC4",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "6f87ba42db14d13040a01925383c6b552601213ba9cadf16a05b61a1c404e8a1",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "超分辨成像、计算光学成像、定量相位成像",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "超分辨成像、计算光学成像、定量相位成像",
+            "source_language": "zh",
+            "source_span": "超分辨成像、计算光学成像、定量相位成像",
+            "source_text_hash": "6f87ba42db14d13040a01925383c6b552601213ba9cadf16a05b61a1c404e8a1"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-000E83C9344A",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "81bc4a8a9db18db2525c817222e0a50c79331e1fb94a027c2d4645a0f077e902",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "1、大学体育课程与教学改革 2、篮球教学与训练 3、体育政策与体育产业 二、",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "1、大学体育课程与教学改革 2、篮球教学与训练 3、体育政策与体育产业 二、",
+            "source_language": "zh",
+            "source_span": "1、大学体育课程与教学改革 2、篮球教学与训练 3、体育政策与体育产业 二、",
+            "source_text_hash": "81bc4a8a9db18db2525c817222e0a50c79331e1fb94a027c2d4645a0f077e902"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-0012FFC9DEC2",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "e9accc6c0b5b6226ee6dc8b14651212951ad3ede435d21ba4b33e14c1171eb99",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "金属酶是自然界中至关重要的分子机器，维系着生命和环境的正常运转，例如固氮酶催化氮气固定、细胞色素 P450 参与药物代谢、以及超氧化物歧化酶清除活性氧。虽然它们在自然界中展现出极高的催化效率，但其非天然功能的潜力尚未被充分挖掘，仍有待更广泛地造福人类社会。通过定向进化等手段对金属酶进行重塑，我们不仅有望实现药物、农药和精细化工产品的绿色合成，还能实现对蛋白质等大分子的快速、精准修饰，从而推动生物医药、食品和化工等领域的深刻变革。毛润泽博士实验室通过整合化学、生物学与人工智能，致力于开发创新的生物催化策略，解决合成、催化和生物分子工程中的重大挑战。通过结合合成化学、合成生物学、计算化学和计算生物学的跨学科方法，我们旨在重新设计并扩展自然的生物合成法则，开拓未知的催化反应空间。 毛润泽博士已在酶催化及合成领域发表高水平学术",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "金属酶是自然界中至关重要的分子机器，维系着生命和环境的正常运转，例如固氮酶催化氮气固定、细胞色素 P450 参与药物代谢、以及超氧化物歧化酶清除活性氧。虽然它们在自然界中展现出极高的催化效率，但其非天然功能的潜力尚未被充分挖掘，仍有待更广泛地造福人类社会。通过定向进化等手段对金属酶进行重塑，我们不仅有望实现药物、农药和精细化工产品的绿色合成，还能实现对蛋白质等大分子的快速、精准修饰，从而推动生物医药、食品和化工等领域的深刻变革。毛润泽博士实验室通过整合化学、生物学与人工智能，致力于开发创新的生物催化策略，解决合成、催化和生物分子工程中的重大挑战。通过结合合成化学、合成生物学、计算化学和计算生物学的跨学科方法，我们旨在重新设计并扩展自然的生物合成法则，开拓未知的催化反应空间。 毛润泽博士已在酶催化及合成领域发表高水平学术",
+            "source_language": "zh",
+            "source_span": "金属酶是自然界中至关重要的分子机器，维系着生命和环境的正常运转，例如固氮酶催化氮气固定、细胞色素 P450 参与药物代谢、以及超氧化物歧化酶清除活性氧。虽然它们在自然界中展现出极高的催化效率，但其非天然功能的潜力尚未被充分挖掘，仍有待更广泛地造福人类社会。通过定向进化等手段对金属酶进行重塑，我们不仅有望实现药物、农药和精细化工产品的绿色合成，还能实现对蛋白质等大分子的快速、精准修饰，从而推动生物医药、食品和化工等领域的深刻变革。毛润泽博士实验室通过整合化学、生物学与人工智能，致力于开发创新的生物催化策略，解决合成、催化和生物分子工程中的重大挑战。通过结合合成化学、合成生物学、计算化学和计算生物学的跨学科方法，我们旨在重新设计并扩展自然的生物合成法则，开拓未知的催化反应空间。 毛润泽博士已在酶催化及合成领域发表高水平学术",
+            "source_text_hash": "e9accc6c0b5b6226ee6dc8b14651212951ad3ede435d21ba4b33e14c1171eb99"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-00248146798C",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "ed40d019056eae27b21c7b6931afc4ab0aa3567261754dd3173ebf8b7d0910ba",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "为电化学储能材料 及 器件 与电池回收 ，已",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "为电化学储能材料 及 器件 与电池回收 ，已",
+            "source_language": "zh",
+            "source_span": "为电化学储能材料 及 器件 与电池回收 ，已",
+            "source_text_hash": "ed40d019056eae27b21c7b6931afc4ab0aa3567261754dd3173ebf8b7d0910ba"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-00270A689C15",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "4609637b1bdd341ecd458877eaf3f1e6ae5a3e44fb33c9a455e3b88b3c0982f2",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "有机/高分子半导体材料与器件应用研究 电子器件物理机制解析与关键技术探索 微纳器件制备方法及其集成工艺研究 科研",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "有机/高分子半导体材料与器件应用研究 电子器件物理机制解析与关键技术探索 微纳器件制备方法及其集成工艺研究 科研",
+            "source_language": "zh",
+            "source_span": "有机/高分子半导体材料与器件应用研究 电子器件物理机制解析与关键技术探索 微纳器件制备方法及其集成工艺研究 科研",
+            "source_text_hash": "4609637b1bdd341ecd458877eaf3f1e6ae5a3e44fb33c9a455e3b88b3c0982f2"
+          },
+          "write_recommendation": "auto_write_candidate"
+        }
+      ]
+    }
+  ],
+  "mode": "candidate_dry_run",
+  "selection_hash": "eab6e5ae1753bc59a0f5e6a76a14667840acdf18b9a819f1648d234031153551",
+  "write_allowed": false
+}

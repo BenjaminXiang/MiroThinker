@@ -226,6 +226,7 @@ data/
 
 # Local secrets and environment
 .sglang_api_key
+.deepseek_api_key
 .serper_api_key
 .python-version
 

@@ -1,0 +1,2623 @@
+{
+  "bucket_limit": 5,
+  "closure_selection_hash": "89b3b4b83beb5cb2c45fdacbcf8ee185cc4b57614905dc146b7e01e1a7be682d",
+  "dry_run": true,
+  "lanes": [
+    {
+      "affected_paper_ids": [],
+      "affected_professor_ids": [
+        "PROF-019A6958E272",
+        "PROF-01DB8A76ECAC",
+        "PROF-01FAFE3D04B6",
+        "PROF-0357C759BDB6",
+        "PROF-03D503D6B32B"
+      ],
+      "blocker_type": "ready_summary_lt_200",
+      "candidate_count": 5,
+      "dataset_input_count": 441,
+      "input_count": 5,
+      "lane": "profile_summary_repair",
+      "provider_failure_count": 0,
+      "provider_failures": [],
+      "rejections": [],
+      "samples": [
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "profile_summary_repair",
+          "paper_ids": [],
+          "professor_id": "PROF-019A6958E272",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "deterministic_synthesis",
+              "input_facts": [
+                "research_topic:计算机视觉",
+                "research_topic:工业视觉应用",
+                "research_topic:深度学习",
+                "research_topic:具身智能"
+              ],
+              "lane": "profile_summary_repair",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_ids": [
+                "af2863d6-cfa7-4955-bfd9-619a4b096848"
+              ],
+              "source_text_hashes": [
+                "88c7014258d2c95d8f2bd9037cf1cf285385ab74d97915761a5e9cf345358119"
+              ],
+              "validation_rules": [
+                "profile_summary_200_300_zh_contract"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_profile_summary": "邵明文现任所属高校教师。研究方向包括计算机视觉、工业视觉应用、深度学习、具身智能。主要研究方向 （1）图像生成与编辑：基于扩散模型的文生图、文生视频，3D图像生成、动态3D图像生成等。所获荣誉 获辽宁省自然科学三等奖，青岛市政府科学技术进步一等奖。先后主持完成国家自然科学基金项目5项、教育部项目1项、省部级项目6项，参与国家重点研发、国家自然科学基金项目5项。已验证论文包括Adaptive Prompt Guided Unified Image Restoration with Latent Diffusion Model、Adaptive Pseu。"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "profile_summary_repair",
+          "paper_ids": [],
+          "professor_id": "PROF-01DB8A76ECAC",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "deterministic_synthesis",
+              "input_facts": [
+                "research_topic:量子输运"
+              ],
+              "lane": "profile_summary_repair",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_ids": [
+                "b6306a6d-77aa-4b2b-b141-928b0f66558f"
+              ],
+              "source_text_hashes": [
+                "f60fe3732418b7030d30732608b97817332a18189ddf1232bf3ceebb3900a590"
+              ],
+              "validation_rules": [
+                "profile_summary_200_300_zh_contract"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_profile_summary": "杨硕颖现任所属高校教师。研究方向包括量子输运。致力于利用二维材料的多样性、堆垛性和可调性，构造和探测新奇量子物态，并以此开发新型量子器件。个人简介 杨硕颖，2014年本科毕业于美国布林茅尔学院，2016年硕士毕业于美国哥伦比亚大学应用物理系， 2020年在德国马克斯普朗克微结构研究所取得凝聚态物理博士学位，随后于西班牙光子科学研究所和加泰罗尼亚纳米科学与技术研究所从事博士后研究。研究领域 ◆量子输运 ◆拓扑量子物态 ◆非常规超导 ◆新奇异质结界面 ◆二维材料与异质结构的设计与制备 学习经历 ◆2010.09 – 2014.05 美国布林茅尔学院，本科 ◆2014.09 – 2016.05 美国"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "profile_summary_repair",
+          "paper_ids": [],
+          "professor_id": "PROF-01FAFE3D04B6",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "deterministic_synthesis",
+              "input_facts": [
+                "research_topic:医疗影像学",
+                "research_topic:深度学习",
+                "research_topic:精准医学",
+                "research_topic:人工智能",
+                "research_topic:AI制药等 五",
+                "research_topic:大数据技术与应用",
+                "research_topic:手术机器人",
+                "research_topic:生物信息学"
+              ],
+              "lane": "profile_summary_repair",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_ids": [
+                "93c8318f-9530-404e-92d7-e7385a757909"
+              ],
+              "source_text_hashes": [
+                "9314f7fb76f1d22e3cd4e3e8c5fa3b5ff8dd7750876364ccaad0d5f38986780c"
+              ],
+              "validation_rules": [
+                "profile_summary_200_300_zh_contract"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_profile_summary": "黄炳顶现任所属高校教师。研究方向包括医疗影像学、深度学习、精准医学、人工智能。至今已发表50多篇SCI和会议论文，近五年内发表第一作者及通讯作者文章30余篇。回国工作以来累计获得超过300万元的纵向和横向科研项目经费。一、 简介 深圳技术大学特聘教授，数据科学与大数据系主任，澳门城市大学数据科学学院博士研究生导师，深圳市鹏城孔雀特聘岗位B类人才。已验证论文包括CoCo-GAN: CodeBERT-driven collaborative generative adversarial learning for software defec。"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "profile_summary_repair",
+          "paper_ids": [],
+          "professor_id": "PROF-0357C759BDB6",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "deterministic_synthesis",
+              "input_facts": [
+                "research_topic:VCSEL",
+                "research_topic:纳米结构材料的合成",
+                "research_topic:光学微机电结构",
+                "research_topic:性质和器件",
+                "research_topic:宽带光通信"
+              ],
+              "lane": "profile_summary_repair",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_ids": [
+                "f648dc08-5179-41a2-ba70-a0823133ff64"
+              ],
+              "source_text_hashes": [
+                "88c815b3ccf5f7925a2cfef939162211e624af58b63148d90e6e083f99c94973"
+              ],
+              "validation_rules": [
+                "profile_summary_200_300_zh_contract"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_profile_summary": "常瑞华现任所属高校教师。研究方向包括VCSEL、纳米结构材料的合成、光学微机电结构、性质和器件。常瑞华 校长学勤讲座教授 中国工程院外籍院士、美国国家工程院院士、国际电气及电子工程师学会会士、美国光学学会会士 学术领域: 电子工程，人工智能与机器人 电子邮件: conniechang@cuhk.edu.cn 研究领域: 纳米结构材料的合成、性质和器件。已验证论文包括Metastable Growth of Pure Wurtzite InGaAs Microstructures、Metastable Growth of Pure Wurtzi。"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "profile_summary_repair",
+          "paper_ids": [],
+          "professor_id": "PROF-03D503D6B32B",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "deterministic_synthesis",
+              "input_facts": [
+                "research_topic:Jie Zhong",
+                "research_topic:H. Tang",
+                "research_topic:March 2018. [48] S. Cho",
+                "research_topic:柔性光电感知与通信",
+                "research_topic:no. 1",
+                "research_topic:no. 5",
+                "research_topic:刘宁",
+                "research_topic:May 2023. [12] P. Xu",
+                "research_topic:M. Wen",
+                "research_topic:“Optimal Cross-Tier Power Allocation for Poisson Clustered D2D Networks”",
+                "research_topic:J. S. Thompson",
+                "research_topic:May 2017. doi:10.1109/TIFS.2017.2656462 [55] S. Dang",
+                "research_topic:Jan. 2024. [5] Z. Abdullah",
+                "research_topic:pp. 917-927",
+                "research_topic:in IEEE Wireless Commun. Letts",
+                "research_topic:无线通信",
+                "research_topic:Aug. 2013. doi:10.1109/WCL.2013.051513.130198 [63] G. Chen",
+                "research_topic:May 2017. [3] 一种基于无人机辅助的星地融合网络资源智能优化方法",
+                "research_topic:Mar. 2015. High Cited Paper doi:10.1109/TIFS.2015.2390136 [60] G. Chen",
+                "research_topic:M. Badiu",
+                "research_topic:vol. 8",
+                "research_topic:vol. 6",
+                "research_topic:May 2023. [13] K. Li",
+                "research_topic:IEEE Trans. Inf. Forensics and Security",
+                "research_topic:G. Chen*and J. P. Coon",
+                "research_topic:June 2018. [47] S. Dang",
+                "research_topic:Y. Ma and A. Maaref",
+                "research_topic:pp. 574-583",
+                "research_topic:M. Zhang and J. A. Chambers",
+                "research_topic:X. Wu and W. Hao",
+                "research_topic:vol. 65",
+                "research_topic:no. 6",
+                "research_topic:pp. 7204-7218",
+                "research_topic:Apr. 2018. [50] S. Dang",
+                "research_topic:IEEE System Journal",
+                "research_topic:Y. Li and I. Krikidis",
+                "research_topic:M. Wen and J. A. Chambers",
+                "research_topic:“Index Modulation for STAR-RIS Assisted NOMA System”",
+                "research_topic:pp. 4101-4112",
+                "research_topic:“Iterative Frequency Domain Equalization for MIMO-GFDM Systems”"
+              ],
+              "lane": "profile_summary_repair",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_ids": [
+                "836ab3ac-a54b-4a3c-b3e7-deb379ac3d47"
+              ],
+              "source_text_hashes": [
+                "6e1eed90381425e143e05c157e39102f1d307b86400f470b524e8bc824fbda72"
+              ],
+              "validation_rules": [
+                "profile_summary_200_300_zh_contract"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_profile_summary": "陈高洁现任所属高校教师。研究方向包括Jie Zhong、H. Tang、March 2018. [48] S. Cho、柔性光电感知与通信。承担多项中国基金委项目、英国EPSRC和DCMS、欧盟H2020等科研项目，项目总经费超1400万元。此外，被聘为英国皇家学会国际交流项目委员会评审委员(2022年-2025年) 。科研项目 [1] 2022年 - 2025年, “TUDOR: Towards Ubiquitous 3D Open Resilient Network”, UK Digital, Culture, Media & Sport (DCMS), (子项目负责人 - 295K 英镑"
+          },
+          "write_recommendation": "auto_write_candidate"
+        }
+      ],
+      "skipped_count": 0,
+      "validation_failure_count": 0,
+      "validation_failures": [],
+      "validation_rules": [
+        "profile_summary_200_300_zh_contract"
+      ],
+      "write_evidence_rows": [
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "profile_summary_repair",
+          "paper_ids": [],
+          "professor_id": "PROF-019A6958E272",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "deterministic_synthesis",
+              "input_facts": [
+                "research_topic:计算机视觉",
+                "research_topic:工业视觉应用",
+                "research_topic:深度学习",
+                "research_topic:具身智能"
+              ],
+              "lane": "profile_summary_repair",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_ids": [
+                "af2863d6-cfa7-4955-bfd9-619a4b096848"
+              ],
+              "source_text_hashes": [
+                "88c7014258d2c95d8f2bd9037cf1cf285385ab74d97915761a5e9cf345358119"
+              ],
+              "validation_rules": [
+                "profile_summary_200_300_zh_contract"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_profile_summary": "邵明文现任所属高校教师。研究方向包括计算机视觉、工业视觉应用、深度学习、具身智能。主要研究方向 （1）图像生成与编辑：基于扩散模型的文生图、文生视频，3D图像生成、动态3D图像生成等。所获荣誉 获辽宁省自然科学三等奖，青岛市政府科学技术进步一等奖。先后主持完成国家自然科学基金项目5项、教育部项目1项、省部级项目6项，参与国家重点研发、国家自然科学基金项目5项。已验证论文包括Adaptive Prompt Guided Unified Image Restoration with Latent Diffusion Model、Adaptive Pseu。"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "profile_summary_repair",
+          "paper_ids": [],
+          "professor_id": "PROF-01DB8A76ECAC",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "deterministic_synthesis",
+              "input_facts": [
+                "research_topic:量子输运"
+              ],
+              "lane": "profile_summary_repair",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_ids": [
+                "b6306a6d-77aa-4b2b-b141-928b0f66558f"
+              ],
+              "source_text_hashes": [
+                "f60fe3732418b7030d30732608b97817332a18189ddf1232bf3ceebb3900a590"
+              ],
+              "validation_rules": [
+                "profile_summary_200_300_zh_contract"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_profile_summary": "杨硕颖现任所属高校教师。研究方向包括量子输运。致力于利用二维材料的多样性、堆垛性和可调性，构造和探测新奇量子物态，并以此开发新型量子器件。个人简介 杨硕颖，2014年本科毕业于美国布林茅尔学院，2016年硕士毕业于美国哥伦比亚大学应用物理系， 2020年在德国马克斯普朗克微结构研究所取得凝聚态物理博士学位，随后于西班牙光子科学研究所和加泰罗尼亚纳米科学与技术研究所从事博士后研究。研究领域 ◆量子输运 ◆拓扑量子物态 ◆非常规超导 ◆新奇异质结界面 ◆二维材料与异质结构的设计与制备 学习经历 ◆2010.09 – 2014.05 美国布林茅尔学院，本科 ◆2014.09 – 2016.05 美国"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "profile_summary_repair",
+          "paper_ids": [],
+          "professor_id": "PROF-01FAFE3D04B6",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "deterministic_synthesis",
+              "input_facts": [
+                "research_topic:医疗影像学",
+                "research_topic:深度学习",
+                "research_topic:精准医学",
+                "research_topic:人工智能",
+                "research_topic:AI制药等 五",
+                "research_topic:大数据技术与应用",
+                "research_topic:手术机器人",
+                "research_topic:生物信息学"
+              ],
+              "lane": "profile_summary_repair",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_ids": [
+                "93c8318f-9530-404e-92d7-e7385a757909"
+              ],
+              "source_text_hashes": [
+                "9314f7fb76f1d22e3cd4e3e8c5fa3b5ff8dd7750876364ccaad0d5f38986780c"
+              ],
+              "validation_rules": [
+                "profile_summary_200_300_zh_contract"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_profile_summary": "黄炳顶现任所属高校教师。研究方向包括医疗影像学、深度学习、精准医学、人工智能。至今已发表50多篇SCI和会议论文，近五年内发表第一作者及通讯作者文章30余篇。回国工作以来累计获得超过300万元的纵向和横向科研项目经费。一、 简介 深圳技术大学特聘教授，数据科学与大数据系主任，澳门城市大学数据科学学院博士研究生导师，深圳市鹏城孔雀特聘岗位B类人才。已验证论文包括CoCo-GAN: CodeBERT-driven collaborative generative adversarial learning for software defec。"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "profile_summary_repair",
+          "paper_ids": [],
+          "professor_id": "PROF-0357C759BDB6",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "deterministic_synthesis",
+              "input_facts": [
+                "research_topic:VCSEL",
+                "research_topic:纳米结构材料的合成",
+                "research_topic:光学微机电结构",
+                "research_topic:性质和器件",
+                "research_topic:宽带光通信"
+              ],
+              "lane": "profile_summary_repair",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_ids": [
+                "f648dc08-5179-41a2-ba70-a0823133ff64"
+              ],
+              "source_text_hashes": [
+                "88c815b3ccf5f7925a2cfef939162211e624af58b63148d90e6e083f99c94973"
+              ],
+              "validation_rules": [
+                "profile_summary_200_300_zh_contract"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_profile_summary": "常瑞华现任所属高校教师。研究方向包括VCSEL、纳米结构材料的合成、光学微机电结构、性质和器件。常瑞华 校长学勤讲座教授 中国工程院外籍院士、美国国家工程院院士、国际电气及电子工程师学会会士、美国光学学会会士 学术领域: 电子工程，人工智能与机器人 电子邮件: conniechang@cuhk.edu.cn 研究领域: 纳米结构材料的合成、性质和器件。已验证论文包括Metastable Growth of Pure Wurtzite InGaAs Microstructures、Metastable Growth of Pure Wurtzi。"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "profile_summary_repair",
+          "paper_ids": [],
+          "professor_id": "PROF-03D503D6B32B",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "deterministic_synthesis",
+              "input_facts": [
+                "research_topic:Jie Zhong",
+                "research_topic:H. Tang",
+                "research_topic:March 2018. [48] S. Cho",
+                "research_topic:柔性光电感知与通信",
+                "research_topic:no. 1",
+                "research_topic:no. 5",
+                "research_topic:刘宁",
+                "research_topic:May 2023. [12] P. Xu",
+                "research_topic:M. Wen",
+                "research_topic:“Optimal Cross-Tier Power Allocation for Poisson Clustered D2D Networks”",
+                "research_topic:J. S. Thompson",
+                "research_topic:May 2017. doi:10.1109/TIFS.2017.2656462 [55] S. Dang",
+                "research_topic:Jan. 2024. [5] Z. Abdullah",
+                "research_topic:pp. 917-927",
+                "research_topic:in IEEE Wireless Commun. Letts",
+                "research_topic:无线通信",
+                "research_topic:Aug. 2013. doi:10.1109/WCL.2013.051513.130198 [63] G. Chen",
+                "research_topic:May 2017. [3] 一种基于无人机辅助的星地融合网络资源智能优化方法",
+                "research_topic:Mar. 2015. High Cited Paper doi:10.1109/TIFS.2015.2390136 [60] G. Chen",
+                "research_topic:M. Badiu",
+                "research_topic:vol. 8",
+                "research_topic:vol. 6",
+                "research_topic:May 2023. [13] K. Li",
+                "research_topic:IEEE Trans. Inf. Forensics and Security",
+                "research_topic:G. Chen*and J. P. Coon",
+                "research_topic:June 2018. [47] S. Dang",
+                "research_topic:Y. Ma and A. Maaref",
+                "research_topic:pp. 574-583",
+                "research_topic:M. Zhang and J. A. Chambers",
+                "research_topic:X. Wu and W. Hao",
+                "research_topic:vol. 65",
+                "research_topic:no. 6",
+                "research_topic:pp. 7204-7218",
+                "research_topic:Apr. 2018. [50] S. Dang",
+                "research_topic:IEEE System Journal",
+                "research_topic:Y. Li and I. Krikidis",
+                "research_topic:M. Wen and J. A. Chambers",
+                "research_topic:“Index Modulation for STAR-RIS Assisted NOMA System”",
+                "research_topic:pp. 4101-4112",
+                "research_topic:“Iterative Frequency Domain Equalization for MIMO-GFDM Systems”"
+              ],
+              "lane": "profile_summary_repair",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_ids": [
+                "836ab3ac-a54b-4a3c-b3e7-deb379ac3d47"
+              ],
+              "source_text_hashes": [
+                "6e1eed90381425e143e05c157e39102f1d307b86400f470b524e8bc824fbda72"
+              ],
+              "validation_rules": [
+                "profile_summary_200_300_zh_contract"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_profile_summary": "陈高洁现任所属高校教师。研究方向包括Jie Zhong、H. Tang、March 2018. [48] S. Cho、柔性光电感知与通信。承担多项中国基金委项目、英国EPSRC和DCMS、欧盟H2020等科研项目，项目总经费超1400万元。此外，被聘为英国皇家学会国际交流项目委员会评审委员(2022年-2025年) 。科研项目 [1] 2022年 - 2025年, “TUDOR: Towards Ubiquitous 3D Open Resilient Network”, UK Digital, Culture, Media & Sport (DCMS), (子项目负责人 - 295K 英镑"
+          },
+          "write_recommendation": "auto_write_candidate"
+        }
+      ]
+    },
+    {
+      "affected_paper_ids": [],
+      "affected_professor_ids": [
+        "PROF-000003A9EBC4",
+        "PROF-000E83C9344A",
+        "PROF-0012FFC9DEC2",
+        "PROF-00248146798C",
+        "PROF-00270A689C15"
+      ],
+      "blocker_type": "missing_research_overview_zh",
+      "candidate_count": 5,
+      "dataset_input_count": 2510,
+      "input_count": 5,
+      "lane": "research_overview_backfill",
+      "provider_failure_count": 0,
+      "provider_failures": [],
+      "rejections": [],
+      "samples": [
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-000003A9EBC4",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "6f87ba42db14d13040a01925383c6b552601213ba9cadf16a05b61a1c404e8a1",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "超分辨成像、计算光学成像、定量相位成像",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "超分辨成像、计算光学成像、定量相位成像",
+            "source_language": "zh",
+            "source_span": "超分辨成像、计算光学成像、定量相位成像",
+            "source_text_hash": "6f87ba42db14d13040a01925383c6b552601213ba9cadf16a05b61a1c404e8a1"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-000E83C9344A",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "81bc4a8a9db18db2525c817222e0a50c79331e1fb94a027c2d4645a0f077e902",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "1、大学体育课程与教学改革 2、篮球教学与训练 3、体育政策与体育产业 二、",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "1、大学体育课程与教学改革 2、篮球教学与训练 3、体育政策与体育产业 二、",
+            "source_language": "zh",
+            "source_span": "1、大学体育课程与教学改革 2、篮球教学与训练 3、体育政策与体育产业 二、",
+            "source_text_hash": "81bc4a8a9db18db2525c817222e0a50c79331e1fb94a027c2d4645a0f077e902"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-0012FFC9DEC2",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "e9accc6c0b5b6226ee6dc8b14651212951ad3ede435d21ba4b33e14c1171eb99",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "金属酶是自然界中至关重要的分子机器，维系着生命和环境的正常运转，例如固氮酶催化氮气固定、细胞色素 P450 参与药物代谢、以及超氧化物歧化酶清除活性氧。虽然它们在自然界中展现出极高的催化效率，但其非天然功能的潜力尚未被充分挖掘，仍有待更广泛地造福人类社会。通过定向进化等手段对金属酶进行重塑，我们不仅有望实现药物、农药和精细化工产品的绿色合成，还能实现对蛋白质等大分子的快速、精准修饰，从而推动生物医药、食品和化工等领域的深刻变革。毛润泽博士实验室通过整合化学、生物学与人工智能，致力于开发创新的生物催化策略，解决合成、催化和生物分子工程中的重大挑战。通过结合合成化学、合成生物学、计算化学和计算生物学的跨学科方法，我们旨在重新设计并扩展自然的生物合成法则，开拓未知的催化反应空间。 毛润泽博士已在酶催化及合成领域发表高水平学术",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "金属酶是自然界中至关重要的分子机器，维系着生命和环境的正常运转，例如固氮酶催化氮气固定、细胞色素 P450 参与药物代谢、以及超氧化物歧化酶清除活性氧。虽然它们在自然界中展现出极高的催化效率，但其非天然功能的潜力尚未被充分挖掘，仍有待更广泛地造福人类社会。通过定向进化等手段对金属酶进行重塑，我们不仅有望实现药物、农药和精细化工产品的绿色合成，还能实现对蛋白质等大分子的快速、精准修饰，从而推动生物医药、食品和化工等领域的深刻变革。毛润泽博士实验室通过整合化学、生物学与人工智能，致力于开发创新的生物催化策略，解决合成、催化和生物分子工程中的重大挑战。通过结合合成化学、合成生物学、计算化学和计算生物学的跨学科方法，我们旨在重新设计并扩展自然的生物合成法则，开拓未知的催化反应空间。 毛润泽博士已在酶催化及合成领域发表高水平学术",
+            "source_language": "zh",
+            "source_span": "金属酶是自然界中至关重要的分子机器，维系着生命和环境的正常运转，例如固氮酶催化氮气固定、细胞色素 P450 参与药物代谢、以及超氧化物歧化酶清除活性氧。虽然它们在自然界中展现出极高的催化效率，但其非天然功能的潜力尚未被充分挖掘，仍有待更广泛地造福人类社会。通过定向进化等手段对金属酶进行重塑，我们不仅有望实现药物、农药和精细化工产品的绿色合成，还能实现对蛋白质等大分子的快速、精准修饰，从而推动生物医药、食品和化工等领域的深刻变革。毛润泽博士实验室通过整合化学、生物学与人工智能，致力于开发创新的生物催化策略，解决合成、催化和生物分子工程中的重大挑战。通过结合合成化学、合成生物学、计算化学和计算生物学的跨学科方法，我们旨在重新设计并扩展自然的生物合成法则，开拓未知的催化反应空间。 毛润泽博士已在酶催化及合成领域发表高水平学术",
+            "source_text_hash": "e9accc6c0b5b6226ee6dc8b14651212951ad3ede435d21ba4b33e14c1171eb99"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-00248146798C",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "ed40d019056eae27b21c7b6931afc4ab0aa3567261754dd3173ebf8b7d0910ba",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "为电化学储能材料 及 器件 与电池回收 ，已",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "为电化学储能材料 及 器件 与电池回收 ，已",
+            "source_language": "zh",
+            "source_span": "为电化学储能材料 及 器件 与电池回收 ，已",
+            "source_text_hash": "ed40d019056eae27b21c7b6931afc4ab0aa3567261754dd3173ebf8b7d0910ba"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-00270A689C15",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "4609637b1bdd341ecd458877eaf3f1e6ae5a3e44fb33c9a455e3b88b3c0982f2",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "有机/高分子半导体材料与器件应用研究 电子器件物理机制解析与关键技术探索 微纳器件制备方法及其集成工艺研究 科研",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "有机/高分子半导体材料与器件应用研究 电子器件物理机制解析与关键技术探索 微纳器件制备方法及其集成工艺研究 科研",
+            "source_language": "zh",
+            "source_span": "有机/高分子半导体材料与器件应用研究 电子器件物理机制解析与关键技术探索 微纳器件制备方法及其集成工艺研究 科研",
+            "source_text_hash": "4609637b1bdd341ecd458877eaf3f1e6ae5a3e44fb33c9a455e3b88b3c0982f2"
+          },
+          "write_recommendation": "auto_write_candidate"
+        }
+      ],
+      "skipped_count": 0,
+      "validation_failure_count": 0,
+      "validation_failures": [],
+      "validation_rules": [
+        "research_overview_zh_source_grounded"
+      ],
+      "write_evidence_rows": [
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-000003A9EBC4",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "6f87ba42db14d13040a01925383c6b552601213ba9cadf16a05b61a1c404e8a1",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "超分辨成像、计算光学成像、定量相位成像",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "超分辨成像、计算光学成像、定量相位成像",
+            "source_language": "zh",
+            "source_span": "超分辨成像、计算光学成像、定量相位成像",
+            "source_text_hash": "6f87ba42db14d13040a01925383c6b552601213ba9cadf16a05b61a1c404e8a1"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-000E83C9344A",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "81bc4a8a9db18db2525c817222e0a50c79331e1fb94a027c2d4645a0f077e902",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "1、大学体育课程与教学改革 2、篮球教学与训练 3、体育政策与体育产业 二、",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "1、大学体育课程与教学改革 2、篮球教学与训练 3、体育政策与体育产业 二、",
+            "source_language": "zh",
+            "source_span": "1、大学体育课程与教学改革 2、篮球教学与训练 3、体育政策与体育产业 二、",
+            "source_text_hash": "81bc4a8a9db18db2525c817222e0a50c79331e1fb94a027c2d4645a0f077e902"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-0012FFC9DEC2",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "e9accc6c0b5b6226ee6dc8b14651212951ad3ede435d21ba4b33e14c1171eb99",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "金属酶是自然界中至关重要的分子机器，维系着生命和环境的正常运转，例如固氮酶催化氮气固定、细胞色素 P450 参与药物代谢、以及超氧化物歧化酶清除活性氧。虽然它们在自然界中展现出极高的催化效率，但其非天然功能的潜力尚未被充分挖掘，仍有待更广泛地造福人类社会。通过定向进化等手段对金属酶进行重塑，我们不仅有望实现药物、农药和精细化工产品的绿色合成，还能实现对蛋白质等大分子的快速、精准修饰，从而推动生物医药、食品和化工等领域的深刻变革。毛润泽博士实验室通过整合化学、生物学与人工智能，致力于开发创新的生物催化策略，解决合成、催化和生物分子工程中的重大挑战。通过结合合成化学、合成生物学、计算化学和计算生物学的跨学科方法，我们旨在重新设计并扩展自然的生物合成法则，开拓未知的催化反应空间。 毛润泽博士已在酶催化及合成领域发表高水平学术",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "金属酶是自然界中至关重要的分子机器，维系着生命和环境的正常运转，例如固氮酶催化氮气固定、细胞色素 P450 参与药物代谢、以及超氧化物歧化酶清除活性氧。虽然它们在自然界中展现出极高的催化效率，但其非天然功能的潜力尚未被充分挖掘，仍有待更广泛地造福人类社会。通过定向进化等手段对金属酶进行重塑，我们不仅有望实现药物、农药和精细化工产品的绿色合成，还能实现对蛋白质等大分子的快速、精准修饰，从而推动生物医药、食品和化工等领域的深刻变革。毛润泽博士实验室通过整合化学、生物学与人工智能，致力于开发创新的生物催化策略，解决合成、催化和生物分子工程中的重大挑战。通过结合合成化学、合成生物学、计算化学和计算生物学的跨学科方法，我们旨在重新设计并扩展自然的生物合成法则，开拓未知的催化反应空间。 毛润泽博士已在酶催化及合成领域发表高水平学术",
+            "source_language": "zh",
+            "source_span": "金属酶是自然界中至关重要的分子机器，维系着生命和环境的正常运转，例如固氮酶催化氮气固定、细胞色素 P450 参与药物代谢、以及超氧化物歧化酶清除活性氧。虽然它们在自然界中展现出极高的催化效率，但其非天然功能的潜力尚未被充分挖掘，仍有待更广泛地造福人类社会。通过定向进化等手段对金属酶进行重塑，我们不仅有望实现药物、农药和精细化工产品的绿色合成，还能实现对蛋白质等大分子的快速、精准修饰，从而推动生物医药、食品和化工等领域的深刻变革。毛润泽博士实验室通过整合化学、生物学与人工智能，致力于开发创新的生物催化策略，解决合成、催化和生物分子工程中的重大挑战。通过结合合成化学、合成生物学、计算化学和计算生物学的跨学科方法，我们旨在重新设计并扩展自然的生物合成法则，开拓未知的催化反应空间。 毛润泽博士已在酶催化及合成领域发表高水平学术",
+            "source_text_hash": "e9accc6c0b5b6226ee6dc8b14651212951ad3ede435d21ba4b33e14c1171eb99"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-00248146798C",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "ed40d019056eae27b21c7b6931afc4ab0aa3567261754dd3173ebf8b7d0910ba",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "为电化学储能材料 及 器件 与电池回收 ，已",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "为电化学储能材料 及 器件 与电池回收 ，已",
+            "source_language": "zh",
+            "source_span": "为电化学储能材料 及 器件 与电池回收 ，已",
+            "source_text_hash": "ed40d019056eae27b21c7b6931afc4ab0aa3567261754dd3173ebf8b7d0910ba"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-00270A689C15",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "4609637b1bdd341ecd458877eaf3f1e6ae5a3e44fb33c9a455e3b88b3c0982f2",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "有机/高分子半导体材料与器件应用研究 电子器件物理机制解析与关键技术探索 微纳器件制备方法及其集成工艺研究 科研",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "有机/高分子半导体材料与器件应用研究 电子器件物理机制解析与关键技术探索 微纳器件制备方法及其集成工艺研究 科研",
+            "source_language": "zh",
+            "source_span": "有机/高分子半导体材料与器件应用研究 电子器件物理机制解析与关键技术探索 微纳器件制备方法及其集成工艺研究 科研",
+            "source_text_hash": "4609637b1bdd341ecd458877eaf3f1e6ae5a3e44fb33c9a455e3b88b3c0982f2"
+          },
+          "write_recommendation": "auto_write_candidate"
+        }
+      ]
+    },
+    {
+      "affected_paper_ids": [
+        "PAPER-00EE9819380B",
+        "PAPER-0200644EC855",
+        "PAPER-093B4EFB6E18",
+        "PAPER-0B74138A9606",
+        "PAPER-14BCF2DF8942",
+        "PAPER-1709E7D4DF1E",
+        "PAPER-1A9258C40F44",
+        "PAPER-1BAFE69067AD",
+        "PAPER-1C013639BB76",
+        "PAPER-1CEC63206D5E",
+        "PAPER-1D0A624B0697",
+        "PAPER-1E963CEDA38E",
+        "PAPER-1F36D67098E8",
+        "PAPER-201F84D4A9F6",
+        "PAPER-2416EE184C9B",
+        "PAPER-2514F60B6E48",
+        "PAPER-25992169D64B",
+        "PAPER-25FEA49294B4",
+        "PAPER-263CF8D3D896",
+        "PAPER-26CFC20E30C5",
+        "PAPER-27A8127703F6",
+        "PAPER-293C5006C042",
+        "PAPER-2DE30479865D",
+        "PAPER-2EA4B92147D0",
+        "PAPER-2F98B8DC9108",
+        "PAPER-3016E371B9C8",
+        "PAPER-3038D1D8FAD6",
+        "PAPER-30F453F33E76",
+        "PAPER-3168434A06C0",
+        "PAPER-337EA3CB0A91",
+        "PAPER-351DC9C83514",
+        "PAPER-3978E5AE1CCE",
+        "PAPER-3D4E1916E2F9",
+        "PAPER-3FA4D675BC50",
+        "PAPER-407AF333EB24",
+        "PAPER-41475376EEAD",
+        "PAPER-422BB0A74C2C",
+        "PAPER-44CBF382F545",
+        "PAPER-48CCCA24D3CD",
+        "PAPER-494FC96BB471",
+        "PAPER-49B656D37F28",
+        "PAPER-4A6FDDE787F4",
+        "PAPER-501E66F94149",
+        "PAPER-522F3068BD1B",
+        "PAPER-5552B3464D50",
+        "PAPER-5978677FD2CD",
+        "PAPER-5F533261EAAB",
+        "PAPER-623CDE9FDD45",
+        "PAPER-67D6C8EC1763",
+        "PAPER-68257016E182",
+        "PAPER-6968911D0391",
+        "PAPER-6C49C4F19B79",
+        "PAPER-6D226930BDD8",
+        "PAPER-6DE951CDB913",
+        "PAPER-720A39853BD2",
+        "PAPER-729F52F5A443",
+        "PAPER-7658BFABD2BA",
+        "PAPER-7667D6AA18A0",
+        "PAPER-778945DAED5C",
+        "PAPER-7A915C896252",
+        "PAPER-7AEB680D5E44",
+        "PAPER-7B8053C27F96",
+        "PAPER-7C00FC4C8E2B",
+        "PAPER-7D095DF2BDDC",
+        "PAPER-7ED47B44A4EF",
+        "PAPER-840A4174A5B0",
+        "PAPER-84E19AAC8704",
+        "PAPER-87A9A7904306",
+        "PAPER-8A0AF9A6629E",
+        "PAPER-8AB1C12296E7",
+        "PAPER-8B3E037F7359",
+        "PAPER-8F713A63EAA7",
+        "PAPER-90C7BB8D87CB",
+        "PAPER-9107DFED5E9A",
+        "PAPER-91F239D4957D",
+        "PAPER-95F58C725A47",
+        "PAPER-98989D12DA13",
+        "PAPER-9AE8CFE5A23E",
+        "PAPER-9E24899C0C50",
+        "PAPER-A882E59E4BAB",
+        "PAPER-AAA50F25C553",
+        "PAPER-B139F520D11D",
+        "PAPER-B29F0BB5CF94",
+        "PAPER-B4808C1AA41B",
+        "PAPER-B79A30FAF4D8",
+        "PAPER-B9DD3C75A096",
+        "PAPER-BA2746895768",
+        "PAPER-BE094C467B2C",
+        "PAPER-C148BDDADCEC",
+        "PAPER-C1FCC218121D",
+        "PAPER-C4167FBF36FD",
+        "PAPER-C5FA702F25F7",
+        "PAPER-C723B59F8963",
+        "PAPER-CABBCCF55930",
+        "PAPER-CBE6719ABC07",
+        "PAPER-CDAD1336D5BF",
+        "PAPER-CEE1C74FC5DF",
+        "PAPER-D10B4C26BA15",
+        "PAPER-D496581D2ADC",
+        "PAPER-D53C9E88BB28",
+        "PAPER-D77E2F54A1CC",
+        "PAPER-DAC88338B2AF",
+        "PAPER-DCAD70C70DC2",
+        "PAPER-E0027B5B6C15",
+        "PAPER-E7BB7227689C",
+        "PAPER-E81B524DBE9A",
+        "PAPER-EC113EDEB1C9",
+        "PAPER-EEF75F8024A2",
+        "PAPER-EF0672CFCD7B",
+        "PAPER-F4491EF2EC29",
+        "PAPER-F708F9B5F8F4",
+        "PAPER-F8EC04BB3E77",
+        "PAPER-FA085AE46E88",
+        "PAPER-FB2501B422E1",
+        "PAPER-FC4CC09DAFCE",
+        "PAPER-FCBD9BCCDC0F",
+        "PAPER-FECA140225C4"
+      ],
+      "affected_professor_ids": [
+        "PROF-000E83C9344A",
+        "PROF-0012FFC9DEC2",
+        "PROF-0020741F0211"
+      ],
+      "blocker_type": "missing_professor_paper_summary",
+      "candidate_count": 3,
+      "dataset_input_count": 2200,
+      "input_count": 5,
+      "lane": "professor_paper_summary_generation",
+      "provider_failure_count": 0,
+      "provider_failures": [],
+      "rejections": [
+        {
+          "duplicate_group_id": null,
+          "evidence": {
+            "canonical_name": "周光敏",
+            "duplicate_group_count": 3,
+            "verified_paper_count": 48
+          },
+          "lane": "professor_paper_summary_generation",
+          "next_action": "manual_review_or_source_recollection",
+          "paper_id": null,
+          "professor_id": "PROF-00248146798C",
+          "reason": "duplicate_verified_paper_links"
+        },
+        {
+          "duplicate_group_id": null,
+          "evidence": {
+            "canonical_name": "刘斌",
+            "duplicate_group_count": 3,
+            "verified_paper_count": 8
+          },
+          "lane": "professor_paper_summary_generation",
+          "next_action": "manual_review_or_source_recollection",
+          "paper_id": null,
+          "professor_id": "PROF-00270A689C15",
+          "reason": "duplicate_verified_paper_links"
+        }
+      ],
+      "samples": [
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "professor_paper_summary_generation",
+          "paper_ids": [
+            "PAPER-2F98B8DC9108",
+            "PAPER-84E19AAC8704",
+            "PAPER-720A39853BD2",
+            "PAPER-1F36D67098E8",
+            "PAPER-EF0672CFCD7B",
+            "PAPER-7ED47B44A4EF",
+            "PAPER-501E66F94149",
+            "PAPER-CEE1C74FC5DF",
+            "PAPER-C148BDDADCEC",
+            "PAPER-AAA50F25C553",
+            "PAPER-7667D6AA18A0",
+            "PAPER-1BAFE69067AD",
+            "PAPER-D77E2F54A1CC",
+            "PAPER-3016E371B9C8",
+            "PAPER-2514F60B6E48",
+            "PAPER-9E24899C0C50",
+            "PAPER-1A9258C40F44",
+            "PAPER-C5FA702F25F7",
+            "PAPER-25992169D64B",
+            "PAPER-7658BFABD2BA",
+            "PAPER-840A4174A5B0",
+            "PAPER-293C5006C042",
+            "PAPER-6C49C4F19B79",
+            "PAPER-729F52F5A443",
+            "PAPER-337EA3CB0A91",
+            "PAPER-B4808C1AA41B",
+            "PAPER-D496581D2ADC",
+            "PAPER-F4491EF2EC29",
+            "PAPER-8A0AF9A6629E",
+            "PAPER-7D095DF2BDDC",
+            "PAPER-3D4E1916E2F9",
+            "PAPER-FECA140225C4",
+            "PAPER-4A6FDDE787F4",
+            "PAPER-3978E5AE1CCE",
+            "PAPER-C723B59F8963",
+            "PAPER-7AEB680D5E44",
+            "PAPER-0B74138A9606",
+            "PAPER-14BCF2DF8942",
+            "PAPER-6968911D0391",
+            "PAPER-E0027B5B6C15",
+            "PAPER-F8EC04BB3E77",
+            "PAPER-263CF8D3D896",
+            "PAPER-EC113EDEB1C9",
+            "PAPER-30F453F33E76",
+            "PAPER-48CCCA24D3CD",
+            "PAPER-67D6C8EC1763",
+            "PAPER-5552B3464D50",
+            "PAPER-2EA4B92147D0",
+            "PAPER-093B4EFB6E18",
+            "PAPER-8AB1C12296E7"
+          ],
+          "professor_id": "PROF-000E83C9344A",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "deterministic_synthesis",
+              "lane": "professor_paper_summary_generation",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_page_ids": [
+                "3a9fe127-0081-46fe-9e57-0861dc238727",
+                "efb85b34-1c3d-431e-99b2-d794697a619f"
+              ],
+              "validation_rules": [
+                "deduplicated_verified_paper_inputs"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_paper_summary": "董伦红的已验证论文围绕中国高教协会体育分会休闲体育学组常务理事（2016-2020）、广东省学生体育职合会篮球协会教练委员会委员（2016-2020）、茂名市体育产业协会顾问（2016-2020）展开。这些论文来自教师种子链路中的已验证论文记录，可用于支撑教师产出摘要。",
+            "duplicate_status": "deduplicated",
+            "excluded_paper_ids": [],
+            "exclusion_reasons": {},
+            "generation_method": "deterministic_synthesis",
+            "paper_ids": [
+              "PAPER-2F98B8DC9108",
+              "PAPER-84E19AAC8704",
+              "PAPER-720A39853BD2",
+              "PAPER-1F36D67098E8",
+              "PAPER-EF0672CFCD7B",
+              "PAPER-7ED47B44A4EF",
+              "PAPER-501E66F94149",
+              "PAPER-CEE1C74FC5DF",
+              "PAPER-C148BDDADCEC",
+              "PAPER-AAA50F25C553",
+              "PAPER-7667D6AA18A0",
+              "PAPER-1BAFE69067AD",
+              "PAPER-D77E2F54A1CC",
+              "PAPER-3016E371B9C8",
+              "PAPER-2514F60B6E48",
+              "PAPER-9E24899C0C50",
+              "PAPER-1A9258C40F44",
+              "PAPER-C5FA702F25F7",
+              "PAPER-25992169D64B",
+              "PAPER-7658BFABD2BA",
+              "PAPER-840A4174A5B0",
+              "PAPER-293C5006C042",
+              "PAPER-6C49C4F19B79",
+              "PAPER-729F52F5A443",
+              "PAPER-337EA3CB0A91",
+              "PAPER-B4808C1AA41B",
+              "PAPER-D496581D2ADC",
+              "PAPER-F4491EF2EC29",
+              "PAPER-8A0AF9A6629E",
+              "PAPER-7D095DF2BDDC",
+              "PAPER-3D4E1916E2F9",
+              "PAPER-FECA140225C4",
+              "PAPER-4A6FDDE787F4",
+              "PAPER-3978E5AE1CCE",
+              "PAPER-C723B59F8963",
+              "PAPER-7AEB680D5E44",
+              "PAPER-0B74138A9606",
+              "PAPER-14BCF2DF8942",
+              "PAPER-6968911D0391",
+              "PAPER-E0027B5B6C15",
+              "PAPER-F8EC04BB3E77",
+              "PAPER-263CF8D3D896",
+              "PAPER-EC113EDEB1C9",
+              "PAPER-30F453F33E76",
+              "PAPER-48CCCA24D3CD",
+              "PAPER-67D6C8EC1763",
+              "PAPER-5552B3464D50",
+              "PAPER-2EA4B92147D0",
+              "PAPER-093B4EFB6E18",
+              "PAPER-8AB1C12296E7"
+            ],
+            "source_page_provenance": [
+              "3a9fe127-0081-46fe-9e57-0861dc238727",
+              "efb85b34-1c3d-431e-99b2-d794697a619f"
+            ],
+            "verified_paper_ids": [
+              "PAPER-2F98B8DC9108",
+              "PAPER-84E19AAC8704",
+              "PAPER-720A39853BD2",
+              "PAPER-1F36D67098E8",
+              "PAPER-EF0672CFCD7B",
+              "PAPER-7ED47B44A4EF",
+              "PAPER-501E66F94149",
+              "PAPER-CEE1C74FC5DF",
+              "PAPER-C148BDDADCEC",
+              "PAPER-AAA50F25C553",
+              "PAPER-7667D6AA18A0",
+              "PAPER-1BAFE69067AD",
+              "PAPER-D77E2F54A1CC",
+              "PAPER-3016E371B9C8",
+              "PAPER-2514F60B6E48",
+              "PAPER-9E24899C0C50",
+              "PAPER-1A9258C40F44",
+              "PAPER-C5FA702F25F7",
+              "PAPER-25992169D64B",
+              "PAPER-7658BFABD2BA",
+              "PAPER-840A4174A5B0",
+              "PAPER-293C5006C042",
+              "PAPER-6C49C4F19B79",
+              "PAPER-729F52F5A443",
+              "PAPER-337EA3CB0A91",
+              "PAPER-B4808C1AA41B",
+              "PAPER-D496581D2ADC",
+              "PAPER-F4491EF2EC29",
+              "PAPER-8A0AF9A6629E",
+              "PAPER-7D095DF2BDDC",
+              "PAPER-3D4E1916E2F9",
+              "PAPER-FECA140225C4",
+              "PAPER-4A6FDDE787F4",
+              "PAPER-3978E5AE1CCE",
+              "PAPER-C723B59F8963",
+              "PAPER-7AEB680D5E44",
+              "PAPER-0B74138A9606",
+              "PAPER-14BCF2DF8942",
+              "PAPER-6968911D0391",
+              "PAPER-E0027B5B6C15",
+              "PAPER-F8EC04BB3E77",
+              "PAPER-263CF8D3D896",
+              "PAPER-EC113EDEB1C9",
+              "PAPER-30F453F33E76",
+              "PAPER-48CCCA24D3CD",
+              "PAPER-67D6C8EC1763",
+              "PAPER-5552B3464D50",
+              "PAPER-2EA4B92147D0",
+              "PAPER-093B4EFB6E18",
+              "PAPER-8AB1C12296E7"
+            ]
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "needs_review",
+          "duplicate_group_id": null,
+          "lane": "professor_paper_summary_generation",
+          "paper_ids": [
+            "PAPER-3168434A06C0",
+            "PAPER-90C7BB8D87CB",
+            "PAPER-1CEC63206D5E",
+            "PAPER-BE094C467B2C",
+            "PAPER-8B3E037F7359",
+            "PAPER-7A915C896252",
+            "PAPER-27A8127703F6",
+            "PAPER-DCAD70C70DC2",
+            "PAPER-44CBF382F545",
+            "PAPER-522F3068BD1B",
+            "PAPER-351DC9C83514",
+            "PAPER-0200644EC855",
+            "PAPER-6D226930BDD8",
+            "PAPER-1C013639BB76",
+            "PAPER-CBE6719ABC07",
+            "PAPER-C1FCC218121D",
+            "PAPER-1709E7D4DF1E"
+          ],
+          "professor_id": "PROF-0012FFC9DEC2",
+          "quality_flags": [
+            "missing_source_page_provenance"
+          ],
+          "source_confidence": "weak",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "needs_review",
+              "generation_method": "deterministic_synthesis",
+              "lane": "professor_paper_summary_generation",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [
+                  "missing_source_page_provenance"
+                ],
+                "review_required": true,
+                "source_confidence": "weak"
+              },
+              "quality_flags": [
+                "missing_source_page_provenance"
+              ],
+              "source_confidence": "weak",
+              "source_page_ids": [],
+              "validation_rules": [
+                "deduplicated_verified_paper_inputs"
+              ],
+              "write_recommendation": "review_before_write"
+            },
+            "candidate_paper_summary": "毛润泽的已验证论文围绕An Engineered Enzyme Enables Stereoconvergent Alkylation of Alkene Mixtures、在合成有机化学领域，无需导向基团即可实现叔碳C–H键的分子间官能团化，从而构建全取代立体中心，一直是一项极具挑战性的任务。目前的催化技术在向外消旋叔sp3碳中心、(co-first); Sicinski, K. M.; Zhao, Y.; Chen, K.; Arnold, F. H. Enzymatic Assembl展开。这些论文来自教师种子链路中的已验证论文记录，可用于支撑教师产出摘要。",
+            "duplicate_status": "deduplicated",
+            "excluded_paper_ids": [],
+            "exclusion_reasons": {},
+            "generation_method": "deterministic_synthesis",
+            "paper_ids": [
+              "PAPER-3168434A06C0",
+              "PAPER-90C7BB8D87CB",
+              "PAPER-1CEC63206D5E",
+              "PAPER-BE094C467B2C",
+              "PAPER-8B3E037F7359",
+              "PAPER-7A915C896252",
+              "PAPER-27A8127703F6",
+              "PAPER-DCAD70C70DC2",
+              "PAPER-44CBF382F545",
+              "PAPER-522F3068BD1B",
+              "PAPER-351DC9C83514",
+              "PAPER-0200644EC855",
+              "PAPER-6D226930BDD8",
+              "PAPER-1C013639BB76",
+              "PAPER-CBE6719ABC07",
+              "PAPER-C1FCC218121D",
+              "PAPER-1709E7D4DF1E"
+            ],
+            "source_page_provenance": [],
+            "verified_paper_ids": [
+              "PAPER-3168434A06C0",
+              "PAPER-90C7BB8D87CB",
+              "PAPER-1CEC63206D5E",
+              "PAPER-BE094C467B2C",
+              "PAPER-8B3E037F7359",
+              "PAPER-7A915C896252",
+              "PAPER-27A8127703F6",
+              "PAPER-DCAD70C70DC2",
+              "PAPER-44CBF382F545",
+              "PAPER-522F3068BD1B",
+              "PAPER-351DC9C83514",
+              "PAPER-0200644EC855",
+              "PAPER-6D226930BDD8",
+              "PAPER-1C013639BB76",
+              "PAPER-CBE6719ABC07",
+              "PAPER-C1FCC218121D",
+              "PAPER-1709E7D4DF1E"
+            ]
+          },
+          "write_recommendation": "review_before_write"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "professor_paper_summary_generation",
+          "paper_ids": [
+            "PAPER-95F58C725A47",
+            "PAPER-E81B524DBE9A",
+            "PAPER-41475376EEAD",
+            "PAPER-FCBD9BCCDC0F",
+            "PAPER-778945DAED5C",
+            "PAPER-5F533261EAAB",
+            "PAPER-E7BB7227689C",
+            "PAPER-D10B4C26BA15",
+            "PAPER-CABBCCF55930",
+            "PAPER-CDAD1336D5BF",
+            "PAPER-9AE8CFE5A23E",
+            "PAPER-2DE30479865D",
+            "PAPER-98989D12DA13",
+            "PAPER-A882E59E4BAB",
+            "PAPER-B29F0BB5CF94",
+            "PAPER-49B656D37F28",
+            "PAPER-BA2746895768",
+            "PAPER-25FEA49294B4",
+            "PAPER-91F239D4957D",
+            "PAPER-B79A30FAF4D8",
+            "PAPER-3FA4D675BC50",
+            "PAPER-623CDE9FDD45",
+            "PAPER-3038D1D8FAD6",
+            "PAPER-68257016E182",
+            "PAPER-7C00FC4C8E2B",
+            "PAPER-FC4CC09DAFCE",
+            "PAPER-DAC88338B2AF",
+            "PAPER-7B8053C27F96",
+            "PAPER-2416EE184C9B",
+            "PAPER-1D0A624B0697",
+            "PAPER-26CFC20E30C5",
+            "PAPER-D53C9E88BB28",
+            "PAPER-5978677FD2CD",
+            "PAPER-FA085AE46E88",
+            "PAPER-C4167FBF36FD",
+            "PAPER-8F713A63EAA7",
+            "PAPER-00EE9819380B",
+            "PAPER-FB2501B422E1",
+            "PAPER-87A9A7904306",
+            "PAPER-422BB0A74C2C",
+            "PAPER-EEF75F8024A2",
+            "PAPER-B9DD3C75A096",
+            "PAPER-F708F9B5F8F4",
+            "PAPER-201F84D4A9F6",
+            "PAPER-6DE951CDB913",
+            "PAPER-B139F520D11D",
+            "PAPER-407AF333EB24",
+            "PAPER-1E963CEDA38E",
+            "PAPER-494FC96BB471",
+            "PAPER-9107DFED5E9A"
+          ],
+          "professor_id": "PROF-0020741F0211",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "deterministic_synthesis",
+              "lane": "professor_paper_summary_generation",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_page_ids": [
+                "aaba80c0-1c38-4e3a-a649-2b128283873a"
+              ],
+              "validation_rules": [
+                "deduplicated_verified_paper_inputs"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_paper_summary": "何道敬的已验证论文围绕A Comprehensive Detection Method for the Lateral Movement Stage of APT Attacks、A Method for Detecting Phishing Websites Based on Tiny-Bert Stacking、Double-layer Detection of Internal Threat in Enterprise Systems Based on Deep Le展开。这些论文来自教师种子链路中的已验证论文记录，可用于支撑教师产出摘要。",
+            "duplicate_status": "deduplicated",
+            "excluded_paper_ids": [],
+            "exclusion_reasons": {},
+            "generation_method": "deterministic_synthesis",
+            "paper_ids": [
+              "PAPER-95F58C725A47",
+              "PAPER-E81B524DBE9A",
+              "PAPER-41475376EEAD",
+              "PAPER-FCBD9BCCDC0F",
+              "PAPER-778945DAED5C",
+              "PAPER-5F533261EAAB",
+              "PAPER-E7BB7227689C",
+              "PAPER-D10B4C26BA15",
+              "PAPER-CABBCCF55930",
+              "PAPER-CDAD1336D5BF",
+              "PAPER-9AE8CFE5A23E",
+              "PAPER-2DE30479865D",
+              "PAPER-98989D12DA13",
+              "PAPER-A882E59E4BAB",
+              "PAPER-B29F0BB5CF94",
+              "PAPER-49B656D37F28",
+              "PAPER-BA2746895768",
+              "PAPER-25FEA49294B4",
+              "PAPER-91F239D4957D",
+              "PAPER-B79A30FAF4D8",
+              "PAPER-3FA4D675BC50",
+              "PAPER-623CDE9FDD45",
+              "PAPER-3038D1D8FAD6",
+              "PAPER-68257016E182",
+              "PAPER-7C00FC4C8E2B",
+              "PAPER-FC4CC09DAFCE",
+              "PAPER-DAC88338B2AF",
+              "PAPER-7B8053C27F96",
+              "PAPER-2416EE184C9B",
+              "PAPER-1D0A624B0697",
+              "PAPER-26CFC20E30C5",
+              "PAPER-D53C9E88BB28",
+              "PAPER-5978677FD2CD",
+              "PAPER-FA085AE46E88",
+              "PAPER-C4167FBF36FD",
+              "PAPER-8F713A63EAA7",
+              "PAPER-00EE9819380B",
+              "PAPER-FB2501B422E1",
+              "PAPER-87A9A7904306",
+              "PAPER-422BB0A74C2C",
+              "PAPER-EEF75F8024A2",
+              "PAPER-B9DD3C75A096",
+              "PAPER-F708F9B5F8F4",
+              "PAPER-201F84D4A9F6",
+              "PAPER-6DE951CDB913",
+              "PAPER-B139F520D11D",
+              "PAPER-407AF333EB24",
+              "PAPER-1E963CEDA38E",
+              "PAPER-494FC96BB471",
+              "PAPER-9107DFED5E9A"
+            ],
+            "source_page_provenance": [
+              "aaba80c0-1c38-4e3a-a649-2b128283873a"
+            ],
+            "verified_paper_ids": [
+              "PAPER-95F58C725A47",
+              "PAPER-E81B524DBE9A",
+              "PAPER-41475376EEAD",
+              "PAPER-FCBD9BCCDC0F",
+              "PAPER-778945DAED5C",
+              "PAPER-5F533261EAAB",
+              "PAPER-E7BB7227689C",
+              "PAPER-D10B4C26BA15",
+              "PAPER-CABBCCF55930",
+              "PAPER-CDAD1336D5BF",
+              "PAPER-9AE8CFE5A23E",
+              "PAPER-2DE30479865D",
+              "PAPER-98989D12DA13",
+              "PAPER-A882E59E4BAB",
+              "PAPER-B29F0BB5CF94",
+              "PAPER-49B656D37F28",
+              "PAPER-BA2746895768",
+              "PAPER-25FEA49294B4",
+              "PAPER-91F239D4957D",
+              "PAPER-B79A30FAF4D8",
+              "PAPER-3FA4D675BC50",
+              "PAPER-623CDE9FDD45",
+              "PAPER-3038D1D8FAD6",
+              "PAPER-68257016E182",
+              "PAPER-7C00FC4C8E2B",
+              "PAPER-FC4CC09DAFCE",
+              "PAPER-DAC88338B2AF",
+              "PAPER-7B8053C27F96",
+              "PAPER-2416EE184C9B",
+              "PAPER-1D0A624B0697",
+              "PAPER-26CFC20E30C5",
+              "PAPER-D53C9E88BB28",
+              "PAPER-5978677FD2CD",
+              "PAPER-FA085AE46E88",
+              "PAPER-C4167FBF36FD",
+              "PAPER-8F713A63EAA7",
+              "PAPER-00EE9819380B",
+              "PAPER-FB2501B422E1",
+              "PAPER-87A9A7904306",
+              "PAPER-422BB0A74C2C",
+              "PAPER-EEF75F8024A2",
+              "PAPER-B9DD3C75A096",
+              "PAPER-F708F9B5F8F4",
+              "PAPER-201F84D4A9F6",
+              "PAPER-6DE951CDB913",
+              "PAPER-B139F520D11D",
+              "PAPER-407AF333EB24",
+              "PAPER-1E963CEDA38E",
+              "PAPER-494FC96BB471",
+              "PAPER-9107DFED5E9A"
+            ]
+          },
+          "write_recommendation": "auto_write_candidate"
+        }
+      ],
+      "skipped_count": 2,
+      "validation_failure_count": 0,
+      "validation_failures": [],
+      "validation_rules": [
+        "deduplicated_verified_paper_inputs"
+      ],
+      "write_evidence_rows": [
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "professor_paper_summary_generation",
+          "paper_ids": [
+            "PAPER-2F98B8DC9108",
+            "PAPER-84E19AAC8704",
+            "PAPER-720A39853BD2",
+            "PAPER-1F36D67098E8",
+            "PAPER-EF0672CFCD7B",
+            "PAPER-7ED47B44A4EF",
+            "PAPER-501E66F94149",
+            "PAPER-CEE1C74FC5DF",
+            "PAPER-C148BDDADCEC",
+            "PAPER-AAA50F25C553",
+            "PAPER-7667D6AA18A0",
+            "PAPER-1BAFE69067AD",
+            "PAPER-D77E2F54A1CC",
+            "PAPER-3016E371B9C8",
+            "PAPER-2514F60B6E48",
+            "PAPER-9E24899C0C50",
+            "PAPER-1A9258C40F44",
+            "PAPER-C5FA702F25F7",
+            "PAPER-25992169D64B",
+            "PAPER-7658BFABD2BA",
+            "PAPER-840A4174A5B0",
+            "PAPER-293C5006C042",
+            "PAPER-6C49C4F19B79",
+            "PAPER-729F52F5A443",
+            "PAPER-337EA3CB0A91",
+            "PAPER-B4808C1AA41B",
+            "PAPER-D496581D2ADC",
+            "PAPER-F4491EF2EC29",
+            "PAPER-8A0AF9A6629E",
+            "PAPER-7D095DF2BDDC",
+            "PAPER-3D4E1916E2F9",
+            "PAPER-FECA140225C4",
+            "PAPER-4A6FDDE787F4",
+            "PAPER-3978E5AE1CCE",
+            "PAPER-C723B59F8963",
+            "PAPER-7AEB680D5E44",
+            "PAPER-0B74138A9606",
+            "PAPER-14BCF2DF8942",
+            "PAPER-6968911D0391",
+            "PAPER-E0027B5B6C15",
+            "PAPER-F8EC04BB3E77",
+            "PAPER-263CF8D3D896",
+            "PAPER-EC113EDEB1C9",
+            "PAPER-30F453F33E76",
+            "PAPER-48CCCA24D3CD",
+            "PAPER-67D6C8EC1763",
+            "PAPER-5552B3464D50",
+            "PAPER-2EA4B92147D0",
+            "PAPER-093B4EFB6E18",
+            "PAPER-8AB1C12296E7"
+          ],
+          "professor_id": "PROF-000E83C9344A",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "deterministic_synthesis",
+              "lane": "professor_paper_summary_generation",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_page_ids": [
+                "3a9fe127-0081-46fe-9e57-0861dc238727",
+                "efb85b34-1c3d-431e-99b2-d794697a619f"
+              ],
+              "validation_rules": [
+                "deduplicated_verified_paper_inputs"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_paper_summary": "董伦红的已验证论文围绕中国高教协会体育分会休闲体育学组常务理事（2016-2020）、广东省学生体育职合会篮球协会教练委员会委员（2016-2020）、茂名市体育产业协会顾问（2016-2020）展开。这些论文来自教师种子链路中的已验证论文记录，可用于支撑教师产出摘要。",
+            "duplicate_status": "deduplicated",
+            "excluded_paper_ids": [],
+            "exclusion_reasons": {},
+            "generation_method": "deterministic_synthesis",
+            "paper_ids": [
+              "PAPER-2F98B8DC9108",
+              "PAPER-84E19AAC8704",
+              "PAPER-720A39853BD2",
+              "PAPER-1F36D67098E8",
+              "PAPER-EF0672CFCD7B",
+              "PAPER-7ED47B44A4EF",
+              "PAPER-501E66F94149",
+              "PAPER-CEE1C74FC5DF",
+              "PAPER-C148BDDADCEC",
+              "PAPER-AAA50F25C553",
+              "PAPER-7667D6AA18A0",
+              "PAPER-1BAFE69067AD",
+              "PAPER-D77E2F54A1CC",
+              "PAPER-3016E371B9C8",
+              "PAPER-2514F60B6E48",
+              "PAPER-9E24899C0C50",
+              "PAPER-1A9258C40F44",
+              "PAPER-C5FA702F25F7",
+              "PAPER-25992169D64B",
+              "PAPER-7658BFABD2BA",
+              "PAPER-840A4174A5B0",
+              "PAPER-293C5006C042",
+              "PAPER-6C49C4F19B79",
+              "PAPER-729F52F5A443",
+              "PAPER-337EA3CB0A91",
+              "PAPER-B4808C1AA41B",
+              "PAPER-D496581D2ADC",
+              "PAPER-F4491EF2EC29",
+              "PAPER-8A0AF9A6629E",
+              "PAPER-7D095DF2BDDC",
+              "PAPER-3D4E1916E2F9",
+              "PAPER-FECA140225C4",
+              "PAPER-4A6FDDE787F4",
+              "PAPER-3978E5AE1CCE",
+              "PAPER-C723B59F8963",
+              "PAPER-7AEB680D5E44",
+              "PAPER-0B74138A9606",
+              "PAPER-14BCF2DF8942",
+              "PAPER-6968911D0391",
+              "PAPER-E0027B5B6C15",
+              "PAPER-F8EC04BB3E77",
+              "PAPER-263CF8D3D896",
+              "PAPER-EC113EDEB1C9",
+              "PAPER-30F453F33E76",
+              "PAPER-48CCCA24D3CD",
+              "PAPER-67D6C8EC1763",
+              "PAPER-5552B3464D50",
+              "PAPER-2EA4B92147D0",
+              "PAPER-093B4EFB6E18",
+              "PAPER-8AB1C12296E7"
+            ],
+            "source_page_provenance": [
+              "3a9fe127-0081-46fe-9e57-0861dc238727",
+              "efb85b34-1c3d-431e-99b2-d794697a619f"
+            ],
+            "verified_paper_ids": [
+              "PAPER-2F98B8DC9108",
+              "PAPER-84E19AAC8704",
+              "PAPER-720A39853BD2",
+              "PAPER-1F36D67098E8",
+              "PAPER-EF0672CFCD7B",
+              "PAPER-7ED47B44A4EF",
+              "PAPER-501E66F94149",
+              "PAPER-CEE1C74FC5DF",
+              "PAPER-C148BDDADCEC",
+              "PAPER-AAA50F25C553",
+              "PAPER-7667D6AA18A0",
+              "PAPER-1BAFE69067AD",
+              "PAPER-D77E2F54A1CC",
+              "PAPER-3016E371B9C8",
+              "PAPER-2514F60B6E48",
+              "PAPER-9E24899C0C50",
+              "PAPER-1A9258C40F44",
+              "PAPER-C5FA702F25F7",
+              "PAPER-25992169D64B",
+              "PAPER-7658BFABD2BA",
+              "PAPER-840A4174A5B0",
+              "PAPER-293C5006C042",
+              "PAPER-6C49C4F19B79",
+              "PAPER-729F52F5A443",
+              "PAPER-337EA3CB0A91",
+              "PAPER-B4808C1AA41B",
+              "PAPER-D496581D2ADC",
+              "PAPER-F4491EF2EC29",
+              "PAPER-8A0AF9A6629E",
+              "PAPER-7D095DF2BDDC",
+              "PAPER-3D4E1916E2F9",
+              "PAPER-FECA140225C4",
+              "PAPER-4A6FDDE787F4",
+              "PAPER-3978E5AE1CCE",
+              "PAPER-C723B59F8963",
+              "PAPER-7AEB680D5E44",
+              "PAPER-0B74138A9606",
+              "PAPER-14BCF2DF8942",
+              "PAPER-6968911D0391",
+              "PAPER-E0027B5B6C15",
+              "PAPER-F8EC04BB3E77",
+              "PAPER-263CF8D3D896",
+              "PAPER-EC113EDEB1C9",
+              "PAPER-30F453F33E76",
+              "PAPER-48CCCA24D3CD",
+              "PAPER-67D6C8EC1763",
+              "PAPER-5552B3464D50",
+              "PAPER-2EA4B92147D0",
+              "PAPER-093B4EFB6E18",
+              "PAPER-8AB1C12296E7"
+            ]
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "needs_review",
+          "duplicate_group_id": null,
+          "lane": "professor_paper_summary_generation",
+          "paper_ids": [
+            "PAPER-3168434A06C0",
+            "PAPER-90C7BB8D87CB",
+            "PAPER-1CEC63206D5E",
+            "PAPER-BE094C467B2C",
+            "PAPER-8B3E037F7359",
+            "PAPER-7A915C896252",
+            "PAPER-27A8127703F6",
+            "PAPER-DCAD70C70DC2",
+            "PAPER-44CBF382F545",
+            "PAPER-522F3068BD1B",
+            "PAPER-351DC9C83514",
+            "PAPER-0200644EC855",
+            "PAPER-6D226930BDD8",
+            "PAPER-1C013639BB76",
+            "PAPER-CBE6719ABC07",
+            "PAPER-C1FCC218121D",
+            "PAPER-1709E7D4DF1E"
+          ],
+          "professor_id": "PROF-0012FFC9DEC2",
+          "quality_flags": [
+            "missing_source_page_provenance"
+          ],
+          "source_confidence": "weak",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "needs_review",
+              "generation_method": "deterministic_synthesis",
+              "lane": "professor_paper_summary_generation",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [
+                  "missing_source_page_provenance"
+                ],
+                "review_required": true,
+                "source_confidence": "weak"
+              },
+              "quality_flags": [
+                "missing_source_page_provenance"
+              ],
+              "source_confidence": "weak",
+              "source_page_ids": [],
+              "validation_rules": [
+                "deduplicated_verified_paper_inputs"
+              ],
+              "write_recommendation": "review_before_write"
+            },
+            "candidate_paper_summary": "毛润泽的已验证论文围绕An Engineered Enzyme Enables Stereoconvergent Alkylation of Alkene Mixtures、在合成有机化学领域，无需导向基团即可实现叔碳C–H键的分子间官能团化，从而构建全取代立体中心，一直是一项极具挑战性的任务。目前的催化技术在向外消旋叔sp3碳中心、(co-first); Sicinski, K. M.; Zhao, Y.; Chen, K.; Arnold, F. H. Enzymatic Assembl展开。这些论文来自教师种子链路中的已验证论文记录，可用于支撑教师产出摘要。",
+            "duplicate_status": "deduplicated",
+            "excluded_paper_ids": [],
+            "exclusion_reasons": {},
+            "generation_method": "deterministic_synthesis",
+            "paper_ids": [
+              "PAPER-3168434A06C0",
+              "PAPER-90C7BB8D87CB",
+              "PAPER-1CEC63206D5E",
+              "PAPER-BE094C467B2C",
+              "PAPER-8B3E037F7359",
+              "PAPER-7A915C896252",
+              "PAPER-27A8127703F6",
+              "PAPER-DCAD70C70DC2",
+              "PAPER-44CBF382F545",
+              "PAPER-522F3068BD1B",
+              "PAPER-351DC9C83514",
+              "PAPER-0200644EC855",
+              "PAPER-6D226930BDD8",
+              "PAPER-1C013639BB76",
+              "PAPER-CBE6719ABC07",
+              "PAPER-C1FCC218121D",
+              "PAPER-1709E7D4DF1E"
+            ],
+            "source_page_provenance": [],
+            "verified_paper_ids": [
+              "PAPER-3168434A06C0",
+              "PAPER-90C7BB8D87CB",
+              "PAPER-1CEC63206D5E",
+              "PAPER-BE094C467B2C",
+              "PAPER-8B3E037F7359",
+              "PAPER-7A915C896252",
+              "PAPER-27A8127703F6",
+              "PAPER-DCAD70C70DC2",
+              "PAPER-44CBF382F545",
+              "PAPER-522F3068BD1B",
+              "PAPER-351DC9C83514",
+              "PAPER-0200644EC855",
+              "PAPER-6D226930BDD8",
+              "PAPER-1C013639BB76",
+              "PAPER-CBE6719ABC07",
+              "PAPER-C1FCC218121D",
+              "PAPER-1709E7D4DF1E"
+            ]
+          },
+          "write_recommendation": "review_before_write"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "professor_paper_summary_generation",
+          "paper_ids": [
+            "PAPER-95F58C725A47",
+            "PAPER-E81B524DBE9A",
+            "PAPER-41475376EEAD",
+            "PAPER-FCBD9BCCDC0F",
+            "PAPER-778945DAED5C",
+            "PAPER-5F533261EAAB",
+            "PAPER-E7BB7227689C",
+            "PAPER-D10B4C26BA15",
+            "PAPER-CABBCCF55930",
+            "PAPER-CDAD1336D5BF",
+            "PAPER-9AE8CFE5A23E",
+            "PAPER-2DE30479865D",
+            "PAPER-98989D12DA13",
+            "PAPER-A882E59E4BAB",
+            "PAPER-B29F0BB5CF94",
+            "PAPER-49B656D37F28",
+            "PAPER-BA2746895768",
+            "PAPER-25FEA49294B4",
+            "PAPER-91F239D4957D",
+            "PAPER-B79A30FAF4D8",
+            "PAPER-3FA4D675BC50",
+            "PAPER-623CDE9FDD45",
+            "PAPER-3038D1D8FAD6",
+            "PAPER-68257016E182",
+            "PAPER-7C00FC4C8E2B",
+            "PAPER-FC4CC09DAFCE",
+            "PAPER-DAC88338B2AF",
+            "PAPER-7B8053C27F96",
+            "PAPER-2416EE184C9B",
+            "PAPER-1D0A624B0697",
+            "PAPER-26CFC20E30C5",
+            "PAPER-D53C9E88BB28",
+            "PAPER-5978677FD2CD",
+            "PAPER-FA085AE46E88",
+            "PAPER-C4167FBF36FD",
+            "PAPER-8F713A63EAA7",
+            "PAPER-00EE9819380B",
+            "PAPER-FB2501B422E1",
+            "PAPER-87A9A7904306",
+            "PAPER-422BB0A74C2C",
+            "PAPER-EEF75F8024A2",
+            "PAPER-B9DD3C75A096",
+            "PAPER-F708F9B5F8F4",
+            "PAPER-201F84D4A9F6",
+            "PAPER-6DE951CDB913",
+            "PAPER-B139F520D11D",
+            "PAPER-407AF333EB24",
+            "PAPER-1E963CEDA38E",
+            "PAPER-494FC96BB471",
+            "PAPER-9107DFED5E9A"
+          ],
+          "professor_id": "PROF-0020741F0211",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "deterministic_synthesis",
+              "lane": "professor_paper_summary_generation",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_page_ids": [
+                "aaba80c0-1c38-4e3a-a649-2b128283873a"
+              ],
+              "validation_rules": [
+                "deduplicated_verified_paper_inputs"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_paper_summary": "何道敬的已验证论文围绕A Comprehensive Detection Method for the Lateral Movement Stage of APT Attacks、A Method for Detecting Phishing Websites Based on Tiny-Bert Stacking、Double-layer Detection of Internal Threat in Enterprise Systems Based on Deep Le展开。这些论文来自教师种子链路中的已验证论文记录，可用于支撑教师产出摘要。",
+            "duplicate_status": "deduplicated",
+            "excluded_paper_ids": [],
+            "exclusion_reasons": {},
+            "generation_method": "deterministic_synthesis",
+            "paper_ids": [
+              "PAPER-95F58C725A47",
+              "PAPER-E81B524DBE9A",
+              "PAPER-41475376EEAD",
+              "PAPER-FCBD9BCCDC0F",
+              "PAPER-778945DAED5C",
+              "PAPER-5F533261EAAB",
+              "PAPER-E7BB7227689C",
+              "PAPER-D10B4C26BA15",
+              "PAPER-CABBCCF55930",
+              "PAPER-CDAD1336D5BF",
+              "PAPER-9AE8CFE5A23E",
+              "PAPER-2DE30479865D",
+              "PAPER-98989D12DA13",
+              "PAPER-A882E59E4BAB",
+              "PAPER-B29F0BB5CF94",
+              "PAPER-49B656D37F28",
+              "PAPER-BA2746895768",
+              "PAPER-25FEA49294B4",
+              "PAPER-91F239D4957D",
+              "PAPER-B79A30FAF4D8",
+              "PAPER-3FA4D675BC50",
+              "PAPER-623CDE9FDD45",
+              "PAPER-3038D1D8FAD6",
+              "PAPER-68257016E182",
+              "PAPER-7C00FC4C8E2B",
+              "PAPER-FC4CC09DAFCE",
+              "PAPER-DAC88338B2AF",
+              "PAPER-7B8053C27F96",
+              "PAPER-2416EE184C9B",
+              "PAPER-1D0A624B0697",
+              "PAPER-26CFC20E30C5",
+              "PAPER-D53C9E88BB28",
+              "PAPER-5978677FD2CD",
+              "PAPER-FA085AE46E88",
+              "PAPER-C4167FBF36FD",
+              "PAPER-8F713A63EAA7",
+              "PAPER-00EE9819380B",
+              "PAPER-FB2501B422E1",
+              "PAPER-87A9A7904306",
+              "PAPER-422BB0A74C2C",
+              "PAPER-EEF75F8024A2",
+              "PAPER-B9DD3C75A096",
+              "PAPER-F708F9B5F8F4",
+              "PAPER-201F84D4A9F6",
+              "PAPER-6DE951CDB913",
+              "PAPER-B139F520D11D",
+              "PAPER-407AF333EB24",
+              "PAPER-1E963CEDA38E",
+              "PAPER-494FC96BB471",
+              "PAPER-9107DFED5E9A"
+            ],
+            "source_page_provenance": [
+              "aaba80c0-1c38-4e3a-a649-2b128283873a"
+            ],
+            "verified_paper_ids": [
+              "PAPER-95F58C725A47",
+              "PAPER-E81B524DBE9A",
+              "PAPER-41475376EEAD",
+              "PAPER-FCBD9BCCDC0F",
+              "PAPER-778945DAED5C",
+              "PAPER-5F533261EAAB",
+              "PAPER-E7BB7227689C",
+              "PAPER-D10B4C26BA15",
+              "PAPER-CABBCCF55930",
+              "PAPER-CDAD1336D5BF",
+              "PAPER-9AE8CFE5A23E",
+              "PAPER-2DE30479865D",
+              "PAPER-98989D12DA13",
+              "PAPER-A882E59E4BAB",
+              "PAPER-B29F0BB5CF94",
+              "PAPER-49B656D37F28",
+              "PAPER-BA2746895768",
+              "PAPER-25FEA49294B4",
+              "PAPER-91F239D4957D",
+              "PAPER-B79A30FAF4D8",
+              "PAPER-3FA4D675BC50",
+              "PAPER-623CDE9FDD45",
+              "PAPER-3038D1D8FAD6",
+              "PAPER-68257016E182",
+              "PAPER-7C00FC4C8E2B",
+              "PAPER-FC4CC09DAFCE",
+              "PAPER-DAC88338B2AF",
+              "PAPER-7B8053C27F96",
+              "PAPER-2416EE184C9B",
+              "PAPER-1D0A624B0697",
+              "PAPER-26CFC20E30C5",
+              "PAPER-D53C9E88BB28",
+              "PAPER-5978677FD2CD",
+              "PAPER-FA085AE46E88",
+              "PAPER-C4167FBF36FD",
+              "PAPER-8F713A63EAA7",
+              "PAPER-00EE9819380B",
+              "PAPER-FB2501B422E1",
+              "PAPER-87A9A7904306",
+              "PAPER-422BB0A74C2C",
+              "PAPER-EEF75F8024A2",
+              "PAPER-B9DD3C75A096",
+              "PAPER-F708F9B5F8F4",
+              "PAPER-201F84D4A9F6",
+              "PAPER-6DE951CDB913",
+              "PAPER-B139F520D11D",
+              "PAPER-407AF333EB24",
+              "PAPER-1E963CEDA38E",
+              "PAPER-494FC96BB471",
+              "PAPER-9107DFED5E9A"
+            ]
+          },
+          "write_recommendation": "auto_write_candidate"
+        }
+      ]
+    },
+    {
+      "affected_paper_ids": [
+        "PAPER-0923DBB68679",
+        "PAPER-193550DF616E",
+        "PAPER-35A2566F296D",
+        "PAPER-39FBE370CED6",
+        "PAPER-4F88A9FE7AAE",
+        "PAPER-55360CD68391",
+        "PAPER-8DF11ADC1E9B",
+        "PAPER-A06CD06C0EB7",
+        "PAPER-CC0FCC5198C5",
+        "PAPER-F39354DC03A0"
+      ],
+      "affected_professor_ids": [
+        "PROF-00248146798C",
+        "PROF-00270A689C15"
+      ],
+      "blocker_type": "duplicate_verified_paper_title_year_groups",
+      "candidate_count": 5,
+      "dataset_input_count": 5186,
+      "input_count": 5,
+      "lane": "duplicate_paper_merge",
+      "provider_failure_count": 0,
+      "provider_failures": [],
+      "rejections": [],
+      "samples": [
+        {
+          "candidate_status": "needs_review",
+          "duplicate_group_id": "PROF-00248146798C:2022:in-situgrowthofultrathinsulfurmicro-crystalonmxe",
+          "lane": "duplicate_paper_merge",
+          "paper_ids": [
+            "PAPER-39FBE370CED6",
+            "PAPER-CC0FCC5198C5"
+          ],
+          "professor_id": "PROF-00248146798C",
+          "quality_flags": [
+            "missing_source_page_provenance"
+          ],
+          "source_confidence": "weak",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "needs_review",
+              "duplicate_group_id": "PROF-00248146798C:2022:in-situgrowthofultrathinsulfurmicro-crystalonmxe",
+              "evidence_type": "doi_match",
+              "lane": "duplicate_paper_merge",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [
+                  "missing_source_page_provenance"
+                ],
+                "review_required": true,
+                "source_confidence": "weak"
+              },
+              "quality_flags": [
+                "missing_source_page_provenance"
+              ],
+              "source_confidence": "weak",
+              "validation_rules": [
+                "safe_identifier_or_author_supported_merge"
+              ],
+              "write_recommendation": "review_before_write"
+            },
+            "canonical_paper_id": "PAPER-39FBE370CED6",
+            "confidence": 0.99,
+            "evidence_type": "doi_match",
+            "merge_reason": "dataset_candidate_generation:doi_match",
+            "old_paper_ids": [
+              "PAPER-CC0FCC5198C5"
+            ],
+            "paper_ids": [
+              "PAPER-39FBE370CED6",
+              "PAPER-CC0FCC5198C5"
+            ],
+            "source_page_provenance": []
+          },
+          "write_recommendation": "review_before_write"
+        },
+        {
+          "candidate_status": "needs_review",
+          "duplicate_group_id": "PROF-00248146798C:2021:efficientreversibleconversionbetweenmos2andmo/na",
+          "lane": "duplicate_paper_merge",
+          "paper_ids": [
+            "PAPER-35A2566F296D",
+            "PAPER-4F88A9FE7AAE"
+          ],
+          "professor_id": "PROF-00248146798C",
+          "quality_flags": [
+            "missing_source_page_provenance"
+          ],
+          "source_confidence": "weak",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "needs_review",
+              "duplicate_group_id": "PROF-00248146798C:2021:efficientreversibleconversionbetweenmos2andmo/na",
+              "evidence_type": "doi_match",
+              "lane": "duplicate_paper_merge",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [
+                  "missing_source_page_provenance"
+                ],
+                "review_required": true,
+                "source_confidence": "weak"
+              },
+              "quality_flags": [
+                "missing_source_page_provenance"
+              ],
+              "source_confidence": "weak",
+              "validation_rules": [
+                "safe_identifier_or_author_supported_merge"
+              ],
+              "write_recommendation": "review_before_write"
+            },
+            "canonical_paper_id": "PAPER-4F88A9FE7AAE",
+            "confidence": 0.99,
+            "evidence_type": "doi_match",
+            "merge_reason": "dataset_candidate_generation:doi_match",
+            "old_paper_ids": [
+              "PAPER-35A2566F296D"
+            ],
+            "paper_ids": [
+              "PAPER-35A2566F296D",
+              "PAPER-4F88A9FE7AAE"
+            ],
+            "source_page_provenance": []
+          },
+          "write_recommendation": "review_before_write"
+        },
+        {
+          "candidate_status": "needs_review",
+          "duplicate_group_id": "PROF-00248146798C:2020:super-cooledliquidsulfurmaintainedinthree-dimens",
+          "lane": "duplicate_paper_merge",
+          "paper_ids": [
+            "PAPER-0923DBB68679",
+            "PAPER-F39354DC03A0"
+          ],
+          "professor_id": "PROF-00248146798C",
+          "quality_flags": [
+            "missing_source_page_provenance"
+          ],
+          "source_confidence": "weak",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "needs_review",
+              "duplicate_group_id": "PROF-00248146798C:2020:super-cooledliquidsulfurmaintainedinthree-dimens",
+              "evidence_type": "doi_match",
+              "lane": "duplicate_paper_merge",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [
+                  "missing_source_page_provenance"
+                ],
+                "review_required": true,
+                "source_confidence": "weak"
+              },
+              "quality_flags": [
+                "missing_source_page_provenance"
+              ],
+              "source_confidence": "weak",
+              "validation_rules": [
+                "safe_identifier_or_author_supported_merge"
+              ],
+              "write_recommendation": "review_before_write"
+            },
+            "canonical_paper_id": "PAPER-0923DBB68679",
+            "confidence": 0.99,
+            "evidence_type": "doi_match",
+            "merge_reason": "dataset_candidate_generation:doi_match",
+            "old_paper_ids": [
+              "PAPER-F39354DC03A0"
+            ],
+            "paper_ids": [
+              "PAPER-0923DBB68679",
+              "PAPER-F39354DC03A0"
+            ],
+            "source_page_provenance": []
+          },
+          "write_recommendation": "review_before_write"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": "PROF-00270A689C15:2025:abithiopheneimide-basedpolymerdonorforalloy-like",
+          "lane": "duplicate_paper_merge",
+          "paper_ids": [
+            "PAPER-193550DF616E",
+            "PAPER-A06CD06C0EB7"
+          ],
+          "professor_id": "PROF-00270A689C15",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "duplicate_group_id": "PROF-00270A689C15:2025:abithiopheneimide-basedpolymerdonorforalloy-like",
+              "evidence_type": "doi_match",
+              "lane": "duplicate_paper_merge",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "validation_rules": [
+                "safe_identifier_or_author_supported_merge"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "canonical_paper_id": "PAPER-A06CD06C0EB7",
+            "confidence": 0.99,
+            "evidence_type": "doi_match",
+            "merge_reason": "dataset_candidate_generation:doi_match",
+            "old_paper_ids": [
+              "PAPER-193550DF616E"
+            ],
+            "paper_ids": [
+              "PAPER-193550DF616E",
+              "PAPER-A06CD06C0EB7"
+            ],
+            "source_page_provenance": [
+              "dcb697ea-a710-46a3-b559-bc469e383e7d"
+            ]
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": "PROF-00270A689C15:2025:three-dimensionalbowl-shapedsolidadditiveachieve",
+          "lane": "duplicate_paper_merge",
+          "paper_ids": [
+            "PAPER-55360CD68391",
+            "PAPER-8DF11ADC1E9B"
+          ],
+          "professor_id": "PROF-00270A689C15",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "duplicate_group_id": "PROF-00270A689C15:2025:three-dimensionalbowl-shapedsolidadditiveachieve",
+              "evidence_type": "doi_match",
+              "lane": "duplicate_paper_merge",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "validation_rules": [
+                "safe_identifier_or_author_supported_merge"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "canonical_paper_id": "PAPER-55360CD68391",
+            "confidence": 0.99,
+            "evidence_type": "doi_match",
+            "merge_reason": "dataset_candidate_generation:doi_match",
+            "old_paper_ids": [
+              "PAPER-8DF11ADC1E9B"
+            ],
+            "paper_ids": [
+              "PAPER-55360CD68391",
+              "PAPER-8DF11ADC1E9B"
+            ],
+            "source_page_provenance": [
+              "dcb697ea-a710-46a3-b559-bc469e383e7d"
+            ]
+          },
+          "write_recommendation": "auto_write_candidate"
+        }
+      ],
+      "skipped_count": 0,
+      "validation_failure_count": 0,
+      "validation_failures": [],
+      "validation_rules": [
+        "safe_identifier_or_author_supported_merge"
+      ],
+      "write_evidence_rows": [
+        {
+          "candidate_status": "needs_review",
+          "duplicate_group_id": "PROF-00248146798C:2022:in-situgrowthofultrathinsulfurmicro-crystalonmxe",
+          "lane": "duplicate_paper_merge",
+          "paper_ids": [
+            "PAPER-39FBE370CED6",
+            "PAPER-CC0FCC5198C5"
+          ],
+          "professor_id": "PROF-00248146798C",
+          "quality_flags": [
+            "missing_source_page_provenance"
+          ],
+          "source_confidence": "weak",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "needs_review",
+              "duplicate_group_id": "PROF-00248146798C:2022:in-situgrowthofultrathinsulfurmicro-crystalonmxe",
+              "evidence_type": "doi_match",
+              "lane": "duplicate_paper_merge",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [
+                  "missing_source_page_provenance"
+                ],
+                "review_required": true,
+                "source_confidence": "weak"
+              },
+              "quality_flags": [
+                "missing_source_page_provenance"
+              ],
+              "source_confidence": "weak",
+              "validation_rules": [
+                "safe_identifier_or_author_supported_merge"
+              ],
+              "write_recommendation": "review_before_write"
+            },
+            "canonical_paper_id": "PAPER-39FBE370CED6",
+            "confidence": 0.99,
+            "evidence_type": "doi_match",
+            "merge_reason": "dataset_candidate_generation:doi_match",
+            "old_paper_ids": [
+              "PAPER-CC0FCC5198C5"
+            ],
+            "paper_ids": [
+              "PAPER-39FBE370CED6",
+              "PAPER-CC0FCC5198C5"
+            ],
+            "source_page_provenance": []
+          },
+          "write_recommendation": "review_before_write"
+        },
+        {
+          "candidate_status": "needs_review",
+          "duplicate_group_id": "PROF-00248146798C:2021:efficientreversibleconversionbetweenmos2andmo/na",
+          "lane": "duplicate_paper_merge",
+          "paper_ids": [
+            "PAPER-35A2566F296D",
+            "PAPER-4F88A9FE7AAE"
+          ],
+          "professor_id": "PROF-00248146798C",
+          "quality_flags": [
+            "missing_source_page_provenance"
+          ],
+          "source_confidence": "weak",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "needs_review",
+              "duplicate_group_id": "PROF-00248146798C:2021:efficientreversibleconversionbetweenmos2andmo/na",
+              "evidence_type": "doi_match",
+              "lane": "duplicate_paper_merge",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [
+                  "missing_source_page_provenance"
+                ],
+                "review_required": true,
+                "source_confidence": "weak"
+              },
+              "quality_flags": [
+                "missing_source_page_provenance"
+              ],
+              "source_confidence": "weak",
+              "validation_rules": [
+                "safe_identifier_or_author_supported_merge"
+              ],
+              "write_recommendation": "review_before_write"
+            },
+            "canonical_paper_id": "PAPER-4F88A9FE7AAE",
+            "confidence": 0.99,
+            "evidence_type": "doi_match",
+            "merge_reason": "dataset_candidate_generation:doi_match",
+            "old_paper_ids": [
+              "PAPER-35A2566F296D"
+            ],
+            "paper_ids": [
+              "PAPER-35A2566F296D",
+              "PAPER-4F88A9FE7AAE"
+            ],
+            "source_page_provenance": []
+          },
+          "write_recommendation": "review_before_write"
+        },
+        {
+          "candidate_status": "needs_review",
+          "duplicate_group_id": "PROF-00248146798C:2020:super-cooledliquidsulfurmaintainedinthree-dimens",
+          "lane": "duplicate_paper_merge",
+          "paper_ids": [
+            "PAPER-0923DBB68679",
+            "PAPER-F39354DC03A0"
+          ],
+          "professor_id": "PROF-00248146798C",
+          "quality_flags": [
+            "missing_source_page_provenance"
+          ],
+          "source_confidence": "weak",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "needs_review",
+              "duplicate_group_id": "PROF-00248146798C:2020:super-cooledliquidsulfurmaintainedinthree-dimens",
+              "evidence_type": "doi_match",
+              "lane": "duplicate_paper_merge",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [
+                  "missing_source_page_provenance"
+                ],
+                "review_required": true,
+                "source_confidence": "weak"
+              },
+              "quality_flags": [
+                "missing_source_page_provenance"
+              ],
+              "source_confidence": "weak",
+              "validation_rules": [
+                "safe_identifier_or_author_supported_merge"
+              ],
+              "write_recommendation": "review_before_write"
+            },
+            "canonical_paper_id": "PAPER-0923DBB68679",
+            "confidence": 0.99,
+            "evidence_type": "doi_match",
+            "merge_reason": "dataset_candidate_generation:doi_match",
+            "old_paper_ids": [
+              "PAPER-F39354DC03A0"
+            ],
+            "paper_ids": [
+              "PAPER-0923DBB68679",
+              "PAPER-F39354DC03A0"
+            ],
+            "source_page_provenance": []
+          },
+          "write_recommendation": "review_before_write"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": "PROF-00270A689C15:2025:abithiopheneimide-basedpolymerdonorforalloy-like",
+          "lane": "duplicate_paper_merge",
+          "paper_ids": [
+            "PAPER-193550DF616E",
+            "PAPER-A06CD06C0EB7"
+          ],
+          "professor_id": "PROF-00270A689C15",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "duplicate_group_id": "PROF-00270A689C15:2025:abithiopheneimide-basedpolymerdonorforalloy-like",
+              "evidence_type": "doi_match",
+              "lane": "duplicate_paper_merge",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "validation_rules": [
+                "safe_identifier_or_author_supported_merge"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "canonical_paper_id": "PAPER-A06CD06C0EB7",
+            "confidence": 0.99,
+            "evidence_type": "doi_match",
+            "merge_reason": "dataset_candidate_generation:doi_match",
+            "old_paper_ids": [
+              "PAPER-193550DF616E"
+            ],
+            "paper_ids": [
+              "PAPER-193550DF616E",
+              "PAPER-A06CD06C0EB7"
+            ],
+            "source_page_provenance": [
+              "dcb697ea-a710-46a3-b559-bc469e383e7d"
+            ]
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": "PROF-00270A689C15:2025:three-dimensionalbowl-shapedsolidadditiveachieve",
+          "lane": "duplicate_paper_merge",
+          "paper_ids": [
+            "PAPER-55360CD68391",
+            "PAPER-8DF11ADC1E9B"
+          ],
+          "professor_id": "PROF-00270A689C15",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "duplicate_group_id": "PROF-00270A689C15:2025:three-dimensionalbowl-shapedsolidadditiveachieve",
+              "evidence_type": "doi_match",
+              "lane": "duplicate_paper_merge",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "validation_rules": [
+                "safe_identifier_or_author_supported_merge"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "canonical_paper_id": "PAPER-55360CD68391",
+            "confidence": 0.99,
+            "evidence_type": "doi_match",
+            "merge_reason": "dataset_candidate_generation:doi_match",
+            "old_paper_ids": [
+              "PAPER-8DF11ADC1E9B"
+            ],
+            "paper_ids": [
+              "PAPER-55360CD68391",
+              "PAPER-8DF11ADC1E9B"
+            ],
+            "source_page_provenance": [
+              "dcb697ea-a710-46a3-b559-bc469e383e7d"
+            ]
+          },
+          "write_recommendation": "auto_write_candidate"
+        }
+      ]
+    }
+  ],
+  "mode": "candidate_dry_run",
+  "selection_hash": "96f490cbe3bff9cd93a563b0d42bd6ad6f7f0d287260d948b5b1328d1a0a8515",
+  "write_allowed": false
+}

@@ -1,0 +1,735 @@
+{
+  "bucket_limit": 12,
+  "closure_selection_hash": "cc8323a13571750ef29516c8a94503248f8d41a06420f08666e76b9e576514f3",
+  "dry_run": true,
+  "lanes": [
+    {
+      "affected_paper_ids": [],
+      "affected_professor_ids": [
+        "PROF-000003A9EBC4",
+        "PROF-000E83C9344A",
+        "PROF-0012FFC9DEC2",
+        "PROF-00248146798C",
+        "PROF-00270A689C15",
+        "PROF-003D52902276",
+        "PROF-005611CCF89B",
+        "PROF-007C408A3774",
+        "PROF-00A4BD7F1847",
+        "PROF-00A5D80185EA",
+        "PROF-00CBEBBC3874",
+        "PROF-00F2A236E5F4"
+      ],
+      "blocker_type": "missing_research_overview_zh",
+      "candidate_count": 12,
+      "dataset_input_count": 2510,
+      "input_count": 12,
+      "lane": "research_overview_backfill",
+      "provider_failure_count": 0,
+      "provider_failures": [],
+      "rejections": [],
+      "samples": [
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-000003A9EBC4",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "6f87ba42db14d13040a01925383c6b552601213ba9cadf16a05b61a1c404e8a1",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "超分辨成像、计算光学成像、定量相位成像",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "超分辨成像、计算光学成像、定量相位成像",
+            "source_language": "zh",
+            "source_span": "超分辨成像、计算光学成像、定量相位成像",
+            "source_text_hash": "6f87ba42db14d13040a01925383c6b552601213ba9cadf16a05b61a1c404e8a1"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-000E83C9344A",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "81bc4a8a9db18db2525c817222e0a50c79331e1fb94a027c2d4645a0f077e902",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "1、大学体育课程与教学改革 2、篮球教学与训练 3、体育政策与体育产业 二、",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "1、大学体育课程与教学改革 2、篮球教学与训练 3、体育政策与体育产业 二、",
+            "source_language": "zh",
+            "source_span": "1、大学体育课程与教学改革 2、篮球教学与训练 3、体育政策与体育产业 二、",
+            "source_text_hash": "81bc4a8a9db18db2525c817222e0a50c79331e1fb94a027c2d4645a0f077e902"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-0012FFC9DEC2",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "e9accc6c0b5b6226ee6dc8b14651212951ad3ede435d21ba4b33e14c1171eb99",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "金属酶是自然界中至关重要的分子机器，维系着生命和环境的正常运转，例如固氮酶催化氮气固定、细胞色素 P450 参与药物代谢、以及超氧化物歧化酶清除活性氧。虽然它们在自然界中展现出极高的催化效率，但其非天然功能的潜力尚未被充分挖掘，仍有待更广泛地造福人类社会。通过定向进化等手段对金属酶进行重塑，我们不仅有望实现药物、农药和精细化工产品的绿色合成，还能实现对蛋白质等大分子的快速、精准修饰，从而推动生物医药、食品和化工等领域的深刻变革。毛润泽博士实验室通过整合化学、生物学与人工智能，致力于开发创新的生物催化策略，解决合成、催化和生物分子工程中的重大挑战。通过结合合成化学、合成生物学、计算化学和计算生物学的跨学科方法，我们旨在重新设计并扩展自然的生物合成法则，开拓未知的催化反应空间。 毛润泽博士已在酶催化及合成领域发表高水平学术",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "金属酶是自然界中至关重要的分子机器，维系着生命和环境的正常运转，例如固氮酶催化氮气固定、细胞色素 P450 参与药物代谢、以及超氧化物歧化酶清除活性氧。虽然它们在自然界中展现出极高的催化效率，但其非天然功能的潜力尚未被充分挖掘，仍有待更广泛地造福人类社会。通过定向进化等手段对金属酶进行重塑，我们不仅有望实现药物、农药和精细化工产品的绿色合成，还能实现对蛋白质等大分子的快速、精准修饰，从而推动生物医药、食品和化工等领域的深刻变革。毛润泽博士实验室通过整合化学、生物学与人工智能，致力于开发创新的生物催化策略，解决合成、催化和生物分子工程中的重大挑战。通过结合合成化学、合成生物学、计算化学和计算生物学的跨学科方法，我们旨在重新设计并扩展自然的生物合成法则，开拓未知的催化反应空间。 毛润泽博士已在酶催化及合成领域发表高水平学术",
+            "source_language": "zh",
+            "source_span": "金属酶是自然界中至关重要的分子机器，维系着生命和环境的正常运转，例如固氮酶催化氮气固定、细胞色素 P450 参与药物代谢、以及超氧化物歧化酶清除活性氧。虽然它们在自然界中展现出极高的催化效率，但其非天然功能的潜力尚未被充分挖掘，仍有待更广泛地造福人类社会。通过定向进化等手段对金属酶进行重塑，我们不仅有望实现药物、农药和精细化工产品的绿色合成，还能实现对蛋白质等大分子的快速、精准修饰，从而推动生物医药、食品和化工等领域的深刻变革。毛润泽博士实验室通过整合化学、生物学与人工智能，致力于开发创新的生物催化策略，解决合成、催化和生物分子工程中的重大挑战。通过结合合成化学、合成生物学、计算化学和计算生物学的跨学科方法，我们旨在重新设计并扩展自然的生物合成法则，开拓未知的催化反应空间。 毛润泽博士已在酶催化及合成领域发表高水平学术",
+            "source_text_hash": "e9accc6c0b5b6226ee6dc8b14651212951ad3ede435d21ba4b33e14c1171eb99"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-00248146798C",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "ed40d019056eae27b21c7b6931afc4ab0aa3567261754dd3173ebf8b7d0910ba",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "为电化学储能材料 及 器件 与电池回收 ，已",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "为电化学储能材料 及 器件 与电池回收 ，已",
+            "source_language": "zh",
+            "source_span": "为电化学储能材料 及 器件 与电池回收 ，已",
+            "source_text_hash": "ed40d019056eae27b21c7b6931afc4ab0aa3567261754dd3173ebf8b7d0910ba"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-00270A689C15",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "4609637b1bdd341ecd458877eaf3f1e6ae5a3e44fb33c9a455e3b88b3c0982f2",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "有机/高分子半导体材料与器件应用研究 电子器件物理机制解析与关键技术探索 微纳器件制备方法及其集成工艺研究 科研",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "有机/高分子半导体材料与器件应用研究 电子器件物理机制解析与关键技术探索 微纳器件制备方法及其集成工艺研究 科研",
+            "source_language": "zh",
+            "source_span": "有机/高分子半导体材料与器件应用研究 电子器件物理机制解析与关键技术探索 微纳器件制备方法及其集成工艺研究 科研",
+            "source_text_hash": "4609637b1bdd341ecd458877eaf3f1e6ae5a3e44fb33c9a455e3b88b3c0982f2"
+          },
+          "write_recommendation": "auto_write_candidate"
+        }
+      ],
+      "skipped_count": 0,
+      "validation_failure_count": 0,
+      "validation_failures": [],
+      "validation_rules": [
+        "research_overview_zh_source_grounded"
+      ],
+      "write_evidence_rows": [
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-000003A9EBC4",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "6f87ba42db14d13040a01925383c6b552601213ba9cadf16a05b61a1c404e8a1",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "超分辨成像、计算光学成像、定量相位成像",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "超分辨成像、计算光学成像、定量相位成像",
+            "source_language": "zh",
+            "source_span": "超分辨成像、计算光学成像、定量相位成像",
+            "source_text_hash": "6f87ba42db14d13040a01925383c6b552601213ba9cadf16a05b61a1c404e8a1"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-000E83C9344A",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "81bc4a8a9db18db2525c817222e0a50c79331e1fb94a027c2d4645a0f077e902",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "1、大学体育课程与教学改革 2、篮球教学与训练 3、体育政策与体育产业 二、",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "1、大学体育课程与教学改革 2、篮球教学与训练 3、体育政策与体育产业 二、",
+            "source_language": "zh",
+            "source_span": "1、大学体育课程与教学改革 2、篮球教学与训练 3、体育政策与体育产业 二、",
+            "source_text_hash": "81bc4a8a9db18db2525c817222e0a50c79331e1fb94a027c2d4645a0f077e902"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-0012FFC9DEC2",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "e9accc6c0b5b6226ee6dc8b14651212951ad3ede435d21ba4b33e14c1171eb99",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "金属酶是自然界中至关重要的分子机器，维系着生命和环境的正常运转，例如固氮酶催化氮气固定、细胞色素 P450 参与药物代谢、以及超氧化物歧化酶清除活性氧。虽然它们在自然界中展现出极高的催化效率，但其非天然功能的潜力尚未被充分挖掘，仍有待更广泛地造福人类社会。通过定向进化等手段对金属酶进行重塑，我们不仅有望实现药物、农药和精细化工产品的绿色合成，还能实现对蛋白质等大分子的快速、精准修饰，从而推动生物医药、食品和化工等领域的深刻变革。毛润泽博士实验室通过整合化学、生物学与人工智能，致力于开发创新的生物催化策略，解决合成、催化和生物分子工程中的重大挑战。通过结合合成化学、合成生物学、计算化学和计算生物学的跨学科方法，我们旨在重新设计并扩展自然的生物合成法则，开拓未知的催化反应空间。 毛润泽博士已在酶催化及合成领域发表高水平学术",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "金属酶是自然界中至关重要的分子机器，维系着生命和环境的正常运转，例如固氮酶催化氮气固定、细胞色素 P450 参与药物代谢、以及超氧化物歧化酶清除活性氧。虽然它们在自然界中展现出极高的催化效率，但其非天然功能的潜力尚未被充分挖掘，仍有待更广泛地造福人类社会。通过定向进化等手段对金属酶进行重塑，我们不仅有望实现药物、农药和精细化工产品的绿色合成，还能实现对蛋白质等大分子的快速、精准修饰，从而推动生物医药、食品和化工等领域的深刻变革。毛润泽博士实验室通过整合化学、生物学与人工智能，致力于开发创新的生物催化策略，解决合成、催化和生物分子工程中的重大挑战。通过结合合成化学、合成生物学、计算化学和计算生物学的跨学科方法，我们旨在重新设计并扩展自然的生物合成法则，开拓未知的催化反应空间。 毛润泽博士已在酶催化及合成领域发表高水平学术",
+            "source_language": "zh",
+            "source_span": "金属酶是自然界中至关重要的分子机器，维系着生命和环境的正常运转，例如固氮酶催化氮气固定、细胞色素 P450 参与药物代谢、以及超氧化物歧化酶清除活性氧。虽然它们在自然界中展现出极高的催化效率，但其非天然功能的潜力尚未被充分挖掘，仍有待更广泛地造福人类社会。通过定向进化等手段对金属酶进行重塑，我们不仅有望实现药物、农药和精细化工产品的绿色合成，还能实现对蛋白质等大分子的快速、精准修饰，从而推动生物医药、食品和化工等领域的深刻变革。毛润泽博士实验室通过整合化学、生物学与人工智能，致力于开发创新的生物催化策略，解决合成、催化和生物分子工程中的重大挑战。通过结合合成化学、合成生物学、计算化学和计算生物学的跨学科方法，我们旨在重新设计并扩展自然的生物合成法则，开拓未知的催化反应空间。 毛润泽博士已在酶催化及合成领域发表高水平学术",
+            "source_text_hash": "e9accc6c0b5b6226ee6dc8b14651212951ad3ede435d21ba4b33e14c1171eb99"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-00248146798C",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "ed40d019056eae27b21c7b6931afc4ab0aa3567261754dd3173ebf8b7d0910ba",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "为电化学储能材料 及 器件 与电池回收 ，已",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "为电化学储能材料 及 器件 与电池回收 ，已",
+            "source_language": "zh",
+            "source_span": "为电化学储能材料 及 器件 与电池回收 ，已",
+            "source_text_hash": "ed40d019056eae27b21c7b6931afc4ab0aa3567261754dd3173ebf8b7d0910ba"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-00270A689C15",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "4609637b1bdd341ecd458877eaf3f1e6ae5a3e44fb33c9a455e3b88b3c0982f2",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "有机/高分子半导体材料与器件应用研究 电子器件物理机制解析与关键技术探索 微纳器件制备方法及其集成工艺研究 科研",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "有机/高分子半导体材料与器件应用研究 电子器件物理机制解析与关键技术探索 微纳器件制备方法及其集成工艺研究 科研",
+            "source_language": "zh",
+            "source_span": "有机/高分子半导体材料与器件应用研究 电子器件物理机制解析与关键技术探索 微纳器件制备方法及其集成工艺研究 科研",
+            "source_text_hash": "4609637b1bdd341ecd458877eaf3f1e6ae5a3e44fb33c9a455e3b88b3c0982f2"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-003D52902276",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "034f1f032b511b4b59b57b5a8119ecef27e036a7f856d8797cd519fc840fedce",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "包括机器学习、智慧医疗、无人自主系统、形式化方法等。曾获广东省学校优秀教学成果奖特等奖 1 项，广东省计算机学会高等教育教学成果奖一等奖、二等奖各 1 项。现为中国生物医学工程学会高级会员， SCI 期刊《 Computers, Materials & Continua 》编委。 二、科研",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "包括机器学习、智慧医疗、无人自主系统、形式化方法等。曾获广东省学校优秀教学成果奖特等奖 1 项，广东省计算机学会高等教育教学成果奖一等奖、二等奖各 1 项。现为中国生物医学工程学会高级会员， SCI 期刊《 Computers, Materials & Continua 》编委。 二、科研",
+            "source_language": "zh",
+            "source_span": "包括机器学习、智慧医疗、无人自主系统、形式化方法等。曾获广东省学校优秀教学成果奖特等奖 1 项，广东省计算机学会高等教育教学成果奖一等奖、二等奖各 1 项。现为中国生物医学工程学会高级会员， SCI 期刊《 Computers, Materials & Continua 》编委。 二、科研",
+            "source_text_hash": "034f1f032b511b4b59b57b5a8119ecef27e036a7f856d8797cd519fc840fedce"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-005611CCF89B",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "e68a4bf93b068a70af188daa47ad2581d09ec83b07c4db8128b52ca6704c30ee",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "1. 不对称催化与有机合成 2. 螺旋电子理论 3. 高分子合成(ROMP) 课题组以螺旋电子理论为基础，力求通过手性配体和手性催化剂的精准设计，高效实现相关手性催化过程；详细研究这些转化中手性传递和手性识别的机制和相应的递导规律，阐明官能团电子极化率与手性选择性之间的本质关系，并通过发展的不对称催化体系进行有机小分子的合成研究和高分子合成研究。 学术成果 主要从事电子效应与分子手性内在本质关联的研究，系我国原创性从0到1的研究工作，同时也是深圳格拉布斯研究院的特色研究工作之一，由此产生的手性自复制催化等子课题是揭示生命体手性起源的关键渠道。在南科大工作期间（2018-2021）以第一作者/通讯作者已发表6篇学术",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "1. 不对称催化与有机合成 2. 螺旋电子理论 3. 高分子合成(ROMP) 课题组以螺旋电子理论为基础，力求通过手性配体和手性催化剂的精准设计，高效实现相关手性催化过程；详细研究这些转化中手性传递和手性识别的机制和相应的递导规律，阐明官能团电子极化率与手性选择性之间的本质关系，并通过发展的不对称催化体系进行有机小分子的合成研究和高分子合成研究。 学术成果 主要从事电子效应与分子手性内在本质关联的研究，系我国原创性从0到1的研究工作，同时也是深圳格拉布斯研究院的特色研究工作之一，由此产生的手性自复制催化等子课题是揭示生命体手性起源的关键渠道。在南科大工作期间（2018-2021）以第一作者/通讯作者已发表6篇学术",
+            "source_language": "zh",
+            "source_span": "1. 不对称催化与有机合成 2. 螺旋电子理论 3. 高分子合成(ROMP) 课题组以螺旋电子理论为基础，力求通过手性配体和手性催化剂的精准设计，高效实现相关手性催化过程；详细研究这些转化中手性传递和手性识别的机制和相应的递导规律，阐明官能团电子极化率与手性选择性之间的本质关系，并通过发展的不对称催化体系进行有机小分子的合成研究和高分子合成研究。 学术成果 主要从事电子效应与分子手性内在本质关联的研究，系我国原创性从0到1的研究工作，同时也是深圳格拉布斯研究院的特色研究工作之一，由此产生的手性自复制催化等子课题是揭示生命体手性起源的关键渠道。在南科大工作期间（2018-2021）以第一作者/通讯作者已发表6篇学术",
+            "source_text_hash": "e68a4bf93b068a70af188daa47ad2581d09ec83b07c4db8128b52ca6704c30ee"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-007C408A3774",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "757743ed386aa68bb9e1274f767206267088a55b767a965ba153b8fd41aeb3ae",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "先进核能材料的腐蚀和力学损伤失效机理",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "先进核能材料的腐蚀和力学损伤失效机理",
+            "source_language": "zh",
+            "source_span": "先进核能材料的腐蚀和力学损伤失效机理",
+            "source_text_hash": "757743ed386aa68bb9e1274f767206267088a55b767a965ba153b8fd41aeb3ae"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-00A4BD7F1847",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "7c011140220a62ec602690a35cf5da4ac83e17d67e225c6279596007dc9d4ea7",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "电解水制氢（OER,HER,ORR） 电催化氧化生物质升级耦合制氢 高熵合金、非晶催化材料的设计与改性 人工智能、机器学习设计固态电解质 代表文章 Zheng-Jie Chen # , Qiting Shao # , Jiajing Wu, Jian Zheng, Shida Bao, Lili Zhang, Tao Zhang, Xuexia Lan, Yuanmiao Sun, Dawei Wang, Jing Peng*, Hui-Ming Cheng*. Angew. Chem. Int. Ed. 2025, e202500678 Zheng-Jie Chen # , Xiaoning Li, Hao Ma, Yuwei Zhang, Jing Peng*, Tianyi Ma, Zhenxiang Cheng, Jose Gracia, Yuanmiao Sun*, Zhichuan J Xu*; Natl. Sci. Rev., 2024, 11(9), nwae314 Zheng-Jie Chen # ; Dong Jiuyi # ; Wu Jiajing # ; Shao, Qiting; Luo, Na; Xu, Minwei; Sun, Yuanmiao; Tang, Yongbing; Jing Peng*; Hui-Ming, Cheng*； Nature Communications 2023 , 14 (1), 4210. Zheng-Jie Chen # ; Tao Zhang # ; Xiao-Yu Gao; Yong-Jiang Huang; Xiao-Hui Qin; Yi-Fan Wang; Kai Zhao; Xu Peng; Cheng Zhang; Lin Liu; Ming-Hua Zeng; Han-Bin Yu; Advanced Materials , 2021 ,33(33), 2101845. Ruikai Qi, Linfeng Zhang, Siyu Ren, Bingyan Shi, Mengxiao Zhong*, Zheng-Jie Chen* , and Xiaofeng Lu*, Nano Lett. 2024 , 24 (29), 8964-8972 Zheng-Jie Chen # ; Tao Zhang # ; Jiajing Wu; Xinchun Yang; Yongping Zheng; Yongbing Tang; Hai-Bin Yu*; Jing Peng*; Hui-Ming Cheng*; Science China Materials . 2024 , 67(2): 598–607 Wu, Jiajing and Bao, Shida and Jiang, Shan and Shao, Qiting and Lan, Xuexia and Zhang, Tao and Yan, Xiao and Yang, Zhi and Chai, Chengliang and Chen Zhengjie*, Peng Jing* . Inorg. Chem. Front. 2025. 10.1039/D5QI00121H Wei Lian # , Zheng-Jie Chen # , Haoyang Mo, Qiuyu Zhu, Jie Wu, Xian Zhang, Shaoxian Song, Feifei Jia; J Colloid Interface Sci, 2025, 683, 291–300 Zheng-Jie Chen # ; Jue-Xian Cao; Li-Wen Yang; Wen-Jin Yin; Xiao-Lin Wei*; Journal of Physics D: Applied Physics , 2018 , 51(26), 265106. Jing Peng, Zheng-Jie Chen , Baofu. Ding, Hui-Ming Cheng*, Research , 2023 , 6, 0040. Di Ouyang; Zheng-Jie Chen ; Hai-Bin Yu; K.C. Chan; Lin Liu; Corrosion Science , 2022 , 198,110153.",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "电解水制氢（OER,HER,ORR） 电催化氧化生物质升级耦合制氢 高熵合金、非晶催化材料的设计与改性 人工智能、机器学习设计固态电解质 代表文章 Zheng-Jie Chen # , Qiting Shao # , Jiajing Wu, Jian Zheng, Shida Bao, Lili Zhang, Tao Zhang, Xuexia Lan, Yuanmiao Sun, Dawei Wang, Jing Peng*, Hui-Ming Cheng*. Angew. Chem. Int. Ed. 2025, e202500678 Zheng-Jie Chen # , Xiaoning Li, Hao Ma, Yuwei Zhang, Jing Peng*, Tianyi Ma, Zhenxiang Cheng, Jose Gracia, Yuanmiao Sun*, Zhichuan J Xu*; Natl. Sci. Rev., 2024, 11(9), nwae314 Zheng-Jie Chen # ; Dong Jiuyi # ; Wu Jiajing # ; Shao, Qiting; Luo, Na; Xu, Minwei; Sun, Yuanmiao; Tang, Yongbing; Jing Peng*; Hui-Ming, Cheng*； Nature Communications 2023 , 14 (1), 4210. Zheng-Jie Chen # ; Tao Zhang # ; Xiao-Yu Gao; Yong-Jiang Huang; Xiao-Hui Qin; Yi-Fan Wang; Kai Zhao; Xu Peng; Cheng Zhang; Lin Liu; Ming-Hua Zeng; Han-Bin Yu; Advanced Materials , 2021 ,33(33), 2101845. Ruikai Qi, Linfeng Zhang, Siyu Ren, Bingyan Shi, Mengxiao Zhong*, Zheng-Jie Chen* , and Xiaofeng Lu*, Nano Lett. 2024 , 24 (29), 8964-8972 Zheng-Jie Chen # ; Tao Zhang # ; Jiajing Wu; Xinchun Yang; Yongping Zheng; Yongbing Tang; Hai-Bin Yu*; Jing Peng*; Hui-Ming Cheng*; Science China Materials . 2024 , 67(2): 598–607 Wu, Jiajing and Bao, Shida and Jiang, Shan and Shao, Qiting and Lan, Xuexia and Zhang, Tao and Yan, Xiao and Yang, Zhi and Chai, Chengliang and Chen Zhengjie*, Peng Jing* . Inorg. Chem. Front. 2025. 10.1039/D5QI00121H Wei Lian # , Zheng-Jie Chen # , Haoyang Mo, Qiuyu Zhu, Jie Wu, Xian Zhang, Shaoxian Song, Feifei Jia; J Colloid Interface Sci, 2025, 683, 291–300 Zheng-Jie Chen # ; Jue-Xian Cao; Li-Wen Yang; Wen-Jin Yin; Xiao-Lin Wei*; Journal of Physics D: Applied Physics , 2018 , 51(26), 265106. Jing Peng, Zheng-Jie Chen , Baofu. Ding, Hui-Ming Cheng*, Research , 2023 , 6, 0040. Di Ouyang; Zheng-Jie Chen ; Hai-Bin Yu; K.C. Chan; Lin Liu; Corrosion Science , 2022 , 198,110153.",
+            "source_language": "zh",
+            "source_span": "电解水制氢（OER,HER,ORR） 电催化氧化生物质升级耦合制氢 高熵合金、非晶催化材料的设计与改性 人工智能、机器学习设计固态电解质 代表文章 Zheng-Jie Chen # , Qiting Shao # , Jiajing Wu, Jian Zheng, Shida Bao, Lili Zhang, Tao Zhang, Xuexia Lan, Yuanmiao Sun, Dawei Wang, Jing Peng*, Hui-Ming Cheng*. Angew. Chem. Int. Ed. 2025, e202500678 Zheng-Jie Chen # , Xiaoning Li, Hao Ma, Yuwei Zhang, Jing Peng*, Tianyi Ma, Zhenxiang Cheng, Jose Gracia, Yuanmiao Sun*, Zhichuan J Xu*; Natl. Sci. Rev., 2024, 11(9), nwae314 Zheng-Jie Chen # ; Dong Jiuyi # ; Wu Jiajing # ; Shao, Qiting; Luo, Na; Xu, Minwei; Sun, Yuanmiao; Tang, Yongbing; Jing Peng*; Hui-Ming, Cheng*； Nature Communications 2023 , 14 (1), 4210. Zheng-Jie Chen # ; Tao Zhang # ; Xiao-Yu Gao; Yong-Jiang Huang; Xiao-Hui Qin; Yi-Fan Wang; Kai Zhao; Xu Peng; Cheng Zhang; Lin Liu; Ming-Hua Zeng; Han-Bin Yu; Advanced Materials , 2021 ,33(33), 2101845. Ruikai Qi, Linfeng Zhang, Siyu Ren, Bingyan Shi, Mengxiao Zhong*, Zheng-Jie Chen* , and Xiaofeng Lu*, Nano Lett. 2024 , 24 (29), 8964-8972 Zheng-Jie Chen # ; Tao Zhang # ; Jiajing Wu; Xinchun Yang; Yongping Zheng; Yongbing Tang; Hai-Bin Yu*; Jing Peng*; Hui-Ming Cheng*; Science China Materials . 2024 , 67(2): 598–607 Wu, Jiajing and Bao, Shida and Jiang, Shan and Shao, Qiting and Lan, Xuexia and Zhang, Tao and Yan, Xiao and Yang, Zhi and Chai, Chengliang and Chen Zhengjie*, Peng Jing* . Inorg. Chem. Front. 2025. 10.1039/D5QI00121H Wei Lian # , Zheng-Jie Chen # , Haoyang Mo, Qiuyu Zhu, Jie Wu, Xian Zhang, Shaoxian Song, Feifei Jia; J Colloid Interface Sci, 2025, 683, 291–300 Zheng-Jie Chen # ; Jue-Xian Cao; Li-Wen Yang; Wen-Jin Yin; Xiao-Lin Wei*; Journal of Physics D: Applied Physics , 2018 , 51(26), 265106. Jing Peng, Zheng-Jie Chen , Baofu. Ding, Hui-Ming Cheng*, Research , 2023 , 6, 0040. Di Ouyang; Zheng-Jie Chen ; Hai-Bin Yu; K.C. Chan; Lin Liu; Corrosion Science , 2022 , 198,110153.",
+            "source_text_hash": "7c011140220a62ec602690a35cf5da4ac83e17d67e225c6279596007dc9d4ea7"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-00A5D80185EA",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "a664960ebef862e0dfbb9ee574c694786bf99656b6f23becefe3b8b90402496d",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "为 城市大数据（遥感/街景图像、时空轨迹、文本、地理空间等）分析与挖掘，深度学习（计算机视觉、自然语言处理等）、人工智能（多模态融合、表征学习、基础大模型等）在城市计算、地理空间智能等领域中的应用。 城市与空间人工智能（CityXAI）实验室 招募优秀硕士研究生和高年级本科生 ，更多介绍请点击实验室官网查看：https://www.caojz.cn",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "为 城市大数据（遥感/街景图像、时空轨迹、文本、地理空间等）分析与挖掘，深度学习（计算机视觉、自然语言处理等）、人工智能（多模态融合、表征学习、基础大模型等）在城市计算、地理空间智能等领域中的应用。 城市与空间人工智能（CityXAI）实验室 招募优秀硕士研究生和高年级本科生 ，更多介绍请点击实验室官网查看：https://www.caojz.cn",
+            "source_language": "zh",
+            "source_span": "为 城市大数据（遥感/街景图像、时空轨迹、文本、地理空间等）分析与挖掘，深度学习（计算机视觉、自然语言处理等）、人工智能（多模态融合、表征学习、基础大模型等）在城市计算、地理空间智能等领域中的应用。 城市与空间人工智能（CityXAI）实验室 招募优秀硕士研究生和高年级本科生 ，更多介绍请点击实验室官网查看：https://www.caojz.cn",
+            "source_text_hash": "a664960ebef862e0dfbb9ee574c694786bf99656b6f23becefe3b8b90402496d"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-00CBEBBC3874",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "official_extract",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong"
+              },
+              "provider_metadata": {},
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "zh",
+              "source_text_hash": "5b48cfea0bf68319f9a155ac2150ef28617d804e77b000c4273bf4ae689f837c",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "l 原子及近原子尺度制造: ACSM l 原子选择刻蚀技术: Atom-selective Etching l 原子迁移制造技术: Atom-migration Manufacturing",
+            "generation_method": "official_extract",
+            "provider_metadata": {},
+            "research_overview_content": "l 原子及近原子尺度制造: ACSM l 原子选择刻蚀技术: Atom-selective Etching l 原子迁移制造技术: Atom-migration Manufacturing",
+            "source_language": "zh",
+            "source_span": "l 原子及近原子尺度制造: ACSM l 原子选择刻蚀技术: Atom-selective Etching l 原子迁移制造技术: Atom-migration Manufacturing",
+            "source_text_hash": "5b48cfea0bf68319f9a155ac2150ef28617d804e77b000c4273bf4ae689f837c"
+          },
+          "write_recommendation": "auto_write_candidate"
+        },
+        {
+          "candidate_status": "ready",
+          "duplicate_group_id": null,
+          "lane": "research_overview_backfill",
+          "paper_ids": [],
+          "professor_id": "PROF-00F2A236E5F4",
+          "quality_flags": [],
+          "source_confidence": "strong",
+          "write_evidence": {
+            "candidate_generation": {
+              "candidate_status": "ready",
+              "generation_method": "llm_translation",
+              "lane": "research_overview_backfill",
+              "llm_self_check": {
+                "hard_rejection": false,
+                "quality_flags": [],
+                "review_required": false,
+                "source_confidence": "strong",
+                "task_type": "research_overview_translation"
+              },
+              "provider_metadata": {
+                "attempt_count": 1,
+                "completion_tokens": 300,
+                "finish_reason": "stop",
+                "llm_profile": "deepseekv4pro",
+                "model": "deepseek-v4-pro",
+                "prompt_hash": "1f6bb1054b496963241062951fc4380cb1d0118f0ec326d9675cc09fac91b5f5",
+                "prompt_tokens": 2370,
+                "provider": "deepseek-v4-pro",
+                "raw_response_hash": "f042ad43f78b57a59a38b57b86620f4f7ac9da79e2c4ef3fb1fca5a57f46947d",
+                "retry_budget": 0,
+                "task_type": "research_overview_translation",
+                "timeout_seconds": 90.0
+              },
+              "quality_flags": [],
+              "source_confidence": "strong",
+              "source_language": "en",
+              "source_text_hash": "3da1f5096fe1975953ca4751ad0fc118d225db1691e878952cec3441de1ed662",
+              "validation_rules": [
+                "research_overview_zh_source_grounded"
+              ],
+              "write_recommendation": "auto_write_candidate"
+            },
+            "candidate_research_overview_zh": "学术兼职：助理研究员。教学课程：《合成有机化学》、《有机波谱学》和《药物化学专题实验》。研究领域：主要研究方向：(1) 基于人工智能（AI）技术的多靶点抗肿瘤小分子化合物的设计、合成及其活性研究；(2) 手性药物导向的过渡金属/小分子协同催化的不对称合成。目前已经在化学类国际一流刊物（J. Am. Chem. Soc. 2024, 146, 34427; Angew. Chem. Int. Ed. 2019, 58, 7092; J. Am. Chem. Soc. 2019, 141, 1074; Chem 2017, 3, 979; Nat. Commun. 2017, 8, 14841; J. Am. Chem. Soc. 2016, 138, 9357; Angew. Chem. Int. Ed. 2015, 54, 7847）上发表等文章33篇，其中多篇文章被Chem, Synfacts, Chin. J. Org. Chem.等杂志亮点评述，3篇论文入选高被引论文（top 1%），总被引用1798多次，H-INDEX为20。",
+            "generation_method": "llm_translation",
+            "provider_metadata": {
+              "attempt_count": 1,
+              "completion_tokens": 300,
+              "finish_reason": "stop",
+              "llm_profile": "deepseekv4pro",
+              "model": "deepseek-v4-pro",
+              "prompt_hash": "1f6bb1054b496963241062951fc4380cb1d0118f0ec326d9675cc09fac91b5f5",
+              "prompt_tokens": 2370,
+              "provider": "deepseek-v4-pro",
+              "raw_response_hash": "f042ad43f78b57a59a38b57b86620f4f7ac9da79e2c4ef3fb1fca5a57f46947d",
+              "retry_budget": 0,
+              "task_type": "research_overview_translation",
+              "timeout_seconds": 90.0
+            },
+            "research_overview_content": "学术兼职：助理研究员。教学课程：《合成有机化学》、《有机波谱学》和《药物化学专题实验》。研究领域：主要研究方向：(1) 基于人工智能（AI）技术的多靶点抗肿瘤小分子化合物的设计、合成及其活性研究；(2) 手性药物导向的过渡金属/小分子协同催化的不对称合成。目前已经在化学类国际一流刊物（J. Am. Chem. Soc. 2024, 146, 34427; Angew. Chem. Int. Ed. 2019, 58, 7092; J. Am. Chem. Soc. 2019, 141, 1074; Chem 2017, 3, 979; Nat. Commun. 2017, 8, 14841; J. Am. Chem. Soc. 2016, 138, 9357; Angew. Chem. Int. Ed. 2015, 54, 7847）上发表等文章33篇，其中多篇文章被Chem, Synfacts, Chin. J. Org. Chem.等杂志亮点评述，3篇论文入选高被引论文（top 1%），总被引用1798多次，H-INDEX为20。",
+            "source_language": "en",
+            "source_span": "Fellow пјҲеҠ©зҗҶз ”з©¶е‘ҳпјү еӯҰжңҜе…јиҒҢ зӨҫдјҡе…јиҒҢ ж•ҷеӯҰиҜҫзЁӢ гҖҠеҗҲжҲҗжңүжңәеҢ–еӯҰгҖӢгҖҒгҖҠжңүжңәжіўи°ұеӯҰгҖӢе’ҢгҖҠиҚҜзү©еҢ–еӯҰдё“йўҳе®һйӘҢгҖӢ з ”з©¶з”ҹжҢҮеҜј з ”з©¶йўҶеҹҹ дё»иҰҒз ”з©¶ж–№еҗ‘пјҡ (1) еҹәдәҺдәәе·ҘжҷәиғҪпјҲAIпјүжҠҖжңҜзҡ„еӨҡйқ¶зӮ№жҠ—иӮҝзҳӨе°ҸеҲҶеӯҗеҢ–еҗҲзү©зҡ„и®ҫи®ЎгҖҒеҗҲжҲҗеҸҠе…¶жҙ»жҖ§з ”з©¶пјӣ(2) жүӢжҖ§иҚҜзү©еҜјеҗ‘зҡ„иҝҮжёЎйҮ‘еұһ/е°ҸеҲҶеӯҗеҚҸеҗҢеӮ¬еҢ–зҡ„дёҚеҜ№з§°еҗҲжҲҗгҖӮзӣ®еүҚе·Із»ҸеңЁеҢ–еӯҰзұ»еӣҪйҷ…дёҖжөҒеҲҠзү© ( J. Am. Chem. Soc. 2024. 146, 34427. Angew. Chem. Int. Ed. 2019, 58, 7092. J. Am. Chem. Soc. 2019, 141, 1074. Chem 2017. 3, 979. Nat. Commun 2017, 8, 14841. J. Am. Chem. Soc. 2016, 138, 9357. Angew. Chem. Int. Ed. 2015, 54, 7847)дёҠеҸ‘иЎЁзӯүж–Үз« 33зҜҮ пјҢе…¶дёӯеӨҡзҜҮж–Үз« иў« Chem, Synfacts, Chin. J. Org. Chem.зӯүжқӮеҝ—дә®зӮ№иҜ„иҝ°пјҢ3зҜҮи®әж–Үе…ҘйҖүй«ҳиў«еј•и®әж–ҮпјҲtop 1%)пјҢ жҖ»иў«еј•з”Ё 1798еӨҡж¬ЎпјҢH-INDEXдёә20гҖӮ дё»иҰҒйЎ№зӣ® д»ЈиЎЁжҖ§и®әж–Ү [1] Ying-Jie Li #, Zhi-Long Wu#, Qiang-Shuai Gu#, Tingting Fan#, Ming-Hao Duan, Lihong Wu, Yu-Tao Wang, Ji-Peng Wu, Fang-Lei Fu, Fan Sang, Ai-Ting Peng, Yuyang Jiang*, Xin-Yuan Liu*, Jin-Shun Lin *. Catalytic Intermolecular Asymmetric [2ПҖ+2Пғ] Cycloadditions of Bicyclo[1.1.0]butanes: Practical Synthesis of Enantioenriched Highly Substituted Bicyclo[2.1.1]hexanes. J. Am. Chem. Soc. 2024, 146, 34427. (#Co-first author) Highlighted in Tsinghua University NEWS. Highlighted in Tsinghua SIGS NEWS. Highlighted in X-MOLиө„и®Ҝ. Highlighted in CBGиө„и®Ҝ Highlighted in еҢ–еӯҰеҠ иө„и®Ҝ [ 2 ] Jin-Shun Lin #, Tao-Tao Li #, Guan-Yuan Jiao #, Qiang-Shuai Gu, Jiang-Tao Cheng, Ling Lv, and XinYuan Liu*. Chiral BrГёnsted Acid-Catalyzed Dynamic Kinetic Asymmetric Hydroamination of Racemic Allenes and Asymmetric Hydroamination of Dienes. Angew. Chem. Int. Ed. 2019, 58, 7092. (#Co-first author) Highlighted in Synfacts 2019, 15, 662. [ 3 ] Jin-Shun Lin #, Tao-Tao Li #, Ji-Ren Liu #, Guan-Yuan Jiao, Qiang-Shuai Gu, Jiang-Tao Cheng, Yu-Long Guo, Xin Hong* and Xin-Yuan Liu*. Cu/Chiral Phosphoric Acid-Catalyzed Asymmetric Three-Component Radical-Initiated 1,2-Dicarbofunctionalization of Alkenes. J. Am. Chem. Soc. 2019, 141, 1074. (#Co-first author) Highlighted in Synfacts 2019, 15, 0255. [ 4 ] Fu-Li Wang #, Xiao-Yang Dong #, Jin-Shun Lin #, Yang Zeng, Guang-Yuan Jiao, Qiang-Shuai Gu, Xiang-Qi Guo, Can-Liang Ma, Xin-Yuan Liu*. Catalytic Asymmetric Radical Diamination of Alkenes. Chem 2017. 3, 979. (#Co-first author) Highlighted in Chem 2017, 3, 919. [ 5 ] Jin-Shun Lin #, Fu-Li Wang #, Xiao-Yang Dong #, Wei-Wei He, Yue Yuan, Su Chen, Xin-Yuan Liu*. Catalytic Asymmetric Radical Aminoperfluoroalkylation and Aminodifluoromethylation of Alkenes with Fluoroalkylsulfonyl Chlorides: A Versatile Platform for Enantioenriched-Fluoroalkyl Amines. Nat. Commun. 2017, 8, 14841. (#Co-first author). [ 6 ] Jin-Shun Lin, Xiao-Yang Dong, Tao-Tao Li, Na-Chuan Jiang, Bin Tan, and Xin-Yuan Liu*. A Dual-Catalytic Strategy to Direct Asymmetric Radical Aminotrifluoromethylation of Alkenes. J. Am. Chem. Soc. 2016, 138, 9357. Highlighted in Synfacts, 2016, 12, 1020. Highlighted in Chin. J. Org. Chem. 2016, 36, 2247. [ 7 ] Jin-Shun Lin , Peng Yu, Lin Huang, Pan Zhang, Bin Tan,* and Xin-Yuan Liu*. BrГёnsted Acid-Catalyzed Asymmetric Hydroamination of Alkenes: Synthesis of Pyrrolidines Bearing a Tetrasubstituted Carbon Stereocenter. Angew. Chem. Int. Ed. 2015, 54, 7847. Highlighted in Chin. J. Org. Chem., 2015, 35, 1802. [ 8 ] Lijuan Liu#, Zhichao Shi#, Xun Zhang, Feng Zhan, Jin-Shun Lin ,* and Yuyang Jiang*. Synthesis of Оұ-Amino Tertiary Alkylperoxides by Lewis AcidCatalyzed Peroxidation of 1,3,5-Triazines. Chem Asian J. 2021, 16, 3487. (#Co-first author) [ 9 ] Zhichao Shi#, Tingting Fan#, Xun Zhang Feng Zhan, Zhe Wang,Lei Zhao, Jin-Shun Lin * and Yuyang Jiang*. Synthesis of Diversely Substituted Imidazolidines via [3+2] Cycloaddition of 1,3,5-Triazinanes with Donor-Acceptor Aziridines and Their Anti-Tumor Activity. Adv. Synth. Catal. 2021, 363, 2619. (#Co-first author) [1 0 ] Zhe Wang #, Jiang-Tao Cheng #, Zhichao Shi, Na Wang, Feng Zhan, Sheng-Peng Jiang, Jin-Shun Lin,* Yuyang Jiang,* and Xin-Yuan Liu.* Catalytic Asymmetric Intermolecular RadicalAminotrifluoromethylation of Alkenes with Hydrazines by Cu(I)/CPA Cooperative Catalysis. ChemCatChem 2021, 13, 185. (#Co-first author). [1 1 ] Jin-Shun Lin , Ya-Ping Xiong, Can-Liang Ma, Li-Jiao Zhao, Bin Tan,* and Xin-Yuan Liu*. Efficient Copper-Catalyzed Direct Intramolecular Aminotrifluoromethylation of Unactivated Alkenes with Diverse Nitrogen-Based Nucleophiles. Chem. Eur. J. 2014, 20, 1332. д»ЈиЎЁжҖ§и‘—дҪң дё»иҰҒдё“еҲ©жҲҗжһң е…¶д»–жҲҗжһң иҚЈиӘүеҘ–йЎ№ 1. Shenzhen High-level Professional Reserve Talent, Shenzhen, 2020. 2. The winner of SUSTech Presidential Postdoctoral Fellowship (Top 10%), SUSTech, China. 2017.",
+            "source_text_hash": "3da1f5096fe1975953ca4751ad0fc118d225db1691e878952cec3441de1ed662"
+          },
+          "write_recommendation": "auto_write_candidate"
+        }
+      ]
+    }
+  ],
+  "mode": "candidate_dry_run",
+  "selection_hash": "a5c62bfe30afd44fe4fe8d09f76e82925f0550dd5789cb25dd52455e48805d3d",
+  "write_allowed": false
+}

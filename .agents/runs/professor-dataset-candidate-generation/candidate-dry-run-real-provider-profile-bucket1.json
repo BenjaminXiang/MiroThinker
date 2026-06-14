@@ -1,0 +1,49 @@
+{
+  "bucket_limit": 1,
+  "closure_selection_hash": "cb2a6f6dcda2c0d9e083f0e8243419b7185e8c238cfdf0826f422356a56b7998",
+  "dry_run": true,
+  "lanes": [
+    {
+      "affected_paper_ids": [],
+      "affected_professor_ids": [],
+      "blocker_type": "ready_summary_lt_200",
+      "candidate_count": 0,
+      "dataset_input_count": 441,
+      "input_count": 1,
+      "lane": "profile_summary_repair",
+      "provider_failure_count": 1,
+      "provider_failures": [
+        {
+          "duplicate_group_id": null,
+          "error_class": "MissingLLMCredentials",
+          "lane": "profile_summary_repair",
+          "next_action": "retry_with_same_grounded_profile_inputs",
+          "paper_id": null,
+          "professor_id": "PROF-019A6958E272",
+          "provider": "deepseek-v4-pro",
+          "provider_metadata": {
+            "llm_profile": "deepseekv4pro",
+            "model": "deepseek-v4-pro",
+            "retry_budget": 0,
+            "task_type": "profile_summary_synthesis",
+            "timeout_seconds": 60.0
+          },
+          "retryable": true,
+          "stage": "profile_summary_generation"
+        }
+      ],
+      "rejections": [],
+      "samples": [],
+      "skipped_count": 0,
+      "validation_failure_count": 0,
+      "validation_failures": [],
+      "validation_rules": [
+        "profile_summary_200_300_zh_contract"
+      ],
+      "write_evidence_rows": []
+    }
+  ],
+  "mode": "candidate_dry_run",
+  "selection_hash": "ed7921df54ec34e0110c5b2803e67f3ae599e7182c90f2bf6653012072f27e4b",
+  "write_allowed": false
+}
