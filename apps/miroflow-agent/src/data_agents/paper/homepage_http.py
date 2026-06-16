@@ -99,7 +99,7 @@ def fetch_homepage_html(
     _wait_for_host(hostname)
 
     if http_client is not None:
-        response = http_client.get(url)
+        response = http_client.get(url, follow_redirects=True)
         response.raise_for_status()
         homepage_url, html_content = _resolve_sustech_faculty_js_redirects(
             requested_url=url,
@@ -179,7 +179,7 @@ def _resolve_sustech_faculty_js_redirects(
             break
 
         seen_urls.add(redirect_url)
-        response = http_client.get(redirect_url)
+        response = http_client.get(redirect_url, follow_redirects=True)
         response.raise_for_status()
         current_url = _response_url(response, fallback=redirect_url)
         html_content = response.text

@@ -31,6 +31,7 @@ from .cross_domain import PaperLink
 from .direction_cleaner import clean_directions
 from .homepage_publication_headings import _PUBLICATIONS_HEADING_RE
 from .homepage_publications import extract_publications_from_html
+from . import hit_playwright_profile as hit_profile
 from .models import (
     EducationEntry,
     EnrichedProfessorProfile,
@@ -44,7 +45,7 @@ from .name_utils import (
     sanitize_english_person_name,
     select_best_english_name_candidate,
 )
-from .publish_helpers import is_official_url
+from .publish_helpers import build_professor_id, is_official_url
 from .discovery import _decode_response_text, _request_with_env_fallback
 from .profile import (
     _find_sztu_fragment_profile_node,
@@ -462,6 +463,8 @@ class HomepageExtractOutput(BaseModel):
     name_en: str | None = None
     title: str | None = None
     department: str | None = None
+    email: str | None = None
+    profile_summary: str | None = None
     research_directions: list[str] = []
     education_structured: list[EducationEntry] = []
     work_experience: list[WorkEntry] = []
@@ -988,7 +991,9 @@ def _extract_follow_candidate_link_infos(html: str, base_url: str) -> list[_Link
             if not hinted and not is_cv:
                 continue
         else:
-            if not (hinted or is_cv or is_academic_profile or is_external_personal_site):
+            if not (
+                hinted or is_cv or is_academic_profile or is_external_personal_site
+            ):
                 continue
 
         seen.add(normalized)
@@ -1131,7 +1136,9 @@ def _classify_follow_link_by_rules(link: _LinkInfo) -> str | None:
 def _has_explicit_personal_homepage_label(link: _LinkInfo) -> bool:
     label = " ".join(part for part in (link.text, link.title or "") if part)
     lowered = label.casefold()
-    return any(keyword.casefold() in lowered for keyword in _PERSONAL_HOMEPAGE_LINK_KEYWORDS)
+    return any(
+        keyword.casefold() in lowered for keyword in _PERSONAL_HOMEPAGE_LINK_KEYWORDS
+    )
 
 
 def _is_szu_navigation_homepage_link(link: _LinkInfo) -> bool:
@@ -1223,7 +1230,9 @@ def _looks_like_lab_or_group_url(url: str) -> bool:
         )
         if part
     ).casefold()
-    return any(token in haystack for token in ("lab", "group", "team", "课题组", "实验室"))
+    return any(
+        token in haystack for token in ("lab", "group", "team", "课题组", "实验室")
+    )
 
 
 def _same_institutional_domain(left_url: str, right_url: str) -> bool:
@@ -1346,7 +1355,9 @@ def _collect_recursive_link_infos(
             if key in seen_urls:
                 continue
             seen_urls.add(key)
-            recursive.append(_RecursiveFollowLink(link=link, category="profile_content"))
+            recursive.append(
+                _RecursiveFollowLink(link=link, category="profile_content")
+            )
 
         publication_links = _select_publication_link_infos(
             link_infos,
@@ -1358,7 +1369,9 @@ def _collect_recursive_link_infos(
             if key in seen_urls:
                 continue
             seen_urls.add(key)
-            recursive.append(_RecursiveFollowLink(link=link, category="publication_page"))
+            recursive.append(
+                _RecursiveFollowLink(link=link, category="publication_page")
+            )
     return recursive
 
 
@@ -1380,9 +1393,7 @@ def _select_recursive_profile_link_infos(
 
 def _classify_recursive_link(link: _LinkInfo) -> str | None:
     haystack = " ".join(
-        part
-        for part in (link.text, link.title or "", urlparse(link.url).path)
-        if part
+        part for part in (link.text, link.title or "", urlparse(link.url).path) if part
     ).casefold()
     if any(keyword in haystack for keyword in PUBLICATION_LINK_KEYWORDS):
         return "publication_page"
@@ -1636,9 +1647,8 @@ def _parse_sigs_work_line(line: str) -> WorkEntry | None:
     organization = _select_sigs_work_organization(parts)
     if organization:
         role_candidates = [part for part in parts if part != organization]
-        role = (
-            _first_matching_part(role_candidates, _SIGS_ROLE_TITLE_RE)
-            or (role_candidates[-1] if role_candidates else None)
+        role = _first_matching_part(role_candidates, _SIGS_ROLE_TITLE_RE) or (
+            role_candidates[-1] if role_candidates else None
         )
     else:
         organization = parts[-1] if len(parts) > 1 else parts[0]
@@ -1832,6 +1842,11 @@ def _merge_homepage_extract_outputs(
         return primary
     return primary.model_copy(
         update={
+            "name_en": primary.name_en or fallback.name_en,
+            "title": primary.title or fallback.title,
+            "department": primary.department or fallback.department,
+            "email": primary.email or fallback.email,
+            "profile_summary": primary.profile_summary or fallback.profile_summary,
             "research_directions": _dedupe_preserve_order(
                 [*primary.research_directions, *fallback.research_directions]
             ),
@@ -1854,6 +1869,8 @@ def _has_homepage_extract_output(output: HomepageExtractOutput) -> bool:
         output.name_en
         or output.title
         or output.department
+        or output.email
+        or output.profile_summary
         or output.research_directions
         or output.education_structured
         or output.work_experience
@@ -1897,6 +1914,10 @@ def _merge_homepage_output(
             updates["title"] = sanitized_title
     if output.department and not profile.department:
         updates["department"] = output.department
+    if output.email and not profile.email:
+        updates["email"] = output.email
+    if output.profile_summary and not profile.profile_summary:
+        updates["profile_summary"] = output.profile_summary
     if output.research_directions and not profile.research_directions:
         updates["research_directions"] = _clean_structured_research_directions(
             output.research_directions
@@ -2077,9 +2098,7 @@ def _normalize_publication_title(line: str) -> str | None:
     author_prefixed = _extract_title_from_author_prefixed_publication_line(line)
     if author_prefixed:
         return author_prefixed
-    cleaned = re.sub(
-        r"^\s*(?:\[\s*\d+\s*\]|\d+\s*[-.)、]|[•*-])\s*", "", line
-    ).strip()
+    cleaned = re.sub(r"^\s*(?:\[\s*\d+\s*\]|\d+\s*[-.)、]|[•*-])\s*", "", line).strip()
     cleaned = re.sub(r"\s+", " ", cleaned)
     cleaned = re.sub(r"\s*(?:doi|arxiv)\s*[:：].*$", "", cleaned, flags=re.IGNORECASE)
     cleaned = cleaned.strip(" ,;:.")
@@ -2103,7 +2122,9 @@ def _looks_like_publication_service_line(line: str) -> bool:
     )
     if not any(marker in lowered for marker in service_markers):
         return False
-    venue_separators = normalized.count("、") + normalized.count(";") + normalized.count("；")
+    venue_separators = (
+        normalized.count("、") + normalized.count(";") + normalized.count("；")
+    )
     latin_abbrev_count = len(re.findall(r"\b[A-Z][A-Za-z]{0,8}\.", normalized))
     return venue_separators >= 1 or latin_abbrev_count >= 2
 
@@ -2165,7 +2186,9 @@ def _looks_like_author_credit_publication_title(line: str) -> bool:
     normalized = re.sub(
         r"^\s*(?:\[\s*\d+\s*\]|\d+\s*[-.)、]|[•*-])\s*", "", line
     ).strip()
-    if len(re.findall(r"\b[A-Z]\.", normalized)) >= 2 and re.search(r"[*#]", normalized):
+    if len(re.findall(r"\b[A-Z]\.", normalized)) >= 2 and re.search(
+        r"[*#]", normalized
+    ):
         return True
     if normalized.count(",") >= 3 and re.match(r"^[A-Z][A-Za-z.' -]+,", normalized):
         return True
@@ -2205,9 +2228,7 @@ def _extract_title_from_author_prefixed_publication_line(line: str) -> str | Non
                 cleaned,
             )
             if initial_period_match is not None:
-                return _title_from_publication_tail(
-                    initial_period_match.group("tail")
-                )
+                return _title_from_publication_tail(initial_period_match.group("tail"))
             period_match = re.match(
                 r"(?P<authors>(?:[^,.;]{2,80},\s*){1,24}"
                 r"(?:and\s+)?[^.;]{2,80})\.\s+"
@@ -2249,10 +2270,9 @@ def _strip_publication_author_residue(title: str) -> str:
     ):
         match = re.match(pattern, normalized)
         if match:
-            candidate = (
-                _title_from_publication_tail(match.group("title"))
-                or match.group("title").strip(" ,;:.")
-            )
+            candidate = _title_from_publication_tail(
+                match.group("title")
+            ) or match.group("title").strip(" ,;:.")
             if len(candidate) >= 20 and len(re.findall(r"[A-Za-z]+", candidate)) >= 4:
                 return candidate
     return normalized
@@ -2506,7 +2526,9 @@ def _paper_link_titles_duplicate(left: str, right: str) -> bool:
     if left_key == right_key:
         return True
     shorter, longer = (
-        (left_key, right_key) if len(left_key) <= len(right_key) else (right_key, left_key)
+        (left_key, right_key)
+        if len(left_key) <= len(right_key)
+        else (right_key, left_key)
     )
     if len(shorter) < 20 or not longer.startswith(shorter):
         return False
@@ -2630,13 +2652,75 @@ def _augment_hit_homepage_dynamic_body(
             timeout=timeout,
         )
     except Exception as exc:  # noqa: BLE001
-        logger.debug("Failed to fetch HIT dynamic teacher body %s: %s", homepage_url, exc)
+        logger.debug(
+            "Failed to fetch HIT dynamic teacher body %s: %s", homepage_url, exc
+        )
         return html_content
 
     body_html = _decode_json_wrapped_html(body_response)
     if not body_html:
         return html_content
     return f"{html_content}\n\n--- HIT dynamic teacher body ---\n{body_html}"
+
+
+async def _extract_hit_playwright_homepage_output(
+    *,
+    homepage_url: str,
+    profile: EnrichedProfessorProfile,
+    run_id: str | None,
+    timeout: float,
+) -> tuple[HomepageExtractOutput, str]:
+    if not hit_profile.is_hit_profile_url(homepage_url):
+        return HomepageExtractOutput(), ""
+    if not run_id:
+        return HomepageExtractOutput(), ""
+
+    try:
+        rendered_html = await hit_profile.render_hit_profile_html_async(
+            homepage_url,
+            timeout=timeout,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "HIT Playwright profile render skipped for %s: %s",
+            homepage_url,
+            exc,
+        )
+        return HomepageExtractOutput(), ""
+
+    try:
+        if run_id:
+            extraction = hit_profile.extract_hit_profile_fields(
+                rendered_html,
+                source_url=homepage_url,
+                professor_id=build_professor_id(profile),
+                run_id=str(run_id),
+            )
+        else:
+            extraction = hit_profile.parse_hit_rendered_profile(
+                rendered_html,
+                source_url=homepage_url,
+            )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "HIT Playwright profile parse skipped for %s: %s",
+            homepage_url,
+            exc,
+        )
+        return HomepageExtractOutput(), ""
+
+    title = extraction.academic_positions[0] if extraction.academic_positions else None
+    output = HomepageExtractOutput(
+        title=title,
+        department=extraction.department,
+        email=extraction.contact_email,
+        profile_summary=extraction.profile_summary,
+        research_directions=list(extraction.research_directions or []),
+        education_structured=list(extraction.education or []),
+        work_experience=list(extraction.work_experience or []),
+        academic_positions=list(extraction.academic_positions or []),
+    )
+    return output, extraction.profile_text
 
 
 async def crawl_homepage(
@@ -2646,6 +2730,7 @@ async def crawl_homepage(
     llm_client: Any,
     llm_model: str,
     timeout: float = 20.0,
+    run_id: str | None = None,
 ) -> HomepageCrawlResult:
     """Crawl professor's homepage and extract structured data.
 
@@ -2690,6 +2775,19 @@ async def crawl_homepage(
         _extract_uestc_yjsjy_secondary_academic_urls(main_html, homepage_url)
     )
     sigs_tab_output = _extract_sigs_tab_homepage_output(main_html, homepage_url)
+    (
+        hit_rendered_output,
+        hit_profile_text,
+    ) = await _extract_hit_playwright_homepage_output(
+        homepage_url=homepage_url,
+        profile=profile,
+        run_id=run_id,
+        timeout=timeout,
+    )
+    template_output = _merge_homepage_extract_outputs(
+        sigs_tab_output,
+        hit_rendered_output,
+    )
 
     pages_fetched = 1
     fetched_pages: list[_FetchedPage] = [
@@ -2807,13 +2905,12 @@ async def crawl_homepage(
             sub_html = sub_result.html if hasattr(sub_result, "html") else sub_result
             if sub_html:
                 sanitized_sub_html = _sanitize_page_content(sub_html)
-                publication_candidate = (
-                    link.url.rstrip("/") in selected_publication_urls
-                    or _has_inline_publication_evidence(
-                        html_content=sub_html,
-                        sanitized_text=sanitized_sub_html,
-                        page_url=link.url,
-                    )
+                publication_candidate = link.url.rstrip(
+                    "/"
+                ) in selected_publication_urls or _has_inline_publication_evidence(
+                    html_content=sub_html,
+                    sanitized_text=sanitized_sub_html,
+                    page_url=link.url,
                 )
                 all_content += f"\n\n--- {link.url} ---\n{sub_html}"
                 fetched_pages.append(
@@ -2856,9 +2953,7 @@ async def crawl_homepage(
                         selected_source_page_roles[link.url] = source_page_role
                 pages_fetched += 1
         except Exception as e:
-            logger.debug(
-                "Failed to fetch recursive sub-page %s: %s", link.url, e
-            )
+            logger.debug("Failed to fetch recursive sub-page %s: %s", link.url, e)
 
     official_publication_signals = _extract_official_publication_signals(fetched_pages)
     anchored_scholarly_profile_urls, anchored_cv_urls = _extract_official_link_targets(
@@ -2891,15 +2986,19 @@ async def crawl_homepage(
         text = response.choices[0].message.content
         output = _parse_extraction_output(text)
     except (ValidationError, json.JSONDecodeError, Exception) as e:
-        if _has_homepage_extract_output(sigs_tab_output):
-            output = sigs_tab_output
+        if _has_homepage_extract_output(template_output):
+            output = template_output
         else:
             logger.warning("Homepage LLM extraction failed for %s: %s", profile.name, e)
             return HomepageCrawlResult(
-                profile=profile, success=False, pages_fetched=pages_fetched, error=str(e)
+                profile=profile,
+                success=False,
+                pages_fetched=pages_fetched,
+                error=str(e),
             )
     else:
         output = _merge_homepage_extract_outputs(output, sigs_tab_output)
+        output = _merge_homepage_extract_outputs(output, hit_rendered_output)
 
     main_anchor_text = _extract_official_anchor_text_from_html(
         html=main_html, profile=profile
@@ -2912,6 +3011,7 @@ async def crawl_homepage(
             [
                 main_anchor_text,
                 *supplementary_text_segments,
+                hit_profile_text,
                 *profile_subpage_content_segments,
             ]
         )
@@ -2920,12 +3020,18 @@ async def crawl_homepage(
         main_sanitized_content
     )
     official_research_terms = _dedupe_preserve_order(
-        [*official_research_directions, *sigs_tab_output.research_directions]
+        [
+            *official_research_directions,
+            *sigs_tab_output.research_directions,
+            *hit_rendered_output.research_directions,
+        ]
     )
     if official_research_terms:
-        merged_research_directions = _merge_research_directions_preserving_official_terms(
-            _clean_structured_research_directions(output.research_directions),
-            official_research_terms,
+        merged_research_directions = (
+            _merge_research_directions_preserving_official_terms(
+                _clean_structured_research_directions(output.research_directions),
+                official_research_terms,
+            )
         )
         if merged_research_directions != output.research_directions:
             output = output.model_copy(
@@ -2987,7 +3093,9 @@ async def crawl_homepage(
         profile_raw_text_content,
     )
     if merged_profile_raw_text:
-        enriched = enriched.model_copy(update={"profile_raw_text": merged_profile_raw_text})
+        enriched = enriched.model_copy(
+            update={"profile_raw_text": merged_profile_raw_text}
+        )
     if sigs_tab_output.research_directions:
         enriched = enriched.model_copy(
             update={

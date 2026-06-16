@@ -638,7 +638,7 @@ def _response_declares_utf8(response: requests.Response) -> bool:
     sample = response.content[:2048].lower()
     if (
         sample.startswith(b"\xef\xbb\xbf")
-        or b"charset=\"utf-8\"" in sample
+        or b'charset="utf-8"' in sample
         or b"charset=utf-8" in sample
     ):
         return True
@@ -694,7 +694,9 @@ def _default_pipeline_runner(
     *,
     max_profile_fetch: int | None = None,
 ) -> ProfessorPipelineResult:
-    with tempfile.NamedTemporaryFile("w", suffix=".md", encoding="utf-8", delete=False) as tmp:
+    with tempfile.NamedTemporaryFile(
+        "w", suffix=".md", encoding="utf-8", delete=False
+    ) as tmp:
         seed_doc = Path(tmp.name)
         tmp.write(_render_temp_seed_markdown(seed))
     try:
@@ -925,6 +927,7 @@ async def _enrich_profile_for_seed_write_async(
             llm_client=llm_client,
             llm_model=llm_model,
             timeout=fetch_timeout,
+            run_id=run_id,
         ),
         timeout=homepage_timeout,
     )
@@ -965,9 +968,8 @@ async def _enrich_profile_for_seed_write_async(
             timeout=paper_timeout,
             identity_gate_enabled=False,
         ),
-        timeout=remaining_timeout or float(
-            os.environ.get("PROFESSOR_SEED_LLM_HOMEPAGE_TIMEOUT", "180")
-        ),
+        timeout=remaining_timeout
+        or float(os.environ.get("PROFESSOR_SEED_LLM_HOMEPAGE_TIMEOUT", "180")),
     )
     if paper_result.staging_records:
         enriched = enriched.model_copy(
@@ -1088,7 +1090,11 @@ def _is_official_source(url: str | None) -> bool:
     if not url:
         return False
     hostname = (urlparse(url).hostname or "").lower()
-    return hostname.endswith(".edu.cn") or hostname.endswith(".gov.cn") or hostname.endswith(".ac.cn")
+    return (
+        hostname.endswith(".edu.cn")
+        or hostname.endswith(".gov.cn")
+        or hostname.endswith(".ac.cn")
+    )
 
 
 def _should_skip_profile_fetch(seed: ProfessorRosterSeed) -> bool:
@@ -1103,10 +1109,7 @@ def _profile_matches_seed_scope(
     if not _is_szu_csse_seed(seed):
         return True
 
-    if any(
-        _is_szu_csse_profile_url(url)
-        for url in _profile_scope_urls([profile])
-    ):
+    if any(_is_szu_csse_profile_url(url) for url in _profile_scope_urls([profile])):
         return True
     return _is_szu_csse_official_supplement_profile(profile)
 
@@ -1228,8 +1231,12 @@ def _extract_cuhk_teacher_search_roster_profiles(
         title = _extract_cuhk_teacher_search_title(card)
         email = _extract_cuhk_teacher_search_email(card)
         research_directions = _extract_cuhk_teacher_search_research_directions(card)
-        homepage = _extract_cuhk_teacher_search_homepage(card, source_url) or profile_url
-        profile_raw_text = _clean_cuhk_teacher_search_text(card.get_text(" ", strip=True))
+        homepage = (
+            _extract_cuhk_teacher_search_homepage(card, source_url) or profile_url
+        )
+        profile_raw_text = _clean_cuhk_teacher_search_text(
+            card.get_text(" ", strip=True)
+        )
         urls = _dedupe_texts(
             [
                 source_url,
@@ -1270,16 +1277,21 @@ def _merge_cuhk_teacher_search_roster_supplement(
     if _cuhk_profile_field_missing_or_polluted(title):
         title = supplement.title
     homepage = profile.homepage
-    if supplement.homepage and _cuhk_should_replace_homepage(profile.homepage, profile.profile_url):
+    if supplement.homepage and _cuhk_should_replace_homepage(
+        profile.homepage, profile.profile_url
+    ):
         homepage = supplement.homepage
     return replace(
         profile,
         title=title,
         email=profile.email or supplement.email,
         homepage=homepage,
-        source_urls=tuple(_dedupe_texts([*profile.source_urls, *supplement.source_urls])),
+        source_urls=tuple(
+            _dedupe_texts([*profile.source_urls, *supplement.source_urls])
+        ),
         evidence=tuple(_dedupe_texts([*profile.evidence, *supplement.evidence])),
-        research_directions=profile.research_directions or supplement.research_directions,
+        research_directions=profile.research_directions
+        or supplement.research_directions,
         profile_raw_text=profile.profile_raw_text or supplement.profile_raw_text,
     )
 
@@ -1408,7 +1420,9 @@ def _cuhk_profile_field_missing_or_polluted(value: str | None) -> bool:
     return any(marker in text for marker in _CUHK_PROFILE_FIELD_POLLUTION_MARKERS)
 
 
-def _cuhk_should_replace_homepage(homepage: str | None, profile_url: str | None) -> bool:
+def _cuhk_should_replace_homepage(
+    homepage: str | None, profile_url: str | None
+) -> bool:
     if not homepage:
         return True
     return homepage.rstrip("/") == (profile_url or "").rstrip("/")
@@ -1496,7 +1510,9 @@ def _extract_szu_csse_supplement_profiles_from_page(
 ) -> list[MergedProfessorProfileRecord]:
     if not html or not _is_szu_csse_official_supplement_source_url(source_url):
         return []
-    normalized_source_url = urlparse(source_url)._replace(fragment="").geturl().rstrip("/")
+    normalized_source_url = (
+        urlparse(source_url)._replace(fragment="").geturl().rstrip("/")
+    )
     if normalized_source_url == "https://bigdata.szu.edu.cn/kytd.htm":
         return _extract_szu_bigdata_supplement_profiles(seed, source_url, html)
     if normalized_source_url == "https://aisc.szu.edu.cn/AISC/Faculty.htm":
@@ -1699,7 +1715,9 @@ def _discover_szu_csse_supplement_publication_source_urls(
         href = str(link_node.get("href", "")).strip()
         if not href or href.startswith(("#", "mailto:", "javascript:", "tel:")):
             continue
-        absolute_url = urlparse(urljoin(source_url, href))._replace(fragment="").geturl()
+        absolute_url = (
+            urlparse(urljoin(source_url, href))._replace(fragment="").geturl()
+        )
         absolute_url = absolute_url.rstrip("/")
         if not _is_szu_csse_supplement_publication_source_url(absolute_url):
             continue
@@ -1992,10 +2010,8 @@ def _discovery_failure_description(result: ProfessorPipelineResult) -> str:
     if not result.source_statuses:
         return "discovery failed: no source status returned"
     status = result.source_statuses[0]
-    return (
-        "discovery failed: "
-        f"{status.reason}"
-        + (f" ({status.error})" if status.error else "")
+    return f"discovery failed: {status.reason}" + (
+        f" ({status.error})" if status.error else ""
     )
 
 
@@ -2206,7 +2222,9 @@ def _file_pipeline_issue(
     evidence: dict[str, Any],
 ) -> None:
     institution = seed.institution or f"seed:{seed_id}"
-    evidence_snapshot = Jsonb(json.loads(json.dumps(evidence, ensure_ascii=False, default=str)))
+    evidence_snapshot = Jsonb(
+        json.loads(json.dumps(evidence, ensure_ascii=False, default=str))
+    )
     existing = conn.execute(
         """
         SELECT issue_id
