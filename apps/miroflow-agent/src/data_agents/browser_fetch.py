@@ -10,6 +10,8 @@ playwright-stealth patches (navigator.webdriver / CDP fingerprint) here.
 
 from __future__ import annotations
 
+import os
+
 from src.data_agents.paper.homepage_http import fetch_homepage_html
 
 _BROWSER_UA = (
