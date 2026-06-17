@@ -215,6 +215,14 @@ def main() -> int:
                         (pid, fact_type, value, page_id, text[:400], run_id),
                     )
             conn.commit()
+            # Also update the professor.profile_summary column (the admin-visible bio)
+            if data.get("profile_summary"):
+                with conn.cursor() as c:
+                    c.execute(
+                        "UPDATE professor SET profile_summary=%s WHERE professor_id=%s",
+                        (str(data["profile_summary"])[:500], pid),
+                    )
+                conn.commit()
             grand += len(facts)
             print(
                 f"  {url}: +{len(facts)} facts | email={data.get('contact_email')!r}",
