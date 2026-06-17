@@ -32,7 +32,10 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from psycopg.types.json import Json
 
-from src.data_agents.paper.homepage_http import fetch_homepage_html
+from src.data_agents.browser_fetch import (
+    CDPChromeRenderer,
+    fetch_html_with_browser_fallback,
+)
 from src.data_agents.professor.llm_profiles import resolve_professor_llm_settings
 
 RUN_KIND = "backfill_real"  # must be a valid pipeline_run.run_kind enum value
@@ -101,6 +104,11 @@ def main() -> int:
         action="store_true",
         help="process all profs; default skips profs already having both academic_position and education (no wasted work).",
     )
+    p.add_argument(
+        "--use-cdp",
+        action="store_true",
+        help="instantiate a CDPChromeRenderer for 瑞数/Rishu JS-challenge sites (csse.szu etc.); run under xvfb-run.",
+    )
     args = p.parse_args()
     # Load .env only for DeepSeek profiles (needs DEEPSEEK_API_KEY). For gemma4/etc.
     # skip it: .env's DEEPSEEK_MODEL/LOCAL_LLM_MODEL would hijack the profile model.
@@ -119,6 +127,7 @@ def main() -> int:
     )
     model = args.model or settings["local_llm_model"]
     run_id = str(uuid.uuid4())
+    cdp_renderer = CDPChromeRenderer() if args.use_cdp else None
 
     conn = psycopg.connect(args.dsn)
     with conn.cursor() as cur:
@@ -161,7 +170,10 @@ def main() -> int:
     total_in = total_out = grand = 0
     for pid, page_id, url in profs:
         try:
-            text = _to_text(fetch_homepage_html(url))[: args.max_text]
+            html, _method = fetch_html_with_browser_fallback(
+                url, cdp_renderer=cdp_renderer
+            )
+            text = _to_text(html)[: args.max_text]
             if len(text) < 60:
                 print(f"  {url}: skip (page too short)")
                 continue
@@ -211,6 +223,8 @@ def main() -> int:
         )
     conn.commit()
     conn.close()
+    if cdp_renderer is not None:
+        cdp_renderer.close()
     n = max(len(profs), 1)
     print(
         f"DONE: {grand} facts | tokens in/out={total_in}/{total_out} | per-prof in={total_in // n} out={total_out // n}"
