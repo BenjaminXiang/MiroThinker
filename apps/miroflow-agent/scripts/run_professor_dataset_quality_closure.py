@@ -49,6 +49,10 @@ from src.data_agents.professor.dataset_quality_closure import (  # noqa: E402
     run_dataset_closure_write_batch,
 )
 from src.data_agents.storage.postgres.connection import resolve_dsn  # noqa: E402
+from src.data_agents.storage.postgres.pipeline_run import (  # noqa: E402
+    close_pipeline_run,
+    open_pipeline_run,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -251,12 +255,15 @@ def run(
                 + "\n"
             )
             return 2
-        if not run_id:
+        if run_id and not _pipeline_run_exists(conn, run_id):
             output.write(
                 json.dumps(
                     {
-                        "error": "missing_run_id",
-                        "message": "write mode requires --run-id",
+                        "error": "missing_pipeline_run",
+                        "message": (
+                            "write mode requires --run-id to reference an "
+                            "existing pipeline_run row"
+                        ),
                         "mode": "write",
                     },
                     ensure_ascii=False,
@@ -273,6 +280,17 @@ def run(
                 buckets=buckets,
                 lanes=lanes,
             )
+            opened_pipeline_run = False
+            if not run_id:
+                run_id = _open_write_mode_pipeline_run(
+                    conn,
+                    lanes=lanes,
+                    bucket_limit=bucket_limit,
+                    batch_size=batch_size,
+                    dry_run_evidence=dry_run_evidence,
+                )
+                opened_pipeline_run = True
+                _commit_if_supported(conn)
             report = run_dataset_closure_write_batch(
                 conn=conn,
                 buckets=buckets,
@@ -287,6 +305,13 @@ def run(
                 write_report=report,
                 callbacks=default_post_write_verification_callbacks(),
             )
+            if opened_pipeline_run:
+                _close_opened_write_mode_pipeline_run(
+                    conn,
+                    run_id=run_id,
+                    report=report,
+                    post_write_report=post_write_report,
+                )
         except (DryRunEvidenceMismatch, ValueError) as exc:
             output.write(
                 json.dumps(
@@ -528,6 +553,76 @@ def _apply_provider_rate_limit_overrides(
         os.environ["COMPANY_DEEPSEEK_MIN_INTERVAL_SECONDS"] = str(value)
         overrides["deepseek_min_interval_seconds"] = value
     return overrides
+
+
+def _pipeline_run_exists(conn, run_id: str) -> bool:
+    row = conn.execute(
+        """
+        SELECT 1
+          FROM pipeline_run
+         WHERE run_id = %s
+         LIMIT 1
+        """,
+        (run_id,),
+    ).fetchone()
+    return row is not None
+
+
+def _open_write_mode_pipeline_run(
+    conn,
+    *,
+    lanes: Sequence[ClosureLaneName],
+    bucket_limit: int,
+    batch_size: int,
+    dry_run_evidence: str | Path | None,
+) -> str:
+    return str(
+        open_pipeline_run(
+            conn,
+            run_kind="backfill_real",
+            run_scope={
+                "task": "professor_dataset_quality_closure",
+                "mode": "write",
+                "lanes": list(lanes),
+                "bucket_limit": bucket_limit,
+                "batch_size": batch_size,
+                "dry_run_evidence": str(dry_run_evidence)
+                if dry_run_evidence is not None
+                else None,
+            },
+            triggered_by="run_professor_dataset_quality_closure",
+        )
+    )
+
+
+def _close_opened_write_mode_pipeline_run(
+    conn,
+    *,
+    run_id: str,
+    report,
+    post_write_report,
+) -> None:
+    failed_count = sum(lane.failed_count for lane in report.lanes)
+    attempted_count = sum(lane.attempted_count for lane in report.lanes)
+    if failed_count:
+        status = "failed"
+    elif post_write_report.completion_allowed:
+        status = "succeeded"
+    else:
+        status = "partial"
+    close_pipeline_run(
+        conn,
+        run_id=run_id,
+        status=status,
+        items_processed=attempted_count,
+        items_failed=failed_count,
+    )
+
+
+def _commit_if_supported(conn) -> None:
+    commit = getattr(conn, "commit", None)
+    if callable(commit):
+        commit()
 
 
 def _load_write_mode_evidence_and_buckets(

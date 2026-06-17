@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import inspect
 import json
 import logging
 import os
-import re
 import sys
 import time
 from pathlib import Path
@@ -27,6 +27,7 @@ from src.data_agents.paper.abstract_translator import (  # noqa: E402
     translate_abstract_to_zh,
 )
 from src.data_agents.paper.enrichment import enrich_paper_with_hybrid_sources  # noqa: E402
+from src.data_agents.paper.doi_quality import assess_doi_quality  # noqa: E402
 from src.data_agents.paper.full_text_fetcher import (  # noqa: E402
     fetch_pdf_url_full_text,
 )
@@ -41,12 +42,18 @@ from src.data_agents.paper.quality_promotion import (  # noqa: E402
     PaperEnrichmentSignals,
     evaluate_paper_promotion,
 )
+from src.data_agents.paper.source_text_quality import (  # noqa: E402
+    is_usable_paper_source_text,
+)
 from src.data_agents.paper.text_sanitizer import (  # noqa: E402
     sanitize_json_for_postgres,
     sanitize_optional_text_for_postgres,
     sanitize_text_for_postgres,
 )
-from src.data_agents.professor.llm_profiles import resolve_professor_llm_settings  # noqa: E402
+from src.data_agents.professor.llm_profiles import (  # noqa: E402
+    build_non_thinking_extra_body,
+    resolve_professor_llm_settings,
+)
 from src.data_agents.storage.postgres.pipeline_run import (  # noqa: E402
     close_pipeline_run,
     open_pipeline_run,
@@ -56,38 +63,6 @@ from src.data_agents.storage.postgres.paper_full_text import (  # noqa: E402
 )
 
 logger = logging.getLogger("run_paper_summary_zh_backfill")
-
-_AUTHOR_LIST_HEAD_RE = re.compile(
-    r"^[A-Z][A-Za-z'’.-]+(?:\s+[A-Z][A-Za-z'’.-]+)*"
-    r"(?:\s*,\s*[A-Z][A-Za-z'’.-]+(?:\s+[A-Z][A-Za-z'’.-]+)*){2,}"
-)
-_CITATION_METADATA_RE = re.compile(
-    r"\b(?:Proceedings of the|Annual Meeting of the|Conference on|"
-    r"International Joint Conference|Association for Computational Linguistics)\b",
-    re.IGNORECASE,
-)
-_PUBLISHER_NOTE_RE = re.compile(
-    r"^\s*(?:please note|the publisher is not responsible|"
-    r"proceedings of the national academy of sciences|international audience)\b",
-    re.IGNORECASE,
-)
-_TRUNCATED_FRAGMENT_RE = re.compile(r"\[\s*\.\.\.\s*\]")
-_LEADING_FRAGMENT_RE = re.compile(
-    r"^\s*(?:and|or|but)\b",
-    re.IGNORECASE,
-)
-_VENUE_ONLY_RE = re.compile(
-    r"^\s*[A-Z][A-Za-z&/ .'-]+Conference\s+\d{4},\s+"
-    r"[A-Z][A-Za-z .'-]+,\s+[A-Za-z .'-]+,\s+"
-    r"(?:\d{1,2}-\d{1,2}\s+[A-Z][A-Za-z]+\s+\d{4}|"
-    r"[A-Z][A-Za-z]+\s+\d{1,2}-\d{1,2},\s+\d{4})\s*$"
-)
-_AUTHOR_AFFILIATION_RE = re.compile(
-    r"^\s*[A-Z][A-Za-z'’.-]+[a-z]?\*?"
-    r".{0,220}\b[a-z]\s+"
-    r"(?:School|Department|University|Institute|College)\b",
-    re.IGNORECASE,
-)
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -157,9 +132,59 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "abstract/venue/year/citation fields."
         ),
     )
+    parser.add_argument(
+        "--existing-source-only",
+        action="store_true",
+        help=(
+            "Explicit fast path: summarize only rows that already have usable "
+            "abstract/full-text source and do not run metadata or full-text acquisition."
+        ),
+    )
+    parser.add_argument(
+        "--identifier-metadata-only",
+        action="store_true",
+        help=(
+            "Source acquisition lane: enrich DOI/OpenAlex/Crossref/arXiv metadata "
+            "without opening an LLM client or writing summary_zh."
+        ),
+    )
+    parser.add_argument(
+        "--worker-count",
+        type=int,
+        default=1,
+        help="Total number of deterministic paper_id hash shards for this run.",
+    )
+    parser.add_argument(
+        "--worker-index",
+        type=int,
+        default=0,
+        help="Zero-based worker shard index for this run.",
+    )
+    parser.add_argument(
+        "--llm-profile",
+        default=None,
+        help=(
+            "LLM profile for summary generation. Defaults to LLM_PROFILE or the "
+            "shared DeepSeek profile."
+        ),
+    )
     parser.add_argument("--dry-run", action="store_true", help="No DB writes")
     parser.add_argument("--log-level", default="INFO")
     args = parser.parse_args(argv)
+    if args.worker_count <= 0:
+        parser.error("--worker-count must be positive")
+    if args.worker_index < 0 or args.worker_index >= args.worker_count:
+        parser.error("--worker-index must be in [0, --worker-count)")
+    if args.existing_source_only and args.enrich_doi_metadata:
+        parser.error("--existing-source-only cannot be combined with --enrich-doi-metadata")
+    if args.identifier_metadata_only and args.enrich_doi_metadata:
+        parser.error(
+            "--identifier-metadata-only cannot be combined with --enrich-doi-metadata"
+        )
+    if args.identifier_metadata_only and args.existing_source_only:
+        parser.error(
+            "--identifier-metadata-only cannot be combined with --existing-source-only"
+        )
     try:
         args.paper_id = _merge_unique_ids(
             [*args.paper_id, *_read_paper_id_files(tuple(args.paper_id_file))]
@@ -198,19 +223,20 @@ def _open_database_connection(url: str):
     return psycopg.connect(url, row_factory=dict_row)
 
 
-def _open_llm_client():
+def _open_llm_client(profile_name: str | None = None):
     import httpx
     from openai import OpenAI
 
-    settings = resolve_professor_llm_settings("gemma4", include_profile=True)
+    settings = resolve_professor_llm_settings(profile_name, include_profile=True)
+    model = settings["local_llm_model"]
     client = OpenAI(
         base_url=settings["local_llm_base_url"],
         api_key=settings["local_llm_api_key"] or "EMPTY",
         http_client=httpx.Client(timeout=90.0, trust_env=False),
         timeout=90.0,
     )
-    extra_body = {"chat_template_kwargs": {"enable_thinking": False}}
-    return client, settings["local_llm_model"], extra_body
+    extra_body = build_non_thinking_extra_body(model)
+    return client, model, extra_body
 
 
 def _resolve_checkpoint_path(resume_arg: str | None, run_id: str) -> Path:
@@ -253,14 +279,33 @@ def _build_select_sql(
     paper_ids: tuple[str, ...] = (),
     institutions: tuple[str, ...] = (),
     seed_ids: tuple[str, ...] = (),
+    worker_count: int = 1,
+    worker_index: int = 0,
     include_doi_enrichment: bool = False,
+    identifier_metadata_only: bool = False,
 ) -> tuple[str, tuple[Any, ...]]:
     abstract_expr = (
         "COALESCE(NULLIF(trim(p.abstract_clean), ''), "
         "NULLIF(trim(pft.abstract), ''), "
         "NULLIF(trim(pft.intro), ''))"
     )
-    if include_doi_enrichment:
+    true_abstract_expr = (
+        "COALESCE(NULLIF(trim(p.abstract_clean), ''), "
+        "NULLIF(trim(pft.abstract), ''))"
+    )
+    identifier_expr = (
+        "("
+        "(p.doi IS NOT NULL AND length(trim(p.doi)) > 0) "
+        "OR (p.arxiv_id IS NOT NULL AND length(trim(p.arxiv_id)) > 0) "
+        "OR (p.openalex_id IS NOT NULL AND length(trim(p.openalex_id)) > 0)"
+        ")"
+    )
+    if identifier_metadata_only:
+        conditions = [
+            identifier_expr,
+            f"{true_abstract_expr} IS NULL",
+        ]
+    elif include_doi_enrichment:
         conditions = [
             "("
             f"({abstract_expr} IS NOT NULL) "
@@ -280,8 +325,16 @@ def _build_select_sql(
         ]
     )
     params: list[Any] = []
-    if only_missing:
-        conditions.append("(p.summary_zh IS NULL OR length(trim(p.summary_zh)) = 0)")
+    if only_missing and not identifier_metadata_only:
+        conditions.append(
+            "("
+            "(p.summary_zh IS NULL OR length(trim(p.summary_zh)) = 0) "
+            "OR ("
+            "NULLIF(trim(p.abstract_clean), '') IS NULL "
+            "AND NULLIF(trim(pft.abstract), '') IS NOT NULL"
+            ")"
+            ")"
+        )
     ctes: list[str] = []
     join_parts = ["LEFT JOIN paper_full_text pft ON pft.paper_id = p.paper_id"]
     if professor_ids or institutions or seed_ids:
@@ -306,6 +359,9 @@ def _build_select_sql(
     if paper_ids:
         conditions.append("p.paper_id = ANY(%s)")
         params.append(list(paper_ids))
+    if worker_count > 1:
+        conditions.append("mod(abs(hashtext(p.paper_id)::bigint), %s) = %s")
+        params.extend([int(worker_count), int(worker_index)])
     sql = ""
     if ctes:
         sql += "WITH " + ", ".join(ctes) + " "
@@ -494,6 +550,51 @@ def _doi_pdf_source(enrichment: PaperMetadataEnrichment) -> str:
     return "doi_pdf"
 
 
+def _persist_metadata_pdf_url_candidate(
+    conn: Any,
+    *,
+    paper_id: str,
+    enrichment: PaperMetadataEnrichment,
+    run_id: str,
+) -> int:
+    pdf_url = sanitize_optional_text_for_postgres(enrichment.pdf_url)
+    if not pdf_url:
+        return 0
+    source = sanitize_optional_text_for_postgres(_doi_pdf_source(enrichment))
+    cursor = conn.execute(
+        """
+        INSERT INTO paper_full_text (
+            paper_id,
+            abstract,
+            intro,
+            pdf_url,
+            pdf_sha256,
+            pdf_byte_size,
+            raw_pdf_storage_ref,
+            source,
+            fetched_at,
+            fetch_error,
+            run_id
+        )
+        VALUES (%s, NULL, NULL, %s, NULL, NULL, NULL, %s, now(), NULL, %s)
+        ON CONFLICT (paper_id) DO UPDATE
+           SET pdf_url = EXCLUDED.pdf_url,
+               source = EXCLUDED.source,
+               fetched_at = now(),
+               fetch_error = NULL,
+               run_id = EXCLUDED.run_id
+         WHERE NULLIF(BTRIM(COALESCE(paper_full_text.pdf_url, '')), '') IS NULL
+        """,
+        (
+            paper_id,
+            pdf_url,
+            source,
+            run_id,
+        ),
+    )
+    return int(getattr(cursor, "rowcount", 0) or 0)
+
+
 def _year_from_publication_date(value: str | None) -> int | None:
     if not value:
         return None
@@ -545,6 +646,72 @@ def _reject_summary_zh(
     )
 
 
+def _enrich_paper_metadata_for_lane(
+    *,
+    doi: str | None,
+    arxiv_id: str | None,
+    openalex_id: str | None,
+    error_recorder: Any,
+) -> PaperMetadataEnrichment | None:
+    kwargs: dict[str, Any] = {
+        "arxiv_id": arxiv_id,
+        "openalex_id": openalex_id,
+    }
+    try:
+        signature = inspect.signature(enrich_paper_with_hybrid_sources)
+    except (TypeError, ValueError):
+        signature = None
+    if signature is not None and "error_recorder" in signature.parameters:
+        kwargs["error_recorder"] = error_recorder
+    return enrich_paper_with_hybrid_sources(doi, **kwargs)
+
+
+def _record_metadata_provider_error(
+    report: dict[str, Any],
+    *,
+    paper_id: str,
+    provider: str,
+    exc: Exception,
+) -> None:
+    report["metadata_provider_errors"] += 1
+    category = _metadata_provider_error_category(exc)
+    if category == "timeout":
+        report["metadata_provider_timeouts"] += 1
+    elif category == "rate_limit":
+        report["metadata_provider_rate_limits"] += 1
+
+    samples = report["metadata_provider_error_samples"]
+    if len(samples) >= 10:
+        return
+    samples.append(
+        {
+            "paper_id": paper_id,
+            "provider": provider,
+            "category": category,
+            "error_type": type(exc).__name__,
+            "error": str(exc)[:240],
+        }
+    )
+
+
+def _metadata_provider_error_category(exc: Exception) -> str:
+    status_code = _exception_status_code(exc)
+    text = f"{type(exc).__name__}: {exc}".casefold()
+    if status_code == 429 or "429" in text or "rate limit" in text:
+        return "rate_limit"
+    if isinstance(exc, TimeoutError) or "timeout" in text or "timed out" in text:
+        return "timeout"
+    return "error"
+
+
+def _exception_status_code(exc: Exception) -> int | None:
+    response = getattr(exc, "response", None)
+    status_code = getattr(response, "status_code", None)
+    if isinstance(status_code, int):
+        return status_code
+    return None
+
+
 def main(argv: list[str] | None = None) -> None:
     args = _parse_args(argv)
     logging.basicConfig(
@@ -559,6 +726,12 @@ def main(argv: list[str] | None = None) -> None:
             file=sys.stderr,
         )
         sys.exit(1)
+
+    metadata_enrichment_enabled = bool(
+        args.enrich_doi_metadata or args.identifier_metadata_only
+    )
+    summary_generation_enabled = not args.identifier_metadata_only
+    full_text_fetch_enabled = bool(args.enrich_doi_metadata)
 
     conn = _open_database_connection(dsn)
     if args.dry_run:
@@ -579,6 +752,14 @@ def main(argv: list[str] | None = None) -> None:
                     "paper_id_files": args.paper_id_file,
                     "seed_ids": args.seed_id,
                     "enrich_doi_metadata": args.enrich_doi_metadata,
+                    "existing_source_only": args.existing_source_only,
+                    "identifier_metadata_only": args.identifier_metadata_only,
+                    "source_acquisition_enabled": metadata_enrichment_enabled,
+                    "summary_generation_enabled": summary_generation_enabled,
+                    "full_text_fetch_enabled": full_text_fetch_enabled,
+                    "worker_count": args.worker_count,
+                    "worker_index": args.worker_index,
+                    "llm_profile": args.llm_profile,
                     "dry_run": args.dry_run,
                 },
                 triggered_by="run_paper_summary_zh_backfill",
@@ -592,7 +773,11 @@ def main(argv: list[str] | None = None) -> None:
     resume_ids = _load_resume_ids(resume_path) if resume_path else set()
     checkpoint_path = resume_path or _resolve_checkpoint_path(None, run_id)
 
-    llm, llm_model, extra_body = _open_llm_client()
+    llm: Any | None = None
+    llm_model: str | None = None
+    extra_body: dict[str, Any] | None = None
+    if summary_generation_enabled:
+        llm, llm_model, extra_body = _open_llm_client(args.llm_profile)
     sql, params = _build_select_sql(
         only_missing=args.only_missing,
         limit=args.limit,
@@ -600,7 +785,10 @@ def main(argv: list[str] | None = None) -> None:
         paper_ids=tuple(args.paper_id or ()),
         institutions=tuple(args.institution or ()),
         seed_ids=tuple(args.seed_id or ()),
-        include_doi_enrichment=args.enrich_doi_metadata,
+        worker_count=args.worker_count,
+        worker_index=args.worker_index,
+        include_doi_enrichment=metadata_enrichment_enabled,
+        identifier_metadata_only=args.identifier_metadata_only,
     )
     rows = conn.execute(sql, params).fetchall()
 
@@ -612,15 +800,30 @@ def main(argv: list[str] | None = None) -> None:
         "papers_skipped": 0,
         "summaries_written": 0,
         "summaries_rejected": 0,
+        "summary_rejection_reason_counts": {},
         "metadata_enrichment_attempted": 0,
+        "metadata_enrichment_skipped_bad_doi": 0,
         "metadata_enriched": 0,
+        "metadata_provider_misses": 0,
+        "metadata_provider_errors": 0,
+        "metadata_provider_timeouts": 0,
+        "metadata_provider_rate_limits": 0,
+        "metadata_provider_error_samples": [],
+        "metadata_no_updates": 0,
+        "metadata_pdf_url_upserts": 0,
         "full_text_enrichment_attempted": 0,
         "full_text_enriched": 0,
         "abstract_clean_backfilled_from_full_text": 0,
         "identifier_contradictions": 0,
         "pipeline_issues_inserted": 0,
         "papers_with_errors": 0,
+        "bad_doi_samples": [],
         "dry_run": args.dry_run,
+        "existing_source_only": args.existing_source_only,
+        "identifier_metadata_only": args.identifier_metadata_only,
+        "source_acquisition_enabled": metadata_enrichment_enabled,
+        "summary_generation_enabled": summary_generation_enabled,
+        "full_text_fetch_enabled": full_text_fetch_enabled,
     }
 
     for row in rows:
@@ -631,97 +834,92 @@ def main(argv: list[str] | None = None) -> None:
             continue
 
         if (
-            args.enrich_doi_metadata
+            metadata_enrichment_enabled
             and _row_needs_metadata_enrichment(row_dict)
             and _row_has_metadata_identifier(row_dict)
         ):
-            report["metadata_enrichment_attempted"] += 1
-            try:
-                has_identifier_contradiction = False
-                enrichment = enrich_paper_with_hybrid_sources(
-                    str(row_dict["doi"]) if row_dict.get("doi") else None,
-                    arxiv_id=(
-                        str(row_dict["arxiv_id"])
-                        if row_dict.get("arxiv_id")
-                        else None
-                    ),
-                    openalex_id=(
-                        str(row_dict["openalex_id"])
-                        if row_dict.get("openalex_id")
-                        else None
-                    ),
+            doi_for_enrichment = str(row_dict["doi"]) if row_dict.get("doi") else None
+            doi_quality = assess_doi_quality(doi_for_enrichment)
+            if doi_for_enrichment is not None and not doi_quality.is_usable:
+                report["metadata_enrichment_skipped_bad_doi"] += 1
+                _append_bad_doi_sample(
+                    report,
+                    paper_id=paper_id,
+                    doi=doi_for_enrichment,
+                    reason=doi_quality.reason or "invalid",
                 )
-                if enrichment is not None:
-                    if enrichment.identifier_contradictions:
-                        has_identifier_contradiction = True
-                        row_dict["quality_status"] = NEEDS_REVIEW
-                        report["identifier_contradictions"] += len(
-                            enrichment.identifier_contradictions
-                        )
-                        if not args.dry_run:
-                            report[
-                                "pipeline_issues_inserted"
-                            ] += _file_identifier_contradiction_issue(
-                                conn,
-                                paper_id=paper_id,
-                                row=row_dict,
-                                enrichment=enrichment,
-                                run_id=run_id,
-                            )
-                    updates = _metadata_updates_from_enrichment(row_dict, enrichment)
-                    if updates:
-                        row_dict.update(updates)
-                        if has_identifier_contradiction:
-                            next_quality_status = NEEDS_REVIEW
-                        else:
-                            promotion = evaluate_paper_promotion(
-                                current_status=_current_quality_status(row_dict),
-                                signals=_paper_enrichment_signals(
-                                    row_dict,
-                                    summary_zh=row_dict.get("summary_zh"),
-                                    summary_zh_boilerplate_rejected=False,
-                                ),
-                            )
-                            next_quality_status = promotion.next_status
-                        if not args.dry_run:
-                            _persist_metadata_enrichment(
-                                conn,
-                                paper_id=paper_id,
-                                updates=updates,
-                                quality_status=next_quality_status,
-                                run_id=run_id,
-                            )
-                            conn.commit()
-                        row_dict["quality_status"] = next_quality_status
-                        report["metadata_enriched"] += 1
-                    if not _abstract_for_summary(row_dict) and enrichment.pdf_url:
-                        report["full_text_enrichment_attempted"] += 1
-                        source = _doi_pdf_source(enrichment)
-                        extract = fetch_pdf_url_full_text(
-                            enrichment.pdf_url,
+                doi_for_enrichment = None
+                if not _row_has_non_doi_metadata_identifier(row_dict):
+                    _append_checkpoint(
+                        checkpoint_path,
+                        {
+                            "paper_id": paper_id,
+                            "status": "metadata_skipped_bad_doi",
+                            "doi": str(row_dict.get("doi") or ""),
+                            "reason": doi_quality.reason,
+                        },
+                    )
+                    if args.identifier_metadata_only:
+                        report["papers_processed"] += 1
+                        continue
+                    # Existing abstracts or full-text fields may still be usable below.
+            if doi_for_enrichment is None and not _row_has_non_doi_metadata_identifier(
+                row_dict
+            ):
+                enrichment = None
+            else:
+                report["metadata_enrichment_attempted"] += 1
+                enrichment = None
+                try:
+                    has_identifier_contradiction = False
+                    provider_errors: list[tuple[str, Exception]] = []
+                    enrichment = _enrich_paper_metadata_for_lane(
+                        doi=doi_for_enrichment,
+                        arxiv_id=(
+                            str(row_dict["arxiv_id"])
+                            if row_dict.get("arxiv_id")
+                            else None
+                        ),
+                        openalex_id=(
+                            str(row_dict["openalex_id"])
+                            if row_dict.get("openalex_id")
+                            else None
+                        ),
+                        error_recorder=lambda provider, exc: provider_errors.append(
+                            (provider, exc)
+                        ),
+                    )
+                    for provider, provider_exc in provider_errors:
+                        _record_metadata_provider_error(
+                            report,
                             paper_id=paper_id,
-                            source=source,
+                            provider=provider,
+                            exc=provider_exc,
                         )
-                        if not args.dry_run:
-                            upsert_paper_full_text(
-                                conn,
-                                paper_id=paper_id,
-                                extract=extract,
-                                run_id=run_id,
+                    if enrichment is not None:
+                        if enrichment.identifier_contradictions:
+                            has_identifier_contradiction = True
+                            row_dict["quality_status"] = NEEDS_REVIEW
+                            report["identifier_contradictions"] += len(
+                                enrichment.identifier_contradictions
                             )
-                            conn.commit()
-                        extract_abstract = sanitize_text_for_postgres(extract.abstract)
-                        extract_intro = sanitize_text_for_postgres(extract.intro)
-                        if _is_usable_abstract(extract_abstract):
-                            row_dict["full_text_abstract"] = extract_abstract
-                            row_dict[
-                                "abstract_for_summary_source"
-                            ] = "paper_full_text.abstract"
-                            full_text_updates: dict[str, Any] = {}
-                            if not _is_usable_abstract(row_dict.get("abstract_clean")):
-                                full_text_updates["abstract_clean"] = extract_abstract
-                            if full_text_updates:
-                                row_dict.update(full_text_updates)
+                            if not args.dry_run:
+                                report[
+                                    "pipeline_issues_inserted"
+                                ] += _file_identifier_contradiction_issue(
+                                    conn,
+                                    paper_id=paper_id,
+                                    row=row_dict,
+                                    enrichment=enrichment,
+                                    run_id=run_id,
+                                )
+                        updates = _metadata_updates_from_enrichment(row_dict, enrichment)
+                        metadata_pdf_url_upserts = 0
+                        if updates:
+                            row_dict.update(updates)
+                            if has_identifier_contradiction:
+                                next_quality_status = NEEDS_REVIEW
+                            else:
                                 promotion = evaluate_paper_promotion(
                                     current_status=_current_quality_status(row_dict),
                                     signals=_paper_enrichment_signals(
@@ -730,40 +928,175 @@ def main(argv: list[str] | None = None) -> None:
                                         summary_zh_boilerplate_rejected=False,
                                     ),
                                 )
-                                if not args.dry_run:
-                                    _persist_metadata_enrichment(
+                                next_quality_status = promotion.next_status
+                            if not args.dry_run:
+                                _persist_metadata_enrichment(
+                                    conn,
+                                    paper_id=paper_id,
+                                    updates=updates,
+                                    quality_status=next_quality_status,
+                                    run_id=run_id,
+                                )
+                                conn.commit()
+                            row_dict["quality_status"] = next_quality_status
+                            report["metadata_enriched"] += 1
+                        if enrichment.pdf_url and not full_text_fetch_enabled:
+                            if not args.dry_run:
+                                metadata_pdf_url_upserts = (
+                                    _persist_metadata_pdf_url_candidate(
                                         conn,
                                         paper_id=paper_id,
-                                        updates=full_text_updates,
-                                        quality_status=promotion.next_status,
+                                        enrichment=enrichment,
                                         run_id=run_id,
                                     )
+                                )
+                                if metadata_pdf_url_upserts:
                                     conn.commit()
-                                row_dict["quality_status"] = promotion.next_status
-                                report[
-                                    "abstract_clean_backfilled_from_full_text"
-                                ] += 1
-                            report["metadata_enriched"] += 0 if updates else 1
-                            report["full_text_enriched"] += 1
-                        elif _is_usable_abstract(extract_intro):
-                            row_dict["full_text_intro"] = extract_intro
-                            row_dict[
-                                "abstract_for_summary_source"
-                            ] = "paper_full_text.intro"
-                            report["full_text_enriched"] += 1
-            except Exception as exc:  # noqa: BLE001
-                logger.warning("Paper %s DOI enrichment crashed: %s", paper_id, exc)
-                report["papers_with_errors"] += 1
-                try:
-                    conn.rollback()
-                except Exception:
-                    pass
-                _append_checkpoint(
-                    checkpoint_path,
-                    {"paper_id": paper_id, "status": "metadata_error", "error": str(exc)},
-                )
-                continue
+                            else:
+                                metadata_pdf_url_upserts = 1
+                            if metadata_pdf_url_upserts:
+                                row_dict["pdf_url"] = enrichment.pdf_url
+                                report["metadata_pdf_url_upserts"] += (
+                                    metadata_pdf_url_upserts
+                                )
+                                if not updates:
+                                    report["metadata_enriched"] += 1
+                        if not updates and not metadata_pdf_url_upserts:
+                            report["metadata_no_updates"] += 1
+                        if args.identifier_metadata_only:
+                            report["papers_processed"] += 1
+                            _append_checkpoint(
+                                checkpoint_path,
+                                {
+                                    "paper_id": paper_id,
+                                    "status": (
+                                        "metadata_enriched"
+                                        if updates or metadata_pdf_url_upserts
+                                        else "metadata_no_updates"
+                                    ),
+                                    "metadata_sources": list(
+                                        enrichment.enrichment_sources
+                                    ),
+                                    "pdf_url_upserted": bool(metadata_pdf_url_upserts),
+                                },
+                            )
+                            continue
+                        if (
+                            full_text_fetch_enabled
+                            and not _abstract_for_summary(row_dict)
+                            and enrichment.pdf_url
+                        ):
+                            report["full_text_enrichment_attempted"] += 1
+                            source = _doi_pdf_source(enrichment)
+                            extract = fetch_pdf_url_full_text(
+                                enrichment.pdf_url,
+                                paper_id=paper_id,
+                                source=source,
+                            )
+                            if not args.dry_run:
+                                upsert_paper_full_text(
+                                    conn,
+                                    paper_id=paper_id,
+                                    extract=extract,
+                                    run_id=run_id,
+                                )
+                                conn.commit()
+                            extract_abstract = sanitize_text_for_postgres(
+                                extract.abstract
+                            )
+                            extract_intro = sanitize_text_for_postgres(extract.intro)
+                            if _is_usable_abstract(extract_abstract):
+                                row_dict["full_text_abstract"] = extract_abstract
+                                row_dict[
+                                    "abstract_for_summary_source"
+                                ] = "paper_full_text.abstract"
+                                full_text_updates: dict[str, Any] = {}
+                                if not _is_usable_abstract(
+                                    row_dict.get("abstract_clean")
+                                ):
+                                    full_text_updates["abstract_clean"] = (
+                                        extract_abstract
+                                    )
+                                if full_text_updates:
+                                    row_dict.update(full_text_updates)
+                                    promotion = evaluate_paper_promotion(
+                                        current_status=_current_quality_status(
+                                            row_dict
+                                        ),
+                                        signals=_paper_enrichment_signals(
+                                            row_dict,
+                                            summary_zh=row_dict.get("summary_zh"),
+                                            summary_zh_boilerplate_rejected=False,
+                                        ),
+                                    )
+                                    if not args.dry_run:
+                                        _persist_metadata_enrichment(
+                                            conn,
+                                            paper_id=paper_id,
+                                            updates=full_text_updates,
+                                            quality_status=promotion.next_status,
+                                            run_id=run_id,
+                                        )
+                                        conn.commit()
+                                    row_dict["quality_status"] = promotion.next_status
+                                    report[
+                                        "abstract_clean_backfilled_from_full_text"
+                                    ] += 1
+                                report["metadata_enriched"] += 0 if updates else 1
+                                report["full_text_enriched"] += 1
+                            elif _is_usable_abstract(extract_intro):
+                                row_dict["full_text_intro"] = extract_intro
+                                row_dict[
+                                    "abstract_for_summary_source"
+                                ] = "paper_full_text.intro"
+                                report["full_text_enriched"] += 1
+                    else:
+                        report["metadata_provider_misses"] += 1
+                        if args.identifier_metadata_only:
+                            report["papers_processed"] += 1
+                            _append_checkpoint(
+                                checkpoint_path,
+                                {
+                                    "paper_id": paper_id,
+                                    "status": "metadata_provider_miss",
+                                },
+                            )
+                            continue
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning("Paper %s DOI enrichment crashed: %s", paper_id, exc)
+                    _record_metadata_provider_error(
+                        report,
+                        paper_id=paper_id,
+                        provider="hybrid",
+                        exc=exc,
+                    )
+                    report["papers_with_errors"] += 1
+                    try:
+                        conn.rollback()
+                    except Exception:
+                        pass
+                    _append_checkpoint(
+                        checkpoint_path,
+                        {
+                            "paper_id": paper_id,
+                            "status": "metadata_error",
+                            "error": str(exc),
+                        },
+                    )
+                    continue
 
+        if args.identifier_metadata_only:
+            report["papers_skipped"] += 1
+            _append_checkpoint(
+                checkpoint_path,
+                {
+                    "paper_id": paper_id,
+                    "status": "metadata_skipped_no_identifier_or_no_gap",
+                },
+            )
+            continue
+
+        abstract_clean_backfilled = False
         try:
             if _backfill_abstract_clean_from_existing_full_text(
                 conn,
@@ -775,6 +1108,7 @@ def main(argv: list[str] | None = None) -> None:
                 if not args.dry_run:
                     conn.commit()
                 report["abstract_clean_backfilled_from_full_text"] += 1
+                abstract_clean_backfilled = True
         except Exception as exc:  # noqa: BLE001
             logger.warning(
                 "Paper %s full-text abstract backfill crashed: %s", paper_id, exc
@@ -790,6 +1124,22 @@ def main(argv: list[str] | None = None) -> None:
                     "paper_id": paper_id,
                     "status": "full_text_abstract_backfill_error",
                     "error": str(exc),
+                },
+            )
+            continue
+
+        if (
+            abstract_clean_backfilled
+            and args.only_missing
+            and str(row_dict.get("summary_zh") or "").strip()
+        ):
+            report["papers_processed"] += 1
+            _append_checkpoint(
+                checkpoint_path,
+                {
+                    "paper_id": paper_id,
+                    "status": "abstract_clean_backfilled_from_full_text",
+                    "abstract_source": "paper_full_text.abstract",
                 },
             )
             continue
@@ -857,10 +1207,14 @@ def main(argv: list[str] | None = None) -> None:
                             },
                         )
                         continue
-                report["summaries_rejected"] += 1
+                _record_summary_rejection(report, "boilerplate_judge")
                 _append_checkpoint(
                     checkpoint_path,
-                    {"paper_id": paper_id, "status": "rejected_boilerplate"},
+                    {
+                        "paper_id": paper_id,
+                        "status": "rejected_boilerplate",
+                        "reason": "boilerplate_judge",
+                    },
                 )
                 continue
 
@@ -940,10 +1294,14 @@ def main(argv: list[str] | None = None) -> None:
                         },
                     )
                     continue
-            report["summaries_rejected"] += 1
+            _record_summary_rejection(report, "translation_invalid_or_empty")
             _append_checkpoint(
                 checkpoint_path,
-                {"paper_id": paper_id, "status": "rejected"},
+                {
+                    "paper_id": paper_id,
+                    "status": "rejected",
+                    "reason": "translation_invalid_or_empty",
+                },
             )
 
     report["duration_seconds"] = round(time.monotonic() - started_at, 2)
@@ -1007,6 +1365,12 @@ def _summary_rejection_quality_status(row: dict[str, Any]) -> str:
     return promotion.next_status
 
 
+def _record_summary_rejection(report: dict[str, Any], reason: str) -> None:
+    report["summaries_rejected"] += 1
+    counts = report.setdefault("summary_rejection_reason_counts", {})
+    counts[reason] = int(counts.get(reason, 0)) + 1
+
+
 def _backfill_abstract_clean_from_existing_full_text(
     conn: Any,
     *,
@@ -1064,6 +1428,23 @@ def _row_has_metadata_identifier(row: dict[str, Any]) -> bool:
     )
 
 
+def _row_has_non_doi_metadata_identifier(row: dict[str, Any]) -> bool:
+    return any(str(row.get(key) or "").strip() for key in ("arxiv_id", "openalex_id"))
+
+
+def _append_bad_doi_sample(
+    report: dict[str, Any],
+    *,
+    paper_id: str,
+    doi: str,
+    reason: str,
+) -> None:
+    samples = report["bad_doi_samples"]
+    if len(samples) >= 10:
+        return
+    samples.append({"paper_id": paper_id, "doi": doi, "reason": reason})
+
+
 def _abstract_for_summary(row: dict[str, Any]) -> str | None:
     for key, source in (
         ("abstract_for_summary", None),
@@ -1087,24 +1468,7 @@ def _has_usable_true_abstract(row: dict[str, Any]) -> bool:
 
 
 def _is_usable_abstract(value: object) -> bool:
-    text = str(value or "").strip()
-    if not text:
-        return False
-    if len(text) < 30:
-        return False
-    if _PUBLISHER_NOTE_RE.search(text):
-        return False
-    if _TRUNCATED_FRAGMENT_RE.search(text):
-        return False
-    if _LEADING_FRAGMENT_RE.search(text):
-        return False
-    if _VENUE_ONLY_RE.search(text):
-        return False
-    if _AUTHOR_AFFILIATION_RE.search(text):
-        return False
-    if _CITATION_METADATA_RE.search(text) and _AUTHOR_LIST_HEAD_RE.search(text):
-        return False
-    return True
+    return is_usable_paper_source_text(value)
 
 
 if __name__ == "__main__":

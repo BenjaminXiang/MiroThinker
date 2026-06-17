@@ -32,6 +32,7 @@ from src.data_agents.paper.canonical_writer import (  # noqa: E402
     PaperUpsertReport,
     upsert_paper,
 )
+from src.data_agents.paper.doi_quality import assess_doi_quality  # noqa: E402
 from src.data_agents.paper.quality_promotion import (  # noqa: E402
     NEEDS_ENRICHMENT,
     PARTIAL,
@@ -68,6 +69,7 @@ _RUN_KIND = "backfill_real"
 _TRIGGERED_BY = "paper_title_enrichment_backfill"
 _DEFAULT_MIN_CONFIDENCE = 0.85
 _SAMPLE_LIMIT = 10
+_SCOPE_PAPER_ID_SAMPLE_LIMIT = 100
 _UNSAFE_PROFESSOR_NAMES_SQL = (
     "'面包屑'",
     "'highlighted news'",
@@ -110,6 +112,12 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Restrict to one prof_page_only paper_id; repeatable.",
     )
     parser.add_argument(
+        "--paper-id-file",
+        action="append",
+        default=[],
+        help="Read paper_id values from a text file; one ID per line, repeatable.",
+    )
+    parser.add_argument(
         "--min-confidence",
         type=float,
         default=_DEFAULT_MIN_CONFIDENCE,
@@ -141,6 +149,14 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--disable-semantic-scholar-title-search",
+        action="store_true",
+        help=(
+            "Disable Semantic Scholar title search while API key approval or "
+            "rate limits make OpenAlex/Crossref-primary backfills preferable."
+        ),
+    )
+    parser.add_argument(
         "--disable-dblp-title-search",
         action="store_true",
         help=(
@@ -153,9 +169,65 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Disable arXiv title search for faster bounded reruns.",
     )
+    parser.add_argument(
+        "--cache-only",
+        action="store_true",
+        help=(
+            "Only use existing title-resolution cache entries; do not call "
+            "live title resolver providers on cache misses."
+        ),
+    )
+    parser.add_argument(
+        "--worker-count",
+        type=int,
+        default=1,
+        help="Total number of deterministic paper_id hash shards for this run.",
+    )
+    parser.add_argument(
+        "--worker-index",
+        type=int,
+        default=0,
+        help="Zero-based worker shard index for this run.",
+    )
     parser.add_argument("--dry-run", action="store_true", help="No DB writes")
     parser.add_argument("--log-level", default="INFO")
-    return parser.parse_args(argv)
+    args = parser.parse_args(argv)
+    if args.worker_count <= 0:
+        parser.error("--worker-count must be positive")
+    if args.worker_index < 0 or args.worker_index >= args.worker_count:
+        parser.error("--worker-index must be in [0, --worker-count)")
+    try:
+        args.paper_id = _merge_unique_ids(
+            [*args.paper_id, *_read_paper_id_files(tuple(args.paper_id_file))]
+        )
+    except OSError as exc:
+        parser.error(str(exc))
+    return args
+
+
+def _read_paper_id_files(paths: tuple[str, ...]) -> list[str]:
+    paper_ids: list[str] = []
+    for item in paths:
+        path = Path(item)
+        with path.open("r", encoding="utf-8") as fh:
+            for line in fh:
+                value = line.strip()
+                if not value or value.startswith("#"):
+                    continue
+                paper_ids.append(value)
+    return paper_ids
+
+
+def _merge_unique_ids(values: list[str]) -> list[str]:
+    merged: list[str] = []
+    seen: set[str] = set()
+    for raw_value in values:
+        value = str(raw_value or "").strip()
+        if not value or value in seen:
+            continue
+        seen.add(value)
+        merged.append(value)
+    return merged
 
 
 def _open_database_connection(url: str):
@@ -171,6 +243,8 @@ def _build_select_sql(
     limit: int | None,
     seed_ids: tuple[str, ...],
     paper_ids: tuple[str, ...],
+    worker_count: int = 1,
+    worker_index: int = 0,
 ) -> tuple[str, tuple[Any, ...]]:
     ctes: list[str] = []
     joins = [
@@ -213,6 +287,9 @@ def _build_select_sql(
     if paper_ids:
         conditions.append("p.paper_id = ANY(%s)")
         params.append(list(paper_ids))
+    if worker_count > 1:
+        conditions.append("mod(abs(hashtext(p.paper_id)::bigint), %s) = %s")
+        params.extend([int(worker_count), int(worker_index)])
 
     sql = ""
     if ctes:
@@ -288,6 +365,7 @@ def _process_rows(
     upsert_paper_fn=upsert_paper,
 ) -> dict[str, Any]:
     report = _empty_report(run_id=run_id, args=args, rows_total=len(rows))
+    cache_only = bool(getattr(args, "cache_only", False))
     for row in rows:
         row_dict = dict(row)
         paper_id = str(row_dict["paper_id"])
@@ -352,15 +430,23 @@ def _process_rows(
                 conn.commit()
             continue
         try:
-            resolved = _resolved_from_existing_identifier(row_dict, title) or resolve_title(
+            resolved = _resolved_from_existing_identifier(
+                row_dict,
+                title,
+                report=report,
+            ) or resolve_title(
                 title,
                 author_hint=_first_author_hint(links),
                 year_hint=_optional_int(row_dict.get("year")),
                 enable_openalex_title_search=not args.disable_openalex_title_search,
+                enable_semantic_scholar_title_search=(
+                    not args.disable_semantic_scholar_title_search
+                ),
                 enable_dblp_title_search=not args.disable_dblp_title_search,
                 enable_arxiv_title_search=not args.disable_arxiv_title_search,
                 http_client=http_client,
-                cache=None if args.dry_run else cache,
+                cache=cache if cache_only else (None if args.dry_run else cache),
+                cache_only=cache_only,
             )
             if resolved is None or resolved.match_confidence < args.min_confidence:
                 report["papers_unresolved"] += 1
@@ -468,8 +554,17 @@ def _build_plan_report(
     report: dict[str, Any] = {
         "plan_only": True,
         "limit": args.limit,
+        "worker_count": args.worker_count,
+        "worker_index": args.worker_index,
         "seed_id": list(args.seed_id),
-        "paper_id": list(args.paper_id),
+        "paper_id_files": list(getattr(args, "paper_id_file", [])),
+        "cache_only": bool(getattr(args, "cache_only", False)),
+        "openalex_title_search_enabled": not args.disable_openalex_title_search,
+        "semantic_scholar_title_search_enabled": (
+            not args.disable_semantic_scholar_title_search
+        ),
+        "dblp_title_search_enabled": not args.disable_dblp_title_search,
+        "arxiv_title_search_enabled": not args.disable_arxiv_title_search,
         "papers_total": len(rows),
         "resolver_candidates": 0,
         "implausible_titles": 0,
@@ -481,6 +576,7 @@ def _build_plan_report(
         "missing_samples": [],
         "unsafe_link_samples": [],
     }
+    report.update(_paper_id_scope_fields(args))
     for row in rows:
         row_dict = dict(row)
         paper_id = str(row_dict.get("paper_id") or "")
@@ -531,10 +627,17 @@ def _empty_report(
         "plan_only": bool(getattr(args, "plan_only", False)),
         "dry_run": bool(args.dry_run),
         "limit": args.limit,
+        "worker_count": args.worker_count,
+        "worker_index": args.worker_index,
         "seed_id": list(args.seed_id),
-        "paper_id": list(args.paper_id),
+        "paper_id_files": list(getattr(args, "paper_id_file", [])),
+        "cache_only": bool(getattr(args, "cache_only", False)),
+        **_paper_id_scope_fields(args),
         "min_confidence": args.min_confidence,
         "openalex_title_search_enabled": not args.disable_openalex_title_search,
+        "semantic_scholar_title_search_enabled": (
+            not args.disable_semantic_scholar_title_search
+        ),
         "dblp_title_search_enabled": not args.disable_dblp_title_search,
         "arxiv_title_search_enabled": not args.disable_arxiv_title_search,
         "papers_total": rows_total,
@@ -555,10 +658,22 @@ def _empty_report(
         "full_text_pdf_upserts": 0,
         "unsafe_links_filtered": 0,
         "unsafe_link_rows": 0,
+        "bad_doi_identifiers": 0,
         "resolved_samples": [],
         "unresolved_samples": [],
         "unsafe_link_samples": [],
+        "bad_doi_samples": [],
         "error_samples": [],
+    }
+
+
+def _paper_id_scope_fields(args: argparse.Namespace) -> dict[str, Any]:
+    paper_ids = list(getattr(args, "paper_id", []))
+    truncated = len(paper_ids) > _SCOPE_PAPER_ID_SAMPLE_LIMIT
+    return {
+        "paper_id": paper_ids[:_SCOPE_PAPER_ID_SAMPLE_LIMIT],
+        "paper_id_count": len(paper_ids),
+        "paper_id_truncated": truncated,
     }
 
 
@@ -620,8 +735,24 @@ def _upsert_resolved_paper(
 def _resolved_from_existing_identifier(
     row: dict[str, Any],
     title: str,
+    report: dict[str, Any] | None = None,
 ) -> ResolvedPaper | None:
     doi = _optional_str(row.get("doi"))
+    if doi:
+        doi_quality = assess_doi_quality(doi)
+        if not doi_quality.is_usable:
+            if report is not None:
+                report["bad_doi_identifiers"] += 1
+                _append_sample(
+                    report,
+                    "bad_doi_samples",
+                    {
+                        "paper_id": str(row.get("paper_id") or ""),
+                        "doi": doi,
+                        "reason": doi_quality.reason or "invalid",
+                    },
+                )
+            doi = None
     arxiv_id = _optional_str(row.get("arxiv_id"))
     openalex_id = _optional_str(row.get("openalex_id"))
     if not any((doi, arxiv_id, openalex_id)):
@@ -763,11 +894,16 @@ def _upsert_resolved_pdf_metadata(
             resolved_paper_id,
             _optional_str(resolved.abstract),
             pdf_url,
-            f"title_resolution:{resolved.match_source}",
+            _paper_full_text_source_for_title_resolution(resolved.match_source),
             require_real_run_id(run_id, writer_name="_upsert_resolved_pdf_metadata"),
         ),
     )
     return int(getattr(cursor, "rowcount", 0) or 1)
+
+
+def _paper_full_text_source_for_title_resolution(match_source: str | None) -> str:
+    suffix = _optional_str(match_source) or "unknown"
+    return f"title_res:{suffix}"[:32]
 
 
 def _upsert_migrated_link(
@@ -1125,6 +1261,8 @@ def main(argv: list[str] | None = None) -> None:
             limit=args.limit,
             seed_ids=tuple(str(item) for item in args.seed_id),
             paper_ids=tuple(str(item) for item in args.paper_id),
+            worker_count=args.worker_count,
+            worker_index=args.worker_index,
         )
         if args.plan_only:
             rows = list(conn.execute(sql, params).fetchall())
@@ -1141,13 +1279,20 @@ def main(argv: list[str] | None = None) -> None:
                 run_scope={
                     "task": "paper_title_enrichment_backfill",
                     "limit": args.limit,
+                    "worker_count": args.worker_count,
+                    "worker_index": args.worker_index,
                     "seed_id": list(args.seed_id),
-                    "paper_id": list(args.paper_id),
+                    **_paper_id_scope_fields(args),
+                    "paper_id_files": list(args.paper_id_file),
                     "dry_run": args.dry_run,
+                    "cache_only": args.cache_only,
                     "min_confidence": args.min_confidence,
                     "reject_implausible": args.reject_implausible,
                     "openalex_title_search_enabled": (
                         not args.disable_openalex_title_search
+                    ),
+                    "semantic_scholar_title_search_enabled": (
+                        not args.disable_semantic_scholar_title_search
                     ),
                     "dblp_title_search_enabled": not args.disable_dblp_title_search,
                     "arxiv_title_search_enabled": not args.disable_arxiv_title_search,
@@ -1161,7 +1306,11 @@ def main(argv: list[str] | None = None) -> None:
             conn.commit()
 
         rows = list(conn.execute(sql, params).fetchall())
-        cache = None if args.dry_run else PostgresTitleResolutionCache(conn)
+        cache = (
+            PostgresTitleResolutionCache(conn)
+            if args.cache_only or not args.dry_run
+            else None
+        )
         http_client = _open_http_client()
         report = _process_rows(
             conn,
