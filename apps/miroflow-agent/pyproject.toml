@@ -58,6 +58,7 @@ dependencies = [
     "sqlalchemy>=2.0",
     "apscheduler>=3.10",
     "milvus-lite>=2.5.1",
+    "socksio>=1.0.0",
 ]
 
 [build-system]
