@@ -35,6 +35,7 @@ from psycopg.types.json import Json
 from src.data_agents.browser_fetch import (
     CDPChromeRenderer,
     fetch_html_with_browser_fallback,
+    render_html_with_browser,
 )
 from src.data_agents.professor.llm_profiles import resolve_professor_llm_settings
 
@@ -109,6 +110,11 @@ def main() -> int:
         action="store_true",
         help="instantiate a CDPChromeRenderer for 瑞数/Rishu JS-challenge sites (csse.szu etc.); run under xvfb-run.",
     )
+    p.add_argument(
+        "--force-browser",
+        action="store_true",
+        help="skip static fetch; always render via headless browser (for JS-rendered sites like HIT).",
+    )
     args = p.parse_args()
     # Load .env only for DeepSeek profiles (needs DEEPSEEK_API_KEY). For gemma4/etc.
     # skip it: .env's DEEPSEEK_MODEL/LOCAL_LLM_MODEL would hijack the profile model.
@@ -170,9 +176,12 @@ def main() -> int:
     total_in = total_out = grand = 0
     for pid, page_id, url in profs:
         try:
-            html, _method = fetch_html_with_browser_fallback(
-                url, cdp_renderer=cdp_renderer
-            )
+            if args.force_browser:
+                html = render_html_with_browser(url, timeout=90.0)
+            else:
+                html, _method = fetch_html_with_browser_fallback(
+                    url, cdp_renderer=cdp_renderer
+                )
             text = _to_text(html)[: args.max_text]
             if len(text) < 60:
                 print(f"  {url}: skip (page too short)")
