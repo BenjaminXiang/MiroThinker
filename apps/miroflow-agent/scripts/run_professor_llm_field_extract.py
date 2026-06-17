@@ -102,9 +102,10 @@ def main() -> int:
         help="process all profs; default skips profs already having both academic_position and education (no wasted work).",
     )
     args = p.parse_args()
-    load_dotenv(
-        override=True
-    )  # ensure .env keys (e.g. DEEPSEEK_API_KEY) win over stale process env
+    # Load .env only for DeepSeek profiles (needs DEEPSEEK_API_KEY). For gemma4/etc.
+    # skip it: .env's DEEPSEEK_MODEL/LOCAL_LLM_MODEL would hijack the profile model.
+    if "deepseek" in args.llm_profile.lower():
+        load_dotenv(override=True)
     if not args.dsn:
         raise SystemExit("DATABASE_URL or --dsn required")
     if "+psycopg" in args.dsn:
