@@ -222,7 +222,9 @@ def main() -> int:
             params.append(args.min_summary_len)
         where_sql = " AND ".join(where)
         cur.execute(
-            f"""SELECT p.professor_id, p.canonical_name, p.profile_summary, p.email,
+            f"""SELECT p.professor_id, p.canonical_name, p.profile_summary,
+                       (SELECT f.value_raw FROM professor_fact f WHERE f.professor_id=p.professor_id
+                        AND f.fact_type='contact' AND f.status='active' LIMIT 1) AS email,
                        pa.institution, pa.department, sp.url
                 FROM professor p
                 JOIN professor_affiliation pa ON pa.professor_id=p.professor_id AND pa.is_primary
