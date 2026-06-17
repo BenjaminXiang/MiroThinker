@@ -187,9 +187,9 @@ def main() -> int:
         raise SystemExit("DATABASE_URL or --dsn required")
     if "+psycopg" in args.dsn:
         args.dsn = args.dsn.replace("postgresql+psycopg://", "postgresql://")
-    load_dotenv(override=True)  # need SERPER_API_KEY
-
+    # Resolve model BEFORE load_dotenv (.env DEEPSEEK_MODEL would hijack the profile)
     settings = resolve_professor_llm_settings(args.llm_profile)
+    load_dotenv(override=True)  # SERPER_API_KEY
     client = OpenAI(
         base_url=settings["local_llm_base_url"],
         api_key=settings.get("local_llm_api_key") or "EMPTY",
@@ -343,13 +343,14 @@ def main() -> int:
                 if updated:
                     c.execute(
                         "INSERT INTO professor_fact(professor_id,fact_type,value_raw,source_page_id,evidence_span,confidence,status,run_id)"
-                        " VALUES(%s,'homepage',%s,%s,%s,0.85,'active',%s) ON CONFLICT DO NOTHING",
+                        " SELECT %s,'homepage',%s,primary_official_profile_page_id,%s,0.85,'active',%s"
+                        " FROM professor WHERE professor_id=%s ON CONFLICT DO NOTHING",
                         (
                             pid,
                             enriched[:500],
-                            None,
-                            f"web_enrich: {len(verified)} verified results",
+                            f"web_enrich: {len(verified)} verified",
                             run_id,
+                            pid,
                         ),
                     )
                 conn.commit()
