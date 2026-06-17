@@ -63,3 +63,19 @@ Every completed field value SHALL record its source (`homepage_section` / `llm_e
 #### Scenario: Externally-enriched field is traceable
 - **WHEN** `research_directions` is filled from OpenAlex
 - **THEN** the resulting facts record source `openalex` and the `run_id`
+
+### Requirement: English field values are translated to Chinese (bilingual, original preserved)
+
+For any professor structured-field value (`research_directions`, `education`, `work_experience`, `academic_position`, `profile_summary`) whose original crawled text is in English, the system SHALL produce a **bilingual** form that preserves the original and adds Chinese: either `English (Chinese translation)` or `Chinese (English original)`. The original crawled text SHALL never be lost. This applies both to newly-extracted fields and to **existing DB field values** (a backfill pass over current rows). Chinese-original values are left as-is (optionally augmented with an English gloss). The translation reuses the existing translation provider infrastructure.
+
+#### Scenario: English research direction becomes bilingual
+- **WHEN** a professor's crawled `research_directions` value is English (e.g. "machine learning")
+- **THEN** the stored value is bilingual, e.g. `machine learning (机器学习)`, with the original preserved
+
+#### Scenario: Existing English DB field is backfilled to bilingual
+- **WHEN** an existing professor fact row holds an English value
+- **THEN** a translation backfill rewrites it to the bilingual form without losing the original
+
+#### Scenario: Chinese-original value is preserved
+- **WHEN** a field value is already Chinese
+- **THEN** it is left as-is (no destructive overwrite; English gloss optional)

@@ -7,6 +7,8 @@ Per CLAUDE.md §14 / AGENTS.md §15. Every OpenSpec change is registered here. S
 | Change ID | Type | Capability | Source | Status | Weight | Risk | Agent Run | PR | Archive |
 |---|---|---|---|---|---|---|---|---|---|
 | prof-admin-workbench-ui | feat (admin API + workbench UI + action log) | professor-admin-workbench-ui | `prof-admin-workbench` child 3 | proposed | Standard | medium-high | — | n/a | no |
+| wire-paper-identity-gate-rejection | feat (LLM-gate rejection → paper identity_status → Milvus exclusion) | paper-identity-status | portfolio plan W0b (Gap B) | proposed | Standard | medium | — | n/a | no |
+| professor-profile-field-completion-pipeline | feat (4-layer template-agnostic professor field completion + gate + closure) | professor-profile-field-completion | cleanup gap-analysis 2026-06-16 | proposed | Epic | medium | — | n/a | no |
 
 ## Notes
 
@@ -36,6 +38,15 @@ Per CLAUDE.md §14 / AGENTS.md §15. Every OpenSpec change is registered here. S
   (`prof-fact-extraction-expansion`) and the parent workspace are also
   archived. Remaining active child work is Child 3
   (`prof-admin-workbench-ui`).
+
+- `wire-paper-identity-gate-rejection` registered 2026-06-16. First change
+  opened from `docs/plans/2026-06-16-dirty-data-gap-closure-portfolio.md`
+  (W0b, Gap B). New capability `paper-identity-status`. Note: this ledger's
+  active table is still missing the other active (un-archived) changes under
+  `openspec/changes/` (paper-source-gap-remediation-lanes,
+  professor-core-profile-paper-quality, professor-dataset-candidate-generation,
+  professor-dataset-quality-closure, sigs-official-publications-to-paper-domain);
+  full reconciliation is portfolio task W3b (`governance-ledger-index-reconcile`).
 
 ## Archived
 

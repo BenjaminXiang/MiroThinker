@@ -1,0 +1,14 @@
+{
+  "note": "Corrected 2026-06-16. Initial count (25575) did not exclude identity_status='merged'; the scan's _load_rows excludes merged, so the real apply blast radius is 1519. Title-quality split added after dry-run sampling exposed parser-garbage dominance.",
+  "scan_filter": "canonical_source='prof_page_only' AND identity_status NOT IN ('merged') AND NOT EXISTS verified professor_paper_link",
+  "initial_count_no_merged_filter": 25575,
+  "eligible_total_scan_filter": 1519,
+  "title_quality_split": {
+    "plausible_title_is_plausible_paper_title_true": 119,
+    "garbage_or_malformed_title_false": 1400,
+    "garbage_pct": 92
+  },
+  "interpretation": "92% of eligible rows are parser-garbage titles (root cause C2/C3), not wrong-attribution. Applying Gap B now would mislabel unverifiable-due-to-bad-title rows as rejected/wrong-attribution. Recommend adding a plausible-title guard (see change refinement).",
+  "all_eligible_have_at_least_one_rejected_link": true,
+  "eligible_and_identity_status_confirmed": 0
+}
