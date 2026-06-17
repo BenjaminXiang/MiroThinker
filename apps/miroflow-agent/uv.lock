@@ -1467,6 +1467,7 @@ dependencies = [
     { name = "pgvector" },
     { name = "pillow" },
     { name = "playwright" },
+    { name = "playwright-stealth" },
     { name = "psycopg", extra = ["binary", "pool"] },
     { name = "puremagic" },
     { name = "pydantic" },
@@ -1536,6 +1537,7 @@ requires-dist = [
     { name = "pgvector", specifier = ">=0.3" },
     { name = "pillow", specifier = ">=11.0.0" },
     { name = "playwright", specifier = ">=1.51.0" },
+    { name = "playwright-stealth", specifier = ">=2.0.3" },
     { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.2" },
     { name = "puremagic" },
     { name = "pydantic", specifier = ">=2.11.3" },
@@ -2104,6 +2106,18 @@ wheels = [
     { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/51/63/28b3f2d36e6a95e88f033d2aa7af06083f6f4aa0d9764759d96033cd053e/playwright-1.53.0-py3-none-win32.whl", hash = "sha256:36eedec101724ff5a000cddab87dd9a72a39f9b3e65a687169c465484e667c06" },
     { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/a9/b5/4ca25974a90d16cfd4a9a953ee5a666cf484a0bdacb4eed484e5cab49e66/playwright-1.53.0-py3-none-win_amd64.whl", hash = "sha256:d68975807a0fd997433537f1dcf2893cda95884a39dc23c6f591b8d5f691e9e8" },
     { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/9a/81/b42ff2116df5d07ccad2dc4eeb20af92c975a1fbc7cd3ed37b678468b813/playwright-1.53.0-py3-none-win_arm64.whl", hash = "sha256:fcfd481f76568d7b011571160e801b47034edd9e2383c43d83a5fb3f35c67885" },
+]
+
+[[package]]
+name = "playwright-stealth"
+version = "2.0.3"
+source = { registry = "https://mirrors.sustech.edu.cn/pypi/web/simple" }
+dependencies = [
+    { name = "playwright" },
+]
+sdist = { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/a4/db/6ade5d539c7d151b9defc78fafa8b65aa52352617d0e7699b47008bd801f/playwright_stealth-2.0.3.tar.gz", hash = "sha256:1d8e488fbdd8f190f1269ea8cf5d57d14df3a9f1af1001c41ee3588b2aac3133" }
+wheels = [
+    { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/b5/10/607c409712c02a26c4cb794820514cb7fdaaeac15fb05bed917fb8a354b3/playwright_stealth-2.0.3-py3-none-any.whl", hash = "sha256:1887ade423ab7ff8ae16d363a30a38de0b5817e1e4a29d47b74bf3a0e3dbfcb4" },
 ]
 
 [[package]]

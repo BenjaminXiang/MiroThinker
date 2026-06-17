@@ -59,6 +59,7 @@ dependencies = [
     "apscheduler>=3.10",
     "milvus-lite>=2.5.1",
     "socksio>=1.0.0",
+    "playwright-stealth>=2.0.3",
 ]
 
 [build-system]
