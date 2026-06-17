@@ -90,6 +90,11 @@ def main() -> int:
     p.add_argument("--llm-profile", default="gemma4")
     p.add_argument("--sleep", type=float, default=3.0)
     p.add_argument("--max-text", type=int, default=6000)
+    p.add_argument(
+        "--all",
+        action="store_true",
+        help="process all profs; default skips profs already having both academic_position and education (no wasted work).",
+    )
     args = p.parse_args()
     if not args.dsn:
         raise SystemExit("DATABASE_URL or --dsn required")
@@ -119,11 +124,23 @@ def main() -> int:
             ),
         )
         conn.commit()
+        gap_skip = (
+            ""
+            if args.all
+            else (
+                " AND NOT (EXISTS(SELECT 1 FROM professor_fact f WHERE f.professor_id=p.professor_id"
+                " AND f.fact_type='academic_position' AND f.status='active')"
+                " AND EXISTS(SELECT 1 FROM professor_fact g WHERE g.professor_id=p.professor_id"
+                " AND g.fact_type='education' AND g.status='active'))"
+            )
+        )
         cur.execute(
             "SELECT p.professor_id, sp.page_id, sp.url FROM professor p"
             " JOIN professor_affiliation pa ON pa.professor_id=p.professor_id AND pa.is_primary AND pa.institution=%s"
             " JOIN source_page sp ON sp.page_id=p.primary_official_profile_page_id"
-            " WHERE sp.url IS NOT NULL ORDER BY p.professor_id LIMIT %s OFFSET %s",
+            " WHERE sp.url IS NOT NULL"
+            + gap_skip
+            + " ORDER BY p.professor_id LIMIT %s OFFSET %s",
             (args.institution, args.limit, args.offset),
         )
         profs = cur.fetchall()
