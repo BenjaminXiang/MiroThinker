@@ -28,6 +28,7 @@ import uuid
 from typing import Any
 
 import psycopg
+from dotenv import load_dotenv
 from openai import OpenAI
 from psycopg.types.json import Json
 
@@ -88,6 +89,11 @@ def main() -> int:
     p.add_argument("--limit", type=int, default=20)
     p.add_argument("--offset", type=int, default=0)
     p.add_argument("--llm-profile", default="gemma4")
+    p.add_argument(
+        "--model",
+        default=None,
+        help="override the LLM model (e.g. deepseek-v4-flash) if the profile is hijacked by an env var like DEEPSEEK_MODEL.",
+    )
     p.add_argument("--sleep", type=float, default=3.0)
     p.add_argument("--max-text", type=int, default=6000)
     p.add_argument(
@@ -96,6 +102,9 @@ def main() -> int:
         help="process all profs; default skips profs already having both academic_position and education (no wasted work).",
     )
     args = p.parse_args()
+    load_dotenv(
+        override=True
+    )  # ensure .env keys (e.g. DEEPSEEK_API_KEY) win over stale process env
     if not args.dsn:
         raise SystemExit("DATABASE_URL or --dsn required")
     if "+psycopg" in args.dsn:
@@ -107,7 +116,7 @@ def main() -> int:
         api_key=settings.get("local_llm_api_key") or "EMPTY",
         timeout=90.0,
     )
-    model = settings["local_llm_model"]
+    model = args.model or settings["local_llm_model"]
     run_id = str(uuid.uuid4())
 
     conn = psycopg.connect(args.dsn)
@@ -155,15 +164,20 @@ def main() -> int:
             if len(text) < 60:
                 print(f"  {url}: skip (page too short)")
                 continue
-            r = client.chat.completions.create(
-                model=model,
-                messages=[
+            create_kwargs = {
+                "model": model,
+                "messages": [
                     {"role": "system", "content": _SYS},
                     {"role": "user", "content": _PROMPT.format(text=text)},
                 ],
-                max_tokens=1200,
-                temperature=0.2,
-            )
+                "max_tokens": 1200,
+                "temperature": 0.2,
+            }
+            # DeepSeek V4 defaults to thinking mode (consumes all tokens on reasoning,
+            # empty output). Disable it for this extraction task.
+            if "deepseek" in args.llm_profile.lower():
+                create_kwargs["extra_body"] = {"thinking": {"type": "disabled"}}
+            r = client.chat.completions.create(**create_kwargs)
             total_in += r.usage.prompt_tokens or 0
             total_out += r.usage.completion_tokens or 0
             content = (r.choices[0].message.content or "").strip()
