@@ -107,6 +107,18 @@ _RESEARCH_DIRECTION_DENY_SUBSTRINGS = (
     "复制地址",
     "主页地址",
 )
+# Reject reference-list / citation fragments that leak in when a verbose professor's
+# publication list is mistaken for research directions (e.g. volume:page, "N. Author",
+# volume(issue), page ranges, DOIs, (year)). A real research direction is a TERM:
+# a CJK char or a 3+ letter run.
+_CITATION_FRAGMENT_RE = re.compile(
+    r"\d+\s*[:：]\s*\d+"  # 114: 103462  (volume: page)
+    r"|^\s*\d+\s*\.\s"  # "10. 宋鹏" (numbered citation author)
+    r"|\d+\s*\(\s*\d"  # 150(16) / 141904 (2016) (volume(issue) / id (year))
+    r"|\d{3,}\s*[-–—~]\s*\d{2,}"  # 138-145 (page range)
+    r"|10\.\d{4,}\s*/"  # 10.xxxx/ (DOI)
+)
+_RESEARCH_TERM_RE = re.compile(r"[一-鿿]|[A-Za-z]{3,}")
 
 
 @dataclass(frozen=True, slots=True)
@@ -230,7 +242,10 @@ def parse_hit_rendered_profile(html: str, *, source_url: str) -> HitProfileExtra
     sections = _extract_hit_sections(soup, text)
     header_lines = _header_lines(text)
 
-    research_text = sections.get("research") or _inline_labeled_text(text, "研究方向")
+    # Use only the (guarded) structured 研究方向 section; do NOT fall back to
+    # _inline_labeled_text, which can mis-attribute a verbose publication/reference
+    # list to research directions (real directions come from the bio pattern below).
+    research_text = sections.get("research") or ""
     summary = sections.get("summary")
     education_work_text = sections.get("education_work") or ""
     contact_text = "\n".join(part for part in (sections.get("contact"), text) if part)
@@ -520,15 +535,16 @@ def _clean_research_directions(raw_items: list[str]) -> list[str]:
 
 def _is_denied_research_direction(value: str) -> bool:
     normalized = _clean_text(value)
-    if not normalized:
+    if not normalized or len(normalized) < 2:
         return True
     if normalized in _RESEARCH_DIRECTION_DENYLIST:
         return True
     if any(token in normalized for token in _RESEARCH_DIRECTION_DENY_SUBSTRINGS):
         return True
-    if re.fullmatch(r"\d+", normalized):
+    if _CITATION_FRAGMENT_RE.search(normalized):
         return True
-    if "." in normalized and not re.search(r"[\u4e00-\u9fff]", normalized):
+    if not _RESEARCH_TERM_RE.search(normalized):
+        # Digits/punctuation only (no CJK char and no 3+ letter run) \u2014 not a real term.
         return True
     return False
 

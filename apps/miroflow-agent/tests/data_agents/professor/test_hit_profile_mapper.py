@@ -201,3 +201,27 @@ async def test_crawl_homepage_routes_hit_hosts_to_playwright_profile_mapper(
     assert result.profile.email == "hedaojinghit@163.com"
     assert result.profile.profile_summary
     assert result.profile.official_top_papers == []
+
+
+def test_research_direction_deny_rejects_publication_list_fragments() -> None:
+    from src.data_agents.professor.hit_playwright_profile import (
+        _is_denied_research_direction,
+    )
+
+    # Citation / publication-list fragments that previously leaked in for verbose
+    # professors (e.g. wangfei's 581 garbage research_topic facts). The deny filter
+    # catches numeric citations, punctuation, and non-terms. (Author/journal names
+    # like "Fei Wang" are term-like and are prevented upstream by dropping the
+    # unreliable inline-labeled research fallback, not by this filter.)
+    garbage = [
+        '"', "(", ")", "*", "[", "]", "）",
+        "114: 103462", "10. 宋鹏", "141904 (2016)", "138-145",
+        "150(16)", "10.1038/abc123",
+        "更新日期", "人气", "二维码",
+    ]
+    for value in garbage:
+        assert _is_denied_research_direction(value), value
+
+    # Real research directions must survive.
+    for value in ["人工智能", "网络空间安全", "机器人", "大模型", "machine learning", "deep learning"]:
+        assert not _is_denied_research_direction(value), value
