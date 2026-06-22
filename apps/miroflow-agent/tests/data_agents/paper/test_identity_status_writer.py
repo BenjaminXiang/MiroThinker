@@ -44,12 +44,18 @@ class FakeConnection:
             return FakeCursor(rows=[self.paper[paper_id]])
         if "FROM pipeline_issue" in compact_sql and "resolved = false" in compact_sql:
             paper_id = str(params[0])
+            stage_filter = params[1] if len(params) > 1 else None
+            reported_by_filter = params[2] if len(params) > 2 else None
             rows = [
                 issue
                 for issue in self.issues
                 if not issue["resolved"]
-                and issue["stage"] == "identity_gate"
                 and issue["evidence_snapshot"]["paper_id"] == paper_id
+                and (stage_filter is None or issue["stage"] == stage_filter)
+                and (
+                    reported_by_filter is None
+                    or issue["reported_by"] == reported_by_filter
+                )
             ]
             return FakeCursor(rows=rows[:1])
         if "FROM professor_paper_link" in compact_sql:
@@ -70,10 +76,11 @@ class FakeConnection:
             paper["identity_status"] = str(restored_status)
             return FakeCursor(rowcount=1)
         if compact_sql.startswith("INSERT INTO pipeline_issue"):
-            snapshot = json.loads(str(params[4]))
+            stage = params[3]
+            snapshot = json.loads(str(params[5]))
             if any(
                 not issue["resolved"]
-                and issue["stage"] == "identity_gate"
+                and issue["stage"] == stage
                 and issue["evidence_snapshot"]["paper_id"] == snapshot["paper_id"]
                 for issue in self.issues
             ):
@@ -84,11 +91,11 @@ class FakeConnection:
                     "professor_id": params[0],
                     "link_id": params[1],
                     "institution": params[2],
-                    "stage": "identity_gate",
+                    "stage": stage,
                     "severity": "medium",
-                    "description": params[3],
+                    "description": params[4],
                     "evidence_snapshot": snapshot,
-                    "reported_by": params[5],
+                    "reported_by": params[6],
                     "resolved": False,
                 }
             )
@@ -225,3 +232,31 @@ def test_restore_returns_prior_identity_status_and_resolves_issue() -> None:
     assert conn.paper["PAPER-1"]["identity_status"] == "unverified"
     assert conn.paper["PAPER-1"]["quality_status"] == "ready"
     assert conn.issues[0]["resolved"] is True
+
+
+def test_apply_rejection_with_title_cleanup_stage_files_distinct_issue() -> None:
+    from src.data_agents.paper.identity_status_writer import (
+        apply_identity_status_rejection,
+    )
+
+    conn = FakeConnection()
+    apply_identity_status_rejection(
+        conn,
+        paper_id="PAPER-1",
+        run_id="33333333-3333-3333-3333-333333333333",
+        evidence={
+            "reason": "implausible title",
+            "title_clean": "Co-supervised PhD student",
+        },
+        prior_identity_status="unverified",
+        stage="title_cleanup",
+        reported_by="paper_title_cleanup_scan",
+    )
+
+    issue = conn.issues[0]
+    assert issue["stage"] == "title_cleanup"
+    assert issue["reported_by"] == "paper_title_cleanup_scan"
+    assert issue["evidence_snapshot"]["stage"] == "title_cleanup"
+    assert issue["evidence_snapshot"]["issue_type"] == "paper_title_cleanup_rejection"
+    # quality_status is not mutated by the rejection path
+    assert conn.paper["PAPER-1"]["quality_status"] == "ready"

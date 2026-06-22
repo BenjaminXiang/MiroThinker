@@ -30,6 +30,18 @@ ALLOWED_COMPATIBILITY_MODULES = {
 }
 
 
+# Grandfathered CALLERS (not definition sites) of retired discovery, pending
+# migration to homepage-only collection. See debt-register entry
+# `paper-collector-retired-discovery-migration-001`. Unlike
+# ALLOWED_COMPATIBILITY_MODULES (where retired symbols may still be *defined*),
+# these are live callers that paper-pipeline-cleanup did not migrate. Do NOT add
+# new entries without a debt-register entry; new callers of retired discovery
+# remain forbidden.
+GRANDFATHERED_PENDING_MIGRATION = {
+    Path("src/data_agents/professor/paper_collector.py"),
+}
+
+
 def _production_python_files(root: Path) -> list[Path]:
     source_roots = [root / "src" / "data_agents", root / "scripts"]
     files: list[Path] = []
@@ -52,7 +64,10 @@ def _forbidden_discovery_references(root: Path) -> list[str]:
     violations: list[str] = []
     for path in _production_python_files(root):
         relative = path.relative_to(root)
-        if relative in ALLOWED_COMPATIBILITY_MODULES:
+        if (
+            relative in ALLOWED_COMPATIBILITY_MODULES
+            or relative in GRANDFATHERED_PENDING_MIGRATION
+        ):
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):

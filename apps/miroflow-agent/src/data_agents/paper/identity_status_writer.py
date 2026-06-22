@@ -66,6 +66,8 @@ def apply_identity_status_rejection(
     run_id: str,
     evidence: dict[str, Any],
     prior_identity_status: str,
+    stage: str = _STAGE,
+    reported_by: str = _REPORTED_BY,
 ) -> RejectionResult:
     """Set ``paper.identity_status='rejected'`` and file trace evidence.
 
@@ -76,7 +78,9 @@ def apply_identity_status_rejection(
         run_id,
         writer_name="apply_identity_status_rejection",
     )
-    existing_issue = _fetch_open_issue(conn, paper_id=paper_id)
+    existing_issue = _fetch_open_issue(
+        conn, paper_id=paper_id, stage=stage, reported_by=reported_by
+    )
     recorded_prior = _prior_identity_status(existing_issue) or prior_identity_status
 
     cursor = conn.execute(
@@ -96,7 +100,8 @@ def apply_identity_status_rejection(
     if existing_issue is None:
         target = _fetch_issue_target(conn, paper_id=paper_id)
         snapshot = {
-            "issue_type": "paper_identity_gate_rejection",
+            "issue_type": f"paper_{stage}_rejection",
+            "stage": stage,
             "paper_id": paper_id,
             "run_id": str(real_run_id),
             "prior_identity_status": recorded_prior,
@@ -114,16 +119,17 @@ def apply_identity_status_rejection(
                 evidence_snapshot,
                 reported_by
             )
-            VALUES (%s, %s::uuid, %s, 'identity_gate', 'medium', %s, %s::jsonb, %s)
+            VALUES (%s, %s::uuid, %s, %s, 'medium', %s, %s::jsonb, %s)
             ON CONFLICT DO NOTHING
             """,
             (
                 target.get("professor_id"),
                 target.get("link_id"),
                 target.get("institution") or "paper_identity_status",
-                f"paper identity gate rejected {paper_id}",
+                stage,
+                f"paper identity status rejected {paper_id}",
                 json.dumps(snapshot, ensure_ascii=False, default=str),
-                _REPORTED_BY,
+                reported_by,
             ),
         )
         issues_filed = int(getattr(insert_cursor, "rowcount", 0) or 0)
@@ -185,20 +191,31 @@ def restore_identity_status(conn: Any, *, paper_id: str) -> RestoreResult:
     )
 
 
-def _fetch_open_issue(conn: Any, *, paper_id: str) -> dict[str, Any] | None:
+def _fetch_open_issue(
+    conn: Any,
+    *,
+    paper_id: str,
+    stage: str | None = None,
+    reported_by: str | None = None,
+) -> dict[str, Any] | None:
+    clauses = ["evidence_snapshot->>'paper_id' = %s", "resolved = false"]
+    params: list[Any] = [paper_id]
+    if stage is not None:
+        clauses.append("stage = %s")
+        params.append(stage)
+    if reported_by is not None:
+        clauses.append("reported_by = %s")
+        params.append(reported_by)
     row = conn.execute(
-        """
+        f"""
         SELECT issue_id::text AS issue_id,
                evidence_snapshot
           FROM pipeline_issue
-         WHERE evidence_snapshot->>'paper_id' = %s
-           AND resolved = false
-           AND stage = %s
-           AND reported_by = %s
+         WHERE {' AND '.join(clauses)}
          ORDER BY reported_at DESC
          LIMIT 1
         """,
-        (paper_id, _STAGE, _REPORTED_BY),
+        tuple(params),
     ).fetchone()
     return dict(row) if row is not None else None
 

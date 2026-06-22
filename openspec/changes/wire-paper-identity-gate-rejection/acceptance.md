@@ -21,10 +21,10 @@
 - **A5.1** Each applied rejection has a stage-`identity_gate` `pipeline_issue` row (or JSONL entry) with gate confidence, reasoning, source spans, and `run_id`. — Met via writer unit test + apply-run artifact.
 
 ## A6. Baseline / blast-radius discipline
-- **A6.1** An eligibility baseline (count of prof-page-only papers with no verified link) is recorded before any `--apply`, and the applied reject count is compared to it. — Met via `eligibility-baseline.json` + dry-run counts.
+- **A6.1** An eligibility baseline (count of `prof_page_only` + `unverified` + no-verified-link papers) is recorded before any `--apply`, and the applied reject count is compared to it. — Baseline = **28,928** (2026-06-22 scan, `eligibility-baseline.json`; supersedes the 6/16 figure of 1,519). Blast-radius audited = **0 `ready`** in the eligible set (28,927 `needs_enrichment` + 1 `rejected`). Met via `eligibility-baseline.json` + dry-run counts + post-apply `ready` audit (AC3).
 
 ## Out of scope (explicitly not accepted here)
-- Promotion of ~7,297 `unverified` rows (→ W0a/W2a source-gap).
+- Promotion of `unverified` rows beyond the W0b-eligible set: **53,165** total `unverified`; W0b targets only the **28,928** eligible (`prof_page_only` + no verified link + plausible title). The ~24,237 non-`prof_page_only` `unverified` (crossref/manual/dblp/s2) → Phase 6 D7 / W2a source-gap. (Prior drafts cited "~7,297" — stale, superseded by the 2026-06-22 scan.)
 - Cleanup of dead `apply_identity_gate_reevaluation` (→ Gap A).
 - Gate threshold/semantics changes.
 

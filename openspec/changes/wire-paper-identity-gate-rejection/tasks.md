@@ -4,8 +4,8 @@
 
 ## 1. Verification contract & baseline
 
-- [ ] 1.1 Create `.agents/runs/wire-paper-identity-gate-rejection/verification-contract.md`: classify as behavior-affecting (deterministic writer/scan; gate reused), select RED = contract/unit tests for the rejection guard + scan dry-run/apply semantics + reversibility, declare GREEN, and state that Superpowers TDD may drive the deterministic slices but must not change the gate.
-- [ ] 1.2 Baseline count: run a SQL read on `miroflow_real` counting papers eligible for rejection (`canonical_source='prof_page_only'` AND no `professor_paper_link` with `link_status='verified'`); save to `.agents/runs/wire-paper-identity-gate-rejection/eligibility-baseline.json`. This is the predicted blast radius.
+- [x] 1.1 Create `.agents/runs/wire-paper-identity-gate-rejection/verification-contract.md` (created 2026-06-16; re-baselined 2026-06-22 against the 28,928 fresh scan — see verification-contract.md AC1–AC6 + growth warning): classify as behavior-affecting (deterministic writer/scan; gate reused), select RED = contract/unit tests for the rejection guard + scan dry-run/apply semantics + reversibility, declare GREEN, and state that Superpowers TDD may drive the deterministic slices but must not change the gate.
+- [x] 1.2 Baseline count (DONE 2026-06-22: **28,928** eligible, **0 `ready`** in the set; `eligibility-baseline.json` re-baselined with the 6/16 prior=1,519 preserved as history + growth explanation): run a SQL read on `miroflow_real` counting papers eligible for rejection (`canonical_source='prof_page_only'` AND no `professor_paper_link` with `link_status='verified'`); save to `.agents/runs/wire-paper-identity-gate-rejection/eligibility-baseline.json`. This is the predicted blast radius.
 
 ## 2. Identity-status writer (guard + reversible transition)
 
@@ -15,8 +15,8 @@
 
 > 2.1–2.3 + group 3/4/5 implemented in Codex slice 1 (2026-06-16); 20 tests pass. The plausible-title guard below (2.4–2.5) is a refinement added after the dry-run found 92% of eligible rows had garbage titles.
 
-- [ ] 2.4 Extend `decide_identity_status_rejection(*, has_verified_link, canonical_source, title_clean)` to add a third condition: `is_plausible_paper_title(title_clean)` must be `True`. Reject only when all three hold; otherwise `no_change` (new reason `implausible_title` for the garbage-title case). Import `is_plausible_paper_title` from `paper/title_quality`.
-- [ ] 2.5 Update `run_paper_identity_scan.py` to pass `title_clean` into `decide_identity_status_rejection` (it already loads `p.title_clean`); ensure garbage-title eligible rows report as `no_change` (left `unverified`).
+- [x] 2.4 Extend `decide_identity_status_rejection(*, has_verified_link, canonical_source, title_clean)` to add a third condition: `is_plausible_paper_title(title_clean)` must be `True`. Reject only when all three hold; otherwise `no_change` (new reason `implausible_title` for the garbage-title case). Import `is_plausible_paper_title` from `paper/title_quality`.
+- [x] 2.5 Update `run_paper_identity_scan.py` to pass `title_clean` into `decide_identity_status_rejection` (it already loads `p.title_clean`); ensure garbage-title eligible rows report as `no_change` (left `unverified`).
 
 ## 3. Scan script (dry-run default, flag, JSONL, counts)
 
@@ -35,7 +35,7 @@
 - [x] 5.3 RED: `restore_identity_status` restores the exact `prior_identity_status` and resolves the issue when a `verified` link exists.
 - [x] 5.4 RED: `run_paper_identity_scan.py` dry-run makes no writes and emits JSONL + counts; `--apply` writes only qualifying rejections; flag-off skips. (Script test mirroring `tests/scripts/test_run_name_identity_scan*`.)
 - [x] 5.5 GREEN: implement until all RED tests pass; run `uv run pytest tests/data_agents/paper/test_identity_status_writer.py tests/scripts/test_run_paper_identity_scan.py -n0`.
-- [ ] 5.6 RED+GREEN (plausible-title guard): extend `test_decide_reject_only_when_no_verified_link_and_prof_page_only` to pass `title_clean` and assert `reject` requires a plausible title; add `test_decide_no_change_for_garbage_title` asserting `no_change` (reason `implausible_title`) when `is_plausible_paper_title` is False even though no verified link + prof_page_only. Re-run the writer + scan tests.
+- [x] 5.6 RED+GREEN (plausible-title guard): extend `test_decide_reject_only_when_no_verified_link_and_prof_page_only` to pass `title_clean` and assert `reject` requires a plausible title; add `test_decide_no_change_for_garbage_title` asserting `no_change` (reason `implausible_title`) when `is_plausible_paper_title` is False even though no verified link + prof_page_only. Re-run the writer + scan tests.
 
 ## 6. Real evidence (dry-run first, bounded apply, re-backfill)
 

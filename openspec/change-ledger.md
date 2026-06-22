@@ -6,8 +6,18 @@ Per CLAUDE.md §14 / AGENTS.md §15. Every OpenSpec change is registered here. S
 
 | Change ID | Type | Capability | Source | Status | Weight | Risk | Agent Run | PR | Archive |
 |---|---|---|---|---|---|---|---|---|---|
-| prof-admin-workbench-ui | feat (admin API + workbench UI + action log) | professor-admin-workbench-ui | `prof-admin-workbench` child 3 | proposed | Standard | medium-high | — | n/a | no |
-| wire-paper-identity-gate-rejection | feat (LLM-gate rejection → paper identity_status → Milvus exclusion) | paper-identity-status | portfolio plan W0b (Gap B) | proposed | Standard | medium | — | n/a | no |
+| sigs-official-publications-to-paper-domain | feat (parse SIGS author-prefixed publications → paper domain + bridge + rollout) | sigs-official-publications-to-paper-domain | portfolio 2026-05-27 | in-verification (116/116; bounded progress, not all-school) | Epic | medium | `.agents/runs/sigs-official-publications-to-paper-domain/` | n/a | no |
+| professor-core-profile-paper-quality | feat (end-to-end quality contract: prof profile → homepage papers → enrichment → dedup → summary → promotion → presentation) | professor-core-profile-paper-quality | portfolio 2026-06-13 | in-verification (41/41; 5 dataset gates pending) | Standard/Epic | medium-high | `.agents/runs/professor-core-profile-paper-quality/` | n/a | no |
+| professor-dataset-candidate-generation | feat (source-grounded candidate layer for 4 closure lanes + gate + closure) | professor-dataset-candidate-generation | portfolio 2026-06-14 | in-verification (90/90; production write-mode not complete) | Standard→Epic | medium | `.agents/runs/professor-dataset-candidate-generation/` | n/a | no |
+| professor-dataset-quality-closure | feat (controlled dataset closure: bucketing + dry-run gates + batch writes + residual-risk) | professor-dataset-quality-closure | portfolio 2026-06-13 | in-verification (37/37; real write-mode not executed) | Standard | medium | `.agents/runs/professor-dataset-quality-closure/` | n/a | no |
+| paper-source-gap-remediation-lanes | feat (split missing summary_zh/abstract_clean into 5 remediation lanes) | paper-homepage-enrichment-completion + paper-fulltext-from-prof-page + paper-pipeline-cleanup (modified) | portfolio 2026-06-15 | tasks-complete-not-archived (27/27; acceptance Passed) | Standard | medium | `.agents/runs/paper-source-gap-remediation-lanes/` | n/a | no |
+| wire-paper-identity-gate-rejection | feat (LLM-gate rejection → paper identity_status → Milvus exclusion) | paper-identity-status | portfolio 2026-06-22 Phase 1 (re-baselines W0b) | in-implementation | Standard | medium | `.agents/runs/wire-paper-identity-gate-rejection/` | n/a | no |
+| ingest-dedup-anchor-before-insert | feat (ingest checks dedup anchor before INSERT; link-attach on hit) | paper-dedup-anchor | portfolio 2026-06-22 Phase 2 | proposed | Standard | medium | — | n/a | no |
+| title-resolver-web-attribution-gate | feat (W1a: web tier requires DOI/arxiv match OR title≥0.85+author-token Jaccard≥0.3) | paper-title-resolution | portfolio 2026-06-22 Phase 3 | proposed | Standard | medium | — | n/a | no |
+| abstract-web-reader-fallback | feat (W2a: 4-empty → Jina reader fetches row pdf_url/landing_page → paper_full_text) | paper-source-acquisition | portfolio 2026-06-22 Phase 3 (blocked by W1a) | proposed | Standard | medium | — | n/a | no |
+| duplicate-paper-review-workflow | feat (W2e: human/LLM review for no-DOI dup groups; merge_alias on confirm) | paper-dedup | portfolio 2026-06-22 Phase 4 | proposed | Standard | medium | — | n/a | no |
+| homepage-cms-selector-coverage | feat (W2c: per-seed citation-template extraction fixes) | paper-homepage-extraction | portfolio 2026-06-22 Phase 5 | proposed | Standard | medium | — | n/a | no |
+| paper-implausible-title-cleanup | feat (reject implausible-titled prof_page_only papers via no-LLM scan + default-exclude rejected/merged from /paper) | paper-title-cleanup (new) | user /paper garbage report 2026-06-22; portfolio Phase 5 remediation | in-implementation (code slices 2-5 done + GREEN; baseline/apply 1.2/6.x pending real DB) | Standard | medium | `.agents/runs/paper-implausible-title-cleanup/` | n/a | no |
 | professor-profile-field-completion-pipeline | feat (4-layer template-agnostic professor field completion + gate + closure) | professor-profile-field-completion | cleanup gap-analysis 2026-06-16 | proposed | Epic | medium | — | n/a | no |
 
 ## Notes
@@ -48,6 +58,22 @@ Per CLAUDE.md §14 / AGENTS.md §15. Every OpenSpec change is registered here. S
   professor-dataset-quality-closure, sigs-official-publications-to-paper-domain);
   full reconciliation is portfolio task W3b (`governance-ledger-index-reconcile`).
 
+- Portfolio re-baseline 2026-06-22 (`docs/plans/2026-06-22-professor-paper-gap-closure-portfolio.md`):
+  re-grounds the professor→paper gap-closure effort in a fresh `miroflow_real` scan.
+  Several 6/15 "large" gaps are now small (profile_summary<200: 3; research_overview
+  missing: 839; DOI pollution: 0; run_id: 0 null; education missing: 239). The
+  `professor-profile-field-completion-pipeline` Epic is **downgraded** (real residual
+  ~240, not "6/10 schools 0%"). `wire-paper-identity-gate-rejection` (Phase 1)
+  re-baselined to 28,928 eligible (was 1,519 on 6/16; growth from fresh UPC/crawl
+  output), 0 `ready` in the eligible set → moved to `in-implementation`. Phases 2–6
+  registered above as `proposed` placeholders; Phase 6 field/link work reuses the
+  downgraded `professor-profile-field-completion-pipeline` capability + a future
+  D7 paper-link-verification change (not yet registered). Full W3b ledger/index
+  reconcile **executed 2026-06-22 (Phase 0)**: 5 missing active changes added with
+  accurate statuses; `prof-admin-workbench-ui` moved active→archived (it was archived
+  2026-05-23 but stale in the active table); 18 missing archived rows added (archive
+  dir 34/34 now covered); `docs/index.md` re-baselined to 2026-06-22.
+
 ## Archived
 
 | Change ID | Archived as | Type | Capability | Status at archive | Weight | Risk | Archived on |
@@ -68,3 +94,21 @@ Per CLAUDE.md §14 / AGENTS.md §15. Every OpenSpec change is registered here. S
 | prof-seed-ops-hardening | `archive/2026-05-23-prof-seed-ops-hardening/` | feat/refactor (bounded trigger + failure taxonomy) | professor-seed-ops-hardening | tasks-complete; P3 sample E2E and browser walkthrough verified and specs synced | Standard | medium | 2026-05-23 |
 | prof-summary-fields | `archive/2026-05-23-prof-summary-fields/` | feat (professor paper/patent aggregate summaries) | professor-summary-fields | tasks-complete; professor output summary verification artifact recorded | Standard | medium | 2026-05-23 |
 | patent-page-only-canonical | `archive/2026-05-23-patent-page-only-canonical/` | feat (preserve title-only page patents) | patent-page-only-canonical | tasks-complete; title-only patent canonical/Postgres/migration verification recorded and specs synced | Standard | medium | 2026-05-23 |
+| prof-admin-workbench-ui | `archive/2026-05-23-prof-admin-workbench-ui/` | feat | professor-admin-workbench-ui | tasks-complete (verification recorded) | Standard | medium | 2026-05-23 |
+| prof-seed-adapter-coverage | `archive/2026-05-24-prof-seed-adapter-coverage/` | feat | professor-seed-adapter-coverage | tasks-complete (verification recorded) | Standard | medium-high | 2026-05-24 |
+| prof-blocked-seed-source-remediation | `archive/2026-05-25-prof-blocked-seed-source-remediation/` | feat | professor-blocked-seed-source-remediation | tasks-complete (verification recorded) | Standard | medium | 2026-05-25 |
+| prof-final-validation | `archive/2026-05-25-prof-final-validation/` | feat | professor-final-validation | tasks-complete (verification recorded) | Standard | medium-high | 2026-05-25 |
+| prof-post-full-quality-audit | `archive/2026-05-25-prof-post-full-quality-audit/` | feat | professor-post-full-quality-audit | tasks-complete (verification recorded) | Standard | medium | 2026-05-25 |
+| prof-publish-index-refresh | `archive/2026-05-25-prof-publish-index-refresh/` | feat | professor-publish-index-refresh | tasks-complete (verification recorded) | Standard | medium-high | 2026-05-25 |
+| prof-seed-controlled-full-recollection | `archive/2026-05-25-prof-seed-controlled-full-recollection/` | feat | professor-seed-controlled-full-recollection | tasks-complete (verification recorded) | Standard | medium-high | 2026-05-25 |
+| prof-seed-recollection-readiness | `archive/2026-05-25-prof-seed-recollection-readiness/` | feat | professor-seed-recollection-readiness | tasks-complete (verification recorded) | Standard | medium | 2026-05-25 |
+| prof-title-contamination-repair | `archive/2026-05-25-prof-title-contamination-repair/` | bugfix | professor-profile-field-extraction-integrity | tasks-complete (verification recorded) | Standard | medium | 2026-05-25 |
+| company-enrichment-source-closure | `archive/2026-05-28-company-enrichment-source-closure/` | feat (epic parent) | company-enrichment-source-closure | tasks-complete (verification recorded) | Epic | high | 2026-05-28 |
+| company-enrichment-business-closure | `archive/2026-06-02-company-enrichment-business-closure/` | feat (epic parent) | company-enrichment-business-closure | tasks-complete (verification recorded) | Epic | high | 2026-06-02 |
+| company-iyiou-site-search-live-fix | `archive/2026-06-02-company-iyiou-site-search-live-fix/` | bugfix | company-enrichment-source-closure (modified) | tasks-complete (verification recorded) | Standard | medium | 2026-06-02 |
+| company-prd-acceptance-closure | `archive/2026-06-02-company-prd-acceptance-closure/` | feat (epic parent) | company-prd-acceptance-closure | tasks-complete (verification recorded) | Epic | medium-high | 2026-06-02 |
+| company-scaleout-enrichment-hardening | `archive/2026-06-02-company-scaleout-enrichment-hardening/` | feat (epic parent) | company-scaleout-enrichment-hardening | tasks-complete (verification recorded) | Epic | high | 2026-06-02 |
+| company-synthesis-enrichment-pipeline | `archive/2026-06-02-company-synthesis-enrichment-pipeline/` | feat (epic parent) | company-synthesis-enrichment-pipeline | tasks-complete (verification recorded) | Epic | high | 2026-06-02 |
+| prof-sigs-tab-template-extraction | `archive/2026-06-02-prof-sigs-tab-template-extraction/` | feat | professor-sigs-tab-template-extraction | tasks-complete (verification recorded) | Standard | low | 2026-06-02 |
+| professor-detail-readability | `archive/2026-06-02-professor-detail-readability/` | feat/refactor | professor-detail-readability | tasks-complete (verification recorded) | Standard | low | 2026-06-02 |
+| professor-list-summary-visibility | `archive/2026-06-02-professor-list-summary-visibility/` | feat | professor-list-summary-visibility | tasks-complete (verification recorded) | Tiny | low | 2026-06-02 |

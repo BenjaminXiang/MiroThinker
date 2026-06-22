@@ -740,6 +740,15 @@ def _looks_like_broken_letter_spacing(title: str) -> bool:
     return len(matches) >= max(3, len(title.split()) // 5)
 
 
+def _author_prefix_has_name_signal(*segments: str) -> bool:
+    tokens = {
+        token.casefold().rstrip(".")
+        for segment in segments
+        for token in segment.split()
+    }
+    return bool(tokens & _COMMON_PINYIN_SURNAME_TOKENS)
+
+
 def _looks_like_author_prefixed_citation_record(title: str) -> bool:
     and_prefix = re.match(
         r"^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+and\s+"
@@ -755,6 +764,7 @@ def _looks_like_author_prefixed_citation_record(title: str) -> bool:
             return False
         if (
             all(_looks_like_first_last(segment) for segment in (left, right))
+            and _author_prefix_has_name_signal(left, right)
             and not re.match(
                 r"^(?:by|via|with|for|in|on|of|to|from|using|based)\b",
                 rest,
@@ -1246,3 +1256,73 @@ def is_plausible_paper_title(title: str | None) -> bool:
     if _looks_like_editorial_bio(normalized):
         return False
     return True
+
+
+def is_clearly_garbage_paper_title(title: str | None) -> bool:
+    """High-precision "clearly not a paper title" classifier for title-cleanup.
+
+    Unlike :func:`is_plausible_paper_title` (high-RECALL: used by the W0b identity
+    gate to *leave* implausible titles alone), this is high-PRECISION: it returns
+    ``True`` only for high-confidence non-paper garbage — parser noise, journal-
+    metric fragments, profile/editorial prose, citation records, patent records,
+    book records, high-confidence author lists, and venue-only/section-label
+    fragments.
+
+    It deliberately SPARES real technical titles that the broad guard over-flags
+    (e.g. "Kinetic Modeling and Reaction Engineering" mistaken for two person
+    names; substring journal-metric matches on long technical titles), because
+    rejecting a real paper is worse than leaving some ambiguous garbage. Truncated
+    real titles are also spared (those are a C2/C3 truncation repair, not a
+    reject). Use this for the title-cleanup scan's rejection decision, NOT for
+    the W0b identity gate.
+    """
+    if title is None:
+        return True
+    normalized = _normalize(str(title))
+    if not (8 <= len(normalized) <= 300):
+        return True
+    if re.search(r"not explicitly (?:provided|titled) in text", normalized, re.IGNORECASE):
+        return True
+    if _JOURNAL_METRIC_FRAGMENT_RE.match(normalized):
+        return True
+    if re.search(r"[\(（]\s*IF\s*[:=]\s*\d", normalized, re.IGNORECASE):
+        return True
+    if _PROFILE_OR_SERVICE_PROSE_RE.search(normalized):
+        return True
+    if _EDITORIAL_ROLE_RE.search(normalized) and len(_ACRONYM_RE.findall(normalized)) >= 2:
+        return True
+    if _CJK_PROFILE_OR_SERVICE_SNIPPET_RE.search(normalized):
+        return True
+    if _CITATION_TAIL_RE.search(normalized):
+        return True
+    if _JOURNAL_DATE_DOI_RECORD_RE.match(normalized):
+        return True
+    if _YEAR_PREFIX_CITATION_METADATA_RE.search(normalized):
+        return True
+    if _PATENT_RECORD_RE.search(normalized):
+        return True
+    if _CJK_PATENT_LIKE_TITLE_RE.search(normalized):
+        return True
+    if _ENGLISH_PATENT_TITLE_RE.match(normalized):
+        return True
+    if _BOOK_OR_TRANSLATION_RECORD_RE.search(normalized):
+        return True
+    if _looks_like_comma_author_list(normalized):
+        return True
+    if _looks_like_mojibake_author_list(normalized):
+        return True
+    if _looks_like_slash_author_list(normalized):
+        return True
+    if _looks_like_known_venue_only_title(normalized):
+        return True
+    if _STANDALONE_VENUE_LINE_RE.match(normalized):
+        return True
+    if _STANDALONE_JOURNAL_OR_TRANSACTIONS_RE.match(normalized):
+        return True
+    if _STANDALONE_SECTION_LABEL_RE.match(normalized):
+        return True
+    if _PUBLICATION_SECTION_LABEL_RE.match(normalized):
+        return True
+    if _STANDALONE_SINGLE_WORD_FRAGMENT_RE.match(normalized):
+        return True
+    return False

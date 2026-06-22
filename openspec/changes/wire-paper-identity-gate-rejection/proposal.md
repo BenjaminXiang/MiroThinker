@@ -31,6 +31,6 @@ This change is **behavior-affecting** (changes which paper rows are eligible for
 ## Non-goals
 
 - Does **not** touch `apply_identity_gate_reevaluation` (paper/quality_promotion.py:212-238) — that dead `quality_status`-path function is a separate cleanup (Gap A).
-- Does **not** promote the ~7,297 `unverified` rows — those lack a resolved identifier (DOI/arXiv/OpenAlex) and are a source-gap / `doi_verify` problem, re-routed to W0a/W2a of the portfolio plan.
+- Does **not** promote `unverified` rows beyond the W0b-eligible set — **53,165** total `unverified` (2026-06-22 scan); W0b targets only the **28,928** eligible (`prof_page_only` + no verified link + plausible title). The ~24,237 non-`prof_page_only` `unverified` lack a resolved identifier (DOI/arXiv/OpenAlex) and are a source-gap / `doi_verify` problem, re-routed to Phase 6 D7 / W2a. (Prior drafts cited "~7,297" — stale, superseded by the 2026-06-22 re-baseline.)
 - Does **not** auto-merge title+year-only duplicate groups or change dedup anchors.
 - Does **not** change the LLM gate's threshold (0.8) or its fail-safe-to-reject semantics.

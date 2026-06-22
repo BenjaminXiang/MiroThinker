@@ -629,6 +629,8 @@ def test_list_domain_returns_released_object_shape(
     expected_keys = set(RELEASED_KEYS)
     if domain == "professor":
         expected_keys.update({"lifecycle_state", "lifecycle_merged_into_id"})
+    if domain == "paper":
+        expected_keys.update({"identity_status"})
     assert set(payload["items"][0]) == expected_keys
 
 
@@ -736,6 +738,8 @@ def test_get_domain_object_returns_released_object_shape(
     expected_keys = set(RELEASED_KEYS)
     if domain == "professor":
         expected_keys.update({"lifecycle_state", "lifecycle_merged_into_id"})
+    if domain == "paper":
+        expected_keys.update({"identity_status"})
     assert set(payload) == expected_keys
 
 
@@ -898,6 +902,8 @@ def test_get_related_objects_joins_canonical_relations(
     expected_keys = set(RELEASED_KEYS)
     if expected_type == "professor":
         expected_keys.update({"lifecycle_state", "lifecycle_merged_into_id"})
+    if expected_type == "paper":
+        expected_keys.update({"identity_status"})
     assert set(payload[bucket][0]) == expected_keys
 
 
@@ -1161,3 +1167,40 @@ def test_delete_domain_object_soft_deletes_and_records_run(
     with pytest.raises(HTTPException) as exc:
         get_domain_object(DomainEnum(domain), object_id, conn=fake_pg_conn)
     assert exc.value.status_code == 404
+
+
+def test_paper_list_default_excludes_rejected_and_merged_identity_status(
+    fake_pg_conn: _FakePostgresConn,
+) -> None:
+    list_domain(
+        DomainEnum.paper,
+        page=1,
+        page_size=20,
+        sort_by="display_name",
+        sort_order="asc",
+        conn=fake_pg_conn,
+    )
+
+    sql = fake_pg_conn.calls[-1][0]
+    # Default view hides W0b-rejected, title-cleanup-rejected, and merged papers.
+    assert "p.identity_status NOT IN ('rejected', 'merged')" in sql
+
+
+def test_paper_list_identity_status_filter_opts_out_of_default_exclusion(
+    fake_pg_conn: _FakePostgresConn,
+) -> None:
+    list_domain(
+        DomainEnum.paper,
+        page=1,
+        page_size=20,
+        sort_by="display_name",
+        sort_order="asc",
+        filters=json.dumps({"identity_status": "rejected"}),
+        conn=fake_pg_conn,
+    )
+
+    sql, params = fake_pg_conn.calls[-1]
+    # Admins can opt in to review rejected papers.
+    assert "p.identity_status NOT IN ('rejected', 'merged')" not in sql
+    assert "p.identity_status = %(filter_identity_status)s" in sql
+    assert params["filter_identity_status"] == "rejected"

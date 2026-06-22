@@ -120,11 +120,12 @@ class FakeConnection:
             paper["identity_status"] = str(restored_status)
             return FakeCursor(rowcount=1)
         if compact_sql.startswith("INSERT INTO pipeline_issue"):
-            snapshot = json.loads(str(params[4]))
+            stage = params[3]
+            snapshot = json.loads(str(params[5]))
             self.issues.append(
                 {
                     "issue_id": f"ISSUE-{len(self.issues) + 1}",
-                    "stage": "identity_gate",
+                    "stage": stage,
                     "evidence_snapshot": snapshot,
                     "resolved": False,
                 }

@@ -495,6 +495,7 @@ SELECT
     p.citation_count,
     p.canonical_source,
     p.quality_status,
+    p.identity_status,
     pft.pdf_url,
     p.first_seen_at,
     p.updated_at,
@@ -641,7 +642,7 @@ DOMAIN_SUPPORTED_FILTERS = {
         "research_topic",
     },
     "company": {"quality_status", "industry", "hq_city", "is_shenzhen"},
-    "paper": {"quality_status", "year", "venue"},
+    "paper": {"quality_status", "year", "venue", "identity_status"},
     "patent": {"quality_status", "patent_type"},
 }
 
@@ -1092,6 +1093,7 @@ def _row_to_released_object(
             "evidence": [],
             "last_updated": _last_updated(row, "updated_at", "first_seen_at"),
             "quality_status": _row_quality_status(row, _derive_paper_quality(row)),
+            "identity_status": row.get("identity_status"),
         }
 
     if domain == "patent":
@@ -1266,6 +1268,9 @@ def _add_filter_conditions(
         elif domain == "paper" and field == "venue":
             params[param_name] = value
             conditions.append("p.venue = %(filter_venue)s")
+        elif domain == "paper" and field == "identity_status":
+            params[param_name] = value
+            conditions.append("p.identity_status = %(filter_identity_status)s")
         elif domain == "patent" and field == "patent_type":
             params[param_name] = value
             conditions.append("patent.patent_type = %(filter_patent_type)s")
@@ -1340,13 +1345,22 @@ def _add_query_condition(
         )
 
 
-def _base_conditions(domain: str) -> list[str]:
+def _base_conditions(
+    domain: str, parsed_filters: dict[str, Any] | None = None
+) -> list[str]:
+    parsed_filters = parsed_filters or {}
     if domain == "professor":
         return ["p.identity_status = 'resolved'"]
     if domain == "company":
         return ["c.identity_status != 'inactive'"]
     if domain == "paper":
-        return ["COALESCE(admin_run.run_scope->>'action', '') != 'delete'"]
+        base = ["COALESCE(admin_run.run_scope->>'action', '') != 'delete'"]
+        # Default-exclude rejected/merged papers (W0b wrong-attribution +
+        # title-cleanup garbage + merged) unless the admin explicitly filters
+        # identity_status to review them. See paper-implausible-title-cleanup.
+        if "identity_status" not in parsed_filters:
+            base.append("p.identity_status NOT IN ('rejected', 'merged')")
+        return base
     if domain == "patent":
         return ["COALESCE(patent.status, '') != 'inactive'"]
     return []
@@ -1379,7 +1393,7 @@ def _query_domain_rows(
     conditions = (
         []
         if object_id is None and derived_quality_filter
-        else _base_conditions(domain)
+        else _base_conditions(domain, parsed_filters)
     )
 
     if object_id is not None:

@@ -1,14 +1,90 @@
 {
-  "note": "Corrected 2026-06-16. Initial count (25575) did not exclude identity_status='merged'; the scan's _load_rows excludes merged, so the real apply blast radius is 1519. Title-quality split added after dry-run sampling exposed parser-garbage dominance.",
-  "scan_filter": "canonical_source='prof_page_only' AND identity_status NOT IN ('merged') AND NOT EXISTS verified professor_paper_link",
-  "initial_count_no_merged_filter": 25575,
-  "eligible_total_scan_filter": 1519,
-  "title_quality_split": {
-    "plausible_title_is_plausible_paper_title_true": 119,
-    "garbage_or_malformed_title_false": 1400,
-    "garbage_pct": 92
+  "change_id": "wire-paper-identity-gate-rejection",
+  "portfolio_phase": 1,
+  "scanned_at": "2026-06-22",
+  "database": "miroflow_real",
+  "method": "read-only SQL scan (6 proxy vars unset per project env)",
+  "supersedes": "2026-06-16 draft (1,519 eligible); see prior_baseline_2026_06_16 below.",
+
+  "eligibility_definition": {
+    "identity_status": "unverified",
+    "canonical_source": "prof_page_only",
+    "and_not_exists": "professor_paper_link with link_status='verified' for this paper"
   },
-  "interpretation": "92% of eligible rows are parser-garbage titles (root cause C2/C3), not wrong-attribution. Applying Gap B now would mislabel unverifiable-due-to-bad-title rows as rejected/wrong-attribution. Recommend adding a plausible-title guard (see change refinement).",
-  "all_eligible_have_at_least_one_rejected_link": true,
-  "eligible_and_identity_status_confirmed": 0
+  "eligible_count": 28928,
+
+  "eligible_by_quality_status": {
+    "needs_enrichment": 28927,
+    "rejected": 1,
+    "ready": 0
+  },
+
+  "blast_radius_note": "0 ready papers in the eligible set. W0b rejection touches zero ready rows; only needs_enrichment empty-shell prof_page_only papers. Safe to dry-run->apply once the plausible-title guard lands.",
+
+  "growth_explanation": "Eligible set grew 1,519 (6/16) -> 28,928 (6/22), a 19x increase not explained by corpus growth alone (papers 49k -> 97k, 2x). The delta is fresh UPC + enrichment-batch crawl output: new papers inserted as identity_status='unverified', canonical_source='prof_page_only', professor_paper_link.link_status='candidate'. These are freshly collected, not-yet-enriched. Implication: (a) W0b's LLM gate must run on 28,928 rows = heavy LLM cost -> batch + rate-limit + monitor; (b) many eligible rows are in-flight (still being enriched by candidate-generation/closure) -> the dry-run must snapshot and the apply should target stable subsets; (c) the 6/16 '92% garbage title' finding may or may not hold for the fresh batch -> only the dry-run (Slice B) reveals the true plausible/garbage split.",
+
+  "title_pollution_proxy_lower_bound": {
+    "eligible": 28928,
+    "too_short_lt8": 132,
+    "too_long_gt300": 0,
+    "comma_chain_3plus": 160,
+    "has_semicolon": 20,
+    "has_year_token": 658,
+    "note": "SQL regex proxy is a LOWER BOUND. The real is_plausible_paper_title guard (~40 regexes in paper/title_quality.py) is stricter; the true reject rate is knowable only by running the W0b dry-run (Slice B / task 6.1)."
+  },
+
+  "candidate_link_only_papers": {
+    "count": 28926,
+    "note": "prof_page_only, only candidate (never verified) links. Exactly the wrong-attribution population W0b targets."
+  },
+
+  "context_unverified_total": 53165,
+  "context_unverified_by_canonical_source": {
+    "prof_page_only": 41010,
+    "crossref": 11720,
+    "manual": 306,
+    "dblp": 124,
+    "semantic_scholar": 5
+  },
+
+  "out_of_w0b_scope": {
+    "non_prof_page_only_unverified": 24237,
+    "note": "crossref/manual/dblp/s2 unverified rows are out of W0b scope -> Phase 6 D7 (prof-link verification) or identifier resolution. The ~12,082 prof_page_only unverified WITH a verified link are correctly excluded from the eligible set."
+  },
+
+  "existing_identity_status_distribution": {
+    "unverified": 53165,
+    "merged": 24327,
+    "confirmed": 18877,
+    "rejected": 1405
+  },
+
+  "existing_quality_status_distribution": {
+    "needs_enrichment": 41530,
+    "rejected": 25894,
+    "ready": 23183,
+    "partial": 6862,
+    "needs_review": 305
+  },
+
+  "pipeline_issue_stage_identity_gate": {
+    "total": 142,
+    "open": 122,
+    "resolved": 20
+  },
+
+  "prior_baseline_2026_06_16": {
+    "scan_filter": "canonical_source='prof_page_only' AND identity_status NOT IN ('merged') AND NOT EXISTS verified professor_paper_link",
+    "initial_count_no_merged_filter": 25575,
+    "eligible_total_scan_filter": 1519,
+    "title_quality_split": {
+      "plausible_title": 119,
+      "garbage_or_malformed": 1400,
+      "garbage_pct": 92
+    },
+    "interpretation": "92% of eligible rows were parser-garbage titles (root cause C2/C3), not wrong-attribution. Applying Gap B then would have mislabeled unverifiable-due-to-bad-title rows as rejected. This drove the plausible-title guard refinement (tasks 2.4/2.5/5.6).",
+    "note": "Filter semantics differ slightly from the 6/22 scan (6/16 excluded identity_status='merged' but included confirmed/rejected; 6/22 restricts to unverified). The 19x growth is dominated by data change (fresh crawls), not the filter."
+  },
+
+  "acceptance_gate": "AC2: dry-run reject count recorded here and compared to eligible_count=28928. AC3: post-apply SELECT quality_status FROM rejected set must show 0 ready."
 }
