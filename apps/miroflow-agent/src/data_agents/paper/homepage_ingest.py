@@ -2500,25 +2500,17 @@ def _find_existing_canonical_homepage_paper(
         params.append(normalized_arxiv_id)
 
     title_key = _page_only_reuse_title_key(clean_title)
-    author_terms = _canonical_author_lookup_terms(authors)
     if title_key:
-        title_conditions = [
-            "regexp_replace(lower(p.title_clean), '\\s+', '', 'g') = %s",
-            "p.year IS NOT DISTINCT FROM %s",
-        ]
-        title_params: list[object] = [title_key, year]
-        if author_terms:
-            title_conditions.append(
-                "("
-                + " OR ".join(
-                    "lower(COALESCE(p.authors_display, '')) LIKE %s"
-                    for _ in author_terms
-                )
-                + ")"
-            )
-            title_params.extend(f"%{term}%" for term in author_terms)
-        conditions.append("(" + " AND ".join(title_conditions) + ")")
-        params.extend(title_params)
+        # Content anchor: title+year only (no author-overlap gate). The author gate
+        # caused co-authored papers on different professor pages to miss (each page
+        # synthesizes a different "ProfName et al." author string). The exact
+        # whitespace-stripped-lowercased title + year is a strong enough anchor.
+        # See OpenSpec change ingest-dedup-anchor-before-insert.
+        conditions.append(
+            "(regexp_replace(lower(p.title_clean), '\\s+', '', 'g') = %s"
+            " AND p.year IS NOT DISTINCT FROM %s)"
+        )
+        params.extend([title_key, year])
 
     if not conditions:
         return None

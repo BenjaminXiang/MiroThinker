@@ -2514,7 +2514,7 @@ def test_page_only_publication_reuses_existing_same_title_year_link(tmp_path):
     assert any("ppl.link_status = 'verified'" in sql for sql, _ in conn.executed)
 
 
-def test_page_only_publication_reuses_existing_canonical_title_year_author(tmp_path):
+def test_page_only_publication_reuses_existing_canonical_title_year(tmp_path):
     prof = _prof_row(prof_id="PROF-GLOBAL-CANON")
 
     class _CanonicalReuseConn:
@@ -2527,7 +2527,7 @@ def test_page_only_publication_reuses_existing_canonical_title_year_author(tmp_p
                 return _FetchRows([prof])
             if "FROM professor_paper_link" in query:
                 return _FetchOne(None)
-            if "FROM paper p" in query and "authors_display" in query:
+            if "FROM paper p" in query and "regexp_replace" in query:
                 return _FetchOne({"paper_id": "PAPER-CANON"})
             return _FetchOne(None)
 
@@ -2571,7 +2571,8 @@ def test_page_only_publication_reuses_existing_canonical_title_year_author(tmp_p
     assert report.papers_linked_total == 1
     m_upsert_paper.assert_not_called()
     assert m_upsert_link.call_args.kwargs["paper_id"] == "PAPER-CANON"
-    assert any("authors_display" in sql for sql, _ in conn.executed)
+    assert any("regexp_replace" in sql for sql, _ in conn.executed)
+    assert not any("authors_display" in sql for sql, _ in conn.executed)
 
 
 @pytest.mark.parametrize(
