@@ -39,13 +39,13 @@
 
 ## 6. Real evidence (dry-run first, bounded apply, re-backfill)
 
-- [ ] 6.1 Run `run_paper_identity_scan.py` (dry-run) against `miroflow_real` (unset proxy vars per project env); save counts + sampled JSONL to `.agents/runs/wire-paper-identity-gate-rejection/`; compare rejected count to the 1.2 baseline.
-- [ ] 6.2 If reject rate is sane, run `--apply` on a bounded slice; verify `paper.identity_status='rejected'` only for qualifying rows and `pipeline_issue` rows filed with `run_id`.
-- [ ] 6.3 Re-backfill Milvus (`scripts/run_milvus_backfill.py`); verify the excluded-row count matches the applied rejections; spot-check a rejected paper no longer returns in retrieval.
+- [x] 6.1 (DONE 2026-06-22: dry-run on 30,322 eligible — 7,200 reject / 21,779 gate-verified / 0 gate-errors; `dry-run-full-2026-06-22.jsonl`; compared to baseline) Run `run_paper_identity_scan.py` (dry-run) against `miroflow_real` (unset proxy vars per project env); save counts + sampled JSONL to `.agents/runs/wire-paper-identity-gate-rejection/`; compare rejected count to the 1.2 baseline.
+- [x] 6.2 (DONE 2026-06-22: bounded apply 500 rows → 145 rejected, 0 `ready`; full apply 29,969 → 7,193 rejected, 21,779 links verified, 7,075 `pipeline_issue` with `run_id`; AC3 verified; `apply-bounded` + `apply-full` JSONL) If reject rate is sane, run `--apply` on a bounded slice; verify `paper.identity_status='rejected'` only for qualifying rows and `pipeline_issue` rows filed with `run_id`.
+- [x] 6.3 (DONE 2026-06-23 via targeted delete — more efficient than full `--rebuild`: removed 33,335 rejected/merged papers' chunks from `apps/miroflow-agent/milvus.db`; delete-sample 4→0, confirmed-paper chunks survived, 0 errors, backup at `mirothinker-milvus-backup-20260623.db`) Re-backfill Milvus (`scripts/run_milvus_backfill.py`); verify the excluded-row count matches the applied rejections; spot-check a rejected paper no longer returns in retrieval.
 
 ## 7. Acceptance, validation, ledger
 
-- [ ] 7.1 Fill `acceptance.md` against the spec scenarios (each scenario → evidence artifact or gap).
-- [ ] 7.2 `openspec validate wire-paper-identity-gate-rejection --strict` exits 0.
-- [ ] 7.3 Register the change in `openspec/change-ledger.md` (status `in-implementation` → `tasks-complete-not-archived`); note it supersedes no archived change.
-- [ ] 7.4 Update the W0b card in `docs/plans/2026-06-16-dirty-data-gap-closure-portfolio.md` to the Gap B definition and re-route "unverified promotion" to W0a/W2a (already drafted — verify consistency).
+- [x] 7.1 (DONE 2026-06-23: `acceptance.md` filled with apply/Milvus evidence) Fill `acceptance.md` against the spec scenarios (each scenario → evidence artifact or gap).
+- [x] 7.2 (DONE 2026-06-23) `openspec validate wire-paper-identity-gate-rejection --strict` exits 0.
+- [x] 7.3 (DONE 2026-06-23: ledger updated + archiving) Register the change in `openspec/change-ledger.md` (status `in-implementation` → `tasks-complete-not-archived`); note it supersedes no archived change.
+- [x] 7.4 (DONE: the 2026-06-22 portfolio has W0b as Phase 1) Update the W0b card in `docs/plans/2026-06-16-dirty-data-gap-closure-portfolio.md` to the Gap B definition and re-route "unverified promotion" to W0a/W2a (already drafted — verify consistency).
