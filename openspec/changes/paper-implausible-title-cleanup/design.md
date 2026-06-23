@@ -11,7 +11,7 @@ cleanup step. This change IS that cleanup step.
 
 W0b's scan (`run_paper_identity_scan.py`) runs the LLM same-person gate per professor
 (heavy, ~1.5s/batch call). Title-cleanup is **pure rule-based**
-(`is_plausible_paper_title`, no LLM) — fast and cheap (can scan all 97k papers in
+(`is_clearly_garbage_paper_title`, no LLM) — fast and cheap (can scan all 97k papers in
 seconds). Mixing the two would either force LLM cost on a rule-based check or complicate
 the W0b scan. A separate lightweight script (`run_paper_title_cleanup_scan.py`) is
 cleaner and lets the two scans run independently.
@@ -46,10 +46,16 @@ restore path.
 
 ## Risks
 
-- **Guard false positives**: `is_plausible_paper_title` could falsely reject a real paper
-  with an unusual title. Mitigation: dry-run-first (review the reject list before apply);
-  `pipeline_issue` traceability (admin can review + restore); the guard is conservative
-  (tuned for obvious garbage). The dry-run JSONL lets operators sample the reject list.
+- **Classifier false positives**: `is_clearly_garbage_paper_title` is high-precision by
+  design — it deliberately spares real technical titles that the broad
+  `is_plausible_paper_title` over-flags. (The initial plan reused
+  `is_plausible_paper_title`, but the dry-run showed ~30-50% false positives on real
+  titles like "Kinetic Modeling and Reaction Engineering" — flagged by the broad guard's
+  over-aggressive `.search()` rules + person-name helpers; the dedicated high-precision
+  classifier fixed this: 30/30 reject samples are clear garbage, real titles spared, and
+  it additionally catches 284 broad-missed "Not explicitly ... in text" parser-noise rows.)
+  Residual risk is low; mitigation remains dry-run-first + `pipeline_issue` traceability
+  + restore.
 - **Blast radius**: like W0b, the eligible set is `prof_page_only` + implausible title;
   the 2026-06-22 scan will quantify it. The apply is bounded + reversible.
 - **Display default change**: default-excluding `rejected`/`merged` from `/paper` changes

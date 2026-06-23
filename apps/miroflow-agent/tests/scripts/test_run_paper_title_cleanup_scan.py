@@ -152,7 +152,7 @@ def test_scan_apply_rejects_implausible_titles_and_leaves_plausible() -> None:
     assert conn.paper["PAPER-REAL"]["identity_status"] == "unverified"
     # the filed issue is at the title_cleanup stage / reporter, distinct from W0b
     assert any(
-        issue["stage"] == "title_cleanup"
+        issue["stage"] == "identity_gate"
         and issue["reported_by"] == "paper_title_cleanup_scan"
         for issue in conn.issues
     )

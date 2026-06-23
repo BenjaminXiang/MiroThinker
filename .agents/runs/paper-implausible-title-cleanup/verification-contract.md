@@ -12,7 +12,7 @@
 - `deterministic_module`
 
 The title-cleanup scan + writer parameterization + display filter are deterministic.
-`is_plausible_paper_title` is pure rule-based (no LLM). **No LLM anywhere in this change.**
+`is_clearly_garbage_paper_title` is pure rule-based (no LLM). **No LLM anywhere in this change.**
 
 ## Superpowers Mode
 - `full_tdd_allowed`

@@ -5,7 +5,7 @@
 > Unmet with the artifact or the specific gap.
 
 ## A1. Implausible-title rejection (spec §1)
-- **A1.1** `is_plausible_paper_title(title_clean)` False + `prof_page_only` + not already rejected/merged ⇒ scan rejects (`identity_status='rejected'`). — RED 5.2.
+- **A1.1** `is_clearly_garbage_paper_title(title_clean)` True + `prof_page_only` + not already rejected/merged ⇒ scan rejects (`identity_status='rejected'`). — RED 5.2.
 - **A1.2** Plausible title ⇒ unchanged. Already rejected/merged ⇒ skipped. — RED 5.2.
 
 ## A2. Evidence + traceability (spec §2)

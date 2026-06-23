@@ -2,14 +2,14 @@
 
 ### Requirement: Implausible-title rejection via rule-based scan
 
-The system SHALL transition `paper.identity_status` to `rejected` for a `prof_page_only` paper whose `title_clean` fails `paper/title_quality.is_plausible_paper_title` (the existing rule-based guard, reused unchanged), via a dedicated title-cleanup scan that does NOT invoke an LLM. The scan SHALL NOT reject papers with plausible titles (left to the W0b identity gate) NOR papers already `identity_status in {rejected, merged}`.
+The system SHALL transition `paper.identity_status` to `rejected` for a `prof_page_only` paper whose `title_clean` is flagged by `paper/title_quality.is_clearly_garbage_paper_title` (a new high-precision classifier in the same module; the broad `is_plausible_paper_title` is reused unchanged by W0b), via a dedicated title-cleanup scan that does NOT invoke an LLM. The scan SHALL NOT reject papers with plausible titles (left to the W0b identity gate) NOR papers already `identity_status in {rejected, merged}`.
 
 #### Scenario: Garbage-title prof-page-only paper is rejected
-- **WHEN** a `prof_page_only` paper's `title_clean` fails `is_plausible_paper_title` (e.g. "Co-supervised PhD student", "011 (IF: 26.8") and `identity_status NOT IN {rejected, merged}`
+- **WHEN** a `prof_page_only` paper's `title_clean` is flagged by `is_clearly_garbage_paper_title` (e.g. "Co-supervised PhD student", "011 (IF: 26.8") and `identity_status NOT IN {rejected, merged}`
 - **THEN** the title-cleanup scan transitions `paper.identity_status` to `rejected`
 
 #### Scenario: Plausible-title paper is not touched
-- **WHEN** a `prof_page_only` paper's `title_clean` passes `is_plausible_paper_title`
+- **WHEN** a `prof_page_only` paper's `title_clean` is NOT flagged by `is_clearly_garbage_paper_title`
 - **THEN** the title-cleanup scan leaves `identity_status` unchanged (the W0b identity gate handles it)
 
 #### Scenario: Already rejected or merged paper is skipped
@@ -18,7 +18,7 @@ The system SHALL transition `paper.identity_status` to `rejected` for a `prof_pa
 
 #### Scenario: Scan uses no LLM
 - **WHEN** the title-cleanup scan runs
-- **THEN** it invokes only the rule-based `is_plausible_paper_title` guard and makes no LLM calls
+- **THEN** it invokes only the rule-based `is_clearly_garbage_paper_title` classifier and makes no LLM calls
 
 ### Requirement: Title-cleanup rejection evidence and traceability
 
@@ -66,4 +66,4 @@ The system SHALL provide a title-cleanup scan that is dry-run by default (no wri
 
 #### Scenario: Apply writes only implausible-title rejections
 - **WHEN** the scan is run with `--apply` and `PAPER_TITLE_CLEANUP_ENABLED` enabled
-- **THEN** only `prof_page_only` papers with `is_plausible_paper_title(title_clean)` False have `identity_status` set to `rejected`
+- **THEN** only `prof_page_only` papers flagged by `is_clearly_garbage_paper_title(title_clean)` have `identity_status` set to `rejected`

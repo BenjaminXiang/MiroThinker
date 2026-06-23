@@ -11,7 +11,7 @@
 
 ## 1. Verification contract & baseline
 - [x] 1.1 Create `.agents/runs/paper-implausible-title-cleanup/verification-contract.md` (created 2026-06-22): behavior-affecting (deterministic scan + display filter; no LLM); RED = contract/unit tests; Superpowers TDD allowed on deterministic slices.
-- [ ] 1.2 Baseline count: SQL read on `miroflow_real` counting `prof_page_only` papers with implausible titles (`is_plausible_paper_title` False) AND `identity_status NOT IN ('rejected','merged')`; save to `.agents/runs/paper-implausible-title-cleanup/eligibility-baseline.json`. Cross-check against the W0b dry-run JSONL `no_change` + no-verified-link count.
+- [ ] 1.2 Baseline count: SQL read on `miroflow_real` counting `prof_page_only` papers with clearly-garbage titles (`is_clearly_garbage_paper_title` True) AND `identity_status NOT IN ('rejected','merged')`; save to `.agents/runs/paper-implausible-title-cleanup/eligibility-baseline.json`. Cross-check against the W0b dry-run JSONL `no_change` + no-verified-link count.
 
 ## 2. Writer parameterization
 - [x] 2.1 Extend `apply_identity_status_rejection(*, ..., stage='identity_gate', reported_by='paper_identity_scan')` with keyword params (defaults preserve W0b behavior); thread them into the `pipeline_issue` INSERT + the `_fetch_open_issue` query.
@@ -19,7 +19,7 @@
 
 ## 3. Title-cleanup scan script
 - [x] 3.1 Create `scripts/run_paper_title_cleanup_scan.py` mirroring `run_paper_identity_scan.py` structure: dry-run default, `--apply`, `--limit`, `--confirm-real-db`, `--json-output`/`--archive`, `_ScanStats` (examined/rejected/unchanged/skipped/issues_filed); `PAPER_TITLE_CLEANUP_ENABLED` flag (default off).
-- [x] 3.2 Scan flow: select `prof_page_only` papers with `identity_status NOT IN ('rejected','merged')`; for each, call `is_plausible_paper_title(title_clean)`; if False → `apply_identity_status_rejection(stage='title_cleanup', reported_by='paper_title_cleanup_scan', ...)` on `--apply`; emit JSONL. **NO LLM calls.**
+- [x] 3.2 Scan flow: select `prof_page_only` papers with `identity_status NOT IN ('rejected','merged')`; for each, call `is_clearly_garbage_paper_title(title_clean)`; if True → `apply_identity_status_rejection(stage='title_cleanup', reported_by='paper_title_cleanup_scan', ...)` on `--apply`; emit JSONL. **NO LLM calls.**
 - [x] 3.3 `_strip_proxy_env()` + `--confirm-real-db` (mirror W0b safety gates).
 
 ## 4. Display exclusion

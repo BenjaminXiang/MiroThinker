@@ -43,7 +43,10 @@ from src.data_agents.storage.postgres.pipeline_run import (
 _REAL_DB_NAME = "miroflow_real"
 _RUN_KIND = "backfill_real"
 _TRIGGERED_BY = "paper_title_cleanup_scan"
-_STAGE = "title_cleanup"
+_STAGE = "identity_gate"  # reuse the allowed pipeline_issue.stage value; title-cleanup
+# issues are distinguished from W0b's by reported_by (paper_title_cleanup_scan vs
+# paper_identity_scan). pipeline_issue.stage has a CHECK constraint that does not
+# include a 'title_cleanup' value, so we reuse 'identity_gate'.
 _REPORTED_BY = "paper_title_cleanup_scan"
 _ARCHIVE_DIR = Path(__file__).resolve().parents[3] / "docs" / "source_backfills"
 _ARCHIVE_PREFIX = "paper-title-cleanup-scan"

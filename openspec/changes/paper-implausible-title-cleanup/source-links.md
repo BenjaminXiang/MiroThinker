@@ -13,10 +13,11 @@ Legacy/source-of-truth docs consulted for this change:
   `decide_identity_status_rejection` defers garbage titles (`no_change` /
   `implausible_title`) to this cleanup step.
 - `apps/miroflow-agent/src/data_agents/paper/title_quality.py` —
-  `is_plausible_paper_title` (reused unchanged).
+  `is_plausible_paper_title` (reused unchanged by W0b); this change adds the new
+  high-precision `is_clearly_garbage_paper_title` classifier.
 - `apps/admin-console/backend/api/domains.py` `PAPER_SELECT_SQL` — the `/paper` list
   query (currently no identity_status filter; not even SELECTed).
 
-Extracted: the `is_plausible_paper_title` guard + the `rejected` identity_status + the
+Extracted/reused: the `rejected` identity_status + the
 Milvus `{rejected, merged}` exclusion are reused from W0b; this change adds the cleanup
 scan (no LLM) + the admin display default-exclusion.
