@@ -129,6 +129,14 @@ def _parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--all-sources",
+        action="store_true",
+        help=(
+            "Include all canonical_source values (not just prof_page_only). "
+            "Used for D7 link verification of crossref/dblp/s2-sourced papers."
+        ),
+    )
+    parser.add_argument(
         "--confirm-real-db",
         action="store_true",
         help="Required if the DSN targets miroflow_real.",
@@ -188,6 +196,7 @@ def _load_rows(
     *,
     limit: int | None,
     only_no_verified_link: bool = False,
+    all_sources: bool = False,
 ) -> list[_ScanRow]:
     sql = """
         SELECT p.paper_id,
@@ -227,8 +236,8 @@ def _load_rows(
            AND pa.is_primary = true
           LEFT JOIN professor_fact pf
             ON pf.professor_id = ppl.professor_id
-         WHERE p.canonical_source = 'prof_page_only'
-           AND p.identity_status != 'merged'
+         WHERE p.identity_status != 'merged'
+           AND (%s OR p.canonical_source = 'prof_page_only')
            AND (
              NOT %s OR NOT EXISTS (
                SELECT 1 FROM professor_paper_link ppl
@@ -252,7 +261,7 @@ def _load_rows(
                   pa.title
          ORDER BY p.paper_id, ppl.professor_id
     """
-    params: list[object] = [only_no_verified_link]
+    params: list[object] = [all_sources, only_no_verified_link]
     if limit is not None:
         sql += "\n         LIMIT %s"
         params.append(limit)
@@ -718,6 +727,7 @@ async def _run(args: argparse.Namespace) -> int:
                 conn,
                 limit=args.limit,
                 only_no_verified_link=args.only_no_verified_link,
+                all_sources=args.all_sources,
             )
             stats = await _scan_rows(
                 conn,

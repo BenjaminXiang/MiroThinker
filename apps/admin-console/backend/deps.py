@@ -79,10 +79,16 @@ def get_pg_conn() -> Iterator[Any]:
 
 @lru_cache(maxsize=1)
 def _get_milvus_client() -> Any:
+    # Default to the agent's milvus.db (the canonical backfill target + the
+    # index cleaned by W0b/title-cleanup). CHAT_MILVUS_URI / MILVUS_URI override.
+    _default_milvus = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        "miroflow-agent", "milvus.db",
+    )
     milvus_uri = (
         os.environ.get("CHAT_MILVUS_URI")
         or os.environ.get("MILVUS_URI")
-        or "./milvus.db"
+        or _default_milvus
     )
     with warnings.catch_warnings():
         warnings.filterwarnings(
