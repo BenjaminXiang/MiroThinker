@@ -783,8 +783,9 @@ def test_arxiv_entry_pdf_url_constructed_when_no_explicit_pdf_link():
 # =============================================================================
 
 
-def test_crossref_title_search_returns_items():
+def test_crossref_title_search_returns_items(monkeypatch: pytest.MonkeyPatch):
     _CROSSREF_FAILURE_CIRCUIT.reset()
+    monkeypatch.setenv("CROSSREF_MAILTO", "scholarly-contact@example.edu")
     http = _fake_http_client_returning(
         _mock_json_response({"message": {"items": [_crossref_work_fixture()]}})
     )
@@ -799,6 +800,28 @@ def test_crossref_title_search_returns_items():
     assert kwargs["params"]["query.title"].startswith("Communication Efficient")
     assert kwargs["params"]["rows"] == 5
     assert kwargs["params"]["mailto"]
+
+
+def test_crossref_title_search_uses_configured_contact(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    _CROSSREF_FAILURE_CIRCUIT.reset()
+    monkeypatch.setenv("CROSSREF_MAILTO", "scholarly-contact@example.edu")
+    monkeypatch.delenv("CROSSREF_USER_AGENT", raising=False)
+    http = _fake_http_client_returning(
+        _mock_json_response({"message": {"items": [_crossref_work_fixture()]}})
+    )
+
+    _search_crossref_by_title(
+        "Communication Efficient Federated Learning with Adaptive Quantization",
+        http_client=http,
+    )
+
+    _, kwargs = http.get.call_args
+    assert kwargs["params"]["mailto"] == "scholarly-contact@example.edu"
+    assert kwargs["headers"]["User-Agent"] == (
+        "MiroThinkerDataAgent/0.1 (mailto:scholarly-contact@example.edu)"
+    )
 
 
 def test_crossref_title_search_circuit_suppresses_repeated_timeouts():
@@ -1129,7 +1152,7 @@ class _FakeCache:
 def _resolved_fixture(source: str, confidence: float) -> ResolvedPaper:
     return ResolvedPaper(
         title="Some Paper",
-        doi="10.1/x" if source == "openalex" else None,
+        doi="10.1/x" if source in ("openalex", "web_search") else None,
         openalex_id="W1" if source == "openalex" else None,
         arxiv_id="2301.00001" if source == "arxiv" else None,
         abstract="abs",
@@ -1302,6 +1325,37 @@ def test_resolve_falls_through_to_semantic_scholar_when_crossref_below_threshold
         assert result is not None
         assert result.match_source == "semantic_scholar"
         m_dblp.assert_not_called()
+        m_ax.assert_not_called()
+
+
+def test_resolve_can_defer_semantic_scholar_title_search_until_api_key_available():
+    with patch(
+        "src.data_agents.paper.title_resolver._search_openalex_by_title"
+    ) as m_oa, patch(
+        "src.data_agents.paper.title_resolver._search_crossref_by_title"
+    ) as m_cr, patch(
+        "src.data_agents.paper.title_resolver._search_semantic_scholar_by_title"
+    ) as m_s2, patch(
+        "src.data_agents.paper.title_resolver._search_dblp_by_title"
+    ) as m_dblp, patch(
+        "src.data_agents.paper.title_resolver._dblp_hit_to_resolved"
+    ) as m_dblp_to_r, patch(
+        "src.data_agents.paper.title_resolver._search_arxiv_by_title"
+    ) as m_ax:
+        m_oa.return_value = []
+        m_cr.return_value = []
+        m_dblp.return_value = [{"fake": "dblp"}]
+        m_dblp_to_r.return_value = (_resolved_fixture("dblp", 0.92), 0.92)
+
+        result = resolve_paper_by_title(
+            "A Paper Title",
+            enable_semantic_scholar_title_search=False,
+            enable_arxiv_title_search=False,
+        )
+
+        assert result is not None
+        assert result.match_source == "dblp"
+        m_s2.assert_not_called()
         m_ax.assert_not_called()
 
 
@@ -1807,3 +1861,40 @@ def test_search_web_filters_non_scholarly_domains():
     assert result is not None
     assert result.match_source == "web_search"
     assert "arxiv" in result.title.lower() or "2310" in (result.arxiv_id or "")
+
+
+def test_w1a_web_gate_rejects_hit_without_identifier_or_author():
+    """W1a: web hit with title ≥ 0.85 but no DOI/arxiv + no author match → rejected."""
+    with patch(
+        "src.data_agents.paper.title_resolver._search_openalex_by_title",
+        return_value=[],
+    ), patch(
+        "src.data_agents.paper.title_resolver._search_crossref_by_title",
+        return_value=[],
+    ), patch(
+        "src.data_agents.paper.title_resolver._search_semantic_scholar_by_title",
+        return_value=[],
+    ), patch(
+        "src.data_agents.paper.title_resolver._search_dblp_by_title",
+        return_value=[],
+    ), patch(
+        "src.data_agents.paper.title_resolver._search_arxiv_by_title",
+        return_value=[],
+    ), patch(
+        "src.data_agents.paper.title_resolver._search_web_by_title"
+    ) as m_web:
+        m_web.return_value = ResolvedPaper(
+            title="Some Paper",
+            doi=None,
+            openalex_id=None,
+            arxiv_id=None,
+            abstract="abs",
+            pdf_url=None,
+            authors=(),
+            year=None,
+            venue=None,
+            match_confidence=0.88,
+            match_source="web_search",
+        )
+        result = resolve_paper_by_title("Some Paper", web_search=MagicMock())
+        assert result is None  # W1a gate rejected → page-only fallback

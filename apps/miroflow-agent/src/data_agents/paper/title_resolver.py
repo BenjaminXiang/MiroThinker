@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import logging
-import os
 import re
 import threading
 import time
@@ -13,11 +12,18 @@ from urllib.parse import quote, quote_plus, urlparse
 
 import httpx  # noqa: F401
 
+from src.data_agents.providers.crossref import (
+    crossref_request_headers as _crossref_request_headers,
+    crossref_request_params as _crossref_request_params,
+)
 from src.data_agents.providers.openalex import (
     OPENALEX_RATE_LIMIT_CIRCUIT as _OPENALEX_RATE_LIMIT_CIRCUIT,
     openalex_api_key as _openalex_api_key,
     openalex_rate_limit_cooldown_seconds as _openalex_rate_limit_cooldown_seconds,
     openalex_skip_without_api_key as _openalex_skip_without_api_key,
+)
+from src.data_agents.providers.semantic_scholar import (
+    semantic_scholar_request_headers as _semantic_scholar_request_headers,
 )
 
 from .title_cleaner import clean_paper_title
@@ -50,7 +56,6 @@ _CONFIDENCE_THRESHOLD = 0.85
 _DEFAULT_TIMEOUT = httpx.Timeout(connect=5.0, read=10.0, write=5.0, pool=5.0)
 _OPENALEX_TITLE_TIMEOUT = httpx.Timeout(connect=3.0, read=5.0, write=3.0, pool=3.0)
 _OPENALEX_FAILURE_COOLDOWN_SECONDS = 1800.0
-_CROSSREF_MAILTO = "mirothinker-data-agent@example.com"
 _SEMANTIC_SCHOLAR_FIELDS = (
     "paperId,title,abstract,year,publicationDate,venue,url,externalIds,authors"
 )
@@ -196,6 +201,7 @@ def resolve_paper_by_title(
     author_hint: str | None = None,
     year_hint: int | None = None,
     enable_openalex_title_search: bool = True,
+    enable_semantic_scholar_title_search: bool = True,
     enable_dblp_title_search: bool = True,
     enable_arxiv_title_search: bool = True,
     web_search=None,
@@ -216,6 +222,9 @@ def resolve_paper_by_title(
             and _cached_match_source_enabled(
                 cached,
                 enable_openalex_title_search=enable_openalex_title_search,
+                enable_semantic_scholar_title_search=(
+                    enable_semantic_scholar_title_search
+                ),
                 enable_dblp_title_search=enable_dblp_title_search,
                 enable_arxiv_title_search=enable_arxiv_title_search,
             )
@@ -271,24 +280,25 @@ def resolve_paper_by_title(
             cache.set(cache_key, crossref_match)
         return crossref_match
 
-    semantic_scholar_results = _search_semantic_scholar_by_title(
-        clean_title,
-        http_client=http_client,
-    )
-    semantic_scholar_match = _best_resolved_match(
-        semantic_scholar_results,
-        converter=_semantic_scholar_paper_to_resolved,
-        query_title=clean_title,
-        author_hint=author_hint,
-        year_hint=year_hint,
-    )
-    if (
-        semantic_scholar_match is not None
-        and semantic_scholar_match.match_confidence >= _CONFIDENCE_THRESHOLD
-    ):
-        if cache is not None:
-            cache.set(cache_key, semantic_scholar_match)
-        return semantic_scholar_match
+    if enable_semantic_scholar_title_search:
+        semantic_scholar_results = _search_semantic_scholar_by_title(
+            clean_title,
+            http_client=http_client,
+        )
+        semantic_scholar_match = _best_resolved_match(
+            semantic_scholar_results,
+            converter=_semantic_scholar_paper_to_resolved,
+            query_title=clean_title,
+            author_hint=author_hint,
+            year_hint=year_hint,
+        )
+        if (
+            semantic_scholar_match is not None
+            and semantic_scholar_match.match_confidence >= _CONFIDENCE_THRESHOLD
+        ):
+            if cache is not None:
+                cache.set(cache_key, semantic_scholar_match)
+            return semantic_scholar_match
 
     if enable_dblp_title_search:
         dblp_results = _search_dblp_by_title(clean_title, http_client=http_client)
@@ -341,9 +351,24 @@ def resolve_paper_by_title(
         return None
 
     if web_match is not None and web_match.match_confidence >= _CONFIDENCE_THRESHOLD:
-        if cache is not None:
-            cache.set(cache_key, web_match)
-        return web_match
+        # W1a: web-tier attribution gate. Accept a web hit only if it has a
+        # verified identifier (DOI/arxiv) OR the author tokens match. Fail-closed:
+        # reject → return None → homepage_ingest page-only fallback (no pollution).
+        has_identifier = bool(web_match.doi or web_match.arxiv_id)
+        author_verified = _author_token_jaccard(author_hint, web_match.authors) >= 0.3
+        if has_identifier or author_verified:
+            if cache is not None:
+                cache.set(cache_key, web_match)
+            return web_match
+        logger.info(
+            "W1a web-tier gate rejected web hit (title=%.2f, doi=%s, arxiv=%s, "
+            "author_jaccard=%.2f) for %r — falling back to page-only",
+            web_match.match_confidence,
+            web_match.doi,
+            web_match.arxiv_id,
+            _author_token_jaccard(author_hint, web_match.authors),
+            clean_title,
+        )
     return None
 
 
@@ -391,11 +416,14 @@ def _cached_match_source_enabled(
     cached: ResolvedPaper,
     *,
     enable_openalex_title_search: bool,
+    enable_semantic_scholar_title_search: bool,
     enable_dblp_title_search: bool,
     enable_arxiv_title_search: bool,
 ) -> bool:
     if cached.match_source == "openalex":
         return enable_openalex_title_search
+    if cached.match_source == "semantic_scholar":
+        return enable_semantic_scholar_title_search
     if cached.match_source == "dblp":
         return enable_dblp_title_search
     if cached.match_source == "arxiv":
@@ -561,11 +589,13 @@ def _search_crossref_by_title(title: str, *, http_client=None) -> list[dict]:
     try:
         response = client.get(
             _CROSSREF_ENDPOINT,
-            params={
-                "query.title": title,
-                "rows": 5,
-                "mailto": _CROSSREF_MAILTO,
-            },
+            params=_crossref_request_params(
+                {
+                    "query.title": title,
+                    "rows": 5,
+                }
+            ),
+            headers=_crossref_request_headers(),
         )
         response.raise_for_status()
         payload = response.json()
@@ -1093,6 +1123,40 @@ def _normalize_author_name(value: str) -> str:
     return _WHITESPACE_RE.sub(" ", without_punct).strip()
 
 
+def _author_token_jaccard(hint: str | None, source_authors: tuple[str, ...]) -> float:
+    """Token-set Jaccard similarity between an author hint and source authors."""
+    if not hint or not source_authors:
+        return 0.0
+    hint_tokens = set(_author_name_tokens(hint))
+    if not hint_tokens:
+        return 0.0
+    source_tokens: set[str] = set()
+    for author in source_authors:
+        source_tokens.update(_author_name_tokens(author))
+    if not source_tokens:
+        return 0.0
+    return len(hint_tokens & source_tokens) / len(hint_tokens | source_tokens)
+
+
+def _extract_authors_from_snippet(snippet: str | None) -> tuple[str, ...]:
+    """Best-effort author extraction from a web-search snippet.
+
+    Scholarly snippets often start with "Author1, Author2 - Title". Take the
+    segment before the first separator and split by comma if it looks like names.
+    """
+    if not snippet:
+        return ()
+    for sep in (" - ", " — ", " | ", " · ", ". "):
+        if sep in snippet:
+            head = snippet.split(sep, 1)[0].strip()
+            if ", " in head:
+                parts = [p.strip() for p in head.split(",") if p.strip()]
+                if len(parts) >= 2 and all(len(p.split()) <= 4 for p in parts):
+                    return tuple(parts[:8])
+            break
+    return ()
+
+
 def _ensure_client(client):
     if client is not None:
         return client, False
@@ -1173,11 +1237,7 @@ def _crossref_date(item: dict[str, object]) -> tuple[int | None, str | None]:
 
 
 def _semantic_scholar_headers() -> dict[str, str]:
-    api_key = (
-        os.getenv("SEMANTIC_SCHOLAR_API_KEY", "").strip()
-        or os.getenv("S2_API_KEY", "").strip()
-    )
-    return {"x-api-key": api_key} if api_key else {}
+    return _semantic_scholar_request_headers()
 
 
 def _semantic_scholar_authors(value: object) -> tuple[str, ...]:
@@ -1358,7 +1418,7 @@ def _web_hit_to_resolved(
     hostname = (
         (urlparse(link).hostname or "").casefold() if isinstance(link, str) else ""
     )
-    authors: tuple[str, ...] = ()
+    authors = _extract_authors_from_snippet(snippet)
     year = None
     confidence = _confidence_with_hints(
         _title_jaccard(query_title, title),
