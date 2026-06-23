@@ -2171,12 +2171,23 @@ def extract_publications_from_html_with_llm_fallback(
         return rule_publications
 
     section_text = _extract_publication_sections_text(html)
+    used_full_page_fallback = False
     if not section_text:
-        return rule_publications
+        # W2c: when the section detector misses (unrecognized CMS headings),
+        # fall back to the full page text so the LLM can still extract.
+        if not rule_publications and llm_extractor is not None:
+            section_text = _full_page_text_for_llm(html)
+            used_full_page_fallback = True
+        if not section_text:
+            return rule_publications
 
-    should_use_fallback = force_llm or _should_use_llm_publication_fallback(
-        publications=rule_publications,
-        section_text=section_text,
+    should_use_fallback = (
+        force_llm
+        or used_full_page_fallback
+        or _should_use_llm_publication_fallback(
+            publications=rule_publications,
+            section_text=section_text,
+        )
     )
     if not should_use_fallback:
         return rule_publications
@@ -2312,6 +2323,21 @@ def _extract_publication_sections_text(html: str) -> str:
                 texts.append(block_text)
                 seen_texts.add(block_text)
     return "\n".join(texts)
+
+
+def _full_page_text_for_llm(html: str) -> str:
+    """Full page text for LLM publication extraction when section detection fails.
+
+    W2c: when ``_find_publications_sections`` misses (unrecognized CMS headings),
+    fall back to the full sanitized page text so the LLM can still extract.
+    """
+    if not html.strip():
+        return ""
+    soup = _parse_homepage_html(html, page_url="full page fallback")
+    for tag_name in _LANDMARK_TAGS:
+        for tag in soup.find_all(tag_name):
+            tag.decompose()
+    return _normalize_sentence(soup.get_text(" ", strip=True))
 
 
 def _chunk_publication_section_text(
