@@ -129,9 +129,29 @@ def _split_abstract_intro(text: str) -> tuple[str | None, str | None]:
     return (abstract, intro)
 
 
+def _fetch_via_jina_reader(url: str) -> str | None:
+    """Fetch page text via the Jina reader (https://r.jina.ai/{url}).
+
+    W2a: landing-page fallback for prof_page_only papers with no arxiv_id,
+    no usable PDF, and no OpenAlex abstract. The reader renders the page
+    (including JS-rendered content) and returns markdown/text.
+    """
+    reader_url = f"https://r.jina.ai/{url.strip()}"
+    try:
+        with httpx.Client(timeout=30.0, trust_env=True, follow_redirects=True) as client:
+            response = client.get(reader_url)
+            if response.status_code == 200 and response.text:
+                return response.text
+            logger.warning("Jina reader returned %d for %s", response.status_code, url)
+            return None
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Jina reader failed for %s: %s", url, exc)
+        return None
+
+
 def _download_pdf(url: str, *, http_client) -> tuple[bytes, str]:
     _ARXIV_PDF_GATE.wait()
-    response = http_client.get(url, timeout=_DEFAULT_TIMEOUT)
+    response = http_client.get(url)
     response.raise_for_status()
 
     content_type = response.headers.get("Content-Type")
@@ -301,6 +321,30 @@ def fetch_and_extract_full_text(
                 source="openalex",
                 fetch_error=None,
             )
+
+        # W2a: Jina reader fallback for prof_page_only papers with no arxiv_id,
+        # no usable PDF, and no OpenAlex abstract. Fetch the landing page via
+        # the reader and extract the abstract from the rendered text.
+        if paper.pdf_url and not paper.arxiv_id:
+            reader_text = _fetch_via_jina_reader(paper.pdf_url)
+            if reader_text:
+                # Strip markdown heading prefixes so _split_abstract_intro
+                # can find "Abstract" (## Abstract → Abstract).
+                reader_text_clean = re.sub(r'^#+\s*', '', reader_text, flags=re.MULTILINE)
+                abstract, intro = _split_abstract_intro(reader_text_clean)
+                if abstract:
+                    return FullTextExtract(
+                        paper_id=paper_id,
+                        abstract=abstract,
+                        intro=intro,
+                        pdf_url=paper.pdf_url,
+                        pdf_sha256=None,
+                        source="landing_page_reader",
+                        fetch_error=None,
+                    )
+                last_fetch_error = "reader_no_abstract"
+            # If reader fails (None), keep the original last_fetch_error
+            # (e.g., "timeout" from the prof_page_pdf attempt).
 
         return FullTextExtract(
             paper_id=paper_id,

@@ -265,6 +265,15 @@ def test_download_pdf_returns_bytes_and_sha256():
     assert all(c in "0123456789abcdef" for c in sha)
 
 
+def test_download_pdf_does_not_override_injected_client_timeout():
+    body = b"%PDF-1.4 fake minimal content"
+    http = _fake_http_client_returning(_mock_response_bytes(body, content_length=len(body)))
+
+    _download_pdf("https://example.org/paper.pdf", http_client=http)
+
+    assert "timeout" not in http.get.call_args.kwargs
+
+
 def test_download_pdf_sha256_is_deterministic():
     body = b"deterministic content"
     http_a = _fake_http_client_returning(_mock_response_bytes(body, content_length=len(body)))
@@ -548,7 +557,10 @@ def test_fetch_prefers_direct_professor_page_pdf_over_arxiv(tmp_path):
 def test_fetch_professor_page_pdf_timeout_marks_timeout():
     with patch(
         "src.data_agents.paper.full_text_fetcher._download_pdf"
-    ) as m_dl:
+    ) as m_dl, patch(
+        "src.data_agents.paper.full_text_fetcher._fetch_via_jina_reader",
+        return_value=None,
+    ):
         m_dl.side_effect = httpx.TimeoutException("slow")
         result = fetch_and_extract_full_text(
             _paper_fixture(
@@ -566,7 +578,10 @@ def test_fetch_professor_page_pdf_timeout_marks_timeout():
 def test_fetch_professor_page_pdf_redirect_cap_marks_error():
     with patch(
         "src.data_agents.paper.full_text_fetcher._download_pdf"
-    ) as m_dl:
+    ) as m_dl, patch(
+        "src.data_agents.paper.full_text_fetcher._fetch_via_jina_reader",
+        return_value=None,
+    ):
         m_dl.side_effect = httpx.TooManyRedirects(
             "too many redirects",
             request=MagicMock(),
@@ -587,7 +602,10 @@ def test_fetch_professor_page_pdf_redirect_cap_marks_error():
 def test_fetch_professor_page_pdf_bad_content_type_marks_cap_error():
     with patch(
         "src.data_agents.paper.full_text_fetcher._download_pdf"
-    ) as m_dl:
+    ) as m_dl, patch(
+        "src.data_agents.paper.full_text_fetcher._fetch_via_jina_reader",
+        return_value=None,
+    ):
         m_dl.side_effect = _UnsupportedContentTypeError("pdf_content_type_disallowed")
         result = fetch_and_extract_full_text(
             _paper_fixture(
