@@ -20,6 +20,7 @@ from src.data_agents.quality.threshold_config import (
 from src.data_agents.storage.postgres.pipeline_run import require_real_run_id
 
 from .name_identity_gate import NameIdentityCandidate, NameIdentityDecision
+from .fact_dedup_key import completeness_score, facts_are_duplicates
 from .homepage_source_filter import is_homepage_publication_ingest_url
 from .name_selection import is_obvious_non_person_name, is_same_person_name_variant
 from .publish_helpers import build_professor_id, is_official_url
@@ -1194,7 +1195,7 @@ def _upsert_fact(
     if value_normalized == "":
         value_normalized = None
     evidence_span = _strip_postgres_nul(evidence_span) or ""
-    active_fact_key = _normalized_fact_key(value_normalized, value_raw)
+
     rows = conn.execute(
         """
         SELECT fact_id, value_raw, value_normalized
@@ -1208,65 +1209,92 @@ def _upsert_fact(
             fact_type,
         ),
     ).fetchall()
-    for row in rows:
-        existing_key = _normalized_fact_key(
-            _row_value(row, "value_normalized", 2),
-            _row_value(row, "value_raw", 1),
-        )
-        if existing_key != active_fact_key:
-            continue
 
-        fact_id = _row_value(row, "fact_id", 0)
+    # Format-normalizing semantic match: the same logical fact written as pipe,
+    # JSON, bilingual prose or a gloss twin counts as one entry (see
+    # fact_dedup_key). A literal-text key cannot match across encodings, which
+    # is what let duplicates accumulate.
+    matches = [
+        row
+        for row in rows
+        if facts_are_duplicates(
+            fact_type,
+            value_raw,
+            _row_value(row, "value_raw", 1) or _row_value(row, "value_normalized", 2),
+        )
+    ]
+
+    def _supersede(fact_id: Any) -> None:
         conn.execute(
             """
             UPDATE professor_fact
-               SET value_raw = %s,
-                   value_normalized = %s,
-                   source_page_id = %s,
-                   evidence_span = %s,
-                   confidence = %s,
+               SET status = 'superseded',
                    run_id = COALESCE(%s, run_id),
                    updated_at = now()
              WHERE fact_id = %s
             """,
+            (run_id, fact_id),
+        )
+
+    def _insert() -> None:
+        conn.execute(
+            """
+            INSERT INTO professor_fact (
+                professor_id,
+                fact_type,
+                value_raw,
+                value_normalized,
+                source_page_id,
+                evidence_span,
+                confidence,
+                run_id
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """,
             (
+                professor_id,
+                fact_type,
                 value_raw,
                 value_normalized,
                 source_page_id,
                 evidence_span,
                 confidence,
                 run_id,
-                fact_id,
             ),
         )
-        return "updated"
 
-    conn.execute(
-        """
-        INSERT INTO professor_fact (
-            professor_id,
-            fact_type,
-            value_raw,
-            value_normalized,
-            source_page_id,
-            evidence_span,
-            confidence,
-            run_id
-        )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """,
-        (
-            professor_id,
-            fact_type,
-            value_raw,
-            value_normalized,
-            source_page_id,
-            evidence_span,
-            confidence,
-            run_id,
+    if not matches:
+        _insert()
+        return "inserted"
+
+    # Keep-richest: structured-with-more-fields outranks prose; pipe-with-years
+    # outranks year-less JSON. The richer representation stays active.
+    best = max(
+        matches,
+        key=lambda r: completeness_score(
+            _row_value(r, "value_raw", 1), _row_value(r, "value_normalized", 2)
         ),
     )
-    return "inserted"
+    candidate_score = completeness_score(value_raw, value_normalized)
+    best_score = completeness_score(
+        _row_value(best, "value_raw", 1), _row_value(best, "value_normalized", 2)
+    )
+
+    if candidate_score > best_score:
+        # Candidate is richer: retire every duplicate twin, insert the candidate.
+        for row in matches:
+            _supersede(_row_value(row, "fact_id", 0))
+        _insert()
+        return "inserted"
+
+    # Existing richest twin is kept untouched; retire any other duplicate twins
+    # so exactly one active row remains for this logical fact.
+    best_id = _row_value(best, "fact_id", 0)
+    for row in matches:
+        row_id = _row_value(row, "fact_id", 0)
+        if row_id != best_id:
+            _supersede(row_id)
+    return "updated"
 
 
 def _retire_conflicting_contact_email_facts(
@@ -1315,11 +1343,6 @@ def _is_generic_contact_email(value: object) -> bool:
 def _normalize_contact_value(value: object) -> str:
     text = _clean_text(value) or ""
     return "".join(text.casefold().split())
-
-
-def _normalized_fact_key(value_normalized: object, value_raw: object) -> str:
-    value = _clean_text(value_normalized) or _clean_text(value_raw) or ""
-    return " ".join(value.casefold().split())
 
 
 def _upsert_professor_paper_link(

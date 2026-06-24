@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 """L2 professor field-completion: LLM structured-field extraction + bilingual (EN→ZH) translation.
 
-Reads a professor's homepage (static fetch via fetch_homepage_html), asks the LLM to extract
-research_directions / education / academic_position / work_experience / contact_email /
-profile_summary, translating any English content to bilingual `English (中文)` (original
-preserved), and writes professor_fact rows with source provenance (`llm_extraction` + run_id).
+Reads a professor's homepage (static/browser fetch), asks the LLM to extract
+research_directions / education / academic_position / work_experience / contact_email, translating
+English structured facts to `English (中文)` while preserving the original. The optional
+profile_summary is a canonical 200-300 char Chinese bio before it can update professor.profile_summary.
+Writes professor_fact rows with source provenance (`llm_extraction` + run_id).
 
 This is the template-agnostic Layer 2 of the professor-profile-field-completion pipeline
 (see openspec/changes/professor-profile-field-completion-pipeline). Use for schools whose
@@ -26,18 +27,24 @@ import re
 import time
 import uuid
 from typing import Any
+from decimal import Decimal
 
 import psycopg
 from dotenv import load_dotenv
 from openai import OpenAI
 from psycopg.types.json import Json
 
+from src.data_agents.professor.canonical_writer import _upsert_fact
 from src.data_agents.browser_fetch import (
     CDPChromeRenderer,
     fetch_html_with_browser_fallback,
     render_html_with_browser,
 )
 from src.data_agents.professor.llm_profiles import resolve_professor_llm_settings
+from src.data_agents.professor.profile_summary_contract import (
+    PROFILE_SUMMARY_PROMPT_CONTRACT,
+    is_valid_profile_summary,
+)
 
 RUN_KIND = "backfill_real"  # must be a valid pipeline_run.run_kind enum value
 SOURCE = "llm_extraction"
@@ -46,14 +53,15 @@ _SYS = "You extract structured fields from a professor's homepage. Return ONLY m
 _PROMPT = """Homepage text (may be English):
 {text}
 
-Extract these fields. For ANY English content, append a Chinese translation in parentheses like "English (中文)"; always keep the original. Use null or [] for fields not present.
+Extract these fields. For English structured fact content, append a Chinese translation in parentheses like "English (中文)"; always keep the original. Use null or [] for fields not present.
+For profile_summary only, follow this canonical summary contract: {profile_summary_contract}
 Return JSON ONLY with keys:
 - research_directions: list of strings (bilingual)
 - education: list of {{"school","degree","field"}} (bilingual school/field)
 - academic_position: string or null (bilingual)
 - work_experience: list of {{"organization","role"}} (bilingual)
 - contact_email: string or null
-- profile_summary: string or null (bilingual bio, <=300 chars)
+- profile_summary: string or null (200-300 char 中文 canonical biography)
 """
 
 
@@ -75,8 +83,9 @@ def _facts_from(data: dict[str, Any]) -> list[tuple[str, str]]:
         facts.append(("work_experience", json.dumps(w, ensure_ascii=False)))
     if data.get("contact_email"):
         facts.append(("contact", str(data["contact_email"])))
-    if data.get("profile_summary"):
-        facts.append(("homepage", str(data["profile_summary"])[:500]))
+    profile_summary = str(data.get("profile_summary") or "").strip()
+    if is_valid_profile_summary(profile_summary):
+        facts.append(("homepage", profile_summary))
     return facts
 
 
@@ -190,7 +199,13 @@ def main() -> int:
                 "model": model,
                 "messages": [
                     {"role": "system", "content": _SYS},
-                    {"role": "user", "content": _PROMPT.format(text=text)},
+                    {
+                        "role": "user",
+                        "content": _PROMPT.format(
+                            text=text,
+                            profile_summary_contract=PROFILE_SUMMARY_PROMPT_CONTRACT,
+                        ),
+                    },
                 ],
                 "max_tokens": 1200,
                 "temperature": 0.2,
@@ -206,21 +221,25 @@ def main() -> int:
             content = content[content.find("{") : content.rfind("}") + 1]
             data = json.loads(content)
             facts = _facts_from(data)
-            with conn.cursor() as c:
-                for fact_type, value in facts:
-                    c.execute(
-                        "INSERT INTO professor_fact(professor_id,fact_type,value_raw,source_page_id,"
-                        "evidence_span,confidence,status,run_id) VALUES(%s,%s,%s,%s,%s,0.8,'active',%s)"
-                        " ON CONFLICT DO NOTHING",
-                        (pid, fact_type, value, page_id, text[:400], run_id),
-                    )
+            for fact_type, value in facts:
+                _upsert_fact(
+                    conn,
+                    professor_id=pid,
+                    fact_type=fact_type,
+                    value_raw=value,
+                    source_page_id=page_id,
+                    evidence_span=text[:400],
+                    confidence=Decimal("0.8"),
+                    run_id=run_id,
+                )
             conn.commit()
             # Also update the professor.profile_summary column (the admin-visible bio)
-            if data.get("profile_summary"):
+            profile_summary = str(data.get("profile_summary") or "").strip()
+            if is_valid_profile_summary(profile_summary):
                 with conn.cursor() as c:
                     c.execute(
                         "UPDATE professor SET profile_summary=%s WHERE professor_id=%s",
-                        (str(data["profile_summary"])[:500], pid),
+                        (profile_summary, pid),
                     )
                 conn.commit()
             grand += len(facts)

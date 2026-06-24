@@ -7,7 +7,7 @@ For each professor:
   3. Identity filter (name + institution keywords in title/snippet).
   4. Fetch verified result pages (static → headless → CDP).
   5. Recursive crawl: follow personal-homepage links from verified pages (depth 1).
-  6. gemma4 synthesizes a comprehensive bilingual profile_summary (300-500 chars) from all content.
+  6. gemma4 synthesizes a canonical Chinese profile_summary (200-300 chars) from all content.
   7. UPDATE professor.profile_summary + UPSERT enriched professor_fact.
 
 Env: localhost DB needs proxy UNSET; Serper + external fetches are external.
@@ -21,6 +21,7 @@ import os
 import re
 import time
 import uuid
+from decimal import Decimal
 from typing import Any
 
 import psycopg
@@ -29,17 +30,23 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from psycopg.types.json import Json
 
+from src.data_agents.professor.canonical_writer import _upsert_fact
 from src.data_agents.browser_fetch import fetch_html_with_browser_fallback
 from src.data_agents.professor.llm_profiles import resolve_professor_llm_settings
+from src.data_agents.professor.profile_summary_contract import (
+    PROFILE_SUMMARY_PROMPT_CONTRACT,
+    is_valid_profile_summary,
+    profile_summary_contract_violations,
+)
 from src.data_agents.providers.web_search import WebSearchProvider
 
 RUN_KIND = "backfill_real"
 _SYS_QUERY = 'You generate web search queries. Return ONLY JSON {"queries": ["..."]}.'
 _SYS_SYNTH = (
-    "You write a comprehensive bilingual professor biography. "
-    "Format: English paragraph (中文段落). "
+    "You write a Chinese canonical professor biography for professor.profile_summary. "
+    f"{PROFILE_SUMMARY_PROMPT_CONTRACT} "
     "Include: academic title, research areas, key projects/grants, career highlights, publications summary. "
-    "300-500 characters total. Be specific — use the provided web content."
+    "200-300 characters total. Be specific and grounded in the provided web content."
 )
 
 
@@ -313,7 +320,7 @@ def main() -> int:
                 f"Department: {department or 'N/A'}\n"
                 f"Current bio: {(current_summary or '')[:200]}\n\n"
                 f"Web content (verified for this professor):\n{all_content}\n\n"
-                f"Write a comprehensive bilingual biography."
+                f"Write the canonical Chinese profile_summary."
             )
             r = client.chat.completions.create(
                 model=model,
@@ -332,27 +339,40 @@ def main() -> int:
                 )
                 time.sleep(args.sleep)
                 continue
+            if not is_valid_profile_summary(enriched):
+                violations = ",".join(profile_summary_contract_violations(enriched))
+                print(
+                    f"  {name}: synthesis violates profile_summary contract ({violations}), skipping",
+                    flush=True,
+                )
+                time.sleep(args.sleep)
+                continue
 
             # 7. Write
             with conn.cursor() as c:
                 c.execute(
                     "UPDATE professor SET profile_summary=%s WHERE professor_id=%s AND length(coalesce(profile_summary,'')) < %s",
-                    (enriched[:800], pid, len(enriched)),
+                    (enriched, pid, len(enriched)),
                 )
                 updated = c.rowcount
                 if updated:
                     c.execute(
-                        "INSERT INTO professor_fact(professor_id,fact_type,value_raw,source_page_id,evidence_span,confidence,status,run_id)"
-                        " SELECT %s,'homepage',%s,primary_official_profile_page_id,%s,0.85,'active',%s"
-                        " FROM professor WHERE professor_id=%s ON CONFLICT DO NOTHING",
-                        (
-                            pid,
-                            enriched[:500],
-                            f"web_enrich: {len(verified)} verified",
-                            run_id,
-                            pid,
-                        ),
+                        "SELECT primary_official_profile_page_id FROM professor WHERE professor_id=%s",
+                        (pid,),
                     )
+                    row = c.fetchone()
+                    page_id = row[0] if row else None
+                    if page_id:
+                        _upsert_fact(
+                            c,
+                            professor_id=pid,
+                            fact_type="homepage",
+                            value_raw=enriched,
+                            source_page_id=page_id,
+                            evidence_span=f"web_enrich: {len(verified)} verified",
+                            confidence=Decimal("0.85"),
+                            run_id=run_id,
+                        )
                 conn.commit()
 
             enriched_count += 1

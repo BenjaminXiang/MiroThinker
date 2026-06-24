@@ -44,6 +44,7 @@ from datetime import datetime, timezone
 import psycopg
 from psycopg.rows import dict_row
 
+from src.data_agents.professor.canonical_writer import _upsert_fact
 from src.data_agents.professor.topic_quality import split_compound_research_topic
 from src.data_agents.storage.postgres.connection import resolve_dsn
 
@@ -96,7 +97,8 @@ def _fetch_candidate_facts(conn, *, limit: int | None) -> list[dict]:
                f.value_raw,
                f.source_page_id,
                f.evidence_span,
-               f.confidence
+               f.confidence,
+               f.run_id
           FROM professor_fact f
           JOIN professor p ON p.professor_id = f.professor_id
          WHERE f.fact_type = 'research_topic'
@@ -123,21 +125,15 @@ def _deprecate(conn, fact_id) -> None:
 
 
 def _insert_atomic(conn, *, source: dict, value_raw: str) -> None:
-    conn.execute(
-        """
-        INSERT INTO professor_fact (
-            professor_id, fact_type, value_raw,
-            source_page_id, evidence_span, confidence, status
-        )
-        VALUES (%s, 'research_topic', %s, %s, %s, %s, 'active')
-        """,
-        (
-            source["professor_id"],
-            value_raw,
-            source["source_page_id"],
-            source["evidence_span"],
-            source["confidence"],
-        ),
+    _upsert_fact(
+        conn,
+        professor_id=source["professor_id"],
+        fact_type="research_topic",
+        value_raw=value_raw,
+        source_page_id=source["source_page_id"],
+        evidence_span=source["evidence_span"],
+        confidence=source["confidence"],
+        run_id=source["run_id"],
     )
 
 
@@ -150,6 +146,7 @@ def _file_issue(conn, row: dict, *, atomic_pieces: list[str]) -> int:
         "type": "topic_split_backfill_report",
         "captured_at": datetime.now(timezone.utc).isoformat(),
         "fact_id": str(row["fact_id"]),
+        "source_run_id": str(row["run_id"]) if row.get("run_id") else None,
         "professor_id": row["professor_id"],
         "original_value": row["value_raw"],
         "atomic_pieces": atomic_pieces,

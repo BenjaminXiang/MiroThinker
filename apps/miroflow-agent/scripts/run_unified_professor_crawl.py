@@ -23,6 +23,7 @@ import os
 import re
 import time
 import uuid
+from decimal import Decimal
 from typing import Any
 
 import psycopg
@@ -31,12 +32,17 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from psycopg.types.json import Json
 
+from src.data_agents.professor.canonical_writer import _upsert_fact
 from src.data_agents.browser_fetch import (
     CDPChromeRenderer,
     fetch_html_with_browser_fallback,
     render_html_with_browser,
 )
 from src.data_agents.professor.llm_profiles import resolve_professor_llm_settings
+from src.data_agents.professor.profile_summary_contract import (
+    PROFILE_SUMMARY_PROMPT_CONTRACT,
+    is_valid_profile_summary,
+)
 from src.data_agents.providers.web_search import WebSearchProvider
 
 RUN_KIND = "backfill_real"
@@ -52,10 +58,11 @@ Department: {dept}
 Web content from multiple sources (official homepage + verified web results):
 {content}
 
-Extract these fields. For English content, add Chinese in parentheses: "English (中文)".
+Extract these fields. For English structured fact values, add Chinese in parentheses: "English (中文)".
+For profile_summary only, follow this canonical summary contract: {profile_summary_contract}
 Return JSON ONLY:
 {{
-  "profile_summary": "300-500 char comprehensive bilingual bio (include research, career, grants, achievements, publications count)",
+  "profile_summary": "200-300 char Chinese canonical biography grounded in the content, or null",
   "research_directions": ["bilingual strings"],
   "education": [{{"school":"","degree":"","field":""}}],
   "academic_position": "bilingual or null",
@@ -65,7 +72,7 @@ Return JSON ONLY:
   "awards": ["bilingual strings"]
 }}
 
-Rules: only include data that's actually in the content. null/[] for absent fields. Be comprehensive — this is the professor's complete profile.
+Rules: only include data that's actually in the content. null/[] for absent fields. Be comprehensive for structured facts, but keep profile_summary concise and Chinese.
 """
 
 _SYS_PAPERS = "You extract academic publication titles from text. Return ONLY JSON."
@@ -279,6 +286,7 @@ def crawl_one_professor(
                         institution=institution,
                         dept=dept or "N/A",
                         content=all_content,
+                        profile_summary_contract=PROFILE_SUMMARY_PROMPT_CONTRACT,
                     ),
                 },
             ],
@@ -341,10 +349,12 @@ def _write_results(
     with conn.cursor() as c:
         # profile_summary
         summary = fields.get("profile_summary")
-        if summary and len(summary) > 50:
+        summary_text = str(summary or "").strip()
+        summary_valid = bool(summary_text) and is_valid_profile_summary(summary_text)
+        if summary_valid:
             c.execute(
                 "UPDATE professor SET profile_summary=%s WHERE professor_id=%s AND length(coalesce(profile_summary,''))<%s",
-                (summary[:800], pid, len(summary)),
+                (summary_text, pid, len(summary_text)),
             )
             if c.rowcount:
                 facts_w += 1
@@ -377,7 +387,7 @@ def _write_results(
                 "contact",
                 [fields.get("contact_email")] if fields.get("contact_email") else [],
             ),
-            ("homepage", [summary[:500]] if summary and len(summary) > 50 else []),
+            ("homepage", [summary_text] if summary_valid else []),
         ]
         # research_projects → store as 'homepage' evidence or a new fact_type
         for proj in fields.get("research_projects") or []:
@@ -389,13 +399,20 @@ def _write_results(
             for val in values:
                 if not val or (isinstance(val, str) and len(val) < 2):
                     continue
-                c.execute(
-                    "INSERT INTO professor_fact(professor_id,fact_type,value_raw,source_page_id,evidence_span,confidence,status,run_id)"
-                    " SELECT %s,%s,%s,primary_official_profile_page_id,'unified_crawl',0.85,'active',%s"
-                    " FROM professor WHERE professor_id=%s ON CONFLICT DO NOTHING",
-                    (pid, fact_type, str(val)[:500], run_id, pid),
+                if not page_id:
+                    continue
+                outcome = _upsert_fact(
+                    c,
+                    professor_id=pid,
+                    fact_type=fact_type,
+                    value_raw=str(val)[:500],
+                    source_page_id=page_id,
+                    evidence_span="unified_crawl",
+                    confidence=Decimal("0.85"),
+                    run_id=run_id,
                 )
-                facts_w += c.rowcount
+                if outcome == "inserted":
+                    facts_w += 1
 
         # papers
         for p in papers:
