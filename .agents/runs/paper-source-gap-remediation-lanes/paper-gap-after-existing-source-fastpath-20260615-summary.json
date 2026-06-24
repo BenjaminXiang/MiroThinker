@@ -1,0 +1,70 @@
+{
+  "active_filter": "identity_status not in merged/rejected, quality_status != rejected, no paper_merge_alias.old_paper_id",
+  "active_total": 40401,
+  "artifact_type": "paper_gap_after_existing_source_fastpath",
+  "database_url_label": "miroflow_real",
+  "doi_missing_summary": 4689,
+  "generated_at": "2026-06-15T13:54:00Z",
+  "has_abstract": 23337,
+  "has_summary": 23696,
+  "missing_abstract": 17064,
+  "missing_summary": 16705,
+  "source_buckets": [
+    {
+      "active_rows": 11861,
+      "has_abstract": 203,
+      "has_summary": 242,
+      "missing_abstract": 11658,
+      "missing_summary": 11619,
+      "source": "prof_page_only"
+    },
+    {
+      "active_rows": 17420,
+      "has_abstract": 14494,
+      "has_summary": 14677,
+      "missing_abstract": 2926,
+      "missing_summary": 2743,
+      "source": "openalex"
+    },
+    {
+      "active_rows": 10725,
+      "has_abstract": 8575,
+      "has_summary": 8711,
+      "missing_abstract": 2150,
+      "missing_summary": 2014,
+      "source": "crossref"
+    },
+    {
+      "active_rows": 306,
+      "has_abstract": 19,
+      "has_summary": 19,
+      "missing_abstract": 287,
+      "missing_summary": 287,
+      "source": "manual"
+    },
+    {
+      "active_rows": 83,
+      "has_abstract": 42,
+      "has_summary": 43,
+      "missing_abstract": 41,
+      "missing_summary": 40,
+      "source": "dblp"
+    },
+    {
+      "active_rows": 4,
+      "has_abstract": 2,
+      "has_summary": 2,
+      "missing_abstract": 2,
+      "missing_summary": 2,
+      "source": "semantic_scholar"
+    },
+    {
+      "active_rows": 2,
+      "has_abstract": 2,
+      "has_summary": 2,
+      "missing_abstract": 0,
+      "missing_summary": 0,
+      "source": "arxiv"
+    }
+  ]
+}

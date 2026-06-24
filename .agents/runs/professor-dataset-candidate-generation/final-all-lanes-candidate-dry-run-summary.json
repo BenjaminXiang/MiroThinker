@@ -1,0 +1,101 @@
+{
+  "mode": "candidate_dry_run",
+  "selection_hash": "2cd5a6adb93aa300b880141b7a442a53652049d84ca6b86790311f437d7a264a",
+  "closure_selection_hash": "8292a5b69c1d01c371f5b3c802979b5283063b75a14748967000d5ea1ffc9fb2",
+  "lanes": [
+    {
+      "lane": "profile_summary_repair",
+      "input_count": 11,
+      "candidate_count": 11,
+      "provider_failure_count": 0,
+      "validation_failure_count": 0,
+      "skipped_count": 0,
+      "ready_auto_write": 2,
+      "review_before_write": 9,
+      "quality_flag_counts": [
+        {
+          "flag": "missing_profile_summary_input_facts",
+          "count": 1
+        },
+        {
+          "flag": "profile_summary_length_out_of_range",
+          "count": 8
+        }
+      ],
+      "provider_failure_classes": [],
+      "rejection_reason_counts": []
+    },
+    {
+      "lane": "research_overview_backfill",
+      "input_count": 22,
+      "candidate_count": 1,
+      "provider_failure_count": 0,
+      "validation_failure_count": 0,
+      "skipped_count": 21,
+      "ready_auto_write": 1,
+      "review_before_write": 0,
+      "quality_flag_counts": [],
+      "provider_failure_classes": [],
+      "rejection_reason_counts": [
+        {
+          "reason": "invalid_research_overview_candidate",
+          "count": 4
+        },
+        {
+          "reason": "source_missing",
+          "count": 17
+        }
+      ]
+    },
+    {
+      "lane": "professor_paper_summary_generation",
+      "input_count": 267,
+      "candidate_count": 135,
+      "provider_failure_count": 0,
+      "validation_failure_count": 0,
+      "skipped_count": 132,
+      "ready_auto_write": 0,
+      "review_before_write": 135,
+      "quality_flag_counts": [
+        {
+          "flag": "missing_source_page_provenance",
+          "count": 135
+        }
+      ],
+      "provider_failure_classes": [],
+      "rejection_reason_counts": [
+        {
+          "reason": "duplicate_verified_paper_links",
+          "count": 131
+        },
+        {
+          "reason": "invalid_paper_summary_candidate",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "lane": "duplicate_paper_merge",
+      "input_count": 295,
+      "candidate_count": 234,
+      "provider_failure_count": 0,
+      "validation_failure_count": 0,
+      "skipped_count": 61,
+      "ready_auto_write": 0,
+      "review_before_write": 234,
+      "quality_flag_counts": [
+        {
+          "flag": "missing_source_page_provenance",
+          "count": 234
+        }
+      ],
+      "provider_failure_classes": [],
+      "rejection_reason_counts": [
+        {
+          "reason": "ambiguous_fuzzy_match",
+          "count": 61
+        }
+      ]
+    }
+  ]
+}

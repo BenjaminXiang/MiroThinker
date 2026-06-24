@@ -1,0 +1,148 @@
+{
+  "aggregate": {
+    "active_scope": 41876,
+    "has_summary": 11372,
+    "missing_summary": 30504,
+    "has_abstract": 11159,
+    "missing_abstract": 30717,
+    "doi_missing_summary": 2231
+  },
+  "selectable_without_doi_enrichment": 45,
+  "selectable_with_doi_enrichment": 2274,
+  "missing_by_canonical_source": [
+    {
+      "canonical_source": "prof_page_only",
+      "missing_summary": 27925,
+      "missing_abstract": 27961,
+      "doi_missing_summary": 18,
+      "missing_summary_with_abstract": 3
+    },
+    {
+      "canonical_source": "openalex",
+      "missing_summary": 1840,
+      "missing_abstract": 1990,
+      "doi_missing_summary": 1799,
+      "missing_summary_with_abstract": 24
+    },
+    {
+      "canonical_source": "crossref",
+      "missing_summary": 409,
+      "missing_abstract": 435,
+      "doi_missing_summary": 409,
+      "missing_summary_with_abstract": 11
+    },
+    {
+      "canonical_source": "manual",
+      "missing_summary": 287,
+      "missing_abstract": 287,
+      "doi_missing_summary": 1,
+      "missing_summary_with_abstract": 0
+    },
+    {
+      "canonical_source": "dblp",
+      "missing_summary": 41,
+      "missing_abstract": 42,
+      "doi_missing_summary": 4,
+      "missing_summary_with_abstract": 0
+    },
+    {
+      "canonical_source": "semantic_scholar",
+      "missing_summary": 2,
+      "missing_abstract": 2,
+      "doi_missing_summary": 0,
+      "missing_summary_with_abstract": 0
+    },
+    {
+      "canonical_source": "arxiv",
+      "missing_summary": 0,
+      "missing_abstract": 0,
+      "doi_missing_summary": 0,
+      "missing_summary_with_abstract": 0
+    }
+  ],
+  "paper_full_text_fetch_error_top": [
+    {
+      "fetch_error": "no_arxiv_id",
+      "row_count": 14313
+    },
+    {
+      "fetch_error": "<null>",
+      "row_count": 8806
+    },
+    {
+      "fetch_error": "pdf_content_type_disallowed",
+      "row_count": 181
+    },
+    {
+      "fetch_error": "http_403",
+      "row_count": 133
+    },
+    {
+      "fetch_error": "network",
+      "row_count": 12
+    },
+    {
+      "fetch_error": "http_418",
+      "row_count": 10
+    },
+    {
+      "fetch_error": "http_405",
+      "row_count": 7
+    },
+    {
+      "fetch_error": "pdf_too_large",
+      "row_count": 7
+    },
+    {
+      "fetch_error": "timeout",
+      "row_count": 7
+    },
+    {
+      "fetch_error": "http_5xx",
+      "row_count": 6
+    },
+    {
+      "fetch_error": "http_404",
+      "row_count": 4
+    },
+    {
+      "fetch_error": "pdf_empty_text",
+      "row_count": 3
+    },
+    {
+      "fetch_error": "http_400",
+      "row_count": 2
+    },
+    {
+      "fetch_error": "http_429",
+      "row_count": 2
+    },
+    {
+      "fetch_error": "pdf_parse_error",
+      "row_count": 1
+    }
+  ],
+  "suspicious_active_doi_missing_summary_count": 4,
+  "suspicious_active_doi_missing_summary_samples": [
+    {
+      "paper_id": "PAPER-A763BB05CCE5",
+      "title_clean": "Adaptive Aromaticity in Osmapentalene and Osmapyridinium Complexes with Carbone Ligands",
+      "doi": "10.1021/10.1002/poc.4450"
+    },
+    {
+      "paper_id": "PAPER-B0D96DAEFDB7",
+      "title_clean": "A generic phase between disorderedWeyl semimetal and di_usive metal\", Ying Su, X.S.Wang, and X",
+      "doi": "10.1038/s415"
+    },
+    {
+      "paper_id": "PAPER-BA20B158E18D",
+      "title_clean": "Synthesis of Dual-Emitting CdZnSe/Mn:ZnS Quantum Dots for Sensing the pH Change in Live Cells",
+      "doi": "10.1021/acs.analchem"
+    },
+    {
+      "paper_id": "PAPER-E5B9634E7037",
+      "title_clean": "A theory on skyrmion size",
+      "doi": "10.1038/s42005-018-0029-0|www.nature.com/commsphys9"
+    }
+  ]
+}

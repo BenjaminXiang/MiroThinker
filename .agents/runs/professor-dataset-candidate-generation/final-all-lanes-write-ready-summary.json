@@ -1,0 +1,100 @@
+{
+  "mode": "write",
+  "run_id": "62e8f26b-74fa-45cd-98c2-89d55c50fd4d",
+  "bucket_limit": 100000,
+  "batch_size": 5000,
+  "dry_run_selection_hash": "8292a5b69c1d01c371f5b3c802979b5283063b75a14748967000d5ea1ffc9fb2",
+  "lanes": [
+    {
+      "lane": "profile_summary_repair",
+      "input_count": 11,
+      "attempted_count": 2,
+      "written_count": 2,
+      "unchanged_count": 0,
+      "skipped_count": 9,
+      "failed_count": 0,
+      "unresolved_issue_count": 9,
+      "changed_professors": 2,
+      "changed_papers": 0,
+      "issue_reason_counts": [
+        {
+          "reason": "candidate_requires_review_before_write",
+          "count": 9
+        }
+      ]
+    },
+    {
+      "lane": "research_overview_backfill",
+      "input_count": 22,
+      "attempted_count": 22,
+      "written_count": 1,
+      "unchanged_count": 0,
+      "skipped_count": 0,
+      "failed_count": 0,
+      "unresolved_issue_count": 21,
+      "changed_professors": 1,
+      "changed_papers": 0,
+      "issue_reason_counts": [
+        {
+          "reason": "missing_candidate_research_overview",
+          "count": 21
+        }
+      ]
+    },
+    {
+      "lane": "professor_paper_summary_generation",
+      "input_count": 267,
+      "attempted_count": 1,
+      "written_count": 0,
+      "unchanged_count": 0,
+      "skipped_count": 266,
+      "failed_count": 0,
+      "unresolved_issue_count": 267,
+      "changed_professors": 0,
+      "changed_papers": 0,
+      "issue_reason_counts": [
+        {
+          "reason": "candidate_requires_review_before_write",
+          "count": 135
+        },
+        {
+          "reason": "duplicate_verified_paper_links",
+          "count": 131
+        },
+        {
+          "reason": "missing_candidate_paper_summary",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "lane": "duplicate_paper_merge",
+      "input_count": 295,
+      "attempted_count": 0,
+      "written_count": 0,
+      "unchanged_count": 0,
+      "skipped_count": 295,
+      "failed_count": 0,
+      "unresolved_issue_count": 295,
+      "changed_professors": 0,
+      "changed_papers": 0,
+      "issue_reason_counts": [
+        {
+          "reason": "ambiguous_fuzzy_match",
+          "count": 61
+        },
+        {
+          "reason": "candidate_requires_review_before_write",
+          "count": 234
+        }
+      ]
+    }
+  ],
+  "post_write_verification": {
+    "status": "success",
+    "completion_allowed": true,
+    "changed_professors": 3,
+    "issue_count": 0,
+    "issue_reason_counts": []
+  }
+}

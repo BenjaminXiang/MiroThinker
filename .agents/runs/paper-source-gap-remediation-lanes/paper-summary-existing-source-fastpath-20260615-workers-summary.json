@@ -1,0 +1,57 @@
+{
+  "artifact_type": "paper_summary_existing_source_fastpath_workers_summary",
+  "database_url_label": "miroflow_real",
+  "durations_seconds": [
+    159.97,
+    176.09,
+    155.48,
+    195.38,
+    129.33,
+    217.05,
+    166.34,
+    198.18
+  ],
+  "generated_at": "2026-06-15T13:50:00Z",
+  "lane": "existing source only, no DOI/full-text/title source acquisition",
+  "notes": [
+    "Workers ran with --existing-source-only; source_acquisition_enabled=false in every worker report.",
+    "Rejected rows remain for prompt/validator review or manual adjudication."
+  ],
+  "run_ids": [
+    "e570f4e5-0dda-4553-a4b6-2a4e7eaa71de",
+    "d84d9b07-8eba-4eaf-97a9-fed415652ec0",
+    "baad62a6-49d0-45ef-9c60-04fb9abdcbd5",
+    "307b2857-95c7-4ee9-8aa3-c537537a05be",
+    "ce962356-a9cc-4343-8725-b5a29c3997fe",
+    "26064e15-0934-4c64-917f-f521a03a2822",
+    "79d424d3-75d9-44fe-9029-a8475f6a98ed",
+    "c83685e2-e126-4d55-b1ba-731664cc979a"
+  ],
+  "totals": {
+    "abstract_clean_backfilled_from_full_text": 0,
+    "full_text_enriched": 0,
+    "full_text_enrichment_attempted": 0,
+    "identifier_contradictions": 0,
+    "metadata_enriched": 0,
+    "metadata_enrichment_attempted": 0,
+    "metadata_enrichment_skipped_bad_doi": 0,
+    "papers_processed": 221,
+    "papers_skipped": 51,
+    "papers_total": 272,
+    "papers_with_errors": 0,
+    "pipeline_issues_inserted": 0,
+    "summaries_rejected": 138,
+    "summaries_written": 83
+  },
+  "worker_count": 8,
+  "worker_reports": [
+    ".agents/runs/paper-source-gap-remediation-lanes/paper-summary-existing-source-fastpath-20260615-worker0.json",
+    ".agents/runs/paper-source-gap-remediation-lanes/paper-summary-existing-source-fastpath-20260615-worker1.json",
+    ".agents/runs/paper-source-gap-remediation-lanes/paper-summary-existing-source-fastpath-20260615-worker2.json",
+    ".agents/runs/paper-source-gap-remediation-lanes/paper-summary-existing-source-fastpath-20260615-worker3.json",
+    ".agents/runs/paper-source-gap-remediation-lanes/paper-summary-existing-source-fastpath-20260615-worker4.json",
+    ".agents/runs/paper-source-gap-remediation-lanes/paper-summary-existing-source-fastpath-20260615-worker5.json",
+    ".agents/runs/paper-source-gap-remediation-lanes/paper-summary-existing-source-fastpath-20260615-worker6.json",
+    ".agents/runs/paper-source-gap-remediation-lanes/paper-summary-existing-source-fastpath-20260615-worker7.json"
+  ]
+}

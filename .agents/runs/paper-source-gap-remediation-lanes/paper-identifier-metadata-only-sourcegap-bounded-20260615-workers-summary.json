@@ -1,0 +1,178 @@
+{
+  "workers": 4,
+  "papers_total": 200,
+  "papers_processed": 200,
+  "papers_skipped": 0,
+  "summaries_written": 0,
+  "metadata_enrichment_attempted": 200,
+  "metadata_enrichment_skipped_bad_doi": 1,
+  "metadata_enriched": 0,
+  "metadata_provider_misses": 0,
+  "metadata_provider_errors": 20,
+  "metadata_provider_timeouts": 0,
+  "metadata_provider_rate_limits": 0,
+  "metadata_no_updates": 200,
+  "full_text_enrichment_attempted": 0,
+  "abstract_clean_backfilled_from_full_text": 0,
+  "papers_with_errors": 0,
+  "metadata_provider_error_samples": [
+    {
+      "paper_id": "PAPER-003B5F0F7546",
+      "provider": "semantic_scholar",
+      "category": "error",
+      "error_type": "HTTPError",
+      "error": "404 Client Error: Not Found for url: https://api.semanticscholar.org/graph/v1/paper/DOI:10.1007/978-3-031-73016-0_7?fields=title%2Cabstract%2Ctldr%2CfieldsOfStudy%2CpublicationDate%2Cvenue%2Curl%2CexternalIds%2CisOpenAccess%2CopenAccessPdf%"
+    },
+    {
+      "paper_id": "PAPER-01BBE2BD660C",
+      "provider": "semantic_scholar",
+      "category": "error",
+      "error_type": "HTTPError",
+      "error": "404 Client Error: Not Found for url: https://api.semanticscholar.org/graph/v1/paper/DOI:10.1360/982005-178?fields=title%2Cabstract%2Ctldr%2CfieldsOfStudy%2CpublicationDate%2Cvenue%2Curl%2CexternalIds%2CisOpenAccess%2CopenAccessPdf%2Ccitatio"
+    },
+    {
+      "paper_id": "PAPER-07C567C6A59C",
+      "provider": "semantic_scholar",
+      "category": "error",
+      "error_type": "HTTPError",
+      "error": "404 Client Error: Not Found for url: https://api.semanticscholar.org/graph/v1/paper/DOI:10.1016/j.measurement.2023.112725?fields=title%2Cabstract%2Ctldr%2CfieldsOfStudy%2CpublicationDate%2Cvenue%2Curl%2CexternalIds%2CisOpenAccess%2CopenAcce"
+    },
+    {
+      "paper_id": "PAPER-07EC13243803",
+      "provider": "semantic_scholar",
+      "category": "error",
+      "error_type": "HTTPError",
+      "error": "404 Client Error: Not Found for url: https://api.semanticscholar.org/graph/v1/paper/DOI:10.1016/j.ensm.2021.12.013?fields=title%2Cabstract%2Ctldr%2CfieldsOfStudy%2CpublicationDate%2Cvenue%2Curl%2CexternalIds%2CisOpenAccess%2CopenAccessPdf%2"
+    },
+    {
+      "paper_id": "PAPER-09410A6805A6",
+      "provider": "semantic_scholar",
+      "category": "error",
+      "error_type": "HTTPError",
+      "error": "404 Client Error: Not Found for url: https://api.semanticscholar.org/graph/v1/paper/DOI:10.1007/978-981-99-9947-7_77?fields=title%2Cabstract%2Ctldr%2CfieldsOfStudy%2CpublicationDate%2Cvenue%2Curl%2CexternalIds%2CisOpenAccess%2CopenAccessPdf"
+    },
+    {
+      "paper_id": "PAPER-013CD95B670B",
+      "provider": "semantic_scholar",
+      "category": "error",
+      "error_type": "HTTPError",
+      "error": "404 Client Error: Not Found for url: https://api.semanticscholar.org/graph/v1/paper/DOI:10.1007/978-3-031-72684-2_9?fields=title%2Cabstract%2Ctldr%2CfieldsOfStudy%2CpublicationDate%2Cvenue%2Curl%2CexternalIds%2CisOpenAccess%2CopenAccessPdf%"
+    },
+    {
+      "paper_id": "PAPER-026E44092CCB",
+      "provider": "semantic_scholar",
+      "category": "error",
+      "error_type": "HTTPError",
+      "error": "404 Client Error: Not Found for url: https://api.semanticscholar.org/graph/v1/paper/DOI:10.1007/978-3-031-20796-9_15?fields=title%2Cabstract%2Ctldr%2CfieldsOfStudy%2CpublicationDate%2Cvenue%2Curl%2CexternalIds%2CisOpenAccess%2CopenAccessPdf"
+    },
+    {
+      "paper_id": "PAPER-0477997681FD",
+      "provider": "semantic_scholar",
+      "category": "error",
+      "error_type": "HTTPError",
+      "error": "404 Client Error: Not Found for url: https://api.semanticscholar.org/graph/v1/paper/DOI:10.1016/b978-0-443-40356-9.00011-0?fields=title%2Cabstract%2Ctldr%2CfieldsOfStudy%2CpublicationDate%2Cvenue%2Curl%2CexternalIds%2CisOpenAccess%2CopenAcc"
+    },
+    {
+      "paper_id": "PAPER-01A935BCCF96",
+      "provider": "semantic_scholar",
+      "category": "error",
+      "error_type": "HTTPError",
+      "error": "404 Client Error: Not Found for url: https://api.semanticscholar.org/graph/v1/paper/DOI:10.1007/978-981-33-4528-7_7?fields=title%2Cabstract%2Ctldr%2CfieldsOfStudy%2CpublicationDate%2Cvenue%2Curl%2CexternalIds%2CisOpenAccess%2CopenAccessPdf%"
+    },
+    {
+      "paper_id": "PAPER-01C21F6F5EAB",
+      "provider": "semantic_scholar",
+      "category": "error",
+      "error_type": "HTTPError",
+      "error": "404 Client Error: Not Found for url: https://api.semanticscholar.org/graph/v1/paper/DOI:10.52202/068431-2347?fields=title%2Cabstract%2Ctldr%2CfieldsOfStudy%2CpublicationDate%2Cvenue%2Curl%2CexternalIds%2CisOpenAccess%2CopenAccessPdf%2Ccitat"
+    },
+    {
+      "paper_id": "PAPER-0297BB020DFB",
+      "provider": "semantic_scholar",
+      "category": "error",
+      "error_type": "HTTPError",
+      "error": "404 Client Error: Not Found for url: https://api.semanticscholar.org/graph/v1/paper/DOI:10.52202/075280-1377?fields=title%2Cabstract%2Ctldr%2CfieldsOfStudy%2CpublicationDate%2Cvenue%2Curl%2CexternalIds%2CisOpenAccess%2CopenAccessPdf%2Ccitat"
+    },
+    {
+      "paper_id": "PAPER-0348C95D51EC",
+      "provider": "semantic_scholar",
+      "category": "error",
+      "error_type": "HTTPError",
+      "error": "404 Client Error: Not Found for url: https://api.semanticscholar.org/graph/v1/paper/DOI:10.1016/j.mtener.2022.101029?fields=title%2Cabstract%2Ctldr%2CfieldsOfStudy%2CpublicationDate%2Cvenue%2Curl%2CexternalIds%2CisOpenAccess%2CopenAccessPdf"
+    },
+    {
+      "paper_id": "PAPER-04967C8FD8A1",
+      "provider": "semantic_scholar",
+      "category": "error",
+      "error_type": "HTTPError",
+      "error": "404 Client Error: Not Found for url: https://api.semanticscholar.org/graph/v1/paper/DOI:10.52202/075280-3530?fields=title%2Cabstract%2Ctldr%2CfieldsOfStudy%2CpublicationDate%2Cvenue%2Curl%2CexternalIds%2CisOpenAccess%2CopenAccessPdf%2Ccitat"
+    },
+    {
+      "paper_id": "PAPER-053B951FEC29",
+      "provider": "semantic_scholar",
+      "category": "error",
+      "error_type": "HTTPError",
+      "error": "404 Client Error: Not Found for url: https://api.semanticscholar.org/graph/v1/paper/DOI:10.1007/978-981-97-3336-1_31?fields=title%2Cabstract%2Ctldr%2CfieldsOfStudy%2CpublicationDate%2Cvenue%2Curl%2CexternalIds%2CisOpenAccess%2CopenAccessPdf"
+    },
+    {
+      "paper_id": "PAPER-06130E24A331",
+      "provider": "semantic_scholar",
+      "category": "error",
+      "error_type": "HTTPError",
+      "error": "404 Client Error: Not Found for url: https://api.semanticscholar.org/graph/v1/paper/DOI:10.1016/j.jmst.2021.03.083?fields=title%2Cabstract%2Ctldr%2CfieldsOfStudy%2CpublicationDate%2Cvenue%2Curl%2CexternalIds%2CisOpenAccess%2CopenAccessPdf%2"
+    },
+    {
+      "paper_id": "PAPER-0648A0B52509",
+      "provider": "semantic_scholar",
+      "category": "error",
+      "error_type": "HTTPError",
+      "error": "404 Client Error: Not Found for url: https://api.semanticscholar.org/graph/v1/paper/DOI:10.1007/978-3-031-72764-1_20?fields=title%2Cabstract%2Ctldr%2CfieldsOfStudy%2CpublicationDate%2Cvenue%2Curl%2CexternalIds%2CisOpenAccess%2CopenAccessPdf"
+    },
+    {
+      "paper_id": "PAPER-07260EDD558E",
+      "provider": "semantic_scholar",
+      "category": "error",
+      "error_type": "HTTPError",
+      "error": "404 Client Error: Not Found for url: https://api.semanticscholar.org/graph/v1/paper/DOI:10.1007/978-981-19-5217-3_117?fields=title%2Cabstract%2Ctldr%2CfieldsOfStudy%2CpublicationDate%2Cvenue%2Curl%2CexternalIds%2CisOpenAccess%2CopenAccessPd"
+    },
+    {
+      "paper_id": "PAPER-0369AC20F736",
+      "provider": "semantic_scholar",
+      "category": "error",
+      "error_type": "HTTPError",
+      "error": "404 Client Error: Not Found for url: https://api.semanticscholar.org/graph/v1/paper/DOI:10.1007/978-3-031-20080-9_17?fields=title%2Cabstract%2Ctldr%2CfieldsOfStudy%2CpublicationDate%2Cvenue%2Curl%2CexternalIds%2CisOpenAccess%2CopenAccessPdf"
+    },
+    {
+      "paper_id": "PAPER-095D574466CC",
+      "provider": "semantic_scholar",
+      "category": "error",
+      "error_type": "HTTPError",
+      "error": "404 Client Error: Not Found for url: https://api.semanticscholar.org/graph/v1/paper/DOI:10.1007/978-981-96-3013-4_11?fields=title%2Cabstract%2Ctldr%2CfieldsOfStudy%2CpublicationDate%2Cvenue%2Curl%2CexternalIds%2CisOpenAccess%2CopenAccessPdf"
+    },
+    {
+      "paper_id": "PAPER-09D407E55BE7",
+      "provider": "semantic_scholar",
+      "category": "error",
+      "error_type": "HTTPError",
+      "error": "404 Client Error: Not Found for url: https://api.semanticscholar.org/graph/v1/paper/DOI:10.1126/science.abn8377?fields=title%2Cabstract%2Ctldr%2CfieldsOfStudy%2CpublicationDate%2Cvenue%2Curl%2CexternalIds%2CisOpenAccess%2CopenAccessPdf%2Cci"
+    }
+  ],
+  "dry_run_values": [
+    false
+  ],
+  "identifier_metadata_only_values": [
+    true
+  ],
+  "summary_generation_enabled_values": [
+    false
+  ],
+  "full_text_fetch_enabled_values": [
+    false
+  ],
+  "run_ids": [
+    "8ccca1e6-502e-4791-9c3f-1c177022260f",
+    "bb60dd73-c584-459a-94ec-4577796fd110",
+    "86477f1a-2d09-4751-aa3a-ecc2cddc63bf",
+    "b4e1311e-f011-4ab8-8feb-de2232a89b23"
+  ]
+}

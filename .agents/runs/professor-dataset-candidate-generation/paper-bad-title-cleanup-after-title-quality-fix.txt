@@ -1,0 +1,32 @@
+
+=== bad_title cleanup summary ===
+  examined            : 49814
+  rejected            : 1542
+  apply               : False
+
+sample rejections (paper_id | professor | institution | title):
+  PAPER-83F518668418 | 吴日         | 南方科技大学                    | 'Wei‐Jing Wu, Ze Wang, Yik‐Ling Winnie Hung, Hei‐Tung Wong, T‐W Dominic Chan*'
+  PAPER-1FBA0C11A809 | Matteo Con | 清华大学深圳国际研究生院              | 'M Convertino'
+  PAPER-A91E374B80A3 | 陈恺哲 Kai-Jh | 清华大学深圳国际研究生院              | 'Electrochemically'
+  PAPER-6636659029E9 | 高岩         | 清华大学深圳国际研究生院              | '建築數字化編程'
+  PAPER-7164A3543F74 | 冯娟         | 清华大学深圳国际研究生院              | 'Implementing Sponsored Search in Web Search Engines: Computational Evaluation of'
+  PAPER-A3AA24BCA3BF | 高岩         | 清华大学深圳国际研究生院              | 'Intelligent Making and Robotic Structure'
+  PAPER-B52ABC7F87FB | 冯娟         | 清华大学深圳国际研究生院              | 'Predicting and Deterring Default with Social Media Information in Peer-to-Peer L'
+  PAPER-575C9AF7A510 | 冯娟         | 清华大学深圳国际研究生院              | 'Selling or leasing? Dynamic pricing of software with upgrades, with Kunhao Jia a'
+  PAPER-B4A827E71CDA | 郭宇韬        | 清华大学深圳国际研究生院              | '一种计算隔舱式双钢板 - 混凝土组合结构的抗弯承载力的方法（ ZL201910765278.0 ）. 授权发明专利'
+  PAPER-EF90671505A6 | 冯娟         | 清华大学深圳国际研究生院              | 'Intensity of Competition and Uncertainty, with Kalyan Chatterjee'
+  PAPER-D0FEC29E7320 | 冯娟         | 清华大学深圳国际研究生院              | 'Negative Price Premium Effect in Online Market — The Impact of Competition and B'
+  PAPER-99757066A58E | 侯廷政        | 清华大学深圳国际研究生院              | '38(7): e15687'
+  PAPER-A4564D105A2A | 冯娟         | 清华大学深圳国际研究生院              | 'Fly with the Wings of Live stream Selling – Channel Strategies with/out Switchin'
+  PAPER-AC893412EEF2 | 冯娟         | 清华大学深圳国际研究生院              | 'Ranked Items Auctions and Online Advertisement'
+  PAPER-258871004B9B | 沈鹏元        | 清华大学深圳国际研究生院              | 'Yi Yunkyu, The feasibility and importance of considering climate change impacts '
+  PAPER-8CA203CA3CD5 | 高岩         | 清华大学深圳国际研究生院              | '城市环境设计'
+  PAPER-8545EE11DBC6 | 李彬彬        | 清华大学深圳国际研究生院              | 'etc, Dynamic controller design for parallel active motion compensated gangway of'
+  PAPER-1806709B281F | 李彬彬        | 清华大学深圳国际研究生院              | 'etc, Study of telescopic gangway motions in time domain during offshore operatio'
+  PAPER-FBA218906E10 | 夏树涛        | 清华大学深圳国际研究生院              | 'Locally repairable codes with multiple (ri'
+  PAPER-CE05D452919B | 夏树涛        | 清华大学深圳国际研究生院              | 'On optimal pseudo-cyclic (r'
+  PAPER-3815E920A196 | 杨舰         | 清华大学深圳国际研究生院              | '严凌纳译《科学家的不端行为》'
+  PAPER-63C99DC02B4F | 曾龙         | 清华大学深圳国际研究生院              | 'A dynamic pre-travel error prediction model for the kinematic touch trigger prob'
+  PAPER-60B50E4DBA33 | 杨舰         | 清华大学深圳国际研究生院              | '戴吾三主编《科学技术史二十一讲》清华大学出版社'
+  PAPER-D37E466A2D51 | 张正华        | 清华大学深圳国际研究生院              | 'CoFeMn layered double hydroxide-based nanoconfined gravity-driven catalytic memb'
+  PAPER-ACE2A3A82431 | 杨舰         | 清华大学深圳国际研究生院              | 'YANG Jian Blended Learning Supported by the Video Case Base in the Course about '

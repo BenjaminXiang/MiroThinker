@@ -1,0 +1,76 @@
+{
+  "has_summary": 23613,
+  "active_total": 40401,
+  "generated_at": "2026-06-15T13:27:00Z",
+  "has_abstract": 23884,
+  "active_filter": "identity_status not in merged/rejected, quality_status != rejected, no paper_merge_alias.old_paper_id",
+  "artifact_type": "paper_gap_after_live_title_and_summary_backfill",
+  "source_buckets": [
+    {
+      "source": "prof_page_only",
+      "active_rows": 11861,
+      "has_summary": 242,
+      "has_abstract": 242,
+      "missing_summary": 11619,
+      "missing_abstract": 11619
+    },
+    {
+      "source": "openalex",
+      "active_rows": 17420,
+      "has_summary": 14639,
+      "has_abstract": 14784,
+      "missing_summary": 2781,
+      "missing_abstract": 2636
+    },
+    {
+      "source": "crossref",
+      "active_rows": 10725,
+      "has_summary": 8666,
+      "has_abstract": 8792,
+      "missing_summary": 2059,
+      "missing_abstract": 1933
+    },
+    {
+      "source": "manual",
+      "active_rows": 306,
+      "has_summary": 19,
+      "has_abstract": 19,
+      "missing_summary": 287,
+      "missing_abstract": 287
+    },
+    {
+      "source": "dblp",
+      "active_rows": 83,
+      "has_summary": 43,
+      "has_abstract": 43,
+      "missing_summary": 40,
+      "missing_abstract": 40
+    },
+    {
+      "source": "semantic_scholar",
+      "active_rows": 4,
+      "has_summary": 2,
+      "has_abstract": 2,
+      "missing_summary": 2,
+      "missing_abstract": 2
+    },
+    {
+      "source": "arxiv",
+      "active_rows": 2,
+      "has_summary": 2,
+      "has_abstract": 2,
+      "missing_summary": 0,
+      "missing_abstract": 0
+    }
+  ],
+  "missing_summary": 16788,
+  "missing_abstract": 16517,
+  "residual_classes": {
+    "other_missing_summary": 325,
+    "identifier_but_no_abstract_after_one_attempt": 4572,
+    "prof_page_only_without_identifier_or_abstract": 11619,
+    "existing_abstract_but_summary_rejected_or_skipped": 272
+  },
+  "database_url_label": "miroflow_real",
+  "doi_missing_summary": 4772
+}

@@ -1,0 +1,17 @@
+{
+  "metadata_enriched": 11,
+  "metadata_enrichment_attempted": 4977,
+  "metadata_enrichment_skipped_bad_doi": 93,
+  "metadata_no_updates": 4966,
+  "metadata_pdf_url_upserts": 0,
+  "metadata_provider_errors": 460,
+  "metadata_provider_misses": 0,
+  "metadata_provider_rate_limits": 0,
+  "metadata_provider_timeouts": 0,
+  "papers_processed": 5069,
+  "papers_skipped": 0,
+  "papers_total": 5069,
+  "papers_with_errors": 0,
+  "summaries_written": 0,
+  "workers": 8
+}

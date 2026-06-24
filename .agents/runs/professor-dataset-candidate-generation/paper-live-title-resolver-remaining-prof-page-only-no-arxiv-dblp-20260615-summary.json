@@ -1,0 +1,31 @@
+{
+  "database_url": "postgresql://miroflow:***@localhost:15432/miroflow_real",
+  "remaining_prof_page_only_missing_summary_rows": 27643,
+  "shard_count": 4,
+  "shards": [
+    {
+      "shard": 0,
+      "paper_id_count": 6896,
+      "path": "/home/longxiang/MiroThinker/.agents/runs/professor-dataset-candidate-generation/paper-live-title-resolver-remaining-prof-page-only-no-arxiv-dblp-20260615-shard0.txt"
+    },
+    {
+      "shard": 1,
+      "paper_id_count": 6993,
+      "path": "/home/longxiang/MiroThinker/.agents/runs/professor-dataset-candidate-generation/paper-live-title-resolver-remaining-prof-page-only-no-arxiv-dblp-20260615-shard1.txt"
+    },
+    {
+      "shard": 2,
+      "paper_id_count": 6908,
+      "path": "/home/longxiang/MiroThinker/.agents/runs/professor-dataset-candidate-generation/paper-live-title-resolver-remaining-prof-page-only-no-arxiv-dblp-20260615-shard2.txt"
+    },
+    {
+      "shard": 3,
+      "paper_id_count": 6846,
+      "path": "/home/longxiang/MiroThinker/.agents/runs/professor-dataset-candidate-generation/paper-live-title-resolver-remaining-prof-page-only-no-arxiv-dblp-20260615-shard3.txt"
+    }
+  ],
+  "disabled_sources_for_next_run": [
+    "arxiv",
+    "dblp"
+  ]
+}

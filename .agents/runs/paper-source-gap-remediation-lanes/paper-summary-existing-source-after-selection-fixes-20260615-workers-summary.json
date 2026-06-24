@@ -1,0 +1,13 @@
+{
+  "abstract_clean_backfilled_from_full_text": 0,
+  "papers_processed": 2,
+  "papers_skipped": 51,
+  "papers_total": 53,
+  "papers_with_errors": 0,
+  "summaries_rejected": 2,
+  "summaries_written": 0,
+  "summary_rejection_reason_counts": {
+    "translation_invalid_or_empty": 2
+  },
+  "workers": 4
+}

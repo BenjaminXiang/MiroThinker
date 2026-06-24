@@ -93,6 +93,75 @@
   provider failure with profile/model metadata instead of deterministic
   fallback.
 
+## Cache-Only Paper Source-Gap Amendment
+
+- Reason: the current Paper table still has tens of thousands of active rows
+  missing `summary_zh` or `abstract_clean`. The safe next source-expansion lane
+  is existing title-resolution cache evidence for `prof_page_only` rows before
+  another LLM summary pass.
+- RED command: `cd apps/miroflow-agent && uv run pytest -n0 tests/scripts/test_run_paper_title_enrichment_backfill.py -k "paper_id_file or cache_only" -q`
+- Expected failing reason before implementation: the title enrichment CLI lacks
+  `--paper-id-file` and `--cache-only`, dry-run disables cache reads entirely,
+  and resolver calls cannot be forced to cache-only mode.
+- GREEN behavior: Paper ids can be scoped from files, cache-only mode forwards
+  `cache_only=True` to the resolver, dry-run may read existing cache without
+  writing, cache misses remain unresolved, and report/run-scope evidence records
+  the mode.
+- Real interaction: generate a current Paper id file from missing-summary rows
+  with existing title-resolution cache hits, run cache-only title enrichment
+  dry-run and write-mode backfill, then run bounded parallel Paper summary
+  backfill and re-audit aggregate gaps.
+
+## Live Resolver Provider Preflight Amendment
+
+- Reason: the next unresolved source-acquisition lane should use OpenAlex as
+  the primary title resolver, Crossref with configured contact metadata, and
+  Semantic Scholar only when credentials and rate limits are ready. The user
+  chose to proceed without waiting for Semantic Scholar approval.
+- RED command: `uv run pytest -n0 apps/miroflow-agent/tests/data_agents/paper/test_title_resolver.py::test_crossref_title_search_uses_configured_contact apps/miroflow-agent/tests/data_agents/paper/test_title_resolver.py::test_resolve_can_defer_semantic_scholar_title_search_until_api_key_available apps/miroflow-agent/tests/scripts/test_run_paper_title_enrichment_backfill.py::test_process_rows_forwards_semantic_scholar_disable_flag_to_title_resolver apps/miroflow-agent/tests/scripts/test_run_paper_title_enrichment_backfill.py::test_empty_report_records_semantic_scholar_title_search_switch apps/miroflow-agent/tests/scripts/test_run_paper_title_enrichment_backfill.py::test_cli_help_lists_safe_scoping_flags apps/miroflow-agent/tests/data_agents/paper/test_crossref.py::test_request_json_uses_configured_crossref_contact apps/miroflow-agent/tests/data_agents/paper/test_semantic_scholar.py::test_request_json_uses_configured_semantic_scholar_api_key`
+- Expected failing reason before implementation: Crossref still uses the
+  placeholder mailto, `resolve_paper_by_title` lacks a Semantic Scholar title
+  search switch, the title-enrichment CLI lacks matching report/run-scope
+  evidence, and Semantic Scholar metadata requests do not send API key headers.
+- GREEN behavior: Crossref reads contact metadata from environment variables,
+  Semantic Scholar title search can be disabled without blocking later enabled
+  providers, Semantic Scholar requests send the configured API key header, and
+  title-enrichment reports/run scopes record provider enablement.
+- Real interaction: no live resolver shard is required for this preflight; the
+  next real interaction belongs to tasks 15.1-15.5.
+
+## DOI Pollution Admission Gate Amendment
+
+- Reason: current residual Paper gaps include polluted DOI values. Sending
+  combined, truncated, or URL-tailed DOI strings to external providers wastes
+  resolver quota and records source pollution as generic provider failure.
+- RED command: `uv run pytest -n0 apps/miroflow-agent/tests/data_agents/paper/test_enrichment.py::test_polluted_doi_does_not_call_doi_lookup_providers apps/miroflow-agent/tests/scripts/test_run_paper_summary_zh_backfill.py::test_cli_skips_doi_enrichment_for_polluted_doi_only_row`
+- Expected failing reason before implementation: the hybrid enrichment
+  aggregator sends polluted DOI strings to DOI lookup providers, and summary
+  backfill has no `metadata_enrichment_skipped_bad_doi` report bucket.
+- GREEN behavior: bad DOI-only rows do not call DOI lookup providers,
+  `metadata_enrichment_skipped_bad_doi` and bounded `bad_doi_samples` are
+  recorded, and rows with arXiv/OpenAlex ids may still use those non-DOI
+  identifier paths.
+- Real interaction: no live database mutation is required for this admission
+  gate; it should affect the next summary/resolver backfill reports.
+
+## Title Enrichment DOI Shortcut Amendment
+
+- Reason: Paper title enrichment had an existing-identifier shortcut that could
+  promote a polluted DOI as a high-confidence `doi_lookup` result before live
+  title resolution ran. That bypass turns source pollution into canonical
+  Paper identity.
+- RED command: `uv run pytest -n0 apps/miroflow-agent/tests/scripts/test_run_paper_title_enrichment_backfill.py::test_process_rows_does_not_trust_polluted_existing_doi_identifier`
+- Expected failing reason before implementation: `_process_rows` trusts the
+  row DOI through `_resolved_from_existing_identifier`, never calls
+  `resolve_title`, and records no `bad_doi_identifiers` report evidence.
+- GREEN behavior: title enrichment classifies bad existing DOI values, reports
+  bounded bad DOI samples, skips the polluted DOI shortcut, and may continue
+  resolution through the cleaned title and enabled resolver providers.
+- Real interaction: no live database mutation is required for this shortcut
+  gate; it should affect the next live title resolver backfill reports.
+
 ## Forbidden Shortcuts
 
 - No hardcoded visible input/output cases.

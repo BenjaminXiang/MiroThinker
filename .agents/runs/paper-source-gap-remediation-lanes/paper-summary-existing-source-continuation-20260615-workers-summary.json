@@ -1,0 +1,26 @@
+{
+  "workers": 4,
+  "papers_total": 189,
+  "papers_processed": 138,
+  "papers_skipped": 51,
+  "summaries_written": 26,
+  "summaries_rejected": 112,
+  "metadata_enrichment_attempted": 0,
+  "full_text_enrichment_attempted": 0,
+  "papers_with_errors": 0,
+  "dry_run_values": [
+    false
+  ],
+  "existing_source_only_values": [
+    true
+  ],
+  "source_acquisition_enabled_values": [
+    false
+  ],
+  "run_ids": [
+    "e7fefe24-7e13-4ffb-a724-9f2884650fc4",
+    "9ad34774-0e6a-4399-a4be-27e131d1a501",
+    "c8f78143-727f-45dc-9a0e-66f593dcb588",
+    "f0ed517d-50b2-45be-a328-2bd49132ff9b"
+  ]
+}

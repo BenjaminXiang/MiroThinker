@@ -1,0 +1,19 @@
+{
+  "workers": 4,
+  "papers_total": 58,
+  "processed": 7,
+  "skipped": 51,
+  "written": 5,
+  "rejected": 2,
+  "errors": 0,
+  "reason_counts": {
+    "translation_invalid_or_empty": 2
+  },
+  "source_counts": {},
+  "durations": [
+    6.01,
+    3.47,
+    20.8,
+    12.38
+  ]
+}

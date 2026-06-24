@@ -1,0 +1,153 @@
+{
+  "artifact_type": "paper_source_gap_audit",
+  "database_url_label": "env:DATABASE_URL",
+  "generated_at": "2026-06-16T00:21:12+00:00",
+  "lane_counts": {
+    "existing_source_summary_fast_path": 1,
+    "identifier_metadata_enrichment": 5125,
+    "prof_page_only_title_parser_cleanup": 10264,
+    "professor_page_full_text_acquisition": 63,
+    "review_only_residual": 303
+  },
+  "lanes": {
+    "existing_source_summary_fast_path": {
+      "lane": "existing_source_summary_fast_path",
+      "sample_paper_ids": [
+        "PAPER-8CCEFD225F45"
+      ],
+      "selection_hash": "f6cd3c1f78618f05202daee8df88afce953295416808381e23ed66c7abbb6280",
+      "skip_reason_counts": {},
+      "total": 1
+    },
+    "identifier_metadata_enrichment": {
+      "lane": "identifier_metadata_enrichment",
+      "sample_paper_ids": [
+        "PAPER-0007F8412B0D",
+        "PAPER-00099A5AC5EB",
+        "PAPER-001041D0B7A3",
+        "PAPER-0031C6FD29D1",
+        "PAPER-003B5F0F7546",
+        "PAPER-00436F24D068",
+        "PAPER-004BB0D25FE7",
+        "PAPER-00508D3ECD9A",
+        "PAPER-006CCD322F4F",
+        "PAPER-006FB8486300",
+        "PAPER-00778CDC852D",
+        "PAPER-008D84C3CE05",
+        "PAPER-00A61B193855",
+        "PAPER-00C8C3257D2F",
+        "PAPER-00DFDD397072",
+        "PAPER-00EC4D8A6771",
+        "PAPER-00EE463A8424",
+        "PAPER-011B4B3D037B",
+        "PAPER-01280ABAA5ED",
+        "PAPER-013CD95B670B"
+      ],
+      "selection_hash": "45d8ef750c871eee71b0899396d1925f220d8cd2432ba8d5bf83404222ddcf71",
+      "skip_reason_counts": {
+        "missing_usable_source_text": 5125
+      },
+      "total": 5125
+    },
+    "prof_page_only_title_parser_cleanup": {
+      "lane": "prof_page_only_title_parser_cleanup",
+      "sample_paper_ids": [
+        "PAPER-000264B0414D",
+        "PAPER-0002989179A1",
+        "PAPER-0012FF35E636",
+        "PAPER-0017A754E36B",
+        "PAPER-001DCF1A8B53",
+        "PAPER-00208B5B242E",
+        "PAPER-0040B18C490B",
+        "PAPER-0043C4D05B45",
+        "PAPER-0049EC02132D",
+        "PAPER-004A88D8762A",
+        "PAPER-004D86DB34DB",
+        "PAPER-0050A2FEB598",
+        "PAPER-006439820D5A",
+        "PAPER-0065C9ADC3AD",
+        "PAPER-00739CC76B17",
+        "PAPER-007D4E3891C4",
+        "PAPER-0085CEAFAB64",
+        "PAPER-0087A946862D",
+        "PAPER-0088DB279CB3",
+        "PAPER-008D069312AA"
+      ],
+      "selection_hash": "a0a8657ced8ca054e76e445bf3b31fcb36653ab7fde12570a323bb05839a58e3",
+      "skip_reason_counts": {
+        "prof_page_only_missing_identifier_or_source": 10264
+      },
+      "total": 10264
+    },
+    "professor_page_full_text_acquisition": {
+      "lane": "professor_page_full_text_acquisition",
+      "sample_paper_ids": [
+        "PAPER-04A2C3D74FBE",
+        "PAPER-09D9D339B399",
+        "PAPER-09E9976D86EE",
+        "PAPER-0D093E96B557",
+        "PAPER-0F6E037BBA7E",
+        "PAPER-102BB112D0F0",
+        "PAPER-11B584DD6AC1",
+        "PAPER-19260F26EB11",
+        "PAPER-1BCF0C543113",
+        "PAPER-1DBEDF84972A",
+        "PAPER-20D65A27D11D",
+        "PAPER-23918377DC06",
+        "PAPER-23FC26CB9DF5",
+        "PAPER-24A23433979E",
+        "PAPER-26F6E6BF51EB",
+        "PAPER-288DECEF7697",
+        "PAPER-35D4174EDADC",
+        "PAPER-3B00C71461C1",
+        "PAPER-402944CEA1AA",
+        "PAPER-411ACBA7DA23"
+      ],
+      "selection_hash": "3c0ad67c1eb8f0bec0226e251715c96246237ab151ed9f942f316d5f4f334163",
+      "skip_reason_counts": {
+        "pdf_available_but_no_usable_text": 63
+      },
+      "total": 63
+    },
+    "review_only_residual": {
+      "lane": "review_only_residual",
+      "sample_paper_ids": [
+        "PAPER-00850179616F",
+        "PAPER-00DDA4D6C27E",
+        "PAPER-015D7EDA7712",
+        "PAPER-021552F607CE",
+        "PAPER-02322D0E2BB3",
+        "PAPER-0298604BB0E8",
+        "PAPER-03338E818267",
+        "PAPER-037C12D4DFA0",
+        "PAPER-0449990CEA1F",
+        "PAPER-05CDE6295AB2",
+        "PAPER-07174B4483E5",
+        "PAPER-0726912A8CAE",
+        "PAPER-073972D49F61",
+        "PAPER-079B95D5DA03",
+        "PAPER-079E56C39AFD",
+        "PAPER-07AA3BFC277C",
+        "PAPER-082FC5770103",
+        "PAPER-0B30544445CC",
+        "PAPER-0B5E15E3E013",
+        "PAPER-0D6344ADF23E"
+      ],
+      "selection_hash": "474dae35750048e5d48cba0e68ddfe04d839840ec72d74f5c39018f231f43755",
+      "skip_reason_counts": {
+        "no_supported_source_action": 303
+      },
+      "total": 303
+    }
+  },
+  "read_only": true,
+  "source_buckets": {
+    "crossref": 2150,
+    "dblp": 40,
+    "manual": 287,
+    "openalex": 2972,
+    "prof_page_only": 10305,
+    "semantic_scholar": 2
+  },
+  "total_rows": 15756
+}

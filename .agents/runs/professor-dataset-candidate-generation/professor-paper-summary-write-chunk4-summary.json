@@ -1,0 +1,46 @@
+{
+  "mode": "write",
+  "run_id": "cf635c2f-bdeb-40d6-ac7b-1bf5d879c5ea",
+  "bucket_limit": 500,
+  "batch_size": 500,
+  "dry_run_selection_hash": "e04fc8c41b0a0c51450b92f5269d9315dc4de6b5cd273b39e24c3655f5bce5ef",
+  "lanes": [
+    {
+      "lane": "professor_paper_summary_generation",
+      "input_count": 500,
+      "attempted_count": 343,
+      "written_count": 285,
+      "unchanged_count": 0,
+      "skipped_count": 157,
+      "failed_count": 0,
+      "unresolved_issue_count": 215,
+      "changed_professors": 285,
+      "issue_reason_counts": [
+        {
+          "reason": "candidate_requires_review_before_write",
+          "count": 68
+        },
+        {
+          "reason": "duplicate_verified_paper_links",
+          "count": 89
+        },
+        {
+          "reason": "missing_candidate_paper_summary",
+          "count": 58
+        }
+      ]
+    }
+  ],
+  "post_write_verification": {
+    "status": "failed",
+    "completion_allowed": false,
+    "changed_professors": 285,
+    "issue_count": 1,
+    "issue_reason_counts": [
+      {
+        "reason": "remaining_blockers",
+        "count": 1
+      }
+    ]
+  }
+}
