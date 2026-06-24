@@ -2750,6 +2750,23 @@ async def crawl_homepage(
             profile=profile, success=False, pages_fetched=0, error="no_homepage_url"
         )
 
+    # Cache every fetch's HTML by URL so the follow-loop can REUSE pages the
+    # supplementary phase (follow_supplementary_links) already fetched, instead
+    # of re-fetching them (cross-phase double-fetch, e.g. a personal homepage
+    # fetched once by supplementary and again by the anchored follow-loop).
+    # Forwards *args/**kwargs so the HIT POST path (method=/data=/headers=) works.
+    fetched_html_cache: dict[str, str] = {}
+    _underlying_fetch_html_fn = fetch_html_fn
+
+    def _caching_fetch_html_fn(url, *args, **kwargs):
+        result = _underlying_fetch_html_fn(url, *args, **kwargs)
+        html = result.html if hasattr(result, "html") else result
+        if html:
+            fetched_html_cache[str(url).rstrip("/")] = html
+        return result
+
+    fetch_html_fn = _caching_fetch_html_fn
+
     # Step 1: Fetch main homepage
     try:
         main_result = fetch_html_fn(homepage_url, timeout)
@@ -2901,8 +2918,16 @@ async def crawl_homepage(
     profile_subpage_content_segments: list[str] = []
     for link in selected_html_links:
         try:
-            sub_result = fetch_html_fn(link.url, timeout)
-            sub_html = sub_result.html if hasattr(sub_result, "html") else sub_result
+            cache_key = link.url.rstrip("/")
+            if cache_key in fetched_html_cache:
+                # Reuse HTML already fetched by the supplementary phase; avoids
+                # a cross-phase re-fetch of the same URL.
+                sub_html = fetched_html_cache[cache_key]
+            else:
+                sub_result = fetch_html_fn(link.url, timeout)
+                sub_html = (
+                    sub_result.html if hasattr(sub_result, "html") else sub_result
+                )
             if sub_html:
                 sanitized_sub_html = _sanitize_page_content(sub_html)
                 publication_candidate = link.url.rstrip(

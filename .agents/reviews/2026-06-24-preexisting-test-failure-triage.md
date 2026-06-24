@@ -52,16 +52,20 @@ product-candidate-dedup semantics judgment (suppress non-specific deterministic
 fragments from the LLM-fallback candidate set, vs. update the test's rejection
 expectation) — not a clear bug; left for a product-domain decision.
 
-### test_homepage_crawler (6 `fetched_urls` + 1 publication-filter)
-`fetched_urls` mismatch: the crawler fetches one URL twice. Root cause
+### test_homepage_crawler (was 7) — cross-phase double-fetch FIXED (2 resolved); 5 remain
+`fetched_urls` mismatch: the crawler fetched one URL twice. Root cause
 (repro-proven: `[official, alice, alice]`): cross-phase double-fetch.
 `crawl_homepage` calls `follow_supplementary_links` (multi_source_crawler, line
 ~2802) which fetches the personal homepage (alice), but those URLs are NOT
-seeded into `seen_urls` (initialized at line ~2868 with only the homepage). The
-primary-follow loop (line ~2904) then re-fetches alice.
-**Fix site:** wrap `fetch_html_fn` in `crawl_homepage` with a visited-tracker
-(forwarding `*args, **kwargs` so the HIT POST path's `method=/data=/headers=`
-still works) and seed `seen_urls` from it before the follow loop. This is a
-substantive change to a 2400-line committed crawler — needs a focused change +
-regression check across crawl scenarios (HIT, SIGS, personal-homepage fallback),
-not a rush at session end.
+seeded into `seen_urls`. The primary-follow loop (line ~2904) then re-fetched
+alice.
+**FIX applied:** a caching `fetch_html_fn` wrapper in `crawl_homepage` records
+every fetched URL's HTML; the follow-loop reuses the cached HTML instead of
+re-fetching (preserves `fetched_pages`/recursion, forwards `*args/**kwargs` for
+the HIT POST path). Repro now `[official, alice]`; file went 7→5 failed (71→73
+passed), no regression (homepage_publications 129 still green). The remaining 5
+are DIFFERENT root causes, not cross-phase fetch:
+- 3 `fetched_urls` (other crawl-planning scenarios).
+- 2 publication-extraction false-positives (`Transllama`, `Privacy Preserving
+  Robot Learning` appearing in profile_raw_text) — extraction-logic issues, not
+  fetch.
