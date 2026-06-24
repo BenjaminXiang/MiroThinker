@@ -134,6 +134,10 @@ export interface AdminProfessorSections {
     status: string;
     reasons: AdminProfessorIssueReason[];
     open_issue_count: number;
+    blocking_issue_count?: number;
+    non_blocking_issue_count?: number;
+    blocking_reasons?: AdminProfessorIssueReason[];
+    non_blocking_reasons?: AdminProfessorIssueReason[];
   };
 }
 

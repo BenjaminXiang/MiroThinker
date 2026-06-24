@@ -20,6 +20,11 @@ from src.data_agents.professor.topic_quality import (
         "图像退化恢复 (Image Restoration)",
         "光无线通信波束赋形超表面 (Beam-Steering Metasurfaces)",
         "Neural network optimization",
+        "Teacher Education (教师教育)",
+        "Group theory (群论)",
+        "Main group element chemistry (主族元素化学)",
+        "Alzheimer's disease mechanism (阿尔兹海默症发生发展机理)",
+        "Laboratory simulation of geophysical fluid dynamics (地球物理流体力学的实验室模拟)",
     ],
 )
 def test_accepts_real_topics(topic: str):
@@ -179,6 +184,28 @@ def test_split_compound_does_not_split_parenthetical_english():
     ]
 
 
+@pytest.mark.parametrize(
+    "topic",
+    [
+        "Electrolytic water splitting (OER, HER, ORR) (电解水制氢 (OER, HER, ORR))",
+        "Large-area, high-quality graphene film preparation (大面积、高品质石墨烯薄膜的制备)",
+        "Science, Technology and Society (STS) (科技与社会)",
+        "通感算一体 (Integrated Sensing, Communication, and Computing)",
+    ],
+)
+def test_split_compound_keeps_english_commas_and_parenthetical_acronyms(topic: str):
+    assert split_compound_research_topic(topic) == [topic]
+
+
+def test_split_compound_keeps_top_level_chinese_topic_separator():
+    assert split_compound_research_topic(
+        "组织经济学 (Organizational Economics)、管理科学 (Management Science)"
+    ) == [
+        "组织经济学 (Organizational Economics)",
+        "管理科学 (Management Science)",
+    ]
+
+
 def test_split_compound_returns_empty_for_pure_noise():
     assert split_compound_research_topic("等, 其他") == []
     assert split_compound_research_topic("") == []
@@ -207,9 +234,36 @@ def test_rejects_publication_metric_pretending_to_be_topic(metric: str):
     assert not is_plausible_research_topic(metric), metric
 
 
+@pytest.mark.parametrize(
+    "topic",
+    [
+        "讲师",
+        "副教授",
+        "博士后",
+        "文侨 博士 教授",
+        "深圳大学教授",
+        "传感等 刘吉博士",
+        "王蕾博士长期聚焦肿瘤免疫学领域",
+        "长期招聘博士后",
+        "博士后研究工作",
+        "【个人简介】Personal Profile 陈张伟",
+        "Group Website: THUSIGSICLAB (课题组网站: THUSIGSICLAB)",
+        "profile (个人资料/简介)",
+        "01 Assistance Professor (01 助理教授)",
+    ],
+)
+def test_rejects_person_role_and_profile_noise_in_research_topics(topic: str):
+    assert not is_plausible_research_topic(topic), topic
+
+
 def test_split_compound_drops_metric_fragments_from_compound():
     """Real case: "课程与教学论研究，发表学术论文350多篇，出版著作30余部"."""
     result = split_compound_research_topic(
         "课程与教学论研究，发表学术论文350多篇，出版著作30余部"
     )
     assert result == ["课程与教学论研究"]
+
+
+def test_split_compound_keeps_original_when_invalid_piece_is_not_disposable_noise():
+    topic = "锂、钠、锌离子电池研究 (Research on lithium, sodium, and zinc-ion batteries)"
+    assert split_compound_research_topic(topic) == [topic]

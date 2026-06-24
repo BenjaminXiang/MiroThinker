@@ -261,6 +261,10 @@ def test_write_batch_requires_real_run_id_and_matching_dry_run_evidence() -> Non
         )
 
 
+def test_write_batch_allows_explicit_large_llm_cleanup_batches() -> None:
+    assert closure_module._normalize_batch_size(3000) == 3000
+
+
 def test_write_batch_limits_rows_and_records_rollback_evidence() -> None:
     buckets = _write_batch_buckets()
     evidence = build_lane_dry_run_report(buckets, lanes=("profile_summary_repair",))
@@ -378,6 +382,138 @@ def test_default_writers_persist_candidate_evidence_for_all_write_lanes() -> Non
     assert "UPDATE professor" in compact_sql
     assert "INSERT INTO professor_profile_section" in compact_sql
     assert "INSERT INTO paper_merge_alias" in compact_sql
+
+
+def test_duplicate_merge_writer_refuses_review_before_write_candidate() -> None:
+    buckets = DatasetClosureBuckets(
+        bucket_limit=1,
+        summary={
+            "duplicate_verified_paper_title_year_groups": {
+                "total": 1,
+                "sampled": 1,
+                "truncated": False,
+                "remediation_lane": "duplicate_paper_merge",
+            }
+        },
+        rows=[
+            DatasetClosureBucketRow(
+                blocker_type="duplicate_verified_paper_title_year_groups",
+                entity_type="paper_group",
+                remediation_lane="duplicate_paper_merge",
+                professor_id="PROF-DUP-REVIEW",
+                duplicate_group_id="PROF-DUP-REVIEW:2024:title",
+                automatic_eligibility=True,
+                evidence={
+                    "canonical_paper_id": "PAPER-CANON",
+                    "old_paper_ids": ["PAPER-OLD"],
+                    "paper_ids": ["PAPER-CANON", "PAPER-OLD"],
+                    "merge_reason": "dataset_candidate_generation:doi_match",
+                    "candidate_generation": {
+                        "lane": "duplicate_paper_merge",
+                        "candidate_status": "needs_review",
+                        "write_recommendation": "review_before_write",
+                        "quality_flags": ["missing_source_page_provenance"],
+                    },
+                },
+            )
+        ],
+    )
+    evidence = build_lane_dry_run_report(buckets, lanes=("duplicate_paper_merge",))
+    conn = _WriteConn()
+
+    report = run_dataset_closure_write_batch(
+        conn=conn,
+        buckets=buckets,
+        lanes=("duplicate_paper_merge",),
+        dry_run_evidence=evidence,
+        run_id="11111111-1111-1111-1111-111111111111",
+        batch_size=1,
+        writers=default_dataset_closure_writers(),
+    )
+
+    summary = report.lanes[0]
+    assert summary.attempted_count == 0
+    assert summary.written_count == 0
+    assert summary.skipped_count == 1
+    assert summary.unresolved_issue_count == 1
+    assert summary.issues[0]["reason"] == "candidate_requires_review_before_write"
+    compact_sql = " ".join(sql for sql, _params in conn.calls)
+    assert "INSERT INTO paper_merge_alias" not in compact_sql
+
+
+def test_review_before_write_candidate_does_not_consume_write_batch_quota() -> None:
+    buckets = DatasetClosureBuckets(
+        bucket_limit=2,
+        summary={
+            "duplicate_verified_paper_title_year_groups": {
+                "total": 2,
+                "sampled": 2,
+                "truncated": False,
+                "remediation_lane": "duplicate_paper_merge",
+            }
+        },
+        rows=[
+            DatasetClosureBucketRow(
+                blocker_type="duplicate_verified_paper_title_year_groups",
+                entity_type="paper_group",
+                remediation_lane="duplicate_paper_merge",
+                professor_id="PROF-DUP-REVIEW",
+                duplicate_group_id="PROF-DUP-REVIEW:2024:title",
+                automatic_eligibility=True,
+                evidence={
+                    "canonical_paper_id": "PAPER-REVIEW-CANON",
+                    "old_paper_ids": ["PAPER-REVIEW-OLD"],
+                    "paper_ids": ["PAPER-REVIEW-CANON", "PAPER-REVIEW-OLD"],
+                    "merge_reason": "dataset_candidate_generation:doi_match",
+                    "candidate_generation": {
+                        "lane": "duplicate_paper_merge",
+                        "candidate_status": "needs_review",
+                        "write_recommendation": "review_before_write",
+                        "quality_flags": ["missing_source_page_provenance"],
+                    },
+                },
+            ),
+            DatasetClosureBucketRow(
+                blocker_type="duplicate_verified_paper_title_year_groups",
+                entity_type="paper_group",
+                remediation_lane="duplicate_paper_merge",
+                professor_id="PROF-DUP-READY",
+                duplicate_group_id="PROF-DUP-READY:2024:title",
+                automatic_eligibility=True,
+                evidence={
+                    "canonical_paper_id": "PAPER-READY-CANON",
+                    "old_paper_ids": ["PAPER-READY-OLD"],
+                    "paper_ids": ["PAPER-READY-CANON", "PAPER-READY-OLD"],
+                    "merge_reason": "dataset_candidate_generation:doi_match",
+                    "candidate_generation": {
+                        "lane": "duplicate_paper_merge",
+                        "candidate_status": "ready",
+                        "write_recommendation": "auto_write_candidate",
+                        "quality_flags": [],
+                    },
+                },
+            ),
+        ],
+    )
+    evidence = build_lane_dry_run_report(buckets, lanes=("duplicate_paper_merge",))
+    conn = _WriteConn()
+
+    report = run_dataset_closure_write_batch(
+        conn=conn,
+        buckets=buckets,
+        lanes=("duplicate_paper_merge",),
+        dry_run_evidence=evidence,
+        run_id="11111111-1111-1111-1111-111111111111",
+        batch_size=1,
+        writers=default_dataset_closure_writers(),
+    )
+
+    summary = report.lanes[0]
+    assert summary.attempted_count == 1
+    assert summary.written_count == 1
+    assert summary.unresolved_issue_count == 1
+    assert summary.changed_paper_ids == ("PAPER-READY-CANON", "PAPER-READY-OLD")
+    assert summary.issues[0]["reason"] == "candidate_requires_review_before_write"
 
 
 def test_post_write_verification_records_required_evidence() -> None:

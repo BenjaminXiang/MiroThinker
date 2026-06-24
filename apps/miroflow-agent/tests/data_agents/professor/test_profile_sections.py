@@ -60,6 +60,33 @@ def test_build_research_overview_section_translates_english_source() -> None:
     assert result.section.source_text_hash != calls[0]
 
 
+def test_build_research_overview_section_cleans_noisy_chinese_source() -> None:
+    raw_text = (
+        "研究方向：群体智能、社交网络传播动力学、网络科学、图神经网络。"
+        "科研详情请访问：https://xiangrongwang.github.io/ "
+        "欢迎研究生发送简历咨询。"
+    )
+    calls: list[str] = []
+
+    def translator(text: str) -> str:
+        calls.append(text)
+        return "研究方向包括群体智能、社交网络传播动力学、网络科学和图神经网络。"
+
+    result = build_research_overview_section(
+        professor_id="PROF-NOISY-ZH",
+        profile_raw_text=raw_text,
+        translator=translator,
+    )
+
+    assert result.status == "section_ready"
+    assert calls and "xiangrongwang.github.io" in calls[0]
+    assert result.section is not None
+    assert result.section.source_language == "zh"
+    assert result.section.generation_method == "llm_cleaning"
+    assert "https://" not in result.section.content
+    assert "研究生" not in result.section.content
+
+
 def test_build_research_overview_section_skips_navigation_label_noise() -> None:
     raw_text = (
         "个人简历 教学 研究领域 研究成果 奖励荣誉 概况 教育经历 "

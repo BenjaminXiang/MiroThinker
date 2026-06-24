@@ -227,6 +227,30 @@ def test_backfill_deletes_non_indexable_paper_without_reinserting():
     embed.embed_batch.assert_not_called()
 
 
+def test_backfill_deletes_rejected_paper_without_reinserting():
+    conn = _fake_pg_conn_returning(
+        [
+            _paper_row(
+                paper_id="PAPER-REJECTED",
+                identity_status="rejected",
+                quality_status="ready",
+            )
+        ]
+    )
+    milvus = _fake_milvus_client()
+    embed = _fake_embedding_client()
+
+    report = backfill_paper_chunks(conn, milvus, embed)
+
+    assert report.papers_processed == 0
+    assert report.papers_skipped == 1
+    milvus.delete.assert_called_once()
+    delete_filter = milvus.delete.call_args.kwargs["filter"]
+    assert "PAPER-REJECTED" in delete_filter
+    milvus.insert.assert_not_called()
+    embed.embed_batch.assert_not_called()
+
+
 def test_backfill_deletes_partial_paper_even_when_summary_exists():
     conn = _fake_pg_conn_returning(
         [

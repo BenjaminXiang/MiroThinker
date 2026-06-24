@@ -606,31 +606,41 @@ def _load_duplicate_paper_bucket_rows(
 ) -> list[DatasetClosureBucketRow]:
     rows = conn.execute(
         """
-        WITH groups AS (
+        WITH verified_links AS (
           SELECT ppl.professor_id,
+                 COALESCE(pma.canonical_paper_id, ppl.paper_id) AS resolved_paper_id,
+                 MIN(ppl.evidence_page_id::text)::uuid AS source_page_id
+            FROM professor_paper_link ppl
+            LEFT JOIN paper_merge_alias pma ON pma.old_paper_id = ppl.paper_id
+           WHERE ppl.link_status = 'verified'
+           GROUP BY ppl.professor_id,
+                    COALESCE(pma.canonical_paper_id, ppl.paper_id)
+        ),
+        groups AS (
+          SELECT vl.professor_id,
                  lower(regexp_replace(COALESCE(p.title_clean, ''), '\\s+', '', 'g'))
                    AS title_key,
                  p.year,
-                 array_agg(DISTINCT p.paper_id ORDER BY p.paper_id) AS paper_ids,
+                 array_agg(DISTINCT vl.resolved_paper_id ORDER BY vl.resolved_paper_id)
+                   AS paper_ids,
                  array_agg(DISTINCT COALESCE(p.canonical_source, 'missing')
                            ORDER BY COALESCE(p.canonical_source, 'missing'))
                    AS canonical_sources,
-                 COUNT(DISTINCT p.paper_id)::int AS paper_count,
+                 COUNT(DISTINCT vl.resolved_paper_id)::int AS paper_count,
                  COUNT(DISTINCT NULLIF(BTRIM(COALESCE(p.doi, '')), ''))::int
                    AS doi_count,
                  COUNT(DISTINCT NULLIF(BTRIM(COALESCE(p.arxiv_id, '')), ''))::int
                    AS arxiv_count,
                  BOOL_OR(COALESCE(p.canonical_source, '') != 'prof_page_only')
                    AS has_enriched_row,
-                 MIN(ppl.evidence_page_id::text)::uuid AS source_page_id
-            FROM professor_paper_link ppl
-            JOIN paper p ON p.paper_id = ppl.paper_id
-           WHERE ppl.link_status = 'verified'
-             AND NULLIF(BTRIM(COALESCE(p.title_clean, '')), '') IS NOT NULL
-           GROUP BY ppl.professor_id,
+                 MIN(vl.source_page_id::text)::uuid AS source_page_id
+            FROM verified_links vl
+            JOIN paper p ON p.paper_id = vl.resolved_paper_id
+           WHERE NULLIF(BTRIM(COALESCE(p.title_clean, '')), '') IS NOT NULL
+           GROUP BY vl.professor_id,
                     lower(regexp_replace(COALESCE(p.title_clean, ''), '\\s+', '', 'g')),
                     p.year
-          HAVING COUNT(DISTINCT p.paper_id) > 1
+          HAVING COUNT(DISTINCT vl.resolved_paper_id) > 1
         )
         SELECT g.professor_id,
                prof.canonical_name,

@@ -126,6 +126,20 @@ flags on usable candidates rather than forcing rejection.
 - **AND** the candidate records source page id or URL, source span, source text
   hash, source language, and `generation_method=official_extract`
 
+#### Scenario: Noisy Chinese research overview is cleaned
+
+- **WHEN** official Chinese profile source text contains a research-overview
+  section mixed with teaching, recruitment, contact, links, publication-list,
+  award, or navigation text
+- **THEN** candidate generation MAY call the configured LLM research-overview
+  cleaner to extract and compress only source-grounded Chinese research
+  directions
+- **AND** the candidate records source page id or URL, original source span,
+  source text hash, source language, provider metadata, self-check evidence, and
+  `generation_method=llm_cleaning`
+- **AND** cleaner output that still contains page noise MUST be emitted as
+  `needs_review` or rejected, not recommended for automatic writing
+
 #### Scenario: English research overview is translated
 
 - **WHEN** official profile text contains an English research-overview section
@@ -222,6 +236,137 @@ or write a row.
 - **THEN** the dry-run report increments provider failure counts
 - **AND** the affected row records provider, stage, error class, retryability,
   and next action
+
+### Requirement: Write mode respects candidate review gates
+
+Candidate dry-run evidence MUST NOT be treated as write approval when the
+candidate records `write_recommendation=review_before_write` or
+`candidate_status=needs_review`. Dataset closure writers MUST refuse to persist
+review-only candidate evidence and record an unresolved write issue instead.
+
+#### Scenario: Review-only duplicate merge candidate is not written
+
+- **WHEN** duplicate Paper write mode receives candidate evidence with
+  `candidate_status=needs_review` or `write_recommendation=review_before_write`
+- **THEN** it MUST NOT insert `paper_merge_alias` rows for that candidate
+- **AND** it records an unresolved reason instead of reporting the row as
+  written
+- **AND** ready auto-write duplicate merge candidates remain writable when they
+  carry safe canonical merge evidence
+
+### Requirement: Cache-only title resolution can close Paper source gaps safely
+
+The system MUST provide an operator mode for Paper title enrichment that only
+uses existing title-resolution cache entries to migrate `prof_page_only` Paper
+rows into richer canonical Paper rows. This mode MUST be usable for large
+source-gap remediation before LLM summary generation, but it MUST NOT call live
+title resolver providers when a cache entry is absent or below the configured
+confidence threshold.
+
+#### Scenario: Cache-only title enrichment reads existing cache in dry-run
+
+- **WHEN** Paper title enrichment runs with `--cache-only --dry-run`
+- **THEN** it may read existing title-resolution cache rows to report resolvable
+  Papers
+- **AND** it MUST NOT write Paper rows, professor-paper links, merge aliases,
+  pipeline issues, or cache entries
+- **AND** unresolved cache misses remain reported as unresolved rows instead of
+  live provider searches
+
+#### Scenario: Cache-only title enrichment can be scoped from a Paper id file
+
+- **WHEN** the operator supplies `--paper-id-file`
+- **THEN** title enrichment MUST merge Paper ids from the file with repeated
+  `--paper-id` flags, trim whitespace, ignore comments and blank lines, and
+  preserve deterministic unique order
+- **AND** the report and pipeline run scope MUST record the scoped Paper ids and
+  cache-only mode
+
+#### Scenario: Cache-only source remediation feeds Paper summaries
+
+- **WHEN** cache-only title enrichment writes richer canonical Paper rows with
+  source-backed abstracts or identifiers
+- **THEN** the Paper summary backfill may generate Chinese `summary_zh` from
+  those persisted source-backed fields
+- **AND** rows still lacking abstracts, identifiers, or resolver evidence remain
+  explicit residual gaps for stronger source acquisition rather than direct
+  unsafe LLM fabrication
+
+### Requirement: Live title resolver provider configuration is auditable
+
+The system MUST make live Paper title resolver provider usage explicit before
+large source-acquisition backfills run. OpenAlex remains the primary title
+resolver source. Crossref requests MUST use configurable contact metadata
+instead of a hardcoded placeholder email. Semantic Scholar title search MUST be
+independently disableable so OpenAlex/Crossref-primary backfills can proceed
+while Semantic Scholar API key approval or rate limits are pending.
+
+#### Scenario: Crossref requests use configured contact metadata
+
+- **WHEN** `CROSSREF_MAILTO` is configured for Paper title resolution or
+  Crossref metadata enrichment
+- **THEN** Crossref requests include that email as the `mailto` query
+  parameter
+- **AND** requests include a configurable or default `User-Agent` value suitable
+  for provider contactability
+- **AND** the system MUST NOT fall back to the previous hardcoded placeholder
+  email when no valid contact email is configured
+
+#### Scenario: Semantic Scholar title search can be deferred
+
+- **WHEN** live title enrichment runs with
+  `--disable-semantic-scholar-title-search`
+- **THEN** `resolve_paper_by_title` skips the Semantic Scholar title-search
+  provider and continues to later enabled providers
+- **AND** reports and pipeline run scope record
+  `semantic_scholar_title_search_enabled=false`
+- **AND** cached Semantic Scholar title-resolution rows are ignored when that
+  provider is disabled
+
+#### Scenario: Semantic Scholar API key is used when configured
+
+- **WHEN** `SEMANTIC_SCHOLAR_API_KEY` or `S2_API_KEY` is configured
+- **THEN** Semantic Scholar title-search and metadata-enrichment requests send
+  the API key in the provider header
+- **AND** missing or pending Semantic Scholar credentials do not block
+  OpenAlex/Crossref-primary resolver backfills
+
+### Requirement: Polluted DOI values are gated before metadata enrichment
+
+The system MUST conservatively identify polluted DOI strings before sending
+Paper rows to external DOI metadata providers. Obvious combined, truncated, or
+URL-tailed DOI values MUST NOT be sent to OpenAlex, Crossref, Semantic Scholar,
+or Unpaywall DOI lookup paths. These rows MUST remain visible in backfill
+reports as source-quality residuals rather than being counted as provider
+attempts or row crashes.
+
+#### Scenario: Nested DOI pollution is not sent to DOI providers
+
+- **WHEN** a Paper row has a DOI such as `10.1021/10.1002/poc.4450`
+- **THEN** DOI metadata enrichment skips DOI lookup providers for that DOI
+- **AND** the summary backfill report increments
+  `metadata_enrichment_skipped_bad_doi`
+- **AND** the report records a bounded `bad_doi_samples` entry with the
+  Paper id, DOI value, and reason
+
+#### Scenario: Strong non-DOI identifiers remain usable
+
+- **WHEN** a Paper row has a polluted DOI but also has an arXiv id or OpenAlex
+  id
+- **THEN** DOI lookup is disabled for that row
+- **AND** metadata enrichment may still use the non-DOI identifier path
+- **AND** the bad DOI remains reportable as source-quality evidence
+
+#### Scenario: Polluted existing DOI does not bypass title resolution
+
+- **WHEN** Paper title enrichment sees an existing DOI value that fails the DOI
+  quality gate
+- **THEN** it MUST NOT promote that DOI through the existing-identifier
+  shortcut as a trusted `doi_lookup` resolution
+- **AND** title resolution may continue with the cleaned title and stronger
+  enabled resolver sources
+- **AND** the title-enrichment report records `bad_doi_identifiers` and a
+  bounded `bad_doi_samples` entry with Paper id, DOI value, and reason
 
 ### Requirement: Candidate dry-run uses real LLM providers by default
 

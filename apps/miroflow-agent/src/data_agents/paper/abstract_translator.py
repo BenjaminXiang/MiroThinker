@@ -28,8 +28,8 @@ from src.data_agents.professor.summary_generator import BOILERPLATE_KEYWORDS
 
 logger = logging.getLogger(__name__)
 
-_MIN_SUMMARY_ZH_LENGTH = 150
-_MAX_SUMMARY_ZH_LENGTH = 650
+_MIN_SUMMARY_ZH_LENGTH = 100
+_MAX_SUMMARY_ZH_LENGTH = 800
 _DEFAULT_TEMPERATURE = 0.2
 _DEFAULT_MAX_TOKENS = 700
 _MARKDOWN_FENCE_RE = re.compile(r"^\s*```[a-zA-Z]*\s*|\s*```\s*$", re.MULTILINE)
@@ -39,6 +39,15 @@ _JUDGE_DEFAULT_TEMPERATURE = 0.0
 _JUDGE_DEFAULT_MAX_TOKENS = 50
 _JUDGE_BOILERPLATE_VERDICT = "BOILERPLATE"
 _JUDGE_INFORMATIVE_VERDICT = "INFORMATIVE"
+_GENERIC_BOILERPLATE_RE = re.compile(
+    r"(?:"
+    r"研究了(?:一个)?重要问题|"
+    r"提出了(?:一种|一个)?新方法|"
+    r"实验证明(?:了)?(?:该方法)?(?:的)?有效性|"
+    r"具有重要(?:理论|现实|应用)?(?:意义|价值)|"
+    r"取得了(?:较好|良好|显著)效果"
+    r")"
+)
 
 _JUDGE_SYSTEM_PROMPT = (
     "你是中文学术摘要质量判别器。判断给定的论文摘要是否为「无信息量的模板"
@@ -154,10 +163,9 @@ def judge_summary_boilerplate(
 ) -> bool:
     """Return True iff the LLM judge classifies ``summary`` as boilerplate.
 
-    Spec contract (Requirement "summary_zh generation" Scenario
-    "Boilerplate-rejected summary"): callers MUST set
-    ``summary_zh=NULL`` and keep the paper row retryable when this
-    returns True.
+    The LLM judge is advisory rather than a hard gate. Return True only
+    when the judge says BOILERPLATE and the summary also has local
+    low-information signals.
 
     Fails open: empty / whitespace inputs return False (nothing to
     judge; the prior translation step already returned None for those);
@@ -186,21 +194,46 @@ def judge_summary_boilerplate(
         return False
 
     verdict = _parse_judge_verdict(raw_text)
-    return verdict == _JUDGE_BOILERPLATE_VERDICT
+    return (
+        verdict == _JUDGE_BOILERPLATE_VERDICT
+        and _looks_topic_agnostic_summary(candidate)
+    )
+
+
+def _looks_topic_agnostic_summary(summary: str) -> bool:
+    text = summary.strip()
+    if not text:
+        return False
+    if any(keyword in text for keyword in BOILERPLATE_KEYWORDS):
+        return True
+    generic_hits = len(_GENERIC_BOILERPLATE_RE.findall(text))
+    if generic_hits >= 2:
+        return True
+    return len(text) < _MIN_SUMMARY_ZH_LENGTH and generic_hits >= 1
 
 
 def _parse_judge_verdict(text: str) -> str:
     """Extract BOILERPLATE / INFORMATIVE token from the judge's reply.
 
     The prompt asks for a single token, but LLMs sometimes return
-    quoted, punctuated, or explained variants. We accept the verdict if
-    EITHER token appears anywhere in the reply, with BOILERPLATE
-    winning on co-occurrence (conservative reject \u2014 when in doubt,
-    keep the summary; we only reject on explicit boilerplate verdict).
+    quoted, punctuated, or explained variants. We scan verdict tokens in
+    order and ignore explicitly negated tokens such as ``not
+    BOILERPLATE``. This keeps the gate weak: reject only on an
+    affirmative boilerplate verdict.
     """
-    upper = (text or "").upper()
-    if _JUDGE_BOILERPLATE_VERDICT in upper:
-        return _JUDGE_BOILERPLATE_VERDICT
-    if _JUDGE_INFORMATIVE_VERDICT in upper:
+    if not isinstance(text, str):
         return _JUDGE_INFORMATIVE_VERDICT
+    upper = text.upper()
+    token_re = re.compile(
+        rf"\b({_JUDGE_BOILERPLATE_VERDICT}|{_JUDGE_INFORMATIVE_VERDICT})\b"
+    )
+    for match in token_re.finditer(upper):
+        if _is_negated_verdict(upper, match.start()):
+            continue
+        return match.group(1)
     return _JUDGE_INFORMATIVE_VERDICT  # default: informative on parse miss
+
+
+def _is_negated_verdict(text: str, token_start: int) -> bool:
+    prefix = text[max(0, token_start - 16) : token_start]
+    return bool(re.search(r"\b(?:NOT|NON|NO)\s+$", prefix))

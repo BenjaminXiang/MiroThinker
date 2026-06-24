@@ -75,6 +75,33 @@ _SECTION_STOP_LABELS = (
 
 _CHINESE_CHAR_RE = re.compile(r"[\u4e00-\u9fff]")
 _WHITESPACE_RE = re.compile(r"\s+")
+_URL_OR_EMAIL_RE = re.compile(
+    r"(https?://|www\.|[\w.+-]+@[\w.-]+\.[A-Za-z]{2,})",
+    flags=re.IGNORECASE,
+)
+_RESEARCH_OVERVIEW_SOURCE_NOISE_TERMS = (
+    "科研详情",
+    "研究课题可参考",
+    "学术主页",
+    "个人主页",
+    "个人网站",
+    "谷歌学术",
+    "Google Scholar",
+    "ResearchGate",
+    "ORCID",
+    "招生",
+    "研究生",
+    "发送简历",
+    "欢迎报考",
+    "联系方式",
+    "联系电话",
+    "邮箱",
+    "代表论著",
+    "发表论文",
+    "论文清单",
+    "主讲课程",
+    "教学课程",
+)
 
 
 def build_research_overview_section(
@@ -96,6 +123,41 @@ def build_research_overview_section(
 
     source_language = _detect_language(candidate)
     if source_language == "zh":
+        if _research_overview_source_needs_llm_cleaning(candidate):
+            if translator is None:
+                return ResearchOverviewBuildResult(
+                    professor_id=professor_id,
+                    status="translation_required",
+                    section=None,
+                    reason="chinese_source_requires_cleaner",
+                )
+            cleaned = _clean_inline_text(translator(candidate))
+            validation_errors = validate_chinese_research_overview(cleaned)
+            if validation_errors:
+                return ResearchOverviewBuildResult(
+                    professor_id=professor_id,
+                    status="invalid_translation",
+                    section=None,
+                    reason=";".join(validation_errors),
+                )
+            return ResearchOverviewBuildResult(
+                professor_id=professor_id,
+                status="section_ready",
+                section=ProfessorProfileSectionInput(
+                    professor_id=professor_id,
+                    section_type="research_overview",
+                    language="zh",
+                    content=cleaned,
+                    source_page_id=source_page_id,
+                    source_language="zh",
+                    source_text=candidate,
+                    source_text_hash=_hash_text(candidate),
+                    source_span=candidate,
+                    generation_method="llm_cleaning",
+                    run_id=run_id,
+                ),
+            )
+
         validation_errors = validate_chinese_research_overview(candidate)
         if validation_errors:
             return ResearchOverviewBuildResult(
@@ -220,6 +282,8 @@ def validate_chinese_research_overview(text: str | None) -> list[str]:
         return ["missing_chinese_text"]
     if len(cleaned) < 10:
         return ["too_short"]
+    if _research_overview_cleaned_text_has_noise(cleaned):
+        return ["source_noise_retained"]
     return []
 
 
@@ -234,3 +298,42 @@ def _hash_text(text: str) -> str:
 
 def _clean_inline_text(text: str) -> str:
     return _WHITESPACE_RE.sub(" ", str(text)).strip()
+
+
+def _research_overview_source_needs_llm_cleaning(text: str) -> bool:
+    cleaned = _clean_inline_text(text)
+    if len(cleaned) > 500:
+        return True
+    if _URL_OR_EMAIL_RE.search(cleaned):
+        return True
+    return any(term.lower() in cleaned.lower() for term in _RESEARCH_OVERVIEW_SOURCE_NOISE_TERMS)
+
+
+def _research_overview_cleaned_text_has_noise(text: str) -> bool:
+    cleaned = _clean_inline_text(text)
+    if _URL_OR_EMAIL_RE.search(cleaned):
+        return True
+    lower = cleaned.lower()
+    noisy_terms = (
+        "科研详情",
+        "研究课题可参考",
+        "学术主页",
+        "个人主页",
+        "个人网站",
+        "谷歌学术",
+        "google scholar",
+        "researchgate",
+        "orcid",
+        "招生",
+        "发送简历",
+        "欢迎报考",
+        "联系方式",
+        "联系电话",
+        "邮箱",
+        "代表论著",
+        "发表论文",
+        "论文清单",
+        "主讲课程",
+        "教学课程",
+    )
+    return any(term in lower for term in noisy_terms)

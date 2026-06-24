@@ -6,6 +6,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -23,6 +24,13 @@ from src.data_agents.professor.multi_source_crawler import (  # noqa: E402
     extract_main_text,
     follow_supplementary_links,
 )
+from src.data_agents.professor.name_selection import (  # noqa: E402
+    is_obvious_non_person_name,
+    looks_like_profile_blob,
+)
+from src.data_agents.professor.profile_summary_contract import (  # noqa: E402
+    profile_summary_contract_violations,
+)
 from src.data_agents.storage.postgres.pipeline_run import (  # noqa: E402
     close_pipeline_run,
     open_pipeline_run,
@@ -30,6 +38,7 @@ from src.data_agents.storage.postgres.pipeline_run import (  # noqa: E402
 
 logger = logging.getLogger("run_professor_raw_text_re_scrape")
 _RAW_TEXT_CAP = 30_000
+_DEFAULT_MIN_RAW_TEXT_LENGTH = 1
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -48,6 +57,27 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--dry-run", action="store_true", help="No DB writes")
     parser.add_argument("--log-level", default="INFO")
+    parser.add_argument(
+        "--missing-raw-only",
+        action="store_true",
+        help="Only select professors whose profile_raw_text is missing or blank.",
+    )
+    parser.add_argument(
+        "--summary-invalid-only",
+        action="store_true",
+        help="Only process rows whose current profile_summary violates the canonical contract.",
+    )
+    parser.add_argument(
+        "--identity-guard",
+        action="store_true",
+        help="Require the fetched text to contain a non-junk canonical-name anchor.",
+    )
+    parser.add_argument(
+        "--min-raw-text-length",
+        type=int,
+        default=_DEFAULT_MIN_RAW_TEXT_LENGTH,
+        help="Minimum extracted raw text length required before writing.",
+    )
     parser.add_argument(
         "--stem-only",
         action="store_true",
@@ -118,16 +148,25 @@ _STEM_DISCIPLINE_FAMILIES = (
 
 
 def _build_select_sql(
-    limit: int | None = None, *, stem_only: bool = False
+    limit: int | None = None,
+    *,
+    stem_only: bool = False,
+    missing_raw_only: bool = False,
 ) -> tuple[str, tuple[Any, ...]]:
     sql = (
-        "SELECT p.professor_id, p.canonical_name, p.profile_raw_text, sp.url AS profile_url "
+        "SELECT p.professor_id, p.canonical_name, p.profile_summary, "
+        "       p.profile_raw_text, sp.url AS profile_url "
         "  FROM professor p "
         "  JOIN source_page sp ON sp.page_id = p.primary_official_profile_page_id "
         " WHERE p.identity_status = 'resolved' "
         "   AND sp.url LIKE 'http%%' "
     )
     params: list[Any] = []
+    if missing_raw_only:
+        sql += (
+            "   AND (p.profile_raw_text IS NULL "
+            "        OR length(trim(p.profile_raw_text)) = 0) "
+        )
     if stem_only:
         placeholders = ",".join(["%s"] * len(_STEM_DISCIPLINE_FAMILIES))
         sql += f"   AND p.discipline_family IN ({placeholders}) "
@@ -143,6 +182,47 @@ def _strip_nul_bytes(text: str) -> str:
     """PG TEXT columns reject NUL (0x00) bytes; some HTML pages contain them
     (e.g. binary PDF embedded inline)."""
     return text.replace("\x00", "")
+
+
+def _should_process_row(row: dict[str, Any], *, summary_invalid_only: bool) -> bool:
+    if not summary_invalid_only:
+        return True
+    return bool(profile_summary_contract_violations(row.get("profile_summary")))
+
+
+def _compact_text(text: str) -> str:
+    return re.sub(r"\s+", "", text)
+
+
+def _raw_text_passes_quality_guard(
+    row: dict[str, Any],
+    raw_text: str,
+    *,
+    min_length: int,
+    identity_guard: bool,
+) -> bool:
+    text = raw_text.strip()
+    if len(text) < max(1, int(min_length)):
+        return False
+    profile_url = str(row.get("profile_url") or "")
+    if not profile_url.startswith(("http://", "https://")):
+        return False
+    if not identity_guard:
+        return True
+
+    canonical_name = str(row.get("canonical_name") or "").strip()
+    if (
+        not canonical_name
+        or is_obvious_non_person_name(canonical_name)
+        or looks_like_profile_blob(canonical_name)
+    ):
+        return False
+    compact = _compact_text(text)
+    if canonical_name in compact:
+        return True
+    if len(canonical_name) >= 3 and canonical_name[:2] in compact:
+        return True
+    return False
 
 
 def _persist_raw_text(
@@ -207,6 +287,10 @@ def main(argv: list[str] | None = None) -> None:
                 "limit": args.limit,
                 "resume": args.resume,
                 "dry_run": args.dry_run,
+                "missing_raw_only": args.missing_raw_only,
+                "summary_invalid_only": args.summary_invalid_only,
+                "identity_guard": args.identity_guard,
+                "min_raw_text_length": args.min_raw_text_length,
             },
             triggered_by="run_professor_raw_text_re_scrape",
         )
@@ -219,7 +303,11 @@ def main(argv: list[str] | None = None) -> None:
     resume_ids = _load_resume_ids(resume_path) if resume_path else set()
     checkpoint_path = _resolve_checkpoint_path(None, run_id)
 
-    sql, params = _build_select_sql(args.limit, stem_only=args.stem_only)
+    sql, params = _build_select_sql(
+        args.limit,
+        stem_only=args.stem_only,
+        missing_raw_only=args.missing_raw_only,
+    )
     rows = conn.execute(sql, params).fetchall()
     started_at = time.monotonic()
     report: dict[str, Any] = {
@@ -230,6 +318,8 @@ def main(argv: list[str] | None = None) -> None:
         "raw_text_written": 0,
         "supplementary_segments": 0,
         "profs_with_errors": 0,
+        "skipped_summary_valid": 0,
+        "skipped_quality_guard": 0,
         "dry_run": args.dry_run,
     }
 
@@ -237,6 +327,13 @@ def main(argv: list[str] | None = None) -> None:
         professor_id = str(row["professor_id"])
         if professor_id in resume_ids:
             report["profs_skipped"] += 1
+            continue
+        if not _should_process_row(
+            dict(row),
+            summary_invalid_only=bool(args.summary_invalid_only),
+        ):
+            report["profs_skipped"] += 1
+            report["skipped_summary_valid"] += 1
             continue
 
         report["profs_processed"] += 1
@@ -260,6 +357,19 @@ def main(argv: list[str] | None = None) -> None:
             _append_checkpoint(
                 checkpoint_path,
                 {"professor_id": professor_id, "status": "skipped_no_raw_text"},
+            )
+            continue
+        if not _raw_text_passes_quality_guard(
+            dict(row),
+            raw_text,
+            min_length=int(args.min_raw_text_length),
+            identity_guard=bool(args.identity_guard),
+        ):
+            report["profs_skipped"] += 1
+            report["skipped_quality_guard"] += 1
+            _append_checkpoint(
+                checkpoint_path,
+                {"professor_id": professor_id, "status": "skipped_quality_guard"},
             )
             continue
 

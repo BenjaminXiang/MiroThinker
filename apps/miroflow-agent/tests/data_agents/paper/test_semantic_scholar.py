@@ -155,3 +155,59 @@ def test_request_json_retries_429_with_short_bounded_backoff(
 
     assert len(calls) == 2
     assert sleeps == [1.0]
+
+
+def test_request_json_uses_configured_semantic_scholar_api_key(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    calls: list[dict[str, object]] = []
+
+    class FakeResponse:
+        status_code = 200
+
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict[str, object]:
+            return {"data": []}
+
+    def fake_get(
+        url: str,
+        *,
+        params: dict[str, object],
+        timeout: object,
+        headers: dict[str, str],
+    ) -> FakeResponse:
+        calls.append(
+            {
+                "url": url,
+                "params": params,
+                "timeout": timeout,
+                "headers": headers,
+            }
+        )
+        return FakeResponse()
+
+    monkeypatch.setenv("SEMANTIC_SCHOLAR_API_KEY", "test-s2-key")
+    monkeypatch.setattr(
+        semantic_scholar,
+        "_CACHE_ROOT",
+        tmp_path / "paper_semantic_scholar_cache",
+    )
+    monkeypatch.setattr(semantic_scholar.requests, "get", fake_get)
+
+    payload = semantic_scholar._request_json(
+        "https://api.semanticscholar.org/graph/v1/author/search",
+        {"query": "靳玉乐"},
+    )
+
+    assert payload == {"data": []}
+    assert calls == [
+        {
+            "url": "https://api.semanticscholar.org/graph/v1/author/search",
+            "params": {"query": "靳玉乐"},
+            "timeout": (5, 20),
+            "headers": {"x-api-key": "test-s2-key"},
+        }
+    ]

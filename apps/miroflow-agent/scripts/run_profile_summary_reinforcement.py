@@ -17,7 +17,6 @@ import logging
 import os
 import sys
 import time
-import uuid
 from pathlib import Path
 
 import psycopg
@@ -29,11 +28,19 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from src.data_agents.professor.llm_profiles import resolve_professor_llm_settings  # noqa: E402
+from src.data_agents.professor.profile_summary_contract import (  # noqa: E402
+    is_valid_profile_summary,
+    profile_summary_contract_violations,
+)
 from src.data_agents.professor.summary_reinforcement import (  # noqa: E402
     PaperContext,
     ReinforcementResult,
     generate_reinforced_profile_summary,
     summary_reinforcement_needed,
+)
+from src.data_agents.storage.postgres.pipeline_run import (  # noqa: E402
+    close_pipeline_run,
+    open_pipeline_run,
 )
 
 logger = logging.getLogger("run_profile_summary_reinforcement")
@@ -53,8 +60,8 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--min-length",
         type=int,
-        default=150,
-        help="Threshold below which profile_summary is regenerated (default 150)",
+        default=200,
+        help="Threshold below which profile_summary is regenerated (default 200)",
     )
     only_group = parser.add_mutually_exclusive_group()
     only_group.add_argument(
@@ -70,6 +77,20 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Process ALL profs (overwrite existing summaries)",
     )
     parser.set_defaults(only_missing=True)
+    parser.add_argument(
+        "--summary-policy",
+        choices=("missing-short", "invalid", "always"),
+        default=None,
+        help=(
+            "Summary retry policy. Defaults to missing-short unless --all is set; "
+            "invalid retries any summary violating the canonical contract."
+        ),
+    )
+    parser.add_argument(
+        "--require-raw-text",
+        action="store_true",
+        help="Only process professors with non-empty profile_raw_text.",
+    )
     parser.add_argument(
         "--resume",
         nargs="?",
@@ -124,12 +145,22 @@ def _build_select_sql(
     only_missing: bool,
     limit: int | None,
     min_length: int,
+    summary_policy: str | None = None,
+    require_raw_text: bool = False,
 ) -> tuple[str, tuple]:
+    policy = _effective_summary_policy(
+        only_missing=only_missing,
+        summary_policy=summary_policy,
+    )
     clauses = ["1=1"]
     params: list = []
-    if only_missing:
+    if policy == "missing-short":
         clauses.append(
-            f"(profile_summary IS NULL OR length(profile_summary) < {int(min_length)})"
+            f"(p.profile_summary IS NULL OR length(p.profile_summary) < {int(min_length)})"
+        )
+    if require_raw_text:
+        clauses.append(
+            "p.profile_raw_text IS NOT NULL AND length(trim(p.profile_raw_text)) > 0"
         )
     sql = (
         "SELECT p.professor_id, p.canonical_name, "
@@ -148,13 +179,36 @@ def _build_select_sql(
         "                      WHERE professor_id = p.professor_id "
         "                        AND fact_type = 'research_topic' "
         "                        AND status != 'deprecated') rd ON true "
-        f" WHERE {' AND '.join(clauses).replace('profile_summary', 'p.profile_summary')} "
+        f" WHERE {' AND '.join(clauses)} "
         " ORDER BY p.professor_id"
     )
     if limit is not None:
         sql += " LIMIT %s"
         params.append(int(limit))
     return sql, tuple(params)
+
+
+def _effective_summary_policy(
+    *,
+    only_missing: bool,
+    summary_policy: str | None,
+) -> str:
+    if summary_policy:
+        return summary_policy
+    return "missing-short" if only_missing else "always"
+
+
+def _should_process_summary(
+    profile_summary: str | None,
+    *,
+    min_length: int,
+    policy: str,
+) -> bool:
+    if policy == "always":
+        return True
+    if policy == "invalid":
+        return bool(profile_summary_contract_violations(profile_summary))
+    return summary_reinforcement_needed(profile_summary, min_length=min_length)
 
 
 def _fetch_paper_contexts(
@@ -187,11 +241,14 @@ def _fetch_paper_contexts(
     ]
 
 
-def _persist_summary(conn, *, professor_id: str, summary: str) -> None:
+def _persist_summary(conn, *, professor_id: str, summary: str, run_id: str) -> None:
+    if not is_valid_profile_summary(summary):
+        violations = ",".join(profile_summary_contract_violations(summary))
+        raise ValueError(f"profile_summary violates canonical contract: {violations}")
     conn.execute(
-        "UPDATE professor SET profile_summary = %s, updated_at = NOW() "
+        "UPDATE professor SET profile_summary = %s, updated_at = NOW(), run_id = %s "
         "WHERE professor_id = %s",
-        (summary, professor_id),
+        (summary, run_id, professor_id),
     )
 
 
@@ -227,8 +284,29 @@ def main(argv: list[str] | None = None) -> None:
         )
         sys.exit(1)
 
-    run_id = str(uuid.uuid4())
     conn = _open_database_connection(dsn)
+    policy = _effective_summary_policy(
+        only_missing=bool(args.only_missing),
+        summary_policy=args.summary_policy,
+    )
+    run_id = str(
+        open_pipeline_run(
+            conn,
+            run_kind="backfill_real",
+            run_scope={
+                "task": "profile_summary_reinforcement",
+                "limit": args.limit,
+                "max_papers": args.max_papers,
+                "min_length": args.min_length,
+                "summary_policy": policy,
+                "require_raw_text": args.require_raw_text,
+                "resume": args.resume,
+                "dry_run": args.dry_run,
+            },
+            triggered_by="run_profile_summary_reinforcement",
+        )
+    )
+    conn.commit()
     llm, llm_model, extra_body = _open_llm_client()
 
     resume_path: Path | None = None
@@ -242,6 +320,8 @@ def main(argv: list[str] | None = None) -> None:
         only_missing=args.only_missing,
         limit=args.limit,
         min_length=args.min_length,
+        summary_policy=policy,
+        require_raw_text=bool(args.require_raw_text),
     )
     prof_rows = conn.execute(sql, params).fetchall()
 
@@ -254,6 +334,7 @@ def main(argv: list[str] | None = None) -> None:
         "summaries_written": 0,
         "summaries_rejected": 0,
         "profs_with_errors": 0,
+        "skipped_source_missing": 0,
     }
 
     for prof in prof_rows:
@@ -262,11 +343,17 @@ def main(argv: list[str] | None = None) -> None:
             report["profs_skipped"] += 1
             continue
 
-        if args.only_missing and not summary_reinforcement_needed(
-            prof.get("profile_summary"), min_length=args.min_length
+        if not _should_process_summary(
+            prof.get("profile_summary"),
+            min_length=args.min_length,
+            policy=policy,
         ):
             # Defensive: should have been filtered by SQL already.
             report["profs_skipped"] += 1
+            continue
+        if args.require_raw_text and not str(prof.get("profile_raw_text") or "").strip():
+            report["profs_skipped"] += 1
+            report["skipped_source_missing"] += 1
             continue
 
         report["profs_processed"] += 1
@@ -305,6 +392,7 @@ def main(argv: list[str] | None = None) -> None:
                         conn,
                         professor_id=prof_id,
                         summary=result.summary,
+                        run_id=run_id,
                     )
                     conn.commit()
                 except Exception as exc:  # noqa: BLE001
@@ -343,6 +431,24 @@ def main(argv: list[str] | None = None) -> None:
 
     report["duration_seconds"] = round(time.monotonic() - started_at, 2)
     report["dry_run"] = args.dry_run
+    close_status = "partial" if report["profs_with_errors"] else "succeeded"
+    try:
+        close_pipeline_run(
+            conn,
+            run_id,
+            status=close_status,
+            items_processed=report["profs_processed"],
+            items_failed=report["profs_with_errors"],
+        )
+        conn.commit()
+    except Exception as exc:  # noqa: BLE001
+        print(
+            json.dumps(
+                {"warn": "close_pipeline_run failed", "error": str(exc)},
+                ensure_ascii=False,
+            ),
+            file=sys.stderr,
+        )
     print(json.dumps(report, ensure_ascii=False))
 
 

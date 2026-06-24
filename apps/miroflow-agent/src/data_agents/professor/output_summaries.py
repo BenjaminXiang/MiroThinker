@@ -358,6 +358,7 @@ def select_eligible_paper_summary_inputs(
               FROM resolved_links AS rl
               JOIN paper AS p ON p.paper_id = rl.resolved_paper_id
              WHERE p.identity_status NOT IN ('rejected', 'merged')
+               AND p.quality_status = 'ready'
         )
         SELECT
             paper_id,

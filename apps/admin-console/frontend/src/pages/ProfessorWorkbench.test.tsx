@@ -8,12 +8,13 @@ import {
   within,
 } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
+import type { AdminProfessorDetail } from "../api";
 import ProfessorWorkbench from "./ProfessorWorkbench";
 import RecordDetail from "./RecordDetail";
 
 const originalGetComputedStyle = window.getComputedStyle;
 
-const detail = {
+const detail: AdminProfessorDetail = {
   professor_id: "PROF-ADMIN-1",
   sections: {
     identity: {
@@ -100,6 +101,17 @@ const detail = {
         },
       ],
       open_issue_count: 1,
+      blocking_issue_count: 1,
+      non_blocking_issue_count: 0,
+      blocking_reasons: [
+        {
+          rule_id: "missing_research_topic",
+          stage: "research_directions",
+          severity: "medium",
+          description: "professor quality gate: missing_research_topic",
+        },
+      ],
+      non_blocking_reasons: [],
     },
   },
 };
@@ -231,6 +243,45 @@ describe("ProfessorWorkbench", () => {
 
     expect(await screen.findByRole("heading", { name: "Ada Lovelace" })).toBeTruthy();
     expect(screen.getByText("not_extracted")).toBeTruthy();
+  });
+
+  it("renders historical diagnostics separately from release blockers", async () => {
+    renderWorkbench({
+      ...detail,
+      sections: {
+        ...detail.sections,
+        quality_diagnosis: {
+          status: "ready",
+          reasons: [
+            {
+              rule_id: "missing_research_topic",
+              stage: "research_directions",
+              severity: "medium",
+              description: "historical professor quality gate issue",
+            },
+          ],
+          open_issue_count: 108,
+          blocking_issue_count: 0,
+          non_blocking_issue_count: 108,
+          blocking_reasons: [],
+          non_blocking_reasons: [
+            {
+              rule_id: "missing_research_topic",
+              stage: "research_directions",
+              severity: "medium",
+              description: "historical professor quality gate issue",
+            },
+          ],
+        },
+      },
+    });
+
+    expect(await screen.findByRole("heading", { name: "Ada Lovelace" })).toBeTruthy();
+    expect(screen.getByText("发布阻塞 0")).toBeTruthy();
+    expect(screen.getByText("历史诊断 108")).toBeTruthy();
+    expect(screen.getByText("无发布阻塞诊断")).toBeTruthy();
+    expect(screen.queryByText("未关闭问题 108")).toBeNull();
+    expect(screen.queryByText("missing_research_topic")).toBeNull();
   });
 
   it("routes professor details to the workbench instead of the generic editor", async () => {

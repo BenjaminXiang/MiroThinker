@@ -145,6 +145,63 @@ def test_cli_all_disables_filter(monkeypatch):
     )
 
 
+def test_invalid_summary_policy_can_require_raw_text():
+    cli = _import_cli()
+
+    sql, params = cli._build_select_sql(
+        only_missing=False,
+        limit=3,
+        min_length=200,
+        summary_policy="invalid",
+        require_raw_text=True,
+    )
+
+    assert "p.profile_raw_text IS NOT NULL" in sql
+    assert "length(trim(p.profile_raw_text)) > 0" in sql
+    assert "profile_summary IS NULL" not in sql
+    assert params == (3,)
+
+
+def test_should_process_summary_filters_invalid_only():
+    cli = _import_cli()
+    valid = "张三现任深圳大学教授，主要从事机器人感知、智能控制与医学影像分析研究。" * 8
+    invalid = (
+        "Professor Zhang is a professor at Shenzhen University. "
+        "His research focuses on robotics and artificial intelligence."
+    )
+
+    assert (
+        cli._should_process_summary(valid, min_length=200, policy="invalid") is False
+    )
+    assert (
+        cli._should_process_summary(invalid, min_length=200, policy="invalid") is True
+    )
+    assert (
+        cli._should_process_summary(valid, min_length=200, policy="always") is True
+    )
+
+
+def test_persist_summary_records_run_id():
+    cli = _import_cli()
+    conn = MagicMock()
+    valid = "张三现任深圳大学教授，主要从事机器人感知、智能控制与医学影像分析研究。" * 8
+
+    cli._persist_summary(
+        conn,
+        professor_id="prof-1",
+        summary=valid,
+        run_id="11111111-1111-1111-1111-111111111111",
+    )
+
+    sql, params = conn.execute.call_args.args
+    assert "run_id" in sql
+    assert params == (
+        valid,
+        "11111111-1111-1111-1111-111111111111",
+        "prof-1",
+    )
+
+
 def test_cli_missing_database_url_exits_nonzero(monkeypatch):
     cli = _import_cli()
     monkeypatch.delenv("DATABASE_URL", raising=False)

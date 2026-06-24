@@ -48,6 +48,75 @@ def test_build_select_sql_limits_professors():
     assert params == (3,)
 
 
+def test_build_select_sql_can_filter_missing_raw_text():
+    cli = _import_cli()
+    sql, params = cli._build_select_sql(limit=3, missing_raw_only=True)
+
+    assert "p.profile_raw_text IS NULL" in sql
+    assert "length(trim(p.profile_raw_text)) = 0" in sql
+    assert params == (3,)
+
+
+def test_should_process_row_filters_summary_valid_rows():
+    cli = _import_cli()
+    valid_summary = (
+        "张三现任深圳大学教授，主要从事人工智能、机器学习与医学影像分析研究，"
+        "关注算法可靠性、临床场景验证和多模态数据建模。其工作围绕智能诊断、"
+        "影像分割和疾病风险评估展开，结合公开发表论文与团队项目积累，形成面向"
+        "医疗应用的技术路线。相关研究强调模型解释性、数据质量和跨学科合作，"
+        "为医学人工智能系统落地提供方法支持。近年来还参与科研项目和学生培养，"
+        "持续推动算法在真实临床数据中的评估、优化与转化，并重视与医院、工程团队"
+        "之间的协同验证。"
+    )
+
+    assert cli._should_process_row(
+        {"profile_summary": valid_summary}, summary_invalid_only=True
+    ) is False
+    assert cli._should_process_row(
+        {"profile_summary": "Too short"}, summary_invalid_only=True
+    ) is True
+
+
+def test_raw_text_quality_guard_requires_person_name_anchor():
+    cli = _import_cli()
+    assert (
+        cli._raw_text_passes_quality_guard(
+            {
+                "canonical_name": "张三",
+                "profile_url": "https://faculty.example.edu/zhangsan",
+            },
+            "这是张三教授的个人主页，研究方向包括人工智能。" * 10,
+            min_length=120,
+            identity_guard=True,
+        )
+        is True
+    )
+    assert (
+        cli._raw_text_passes_quality_guard(
+            {
+                "canonical_name": "张三",
+                "profile_url": "https://faculty.example.edu/zhangsan",
+            },
+            "这是学院新闻页面，主要介绍科研平台和通知公告。" * 10,
+            min_length=120,
+            identity_guard=True,
+        )
+        is False
+    )
+    assert (
+        cli._raw_text_passes_quality_guard(
+            {
+                "canonical_name": "科研方向",
+                "profile_url": "https://faculty.example.edu/research",
+            },
+            "科研方向栏目介绍学院平台。" * 20,
+            min_length=120,
+            identity_guard=True,
+        )
+        is False
+    )
+
+
 def test_scrape_raw_text_combines_primary_and_supplementary(monkeypatch):
     cli = _import_cli()
     html = "<html><body><h1>张三</h1><p>Primary bio text.</p></body></html>"

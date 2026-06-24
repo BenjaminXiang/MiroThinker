@@ -9,6 +9,7 @@ from typing import Callable
 
 import requests
 
+from src.data_agents.providers.semantic_scholar import semantic_scholar_request_headers
 from src.data_agents.normalization import normalize_person_name
 
 from .models import (
@@ -191,7 +192,11 @@ def _request_json(url: str, params: RequestParams) -> dict[str, object]:
 
     response = None
     for attempt in range(_MAX_RETRIES):
-        response = requests.get(url, params=params, timeout=_REQUEST_TIMEOUT)
+        request_kwargs = {"params": params, "timeout": _REQUEST_TIMEOUT}
+        headers = semantic_scholar_request_headers()
+        if headers:
+            request_kwargs["headers"] = headers
+        response = requests.get(url, **request_kwargs)
         if response.status_code != 429 and response.status_code < 500:
             break
         if attempt + 1 >= _MAX_RETRIES:

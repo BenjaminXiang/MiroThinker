@@ -29,6 +29,8 @@ from src.data_agents.paper.title_quality import is_plausible_paper_title
         "Committee Neural Networks for Robust Image Classification",
         "COVID-19 in 2020: No Evidence for Increased Transmission in Schools",
         "No Evidence for Increased Transmission in Schools in 2020",
+        "Removing Interference and Recovering Content Imaginatively for Visible Watermark Removal",
+        "Human Obedience and Social Norm Adherence in Small Groups with Virtual Agents",
     ],
 )
 def test_accepts_real_paper_titles(title: str):

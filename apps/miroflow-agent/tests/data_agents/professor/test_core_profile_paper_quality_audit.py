@@ -8,11 +8,11 @@ from src.data_agents.professor.core_profile_paper_quality_audit import (
     BaselinePaperMetrics,
     BaselineProfessorMetrics,
     DatasetClosureBucketRow,
-    DatasetClosureBuckets,
     _classify_duplicate_paper_bucket,
     _classify_professor_paper_summary_bucket,
     _classify_profile_summary_bucket,
     _classify_research_overview_bucket,
+    _load_duplicate_paper_bucket_rows,
     build_core_profile_paper_quality_report,
     build_dataset_closure_bucket_report,
     evaluate_case_definitions,
@@ -51,6 +51,29 @@ class _PfedgpaAliasConn:
                 "alias_target": "PAPER-CANON-PFEDGPA",
             }
         )
+
+
+class _DuplicateBucketSqlConn:
+    def execute(self, sql, params=()):
+        compact_sql = " ".join(sql.split())
+        assert params == (5,)
+        assert "LEFT JOIN paper_merge_alias pma ON pma.old_paper_id = ppl.paper_id" in (
+            compact_sql
+        )
+        assert "COALESCE(pma.canonical_paper_id, ppl.paper_id) AS resolved_paper_id" in (
+            compact_sql
+        )
+        assert "JOIN paper p ON p.paper_id = vl.resolved_paper_id" in compact_sql
+        assert "HAVING COUNT(DISTINCT vl.resolved_paper_id) > 1" in compact_sql
+        return _CursorList([])
+
+
+class _CursorList:
+    def __init__(self, rows):
+        self._rows = rows
+
+    def fetchall(self):
+        return self._rows
 
 
 def test_report_flags_professor_and_paper_quality_gaps() -> None:
@@ -252,6 +275,13 @@ def test_dataset_closure_bucket_classifiers_are_stable() -> None:
         doi_count=0,
         arxiv_count=0,
     ) == (False, "ambiguous_fuzzy_match")
+
+
+def test_duplicate_paper_bucket_loader_resolves_merge_aliases_before_grouping() -> None:
+    assert _load_duplicate_paper_bucket_rows(
+        _DuplicateBucketSqlConn(),
+        bucket_limit=5,
+    ) == []
 
 
 def test_case_fixture_covers_required_badcases() -> None:

@@ -29,7 +29,13 @@ def _profile(**overrides) -> EnrichedProfessorProfile:
         "citation_count": 12000,
         "paper_count": 150,
         "top_papers": [
-            PaperLink(title="Safety Alignment", year=2024, venue="NeurIPS", citation_count=500, source="s2"),
+            PaperLink(
+                title="Safety Alignment",
+                year=2024,
+                venue="NeurIPS",
+                citation_count=500,
+                source="s2",
+            ),
         ],
         "awards": ["国家杰青"],
         "profile_url": "https://example.com",
@@ -86,8 +92,22 @@ class TestValidateProfileSummary:
         )
         assert not validate_profile_summary(text)
 
+    def test_rejects_english_dominant_bilingual_paragraph(self):
+        text = (
+            "Ahmed Elazab is an Assistant Professor (助理教授) and Doctoral Supervisor "
+            "(博士生导师) at Tsinghua SIGS. His research focuses on trustworthy "
+            "artificial intelligence for medical image analysis, brain disease "
+            "diagnosis and prognosis, with emphasis on multimodal neuroimaging "
+            "and clinical AI systems."
+        )
+        assert 200 <= len(text) <= 300
+
+        assert not validate_profile_summary(text)
+
     def test_accepts_valid_summary(self):
-        text = _pad("张三现任南方科技大学计算机系教授，研究方向聚焦大语言模型安全对齐", 250)
+        text = _pad(
+            "张三现任南方科技大学计算机系教授，研究方向聚焦大语言模型安全对齐", 250
+        )
         assert validate_profile_summary(text)
 
 
@@ -160,7 +180,9 @@ def test_fallback_profile_summary_drops_operator_meta_structured_parts():
 @pytest.mark.asyncio
 class TestGenerateSummaries:
     async def test_with_valid_llm_response(self):
-        profile_text = _pad("张三现任南方科技大学计算机系教授，研究大语言模型安全对齐", 250)
+        profile_text = _pad(
+            "张三现任南方科技大学计算机系教授，研究大语言模型安全对齐", 250
+        )
 
         mock = MagicMock()
         mock.chat.completions.create.return_value = SimpleNamespace(
@@ -197,14 +219,20 @@ class TestGenerateSummaries:
 
         assert result.profile_summary
         assert "课程与教学论" in result.profile_summary
-        assert not any(marker in result.profile_summary for marker in OPERATOR_META_MARKERS)
+        assert not any(
+            marker in result.profile_summary for marker in OPERATOR_META_MARKERS
+        )
         assert len(result.profile_summary) <= 300
 
     async def test_falls_back_when_llm_returns_invalid_length_outputs(self):
         mock = MagicMock()
         mock.chat.completions.create.side_effect = [
-            SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content="太短"))]),
-            SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content="仍然太短"))]),
+            SimpleNamespace(
+                choices=[SimpleNamespace(message=SimpleNamespace(content="太短"))]
+            ),
+            SimpleNamespace(
+                choices=[SimpleNamespace(message=SimpleNamespace(content="仍然太短"))]
+            ),
         ]
 
         result = await generate_summaries(
@@ -226,5 +254,7 @@ class TestGenerateSummaries:
 
         assert result.profile_summary
         assert "流行病学" in result.profile_summary
-        assert not any(marker in result.profile_summary for marker in OPERATOR_META_MARKERS)
+        assert not any(
+            marker in result.profile_summary for marker in OPERATOR_META_MARKERS
+        )
         assert len(result.profile_summary) <= 300

@@ -4,6 +4,7 @@
 
 Replaces template-based summaries with substantive, paper-driven content.
 """
+
 from __future__ import annotations
 
 import logging
@@ -14,32 +15,41 @@ from typing import Any
 from .models import EnrichedProfessorProfile
 from .profile_summary_contract import (
     OPERATOR_META_KEYWORDS,
+    PROFILE_SUMMARY_MAX_CHARS,
+    PROFILE_SUMMARY_MIN_CHARS,
+    PROFILE_SUMMARY_PROMPT_CONTRACT,
     contains_operator_meta_language,
     extract_profile_fact_sentences,
+    is_valid_profile_summary,
 )
 from .translation_spec import LLM_EXTRA_BODY
 
 logger = logging.getLogger(__name__)
 
-BOILERPLATE_KEYWORDS = frozenset({
-    "暂未获取",
-    "持续补全",
-    "仍在完善",
-    "已整理",
-    "可追溯来源",
-    "已同步整理",
-    "持续补充",
-    "仍在持续",
-    "由于您提供的教授信息极度匮乏",
-    "由于您提供的原始信息中",
-    "由于提供的原始信息中",
-    "无法构建符合您要求",
-    "无法构建符合学术规范",
-    "无法构建符合学术规范且达到",
-    "若需生成符合学术规范",
-    "若要生成高质量的学术摘要",
-    "请补充以下关键维度信息",
-}) | OPERATOR_META_KEYWORDS
+BOILERPLATE_KEYWORDS = (
+    frozenset(
+        {
+            "暂未获取",
+            "持续补全",
+            "仍在完善",
+            "已整理",
+            "可追溯来源",
+            "已同步整理",
+            "持续补充",
+            "仍在持续",
+            "由于您提供的教授信息极度匮乏",
+            "由于您提供的原始信息中",
+            "由于提供的原始信息中",
+            "无法构建符合您要求",
+            "无法构建符合学术规范",
+            "无法构建符合学术规范且达到",
+            "若需生成符合学术规范",
+            "若要生成高质量的学术摘要",
+            "请补充以下关键维度信息",
+        }
+    )
+    | OPERATOR_META_KEYWORDS
+)
 
 _JSON_FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)\s*```", re.DOTALL)
 
@@ -103,21 +113,29 @@ def _ensure_summary_length(
     normalized = text.strip()
     if not normalized:
         normalized = ""
-    normalized = _coerce_summary_length(normalized, min_length=min_length, max_length=max_length)
+    normalized = _coerce_summary_length(
+        normalized, min_length=min_length, max_length=max_length
+    )
     if len(normalized) >= min_length:
         return normalized
 
-    segments = [segment for segment in re.split(r"(?<=[。！？])", normalized) if segment.strip()]
+    segments = [
+        segment for segment in re.split(r"(?<=[。！？])", normalized) if segment.strip()
+    ]
     for sentence in padding_sentences:
         candidate = _ensure_sentence(sentence)
         if candidate not in segments:
             segments.append(candidate)
         joined = "".join(segments).strip()
-        joined = _coerce_summary_length(joined, min_length=min_length, max_length=max_length)
+        joined = _coerce_summary_length(
+            joined, min_length=min_length, max_length=max_length
+        )
         if len(joined) >= min_length:
             return joined
 
-    return _coerce_summary_length("".join(segments).strip(), min_length=min_length, max_length=max_length)
+    return _coerce_summary_length(
+        "".join(segments).strip(), min_length=min_length, max_length=max_length
+    )
 
 
 def _build_fallback_profile_summary(profile: EnrichedProfessorProfile) -> str:
@@ -146,7 +164,9 @@ def _build_fallback_profile_summary(profile: EnrichedProfessorProfile) -> str:
     if profile.citation_count:
         metric_fragments.append(f"总引用约{profile.citation_count}")
     if profile.top_papers:
-        representative_titles = "、".join(p.title for p in profile.top_papers[:2] if p.title.strip())
+        representative_titles = "、".join(
+            p.title for p in profile.top_papers[:2] if p.title.strip()
+        )
         if representative_titles:
             metric_fragments.append(f"代表论文包括{representative_titles}")
     if metric_fragments:
@@ -181,8 +201,8 @@ def _build_fallback_profile_summary(profile: EnrichedProfessorProfile) -> str:
     base = "".join(part for part in (_summary_part(part) for part in parts) if part)
     summary = _ensure_summary_length(
         base,
-        min_length=150,
-        max_length=300,
+        min_length=PROFILE_SUMMARY_MIN_CHARS,
+        max_length=PROFILE_SUMMARY_MAX_CHARS,
         padding_sentences=tuple(fact_sentences),
     )
     if not contains_operator_meta_language(summary):
@@ -194,23 +214,34 @@ def _build_fallback_profile_summary(profile: EnrichedProfessorProfile) -> str:
     )
     return _coerce_summary_length(
         "".join(safe_sentences),
-        min_length=150,
-        max_length=300,
+        min_length=PROFILE_SUMMARY_MIN_CHARS,
+        max_length=PROFILE_SUMMARY_MAX_CHARS,
     )
 
 
 def build_profile_summary_prompt(profile: EnrichedProfessorProfile) -> str:
     """Build prompt for profile_summary generation (200-300 chars)."""
-    directions = "、".join(profile.research_directions[:5]) if profile.research_directions else "暂无具体方向"
-    papers = "\n".join(
-        f"- {p.title} ({p.year}, {p.venue}, 引用{p.citation_count})"
-        for p in profile.top_papers[:5]
-    ) or "无代表论文数据"
+    directions = (
+        "、".join(profile.research_directions[:5])
+        if profile.research_directions
+        else "暂无具体方向"
+    )
+    papers = (
+        "\n".join(
+            f"- {p.title} ({p.year}, {p.venue}, 引用{p.citation_count})"
+            for p in profile.top_papers[:5]
+        )
+        or "无代表论文数据"
+    )
 
     awards_text = "、".join(profile.awards[:3]) if profile.awards else ""
-    edu_text = "、".join(
-        f"{e.school}{e.degree or ''}" for e in profile.education_structured[:3]
-    ) if profile.education_structured else ""
+    edu_text = (
+        "、".join(
+            f"{e.school}{e.degree or ''}" for e in profile.education_structured[:3]
+        )
+        if profile.education_structured
+        else ""
+    )
     raw_text = ""
     if profile.official_anchor_profile and profile.official_anchor_profile.bio_text:
         raw_text = profile.official_anchor_profile.bio_text.strip()
@@ -222,6 +253,7 @@ def build_profile_summary_prompt(profile: EnrichedProfessorProfile) -> str:
         )
 
     return f"""请为以下教授生成200-300字的中文简介（profile_summary）。
+合同：{PROFILE_SUMMARY_PROMPT_CONTRACT}
 
 要求：
 - 第一句：姓名+学校+院系+职称（身份锚定）
@@ -251,10 +283,7 @@ h-index：{profile.h_index or "未知"}
 
 def validate_profile_summary(summary: str) -> bool:
     """Check profile_summary meets quality requirements."""
-    if not summary:
-        return False
-    length = len(summary)
-    if length < 200 or length > 300:
+    if not is_valid_profile_summary(summary):
         return False
     if contains_operator_meta_language(summary):
         return False
@@ -273,7 +302,9 @@ async def generate_summaries(
     profile_prompt = build_profile_summary_prompt(profile)
 
     profile_summary = await _generate_single_summary(
-        llm_client, llm_model, profile_prompt,
+        llm_client,
+        llm_model,
+        profile_prompt,
         validator=validate_profile_summary,
         summary_type="profile",
     )

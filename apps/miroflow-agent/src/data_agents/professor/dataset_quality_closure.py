@@ -24,6 +24,7 @@ from .core_profile_paper_quality_audit import (
     DatasetClosureBuckets,
 )
 from .output_summaries import persist_professor_output_summaries
+from .profile_summary_contract import is_valid_profile_summary
 from .quality_gate import (
     evaluate_professor_quality,
     load_professor_canonical_states,
@@ -54,9 +55,7 @@ _LANE_TO_BLOCKER = {
 _LANE_VALIDATION_RULES = {
     "profile_summary_repair": ("profile_summary_200_300_zh_contract",),
     "research_overview_backfill": ("research_overview_zh_source_grounded",),
-    "professor_paper_summary_generation": (
-        "deduplicated_verified_paper_inputs",
-    ),
+    "professor_paper_summary_generation": ("deduplicated_verified_paper_inputs",),
     "duplicate_paper_merge": ("safe_identifier_or_author_supported_merge",),
 }
 
@@ -194,26 +193,41 @@ class IndexRefreshEvidence:
 
 @dataclass(frozen=True, slots=True)
 class PostWriteVerificationCallbacks:
-    quality_re_evaluator: Callable[
-        [Any, tuple[str, ...]],
-        QualityReevaluationEvidence,
-    ] | None = None
-    affected_audit_checker: Callable[
-        [Any, tuple[str, ...], tuple[str, ...]],
-        AffectedAuditEvidence,
-    ] | None = None
-    professor_detail_sampler: Callable[
-        [Any, tuple[str, ...]],
-        ApiSampleEvidence,
-    ] | None = None
-    paper_detail_sampler: Callable[
-        [Any, tuple[str, ...]],
-        ApiSampleEvidence,
-    ] | None = None
-    refresh_selector: Callable[
-        [Any, tuple[str, ...], tuple[str, ...], str],
-        IndexRefreshEvidence,
-    ] | None = None
+    quality_re_evaluator: (
+        Callable[
+            [Any, tuple[str, ...]],
+            QualityReevaluationEvidence,
+        ]
+        | None
+    ) = None
+    affected_audit_checker: (
+        Callable[
+            [Any, tuple[str, ...], tuple[str, ...]],
+            AffectedAuditEvidence,
+        ]
+        | None
+    ) = None
+    professor_detail_sampler: (
+        Callable[
+            [Any, tuple[str, ...]],
+            ApiSampleEvidence,
+        ]
+        | None
+    ) = None
+    paper_detail_sampler: (
+        Callable[
+            [Any, tuple[str, ...]],
+            ApiSampleEvidence,
+        ]
+        | None
+    ) = None
+    refresh_selector: (
+        Callable[
+            [Any, tuple[str, ...], tuple[str, ...], str],
+            IndexRefreshEvidence,
+        ]
+        | None
+    ) = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -287,19 +301,25 @@ def build_lane_dry_run_report(
 def format_dataset_closure_dry_run_report(
     report: DatasetClosureDryRunReport,
 ) -> str:
-    return json.dumps(asdict(report), ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    return (
+        json.dumps(asdict(report), ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    )
 
 
 def format_dataset_closure_write_report(
     report: DatasetClosureWriteReport,
 ) -> str:
-    return json.dumps(asdict(report), ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    return (
+        json.dumps(asdict(report), ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    )
 
 
 def format_dataset_closure_post_write_verification_report(
     report: DatasetClosurePostWriteVerificationReport,
 ) -> str:
-    return json.dumps(asdict(report), ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    return (
+        json.dumps(asdict(report), ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    )
 
 
 def load_dry_run_evidence(path: str | Path) -> DatasetClosureDryRunReport:
@@ -678,7 +698,9 @@ def _sample_admin_professor_detail_shape(
                 }
             )
     return ApiSampleEvidence(
-        sampled_ids=tuple(professor_id for professor_id in professor_ids if professor_id in by_id),
+        sampled_ids=tuple(
+            professor_id for professor_id in professor_ids if professor_id in by_id
+        ),
         failures=tuple(failures),
     )
 
@@ -758,11 +780,7 @@ def _selected_residual_rows(
     if lanes is None:
         return tuple(buckets.rows)
     selected_lanes = {_normalize_lane(lane) for lane in lanes}
-    return tuple(
-        row
-        for row in buckets.rows
-        if row.remediation_lane in selected_lanes
-    )
+    return tuple(row for row in buckets.rows if row.remediation_lane in selected_lanes)
 
 
 def _require_full_bucket_coverage(
@@ -1011,7 +1029,9 @@ def _build_lane_summary(
         row for row in eligible_rows if _has_validation_failure(row, lane=lane)
     ]
     validation_failure_ids = {id(row) for row in validation_failure_rows}
-    proposed_rows = [row for row in eligible_rows if id(row) not in validation_failure_ids]
+    proposed_rows = [
+        row for row in eligible_rows if id(row) not in validation_failure_ids
+    ]
     return LaneDryRunSummary(
         lane=lane,
         blocker_type=blocker_type,
@@ -1086,9 +1106,7 @@ def _quality_distribution_for_ids(
         (list(professor_ids),),
     ).fetchall()
     return {
-        str(_row_value(row, "quality_status", 0)): int(
-            _row_value(row, "count", 1) or 0
-        )
+        str(_row_value(row, "quality_status", 0)): int(_row_value(row, "count", 1) or 0)
         for row in rows
     }
 
@@ -1428,6 +1446,16 @@ def _write_duplicate_merge_alias_from_candidate(
     run_id: str,
 ) -> ClosureRowWriteResult:
     evidence = row.evidence or {}
+    candidate_gate = evidence.get("candidate_generation")
+    if isinstance(candidate_gate, dict):
+        if (
+            candidate_gate.get("candidate_status") != "ready"
+            or candidate_gate.get("write_recommendation") != "auto_write_candidate"
+        ):
+            return ClosureRowWriteResult(
+                status="unresolved",
+                unresolved_reason="candidate_requires_review_before_write",
+            )
     canonical_paper_id = _optional_text(evidence.get("canonical_paper_id"))
     if not canonical_paper_id:
         return ClosureRowWriteResult(
@@ -1485,15 +1513,27 @@ def _run_lane_write_batch(
     writer: ClosureRowWriter | None,
 ) -> LaneWriteBatchSummary:
     rows = [row for row in buckets.rows if row.remediation_lane == lane]
+    review_required_rows = [
+        row
+        for row in rows
+        if row.automatic_eligibility
+        and not _has_validation_failure(row, lane=lane)
+        and _candidate_requires_review_before_write(row)
+    ]
+    review_required_row_ids = {id(row) for row in review_required_rows}
     skipped_rows = [
         row
         for row in rows
-        if not row.automatic_eligibility or _has_validation_failure(row, lane=lane)
+        if not row.automatic_eligibility
+        or _has_validation_failure(row, lane=lane)
+        or id(row) in review_required_row_ids
     ]
     eligible_rows = [
         row
         for row in rows
-        if row.automatic_eligibility and not _has_validation_failure(row, lane=lane)
+        if row.automatic_eligibility
+        and not _has_validation_failure(row, lane=lane)
+        and id(row) not in review_required_row_ids
     ]
     attempted_rows = eligible_rows[:batch_size]
     skipped_by_batch_bound = eligible_rows[batch_size:]
@@ -1509,6 +1549,8 @@ def _run_lane_write_batch(
     for row in [*skipped_rows, *skipped_by_batch_bound]:
         if row in skipped_by_batch_bound:
             reason = row.skip_reason or "batch_size_bound"
+        elif id(row) in review_required_row_ids:
+            reason = "candidate_requires_review_before_write"
         else:
             reason = row.skip_reason
         issues.append(
@@ -1592,10 +1634,22 @@ def _has_validation_failure(
     if lane != "profile_summary_repair":
         return False
     evidence = row.evidence or {}
+    if isinstance(evidence.get("candidate_generation"), dict):
+        return False
     if "candidate_profile_summary" not in evidence:
         return False
     return not _valid_candidate_profile_summary(
         str(evidence.get("candidate_profile_summary") or "")
+    )
+
+
+def _candidate_requires_review_before_write(row: DatasetClosureBucketRow) -> bool:
+    candidate_gate = (row.evidence or {}).get("candidate_generation")
+    if not isinstance(candidate_gate, dict):
+        return False
+    return (
+        candidate_gate.get("candidate_status") != "ready"
+        or candidate_gate.get("write_recommendation") != "auto_write_candidate"
     )
 
 
@@ -1668,7 +1722,7 @@ def _lane_summary_from_payload(payload: Any) -> LaneDryRunSummary:
 def _normalize_batch_size(value: int) -> int:
     if value <= 0:
         raise ValueError("batch_size must be positive")
-    return min(int(value), 200)
+    return min(int(value), 5000)
 
 
 def _fetch_professor_field(
@@ -1725,7 +1779,7 @@ def _row_value(row: Any, key: str, index: int) -> Any:
 
 
 def _valid_candidate_profile_summary(value: str) -> bool:
-    return 200 <= len(value) <= 300 and bool(re.search(r"[\u4e00-\u9fff]", value))
+    return is_valid_profile_summary(value)
 
 
 def _selection_hash(

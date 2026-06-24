@@ -24,11 +24,16 @@ if str(_SCRIPT_DIR) not in sys.path:
 from run_professor_quality_re_eval import run_re_eval  # noqa: E402
 from src.data_agents.professor.fact_backfill import (  # noqa: E402
     compute_fact_backfill_preflight,
+    dedupe_profile_raw_text_for_llm,
     extract_professor_facts,
     persist_extracted_professor_facts,
 )
 from src.data_agents.professor.llm_profiles import (  # noqa: E402
     resolve_professor_llm_settings,
+)
+from src.data_agents.professor.profile_summary_contract import (  # noqa: E402
+    is_valid_profile_summary,
+    profile_summary_contract_violations,
 )
 from src.data_agents.professor.summary_reinforcement import (  # noqa: E402
     generate_reinforced_profile_summary,
@@ -52,6 +57,12 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument(
+        "--offset",
+        type=int,
+        default=0,
+        help="Offset into eligible profile_raw_text rows; useful for chunked runs.",
+    )
+    parser.add_argument(
         "--id",
         dest="professor_id",
         action="append",
@@ -69,6 +80,15 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         type=int,
         default=150,
         help="Only regenerate profile_summary below this length.",
+    )
+    parser.add_argument(
+        "--summary-policy",
+        choices=("missing-short", "invalid", "always"),
+        default="missing-short",
+        help=(
+            "When to regenerate profile_summary: current missing/short behavior, "
+            "canonical-contract invalid summaries, or every selected row."
+        ),
     )
     parser.add_argument("--log-level", default="INFO")
     return parser.parse_args(argv)
@@ -94,7 +114,11 @@ def _open_llm_client():
 
 
 def _resolve_database_url(database_url: str | None) -> str:
-    dsn = database_url or os.environ.get("DATABASE_URL") or os.environ.get("DATABASE_URL_TEST")
+    dsn = (
+        database_url
+        or os.environ.get("DATABASE_URL")
+        or os.environ.get("DATABASE_URL_TEST")
+    )
     if not dsn:
         raise RuntimeError("DATABASE_URL or DATABASE_URL_TEST is required")
     return dsn
@@ -103,6 +127,7 @@ def _resolve_database_url(database_url: str | None) -> str:
 def _build_select_sql(
     *,
     limit: int | None,
+    offset: int = 0,
     professor_ids: tuple[str, ...] = (),
 ) -> tuple[str, tuple[Any, ...]]:
     params: list[Any] = []
@@ -141,6 +166,9 @@ def _build_select_sql(
     if limit is not None:
         sql += " LIMIT %s"
         params.append(int(limit))
+    if offset:
+        sql += " OFFSET %s"
+        params.append(int(offset))
     return sql, tuple(params)
 
 
@@ -157,9 +185,11 @@ def run_backfill(args: argparse.Namespace) -> dict[str, Any]:
                 run_scope={
                     "task": "professor_fact_extraction_expansion",
                     "limit": args.limit,
+                    "offset": args.offset,
                     "professor_ids": args.professor_id,
                     "dry_run": args.dry_run,
                     "skip_re_eval": args.skip_re_eval,
+                    "summary_policy": args.summary_policy,
                 },
                 triggered_by="run_professor_fact_backfill",
             )
@@ -170,6 +200,7 @@ def run_backfill(args: argparse.Namespace) -> dict[str, Any]:
         llm, llm_model, extra_body = _open_llm_client()
         sql, params = _build_select_sql(
             limit=args.limit,
+            offset=args.offset,
             professor_ids=tuple(args.professor_id or ()),
         )
         rows = conn.execute(sql, params).fetchall()
@@ -184,6 +215,7 @@ def run_backfill(args: argparse.Namespace) -> dict[str, Any]:
             "facts_written": 0,
             "facts_updated": 0,
             "facts_skipped": 0,
+            "facts_retired": 0,
             "summaries_written": 0,
             "re_evaluated": 0,
             "dry_run": bool(args.dry_run),
@@ -195,7 +227,9 @@ def run_backfill(args: argparse.Namespace) -> dict[str, Any]:
             professor_id = str(row_dict["professor_id"])
             report["processed"] += 1
             try:
-                profile_text = _profile_text_from_row(row_dict)
+                profile_text = dedupe_profile_raw_text_for_llm(
+                    _profile_text_from_row(row_dict)
+                )
                 source_page_id = row_dict.get("primary_official_profile_page_id")
                 if source_page_id is None:
                     report["skipped"] += 1
@@ -227,15 +261,19 @@ def run_backfill(args: argparse.Namespace) -> dict[str, Any]:
                         report["facts_written"] += fact_report.facts_written
                         report["facts_updated"] += fact_report.facts_updated
                         report["facts_skipped"] += fact_report.facts_skipped
+                        report["facts_retired"] += fact_report.facts_retired
 
                 if _summary_needed(
                     row_dict.get("profile_summary"),
                     min_length=args.min_summary_length,
+                    policy=args.summary_policy,
                 ):
                     summary_result = generate_reinforced_profile_summary(
                         prof_name=str(row_dict.get("canonical_name") or ""),
                         institution=str(row_dict.get("institution") or ""),
-                        research_directions=list(row_dict.get("research_directions") or []),
+                        research_directions=list(
+                            row_dict.get("research_directions") or []
+                        ),
                         bio=profile_text,
                         paper_contexts=[],
                         llm_client=llm,
@@ -301,8 +339,17 @@ def _profile_text_from_row(row: dict[str, Any]) -> str:
     return str(row.get("profile_raw_text") or "").strip()
 
 
-def _summary_needed(value: object, *, min_length: int) -> bool:
+def _summary_needed(
+    value: object,
+    *,
+    min_length: int,
+    policy: str = "missing-short",
+) -> bool:
     text = str(value or "").strip()
+    if policy == "always":
+        return True
+    if policy == "invalid":
+        return bool(profile_summary_contract_violations(text))
     return len(text) < int(min_length)
 
 
@@ -313,6 +360,9 @@ def _persist_summary(
     summary: str,
     run_id: str,
 ) -> None:
+    if not is_valid_profile_summary(summary):
+        violations = ",".join(profile_summary_contract_violations(summary))
+        raise ValueError(f"profile_summary violates canonical contract: {violations}")
     conn.execute(
         """
         UPDATE professor

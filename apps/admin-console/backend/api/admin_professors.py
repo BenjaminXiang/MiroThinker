@@ -17,6 +17,7 @@ QualityStatus = Literal["ready", "needs_review", "low_confidence", "needs_enrich
 SortBy = Literal[
     "canonical_name",
     "quality_status",
+    "blocking_issue_count",
     "open_issue_count",
     "latest_admin_action",
     "official_source",
@@ -84,6 +85,27 @@ _RESEARCH_SECTION_STOP_LABELS = (
     "研究生指导",
     "个人简介",
 )
+_RELEASE_BLOCKING_STAGES = frozenset(
+    {
+        "identity_gate",
+        "name_extraction",
+    }
+)
+_RELEASE_BLOCKING_REPORTERS = frozenset(
+    {
+        "professor_model_quality_gate",
+    }
+)
+_QUALITY_GATE_RELEASE_BLOCKING_RULES = frozenset(
+    {
+        "duplicate_verified_paper_links",
+        "external_blocking_issue",
+        "field_contradiction",
+        "identity_unresolved",
+        "same_name_conflict",
+        "shallow_or_repetitive_profile_summary",
+    }
+)
 
 
 def _clean_inline_text(value: str) -> str:
@@ -145,6 +167,7 @@ def _sort_clause(sort_by: SortBy, sort_order: SortOrder) -> str:
     columns = {
         "canonical_name": "p.canonical_name",
         "quality_status": "p.quality_status",
+        "blocking_issue_count": "blocking_issue_count",
         "open_issue_count": "open_issue_count",
         "latest_admin_action": "latest_admin_action",
         "official_source": "has_official_source",
@@ -158,7 +181,7 @@ def list_admin_professors(
     reason_rule_id: str | None = Query(default=None),
     latest_admin_action: str | None = Query(default=None),
     official_source: bool | None = Query(default=None),
-    sort_by: SortBy = "open_issue_count",
+    sort_by: SortBy = "blocking_issue_count",
     sort_order: SortOrder = "desc",
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
@@ -189,6 +212,25 @@ def list_admin_professors(
         WITH issue_summary AS (
             SELECT professor_id,
                    count(*) FILTER (WHERE resolved = false) AS open_issue_count,
+                   count(*) FILTER (
+                       WHERE resolved = false
+                         AND (
+                            stage IN ('identity_gate', 'name_extraction')
+                            OR reported_by = 'professor_model_quality_gate'
+                            OR (
+                                reported_by = 'professor_quality_gate'
+                                AND COALESCE(evidence_snapshot->>'rule_id', stage)
+                                    IN (
+                                        'duplicate_verified_paper_links',
+                                        'external_blocking_issue',
+                                        'field_contradiction',
+                                        'identity_unresolved',
+                                        'same_name_conflict',
+                                        'shallow_or_repetitive_profile_summary'
+                                    )
+                            )
+                         )
+                   ) AS blocking_issue_count,
                    array_remove(
                        array_agg(DISTINCT evidence_snapshot->>'rule_id')
                          FILTER (WHERE resolved = false),
@@ -221,6 +263,12 @@ def list_admin_professors(
                p.quality_status,
                p.lifecycle_state,
                COALESCE(i.open_issue_count, 0) AS open_issue_count,
+               COALESCE(i.blocking_issue_count, 0) AS blocking_issue_count,
+               GREATEST(
+                   COALESCE(i.open_issue_count, 0)
+                   - COALESCE(i.blocking_issue_count, 0),
+                   0
+               ) AS non_blocking_issue_count,
                a.action AS latest_admin_action,
                COALESCE(s.has_official_source, false) AS has_official_source,
                COALESCE(i.reason_rule_ids, ARRAY[]::text[]) AS reason_rule_ids,
@@ -241,7 +289,7 @@ def list_admin_professors(
         params,
     ).fetchall()
 
-    total = int(_row_get(rows[0], "total_count", 10, 0)) if rows else 0
+    total = int(_row_get(rows[0], "total_count", 12, 0)) if rows else 0
     items = [
         {
             "professor_id": _row_get(row, "professor_id", 0),
@@ -251,9 +299,15 @@ def list_admin_professors(
             "quality_status": _row_get(row, "quality_status", 4),
             "lifecycle_state": _row_get(row, "lifecycle_state", 5),
             "open_issue_count": int(_row_get(row, "open_issue_count", 6, 0) or 0),
-            "latest_admin_action": _row_get(row, "latest_admin_action", 7),
-            "has_official_source": bool(_row_get(row, "has_official_source", 8, False)),
-            "reason_rule_ids": _json_list(_row_get(row, "reason_rule_ids", 9)),
+            "blocking_issue_count": int(
+                _row_get(row, "blocking_issue_count", 7, 0) or 0
+            ),
+            "non_blocking_issue_count": int(
+                _row_get(row, "non_blocking_issue_count", 8, 0) or 0
+            ),
+            "latest_admin_action": _row_get(row, "latest_admin_action", 9),
+            "has_official_source": bool(_row_get(row, "has_official_source", 10, False)),
+            "reason_rule_ids": _json_list(_row_get(row, "reason_rule_ids", 11)),
         }
         for row in rows
     ]
@@ -334,20 +388,25 @@ def get_admin_professor_detail(
     )
 
     reasons = []
+    blocking_reasons = []
+    non_blocking_reasons = []
     for issue in issues:
         evidence = _row_get(issue, "evidence_snapshot", 4) or {}
         if isinstance(evidence, dict):
             rule_id = evidence.get("rule_id")
         else:
             rule_id = None
-        reasons.append(
-            {
-                "rule_id": rule_id or _row_get(issue, "stage", 1),
-                "stage": _row_get(issue, "stage", 1),
-                "severity": _row_get(issue, "severity", 2),
-                "description": _row_get(issue, "description", 3),
-            }
-        )
+        reason = {
+            "rule_id": rule_id or _row_get(issue, "stage", 1),
+            "stage": _row_get(issue, "stage", 1),
+            "severity": _row_get(issue, "severity", 2),
+            "description": _row_get(issue, "description", 3),
+        }
+        reasons.append(reason)
+        if _issue_blocks_release(issue):
+            blocking_reasons.append(reason)
+        else:
+            non_blocking_reasons.append(reason)
 
     sections = {
         "identity": {
@@ -380,9 +439,30 @@ def get_admin_professor_detail(
             "status": _row_get(prof, "quality_status", 7),
             "reasons": reasons,
             "open_issue_count": len(issues),
+            "blocking_issue_count": len(blocking_reasons),
+            "non_blocking_issue_count": len(non_blocking_reasons),
+            "blocking_reasons": blocking_reasons,
+            "non_blocking_reasons": non_blocking_reasons,
         },
     }
     return {"professor_id": professor_id, "sections": sections}
+
+
+def _issue_blocks_release(issue: object) -> bool:
+    stage = str(_row_get(issue, "stage", 1) or "").strip()
+    reported_by = str(_row_get(issue, "reported_by", 5) or "").strip()
+    evidence = _row_get(issue, "evidence_snapshot", 4) or {}
+    rule_id = ""
+    if isinstance(evidence, dict):
+        rule_id = str(evidence.get("rule_id") or "").strip()
+    if stage in _RELEASE_BLOCKING_STAGES:
+        return True
+    if reported_by in _RELEASE_BLOCKING_REPORTERS:
+        return True
+    return (
+        reported_by == "professor_quality_gate"
+        and (rule_id or stage) in _QUALITY_GATE_RELEASE_BLOCKING_RULES
+    )
 
 
 def _load_professor_mark_state(conn: Any, professor_id: str) -> dict[str, Any]:

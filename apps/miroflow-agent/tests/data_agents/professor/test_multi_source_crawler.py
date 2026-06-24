@@ -47,6 +47,88 @@ def test_follows_cv_pdf_link():
     ]
 
 
+def test_recursively_follows_teacher_maintained_github_pages_homepage():
+    main_html = """
+    <html><body>
+      <a href="https://xiangrongwang.github.io/">个人主页</a>
+      <a href="https://scholar.google.com/citations?user=LJm0X3AAAAAJ">谷歌学术</a>
+    </body></html>
+    """
+    pages = {
+        "https://xiangrongwang.github.io/": """
+            <html><body>
+              <main>Wang Xiangrong studies network science and graph neural networks.</main>
+              <a href="/research/">Research</a>
+              <a href="/publications/">Publications</a>
+              <a href="https://scholar.google.com/citations?user=LJm0X3AAAAAJ">Scholar</a>
+            </body></html>
+        """,
+        "https://xiangrongwang.github.io/research/": (
+            "<html><body>Research interests include social network diffusion dynamics.</body></html>"
+        ),
+        "https://xiangrongwang.github.io/publications/": (
+            "<html><body>Selected publications on complex system control.</body></html>"
+        ),
+    }
+    fetched: list[str] = []
+
+    def fetch(url: str, _timeout: float) -> str:
+        fetched.append(url)
+        return pages[url]
+
+    segments = follow_supplementary_links(
+        main_html,
+        "https://faculty.example.edu/prof.html",
+        professor_name="王向荣",
+        max_hops=2,
+        fetch_html_fn=fetch,
+    )
+
+    joined = "\n".join(segments)
+    assert "https://xiangrongwang.github.io/" in joined
+    assert "network science and graph neural networks" in joined
+    assert "social network diffusion dynamics" in joined
+    assert "complex system control" in joined
+    assert "https://scholar.google.com" not in fetched
+
+
+def test_recursively_follows_bare_teacher_github_pages_url():
+    main_html = """
+    <html><body>
+      科研详情请访问：https://xiangrongwang.github.io/
+      谷歌学术主页：https://scholar.google.com/citations?user=LJm0X3AAAAAJ
+    </body></html>
+    """
+    pages = {
+        "https://xiangrongwang.github.io/": """
+            <html><body>
+              <main>Research interests include graph neural networks.</main>
+              <a href="/research/">Research</a>
+            </body></html>
+        """,
+        "https://xiangrongwang.github.io/research/": (
+            "<html><body>Research on social network diffusion dynamics.</body></html>"
+        ),
+    }
+    fetched: list[str] = []
+
+    def fetch(url: str, _timeout: float) -> str:
+        fetched.append(url)
+        return pages[url]
+
+    segments = follow_supplementary_links(
+        main_html,
+        "https://faculty.example.edu/prof.html",
+        max_hops=2,
+        fetch_html_fn=fetch,
+    )
+
+    joined = "\n".join(segments)
+    assert "graph neural networks" in joined
+    assert "social network diffusion dynamics" in joined
+    assert "https://scholar.google.com" not in fetched
+
+
 def test_respects_2_hop_depth_limit():
     main_html = '<a href="/lab/">Lab</a>'
     pages = {

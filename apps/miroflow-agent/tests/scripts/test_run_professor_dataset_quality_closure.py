@@ -409,7 +409,7 @@ def test_cli_write_mode_without_evidence_is_rejected() -> None:
     assert "missing_dry_run_evidence" in output.getvalue()
 
 
-def test_cli_write_mode_loads_evidence_and_requires_run_id(
+def test_cli_write_mode_loads_evidence_and_opens_pipeline_run(
     monkeypatch,
     tmp_path,
 ) -> None:
@@ -447,21 +447,46 @@ def test_cli_write_mode_loads_evidence_and_requires_run_id(
         return buckets
 
     monkeypatch.setattr(cli, "load_buckets", fake_load_buckets)
+    opened_run_scopes: list[dict] = []
+    closed_runs: list[dict] = []
+
+    def fake_open_pipeline_run(conn, **kwargs):
+        assert conn == "CONN"
+        opened_run_scopes.append(kwargs)
+        return "22222222-2222-2222-2222-222222222222"
+
+    def fake_close_pipeline_run(conn, run_id, **kwargs):
+        assert conn == "CONN"
+        closed_runs.append({"run_id": run_id, **kwargs})
+
+    monkeypatch.setattr(cli, "open_pipeline_run", fake_open_pipeline_run)
+    monkeypatch.setattr(cli, "close_pipeline_run", fake_close_pipeline_run)
     output = io.StringIO()
 
-    missing_run_id_exit = cli.run(
+    opened_exit = cli.run(
         conn="CONN",
         lanes=("profile_summary_repair",),
         bucket_limit=1,
         mode="write",
         output=output,
         dry_run_evidence=evidence_path,
+        batch_size=1,
     )
 
-    assert missing_run_id_exit == 2
-    assert "missing_run_id" in output.getvalue()
+    assert opened_exit == 0
+    assert opened_run_scopes[0]["run_kind"] == "backfill_real"
+    assert opened_run_scopes[0]["triggered_by"] == (
+        "run_professor_dataset_quality_closure"
+    )
+    assert opened_run_scopes[0]["run_scope"]["task"] == (
+        "professor_dataset_quality_closure"
+    )
+    assert closed_runs[0]["run_id"] == "22222222-2222-2222-2222-222222222222"
+    assert closed_runs[0]["status"] == "partial"
+    assert '"run_id": "22222222-2222-2222-2222-222222222222"' in output.getvalue()
 
     output = io.StringIO()
+    monkeypatch.setattr(cli, "_pipeline_run_exists", lambda _conn, _run_id: True)
     exit_code = cli.run(
         conn="CONN",
         lanes=("profile_summary_repair",),
@@ -478,6 +503,133 @@ def test_cli_write_mode_loads_evidence_and_requires_run_id(
     assert '"mode": "write"' in rendered
     assert '"run_id": "11111111-1111-1111-1111-111111111111"' in rendered
     assert '"unresolved_issue_count": 1' in rendered
+
+
+def test_cli_write_mode_rejects_missing_pipeline_run_before_write(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    cli = _import_cli()
+    buckets = DatasetClosureBuckets(
+        bucket_limit=1,
+        summary={
+            "ready_summary_lt_200": {
+                "total": 1,
+                "sampled": 1,
+                "truncated": False,
+                "remediation_lane": "profile_summary_repair",
+            }
+        },
+        rows=[
+            DatasetClosureBucketRow(
+                blocker_type="ready_summary_lt_200",
+                entity_type="professor",
+                remediation_lane="profile_summary_repair",
+                professor_id="PROF-1",
+                automatic_eligibility=True,
+            )
+        ],
+    )
+    evidence_path = tmp_path / "dry-run.json"
+    evidence_path.write_text(
+        format_dataset_closure_dry_run_report(
+            build_lane_dry_run_report(buckets, lanes=("profile_summary_repair",))
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(cli, "_pipeline_run_exists", lambda _conn, _run_id: False)
+    monkeypatch.setattr(
+        cli,
+        "load_buckets",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AssertionError("write should stop before loading buckets")
+        ),
+    )
+    output = io.StringIO()
+
+    exit_code = cli.run(
+        conn="CONN",
+        lanes=("profile_summary_repair",),
+        bucket_limit=1,
+        mode="write",
+        output=output,
+        dry_run_evidence=evidence_path,
+        run_id="11111111-1111-1111-1111-111111111111",
+        batch_size=1,
+    )
+
+    assert exit_code == 2
+    assert "missing_pipeline_run" in output.getvalue()
+
+
+def test_close_opened_pipeline_run_marks_clean_partial_write_as_partial(
+    monkeypatch,
+) -> None:
+    cli = _import_cli()
+    closed_runs: list[dict] = []
+
+    class FakeConn:
+        pass
+
+    def fake_close_pipeline_run(conn, **kwargs):
+        assert isinstance(conn, FakeConn)
+        closed_runs.append(kwargs)
+
+    monkeypatch.setattr(cli, "close_pipeline_run", fake_close_pipeline_run)
+    cli._close_opened_write_mode_pipeline_run(
+        FakeConn(),
+        run_id="11111111-1111-1111-1111-111111111111",
+        report=DatasetClosureWriteReport(
+            mode="write",
+            dry_run=False,
+            write_allowed=True,
+            run_id="11111111-1111-1111-1111-111111111111",
+            bucket_limit=1,
+            batch_size=1,
+            dry_run_selection_hash="hash",
+            lanes=(
+                LaneWriteBatchSummary(
+                    lane="duplicate_paper_merge",
+                    blocker_type="duplicate_verified_paper_title_year_groups",
+                    input_count=1,
+                    attempted_count=1,
+                    written_count=1,
+                    unchanged_count=0,
+                    skipped_count=0,
+                    failed_count=0,
+                    unresolved_issue_count=0,
+                    changed_professor_ids=("PROF-1",),
+                    changed_paper_ids=("PAPER-1",),
+                    rollback_evidence=(),
+                    issues=(),
+                ),
+            ),
+        ),
+        post_write_report=DatasetClosurePostWriteVerificationReport(
+            mode="post_write_verification",
+            status="failed",
+            completion_allowed=False,
+            run_id="11111111-1111-1111-1111-111111111111",
+            changed_professor_ids=("PROF-1",),
+            changed_paper_ids=("PAPER-1",),
+            issues=(
+                {
+                    "stage": "affected_id_closure_audit",
+                    "reason": "remaining_blockers",
+                },
+            ),
+        ),
+    )
+
+    assert closed_runs == [
+        {
+            "run_id": "11111111-1111-1111-1111-111111111111",
+            "status": "partial",
+            "items_processed": 1,
+            "items_failed": 0,
+        }
+    ]
 
 
 def test_cli_write_mode_accepts_candidate_dry_run_handoff(
@@ -578,6 +730,7 @@ def test_cli_write_mode_accepts_candidate_dry_run_handoff(
         lambda **_kwargs: post_write_report,
     )
     output = io.StringIO()
+    monkeypatch.setattr(cli, "_pipeline_run_exists", lambda _conn, _run_id: True)
 
     exit_code = cli.run(
         conn="CONN",
@@ -676,6 +829,7 @@ def test_cli_write_mode_outputs_post_write_verification(monkeypatch, tmp_path) -
 
     monkeypatch.setattr(cli, "load_buckets", lambda _conn, bucket_limit: buckets)
     monkeypatch.setattr(cli, "run_dataset_closure_write_batch", lambda **_kwargs: write_report)
+    monkeypatch.setattr(cli, "_pipeline_run_exists", lambda _conn, _run_id: True)
     monkeypatch.setattr(
         cli,
         "build_post_write_verification_report",

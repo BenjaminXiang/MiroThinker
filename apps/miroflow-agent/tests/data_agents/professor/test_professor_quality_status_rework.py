@@ -235,7 +235,7 @@ def test_missing_official_source_is_low_confidence() -> None:
     ]
 
 
-def test_external_issue_blocks_review_but_gate_issue_does_not_self_feedback() -> None:
+def test_release_blocking_external_issue_blocks_review_but_gate_issue_does_not_self_feedback() -> None:
     gate_issue = PipelineIssueState(
         issue_id="ISSUE-GATE",
         stage="coverage",
@@ -260,6 +260,57 @@ def test_external_issue_blocks_review_but_gate_issue_does_not_self_feedback() ->
         "external_blocking_issue"
     ]
     assert blocked.reasons[0].persist is False
+
+
+def test_non_release_blocking_external_issue_does_not_create_manual_review_queue() -> None:
+    gate_issue = PipelineIssueState(
+        issue_id="ISSUE-GATE",
+        stage="coverage",
+        reported_by="professor_quality_gate",
+        description="missing profile summary",
+        reported_at=_dt(10),
+    )
+    coverage_issue = PipelineIssueState(
+        issue_id="ISSUE-COVERAGE",
+        stage="coverage",
+        reported_by="professor_dataset_quality_closure",
+        description="historical profile-summary repair residual",
+        reported_at=_dt(10),
+    )
+    paper_issue = PipelineIssueState(
+        issue_id="ISSUE-PAPER",
+        stage="paper_quality",
+        reported_by="professor_dataset_quality_closure",
+        description="paper-side enrichment residual",
+        reported_at=_dt(10),
+    )
+
+    evaluation = evaluate_professor_quality(
+        _state(open_issues=(gate_issue, coverage_issue, paper_issue))
+    )
+
+    assert evaluation.quality_status == "ready"
+    assert evaluation.reasons == ()
+
+
+def test_non_person_canonical_name_takes_low_confidence_priority() -> None:
+    external_issue = PipelineIssueState(
+        issue_id="ISSUE-EXT",
+        stage="identity_gate",
+        reported_by="professor_seed_runner",
+        description="identity conflict",
+        reported_at=_dt(10),
+    )
+
+    evaluation = evaluate_professor_quality(
+        _state(
+            canonical_name="Deep Bit lab",
+            open_issues=(external_issue,),
+        )
+    )
+
+    assert evaluation.quality_status == "low_confidence"
+    assert [reason.rule_id for reason in evaluation.reasons] == ["non_person_name"]
 
 
 def test_multiple_current_primary_institutions_are_field_contradiction() -> None:

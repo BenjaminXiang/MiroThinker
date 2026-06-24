@@ -18,6 +18,7 @@ from src.data_agents.professor.name_selection import (
         "南燕新闻",
         "返回主站",
         "最新公告",
+        "廉洁之窗",
         "院长寄语",
         "优质教育",
         "“师说”教授专访",

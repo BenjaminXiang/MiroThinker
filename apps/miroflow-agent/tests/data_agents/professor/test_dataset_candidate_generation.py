@@ -6,6 +6,7 @@ from src.data_agents.professor.core_profile_paper_quality_audit import (
 )
 from src.data_agents.professor import dataset_candidate_generation as module
 from src.data_agents.professor.dataset_candidate_generation import (
+    CandidateLLMOutput,
     CandidateProviderFailure,
     CandidateRejection,
     DuplicatePaperRecord,
@@ -25,6 +26,7 @@ from src.data_agents.professor.dataset_candidate_generation import (
     validate_profile_summary_candidate,
     validate_research_overview_candidate,
 )
+from src.data_agents.professor.dataset_quality_closure import build_lane_dry_run_report
 from src.data_agents.professor.output_summaries import PaperSummaryInput
 
 
@@ -175,6 +177,235 @@ def test_parallel_candidate_generation_uses_worker_connections_and_preserves_ord
     assert lane.affected_professor_ids == ("PROF-PAR-1", "PROF-PAR-2")
     assert generated_conn_labels == ["worker-1", "worker-2"]
     assert [conn.closed for conn in worker_connections] == [True, True]
+
+
+def test_enrich_candidate_write_evidence_preserves_duplicate_closure_selection_hash() -> None:
+    buckets = DatasetClosureBuckets(
+        bucket_limit=1,
+        summary={
+            "duplicate_verified_paper_title_year_groups": {
+                "total": 1,
+                "sampled": 1,
+                "truncated": False,
+                "remediation_lane": "duplicate_paper_merge",
+            }
+        },
+        rows=[
+            DatasetClosureBucketRow(
+                blocker_type="duplicate_verified_paper_title_year_groups",
+                entity_type="paper_group",
+                remediation_lane="duplicate_paper_merge",
+                professor_id="PROF-DUP-1",
+                duplicate_group_id="PROF-DUP-1:2024:title",
+                automatic_eligibility=True,
+                evidence={
+                    "paper_ids": ["PAPER-A", "PAPER-B", "PAPER-C"],
+                    "doi_count": 1,
+                },
+            )
+        ],
+    )
+    candidate = DuplicatePaperMergeCandidate(
+        professor_id="PROF-DUP-1",
+        duplicate_group_id="PROF-DUP-1:2024:title",
+        canonical_paper_id="PAPER-A",
+        old_paper_ids=("PAPER-B",),
+        paper_ids=("PAPER-A", "PAPER-B"),
+        evidence_type="doi_match",
+        confidence=0.99,
+        merge_reason="dataset_candidate_generation:doi_match",
+        source_page_ids=("PAGE-DUP-1",),
+    )
+    candidate_report = build_candidate_generation_report(
+        buckets,
+        candidates=(candidate,),
+        lanes=("duplicate_paper_merge",),
+    )
+    payload = module.json.loads(module.format_candidate_generation_report(candidate_report))
+    before = build_lane_dry_run_report(buckets, lanes=("duplicate_paper_merge",))
+
+    enriched = module.enrich_buckets_with_candidate_write_evidence(
+        buckets,
+        candidate_payload=payload,
+    )
+    after = build_lane_dry_run_report(enriched, lanes=("duplicate_paper_merge",))
+
+    assert before.selection_hash == candidate_report.closure_selection_hash
+    assert after.selection_hash == before.selection_hash
+    assert enriched.rows[0].evidence["paper_ids"] == [
+        "PAPER-A",
+        "PAPER-B",
+        "PAPER-C",
+    ]
+    assert enriched.rows[0].evidence["canonical_paper_id"] == "PAPER-A"
+    assert enriched.rows[0].evidence["old_paper_ids"] == ["PAPER-B"]
+
+
+def test_enrich_review_profile_candidate_preserves_closure_selection_hash() -> None:
+    buckets = DatasetClosureBuckets(
+        bucket_limit=1,
+        summary={
+            "ready_summary_lt_200": {
+                "total": 1,
+                "sampled": 1,
+                "truncated": False,
+                "remediation_lane": "profile_summary_repair",
+            }
+        },
+        rows=[
+            DatasetClosureBucketRow(
+                blocker_type="ready_summary_lt_200",
+                entity_type="professor",
+                remediation_lane="profile_summary_repair",
+                professor_id="PROF-PROFILE-REVIEW",
+                automatic_eligibility=True,
+                evidence={"profile_summary_length": 120},
+            )
+        ],
+    )
+    candidate = ProfileSummaryCandidate(
+        professor_id="PROF-PROFILE-REVIEW",
+        candidate_profile_summary="该教师研究人工智能。",
+        source_ids=("PAGE-1",),
+        source_text_hashes=("a" * 64,),
+        generation_method="llm_synthesis",
+        input_facts=("research_topic:人工智能",),
+        candidate_status="needs_review",
+        quality_flags=("profile_summary_length_out_of_range",),
+        write_recommendation="review_before_write",
+    )
+    candidate_report = build_candidate_generation_report(
+        buckets,
+        candidates=(candidate,),
+        lanes=("profile_summary_repair",),
+    )
+    payload = module.json.loads(module.format_candidate_generation_report(candidate_report))
+    before = build_lane_dry_run_report(buckets, lanes=("profile_summary_repair",))
+
+    enriched = module.enrich_buckets_with_candidate_write_evidence(
+        buckets,
+        candidate_payload=payload,
+    )
+    after = build_lane_dry_run_report(enriched, lanes=("profile_summary_repair",))
+
+    assert before.selection_hash == candidate_report.closure_selection_hash
+    assert after.selection_hash == before.selection_hash
+    assert enriched.rows[0].evidence["candidate_profile_summary"] == (
+        "该教师研究人工智能。"
+    )
+
+
+def test_enrich_paper_summary_candidate_preserves_closure_selection_hash() -> None:
+    buckets = DatasetClosureBuckets(
+        bucket_limit=1,
+        summary={
+            "missing_professor_paper_summary": {
+                "total": 1,
+                "sampled": 1,
+                "truncated": False,
+                "remediation_lane": "professor_paper_summary_generation",
+            }
+        },
+        rows=[
+            DatasetClosureBucketRow(
+                blocker_type="missing_professor_paper_summary",
+                entity_type="professor",
+                remediation_lane="professor_paper_summary_generation",
+                professor_id="PROF-PAPER-SUMMARY",
+                automatic_eligibility=True,
+                evidence={"verified_paper_count": 2},
+            )
+        ],
+    )
+    candidate = ProfessorPaperSummaryCandidate(
+        professor_id="PROF-PAPER-SUMMARY",
+        candidate_paper_summary=(
+            "该教师论文围绕可信人工智能和医学影像分析展开，覆盖多模态数据融合、"
+            "脑疾病辅助诊断和模型可解释性。"
+        ),
+        verified_paper_ids=("PAPER-1", "PAPER-2"),
+        excluded_paper_ids=(),
+        exclusion_reasons={},
+        duplicate_status="deduplicated",
+        source_page_ids=("PAGE-1",),
+        generation_method="llm_synthesis",
+    )
+    candidate_report = build_candidate_generation_report(
+        buckets,
+        candidates=(candidate,),
+        lanes=("professor_paper_summary_generation",),
+    )
+    payload = module.json.loads(module.format_candidate_generation_report(candidate_report))
+    before = build_lane_dry_run_report(
+        buckets,
+        lanes=("professor_paper_summary_generation",),
+    )
+
+    enriched = module.enrich_buckets_with_candidate_write_evidence(
+        buckets,
+        candidate_payload=payload,
+    )
+    after = build_lane_dry_run_report(
+        enriched,
+        lanes=("professor_paper_summary_generation",),
+    )
+
+    assert before.selection_hash == candidate_report.closure_selection_hash
+    assert after.selection_hash == before.selection_hash
+    assert enriched.rows[0].evidence["candidate_paper_ids"] == ["PAPER-1", "PAPER-2"]
+
+
+def test_enrich_single_paper_summary_candidate_uses_professor_bucket_key() -> None:
+    buckets = DatasetClosureBuckets(
+        bucket_limit=1,
+        summary={
+            "missing_professor_paper_summary": {
+                "total": 1,
+                "sampled": 1,
+                "truncated": False,
+                "remediation_lane": "professor_paper_summary_generation",
+            }
+        },
+        rows=[
+            DatasetClosureBucketRow(
+                blocker_type="missing_professor_paper_summary",
+                entity_type="professor",
+                remediation_lane="professor_paper_summary_generation",
+                professor_id="PROF-SINGLE-PAPER",
+                automatic_eligibility=True,
+                evidence={"verified_paper_count": 1},
+            )
+        ],
+    )
+    candidate = ProfessorPaperSummaryCandidate(
+        professor_id="PROF-SINGLE-PAPER",
+        candidate_paper_summary=(
+            "该教师论文围绕医学影像人工智能展开，重点关注多模态影像数据处理、"
+            "辅助诊断模型构建和临床决策支持方法。"
+        ),
+        verified_paper_ids=("PAPER-ONLY",),
+        excluded_paper_ids=(),
+        exclusion_reasons={},
+        duplicate_status="deduplicated",
+        source_page_ids=("PAGE-ONLY",),
+        generation_method="llm_synthesis",
+    )
+    candidate_report = build_candidate_generation_report(
+        buckets,
+        candidates=(candidate,),
+        lanes=("professor_paper_summary_generation",),
+    )
+    payload = module.json.loads(module.format_candidate_generation_report(candidate_report))
+
+    enriched = module.enrich_buckets_with_candidate_write_evidence(
+        buckets,
+        candidate_payload=payload,
+    )
+
+    assert enriched.rows[0].evidence["candidate_paper_summary"].startswith(
+        "该教师论文围绕医学影像人工智能展开"
+    )
+    assert enriched.rows[0].evidence["candidate_paper_ids"] == ["PAPER-ONLY"]
 
 
 def test_profile_summary_input_assembly_collects_grounded_sources() -> None:
@@ -332,6 +563,168 @@ def test_generate_research_overview_candidate_extracts_chinese_source() -> None:
     assert result.research_overview_content.startswith("研究方向包括")
     assert len(result.source_text_hash) == 64
     assert result.to_write_evidence()["source_span"].startswith("研究方向包括")
+
+
+def test_generate_research_overview_candidate_rejects_ui_navigation_noise() -> None:
+    result = generate_research_overview_candidate(
+        professor_id="PROF-OVERVIEW-NAV",
+        profile_raw_text=(
+            "个人简介 何道敬。研究领域 更新日期 人气 主页地址 "
+            "http://homepage.hit.edu.cn/hedaojing 复制地址 更换皮肤 版式 预览 "
+            "提交 二维码 手机扫描二维码 访问本教师主页手机版 回到顶部"
+        ),
+        source_page_id="PAGE-NAV",
+        source_url="https://example.edu/prof/nav-noise",
+    )
+
+    assert isinstance(result, CandidateRejection)
+    assert result.reason == "invalid_research_overview_candidate"
+    assert "research_overview_navigation_noise" in result.evidence["errors"]
+
+
+def test_research_overview_candidate_with_heading_noise_requires_review() -> None:
+    candidate = ResearchOverviewCandidate(
+        professor_id="PROF-OVERVIEW-HEADING",
+        research_overview_content=(
+            "代表论著 科研项目 荣誉获奖 郑勇平目前主要围绕表界面物理化学"
+            "与能源催化/电池材料设计开展研究工作。"
+        ),
+        source_language="zh",
+        source_text_hash="a" * 64,
+        source_span=(
+            "代表论著 科研项目 荣誉获奖 郑勇平目前主要围绕表界面物理化学"
+            "与能源催化/电池材料设计开展研究工作。"
+        ),
+        generation_method="official_extract",
+    )
+
+    result = validate_research_overview_candidate(candidate)
+
+    assert result.valid is True
+    assert "research_overview_section_heading_noise" in result.errors
+    gate = candidate.to_write_evidence()["candidate_generation"]
+    assert gate["candidate_status"] == "needs_review"
+    assert gate["write_recommendation"] == "review_before_write"
+
+
+def test_research_overview_candidate_with_link_or_recruitment_noise_requires_review() -> None:
+    candidate = ResearchOverviewCandidate(
+        professor_id="PROF-OVERVIEW-LINK-NOISE",
+        research_overview_content=(
+            "群体智能、社交网络传播动力学、网络科学、图神经网络、复杂系统控制等。"
+            "科研详情请访问：https://xiangrongwang.github.io/ "
+            "欢迎对相关方向感兴趣的研究生发送简历咨询。"
+        ),
+        source_language="zh",
+        source_text_hash="a" * 64,
+        source_span=(
+            "群体智能、社交网络传播动力学、网络科学、图神经网络、复杂系统控制等。"
+            "科研详情请访问：https://xiangrongwang.github.io/ "
+            "欢迎对相关方向感兴趣的研究生发送简历咨询。"
+        ),
+        generation_method="official_extract",
+    )
+
+    result = validate_research_overview_candidate(candidate)
+
+    assert result.valid is True
+    assert "research_overview_link_contact_recruitment_noise" in result.errors
+    gate = candidate.to_write_evidence()["candidate_generation"]
+    assert gate["candidate_status"] == "needs_review"
+    assert gate["write_recommendation"] == "review_before_write"
+
+
+def test_generate_research_overview_candidate_cleans_noisy_chinese_source_with_llm() -> None:
+    calls: list[str] = []
+
+    def cleaner(source_text: str) -> CandidateLLMOutput:
+        calls.append(source_text)
+        return CandidateLLMOutput(
+            text="研究方向包括群体智能、社交网络传播动力学、网络科学、图神经网络和复杂系统控制。",
+            provider_metadata={"prompt_tokens": 10, "completion_tokens": 8},
+            llm_self_check={"removed_page_noise": True, "source_grounded": True},
+        )
+
+    result = generate_research_overview_candidate(
+        professor_id="PROF-OVERVIEW-CLEAN",
+        profile_raw_text=(
+            "个人简介 王向荣。研究方向：群体智能；社交网络传播动力学；网络科学；"
+            "图神经网络；数据科学；复杂系统控制等。科研详情请访问："
+            "https://xiangrongwang.github.io/ 谷歌学术主页：https://scholar.google.com "
+            "欢迎对相关方向感兴趣的研究生发送简历咨询。"
+        ),
+        source_page_id="PAGE-CLEAN",
+        source_url="https://example.edu/prof/noisy-clean",
+        translator=cleaner,
+        provider_name="fake-llm",
+    )
+
+    assert isinstance(result, ResearchOverviewCandidate)
+    assert calls and "谷歌学术主页" in calls[0]
+    assert result.source_language == "zh"
+    assert result.generation_method == "llm_cleaning"
+    assert result.provider_metadata == {
+        "prompt_tokens": 10,
+        "completion_tokens": 8,
+        "provider": "fake-llm",
+    }
+    assert result.llm_self_check["removed_page_noise"] is True
+    assert result.write_recommendation == "auto_write_candidate"
+    assert "https://" not in result.research_overview_content
+    assert "研究生" not in result.research_overview_content
+
+
+def test_generate_research_overview_candidate_keeps_noisy_cleaner_output_in_review() -> None:
+    result = generate_research_overview_candidate(
+        professor_id="PROF-OVERVIEW-STILL-NOISY",
+        profile_raw_text=(
+            "研究方向：智能无线通信、智能边缘计算、低空通信与定位网络。"
+            "研究课题可参考以下近期项目，欢迎研究生发送简历咨询。"
+        ),
+        source_page_id="PAGE-STILL-NOISY",
+        source_url="https://example.edu/prof/still-noisy",
+        translator=lambda _source_text: CandidateLLMOutput(
+            text=(
+                "智能无线通信、智能边缘计算、低空通信与定位网络，"
+                "欢迎研究生发送简历咨询。"
+            ),
+            llm_self_check={"source_grounded": True},
+        ),
+        provider_name="fake-llm",
+    )
+
+    assert isinstance(result, ResearchOverviewCandidate)
+    assert result.generation_method == "llm_cleaning"
+    assert result.candidate_status == "needs_review"
+    assert result.write_recommendation == "review_before_write"
+    assert "research_overview_link_contact_recruitment_noise" in result.quality_flags
+
+
+def test_generate_research_overview_candidate_rejects_cleaner_empty_absence() -> None:
+    result = generate_research_overview_candidate(
+        professor_id="PROF-OVERVIEW-NO-SOURCE-AFTER-CLEAN",
+        profile_raw_text=(
+            "研究方向：主页地址 复制地址 联系方式 招生信息 Google Scholar "
+            "欢迎研究生发送简历。"
+        ),
+        source_page_id="PAGE-NO-SOURCE-AFTER-CLEAN",
+        source_url="https://example.edu/prof/no-source-after-clean",
+        translator=lambda _source_text: CandidateLLMOutput(
+            text="",
+            provider_metadata={"prompt_tokens": 42, "completion_tokens": 12},
+            llm_self_check={
+                "source_grounded": True,
+                "missing_research_overview_source": True,
+            },
+        ),
+        provider_name="fake-llm",
+    )
+
+    assert isinstance(result, CandidateRejection)
+    assert result.reason == "source_missing_after_llm_cleaning"
+    assert result.next_action == "recrawl_official_profile_research_overview"
+    assert result.evidence["provider_metadata"]["provider"] == "fake-llm"
+    assert result.evidence["llm_self_check"]["missing_research_overview_source"] is True
 
 
 def test_generate_research_overview_candidate_translates_english_source() -> None:
@@ -749,6 +1142,52 @@ def test_paper_summary_candidate_requires_verified_deduplicated_inputs() -> None
     unresolved_gate = unresolved_duplicate.to_write_evidence()["candidate_generation"]
     assert unresolved_gate["candidate_status"] == "needs_review"
     assert unresolved_gate["write_recommendation"] == "review_before_write"
+
+
+def test_paper_summary_candidate_quality_flags_block_overlong_or_english_dominant() -> None:
+    overlong = ProfessorPaperSummaryCandidate(
+        professor_id="PROF-PAPER-LONG",
+        candidate_paper_summary=(
+            "该教师论文围绕可信人工智能、医学影像分析和临床决策支持展开。"
+            * 30
+        ),
+        verified_paper_ids=("PAPER-1",),
+        excluded_paper_ids=(),
+        exclusion_reasons={},
+        duplicate_status="deduplicated",
+        source_page_ids=("PAGE-1",),
+        generation_method="llm_synthesis",
+    )
+    overlong_result = validate_paper_summary_candidate(overlong)
+
+    assert overlong_result.valid is True
+    assert "paper_summary_too_long" in overlong_result.errors
+    overlong_gate = overlong.to_write_evidence()["candidate_generation"]
+    assert overlong_gate["candidate_status"] == "needs_review"
+    assert overlong_gate["write_recommendation"] == "review_before_write"
+
+    english_dominant = ProfessorPaperSummaryCandidate(
+        professor_id="PROF-PAPER-EN",
+        candidate_paper_summary=(
+            "This professor's papers mainly focus on trustworthy artificial "
+            "intelligence, multimodal medical image analysis, robust feature "
+            "selection, disease prognosis modeling, and interpretable clinical "
+            "decision support systems. 研究涉及人工智能。"
+        ),
+        verified_paper_ids=("PAPER-2",),
+        excluded_paper_ids=(),
+        exclusion_reasons={},
+        duplicate_status="deduplicated",
+        source_page_ids=("PAGE-2",),
+        generation_method="llm_synthesis",
+    )
+    english_result = validate_paper_summary_candidate(english_dominant)
+
+    assert english_result.valid is True
+    assert "paper_summary_english_dominant" in english_result.errors
+    english_gate = english_dominant.to_write_evidence()["candidate_generation"]
+    assert english_gate["candidate_status"] == "needs_review"
+    assert english_gate["write_recommendation"] == "review_before_write"
 
 
 def test_duplicate_merge_candidate_accepts_identifier_match_and_rejects_unsafe() -> None:

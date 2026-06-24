@@ -60,13 +60,15 @@ def test_parse_judge_verdict_verbose_reply():
     )
 
 
-def test_parse_judge_verdict_co_occurrence_prefers_boilerplate():
-    """Conservative: when both tokens appear, BOILERPLATE wins. This
-    is OK because the judge is the second filter after the translator
-    already produced a candidate — over-rejecting here just routes the
-    summary to a manual review path, not data loss."""
+def test_parse_judge_verdict_co_occurrence_respects_negation_and_first_verdict():
+    """Weak gate: do not reject an informative verdict just because the
+    explanation mentions "not BOILERPLATE"."""
     text = "Decision: not INFORMATIVE; it is BOILERPLATE."
     assert _parse_judge_verdict(text) == _JUDGE_BOILERPLATE_VERDICT
+    assert (
+        _parse_judge_verdict("INFORMATIVE, not BOILERPLATE.")
+        == _JUDGE_INFORMATIVE_VERDICT
+    )
 
 
 def test_parse_judge_verdict_unknown_defaults_to_informative():
@@ -76,6 +78,7 @@ def test_parse_judge_verdict_unknown_defaults_to_informative():
     finer-grained step and shouldn't over-block on parse failure."""
     assert _parse_judge_verdict("OK") == _JUDGE_INFORMATIVE_VERDICT
     assert _parse_judge_verdict("") == _JUDGE_INFORMATIVE_VERDICT
+    assert _parse_judge_verdict(MagicMock()) == _JUDGE_INFORMATIVE_VERDICT
 
 
 # --- judge_summary_boilerplate ---------------------------------------------
@@ -99,6 +102,19 @@ def test_judge_returns_false_for_substantive_summary():
         "两个公开数据集上分别达到 92.6% 与 88.1% 准确率，已在某三甲医院"
         "病理科部署半年累计辅助阅片 4500 例。"
     )
+    assert judge_summary_boilerplate(
+        summary, llm_client=llm, llm_model="gemma"
+    ) is False
+
+
+def test_judge_does_not_hard_reject_substantive_summary_on_false_positive():
+    llm = _llm_with_reply("BOILERPLATE")
+    summary = (
+        "属性网络中异常普遍存在，却隐匿于复杂拓扑结构与高维节点属性之中。"
+        "现有属性网络异常检测研究虽提出多种技术，但较少关注小样本异常检测问题。"
+        "该研究面向仅有少量标记异常的实际系统场景，讨论网络风险识别和数据质量提升。"
+    )
+
     assert judge_summary_boilerplate(
         summary, llm_client=llm, llm_model="gemma"
     ) is False

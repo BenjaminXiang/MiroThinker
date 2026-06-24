@@ -46,6 +46,8 @@ class _AdminProfessorConn:
                         "quality_status": "needs_review",
                         "lifecycle_state": "active",
                         "open_issue_count": 2,
+                        "blocking_issue_count": 1,
+                        "non_blocking_issue_count": 1,
                         "latest_admin_action": "send_to_review",
                         "has_official_source": True,
                         "reason_rule_ids": ["missing_research_topic"],
@@ -216,6 +218,8 @@ def test_admin_professor_list_filters_by_quality_and_reason_rule() -> None:
     assert payload["items"][0]["professor_id"] == "PROF-ADMIN-1"
     assert payload["items"][0]["reason_rule_ids"] == ["missing_research_topic"]
     assert payload["items"][0]["open_issue_count"] == 2
+    assert payload["items"][0]["blocking_issue_count"] == 1
+    assert payload["items"][0]["non_blocking_issue_count"] == 1
     assert conn.calls[0][1]["quality_status"] == "needs_review"
     assert conn.calls[0][1]["reason_rule_id"] == "missing_research_topic"
     assert "ORDER BY open_issue_count DESC" in conn.calls[0][0]
@@ -240,6 +244,13 @@ def test_admin_professor_detail_returns_seven_sections() -> None:
     }
     assert payload["sections"]["quality_diagnosis"]["status"] == "low_confidence"
     assert payload["sections"]["quality_diagnosis"]["reasons"][0]["rule_id"] == (
+        "missing_research_topic"
+    )
+    assert payload["sections"]["quality_diagnosis"]["open_issue_count"] == 1
+    assert payload["sections"]["quality_diagnosis"]["blocking_issue_count"] == 0
+    assert payload["sections"]["quality_diagnosis"]["non_blocking_issue_count"] == 1
+    assert payload["sections"]["quality_diagnosis"]["blocking_reasons"] == []
+    assert payload["sections"]["quality_diagnosis"]["non_blocking_reasons"][0]["rule_id"] == (
         "missing_research_topic"
     )
 

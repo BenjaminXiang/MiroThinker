@@ -4,7 +4,7 @@ import hashlib
 import json
 import re
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Callable, Literal
 
 from .dataset_candidate_generation import (
     CandidateLLMOutput,
@@ -12,6 +12,10 @@ from .dataset_candidate_generation import (
     ProfileSummaryInput,
 )
 from .llm_profiles import build_non_thinking_extra_body, resolve_professor_llm_settings
+from .profile_summary_contract import (
+    PROFILE_SUMMARY_PROMPT_CONTRACT,
+    profile_summary_contract_violations,
+)
 
 ProfessorCandidateLLMTaskType = Literal[
     "profile_summary_synthesis",
@@ -84,6 +88,10 @@ class MalformedLLMJSON(CandidateLLMProviderError):
     pass
 
 
+class InvalidLLMOutputContract(CandidateLLMProviderError):
+    pass
+
+
 class ProfessorCandidateLLMProvider:
     def __init__(
         self,
@@ -92,7 +100,9 @@ class ProfessorCandidateLLMProvider:
         client: Any | None = None,
     ) -> None:
         self.settings = settings
-        self.client = client if client is not None else self._open_client_if_configured()
+        self.client = (
+            client if client is not None else self._open_client_if_configured()
+        )
 
     @property
     def provider_name(self) -> str:
@@ -107,9 +117,10 @@ class ProfessorCandidateLLMProvider:
             output_key="candidate_profile_summary",
             system_prompt=(
                 "你是高校教师画像候选生成器。只基于给定官方资料生成中文候选摘要，"
-                "必须输出严格 JSON。"
+                f"必须输出严格 JSON。摘要合同：{PROFILE_SUMMARY_PROMPT_CONTRACT}"
             ),
             user_prompt=_build_profile_summary_prompt(profile_input),
+            text_validator=_validate_profile_summary_text,
         )
 
     def translate_research_overview(self, source_text: str) -> CandidateLLMOutput:
@@ -117,7 +128,8 @@ class ProfessorCandidateLLMProvider:
             task_type="research_overview_translation",
             output_key="candidate_research_overview_zh",
             system_prompt=(
-                "你是高校教师研究方向翻译器。只翻译和整理给定英文来源，"
+                "你是高校教师研究方向抽取与清洗器。只基于给定官方来源抽取"
+                "研究方向；来源为英文时翻译为中文，来源为中文时清洗压缩为中文。"
                 "不要添加来源外事实，必须输出严格 JSON。"
             ),
             user_prompt=_build_research_translation_prompt(source_text),
@@ -166,6 +178,7 @@ class ProfessorCandidateLLMProvider:
         output_key: str,
         system_prompt: str,
         user_prompt: str,
+        text_validator: Callable[[str], tuple[str, ...]] | None = None,
     ) -> CandidateLLMOutput:
         if self.client is None:
             raise MissingLLMCredentials(
@@ -209,19 +222,52 @@ class ProfessorCandidateLLMProvider:
             payload = _parse_json_object(raw_text)
             if isinstance(payload, dict) and isinstance(payload.get(output_key), str):
                 text = payload[output_key].strip()
-                if text:
+                self_check = _self_check_payload(payload, task_type=task_type)
+                if not text:
+                    if _empty_candidate_output_allowed(
+                        task_type=task_type,
+                        llm_self_check=self_check,
+                    ):
+                        return CandidateLLMOutput(
+                            text=text,
+                            provider_metadata=last_metadata,
+                            llm_self_check=self_check,
+                        )
+                else:
+                    validation_errors = (
+                        text_validator(text) if text_validator is not None else ()
+                    )
+                    if validation_errors:
+                        last_metadata = {
+                            **last_metadata,
+                            "validation_errors": list(validation_errors),
+                        }
+                        current_user_prompt = _build_retry_prompt(
+                            user_prompt=user_prompt,
+                            output_key=output_key,
+                            reason=(
+                                "上次输出违反摘要合同：" + "、".join(validation_errors)
+                            ),
+                        )
+                        continue
                     return CandidateLLMOutput(
                         text=text,
                         provider_metadata=last_metadata,
-                        llm_self_check=_self_check_payload(payload, task_type=task_type),
+                        llm_self_check=self_check,
                     )
 
-            current_user_prompt = (
-                user_prompt
-                + "\n\n上次输出无法解析或缺少必需字段。请只输出严格 JSON 对象，"
-                f"必须包含字符串字段 {output_key} 和对象字段 llm_self_check。"
+            current_user_prompt = _build_retry_prompt(
+                user_prompt=user_prompt,
+                output_key=output_key,
+                reason="上次输出无法解析或缺少必需字段。",
             )
 
+        if last_metadata.get("validation_errors"):
+            raise InvalidLLMOutputContract(
+                "LLM output violated candidate contract.",
+                provider_metadata=last_metadata,
+                retryable=True,
+            )
         raise MalformedLLMJSON(
             "LLM output was not valid candidate JSON.",
             provider_metadata=last_metadata,
@@ -290,8 +336,11 @@ def _build_profile_summary_prompt(profile_input: ProfileSummaryInput) -> str:
     return "\n".join(
         [
             "任务：生成 candidate_profile_summary，中文，目标 200-300 字。",
+            f"硬性合同：{PROFILE_SUMMARY_PROMPT_CONTRACT}",
             "要求：只使用输入中的官方资料、结构化事实和已验证产出；不要补充企业任职或创业经历。",
-            "输出 JSON：candidate_profile_summary, llm_self_check。",
+            "长度必须按最终输出字符串计数控制在 200-300 字之间；超过 300 字视为失败。",
+            "优先保留身份、研究方向、代表成果各 1-2 个要点；删去冗余履历、奖项堆叠和长论文清单。",
+            _json_output_contract("candidate_profile_summary"),
             f"Professor ID: {profile_input.professor_id}",
             f"Name: {profile_input.canonical_name}",
             f"Institution: {profile_input.institution}",
@@ -309,12 +358,33 @@ def _build_profile_summary_prompt(profile_input: ProfileSummaryInput) -> str:
     )
 
 
+def _build_retry_prompt(*, user_prompt: str, output_key: str, reason: str) -> str:
+    return (
+        user_prompt
+        + "\n\n"
+        + reason
+        + "请重新输出严格 JSON 对象。"
+        + _json_output_contract(output_key)
+        + "若字段是 candidate_profile_summary，必须严格满足 200-300 字中文摘要合同，"
+        "不要超过 300 字。"
+    )
+
+
+def _validate_profile_summary_text(text: str) -> tuple[str, ...]:
+    return profile_summary_contract_violations(text)
+
+
 def _build_research_translation_prompt(source_text: str) -> str:
     return "\n".join(
         [
-            "任务：将英文研究方向/研究概况翻译整理为中文 candidate_research_overview_zh。",
-            "要求：保留原意，只基于 source text，不添加新事实。",
-            "输出 JSON：candidate_research_overview_zh, llm_self_check。",
+            "任务：从 source text 中抽取、清洗并必要时翻译教师研究方向，输出中文 candidate_research_overview_zh。",
+            "要求：只保留研究方向、研究兴趣、研究概况、研究问题、方法和应用场景。",
+            "必须剔除课程、招生、联系方式、链接、主页、Google Scholar、ResearchGate、ORCID、"
+            "代表论著标题、论文清单、项目/荣誉栏目标题、导航和页面操作文字。",
+            "如果来源没有研究方向信息，输出空字符串并在 llm_self_check 写明 missing_research_overview_source=true。",
+            "不得添加 source text 中没有的研究方向或成果。",
+            "建议长度 30-260 个中文字符；不要输出 URL、邮箱、电话或招生话术。",
+            _json_output_contract("candidate_research_overview_zh"),
             "Source text:",
             source_text[:5000],
         ]
@@ -343,7 +413,7 @@ def _build_paper_summary_prompt(
         [
             "任务：基于已验证教师论文生成 candidate_paper_summary，中文。",
             "要求：只使用 verified Professor-seeded Paper 输入，不使用姓名搜索外部论文。",
-            "输出 JSON：candidate_paper_summary, llm_self_check。",
+            _json_output_contract("candidate_paper_summary"),
             f"Professor ID: {generation_input.professor_id}",
             f"Professor name: {generation_input.professor_name}",
             f"Duplicate status: {generation_input.duplicate_status}",
@@ -353,6 +423,15 @@ def _build_paper_summary_prompt(
             "Excluded paper ids:",
             json.dumps(generation_input.exclusion_reasons, ensure_ascii=False),
         ]
+    )
+
+
+def _json_output_contract(output_key: str) -> str:
+    return (
+        "输出要求：只输出一个 JSON 对象，不要输出 Markdown/code fence/解释文字。"
+        f'JSON 模板：{{"{output_key}": "...", '
+        '"llm_self_check": {"source_grounded": true, '
+        '"review_required": false, "quality_flags": []}}}'
     )
 
 
@@ -379,6 +458,24 @@ def _self_check_payload(payload: dict[str, Any], *, task_type: str) -> dict[str,
         **raw,
         "task_type": task_type,
     }
+
+
+def _empty_candidate_output_allowed(
+    *,
+    task_type: str,
+    llm_self_check: dict[str, Any],
+) -> bool:
+    if task_type != "research_overview_translation":
+        return False
+    if bool(llm_self_check.get("missing_research_overview_source")):
+        return True
+    quality_flags = llm_self_check.get("quality_flags")
+    if not isinstance(quality_flags, list):
+        return False
+    return any(
+        "missing_research_overview_source" in str(flag)
+        for flag in quality_flags
+    )
 
 
 def _usage_metadata(response: Any) -> dict[str, Any]:

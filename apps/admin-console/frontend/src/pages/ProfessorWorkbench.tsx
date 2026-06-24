@@ -97,8 +97,14 @@ function FactTable({
   );
 }
 
-function ReasonTags({ reasons }: { reasons: AdminProfessorIssueReason[] }) {
-  if (reasons.length === 0) return <Text type="secondary">无未关闭诊断</Text>;
+function ReasonTags({
+  reasons,
+  emptyText = "无未关闭诊断",
+}: {
+  reasons: AdminProfessorIssueReason[];
+  emptyText?: string;
+}) {
+  if (reasons.length === 0) return <Text type="secondary">{emptyText}</Text>;
   return (
     <Space wrap>
       {reasons.map((reason, index) => (
@@ -168,6 +174,12 @@ export default function ProfessorWorkbench() {
   const research = sections.research_output;
   const experience = sections.experience;
   const evidence = sections.sources_evidence;
+  const blockingIssueCount =
+    diagnosis.blocking_issue_count ?? diagnosis.open_issue_count;
+  const nonBlockingIssueCount =
+    diagnosis.non_blocking_issue_count ??
+    Math.max(diagnosis.open_issue_count - blockingIssueCount, 0);
+  const blockingReasons = diagnosis.blocking_reasons ?? diagnosis.reasons;
   const facts = research.facts ?? [];
   const papers = research.papers ?? [];
   const patents = research.patents ?? [];
@@ -208,8 +220,11 @@ export default function ProfessorWorkbench() {
           <Space wrap>
             <Text strong>质量诊断</Text>
             <QualityTag status={diagnosis.status} />
-            <Text>未关闭问题 {diagnosis.open_issue_count}</Text>
-            <ReasonTags reasons={diagnosis.reasons} />
+            <Text>{`发布阻塞 ${blockingIssueCount}`}</Text>
+            {nonBlockingIssueCount > 0 && (
+              <Text type="secondary">{`历史诊断 ${nonBlockingIssueCount}`}</Text>
+            )}
+            <ReasonTags reasons={blockingReasons} emptyText="无发布阻塞诊断" />
           </Space>
         }
         action={

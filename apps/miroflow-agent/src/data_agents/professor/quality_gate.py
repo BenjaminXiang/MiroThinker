@@ -27,6 +27,7 @@ from src.data_agents.contracts import (
 from .models import EnrichedProfessorProfile
 from .name_selection import is_obvious_non_person_name, looks_like_profile_blob
 from .profile_sections import extract_research_overview_text
+from .profile_summary_contract import profile_summary_contract_issue
 from .summary_generator import BOILERPLATE_KEYWORDS as SUMMARY_BOILERPLATE_KEYWORDS
 
 _QUALITY_GATE_REFUSAL_KEYWORDS = frozenset(
@@ -107,6 +108,7 @@ QUALITY_REASON_STAGE_MAP = {
     "profile_summary_too_short": "coverage",
     "profile_summary_too_long": "coverage",
     "profile_summary_not_chinese": "coverage",
+    "profile_summary_english_dominant": "coverage",
     "shallow_or_repetitive_profile_summary": "data_quality_flag",
     "missing_research_overview_zh": "research_directions",
     "missing_verified_paper_signal": "paper_attribution",
@@ -123,6 +125,18 @@ _LOW_CONFIDENCE_RULES = {
     "profile_blob_detected",
 }
 _NEEDS_REVIEW_SIGNALS = {"same_name_conflict", "field_contradiction"}
+_EXTERNAL_RELEASE_BLOCKING_STAGES = frozenset(
+    {
+        "identity_gate",
+        "name_extraction",
+        "model_quality_gate",
+    }
+)
+_EXTERNAL_RELEASE_BLOCKING_REPORTERS = frozenset(
+    {
+        "professor_model_quality_gate",
+    }
+)
 _CONTACT_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 _HTTP_PREFIXES = ("http://", "https://")
 _CHINESE_CHAR_RE = re.compile(r"[\u3400-\u4DBF\u4E00-\u9FFF]")
@@ -279,21 +293,21 @@ def evaluate_professor_quality(
             canonical_watermark=watermark,
         )
 
-    needs_review = _needs_review_reasons(state)
-    if needs_review:
-        return ProfessorQualityEvaluation(
-            professor_id=state.professor_id,
-            quality_status="needs_review",
-            reasons=tuple(needs_review),
-            canonical_watermark=watermark,
-        )
-
     low_confidence = _low_confidence_reasons(state)
     if low_confidence:
         return ProfessorQualityEvaluation(
             professor_id=state.professor_id,
             quality_status="low_confidence",
             reasons=tuple(low_confidence),
+            canonical_watermark=watermark,
+        )
+
+    needs_review = _needs_review_reasons(state)
+    if needs_review:
+        return ProfessorQualityEvaluation(
+            professor_id=state.professor_id,
+            quality_status="needs_review",
+            reasons=tuple(needs_review),
             canonical_watermark=watermark,
         )
 
@@ -397,7 +411,10 @@ def load_professor_canonical_states(
         selected_ids = [str(_row_get(row, "professor_id", 0)) for row in rows]
     else:
         selected_ids = list(professor_ids)
-    return [load_professor_canonical_state(conn, professor_id) for professor_id in selected_ids]
+    return [
+        load_professor_canonical_state(conn, professor_id)
+        for professor_id in selected_ids
+    ]
 
 
 def persist_professor_quality_evaluation(
@@ -743,25 +760,42 @@ def _needs_review_reasons(
     external_issues = [
         issue
         for issue in state.open_issues
-        if not issue.resolved and issue.reported_by != QUALITY_GATE_REPORTED_BY
+        if not issue.resolved
+        and issue.reported_by != QUALITY_GATE_REPORTED_BY
+        and _external_issue_blocks_release(issue)
     ]
     if external_issues:
         reasons.append(
             ProfessorQualityReason(
                 rule_id="external_blocking_issue",
-                description="open external pipeline_issue blocks quality evaluation",
+                description=(
+                    "open release-blocking external pipeline_issue blocks "
+                    "quality evaluation"
+                ),
                 persist=False,
             )
         )
     if "same_name_conflict" in state.anomaly_signals:
         reasons.append(_persisted_reason("same_name_conflict"))
-    if _has_field_contradiction(state) or "field_contradiction" in state.anomaly_signals:
+    if (
+        _has_field_contradiction(state)
+        or "field_contradiction" in state.anomaly_signals
+    ):
         reasons.append(_persisted_reason("field_contradiction"))
     if state.has_duplicate_verified_papers:
         reasons.append(_persisted_reason("duplicate_verified_paper_links"))
     if _profile_summary_is_shallow_or_repetitive(state.profile_summary):
         reasons.append(_persisted_reason("shallow_or_repetitive_profile_summary"))
     return reasons
+
+
+def _external_issue_blocks_release(issue: PipelineIssueState) -> bool:
+    stage = (issue.stage or "").strip()
+    reporter = (issue.reported_by or "").strip()
+    return (
+        stage in _EXTERNAL_RELEASE_BLOCKING_STAGES
+        or reporter in _EXTERNAL_RELEASE_BLOCKING_REPORTERS
+    )
 
 
 def _low_confidence_reasons(
@@ -810,17 +844,10 @@ def _needs_enrichment_reasons(
 
 
 def _profile_summary_contract_reason(summary: str | None) -> str | None:
-    text = (summary or "").strip()
-    if not text:
+    issue = profile_summary_contract_issue(summary)
+    if issue == "profile_summary_missing":
         return "missing_profile_summary"
-    if not _CHINESE_CHAR_RE.search(text):
-        return "profile_summary_not_chinese"
-    length = len(text)
-    if length < 200:
-        return "profile_summary_too_short"
-    if length > 300:
-        return "profile_summary_too_long"
-    return None
+    return issue
 
 
 def _profile_summary_is_shallow_or_repetitive(summary: str | None) -> bool:
@@ -977,11 +1004,14 @@ def _canonical_watermark(state: ProfessorCanonicalState) -> datetime | None:
         for affiliation in state.affiliations
         if affiliation.updated_at is not None
     )
-    candidates.extend(fact.updated_at for fact in state.facts if fact.updated_at is not None)
+    candidates.extend(
+        fact.updated_at for fact in state.facts if fact.updated_at is not None
+    )
     candidates.extend(
         issue.reported_at
         for issue in state.open_issues
-        if issue.reported_at is not None and issue.reported_by != QUALITY_GATE_REPORTED_BY
+        if issue.reported_at is not None
+        and issue.reported_by != QUALITY_GATE_REPORTED_BY
     )
     return max(candidates) if candidates else None
 

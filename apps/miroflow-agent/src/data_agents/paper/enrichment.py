@@ -45,6 +45,7 @@ import requests
 
 from .arxiv import enrich_paper_metadata_from_arxiv
 from .crossref import enrich_paper_metadata_from_crossref
+from .doi_quality import normalize_usable_doi
 from .models import (
     PaperAuthorMetadata,
     PaperIdentifierContradiction,
@@ -55,6 +56,7 @@ from .semantic_scholar import enrich_paper_metadata_from_semantic_scholar
 from .unpaywall import enrich_paper_metadata_from_unpaywall
 
 EnrichmentLookup = Callable[[str], PaperMetadataEnrichment | None]
+EnrichmentErrorRecorder = Callable[[str, Exception], None]
 _OPENALEX_WORKS_ENDPOINT = "https://api.openalex.org/works"
 
 
@@ -69,6 +71,7 @@ def enrich_paper_with_hybrid_sources(
     semantic_scholar_lookup: EnrichmentLookup | None = None,
     unpaywall_lookup: EnrichmentLookup | None = None,
     arxiv_lookup: EnrichmentLookup | None = None,
+    error_recorder: EnrichmentErrorRecorder | None = None,
 ) -> PaperMetadataEnrichment | None:
     """Enrich a paper canonical row by DOI lookup across multiple sources.
 
@@ -81,8 +84,8 @@ def enrich_paper_with_hybrid_sources(
     do not let downstream sources fill it (they may report stale or
     incompatible numbers).
     """
-    lookup_doi = doi.strip() if doi and doi.strip() else None
     normalized_doi = _normalize_doi(doi)
+    lookup_doi = doi.strip() if doi and doi.strip() and normalized_doi else None
     normalized_arxiv_id = _normalize_arxiv_id(arxiv_id)
     normalized_openalex_id = _normalize_openalex_id(openalex_id)
     if (
@@ -103,7 +106,8 @@ def enrich_paper_with_hybrid_sources(
     if normalized_openalex_id is not None:
         try:
             openalex_id_result = fetch_openalex_id(normalized_openalex_id)
-        except Exception:  # noqa: BLE001 — enrichment must never raise
+        except Exception as exc:  # noqa: BLE001 — enrichment must never raise
+            _record_lookup_error(error_recorder, "openalex_id", exc)
             openalex_id_result = None
         if openalex_id_result is not None:
             merged = _merge_enrichment(
@@ -120,7 +124,8 @@ def enrich_paper_with_hybrid_sources(
         # Source 1: OpenAlex (primary)
         try:
             openalex_result = fetch_openalex(lookup_doi)
-        except Exception:  # noqa: BLE001 — enrichment must never raise
+        except Exception as exc:  # noqa: BLE001 — enrichment must never raise
+            _record_lookup_error(error_recorder, "openalex", exc)
             openalex_result = None
         if openalex_result is not None:
             merged = _merge_enrichment(
@@ -136,7 +141,8 @@ def enrich_paper_with_hybrid_sources(
         # Source 2: Crossref (fills gaps; never overrides OpenAlex)
         try:
             crossref_result = fetch_crossref(lookup_doi)
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            _record_lookup_error(error_recorder, "crossref", exc)
             crossref_result = None
         if crossref_result is not None:
             merged = _merge_enrichment(
@@ -152,7 +158,8 @@ def enrich_paper_with_hybrid_sources(
         # Source 3: Semantic Scholar (fills gaps; never overrides OpenAlex)
         try:
             s2_result = fetch_s2(lookup_doi)
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            _record_lookup_error(error_recorder, "semantic_scholar", exc)
             s2_result = None
         if s2_result is not None:
             merged = _merge_enrichment(
@@ -168,7 +175,8 @@ def enrich_paper_with_hybrid_sources(
         # Source 4: Unpaywall (open-access PDF/OA metadata only)
         try:
             unpaywall_result = fetch_unpaywall(lookup_doi)
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            _record_lookup_error(error_recorder, "unpaywall", exc)
             unpaywall_result = None
         if unpaywall_result is not None:
             merged = _merge_enrichment(
@@ -185,7 +193,8 @@ def enrich_paper_with_hybrid_sources(
     if normalized_arxiv_id is not None:
         try:
             arxiv_result = fetch_arxiv(normalized_arxiv_id)
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            _record_lookup_error(error_recorder, "arxiv", exc)
             arxiv_result = None
         if arxiv_result is not None:
             merged = _merge_enrichment(
@@ -199,6 +208,16 @@ def enrich_paper_with_hybrid_sources(
             )
 
     return merged
+
+
+def _record_lookup_error(
+    error_recorder: EnrichmentErrorRecorder | None,
+    provider: str,
+    exc: Exception,
+) -> None:
+    if error_recorder is None:
+        return
+    error_recorder(provider, exc)
 
 
 def enrich_paper_with_openalex_id(
@@ -424,13 +443,7 @@ def _source_name(enrichment: PaperMetadataEnrichment) -> str:
 
 
 def _normalize_doi(value: object) -> str | None:
-    if not isinstance(value, str):
-        return None
-    item = value.strip()
-    if not item:
-        return None
-    item = item.removeprefix("https://doi.org/").removeprefix("http://doi.org/")
-    return item.lower()
+    return normalize_usable_doi(value)
 
 
 def _normalize_arxiv_id(value: object) -> str | None:

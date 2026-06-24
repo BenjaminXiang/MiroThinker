@@ -46,6 +46,25 @@ def test_returns_none_when_doi_blank():
     assert enrich_paper_with_hybrid_sources("   ") is None
 
 
+def test_polluted_doi_does_not_call_doi_lookup_providers():
+    calls: list[str] = []
+
+    def fail_if_called(doi: str) -> PaperMetadataEnrichment | None:
+        calls.append(doi)
+        raise AssertionError("polluted DOI should not reach provider lookup")
+
+    result = enrich_paper_with_hybrid_sources(
+        "10.1021/10.1002/poc.4450",
+        openalex_lookup=fail_if_called,
+        crossref_lookup=fail_if_called,
+        semantic_scholar_lookup=fail_if_called,
+        unpaywall_lookup=fail_if_called,
+    )
+
+    assert result is None
+    assert calls == []
+
+
 def test_openalex_only_returns_its_payload():
     openalex = _make(
         abstract="Abstract from OpenAlex.",
@@ -405,6 +424,26 @@ def test_lookup_exception_does_not_propagate():
     assert result is not None
     assert result.abstract == "S2 saved the day."
     assert result.enrichment_sources == ("semantic_scholar",)
+
+
+def test_lookup_exception_can_be_recorded_without_propagating():
+    def timeout(_doi):
+        raise TimeoutError("provider timeout")
+
+    errors: list[tuple[str, str]] = []
+    result = enrich_paper_with_hybrid_sources(
+        "10.1234/abc",
+        openalex_lookup=lambda d: None,
+        crossref_lookup=timeout,
+        semantic_scholar_lookup=lambda d: None,
+        unpaywall_lookup=lambda d: None,
+        error_recorder=lambda provider, exc: errors.append(
+            (provider, type(exc).__name__)
+        ),
+    )
+
+    assert result is None
+    assert errors == [("crossref", "TimeoutError")]
 
 
 def test_reference_count_takes_max_across_sources():

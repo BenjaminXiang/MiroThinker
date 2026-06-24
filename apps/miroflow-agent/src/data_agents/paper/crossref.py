@@ -10,6 +10,10 @@ from typing import Callable
 
 import requests
 
+from src.data_agents.providers.crossref import (
+    crossref_request_headers,
+    crossref_request_params,
+)
 from src.data_agents.normalization import normalize_person_name
 
 from .models import (
@@ -43,11 +47,7 @@ def discover_professor_paper_candidates_from_crossref(
     query_name = _normalize_query_name(professor_name)
     payload = fetch_json(
         _WORKS_ENDPOINT,
-        {
-            "query.author": query_name,
-            "rows": max_papers,
-            "mailto": "mirothinker-data-agent@example.com",
-        },
+        crossref_request_params({"query.author": query_name, "rows": max_papers}),
     )
     message = payload.get("message")
     if not isinstance(message, dict):
@@ -103,7 +103,7 @@ def enrich_paper_metadata_from_crossref(
     fetch_json = request_json or _request_json
     payload = fetch_json(
         f"{_WORKS_ENDPOINT}/{normalized_doi}",
-        {"mailto": "mirothinker-data-agent@example.com"},
+        crossref_request_params({}),
     )
     message = payload.get("message")
     if not isinstance(message, dict):
@@ -133,7 +133,8 @@ def enrich_paper_metadata_from_crossref(
 
 
 def _request_json(url: str, params: RequestParams) -> dict[str, object]:
-    cache_path = _CACHE_ROOT / f"{_cache_key(url, params)}.json"
+    request_params = crossref_request_params(params)
+    cache_path = _CACHE_ROOT / f"{_cache_key(url, request_params)}.json"
     if cache_path.exists():
         payload = json.loads(cache_path.read_text(encoding="utf-8"))
         if isinstance(payload, dict):
@@ -141,7 +142,12 @@ def _request_json(url: str, params: RequestParams) -> dict[str, object]:
 
     response = None
     for attempt in range(_MAX_RETRIES):
-        response = requests.get(url, params=params, timeout=_REQUEST_TIMEOUT)
+        response = requests.get(
+            url,
+            params=request_params,
+            timeout=_REQUEST_TIMEOUT,
+            headers=crossref_request_headers(),
+        )
         if response.status_code != 429 and response.status_code < 500:
             break
         if attempt + 1 >= _MAX_RETRIES:

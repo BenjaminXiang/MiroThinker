@@ -4,9 +4,16 @@ from __future__ import annotations
 
 from typing import Any, Literal, Mapping, TypeAlias
 
+from src.data_agents.professor.profile_summary_contract import (
+    profile_summary_contract_violations,
+)
+
 PromotionStatus: TypeAlias = Literal["ready", "needs_review"]
 PipelineIssueCode: TypeAlias = Literal[
+    "professor_summary_english_dominant",
+    "professor_summary_not_chinese",
     "professor_summary_too_short",
+    "professor_summary_too_long",
     "company_partial_narrative",
     "company_no_narrative",
     "paper_partial_metadata",
@@ -23,9 +30,10 @@ def evaluate_professor(
     if identity_status not in _PROFESSOR_CONFIRMED_STATUSES:
         return "needs_review", None
 
-    if len(_text(row, "profile_summary")) >= 150:
-        return "ready", None
-    return "needs_review", "professor_summary_too_short"
+    issue_code = _professor_summary_issue(_text(row, "profile_summary"))
+    if issue_code is not None:
+        return "needs_review", issue_code
+    return "ready", None
 
 
 def evaluate_company(
@@ -64,3 +72,19 @@ def _text(row: Mapping[str, Any], key: str) -> str:
     if value is None:
         return ""
     return str(value).strip()
+
+
+def _professor_summary_issue(summary: str) -> PipelineIssueCode | None:
+    violations = profile_summary_contract_violations(summary)
+    if "profile_summary_not_chinese" in violations:
+        return "professor_summary_not_chinese"
+    if (
+        "profile_summary_too_short" in violations
+        or "profile_summary_missing" in violations
+    ):
+        return "professor_summary_too_short"
+    if "profile_summary_too_long" in violations:
+        return "professor_summary_too_long"
+    if "profile_summary_english_dominant" in violations:
+        return "professor_summary_english_dominant"
+    return None

@@ -55,10 +55,12 @@ def _args(**overrides):
     defaults = {
         "database_url": "postgresql://fake/test",
         "limit": 10,
+        "offset": 0,
         "professor_id": None,
         "dry_run": False,
         "skip_re_eval": False,
         "min_summary_length": 150,
+        "summary_policy": "missing-short",
         "log_level": "INFO",
     }
     defaults.update(overrides)
@@ -100,9 +102,37 @@ def test_build_select_sql_uses_non_empty_profile_raw_text_filter() -> None:
     assert params == (["PROF-1"], 5)
 
 
+def test_build_select_sql_supports_offset_for_chunked_runs() -> None:
+    cli = _import_cli()
+
+    sql, params = cli._build_select_sql(limit=5, offset=10)
+
+    assert " LIMIT %s OFFSET %s" in sql
+    assert params == (5, 10)
+
+
+def test_summary_needed_policies_cover_invalid_and_always() -> None:
+    cli = _import_cli()
+    valid = "张三现任深圳大学教授，主要从事人工智能、机器学习和医学影像分析研究。" * 8
+    invalid_english = (
+        "Professor Zhang is a professor at Shenzhen University. "
+        "His research focuses on artificial intelligence and medical imaging. "
+        "He has published papers in international journals."
+    )
+
+    assert cli._summary_needed(valid, min_length=150) is False
+    assert cli._summary_needed(valid, min_length=150, policy="missing-short") is False
+    assert cli._summary_needed(valid, min_length=150, policy="always") is True
+    assert (
+        cli._summary_needed(invalid_english, min_length=150, policy="invalid") is True
+    )
+
+
 def test_run_backfill_processes_facts_summary_and_re_eval(monkeypatch) -> None:
     cli = _import_cli()
-    conn = FakeConn([_row("PROF-1", raw_text="同一段 profile raw text")])
+    raw_text = "同一段 profile raw text\n保留的新内容\n同一段 profile raw text"
+    deduped_text = "同一段 profile raw text\n保留的新内容"
+    conn = FakeConn([_row("PROF-1", raw_text=raw_text)])
     extract = MagicMock(
         return_value=ProfessorFactExtractionResult(facts=(_fact("PROF-1"),))
     )
@@ -144,8 +174,8 @@ def test_run_backfill_processes_facts_summary_and_re_eval(monkeypatch) -> None:
     assert report["re_evaluated"] == 1
     extract_kwargs = extract.call_args.kwargs
     summary_kwargs = summary.call_args.kwargs
-    assert extract_kwargs["profile_raw_text"] == "同一段 profile raw text"
-    assert summary_kwargs["bio"] == "同一段 profile raw text"
+    assert extract_kwargs["profile_raw_text"] == deduped_text
+    assert summary_kwargs["bio"] == deduped_text
     persist.assert_called_once()
     persist_summary.assert_called_once()
     re_eval.assert_called_once()
@@ -174,7 +204,9 @@ def test_run_backfill_isolates_per_professor_failures(monkeypatch) -> None:
         "compute_fact_backfill_preflight",
         lambda _conn: SimpleNamespace(skipped_no_profile_raw_text_count=0),
     )
-    monkeypatch.setattr(cli, "extract_professor_facts", MagicMock(side_effect=extract_side_effect))
+    monkeypatch.setattr(
+        cli, "extract_professor_facts", MagicMock(side_effect=extract_side_effect)
+    )
     monkeypatch.setattr(
         cli,
         "persist_extracted_professor_facts",
@@ -183,7 +215,11 @@ def test_run_backfill_isolates_per_professor_failures(monkeypatch) -> None:
     monkeypatch.setattr(
         cli,
         "generate_reinforced_profile_summary",
-        MagicMock(return_value=ReinforcementResult(summary="", source_paper_count=0, error=None)),
+        MagicMock(
+            return_value=ReinforcementResult(
+                summary="", source_paper_count=0, error=None
+            )
+        ),
     )
     monkeypatch.setattr(cli, "run_re_eval", MagicMock(return_value={"evaluated": 1}))
 

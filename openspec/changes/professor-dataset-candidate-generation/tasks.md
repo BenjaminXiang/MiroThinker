@@ -91,3 +91,56 @@
 - [x] 12.4 Wire CLI `--candidate-concurrency`, provider max concurrency, and provider minimum interval options while keeping serial behavior as the default for deterministic tests.
 - [x] 12.5 Reuse the existing provider limiter for DeepSeek-backed real providers so provider pressure is bounded independently from worker count.
 - [x] 12.6 Run targeted tests, Ruff, OpenSpec validation, and a bounded DeepSeek dry-run sample before any write-mode cleanup.
+
+## 13. Review-Gated Duplicate Merge Writes
+
+- [x] 13.1 Run a full read-only duplicate Paper merge candidate dry-run and summarize auto-write, review-only, and rejected candidates.
+- [x] 13.2 Add a RED test proving duplicate merge write mode refuses `review_before_write` candidates.
+- [x] 13.3 Enforce duplicate merge candidate review gates before inserting `paper_merge_alias` rows.
+- [x] 13.4 Run targeted tests, Ruff, OpenSpec validation, and a bounded duplicate merge write batch with post-write verification.
+
+## 14. Cache-Only Paper Source-Gap Resolver Backfill
+
+- [x] 14.1 Add RED tests proving Paper title enrichment can scope rows from `--paper-id-file` and can run resolver `--cache-only` without external provider calls.
+- [x] 14.2 Implement `--paper-id-file` and `--cache-only` in `run_paper_title_enrichment_backfill.py`, including dry-run cache reads and report/run-scope evidence.
+- [x] 14.3 Generate a current missing-summary Paper id file from existing title-resolution cache hits and run cache-only title enrichment dry-run plus write-mode backfill.
+- [x] 14.4 Re-run bounded parallel Paper `summary_zh` backfill for newly source-backed rows and record the post-run aggregate gaps.
+- [x] 14.5 Update `acceptance.md`, `change-log.md`, `.agents/runs/professor-dataset-candidate-generation/verification.md`, and OpenSpec validation evidence.
+
+## 15. Live Paper Title Resolver Source Acquisition
+
+- [x] 15.1 Generate remaining active `prof_page_only` missing-summary Paper id shards after cache-only remediation.
+- [x] 15.2 Run live title resolver backfill in parallel shards with existing confidence and official-link gates, recording external resolver failures instead of writing unsupported rows.
+- [x] 15.3 Re-run parallel Paper `summary_zh` backfill after live resolver source acquisition.
+- [x] 15.4 Re-audit aggregate gaps and residual source buckets.
+- [x] 15.5 Update `acceptance.md`, `change-log.md`, `.agents/runs/professor-dataset-candidate-generation/verification.md`, and OpenSpec validation evidence.
+
+## 16. Live Resolver Provider Preflight
+
+- [x] 16.1 Add RED tests proving Crossref title resolution and metadata enrichment use configured contact metadata instead of a hardcoded placeholder mailto.
+- [x] 16.2 Add RED tests proving Semantic Scholar title search can be independently disabled while later resolver providers continue.
+- [x] 16.3 Add RED tests proving Semantic Scholar metadata requests send the configured API key header.
+- [x] 16.4 Implement shared Crossref and Semantic Scholar provider configuration helpers.
+- [x] 16.5 Wire `--disable-semantic-scholar-title-search` through Paper title enrichment reports, pipeline run scope, and resolver kwargs.
+- [x] 16.6 Document Crossref contact and optional Semantic Scholar key environment variables, then run targeted tests, Ruff, and OpenSpec validation.
+
+## 17. DOI Pollution Admission Gate
+
+- [x] 17.1 Add RED tests proving nested DOI pollution is not sent to DOI metadata provider lookups.
+- [x] 17.2 Add RED tests proving Paper summary backfill reports bad DOI-only rows as skipped metadata enrichment instead of provider attempts.
+- [x] 17.3 Implement conservative DOI quality classification for nested DOI prefixes, separators, URL tails, publisher stubs, and invalid DOI formats.
+- [x] 17.4 Wire DOI quality into hybrid enrichment and Paper summary backfill while preserving arXiv/OpenAlex identifier enrichment.
+- [x] 17.5 Run targeted tests, Ruff, OpenSpec validation, and record evidence.
+
+## 18. Title Enrichment Existing-Identifier DOI Gate
+
+- [x] 18.1 Add a RED test proving title enrichment does not trust a polluted existing DOI as a high-confidence `doi_lookup` shortcut.
+- [x] 18.2 Wire DOI quality into `_resolved_from_existing_identifier` so bad DOI values are reported and title resolver fallback remains available.
+- [x] 18.3 Run targeted title-enrichment tests, Ruff, OpenSpec validation, and record evidence.
+
+## 19. Research Overview Source Cleaning
+
+- [x] 19.1 Add RED tests proving noisy Chinese official source text can be cleaned by the LLM research-overview provider instead of being directly written or rejected.
+- [x] 19.2 Extend the research-overview candidate contract so Chinese source text with page noise may use `generation_method=llm_cleaning` while preserving source span, source hash, provider metadata, and review gates.
+- [x] 19.3 Update the Professor candidate LLM provider prompt so the research-overview task extracts, cleans, and if necessary translates only source-grounded research directions, excluding teaching, recruitment, contact, links, publications, awards, and navigation text.
+- [x] 19.4 Run targeted tests, Ruff, OpenSpec validation, and a real bounded/full research-overview candidate dry-run before any write-mode cleanup.

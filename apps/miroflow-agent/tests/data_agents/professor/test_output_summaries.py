@@ -197,3 +197,12 @@ def test_select_eligible_paper_summary_inputs_resolves_aliases_and_deduplicates(
     assert "paper_merge_alias" in sql
     assert "coalesce(pma.canonical_paper_id, ppl.paper_id)" in sql
     assert "duplicate_rank = 1" in sql
+
+
+def test_select_eligible_paper_summary_inputs_requires_ready_papers() -> None:
+    conn = RecordingConn([])
+
+    select_eligible_paper_summary_inputs(conn, professor_id="PROF-AHMED")
+
+    sql = " ".join(conn.calls[0][0].split()).lower()
+    assert "p.quality_status = 'ready'" in sql

@@ -11,6 +11,7 @@ from .core_profile_paper_quality_audit import DatasetClosureBuckets
 from .profile_summary_contract import (
     contains_operator_meta_language,
     extract_profile_fact_sentences,
+    profile_summary_contract_violations,
 )
 from .profile_sections import extract_research_overview_text
 from .output_summaries import PaperSummaryInput, select_eligible_paper_summary_inputs
@@ -29,6 +30,7 @@ ProfileSummaryGenerationMethod = Literal[
 ResearchOverviewGenerationMethod = Literal[
     "official_extract",
     "llm_translation",
+    "llm_cleaning",
 ]
 PaperSummaryGenerationMethod = Literal[
     "deterministic_synthesis",
@@ -67,8 +69,61 @@ _LANE_VALIDATION_RULES: dict[CandidateLaneName, tuple[str, ...]] = {
     "professor_paper_summary_generation": ("deduplicated_verified_paper_inputs",),
     "duplicate_paper_merge": ("safe_identifier_or_author_supported_merge",),
 }
+_CLOSURE_SELECTION_EVIDENCE_KEYS: dict[CandidateLaneName, frozenset[str]] = {
+    "professor_paper_summary_generation": frozenset({"paper_ids"}),
+    "duplicate_paper_merge": frozenset({"paper_ids"}),
+}
 _CHINESE_RE = re.compile(r"[\u4e00-\u9fff]")
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$", re.IGNORECASE)
+_RESEARCH_OVERVIEW_NAVIGATION_NOISE_TERMS = (
+    "更新日期",
+    "人气",
+    "主页地址",
+    "复制地址",
+    "更换皮肤",
+    "版式",
+    "预览",
+    "提交",
+    "二维码",
+    "手机版",
+    "回到顶部",
+)
+_RESEARCH_OVERVIEW_SECTION_HEADING_NOISE_TERMS = (
+    "代表论著",
+    "科研项目",
+    "荣誉获奖",
+    "主讲本科课程",
+    "主讲研究生课程",
+    "招生",
+    "欢迎",
+)
+_RESEARCH_OVERVIEW_LINK_CONTACT_RECRUITMENT_NOISE_TERMS = (
+    "代表论著",
+    "个人简介",
+    "科研成果",
+    "招生信息",
+    "科研详情",
+    "研究课题可参考",
+    "学术主页",
+    "谷歌学术",
+    "联系方式",
+    "联系电话",
+    "邮箱",
+    "传真",
+    "教授课程",
+    "主讲",
+    "开放平台",
+    "人才招聘",
+)
+_RESEARCH_OVERVIEW_RECRUITMENT_CONTEXT_TERMS = (
+    "报考",
+    "招收",
+    "招生",
+    "诚聘",
+    "招聘",
+    "简历",
+    "欢迎",
+)
 _SAFE_DUPLICATE_EVIDENCE_TYPES = {
     "doi_match",
     "arxiv_match",
@@ -431,10 +486,14 @@ class DatasetCandidateGenerationReport:
 
 
 def format_candidate_generation_report(report: DatasetCandidateGenerationReport) -> str:
-    return json.dumps(asdict(report), ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    return (
+        json.dumps(asdict(report), ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    )
 
 
-def _coerce_provider_output(value: Any) -> tuple[str, dict[str, Any] | None, dict[str, Any] | None]:
+def _coerce_provider_output(
+    value: Any,
+) -> tuple[str, dict[str, Any] | None, dict[str, Any] | None]:
     if isinstance(value, CandidateLLMOutput):
         return (
             _clean_text(value.text),
@@ -468,10 +527,11 @@ def validate_profile_summary_candidate(
     candidate: ProfileSummaryCandidate,
 ) -> CandidateValidationResult:
     text = candidate.candidate_profile_summary.strip()
+    violations = set(profile_summary_contract_violations(text))
     hard_errors: list[str] = []
-    if not text:
+    if "profile_summary_missing" in violations:
         hard_errors.append("empty_profile_summary")
-    if not _CHINESE_RE.search(text):
+    if "profile_summary_not_chinese" in violations:
         hard_errors.append("missing_chinese_profile_summary")
     if contains_operator_meta_language(text):
         hard_errors.append("operator_meta_language")
@@ -486,11 +546,7 @@ def validate_profile_summary_candidate(
     return CandidateValidationResult(
         valid=True,
         errors=soft_flags,
-        next_action=(
-            "review_profile_summary_candidate"
-            if soft_flags
-            else None
-        ),
+        next_action=("review_profile_summary_candidate" if soft_flags else None),
     )
 
 
@@ -522,9 +578,7 @@ def build_profile_summary_input(
     normalized_raw = _optional_clean_text(profile_raw_text)
     normalized_paper_summary = _optional_clean_text(paper_summary)
     normalized_titles = tuple(
-        title
-        for title in (_clean_text(item) for item in linked_output_titles)
-        if title
+        title for title in (_clean_text(item) for item in linked_output_titles) if title
     )
     input_facts = tuple(
         f"{fact.fact_type}:{_clean_text(fact.value)}" for fact in normalized_facts
@@ -630,6 +684,8 @@ def validate_research_overview_candidate(
         hard_errors.append("missing_chinese_research_overview")
     if len(text) < 10:
         hard_errors.append("research_overview_too_short")
+    if _looks_like_navigation_noise(text):
+        hard_errors.append("research_overview_navigation_noise")
     soft_flags = _research_overview_quality_flags(candidate)
     if hard_errors:
         return CandidateValidationResult(
@@ -641,11 +697,52 @@ def validate_research_overview_candidate(
     return CandidateValidationResult(
         valid=True,
         errors=soft_flags,
-        next_action=(
-            "review_research_overview_candidate"
-            if soft_flags
-            else None
-        ),
+        next_action=("review_research_overview_candidate" if soft_flags else None),
+    )
+
+
+def _looks_like_navigation_noise(text: str) -> bool:
+    compact = re.sub(r"\s+", "", text)
+    hit_count = sum(
+        1 for term in _RESEARCH_OVERVIEW_NAVIGATION_NOISE_TERMS if term in compact
+    )
+    return hit_count >= 3 or (
+        "主页地址" in compact and ("回到顶部" in compact or "复制地址" in compact)
+    )
+
+
+def _looks_like_section_heading_noise(text: str) -> bool:
+    compact = re.sub(r"\s+", "", text)
+    hit_count = sum(
+        1 for term in _RESEARCH_OVERVIEW_SECTION_HEADING_NOISE_TERMS if term in compact
+    )
+    return hit_count >= 2
+
+
+def _looks_like_link_contact_recruitment_noise(text: str) -> bool:
+    compact = re.sub(r"\s+", "", text)
+    lowered = compact.lower()
+    if re.search(r"https?://|www\.|google\.com|researchgate|orcid", lowered):
+        return True
+    if any(
+        term in compact
+        for term in _RESEARCH_OVERVIEW_LINK_CONTACT_RECRUITMENT_NOISE_TERMS
+    ):
+        return True
+    if "研究生" in compact and any(
+        term in compact for term in _RESEARCH_OVERVIEW_RECRUITMENT_CONTEXT_TERMS
+    ):
+        return True
+    return False
+
+
+def _research_overview_source_needs_llm_cleaning(text: str) -> bool:
+    stripped = text.strip()
+    return (
+        len(stripped) > 500
+        or _looks_like_navigation_noise(stripped)
+        or _looks_like_section_heading_noise(stripped)
+        or _looks_like_link_contact_recruitment_noise(stripped)
     )
 
 
@@ -674,14 +771,64 @@ def generate_research_overview_candidate(
     source_language = _detect_language(source_span)
     source_text_hash = _hash_text(source_span)
     if source_language == "zh":
-        candidate = ResearchOverviewCandidate(
-            professor_id=_clean_text(professor_id),
-            research_overview_content=_clean_text(source_span),
-            source_language="zh",
-            source_text_hash=source_text_hash,
-            source_span=_clean_text(source_span),
-            generation_method="official_extract",
-        )
+        if translator is not None and _research_overview_source_needs_llm_cleaning(
+            source_span
+        ):
+            try:
+                cleaned, provider_metadata, llm_self_check = _coerce_provider_output(
+                    translator(source_span)
+                )
+            except Exception as exc:  # noqa: BLE001 - provider failure is evidence
+                return CandidateProviderFailure(
+                    lane="research_overview_backfill",
+                    professor_id=_clean_text(professor_id),
+                    provider=provider_name,
+                    stage="llm_cleaning",
+                    error_class=type(exc).__name__,
+                    retryable=_provider_retryable(exc),
+                    next_action="retry_research_overview_cleaning_with_same_source_hash",
+                    provider_metadata=_provider_failure_metadata(exc),
+                )
+            if not cleaned:
+                return CandidateRejection(
+                    lane="research_overview_backfill",
+                    professor_id=_clean_text(professor_id),
+                    reason="source_missing_after_llm_cleaning",
+                    next_action="recrawl_official_profile_research_overview",
+                    evidence={
+                        "source_page_id": source_page_id,
+                        "source_url": source_url,
+                        "source_text_hash": source_text_hash,
+                        "source_language": "zh",
+                        "provider_metadata": _merge_provider_metadata(
+                            provider_name,
+                            provider_metadata,
+                        )
+                        or {},
+                        "llm_self_check": dict(llm_self_check or {}),
+                    },
+                )
+            candidate = ResearchOverviewCandidate(
+                professor_id=_clean_text(professor_id),
+                research_overview_content=cleaned,
+                source_language="zh",
+                source_text_hash=source_text_hash,
+                source_span=_clean_text(source_span),
+                generation_method="llm_cleaning",
+                provider_metadata=_merge_provider_metadata(
+                    provider_name, provider_metadata
+                ),
+                llm_self_check=llm_self_check,
+            )
+        else:
+            candidate = ResearchOverviewCandidate(
+                professor_id=_clean_text(professor_id),
+                research_overview_content=_clean_text(source_span),
+                source_language="zh",
+                source_text_hash=source_text_hash,
+                source_span=_clean_text(source_span),
+                generation_method="official_extract",
+            )
     else:
         if translator is None:
             return CandidateRejection(
@@ -711,6 +858,25 @@ def generate_research_overview_candidate(
                 next_action="retry_translation_with_same_source_hash",
                 provider_metadata=_provider_failure_metadata(exc),
             )
+        if not translated:
+            return CandidateRejection(
+                lane="research_overview_backfill",
+                professor_id=_clean_text(professor_id),
+                reason="source_missing_after_llm_translation",
+                next_action="recrawl_official_profile_research_overview",
+                evidence={
+                    "source_page_id": source_page_id,
+                    "source_url": source_url,
+                    "source_text_hash": source_text_hash,
+                    "source_language": "en",
+                    "provider_metadata": _merge_provider_metadata(
+                        provider_name,
+                        provider_metadata,
+                    )
+                    or {},
+                    "llm_self_check": dict(llm_self_check or {}),
+                },
+            )
         candidate = ResearchOverviewCandidate(
             professor_id=_clean_text(professor_id),
             research_overview_content=translated,
@@ -718,7 +884,9 @@ def generate_research_overview_candidate(
             source_text_hash=source_text_hash,
             source_span=_clean_text(source_span),
             generation_method="llm_translation",
-            provider_metadata=_merge_provider_metadata(provider_name, provider_metadata),
+            provider_metadata=_merge_provider_metadata(
+                provider_name, provider_metadata
+            ),
             llm_self_check=llm_self_check,
         )
 
@@ -761,11 +929,7 @@ def validate_paper_summary_candidate(
     return CandidateValidationResult(
         valid=True,
         errors=soft_flags,
-        next_action=(
-            "review_paper_summary_candidate"
-            if soft_flags
-            else None
-        ),
+        next_action=("review_paper_summary_candidate" if soft_flags else None),
     )
 
 
@@ -781,7 +945,9 @@ def generate_professor_paper_summary_candidate(
 ) -> ProfessorPaperSummaryCandidate | CandidateRejection | CandidateProviderFailure:
     eligible, excluded_reasons = _filter_eligible_paper_summary_inputs(paper_inputs)
     source_page_id_tuple = tuple(
-        source_id for source_id in (_clean_text(item) for item in source_page_ids) if source_id
+        source_id
+        for source_id in (_clean_text(item) for item in source_page_ids)
+        if source_id
     )
     generation_input = ProfessorPaperSummaryGenerationInput(
         professor_id=_clean_text(professor_id),
@@ -888,11 +1054,7 @@ def validate_duplicate_merge_candidate(
     return CandidateValidationResult(
         valid=True,
         errors=soft_flags,
-        next_action=(
-            "manual_duplicate_paper_review"
-            if soft_flags
-            else None
-        ),
+        next_action=("manual_duplicate_paper_review" if soft_flags else None),
     )
 
 
@@ -903,7 +1065,9 @@ def plan_duplicate_paper_merge_candidate(
     papers: Sequence[DuplicatePaperRecord],
 ) -> DuplicatePaperMergeCandidate | CandidateRejection:
     normalized_papers = tuple(
-        paper for paper in papers if _clean_text(paper.paper_id) and _clean_text(paper.title)
+        paper
+        for paper in papers
+        if _clean_text(paper.paper_id) and _clean_text(paper.title)
     )
     if len(normalized_papers) < 2:
         return CandidateRejection(
@@ -1200,13 +1364,27 @@ def enrich_buckets_with_candidate_write_evidence(
         enriched_rows.append(
             replace(
                 row,
-                evidence={
-                    **(row.evidence or {}),
-                    **evidence,
-                },
+                evidence=_merge_candidate_write_evidence(row, evidence),
             )
         )
     return replace(buckets, rows=enriched_rows)
+
+
+def _merge_candidate_write_evidence(
+    row: Any,
+    candidate_write_evidence: dict[str, Any],
+) -> dict[str, Any]:
+    merged = dict(row.evidence or {})
+    protected_keys = _CLOSURE_SELECTION_EVIDENCE_KEYS.get(
+        row.remediation_lane,
+        frozenset(),
+    )
+    for key, value in candidate_write_evidence.items():
+        if key in protected_keys:
+            merged.setdefault(f"candidate_{key}", value)
+            continue
+        merged[key] = value
+    return merged
 
 
 def validate_candidate(candidate: CandidateLike) -> CandidateValidationResult:
@@ -1319,7 +1497,9 @@ def _build_lane_summary(
             for candidate in candidates
             for paper_id in _candidate_paper_ids(candidate)
         ),
-        write_evidence_rows=tuple(_candidate_sample(candidate) for candidate in candidates),
+        write_evidence_rows=tuple(
+            _candidate_sample(candidate) for candidate in candidates
+        ),
         samples=tuple(_candidate_sample(candidate) for candidate in candidates[:5]),
         validation_failures=validation_failures,
         provider_failures=provider_failures,
@@ -1378,9 +1558,7 @@ def _candidate_quality_evidence(candidate: CandidateLike) -> dict[str, Any]:
         "source_confidence": quality["source_confidence"],
         "write_recommendation": quality["write_recommendation"],
         "llm_self_check": quality["llm_self_check"],
-        "provider_metadata": dict(
-            getattr(candidate, "provider_metadata", None) or {}
-        ),
+        "provider_metadata": dict(getattr(candidate, "provider_metadata", None) or {}),
     }
 
 
@@ -1451,8 +1629,11 @@ def _profile_summary_quality_flags(
 ) -> tuple[str, ...]:
     text = candidate.candidate_profile_summary.strip()
     flags: list[str] = []
-    if text and not 200 <= len(text) <= 300:
+    violations = set(profile_summary_contract_violations(text))
+    if violations & {"profile_summary_too_short", "profile_summary_too_long"}:
         flags.append("profile_summary_length_out_of_range")
+    if "profile_summary_english_dominant" in violations:
+        flags.append("profile_summary_english_dominant")
     if not candidate.source_ids and not candidate.source_text_hashes:
         flags.append("missing_profile_summary_sources")
     if not candidate.input_facts:
@@ -1464,16 +1645,24 @@ def _research_overview_quality_flags(
     candidate: ResearchOverviewCandidate,
 ) -> tuple[str, ...]:
     flags: list[str] = []
+    text = candidate.research_overview_content.strip()
     if not candidate.source_text_hash:
         flags.append("missing_source_text_hash")
     elif not _SHA256_RE.fullmatch(candidate.source_text_hash):
         flags.append("invalid_source_text_hash")
     if not candidate.source_span.strip():
         flags.append("missing_source_span")
-    expected_method = (
-        "official_extract" if candidate.source_language == "zh" else "llm_translation"
-    )
-    if candidate.generation_method != expected_method:
+    if len(text) > 500:
+        flags.append("research_overview_too_long")
+    if _looks_like_section_heading_noise(text):
+        flags.append("research_overview_section_heading_noise")
+    if _looks_like_link_contact_recruitment_noise(text):
+        flags.append("research_overview_link_contact_recruitment_noise")
+    if candidate.source_language == "zh":
+        valid_methods = {"official_extract", "llm_cleaning"}
+    else:
+        valid_methods = {"llm_translation"}
+    if candidate.generation_method not in valid_methods:
         flags.append("invalid_generation_method_for_language")
     return tuple(flags)
 
@@ -1482,11 +1671,24 @@ def _paper_summary_quality_flags(
     candidate: ProfessorPaperSummaryCandidate,
 ) -> tuple[str, ...]:
     flags: list[str] = []
+    text = candidate.candidate_paper_summary.strip()
+    if len(text) > 500:
+        flags.append("paper_summary_too_long")
+    if _is_english_dominant_text(text):
+        flags.append("paper_summary_english_dominant")
     if not candidate.source_page_ids:
         flags.append("missing_source_page_provenance")
     if candidate.duplicate_status != "deduplicated":
         flags.append("unresolved_duplicate_status")
     return tuple(flags)
+
+
+def _is_english_dominant_text(text: str) -> bool:
+    latin_count = len(re.findall(r"[A-Za-z]", text))
+    chinese_count = len(_CHINESE_RE.findall(text))
+    if chinese_count == 0:
+        return latin_count > 0
+    return latin_count >= 80 and latin_count > chinese_count * 1.25
 
 
 def _duplicate_merge_quality_flags(
@@ -1563,7 +1765,9 @@ def _load_profile_summary_input(conn: Any, row: Any) -> ProfileSummaryInput | No
         title=_optional_clean_text(_row_value(profile, "title", 4)),
         source_page_id=_optional_clean_text(_row_value(profile, "source_page_id", 5)),
         source_url=_optional_clean_text(_row_value(profile, "source_url", 6)),
-        profile_raw_text=_optional_clean_text(_row_value(profile, "profile_raw_text", 7)),
+        profile_raw_text=_optional_clean_text(
+            _row_value(profile, "profile_raw_text", 7)
+        ),
         facts=_load_profile_summary_facts(conn, professor_id),
         paper_summary=_optional_clean_text(_row_value(profile, "paper_summary", 8)),
         linked_output_titles=_load_verified_paper_titles(conn, professor_id),
@@ -1593,7 +1797,9 @@ def _load_profile_summary_facts(
                 fact_type=str(_row_value(row, "fact_type", 0) or ""),
                 value=str(_row_value(row, "value_raw", 1) or ""),
                 evidence_span=str(_row_value(row, "evidence_span", 2) or ""),
-                source_page_id=_optional_clean_text(_row_value(row, "source_page_id", 3)),
+                source_page_id=_optional_clean_text(
+                    _row_value(row, "source_page_id", 3)
+                ),
             )
         )
     return tuple(facts)
@@ -1616,7 +1822,9 @@ def _load_verified_paper_titles(conn: Any, professor_id: str) -> tuple[str, ...]
     return tuple(str(_row_value(row, "title_clean", 0) or "") for row in rows)
 
 
-def _load_professor_source_text(conn: Any, professor_id: str | None) -> dict[str, str | None]:
+def _load_professor_source_text(
+    conn: Any, professor_id: str | None
+) -> dict[str, str | None]:
     professor_id = _clean_text(professor_id)
     if not professor_id:
         return {}
@@ -1635,13 +1843,17 @@ def _load_professor_source_text(conn: Any, professor_id: str | None) -> dict[str
     if row is None:
         return {}
     return {
-        "profile_raw_text": _optional_clean_text(_row_value(row, "profile_raw_text", 0)),
+        "profile_raw_text": _optional_clean_text(
+            _row_value(row, "profile_raw_text", 0)
+        ),
         "source_page_id": _optional_clean_text(_row_value(row, "source_page_id", 1)),
         "source_url": _optional_clean_text(_row_value(row, "source_url", 2)),
     }
 
 
-def _load_verified_paper_source_page_ids(conn: Any, professor_id: str) -> tuple[str, ...]:
+def _load_verified_paper_source_page_ids(
+    conn: Any, professor_id: str
+) -> tuple[str, ...]:
     rows = conn.execute(
         """
         SELECT DISTINCT evidence_page_id::text AS source_page_id
@@ -1657,11 +1869,11 @@ def _load_verified_paper_source_page_ids(conn: Any, professor_id: str) -> tuple[
     return tuple(str(_row_value(row, "source_page_id", 0) or "") for row in rows)
 
 
-def _load_duplicate_paper_records(conn: Any, row: Any) -> tuple[DuplicatePaperRecord, ...]:
+def _load_duplicate_paper_records(
+    conn: Any, row: Any
+) -> tuple[DuplicatePaperRecord, ...]:
     paper_ids = tuple(
-        item
-        for item in _string_tuple((row.evidence or {}).get("paper_ids"))
-        if item
+        item for item in _string_tuple((row.evidence or {}).get("paper_ids")) if item
     )
     if not paper_ids:
         return ()
@@ -1698,10 +1910,14 @@ def _load_duplicate_paper_records(conn: Any, row: Any) -> tuple[DuplicatePaperRe
             year=_optional_int(_row_value(record, "year", 2)),
             doi=_optional_clean_text(_row_value(record, "doi", 3)),
             arxiv_id=_optional_clean_text(_row_value(record, "arxiv_id", 4)),
-            authors_display=_optional_clean_text(_row_value(record, "authors_display", 5)),
+            authors_display=_optional_clean_text(
+                _row_value(record, "authors_display", 5)
+            ),
             venue=_optional_clean_text(_row_value(record, "venue", 6)),
             canonical_source=str(_row_value(record, "canonical_source", 7) or ""),
-            abstract_clean=_optional_clean_text(_row_value(record, "abstract_clean", 8)),
+            abstract_clean=_optional_clean_text(
+                _row_value(record, "abstract_clean", 8)
+            ),
             summary_zh=_optional_clean_text(_row_value(record, "summary_zh", 9)),
             citation_count=_optional_int(_row_value(record, "citation_count", 10)),
             source_page_ids=tuple(
@@ -1752,12 +1968,12 @@ def _payload_target_key(payload: dict[str, Any]) -> str:
     duplicate_group_id = payload.get("duplicate_group_id")
     if duplicate_group_id:
         return f"duplicate_group:{duplicate_group_id}"
-    paper_ids = payload.get("paper_ids")
-    if isinstance(paper_ids, list) and len(paper_ids) == 1:
-        return f"paper:{paper_ids[0]}"
     professor_id = payload.get("professor_id")
     if professor_id:
         return f"professor:{professor_id}"
+    paper_ids = payload.get("paper_ids")
+    if isinstance(paper_ids, list) and len(paper_ids) == 1:
+        return f"paper:{paper_ids[0]}"
     return ""
 
 
@@ -1811,13 +2027,17 @@ def _build_deterministic_profile_summary(profile_input: ProfileSummaryInput) -> 
         sentences.append(_ensure_sentence(f"已验证论文包括{_trim_text(titles, 90)}"))
     education_values = _fact_values(profile_input, "education")
     if education_values:
-        sentences.append(_ensure_sentence(f"教育背景包括{'、'.join(education_values[:2])}"))
+        sentences.append(
+            _ensure_sentence(f"教育背景包括{'、'.join(education_values[:2])}")
+        )
     award_values = [
         *_fact_values(profile_input, "award"),
         *_fact_values(profile_input, "honor"),
     ]
     if award_values:
-        sentences.append(_ensure_sentence(f"代表性荣誉包括{'、'.join(award_values[:2])}"))
+        sentences.append(
+            _ensure_sentence(f"代表性荣誉包括{'、'.join(award_values[:2])}")
+        )
 
     summary = "".join(_dedupe_preserve_order(sentences))
     return _coerce_text_length(summary, min_length=200, max_length=300)
@@ -1912,7 +2132,9 @@ def _merge_candidate_from_papers(
 ) -> DuplicatePaperMergeCandidate:
     canonical = _choose_canonical_paper(papers)
     paper_ids = tuple(sorted(paper.paper_id for paper in papers))
-    old_paper_ids = tuple(paper_id for paper_id in paper_ids if paper_id != canonical.paper_id)
+    old_paper_ids = tuple(
+        paper_id for paper_id in paper_ids if paper_id != canonical.paper_id
+    )
     return DuplicatePaperMergeCandidate(
         professor_id=_clean_text(professor_id),
         duplicate_group_id=_clean_text(duplicate_group_id),

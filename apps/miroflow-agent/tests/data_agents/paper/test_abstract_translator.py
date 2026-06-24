@@ -77,7 +77,25 @@ def test_translate_abstract_to_zh_retries_invalid_length_once():
     assert llm.chat.completions.create.call_count == 2
 
 
-def test_translate_abstract_to_zh_accepts_detailed_six_hundred_char_summary():
+def test_translate_abstract_to_zh_accepts_concise_informative_summary():
+    summary = (
+        "本文提出一种用于医学影像分割的轻量级多尺度网络，结合边界约束和注意力融合提升小病灶识别能力。"
+        "实验在公开脑部MRI数据集上验证了Dice和召回率改进，并分析了模型在临床辅助诊断中的部署成本和泛化风险控制。"
+    )
+    assert 100 <= len(summary) < 150
+    llm = _llm_with_outputs([summary])
+
+    result = translate_abstract_to_zh(
+        "A concise but specific medical image segmentation abstract.",
+        llm_client=llm,
+        llm_model="gemma",
+    )
+
+    assert result == summary
+    assert llm.chat.completions.create.call_count == 1
+
+
+def test_translate_abstract_to_zh_accepts_detailed_seven_hundred_char_summary():
     summary = (
         "为了提升虚拟现实（VR）用户的视觉体验，VR360视频需要比传统视频更高的分辨率与画质。目前主流的VR360投影格式"
         "包括等距柱状投影（ERP）和立方体贴图投影（CMP），这些格式在投影至三维球面进行渲染时，对码率分配提出了新的"
@@ -88,8 +106,11 @@ def test_translate_abstract_to_zh_accepts_detailed_six_hundred_char_summary():
         "实验结果表明，两种算法在全内帧（AI）、低延迟（LD）及随机访问（RA）配置下均取得了显著的BD-Rate节省，性能优于"
         "HM16.17平台。具体而言，在低延迟配置下，EEOA-ERP较现有先进算法WSU-ERP实现了0.37%的BD-Rate节省；在随机访问"
         "配置下，EEOA-CMP在相同测试条件下较HM16.17 VR CMP实现了2.6%的客观质量提升。"
+        "此外，研究比较了不同投影格式下的码率分布差异，说明所提出的熵平衡策略可以在复杂观看视角中保持稳定编码收益。"
+        "消融实验进一步验证了拉格朗日乘子估计、块级QP调整和球面权重建模三个模块的独立贡献，说明该方法并非依赖单一"
+        "数据集调参获得收益，而是在多种内容类型、运动强度和码率范围内保持一致改进。"
     )
-    assert 500 < len(summary) < 650
+    assert 650 < len(summary) < 800
     llm = _llm_with_outputs([summary])
 
     result = translate_abstract_to_zh(

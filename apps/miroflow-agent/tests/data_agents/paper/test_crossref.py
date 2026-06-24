@@ -1,16 +1,22 @@
 from __future__ import annotations
 
+import src.data_agents.paper.crossref as crossref
 from src.data_agents.paper.crossref import (
     discover_professor_paper_candidates_from_crossref,
     enrich_paper_metadata_from_crossref,
 )
 
 
-def test_discover_professor_paper_candidates_from_crossref_filters_exact_author_names_and_parses_works() -> None:
+def test_discover_professor_paper_candidates_from_crossref_filters_exact_author_names_and_parses_works(
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("CROSSREF_MAILTO", "scholarly-contact@example.edu")
+
     def fake_request_json(url: str, params: dict[str, object]) -> dict[str, object]:
         assert url == "https://api.crossref.org/works"
         assert params["query.author"] == "高会军"
         assert params["rows"] == 5
+        assert params["mailto"] == "scholarly-contact@example.edu"
         return {
             "message": {
                 "items": [
@@ -69,10 +75,12 @@ def test_discover_professor_paper_candidates_from_crossref_filters_exact_author_
     assert paper.source_url == "https://doi.org/10.1109/example"
 
 
-def test_enrich_paper_metadata_from_crossref_by_doi() -> None:
+def test_enrich_paper_metadata_from_crossref_by_doi(monkeypatch) -> None:
+    monkeypatch.setenv("CROSSREF_MAILTO", "scholarly-contact@example.edu")
+
     def fake_request_json(url: str, params: dict[str, object]) -> dict[str, object]:
         assert url == "https://api.crossref.org/works/10.1109/example"
-        assert params["mailto"] == "mirothinker-data-agent@example.com"
+        assert params["mailto"] == "scholarly-contact@example.edu"
         return {
             "message": {
                 "DOI": "10.1109/example",
@@ -110,3 +118,62 @@ def test_enrich_paper_metadata_from_crossref_by_doi() -> None:
     assert enrichment.pdf_url == "https://publisher.example.org/paper.pdf"
     assert enrichment.source_url == "https://doi.org/10.1109/example"
     assert enrichment.enrichment_sources == ("crossref",)
+
+
+def test_request_json_uses_configured_crossref_contact(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("CROSSREF_MAILTO", "scholarly-contact@example.edu")
+    monkeypatch.delenv("CROSSREF_USER_AGENT", raising=False)
+    monkeypatch.setattr(crossref, "_CACHE_ROOT", tmp_path / "paper_crossref_cache")
+    calls: list[dict[str, object]] = []
+
+    class FakeResponse:
+        status_code = 200
+
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict[str, object]:
+            return {"message": {"items": []}}
+
+    def fake_get(
+        url: str,
+        *,
+        params: dict[str, object],
+        timeout: object,
+        headers: dict[str, str],
+    ) -> FakeResponse:
+        calls.append(
+            {
+                "url": url,
+                "params": params,
+                "timeout": timeout,
+                "headers": headers,
+            }
+        )
+        return FakeResponse()
+
+    monkeypatch.setattr(crossref.requests, "get", fake_get)
+
+    payload = crossref._request_json(
+        "https://api.crossref.org/works",
+        {"query.title": "A Paper", "rows": 1},
+    )
+
+    assert payload == {"message": {"items": []}}
+    assert calls == [
+        {
+            "url": "https://api.crossref.org/works",
+            "params": {
+                "query.title": "A Paper",
+                "rows": 1,
+                "mailto": "scholarly-contact@example.edu",
+            },
+            "timeout": (5, 20),
+            "headers": {
+                "User-Agent": (
+                    "MiroThinkerDataAgent/0.1 "
+                    "(mailto:scholarly-contact@example.edu)"
+                )
+            },
+        }
+    ]

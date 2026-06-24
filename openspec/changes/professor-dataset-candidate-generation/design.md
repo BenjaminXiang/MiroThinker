@@ -134,6 +134,78 @@ candidate CLI should expose worker concurrency and provider concurrency/interval
 controls, and the provider client should reuse the existing file-lock based
 provider limiter already used by company enrichment paths.
 
+### 7. Review recommendations are write gates
+
+Candidate evidence may include useful but weak candidates. Those rows should
+remain visible to operators, but write mode must not treat them as approved
+data. Duplicate Paper merge write mode should persist only candidates whose
+candidate evidence says `candidate_status=ready` and
+`write_recommendation=auto_write_candidate`. Review-only merge candidates
+should become unresolved write issues without inserting `paper_merge_alias`
+rows.
+
+Alternative considered: let write mode attempt every automatically eligible
+bucket row and rely on dry-run operators to filter the evidence file. That is
+too fragile for full-dataset cleanup because a single unfiltered evidence file
+can contain thousands of safe candidates plus hundreds of review-only rows.
+
+### 8. Live scholarly resolver provider configuration is explicit
+
+The live title resolver path should proceed with OpenAlex as the primary
+metadata source and Crossref as the contactable fallback, while Semantic Scholar
+approval remains pending. Crossref must use configurable contact metadata
+(`CROSSREF_MAILTO` and optional `CROSSREF_USER_AGENT`) instead of the previous
+placeholder email. Semantic Scholar title search should be independently
+disableable for large OpenAlex/Crossref-primary backfills, but the Semantic
+Scholar request helpers should still send `SEMANTIC_SCHOLAR_API_KEY` or
+`S2_API_KEY` when those credentials become available.
+
+Alternative considered: keep Semantic Scholar in every live title resolver run
+and rely on temporary circuits for rate limits. That wastes quota and retries on
+large batches when the user has already chosen OpenAlex as the current primary
+source while Semantic Scholar approval is pending.
+
+### 9. DOI quality is a resolver admission gate
+
+The cleaning layer should treat DOI strings as candidate identifiers, not as
+trusted routing input. Obvious DOI pollution, such as nested DOI prefixes,
+separator-joined DOI and URL tails, should be classified before external
+provider calls. Bad DOI-only rows become residual source-quality evidence; rows
+with a bad DOI plus a stronger arXiv or OpenAlex id may still use the stronger
+identifier for metadata enrichment.
+
+The same admission gate applies to title-enrichment shortcuts that build a
+resolved Paper from existing row identifiers. A polluted DOI must not be
+promoted as a high-confidence `doi_lookup` result before the title resolver has
+a chance to use the cleaned title and stronger enabled providers.
+
+Alternative considered: send all DOI-like strings to OpenAlex/Crossref and rely
+on provider misses. That wastes external resolver quota and hides source
+pollution as generic provider failure instead of a repairable data-quality
+bucket.
+
+### 10. Research overview source text is noisy by default
+
+Official Professor profile text may contain a research-overview label followed
+by a mixture of research directions, teaching assignments, recruitment notes,
+contact details, publication headings, links, awards, or page navigation. The
+candidate layer should not treat a Chinese source span as automatically clean
+merely because it is Chinese. When source text shows page-noise patterns, the
+research-overview LLM provider should act as a source-grounded cleaner: extract
+only research directions, compress them into concise Chinese, and preserve the
+original source span and source hash in evidence.
+
+Automatic writing remains gated by the candidate quality evidence. If LLM
+cleaning still returns URLs, contact details, teaching, recruitment, publication
+headings, awards, or navigation text, the candidate must stay
+`needs_review` or be rejected. This avoids turning the cleaner into a
+fabrication or publication bypass.
+
+Alternative considered: keep deterministic Chinese extraction and rely on
+post-write cleanup. The full-run sample showed this lets low-quality sections
+enter storage before being removed later, so the cleaner belongs before the
+write gate.
+
 ## Risks / Trade-offs
 
 - [LLM variance] Generated summaries or translations may be shallow or
@@ -175,6 +247,8 @@ provider limiter already used by company enrichment paths.
 10. Add bounded parallel candidate dry-run for the same evidence shape, using
     independent worker connections and provider rate limits before scaling
     DeepSeek cleaning beyond small samples.
+11. Enforce candidate review recommendations in write mode before running any
+    real duplicate Paper merge batch from full candidate evidence.
 
 Rollback is operational: candidate-generation dry-run files can be discarded;
 write-mode remediation remains guarded by the existing run id, dry-run evidence,

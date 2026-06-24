@@ -6,7 +6,9 @@ import importlib.util
 from pathlib import Path
 
 _SCRIPT_PATH = (
-    Path(__file__).parent.parent.parent / "scripts" / "run_profile_summary_reinforcement.py"
+    Path(__file__).parent.parent.parent
+    / "scripts"
+    / "run_profile_summary_reinforcement.py"
 )
 
 
@@ -20,7 +22,7 @@ def _import_cli():
     return module
 
 
-def test_default_min_length_is_150():
+def test_default_min_length_is_200():
     cli = _import_cli()
 
     args = cli._parse_args([])
@@ -30,8 +32,8 @@ def test_default_min_length_is_150():
         min_length=args.min_length,
     )
 
-    assert args.min_length == 150
-    assert "length(p.profile_summary) < 150" in sql
+    assert args.min_length == 200
+    assert "length(p.profile_summary) < 200" in sql
 
 
 def test_min_length_cli_override():

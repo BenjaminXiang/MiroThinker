@@ -239,6 +239,14 @@ data/
 config/
 todos/
 
+# Local full-row evidence from the current Professor dataset cleanup run.
+# Summary JSON/JSONL/TXT artifacts remain visible; tracked bounded JSON artifacts
+# are unaffected by ignore rules.
+.agents/runs/professor-dataset-candidate-generation/*.json
+!.agents/runs/professor-dataset-candidate-generation/*summary.json
+!.agents/runs/professor-dataset-candidate-generation/*-summary.json
+!.agents/runs/professor-dataset-candidate-generation/*.txt
+
 # Root-level experiment scripts (not part of the app)
 /openai_client_compat.py
 /recommended_client_template_*.py

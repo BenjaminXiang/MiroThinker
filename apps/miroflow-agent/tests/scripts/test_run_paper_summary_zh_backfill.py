@@ -44,6 +44,8 @@ def test_cli_help(capsys):
     assert "--paper-id-file" in captured.out
     assert "--worker-count" in captured.out
     assert "--worker-index" in captured.out
+    assert "--existing-source-only" in captured.out
+    assert "--identifier-metadata-only" in captured.out
 
 
 def test_cli_loads_app_env_file_on_import(monkeypatch):
@@ -77,6 +79,31 @@ def test_build_select_sql_only_missing_default():
     assert params == (5,)
 
 
+def test_parse_args_existing_source_only_refuses_doi_enrichment():
+    cli = _import_cli()
+
+    args = cli._parse_args(["--existing-source-only"])
+    assert args.existing_source_only is True
+    assert args.enrich_doi_metadata is False
+
+    with pytest.raises(SystemExit):
+        cli._parse_args(["--existing-source-only", "--enrich-doi-metadata"])
+
+
+def test_parse_args_identifier_metadata_only_refuses_summary_lanes():
+    cli = _import_cli()
+
+    args = cli._parse_args(["--identifier-metadata-only"])
+    assert args.identifier_metadata_only is True
+    assert args.enrich_doi_metadata is False
+    assert args.existing_source_only is False
+
+    with pytest.raises(SystemExit):
+        cli._parse_args(["--identifier-metadata-only", "--enrich-doi-metadata"])
+    with pytest.raises(SystemExit):
+        cli._parse_args(["--identifier-metadata-only", "--existing-source-only"])
+
+
 def test_build_select_sql_can_select_grounded_full_text_intro():
     cli = _import_cli()
     sql, _params = cli._build_select_sql(
@@ -89,6 +116,24 @@ def test_build_select_sql_can_select_grounded_full_text_intro():
 
     assert "pft.intro AS full_text_intro" in sql
     assert "NULLIF(trim(pft.intro), '')" in sql
+
+
+def test_build_select_sql_includes_full_text_abstract_backfill_when_summary_exists():
+    cli = _import_cli()
+    sql, _params = cli._build_select_sql(
+        only_missing=True,
+        limit=None,
+        professor_ids=(),
+        paper_ids=(),
+        include_doi_enrichment=False,
+    )
+
+    compact_sql = " ".join(sql.split())
+    assert "(p.summary_zh IS NULL OR length(trim(p.summary_zh)) = 0)" in compact_sql
+    assert (
+        "NULLIF(trim(p.abstract_clean), '') IS NULL "
+        "AND NULLIF(trim(pft.abstract), '') IS NOT NULL"
+    ) in compact_sql
 
 
 def test_build_select_sql_excludes_terminal_paper_states():
@@ -141,6 +186,49 @@ def test_build_select_sql_can_scope_to_professor_and_doi_enrichment():
     assert params == (["PROF-1"], 10)
 
 
+def test_build_select_sql_identifier_metadata_only_selects_source_gaps():
+    cli = _import_cli()
+    sql, params = cli._build_select_sql(
+        only_missing=True,
+        limit=10,
+        professor_ids=(),
+        paper_ids=(),
+        include_doi_enrichment=True,
+        identifier_metadata_only=True,
+    )
+
+    compact_sql = " ".join(sql.split())
+    assert "p.doi IS NOT NULL" in compact_sql
+    assert "p.arxiv_id IS NOT NULL" in compact_sql
+    assert "p.openalex_id IS NOT NULL" in compact_sql
+    assert (
+        "COALESCE(NULLIF(trim(p.abstract_clean), ''), "
+        "NULLIF(trim(pft.abstract), '')) IS NULL"
+    ) in compact_sql
+    assert "p.year IS NULL" not in compact_sql
+    assert "p.venue IS NULL OR length(trim(p.venue)) = 0" not in compact_sql
+    assert "p.authors_display IS NULL OR length(trim(p.authors_display)) = 0" not in compact_sql
+    assert "p.summary_zh IS NULL" not in compact_sql
+    assert params == (10,)
+
+
+def test_build_select_sql_identifier_metadata_only_treats_intro_as_missing_true_abstract():
+    cli = _import_cli()
+    sql, _params = cli._build_select_sql(
+        only_missing=True,
+        limit=None,
+        professor_ids=(),
+        paper_ids=(),
+        include_doi_enrichment=True,
+        identifier_metadata_only=True,
+    )
+
+    compact_sql = " ".join(sql.split())
+    where_clause = compact_sql.split(" WHERE ", 1)[1].split(" ORDER BY ", 1)[0]
+    assert "NULLIF(trim(pft.abstract), '')" in where_clause
+    assert "NULLIF(trim(pft.intro), '')" not in where_clause
+
+
 def test_build_select_sql_can_scope_to_institution():
     cli = _import_cli()
     sql, params = cli._build_select_sql(
@@ -175,7 +263,7 @@ def test_build_select_sql_can_partition_work_by_worker_shard():
     )
 
     compact_sql = " ".join(sql.split())
-    assert "mod(abs(hashtext(p.paper_id)), %s) = %s" in compact_sql
+    assert "mod(abs(hashtext(p.paper_id)::bigint), %s) = %s" in compact_sql
     assert params == (["清华大学深圳国际研究生院"], 4, 2, 25)
 
 
@@ -330,6 +418,42 @@ def test_open_llm_client_disables_env_proxy(monkeypatch):
     assert extra_body == {"chat_template_kwargs": {"enable_thinking": False}}
 
 
+def test_open_llm_client_uses_requested_profile_and_deepseek_extra_body(monkeypatch):
+    cli = _import_cli()
+    captured: dict[str, object] = {}
+    requested_profiles: list[str | None] = []
+
+    class FakeHttpClient:
+        def __init__(self, *, timeout, trust_env):
+            captured["trust_env"] = trust_env
+
+    class FakeOpenAI:
+        def __init__(self, **kwargs):
+            captured["openai_kwargs"] = kwargs
+
+    monkeypatch.setitem(sys.modules, "httpx", types.SimpleNamespace(Client=FakeHttpClient))
+    monkeypatch.setitem(sys.modules, "openai", types.SimpleNamespace(OpenAI=FakeOpenAI))
+
+    def fake_resolve(profile_name=None, **_kwargs):
+        requested_profiles.append(profile_name)
+        return {
+            "local_llm_base_url": "https://api.deepseek.com",
+            "local_llm_api_key": "test-key",
+            "local_llm_model": "deepseek-v4-pro",
+        }
+
+    monkeypatch.setattr(cli, "resolve_professor_llm_settings", fake_resolve)
+
+    _client, model, extra_body = cli._open_llm_client("deepseekv4pro")
+
+    assert requested_profiles == ["deepseekv4pro"]
+    assert model == "deepseek-v4-pro"
+    assert captured["trust_env"] is False
+    assert captured["openai_kwargs"]["base_url"] == "https://api.deepseek.com"
+    assert captured["openai_kwargs"]["api_key"] == "test-key"
+    assert extra_body == {"thinking": {"type": "disabled"}}
+
+
 def test_abstract_for_summary_rejects_citation_metadata_and_uses_full_text():
     cli = _import_cli()
     row = {
@@ -451,7 +575,7 @@ def test_cli_dry_run_dispatches_without_paper_update(monkeypatch, tmp_path, caps
     conn.execute.return_value = select_cursor
 
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
-    monkeypatch.setattr(cli, "_open_llm_client", lambda: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(cli, "_open_llm_client", lambda *_args, **_kwargs: (MagicMock(), "gemma", {}))
     open_pipeline_run = MagicMock(return_value="11111111-1111-1111-1111-111111111111")
     close_pipeline_run = MagicMock()
     monkeypatch.setattr(cli, "open_pipeline_run", open_pipeline_run)
@@ -472,6 +596,57 @@ def test_cli_dry_run_dispatches_without_paper_update(monkeypatch, tmp_path, caps
     report = json.loads(capsys.readouterr().out)
     assert report["summaries_written"] == 1
     assert report["dry_run"] is True
+    assert report["existing_source_only"] is False
+    assert report["source_acquisition_enabled"] is False
+
+
+def test_existing_source_only_report_refuses_source_acquisition(
+    monkeypatch,
+    tmp_path,
+    capsys,
+):
+    cli = _import_cli()
+    conn = MagicMock()
+    select_cursor = MagicMock()
+    select_cursor.fetchall.return_value = [
+        {
+            "paper_id": "PAPER-1",
+            "title_clean": "A paper",
+            "title_raw": None,
+            "abstract_clean": "This paper proposes a robust model for scientific discovery.",
+            "summary_zh": None,
+            "quality_status": "needs_enrichment",
+        }
+    ]
+    conn.execute.return_value = select_cursor
+
+    monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
+    monkeypatch.setattr(
+        cli, "_open_llm_client", lambda *_args, **_kwargs: (MagicMock(), "gemma", {})
+    )
+    monkeypatch.setattr(
+        cli,
+        "open_pipeline_run",
+        lambda *_a, **_kw: "11111111-1111-1111-1111-111111111111",
+    )
+    monkeypatch.setattr(cli, "close_pipeline_run", lambda *_a, **_kw: None)
+    monkeypatch.setattr(
+        cli, "_resolve_checkpoint_path", lambda _resume, _run_id: tmp_path / "run.jsonl"
+    )
+    monkeypatch.setattr(cli, "translate_abstract_to_zh", lambda *_a, **_kw: "中" * 220)
+    monkeypatch.setattr(cli, "judge_summary_boilerplate", lambda *_a, **_kw: False)
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+
+    with _patch_argv(
+        ["run_paper_summary_zh_backfill.py", "--existing-source-only", "--limit", "1"]
+    ):
+        cli.main()
+
+    report = json.loads(capsys.readouterr().out)
+    assert report["existing_source_only"] is True
+    assert report["source_acquisition_enabled"] is False
+    assert report["metadata_enrichment_attempted"] == 0
+    assert report["full_text_enrichment_attempted"] == 0
 
 
 def test_cli_boilerplate_summary_rejects_summary_without_rejecting_paper(
@@ -498,7 +673,7 @@ def test_cli_boilerplate_summary_rejects_summary_without_rejecting_paper(
     conn.execute.return_value = select_cursor
 
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
-    monkeypatch.setattr(cli, "_open_llm_client", lambda: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(cli, "_open_llm_client", lambda *_args, **_kwargs: (MagicMock(), "gemma", {}))
     monkeypatch.setattr(
         cli,
         "open_pipeline_run",
@@ -528,6 +703,7 @@ def test_cli_boilerplate_summary_rejects_summary_without_rejecting_paper(
     report = json.loads(capsys.readouterr().out)
     assert report["summaries_rejected"] == 1
     assert report["summaries_written"] == 0
+    assert report["summary_rejection_reason_counts"] == {"boilerplate_judge": 1}
 
 
 def test_cli_invalid_generated_summary_rejects_summary_without_rejecting_paper(
@@ -554,7 +730,7 @@ def test_cli_invalid_generated_summary_rejects_summary_without_rejecting_paper(
     conn.execute.return_value = select_cursor
 
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
-    monkeypatch.setattr(cli, "_open_llm_client", lambda: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(cli, "_open_llm_client", lambda *_args, **_kwargs: (MagicMock(), "gemma", {}))
     monkeypatch.setattr(
         cli,
         "open_pipeline_run",
@@ -583,6 +759,7 @@ def test_cli_invalid_generated_summary_rejects_summary_without_rejecting_paper(
     report = json.loads(capsys.readouterr().out)
     assert report["summaries_rejected"] == 1
     assert report["summaries_written"] == 0
+    assert report["summary_rejection_reason_counts"] == {"translation_invalid_or_empty": 1}
 
 
 def test_cli_successful_summary_promotes_paper_status(monkeypatch, tmp_path, capsys):
@@ -605,7 +782,7 @@ def test_cli_successful_summary_promotes_paper_status(monkeypatch, tmp_path, cap
     conn.execute.return_value = select_cursor
 
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
-    monkeypatch.setattr(cli, "_open_llm_client", lambda: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(cli, "_open_llm_client", lambda *_args, **_kwargs: (MagicMock(), "gemma", {}))
     monkeypatch.setattr(
         cli,
         "open_pipeline_run",
@@ -680,7 +857,7 @@ def test_cli_enriches_missing_venue_even_when_abstract_is_present(
         )
 
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
-    monkeypatch.setattr(cli, "_open_llm_client", lambda: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(cli, "_open_llm_client", lambda *_args, **_kwargs: (MagicMock(), "gemma", {}))
     monkeypatch.setattr(
         cli,
         "open_pipeline_run",
@@ -730,6 +907,497 @@ def test_cli_enriches_missing_venue_even_when_abstract_is_present(
     assert report["summaries_written"] == 1
 
 
+def test_identifier_metadata_only_persists_source_without_llm_or_summary(
+    monkeypatch,
+    tmp_path,
+    capsys,
+):
+    cli = _import_cli()
+    conn = MagicMock()
+    select_cursor = MagicMock()
+    select_cursor.fetchall.return_value = [
+        {
+            "paper_id": "PAPER-METADATA-ONLY",
+            "title_clean": "Identifier Metadata Source Lane",
+            "title_raw": None,
+            "doi": "10.1234/source-lane",
+            "arxiv_id": None,
+            "openalex_id": "W123",
+            "year": None,
+            "venue": None,
+            "authors_display": None,
+            "abstract_clean": None,
+            "summary_zh": None,
+            "quality_status": "needs_enrichment",
+            "citation_count": None,
+        }
+    ]
+    conn.execute.return_value = select_cursor
+
+    def fake_enrich(doi: str | None, **kwargs):
+        assert doi == "10.1234/source-lane"
+        assert kwargs == {"arxiv_id": None, "openalex_id": "W123"}
+        return cli.PaperMetadataEnrichment(
+            abstract=(
+                "This paper presents an identifier metadata source lane, "
+                "recovering usable abstract evidence before summary generation."
+            ),
+            venue="Journal of Source Evidence",
+            publication_date="2024-01-01",
+            citation_count=7,
+            enrichment_sources=("openalex", "crossref"),
+            authors=(PaperAuthorMetadata(display_name="A. Researcher"),),
+        )
+
+    monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
+    monkeypatch.setattr(
+        cli,
+        "_open_llm_client",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AssertionError("metadata-only lane must not open LLM client")
+        ),
+    )
+    monkeypatch.setattr(
+        cli,
+        "open_pipeline_run",
+        lambda *_a, **_kw: "11111111-1111-1111-1111-111111111111",
+    )
+    monkeypatch.setattr(cli, "close_pipeline_run", lambda *_a, **_kw: None)
+    monkeypatch.setattr(
+        cli, "_resolve_checkpoint_path", lambda _resume, _run_id: tmp_path / "run.jsonl"
+    )
+    monkeypatch.setattr(cli, "enrich_paper_with_hybrid_sources", fake_enrich)
+    translate = MagicMock()
+    monkeypatch.setattr(cli, "translate_abstract_to_zh", translate)
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+
+    with _patch_argv(
+        [
+            "run_paper_summary_zh_backfill.py",
+            "--identifier-metadata-only",
+            "--limit",
+            "1",
+        ]
+    ):
+        cli.main()
+
+    translate.assert_not_called()
+    update_calls = [
+        (call.args[0], call.args[1])
+        for call in conn.execute.call_args_list
+        if call.args and isinstance(call.args[0], str) and "UPDATE paper" in call.args[0]
+    ]
+    assert len(update_calls) == 1
+    metadata_sql, metadata_params = update_calls[0]
+    assert "abstract_clean = COALESCE(%s, abstract_clean)" in metadata_sql
+    assert "summary_zh = %s" not in metadata_sql
+    assert metadata_params[0].startswith("This paper presents")
+    assert metadata_params[1] == "Journal of Source Evidence"
+    assert metadata_params[2] == 2024
+    assert metadata_params[3] == 7
+    assert metadata_params[4] == "A. Researcher"
+    report = json.loads(capsys.readouterr().out)
+    assert report["identifier_metadata_only"] is True
+    assert report["summary_generation_enabled"] is False
+    assert report["source_acquisition_enabled"] is True
+    assert report["metadata_enrichment_attempted"] == 1
+    assert report["metadata_enriched"] == 1
+    assert report["metadata_provider_misses"] == 0
+    assert report["metadata_no_updates"] == 0
+    assert report["summaries_written"] == 0
+
+
+def test_identifier_metadata_only_persists_pdf_url_for_slow_lane_without_fetch(
+    monkeypatch,
+    tmp_path,
+    capsys,
+):
+    cli = _import_cli()
+    conn = MagicMock()
+    select_cursor = MagicMock()
+    select_cursor.fetchall.return_value = [
+        {
+            "paper_id": "PAPER-METADATA-PDF",
+            "title_clean": "Identifier Metadata PDF Candidate",
+            "title_raw": None,
+            "doi": "10.1234/pdf-candidate",
+            "arxiv_id": None,
+            "openalex_id": "W456",
+            "year": None,
+            "venue": None,
+            "authors_display": None,
+            "abstract_clean": None,
+            "summary_zh": None,
+            "quality_status": "needs_enrichment",
+            "citation_count": None,
+        }
+    ]
+    select_cursor.rowcount = 1
+    conn.execute.return_value = select_cursor
+
+    monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
+    monkeypatch.setattr(
+        cli,
+        "_open_llm_client",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AssertionError("metadata-only lane must not open LLM client")
+        ),
+    )
+    monkeypatch.setattr(
+        cli,
+        "open_pipeline_run",
+        lambda *_a, **_kw: "11111111-1111-1111-1111-111111111111",
+    )
+    monkeypatch.setattr(cli, "close_pipeline_run", lambda *_a, **_kw: None)
+    checkpoint = tmp_path / "run.jsonl"
+    monkeypatch.setattr(cli, "_resolve_checkpoint_path", lambda _resume, _run_id: checkpoint)
+    monkeypatch.setattr(
+        cli,
+        "enrich_paper_with_hybrid_sources",
+        lambda _doi, **_kwargs: cli.PaperMetadataEnrichment(
+            pdf_url="https://repository.example.org/paper.pdf",
+            enrichment_sources=("unpaywall",),
+        ),
+    )
+    fetch = MagicMock(side_effect=AssertionError("metadata-only lane must not fetch PDF"))
+    translate = MagicMock()
+    monkeypatch.setattr(cli, "fetch_pdf_url_full_text", fetch)
+    monkeypatch.setattr(cli, "translate_abstract_to_zh", translate)
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+
+    with _patch_argv(
+        [
+            "run_paper_summary_zh_backfill.py",
+            "--identifier-metadata-only",
+            "--limit",
+            "1",
+        ]
+    ):
+        cli.main()
+
+    fetch.assert_not_called()
+    translate.assert_not_called()
+    paper_updates = [
+        call
+        for call in conn.execute.call_args_list
+        if call.args and isinstance(call.args[0], str) and "UPDATE paper" in call.args[0]
+    ]
+    assert paper_updates == []
+    pdf_upserts = [
+        (call.args[0], call.args[1])
+        for call in conn.execute.call_args_list
+        if call.args
+        and isinstance(call.args[0], str)
+        and "INSERT INTO paper_full_text" in call.args[0]
+    ]
+    assert len(pdf_upserts) == 1
+    _, params = pdf_upserts[0]
+    assert params[0] == "PAPER-METADATA-PDF"
+    assert params[1] == "https://repository.example.org/paper.pdf"
+    assert params[2] == "doi_pdf:unpaywall"
+    report = json.loads(capsys.readouterr().out)
+    assert report["identifier_metadata_only"] is True
+    assert report["summary_generation_enabled"] is False
+    assert report["metadata_enrichment_attempted"] == 1
+    assert report["metadata_enriched"] == 1
+    assert report["metadata_pdf_url_upserts"] == 1
+    assert report["metadata_no_updates"] == 0
+    assert report["full_text_enrichment_attempted"] == 0
+    assert report["summaries_written"] == 0
+    checkpoint_rows = [
+        json.loads(line) for line in checkpoint.read_text(encoding="utf-8").splitlines()
+    ]
+    assert checkpoint_rows[-1]["status"] == "metadata_enriched"
+    assert checkpoint_rows[-1]["pdf_url_upserted"] is True
+
+
+def test_identifier_metadata_only_reports_provider_miss_without_summary(
+    monkeypatch,
+    tmp_path,
+    capsys,
+):
+    cli = _import_cli()
+    conn = MagicMock()
+    select_cursor = MagicMock()
+    select_cursor.fetchall.return_value = [
+        {
+            "paper_id": "PAPER-METADATA-MISS",
+            "title_clean": "Identifier Metadata Miss",
+            "title_raw": None,
+            "doi": None,
+            "arxiv_id": "2401.12345",
+            "openalex_id": None,
+            "year": None,
+            "venue": None,
+            "authors_display": None,
+            "abstract_clean": None,
+            "summary_zh": None,
+            "quality_status": "needs_enrichment",
+            "citation_count": None,
+        }
+    ]
+    conn.execute.return_value = select_cursor
+
+    monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
+    monkeypatch.setattr(
+        cli,
+        "_open_llm_client",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AssertionError("metadata-only lane must not open LLM client")
+        ),
+    )
+    monkeypatch.setattr(
+        cli,
+        "open_pipeline_run",
+        lambda *_a, **_kw: "11111111-1111-1111-1111-111111111111",
+    )
+    monkeypatch.setattr(cli, "close_pipeline_run", lambda *_a, **_kw: None)
+    monkeypatch.setattr(
+        cli, "_resolve_checkpoint_path", lambda _resume, _run_id: tmp_path / "run.jsonl"
+    )
+    monkeypatch.setattr(cli, "enrich_paper_with_hybrid_sources", lambda *_a, **_kw: None)
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+
+    with _patch_argv(
+        [
+            "run_paper_summary_zh_backfill.py",
+            "--identifier-metadata-only",
+            "--limit",
+            "1",
+        ]
+    ):
+        cli.main()
+
+    report = json.loads(capsys.readouterr().out)
+    assert report["papers_processed"] == 1
+    assert report["metadata_enrichment_attempted"] == 1
+    assert report["metadata_provider_misses"] == 1
+    assert report["summaries_written"] == 0
+    assert not [
+        call
+        for call in conn.execute.call_args_list
+        if call.args and isinstance(call.args[0], str) and "UPDATE paper" in call.args[0]
+    ]
+
+
+def test_identifier_metadata_only_reports_provider_error_without_summary(
+    monkeypatch,
+    tmp_path,
+    capsys,
+):
+    cli = _import_cli()
+    conn = MagicMock()
+    select_cursor = MagicMock()
+    select_cursor.fetchall.return_value = [
+        {
+            "paper_id": "PAPER-METADATA-ERROR",
+            "title_clean": "Identifier Metadata Error",
+            "title_raw": None,
+            "doi": "10.1234/provider-error",
+            "arxiv_id": None,
+            "openalex_id": None,
+            "year": None,
+            "venue": None,
+            "authors_display": None,
+            "abstract_clean": None,
+            "summary_zh": None,
+            "quality_status": "needs_enrichment",
+            "citation_count": None,
+        }
+    ]
+    conn.execute.return_value = select_cursor
+
+    monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
+    monkeypatch.setattr(
+        cli,
+        "_open_llm_client",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AssertionError("metadata-only lane must not open LLM client")
+        ),
+    )
+    monkeypatch.setattr(
+        cli,
+        "open_pipeline_run",
+        lambda *_a, **_kw: "11111111-1111-1111-1111-111111111111",
+    )
+    monkeypatch.setattr(cli, "close_pipeline_run", lambda *_a, **_kw: None)
+    monkeypatch.setattr(
+        cli, "_resolve_checkpoint_path", lambda _resume, _run_id: tmp_path / "run.jsonl"
+    )
+    monkeypatch.setattr(
+        cli,
+        "enrich_paper_with_hybrid_sources",
+        lambda *_a, **_kw: (_ for _ in ()).throw(TimeoutError("provider timeout")),
+    )
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+
+    with _patch_argv(
+        [
+            "run_paper_summary_zh_backfill.py",
+            "--identifier-metadata-only",
+            "--limit",
+            "1",
+        ]
+    ):
+        cli.main()
+
+    report = json.loads(capsys.readouterr().out)
+    assert report["metadata_enrichment_attempted"] == 1
+    assert report["metadata_provider_errors"] == 1
+    assert report["metadata_provider_timeouts"] == 1
+    assert report["metadata_provider_rate_limits"] == 0
+    assert report["metadata_provider_error_samples"] == [
+        {
+            "paper_id": "PAPER-METADATA-ERROR",
+            "provider": "hybrid",
+            "category": "timeout",
+            "error_type": "TimeoutError",
+            "error": "provider timeout",
+        }
+    ]
+    assert report["papers_with_errors"] == 1
+    assert report["summaries_written"] == 0
+
+
+def test_cli_skips_doi_enrichment_for_polluted_doi_only_row(
+    monkeypatch,
+    tmp_path,
+    capsys,
+):
+    cli = _import_cli()
+    conn = MagicMock()
+    select_cursor = MagicMock()
+    select_cursor.fetchall.return_value = [
+        {
+            "paper_id": "PAPER-BAD-DOI",
+            "title_clean": "A paper with a polluted DOI",
+            "title_raw": None,
+            "doi": "10.1021/10.1002/poc.4450",
+            "arxiv_id": None,
+            "openalex_id": None,
+            "year": None,
+            "venue": None,
+            "authors_display": None,
+            "abstract_clean": None,
+            "summary_zh": None,
+            "quality_status": "needs_enrichment",
+            "citation_count": None,
+        }
+    ]
+    conn.execute.return_value = select_cursor
+    enrich = MagicMock(side_effect=AssertionError("bad DOI should be skipped"))
+
+    monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
+    monkeypatch.setattr(cli, "_open_llm_client", lambda *_args, **_kwargs: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(
+        cli,
+        "open_pipeline_run",
+        lambda *_a, **_kw: "11111111-1111-1111-1111-111111111111",
+    )
+    monkeypatch.setattr(cli, "close_pipeline_run", lambda *_a, **_kw: None)
+    monkeypatch.setattr(
+        cli, "_resolve_checkpoint_path", lambda _resume, _run_id: tmp_path / "run.jsonl"
+    )
+    monkeypatch.setattr(cli, "enrich_paper_with_hybrid_sources", enrich)
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+
+    with _patch_argv(
+        [
+            "run_paper_summary_zh_backfill.py",
+            "--enrich-doi-metadata",
+            "--limit",
+            "1",
+        ]
+    ):
+        cli.main()
+
+    enrich.assert_not_called()
+    report = json.loads(capsys.readouterr().out)
+    assert report["metadata_enrichment_attempted"] == 0
+    assert report["metadata_enrichment_skipped_bad_doi"] == 1
+    assert report["bad_doi_samples"] == [
+        {
+            "paper_id": "PAPER-BAD-DOI",
+            "doi": "10.1021/10.1002/poc.4450",
+            "reason": "nested_doi_prefix",
+        }
+    ]
+    assert report["papers_skipped"] == 1
+
+
+def test_identifier_metadata_only_reports_bad_doi_without_provider_call(
+    monkeypatch,
+    tmp_path,
+    capsys,
+):
+    cli = _import_cli()
+    conn = MagicMock()
+    select_cursor = MagicMock()
+    select_cursor.fetchall.return_value = [
+        {
+            "paper_id": "PAPER-BAD-DOI-METADATA-ONLY",
+            "title_clean": "A paper with a polluted DOI",
+            "title_raw": None,
+            "doi": "10.1021/10.1002/poc.4450",
+            "arxiv_id": None,
+            "openalex_id": None,
+            "year": None,
+            "venue": None,
+            "authors_display": None,
+            "abstract_clean": None,
+            "summary_zh": None,
+            "quality_status": "needs_enrichment",
+            "citation_count": None,
+        }
+    ]
+    conn.execute.return_value = select_cursor
+    provider = MagicMock()
+
+    monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
+    monkeypatch.setattr(
+        cli,
+        "_open_llm_client",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AssertionError("metadata-only lane must not open LLM client")
+        ),
+    )
+    monkeypatch.setattr(
+        cli,
+        "open_pipeline_run",
+        lambda *_a, **_kw: "11111111-1111-1111-1111-111111111111",
+    )
+    monkeypatch.setattr(cli, "close_pipeline_run", lambda *_a, **_kw: None)
+    monkeypatch.setattr(
+        cli, "_resolve_checkpoint_path", lambda _resume, _run_id: tmp_path / "run.jsonl"
+    )
+    monkeypatch.setattr(cli, "enrich_paper_with_hybrid_sources", provider)
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+
+    with _patch_argv(
+        [
+            "run_paper_summary_zh_backfill.py",
+            "--identifier-metadata-only",
+            "--limit",
+            "1",
+        ]
+    ):
+        cli.main()
+
+    provider.assert_not_called()
+    report = json.loads(capsys.readouterr().out)
+    assert report["papers_processed"] == 1
+    assert report["metadata_enrichment_attempted"] == 0
+    assert report["metadata_enrichment_skipped_bad_doi"] == 1
+    assert report["metadata_provider_misses"] == 0
+    assert report["bad_doi_samples"] == [
+        {
+            "paper_id": "PAPER-BAD-DOI-METADATA-ONLY",
+            "doi": "10.1021/10.1002/poc.4450",
+            "reason": "nested_doi_prefix",
+        }
+    ]
+
+
 def test_cli_enriches_doi_metadata_before_summary(monkeypatch, tmp_path, capsys):
     cli = _import_cli()
     conn = MagicMock()
@@ -752,7 +1420,7 @@ def test_cli_enriches_doi_metadata_before_summary(monkeypatch, tmp_path, capsys)
     conn.execute.return_value = select_cursor
 
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
-    monkeypatch.setattr(cli, "_open_llm_client", lambda: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(cli, "_open_llm_client", lambda *_args, **_kwargs: (MagicMock(), "gemma", {}))
     monkeypatch.setattr(
         cli,
         "open_pipeline_run",
@@ -841,7 +1509,7 @@ def test_cli_does_not_persist_unusable_provider_abstract(
     conn.execute.return_value = select_cursor
 
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
-    monkeypatch.setattr(cli, "_open_llm_client", lambda: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(cli, "_open_llm_client", lambda *_args, **_kwargs: (MagicMock(), "gemma", {}))
     monkeypatch.setattr(
         cli,
         "open_pipeline_run",
@@ -912,7 +1580,7 @@ def test_cli_enriches_missing_authors_from_metadata(monkeypatch, tmp_path, capsy
     conn.execute.return_value = select_cursor
 
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
-    monkeypatch.setattr(cli, "_open_llm_client", lambda: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(cli, "_open_llm_client", lambda *_args, **_kwargs: (MagicMock(), "gemma", {}))
     monkeypatch.setattr(
         cli,
         "open_pipeline_run",
@@ -1007,7 +1675,7 @@ def test_cli_enriches_doi_metadata_when_existing_abstract_is_citation_metadata(
         )
 
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
-    monkeypatch.setattr(cli, "_open_llm_client", lambda: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(cli, "_open_llm_client", lambda *_args, **_kwargs: (MagicMock(), "gemma", {}))
     monkeypatch.setattr(
         cli,
         "open_pipeline_run",
@@ -1088,7 +1756,7 @@ def test_cli_enriches_arxiv_metadata_before_summary(monkeypatch, tmp_path, capsy
         )
 
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
-    monkeypatch.setattr(cli, "_open_llm_client", lambda: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(cli, "_open_llm_client", lambda *_args, **_kwargs: (MagicMock(), "gemma", {}))
     monkeypatch.setattr(
         cli,
         "open_pipeline_run",
@@ -1186,7 +1854,7 @@ def test_cli_uses_enriched_pdf_url_when_metadata_has_no_abstract(
         )
 
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
-    monkeypatch.setattr(cli, "_open_llm_client", lambda: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(cli, "_open_llm_client", lambda *_args, **_kwargs: (MagicMock(), "gemma", {}))
     monkeypatch.setattr(
         cli,
         "open_pipeline_run",
@@ -1312,7 +1980,7 @@ def test_cli_uses_same_run_pdf_intro_without_persisting_as_abstract(
         return "中" * 220
 
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
-    monkeypatch.setattr(cli, "_open_llm_client", lambda: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(cli, "_open_llm_client", lambda *_args, **_kwargs: (MagicMock(), "gemma", {}))
     monkeypatch.setattr(
         cli,
         "open_pipeline_run",
@@ -1404,7 +2072,7 @@ def test_cli_backfills_abstract_clean_from_existing_full_text_abstract(
         return "中" * 220
 
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
-    monkeypatch.setattr(cli, "_open_llm_client", lambda: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(cli, "_open_llm_client", lambda *_args, **_kwargs: (MagicMock(), "gemma", {}))
     monkeypatch.setattr(
         cli,
         "open_pipeline_run",
@@ -1436,6 +2104,68 @@ def test_cli_backfills_abstract_clean_from_existing_full_text_abstract(
     assert summary_params[1] == "ready"
     report = json.loads(capsys.readouterr().out)
     assert report["abstract_clean_backfilled_from_full_text"] == 1
+
+
+def test_cli_backfills_abstract_clean_without_regenerating_existing_summary(
+    monkeypatch,
+    tmp_path,
+    capsys,
+):
+    cli = _import_cli()
+    conn = MagicMock()
+    select_cursor = MagicMock()
+    select_cursor.fetchall.return_value = [
+        {
+            "paper_id": "PAPER-FT-DONE",
+            "title_clean": "Full text abstract paper with existing summary",
+            "title_raw": None,
+            "year": 2026,
+            "venue": "ICLR",
+            "authors_display": "A. Smith",
+            "abstract_clean": None,
+            "full_text_abstract": "This full text abstract has useful technical details.",
+            "summary_zh": "这篇论文已经有一个可用的中文摘要，不应该重新生成。",
+            "quality_status": "partial",
+        }
+    ]
+    conn.execute.return_value = select_cursor
+
+    def fail_translate(*_args, **_kwargs):
+        raise AssertionError("summary generation should not run when summary_zh exists")
+
+    monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
+    monkeypatch.setattr(cli, "_open_llm_client", lambda *_args, **_kwargs: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(
+        cli,
+        "open_pipeline_run",
+        lambda *_a, **_kw: "11111111-1111-1111-1111-111111111111",
+    )
+    monkeypatch.setattr(cli, "close_pipeline_run", lambda *_a, **_kw: None)
+    monkeypatch.setattr(
+        cli, "_resolve_checkpoint_path", lambda _resume, _run_id: tmp_path / "run.jsonl"
+    )
+    monkeypatch.setattr(cli, "translate_abstract_to_zh", fail_translate)
+    monkeypatch.setattr(cli, "judge_summary_boilerplate", lambda *_a, **_kw: False)
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+
+    with _patch_argv(["run_paper_summary_zh_backfill.py", "--limit", "1"]):
+        cli.main()
+
+    update_calls = [
+        (call.args[0], call.args[1])
+        for call in conn.execute.call_args_list
+        if call.args and isinstance(call.args[0], str) and "UPDATE paper" in call.args[0]
+    ]
+    assert len(update_calls) == 1
+    metadata_sql, metadata_params = update_calls[0]
+    assert "abstract_clean = COALESCE(%s, abstract_clean)" in metadata_sql
+    assert "summary_zh = %s" not in metadata_sql
+    assert metadata_params[0] == "This full text abstract has useful technical details."
+    report = json.loads(capsys.readouterr().out)
+    assert report["abstract_clean_backfilled_from_full_text"] == 1
+    assert report["summaries_written"] == 0
+    assert report["papers_processed"] == 1
+    assert report["papers_with_errors"] == 0
 
 
 def test_cli_enriches_openalex_metadata_before_summary(monkeypatch, tmp_path, capsys):
@@ -1477,7 +2207,7 @@ def test_cli_enriches_openalex_metadata_before_summary(monkeypatch, tmp_path, ca
         )
 
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
-    monkeypatch.setattr(cli, "_open_llm_client", lambda: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(cli, "_open_llm_client", lambda *_args, **_kwargs: (MagicMock(), "gemma", {}))
     monkeypatch.setattr(
         cli,
         "open_pipeline_run",
@@ -1536,7 +2266,7 @@ def test_cli_identifier_contradiction_files_issue_and_blocks_ready(
     conn.execute.return_value = select_cursor
 
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
-    monkeypatch.setattr(cli, "_open_llm_client", lambda: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(cli, "_open_llm_client", lambda *_args, **_kwargs: (MagicMock(), "gemma", {}))
     monkeypatch.setattr(
         cli,
         "open_pipeline_run",
@@ -1623,7 +2353,7 @@ def test_cli_summarizes_already_chinese_abstract(monkeypatch, tmp_path):
     checkpoint = tmp_path / "run.jsonl"
 
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
-    monkeypatch.setattr(cli, "_open_llm_client", lambda: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(cli, "_open_llm_client", lambda *_args, **_kwargs: (MagicMock(), "gemma", {}))
     monkeypatch.setattr(
         cli,
         "open_pipeline_run",
@@ -1675,7 +2405,7 @@ def test_cli_writes_checkpoint_to_explicit_resume_path(monkeypatch, tmp_path):
         return explicit_checkpoint if resume_arg else default_checkpoint
 
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
-    monkeypatch.setattr(cli, "_open_llm_client", lambda: (MagicMock(), "gemma", {}))
+    monkeypatch.setattr(cli, "_open_llm_client", lambda *_args, **_kwargs: (MagicMock(), "gemma", {}))
     monkeypatch.setattr(
         cli,
         "open_pipeline_run",

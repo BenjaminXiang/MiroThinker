@@ -25,6 +25,24 @@ _GROUP_PATTERNS = (
 _LAB_URL_PATTERNS = (r"/lab(?:/|$)", r"/group(?:/|$)", r"/team(?:/|$)")
 _CV_PATTERNS = (r"CV\b", r"个人简历", r"履历", r"resume\.pdf", r"-cv\.pdf")
 _PDF_URL_PATTERNS = (r"\.pdf(?:\?|$)",)
+_BARE_HTTP_URL_RE = re.compile(r"https?://[^\s<>'\"，。；;、）)]+")
+_PERSONAL_HOMEPAGE_ANCHOR_PATTERNS = (
+    r"个人主页",
+    r"个人网站",
+    r"教师主页",
+    r"主页",
+    r"Personal\s+(?:Homepage|Website|Page)",
+    r"Homepage",
+    r"Website",
+    r"科研详情",
+)
+_PERSONAL_HOMEPAGE_HOST_SUFFIXES = (".github.io",)
+_BLOCKED_EXTERNAL_PROFILE_HOST_TOKENS = (
+    "scholar.google.",
+    "researchgate.net",
+    "orcid.org",
+    "linkedin.com",
+)
 _SKIP_SCHEMES = ("mailto:", "javascript:", "tel:")
 _USER_AGENT = "MiroThinker professor multi-source crawler/1.0"
 _HTML_TIMEOUT_SECONDS = 10.0
@@ -75,6 +93,19 @@ def follow_supplementary_links(
             )
             if pdf_text:
                 segments.append(_format_segment(link.url, pdf_text))
+            continue
+
+        if _is_teacher_personal_homepage_anchor(link, base_url):
+            seen_urls.discard(key)
+            homepage_segments = _crawl_teacher_personal_homepage(
+                link.url,
+                professor_name=professor_name,
+                max_hops=max_hops,
+                max_pages=max_sub_links_per_domain + 1,
+                seen_urls=seen_urls,
+                fetch_html_fn=fetch_html_fn,
+            )
+            segments.extend(homepage_segments)
             continue
 
         if not (
@@ -145,6 +176,106 @@ def _is_cv_pdf_anchor(text: str, href: str) -> bool:
     return any(re.search(pattern, combined, re.IGNORECASE) for pattern in _CV_PATTERNS)
 
 
+def _is_teacher_personal_homepage_anchor(link: LinkCandidate, base_url: str) -> bool:
+    parsed = urlparse(link.url)
+    host = (parsed.hostname or "").lower()
+    if not host or _is_blocked_external_profile_host(host):
+        return False
+    if parsed.scheme not in {"http", "https"}:
+        return False
+
+    base_host = (urlparse(base_url).hostname or "").lower()
+    known_personal_host = any(
+        host.endswith(suffix) for suffix in _PERSONAL_HOMEPAGE_HOST_SUFFIXES
+    )
+    if host == base_host and not known_personal_host:
+        return False
+
+    combined = f"{link.text or ''} {link.title or ''} {link.url or ''}"
+    anchor_looks_personal = any(
+        re.search(pattern, combined, re.IGNORECASE)
+        for pattern in _PERSONAL_HOMEPAGE_ANCHOR_PATTERNS
+    )
+    return known_personal_host or anchor_looks_personal
+
+
+def _crawl_teacher_personal_homepage(
+    url: str,
+    *,
+    professor_name: str | None,
+    max_hops: int,
+    max_pages: int,
+    seen_urls: set[str],
+    fetch_html_fn: Callable[[str, float], object] | None,
+) -> list[str]:
+    if max_hops <= 0 or max_pages <= 0:
+        return []
+    root_host = (urlparse(url).hostname or "").lower()
+    if not root_host or _is_blocked_external_profile_host(root_host):
+        return []
+
+    segments: list[str] = []
+    queue: list[tuple[str, int]] = [(url, 1)]
+    fetched_count = 0
+    while queue and fetched_count < max_pages:
+        current_url, depth = queue.pop(0)
+        current_key = current_url.rstrip("/")
+        if current_key in seen_urls:
+            continue
+        seen_urls.add(current_key)
+        html = _safe_fetch_html(
+            current_url,
+            fetch_html_fn=fetch_html_fn,
+            timeout=_HTML_TIMEOUT_SECONDS,
+        )
+        if not html:
+            continue
+        fetched_count += 1
+        text = extract_main_text(html)
+        if text:
+            segments.append(_format_segment(current_url, text))
+
+        if depth >= max_hops:
+            continue
+        for sub_link in _select_personal_homepage_recursive_links(
+            html,
+            current_url,
+            root_host=root_host,
+            professor_name=professor_name,
+        ):
+            sub_key = sub_link.url.rstrip("/")
+            if sub_key in seen_urls:
+                continue
+            queue.append((sub_link.url, depth + 1))
+            if len(queue) + fetched_count >= max_pages:
+                break
+    return segments
+
+
+def _select_personal_homepage_recursive_links(
+    html: str,
+    base_url: str,
+    *,
+    root_host: str,
+    professor_name: str | None,
+) -> list[LinkCandidate]:
+    selected: list[LinkCandidate] = []
+    for link in _extract_links(html, base_url):
+        parsed = urlparse(link.url)
+        if (parsed.hostname or "").lower() != root_host:
+            continue
+        if _is_cv_pdf_anchor(link.text, link.url):
+            continue
+        if not _is_personal_section(link, professor_name=professor_name):
+            continue
+        selected.append(link)
+    return selected
+
+
+def _is_blocked_external_profile_host(host: str) -> bool:
+    return any(token in host for token in _BLOCKED_EXTERNAL_PROFILE_HOST_TOKENS)
+
+
 def extract_main_text(html: str) -> str:
     if not html:
         return ""
@@ -186,6 +317,17 @@ def _extract_links(html: str, base_url: str) -> list[LinkCandidate]:
                 title=str(anchor.get("title")).strip() if anchor.get("title") else None,
             )
         )
+    page_text = soup.get_text(" ", strip=True)
+    for match in _BARE_HTTP_URL_RE.finditer(page_text):
+        absolute = match.group(0).rstrip(".,;:，。；、")
+        parsed = urlparse(absolute)
+        if parsed.scheme not in {"http", "https"}:
+            continue
+        normalized = absolute.rstrip("/")
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        links.append(LinkCandidate(url=absolute, text="", title=None))
     return links
 
 
