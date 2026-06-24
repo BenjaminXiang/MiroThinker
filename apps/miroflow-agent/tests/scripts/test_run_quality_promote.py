@@ -6,6 +6,16 @@ from uuid import UUID
 
 import scripts.run_quality_promote as promote
 
+# A canonical Chinese biography (200-300 chars, CJK-dominant) that satisfies the
+# profile_summary contract so evaluate_professor returns "ready".
+_ZH_PROFILE_SUMMARY = (
+    "该教师长期从事人工智能与医学影像分析研究，聚焦脑疾病诊断、预后评估和多模态数据融合。"
+    "其工作结合深度学习、可信人工智能和临床应用场景，形成了较稳定的研究方向。"
+    "相关成果服务于智能医疗系统建设，并在人才培养和科研合作中持续积累影响。"
+    "近年的研究强调算法可靠性、模型解释性和真实临床数据验证，能够为深圳高校的交叉学科布局提供支撑。"
+    "团队也关注医学数据治理和跨院校协作，推动算法从实验室验证走向可审计的真实应用，并形成稳定成果。"
+)
+
 
 class FakeCursor:
     def __init__(
@@ -94,7 +104,7 @@ def test_dry_run_summary_uses_no_writes(
                 {
                     "professor_id": "p1",
                     "identity_status": "confirmed",
-                    "profile_summary": "x" * 150,
+                    "profile_summary": _ZH_PROFILE_SUMMARY,
                 }
             ],
             "company": [
@@ -143,7 +153,7 @@ def test_actual_run_updates_ready_rows(
                 {
                     "professor_id": "p1",
                     "identity_status": "confirmed",
-                    "profile_summary": "x" * 150,
+                    "profile_summary": _ZH_PROFILE_SUMMARY,
                 }
             ]
         }

@@ -6,6 +6,8 @@ from pathlib import Path
 
 from openpyxl import Workbook
 
+import psycopg
+
 
 _SCRIPT_PATH = (
     Path(__file__).parent.parent.parent / "scripts" / "run_patent_release_e2e.py"
@@ -49,8 +51,49 @@ class _RecordingConn:
     def rollback(self):
         self.rolled_back = True
 
+    def transaction(self):
+        class _Tx:
+            def __enter__(self_inner):
+                return self_inner
+
+            def __exit__(self_inner, exc_type, exc, tb):
+                if exc_type is None:
+                    self.committed = True
+                else:
+                    self.rolled_back = True
+                return False
+
+        return _Tx()
+
     def close(self):
         self.closed = True
+
+
+class _EmptyCompanyReadConn:
+    """Mock for the direct ``psycopg.connect`` company-name read (run_patent
+    line ~132): returns no rows so the xlsx-name fallback map is used."""
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def cursor(self, *args, **kwargs):
+        class _Cursor:
+            def execute(self, *a, **k):
+                pass
+
+            def fetchall(self):
+                return []
+
+            def close(self):
+                pass
+
+        return _Cursor()
+
+    def close(self):
+        pass
 
 
 def _import_cli():
@@ -126,6 +169,9 @@ def test_run_patent_release_e2e_writes_patents_and_company_links_with_mock_pg(
 
     monkeypatch.setattr(cli, "_open_database_connection", lambda _url: conn)
     monkeypatch.setattr(cli, "_default_supplement_patent_inputs", lambda: [])
+    # The company-name read opens a direct psycopg.connect (not _open_database_
+    # connection); mock it so the 'fake' DSN is never resolved.
+    monkeypatch.setattr(psycopg, "connect", lambda *a, **k: _EmptyCompanyReadConn())
 
     result = cli.main(
         [

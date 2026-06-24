@@ -11,6 +11,26 @@ from src.data_agents.professor.llm_profiles import (
     resolve_professor_llm_settings,
 )
 
+# Override env vars that resolve_professor_llm_settings reads (llm_profiles.py).
+# Other tests invoke scripts whose load_dotenv() can set these from .env and
+# pollute this worker's os.environ; clear them so profile resolution here is
+# deterministic. Tests that explicitly setenv() an override do so in their body
+# AFTER this fixture, so their value still wins.
+_LLM_OVERRIDE_ENV = (
+    "LOCAL_LLM_BASE_URL",
+    "LOCAL_LLM_MODEL",
+    "ONLINE_LLM_BASE_URL",
+    "ONLINE_LLM_MODEL",
+    "LLM_PROFILE",
+    "DEEPSEEK_MODEL",
+)
+
+
+@pytest.fixture(autouse=True)
+def _isolate_llm_override_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    for var in _LLM_OVERRIDE_ENV:
+        monkeypatch.delenv(var, raising=False)
+
 
 def test_list_professor_llm_profiles_is_sorted_and_predictable():
     """Canonical profile names should be deterministic and include known aliases."""

@@ -271,10 +271,6 @@ def _merge_professor_record_cluster(records: list[ProfessorRecord]) -> Professor
                 base.profile_summary,
                 *(record.profile_summary for record in records),
             ),
-            "evaluation_summary": _prefer_longer_text(
-                base.evaluation_summary,
-                *(record.evaluation_summary for record in records),
-            ),
             "last_updated": max(record.last_updated for record in records),
             "evidence": merged_evidence,
         },
