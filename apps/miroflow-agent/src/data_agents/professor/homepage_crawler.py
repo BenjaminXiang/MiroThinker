@@ -2955,8 +2955,14 @@ async def crawl_homepage(
     for recursive_link in recursive_links:
         link = recursive_link.link
         try:
-            sub_result = fetch_html_fn(link.url, timeout)
-            sub_html = sub_result.html if hasattr(sub_result, "html") else sub_result
+            cache_key = link.url.rstrip("/")
+            if cache_key in fetched_html_cache:
+                sub_html = fetched_html_cache[cache_key]
+            else:
+                sub_result = fetch_html_fn(link.url, timeout)
+                sub_html = (
+                    sub_result.html if hasattr(sub_result, "html") else sub_result
+                )
             if sub_html:
                 all_content += f"\n\n--- {link.url} ---\n{sub_html}"
                 fetched_pages.append(

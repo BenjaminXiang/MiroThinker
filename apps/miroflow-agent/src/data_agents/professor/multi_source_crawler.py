@@ -37,6 +37,21 @@ _PERSONAL_HOMEPAGE_ANCHOR_PATTERNS = (
     r"科研详情",
 )
 _PERSONAL_HOMEPAGE_HOST_SUFFIXES = (".github.io",)
+# Institutional/site homepages that the bare "主页" pattern in
+# _PERSONAL_HOMEPAGE_ANCHOR_PATTERNS would otherwise mis-classify as a teacher
+# personal homepage (e.g. a "学校主页"/"学院主页" link to the school/college
+# root). These must NOT be crawled as personal pages.
+_SCHOOL_HOMEPAGE_ANCHOR_PATTERNS = (
+    r"学校主页",
+    r"学院主页",
+    r"学校首页",
+    r"学院首页",
+    r"校园主页",
+    r"学校官网",
+    r"学院官网",
+    r"学校网站",
+    r"官方网站",
+)
 _BLOCKED_EXTERNAL_PROFILE_HOST_TOKENS = (
     "scholar.google.",
     "researchgate.net",
@@ -192,6 +207,11 @@ def _is_teacher_personal_homepage_anchor(link: LinkCandidate, base_url: str) -> 
         return False
 
     combined = f"{link.text or ''} {link.title or ''} {link.url or ''}"
+    if any(
+        re.search(pattern, combined, re.IGNORECASE)
+        for pattern in _SCHOOL_HOMEPAGE_ANCHOR_PATTERNS
+    ):
+        return False
     anchor_looks_personal = any(
         re.search(pattern, combined, re.IGNORECASE)
         for pattern in _PERSONAL_HOMEPAGE_ANCHOR_PATTERNS
