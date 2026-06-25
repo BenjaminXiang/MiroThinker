@@ -19,10 +19,14 @@ from src.data_agents.professor.llm_profiles import (
 _LLM_OVERRIDE_ENV = (
     "LOCAL_LLM_BASE_URL",
     "LOCAL_LLM_MODEL",
+    "LOCAL_LLM_API_KEY",
     "ONLINE_LLM_BASE_URL",
     "ONLINE_LLM_MODEL",
+    "ONLINE_LLM_API_KEY",
     "LLM_PROFILE",
     "DEEPSEEK_MODEL",
+    "DEEPSEEK_API_KEY",
+    "API_KEY",
 )
 
 

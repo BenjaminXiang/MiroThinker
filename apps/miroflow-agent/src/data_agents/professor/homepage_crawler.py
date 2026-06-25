@@ -3037,11 +3037,30 @@ async def crawl_homepage(
     main_sanitized_content = _sanitize_page_content(
         "\n\n".join([main_anchor_text, *supplementary_text_segments])[:30000]
     )
+    # profile_raw_text is the professor's BIO. Exclude supplementary segments
+    # sourced from publication pages — those pages feed official_top_papers, and
+    # including them here leaked publication titles into the bio. A segment is
+    # attributed "Source: {url}\n..."; drop it when that URL was also fetched as
+    # a publication_candidate page.
+    publication_fetched_urls = {
+        page.url.rstrip("/") for page in fetched_pages if page.publication_candidate
+    }
+
+    def _is_publication_supplementary_segment(segment: str) -> bool:
+        if not segment.startswith("Source: "):
+            return False
+        return segment.split("\n", 1)[0][len("Source: ") :].rstrip("/") in publication_fetched_urls
+
+    bio_supplementary_segments = [
+        segment
+        for segment in supplementary_text_segments
+        if not _is_publication_supplementary_segment(segment)
+    ]
     profile_raw_text_content = _sanitize_page_content(
         "\n\n".join(
             [
                 main_anchor_text,
-                *supplementary_text_segments,
+                *bio_supplementary_segments,
                 hit_profile_text,
                 *profile_subpage_content_segments,
             ]
