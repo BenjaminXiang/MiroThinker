@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from unittest.mock import MagicMock
 
 from src.data_agents.paper.canonical_writer import upsert_paper
@@ -13,6 +14,7 @@ def _upsert_with_source(
     *,
     canonical_source: str = "manual",
     quality_status: str | None = None,
+    year: int | None = 2026,
 ) -> tuple[str, tuple[object, ...]]:
     conn = MagicMock()
     conn.execute.return_value.fetchone.return_value = None
@@ -25,7 +27,7 @@ def _upsert_with_source(
         arxiv_id=None,
         openalex_id="W123" if source == "openalex" else None,
         semantic_scholar_id=None,
-        year=2026,
+        year=year,
         venue=None,
         abstract_clean=None,
         authors_display=None,
@@ -40,17 +42,28 @@ def _upsert_with_source(
     return insert_call.args[0], insert_call.args[1]
 
 
+def _insert_param(sql: str, params: tuple[object, ...], column: str) -> object:
+    match = re.search(r"INSERT INTO paper\s*\((?P<columns>.*?)\)\s*VALUES", sql, re.S)
+    assert match is not None
+    columns = [
+        raw_column.strip()
+        for raw_column in match.group("columns").split(",")
+        if raw_column.strip()
+    ]
+    return params[columns.index(column)]
+
+
 def test_upsert_paper_marks_identity_confirmed_for_openalex_resolution():
     sql, params = _upsert_with_source("openalex", canonical_source="openalex")
 
     assert "identity_status" in sql
-    assert params[13] == "confirmed"
+    assert _insert_param(sql, params, "identity_status") == "confirmed"
 
 
 def test_upsert_paper_marks_identity_unverified_for_llm_only_resolution():
-    _, params = _upsert_with_source("llm_only")
+    sql, params = _upsert_with_source("llm_only")
 
-    assert params[13] == "unverified"
+    assert _insert_param(sql, params, "identity_status") == "unverified"
 
 
 def test_upsert_paper_can_initialize_page_only_quality_status():
@@ -58,11 +71,12 @@ def test_upsert_paper_can_initialize_page_only_quality_status():
         "prof_page_only",
         canonical_source="prof_page_only",
         quality_status="needs_enrichment",
+        year=None,
     )
 
     assert "quality_status" in sql
     assert "updated_at" in sql
-    assert params[14] == "needs_enrichment"
+    assert _insert_param(sql, params, "quality_status") == "needs_enrichment"
 
 
 def test_upsert_paper_conflict_updates_quality_status_monotonically():
@@ -74,5 +88,5 @@ def test_upsert_paper_conflict_updates_quality_status_monotonically():
 
     update_sql = sql.split("DO UPDATE", maxsplit=1)[1]
     assert "quality_status" in update_sql
-    assert "paper.quality_status IN ('rejected', 'ready', 'needs_review')" in update_sql
-    assert "EXCLUDED.quality_status = 'partial'" in update_sql
+    assert "quality_status       = EXCLUDED.quality_status" in update_sql
+    assert "quality_status       = CASE" not in update_sql

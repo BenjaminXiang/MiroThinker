@@ -1,8 +1,30 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
+
+import pytest
+
+from src.data_agents.company.canonical_import import _evaluate_xlsx_baseline_readiness
+from src.data_agents.paper.quality_promotion import (
+    PaperEnrichmentSignals,
+    PromotionDecision,
+    evaluate_paper_promotion,
+)
+from src.data_agents.patent.quality_promotion import (
+    PatentEnrichmentSignals,
+    evaluate_patent_promotion,
+)
+from src.data_agents.professor.quality_gate import (
+    ProfessorAffiliationState,
+    ProfessorCanonicalState,
+    ProfessorFactState,
+    SourcePageState,
+    evaluate_professor_quality,
+)
 from src.data_agents.quality.promotion_rules import (
     evaluate_company,
     evaluate_paper,
+    evaluate_patent,
     evaluate_professor,
 )
 
@@ -21,113 +43,170 @@ def _zh_summary() -> str:
     )
 
 
-def test_evaluate_professor_high_ready() -> None:
-    assert evaluate_professor(
-        {"identity_status": "confirmed", "profile_summary": _zh_summary()}
-    ) == ("ready", None)
+def _professor_row() -> dict[str, object]:
+    return {
+        "professor_id": "prof-1",
+        "canonical_name": "张三",
+        "identity_status": "resolved",
+        "institution": "南方科技大学",
+        "department": "计算机科学与工程系",
+        "title": "教授",
+        "research_topic": "人工智能",
+        "profile_summary": _zh_summary(),
+        "official_source_url": "https://faculty.sustech.edu.cn/zhangsan",
+    }
 
 
-def test_evaluate_professor_resolved_matches_confirmed_schema_semantics() -> None:
-    assert evaluate_professor(
-        {"identity_status": "resolved", "profile_summary": _zh_summary()}
-    ) == ("ready", None)
-
-
-def test_evaluate_professor_medium_summary_too_short() -> None:
-    assert evaluate_professor(
-        {"identity_status": "confirmed", "profile_summary": "摘要过短。"}
-    ) == ("needs_review", "professor_summary_too_short")
-
-
-def test_evaluate_professor_rejects_no_chinese_summary() -> None:
-    assert evaluate_professor(
-        {
-            "identity_status": "resolved",
-            "profile_summary": (
-                "Ahmed Elazab is an Assistant Professor at Tsinghua SIGS. "
-                "His research focuses on trustworthy artificial intelligence "
-                "for medical image analysis, brain disease diagnosis, and "
-                "multi-modal neuroimaging data."
+def _professor_state(row: Mapping[str, object]) -> ProfessorCanonicalState:
+    return ProfessorCanonicalState(
+        professor_id=str(row["professor_id"]),
+        canonical_name=str(row["canonical_name"]),
+        identity_status=str(row["identity_status"]),
+        profile_summary=str(row["profile_summary"]),
+        primary_official_profile_page_id="page-1",
+        source_pages=(
+            SourcePageState(
+                page_id="page-1",
+                url=str(row["official_source_url"]),
+                is_official_source=True,
             ),
-        }
-    ) == ("needs_review", "professor_summary_not_chinese")
-
-
-def test_evaluate_professor_rejects_english_dominant_summary() -> None:
-    assert evaluate_professor(
-        {
-            "identity_status": "resolved",
-            "profile_summary": (
-                "Ahmed Elazab is an Assistant Professor (助理教授) and Doctoral "
-                "Supervisor (博士生导师) at Tsinghua SIGS. His research focuses "
-                "on developing trustworthy artificial intelligence (可信人工智能) "
-                "for medical image analysis, brain disease diagnosis and prognosis."
+        ),
+        affiliations=(
+            ProfessorAffiliationState(
+                institution=str(row["institution"]),
+                department=str(row["department"]),
+                title=str(row["title"]),
+                is_primary=True,
             ),
-        }
-    ) == ("needs_review", "professor_summary_english_dominant")
+        ),
+        facts=(
+            ProfessorFactState(
+                fact_type="research_topic",
+                value_raw=str(row["research_topic"]),
+            ),
+        ),
+    )
 
 
-def test_evaluate_professor_rejects_too_long_summary() -> None:
-    assert evaluate_professor(
-        {
-            "identity_status": "resolved",
-            "profile_summary": _zh_summary() * 3,
-        }
-    ) == ("needs_review", "professor_summary_too_long")
+def _paper_row() -> dict[str, object]:
+    return {
+        "paper_id": "paper-1",
+        "quality_status": "needs_enrichment",
+        "title_clean": "Unified Quality Gates",
+        "year": 2026,
+        "venue": "Journal of Data Quality",
+        "authors_display": "Ada Zhang",
+        "abstract_clean": "A study of quality gates.",
+        "summary_zh": _text(150),
+    }
 
 
-def test_evaluate_professor_low_unconfirmed_no_issue() -> None:
-    assert evaluate_professor(
-        {"identity_status": "unverified", "profile_summary": _text(200)}
-    ) == ("needs_review", None)
+def _paper_signals(row: Mapping[str, object]) -> PaperEnrichmentSignals:
+    return PaperEnrichmentSignals(
+        has_title=bool(str(row.get("title_clean") or "").strip()),
+        has_year=row.get("year") is not None,
+        has_venue=bool(str(row.get("venue") or "").strip()),
+        has_authors=bool(str(row.get("authors_display") or "").strip()),
+        has_abstract=bool(str(row.get("abstract_clean") or "").strip()),
+        has_summary_zh=bool(str(row.get("summary_zh") or "").strip()),
+    )
 
 
-def test_evaluate_company_high_ready() -> None:
-    assert evaluate_company(
-        {
-            "profile_summary": _text(100),
-            "technology_route_summary": "route summary",
-        }
-    ) == ("ready", None)
+def _company_row() -> dict[str, object]:
+    return {
+        "company_id": "company-1",
+        "company_name_xlsx": "Shenzhen Example Technology Co Ltd",
+        "identity_status": "resolved",
+        "industry": "medical AI",
+        "description": "company profile",
+    }
 
 
-def test_evaluate_company_medium_partial_narrative() -> None:
-    assert evaluate_company(
-        {"profile_summary": _text(100), "technology_route_summary": None}
-    ) == ("needs_review", "company_partial_narrative")
+def _patent_row() -> dict[str, object]:
+    return {
+        "patent_id": "patent-1",
+        "quality_status": "needs_enrichment",
+        "patent_number": "CN123456789A",
+        "title_clean": "Example patent",
+        "patent_type": "invention",
+        "filing_date": "2026-01-02",
+        "grant_date": None,
+        "publication_date": None,
+        "applicants_parsed": ["Example Company"],
+        "inventors_parsed": [],
+        "xlsx_merged": True,
+    }
 
 
-def test_evaluate_company_low_no_narrative() -> None:
-    assert evaluate_company(
-        {"profile_summary": None, "technology_route_summary": ""}
-    ) == ("needs_review", "company_no_narrative")
+def _patent_signals(row: Mapping[str, object]) -> PatentEnrichmentSignals:
+    return PatentEnrichmentSignals(
+        has_patent_number=bool(str(row.get("patent_number") or "").strip()),
+        has_title=bool(str(row.get("title_clean") or "").strip()),
+        has_patent_type=bool(str(row.get("patent_type") or "").strip()),
+        has_any_date=bool(
+            row.get("filing_date") or row.get("grant_date") or row.get("publication_date")
+        ),
+        has_applicants_or_inventors=bool(
+            row.get("applicants_parsed") or row.get("inventors_parsed")
+        ),
+        xlsx_merged=bool(row.get("xlsx_merged")),
+    )
 
 
-def test_evaluate_paper_high_ready() -> None:
-    assert evaluate_paper(
-        {
-            "summary_zh": _text(150),
-            "abstract_clean": "abstract",
-            "identity_status": "confirmed",
-        }
-    ) == ("ready", None)
+@pytest.mark.parametrize(
+    ("domain", "batch_status", "write_status"),
+    [
+        (
+            "professor",
+            evaluate_professor(_professor_row())[0],
+            evaluate_professor_quality(_professor_state(_professor_row())).quality_status,
+        ),
+        (
+            "company",
+            evaluate_company(_company_row())[0],
+            _evaluate_xlsx_baseline_readiness(_company_row()).quality_status,
+        ),
+        (
+            "paper",
+            evaluate_paper(_paper_row())[0],
+            evaluate_paper_promotion(
+                current_status=str(_paper_row()["quality_status"]),
+                signals=_paper_signals(_paper_row()),
+            ).next_status,
+        ),
+        (
+            "patent",
+            evaluate_patent(_patent_row())[0],
+            evaluate_patent_promotion(
+                current_status=str(_patent_row()["quality_status"]),
+                signals=_patent_signals(_patent_row()),
+            ).next_status,
+        ),
+    ],
+)
+def test_batch_promotion_rules_match_write_path_status(
+    domain: str,
+    batch_status: str,
+    write_status: str,
+) -> None:
+    assert batch_status == write_status, domain
 
 
-def test_evaluate_paper_medium_partial_metadata() -> None:
-    assert evaluate_paper(
-        {
-            "summary_zh": None,
-            "abstract_clean": "abstract",
-            "identity_status": "unverified",
-        }
-    ) == ("needs_review", "paper_partial_metadata")
+def test_evaluate_patent_delegates_to_patent_state_machine(monkeypatch) -> None:
+    calls: list[tuple[str, PatentEnrichmentSignals]] = []
 
+    def fake_evaluate_patent_promotion(
+        *,
+        current_status: str,
+        signals: PatentEnrichmentSignals,
+    ) -> PromotionDecision:
+        calls.append((current_status, signals))
+        return PromotionDecision("ready", "delegated")
 
-def test_evaluate_paper_low_no_abstract_no_issue() -> None:
-    assert evaluate_paper(
-        {
-            "summary_zh": None,
-            "abstract_clean": None,
-            "identity_status": "unverified",
-        }
-    ) == ("needs_review", None)
+    monkeypatch.setattr(
+        "src.data_agents.quality.promotion_rules.evaluate_patent_promotion",
+        fake_evaluate_patent_promotion,
+    )
+
+    assert evaluate_patent(_patent_row()) == ("ready", None)
+    assert calls == [("needs_enrichment", _patent_signals(_patent_row()))]
