@@ -19,6 +19,7 @@ from src.data_agents.patent.quality_promotion import (
     apply_admin_override,
     evaluate_patent_promotion,
 )
+from src.data_agents.patent.release import _calculate_quality_status
 
 
 def _xlsx_full() -> PatentEnrichmentSignals:
@@ -26,7 +27,7 @@ def _xlsx_full() -> PatentEnrichmentSignals:
         has_patent_number=True,
         has_title=True,
         has_patent_type=True,
-        has_filing_or_grant_date=True,
+        has_any_date=True,
         has_applicants_or_inventors=True,
         xlsx_merged=True,
     )
@@ -37,7 +38,7 @@ def _page_only() -> PatentEnrichmentSignals:
         has_patent_number=True,
         has_title=True,
         has_patent_type=False,
-        has_filing_or_grant_date=False,
+        has_any_date=False,
         has_applicants_or_inventors=False,
         xlsx_merged=False,
     )
@@ -60,7 +61,7 @@ def test_xlsx_merge_with_gaps_lands_in_partial():
         has_patent_number=True,
         has_title=True,
         has_patent_type=True,
-        has_filing_or_grant_date=False,
+        has_any_date=False,
         has_applicants_or_inventors=False,
         xlsx_merged=True,
     )
@@ -176,3 +177,37 @@ def test_admin_override_unknown_action_raises():
             current_status=NEEDS_ENRICHMENT,
             override_action="bogus",
         )
+
+
+# --- publication_date date-signal relaxation (RED #7) -----------------------
+# Source xlsx provides only 公开（公告）日 (publication_date); 申请日 (filing_date)
+# and grant_date are NULL. The relaxed gate must accept publication_date as the
+# date signal so inferred-type patents reach `ready`.
+
+
+def test_calculate_quality_status_accepts_publication_date_only():
+    qs = _calculate_quality_status(
+        title_clean="一种专利",
+        patent_number="CN115709471A",
+        patent_type="发明",
+        applicants_parsed=["申请人"],
+        inventors_parsed=[],
+        filing_date=None,
+        grant_date=None,
+        publication_date="2025-02-11",
+    )
+    assert qs == "ready"
+
+
+def test_calculate_quality_status_partial_when_no_date_at_all():
+    qs = _calculate_quality_status(
+        title_clean="一种专利",
+        patent_number="CN115709471A",
+        patent_type="发明",
+        applicants_parsed=["申请人"],
+        inventors_parsed=[],
+        filing_date=None,
+        grant_date=None,
+        publication_date=None,
+    )
+    assert qs == "partial"

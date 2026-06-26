@@ -22,6 +22,7 @@ from .summary_llm import (
     PatentSummaryMethod,
     generate_patent_summary_text,
 )
+from .type_inference import infer_patent_type
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,6 +68,10 @@ def build_patent_release(
             company_name_to_id,
             company_aliases_map=company_aliases_map,
         )
+        patent_type = infer_patent_type(
+            record.patent_number,
+            current_type=record.patent_type,
+        )
         patent = PatentRecord(
             id=build_stable_id(
                 "pat",
@@ -78,7 +83,7 @@ def build_patent_release(
             identity_status=_identity_status_for_patent_number(record.patent_number),
             applicants=applicants,
             inventors=inventors,
-            patent_type=record.patent_type or "未知类型",
+            patent_type=patent_type or "未知类型",
             filing_date=_date_to_iso(record.filing_date),
             publication_date=_date_to_iso(record.publication_date),
             grant_date=None,
@@ -102,11 +107,12 @@ def build_patent_release(
             quality_status=_calculate_quality_status(
                 title_clean=title,
                 patent_number=record.patent_number,
-                patent_type=record.patent_type,
+                patent_type=patent_type,
                 applicants_parsed=applicants,
                 inventors_parsed=inventors,
                 filing_date=record.filing_date,
                 grant_date=None,
+                publication_date=record.publication_date,
             ),
         )
         patent_records.append(patent)
@@ -160,6 +166,10 @@ def record_to_patent_dict(record: PatentRecord) -> dict[str, object]:
         str(item).strip() for item in record.inventors if str(item).strip()
     ]
     filing_date = _date_from_iso(record.filing_date)
+    patent_type = infer_patent_type(
+        record.patent_number,
+        current_type=record.patent_type,
+    )
 
     return {
         "patent_id": record.id,
@@ -174,7 +184,7 @@ def record_to_patent_dict(record: PatentRecord) -> dict[str, object]:
         "filing_date": filing_date,
         "publication_date": _date_from_iso(record.publication_date),
         "grant_date": _date_from_iso(record.grant_date),
-        "patent_type": _normalize_patent_type_for_canonical(record.patent_type),
+        "patent_type": _normalize_patent_type_for_canonical(patent_type),
         "status": None,
         "abstract_clean": record.abstract,
         "technology_effect": record.technology_effect,
@@ -185,11 +195,12 @@ def record_to_patent_dict(record: PatentRecord) -> dict[str, object]:
         "quality_status": _calculate_quality_status(
             title_clean=record.title,
             patent_number=record.patent_number,
-            patent_type=record.patent_type,
+            patent_type=patent_type,
             applicants_parsed=applicants_parsed,
             inventors_parsed=inventors_parsed,
             filing_date=filing_date,
             grant_date=_date_from_iso(record.grant_date),
+            publication_date=_date_from_iso(record.publication_date),
         ),
         "first_seen_at": record.last_updated,
         "updated_at": record.last_updated,
@@ -247,6 +258,7 @@ def _calculate_quality_status(
     inventors_parsed: list[str],
     filing_date: date | str | None,
     grant_date: date | str | None,
+    publication_date: date | str | None,
 ) -> str:
     decision = evaluate_patent_promotion(
         current_status=NEEDS_ENRICHMENT,
@@ -254,7 +266,7 @@ def _calculate_quality_status(
             has_patent_number=bool((patent_number or "").strip()),
             has_title=bool((title_clean or "").strip()),
             has_patent_type=bool(_normalize_patent_type_for_canonical(patent_type)),
-            has_filing_or_grant_date=bool(filing_date or grant_date),
+            has_any_date=bool(filing_date or grant_date or publication_date),
             has_applicants_or_inventors=bool(applicants_parsed or inventors_parsed),
             xlsx_merged=True,
         ),

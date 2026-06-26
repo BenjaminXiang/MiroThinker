@@ -54,8 +54,8 @@ class PatentEnrichmentSignals:
 
     "Required" fields for ``ready`` (matches V004 NOT NULL set plus
     fields a researcher / end user expects to see): patent_number,
-    title, patent_type, at least one of filing_date/grant_date, and at
-    least one applicant or inventor.
+    title, patent_type, at least one of filing_date/grant_date/publication_date,
+    and at least one applicant or inventor.
 
     ``xlsx_merged`` flips True when a future xlsx import has overlaid
     authoritative data for this row (e.g. ``patent.exact_backfill``).
@@ -65,7 +65,7 @@ class PatentEnrichmentSignals:
     has_patent_number: bool
     has_title: bool
     has_patent_type: bool
-    has_filing_or_grant_date: bool
+    has_any_date: bool
     has_applicants_or_inventors: bool
     xlsx_merged: bool = False
 
@@ -109,7 +109,7 @@ def evaluate_patent_promotion(
             signals.has_patent_number,
             signals.has_title,
             signals.has_patent_type,
-            signals.has_filing_or_grant_date,
+            signals.has_any_date,
             signals.has_applicants_or_inventors,
         ]
     )

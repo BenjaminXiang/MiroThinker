@@ -78,7 +78,10 @@ def test_record_to_patent_dict_marks_ready_when_required_fields_exist():
 
 
 def test_record_to_patent_dict_marks_partial_when_xlsx_merge_has_gaps():
-    payload = record_to_patent_dict(_record(filing_date=None))
+    # After the publication_date date-signal relaxation, a date gap can no
+    # longer occur (PatentRecord requires filing OR publication). Use a
+    # missing patent_number as the gap instead.
+    payload = record_to_patent_dict(_record(patent_number=None))
 
     assert payload["quality_status"] == "partial"
 
@@ -92,3 +95,27 @@ def test_upsert_patent_writes_applicants_parsed_as_jsonb_list():
     params = conn.execute.call_args.args[1]
     applicants_jsonb = params[6]
     assert applicants_jsonb.obj == ["深圳市公司A有限公司", "深圳市公司B有限公司"]
+
+
+@pytest.mark.parametrize(
+    ("patent_number", "expected_type"),
+    [
+        ("CN115709471A", "发明"),
+        ("CN223200311U", "实用新型"),
+    ],
+)
+def test_upsert_patent_infers_absent_type_before_quality_gate(
+    patent_number: str,
+    expected_type: str,
+):
+    conn = MagicMock()
+    conn.execute.return_value.fetchone.return_value = {"patent_id": "PAT-TEST"}
+    record = _record(patent_number=patent_number, filing_date=None).model_copy(
+        update={"patent_type": None}
+    )
+
+    upsert_patent(conn, record=record, run_id=RUN_ID)
+
+    params = conn.execute.call_args.args[1]
+    assert params[12] == expected_type
+    assert params[20] == "ready"

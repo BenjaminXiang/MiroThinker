@@ -18,6 +18,8 @@ Per CLAUDE.md §14 / AGENTS.md §15. Every OpenSpec change is registered here. S
 | homepage-cms-selector-coverage | feat (W2c: per-seed citation-template extraction fixes) | paper-homepage-extraction | portfolio 2026-06-22 Phase 5 | proposed | Standard | medium | — | n/a | no |
 | professor-profile-field-completion-pipeline | feat (4-layer template-agnostic professor field completion + gate + closure) | professor-profile-field-completion | cleanup gap-analysis 2026-06-16 | proposed | Epic | medium | — | n/a | no |
 | professor-fact-cross-format-dedup | feat (format-normalizing semantic dedup key + universal keep-richest writer; route all 7 professor_fact insert paths; no schema change) | professor-fact-extraction (modified) | cleanup gap-analysis 2026-06-23 | in-verification (impl done + self-review accept; 42 touched tests GREEN, 25 pre-existing unrelated failures; not committed) | Standard | medium | `.agents/runs/professor-fact-cross-format-dedup/` | n/a | no |
+| unify-data-quality-gating | feat (paper write-path gate wire + Milvus rebackfill coupling + batch reconciliation; 66-row measured delta; company cut 0-delta; patent out-of-scope source-data) | data-quality-gating | cross-domain audit 2026-06-26 (DB-grounded) | in-implementation (code+test slices done+verified: 35 tests, CASE removed, promotion_rules delegates incl evaluate_patent; DB dry-run/apply + paper_chunks rebackfill pending) | Standard | medium | `.agents/runs/unify-data-quality-gating/` | n/a | no |
+| infer-patent-type-from-patent-number | feat (infer patent_type from CN patent_number kind-code A/B/U/Y/S/D + relax gate date-signal to accept publication_date → 11,408 partial→ready→retrievable; applied + Milvus rebackfilled; inventors deferred data-blocked) | patent-type-inference | cross-domain audit 2026-06-26 (DB-grounded, feasibility-verified) | tasks-complete-not-archived (11,408 applied+indexed; 5/5 retrieval spot-check; 1 pre-existing unrelated test_release failure) | Standard | medium | `.agents/runs/infer-patent-type-from-patent-number/` | n/a | no |
 
 ## Notes
 
@@ -72,6 +74,25 @@ Per CLAUDE.md §14 / AGENTS.md §15. Every OpenSpec change is registered here. S
   accurate statuses; `prof-admin-workbench-ui` moved active→archived (it was archived
   2026-05-23 but stale in the active table); 18 missing archived rows added (archive
   dir 34/34 now covered); `docs/index.md` re-baselined to 2026-06-22.
+- Governance refresh 2026-06-26 (read-only `miroflow_real` scan, proxy unset): the 6/22
+  counts were materially wrong for company/patent. Real: company **6,514/6,514 ready
+  (100%)** (was 1,013/1,024); patent **11,408 / 0 ready (all `partial`)** (was 1,931/1,931)
+  because `patent_type` is NULL on every row → gate returns `partial` → 0 retrievable;
+  `professor_patent_link` **0 rows** (R17 not wired; `release.py:60 inventors=[]`
+  hardcoded + no `upsert_professor_patent_link` in canonical_writer); `summary_text` 100%
+  `fallback_template`; professor `canonical_name_en` missing **77** (portfolio's "3,314
+  missing" inverted present/missing); paper `unverified` **28,403** (was 53,165; W0b 7,193 +
+  title-cleanup 528 applied), ready-worthy-but-not-ready **66** (gate bypass residual).
+  `docs/index.md` got a 2026-06-26 correction block + matrix fixes. New highest-leverage
+  retrieval gap surfaced: **patent 0/11,408 retrievable** (separate `patent_type` ingest
+  fix, not the gating change). Cross-domain structural changes 2026-06-26:
+  `unify-data-quality-gating` registered (downgraded Epic→Standard after 66/0 real delta;
+  company cut, patent out-of-scope as source-data). `harden-entity-normalization`
+  **withdrawn** — its premise (person-name matching for inventor links) was invalidated by
+  the same scan: `inventors_parsed` is empty `[]` for all 11,408 patents (no xlsx inventor
+  column alias; R20), so there is no inventor data to link. A `wire-professor-patent-
+  inventor-linking` (R17) change is **not viable** until patent inventor data is sourced
+  (separate patent-sourcing change) — pivot pending user decision.
 
 ## Archived
 
