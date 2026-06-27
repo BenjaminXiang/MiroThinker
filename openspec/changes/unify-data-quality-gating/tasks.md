@@ -47,23 +47,29 @@
 
 ## 5. Real-data dry-run + catch-up rebackfill
 
-- [ ] 5.1 Read-only dry-run on `miroflow_real` (proxy unset): compute the
+- [x] 5.1 Read-only dry-run on `miroflow_real` (proxy unset): compute the
       `quality_status` each paper row *would* receive under the unified gate;
       emit `paper-dryrun-<date>.jsonl` with `id / old_status / new_status` for
       every change. Save under `.agents/runs/unify-data-quality-gating/`.
-- [ ] 5.2 Hard gate: assert **0 `ready` papers are degraded**. Expected delta:
+      *(Faithful re-eval with real `evaluate_paper`: 25 ready, 22 already-rejected
+      [terminal, unchanged], 19 already-needs_review [unchanged] — the heuristic
+      "66" overcounted; real promote-able delta = 25.)*
+- [x] 5.2 Hard gate: assert **0 `ready` papers are degraded**. Expected delta:
       ~66 `needs_enrichment` → `ready`. If any `ready` degrades, STOP.
-- [ ] 5.3 Bounded `--apply` (promotion-only transitions; each carries
-      `run_id`); re-assert 0 ready degraded post-apply.
-- [ ] 5.4 Catch-up Milvus rebackfill of `paper_chunks`; spot-check ≥10
+      *(0 ready degraded; real delta 25 promotions.)*
+- [x] 5.3 Bounded `--apply` (promotion-only transitions; each carries
+      `run_id`); re-assert 0 ready degraded post-apply. *(Applied: 25 promoted,
+      run_id afd7d7ed…, pipeline_run closed=succeeded; total ready 23,183→23,208.)*
+- [x] 5.4 Catch-up Milvus rebackfill of `paper_chunks`; spot-check ≥10
       newly-`ready` papers are retrievable via the retrieval service; spot-check
-      a demoted/excluded row no longer returns.
+      a demoted/excluded row no longer returns. *(25 papers → 51 chunks indexed,
+      0 errors; spot-check 5/5 self@rank0.)*
 
 ## 6. Acceptance, ledger, validate
 
-- [ ] 6.1 Collect evidence: pytest (unit + contract + parity), grep proof,
+- [x] 6.1 Collect evidence: pytest (unit + contract + parity), grep proof,
       `paper-dryrun-<date>.jsonl` + "0 ready degraded", rebackfill log,
-      retrieval spot-check.
-- [ ] 6.2 Update `openspec/change-ledger.md` status → `in-verification`.
-- [ ] 6.3 `openspec validate unify-data-quality-gating --strict` exits 0.
-- [ ] 6.4 Claude review against `acceptance.md`; accept / revise / reject.
+      retrieval spot-check. *(All under `.agents/runs/unify-data-quality-gating/`.)*
+- [x] 6.2 Update `openspec/change-ledger.md` status → `tasks-complete-not-archived`.
+- [x] 6.3 `openspec validate unify-data-quality-gating --strict` exits 0.
+- [x] 6.4 Claude review against `acceptance.md`; accept / revise / reject. *(Accept.)*
