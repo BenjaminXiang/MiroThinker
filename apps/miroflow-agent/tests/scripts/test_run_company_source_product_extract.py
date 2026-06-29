@@ -821,3 +821,57 @@ def test_supported_source_url_allows_generic_web_after_source_judgment():
         )
         is False
     )
+
+
+def test_filter_source_candidates_excludes_dedup_fragment_from_rejected_count():
+    """A kept-product fragment (e.g. deterministic 'PowerArena' vs the LLM's full
+    'PowerArena HOP 人因作业平台') is the SAME product caught by a partial
+    extraction; counting it as a rejection would inflate the rejection metric.
+    The _is_duplicate_of_kept_product fix must exclude it from the rejected count.
+    """
+    from decimal import Decimal
+
+    mod = _import_cli()
+    message = MagicMock()
+    message.content = json.dumps(
+        {
+            "keep_products": ["PowerArena HOP 人因作业平台"],
+            "keep_scenarios": [],
+            "reason": "kept",
+        }
+    )
+    choice = MagicMock()
+    choice.message = message
+    response = MagicMock()
+    response.choices = [choice]
+    client = MagicMock()
+    client.chat.completions.create.return_value = response
+
+    def _pc(name: str) -> CompanyProductCandidate:
+        return CompanyProductCandidate(
+            company_id="COMP-X",
+            product_name=name,
+            short_description=None,
+            official_product_url="https://example.com",
+            evidence_span="span",
+            confidence=Decimal("0.9"),
+        )
+
+    kept_p, _kept_s, rejected, _reason = mod._filter_source_candidates_with_llm(
+        row={
+            "canonical_name": "云鲸智能",
+            "source_url": "https://example.com",
+            "summary_clean": "text",
+        },
+        products=[
+            _pc("PowerArena HOP 人因作业平台"),
+            _pc("PowerArena"),  # fragment of the kept product -> NOT a rejection
+            _pc("其他公司产品"),  # genuinely unrelated -> IS a rejection
+        ],
+        scenarios=[],
+        llm_client=(client, "model", {}),
+    )
+
+    assert [p.product_name for p in kept_p] == ["PowerArena HOP 人因作业平台"]
+    # Only "其他公司产品" is rejected; the "PowerArena" fragment is excluded.
+    assert rejected == 1, f"expected 1 (fragment excluded), got {rejected}"

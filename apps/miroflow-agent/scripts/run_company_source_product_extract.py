@@ -504,6 +504,23 @@ def _filter_source_candidates_with_llm(
     keep_scenarios = {
         str(item).strip() for item in payload.get("keep_scenarios") or [] if str(item).strip()
     }
+
+    def _is_duplicate_of_kept_product(name: str) -> bool:
+        # A candidate that is a fragment of (or contains) a kept product name is
+        # the SAME product caught by a partial extraction (e.g. deterministic
+        # "PowerArena" vs the LLM's full "PowerArena HOP 人因作业平台"), not a
+        # separate wrongly-attributed product. Counting it as a rejection would
+        # inflate the rejection metric with dedup-fragments.
+        normalized = " ".join(str(name or "").casefold().split())
+        if len(normalized) < 3:
+            return False
+        return any(
+            normalized != kept and (normalized in kept or kept in normalized)
+            for kept in (
+                " ".join(str(item or "").casefold().split()) for item in keep_products
+            )
+        )
+
     filtered_products = [
         product for product in products if product.product_name in keep_products
     ]
@@ -516,9 +533,12 @@ def _filter_source_candidates_with_llm(
             or scenario.related_product_name in keep_products
         )
     ]
-    rejected = (len(products) - len(filtered_products)) + (
-        len(scenarios) - len(filtered_scenarios)
-    )
+    rejected = sum(
+        1
+        for product in products
+        if product.product_name not in keep_products
+        and not _is_duplicate_of_kept_product(product.product_name)
+    ) + (len(scenarios) - len(filtered_scenarios))
     reason = None
     if rejected:
         reason = str(payload.get("reason") or "").strip() or "candidate_gate_rejected"
