@@ -195,6 +195,101 @@ class RetrievalCache(Protocol):
     ) -> None: ...
 
 
+# --- Hybrid retrieval: lexical-coverage RRF fusion (vector-rerank + keywords) ---
+# Pure functions so they are unit-testable independent of the live services.
+_RRF_K = 60
+_HYBRID_LEX_WEIGHT = 1.0  # equal weight to rerank rank and lexical rank by default
+_LATIN_TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z0-9]{1,}")
+
+
+def _cjk_runs(text: str) -> list[str]:
+    """Return contiguous CJK runs of length >= 2 from ``text``."""
+    runs: list[str] = []
+    cur: list[str] = []
+    for ch in text or "":
+        if "一" <= ch <= "鿿":
+            cur.append(ch)
+        else:
+            if len(cur) >= 2:
+                runs.append("".join(cur))
+            cur = []
+    if len(cur) >= 2:
+        runs.append("".join(cur))
+    return runs
+
+
+def _lexical_terms(text: str) -> set[str]:
+    """Significant lexical terms: CJK char-bigrams (per run) + latin tokens (>=2 chars)."""
+    terms: set[str] = set()
+    for run in _cjk_runs(text):
+        for i in range(len(run) - 1):
+            terms.add(run[i : i + 2])
+    for match in _LATIN_TOKEN_RE.findall(text or ""):
+        terms.add(match.lower())
+    return terms
+
+
+def _lexical_coverage(query_terms: set[str], text: str) -> float:
+    """Fraction of ``query_terms`` present in ``text``'s lexical terms (query coverage)."""
+    if not query_terms:
+        return 0.0
+    text_terms = _lexical_terms(text)
+    if not text_terms:
+        return 0.0
+    return len(query_terms & text_terms) / float(len(query_terms))
+
+
+def _hybrid_rrf_select(
+    query: str,
+    candidates: list[Evidence],
+    reranked,
+    *,
+    final_top_k: int,
+    lex_weight: float = _HYBRID_LEX_WEIGHT,
+) -> list[Evidence]:
+    """Reciprocal Rank Fusion of rerank rank and lexical-coverage rank.
+
+    Boosts candidates whose text overlaps the query's keywords, rescuing
+    semantically-relevant rows the cross-encoder reranker ranks just outside top-k
+    (e.g. broad-profile market leaders). Robust to score scales (uses ranks only).
+    """
+    n = len(candidates)
+    rerank_rank: dict[int, int] = {}
+    rerank_score_by_idx: dict[int, float] = {}
+    for pos, item in enumerate(reranked):
+        if 0 <= item.index < n:
+            rerank_rank[item.index] = pos + 1
+            rerank_score_by_idx[item.index] = item.score
+    query_terms = _lexical_terms(query)
+    lex_scored = sorted(
+        ((i, _lexical_coverage(query_terms, candidates[i].snippet)) for i in range(n)),
+        key=lambda pair: pair[1],
+        reverse=True,
+    )
+    lex_rank = {i: rank + 1 for rank, (i, _cov) in enumerate(lex_scored)}
+    fused: list[tuple[float, int]] = []
+    for i in range(n):
+        rr = rerank_rank.get(i, n)
+        lr = lex_rank.get(i, n)
+        score = 1.0 / (_RRF_K + rr) + lex_weight / (_RRF_K + lr)
+        fused.append((score, i))
+    fused.sort(key=lambda pair: pair[0], reverse=True)
+    results: list[Evidence] = []
+    for _score, i in fused[:final_top_k]:
+        candidate = candidates[i]
+        results.append(
+            Evidence(
+                object_type=candidate.object_type,
+                object_id=candidate.object_id,
+                score=rerank_score_by_idx.get(i, candidate.score),
+                snippet=candidate.snippet,
+                source_url=candidate.source_url,
+                metadata=candidate.metadata,
+            )
+        )
+    return results
+
+
 class RetrievalService:
     def __init__(
         self,
@@ -204,12 +299,14 @@ class RetrievalService:
         embedding_client,
         reranker,
         cache: RetrievalCache | None = None,
+        web_search_provider=None,
     ) -> None:
         self._pg_conn_factory = pg_conn_factory
         self._milvus_client = milvus_client
         self._embedding_client = embedding_client
         self._reranker = reranker
         self._cache = cache
+        self._web_search_provider = web_search_provider
 
     @staticmethod
     def _compute_filters_key(filters: dict | None) -> str:
@@ -223,9 +320,11 @@ class RetrievalService:
         *,
         domains: tuple[str, ...],
         filters: dict | None = None,
-        candidate_limit: int = 30,
+        candidate_limit: int = 64,
         final_top_k: int = 10,
         filter_by_quality_status: bool | None = None,
+        augment_with_web: bool = False,
+        web_top_n: int = 5,
     ) -> list[Evidence]:
         unsupported_domains = tuple(
             domain for domain in domains if domain not in _VALID_DOMAINS
@@ -253,7 +352,7 @@ class RetrievalService:
         if professor_lifecycle_state is not None:
             cache_filters["__professor_lifecycle_state"] = professor_lifecycle_state
         filters_key = self._compute_filters_key(cache_filters)
-        if self._cache is not None:
+        if self._cache is not None and not augment_with_web:
             cached = self._cache.get(query, domains, filters_key)
             if cached is not None:
                 return cached
@@ -320,7 +419,13 @@ class RetrievalService:
             reranked = self._reranker.rerank(
                 query,
                 [candidate.snippet for candidate in candidates],
-                top_n=final_top_k,
+                top_n=len(candidates),
+            )
+            results = _hybrid_rrf_select(
+                query,
+                candidates,
+                reranked,
+                final_top_k=final_top_k,
             )
         except Exception as exc:
             logger.warning("Rerank failed for retrieval query %r: %s", query, exc)
@@ -329,23 +434,6 @@ class RetrievalService:
                 key=lambda candidate: candidate.metadata.get("ann_score", candidate.score),
                 reverse=True,
             )[:final_top_k]
-        else:
-            results = []
-            for item in reranked:
-                if item.index < 0 or item.index >= len(candidates):
-                    logger.warning("Reranker returned out-of-range index %s", item.index)
-                    continue
-                candidate = candidates[item.index]
-                results.append(
-                    Evidence(
-                        object_type=candidate.object_type,
-                        object_id=candidate.object_id,
-                        score=item.score,
-                        snippet=candidate.snippet,
-                        source_url=candidate.source_url,
-                        metadata=candidate.metadata,
-                    )
-                )
 
         results = self._promote_exact_paper_title_matches(
             results,
@@ -353,10 +441,59 @@ class RetrievalService:
             final_top_k=final_top_k,
         )
 
-        if self._cache is not None and results:
+        if augment_with_web and self._web_search_provider is not None:
+            results = self._augment_with_web(query, results, web_top_n=web_top_n)
+        elif self._cache is not None and results:
             self._cache.set(query, domains, filters_key, results)
 
         return results
+
+    def _augment_with_web(
+        self,
+        query: str,
+        results: list[Evidence],
+        *,
+        web_top_n: int,
+    ) -> list[Evidence]:
+        """Append web-search results as object_type='web' Evidence.
+
+        Closes the FM1a coverage gap: surfaces entities/concepts absent from the local
+        DB (e.g. well-known market leaders never ingested) so they become citable
+        candidates. The chat layer renders object_type='web' as a cited source row.
+        Best-effort: on web-search failure, returns local results unchanged.
+        """
+        if self._web_search_provider is None:
+            return results
+        try:
+            payload = self._web_search_provider.search(query)
+        except Exception as exc:  # noqa: BLE001 - web is best-effort augmentation
+            logger.warning("Web search augmentation failed for %r: %s", query, exc)
+            return results
+        organic = payload.get("organic") or payload.get("results") or []
+        existing_urls = {evidence.source_url for evidence in results if evidence.source_url}
+        web_evidence: list[Evidence] = []
+        for index, item in enumerate(organic):
+            if len(web_evidence) >= web_top_n:
+                break
+            url = item.get("link") or item.get("url") or ""
+            title = (item.get("title") or "").strip()
+            snippet = (item.get("snippet") or "").strip()
+            if not (title or snippet):
+                continue
+            if url and url in existing_urls:
+                continue
+            existing_urls.add(url)
+            web_evidence.append(
+                Evidence(
+                    object_type="web",
+                    object_id=f"web-{index}",
+                    source_url=url or None,
+                    snippet=f"{title} {snippet}".strip(),
+                    score=0.0,
+                    metadata={"title": title, "source_kind": "web"},
+                )
+            )
+        return results + web_evidence
 
     def get_object(
         self,

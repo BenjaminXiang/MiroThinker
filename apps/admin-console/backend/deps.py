@@ -124,5 +124,6 @@ def get_retrieval_service() -> RetrievalService:
         milvus_client=_get_milvus_client(),
         embedding_client=_get_embedding_client(),
         reranker=_get_reranker_client(),
+        web_search_provider=_get_web_search_provider(),
         cache=None,
     )

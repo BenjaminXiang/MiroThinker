@@ -1749,7 +1749,7 @@ def _lookup_professors_by_topic(
             query=topic,
             domains=("professor",),
             filters=filters or None,
-            candidate_limit=30,
+            candidate_limit=64,
             final_top_k=limit,
         )
         rows = _evidence_list_from_retrieval(results)
@@ -2161,6 +2161,51 @@ def _has_topic_row_value(value: Any) -> bool:
     return value is not None and value != "" and value != []
 
 
+def _augment_rows_with_web(query: str, rows: list[dict], *, web_top_n: int = 5) -> list[dict]:
+    """Append web-search results as type='web' rows (closes the FM1a coverage gap).
+
+    Surfaces entities absent from the local DB (e.g. well-known market leaders never
+    ingested) so they appear in matched_objects/citations. Best-effort: on any failure
+    returns rows unchanged. Gated by CHAT_AUGMENT_WEB (default on).
+    """
+    if os.environ.get("CHAT_AUGMENT_WEB", "1") == "0":
+        return rows
+    provider = _get_web_search_provider_or_none()
+    if provider is None:
+        return rows
+    try:
+        payload = provider.search(query)
+    except Exception as exc:  # noqa: BLE001 - web is best-effort augmentation
+        logger.warning("Web row augmentation failed for %r: %s", query, exc)
+        return rows
+    organic = payload.get("organic") or payload.get("results") or []
+    existing_urls = {row.get("url") for row in rows if row.get("url")}
+    web_rows: list[dict] = []
+    for index, item in enumerate(organic):
+        if len(web_rows) >= web_top_n:
+            break
+        url = item.get("link") or item.get("url") or ""
+        title = (item.get("title") or "").strip()
+        snippet = (item.get("snippet") or "").strip()
+        if not (title or snippet):
+            continue
+        if url and url in existing_urls:
+            continue
+        existing_urls.add(url)
+        web_rows.append(
+            {
+                "type": "web",
+                "source_type": "web",
+                "id": url or f"web-{index}",
+                "title": title,
+                "snippet": snippet,
+                "url": url,
+                "score": 0.0,
+            }
+        )
+    return rows + web_rows
+
+
 def _lookup_domain_by_topic(
     conn: Any,
     *,
@@ -2207,7 +2252,7 @@ def _lookup_domain_by_topic(
                 results = get_retrieval_service().retrieve(
                     query=topic,
                     domains=(domain,),
-                    candidate_limit=30,
+                    candidate_limit=64,
                     final_top_k=limit,
                     filter_by_quality_status=ready_only,
                 )
@@ -2229,9 +2274,11 @@ def _lookup_domain_by_topic(
         results = get_retrieval_service().retrieve(
             query=topic,
             domains=(domain,),
-            candidate_limit=30,
+            candidate_limit=64,
             final_top_k=limit,
             filter_by_quality_status=None,
+            augment_with_web=os.environ.get("CHAT_AUGMENT_WEB", "1") != "0",
+            web_top_n=5,
         )
         rows = _evidence_list_from_retrieval(results)
         rows = _dedupe_topic_rows(domain, rows)
@@ -4211,8 +4258,12 @@ def chat(
                 limit=20,
                 raw_query=raw_query,
             )
+            rows = _augment_rows_with_web(raw_query, rows)
             if target_domain != "professor":
                 id_key = domain_id_key(target_domain)
+                shown_rows = [r for r in rows if r.get("type") != "web"][:10] + [
+                    r for r in rows if r.get("type") == "web"
+                ][:5]
                 return _record_and_return(_build_chat_response(
                     conn=conn,
                     query=raw_query,
@@ -4235,7 +4286,7 @@ def chat(
                                 or f"/browse#{target_domain}/{r.get(id_key) or r.get('id') or ''}"
                             ),
                         )
-                        for r in rows[:10]
+                        for r in shown_rows
                         if r.get(id_key) or r.get("id")
                     ],
                     structured_payload={
@@ -4243,7 +4294,7 @@ def chat(
                         "classifier_target_domain": target_domain,
                         "classifier_reason": reason,
                         "match_count": rows[0].get("total_count", len(rows)) if rows else 0,
-                        "matched_objects": rows[:10],
+                        "matched_objects": shown_rows,
                     },
                 ))
             return _record_and_return(_build_chat_response(
