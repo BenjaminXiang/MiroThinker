@@ -50,7 +50,10 @@ class _LLMEndpoint:
             api_key = os.getenv(env_name, "").strip()
             if api_key:
                 return api_key
-        for env_name in (override_env, self.api_key_env):
+        # File fallback: prefer the profile-specific key file (e.g. .deepseek_api_key)
+        # over the generic LOCAL_LLM_API_KEY -> .sglang_api_key, so a cloud profile
+        # like deepseekv4pro gets its own key instead of the local sglang key.
+        for env_name in (self.api_key_env, override_env):
             filename = _KEY_FILE_BY_ENV.get(env_name)
             if not filename:
                 continue

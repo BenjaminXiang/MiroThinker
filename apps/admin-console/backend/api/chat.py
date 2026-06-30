@@ -309,6 +309,14 @@ def _clean_classifier_topic(query: str) -> str:
     topic = re.sub(r"^(做|研究|关于|和)\s*", "", topic)
     topic = re.sub(r"(的深圳|深圳高校|深圳|中国|近两年|方向上|方向的)", "", topic)
     topic = re.sub(r"(有哪些|有谁|有什么|推荐|供应商|厂商|企业|公司|教授|专家|学者|团队|论文|专利|方向|领域|代表论文)$", "", topic)
+    # Strip residual domain nouns + list connectors anywhere so cross-domain
+    # queries reduce to the subject, e.g. "具身智能的教授和企业" -> "具身智能".
+    topic = re.sub(
+        r"(教授|研究员|专家|学者|团队|企业|公司|厂商|供应商|平台|论文|文章|专利|方向|领域|主题|代表论文|和|、|及|与|等)",
+        "",
+        topic,
+    )
+    topic = re.sub(r"的+", "的", topic)
     topic = topic.strip(" ，、的")
     return topic[:80] or query.strip()[:80]
 
@@ -4439,7 +4447,9 @@ def chat(
             ))
 
         if ctype == "D" and topic:
-            if narrowed_response := _handle_d_narrowing(topic):
+            if looks_like_narrowing_query(query) and (
+                narrowed_response := _handle_d_narrowing(topic)
+            ):
                 return narrowed_response
             # 跨域聚合: 教授 + 企业（专利留下一轮，目前 patent 表空）
             evidence = _lookup_cross_domain_evidence(
