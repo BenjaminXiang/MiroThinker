@@ -67,7 +67,7 @@ from src.data_agents.service.retrieval import Evidence
 router = APIRouter(prefix="/api")
 logger = logging.getLogger(__name__)
 
-_CHAT_SYNTHESIS_TIMEOUT_SECONDS = 3.0
+_CHAT_SYNTHESIS_TIMEOUT_SECONDS = float(os.environ.get("CHAT_SYNTHESIS_TIMEOUT", "60.0"))
 _CHAT_SYNTHESIS_REPORTED_BY = "round_9_p1_v1_chat_synthesis"
 _CHAT_FEEDBACK_REPORTED_BY = "chat_user_feedback"
 _CHAT_SYNTHESIS_SYSTEM_PROMPT = (
