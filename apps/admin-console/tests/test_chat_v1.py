@@ -130,7 +130,7 @@ def test_chat_v1_profile_uses_llm_synthesis_and_returns_citation_map(
         {
             "base_url": "http://127.0.0.1:8000/v1",
             "api_key": "deepseek-secret",
-            "timeout": 3.0,
+            "timeout": 60.0,
         }
     ]
     assert _FakeOpenAI.create_calls[0]["model"] == "deepseek-v4-pro"
