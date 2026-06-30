@@ -8,7 +8,7 @@
 ## 1. Candidate selection (Tier 2)
 
 ```sql
--- exact-title groups, single author-list across members, not rejected/merged
+-- exact-title groups, single author-list across LIVE members (not rejected/merged)
 WITH g AS (
   SELECT lower(nullif(trim(title_clean::text),'')) t
   FROM paper
@@ -17,11 +17,17 @@ WITH g AS (
   GROUP BY t HAVING count(*) > 1)
 SELECT g.t, array_agg(p.paper_id ORDER BY p.paper_id) pids
 FROM g JOIN paper p ON lower(trim(p.title_clean)) = g.t
+WHERE coalesce(p.identity_status,'unverified') NOT IN ('rejected','merged')  -- implemented refinement
 GROUP BY g.t
 HAVING count(DISTINCT lower(coalesce(p.authors_display,''))) = 1;
 ```
-Grounded (2026-06-29): **804 groups, 2,135 rows**; sizes {2:326, 3:431, 4:46, 6:1};
-**725/804 have ≥1 identifier-bearing member** (canonical pick).
+Grounded (2026-06-29): design §1's naïve SQL (no outer `identity_status` filter) yields
+**804 groups, 2,135 rows** (sizes {2:326, 3:431, 4:46, 6:1}; **725/804 identifier-bearing**).
+The **implemented** SQL adds the outer `identity_status` filter so the `HAVING authors` check
+sees only live members → **921 groups, 1,857 rows, 841 identifier-bearing** — a strict superset
+(921 ⊇ 804; +117 legit groups that the naïve SQL blocked via divergent-author already-merged
+members; 0 dropped; 0 merged/rejected members ever selected). DB verified stable (naïve SQL
+reproduces 804/2,135 live). See `evidence.md`.
 
 ## 2. Canonical pick (deterministic)
 
