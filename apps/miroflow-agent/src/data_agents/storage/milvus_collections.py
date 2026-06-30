@@ -158,7 +158,21 @@ def _install_milvus_memory_compat() -> None:
             elif uri.endswith(".db") and not use_real:
                 self._delegate = _InMemoryMilvusClient(uri)
             else:
-                self._delegate = original_client(uri=uri, *args, **kwargs)
+                # Relax gRPC keepalive: pymilvus defaults keepalive_time_ms=10000 +
+                # permit_without_calls=True, which PINGs idle channels every 10s and
+                # milvus-lite's embedded server rejects (GOAWAY too_many_pings ->
+                # per-search latency spikes). 10min interval + no idle-PING keeps the
+                # channel warm without tripping the server. Caller grpc_options win.
+                grpc_opts = {
+                    "grpc.keepalive_time_ms": 600000,
+                    "grpc.keepalive_timeout_ms": 20000,
+                    "grpc.keepalive_permit_without_calls": False,
+                }
+                grpc_opts.update(kwargs.get("grpc_options") or {})
+                forwarded = {k: v for k, v in kwargs.items() if k != "grpc_options"}
+                self._delegate = original_client(
+                    uri=uri, *args, grpc_options=grpc_opts, **forwarded
+                )
 
         def __getattr__(self, name: str):
             return getattr(self._delegate, name)

@@ -1897,45 +1897,36 @@ def _lookup_cross_domain_evidence(
     if chat_use_retrieval_service():
         retrieval_query = _cross_domain_retrieval_query(topic, raw_query)
         retrieval_service = get_retrieval_service()
-        for domains in (("professor",), ("paper",)):
+        def _retrieve_domain(domains_tuple, augment_web, top_k):
             try:
-                results = retrieval_service.retrieve(
+                return retrieval_service.retrieve(
                     query=retrieval_query,
-                    domains=domains,
-                    final_top_k=5,
+                    domains=domains_tuple,
+                    final_top_k=top_k,
+                    augment_with_web=augment_web,
+                    web_top_n=5,
                 )
             except Exception as exc:
                 logger.warning(
                     "Cross-domain retrieval failed for topic %r domains %s: %s",
-                    retrieval_query,
-                    domains,
-                    exc,
+                    retrieval_query, domains_tuple, exc,
                 )
-                continue
-            merged.extend(_evidence_list_from_retrieval(results))
+                return []
 
-        # Company: vector + hybrid-RRF + web augment. This is the primary
-        # semantic path for category/topic queries (e.g. 具身智能) — it finds
-        # category-relevant companies the SQL keyword pass misses (自变量 for
-        # 具身智能) and excludes keyword false-positives (PCB/AI-Memory firms
-        # leaking into an embodied-intelligence query). The SQL pass below
-        # stays as a second keyword/funding path; both are deduped-fused.
-        try:
-            company_results = retrieval_service.retrieve(
-                query=retrieval_query,
-                domains=("company",),
-                final_top_k=10,
-                augment_with_web=True,
-                web_top_n=5,
-            )
-        except Exception as exc:
-            logger.warning(
-                "Cross-domain company retrieval failed for topic %r: %s",
-                retrieval_query,
-                exc,
-            )
-            company_results = []
-        merged.extend(_evidence_list_from_retrieval(company_results))
+        # Run professor / paper / company retrieves concurrently (I/O-bound:
+        # embed + Milvus search + rerank + web). Wall-time = max(1) not sum.
+        # Company includes web augment (augment_with_web=True) — the primary
+        # semantic path for category queries; SQL keyword pass below is a
+        # second path, both deduped-fused.
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=3) as ex:
+            futures = [
+                ex.submit(_retrieve_domain, ("professor",), False, 5),
+                ex.submit(_retrieve_domain, ("paper",), False, 5),
+                ex.submit(_retrieve_domain, ("company",), True, 10),
+            ]
+            for f in futures:
+                merged.extend(_evidence_list_from_retrieval(f.result()))
 
     for row in company_rows:
         company_id = row.get("company_id") or row.get("id") or row.get("canonical_name") or row.get("name")
