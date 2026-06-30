@@ -1914,6 +1914,29 @@ def _lookup_cross_domain_evidence(
                 continue
             merged.extend(_evidence_list_from_retrieval(results))
 
+        # Company: vector + hybrid-RRF + web augment. This is the primary
+        # semantic path for category/topic queries (e.g. 具身智能) — it finds
+        # category-relevant companies the SQL keyword pass misses (自变量 for
+        # 具身智能) and excludes keyword false-positives (PCB/AI-Memory firms
+        # leaking into an embodied-intelligence query). The SQL pass below
+        # stays as a second keyword/funding path; both are deduped-fused.
+        try:
+            company_results = retrieval_service.retrieve(
+                query=retrieval_query,
+                domains=("company",),
+                final_top_k=10,
+                augment_with_web=True,
+                web_top_n=5,
+            )
+        except Exception as exc:
+            logger.warning(
+                "Cross-domain company retrieval failed for topic %r: %s",
+                retrieval_query,
+                exc,
+            )
+            company_results = []
+        merged.extend(_evidence_list_from_retrieval(company_results))
+
     for row in company_rows:
         company_id = row.get("company_id") or row.get("id") or row.get("canonical_name") or row.get("name")
         company_name = row.get("canonical_name") or row.get("name") or ""
