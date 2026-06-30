@@ -72,11 +72,11 @@ _CHAT_SYNTHESIS_REPORTED_BY = "round_9_p1_v1_chat_synthesis"
 _CHAT_FEEDBACK_REPORTED_BY = "chat_user_feedback"
 _CHAT_SYNTHESIS_SYSTEM_PROMPT = (
     "你是深圳科创信息检索助手。基于下面的证据回答用户问题。规则："
-    "(1) 只使用证据中出现的事实，不要编造。"
-    "(2) 每个事实用 [N] 标注来源编号，每个标记只写一个编号；"
-    "不要合并成 [1, 2, 3]——要么分别标 [1][2][3]，要么只标最关键的那个。"
-    "(3) 回答用中文，简洁自然，不要列 bullet。"
-    '(4) 如果证据不足，直说"证据不足以回答"。'
+    "(1) 只使用证据中出现的事实，不要编造；证据不足以回答时直说\"证据不足以回答\"。"
+    "(2) 每个事实用 [N] 标注来源编号，每个标记只写一个编号(不要合并成 [1,2,3])。"
+    "(3) 回答用中文，结构清晰、信息完整：人物/企业画像用多字段呈现"
+    "(基本信息、技术或产品、核心亮点等)；列表类问题逐条列出关键对象及其要点，"
+    "可使用编号或项目符号；优先覆盖证据中最相关、最具代表性的对象，不要遗漏重要条目。"
 )
 
 
@@ -535,6 +535,21 @@ def _classify_query_by_rules(query: str) -> dict[str, str] | None:
                 target_domain="professor",
                 reason="institution-qualified professor deterministic rule",
             )
+
+    # Cross-filter professor/people search: an origin/school attribute AND a field plus a
+    # person noun (企业家/创始人/学者/...) → type B, domain professor. The explicit
+    # target_domain overrides the "企业" substring inside 企业家 (which would otherwise
+    # route to company). Rescues queries like "毕业于早稻田，且专注机器人行业的企业家有谁".
+    if re.search(
+        r"(毕业|毕业于|学校|大学|学院|博士|硕士|校友|师从|出身)",
+        q,
+    ) and re.search(r"(企业家|创始人|创办人|学者|教授|研究员|团队|人物|有谁)", q):
+        return _classifier_response(
+            "B",
+            topic=_clean_classifier_topic(q),
+            target_domain="professor",
+            reason="cross-filter professor search deterministic rule",
+        )
 
     if re.search(r"(哪些|有哪些|有没有|查一下|找|推荐|供应商|厂商|专家|代表论文)", q) or re.search(
         r"(深圳)?做.+的?(企业|公司|厂商|论文)", q
@@ -3268,6 +3283,61 @@ def _build_evidence_blocks(
             )
         return "\n".join(blocks), citation_map
 
+    # B-topic list results (company/professor/patent topic search) + web evidence.
+    # Builds blocks from matched_professors/matched_objects so synthesis fires for
+    # list queries (otherwise these paths fall through to template answers).
+    list_rows = (
+        structured_payload.get("matched_professors")
+        or structured_payload.get("matched_objects")
+        or []
+    )
+    for item in list_rows[:10]:
+        if not isinstance(item, dict):
+            continue
+        name = (
+            item.get("canonical_name")
+            or item.get("title")
+            or item.get("name")
+            or item.get("id")
+            or "对象"
+        )
+        detail = (
+            item.get("snippet")
+            or item.get("business")
+            or item.get("industry")
+            or item.get("institution")
+            or ""
+        )
+        summary = f"{name}：{detail}" if detail else str(name)
+        marker = _append_evidence_block(
+            blocks=blocks,
+            citation_map=citation_map,
+            marker=marker,
+            kind=str(item.get("type") or "evidence"),
+            summary=summary[:200],
+            evidence_id=str(
+                item.get("id")
+                or item.get("professor_id")
+                or item.get("company_id")
+                or name
+            ),
+        )
+    for item in (structured_payload.get("web_evidence") or [])[:5]:
+        if not isinstance(item, dict):
+            continue
+        title = item.get("title") or "网络来源"
+        snippet = item.get("snippet") or ""
+        marker = _append_evidence_block(
+            blocks=blocks,
+            citation_map=citation_map,
+            marker=marker,
+            kind="web",
+            summary=f"{title}：{snippet}"[:200],
+            evidence_id=str(item.get("id") or item.get("url") or title),
+        )
+    if blocks:
+        return "\n".join(blocks), citation_map
+
     return "", {}
 
 
@@ -3364,6 +3434,40 @@ def _file_chat_synthesis_issue(
         return
 
 
+def _evidence_rows_for_response(structured_payload: dict[str, Any]) -> list[dict]:
+    """Flatten the evidence-bearing keys of structured_payload into uniform rows.
+
+    Restores snippet-level provenance on the response (the `evidence` field was
+    previously declared but never populated). Includes web_evidence rows.
+    """
+    rows: list[dict] = []
+    for key in ("retrieval_evidence", "matched_objects", "matched_professors", "web_evidence"):
+        value = structured_payload.get(key)
+        if not isinstance(value, list):
+            continue
+        for item in value:
+            if not isinstance(item, dict):
+                continue
+            rows.append(
+                {
+                    "type": item.get("type") or item.get("source_type") or "",
+                    "id": (
+                        item.get("id")
+                        or item.get("professor_id")
+                        or item.get("company_id")
+                        or item.get("paper_id")
+                        or item.get("patent_id")
+                        or ""
+                    ),
+                    "title": item.get("title") or item.get("canonical_name") or "",
+                    "snippet": item.get("snippet") or "",
+                    "url": item.get("url"),
+                    "score": item.get("score"),
+                }
+            )
+    return rows
+
+
 def _build_chat_response(
     *,
     conn: Any,
@@ -3380,6 +3484,7 @@ def _build_chat_response(
         citations=citations,
         clarification=clarification,
     )
+    evidence_rows = _evidence_rows_for_response(structured_payload)
     base_response = ChatResponse(
         query=query,
         query_type=query_type,
@@ -3388,6 +3493,7 @@ def _build_chat_response(
         clarification=clarification,
         structured_payload=structured_payload,
         suggested_followups=suggested_followups,
+        evidence=evidence_rows,
     )
     if not llm_synthesis_enabled():
         return base_response
@@ -3437,6 +3543,7 @@ def _build_chat_response(
             answer_style="llm_synthesized",
             citation_map=citation_map,
             suggested_followups=suggested_followups,
+            evidence=evidence_rows,
         )
     except Exception as exc:
         _file_chat_synthesis_issue(conn, query, query_type, exc)
@@ -4297,11 +4404,13 @@ def chat(
                         "matched_objects": shown_rows,
                     },
                 ))
+            prof_rows = [r for r in rows if r.get("type") != "web"]
+            web_rows = [r for r in rows if r.get("type") == "web"][:5]
             return _record_and_return(_build_chat_response(
                 conn=conn,
                 query=raw_query,
                 query_type="B_semantic_topic_search",
-                answer_text=_answer_prof_list(_SZ_INSTITUTIONS_ALL, topic, rows),
+                answer_text=_answer_prof_list(_SZ_INSTITUTIONS_ALL, topic, prof_rows),
                 citations=[
                     ChatCitation(
                         type="professor",
@@ -4309,12 +4418,12 @@ def chat(
                         label=f"{r['canonical_name']} - {r['institution']}",
                         url=f"/browse#professor/{r['professor_id']}",
                     )
-                    for r in rows[:10]
+                    for r in prof_rows[:10]
                 ],
                 structured_payload={
                     "classifier_topic": topic,
                     "classifier_reason": reason,
-                    "match_count": rows[0].get("total_count", len(rows)) if rows else 0,
+                    "match_count": prof_rows[0].get("total_count", len(prof_rows)) if prof_rows else 0,
                     "matched_professors": [
                         {
                             "professor_id": r["professor_id"],
@@ -4323,8 +4432,9 @@ def chat(
                             "matched_topics": r.get("matched_topics") or [],
                             **_professor_metric_payload(r),
                         }
-                        for r in rows[:10]
+                        for r in prof_rows[:10]
                     ],
+                    "web_evidence": web_rows,
                 },
             ))
 
