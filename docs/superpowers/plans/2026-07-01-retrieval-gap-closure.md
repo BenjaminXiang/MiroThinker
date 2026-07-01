@@ -8,7 +8,14 @@
 
 **Tech Stack:** Python 3.12, uv, FastAPI TestClient, OpenSpec CLI, pytest. Eval scripts under `apps/admin-console/scripts/` following the `eval_recall.py` pattern.
 
-**Spec:** `docs/superpowers/specs/2026-07-01-retrieval-gap-closure-design.md` (commit `20086e5`).
+**Spec:** `docs/superpowers/specs/2026-07-01-retrieval-gap-closure-design.md`.
+
+> **REVISION NOTE (post Phase-1 measurement):** Phase 1 oracles ran and revised the design's
+> recall premise. The commit-claimed 74% is NOT reproducible (Serper 403 → web-augment dead);
+> real recall = **58%** (no-web). Decision C: recall contract baseline = 58%, web-augment split
+> to its own `add-web-augment` workstream. Where Phase 2 below says "74%" or includes web-search
+> in the recall requirement, the **revised design doc supersedes this plan** (58%, web OUT, plus
+> a new `add-web-augment` skeleton task). Phase 1 (oracles) is complete; Phases 2–5 remain.
 
 ---
 
