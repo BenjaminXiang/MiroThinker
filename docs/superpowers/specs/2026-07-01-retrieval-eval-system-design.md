@@ -118,6 +118,12 @@ Eval object: the system's generated `answer_text` (synthesis ON). Per case, thre
   pre-set** — first run establishes a baseline; the judge is calibrated on a human-reviewed sample
   (~5 cases across A/B/multi-turn); then the threshold is set. Per-dimension scores let an
   iteration see WHICH dimension regressed (direction), not just the aggregate.
+- **Applicability (N/A handling)**: a dimension that does not apply to a case's type is marked
+  N/A and excluded from BOTH numerator and denominator (not scored, not penalized). E.g. for an
+  A-profile case, dimension 4 (provenance: web/fallback source+time) and dimension 5 (F/G
+  handling) are N/A — only dimensions 1/2/3 (and 6 if multi-turn) score. For an E case,
+  dimension 4 applies; for an F case, dimension 5 applies. The case's final score = average of
+  applicable dimensions only.
 
 ### Layer notes
 - Layers 1/2 are deterministic (no judge) — cheap, reliable regression anchors; a layer-1/2 red
