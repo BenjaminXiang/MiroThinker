@@ -483,6 +483,20 @@ def _classify_query_by_rules(query: str) -> dict[str, str] | None:
             target_domain="paper",
             reason="paper topic deterministic rule",
         )
+    # bare English paper-title query (e.g. "pFedGPA: Diffusion-based Generative ...")
+    # — mostly ASCII, long, looks like a paper title; route to A_paper deterministically
+    # (without this, it falls to the LLM classifier which intermittently mis-refuses).
+    if (
+        re.match(r"^[A-Za-z][A-Za-z0-9\s:,\-./]{15,}$", q)
+        and not _CLASSIFIER_KNOWLEDGE_RE.search(q)
+        and not _CLASSIFIER_OUT_OF_SCOPE_RE.search(q)
+    ):
+        return _classifier_response(
+            "A",
+            name=_extract_a_name(q, "paper"),
+            target_domain="paper",
+            reason="english paper-title deterministic rule",
+        )
     if q.startswith("论文 ") or q.startswith("介绍论文 ") or (
         "论文" in q and re.search(r"[A-Za-z][^\u4e00-\u9fff]{8,}", q)
     ) or re.search(r"[A-Za-z][^\u4e00-\u9fff]{12,}\s*的(研究内容|作者|摘要)", q):
