@@ -55,6 +55,11 @@ CASES: list[Case] = [
          "company", ["爱博合创"]),
     Case(34, "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线",
          "company", ["自变量"]),
+    Case(50, "有哪些做具身智能和灵巧手的教授", "professor",
+         ["柯文德", "任尔夫", "王强", "刘桂良"],
+         "FM4 ground-truth: profs with >=6 embodied/dexterous papers (first-draft; refine "
+         "after labeling). Tests cross-domain paper->professor recall gap — professor vector "
+         "recall on profile_summary is not expected to surface these by topic."),
     Case(40, "优必选有哪些专利", "patent", ["优必选"]),
     Case(41, "专利 CN117873146A 的详细信息是什么", "patent", ["CN117873146A"]),
 ]

@@ -1,7 +1,7 @@
 {
   "total_hit": 11,
-  "total_req": 19,
-  "pct": 57.89473684210526,
+  "total_req": 23,
+  "pct": 47.82608695652174,
   "rows": [
     {
       "qid": 1,
@@ -91,6 +91,17 @@
         "自变量"
       ],
       "misses": []
+    },
+    {
+      "qid": 50,
+      "query_type": "B_semantic_topic_search",
+      "hits": [],
+      "misses": [
+        "柯文德",
+        "任尔夫",
+        "王强",
+        "刘桂良"
+      ]
     },
     {
       "qid": 40,

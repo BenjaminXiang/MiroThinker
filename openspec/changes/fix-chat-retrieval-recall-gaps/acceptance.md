@@ -27,6 +27,10 @@ A change is accepted only when ALL hold.
       `fm1a-ingest-decision.md` as the recall ceiling — separate ingest decision; NOT claimed
       solved.
 - [x] Web-search augmentation (Serper 403) split to `add-web-augment` — NOT claimed solved.
+- [x] **FM4 (cross-domain paper→professor not wired on topic path)** recorded in `design.md`
+      as a known recall-logic gap, **measured** by oracle case 50 (0/4: 柯文德/任尔夫/王强/刘桂良
+      missed). NOT a data gap (3367 active professors, 2843 with paper links). Implementation
+      deferred to a follow-on recall-logic change.
 
 ## Evidence to report
 - post-fix-recall.json + precision-baseline.json + latency-baseline.json; per-case delta; FM1a

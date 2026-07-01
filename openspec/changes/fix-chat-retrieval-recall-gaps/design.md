@@ -27,6 +27,29 @@ layer (broad summaries) is also out of scope (mitigated via RRF, not redone).
 professor pattern (school/origin + field/topic → type B, domain professor) reaches professor
 Milvus recall. Acceptance = routing-reachable; #19 recall is bound by ingest (许晋诚/陈功 absent).
 
+## FM4 — cross-domain paper→professor reverse-lookup (KNOWN GAP, measured, deferred)
+
+**Root cause (verified 2026-07-01):** the DB has 3367 active professors (2843 with paper links);
+12 have embodied/dexterous papers (柯文德/任尔夫/王强/刘桂良...). So professor data IS present —
+NOT an FM1a data gap. The gap is recall logic, three layers: (1) topic queries route to
+`B_company_topic` (company-only recall); `_lookup_cross_domain_evidence` (professor+paper+company
+concurrent) only fires for `D_` queries (chat.py:4469/4498), not `B_`; (2) `retrieve(professor)`
+is pure `professor_profiles` vector (retrieval.py:564+), not reverse-looking-up authors from
+recalled papers; (3) the cross-domain SQL `_paper_professors_sql` exists in `get_related_objects`
+(retrieval.py:599-604, via `professor_paper_link`) but is NOT invoked on the topic/professor
+recall path.
+
+**Measured (oracle case 50):** forced-domain professor recall for "有哪些做具身智能和灵巧手的
+教授" = **0/4** (柯文德/任尔夫/王强/刘桂良 all missed; recalled-top4 are generic "Research
+direction"/"Profile summary" snippets). The gap is now counted (it was previously invisible —
+#34's `required` was company-only).
+
+**Scope this round:** recorded + measured, NOT implemented. Implementation (wire paper→professor
+reverse-lookup into the topic/professor recall path, and/or extend FM3 routing to route
+topic→professor) is a separate recall-logic slice — deferred to a follow-on change (like
+FM1a/web-augment). FM3's region+domain topic→professor routing is the same class as #19's
+person-attribute routing.
+
 ## Verification surface (eval-first)
 | Surface | What it proves | RED/oracle |
 |---|---|---|
