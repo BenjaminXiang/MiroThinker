@@ -1,0 +1,517 @@
+{
+  "rows": [
+    {
+      "qid": 1,
+      "query": "介绍清华的丁文伯",
+      "l1_hit": [],
+      "l1_miss": [],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 2,
+      "query": "他是否有参与哪些企业的创立",
+      "l1_hit": [],
+      "l1_miss": [],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 3,
+      "query": "中国有哪些成熟的酒店送餐机器人供应商",
+      "l1_hit": [
+        "普渡"
+      ],
+      "l1_miss": [
+        "开普勒机器人",
+        "云迹",
+        "九号机器人",
+        "擎朗智能"
+      ],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 4,
+      "query": "上述企业里总部在深圳的企业有哪些",
+      "l1_hit": [],
+      "l1_miss": [],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 5,
+      "query": "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+      "l1_hit": [],
+      "l1_miss": [
+        "普渡"
+      ],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 6,
+      "query": "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的",
+      "l1_hit": [],
+      "l1_miss": [],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 7,
+      "query": "请介绍无界智航的相关信息",
+      "l1_hit": [],
+      "l1_miss": [],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 8,
+      "query": "我关注的是深圳智航无界科技",
+      "l1_hit": [],
+      "l1_miss": [],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 9,
+      "query": "我想找PCB打板， 有哪些推荐",
+      "l1_hit": [
+        "一博"
+      ],
+      "l1_miss": [
+        "嘉立创",
+        "深南电路"
+      ],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 10,
+      "query": "上述企业有哪些是深圳的企业",
+      "l1_hit": [],
+      "l1_miss": [],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 11,
+      "query": "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning 这篇论文的详细信息",
+      "l1_hit": [],
+      "l1_miss": [],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 12,
+      "query": "这论文的链接是什么",
+      "l1_hit": [],
+      "l1_miss": [],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 13,
+      "query": "毕业于早稻田，且在深圳专注在机器人行业的企业家有谁",
+      "l1_hit": [],
+      "l1_miss": [],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 14,
+      "query": "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样",
+      "l1_hit": [],
+      "l1_miss": [],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 15,
+      "query": "光基多维力传感原理具体展开说",
+      "l1_hit": [],
+      "l1_miss": [],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 16,
+      "query": "清华的王学谦的评价如何，他是否是属于大牛",
+      "l1_hit": [],
+      "l1_miss": [],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 17,
+      "query": "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何",
+      "l1_hit": [],
+      "l1_miss": [],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 18,
+      "query": "具身智能厂商在数据方面目前存在几种技术路线",
+      "l1_hit": [],
+      "l1_miss": [
+        "真实数据",
+        "合成数据"
+      ],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 19,
+      "query": "在真实数据采集路线中，有哪些具体方式",
+      "l1_hit": [
+        "遥操作"
+      ],
+      "l1_miss": [
+        "动捕数据",
+        "真机实测"
+      ],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 20,
+      "query": "在模拟器生成数据路线中，有哪些具体方式",
+      "l1_hit": [
+        "合成数据"
+      ],
+      "l1_miss": [
+        "仿真数据",
+        "合成方法包括"
+      ],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 21,
+      "query": "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线",
+      "l1_hit": [],
+      "l1_miss": [],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 22,
+      "query": "在具身智能的合成数据发展方向上，具体有几种实现方法，分别有哪些代表厂商",
+      "l1_hit": [],
+      "l1_miss": [
+        "物理仿真引擎生成",
+        "生成式模型生成",
+        "基于规则生成"
+      ],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 23,
+      "query": "在具身智能的运动和操作层面，数据需求有什么不同，在实际落地层面分别采用了哪些数据采集方式",
+      "l1_hit": [],
+      "l1_miss": [
+        "差异：本体感知数据",
+        "环境感知数据vs多模态交互数据\n主要采集方式：真机遥操作",
+        "仿真环境合成",
+        "全模态真机采集",
+        "动捕数据",
+        "仿真+真机强化学习"
+      ],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 24,
+      "query": "优必选有哪些专利",
+      "l1_hit": [],
+      "l1_miss": [],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    },
+    {
+      "qid": 25,
+      "query": "专利 CN117873146A 的详细信息是什么",
+      "l1_hit": [],
+      "l1_miss": [],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": null,
+        "key_content_coverage": null,
+        "structure_apt": null,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.0,
+      "l3_reasons": {
+        "_": "judge not configured"
+      }
+    }
+  ]
+}
