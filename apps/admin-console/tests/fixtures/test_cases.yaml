@@ -994,3 +994,20 @@ cases:
   coref_needs_label: false
   refusal_expected: false
   disambiguation_expected: false
+- qid: 26
+  turn_group: badcase-fm5
+  is_head_turn: true
+  query: 深圳法本信息科技有限公司的产品特点以及团队介绍
+  answer: 深圳法本信息科技有限公司(现名:深圳市法本信息技术股份有限公司,股票代码:300925.SZ)成立于2006年,是国际一流的信息技术服务商,并于2020年在深圳证券交易所上市。产品特点:数字化技术服务、全生命周期管理、完整经营架构、成熟质量管控体系。团队:年轻专业化客户服务团队,丰富技术资源。
+  key_point: 法本信息成立于2006年,2020年上市(300925.SZ);产品特点包括数字化技术服务、全生命周期管理;团队年轻专业化
+  required_entities:
+  - 法本信息
+  - 2006年
+  - 数字化技术服务
+  - 全生命周期管理
+  - 客户服务团队
+  forbidden_entities: []
+  coref_needs_label: false
+  refusal_expected: false
+  disambiguation_expected: false
+  source: badcase+web+llm+user-reviewed
