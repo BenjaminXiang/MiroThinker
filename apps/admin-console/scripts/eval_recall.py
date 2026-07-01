@@ -16,7 +16,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 # Defaults required before importing backend.deps (env-driven wiring).
 os.environ.setdefault(
@@ -33,6 +33,7 @@ class Case:
     domain: str
     required: list[str]  # substrings that MUST appear in some candidate snippet
     note: str = ""
+    false_positives: list[str] = field(default_factory=list)
 
 
 # Single-domain, objectively gradable cases (关键点 lists required entities).
