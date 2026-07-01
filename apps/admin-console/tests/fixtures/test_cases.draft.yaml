@@ -272,7 +272,7 @@ cases:
   - 丁文伯
   - 穆世龙
   - 具身智能
-  - 无界智航
+  - 深圳无界智航科技有限公司
   - 可穿戴数采套件
   forbidden_entities:
   - 深圳智航无人机有限公司
@@ -351,8 +351,8 @@ cases:
   - 嘉立创
   - 华秋PCB
   - 深南电路
-  - 兴森
-  - 一博
+  - 兴森科技
+  - 一博科技
   - 则成电子
   forbidden_entities: []
   coref_needs_label: true
@@ -463,10 +463,10 @@ cases:
     瓦力科技核心团队：广东瓦力科技有限公司核心成员，毕业于日本早稻田大学等，专注智能检测机器人、工业机器人。'
   key_point: 获取知识库内容
   required_entities:
-  - 帕西尼感知
+  - 帕西尼感知科技
   - 迈步机器人
   - 奥达智声
-  - 瓦力
+  - 瓦力科技
   - 早稻田大学
   forbidden_entities: []
   coref_needs_label: false
@@ -516,7 +516,7 @@ cases:
   - 力传感器
   - Photon系列
   - 六维力传感器
-  - 光学传感
+  - 光学传感技术
   forbidden_entities: []
   coref_needs_label: true
   refusal_expected: false
@@ -564,7 +564,7 @@ cases:
   - 光学多模态感知
   - 六维力/力矩
   - 微形变
-  - 华力创科学
+  - 华力创科学技术
   - Photon Finger
   forbidden_entities: []
   coref_needs_label: false
@@ -788,10 +788,10 @@ cases:
     总结：深圳厂商主流路线为“真实数据采集+多模态融合+大模型训练”，典型特征包括灵巧手触觉数据闭环、端到端大模型驱动、多场景数据适配；部分厂商探索类脑计算、遥操作或“真实+合成”双引擎模式。'
   key_point: ''
   required_entities:
-  - 自变量机器人
-  - 忆海原识
+  - 自变量机器人科技
+  - 忆海原识科技
   - 赛博格机器人
-  - 宇数
+  - 宇数科技
   - 源升智能
   forbidden_entities: []
   coref_needs_label: false

@@ -3,7 +3,14 @@
     {
       "qid": 1,
       "query": "介绍清华的丁文伯",
-      "l1_hit": [],
+      "l1_hit": [
+        "丁文伯",
+        "清华大学",
+        "副教授",
+        "信号处理",
+        "机器学习",
+        "深圳国际研究生院"
+      ],
       "l1_miss": [],
       "l2_violations": [],
       "l3_scores": {
@@ -23,7 +30,13 @@
       "qid": 2,
       "query": "他是否有参与哪些企业的创立",
       "l1_hit": [],
-      "l1_miss": [],
+      "l1_miss": [
+        "丁文伯",
+        "无界智航",
+        "联合创始人",
+        "首席科学家",
+        "具身智能"
+      ],
       "l2_violations": [],
       "l3_scores": {
         "type_correct": null,
@@ -68,7 +81,14 @@
       "qid": 4,
       "query": "上述企业里总部在深圳的企业有哪些",
       "l1_hit": [],
-      "l1_miss": [],
+      "l1_miss": [
+        "安赛步",
+        "小村机器人",
+        "中科世界",
+        "艾唯尔",
+        "锐曼智能",
+        "普渡"
+      ],
       "l2_violations": [],
       "l3_scores": {
         "type_correct": null,
@@ -126,8 +146,16 @@
     {
       "qid": 7,
       "query": "请介绍无界智航的相关信息",
-      "l1_hit": [],
-      "l1_miss": [],
+      "l1_hit": [
+        "无界智航"
+      ],
+      "l1_miss": [
+        "具身智能",
+        "穆世龙",
+        "丁文伯",
+        "X-H1",
+        "X-Sim"
+      ],
       "l2_violations": [],
       "l3_scores": {
         "type_correct": null,
@@ -146,7 +174,14 @@
       "qid": 8,
       "query": "我关注的是深圳智航无界科技",
       "l1_hit": [],
-      "l1_miss": [],
+      "l1_miss": [
+        "无界智航",
+        "丁文伯",
+        "穆世龙",
+        "具身智能",
+        "无界智航",
+        "可穿戴数采套件"
+      ],
       "l2_violations": [],
       "l3_scores": {
         "type_correct": null,
@@ -189,7 +224,14 @@
       "qid": 10,
       "query": "上述企业有哪些是深圳的企业",
       "l1_hit": [],
-      "l1_miss": [],
+      "l1_miss": [
+        "嘉立创",
+        "华秋PCB",
+        "深南电路",
+        "兴森",
+        "一博",
+        "则成电子"
+      ],
       "l2_violations": [],
       "l3_scores": {
         "type_correct": null,
@@ -208,7 +250,14 @@
       "qid": 11,
       "query": "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning 这篇论文的详细信息",
       "l1_hit": [],
-      "l1_miss": [],
+      "l1_miss": [
+        "pFedGPA",
+        "扩散模型",
+        "联邦学习",
+        "参数聚合",
+        "个性化",
+        "非独立同分布"
+      ],
       "l2_violations": [],
       "l3_scores": {
         "type_correct": null,
@@ -227,7 +276,10 @@
       "qid": 12,
       "query": "这论文的链接是什么",
       "l1_hit": [],
-      "l1_miss": [],
+      "l1_miss": [
+        "PDF链接",
+        "arxiv"
+      ],
       "l2_violations": [],
       "l3_scores": {
         "type_correct": null,
@@ -245,8 +297,15 @@
     {
       "qid": 13,
       "query": "毕业于早稻田，且在深圳专注在机器人行业的企业家有谁",
-      "l1_hit": [],
-      "l1_miss": [],
+      "l1_hit": [
+        "早稻田大学"
+      ],
+      "l1_miss": [
+        "帕西尼感知",
+        "迈步机器人",
+        "奥达智声",
+        "瓦力"
+      ],
       "l2_violations": [],
       "l3_scores": {
         "type_correct": null,
@@ -265,7 +324,13 @@
       "qid": 14,
       "query": "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样",
       "l1_hit": [],
-      "l1_miss": [],
+      "l1_miss": [
+        "华力创科学",
+        "力传感器",
+        "Photon系列",
+        "六维力传感器",
+        "光学传感"
+      ],
       "l2_violations": [],
       "l3_scores": {
         "type_correct": null,
@@ -283,8 +348,16 @@
     {
       "qid": 15,
       "query": "光基多维力传感原理具体展开说",
-      "l1_hit": [],
-      "l1_miss": [],
+      "l1_hit": [
+        "光基多维力传感"
+      ],
+      "l1_miss": [
+        "光学多模态感知",
+        "六维力/力矩",
+        "微形变",
+        "华力创科学",
+        "Photon Finger"
+      ],
       "l2_violations": [],
       "l3_scores": {
         "type_correct": null,
@@ -302,8 +375,15 @@
     {
       "qid": 16,
       "query": "清华的王学谦的评价如何，他是否是属于大牛",
-      "l1_hit": [],
-      "l1_miss": [],
+      "l1_hit": [
+        "王学谦",
+        "清华大学"
+      ],
+      "l1_miss": [
+        "空间机器人",
+        "青年领军人才",
+        "国家科技进步特等奖"
+      ],
       "l2_violations": [],
       "l3_scores": {
         "type_correct": null,
@@ -321,8 +401,15 @@
     {
       "qid": 17,
       "query": "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何",
-      "l1_hit": [],
-      "l1_miss": [],
+      "l1_hit": [
+        "爱博合创"
+      ],
+      "l1_miss": [
+        "PANVIS-A",
+        "郭书祥",
+        "郭健",
+        "血管介入手术机器人"
+      ],
       "l2_violations": [],
       "l3_scores": {
         "type_correct": null,
@@ -410,8 +497,15 @@
     {
       "qid": 21,
       "query": "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线",
-      "l1_hit": [],
-      "l1_miss": [],
+      "l1_hit": [
+        "自变量机器人",
+        "源升智能"
+      ],
+      "l1_miss": [
+        "忆海原识",
+        "赛博格机器人",
+        "宇数"
+      ],
       "l2_violations": [],
       "l3_scores": {
         "type_correct": null,
@@ -479,7 +573,14 @@
       "qid": 24,
       "query": "优必选有哪些专利",
       "l1_hit": [],
-      "l1_miss": [],
+      "l1_miss": [
+        "异常姿态检测系统",
+        "割草机器人",
+        "机器人障碍物感知",
+        "直线关节",
+        "扭矩传递组件",
+        "机器人关节限位机构"
+      ],
       "l2_violations": [],
       "l3_scores": {
         "type_correct": null,
@@ -497,8 +598,15 @@
     {
       "qid": 25,
       "query": "专利 CN117873146A 的详细信息是什么",
-      "l1_hit": [],
-      "l1_miss": [],
+      "l1_hit": [
+        "CN117873146A",
+        "优必选"
+      ],
+      "l1_miss": [
+        "机器人落地控制",
+        "腿部刚度",
+        "腰部高度"
+      ],
       "l2_violations": [],
       "l3_scores": {
         "type_correct": null,
