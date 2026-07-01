@@ -26,7 +26,11 @@ _META_PHRASES = (
     "这里的答案是不准确",
 )
 _FORBIDDEN_RE = re.compile(r"不应该出现(.+?)(?:;|;|。|$)")
-_NEED_MARKER_RE = re.compile(r"\s*需要(?:在回答(?:结果|中)?|出现)?\s*$")
+# Strip the grading instruction "需要..." and everything after it (not part of the entity).
+_NEED_MARKER_RE = re.compile(r"\s*需要.*$")
+# Grading/sentence phrases: if a token still contains any of these after marker strip, it is a
+# sentence (not an entity) -> skip and leave for the one-time labeling pass.
+_GRADING_PHRASES = ("应该", "参考", "知识库", "获取", "识别", "上下文", "且", "具体描述")
 
 
 def _split_entities(kp: str) -> list[str]:
@@ -56,7 +60,8 @@ def _derive_required(kp: str) -> list[str]:
     out: list[str] = []
     for token in _split_entities(kp):
         token = _NEED_MARKER_RE.sub("", token)
-        if not token or token.startswith(_META_PHRASES):
+        token = re.sub(r"^(且|并且)", "", token).strip()
+        if not token or token.startswith(_META_PHRASES) or any(p in token for p in _GRADING_PHRASES):
             continue
         out.append(_normalize_core(token))
     return out

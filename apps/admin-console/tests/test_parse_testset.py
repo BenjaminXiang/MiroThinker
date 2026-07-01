@@ -18,6 +18,19 @@ def test_derive_required_strips_marker_and_normalizes_to_short_core():
     assert not any("股份有限公司" in r for r in req)  # suffix stripped
 
 
+def test_derive_required_strips_mid_token_need_marker():
+    # "普渡科技股份有限公司需要答出来" -> strip "需要答出来" -> normalize -> "普渡"
+    req = _derive_required("普渡科技股份有限公司需要答出来")
+    assert "普渡" in req
+    assert not any("需要" in r for r in req)
+
+
+def test_derive_required_skips_sentence_like_tokens():
+    # whole sentence with grading phrase -> skipped (left for labeling pass)
+    req = _derive_required("且无界智航应该参考知识库获得具体描述信息")
+    assert req == []  # skipped, not added dirty
+
+
 def test_derive_forbidden_extracts_after_marker():
     kp = "不应该出现深圳智航无人机有限公司"
     forb = _derive_forbidden(kp)

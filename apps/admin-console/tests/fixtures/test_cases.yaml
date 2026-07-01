@@ -98,7 +98,7 @@ cases:
   - 开普勒机器人
   - 云迹
   - 九号机器人
-  - 擎朗智能 需要在回答结果中
+  - 擎朗智能
   forbidden_entities: []
   coref_needs_label: false
   refusal_expected: false
@@ -167,7 +167,7 @@ cases:
     深圳市艾唯尔科技有限公司：​ 该公司核心业务是仿人形机器人，专注于表情、语音交互等前沿技术，其产品形态和技术路径与普渡这类解决具体物流任务的商用机器人不同。'
   key_point: 普渡科技股份有限公司需要答出来
   required_entities:
-  - 普渡科技股份有限公司需要答出来
+  - 普渡
   forbidden_entities: []
   coref_needs_label: true
   refusal_expected: false
@@ -244,8 +244,7 @@ cases:
 
     两者均为深圳本地科技企业，但分属具身智能与无人机不同细分赛道。其他行业相关企业（边界智控科技、鹰驾科技、鼎界科技）无直接关联。'
   key_point: 这里的答案是不准确， 不应该出现深圳智航无人机有限公司;且无界智航应该参考知识库获得具体描述信息
-  required_entities:
-  - 且无界智航应该参考知识库获得具体描述信息
+  required_entities: []
   forbidden_entities:
   - 深圳智航无人机有限公司
   coref_needs_label: false
