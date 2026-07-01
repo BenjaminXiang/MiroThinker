@@ -35,6 +35,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 def main() -> int:
     client = TestClient(app)
     total_req = total_hit = 0
+    rows: list[dict] = []
     print(f"{'qid':>3} {'qtype':<24} {'hit/req':>8}  misses")
     print("-" * 92)
     for c in CASES:
@@ -43,10 +44,12 @@ def main() -> int:
         except Exception as e:  # noqa: BLE001
             print(f"{c.qid:>3} {'ERR':<24} {'-':>8}  {type(e).__name__}: {str(e)[:120]}")
             total_req += len(c.required)
+            rows.append({"qid": c.qid, "error": str(e)})
             continue
         if r.status_code != 200:
             print(f"{c.qid:>3} {'HTTP'+str(r.status_code):<24} {'-':>8}  {r.text[:120]}")
             total_req += len(c.required)
+            rows.append({"qid": c.qid, "http": r.status_code})
             continue
         j = r.json()
         qtype = str(j.get("query_type", "?"))
@@ -56,11 +59,19 @@ def main() -> int:
         total_req += len(c.required)
         total_hit += len(hits)
         flag = "OK  " if not miss else "MISS"
+        rows.append({"qid": c.qid, "query_type": qtype, "hits": hits, "misses": miss})
         print(f"{c.qid:>3} {qtype[:24]:<24} {len(hits)}/{len(c.required):>5} {flag}  {miss}")
     print("-" * 92)
     pct = 100.0 * total_hit / total_req if total_req else 0.0
     print(f"END-TO-END ENTITY RECALL (/api/chat, synthesis off): "
           f"{total_hit}/{total_req} ({pct:.0f}%)")
+    out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..",
+                       ".agents", "runs", "retrieval-generation-alignment", "post-fix-recall.json")
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    with open(out, "w", encoding="utf-8") as fh:
+        json.dump({"total_hit": total_hit, "total_req": total_req, "pct": pct, "rows": rows},
+                  fh, ensure_ascii=False, indent=2)
+    print(f"WRITTEN: {out}")
     return 0
 
 
