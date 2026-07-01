@@ -31,6 +31,10 @@ A change is accepted only when ALL hold.
       as a known recall-logic gap, **measured** by oracle case 50 (0/4: 柯文德/任尔夫/王强/刘桂良
       missed). NOT a data gap (3367 active professors, 2843 with paper links). Implementation
       deferred to a follow-on recall-logic change.
+- [x] **FM5 (clear single-company query → `unknown` via strict name matching)** recorded in
+      `design.md`, **measured** by oracle case 51 (0/1: 法本信息技术 missed; entity IS in the DB
+      COMP-d5c254c49820 ready). Implementation (fuzzy/alias name matching) deferred to a
+      classifier slice.
 
 ## Evidence to report
 - post-fix-recall.json + precision-baseline.json + latency-baseline.json; per-case delta; FM1a

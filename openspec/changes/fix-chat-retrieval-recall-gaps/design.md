@@ -50,6 +50,22 @@ topic→professor) is a separate recall-logic slice — deferred to a follow-on 
 FM1a/web-augment). FM3's region+domain topic→professor routing is the same class as #19's
 person-attribute routing.
 
+## FM5 — clear single-company query misclassified `unknown` (KNOWN GAP, measured, deferred)
+
+**Root cause (verified 2026-07-01, user badcase):** query "深圳法本信息科技有限公司的产品特点以及团队介绍"
+routes to `query_type=unknown` (the clarify/refuse path), even though the company IS in the DB
+(`法本信息技术`, COMP-d5c254c49820, `ready`). The classifier's company-name lookup is too strict:
+the query name "法本信息科技有限公司" does not exact/ILIKE-match the DB canonical "法本信息技术"
+(suffix differs: 科技有限公司 vs 技术), so the name-lookup misses → classifier falls to `unknown`.
+NOT a data gap; a name-variant-matching gap.
+
+**Measured (oracle case 51):** end-to-end `/api/chat` returns `query_type=unknown`, 0 candidates
+→ 0/1 (法本信息技术 missed). The gap is now counted.
+
+**Scope this round:** recorded + measured, NOT implemented. Implementation (fuzzy/substring/
+trigram company-name matching, or alias expansion) is a separate classifier slice — deferred.
+Risk: over-matching (false company matches) — needs precision care + eval.
+
 ## Verification surface (eval-first)
 | Surface | What it proves | RED/oracle |
 |---|---|---|

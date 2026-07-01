@@ -60,6 +60,11 @@ CASES: list[Case] = [
          "FM4 ground-truth: profs with >=6 embodied/dexterous papers (first-draft; refine "
          "after labeling). Tests cross-domain paper->professor recall gap — professor vector "
          "recall on profile_summary is not expected to surface these by topic."),
+    Case(51, "深圳法本信息科技有限公司的产品特点以及团队介绍", "company",
+         ["法本信息技术"],
+         "FM5: clear single-company query; classifier routes to `unknown` because the name "
+         "variant (法本信息科技有限公司) doesn't exact-match the DB canonical (法本信息技术). "
+         "Entity IS in the DB (COMP-d5c254c49820, ready)."),
     Case(40, "优必选有哪些专利", "patent", ["优必选"]),
     Case(41, "专利 CN117873146A 的详细信息是什么", "patent", ["CN117873146A"]),
 ]
