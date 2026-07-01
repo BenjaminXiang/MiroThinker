@@ -115,8 +115,25 @@ def infer_a_target_domain(query: str, name: str, classification: dict[str, str])
     return "professor"
 
 
+def _normalize_company_name(name: str) -> str:
+    """Strip region prefix + legal suffix -> short matchable core.
+
+    '深圳法本信息科技有限公司' -> '法本信息'; '深圳市普渡科技股份有限公司' -> '普渡'.
+    """
+    import re
+
+    s = re.sub(r"^(深圳|北京|上海|广州|杭州|南京|武汉|成都|西安|苏州|东莞|深圳市|北京市|上海市)[市]?", "", name.strip())
+    prev = None
+    suffix_re = re.compile(r"(股份有限公司|有限公司|责任公司|科技|集团|控股|公司|技术|有限)$")
+    while prev != s:
+        prev = s
+        s = suffix_re.sub("", s).strip()
+    return s or name
+
+
 def lookup_company(conn: Any, *, name: str) -> list[dict]:
-    like = f"%{name}%"
+    core = _normalize_company_name(name)
+    like = f"%{core}%"
     return conn.execute(
         """
         SELECT c.company_id, c.canonical_name, latest.industry,
@@ -195,13 +212,16 @@ def lookup_company(conn: Any, *, name: str) -> list[dict]:
          WHERE c.identity_status != 'inactive'
            AND (
                 c.canonical_name = %s
+                OR c.registered_name = %s
                 OR jsonb_exists(COALESCE(c.aliases, '[]'::jsonb), %s)
+                OR c.canonical_name ILIKE %s
+                OR c.registered_name ILIKE %s
                 OR c.canonical_name ILIKE %s
            )
          ORDER BY c.canonical_name
          LIMIT 10
         """,
-        (name, name, like),
+        (name, name, name, like, like, f"%{name}%"),
     ).fetchall()
 
 

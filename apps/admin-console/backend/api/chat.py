@@ -400,9 +400,15 @@ def _extract_a_name(query: str, target_domain: str) -> str:
     if target_domain == "professor":
         return _extract_professor_name(query)
     company = query.strip()
-    company = re.sub(r"^(介绍)\s*", "", company)
+    company = re.sub(r"^(介绍|请介绍|查一下|查找|查询)\s*", "", company)
     company = re.sub(
-        r"(有哪些专利|有什么专利|的技术实力怎么样|在深圳的科创业务介绍|公司画像|有哪些机器人产品|的核心技术|有哪些科研成果|的专利布局|公司的技术方向|相关信息)$",
+        r"(有哪些专利|有什么专利|有哪些机器人产品|有哪些科研成果|"
+        r"的技术实力怎么样|在深圳的科创业务介绍|公司画像|的核心技术|"
+        r"的专利布局|公司的技术方向|相关信息|"
+        r"的产品特点以及团队介绍|的产品特点|团队介绍|产品特点|"
+        r"的产品|的团队|团队|产品|的业务|业务|的简介|简介|的介绍|介绍|"
+        r"的概况|概况|的画像|画像|的实力|实力|的基本信息|基本信息|"
+        r"的详细信息|详细信息|的产品信息|产品信息|怎么样|如何)$",
         "",
         company,
     )
@@ -495,6 +501,13 @@ def _classify_query_by_rules(query: str) -> dict[str, str] | None:
             name=match.group("name"),
             target_domain="professor",
             reason="institution-qualified professor deterministic rule",
+        )
+    if re.search(r"(公司|科技|集团|有限)(的)?(产品特点|团队介绍|产品特点以及团队介绍|产品|团队|业务|简介|介绍|概况|画像|实力|基本信息|详细信息|产品信息|怎么样|如何)", q):
+        return _classifier_response(
+            "A",
+            name=_extract_a_name(q, "company"),
+            target_domain="company",
+            reason="company-profile-by-name deterministic rule",
         )
     if re.search(r"(有哪些专利|有什么专利|有哪些机器人产品|有哪些科研成果)", q) and not q.startswith(
         ("哪些", "有哪些", "有没有")
