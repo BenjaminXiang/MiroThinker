@@ -75,11 +75,11 @@ _L3_JUDGE_PROMPT = """你是检索增强系统的评估 judge。对照金标准�
 必需实体(关键点): {required}
 禁出实体: {forbidden}
 
-按以下六个维度各打 0-1 分(不适用标 null),每维给一句理由:
+按以下六个维度各打 0-1 分(不适用标 null),每维给一句理由。**null 表示不适用,不计入分母;不要把"适用但满分"或"本地答案"打成 0,该 null 就 null:**
 1. type_correct: 答案类型是否符合期望(A 单实体profile / B 主题列表 / C 跨轮 / D 全景聚合 / E 知识+web / F 拒答 / G 默认+提示)
-2. key_content_coverage: 金标准的关键事实/实体是否覆盖(必需实体必须出现)
-3. structure_apt: 结构是否得当(profile字段齐全 / 主题是列表 / 跨域是聚合)
-4. provenance_correct: web/fallback/时效性答案是否标了来源+时间(纯本地高置信答案标 null)
+2. key_content_coverage: 金标准的关键事实/实体是否覆盖(必需实体必须出现)。**F拒答类查询标 null(拒答无内容可覆盖)**;非拒答才打分。
+3. structure_apt: 结构是否得当(profile字段齐全 / 主题是列表 / 跨域是聚合)。F拒答标 null。
+4. provenance_correct: **纯本地知识库答案(无web/fallback/实时补充)标 null,不打0**;只有当答案含web/fallback/时效性内容却没标来源+时间时才打低分。
 5. f_g_handling: F是否礼貌拒答+引导 / G是否默认高置信+短提示(非F/G标 null)
 6. multi_turn_coref: 代词(他/上述企业)是否解析对(单轮标 null)
 
@@ -90,27 +90,27 @@ _L3_JUDGE_PROMPT = """你是检索增强系统的评估 judge。对照金标准�
 
 
 def _call_judge(case: dict, system_answer: str, l1_hit: list[str]) -> dict:
-    """Call the 异模型 LLM judge. Config: EVAL_JUDGE_API_KEY, EVAL_JUDGE_BASE_URL, EVAL_JUDGE_MODEL."""
-    import urllib.request
-    base = os.environ.get("EVAL_JUDGE_BASE_URL", "")
-    key = os.environ.get("EVAL_JUDGE_API_KEY", "")
-    model = os.environ.get("EVAL_JUDGE_MODEL", "")
-    if not (base and key and model):
-        # judge not configured -> return all-N/A (L3 skipped; L1/L2 still run)
-        return {d: None for d in DIMENSIONS} | {"reasons": {"_": "judge not configured"}}
+    """Call the 异模型 LLM judge (Anthropic SDK via zenmux proxy, claude-sonnet-4-5 by default).
+
+    Uses ANTHROPIC_BASE_URL + ANTHROPIC_AUTH_TOKEN (the same proxy the harness uses). Override
+    model via EVAL_JUDGE_MODEL (default claude-sonnet-4-5). Returns all-N/A if the SDK/env is
+    unavailable. 异模型: synthesis uses a different provider/model; the judge is Claude.
+    """
+    import anthropic
+    base = os.environ.get("ANTHROPIC_BASE_URL", "")
+    key = os.environ.get("ANTHROPIC_AUTH_TOKEN", "")
+    model = os.environ.get("EVAL_JUDGE_MODEL", "claude-sonnet-4-5-20250929")
+    if not (base and key):
+        return {d: None for d in DIMENSIONS} | {"reasons": {"_": "judge not configured (ANTHROPIC_* unset)"}}
     prompt = _L3_JUDGE_PROMPT.format(
         query=case["query"], expected_type=case.get("expected_type", "?"),
         golden=case.get("answer", ""), system_answer=system_answer,
         required=case.get("required_entities", []), forbidden=case.get("forbidden_entities", []),
     )
-    body = json.dumps({"model": model, "messages": [{"role": "user", "content": prompt}],
-                       "temperature": 0}).encode("utf-8")
-    req = urllib.request.Request(f"{base}/chat/completions", data=body,
-                                 headers={"Authorization": f"Bearer {key}",
-                                          "Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        data = json.loads(resp.read())
-    content = data["choices"][0]["message"]["content"]
+    client = anthropic.Anthropic(base_url=base, auth_token=key)
+    resp = client.messages.create(model=model, max_tokens=600,
+                                  messages=[{"role": "user", "content": prompt}])
+    content = resp.content[0].text
     content = content.strip().strip("`").lstrip("json").strip()
     return json.loads(content)
 
