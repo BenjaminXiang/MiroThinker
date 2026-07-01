@@ -16,6 +16,7 @@ def test_walk_candidates_collects_typed_dicts():
             {"type": "company", "name": "普渡科技", "snippet": "普渡科技是一家..."},
             {"type": "web", "title": "云迹科技", "url": "https://x.com", "snippet": "云迹..."},
             {"type": "web", "title": "无源条目", "url": "", "snippet": "..."},
+            {"type": "paper", "label": "pFedGPA", "url": "/browse#paper/X"},
         ],
         "nested": {"results": [{"type": "professor", "name": "王学谦", "snippet": "王学谦"}]},
     }
@@ -23,6 +24,7 @@ def test_walk_candidates_collects_typed_dicts():
     assert "普渡科技" in names
     assert "王学谦" in names
     assert "云迹科技" in names
+    assert "pFedGPA" in names  # rendered candidates carry name as "label"
 
 
 def test_count_unsourced_web_flags_urlless_web():

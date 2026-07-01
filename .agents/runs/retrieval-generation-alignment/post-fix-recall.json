@@ -1,0 +1,112 @@
+{
+  "total_hit": 11,
+  "total_req": 19,
+  "pct": 57.89473684210526,
+  "rows": [
+    {
+      "qid": 1,
+      "query_type": "A_prof_profile",
+      "hits": [
+        "丁文伯"
+      ],
+      "misses": []
+    },
+    {
+      "qid": 4,
+      "query_type": "B_company_topic_search",
+      "hits": [
+        "普渡"
+      ],
+      "misses": [
+        "开普勒",
+        "云迹",
+        "九号",
+        "擎朗"
+      ]
+    },
+    {
+      "qid": 10,
+      "query_type": "G_ambiguous_not_found",
+      "hits": [
+        "无界智航"
+      ],
+      "misses": []
+    },
+    {
+      "qid": 13,
+      "query_type": "B_company_topic_search",
+      "hits": [
+        "一博"
+      ],
+      "misses": [
+        "嘉立创",
+        "深南电路"
+      ]
+    },
+    {
+      "qid": 16,
+      "query_type": "A_paper_profile",
+      "hits": [
+        "pFedGPA"
+      ],
+      "misses": []
+    },
+    {
+      "qid": 19,
+      "query_type": "B_semantic_topic_search",
+      "hits": [],
+      "misses": [
+        "许晋诚",
+        "陈功"
+      ]
+    },
+    {
+      "qid": 21,
+      "query_type": "unknown",
+      "hits": [
+        "华力创"
+      ],
+      "misses": []
+    },
+    {
+      "qid": 24,
+      "query_type": "A_prof_profile",
+      "hits": [
+        "王学谦"
+      ],
+      "misses": []
+    },
+    {
+      "qid": 26,
+      "query_type": "D_cross_domain_topic",
+      "hits": [
+        "爱博合创"
+      ],
+      "misses": []
+    },
+    {
+      "qid": 34,
+      "query_type": "B_company_topic_search",
+      "hits": [
+        "自变量"
+      ],
+      "misses": []
+    },
+    {
+      "qid": 40,
+      "query_type": "A_patent_by_applicant",
+      "hits": [
+        "优必选"
+      ],
+      "misses": []
+    },
+    {
+      "qid": 41,
+      "query_type": "A_patent_profile",
+      "hits": [
+        "CN117873146A"
+      ],
+      "misses": []
+    }
+  ]
+}

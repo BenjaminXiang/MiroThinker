@@ -44,7 +44,9 @@ def _walk_candidates(node: object) -> Iterator[dict]:
 
 
 def _display_name(cand: dict) -> str:
-    return (cand.get("name") or cand.get("title") or cand.get("snippet") or "").strip()
+    # Chat response renders the name as "label"; Evidence-shaped dicts use name/title.
+    return (cand.get("label") or cand.get("name") or cand.get("title")
+            or cand.get("snippet") or "").strip()
 
 
 def _count_unsourced_web(response: dict) -> int:
