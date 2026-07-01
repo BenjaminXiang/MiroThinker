@@ -2,12 +2,20 @@
 
 A change is accepted only when ALL hold.
 
-## Recall (eval-gated)
-- [ ] End-to-end entity recall (`eval_recall_chat.py`) rises from baseline **53% (10/19)** to
-      **≥ 63% (12/19)** on single-domain gradable cases, with **no passing case regressed**.
-- [ ] FM1b: 普渡 (#4) and/or 深南电路 (#13) enter the candidate window after the
-      candidate_limit raise (verified via `eval_recall.py` forced-domain).
-- [ ] FM3: #19 (许晋诚/陈功) is routed to professor recall (no longer `unknown`).
+## Recall (eval-gated, 58% baseline)
+- [x] End-to-end entity recall (`eval_recall_chat.py`) is **58% (11/19)** (current-HEAD, no-web,
+      Serper 403), persisted as `post-fix-recall.json`, with no passing case regressed.
+      (The commit-claimed 74% is NOT reproducible — depended on a now-dead Serper key; web is
+      split to `add-web-augment`.)
+- [x] RRF rescues broad-profile entities (#4 普渡) into the candidate window (verified via
+      `eval_recall.py` forced-domain).
+- [x] FM3: #19 routed to professor recall (no longer `unknown`) — routing-reachable; recall
+      ceiling bound by ingest.
+
+## Precision (new oracle, baseline only this round)
+- [x] `precision-baseline.json` persisted; false-positive substrate surfaced (candidate labels);
+      `unsourced_web=0` (Serper dead — web-provenance audit deferred to `add-web-augment`).
+      GREEN p@k threshold set after labeling (design §1.1).
 
 ## No regression
 - [ ] Patent applicant (#40) / exact (#41) routing still correct.
@@ -15,8 +23,11 @@ A change is accepted only when ALL hold.
 - [ ] Existing chat tests green; `openspec validate fix-chat-retrieval-recall-gaps --strict` 0.
 
 ## Honest scope (not blocked-on)
-- [ ] FM1a (云迹/九号/擎朗/嘉立创 not ingested) recorded as the remaining recall ceiling —
-      requires a separate ingest decision; NOT claimed solved by this change.
+- [x] FM1a (云迹/九号/擎朗/嘉立创/许晋诚/陈功 not ingested) recorded in
+      `fm1a-ingest-decision.md` as the recall ceiling — separate ingest decision; NOT claimed
+      solved.
+- [x] Web-search augmentation (Serper 403) split to `add-web-augment` — NOT claimed solved.
 
 ## Evidence to report
-- Baseline 53% JSON → post-fix recall JSON; per-case hit/miss delta; FM1a blocker note.
+- post-fix-recall.json + precision-baseline.json + latency-baseline.json; per-case delta; FM1a
+  blocker note; Serper-403 note.

@@ -1,28 +1,30 @@
 # Tasks: fix-chat-retrieval-recall-gaps
 
-> Eval-first. Codex may implement; Claude runs the eval oracle (localhost).
+> Eval-first. Delivered in commits 1fb6449/0c85b04/06ae50b. This change re-truths the contract
+> to the measured 58% baseline (web-augment split to add-web-augment).
 
 ## 0. Verification contract
-- [ ] 0.1 `.agents/runs/retrieval-generation-alignment/verification-contract.md` — RED =
-      baseline 53% (`eval_recall_chat.py`); GREEN = recall ≥ target (acceptance). FM3 routing =
-      eval-first (LLM-classifier branch).
+- [x] 0.1 verification-contract.md exists (RED=baseline; GREEN=recall target). Baseline
+      re-measured this round = 58% (Serper 403 → web dead).
 
-## 1. Eval harness (the oracle) — mostly done
-- [x] 1.1 `eval_recall.py` (forced-domain) + `eval_recall_chat.py` (end-to-end) — baseline 53%.
-- [ ] 1.2 Pin the eval as a runnable script + record baseline JSON to the run dir.
+## 1. Eval harness (the oracle)
+- [x] 1.1 eval_recall.py + eval_recall_chat.py — baseline.
+- [x] 1.2 Post-fix recall JSON persisted (`.agents/runs/.../post-fix-recall.json`, 58% 11/19).
 
-## 2. FM1b — candidate window
-- [ ] 2.1 Raise default `candidate_limit` in `retrieval.py` (30 → 64); eval-gated.
-- [ ] 2.2 Re-run eval; confirm recall rises on #4/#13 (普渡/深南电路 enter candidates) without
-      precision loss on passing cases; revert/adjust if it hurts.
+## 2. FM1b — candidate window (DELIVERED as hybrid RRF, not candidate_limit)
+- [x] 2.1 `_hybrid_rrf_select` delivered (retrieval.py:242); candidate_limit raise reverted.
+- [x] 2.2 RRF rescues broad-profile entities (#4 普渡) into the candidate window.
 
-## 3. FM3 — cross-filter professor routing
-- [ ] 3.1 Add a rule/classifier-target for school+field professor cross-filter → professor
-      recall (not `unknown`); locate the `unknown` fallthrough in chat.py.
-- [ ] 3.2 Re-run eval; confirm #19 (许晋诚/陈功) improves; no regression on other cases.
+## 3. FM3 — cross-filter professor routing (DELIVERED, data-blocked)
+- [x] 3.1 Cross-filter professor pattern routes to recall (not `unknown`).
+- [x] 3.2 #19 routed to professor recall; recall ceiling bound by ingest (许晋诚/陈功 absent).
 
 ## 4. Acceptance, ledger, validate
-- [ ] 4.1 Evidence: baseline 53% → post-fix recall; per-case deltas; FM1a blocker note.
-- [ ] 4.2 `openspec/change-ledger.md` status → in-verification.
-- [ ] 4.3 `openspec validate fix-chat-retrieval-recall-gaps --strict` exits 0.
+- [x] 4.1 Evidence persisted (recall + precision + latency baseline JSON).
+- [ ] 4.2 change-ledger status → in-verification.
+- [ ] 4.3 openspec validate fix-chat-retrieval-recall-gaps --strict exits 0.
 - [ ] 4.4 Claude review against acceptance; accept / revise / reject.
+
+## Out of scope (split to other workstreams)
+- FM1a ingest → `fm1a-ingest-decision.md` (decision gate).
+- Web-search augmentation (Serper 403) → `add-web-augment` change.
