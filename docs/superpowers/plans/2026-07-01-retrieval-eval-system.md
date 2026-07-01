@@ -53,12 +53,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from parse_testset import parse_workbook, _derive_required, _derive_forbidden
 
 
-def test_derive_required_strips_marker_and_splits():
+def test_derive_required_strips_marker_and_normalizes_to_short_core():
     kp = "深圳市普渡科技股份有限公司；上海开普勒机器人有限公司；云迹科技 需要在回答结果"
     req = _derive_required(kp)
-    assert "普渡" in req or any("普渡" in r for r in req)
-    assert "云迹" in req or any("云迹" in r for r in req)
+    assert "普渡" in req  # normalized short core, not the long form
+    assert "云迹" in req
     assert "需要在回答结果" not in req
+    assert not any("股份有限公司" in r for r in req)  # suffix stripped
 
 
 def test_derive_forbidden_extracts_after_marker():
@@ -140,8 +141,23 @@ def _split_entities(kp: str) -> list[str]:
     return [p.strip() for p in parts if p.strip()]
 
 
+# Company suffixes/prefixes stripped to a short matchable core (mirrors FM5 name-normalization).
+_CITY_PREFIX_RE = re.compile(r"^(深圳|北京|上海|广州|杭州|南京|武汉|成都|西安|苏州|东莞)[市]?")
+_LEGAL_SUFFIX_RE = re.compile(r"(股份有限公司|有限公司|责任公司|科技|集团|控股|公司|技术|有限)$")
+
+
+def _normalize_core(name: str) -> str:
+    """Strip city prefix + legal suffix -> short matchable core ('深圳市普渡科技股份有限公司' -> '普渡')."""
+    s = _CITY_PREFIX_RE.sub("", name)
+    prev = None
+    while prev != s:  # iteratively strip suffixes ('科技有限' -> strip '有限' -> '科技' -> strip '科技')
+        prev = s
+        s = _LEGAL_SUFFIX_RE.sub("", s).strip()
+    return s or name
+
+
 def _derive_required(kp: str) -> list[str]:
-    """Best-effort extract required entities from 关键点. Flags uncertainty via the label pass."""
+    """Best-effort extract required entities from 关键点 as short matchable cores."""
     if not kp:
         return []
     out: list[str] = []
@@ -149,8 +165,7 @@ def _derive_required(kp: str) -> list[str]:
         token = _NEED_MARKER_RE.sub("", token)  # strip trailing "需要在回答中"
         if not token or token.startswith(_META_PHRASES):
             continue
-        # strip company-name suffixes for a shorter matchable form (long form kept too)
-        out.append(token)
+        out.append(_normalize_core(token))
     return out
 
 
