@@ -1803,6 +1803,41 @@ def _lookup_professors_by_topic(
             final_top_k=limit,
         )
         rows = _evidence_list_from_retrieval(results)
+        # FM4 cross-domain rescue: professor vector recall is weak for topic queries
+        # (profile_summary doesn't emphasize the topic the way paper titles do). When recall
+        # is thin, recall papers on the topic and rescue their authors via paper->professor
+        # (get_related_objects; the link SQL already exists). Rank rescued professors by
+        # topic-paper-count (more papers on the topic = more relevant) so high-volume authors
+        # surface first. Dedup by professor_id.
+        if len(rows) < limit:
+            try:
+                paper_results = retrieval_service.retrieve(
+                    query=topic, domains=("paper",),
+                    candidate_limit=64, final_top_k=20,
+                )
+                seen = {r.get("professor_id") for r in rows if r.get("professor_id")}
+                prof_counts: dict[str, int] = {}
+                prof_rows: dict[str, dict] = {}
+                for ev in paper_results:
+                    oid = getattr(ev, "object_id", "")
+                    if getattr(ev, "object_type", "") != "paper" or not oid:
+                        continue
+                    rel = retrieval_service.get_related_objects(
+                        source_domain="paper", source_id=oid,
+                        target_domain="professor", limit=20,
+                    )
+                    for r in rel:
+                        pid = str(r.get("professor_id") or "").strip()
+                        if pid and pid not in seen:
+                            prof_counts[pid] = prof_counts.get(pid, 0) + 1
+                            prof_rows.setdefault(pid, {**r, "type": "professor"})
+                ranked = sorted(prof_counts, key=lambda p: prof_counts[p], reverse=True)
+                slots = max(0, limit - len(rows))
+                rescued = [prof_rows[p] for p in ranked[:slots]]
+                if rescued:
+                    rows.extend(rescued)
+            except Exception as exc:
+                logger.warning("Paper->professor rescue failed for topic %r: %s", topic, exc)
         normalized_rows = _normalize_professor_topic_rows(
             conn,
             rows,

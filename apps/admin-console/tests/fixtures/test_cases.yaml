@@ -1011,3 +1011,19 @@ cases:
   refusal_expected: false
   disambiguation_expected: false
   source: badcase+web+llm+user-reviewed
+- qid: 27
+  turn_group: badcase-fm4
+  is_head_turn: true
+  query: 有哪些做具身智能和灵巧手的教授
+  answer: 做具身智能/灵巧手的教授包括:柯文德、任尔夫、王强、刘桂良、冀晓强、戴建生等(均有具身智能/灵巧手相关论文)。
+  key_point: 柯文德、任尔夫、王强、刘桂良 需要在回答中(有具身智能/灵巧手论文的教授)
+  required_entities:
+  - 柯文德
+  - 任尔夫
+  - 王强
+  - 刘桂良
+  forbidden_entities: []
+  coref_needs_label: false
+  refusal_expected: false
+  disambiguation_expected: false
+  source: badcase+DB-grounded+user-reviewed
