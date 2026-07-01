@@ -16,19 +16,19 @@
       "l3_scores": {
         "type_correct": 1,
         "key_content_coverage": 0.7,
-        "structure_apt": 0.8,
+        "structure_apt": 1,
         "provenance_correct": null,
         "f_g_handling": null,
         "multi_turn_coref": null
       },
-      "l3_avg": 0.8333333333333334,
+      "l3_avg": 0.9,
       "l3_reasons": {
-        "type_correct": "答案类型符合期望，是对清华丁文伯教授的个人profile介绍，包含基本信息、研究方向和学术成果等维度",
-        "key_content_coverage": "覆盖了所有必需实体（丁文伯、清华大学、副教授、信号处理、机器学习、深圳国际研究生院），但相比金标准答案缺少大量关键信息，如教育经历、工作经历、学术兼职、奖励荣誉、科研进展等重要内容，覆盖度较低",
-        "structure_apt": "结构较为得当，分为基本信息、研究方向、学术成果三个部分，层次清晰，但相比金标准答案的profile字段完整性不足，缺少教育背景、工作经历、荣誉奖项等重要模块",
-        "provenance_correct": null,
-        "f_g_handling": null,
-        "multi_turn_coref": null
+        "type_correct": "答案类型为单实体profile,符合对丁文伯教授个人介绍的期望",
+        "key_content_coverage": "必需实体中'丁文伯'、'清华大学'、'副教授'、'信号处理'、'机器学习'、'深圳国际研究生院'均已覆盖。但金标准中的重要信息如邮箱、教育经历、工作经历详情、学术兼职、奖励荣誉等关键事实均缺失,覆盖度偏低",
+        "structure_apt": "采用了基本信息、研究领域、学术成果的分类结构,字段组织清晰得当,适合profile类答案",
+        "provenance_correct": "答案内容带有引用标记[1][2]等,表明来自本地知识库,无需标注web来源和时间,标null",
+        "f_g_handling": "非F拒答类或G默认类查询,标null",
+        "multi_turn_coref": "单轮查询,无需代词解析,标null"
       }
     },
     {
@@ -53,12 +53,12 @@
       },
       "l3_avg": 0.0,
       "l3_reasons": {
-        "type_correct": "期望类型是单实体profile(A类)，应回答丁文伯参与创立的企业信息，但系统返回了拒答+引导(F/G类)，类型不符",
-        "key_content_coverage": "金标准要求覆盖'丁文伯'、'无界智航'、'联合创始人'、'首席科学家'、'具身智能'等必需实体，系统答案完全未提及任何关键信息",
-        "structure_apt": "系统拒答无实质内容结构，标null",
-        "provenance_correct": "系统未提供实质答案内容，无需溯源标注，标null",
-        "f_g_handling": "查询中'他'明确指代前文实体(应为丁文伯)，系统本应解析指代并回答，却要求用户'先确认要查询哪一个实体'，这是跨轮指代解析失败，不应拒答，引导不当",
-        "multi_turn_coref": "查询中的'他'是跨轮代词指代，系统未能正确解析出指代对象(丁文伯)，导致拒答，指代解析失败"
+        "type_correct": "期望类型是单实体profile(A类)，应该直接回答丁文伯参与创立的企业信息，但系统返回了拒答/引导类型(F/G类)，类型不符",
+        "key_content_coverage": "系统未提供任何关键实体信息，必需实体'丁文伯'、'无界智航'、'联合创始人'、'首席科学家'、'具身智能'全部缺失",
+        "structure_apt": "拒答类型标null",
+        "provenance_correct": "拒答无实质内容，标null",
+        "f_g_handling": "查询中'他'指代明确(前文应有丁文伯上下文)，系统却要求用户确认实体，说明跨轮指代解析失败，未能正确处理多轮对话",
+        "multi_turn_coref": "查询中的'他'应该指代前文提到的丁文伯，但系统未能解析这个代词指代，要求用户重新确认实体，指代解析失败"
       }
     },
     {
@@ -75,20 +75,20 @@
       ],
       "l2_violations": [],
       "l3_scores": {
-        "type_correct": 1,
-        "key_content_coverage": 0.4,
-        "structure_apt": 1,
+        "type_correct": 0,
+        "key_content_coverage": 0.2,
+        "structure_apt": 0.5,
         "provenance_correct": null,
         "f_g_handling": null,
         "multi_turn_coref": null
       },
-      "l3_avg": 0.7999999999999999,
+      "l3_avg": 0.2333333333333333,
       "l3_reasons": {
-        "type_correct": "答案类型为主题列表(B类),按供应商逐一梳理基本信息、产品和亮点,符合查询'有哪些供应商'的期望",
-        "key_content_coverage": "必需实体5个中仅覆盖'普渡'1个,缺少云迹、擎朗智能、开普勒机器人、九号机器人4个核心头部供应商,覆盖率仅20%",
-        "structure_apt": "采用分条列举结构,每个供应商包含基本信息、技术产品、核心亮点三部分,逻辑清晰,适合供应商列表展示",
-        "provenance_correct": "答案引用本地知识库证据标注(如[10][8][3]等),属于纯本地知识库答案,标null",
-        "f_g_handling": "非F拒答或G默认类查询,标null",
+        "type_correct": "期望类型是主题列表(B类),应提供全国范围的成熟供应商列表,但系统却以F类拒答形式回答'证据不足以回答',并只提供了深圳本地的4家企业,类型不符",
+        "key_content_coverage": "必需实体5个中仅覆盖了'普渡'1个(0.2分),缺失'开普勒机器人'、'云迹'、'九号机器人'、'擎朗智能'等头部供应商",
+        "structure_apt": "虽然采用了企业画像的结构(基本信息、技术与产品、核心亮点),但作为列表类查询,应该是扁平化的供应商列表而非详细profile,且范围局限于深圳不符合'中国'的查询范围,结构部分得当但范围错误",
+        "provenance_correct": "答案基于本地知识库且标注了证据编号[2][8][9][10],属于纯本地知识库答案,标null",
+        "f_g_handling": "虽然系统声称'证据不足以回答',但这不是真正的F类拒答场景,因为金标准显示有充足的供应商信息可提供,系统错误地将正常查询当作证据不足处理,标null",
         "multi_turn_coref": "单轮查询,无需代词解析,标null"
       }
     },
@@ -115,12 +115,12 @@
       },
       "l3_avg": 0.0,
       "l3_reasons": {
-        "type_correct": "期望类型未明确标注但金标准答案是企业列表(B类),系统却返回了拒答式提示(F/G类),类型不符",
-        "key_content_coverage": "系统未返回任何必需实体(安赛步、小村机器人、中科世界、艾唯尔、锐曼智能、普渡),覆盖率0%",
-        "structure_apt": "应返回列表结构展示深圳企业,但系统仅返回提示文本,结构不当",
-        "provenance_correct": "系统未提供实质答案内容,无需标注来源,标null",
-        "f_g_handling": "虽有引导但场景判断错误:查询明确提到'上述企业'表明是多轮对话,系统应解析指代而非要求用户重新确认,标null",
-        "multi_turn_coref": "查询中'上述企业'是明确的跨轮指代,系统完全未解析该指代关系,反而要求用户重新确认实体,指代解析失败"
+        "type_correct": "期望返回主题列表(深圳总部企业名单),系统却返回了拒答式提示,类型不符",
+        "key_content_coverage": "金标准要求返回6家企业(安赛步、小村机器人、中科世界、艾唯尔、锐曼智能、普渡),系统一个都没有给出,覆盖率0%",
+        "structure_apt": "应返回结构化列表,系统却返回了要求用户澄清的提示语,结构完全不当",
+        "provenance_correct": "系统未返回实质内容,无需标注来源,标null",
+        "f_g_handling": "查询不属于F拒答类或G默认类,是明确的多轮指代查询,标null",
+        "multi_turn_coref": "查询中'上述企业'是明确的跨轮指代,系统未能解析这一指代关系,反而要求用户重新确认实体,指代解析失败"
       }
     },
     {
@@ -134,19 +134,19 @@
       "l3_scores": {
         "type_correct": 0,
         "key_content_coverage": 0,
-        "structure_apt": 0,
+        "structure_apt": null,
         "provenance_correct": null,
-        "f_g_handling": null,
+        "f_g_handling": 0,
         "multi_turn_coref": 0
       },
       "l3_avg": 0.0,
       "l3_reasons": {
-        "type_correct": "期望类型为能力判断+产品列举(针对特定企业的深度分析),实际返回了30个企业的简单列表,类型完全不符",
-        "key_content_coverage": "必需实体'普渡'虽在列表中出现但未展开说明其机械臂按电梯能力,金标准中关于普渡产品的核心技术特点(视觉识别、机械臂、全流程自动化)完全缺失",
-        "structure_apt": "结构不当:应针对查询中'上述企业'逐一分析是否具备机械臂按电梯功能,而非泛泛列举30个企业的基本介绍",
-        "provenance_correct": "答案为本地知识库内容,标null",
-        "f_g_handling": "非F/G类型,标null",
-        "multi_turn_coref": "查询中'上述企业'指代前文提及的特定企业列表(普渡、锐曼等),系统未正确解析指代关系,返回了泛化的30个企业而非针对性分析"
+        "type_correct": "查询期望得到具体企业及产品的列表答案(B类主题列表)，但系统返回了拒答(F类)，类型不符",
+        "key_content_coverage": "必需实体'普渡'完全缺失，金标准明确指出普渡科技的产品可实现该功能且是核心应用，但系统答案未提及任何关键信息",
+        "structure_apt": "拒答类查询不适用结构评估",
+        "provenance_correct": "系统答案引用了证据编号[1]-[10]，表明是基于本地知识库的答案，标null",
+        "f_g_handling": "虽然系统进行了拒答，但这是错误的拒答(证据中实际包含相关信息)，且未提供有效的引导或建议，拒答处理不当",
+        "multi_turn_coref": "查询中'上述企业'指代前文提到的企业列表，系统未能正确解析这个跨轮指代关系，导致检索失败"
       }
     },
     {
@@ -165,12 +165,12 @@
       },
       "l3_avg": 0.5,
       "l3_reasons": {
-        "type_correct": "系统正确识别这是一个应当拒答的查询(类型F),因为涉及违法场所信息不应提供",
-        "key_content_coverage": "拒答类查询不适用内容覆盖度评估",
-        "structure_apt": "拒答类查询不适用结构评估",
-        "provenance_correct": "系统回答基于本地知识库不足,未涉及web内容,标null",
-        "f_g_handling": "虽然系统选择了拒答,但处理方式不当:仅说'证据不足'是技术性回避,未明确说明不应提供违法场所信息的原因,也没有像金标准那样提供安全出行建议、举报渠道等正向引导,缺乏礼貌性和建设性",
-        "multi_turn_coref": "单轮对话,不涉及指代消解"
+        "type_correct": "系统正确识别出证据不足并给出拒答响应,符合F类拒答的期望类型",
+        "key_content_coverage": "F拒答类查询不适用内容覆盖度评估",
+        "structure_apt": "F拒答类查询不适用结构评估",
+        "provenance_correct": "系统明确标注了证据来源[1],溯源处理得当,但此维度对拒答类不适用",
+        "f_g_handling": "虽然系统正确拒答,但处理不当:未给出礼貌的引导建议(如建议通过正规渠道、注意安全等),仅生硬地说明证据不足,缺乏对敏感查询的恰当引导",
+        "multi_turn_coref": "单轮对话,不涉及代词消解"
       }
     },
     {
@@ -197,12 +197,12 @@
       },
       "l3_avg": 0.0,
       "l3_reasons": {
-        "type_correct": "期望类型标注为'?'表示需要提供企业profile,但系统错误地返回了未找到企业的拒答,与期望的A类单实体profile完全不符",
-        "key_content_coverage": "系统称未找到企业,所有必需实体(无界智航、具身智能、穆世龙、丁文伯、X-H1、X-Sim)全部缺失,覆盖率为0",
-        "structure_apt": "系统返回未找到企业的简单文本,没有提供任何profile应有的结构化字段(成立时间、业务、团队、产品等),结构完全不当",
-        "provenance_correct": "系统返回的是检索失败信息而非实质内容,不涉及来源标注问题,标注为null",
-        "f_g_handling": "虽然系统做了拒答,但这是错误的拒答(实际数据库中应有该企业信息),且没有提供任何引导性建议或替代查询方式,处理质量差",
-        "multi_turn_coref": "这是单轮查询,不涉及代词消解问题,标注为null"
+        "type_correct": "期望类型为单实体profile(A类),但系统错误地返回了拒答(F类),类型不符",
+        "key_content_coverage": "系统未返回任何关键信息,必需实体(无界智航、具身智能、穆世龙、丁文伯、X-H1、X-Sim)全部缺失,覆盖率为0",
+        "structure_apt": "系统应返回结构化的企业profile(包含成立时间、业务、团队、产品等字段),但实际返回空答案,结构完全不当",
+        "provenance_correct": "系统返回的是本地知识库查询结果(虽然是错误的未找到),无web内容,标null",
+        "f_g_handling": "系统错误地判定为找不到企业而拒答,但金标准答案表明无界智航是存在的实体,且未提供有效的引导或替代建议,拒答处理不当",
+        "multi_turn_coref": "单轮查询,无需代词解析,标null"
       }
     },
     {
@@ -228,12 +228,12 @@
       },
       "l3_avg": 0.0,
       "l3_reasons": {
-        "type_correct": "期望类型为单实体profile(A类),系统应返回无界智航的详细信息,但系统错误地返回了拒答(F类),类型不符",
-        "key_content_coverage": "系统未返回任何必需实体(无界智航、丁文伯、穆世龙、具身智能、可穿戴数采套件等),关键内容覆盖率为0",
-        "structure_apt": "系统返回拒答,无结构可评估,标null",
-        "provenance_correct": "系统返回拒答,无溯源内容,标null",
-        "f_g_handling": "虽然系统返回了拒答形式,但这是错误的拒答(知识库中实际有相关信息),且未提供有效的引导建议帮助用户找到'深圳无界智航科技有限公司'等相关实体",
-        "multi_turn_coref": "单轮对话,无指代消解需求,标null"
+        "type_correct": "期望类型为'?'(待推断),金标准给出了详细的企业profile和辨析内容,应为A类单实体profile或D类全景聚合;系统返回拒答(F类),类型不符",
+        "key_content_coverage": "系统直接拒答未找到匹配企业,必需实体['无界智航', '丁文伯', '穆世龙', '具身智能', '可穿戴数采套件']完全未覆盖,关键内容缺失率100%",
+        "structure_apt": "拒答类查询结构维度不适用",
+        "provenance_correct": "拒答无实际内容输出,无需标注来源,此维度不适用",
+        "f_g_handling": "虽然是拒答场景,但系统仅简单表示'没有找到',未提供礼貌的解释、未尝试澄清用户意图(如询问是指'无界智航'还是'智航无人机'),也未给出搜索建议或引导,拒答处理质量差",
+        "multi_turn_coref": "单轮查询,无指代消解需求,此维度不适用"
       }
     },
     {
@@ -251,18 +251,18 @@
         "type_correct": 1,
         "key_content_coverage": 0.3,
         "structure_apt": 1,
-        "provenance_correct": null,
+        "provenance_correct": 1,
         "f_g_handling": null,
         "multi_turn_coref": null
       },
-      "l3_avg": 0.7666666666666666,
+      "l3_avg": 0.825,
       "l3_reasons": {
-        "type_correct": "答案类型符合期望,提供了PCB打板厂商的主题列表,符合B类型查询需求",
-        "key_content_coverage": "必需实体中仅覆盖了'一博'(一博科技),遗漏了'嘉立创'和'深南电路'这两个关键厂商,覆盖率仅1/3",
-        "structure_apt": "结构得当,采用列表形式呈现多个厂商,每个厂商包含基本信息、核心业务、核心亮点等字段,层次清晰",
-        "provenance_correct": "答案基于本地知识库,有明确的引用标注[1]-[10],属于纯本地知识库答案,标注null",
-        "f_g_handling": "非F拒答或G默认类查询,标注null",
-        "multi_turn_coref": "单轮查询,无代词消歧需求,标注null"
+        "type_correct": "答案类型符合期望，提供了PCB打板厂商的主题列表，每个厂商都有基本信息、技术产品和核心亮点的结构化呈现",
+        "key_content_coverage": "必需实体覆盖不足：仅覆盖了'一博'(一博科技)，缺少'嘉立创'和'深南电路'这两个关键厂商，覆盖率约33%",
+        "structure_apt": "结构得当，采用了清晰的列表形式，每个厂商都包含基本信息、技术产品、核心亮点等字段，信息层次分明",
+        "provenance_correct": "答案正确标注了来源引用[1][3][4][7][8][10]，符合溯源要求",
+        "f_g_handling": null,
+        "multi_turn_coref": null
       }
     },
     {
@@ -288,12 +288,12 @@
       },
       "l3_avg": 0.0,
       "l3_reasons": {
-        "type_correct": "期望类型为列表聚合答案(类型B/D)，应列出深圳企业并提供相关信息，但系统返回了拒绝回答并要求用户澄清的提示(类型F)，类型不符",
-        "key_content_coverage": "系统完全未提供任何必需实体(嘉立创、华秋PCB、深南电路、兴森、一博、则成电子)的信息，覆盖率为0",
-        "structure_apt": "系统未提供任何结构化的企业列表或信息聚合，仅返回了一句引导性提示",
-        "provenance_correct": "系统返回的是本地拒答提示，无web或外部来源内容，标null",
-        "f_g_handling": "虽然系统尝试引导用户澄清查询，但查询中'上述企业'的指代在多轮对话中应该是可解析的，不应要求用户重新确认实体，引导不当",
-        "multi_turn_coref": "查询中'上述企业'是明确的跨轮指代，系统未能正确解析这个指代关系，反而要求用户重新确认，指代解析失败"
+        "type_correct": "期望类型为主题列表(B类)或全景聚合(D类)，应列出深圳企业；系统却返回了拒答式的反问，类型完全不符",
+        "key_content_coverage": "系统完全未提供任何企业信息，必需实体(嘉立创、华秋PCB、深南电路等)全部缺失，覆盖率为0",
+        "structure_apt": "系统未提供任何结构化内容，既没有企业列表也没有聚合信息，结构完全不当",
+        "provenance_correct": "答案为纯本地知识库查询结果(虽然查询失败)，无web内容，标null",
+        "f_g_handling": "查询明确指向'上述企业'，不属于F拒答或G默认场景，标null",
+        "multi_turn_coref": "这是明确的跨轮查询('上述企业'指代前文提到的企业列表)，系统完全未能解析这个指代关系，反而要求用户重新确认实体"
       }
     },
     {
@@ -319,12 +319,12 @@
       },
       "l3_avg": 0.0,
       "l3_reasons": {
-        "type_correct": "期望类型是A单实体profile(论文详细信息),但系统返回了F拒答类回复,类型不符",
-        "key_content_coverage": "系统未提供任何关键实体信息,必需实体如'pFedGPA'、'扩散模型'、'联邦学习'、'参数聚合'等全部缺失",
-        "structure_apt": "拒答类查询structure_apt标null",
-        "provenance_correct": "系统未提供实质内容,无需标注来源,标null",
-        "f_g_handling": "查询明确指定了论文标题'pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning',系统不应拒答。系统错误判断用户意图不明,应直接返回该论文详细信息而非要求用户补充查询范围",
-        "multi_turn_coref": "单轮查询,标null"
+        "type_correct": "期望类型是A单实体profile(论文详细信息),但系统返回了F拒答类型,类型完全不符",
+        "key_content_coverage": "系统未返回任何关于pFedGPA论文的信息,必需实体如'pFedGPA'、'扩散模型'、'联邦学习'、'参数聚合'、'个性化'、'非独立同分布'均未覆盖,覆盖率为0",
+        "structure_apt": "系统拒答无结构可评估,标null",
+        "provenance_correct": "系统拒答无内容来源问题,标null",
+        "f_g_handling": "用户明确指定论文标题查询详细信息,意图清晰无歧义,系统却错误判断为意图不明并要求用户澄清,这是误拒答,未能正确识别论文查询意图,处理不当",
+        "multi_turn_coref": "单轮对话无代词消解问题,标null"
       }
     },
     {
@@ -346,42 +346,43 @@
       },
       "l3_avg": 0.0,
       "l3_reasons": {
-        "type_correct": "期望类型为'?'(应返回具体答案),但系统返回了拒答/澄清类型(F),类型不符合期望",
-        "key_content_coverage": "金标准要求提供PDF链接和arxiv信息,但系统完全未覆盖这些必需实体,而是要求用户澄清",
-        "structure_apt": "拒答类查询标null",
-        "provenance_correct": "本地知识库答案,标null",
-        "f_g_handling": "虽然系统进行了澄清引导,但查询'这论文'是明确的跨轮指代,系统应解析上文而非要求澄清,处理不当",
-        "multi_turn_coref": "查询中'这论文'是跨轮指代,系统未能解析上文中的论文实体,而是错误地要求用户重新指定,指代解析失败"
+        "type_correct": "期望类型为'?'(应返回具体PDF链接),系统却返回了拒答式引导,类型不符",
+        "key_content_coverage": "金标准要求提供PDF链接和arxiv信息,系统完全未提供这些必需实体",
+        "structure_apt": "系统返回的是拒答引导而非具体内容,结构维度不适用",
+        "provenance_correct": "系统未提供实质内容,无来源标注需求,标null",
+        "f_g_handling": "查询期望类型为'?'而非F拒答类型,此维度不适用",
+        "multi_turn_coref": "查询中'这论文'是跨轮指代,系统未能正确解析上文所指论文,要求用户重新确认实体"
       }
     },
     {
       "qid": 13,
       "query": "毕业于早稻田，且在深圳专注在机器人行业的企业家有谁",
-      "l1_hit": [],
+      "l1_hit": [
+        "早稻田大学"
+      ],
       "l1_miss": [
         "帕西尼感知",
         "迈步机器人",
         "奥达智声",
-        "瓦力",
-        "早稻田大学"
+        "瓦力"
       ],
       "l2_violations": [],
       "l3_scores": {
         "type_correct": 0,
         "key_content_coverage": 0,
-        "structure_apt": 0,
+        "structure_apt": null,
         "provenance_correct": null,
-        "f_g_handling": null,
+        "f_g_handling": 0,
         "multi_turn_coref": null
       },
       "l3_avg": 0.0,
       "l3_reasons": {
-        "type_correct": "用户查询的是深圳机器人行业企业家,期望得到人物列表,但系统误将查询理解为在深圳高校中查找教授,答案类型完全错误",
-        "key_content_coverage": "金标准答案要求的必需实体(帕西尼感知、迈步机器人、奥达智声、瓦力、早稻田大学)一个都未出现,完全未覆盖关键内容",
-        "structure_apt": "系统输出的是高校列表而非企业家profile或列表,结构与预期的人物介绍格式完全不符",
-        "provenance_correct": "系统答案是本地知识库检索结果,无web或实时内容,标null",
-        "f_g_handling": "不属于F拒答或G默认类型,标null",
-        "multi_turn_coref": "单轮查询,无代词消解需求,标null"
+        "type_correct": "期望类型为主题列表(B类)，应列举符合条件的企业家，但系统返回了拒答(F类)，类型不符",
+        "key_content_coverage": "金标准包含许晋诚、陈功、叶晶、张哲明等多位企业家及帕西尼感知、迈步机器人、奥达智声、瓦力等企业，系统答案完全未覆盖任何必需实体",
+        "structure_apt": "系统选择了拒答，无结构可评估，标null",
+        "provenance_correct": "系统答案为本地知识库查询结果的拒答，无web内容，标null",
+        "f_g_handling": "虽然系统给出了'证据不足'的说明并列举了部分相关信息，但这是错误的拒答(实际存在答案)，且未提供有效的引导建议帮助用户获取正确信息",
+        "multi_turn_coref": "单轮查询，无代词消解需求，标null"
       }
     },
     {
@@ -399,19 +400,19 @@
       "l3_scores": {
         "type_correct": 0,
         "key_content_coverage": 0,
-        "structure_apt": 0,
+        "structure_apt": null,
         "provenance_correct": null,
         "f_g_handling": 0,
         "multi_turn_coref": null
       },
       "l3_avg": 0.0,
       "l3_reasons": {
-        "type_correct": "用户明确查询'华力创科学这家公司'，期望得到单实体profile(A类)，但系统误判为未明确主体，返回了引导提示(G类)，类型不符",
-        "key_content_coverage": "系统未返回任何关于华力创科学的实际内容，必需实体('华力创科学'、'力传感器'、'Photon系列'、'六维力传感器'、'光学传感')全部缺失",
-        "structure_apt": "系统未提供profile结构，仅返回了引导话术，完全不符合单实体profile应有的公司信息、产品特点、竞争力等结构化内容",
-        "provenance_correct": "系统未返回实际内容，无web或外部来源引用，标null",
-        "f_g_handling": "虽然系统试图引导用户明确查询，但用户查询'华力创科学这家公司'已经非常明确(主体明确、意图清晰)，系统误判导致不必要的引导，处理不当",
-        "multi_turn_coref": "单轮查询，无代词解析需求，标null"
+        "type_correct": "用户明确查询'华力创科学这家公司'的信息和特点，期望A类单实体profile，但系统返回了F类拒答提示，类型不符",
+        "key_content_coverage": "系统完全未提供金标准中的任何关键实体（华力创科学、力传感器、Photon系列、六维力传感器、光学传感等），覆盖率为0",
+        "structure_apt": "拒答类型标null",
+        "provenance_correct": "拒答无实际内容输出，标null",
+        "f_g_handling": "用户查询'华力创科学'已经是明确的企业主体名称，系统却误判为意图不明要求补充信息，拒答不当且引导错误",
+        "multi_turn_coref": "单轮查询，标null"
       }
     },
     {
@@ -419,31 +420,31 @@
       "query": "光基多维力传感原理具体展开说",
       "l1_hit": [
         "光基多维力传感",
+        "微形变",
         "华力创科学"
       ],
       "l1_miss": [
         "光学多模态感知",
         "六维力/力矩",
-        "微形变",
         "Photon Finger"
       ],
       "l2_violations": [],
       "l3_scores": {
         "type_correct": 1,
-        "key_content_coverage": 0.75,
+        "key_content_coverage": 0.7,
         "structure_apt": 1,
         "provenance_correct": null,
         "f_g_handling": null,
         "multi_turn_coref": null
       },
-      "l3_avg": 0.9166666666666666,
+      "l3_avg": 0.9,
       "l3_reasons": {
-        "type_correct": "答案类型符合期望，对光基多维力传感原理进行了全景式的详细展开说明，包含原理、技术特点、应用等多个维度",
-        "key_content_coverage": "覆盖了'光基多维力传感'、'六维力/力矩'、'微形变'、'华力创科学'四个必需实体，但缺少'光学多模态感知'这一核心概念术语和'Photon Finger'具体产品名称",
-        "structure_apt": "结构组织得当，分为核心物理过程、技术优势、研发案例、行业地位四个层次，逻辑清晰，层次分明，适合全景聚合类回答",
-        "provenance_correct": "答案中包含引用标注[1][2][3][4][5]，表明来源于检索文档，属于本地知识库答案，标null",
-        "f_g_handling": "非F拒答类或G默认类查询，标null",
-        "multi_turn_coref": "单轮对话，无需代词解析，标null"
+        "type_correct": "答案类型符合期望,对技术原理进行了详细展开说明,采用了分层结构阐述光基多维力传感原理",
+        "key_content_coverage": "覆盖了'光基多维力传感'、'微形变'、'华力创科学'等必需实体,但缺少'光学多模态感知'、'六维力/力矩'的明确表述,且未提及'Photon Finger'产品名称",
+        "structure_apt": "结构合理,分为基本原理、物理实现与光学机制、多维力解耦与测量等层次,逻辑清晰,便于理解技术细节",
+        "provenance_correct": "答案中有引用标记[2][3][4][5]表明来源,属于本地知识库答案,标null",
+        "f_g_handling": "非F拒答或G默认类型查询,标null",
+        "multi_turn_coref": "单轮对话,无需代词解析,标null"
       }
     },
     {
@@ -460,49 +461,49 @@
       ],
       "l2_violations": [],
       "l3_scores": {
-        "type_correct": 1,
+        "type_correct": 0,
         "key_content_coverage": 0.2,
-        "structure_apt": 0.6,
+        "structure_apt": 0.3,
         "provenance_correct": null,
         "f_g_handling": null,
         "multi_turn_coref": null
       },
-      "l3_avg": 0.6,
+      "l3_avg": 0.16666666666666666,
       "l3_reasons": {
-        "type_correct": "答案类型符合预期，提供了王学谦的人物画像(profile)，包含基本信息、研究方向、学术产出等字段",
-        "key_content_coverage": "必需实体仅覆盖'王学谦'和'清华大学'，缺失'空间机器人'(虽提到机器人但未明确空间机器人)、'青年领军人才'、'国家科技进步特等奖'等关键信息，核心评价维度完全缺失",
-        "structure_apt": "基本结构合理，有基本信息、研究方向、学术产出等字段，但缺少荣誉奖项、学术地位等profile关键维度，且明确表示'证据不足'表明检索不完整",
-        "provenance_correct": null,
-        "f_g_handling": null,
-        "multi_turn_coref": null
+        "type_correct": "金标准答案是A类单实体profile，应对王学谦进行全面评价并明确回答是否属于大牛。系统答案却以'证据不足'为由拒绝评价，实际上是F类拒答，类型不符。",
+        "key_content_coverage": "必需实体中仅覆盖'王学谦'和'清华大学'，缺失'空间机器人'、'青年领军人才'、'国家科技进步特等奖'等关键信息，覆盖率极低。",
+        "structure_apt": "虽然包含基本信息、研究方向、学术产出等结构字段，但核心评价部分以'证据不足'敷衍，未能呈现完整的人物profile，结构不够充分。",
+        "provenance_correct": "系统答案标注了证据来源[1]-[10]，符合溯源要求，但因答案本身是本地知识库内容，此维度标null。",
+        "f_g_handling": "此查询应为A类profile而非F类拒答，该维度不适用。",
+        "multi_turn_coref": "单轮查询，无代词消解需求，标null。"
       }
     },
     {
       "qid": 17,
       "query": "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何",
       "l1_hit": [
-        "爱博合创"
-      ],
-      "l1_miss": [
+        "爱博合创",
         "PANVIS-A",
-        "郭书祥",
         "郭健",
         "血管介入手术机器人"
       ],
+      "l1_miss": [
+        "郭书祥"
+      ],
       "l2_violations": [],
       "l3_scores": {
-        "type_correct": 0,
-        "key_content_coverage": 0.2,
-        "structure_apt": 0,
+        "type_correct": 1,
+        "key_content_coverage": 0.6,
+        "structure_apt": 1,
         "provenance_correct": null,
         "f_g_handling": null,
         "multi_turn_coref": null
       },
-      "l3_avg": 0.06666666666666667,
+      "l3_avg": 0.8666666666666667,
       "l3_reasons": {
-        "type_correct": "查询明确要求爱博合创的企业情况、创始人信息和市场评价,应返回单个企业的profile(A类),但系统返回了包含教授、论文、多家企业的生态全景聚合(D类),类型完全不符",
-        "key_content_coverage": "必需实体中仅提及'深圳爱博合创医疗机器人'企业名称,但缺失核心产品PANVIS-A、创始人郭书祥和郭健的详细信息、血管介入手术机器人的具体介绍,覆盖率极低",
-        "structure_apt": "查询要求单一企业的profile结构(企业概况、产品、创始人、市场评价等),但系统输出为教授-论文-企业的生态全景结构,完全不适配单企业查询需求",
+        "type_correct": "答案类型符合预期，提供了企业profile，包含企业概况、创始人信息和市场评价三个维度的结构化内容",
+        "key_content_coverage": "覆盖了必需实体中的'爱博合创'、'PANVIS-A'、'郭健'和'血管介入手术机器人'，但缺失了关键创始人'郭书祥'的信息（金标准中明确郭书祥是创始人、董事长兼首席科学家，有30年技术积累），仅笼统提到'海外院士级专家'",
+        "structure_apt": "结构得当，按企业基本情况、创始人信息、市场评价三部分组织，层次清晰，使用了分点和子项展示，便于阅读",
         "provenance_correct": null,
         "f_g_handling": null,
         "multi_turn_coref": null
@@ -527,12 +528,12 @@
       },
       "l3_avg": 0.09999999999999999,
       "l3_reasons": {
-        "type_correct": "查询期望得到技术路线的分类总结(D全景聚合型),但系统只返回了单一企业案例(A单实体profile型),未对行业技术路线进行归纳",
-        "key_content_coverage": "金标准要求的两种核心路线'真实数据'和'合成数据'完全未覆盖,系统仅提及'遥操作数据采集'这一具体方法,且明确表示'证据不足以全面回答',缺失必需实体",
-        "structure_apt": "系统采用了企业案例结构而非技术路线分类结构,虽然企业信息字段较完整,但不符合查询对技术路线归纳总结的结构需求,仅给部分分因其承认了证据不足",
-        "provenance_correct": "答案基于本地知识库并标注了来源[9],属于纯本地知识库答案,标null",
-        "f_g_handling": "非F/G类型查询,标null",
-        "multi_turn_coref": "单轮查询无代词消解需求,标null"
+        "type_correct": "查询期望得到具身智能数据技术路线的分类概述，金标准给出了'真实场景数据采集'和'模拟器生成数据'两种核心路线。系统答案却给出了特定厂商的具体产品和技术（遥操作平台、AI记忆框架），这是按厂商案例而非技术路线类型来组织，答案类型不符合期望。",
+        "key_content_coverage": "金标准的必需实体是'真实数据'和'合成数据'（模拟器生成数据），系统答案完全没有提及这两个核心概念。系统提到的'遥操作平台采集数据'和'AI记忆框架'与金标准要求的技术路线分类（真实vs合成）完全不匹配，关键内容覆盖度为零。",
+        "structure_apt": "系统答案有清晰的结构（两种路线+代表厂商+技术要点），但结构维度错误：应该按数据来源类型分类（真实/合成），却按厂商的具体技术方案分类。结构形式尚可但维度偏离，给0.3分。",
+        "provenance_correct": "答案基于本地知识库检索结果，有明确的引用标注[9][10]等，属于纯本地知识库答案，标null。",
+        "f_g_handling": "本查询不属于F拒答类或G默认类，标null。",
+        "multi_turn_coref": "本查询为单轮对话，无需代词解析，标null。"
       }
     },
     {
@@ -548,20 +549,20 @@
       "l2_violations": [],
       "l3_scores": {
         "type_correct": 1,
-        "key_content_coverage": 0.85,
+        "key_content_coverage": 1,
         "structure_apt": 1,
         "provenance_correct": null,
         "f_g_handling": null,
         "multi_turn_coref": null
       },
-      "l3_avg": 0.9500000000000001,
+      "l3_avg": 1.0,
       "l3_reasons": {
-        "type_correct": "答案类型符合期望，提供了真实数据采集路线中的具体方式列表，属于主题列表类型(B类)。",
-        "key_content_coverage": "必需实体中覆盖了'遥操作'和'动捕数据'，但缺少'真机实测'这一关键点。金标准答案中提到的'真实场景任务执行'和'多模态传感器融合'等内容在系统答案中未体现，但主要关键点已覆盖大部分。",
-        "structure_apt": "结构得当，采用清晰的列表形式，每种方式都有具体说明和子分类，层次分明，便于理解。",
-        "provenance_correct": "答案基于本地知识库，带有引用标注[1][3][4]，属于纯本地知识库答案，标记为null。",
-        "f_g_handling": "非F拒答类或G默认类查询，不适用此维度。",
-        "multi_turn_coref": "单轮对话，无需代词消解，不适用此维度。"
+        "type_correct": "查询要求列举真实数据采集路线的具体方式,系统生成的答案提供了分类清晰的具体方式列表,符合B主题列表类型",
+        "key_content_coverage": "必需实体全部覆盖:遥操作(远程操作/遥操作采集部分详细说明)、动捕数据(VR/动捕的遥操作、人类佩戴设备直接示范)、真机实测(人类直接演示采集、拖拽示教等真实机器人操作)",
+        "structure_apt": "结构组织得当,采用分类列表形式,每种方式有明确的标题和子分类,并配有详细的解释和具体实现方法,层次清晰",
+        "provenance_correct": "答案内容来自本地知识库(带有[1][2][3][4]等引用标记),无需外部web来源,标null",
+        "f_g_handling": "非F拒答或G默认类查询,标null",
+        "multi_turn_coref": "单轮查询,无代词消解需求,标null"
       }
     },
     {
@@ -576,21 +577,21 @@
       ],
       "l2_violations": [],
       "l3_scores": {
-        "type_correct": 0,
-        "key_content_coverage": 0,
-        "structure_apt": 0,
-        "provenance_correct": null,
+        "type_correct": 0.3,
+        "key_content_coverage": 0.2,
+        "structure_apt": 0.7,
+        "provenance_correct": 0,
         "f_g_handling": null,
         "multi_turn_coref": null
       },
-      "l3_avg": 0.0,
+      "l3_avg": 0.3,
       "l3_reasons": {
-        "type_correct": "金标准期望给出模拟器生成数据路线的具体方式列表(类型B主题列表),但系统生成答案采用了拒答形式(类型F),声称证据不足,类型不符",
-        "key_content_coverage": "必需实体要求覆盖'仿真数据''合成数据''合成方法包括'等关键点,金标准列出了RoboGen、NVIDIA Isaac Sim、Habitat等多个具体方案,但系统答案仅提及工具名称而未给出具体方式,完全未覆盖金标准中的关键内容",
-        "structure_apt": "金标准采用分类列表结构(基于模拟器生成场景、利用物理模拟器、结合生成模型等),系统答案结构为拒答+参考信息罗列,未按具体方式进行结构化组织",
-        "provenance_correct": "系统答案提供了编号引用[1][2][3][4][5],表明是基于本地知识库回答,标null",
-        "f_g_handling": "这是一个应该正面回答的主题列表查询(类型B),不是F或G类型,标null",
-        "multi_turn_coref": "这是单轮查询,无跨轮指代问题,标null"
+        "type_correct": "期望答案是关于模拟器生成数据路线的具体方式列表，系统答案虽然提供了列表结构，但内容偏向通用合成数据工具（Syntho、是德科技等），而非金标准中要求的具身智能、机器人领域的模拟器方案（RoboGen、RoboTwin、Habitat等），主题偏离较大",
+        "key_content_coverage": "必需实体'仿真数据'和'合成数据'在系统答案中有提及，但'合成方法包括'所对应的具体方法严重缺失。金标准中的核心内容如RoboGen、RoboTwin 2.0、Habitat平台、InternDog、特斯拉世界模拟器、WISA等关键实体和方法均未覆盖，仅提到了NVIDIA Isaac Sim一个相关项目",
+        "structure_apt": "答案采用了分点列举的结构，每个方式包含提供方、具体方式和核心亮点，结构清晰合理，但内容主题与金标准要求不匹配",
+        "provenance_correct": "系统答案明确标注了证据来源编号[1][2][3][4][5]，但这些证据来源似乎与具身智能模拟器生成数据的专业领域不匹配，表明检索到的文档不够准确，未能检索到金标准中提到的相关文献和方案",
+        "f_g_handling": null,
+        "multi_turn_coref": null
       }
     },
     {
@@ -616,12 +617,12 @@
       },
       "l3_avg": 0.7666666666666666,
       "l3_reasons": {
-        "type_correct": "答案类型符合期望,提供了深圳具身智能、灵巧手厂商列表及其数据路线的全景聚合",
-        "key_content_coverage": "必需实体中仅覆盖了'自变量机器人'和'源升智能',缺失'忆海原识'、'赛博格机器人'、'宇数'三个关键厂商,覆盖率较低",
-        "structure_apt": "结构得当,按厂商分类组织,每个厂商包含基本信息、技术产品、核心亮点和数据路线等维度,层次清晰",
-        "provenance_correct": "答案为本地知识库内容,带有证据标注[2][5][6]等,不涉及web或实时内容,标null",
-        "f_g_handling": "非F拒答或G默认类型,标null",
-        "multi_turn_coref": "单轮查询,无代词消解需求,标null"
+        "type_correct": "答案类型符合期望，以厂商列表形式呈现深圳具身智能和灵巧手厂商及其数据路线信息，属于主题列表类型。",
+        "key_content_coverage": "必需实体覆盖不足。仅覆盖了'自变量机器人'和'源升智能'2个必需实体，缺失'忆海原识'、'赛博格机器人'、'宇数'3个关键厂商，覆盖率仅40%。且对已覆盖厂商的数据路线描述也过于简略，未提及金标准中的核心数据路线细节（如自变量的VR遥操作、大模型驱动等）。",
+        "structure_apt": "结构得当，按厂商分条列举，每个厂商包含基本信息、技术产品和数据路线三个维度，层次清晰，并在最后给出总结说明证据不足的情况。",
+        "provenance_correct": "答案基于本地知识库，每条信息都标注了证据编号[2][5][6]等，属于纯本地知识库答案，该维度不适用。",
+        "f_g_handling": "非F拒答或G默认类查询，该维度不适用。",
+        "multi_turn_coref": "单轮查询，无代词解析需求，该维度不适用。"
       }
     },
     {
@@ -637,30 +638,29 @@
       "l3_scores": {
         "type_correct": 1,
         "key_content_coverage": 0,
-        "structure_apt": 0.5,
-        "provenance_correct": null,
+        "structure_apt": 1,
+        "provenance_correct": 1,
         "f_g_handling": null,
         "multi_turn_coref": null
       },
-      "l3_avg": 0.5,
+      "l3_avg": 0.75,
       "l3_reasons": {
-        "type_correct": "答案类型符合期望，提供了具体实现方法和代表厂商的结构化信息",
-        "key_content_coverage": "系统答案仅提及了NVIDIA作为合成数据生成工具与引擎的代表厂商，完全缺失必需实体中的三种关键实现方法（物理仿真引擎生成、生成式模型生成、基于规则生成），也缺失金标准答案中提到的视频合成+3D重建、端到端3D生成两大方法类别，以及光轮智能、银河通用、群核科技等多个代表厂商",
-        "structure_apt": "答案有基本结构（实现方法+代表厂商），但结构不够完整，未能体现金标准答案中两大类方法的分类框架，且只列举了一个厂商，结构深度和广度都不足",
-        "provenance_correct": "答案基于本地知识库证据回答，有明确的证据标注[2]，不涉及web或实时内容，标null",
-        "f_g_handling": "非F拒答类或G默认类查询，标null",
-        "multi_turn_coref": "单轮查询，无代词消解需求，标null"
+        "type_correct": "答案类型符合期望，提供了具身智能合成数据实现方法的主题列表及代表厂商，结构清晰",
+        "key_content_coverage": "金标准要求的三个必需实体('物理仿真引擎生成'、'生成式模型生成'、'基于规则生成')均未在系统答案中出现。系统答案给出的是'生成式仿真'、'AIGC增强生成'、'真实遥操作与示范采集'，其中第三种甚至不是合成数据方法，与金标准答案的分类体系完全不匹配",
+        "structure_apt": "答案结构得当，采用清晰的分级列表形式，每种方法都包含实现方式和代表厂商，层次分明",
+        "provenance_correct": "答案中每个关键信息都标注了证据来源编号[1][4][5]，符合溯源要求",
+        "f_g_handling": null,
+        "multi_turn_coref": null
       }
     },
     {
       "qid": 23,
       "query": "在具身智能的运动和操作层面，数据需求有什么不同，在实际落地层面分别采用了哪些数据采集方式",
-      "l1_hit": [
-        "仿真环境合成"
-      ],
+      "l1_hit": [],
       "l1_miss": [
         "差异：本体感知数据",
         "环境感知数据vs多模态交互数据\n主要采集方式：真机遥操作",
+        "仿真环境合成",
         "全模态真机采集",
         "动捕数据",
         "仿真+真机强化学习"
@@ -668,20 +668,20 @@
       "l2_violations": [],
       "l3_scores": {
         "type_correct": 1,
-        "key_content_coverage": 0.4,
+        "key_content_coverage": 0.7,
         "structure_apt": 1,
         "provenance_correct": null,
         "f_g_handling": null,
         "multi_turn_coref": null
       },
-      "l3_avg": 0.7999999999999999,
+      "l3_avg": 0.9,
       "l3_reasons": {
-        "type_correct": "答案类型符合预期，对比分析了运动和操作层面的数据需求差异，并列举了实际落地的数据采集方式",
-        "key_content_coverage": "覆盖了'仿真环境合成'和'真机遥操作'两个关键点，但缺失了'本体感知数据vs环境感知数据'、'多模态交互数据'、'全模态真机采集'、'动捕数据'、'仿真+真机强化学习'等多个必需实体",
-        "structure_apt": "结构清晰得当，分为数据需求差异和数据采集方式两大部分，采用对比分析和案例举例的方式组织内容",
-        "provenance_correct": null,
-        "f_g_handling": null,
-        "multi_turn_coref": null
+        "type_correct": "答案类型符合期望，提供了关于具身智能运动和操作层面数据需求差异及采集方式的全景聚合型回答。",
+        "key_content_coverage": "覆盖了环境感知数据vs多模态交互数据、真机遥操作、仿真环境合成等关键点，但缺少金标准中明确提到的'本体感知数据'、'动捕数据'、'仿真+真机强化学习'等具体必需实体，覆盖度约70%。",
+        "structure_apt": "结构清晰得当，分为数据需求差异和数据采集方式两大部分，每部分都有明确的层次和分类，便于理解。",
+        "provenance_correct": "答案基于本地知识库，有证据编号标注[1][2][3]等，属于纯本地知识库答案，标null。",
+        "f_g_handling": "非F/G类型查询，不适用。",
+        "multi_turn_coref": "单轮查询，无代词消解需求，不适用。"
       }
     },
     {
@@ -700,19 +700,19 @@
       "l3_scores": {
         "type_correct": 0,
         "key_content_coverage": 0,
-        "structure_apt": 0.3,
+        "structure_apt": 0.6,
         "provenance_correct": null,
         "f_g_handling": null,
         "multi_turn_coref": null
       },
-      "l3_avg": 0.09999999999999999,
+      "l3_avg": 0.19999999999999998,
       "l3_reasons": {
-        "type_correct": "期望类型为主题列表或全景聚合(专利情况概览+核心专利列表+技术布局),但系统仅给出10项专利的简单罗列,缺少整体规模、技术领域分类、核心专利详细描述等全景信息",
-        "key_content_coverage": "金标准中的必需实体(异常姿态检测系统、割草机器人、机器人障碍物感知、直线关节、扭矩传递组件、机器人关节限位机构)完全未出现在系统答案中,系统给出的10项专利与金标准中的核心专利几乎无重叠",
-        "structure_apt": "系统答案采用了列表结构并标注了专利类型和申请人,但缺少金标准要求的分类维度(按时间排序的核心专利、专利整体规模、技术布局、具体技术领域),结构层次不足",
-        "provenance_correct": "系统答案基于本地知识库(带[1]-[10]引用标注),无web或实时内容,标null",
-        "f_g_handling": "非F/G类型查询,标null",
-        "multi_turn_coref": "单轮查询,无代词消解需求,标null"
+        "type_correct": "期望类型为全景聚合(D类),应包含专利规模统计、技术布局、核心专利等多维度信息;系统仅输出了简单的专利列表(B类),类型不符",
+        "key_content_coverage": "金标准要求的必需实体(异常姿态检测系统、割草机器人、机器人障碍物感知、直线关节、扭矩传递组件、机器人关节限位机构)完全未覆盖,系统仅列出了证据中的10项专利,与金标准的核心专利无重叠",
+        "structure_apt": "系统采用了列表结构并标注了专利类型、申请人、公开号等字段,结构清晰;但缺少金标准要求的专利规模统计(如2680/2790项授权专利)、技术布局分类、时间排序等全景聚合应有的结构维度",
+        "provenance_correct": "答案基于本地知识库中的专利记录,明确标注了来源证据编号[1]-[10],属于纯本地知识库答案,标注null",
+        "f_g_handling": "非F拒答类或G默认类查询,标注null",
+        "multi_turn_coref": "单轮对话,无代词消解需求,标注null"
       }
     },
     {
@@ -738,12 +738,43 @@
       },
       "l3_avg": 0.5666666666666667,
       "l3_reasons": {
-        "type_correct": "答案类型符合期望，属于单实体profile类型，提供了专利CN117873146A的详细信息",
-        "key_content_coverage": "仅覆盖了必需实体中的'CN117873146A'和'优必选'，缺失了'机器人落地控制'、'腿部刚度'、'腰部高度'等核心技术方案内容，覆盖率约40%",
-        "structure_apt": "结构过于简略，仅包含标题和申请人两个字段，缺少公开日期、技术方案概述、核心步骤、技术功效等关键profile字段，结构完整性差",
-        "provenance_correct": "答案为本地知识库内容（专利信息），无需标注来源和时间，标null",
-        "f_g_handling": "非F拒答或G默认类查询，标null",
-        "multi_turn_coref": "单轮对话，无需代词解析，标null"
+        "type_correct": "答案类型符合期望，属于单实体profile类型，提供了专利的基本信息",
+        "key_content_coverage": "仅覆盖了必需实体中的'CN117873146A'和'优必选'，但缺失了'机器人落地控制'、'腿部刚度'、'腰部高度'等核心技术方案内容，覆盖率约40%",
+        "structure_apt": "结构过于简单，仅包含标题和申请人，缺少公开日期、技术方案概述、核心步骤、技术功效等详细信息字段，不够齐全",
+        "provenance_correct": "答案为纯本地知识库内容，无需标注来源，标null",
+        "f_g_handling": "非F/G类型查询，标null",
+        "multi_turn_coref": "单轮对话，无指代消解需求，标null"
+      }
+    },
+    {
+      "qid": 26,
+      "query": "深圳法本信息科技有限公司的产品特点以及团队介绍",
+      "l1_hit": [
+        "法本信息"
+      ],
+      "l1_miss": [
+        "2006年",
+        "数字化技术服务",
+        "全生命周期管理",
+        "客户服务团队"
+      ],
+      "l2_violations": [],
+      "l3_scores": {
+        "type_correct": 0.3,
+        "key_content_coverage": 0.2,
+        "structure_apt": 0.6,
+        "provenance_correct": null,
+        "f_g_handling": null,
+        "multi_turn_coref": null
+      },
+      "l3_avg": 0.3666666666666667,
+      "l3_reasons": {
+        "type_correct": "期望类型未明确标注,但从金标准看应为单实体profile(公司基本信息+产品特点+团队介绍)。系统答案虽提供了企业信息,但过度聚焦于具体产品细节(FarCarOS、GPTRecruit等),偏离了概括性特点和团队介绍的要求",
+        "key_content_coverage": "必需实体覆盖严重不足:仅出现'法本信息',缺失'2006年'成立时间、'数字化技术服务'、'全生命周期管理'、'客户服务团队'等关键信息。系统答案聚焦于具体产品而非整体特点",
+        "structure_apt": "结构上提供了行业方向、业务摘要、产品/服务、应用场景等字段,有一定组织性。但对于产品特点应概括性描述而非详细列举,且完全缺失团队介绍部分",
+        "provenance_correct": "答案来自本地知识库,无web或实时内容,标null",
+        "f_g_handling": "非F拒答或G默认类查询,标null",
+        "multi_turn_coref": "单轮查询,无代词消歧需求,标null"
       }
     }
   ]
