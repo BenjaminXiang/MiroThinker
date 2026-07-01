@@ -401,6 +401,8 @@ def _extract_a_name(query: str, target_domain: str) -> str:
         return _extract_professor_name(query)
     company = query.strip()
     company = re.sub(r"^(介绍|请介绍|查一下|查找|查询)\s*", "", company)
+    # isolate the company name in multi-clause queries: cut at "这家公司/这家企业/该公司"
+    company = re.split(r"这家公司|这家企业|该公司|本企业|本家公司", company, maxsplit=1)[0]
     company = re.sub(
         r"(有哪些专利|有什么专利|有哪些机器人产品|有哪些科研成果|"
         r"的技术实力怎么样|在深圳的科创业务介绍|公司画像|的核心技术|"
@@ -516,7 +518,7 @@ def _classify_query_by_rules(query: str) -> dict[str, str] | None:
             target_domain="professor",
             reason="institution-qualified professor deterministic rule",
         )
-    if re.search(r"(公司|科技|集团|有限)(的)?(产品特点|团队介绍|产品特点以及团队介绍|产品|团队|业务|简介|介绍|概况|画像|实力|基本信息|详细信息|产品信息|怎么样|如何)", q):
+    if re.search(r"(公司|科技|集团|有限)(的)?(产品特点|产量特点|团队介绍|产品特点以及团队介绍|产品|产量|团队|业务|简介|介绍|概况|画像|实力|基本信息|详细信息|产品信息|相关信息|信息|市场竞争力|竞争力|特点|怎么样|如何)", q):
         return _classifier_response(
             "A",
             name=_extract_a_name(q, "company"),
