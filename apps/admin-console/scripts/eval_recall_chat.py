@@ -65,7 +65,7 @@ def main() -> int:
     pct = 100.0 * total_hit / total_req if total_req else 0.0
     print(f"END-TO-END ENTITY RECALL (/api/chat, synthesis off): "
           f"{total_hit}/{total_req} ({pct:.0f}%)")
-    out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..",
+    out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..",
                        ".agents", "runs", "retrieval-generation-alignment", "post-fix-recall.json")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, "w", encoding="utf-8") as fh:

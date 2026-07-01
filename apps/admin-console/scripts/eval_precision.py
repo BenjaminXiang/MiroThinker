@@ -88,7 +88,7 @@ def main() -> int:
         print(f"{c.qid:>3} {qtype[:22]:<22} {len(names):>5} {unsourced:>13}  {names[:4]}")
     print("-" * 96)
     print(f"UNSOURCED WEB (§5 provenance risk): {total_unsourced}")
-    out = os.path.join(os.path.dirname(__file__), "..", "..", ".agents",
+    out = os.path.join(os.path.dirname(__file__), "..", "..", "..", ".agents",
                        "runs", "retrieval-generation-alignment", "precision-baseline.json")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, "w", encoding="utf-8") as fh:

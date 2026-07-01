@@ -89,7 +89,7 @@ def main() -> int:
     print("-" * 88)
     overall_p95 = _percentile(all_p95, 95) if all_p95 else 0.0
     print(f"{kind.upper()} p95 (across cases): {overall_p95:.2f}s — SLO {_slo_verdict(overall_p95, kind=kind)}")
-    out = os.path.join(os.path.dirname(__file__), "..", "..", ".agents",
+    out = os.path.join(os.path.dirname(__file__), "..", "..", "..", ".agents",
                        "runs", "retrieval-generation-alignment", "latency-baseline.json")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, "w", encoding="utf-8") as fh:
