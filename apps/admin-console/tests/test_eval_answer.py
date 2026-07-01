@@ -37,3 +37,26 @@ def test_l2_forbidden_clean_when_absent():
     answer = "无界智航是另一家公司。"
     violations = score_l2_forbidden(case, answer)
     assert violations == []
+
+
+from eval_answer import aggregate_l3_scores, DIMENSIONS
+
+
+def test_l3_aggregate_averages_applicable_dims_only():
+    # dim 4 (provenance) and 5 (F/G) are N/A for an A-profile case -> excluded from denominator
+    scores = {
+        "type_correct": 1.0,
+        "key_content_coverage": 0.5,
+        "structure_apt": 1.0,
+        "provenance_correct": None,   # N/A
+        "f_g_handling": None,          # N/A
+        "multi_turn_coref": None,      # N/A (single-turn)
+    }
+    avg = aggregate_l3_scores(scores)
+    assert avg == (1.0 + 0.5 + 1.0) / 3
+
+
+def test_l3_aggregate_all_applicable():
+    scores = {d: 1.0 for d in DIMENSIONS}
+    scores["provenance_correct"] = None
+    assert aggregate_l3_scores(scores) == 1.0
