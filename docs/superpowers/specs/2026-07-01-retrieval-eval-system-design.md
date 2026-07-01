@@ -66,44 +66,66 @@ scale generation; the review keeps it golden.
 
 ## 2. Three-layer evaluation metrics + standards (the core)
 
-Eval object: `/api/chat` response (synthesis ON = the user-facing answer; plus the
-candidates/evidence in the JSON for layer 1/2). Per case, three layers:
+**First principle (user view):** a user asks a question and expects a *good answer*. The xlsx
+`答案` is the golden example of such a good answer — not just an entity list, but a well-written,
+complete, correctly-typed, properly-sourced answer. The system's answer need not match verbatim,
+but it should be "as good as the golden answer" (cover the same key points + correct type/
+structure/provenance per the PRD). The eval judges whether the system's generated answer is as
+good as the golden answer.
 
-### Layer 1 — Required-entity coverage (recall type, deterministic)
-- **What**: each `required_entities` (from 关键点) must appear in the **generated
-  `answer_text`** (synthesis ON — evaluates the system's generated result, not just retrieval).
-  This catches both retrieval misses (entity never found) and generation gaps (entity retrieved
-  but dropped from the answer).
-- **Standard**: per-case hit/miss (which required entities appeared in the answer). Overall =
-  hit/total.
-- **Red/green**: a case is GREEN if all required entities appear in the answer; RED if any
-  missed vs the golden expectation. **No judge** — substring presence, deterministic.
-- Multi-turn: the required set = head-turn entities filtered by the followup constraint (e.g.
+So **Layer 3 (answer vs golden) is the core** — it asks "is the system answer as good as golden?".
+Layers 1/2 are deterministic sub-checks that *support* L3 (key-point coverage + forbidden
+absence). Routing/type/structure/provenance/F-G/multi-turn fold INTO L3's judge rubric (per PRD),
+not a separate fourth layer (user confirmed three layers).
+
+Eval object: the system's generated `answer_text` (synthesis ON). Per case, three layers:
+
+### Layer 1 — Required-entity/coverage (deterministic, supports L3)
+- **What**: each `required_entities` (from 关键点) must appear in the **generated answer_text**.
+  Catches both retrieval misses (entity never found) and generation drops (retrieved but omitted).
+- **Standard**: per-case hit/miss (which required entities appeared in the answer). Overall = hit/total.
+- **Red/green**: GREEN if all required entities appear; RED if any missed. **No judge** — deterministic.
+- Multi-turn: required set = head-turn entities filtered by the followup constraint (e.g.
   "上述企业总部深圳" → the 深圳 suppliers from the head-turn answer).
-- **Retrieval-isolation variant** (optional): the same check over candidates/evidence with
-  synthesis OFF isolates whether a miss is a retrieval gap or a generation gap.
+- **Retrieval-isolation variant** (optional): same check over candidates/evidence (synthesis OFF)
+  isolates whether a miss is retrieval or generation.
 
-### Layer 2 — Forbidden-entity negative gate (deterministic)
+### Layer 2 — Forbidden-entity negative gate (deterministic, supports L3)
 - **What**: each `forbidden_entities` (from 关键点 "不应出现X") must NOT appear in the
-  **generated `answer_text`**.
+  **generated answer_text**.
 - **Standard**: per-case violation count = 0.
-- **Red/green**: GREEN if 0 forbidden entities appear in the answer; RED if any appears. **No judge**.
+- **Red/green**: GREEN if 0 forbidden entities appear; RED if any appears. **No judge**.
 
-### Layer 3 — Answer vs reference answer (semantic, judge)
-- **What**: the synthesized `answer_text` vs the xlsx `答案` reference answer.
-- **Standard**: an LLM-judge (异模型, different from the synthesis model) scores semantic
-  alignment + completeness on 0–1, with the required-entity coverage (layer 1) as a
-  deterministic sub-check.
-- **Red/green**: GREEN if judge score ≥ threshold; RED if below. **Threshold NOT pre-set** —
-  first run establishes a baseline; the judge is calibrated on a human-reviewed sample (~5 cases
-  across A/B/multi-turn); then the threshold is set.
+### Layer 3 — Answer vs golden answer (CORE, judge)
+- **What**: the synthesized `answer_text` vs the xlsx `答案` golden answer — "is the system
+  answer as good as golden?" An LLM-judge (异模型, different from synthesis) scores 0–1.
+- **Tolerance**: verbatim match NOT required; the judge assesses "as good as golden" semantically.
+- **Judge rubric — six PRD dimensions, each scored independently 0–1, equal-weight average:**
+  1. **Type correct** — matches the expected query-type behavior (A single-entity profile /
+     B topic list / C cross-turn / D panoramic aggregate / E knowledge+web / F refusal /
+     G default-high-confidence + hint). Topic asked as profile = wrong; F not refused = wrong;
+     G missing hint = wrong.
+  2. **Key-content coverage** — the key facts/entities of the golden answer appear (= L1, fed in
+     as a deterministic sub-score).
+  3. **Structure apt** — profile has the right fields (H-index/Top papers per PRD §模块一); topic
+     is a list; cross-domain is an aggregate.
+  4. **Provenance correct** — web/fallback/time-sensitive answers explicitly mark source + time
+     (PRD §2 step 4); local high-confidence need not show source in-body.
+  5. **F/G handling** — F politely refuses + redirects; G defaults to the most-relevant candidate
+     with a short switch hint.
+  6. **Multi-turn coref** — pronouns ("他/上述企业") resolve to the correct prior entity.
+- **Red/green**: GREEN if the six-dimension average ≥ threshold; RED if below. **Threshold NOT
+  pre-set** — first run establishes a baseline; the judge is calibrated on a human-reviewed sample
+  (~5 cases across A/B/multi-turn); then the threshold is set. Per-dimension scores let an
+  iteration see WHICH dimension regressed (direction), not just the aggregate.
 
 ### Layer notes
-- Layers 1+2 are deterministic (no judge) — they catch regressions cheaply and reliably.
-- Layer 3 is the only judge-dependent layer — kept to ONE judge (异模型), not an ensemble.
-- faithfulness/context-precision (RAGAS label-free) are **out of scope for v1** (per lean) —
-  layer 3's judge-correctness + layers 1/2 cover the core; faithfulness/precision can be a v2
-  add once the three-layer base is trusted.
+- Layers 1/2 are deterministic (no judge) — cheap, reliable regression anchors; a layer-1/2 red
+  forces a layer-3 red (coverage/forbidden is a floor).
+- Layer 3's judge catches what L1/L2 miss: "all entities present but the answer is poorly written
+  / wrong type / unsourced / no hint" — the answer-quality dimensions the PRD cares about.
+- faithfulness/context-precision (RAGAS label-free) are **out of scope for v1** (lean) — L3's
+  provenance dimension + L1/2 cover the core; faithfulness/precision can be a v2 add.
 
 ## 3. Env truth (the lesson learned)
 
