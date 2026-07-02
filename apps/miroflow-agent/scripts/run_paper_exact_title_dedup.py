@@ -90,9 +90,9 @@ HAVING count(DISTINCT lower(coalesce(p.authors_display,''))) = 1
   -- 2+ publisher DOIs usually means distinct publications (conf/journal
   -- extension), so route to Tier-3 review; preprint DOIs stay Tier-2.
   AND count(DISTINCT nullif(p.doi,''))
-    - count(DISTINCT CASE WHEN p.doi LIKE '10.48550/arxiv.%'
-                           OR p.doi LIKE '10.2139/ssrn.%'
-                           OR p.doi LIKE '10.5194/egusphere-%'
+    - count(DISTINCT CASE WHEN p.doi LIKE '10.48550/arxiv.%%'
+                           OR p.doi LIKE '10.2139/ssrn.%%'
+                           OR p.doi LIKE '10.5194/egusphere-%%'
                           THEN nullif(p.doi,'') END) <= 1
 ORDER BY g.t
 """
