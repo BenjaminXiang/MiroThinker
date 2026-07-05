@@ -199,6 +199,12 @@ class RetrievalCache(Protocol):
 # Pure functions so they are unit-testable independent of the live services.
 _RRF_K = 60
 _HYBRID_LEX_WEIGHT = 1.0  # equal weight to rerank rank and lexical rank by default
+# Professor ready-boost: a `ready` professor's rerank-fusion term is multiplied by
+# (1 + this). Counteracts loose matches from less-polished needs_review/needs_enrichment
+# profiles admitted by the professor-decouple: when relevance is close (adjacent RRF
+# ranks), prefer the better-embedded `ready` profile. Professor-only; gentle (tunable
+# via the precision oracle). See make-professors-retrievable-beyond-ready design D3.
+_PROFESSOR_READY_BOOST = 0.1
 _LATIN_TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z0-9]{1,}")
 
 
@@ -272,6 +278,12 @@ def _hybrid_rrf_select(
         rr = rerank_rank.get(i, n)
         lr = lex_rank.get(i, n)
         score = 1.0 / (_RRF_K + rr) + lex_weight / (_RRF_K + lr)
+        if (
+            candidates[i].object_type == "professor"
+            and candidates[i].metadata.get("quality_status") == "ready"
+        ):
+            # ready-boost: prefer better-embedded ready profiles on near-ties.
+            score += _PROFESSOR_READY_BOOST / (_RRF_K + rr)
         fused.append((score, i))
     fused.sort(key=lambda pair: pair[0], reverse=True)
     results: list[Evidence] = []

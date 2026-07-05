@@ -140,3 +140,33 @@ def test_filter_admits_non_ready_professors_except_low_confidence() -> None:
     assert admitted == ["PROF-READY", "PROF-NEEDS-REVIEW", "PROF-NEEDS-ENRICHMENT"]
     assert "PROF-LOW-CONFIDENCE" not in admitted
 
+
+def test_ready_boost_prefers_ready_professor_on_near_tie() -> None:
+    # The ready-boost multiplies a ready professor's rerank-fusion term by (1+boost),
+    # so on a near-tie a `ready` profile outranks a `needs_review` profile (counteracts
+    # loose matches from less-polish profiles admitted by the decouple).
+    from src.data_agents.providers.rerank import RerankResult
+    from src.data_agents.service.retrieval import Evidence, _hybrid_rrf_select
+
+    def _prof(pid: str, quality: str) -> Any:
+        return Evidence(
+            object_type="professor",
+            object_id=pid,
+            score=0.5,
+            snippet=f"snippet {pid}",
+            source_url=None,
+            metadata={"quality_status": quality, "retrieval_source": "professor_vector"},
+        )
+
+    candidates = [_prof("PROF-NEEDS-REVIEW", "needs_review"), _prof("PROF-READY", "ready")]
+    # needs_review is ranked MORE relevant by the reranker (rank 1), ready rank 2 —
+    # yet the ready-boost should still put ready first on this near-tie.
+    reranked = [
+        RerankResult(index=0, score=0.9, document="snippet PROF-NEEDS-REVIEW"),
+        RerankResult(index=1, score=0.8, document="snippet PROF-READY"),
+    ]
+    results = _hybrid_rrf_select(
+        "topic query", candidates, reranked, final_top_k=2
+    )
+    assert results[0].object_id == "PROF-READY"
+
