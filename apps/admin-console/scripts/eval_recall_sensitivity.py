@@ -45,18 +45,20 @@ SENSITIVITY_CASES: list[SensitivityCase] = [
     SensitivityCase("S1", "做机器学习教授", ["夏树涛"], "rootA-classifier-phrasing", "RED"),
     SensitivityCase("S2", "大模型 教授", ["夏树涛"], "rootA-classifier-phrasing", "RED"),
     # Lever 1 (professor decouple): needs_review profs are now retrievable.
-    # 夏树涛 is needs_review + an ML/embodied author; a topic query should surface him
-    # post-decouple (was filtered pre-decouple). GREEN today (decouple shipped).
+    # Use a WELL-PHRASED query (routes to B_semantic, confirmed by the breadth probe)
+    # so the case isolates the decouple from the phrasing brittleness. 夏树涛 is
+    # needs_review + an ML/embodied author; surfaces post-decouple.
     SensitivityCase(
-        "S3", "做机器学习与深度学习的教授", ["夏树涛"], "L1-professor-decouple", "GREEN"
+        "S3", "做机器学习和大模型的教授有哪些", ["夏树涛"], "L1-professor-decouple", "GREEN"
     ),
-    # Lever 0 (partial-paper retrievability): a topic query whose answer is a
-    # partial+fulltext paper now embedded. (Tune the required entity to a specific
-    # partial+rich paper title/author; placeholder until grounded per-DB.)
+    # Lever 0 (partial-paper retrievability): a Chinese-titled partial+fulltext paper
+    # now embedded (PAPER-62144912BE08 "基于矢量波数变换法(VWTM)的多道Rayleigh波分析
+    # 方法"). Same-language query + title fragment as the required entity (paper
+    # responses surface the title, not the author).
     SensitivityCase(
         "S4",
-        "diffusion model anomaly detection 论文",
-        ["夏树涛"],
+        "矢量波数变换法 Rayleigh波 分析论文",
+        ["Rayleigh"],
         "L0-partial-paper",
         "GREEN",
     ),

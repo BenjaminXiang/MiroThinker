@@ -25,7 +25,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[2]
+REPO = Path(__file__).resolve().parents[3]  # apps/admin-console/scripts/<this> -> repo root
 EVAL = REPO / "apps" / "admin-console" / "scripts" / "eval_recall_chat.py"
 
 
