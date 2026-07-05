@@ -5,6 +5,7 @@ import time
 from dataclasses import dataclass
 
 from src.data_agents.paper.chunker import PaperChunk, chunk_paper
+from src.data_agents.quality.gating_contract import is_indexable
 from src.data_agents.storage.milvus_collections import (
     PAPER_CHUNKS_COLLECTION,
     ensure_paper_chunks_collection,
@@ -50,7 +51,10 @@ def backfill_paper_chunks(
     sql = (
         "SELECT p.paper_id, p.title_clean AS title, p.year, p.venue, "
         "       p.summary_zh, p.abstract_clean, p.identity_status, "
-        "       p.quality_status, pft.abstract, pft.intro "
+        "       p.quality_status, pft.abstract, pft.intro, "
+        "       (NULLIF(BTRIM(COALESCE(pft.abstract, '')), '') IS NOT NULL "
+        "        OR NULLIF(BTRIM(COALESCE(pft.intro, '')), '') IS NOT NULL) "
+        "       AS has_rich_text "
         "FROM paper p "
         "LEFT JOIN paper_full_text pft ON pft.paper_id = p.paper_id"
     )
@@ -176,9 +180,11 @@ def _paper_embedding_abstract(row: dict) -> str | None:
 
 
 def _is_indexable_paper(row: dict) -> bool:
-    identity_status = str(row.get("identity_status") or "unverified").strip()
-    quality_status = str(row.get("quality_status") or "needs_enrichment").strip()
-    return identity_status not in {"rejected", "merged"} and quality_status == "ready"
+    return is_indexable(
+        row.get("quality_status"),
+        identity_status=row.get("identity_status") or "unverified",
+        paper_has_rich_text=row.get("has_rich_text") is True,
+    )
 
 
 def _delete_paper_chunks(milvus_client, paper_id: str) -> None:

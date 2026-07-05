@@ -916,12 +916,14 @@ class RetrievalService:
                            venue,
                            abstract_clean,
                            summary_zh,
+                           pft.abstract AS paper_full_text_abstract,
                            doi,
                            identity_status,
                            quality_status,
                            citation_count
-                      FROM paper
-                     WHERE paper_id IS NOT NULL
+                      FROM paper p
+                      LEFT JOIN paper_full_text pft ON pft.paper_id = p.paper_id
+                     WHERE p.paper_id IS NOT NULL
                        AND COALESCE(identity_status, 'unverified') != 'rejected'
                        AND COALESCE(quality_status, 'needs_enrichment') != 'rejected'
                        AND (
@@ -936,7 +938,7 @@ class RetrievalService:
                            END,
                            citation_count DESC NULLS LAST,
                            year DESC NULLS LAST,
-                           paper_id ASC
+                           p.paper_id ASC
                      LIMIT %s
                     """,
                     (title_key, like_pattern, title_key, max(1, int(limit))),
@@ -1068,7 +1070,7 @@ class RetrievalService:
 
     @staticmethod
     def _paper_title_snippet(row: dict, title: str) -> tuple[str, str]:
-        for source in ("summary_zh", "abstract_clean"):
+        for source in ("summary_zh", "abstract_clean", "paper_full_text_abstract"):
             value = row.get(source)
             if isinstance(value, str) and value.strip():
                 return value.strip(), source
@@ -1077,7 +1079,11 @@ class RetrievalService:
     @staticmethod
     def _paper_title_candidate_rank(candidate: Evidence) -> tuple[int, int, int, int]:
         snippet_source = candidate.metadata.get("snippet_source")
-        source_rank = {"summary_zh": 2, "abstract_clean": 1}.get(snippet_source, 0)
+        source_rank = {
+            "summary_zh": 3,
+            "abstract_clean": 2,
+            "paper_full_text_abstract": 1,
+        }.get(snippet_source, 0)
         quality_rank = 1 if candidate.metadata.get("quality_status") == "ready" else 0
         citation_count = candidate.metadata.get("citation_count")
         if not isinstance(citation_count, int):
@@ -1197,14 +1203,20 @@ class RetrievalService:
             status = status_info.get("quality_status")
             if status == "rejected":
                 continue
-            if (
-                filter_ready_only
-                and status != "ready"
-                and not self._allow_non_ready_exact_paper(candidate)
+            if filter_ready_only and not self._filter_ready_only(
+                candidate,
+                status_info,
             ):
                 continue
             if status is not None:
                 candidate.metadata["quality_status"] = status
+            if (
+                candidate.object_type == "paper"
+                and "paper_has_rich_text" in status_info
+            ):
+                candidate.metadata["paper_has_rich_text"] = status_info[
+                    "paper_has_rich_text"
+                ]
             if candidate.object_type == "professor":
                 lifecycle_state = status_info.get(
                     "lifecycle_state", _PROFESSOR_DEFAULT_LIFECYCLE_STATE
@@ -1221,8 +1233,8 @@ class RetrievalService:
     def _fetch_quality_statuses(
         self,
         ids_by_domain: dict[str, set[str]],
-    ) -> dict[tuple[str, str], dict[str, str]]:
-        statuses: dict[tuple[str, str], dict[str, str]] = {}
+    ) -> dict[tuple[str, str], dict[str, str | bool]]:
+        statuses: dict[tuple[str, str], dict[str, str | bool]] = {}
         if not ids_by_domain:
             return statuses
 
@@ -1243,6 +1255,18 @@ class RetrievalService:
                             f"WHERE {id_column} IN ({placeholders})",
                             tuple(sorted_ids),
                         ).fetchall()
+                    elif domain == "paper":
+                        rows = conn.execute(
+                            "SELECT p.paper_id AS object_id, "
+                            "p.quality_status, "
+                            "(NULLIF(BTRIM(COALESCE(pft.abstract, '')), '') IS NOT NULL "
+                            " OR NULLIF(BTRIM(COALESCE(pft.intro, '')), '') IS NOT NULL) "
+                            "AS paper_has_rich_text "
+                            "FROM paper p "
+                            "LEFT JOIN paper_full_text pft ON pft.paper_id = p.paper_id "
+                            f"WHERE p.paper_id IN ({placeholders})",
+                            tuple(sorted_ids),
+                        ).fetchall()
                     else:
                         rows = conn.execute(
                             f"SELECT {id_column} AS object_id, quality_status "
@@ -1255,6 +1279,10 @@ class RetrievalService:
                         status = row_dict.get("quality_status")
                         if object_id is not None and status is not None:
                             payload = {"quality_status": str(status)}
+                            if domain == "paper":
+                                payload["paper_has_rich_text"] = (
+                                    row_dict.get("paper_has_rich_text") is True
+                                )
                             lifecycle_state = row_dict.get("lifecycle_state")
                             if lifecycle_state is not None:
                                 payload["lifecycle_state"] = str(lifecycle_state)
@@ -1263,13 +1291,43 @@ class RetrievalService:
             logger.warning("Failed to fetch retrieval quality_status values: %s", exc)
         return statuses
 
+    @classmethod
+    def _filter_ready_only(
+        cls,
+        candidate: Evidence,
+        status_info: dict[str, str | bool],
+    ) -> bool:
+        status = status_info.get("quality_status")
+        if status == "ready":
+            return True
+        if cls._allow_non_ready_exact_paper(candidate):
+            return True
+        return cls._allow_non_ready_vector_paper(candidate, status_info)
+
     @staticmethod
     def _allow_non_ready_exact_paper(candidate: Evidence) -> bool:
         if candidate.object_type != "paper":
             return False
         if candidate.metadata.get("retrieval_source") != "paper_title_exact":
             return False
-        return candidate.metadata.get("snippet_source") in {"summary_zh", "abstract_clean"}
+        return candidate.metadata.get("snippet_source") in {
+            "summary_zh",
+            "abstract_clean",
+            "paper_full_text_abstract",
+        }
+
+    @staticmethod
+    def _allow_non_ready_vector_paper(
+        candidate: Evidence,
+        status_info: dict[str, str | bool],
+    ) -> bool:
+        if candidate.object_type != "paper":
+            return False
+        if candidate.metadata.get("retrieval_source") == "paper_title_exact":
+            return False
+        if status_info.get("quality_status") != "partial":
+            return False
+        return status_info.get("paper_has_rich_text") is True
 
     def _apply_filters(
         self,

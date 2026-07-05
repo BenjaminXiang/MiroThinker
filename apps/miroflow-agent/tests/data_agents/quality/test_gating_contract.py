@@ -56,6 +56,39 @@ def test_promote_monotonic_never_auto_degrades_ready() -> None:
     )
 
 
+def test_is_indexable_admits_only_partial_papers_with_rich_text() -> None:
+    assert is_indexable(
+        "partial",
+        identity_status="confirmed",
+        paper_has_rich_text=True,
+    )
+    assert not is_indexable(
+        "partial",
+        identity_status="confirmed",
+        paper_has_rich_text=False,
+    )
+    assert not is_indexable(
+        "needs_enrichment",
+        identity_status="confirmed",
+        paper_has_rich_text=True,
+    )
+    assert is_indexable(
+        "ready",
+        identity_status="confirmed",
+        paper_has_rich_text=False,
+    )
+    assert not is_indexable(
+        "partial",
+        identity_status="rejected",
+        paper_has_rich_text=True,
+    )
+    assert not is_indexable(
+        "partial",
+        identity_status="merged",
+        paper_has_rich_text=True,
+    )
+
+
 @pytest.mark.parametrize(
     "row",
     [

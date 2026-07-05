@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 
 from src.data_agents.paper.milvus_backfill import (
     BackfillReport,
+    _is_indexable_paper,
     backfill_paper_chunks,
 )
 
@@ -256,6 +257,8 @@ def test_backfill_deletes_partial_paper_even_when_summary_exists():
         [
             _paper_row(
                 paper_id="PAPER-PARTIAL",
+                abstract=None,
+                intro=None,
                 summary_zh="中文摘要内容。" * 20,
                 quality_status="partial",
             )
@@ -273,6 +276,46 @@ def test_backfill_deletes_partial_paper_even_when_summary_exists():
     assert "PAPER-PARTIAL" in delete_filter
     milvus.insert.assert_not_called()
     embed.embed_batch.assert_not_called()
+
+
+def test_partial_paper_with_full_text_abstract_is_indexable() -> None:
+    row = _paper_row(
+        paper_id="PAPER-PARTIAL-RICH",
+        quality_status="partial",
+        summary_zh=None,
+        abstract_clean=None,
+        abstract="Collected abstract from paper_full_text.",
+    )
+    row["has_rich_text"] = True
+
+    assert _is_indexable_paper(row)
+
+
+def test_title_only_partial_paper_is_not_indexable() -> None:
+    row = _paper_row(
+        paper_id="PAPER-PARTIAL-TITLE-ONLY",
+        quality_status="partial",
+        summary_zh=None,
+        abstract_clean=None,
+        abstract=None,
+        intro=None,
+    )
+    row["has_rich_text"] = False
+
+    assert not _is_indexable_paper(row)
+
+
+def test_backfill_sql_surfaces_rich_text_predicate() -> None:
+    conn = _fake_pg_conn_returning([])
+    milvus = _fake_milvus_client()
+    embed = _fake_embedding_client()
+
+    backfill_paper_chunks(conn, milvus, embed)
+
+    sql = conn.execute.call_args.args[0]
+    normalized = " ".join(sql.split()).lower()
+    assert "left join paper_full_text" in normalized
+    assert "has_rich_text" in normalized
 
 
 def test_backfill_empty_title_paper_skipped_or_counted_as_error():

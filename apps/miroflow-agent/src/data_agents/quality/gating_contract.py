@@ -60,10 +60,15 @@ def promote_monotonic(
 def is_indexable(
     quality_status: object | None,
     identity_status: object | None = None,
+    *,
+    paper_has_rich_text: bool | None = None,
 ) -> bool:
     """Return whether a row is eligible for retrieval indexing."""
     if identity_status is not None:
         normalized_identity = str(identity_status).strip()
         if normalized_identity in _IDENTITY_EXCLUDED_FROM_INDEX:
             return False
-    return normalize_quality_status(quality_status) == "ready"
+    normalized_status = normalize_quality_status(quality_status)
+    if normalized_status == "ready":
+        return True
+    return normalized_status == "partial" and paper_has_rich_text is True
