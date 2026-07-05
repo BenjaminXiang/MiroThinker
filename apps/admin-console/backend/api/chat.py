@@ -2037,6 +2037,44 @@ def _prof_research_topics(conn: Any, professor_id: str) -> list[str]:
     return [r["value_raw"] for r in rows]
 
 
+def _prof_rich_profile_facts(conn: Any, professor_id: str) -> dict[str, Any]:
+    """Rich facts for synthesis depth: profile_summary + awards + education +
+    work_experience + academic_positions.
+
+    These exist in the collected data (e.g. 丁文伯 has 11 awards, education, work
+    history, academic positions) but were never surfaced to synthesis, so the LLM
+    emitted shallow answers (basic info + paper counts). Surfacing them lets the
+    synthesis generate the deep prose the standard answers expect.
+    """
+    facts: dict[str, Any] = {}
+    summary_row = conn.execute(
+        "SELECT profile_summary FROM professor WHERE professor_id = %s",
+        (professor_id,),
+    ).fetchone()
+    summary = (summary_row or {}).get("profile_summary") if summary_row else None
+    if summary and summary.strip():
+        facts["profile_summary"] = summary.strip()
+    for key, ftype in (
+        ("awards", "award"),
+        ("education", "education"),
+        ("work_experience", "work_experience"),
+        ("academic_positions", "academic_position"),
+    ):
+        rows = conn.execute(
+            """
+            SELECT value_raw FROM professor_fact
+             WHERE professor_id = %s AND fact_type = %s AND status = 'active'
+             ORDER BY created_at
+             LIMIT 12
+            """,
+            (professor_id, ftype),
+        ).fetchall()
+        values = [r["value_raw"] for r in rows if (r.get("value_raw") or "").strip()]
+        if values:
+            facts[key] = values
+    return facts
+
+
 def _prof_paper_count(conn: Any, professor_id: str) -> int:
     return conn.execute(
         """
@@ -3261,6 +3299,34 @@ def _build_evidence_blocks(
                 summary=f"论文数：{paper_count}",
                 evidence_id=professor_id,
             )
+        # Rich facts for synthesis depth (awards/education/work/positions/summary).
+        # Without these the LLM emits shallow answers; the data has them.
+        profile_summary_text = structured_payload.get("profile_summary")
+        if profile_summary_text:
+            marker = _append_evidence_block(
+                blocks=blocks,
+                citation_map=citation_map,
+                marker=marker,
+                kind="research_overview",
+                summary=f"研究概况：{profile_summary_text}",
+                evidence_id=professor_id,
+            )
+        for label, key in (
+            ("奖励荣誉", "awards"),
+            ("教育经历", "education"),
+            ("工作经历", "work_experience"),
+            ("学术兼职", "academic_positions"),
+        ):
+            values = structured_payload.get(key)
+            if values:
+                marker = _append_evidence_block(
+                    blocks=blocks,
+                    citation_map=citation_map,
+                    marker=marker,
+                    kind=key,
+                    summary=f"{label}：{'；'.join(str(v) for v in values)[:400]}",
+                    evidence_id=professor_id,
+                )
         return "\n".join(blocks), citation_map
 
     matched_professors = structured_payload.get("matched_professors") or []
@@ -3583,6 +3649,15 @@ def _build_chat_response(
     )
     if not llm_synthesis_enabled():
         return base_response
+
+    # Enrich professor profiles with rich facts (awards/education/work/positions/
+    # summary) so synthesis can generate deep prose, not just basic fields. The data
+    # has these (e.g. 11 awards); they were never surfaced to the LLM before.
+    prof_id_for_rich = structured_payload.get("professor_id")
+    if prof_id_for_rich:
+        rich_facts = _prof_rich_profile_facts(conn, str(prof_id_for_rich))
+        if rich_facts:
+            structured_payload.update(rich_facts)
 
     evidence_text, citation_map = _build_evidence_blocks(structured_payload)
     if not evidence_text:
