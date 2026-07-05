@@ -106,3 +106,37 @@ def test_vector_filter_admits_only_ready_and_partial_rich_text_papers() -> None:
     assert results[1].metadata["quality_status"] == "partial"
     assert results[1].metadata["paper_has_rich_text"] is True
 
+
+def _prof_evidence(prof_id: str) -> Any:
+    from src.data_agents.service.retrieval import Evidence
+
+    return Evidence(
+        object_type="professor",
+        object_id=prof_id,
+        score=0.9,
+        snippet="",
+        source_url=None,
+        metadata={"retrieval_source": "professor_vector"},
+    )
+
+
+def test_filter_admits_non_ready_professors_except_low_confidence() -> None:
+    # Decouple retrievability from publication-completeness for professors:
+    # ready/needs_review/needs_enrichment are retrievable; only low_confidence
+    # (non-person-name / profile-blob) is excluded.
+    cases = {
+        "PROF-READY": {"quality_status": "ready"},
+        "PROF-NEEDS-REVIEW": {"quality_status": "needs_review"},
+        "PROF-NEEDS-ENRICHMENT": {"quality_status": "needs_enrichment"},
+        "PROF-LOW-CONFIDENCE": {"quality_status": "low_confidence"},
+    }
+    from src.data_agents.service.retrieval import RetrievalService
+
+    admitted = [
+        pid
+        for pid, info in cases.items()
+        if RetrievalService._filter_ready_only(_prof_evidence(pid), info)
+    ]
+    assert admitted == ["PROF-READY", "PROF-NEEDS-REVIEW", "PROF-NEEDS-ENRICHMENT"]
+    assert "PROF-LOW-CONFIDENCE" not in admitted
+

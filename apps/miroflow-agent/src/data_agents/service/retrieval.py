@@ -1300,6 +1300,16 @@ class RetrievalService:
         status = status_info.get("quality_status")
         if status == "ready":
             return True
+        if candidate.object_type == "professor":
+            # Decouple professor retrievability from publication-completeness.
+            # A professor is retrievable if it is a real identified entity.
+            # quality_status (ready > needs_review > needs_enrichment) is a
+            # RANKING signal (better profiles embed/rerank higher), not a
+            # retrieval gate. Only low_confidence (non-person-name /
+            # profile-blob / reader-artifact / missing-official-source) is
+            # excluded — it is not a reliable entity. rejected/merged identity
+            # are already excluded from the index.
+            return status != "low_confidence"
         if cls._allow_non_ready_exact_paper(candidate):
             return True
         return cls._allow_non_ready_vector_paper(candidate, status_info)

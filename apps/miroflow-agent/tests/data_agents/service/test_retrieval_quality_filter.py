@@ -186,8 +186,17 @@ def test_default_quality_status_filter_keeps_only_ready(
 
     results = _service(domain).retrieve(query, domains=(domain,), final_top_k=10)
 
-    assert [result.object_id for result in results] == [_IDS_BY_DOMAIN[domain][0]]
-    assert results[0].metadata["quality_status"] == "ready"
+    ids = [result.object_id for result in results]
+    ready_id, review_id = _IDS_BY_DOMAIN[domain]
+    if domain == "professor":
+        # Professor retrievability is decoupled from publication-completeness:
+        # needs_review is admitted (only low_confidence is excluded). ready still
+        # ranks first.
+        assert set(ids) == {ready_id, review_id}
+        assert ids[0] == ready_id
+    else:
+        assert ids == [ready_id]
+        assert results[0].metadata["quality_status"] == "ready"
 
 
 @pytest.mark.parametrize("domain", ["professor", "paper", "company", "patent"])
