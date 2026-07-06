@@ -4887,8 +4887,12 @@ def chat(
 
         if ctype == "G" and name:
             target_domain = classification.get("target_domain")
+            # Clean the name: strip common prefixes/suffixes the classifier may leave in
+            clean_name = re.sub(r"^(请介绍|介绍|请|查一下|查找|查询)\s*", "", name)
+            clean_name = re.sub(r"(的相关信息|的相关信息是什么|的信息|的基本信息|的详细信息|怎么样|如何)$", "", clean_name)
+            clean_name = clean_name.strip(" ：，。")
             if target_domain == "company":
-                companies = _lookup_company(conn, name=name)
+                companies = _lookup_company(conn, name=clean_name or name)
                 if len(companies) == 0:
                     return _record_and_return(ChatResponse(
                         query=raw_query,
