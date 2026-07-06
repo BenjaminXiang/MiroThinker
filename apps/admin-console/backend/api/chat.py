@@ -252,7 +252,7 @@ _CLASSIFIER_CONTEXT_RE = re.compile(
 _TOPIC_SWITCH_PREFIX_RE = re.compile(
     r"^\s*(?:对了|另外|另一个问题|换个话题|换一个话题|再问一个|再问下|顺便问下|顺便问一下)[，,、\s]*"
 )
-_CLASSIFIER_OUT_OF_SCOPE_RE = re.compile(r"(写一首诗|天气|翻译)")
+_CLASSIFIER_OUT_OF_SCOPE_RE = re.compile(r"(写一首诗|天气|翻译|黄赌毒|赌博|色情|毒品|吸毒|嫖娼|卖淫|非法交易|违禁品)")
 _CLASSIFIER_KNOWLEDGE_RE = re.compile(
     r"(几种实现方法|有什么不同|具体方式|基本原理|为什么|原理是什么|数据需求)"
 )
@@ -2301,8 +2301,11 @@ def _lookup_patents_by_applicant(
                count(*) OVER ()::int AS total_count
           FROM patent
          WHERE applicants_raw ILIKE %s
-         ORDER BY filing_date DESC NULLS LAST
-         LIMIT 20
+         ORDER BY
+           CASE WHEN patent_type = 'invention' THEN 0 ELSE 1 END,
+           grant_date DESC NULLS LAST,
+           filing_date DESC NULLS LAST
+         LIMIT 30
         """,
         (like,),
     ).fetchall()
