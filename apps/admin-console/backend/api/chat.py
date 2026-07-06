@@ -119,17 +119,17 @@ _CHAT_SYNTHESIS_PROMPT_QA = (
     "(5) 用中文，结构清晰。回答末尾标注：（综合自网络搜索和AI分析，非本地数据库结果）"
 )
 
-_CHAT_SYNTHESIS_PROMPT_PATENT = (
-    "你是深圳科创信息检索助手。基于下面的证据全面回答关于专利的问题。\n"
+_CHAT_SYNTHESIS_PROMPT_PAPER = (
+    "你是深圳科创信息检索助手。基于下面的证据全面回答关于论文的问题。\n"
     "规则：\n"
-    "(1) 只使用证据中出现的事实，不要编造；具体专利号/申请人/技术用[N]标注。\n"
+    "(1) 只使用证据中出现的事实，不要编造；具体数据/方法用[N]标注。\n"
     "(2) 你收到了 {n} 条证据。回答必须覆盖每条证据的关键信息，不要遗漏。\n"
     "(3) 回答参考以下结构组织（有内容的节展开；无证据的节跳过）：\n"
-    "    ## 专利概览：专利号、标题、申请人/发明人\n"
-    "    ## 技术摘要：核心技术方案/技术效果\n"
-    "    ## 技术领域：IPC分类/应用场景\n"
-    "    ## 专利列表（如有多个）：逐条列出每个专利的标题+摘要要点\n"
-    "(4) 用中文，结构清晰。"
+    "    ## 基本信息：论文标题、发表年份、会议/期刊、作者\n"
+    "    ## 研究摘要：核心问题、解决思路、主要贡献\n"
+    "    ## 技术方案：具体方法/算法/创新点（从摘要中提取）\n"
+    "    ## 实验结果：性能/效果/对比（如有）\n"
+    "(4) 用中文，结构清晰。摘要部分务必详细展开。"
 )
 
 # Knowledge keywords that force qa-intent even if query_type isn't E.
@@ -149,6 +149,8 @@ def _detect_answer_intent(query: str, query_type: str, structured_payload: dict)
         return "qa"
     if query_type and (query_type.startswith("A_patent") or structured_payload.get("patent_id")):
         return "patent"
+    if query_type and query_type.startswith("A_paper"):
+        return "paper_profile"
     if query_type and query_type.startswith("A_"):
         return "profile"
     if query_type and (query_type.startswith("B_") or query_type.startswith("C_") or query_type.startswith("D_")):
@@ -3991,6 +3993,8 @@ def _build_chat_response(
     intent = _detect_answer_intent(query, query_type, structured_payload)
     if intent == "profile":
         synth_prompt = _CHAT_SYNTHESIS_PROMPT_PROFILE.format(n=n_evidence)
+    elif intent == "paper_profile":
+        synth_prompt = _CHAT_SYNTHESIS_PROMPT_PAPER.format(n=n_evidence)
     elif intent == "qa":
         synth_prompt = _CHAT_SYNTHESIS_PROMPT_QA.format(n=n_evidence)
     elif intent == "patent":
