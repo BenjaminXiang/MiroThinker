@@ -79,6 +79,72 @@ _CHAT_SYNTHESIS_SYSTEM_PROMPT = (
     "可使用编号或项目符号；优先覆盖证据中最相关、最具代表性的对象，不要遗漏重要条目。"
 )
 
+# --- Intent-aware structured synthesis prompts (comprehensive coverage enforcement) ---
+
+_CHAT_SYNTHESIS_PROMPT_PROFILE = (
+    "你是深圳科创信息检索助手。基于下面的证据全面回答用户问题。\n"
+    "规则：\n"
+    "(1) 只使用证据中出现的事实，不要编造；具体人名/机构/数字必须来自证据并用[N]标注。\n"
+    "(2) 你收到了 {n} 条证据。回答必须覆盖每条证据的关键信息，不要遗漏。\n"
+    "(3) 回答必须按以下结构组织（每节从证据中填充；某节无证据时标注'证据不足'）：\n"
+    "    ## 基本信息：名称、机构/单位、职位/行业\n"
+    "    ## 核心技术或产品：主要技术方向/产品/研究方向\n"
+    "    ## 履历或团队：教育/工作经历/创始团队\n"
+    "    ## 成就或荣誉：奖项/学术兼职/融资/市场地位\n"
+    "    ## 其他亮点：科研进展/近期动态/行业评价\n"
+    "(4) 用中文，结构清晰，信息完整。"
+)
+
+_CHAT_SYNTHESIS_PROMPT_LIST = (
+    "你是深圳科创信息检索助手。基于下面的证据全面回答用户问题。\n"
+    "规则：\n"
+    "(1) 只使用证据中出现的事实，不要编造；每个实体用[N]标注。\n"
+    "(2) 你收到了 {n} 条证据。回答必须逐条列出证据中的每个对象/实体，不要遗漏任何一个。\n"
+    "(3) 每个对象列出：名称、关键特征/要点、与问题的相关性。\n"
+    "(4) 用中文，编号或项目符号，逐条呈现。"
+)
+
+_CHAT_SYNTHESIS_PROMPT_QA = (
+    "你是深圳科创信息检索助手。用户问了一个科创领域的知识性问题。\n"
+    "规则：\n"
+    "(1) 基于证据和你的领域知识回答。具体人名/机构/数字必须来自证据并用[N]标注，不要编造。\n"
+    "(2) 你收到了 {n} 条证据。回答必须覆盖每条证据的关键信息。\n"
+    "(3) 通用概念/方法/分类/趋势可使用你的领域知识，标注'（行业一般认知）'。\n"
+    "(4) 回答必须按以下结构组织：\n"
+    "    ## 概念定义：问题涉及的核心概念\n"
+    "    ## 主要方法或分类：技术路线/方法/类型的逐一列举\n"
+    "    ## 代表企业或学者：每个路线/方法的代表\n"
+    "    ## 技术对比：各路线/方法的优劣/差异\n"
+    "    ## 发展趋势：行业方向\n"
+    "(5) 用中文，结构清晰。回答末尾标注：（综合自网络搜索和AI分析，非本地数据库结果）"
+)
+
+# Knowledge keywords that force qa-intent even if query_type isn't E.
+_KNOWLEDGE_INTENT_KEYWORDS = frozenset({
+    "几种", "多少种", "路线", "方式", "方法", "原理", "分类", "类型",
+    "区别", "趋势", "发展", "什么是", "如何实现", "具体方式", "对比",
+})
+
+
+def _detect_answer_intent(query: str, query_type: str, structured_payload: dict) -> str:
+    """Detect synthesis intent: 'profile' | 'list' | 'qa'.
+    Derives from query_type prefixes + knowledge keywords."""
+    if query_type and query_type.startswith("E_"):
+        return "qa"
+    # Knowledge keywords force qa even for non-E routing
+    if any(kw in query for kw in _KNOWLEDGE_INTENT_KEYWORDS):
+        return "qa"
+    if query_type and query_type.startswith("A_"):
+        return "profile"
+    if query_type and (query_type.startswith("B_") or query_type.startswith("C_") or query_type.startswith("D_")):
+        return "list"
+    # Check structured_payload for entity-id (profile) vs matched list
+    if structured_payload.get("professor_id") or structured_payload.get("company_id") or structured_payload.get("paper_id"):
+        return "profile"
+    if structured_payload.get("matched_professors") or structured_payload.get("matched_objects"):
+        return "list"
+    return "list"  # default to list (safer than profile for unknown)
+
 
 def _chat_synthesis_extra_body(model_name: str | None) -> dict[str, Any]:
     return build_non_thinking_extra_body(model_name)
@@ -3619,6 +3685,7 @@ def _call_gemma_synthesis(
     evidence_text: str,
     *,
     timeout: float,
+    system_prompt: str = _CHAT_SYNTHESIS_SYSTEM_PROMPT,
 ) -> str:
     _clear_proxy_env()
     llm_settings = resolve_professor_llm_settings(None)
@@ -3633,7 +3700,7 @@ def _call_gemma_synthesis(
     response = client.chat.completions.create(
         model=llm_settings["local_llm_model"],
         messages=[
-            {"role": "system", "content": _CHAT_SYNTHESIS_SYSTEM_PROMPT},
+            {"role": "system", "content": system_prompt},
             {
                 "role": "user",
                 "content": (
@@ -3789,11 +3856,22 @@ def _build_chat_response(
     if not evidence_text:
         return base_response
 
+    # Intent-aware structured synthesis: detect intent → select template → enforce coverage
+    n_evidence = len(citation_map)
+    intent = _detect_answer_intent(query, query_type, structured_payload)
+    if intent == "profile":
+        synth_prompt = _CHAT_SYNTHESIS_PROMPT_PROFILE.format(n=n_evidence)
+    elif intent == "qa":
+        synth_prompt = _CHAT_SYNTHESIS_PROMPT_QA.format(n=n_evidence)
+    else:
+        synth_prompt = _CHAT_SYNTHESIS_PROMPT_LIST.format(n=n_evidence)
+
     try:
         llm_answer = _call_gemma_synthesis(
             query,
             evidence_text,
             timeout=_CHAT_SYNTHESIS_TIMEOUT_SECONDS,
+            system_prompt=synth_prompt,
         )
         llm_answer = _validate_and_strip_citations(llm_answer, len(citation_map))
         # Match single [N] markers AND compound [1, 2, 3] markers (just in case
