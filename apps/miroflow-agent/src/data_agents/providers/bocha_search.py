@@ -51,7 +51,7 @@ class BochaSearchProvider:
         endpoint: str = "https://api.bochaai.com/v1/web-search",
         api_key: str | None = None,
         freshness: str = "noLimit",
-        count: int = 8,
+        count: int = 12,
         timeout: float = 30.0,
         session: requests.Session | Any | None = None,
         curl_runner: Callable[..., Any] | None = None,
