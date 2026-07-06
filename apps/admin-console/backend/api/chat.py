@@ -2075,6 +2075,38 @@ def _prof_rich_profile_facts(conn: Any, professor_id: str) -> dict[str, Any]:
     return facts
 
 
+def _paper_rich_fields(conn: Any, paper_id: str) -> dict[str, Any]:
+    """Rich paper fields for synthesis depth: abstract_clean/summary_zh + authors.
+
+    The paper profile payload only carries title/year/venue/citation_count; the
+    abstract + authors exist in the paper table but were never surfaced to the LLM.
+    """
+    row = conn.execute(
+        "SELECT abstract_clean, summary_zh, authors_display FROM paper WHERE paper_id = %s",
+        (paper_id,),
+    ).fetchone()
+    if not row:
+        return {}
+    out: dict[str, Any] = {}
+    abstract_clean = (row.get("abstract_clean") or "").strip()
+    summary_zh = (row.get("summary_zh") or "").strip()
+    if abstract_clean:
+        out["abstract_clean"] = abstract_clean
+    if summary_zh:
+        out["summary_zh"] = summary_zh
+    authors_display = row.get("authors_display")
+    if authors_display:
+        # authors_display is a single display string ("Name1, Name2, ..."); keep it as
+        # one entry so _build_evidence_blocks renders the full author list in one block.
+        if isinstance(authors_display, (list, tuple)):
+            names = [str(a) for a in authors_display if a]
+            if names:
+                out["authors"] = names
+        elif isinstance(authors_display, str) and authors_display.strip():
+            out["authors"] = [authors_display.strip()]
+    return out
+
+
 def _prof_paper_count(conn: Any, professor_id: str) -> int:
     return conn.execute(
         """
@@ -3329,6 +3361,69 @@ def _build_evidence_blocks(
                 )
         return "\n".join(blocks), citation_map
 
+    if company_id := structured_payload.get("company_id"):
+        canonical_name = structured_payload.get("canonical_name")
+        if canonical_name:
+            marker = _append_evidence_block(
+                blocks=blocks, citation_map=citation_map, marker=marker,
+                kind="company", summary=f"企业名称：{canonical_name}", evidence_id=company_id,
+            )
+        for label, key in (
+            ("行业", "industry"), ("主营业务", "business"), ("企业简介", "description"),
+        ):
+            value = structured_payload.get(key)
+            if value:
+                marker = _append_evidence_block(
+                    blocks=blocks, citation_map=citation_map, marker=marker,
+                    kind=key, summary=f"{label}：{str(value)[:400]}", evidence_id=company_id,
+                )
+        for products in (structured_payload.get("products") or [])[:8]:
+            marker = _append_evidence_block(
+                blocks=blocks, citation_map=citation_map, marker=marker,
+                kind="product", summary=f"产品：{str(products)[:200]}", evidence_id=company_id,
+            )
+        for scenario in (structured_payload.get("application_scenarios") or [])[:6]:
+            marker = _append_evidence_block(
+                blocks=blocks, citation_map=citation_map, marker=marker,
+                kind="application_scenario", summary=f"应用场景：{str(scenario)[:200]}",
+                evidence_id=company_id,
+            )
+        for event in (structured_payload.get("recent_events") or [])[:5]:
+            marker = _append_evidence_block(
+                blocks=blocks, citation_map=citation_map, marker=marker,
+                kind="recent_event", summary=f"近期动态：{str(event)[:200]}", evidence_id=company_id,
+            )
+        return "\n".join(blocks), citation_map
+
+    if paper_id := structured_payload.get("paper_id"):
+        title = structured_payload.get("title")
+        if title:
+            marker = _append_evidence_block(
+                blocks=blocks, citation_map=citation_map, marker=marker,
+                kind="paper", summary=f"论文标题：{title}", evidence_id=paper_id,
+            )
+        for label, key in (("发表年份", "year"), ("发表期刊/会议", "venue"), ("引用数", "citation_count")):
+            value = structured_payload.get(key)
+            if value is not None:
+                marker = _append_evidence_block(
+                    blocks=blocks, citation_map=citation_map, marker=marker,
+                    kind=key, summary=f"{label}：{value}", evidence_id=paper_id,
+                )
+        abstract = structured_payload.get("abstract_clean") or structured_payload.get("summary_zh")
+        if abstract:
+            marker = _append_evidence_block(
+                blocks=blocks, citation_map=citation_map, marker=marker,
+                kind="abstract", summary=f"摘要：{str(abstract)[:500]}", evidence_id=paper_id,
+            )
+        authors = structured_payload.get("authors") or []
+        if authors:
+            marker = _append_evidence_block(
+                blocks=blocks, citation_map=citation_map, marker=marker,
+                kind="authors", summary=f"作者：{'，'.join(str(a) for a in authors[:10])[:300]}",
+                evidence_id=paper_id,
+            )
+        return "\n".join(blocks), citation_map
+
     matched_professors = structured_payload.get("matched_professors") or []
     if matched_professors:
         for prof in matched_professors[:10]:
@@ -3658,6 +3753,11 @@ def _build_chat_response(
         rich_facts = _prof_rich_profile_facts(conn, str(prof_id_for_rich))
         if rich_facts:
             structured_payload.update(rich_facts)
+    paper_id_for_rich = structured_payload.get("paper_id")
+    if paper_id_for_rich:
+        paper_rich = _paper_rich_fields(conn, str(paper_id_for_rich))
+        if paper_rich:
+            structured_payload.update(paper_rich)
 
     # Every query goes through web search (per product decision): if the retrieval
     # path did not already web-augment (e.g. profile paths don't call retrieve with
