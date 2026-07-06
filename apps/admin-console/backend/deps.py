@@ -22,6 +22,7 @@ from typing import Any, Iterator
 
 from src.data_agents.professor.vectorizer import EmbeddingClient
 from src.data_agents.providers.bocha_search import BochaSearchProvider
+from src.data_agents.providers.composite_web_search import CompositeWebSearchProvider
 from src.data_agents.providers.local_api_key import load_local_api_key
 from src.data_agents.providers.rerank import RerankerClient
 from src.data_agents.providers.web_search import WebSearchProvider
@@ -114,14 +115,11 @@ def _get_reranker_client() -> RerankerClient:
 
 
 @lru_cache(maxsize=1)
-def _get_web_search_provider() -> WebSearchProvider | BochaSearchProvider:
-    """Env-selected web-search provider (CHAT_WEB_SEARCH_PROVIDER=bocha|serper; default bocha).
-    Bocha is the primary: China-native + returns a rich `summary` per result (not just snippets).
-    Serper is the fallback if Bocha's key is unavailable or CHAT_WEB_SEARCH_PROVIDER=serper."""
-    provider = os.getenv("CHAT_WEB_SEARCH_PROVIDER", "bocha").strip().lower()
-    if provider == "serper":
-        return WebSearchProvider()
-    return BochaSearchProvider()
+def _get_web_search_provider() -> CompositeWebSearchProvider:
+    """Dual web-search provider: Bocha (rich Chinese summaries) + Serper (Google entity
+    coverage), run concurrently, merged + deduped by URL. Both strengths, no tradeoff.
+    Falls back gracefully if either provider's key is missing (the other's results alone)."""
+    return CompositeWebSearchProvider()
 
 
 @lru_cache(maxsize=1)

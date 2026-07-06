@@ -163,7 +163,7 @@ def answer_knowledge_qa_with_web_search(
     synthesize: Callable[[str, list[dict]], str],
     fallback: Callable[[str], tuple[str, str | None]],
     logger: logging.Logger,
-    provider_name: str = "serper",
+    provider_name: str = "composite",
 ) -> tuple[str, str | None, list[dict]]:
     cached = cache.get(query, provider=provider_name)
     err: str | None = None
