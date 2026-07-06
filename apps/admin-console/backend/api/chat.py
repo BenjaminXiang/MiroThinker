@@ -2158,6 +2158,96 @@ def _prof_rich_profile_facts(conn: Any, professor_id: str) -> dict[str, Any]:
     return facts
 
 
+def _company_rich_facts(conn: Any, company_id: str) -> dict[str, Any]:
+    """Rich company facts for synthesis depth: products + team members + news.
+
+    These exist in company_product / company_team_member / company_news_item
+    but were never surfaced to synthesis. E.g. 爱博合创 has 10 products
+    (PANVIS®系列), 14 team members (郭书祥/郭健), 10 news items — none reached
+    the LLM. Surfacing them lets the synthesis cover the specific facts the
+    standard expects (products, founders, market evaluation).
+    """
+    facts: dict[str, Any] = {}
+
+    # Products (top 5)
+    rows = conn.execute(
+        """
+        SELECT canonical_name, short_description, product_category
+          FROM company_product
+         WHERE company_id = %s
+         ORDER BY confidence DESC NULLS LAST, canonical_name
+         LIMIT 5
+        """,
+        (company_id,),
+    ).fetchall()
+    products = []
+    for r in rows:
+        name = (r.get("canonical_name") or "").strip() if r else ""
+        if not name:
+            continue
+        desc = (r.get("short_description") or "").strip()
+        cat = (r.get("product_category") or "").strip()
+        entry = name
+        if cat:
+            entry += f"（{cat}）"
+        if desc:
+            entry += f"：{desc[:200]}"
+        products.append(entry)
+    if products:
+        facts["company_products"] = products
+
+    # Team members (top 5)
+    rows = conn.execute(
+        """
+        SELECT raw_name, raw_role, raw_intro
+          FROM company_team_member
+         WHERE company_id = %s
+         ORDER BY member_order NULLS LAST, raw_name
+         LIMIT 5
+        """,
+        (company_id,),
+    ).fetchall()
+    members = []
+    for r in rows:
+        name = (r.get("raw_name") or "").strip() if r else ""
+        if not name:
+            continue
+        role = (r.get("raw_role") or "").strip()
+        intro = (r.get("raw_intro") or "").strip()
+        entry = name
+        if role:
+            entry += f"（{role}）"
+        if intro:
+            entry += f"：{intro[:200]}"
+        members.append(entry)
+    if members:
+        facts["company_team"] = members
+
+    # News items (top 3 — for market evaluation / recent events)
+    rows = conn.execute(
+        """
+        SELECT title, summary_clean
+          FROM company_news_item
+         WHERE company_id = %s
+         ORDER BY published_at DESC NULLS LAST, fetched_at DESC
+         LIMIT 3
+        """,
+        (company_id,),
+    ).fetchall()
+    news = []
+    for r in rows:
+        title = (r.get("title") or "").strip() if r else ""
+        summary = (r.get("summary_clean") or "").strip()
+        entry = title
+        if summary:
+            entry += f"：{summary[:300]}"
+        news.append(entry)
+    if news:
+        facts["company_news"] = news
+
+    return facts
+
+
 def _paper_rich_fields(conn: Any, paper_id: str) -> dict[str, Any]:
     """Rich paper fields for synthesis depth: abstract_clean/summary_zh + authors.
 
@@ -3476,6 +3566,21 @@ def _build_evidence_blocks(
                 blocks=blocks, citation_map=citation_map, marker=marker,
                 kind="recent_event", summary=f"近期动态：{str(event)[:200]}", evidence_id=company_id,
             )
+        for product in (structured_payload.get("company_products") or [])[:5]:
+            marker = _append_evidence_block(
+                blocks=blocks, citation_map=citation_map, marker=marker,
+                kind="product", summary=f"核心产品：{str(product)[:300]}", evidence_id=company_id,
+            )
+        for member in (structured_payload.get("company_team") or [])[:5]:
+            marker = _append_evidence_block(
+                blocks=blocks, citation_map=citation_map, marker=marker,
+                kind="team_member", summary=f"团队/创始人：{str(member)[:300]}", evidence_id=company_id,
+            )
+        for news in (structured_payload.get("company_news") or [])[:3]:
+            marker = _append_evidence_block(
+                blocks=blocks, citation_map=citation_map, marker=marker,
+                kind="news", summary=f"近期新闻/市场评价：{str(news)[:400]}", evidence_id=company_id,
+            )
         return "\n".join(blocks), citation_map
 
     if paper_id := structured_payload.get("paper_id"):
@@ -3837,6 +3942,11 @@ def _build_chat_response(
         rich_facts = _prof_rich_profile_facts(conn, str(prof_id_for_rich))
         if rich_facts:
             structured_payload.update(rich_facts)
+    company_id_for_rich = structured_payload.get("company_id")
+    if company_id_for_rich:
+        company_rich = _company_rich_facts(conn, str(company_id_for_rich))
+        if company_rich:
+            structured_payload.update(company_rich)
     paper_id_for_rich = structured_payload.get("paper_id")
     if paper_id_for_rich:
         paper_rich = _paper_rich_fields(conn, str(paper_id_for_rich))
