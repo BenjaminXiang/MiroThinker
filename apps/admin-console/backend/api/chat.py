@@ -3986,32 +3986,14 @@ def _build_chat_response(
     # Intent-aware structured synthesis: detect intent → select template → enforce coverage
     n_evidence = len(citation_map)
     intent = _detect_answer_intent(query, query_type, structured_payload)
-
-    # Intent-based evidence cap: too many evidence blocks dilute synthesis quality.
-    # Profile intent: allow up to 18 (deep multi-field answer).
-    # List/qa intent: cap at 10 (focused, avoid overload → shallow answers).
-    # Multi-turn philosophy: don't cram everything in one turn; suggest follow-ups.
-    _EVIDENCE_CAP = {"profile": 18, "patent": 18, "list": 10, "qa": 10}
-    cap = _EVIDENCE_CAP.get(intent, 10)
-    if n_evidence > cap:
-        evidence_lines = evidence_text.split("\n")
-        evidence_text = "\n".join(evidence_lines[:cap])
-        n_evidence = min(n_evidence, cap)
-
-    # Append a follow-up suggestion instruction to every prompt (multi-turn design).
-    _FOLLOWUP_SUFFIX = (
-        "\n(6) 回答末尾，给出1-2个引导用户继续深入提问的建议（如'想了解创始团队详情？'"
-        "或'想看具体产品技术对比？'）。不要试图在一轮回答中覆盖所有内容。"
-    )
-
     if intent == "profile":
-        synth_prompt = _CHAT_SYNTHESIS_PROMPT_PROFILE.format(n=n_evidence) + _FOLLOWUP_SUFFIX
+        synth_prompt = _CHAT_SYNTHESIS_PROMPT_PROFILE.format(n=n_evidence)
     elif intent == "qa":
-        synth_prompt = _CHAT_SYNTHESIS_PROMPT_QA.format(n=n_evidence) + _FOLLOWUP_SUFFIX
+        synth_prompt = _CHAT_SYNTHESIS_PROMPT_QA.format(n=n_evidence)
     elif intent == "patent":
-        synth_prompt = _CHAT_SYNTHESIS_PROMPT_PATENT.format(n=n_evidence) + _FOLLOWUP_SUFFIX
+        synth_prompt = _CHAT_SYNTHESIS_PROMPT_PATENT.format(n=n_evidence)
     else:
-        synth_prompt = _CHAT_SYNTHESIS_PROMPT_LIST.format(n=n_evidence) + _FOLLOWUP_SUFFIX
+        synth_prompt = _CHAT_SYNTHESIS_PROMPT_LIST.format(n=n_evidence)
 
     try:
         llm_answer = _call_gemma_synthesis(
