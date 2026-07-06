@@ -163,24 +163,25 @@ def answer_knowledge_qa_with_web_search(
     synthesize: Callable[[str, list[dict]], str],
     fallback: Callable[[str], tuple[str, str | None]],
     logger: logging.Logger,
+    provider_name: str = "serper",
 ) -> tuple[str, str | None, list[dict]]:
-    cached = cache.get(query, provider="serper")
+    cached = cache.get(query, provider=provider_name)
     err: str | None = None
     if cached is None:
         provider = provider_factory()
         if provider is None:
             results = []
-            err = "SERPER_API_KEY 未配置"
+            err = "web search provider 未配置"
         else:
             try:
                 results = normalize_serper_results(provider.search(query), top_n=5)
             except Exception as exc:
-                logger.warning("Serper search failed for knowledge QA %r: %s", query, exc)
+                logger.warning("Web search failed for knowledge QA %r: %s", query, exc)
                 results = []
                 err = str(exc)
             else:
                 if results:
-                    cache.set(query, results, provider="serper")
+                    cache.set(query, results, provider=provider_name)
     else:
         results = cached[:5]
 

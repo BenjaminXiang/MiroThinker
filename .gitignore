@@ -228,6 +228,7 @@ data/
 .sglang_api_key
 .deepseek_api_key
 .serper_api_key
+.bocha_api_key
 .python-version
 
 # AI tool local state
