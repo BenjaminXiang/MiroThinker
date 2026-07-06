@@ -3659,6 +3659,32 @@ def _build_chat_response(
         if rich_facts:
             structured_payload.update(rich_facts)
 
+    # Every query goes through web search (per product decision): if the retrieval
+    # path did not already web-augment (e.g. profile paths don't call retrieve with
+    # augment_with_web), do it here so synthesis sees web evidence too. Best-effort:
+    # on failure, fall through to the local-only answer.
+    if not structured_payload.get("web_evidence"):
+        web_provider = _get_web_search_provider_or_none()
+        if web_provider is not None:
+            try:
+                web_payload = web_provider.search(query)
+                organic = web_payload.get("organic") or web_payload.get("results") or []
+                web_evidence_rows: list[dict[str, Any]] = []
+                for item in organic[:5]:
+                    web_evidence_rows.append(
+                        {
+                            "id": item.get("link") or item.get("url") or f"web-{len(web_evidence_rows)}",
+                            "title": (item.get("title") or "").strip(),
+                            "snippet": (item.get("snippet") or "").strip(),
+                            "url": item.get("link") or item.get("url") or "",
+                            "type": "web",
+                        }
+                    )
+                if web_evidence_rows:
+                    structured_payload["web_evidence"] = web_evidence_rows
+            except Exception as exc:  # noqa: BLE001 - web is best-effort
+                logger.warning("Web search augmentation failed for %r: %s", query, exc)
+
     evidence_text, citation_map = _build_evidence_blocks(structured_payload)
     if not evidence_text:
         return base_response

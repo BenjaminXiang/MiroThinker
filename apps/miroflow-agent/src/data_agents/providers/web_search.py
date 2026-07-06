@@ -4,9 +4,38 @@ import json
 import os
 import subprocess
 import tempfile
+from pathlib import Path
 from typing import Any, Callable
 
 import requests
+
+
+def _read_serper_key_file() -> str:
+    """Read .serper_api_key from the repo root (fallback when SERPER_API_KEY env
+    is unset). The key file exists at the repo root; the provider previously read
+    only the env var, so the key was empty -> Serper 403 Unauthorized."""
+    here = Path(__file__).resolve()
+    for parent in [here.parent, *here.parents]:
+        candidate = parent / ".serper_api_key"
+        if candidate.is_file():
+            try:
+                value = candidate.read_text(encoding="utf-8").strip()
+                if value:
+                    return value
+            except OSError:
+                continue
+    # also try cwd upwards (admin-console backend may run from a different root)
+    cwd = Path.cwd()
+    for parent in [cwd, *cwd.parents]:
+        candidate = parent / ".serper_api_key"
+        if candidate.is_file():
+            try:
+                value = candidate.read_text(encoding="utf-8").strip()
+                if value:
+                    return value
+            except OSError:
+                continue
+    return ""
 
 
 class WebSearchProvider:
@@ -22,7 +51,9 @@ class WebSearchProvider:
         curl_runner: Callable[..., Any] | None = None,
     ) -> None:
         self.endpoint = endpoint
-        self.api_key = api_key or os.getenv("SERPER_API_KEY", "").strip()
+        self.api_key = (
+            api_key or os.getenv("SERPER_API_KEY", "").strip() or _read_serper_key_file()
+        ).strip()
         self.gl = gl
         self.hl = hl
         self.timeout = timeout
