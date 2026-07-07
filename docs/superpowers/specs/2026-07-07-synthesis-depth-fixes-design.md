@@ -124,15 +124,21 @@ no migration, no data, no public-API change. Order of commits: Fix3 (1 line, zer
 - Data population pipeline (companies/papers/professors at scale) — Workstream 3.
 - Eval methodology redesign (semantic similarity, held-out set) — Workstream 4.
 
-## OpenSpec consideration (decision needed at review)
+## Contract — doc-as-contract (decided)
 
-These fixes are behavior-affecting (they change answer/citation output), so CLAUDE.md §8
-technically requires an OpenSpec change. Options:
-- (a) Fold into the existing `openspec/changes/intent-aware-synthesis/` as a continuation
-  (it already exists and is implemented; these are a depth refinement on top). ← recommended
-- (b) New small change `openspec/changes/synthesis-depth-enrichment/`.
-- (c) Treat as continuation; this design doc + the change log is the contract.
+These fixes are behavior-affecting (they change answer/citation output). CLAUDE.md §8
+would normally require an OpenSpec change, but `openspec/` does **not exist on disk** in
+this branch (verified: `ls openspec/` → not found; not tracked in git). Bootstrapping an
+entire `openspec/` tree for three small synthesis fixes would violate CLAUDE.md §1 ("use
+the lightest reliable workflow; do not turn small fixes into multi-agent rituals"), and
+the OpenSpec validation tooling is not set up here.
 
-Recommendation: **(a)** — these fixes are the natural depth follow-on to intent-aware
-synthesis, and (c)'s "design doc as contract" under-weights the behavior-contract rule.
-Flag for user decision before implementation.
+**Decision: doc-as-contract.** The behavior contract for this task is exactly:
+- Spec: `docs/superpowers/specs/2026-07-07-synthesis-depth-fixes-design.md` (this file)
+- Plan: `docs/superpowers/plans/2026-07-07-synthesis-depth-fixes.md`
+- Tests: `apps/admin-console/tests/test_chat_synthesis_depth.py`
+- Code under change: `apps/admin-console/backend/api/chat.py`
+- GREEN gate: `apps/admin-console/scripts/eval_true_accuracy.py --runs 3`
+
+Future OpenSpec adoption (bootstrapping `openspec/` + its validation tooling) is a
+separate harness/setup change and is explicitly **out of scope** for this slice.
