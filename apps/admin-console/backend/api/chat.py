@@ -2263,6 +2263,80 @@ def _company_rich_facts(conn: Any, company_id: str) -> dict[str, Any]:
     return facts
 
 
+def _compact_prof_rich(facts: dict[str, Any]) -> str:
+    """Compact one-line rich-fact string for a professor list entry.
+
+    Picks the 1-2 highest-signal facts (top award + research summary) so a list
+    query surfaces depth without token bloat. Returns '' if nothing notable.
+    """
+    if not facts:
+        return ""
+    parts: list[str] = []
+    awards = facts.get("awards") or []
+    if awards:
+        parts.append(f"奖项：{str(awards[0])[:80]}")
+    summary = (facts.get("profile_summary") or "").strip()
+    if summary:
+        parts.append(f"研究概要：{summary[:100]}")
+    if not parts:
+        edu = facts.get("education") or []
+        if edu:
+            parts.append(f"教育：{str(edu[0])[:80]}")
+    return "；".join(parts)[:200]
+
+
+def _compact_company_rich(facts: dict[str, Any]) -> str:
+    """Compact one-line rich-fact string for a company list entry.
+
+    Picks flagship product + founder so a list query surfaces depth.
+    """
+    if not facts:
+        return ""
+    parts: list[str] = []
+    products = facts.get("company_products") or []
+    if products:
+        parts.append(f"产品：{str(products[0])[:100]}")
+    team = facts.get("company_team") or []
+    if team:
+        parts.append(f"团队：{str(team[0])[:80]}")
+    return "；".join(parts)[:200]
+
+
+def _enrich_list_entities(
+    structured_payload: dict[str, Any],
+    *,
+    conn: Any,
+    prof_rich_fn: Any = _prof_rich_profile_facts,
+    company_rich_fn: Any = _company_rich_facts,
+) -> None:
+    """Attach a compact `rich_summary` to the top list entities (in place).
+
+    List queries return matched_professors / matched_objects with name+snippet
+    only; the rich-fact fetchers were never called for them, so synthesis saw
+    shallow detail. This fetches rich facts for the top-3 of each and stores a
+    compact one-liner the list renderers surface. Fetchers are injectable for
+    unit testing (no DB needed).
+    """
+    for prof in (structured_payload.get("matched_professors") or [])[:3]:
+        if not isinstance(prof, dict):
+            continue
+        pid = prof.get("professor_id")
+        if not pid:
+            continue
+        compact = _compact_prof_rich(prof_rich_fn(conn, str(pid)))
+        if compact:
+            prof["rich_summary"] = compact
+    for obj in (structured_payload.get("matched_objects") or [])[:3]:
+        if not isinstance(obj, dict):
+            continue
+        cid = obj.get("company_id")
+        if not cid:
+            continue  # only companies have a rich-facts fetcher; papers/patents skipped
+        compact = _compact_company_rich(company_rich_fn(conn, str(cid)))
+        if compact:
+            obj["rich_summary"] = compact
+
+
 def _paper_rich_fields(conn: Any, paper_id: str) -> dict[str, Any]:
     """Rich paper fields for synthesis depth: abstract_clean/summary_zh + authors.
 
@@ -3635,6 +3709,10 @@ def _build_evidence_blocks(
         for prof in matched_professors[:10]:
             topics = prof.get("matched_topics") or []
             topic_text = f"，匹配方向：{'、'.join(topics[:3])}" if topics else ""
+            rich_text = ""
+            rich = (prof.get("rich_summary") or "").strip()
+            if rich:
+                rich_text = f"，亮点：{rich}"
             marker = _append_evidence_block(
                 blocks=blocks,
                 citation_map=citation_map,
@@ -3643,7 +3721,7 @@ def _build_evidence_blocks(
                 summary=(
                     f"{prof.get('canonical_name') or '姓名未知'}，"
                     f"{prof.get('institution') or '机构未知'}"
-                    f"{topic_text}"
+                    f"{topic_text}{rich_text}"
                 ),
                 evidence_id=prof["professor_id"],
             )
@@ -3762,12 +3840,15 @@ def _build_evidence_blocks(
             or ""
         )
         summary = f"{name}：{detail}" if detail else str(name)
+        rich = (item.get("rich_summary") or "").strip()
+        if rich:
+            summary = f"{summary}（亮点：{rich}）"
         marker = _append_evidence_block(
             blocks=blocks,
             citation_map=citation_map,
             marker=marker,
             kind=str(item.get("type") or "evidence"),
-            summary=summary[:200],
+            summary=summary[:320],
             evidence_id=str(
                 item.get("id")
                 or item.get("professor_id")
@@ -3971,6 +4052,10 @@ def _build_chat_response(
         paper_rich = _paper_rich_fields(conn, str(paper_id_for_rich))
         if paper_rich:
             structured_payload.update(paper_rich)
+
+    # List-entity enrichment (Fix1): fetch rich facts for the top list entities so
+    # the list render surfaces depth (flagship product, top award), not just name.
+    _enrich_list_entities(structured_payload, conn=conn)
 
     # Every query goes through web search (per product decision): if the retrieval
     # path did not already web-augment (e.g. profile paths don't call retrieve with
