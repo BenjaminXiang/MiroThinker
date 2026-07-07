@@ -3901,6 +3901,74 @@ def _extract_chat_completion_text(response: Any) -> str:
     raise ValueError("parse failure: unsupported content shape")
 
 
+def _web_search_to_rows(web_provider: Any, query: str) -> list[dict[str, Any]]:
+    """Run one web search and normalize to evidence-row dicts (id/title/snippet/url/type).
+    Raises propagate to the caller, which wraps in best-effort try/except."""
+    payload = web_provider.search(query)
+    organic = payload.get("organic") or payload.get("results") or []
+    rows: list[dict[str, Any]] = []
+    for item in organic[:10]:
+        if not isinstance(item, dict):
+            continue
+        rows.append(
+            {
+                "id": item.get("link") or item.get("url") or f"web-{len(rows)}",
+                "title": (item.get("title") or "").strip(),
+                "snippet": (item.get("snippet") or "").strip(),
+                "url": item.get("link") or item.get("url") or "",
+                "type": "web",
+            }
+        )
+    return rows
+
+
+_SEARCH_REFORMULATE_SYSTEM = (
+    "你是一个搜索查询改写器。将用户问题改写为适合网络搜索的中文关键词组合："
+    "保留核心意图，去除上下文引用（如'在...路线中'、'有哪些具体方式'），"
+    "补充相关领域术语。只输出关键词，用空格分隔，不要解释，不要标点。"
+)
+
+
+def _reformulate_query_for_search(
+    query: str,
+    *,
+    client_factory: Any = None,
+    timeout: float = 8.0,
+) -> str:
+    """Rewrite a knowledge sub-question into search-friendly keywords via the local
+    LLM (qwen3.6, free). Used ONLY as the web-search query; synthesis keeps the raw
+    user query. Returns '' on any failure (caller falls through to local-only —
+    best-effort contract, CLAUDE.md §5)."""
+    _clear_proxy_env()
+    llm_settings = resolve_professor_llm_settings(None)
+    api_key = llm_settings.get("local_llm_api_key")
+    if not api_key:
+        return ""
+    if client_factory is not None:
+        client = client_factory()
+    else:
+        client = OpenAI(
+            base_url=llm_settings["local_llm_base_url"],
+            api_key=api_key,
+            timeout=timeout,
+        )
+    try:
+        response = client.chat.completions.create(
+            model=llm_settings["local_llm_model"],
+            temperature=0,
+            messages=[
+                {"role": "system", "content": _SEARCH_REFORMULATE_SYSTEM},
+                {"role": "user", "content": query},
+            ],
+            extra_body=_chat_synthesis_extra_body(llm_settings["local_llm_model"]),
+        )
+        text = _extract_chat_completion_text(response).strip()
+    except Exception:  # noqa: BLE001 - best-effort, never break the response
+        return ""
+    text = text.splitlines()[0].strip() if text else ""
+    return text[:200]
+
+
 def _call_gemma_synthesis(
     query: str,
     evidence_text: str,
@@ -4057,6 +4125,10 @@ def _build_chat_response(
     # the list render surfaces depth (flagship product, top award), not just name.
     _enrich_list_entities(structured_payload, conn=conn)
 
+    # Intent computed once (Fix2): used both to gate the web-search reformulation
+    # retry below and to select the synthesis template later.
+    intent = _detect_answer_intent(query, query_type, structured_payload)
+
     # Every query goes through web search (per product decision): if the retrieval
     # path did not already web-augment (e.g. profile paths don't call retrieve with
     # augment_with_web), do it here so synthesis sees web evidence too. Best-effort:
@@ -4065,19 +4137,15 @@ def _build_chat_response(
         web_provider = _get_web_search_provider_or_none()
         if web_provider is not None:
             try:
-                web_payload = web_provider.search(query)
-                organic = web_payload.get("organic") or web_payload.get("results") or []
-                web_evidence_rows: list[dict[str, Any]] = []
-                for item in organic[:10]:
-                    web_evidence_rows.append(
-                        {
-                            "id": item.get("link") or item.get("url") or f"web-{len(web_evidence_rows)}",
-                            "title": (item.get("title") or "").strip(),
-                            "snippet": (item.get("snippet") or "").strip(),
-                            "url": item.get("link") or item.get("url") or "",
-                            "type": "web",
-                        }
-                    )
+                web_evidence_rows: list[dict[str, Any]] = _web_search_to_rows(web_provider, query)
+                # Fix2: a raw knowledge sub-question is often too contextualized for
+                # Bocha (e.g. "在真实数据采集路线中，有哪些具体方式" -> 0 results). On a
+                # qa-intent miss, rewrite to search keywords via the local LLM and
+                # retry once. Synthesis still answers the raw user query.
+                if not web_evidence_rows and intent == "qa":
+                    reformulated = _reformulate_query_for_search(query)
+                    if reformulated and reformulated != query:
+                        web_evidence_rows = _web_search_to_rows(web_provider, reformulated)
                 if web_evidence_rows:
                     structured_payload["web_evidence"] = web_evidence_rows
             except Exception as exc:  # noqa: BLE001 - web is best-effort
@@ -4089,7 +4157,6 @@ def _build_chat_response(
 
     # Intent-aware structured synthesis: detect intent → select template → enforce coverage
     n_evidence = len(citation_map)
-    intent = _detect_answer_intent(query, query_type, structured_payload)
     if intent == "profile":
         synth_prompt = _CHAT_SYNTHESIS_PROMPT_PROFILE.format(n=n_evidence)
     elif intent == "paper_profile":
