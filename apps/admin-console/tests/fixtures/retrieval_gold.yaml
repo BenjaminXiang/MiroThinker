@@ -1,0 +1,47 @@
+# Gold entities for retrieval precision/coverage probe.
+#
+# Source: authoritative industry rankings / domain knowledge — NOT the DB.
+# This avoids circular bias (measuring retrieval against what the DB happens to
+# have). Each query lists entities that SHOULD be in the answer for that query.
+#
+# The probe measures, per query:
+#   recall    = gold entities found in matched_objects/matched_professors (Layer C precision)
+#   coverage  = gold entities present in the DB at all (Layer E)
+#   C-gap     = covered-but-not-retrieved (retrieval precision failure)
+#   E-gap     = not-in-DB (coverage failure)
+
+queries:
+  - qid: pcb_makers
+    query: "国内做PCB的厂商主要有哪些"
+    domain: company
+    # 2022 国内PCB十强 (Prismark / 行业榜单) — authoritative
+    gold_entities: [鹏鼎控股, 臻鼎科技, 东山精密, 深南电路, 景旺电子, 沪电股份, 健鼎, 华通, 建滔, 紫翔, 欣兴]
+    notes: "DB has 深南电路/崇达技术/兴森快捷; most十强 absent = E-gap"
+
+  - qid: delivery_robot_suppliers
+    query: "中国有哪些成熟的酒店送餐机器人供应商"
+    domain: company
+    # 行业公认头部: 普渡(配送)/擎朗(餐饮)/云迹(酒店)/猎户星空/惊鸿/YOUI/锐曼
+    gold_entities: [普渡科技, 擎朗智能, 云迹科技, 猎户星空, 惊鸿, YOUI, 锐曼智能]
+    notes: "普渡 in-DB-but-buried = C-gap; 擎朗/云迹/猎户星空 absent = E-gap"
+
+  - qid: visuotactile_professors
+    query: "清华做视触觉的教授有哪些"
+    domain: professor
+    # 潘挺睿 = 触觉/视触觉传感 (清华深研院); authoritative
+    gold_entities: [潘挺睿]
+    notes: "false positives = 多孔材料/线粒体/水合物 profs = C precision failure"
+
+  - qid: embodied_shenzhen_companies
+    query: "深圳有哪些做具身智能的公司"
+    domain: company
+    # 深圳具身智能代表: 优必选(人形)/无界智航(具身数据)/越疆(协作)
+    gold_entities: [优必选, 无界智航, 越疆]
+    notes: "all should be in a Shenzhen-local DB; measures recall precision"
+
+  - qid: dexterous_hand_professors
+    query: "有哪些做灵巧手的教授"
+    domain: professor
+    # 灵巧手方向代表教授 (行业认知); seed for professor-topic recall baseline
+    gold_entities: [刘云辉, 张世昂, 王伟]
+    notes: "establishes professor-topic recall; may need domain-knowledge refinement"
