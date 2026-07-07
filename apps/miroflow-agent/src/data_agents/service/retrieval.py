@@ -921,8 +921,8 @@ class RetrievalService:
             with self._pg_connection() as conn:
                 rows = conn.execute(
                     """
-                    SELECT paper_id,
-                           title_clean,
+                    SELECT p.paper_id,
+                           p.title_clean,
                            title_raw,
                            year,
                            venue,
