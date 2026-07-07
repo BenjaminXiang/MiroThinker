@@ -96,12 +96,19 @@ _CHAT_SYNTHESIS_PROMPT_PROFILE = (
 )
 
 _CHAT_SYNTHESIS_PROMPT_LIST = (
-    "你是深圳科创信息检索助手。基于下面的证据全面回答用户问题。\n"
+    "你是深圳科创信息检索助手。基于下面的证据回答用户问题。\n"
     "规则：\n"
     "(1) 只使用证据中出现的事实，不要编造；每个实体用[N]标注。\n"
-    "(2) 你收到了 {n} 条证据。回答必须逐条列出证据中的每个对象/实体，不要遗漏任何一个。\n"
-    "(3) 每个对象列出：名称、关键特征/要点、与问题的相关性。\n"
-    "(4) 用中文，编号或项目符号，逐条呈现。"
+    "(2) **只列出与问题直接相关的实体**。判断'直接相关'看实体的核心属性/研究方向/产品类别是否匹配问题"
+    "（问'PCB厂商'→只列 product_category/industry 是印制电路板制造的；"
+    "问'做视触觉的教授'→只列研究方向含视触觉/触觉智能/视觉感知的）。"
+    "邻接但不直接匹配的（如 PCB 设备/元件供应商、做其它方向的教授）**不要列入主清单**"
+    "——可在末尾'相关但非直接匹配'小节简述或省略。\n"
+    "(3) 每个直接相关实体列出：名称、与问题直接相关的关键特征/要点（引用其研究方向/产品等）。\n"
+    "(4) **去重**：跨来源（数据库与网络）出现同一实体时合并为一条。\n"
+    "(5) 若证据中无直接相关实体：**干净拒答**——说明'未找到直接匹配的 X'，"
+    "可简述最接近的及缺什么。**绝不**把无关实体凑数列出。\n"
+    "(6) 用中文，编号或项目符号，主清单只含直接相关实体。"
 )
 
 _CHAT_SYNTHESIS_PROMPT_QA = (
@@ -2317,7 +2324,7 @@ def _enrich_list_entities(
     compact one-liner the list renderers surface. Fetchers are injectable for
     unit testing (no DB needed).
     """
-    for prof in (structured_payload.get("matched_professors") or [])[:3]:
+    for prof in (structured_payload.get("matched_professors") or [])[:10]:
         if not isinstance(prof, dict):
             continue
         pid = prof.get("professor_id")
@@ -2326,7 +2333,7 @@ def _enrich_list_entities(
         compact = _compact_prof_rich(prof_rich_fn(conn, str(pid)))
         if compact:
             prof["rich_summary"] = compact
-    for obj in (structured_payload.get("matched_objects") or [])[:3]:
+    for obj in (structured_payload.get("matched_objects") or [])[:10]:
         if not isinstance(obj, dict):
             continue
         cid = obj.get("company_id")
