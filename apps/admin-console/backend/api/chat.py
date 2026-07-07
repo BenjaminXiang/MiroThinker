@@ -3839,6 +3839,7 @@ def _call_gemma_synthesis(
     )
     response = client.chat.completions.create(
         model=llm_settings["local_llm_model"],
+        temperature=0,
         messages=[
             {"role": "system", "content": system_prompt},
             {
