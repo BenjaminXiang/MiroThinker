@@ -78,7 +78,21 @@ for obj in matched_objects[:3]:
 
 ### Fix 2 — LLM query reformulation for web search (local qwen3.6)
 
-**New helper** `_reformulate_query_for_search(query) -> str`:
+> **STATUS: REVERTED** (commit `322cbd1`, 2026-07-07). Implemented in `452d77a`, reverted
+> after eval + live probing showed it cannot reach its targets:
+> 1. **Wrong path** — E-route queries (`ctype == "E"`, chat.py:5156) call
+>    `_answer_knowledge_qa_with_web_search` and return directly, **bypassing
+>    `_build_chat_response`** where the reformulation lived.
+> 2. **Wrong trigger** — the targets return 5 wrong-domain web results (not 0), so a
+>    "retry on 0 results" gate never fires.
+> 3. **Absent domain** — qid19/20 are multi-turn follow-ups; the "embodied-AI" domain
+>    lives only in the prior turn (qid18), not the standalone query. Standalone
+>    reformulation can't reconstruct it → this is a **multi-turn-context** problem
+>    (Workstream 2), not reformulation.
+>
+> Fix 1 (list-entity enrichment) and Fix 3 (temperature=0) are **kept** — they work.
+
+**New helper** `_reformulate_query_for_search(query) -> str`: *(historical — reverted, see status)*
 - LLM: `resolve_professor_llm_settings(None)` → local qwen3.6 (the free, locally-deployed
   model — NOT deepseek-v4-pro, which is an external API). temperature=0, short timeout.
 - Prompt (system): "将用户问题改写为适合网络搜索的关键词组合：保留核心意图，去除上下文
