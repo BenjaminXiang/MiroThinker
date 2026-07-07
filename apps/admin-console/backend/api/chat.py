@@ -995,6 +995,17 @@ def _lookup_companies_by_topic(conn: Any, *, topic: str) -> list[dict]:
     if not predicates:
         predicates.append("search.search_text ILIKE %s")
         params.append(f"%{topic}%")
+    # Layer C: relevance score — rank companies whose core self-description
+    # (industry/profile_summary/technology_route_summary) contains the topic above
+    # those that only mention it in a peripheral scenario/event. Fixes ORDER BY name
+    # + LIMIT 15 cutting真正相关 companies (e.g. 无界智航 for '具身智能') when many
+    # blob matches exist. product_category is NOT a reliable signal (embodied
+    # companies are categorized as '机器人', not '具身智能').
+    score_terms = [t for group in term_groups for t in group] or [topic]
+    score_expr = " + ".join(
+        "(CASE WHEN search.core_text ILIKE %s THEN 1 ELSE 0 END)" for _ in score_terms
+    ) or "0"
+    score_params = [f"%{t}%" for t in score_terms]
     funding_predicate = (
         "AND (latest.latest_funding_time IS NOT NULL OR events.funding_event_count > 0)"
         if funding_query
@@ -1002,10 +1013,9 @@ def _lookup_companies_by_topic(conn: Any, *, topic: str) -> list[dict]:
     )
     order_clause = (
         "latest.latest_funding_time DESC NULLS LAST, "
-        "events.latest_event_date DESC NULLS LAST, "
-        "c.canonical_name"
+        "events.latest_event_date DESC NULLS LAST, core_score DESC, c.canonical_name"
         if funding_query
-        else "c.canonical_name"
+        else "core_score DESC, c.canonical_name"
     )
     return conn.execute(
         f"""
@@ -1015,6 +1025,7 @@ def _lookup_companies_by_topic(conn: Any, *, topic: str) -> list[dict]:
                latest.latest_funding_time,
                latest.latest_funding_amount_raw,
                COALESCE(products.product_snippet, scenarios.scenario_snippet, events.event_snippet) AS snippet,
+               ({score_expr}) AS core_score,
                count(*) OVER ()::int AS total_count
           FROM company c
           JOIN LATERAL (
@@ -1086,17 +1097,13 @@ def _lookup_companies_by_topic(conn: Any, *, topic: str) -> list[dict]:
                AND cse.status = 'active'
           ) events ON true
           CROSS JOIN LATERAL (
-            SELECT concat_ws(
-                ' ',
-                latest.industry,
-                latest.business,
-                latest.description,
-                c.profile_summary,
-                c.technology_route_summary,
-                products.product_text,
-                scenarios.scenario_text,
-                events.event_text
-            ) AS search_text
+            SELECT concat_ws(' ', latest.industry, c.profile_summary, c.technology_route_summary) AS core_text,
+                   concat_ws(
+                       ' ',
+                       latest.industry, latest.business, latest.description,
+                       c.profile_summary, c.technology_route_summary,
+                       products.product_text, scenarios.scenario_text, events.event_text
+                   ) AS search_text
           ) search
          WHERE c.is_shenzhen = true
            AND c.identity_status != 'inactive'
@@ -1107,7 +1114,7 @@ def _lookup_companies_by_topic(conn: Any, *, topic: str) -> list[dict]:
          ORDER BY {order_clause}
          LIMIT 15
         """,
-        tuple(params),
+        tuple(score_params + params),
     ).fetchall()
 
 
