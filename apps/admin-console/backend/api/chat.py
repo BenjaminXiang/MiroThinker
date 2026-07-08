@@ -77,6 +77,43 @@ _COMPANY_TOPIC_STEP1_TARGET_COUNT = 10
 _COMPANY_TOPIC_SPECIFICITY_TOP_K = 5
 _COMPANY_TOPIC_SELECTION_MAX_COUNT = 15
 _COMPANY_TOPIC_SPECIFICITY_REASON = "高主题相关度(具体主题词 top-K)"
+_PROFESSOR_TOPIC_EQUIVALENTS: dict[str, tuple[str, ...]] = {
+    "视触觉": ("触觉", "视触", "haptic", "tactile", "visuotactile"),
+    "触觉": ("haptic", "tactile"),
+    "灵巧手": ("dexterous",),
+    "具身智能": ("embodied",),
+    "机器人": ("robot", "robotic"),
+}
+_PROFESSOR_TOPIC_STOPWORDS = (
+    "有哪些",
+    "有那些",
+    "有什么",
+    "有谁",
+    "哪位",
+    "哪些",
+    "请问",
+    "一下",
+    "清华大学深圳国际研究生院",
+    "清华大学深圳研究生院",
+    "清华大学深圳",
+    "清华深圳",
+    "清华",
+    "深圳",
+    "大学",
+    "学院",
+    "教授",
+    "研究员",
+    "老师",
+    "学者",
+    "专家",
+    "研究方向",
+    "方向",
+    "领域",
+    "相关",
+    "研究",
+    "做",
+    "的",
+)
 _CHAT_SYNTHESIS_SYSTEM_PROMPT = (
     "你是深圳科创信息检索助手。基于下面的证据回答用户问题。规则："
     "(1) 只使用证据中出现的事实，不要编造；证据不足以回答时直说\"证据不足以回答\"。"
@@ -1219,6 +1256,44 @@ def _company_topic_specific_count(
     return sum(text.count(term) for term in score_terms if term)
 
 
+def _append_professor_topic_term(
+    terms: list[str],
+    seen: set[str],
+    term: str,
+) -> None:
+    cleaned = term.strip(" ：，。；;、,")
+    if not cleaned or cleaned in seen:
+        return
+    seen.add(cleaned)
+    terms.append(cleaned)
+
+
+def _professor_topic_terms(topic: str) -> list[str]:
+    normalized = _normalize_query_for_rules(topic)
+    normalized = re.sub(r"[?？!！。；;，,、:：]+", " ", normalized)
+    stripped = normalized
+    stopwords = sorted(
+        (*_INSTITUTION_KEYS_BY_LEN, *_PROFESSOR_TOPIC_STOPWORDS),
+        key=len,
+        reverse=True,
+    )
+    for stopword in stopwords:
+        stripped = stripped.replace(stopword, " ")
+
+    raw_tokens = [token.strip() for token in re.split(r"\s+", stripped) if token.strip()]
+    terms: list[str] = []
+    seen: set[str] = set()
+    for token in raw_tokens:
+        _append_professor_topic_term(terms, seen, token)
+        for key, equivalents in _PROFESSOR_TOPIC_EQUIVALENTS.items():
+            if key not in token:
+                continue
+            _append_professor_topic_term(terms, seen, key)
+            for equivalent in equivalents:
+                _append_professor_topic_term(terms, seen, equivalent)
+    return terms
+
+
 def _company_topic_leaderboard(candidates: list[dict], query: str) -> list[dict[str, Any]]:
     score_terms = _company_topic_score_terms(query, _company_topic_term_groups(query))
     leaderboard: list[dict[str, Any]] = []
@@ -2163,6 +2238,101 @@ def _lookup_professor_by_id(conn: Any, *, professor_id: str) -> dict | None:
     return rows[0] if rows else None
 
 
+def _professor_topic_paper_counts(
+    conn: Any,
+    professor_ids: list[str],
+    topic_terms: list[str],
+) -> dict[str, int]:
+    unique_professor_ids = list(
+        dict.fromkeys(
+            professor_id
+            for professor_id in (str(item).strip() for item in professor_ids)
+            if professor_id
+        )
+    )
+    counts = {professor_id: 0 for professor_id in unique_professor_ids}
+    clean_terms = list(
+        dict.fromkeys(term for term in (item.strip() for item in topic_terms) if term)
+    )
+    if not unique_professor_ids or not clean_terms:
+        return counts
+
+    like_terms = [f"%{term}%" for term in clean_terms]
+    rows = conn.execute(
+        """
+        SELECT pl.professor_id, count(*)::int AS count
+          FROM professor_paper_link pl
+          JOIN paper p ON p.paper_id=pl.paper_id
+         WHERE pl.professor_id = ANY(%s)
+           AND pl.link_status='verified'
+           AND (p.title_clean ILIKE ANY(%s) OR p.title_raw ILIKE ANY(%s))
+         GROUP BY pl.professor_id
+        """,
+        (unique_professor_ids, like_terms, like_terms),
+    ).fetchall()
+    for row in rows:
+        if isinstance(row, dict):
+            professor_id = str(row.get("professor_id") or "").strip()
+            count = row.get("count")
+        else:
+            professor_id = str(row[0]).strip()
+            count = row[1]
+        if professor_id in counts:
+            counts[professor_id] = int(count or 0)
+    return counts
+
+
+def _rerank_professor_topic_rows_by_paper_count(
+    conn: Any,
+    rows: list[dict],
+    *,
+    topic: str,
+) -> list[dict]:
+    topic_terms = _professor_topic_terms(topic)
+    if not rows or not topic_terms:
+        return rows
+
+    ranked_rows: list[tuple[int, dict, str]] = []
+    professor_ids: list[str] = []
+    for original_rank, row in enumerate(rows):
+        professor_id = str(row.get("professor_id") or row.get("id") or "").strip()
+        ranked_rows.append((original_rank, row, professor_id))
+        if professor_id:
+            professor_ids.append(professor_id)
+    if not professor_ids:
+        return rows
+
+    try:
+        topic_paper_counts = _professor_topic_paper_counts(
+            conn,
+            professor_ids,
+            topic_terms,
+        )
+    except Exception as exc:
+        logger.warning(
+            "Professor topic-paper-count fusion failed for topic %r: %s",
+            topic,
+            exc,
+        )
+        return rows
+
+    nonzero = {pid: c for pid, c in topic_paper_counts.items() if c}
+    logger.info(
+        "professor_topic_rerank topic=%r rows=%d prof_ids=%d nonzero=%s",
+        topic,
+        len(rows),
+        len(professor_ids),
+        nonzero,
+    )
+    return [
+        item[1]
+        for item in sorted(
+            ranked_rows,
+            key=lambda item: (-topic_paper_counts.get(item[2], 0), item[0]),
+        )
+    ]
+
+
 def _lookup_company_by_id(conn: Any, *, company_id: str) -> dict | None:
     rows = conn.execute(
         """
@@ -2284,6 +2454,11 @@ def _lookup_professors_by_topic(
                     rows.extend(rescued)
             except Exception as exc:
                 logger.warning("Paper->professor rescue failed for topic %r: %s", topic, exc)
+        # Re-rank the FULL set (vector + rescued) by topic-paper-count: professors with
+        # topic papers (often surfaced via the paper->professor rescue) must outrank vector
+        # false-positives that have zero topic papers. Runs AFTER rescue so rescued profs are
+        # included; demotes 0-count profs, never drops them.
+        rows = _rerank_professor_topic_rows_by_paper_count(conn, rows, topic=topic)
         normalized_rows = _normalize_professor_topic_rows(
             conn,
             rows,
