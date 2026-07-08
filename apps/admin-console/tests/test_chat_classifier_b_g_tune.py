@@ -870,6 +870,7 @@ def test_b_paper_topic_search_prefers_ready_candidates_without_caveat(
     )
     monkeypatch.setattr(chat_module, "chat_use_retrieval_service", lambda: True)
     monkeypatch.setattr(chat_module, "get_retrieval_service", lambda: service)
+    monkeypatch.setattr(chat_module, "_augment_rows_with_web", lambda query, rows, **_k: rows)
 
     response = chat_module.chat(
         chat_module.ChatRequest(query="机器人控制相关论文有哪些？"),
@@ -948,6 +949,7 @@ def test_b_paper_topic_search_excludes_rejected_candidates(
     monkeypatch.setattr(
         chat_module, "get_retrieval_service", lambda: _FakeRetrievalService()
     )
+    monkeypatch.setattr(chat_module, "_augment_rows_with_web", lambda query, rows, **_k: rows)
 
     response = chat_module.chat(
         chat_module.ChatRequest(query="纳米颗粒 TEM 动态非参数分布追踪相关论文有哪些？"),
@@ -1031,6 +1033,7 @@ def test_b_paper_topic_search_deduplicates_chunk_hits_by_paper_id(
     monkeypatch.setattr(
         chat_module, "get_retrieval_service", lambda: _FakeRetrievalService()
     )
+    monkeypatch.setattr(chat_module, "_augment_rows_with_web", lambda query, rows, **_k: rows)
 
     response = chat_module.chat(
         chat_module.ChatRequest(query="找模型预测控制相关论文"),
@@ -1112,6 +1115,7 @@ def test_b_paper_topic_search_deduplicates_different_ids_by_title(
     monkeypatch.setattr(
         chat_module, "get_retrieval_service", lambda: _FakeRetrievalService()
     )
+    monkeypatch.setattr(chat_module, "_augment_rows_with_web", lambda query, rows, **_k: rows)
 
     response = chat_module.chat(
         chat_module.ChatRequest(query="找人脸识别相关论文"),
