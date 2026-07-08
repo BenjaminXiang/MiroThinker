@@ -18,12 +18,13 @@ and let the UI show it — that's better than faking an answer.
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import re
 import time
 from datetime import datetime
-from typing import Any, Literal
+from typing import Any, Literal, cast
 from urllib.parse import urlparse
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
@@ -70,6 +71,12 @@ logger = logging.getLogger(__name__)
 _CHAT_SYNTHESIS_TIMEOUT_SECONDS = float(os.environ.get("CHAT_SYNTHESIS_TIMEOUT", "60.0"))
 _CHAT_SYNTHESIS_REPORTED_BY = "round_9_p1_v1_chat_synthesis"
 _CHAT_FEEDBACK_REPORTED_BY = "chat_user_feedback"
+_COMPANY_TOPIC_GENERIC_AI_GROUP = ("AI", "人工智能", "智能")
+_COMPANY_TOPIC_GENERIC_AI_TERMS = frozenset(_COMPANY_TOPIC_GENERIC_AI_GROUP)
+_COMPANY_TOPIC_STEP1_TARGET_COUNT = 10
+_COMPANY_TOPIC_SPECIFICITY_TOP_K = 5
+_COMPANY_TOPIC_SELECTION_MAX_COUNT = 15
+_COMPANY_TOPIC_SPECIFICITY_REASON = "高主题相关度(具体主题词 top-K)"
 _CHAT_SYNTHESIS_SYSTEM_PROMPT = (
     "你是深圳科创信息检索助手。基于下面的证据回答用户问题。规则："
     "(1) 只使用证据中出现的事实，不要编造；证据不足以回答时直说\"证据不足以回答\"。"
@@ -996,16 +1003,19 @@ def _lookup_companies_by_topic(conn: Any, *, topic: str) -> list[dict]:
         predicates.append("search.search_text ILIKE %s")
         params.append(f"%{topic}%")
     # Layer C: relevance score — rank companies whose core self-description
-    # (industry/profile_summary/technology_route_summary) contains the topic above
-    # those that only mention it in a peripheral scenario/event. Fixes ORDER BY name
-    # + LIMIT 15 cutting真正相关 companies (e.g. 无界智航 for '具身智能') when many
-    # blob matches exist. product_category is NOT a reliable signal (embodied
-    # companies are categorized as '机器人', not '具身智能').
-    score_terms = [t for group in term_groups for t in group] or [topic]
+    # (industry/profile_summary/technology_route_summary) mentions the topic more
+    # frequently above peripheral mentions. COUNT of occurrences (not binary) —
+    # 118 Shenzhen companies mention '具身智能' in profile_summary (over-match);
+    # truly-embodied companies (e.g. 无界智航, 2+ mentions) must outrank those that
+    # mention it once, so they enter the Step-1 candidate pool instead of being cut
+    # by the alphabetical tiebreak. product_category is NOT a signal (embodied
+    # companies are categorized as '机器人').
+    score_terms = _company_topic_score_terms(topic, term_groups)
     score_expr = " + ".join(
-        "(CASE WHEN search.core_text ILIKE %s THEN 1 ELSE 0 END)" for _ in score_terms
+        "(char_length(search.core_text) - char_length(REPLACE(search.core_text, %s, ''))) / GREATEST(char_length(%s), 1)"
+        for _ in score_terms
     ) or "0"
-    score_params = [f"%{t}%" for t in score_terms]
+    score_params = [val for t in score_terms for val in (t, t)]
     funding_predicate = (
         "AND (latest.latest_funding_time IS NOT NULL OR events.funding_event_count > 0)"
         if funding_query
@@ -1025,6 +1035,7 @@ def _lookup_companies_by_topic(conn: Any, *, topic: str) -> list[dict]:
                latest.latest_funding_time,
                latest.latest_funding_amount_raw,
                COALESCE(products.product_snippet, scenarios.scenario_snippet, events.event_snippet) AS snippet,
+               c.profile_summary,
                ({score_expr}) AS core_score,
                count(*) OVER ()::int AS total_count
           FROM company c
@@ -1112,7 +1123,7 @@ def _lookup_companies_by_topic(conn: Any, *, topic: str) -> list[dict]:
              {" AND ".join(predicates)}
            )
          ORDER BY {order_clause}
-         LIMIT 15
+         LIMIT 45
         """,
         tuple(score_params + params),
     ).fetchall()
@@ -1159,6 +1170,326 @@ def _company_topic_term_groups(topic: str) -> list[list[str]]:
         seen.add(key)
         deduped.append(group)
     return deduped[:4]
+
+
+def _company_topic_score_terms(topic: str, term_groups: list[list[str]]) -> list[str]:
+    """Score on specific topic terms, but keep generic-AI fallback for pure AI queries."""
+    specific_terms: list[str] = []
+    for group in term_groups:
+        if tuple(group) == _COMPANY_TOPIC_GENERIC_AI_GROUP:
+            continue
+        for term in group:
+            cleaned = str(term).strip()
+            if not cleaned:
+                continue
+            if cleaned.upper() == "AI" or cleaned in _COMPANY_TOPIC_GENERIC_AI_TERMS:
+                continue
+            specific_terms.append(cleaned)
+    if specific_terms:
+        return specific_terms
+    fallback_terms = [
+        str(term).strip()
+        for group in term_groups
+        for term in group
+        if str(term).strip()
+    ]
+    stripped_topic = topic.strip()
+    return fallback_terms or ([stripped_topic] if stripped_topic else [])
+
+
+def _company_topic_specific_count(
+    candidate: dict[str, Any],
+    score_terms: list[str],
+) -> int:
+    core_score = candidate.get("core_score")
+    if core_score is not None:
+        try:
+            return max(0, int(float(core_score)))
+        except (TypeError, ValueError):
+            pass
+    text = " ".join(
+        str(candidate.get(key) or "")
+        for key in (
+            "industry",
+            "business",
+            "profile_summary",
+            "snippet",
+        )
+    )
+    return sum(text.count(term) for term in score_terms if term)
+
+
+def _company_topic_leaderboard(candidates: list[dict], query: str) -> list[dict[str, Any]]:
+    score_terms = _company_topic_score_terms(query, _company_topic_term_groups(query))
+    leaderboard: list[dict[str, Any]] = []
+    for index, candidate in enumerate(candidates, start=1):
+        profile_summary = str(candidate.get("profile_summary") or "").strip()
+        leaderboard.append(
+            {
+                "index": index,
+                "canonical_name": candidate.get("canonical_name") or "",
+                "business": candidate.get("business") or "",
+                "profile_head": profile_summary[:70],
+                "specific_term_count": _company_topic_specific_count(
+                    candidate,
+                    score_terms,
+                ),
+            }
+        )
+    return leaderboard
+
+
+def _json_object_from_text(text: str) -> dict[str, Any]:
+    cleaned = re.sub(
+        r"^```(?:json)?\s*|\s*```$",
+        "",
+        text.strip(),
+        flags=re.MULTILINE,
+    )
+    try:
+        data = json.loads(cleaned)
+    except json.JSONDecodeError:
+        start = cleaned.find("{")
+        end = cleaned.rfind("}")
+        if start < 0 or end <= start:
+            raise
+        data = json.loads(cleaned[start : end + 1])
+    if not isinstance(data, dict):
+        raise ValueError("Step-1 selection returned non-object JSON")
+    return data
+
+
+def _candidate_by_step1_item(
+    item: Any,
+    candidates: list[dict],
+) -> tuple[dict | None, str]:
+    reason = ""
+    index_value: Any = None
+    name_value = ""
+    company_id_value = ""
+    if isinstance(item, int):
+        index_value = item
+    elif isinstance(item, str):
+        name_value = item.strip()
+    elif isinstance(item, dict):
+        index_value = (
+            item.get("index")
+            or item.get("candidate_index")
+            or item.get("rank_index")
+        )
+        name_value = str(
+            item.get("canonical_name")
+            or item.get("name")
+            or item.get("company")
+            or ""
+        ).strip()
+        company_id_value = str(item.get("company_id") or item.get("id") or "").strip()
+        reason = str(item.get("reason") or item.get("rationale") or "").strip()[:160]
+
+    if index_value is not None:
+        try:
+            index = int(index_value)
+        except (TypeError, ValueError):
+            index = 0
+        if 1 <= index <= len(candidates):
+            return candidates[index - 1], reason
+
+    if company_id_value:
+        for candidate in candidates:
+            candidate_id = str(candidate.get("company_id") or candidate.get("id") or "")
+            if candidate_id == company_id_value:
+                return candidate, reason
+    if name_value:
+        for candidate in candidates:
+            if str(candidate.get("canonical_name") or "").strip() == name_value:
+                return candidate, reason
+    return None, reason
+
+
+def _selected_company_step1_items(payload: dict[str, Any]) -> list[Any]:
+    for key in (
+        "leaders",
+        "selected_leaders",
+        "selected_companies",
+        "selected_indices",
+        "companies",
+    ):
+        value = payload.get(key)
+        if isinstance(value, list):
+            return value
+    return []
+
+
+def _company_topic_candidate_keys(candidate: dict[str, Any], fallback_index: int) -> list[str]:
+    keys: list[str] = []
+    identifier = str(candidate.get("company_id") or candidate.get("id") or "").strip()
+    if identifier:
+        keys.append(f"id:{identifier}")
+    canonical_name = str(candidate.get("canonical_name") or "").strip()
+    if canonical_name:
+        keys.append(f"name:{canonical_name}")
+    return keys or [f"candidate:{fallback_index}"]
+
+
+def _company_topic_specificity_topk(
+    candidates: list[dict],
+    query: str,
+    *,
+    top_k: int = _COMPANY_TOPIC_SPECIFICITY_TOP_K,
+) -> list[dict]:
+    score_terms = _company_topic_score_terms(query, _company_topic_term_groups(query))
+    ranked = [
+        (
+            _company_topic_specific_count(candidate, score_terms),
+            index,
+            candidate,
+        )
+        for index, candidate in enumerate(candidates)
+    ]
+    ranked.sort(key=lambda item: (-item[0], item[1]))
+    return [candidate for _score, _index, candidate in ranked[:top_k]]
+
+
+def _compose_company_topic_selection(
+    step1_selected: list[dict],
+    candidates: list[dict],
+    query: str,
+) -> list[dict]:
+    final: list[dict] = []
+    selected_keys: set[str] = set()
+
+    def append_candidate(candidate: dict, *, reason: str | None = None) -> None:
+        if len(final) >= _COMPANY_TOPIC_SELECTION_MAX_COUNT:
+            return
+        keys = _company_topic_candidate_keys(candidate, len(final))
+        if any(key in selected_keys for key in keys):
+            return
+        selected_keys.update(keys)
+        selected_candidate = dict(candidate)
+        if reason is not None:
+            selected_candidate["leader_selection_reason"] = reason
+        selected_candidate["leader_selection_rank"] = len(final) + 1
+        final.append(selected_candidate)
+
+    for candidate in step1_selected:
+        append_candidate(candidate)
+    for candidate in _company_topic_specificity_topk(candidates, query):
+        append_candidate(candidate, reason=_COMPANY_TOPIC_SPECIFICITY_REASON)
+    return final
+
+
+def _select_company_leaders_step1(candidates: list[dict], query: str) -> list[dict]:
+    if not candidates:
+        logger.info(
+            "company_topic_step1_selection query=%r candidate_count=0 selected_count=0 selected=[]",
+            query,
+        )
+        return []
+
+    leaderboard = _company_topic_leaderboard(candidates, query)
+    system_prompt = (
+        "你是深圳科创企业检索的第一步筛选器。只能从候选列表中选择公司，"
+        "不要新增候选外公司。目标是选出与用户主题直接相关、行业公认度更高、"
+        "更像代表性厂商/龙头/重要玩家的企业，按重要性排序。"
+        "排除只蹭关键词、纯邻接业务、数据标注/通用AI软件等明显不直接匹配的公司；"
+        "若主题是具身智能，排除非机器人/非具身智能核心业务。"
+        "输出严格 JSON：{\"leaders\":[{\"index\":候选index,\"reason\":\"简短理由\"}]}，"
+        "leaders 数量最多 10。"
+    )
+    user_prompt = (
+        f"用户问题：{query}\n\n"
+        "候选企业（index 为唯一可引用编号；specific_term_count 是核心文本中具体主题词命中数）：\n"
+        f"{json.dumps(leaderboard, ensure_ascii=False)}"
+    )
+
+    try:
+        _clear_proxy_env()
+        settings = resolve_professor_llm_settings(None, include_profile=True)
+        model = os.getenv("LOCAL_LLM_MODEL") or settings["local_llm_model"]
+        client = OpenAI(
+            base_url=settings["local_llm_base_url"],
+            api_key=settings["local_llm_api_key"] or "EMPTY",
+            timeout=60.0,
+        )
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            temperature=0,
+            max_tokens=1200,
+            response_format={"type": "json_object"},
+            extra_body=build_non_thinking_extra_body(model),
+        )
+        payload = _json_object_from_text(_extract_chat_completion_text(response))
+        selected: list[dict] = []
+        selected_keys: set[str] = set()
+        for item in _selected_company_step1_items(payload):
+            candidate, reason = _candidate_by_step1_item(item, candidates)
+            if candidate is None:
+                continue
+            candidate_keys = _company_topic_candidate_keys(candidate, len(selected))
+            if any(key in selected_keys for key in candidate_keys):
+                continue
+            selected_keys.update(candidate_keys)
+            selected_candidate = dict(candidate)
+            if reason:
+                selected_candidate["leader_selection_reason"] = reason
+            selected_candidate["leader_selection_rank"] = len(selected) + 1
+            selected.append(selected_candidate)
+            if len(selected) >= _COMPANY_TOPIC_STEP1_TARGET_COUNT:
+                break
+        if not selected:
+            selected = [dict(candidate) for candidate in candidates[:_COMPANY_TOPIC_STEP1_TARGET_COUNT]]
+    except Exception as exc:  # noqa: BLE001 - preserve chat path on selector failure
+        logger.warning(
+            "company_topic_step1_selection_failed query=%r candidate_count=%d error=%s",
+            query,
+            len(candidates),
+            exc,
+        )
+        selected = [dict(candidate) for candidate in candidates[:_COMPANY_TOPIC_STEP1_TARGET_COUNT]]
+
+    selected = _compose_company_topic_selection(selected, candidates, query)
+
+    logger.info(
+        "company_topic_step1_selection query=%r candidate_count=%d selected_count=%d selected=%s",
+        query,
+        len(candidates),
+        len(selected),
+        [
+            {
+                "rank": index,
+                "company_id": row.get("company_id") or row.get("id"),
+                "canonical_name": row.get("canonical_name"),
+                "reason": row.get("leader_selection_reason"),
+            }
+            for index, row in enumerate(selected, start=1)
+        ],
+    )
+    return selected
+
+
+def _company_topic_response_rows(rows: list[dict]) -> list[dict]:
+    return [
+        {
+            "type": "company",
+            "id": row.get("company_id"),
+            "company_id": row.get("company_id"),
+            "canonical_name": row.get("canonical_name"),
+            "industry": row.get("industry"),
+            "business": row.get("business"),
+            "snippet": row.get("snippet"),
+            "latest_funding_round": row.get("latest_funding_round"),
+            "latest_funding_time": row.get("latest_funding_time"),
+            "latest_funding_amount_raw": row.get("latest_funding_amount_raw"),
+            "total_count": row.get("total_count"),
+            "leader_selection_rank": row.get("leader_selection_rank"),
+            "leader_selection_reason": row.get("leader_selection_reason"),
+        }
+        for row in rows
+    ]
 
 
 def _answer_cross_domain(
@@ -2341,7 +2672,10 @@ def _enrich_list_entities(
         compact = _compact_prof_rich(prof_rich_fn(conn, str(pid)))
         if compact:
             prof["rich_summary"] = compact
-    for obj in (structured_payload.get("matched_objects") or [])[:10]:
+    company_enrich_limit = structured_payload.get("matched_objects_enrich_limit", 10)
+    if not isinstance(company_enrich_limit, int) or company_enrich_limit < 0:
+        company_enrich_limit = 10
+    for obj in (structured_payload.get("matched_objects") or [])[:company_enrich_limit]:
         if not isinstance(obj, dict):
             continue
         cid = obj.get("company_id")
@@ -2665,9 +2999,17 @@ def _lookup_domain_by_topic(
     limit: int,
     raw_query: str = "",
 ) -> list[dict]:
-    if domain == "company" and not chat_use_retrieval_service():
+    if domain == "company":
         lookup_topic = _company_lookup_topic(topic, raw_query)
-        return _lookup_companies_by_topic(conn, topic=lookup_topic)[:limit]
+        sql_rows = _lookup_companies_by_topic(conn, topic=lookup_topic)
+        if sql_rows:
+            selected_rows = _select_company_leaders_step1(
+                sql_rows,
+                raw_query or lookup_topic,
+            )
+            return _company_topic_response_rows(selected_rows)
+        if not chat_use_retrieval_service():
+            return []
     if domain == "professor":
         return _lookup_professors_by_topic(
             conn,
@@ -2675,26 +3017,6 @@ def _lookup_domain_by_topic(
             topic=topic,
             limit=limit,
         )
-    if domain == "company":
-        lookup_topic = _company_lookup_topic(topic, raw_query)
-        sql_rows = _lookup_companies_by_topic(conn, topic=lookup_topic)[:limit]
-        if sql_rows:
-            return [
-                {
-                    "type": "company",
-                    "id": row.get("company_id"),
-                    "company_id": row.get("company_id"),
-                    "canonical_name": row.get("canonical_name"),
-                    "industry": row.get("industry"),
-                    "business": row.get("business"),
-                    "snippet": row.get("snippet"),
-                    "latest_funding_round": row.get("latest_funding_round"),
-                    "latest_funding_time": row.get("latest_funding_time"),
-                    "latest_funding_amount_raw": row.get("latest_funding_amount_raw"),
-                    "total_count": row.get("total_count"),
-                }
-                for row in sql_rows
-            ]
     if not chat_use_retrieval_service():
         return []
     if domain == "paper":
@@ -3837,7 +4159,10 @@ def _build_evidence_blocks(
         or structured_payload.get("matched_objects")
         or []
     )
-    for item in list_rows[:10]:
+    list_limit = structured_payload.get("synthesis_list_limit", 10)
+    if not isinstance(list_limit, int) or list_limit < 0:
+        list_limit = 10
+    for item in list_rows[:list_limit]:
         if not isinstance(item, dict):
             continue
         name = (
@@ -4070,7 +4395,12 @@ def _build_chat_response(
 
     # List-entity enrichment (Fix1): fetch rich facts for the top list entities so
     # the list render surfaces depth (flagship product, top award), not just name.
-    _enrich_list_entities(structured_payload, conn=conn)
+    _enrich_list_entities(
+        structured_payload,
+        conn=conn,
+        prof_rich_fn=_prof_rich_profile_facts,
+        company_rich_fn=_company_rich_facts,
+    )
 
     # Every query goes through web search (per product decision): if the retrieval
     # path did not already web-augment (e.g. profile paths don't call retrieve with
@@ -4983,9 +5313,19 @@ def chat(
             rows = _augment_rows_with_web(raw_query, rows)
             if target_domain != "professor":
                 id_key = domain_id_key(target_domain)
-                shown_rows = [r for r in rows if r.get("type") != "web"][:10] + [
-                    r for r in rows if r.get("type") == "web"
-                ][:5]
+                local_rows = [r for r in rows if r.get("type") != "web"]
+                web_rows = [r for r in rows if r.get("type") == "web"][:5]
+                shown_rows = (
+                    local_rows
+                    if target_domain == "company"
+                    else local_rows[:10]
+                ) + web_rows
+                selected_company_count = (
+                    len(local_rows)
+                    if target_domain == "company"
+                    else 10
+                )
+                citation_domain = cast(TargetDomain, target_domain)
                 return _record_and_return(_build_chat_response(
                     conn=conn,
                     query=raw_query,
@@ -4993,7 +5333,7 @@ def chat(
                     answer_text=_answer_domain_topic_list(target_domain, topic, rows),
                     citations=[
                         ChatCitation(
-                            type=target_domain,
+                            type=citation_domain,
                             id=str(r.get(id_key) or r.get("id") or ""),
                             label=str(
                                 r.get("canonical_name")
@@ -5017,6 +5357,8 @@ def chat(
                         "classifier_reason": reason,
                         "match_count": rows[0].get("total_count", len(rows)) if rows else 0,
                         "matched_objects": shown_rows,
+                        "matched_objects_enrich_limit": selected_company_count,
+                        "synthesis_list_limit": selected_company_count,
                     },
                 ))
             prof_rows = [r for r in rows if r.get("type") != "web"]
