@@ -126,6 +126,11 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--paper-id-file",
+        default=None,
+        help="Restrict to paper_ids listed in a file (JSONL with paper_id/id). For targeted enrichment.",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="No DB writes — report what would have been fetched/promoted.",
@@ -925,6 +930,7 @@ def _select_papers(
     *,
     limit: int | None,
     shard: tuple[int, int] | None = None,
+    paper_ids: set[str] | None = None,
 ) -> list[dict[str, Any]]:
     sql = (
         "SELECT p.paper_id, p.title_clean, p.title_raw, p.doi, p.arxiv_id, "
@@ -936,19 +942,19 @@ def _select_papers(
         "WHERE p.quality_status = 'needs_enrichment' "
         "AND COALESCE(p.identity_status, 'unverified') NOT IN ('rejected', 'merged') "
     )
-    params: tuple[Any, ...] = ()
+    params: list[Any] = []
+    if paper_ids is not None:
+        sql += "AND p.paper_id = ANY(%s) "
+        params.append(list(paper_ids))
     if shard is not None:
-        # Partition by paper_id hash so parallel workers (shard k of N) process
-        # disjoint sets without OFFSET instability (papers promote out of the pool).
-        # abs() because postgres mod() can return negative for negative hashtext.
         shard_k, shard_n = shard
         sql += "AND mod(abs(hashtext(p.paper_id)), %s) = %s "
-        params += (shard_n, shard_k)
+        params += [shard_n, shard_k]
     sql += "ORDER BY p.paper_id"
     if limit is not None:
         sql += " LIMIT %s"
-        params += (int(limit),)
-    return [dict(r) for r in conn.execute(sql, params).fetchall()]
+        params.append(int(limit))
+    return [dict(r) for r in conn.execute(sql, tuple(params)).fetchall()]
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -1000,7 +1006,24 @@ def main(argv: list[str] | None = None) -> None:
     if args.shard:
         k_str, _, n_str = args.shard.partition("/")
         shard = (int(k_str), int(n_str))
-    rows = _select_papers(conn, limit=args.limit, shard=shard)
+    paper_ids: set[str] | None = None
+    if args.paper_id_file:
+        import json as _json
+        ids: set[str] = set()
+        for line in Path(args.paper_id_file).read_text().splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = _json.loads(line)
+                pid = obj.get("paper_id") or obj.get("id") or ""
+                if pid:
+                    ids.add(pid)
+            except (ValueError, KeyError):
+                ids.add(line)  # plain ID per line
+        paper_ids = ids or None
+        logger.info("Loaded %d paper_ids from %s", len(ids), args.paper_id_file)
+    rows = _select_papers(conn, limit=args.limit, shard=shard, paper_ids=paper_ids)
     started_at = time.monotonic()
 
     # Baseline counts so we can compute deltas + assert no ready degradation.
