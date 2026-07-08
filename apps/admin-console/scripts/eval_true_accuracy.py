@@ -4,9 +4,11 @@ For each head-turn case in the golden set, the local LLM (qwen3.6, free) judges 
 the system's answer correctly + comprehensively addresses the user's question — scoring
 correctness/completeness/relevance (0-1 each), even if the wording differs from the standard.
 
-Uses TestClient (in-process, no external backend needed — same as eval_recall_chat.py).
+HTTP-based: POSTs each case to the LIVE backend (:18188) and judges the answer. Uses the
+backend's already-loaded Milvus (no in-process single-writer conflict — the prior TestClient
+eval broke because Milvus Lite is single-writer and cannot init a 1.3GB milvus.db copy).
 
-Usage (backend DOWN to avoid Milvus lock conflict):
+Usage (backend UP on :18188 with the code under test):
   export DATABASE_URL=postgresql+psycopg://miroflow:miroflow@localhost:15432/miroflow_real
   MILVUS_USE_REAL_CLIENT=1 CHAT_LLM_SYNTHESIS=on UV_OFFLINE=1
   uv run python scripts/eval_true_accuracy.py            # canonical: deterministic single run
@@ -22,6 +24,7 @@ import argparse
 import json
 import os
 import re
+import requests
 import sys
 from pathlib import Path
 
@@ -125,7 +128,7 @@ def _judge(
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", type=int, default=1, help="Judge runs per case (median for stability)")
-    ap.add_argument("--out", default=str(REPO / ".agents" / "runs" / "retrieval-generation-alignment" / f"true-accuracy-latest.json"))
+    ap.add_argument("--out", default=str(REPO / ".agents" / "runs" / "retrieval-generation-alignment" / "true-accuracy-latest.json"))
     args = ap.parse_args()
 
     cases = yaml.safe_load(FIXTURE.read_text())["cases"]
@@ -135,10 +138,11 @@ def main() -> int:
     client, model, judge_extra_body = _get_judge_client()
     print(f"judge model: {model}")
 
-    # Use TestClient (in-process, no external backend needed)
-    from backend.main import app
-    from fastapi.testclient import TestClient
-    tc = TestClient(app)
+    # HTTP to the LIVE backend (uses the backend's already-loaded Milvus — avoids the
+    # in-process single-writer lock conflict that breaks TestClient-based eval, and the
+    # 1.3GB milvus.db copy that Milvus Lite can't init). Backend MUST be UP on :18188
+    # with the code under test. Set EVAL_BACKEND_URL to override.
+    backend = os.environ.get("EVAL_BACKEND_URL", "http://localhost:18188")
 
     results = []
     total_pass = 0
@@ -147,7 +151,7 @@ def main() -> int:
         query = c["query"]
         standard = c.get("answer") or ""
         try:
-            r = tc.post("/api/chat", json={"query": query})
+            r = requests.post(f"{backend}/api/chat", json={"query": query}, timeout=120)
             system_answer = (r.json().get("answer_text") or "")[:2000]
         except Exception as exc:
             print(f"qid {qid}: error: {exc}")
@@ -188,7 +192,7 @@ def main() -> int:
     }
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(summary, ensure_ascii=False, indent=2))
-    print(f"\n=== TRUE ACCURACY (LLM-judge) ===")
+    print("\n=== TRUE ACCURACY (LLM-judge) ===")
     print(f"  {total_pass}/{len(head_cases)} ({100*accuracy:.0f}%)  [keyword-overlap was 42%]")
     print(f"  written: {args.out}")
     return 0
