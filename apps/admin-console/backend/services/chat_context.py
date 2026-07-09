@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import date, datetime
 import json
 import re
 from typing import Any
@@ -18,8 +20,328 @@ TARGET_DOMAIN_LABELS = {
 _NARROWING_PREFIX_RE = re.compile(r"^(其中|这些|上述|上面|里面|那里面|在这些中)\s*")
 
 
+@dataclass(frozen=True)
+class SetReferent:
+    domain: str | None
+    surface: str
+
+
+@dataclass(frozen=True)
+class ChipPredicate:
+    kind: str
+    domain: str
+    param: dict[str, Any]
+
+
+_SET_REFERENT_DOMAIN_WORDS = {
+    "professor": ("教授", "老师", "学者"),
+    "company": ("公司", "企业"),
+    "paper": ("论文", "文章"),
+    "patent": ("专利",),
+}
+_SET_REFERENT_PREFIXES = ("上面这些", "上述", "这些")
+_BARE_SET_REFERENTS = ("上面这些", "他们", "这些", "上述")
+
+
 def looks_like_narrowing_query(query: str) -> bool:
     return bool(_NARROWING_PREFIX_RE.search(query))
+
+
+def detect_set_referent(query: str) -> SetReferent | None:
+    text = query.strip()
+    if not text:
+        return None
+
+    for prefix in _SET_REFERENT_PREFIXES:
+        for domain, words in _SET_REFERENT_DOMAIN_WORDS.items():
+            for word in words:
+                surface = f"{prefix}{word}"
+                if surface in text:
+                    return SetReferent(domain=domain, surface=surface)
+
+    # Bare referents anchor the query start; mid-sentence 他们/这些 is
+    # intra-sentence coreference (…厂商，他们…), not a cross-turn set reference.
+    for surface in _BARE_SET_REFERENTS:
+        if text.startswith(surface):
+            return SetReferent(domain=None, surface=surface)
+    return None
+
+
+def detect_set_operation(query: str, source_domain: str) -> tuple[str, str | None]:
+    text = query.strip()
+    if not text:
+        return ("narrow", None)
+
+    referenced_domains = {
+        domain
+        for domain, words in _SET_REFERENT_DOMAIN_WORDS.items()
+        if domain != source_domain and any(word in text for word in words)
+    }
+    if len(referenced_domains) == 1:
+        return ("traverse", next(iter(referenced_domains)))
+    return ("narrow", None)
+
+
+_INVALID_REGION_TOKENS = {
+    "这些",
+    "上述",
+    "上面",
+    "其中",
+    "哪些",
+    "那里",
+    "这里",
+}
+_CN_SMALL_NUMBERS = {
+    "一": 1,
+    "二": 2,
+    "两": 2,
+    "三": 3,
+    "四": 4,
+    "五": 5,
+    "六": 6,
+    "七": 7,
+    "八": 8,
+    "九": 9,
+    "十": 10,
+}
+
+
+def _parse_small_year_count(value: str) -> int | None:
+    value = value.strip()
+    if value.isdigit():
+        return int(value)
+    if value in _CN_SMALL_NUMBERS:
+        return _CN_SMALL_NUMBERS[value]
+    if len(value) == 2 and value.startswith("十"):
+        suffix = _CN_SMALL_NUMBERS.get(value[1])
+        return 10 + suffix if suffix else None
+    if len(value) == 2 and value.endswith("十"):
+        prefix = _CN_SMALL_NUMBERS.get(value[0])
+        return prefix * 10 if prefix else None
+    return None
+
+
+def _detect_region_city(text: str) -> str | None:
+    if any(token in text for token in ("在深圳", "总部深圳", "总部在深圳", "深圳的")):
+        return "深圳"
+    patterns = (
+        r"总部(?:在)?(?P<city>[\u4e00-\u9fff]{2,6})(?:市)?(?:的|$|[，,。？?\s])",
+        r"(?:位于|在)(?P<city>[\u4e00-\u9fff]{2,6})(?:市)?(?:的|$|[，,。？?\s])",
+    )
+    for pattern in patterns:
+        if match := re.search(pattern, text):
+            city = match.group("city").strip()
+            city = city.removesuffix("市")
+            if city and city not in _INVALID_REGION_TOKENS and not city.endswith(("中", "里")):
+                return city
+    return None
+
+
+def _detect_recency_param(text: str) -> dict[str, Any] | None:
+    if match := re.search(r"(?P<year>20\d{2})\s*年", text):
+        return {"mode": "year", "year": int(match.group("year"))}
+    if "近一年" in text:
+        return {"mode": "recent_years", "years": 1}
+    if match := re.search(r"近\s*(?P<count>[0-9一二两三四五六七八九十]{1,3})\s*年", text):
+        count = _parse_small_year_count(match.group("count"))
+        if count is not None and count > 0:
+            return {"mode": "recent_years", "years": count}
+    return None
+
+
+def detect_chip_predicate(query: str, domain: str) -> ChipPredicate | None:
+    """Detect closed-table narrowing predicates that should not use retrieval."""
+    if domain not in TARGET_DOMAINS:
+        return None
+    text = query.strip()
+    if not text:
+        return None
+
+    if domain in {"professor", "company"}:
+        city = _detect_region_city(text)
+        if city:
+            return ChipPredicate(kind="region", domain=domain, param={"city": city})
+
+    if domain in {"paper", "patent"}:
+        recency = _detect_recency_param(text)
+        if recency:
+            return ChipPredicate(kind="recency", domain=domain, param=recency)
+
+    if domain == "patent" and "授权" in text:
+        return ChipPredicate(
+            kind="grant_status",
+            domain=domain,
+            param={"status": "granted"},
+        )
+
+    if domain == "patent" and re.search(r"申请人(是|为|类型)?.*(企业|公司)", text):
+        return ChipPredicate(
+            kind="applicant_type",
+            domain=domain,
+            param={"type": "企业"},
+        )
+
+    return None
+
+
+def _row_label(domain: str, row: Mapping[str, Any]) -> str:
+    if domain in {"professor", "company"}:
+        label = row.get("canonical_name") or row.get("name") or row.get("title")
+    elif domain == "paper":
+        label = row.get("title") or row.get("title_clean")
+    else:
+        label = row.get("patent_number") or row.get("title") or row.get("title_clean")
+    return str(label or row.get(domain_id_key(domain)) or row.get("id") or "未知")
+
+
+def _is_blank(value: Any) -> bool:
+    return value is None or str(value).strip() == ""
+
+
+def _extract_year(value: Any) -> int | None:
+    if value is None:
+        return None
+    if isinstance(value, (date, datetime)):
+        return int(value.year)
+    if isinstance(value, int):
+        return value
+    text = str(value)
+    if match := re.search(r"(19|20)\d{2}", text):
+        return int(match.group(0))
+    return None
+
+
+def _recency_cutoff_and_phrase(param: Mapping[str, Any]) -> tuple[int | None, str]:
+    if param.get("mode") == "year":
+        year = int(param.get("year") or 0)
+        return (year or None), f"{year}年"
+    if param.get("mode") == "recent_years":
+        years = int(param.get("years") or 0)
+        if years <= 0:
+            return None, "近年"
+        cutoff = date.today().year - years + 1
+        return cutoff, f"近{years}年"
+    return None, "近年"
+
+
+def _evaluate_region_professor(
+    row: Mapping[str, Any],
+    *,
+    city: str,
+    label: str,
+) -> tuple[bool | None, str]:
+    institution = str(row.get("institution") or "").strip()
+    if not institution:
+        return None, f"{label} - 机构信息缺失 -> 信息缺失"
+    if city in institution:
+        return True, f"{label} - {institution} -> 在{city}"
+    return False, f"{label} - {institution} -> 不在{city}"
+
+
+def _evaluate_region_company(
+    row: Mapping[str, Any],
+    *,
+    city: str,
+    label: str,
+) -> tuple[bool | None, str]:
+    for field in ("hq_city", "region", "registered_address", "hq_district"):
+        value = str(row.get(field) or "").strip()
+        if not value:
+            continue
+        if city in value:
+            return True, f"{label} - {field}={value} -> 在{city}"
+        return False, f"{label} - {field}={value} -> 不在{city}"
+
+    if city == "深圳" and row.get("is_shenzhen") is True:
+        return True, f"{label} - is_shenzhen=True -> 在深圳"
+
+    name_values = (
+        str(row.get("canonical_name") or "").strip(),
+        str(row.get("registered_name") or "").strip(),
+    )
+    if city == "深圳":
+        for name in name_values:
+            if name.startswith(("深圳市", "深圳")):
+                return True, f"{label} - 名称前缀={name} -> 在深圳"
+
+    return None, f"{label} - 地区信息缺失 -> 信息缺失"
+
+
+def _evaluate_recency(
+    domain: str,
+    row: Mapping[str, Any],
+    predicate: ChipPredicate,
+    *,
+    label: str,
+) -> tuple[bool | None, str]:
+    field = "year" if domain == "paper" else "filing_date"
+    year = _extract_year(row.get(field))
+    cutoff, phrase = _recency_cutoff_and_phrase(predicate.param)
+    missing = "年份信息缺失" if domain == "paper" else "申请年份信息缺失"
+    if year is None or cutoff is None:
+        return None, f"{label} - {missing} -> 信息缺失"
+    if year >= cutoff:
+        return True, f"{label} - {field}={year} -> {phrase}"
+    return False, f"{label} - {field}={year} -> 不满足{phrase}"
+
+
+def _evaluate_patent_grant_status(
+    row: Mapping[str, Any],
+    *,
+    label: str,
+) -> tuple[bool | None, str]:
+    grant_date = row.get("grant_date")
+    if not _is_blank(grant_date):
+        return True, f"{label} - grant_date={grant_date} -> 已授权"
+    legal_status = str(row.get("legal_status") or "").strip().casefold()
+    if legal_status and ("授权" in legal_status or "granted" in legal_status):
+        return True, f"{label} - legal_status={row.get('legal_status')} -> 已授权"
+    filing_date = row.get("filing_date")
+    if not _is_blank(filing_date):
+        return False, f"{label} - filing_date={filing_date} -> 未见授权日"
+    return None, f"{label} - 授权/申请日期信息缺失 -> 信息缺失"
+
+
+def _evaluate_patent_applicant_type(
+    row: Mapping[str, Any],
+    *,
+    label: str,
+) -> tuple[bool | None, str]:
+    applicants = str(row.get("applicants_raw") or "").strip()
+    if not applicants:
+        return None, f"{label} - 申请人信息缺失 -> 信息缺失"
+    if any(token in applicants for token in ("企业", "公司", "有限公司")):
+        return True, f"{label} - applicants_raw={applicants} -> 企业申请人"
+    return False, f"{label} - applicants_raw={applicants} -> 非企业申请人"
+
+
+def evaluate_chip_predicate(
+    domain: str,
+    member_row: Mapping[str, Any],
+    predicate: ChipPredicate,
+) -> tuple[bool | None, str]:
+    label = _row_label(domain, member_row)
+    if predicate.domain != domain:
+        return None, f"{label} - 谓词不适用于{TARGET_DOMAIN_LABELS.get(domain, domain)} -> 信息缺失"
+
+    if predicate.kind == "region":
+        city = str(predicate.param.get("city") or "深圳")
+        if domain == "professor":
+            return _evaluate_region_professor(member_row, city=city, label=label)
+        if domain == "company":
+            return _evaluate_region_company(member_row, city=city, label=label)
+        return None, f"{label} - 地区谓词不适用于{TARGET_DOMAIN_LABELS.get(domain, domain)} -> 信息缺失"
+
+    if predicate.kind == "recency" and domain in {"paper", "patent"}:
+        return _evaluate_recency(domain, member_row, predicate, label=label)
+
+    if predicate.kind == "grant_status" and domain == "patent":
+        return _evaluate_patent_grant_status(member_row, label=label)
+
+    if predicate.kind == "applicant_type" and domain == "patent":
+        return _evaluate_patent_applicant_type(member_row, label=label)
+
+    return None, f"{label} - 谓词不适用于{TARGET_DOMAIN_LABELS.get(domain, domain)} -> 信息缺失"
 
 
 def normalize_narrowing_topic(query: str, fallback: str = "") -> str:
@@ -66,11 +388,6 @@ def result_ids_by_domain(
         for key in keys:
             for item in structured_payload.get(key) or []:
                 add(domain, item.get(id_key) or item.get("id"))
-
-    for item in structured_payload.get("retrieval_evidence") or []:
-        domain = item.get("type")
-        if domain in TARGET_DOMAINS:
-            add(str(domain), item.get(domain_id_key(str(domain))) or item.get("id"))
 
     for citation in citations:
         add(getattr(citation, "type", ""), getattr(citation, "id", ""))

@@ -45,11 +45,17 @@ from backend.services.web_search_cache import (
     answer_knowledge_qa_with_web_search,
 )
 from backend.services.chat_context import (
+    ChipPredicate,
+    SetReferent,
     answer_company_profile as _answer_company_profile,
     answer_narrowed_results,
     answer_paper_profile as _answer_paper_profile,
     answer_patent_profile as _answer_patent_profile,
+    detect_chip_predicate,
+    detect_set_operation,
+    detect_set_referent,
     domain_id_key,
+    evaluate_chip_predicate,
     infer_a_target_domain,
     looks_like_narrowing_query,
     lookup_company as _lookup_company,
@@ -1904,7 +1910,9 @@ _PRONOUN_DOMAIN_MAP = {
     "这件专利": "patent",
     "该专利": "patent",
     "这篇论文": "paper",
+    "这论文": "paper",
     "这本论文": "paper",
+    "该篇论文": "paper",
     "该论文": "paper",
 }
 _SESSION_PRONOUNS_RE = re.compile(
@@ -1979,6 +1987,19 @@ class SessionContext(BaseModel):
                 return domain
         return None
 
+    def resolve_set_referent(
+        self, referent: SetReferent
+    ) -> tuple[str, list[str]] | None:
+        if referent.domain:
+            ids = self.last_result_set.get(referent.domain) or []
+            return (referent.domain, list(ids)) if ids else None
+
+        domain = self.latest_result_domain()
+        if domain is None:
+            return None
+        ids = self.last_result_set.get(domain) or []
+        return (domain, list(ids)) if ids else None
+
     def push_result_set(
         self, domain: str, ids: list[str], cap: int = _SESSION_RESULT_SET_CAP
     ) -> None:
@@ -2039,6 +2060,50 @@ def _rewrite_query_with_context(query: str, session: SessionContext) -> str:
         return entity.label if entity else pronoun
 
     return _SESSION_PRONOUNS_RE.sub(replace, query)
+
+
+_SINGULAR_CONTEXT_DOMAIN_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"^(?:这个|这位|该)(?:教授|老师|学者)"), "professor"),
+    (re.compile(r"^(?:这家|这个|该)(?:公司|企业)"), "company"),
+    (re.compile(r"^(?:这篇|这个|该)(?:论文|文章)"), "paper"),
+    (re.compile(r"^(?:这件|这个|该)(?:专利)"), "patent"),
+    (re.compile(r"^这家"), "company"),
+    (re.compile(r"^这篇"), "paper"),
+)
+
+
+def _singular_pronoun_domain(
+    query: str,
+    session: SessionContext,
+) -> str | None:
+    """Infer the singular context domain without treating set words as singular."""
+    normalized = _normalize_query_for_rules(_strip_topic_switch_prefix(query))
+    if not normalized:
+        return None
+
+    for pronoun, domain in sorted(
+        _PRONOUN_DOMAIN_MAP.items(),
+        key=lambda item: len(item[0]),
+        reverse=True,
+    ):
+        if pronoun in {"他", "她"}:
+            if re.search(rf"{re.escape(pronoun)}(?!们)", normalized):
+                return domain
+            continue
+        if pronoun in normalized:
+            return domain
+
+    for pattern, domain in _SINGULAR_CONTEXT_DOMAIN_PATTERNS:
+        if pattern.search(normalized):
+            return domain
+
+    if normalized.startswith("这个"):
+        live_domains = [
+            domain for domain, ids in session.last_result_set.items() if ids
+        ]
+        if len(live_domains) == 1:
+            return live_domains[0]
+    return None
 
 
 def _query_uses_context(query: str) -> bool:
@@ -2336,22 +2401,123 @@ def _rerank_professor_topic_rows_by_paper_count(
 def _lookup_company_by_id(conn: Any, *, company_id: str) -> dict | None:
     rows = conn.execute(
         """
-        SELECT c.company_id, c.canonical_name, latest.industry,
-               latest.business, latest.description, c.website,
+        SELECT c.company_id, c.canonical_name, c.registered_name,
+               c.hq_province, c.hq_city, c.hq_district, c.is_shenzhen,
+               latest.industry, latest.business, latest.description,
+               latest.region, latest.registered_address,
+               c.website,
+               COALESCE(products.products_json, '[]'::jsonb) AS products,
+               COALESCE(scenarios.application_scenarios_json, '[]'::jsonb) AS application_scenarios,
+               COALESCE(recent_events.recent_events_json, '[]'::jsonb) AS recent_events,
                1::int AS total_count
           FROM company c
           LEFT JOIN LATERAL (
-            SELECT cs.industry, cs.business, cs.description
+            SELECT cs.industry, cs.business, cs.description,
+                   cs.region, cs.registered_address
               FROM company_snapshot cs
              WHERE cs.company_id = c.company_id
              ORDER BY cs.snapshot_created_at DESC NULLS LAST
              LIMIT 1
           ) latest ON true
+          LEFT JOIN LATERAL (
+            SELECT jsonb_agg(
+                jsonb_build_object(
+                    'name', cp.canonical_name,
+                    'description', cp.short_description,
+                    'source_url', cp.official_product_url,
+                    'quality_status', cp.quality_status,
+                    'confidence', cp.confidence,
+                    'product_category', cp.product_category,
+                    'target_customers', cp.target_customers,
+                    'application_scenarios', cp.application_scenarios,
+                    'technical_tags', cp.technical_tags
+                )
+                ORDER BY cp.confidence DESC NULLS LAST, cp.last_refreshed_at DESC NULLS LAST
+            ) AS products_json
+              FROM company_product cp
+             WHERE cp.company_id = c.company_id
+               AND cp.quality_status = 'ready'
+          ) products ON true
+          LEFT JOIN LATERAL (
+            SELECT jsonb_agg(
+                jsonb_build_object(
+                    'scenario_id', cas.scenario_id,
+                    'scenario_name', cas.scenario_name,
+                    'scenario_category', cas.scenario_category,
+                    'description', cas.description,
+                    'target_customer', cas.target_customer,
+                    'source_url', cas.source_url,
+                    'quality_status', cas.quality_status,
+                    'confidence', cas.confidence
+                )
+                ORDER BY cas.confidence DESC NULLS LAST, cas.last_refreshed_at DESC NULLS LAST
+            ) AS application_scenarios_json
+              FROM company_application_scenario cas
+             WHERE cas.company_id = c.company_id
+               AND cas.quality_status = 'ready'
+          ) scenarios ON true
+          LEFT JOIN LATERAL (
+            SELECT jsonb_agg(
+                jsonb_build_object(
+                    'event_type', cse.event_type,
+                    'event_date', cse.event_date,
+                    'summary', cse.event_summary,
+                    'confidence', cse.confidence,
+                    'source_url', news.source_url,
+                    'normalized', cse.event_subject_normalized
+                )
+                ORDER BY cse.event_date DESC, cse.created_at DESC NULLS LAST
+            ) AS recent_events_json
+              FROM (
+                SELECT *
+                  FROM company_signal_event cse
+                 WHERE cse.company_id = c.company_id
+                   AND cse.status = 'active'
+                 ORDER BY cse.event_date DESC, cse.created_at DESC NULLS LAST
+                 LIMIT 5
+              ) cse
+              LEFT JOIN company_news_item news ON news.news_id = cse.primary_news_id
+          ) recent_events ON true
          WHERE c.identity_status != 'inactive'
            AND c.company_id = %s
          LIMIT 1
         """,
         (company_id,),
+    ).fetchall()
+    return rows[0] if rows else None
+
+
+def _lookup_paper_by_id(conn: Any, *, paper_id: str) -> dict | None:
+    rows = conn.execute(
+        """
+        SELECT paper_id, title_clean, year, venue, authors_display,
+               abstract_clean, summary_zh, citation_count,
+               identity_status, quality_status,
+               1::int AS total_count
+          FROM paper
+         WHERE paper_id = %s
+           AND COALESCE(identity_status, 'unverified') != 'rejected'
+           AND COALESCE(quality_status, 'needs_enrichment') != 'rejected'
+         LIMIT 1
+        """,
+        (paper_id,),
+    ).fetchall()
+    return rows[0] if rows else None
+
+
+def _lookup_patent_by_id(conn: Any, *, patent_id: str) -> dict | None:
+    rows = conn.execute(
+        """
+        SELECT patent_id, patent_number, title_clean, applicants_raw,
+               filing_date, grant_date, patent_type, abstract_clean,
+               status AS legal_status,
+               1::int AS total_count
+          FROM patent
+         WHERE patent_id = %s
+           AND COALESCE(status, '') != 'inactive'
+         LIMIT 1
+        """,
+        (patent_id,),
     ).fetchall()
     return rows[0] if rows else None
 
@@ -3265,13 +3431,164 @@ _TARGET_DOMAIN_LABELS = {
     "company": "企业",
     "patent": "专利",
 }
+_SET_TRAVERSAL_SOURCE_CAP = 10
+_SET_TRAVERSAL_TARGET_CAP = 10
+
+
+def _relation_metadata(row: dict[str, Any]) -> dict[str, Any]:
+    metadata: dict[str, Any] = {}
+    role_type = row.get("role_type") or row.get("link_role")
+    if role_type:
+        metadata["role_type"] = role_type
+    for key in ("link_status", "match_reason", "link_role"):
+        value = row.get(key)
+        if value is not None and value != "":
+            metadata[key] = value
+    return metadata
+
+
+def _row_display_label(domain: str, row: dict[str, Any], fallback: str = "") -> str:
+    if domain in {"professor", "company"}:
+        label = row.get("canonical_name") or row.get("name") or row.get("title")
+    elif domain == "paper":
+        label = row.get("title") or row.get("title_clean")
+    else:
+        label = row.get("patent_number") or row.get("title") or row.get("title_clean")
+    return str(label or row.get("id") or fallback)
+
+
+def _link_status_label(status: Any) -> str:
+    status_text = str(status or "").strip()
+    if status_text == "candidate":
+        return "候选"
+    return status_text
+
+
+def _relation_annotation(target: dict[str, Any]) -> str:
+    parts: list[str] = []
+    if role_type := target.get("role_type"):
+        parts.append(str(role_type))
+    if status := _link_status_label(target.get("link_status")):
+        parts.append(status)
+    return ", ".join(parts)
+
+
+def _target_annotation(target_domain: str, target: dict[str, Any]) -> str:
+    label = _row_display_label(target_domain, target, str(target.get("id") or ""))
+    relation = _relation_annotation(target)
+    return f"{label}（{relation}）" if relation else label
+
+
+def _member_backlink_annotation(
+    member: dict[str, Any],
+    target: dict[str, Any],
+) -> str:
+    relation = _relation_annotation(target)
+    label = str(member.get("member_label") or member.get("member_id") or "")
+    return f"{label}（{relation}）" if relation else label
+
+
+def _dedupe_set_traversal_targets(
+    mapping: list[dict[str, Any]],
+    target_domain: str,
+) -> list[dict[str, Any]]:
+    id_key = domain_id_key(target_domain)
+    seen: set[str] = set()
+    targets: list[dict[str, Any]] = []
+    for member in mapping:
+        for target in member.get("targets") or []:
+            target_id = str(target.get(id_key) or target.get("id") or "").strip()
+            if not target_id or target_id in seen:
+                continue
+            seen.add(target_id)
+            targets.append(dict(target))
+    return targets
+
+
+def _render_set_traversal_answer(
+    *,
+    query: str,
+    source_domain: str,
+    target_domain: str,
+    mapping: list[dict[str, Any]],
+    unique_targets: list[dict[str, Any]],
+    displayed_targets: list[dict[str, Any]],
+    truncated_source_count: int,
+) -> str:
+    source_label = _TARGET_DOMAIN_LABELS.get(source_domain, "结果")
+    target_label = _TARGET_DOMAIN_LABELS.get(target_domain, "关联对象")
+    member_count = len(mapping)
+    linked_member_count = sum(1 for member in mapping if member.get("targets"))
+    target_count = len(unique_targets)
+    lines = [
+        (
+            f"上轮 {member_count} 位{source_label}中，{linked_member_count} 位有"
+            f"{target_label}关联记录，共涉及 {target_count} 个{target_label}。"
+            f"其余 {member_count - linked_member_count} 位暂无收录。"
+        )
+    ]
+    if truncated_source_count > 0:
+        lines.append(
+            f"本次仅处理前 {member_count} 位{source_label}，"
+            f"还有 {truncated_source_count} 位未处理。"
+        )
+    lines.append("")
+
+    if "分别" in query:
+        lines.append(f"按{source_label}分别列出关联{target_label}：")
+        for member in mapping:
+            member_label = str(member.get("member_label") or member.get("member_id"))
+            targets = member.get("targets") or []
+            if not targets:
+                lines.append(f"  • {member_label}：暂无收录")
+                continue
+            target_text = "、".join(
+                _target_annotation(target_domain, target) for target in targets
+            )
+            lines.append(f"  • {member_label}：{target_text}")
+        return "\n".join(lines)
+
+    if not unique_targets:
+        lines.append(f"暂未找到这些{source_label}关联的{target_label}记录。")
+    else:
+        header = f"关联{target_label}："
+        if len(unique_targets) > len(displayed_targets):
+            header = (
+                f"关联{target_label}（显示前 {len(displayed_targets)} 个，"
+                f"共 {len(unique_targets)} 个）："
+            )
+        lines.append(header)
+        id_key = domain_id_key(target_domain)
+        for displayed in displayed_targets:
+            displayed_id = str(displayed.get(id_key) or displayed.get("id") or "")
+            backlinks: list[str] = []
+            for member in mapping:
+                for target in member.get("targets") or []:
+                    target_id = str(target.get(id_key) or target.get("id") or "")
+                    if target_id == displayed_id:
+                        backlinks.append(_member_backlink_annotation(member, target))
+            target_label_text = _row_display_label(
+                target_domain,
+                displayed,
+                displayed_id,
+            )
+            lines.append(f"  • {target_label_text}：{'、'.join(backlinks)}")
+
+    empty_members = [
+        str(member.get("member_label") or member.get("member_id"))
+        for member in mapping
+        if not member.get("targets")
+    ]
+    if empty_members:
+        lines.append(f"暂无收录：{'、'.join(empty_members)}")
+    return "\n".join(lines)
 
 
 def _related_row_to_chat_row(domain: str, row: dict[str, Any]) -> dict[str, Any]:
     if domain == "professor":
         professor_id = str(row.get("professor_id") or row.get("id") or "")
         name = str(row.get("canonical_name") or row.get("name") or professor_id)
-        return {
+        payload = {
             "type": "professor",
             "id": professor_id,
             "professor_id": professor_id,
@@ -3282,10 +3599,12 @@ def _related_row_to_chat_row(domain: str, row: dict[str, Any]) -> dict[str, Any]
             "snippet": row.get("profile_summary") or row.get("match_reason") or "",
             "score": row.get("score", 1.0),
         }
+        payload.update(_relation_metadata(row))
+        return payload
     if domain == "paper":
         paper_id = str(row.get("paper_id") or row.get("id") or "")
         title = str(row.get("title_clean") or row.get("title") or paper_id)
-        return {
+        payload = {
             "type": "paper",
             "id": paper_id,
             "paper_id": paper_id,
@@ -3296,10 +3615,12 @@ def _related_row_to_chat_row(domain: str, row: dict[str, Any]) -> dict[str, Any]
             "snippet": row.get("abstract_clean") or row.get("match_reason") or "",
             "score": row.get("score", 1.0),
         }
+        payload.update(_relation_metadata(row))
+        return payload
     if domain == "company":
         company_id = str(row.get("company_id") or row.get("id") or "")
         name = str(row.get("canonical_name") or row.get("name") or company_id)
-        return {
+        payload = {
             "type": "company",
             "id": company_id,
             "company_id": company_id,
@@ -3312,9 +3633,11 @@ def _related_row_to_chat_row(domain: str, row: dict[str, Any]) -> dict[str, Any]
             "snippet": row.get("match_reason") or row.get("description") or "",
             "score": row.get("score", 1.0),
         }
+        payload.update(_relation_metadata(row))
+        return payload
     patent_id = str(row.get("patent_id") or row.get("id") or "")
     title = str(row.get("title_clean") or row.get("title") or patent_id)
-    return {
+    payload = {
         "type": "patent",
         "id": patent_id,
         "patent_id": patent_id,
@@ -3325,6 +3648,447 @@ def _related_row_to_chat_row(domain: str, row: dict[str, Any]) -> dict[str, Any]
         "snippet": row.get("abstract_clean") or row.get("match_reason") or "",
         "score": row.get("score", 1.0),
     }
+    payload.update(_relation_metadata(row))
+    return payload
+
+
+_OPEN_PREDICATE_SYSTEM_PROMPT = """你是深圳科创数据平台的集合筛选审计器。
+任务：只根据给定成员字段，逐个判断成员是否满足用户的筛选条件。
+输出必须是 JSON 数组，不要输出解释性正文。每个元素格式：
+{"member_id": "...", "verdict": true|false|"unknown", "evidence_field": "字段名", "quote": "原文短摘"}
+verdict=true 表示证据支持满足；false 表示证据支持不满足；unknown 表示字段缺失或证据不足。"""
+
+
+def _domain_list_payload_key(domain: str) -> str:
+    return {
+        "professor": "matched_professors",
+        "paper": "papers",
+        "company": "companies",
+        "patent": "patents",
+    }[domain]
+
+
+def _coerce_narrowing_member_row(
+    domain: str,
+    row: dict[str, Any] | None,
+    member_id: str,
+) -> dict[str, Any]:
+    id_key = domain_id_key(domain)
+    payload = dict(row or {})
+    payload.setdefault(id_key, member_id)
+    payload.setdefault("id", member_id)
+    payload.setdefault("type", domain)
+    return payload
+
+
+def _lookup_narrowing_member_rows(
+    conn: Any,
+    *,
+    domain: str,
+    member_ids: list[str],
+    rich: bool = False,
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for member_id in member_ids:
+        row: dict[str, Any] | None = None
+        try:
+            if domain == "professor":
+                row = _lookup_professor_by_id(conn, professor_id=member_id)
+                if row and rich:
+                    try:
+                        row["research_topics"] = _prof_research_topics(conn, member_id)
+                    except Exception as exc:  # noqa: BLE001 - enrichment best-effort
+                        logger.warning("Professor narrowing topics fetch failed: %s", exc)
+                    try:
+                        row.update(_prof_rich_profile_facts(conn, member_id))
+                    except Exception as exc:  # noqa: BLE001 - enrichment best-effort
+                        logger.warning("Professor narrowing rich fetch failed: %s", exc)
+            elif domain == "company":
+                row = _lookup_company_by_id(conn, company_id=member_id)
+                if row and rich:
+                    try:
+                        row.update(_company_rich_facts(conn, member_id))
+                    except Exception as exc:  # noqa: BLE001 - enrichment best-effort
+                        logger.warning("Company narrowing rich fetch failed: %s", exc)
+            elif domain == "paper":
+                row = _lookup_paper_by_id(conn, paper_id=member_id)
+            elif domain == "patent":
+                row = _lookup_patent_by_id(conn, patent_id=member_id)
+        except Exception as exc:  # noqa: BLE001 - one missing row must not abort narrowing
+            logger.warning("Narrowing member lookup failed: %s:%s: %s", domain, member_id, exc)
+        rows.append(_coerce_narrowing_member_row(domain, row, member_id))
+    return rows
+
+
+def _chip_predicate_payload(predicate: ChipPredicate) -> dict[str, Any]:
+    return {
+        "kind": predicate.kind,
+        "domain": predicate.domain,
+        "param": dict(predicate.param),
+    }
+
+
+def _chip_predicate_phrase(predicate: ChipPredicate) -> str:
+    if predicate.kind == "region":
+        return f"在{predicate.param.get('city') or '深圳'}"
+    if predicate.kind == "recency":
+        if predicate.param.get("mode") == "year":
+            return f"{predicate.param.get('year')}年"
+        years = predicate.param.get("years") or ""
+        return f"近{years}年"
+    if predicate.kind == "grant_status":
+        return "已授权"
+    if predicate.kind == "applicant_type":
+        return f"申请人是{predicate.param.get('type') or '企业'}"
+    return "满足条件"
+
+
+def _verdict_rank(verdict: bool | None) -> int:
+    if verdict is True:
+        return 0
+    if verdict is False:
+        return 1
+    return 2
+
+
+def _narrowing_evidence_rows(domain: str, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [_related_row_to_chat_row(domain, row) for row in rows]
+
+
+def _render_chip_narrowing_answer(
+    *,
+    domain: str,
+    predicate: ChipPredicate,
+    verdicts: list[dict[str, Any]],
+    total: int,
+) -> str:
+    label = _TARGET_DOMAIN_LABELS.get(domain, "结果")
+    phrase = _chip_predicate_phrase(predicate)
+    satisfied = sum(1 for item in verdicts if item["verdict"] is True)
+    unsatisfied = sum(1 for item in verdicts if item["verdict"] is False)
+    unknown = sum(1 for item in verdicts if item["verdict"] is None)
+    lines = [
+        f"上轮 {total} 个{label}中，{satisfied} 个{phrase}，{unsatisfied} 个不满足，{unknown} 个信息缺失。",
+        "",
+    ]
+    for item in sorted(verdicts, key=lambda item: _verdict_rank(item["verdict"])):
+        lines.append(f"  • {item['basis']}")
+    return "\n".join(lines)
+
+
+def _build_chip_narrowing_response(
+    *,
+    conn: Any,
+    query: str,
+    domain: str,
+    source_ids: list[str],
+    predicate: ChipPredicate,
+) -> ChatResponse:
+    member_rows = _lookup_narrowing_member_rows(
+        conn,
+        domain=domain,
+        member_ids=source_ids,
+    )
+    verdicts: list[dict[str, Any]] = []
+    satisfied_rows: list[dict[str, Any]] = []
+    for row in member_rows:
+        verdict, basis = evaluate_chip_predicate(domain, row, predicate)
+        member_id = str(row.get(domain_id_key(domain)) or row.get("id") or "")
+        label = _row_display_label(domain, row, member_id)
+        verdicts.append(
+            {
+                "member_id": member_id,
+                "label": label,
+                "verdict": verdict,
+                "basis": basis,
+            }
+        )
+        if verdict is True:
+            satisfied_rows.append(row)
+
+    evidence_rows = _narrowing_evidence_rows(domain, satisfied_rows)
+    structured_payload: dict[str, Any] = {
+        "source_ids": source_ids,
+        "narrowing_domain": domain,
+        "narrowing_mechanism": "chip",
+        "predicate": _chip_predicate_payload(predicate),
+        "verdicts": verdicts,
+        "retrieval_evidence": evidence_rows,
+        _domain_list_payload_key(domain): evidence_rows,
+    }
+    return _build_chat_response(
+        conn=conn,
+        query=query,
+        query_type="D_narrowing",
+        answer_text=_render_chip_narrowing_answer(
+            domain=domain,
+            predicate=predicate,
+            verdicts=verdicts,
+            total=len(source_ids),
+        ),
+        citations=_chat_citations_from_result_rows(evidence_rows),
+        structured_payload=structured_payload,
+        skip_synthesis=True,
+    )
+
+
+def _strip_json_response(text: str) -> str:
+    stripped = text.strip()
+    if match := re.search(r"```(?:json)?\s*(?P<body>.*?)\s*```", stripped, re.DOTALL):
+        stripped = match.group("body").strip()
+    start = min(
+        [idx for idx in (stripped.find("["), stripped.find("{")) if idx >= 0],
+        default=0,
+    )
+    return stripped[start:]
+
+
+def _normalize_open_verdict(raw: Any) -> bool | str:
+    if raw is True or raw is False:
+        return raw
+    text = str(raw or "").strip().casefold()
+    if text in {"true", "yes", "y", "满足", "是", "support", "supported"}:
+        return True
+    if text in {"false", "no", "n", "不满足", "否", "unsupported"}:
+        return False
+    return "unknown"
+
+
+def _parse_open_predicate_verdicts(
+    text: str,
+    *,
+    allowed_ids: set[str],
+) -> list[dict[str, Any]]:
+    parsed = json.loads(_strip_json_response(text))
+    if isinstance(parsed, dict):
+        parsed = parsed.get("verdicts") or parsed.get("results") or []
+    if not isinstance(parsed, list):
+        raise ValueError("open-predicate verdict payload must be a JSON array")
+    verdicts: list[dict[str, Any]] = []
+    for item in parsed:
+        if not isinstance(item, dict):
+            continue
+        member_id = str(item.get("member_id") or item.get("id") or "").strip()
+        if member_id not in allowed_ids:
+            continue
+        verdicts.append(
+            {
+                "member_id": member_id,
+                "verdict": _normalize_open_verdict(item.get("verdict")),
+                "evidence_field": str(item.get("evidence_field") or "").strip(),
+                "quote": str(item.get("quote") or "").strip(),
+            }
+        )
+    return verdicts
+
+
+def _call_open_predicate_verdicts(
+    *,
+    query: str,
+    domain: str,
+    rows: list[dict[str, Any]],
+) -> list[dict[str, Any]] | None:
+    allowed_ids = {
+        str(row.get(domain_id_key(domain)) or row.get("id") or "")
+        for row in rows
+    }
+    evidence_text = json.dumps(
+        {
+            "domain": domain,
+            "members": rows,
+        },
+        ensure_ascii=False,
+        default=str,
+    )
+    try:
+        llm_text = _call_gemma_synthesis(
+            query,
+            evidence_text,
+            timeout=_CHAT_SYNTHESIS_TIMEOUT_SECONDS,
+            system_prompt=_OPEN_PREDICATE_SYSTEM_PROMPT,
+        )
+    except Exception as exc:  # noqa: BLE001 - open lane can degrade to topic narrowing
+        logger.warning("Open predicate batch LLM call failed: %s", exc)
+        return None
+
+    try:
+        return _parse_open_predicate_verdicts(llm_text, allowed_ids=allowed_ids)
+    except Exception as exc:  # noqa: BLE001 - retry per member on parse failure
+        logger.warning("Open predicate batch parse failed, retrying per member: %s", exc)
+
+    verdicts: list[dict[str, Any]] = []
+    for row in rows:
+        member_id = str(row.get(domain_id_key(domain)) or row.get("id") or "")
+        member_text = json.dumps(
+            {"domain": domain, "members": [row]},
+            ensure_ascii=False,
+            default=str,
+        )
+        try:
+            llm_text = _call_gemma_synthesis(
+                query,
+                member_text,
+                timeout=_CHAT_SYNTHESIS_TIMEOUT_SECONDS,
+                system_prompt=_OPEN_PREDICATE_SYSTEM_PROMPT,
+            )
+            parsed = _parse_open_predicate_verdicts(
+                llm_text,
+                allowed_ids={member_id},
+            )
+        except Exception as exc:  # noqa: BLE001 - preserve audit as unknown
+            logger.warning("Open predicate per-member parse failed for %s: %s", member_id, exc)
+            parsed = []
+        verdicts.extend(
+            parsed
+            or [
+                {
+                    "member_id": member_id,
+                    "verdict": "unknown",
+                    "evidence_field": "",
+                    "quote": "",
+                }
+            ]
+        )
+    return verdicts
+
+
+def _open_verdict_to_optional_bool(verdict: Any) -> bool | None:
+    normalized = _normalize_open_verdict(verdict)
+    if normalized is True:
+        return True
+    if normalized is False:
+        return False
+    return None
+
+
+def _render_open_narrowing_answer(
+    *,
+    domain: str,
+    verdicts: list[dict[str, Any]],
+    total: int,
+) -> str:
+    label = _TARGET_DOMAIN_LABELS.get(domain, "结果")
+    satisfied = sum(1 for item in verdicts if item["verdict"] is True)
+    unsatisfied = sum(1 for item in verdicts if item["verdict"] is False)
+    unknown = sum(1 for item in verdicts if item["verdict"] is None)
+    lines = [
+        f"上轮 {total} 个{label}中，{satisfied} 个满足，{unsatisfied} 个不满足，{unknown} 个信息缺失。",
+        "",
+    ]
+    for item in sorted(verdicts, key=lambda item: _verdict_rank(item["verdict"])):
+        lines.append(f"  • {item['basis']}")
+    return "\n".join(lines)
+
+
+def _build_open_predicate_narrowing_response(
+    *,
+    conn: Any,
+    query: str,
+    domain: str,
+    source_ids: list[str],
+) -> ChatResponse | None:
+    member_rows = _lookup_narrowing_member_rows(
+        conn,
+        domain=domain,
+        member_ids=source_ids,
+        rich=True,
+    )
+    raw_verdicts = _call_open_predicate_verdicts(
+        query=query,
+        domain=domain,
+        rows=member_rows,
+    )
+    if raw_verdicts is None:
+        return None
+
+    raw_by_id = {item["member_id"]: item for item in raw_verdicts}
+    complete_raw_verdicts: list[dict[str, Any]] = []
+    display_verdicts: list[dict[str, Any]] = []
+    satisfied_rows: list[dict[str, Any]] = []
+    for row in member_rows:
+        member_id = str(row.get(domain_id_key(domain)) or row.get("id") or "")
+        label = _row_display_label(domain, row, member_id)
+        raw = raw_by_id.get(member_id) or {
+            "member_id": member_id,
+            "verdict": "unknown",
+            "evidence_field": "",
+            "quote": "",
+        }
+        verdict = _open_verdict_to_optional_bool(raw.get("verdict"))
+        field = raw.get("evidence_field") or "evidence"
+        quote = raw.get("quote") or "未提供可审计证据"
+        verdict_text = "满足" if verdict is True else "不满足" if verdict is False else "信息缺失"
+        complete_raw_verdicts.append(raw)
+        display_verdicts.append(
+            {
+                "member_id": member_id,
+                "label": label,
+                "verdict": verdict,
+                "basis": f"{label} - {field}: {quote} -> {verdict_text}",
+            }
+        )
+        if verdict is True:
+            satisfied_rows.append(row)
+
+    evidence_rows = _narrowing_evidence_rows(domain, satisfied_rows)
+    structured_payload: dict[str, Any] = {
+        "source_ids": source_ids,
+        "narrowing_domain": domain,
+        "narrowing_mechanism": "open_predicate_llm",
+        "open_predicate_verdicts": complete_raw_verdicts,
+        "verdicts": display_verdicts,
+        "retrieval_evidence": evidence_rows,
+        _domain_list_payload_key(domain): evidence_rows,
+    }
+    return _build_chat_response(
+        conn=conn,
+        query=query,
+        query_type="D_narrowing",
+        answer_text=_render_open_narrowing_answer(
+            domain=domain,
+            verdicts=display_verdicts,
+            total=len(source_ids),
+        ),
+        citations=_chat_citations_from_result_rows(evidence_rows),
+        structured_payload=structured_payload,
+        skip_synthesis=True,
+    )
+
+
+def _build_topic_narrowing_response(
+    *,
+    conn: Any,
+    query: str,
+    domain: str,
+    source_ids: list[str],
+    topic: str,
+    degraded_from_open_predicate: bool = False,
+) -> ChatResponse:
+    rows = _lookup_narrowed_results(
+        conn,
+        domain=domain,
+        allowed_ids=source_ids,
+        topic=topic,
+    )
+    answer_text = answer_narrowed_results(domain, topic, rows, len(source_ids))
+    structured_payload: dict[str, Any] = {
+        "narrowing_domain": domain,
+        "narrowing_topic": topic,
+        "narrowing_mechanism": "topic",
+        "narrowed_from_count": len(source_ids),
+        "retrieval_evidence": rows,
+    }
+    if degraded_from_open_predicate:
+        answer_text = f"按语义相关性筛选：\n{answer_text}"
+        structured_payload["degraded_from_open_predicate"] = True
+    return _build_chat_response(
+        conn=conn,
+        query=query,
+        query_type="D_narrowing",
+        answer_text=answer_text,
+        citations=_chat_citations_from_result_rows(rows),
+        structured_payload=structured_payload,
+    )
 
 
 def _answer_c_related_objects(
@@ -4528,6 +5292,7 @@ def _build_chat_response(
     citations: list[ChatCitation],
     structured_payload: dict[str, Any],
     clarification: ClarificationPayload | None = None,
+    skip_synthesis: bool = False,
 ) -> ChatResponse:
     suggested_followups = _suggested_followups(
         query_type=query_type,
@@ -4546,7 +5311,7 @@ def _build_chat_response(
         suggested_followups=suggested_followups,
         evidence=evidence_rows,
     )
-    if not llm_synthesis_enabled():
+    if not llm_synthesis_enabled() or skip_synthesis:
         return base_response
 
     # Enrich professor profiles with rich facts (awards/education/work/positions/
@@ -4952,24 +5717,253 @@ def chat(
         if not allowed_ids:
             return None
         topic = normalize_narrowing_topic(query, fallback=topic_hint)
-        rows = _lookup_narrowed_results(
-            conn,
-            domain=domain,
-            allowed_ids=allowed_ids,
-            topic=topic,
+        predicate = detect_chip_predicate(query, domain)
+        if predicate is not None:
+            return _record_and_return(
+                _build_chip_narrowing_response(
+                    conn=conn,
+                    query=raw_query,
+                    domain=domain,
+                    source_ids=allowed_ids,
+                    predicate=predicate,
+                )
+            )
+        if llm_synthesis_enabled():
+            open_response = _build_open_predicate_narrowing_response(
+                conn=conn,
+                query=raw_query,
+                domain=domain,
+                source_ids=allowed_ids,
+            )
+            if open_response is not None:
+                return _record_and_return(open_response)
+        return _record_and_return(
+            _build_topic_narrowing_response(
+                conn=conn,
+                query=raw_query,
+                domain=domain,
+                source_ids=allowed_ids,
+                topic=topic,
+                degraded_from_open_predicate=not llm_synthesis_enabled(),
+            )
         )
-        citations = _chat_citations_from_result_rows(rows)
+
+    def _source_member_label(
+        retrieval_service: Any,
+        source_domain: str,
+        source_id: str,
+    ) -> str:
+        get_object = getattr(retrieval_service, "get_object", None)
+        if callable(get_object):
+            try:
+                row = get_object(domain=source_domain, object_id=source_id)
+            except Exception as exc:  # noqa: BLE001 - labels are best-effort
+                logger.warning(
+                    "Set traversal source label lookup failed: %s:%s: %s",
+                    source_domain,
+                    source_id,
+                    exc,
+                )
+            else:
+                if isinstance(row, dict) and row:
+                    return _row_display_label(source_domain, row, source_id)
+        return source_id
+
+    def _member_label_by_id(
+        retrieval_service: Any | None,
+        domain: str,
+        object_id: str,
+    ) -> str:
+        get_object = getattr(retrieval_service, "get_object", None)
+        if callable(get_object):
+            try:
+                row = get_object(domain=domain, object_id=object_id)
+            except Exception as exc:  # noqa: BLE001 - labels are best-effort
+                logger.warning(
+                    "Clarification member label lookup failed: %s:%s: %s",
+                    domain,
+                    object_id,
+                    exc,
+                )
+            else:
+                if isinstance(row, dict) and row:
+                    return _row_display_label(domain, row, object_id)
+
+        try:
+            if domain == "professor":
+                row = _lookup_professor_by_id(conn, professor_id=object_id)
+            elif domain == "company":
+                row = _lookup_company_by_id(conn, company_id=object_id)
+            elif domain == "paper":
+                row = _lookup_paper_by_id(conn, paper_id=object_id)
+            elif domain == "patent":
+                row = _lookup_patent_by_id(conn, patent_id=object_id)
+            else:
+                row = None
+        except Exception as exc:  # noqa: BLE001 - labels are best-effort
+            logger.warning(
+                "Clarification member by-id label lookup failed: %s:%s: %s",
+                domain,
+                object_id,
+                exc,
+            )
+            row = None
+        if isinstance(row, dict) and row:
+            return _row_display_label(domain, row, object_id)
+        return object_id
+
+    def _singular_member_listing_clarification() -> ChatResponse | None:
+        domain = _singular_pronoun_domain(raw_query, session)
+        if domain is None or session.latest_for(domain) is not None:
+            return None
+        live_ids = [str(item) for item in session.last_result_set.get(domain, []) if item]
+        if not live_ids:
+            return None
+
+        try:
+            retrieval_service = get_retrieval_service()
+        except Exception as exc:  # noqa: BLE001 - labels are best-effort
+            logger.warning("Clarification retrieval service unavailable: %s", exc)
+            retrieval_service = None
+
+        candidate_ids = live_ids[:10]
+        labels = [
+            _member_label_by_id(retrieval_service, domain, object_id)
+            for object_id in candidate_ids
+        ]
+        selector_label, unit = {
+            "professor": ("哪一位", "位"),
+            "company": ("哪家公司", "家"),
+            "paper": ("哪篇论文", "篇"),
+            "patent": ("哪件专利", "件"),
+        }.get(domain, ("哪一个", "个"))
+        lines = [f"{index}. {label}" for index, label in enumerate(labels, start=1)]
+        answer_text = (
+            f"您指的是上轮列表中的{selector_label}？请先确认后再追问：\n"
+            + "\n".join(lines)
+        )
+        if len(live_ids) > len(candidate_ids):
+            answer_text += f"\n以上列出前 {len(candidate_ids)} {unit}，等共 {len(live_ids)} {unit}。"
+        return _record_and_return(ChatResponse(
+            query=raw_query,
+            query_type="C_cross_domain_clarification",
+            answer_text=answer_text,
+            citations=[],
+            structured_payload={
+                "referent_domain": domain,
+                "candidate_ids": candidate_ids,
+                "candidate_labels": labels,
+                "clarification_reason": "singular_pronoun_no_anchor_live_set",
+            },
+        ))
+
+    def _handle_set_traversal(
+        source_domain: str,
+        source_ids: list[str],
+        target_domain: str,
+    ) -> ChatResponse:
+        all_source_ids = [str(item) for item in source_ids if item]
+        capped_source_ids = all_source_ids[:_SET_TRAVERSAL_SOURCE_CAP]
+        truncated_source_count = max(len(all_source_ids) - len(capped_source_ids), 0)
+        retrieval_service = get_retrieval_service()
+        mapping: list[dict[str, Any]] = []
+        for source_id in capped_source_ids:
+            member_label = _source_member_label(
+                retrieval_service,
+                source_domain,
+                source_id,
+            )
+            try:
+                rows = retrieval_service.get_related_objects(
+                    source_domain=source_domain,
+                    source_id=source_id,
+                    target_domain=target_domain,
+                    limit=5,
+                )
+            except Exception as exc:  # noqa: BLE001 - per-member failure must not abort
+                logger.warning(
+                    "Set traversal related lookup failed: %s:%s -> %s: %s",
+                    source_domain,
+                    source_id,
+                    target_domain,
+                    exc,
+                )
+                rows = []
+            target_rows = [
+                _related_row_to_chat_row(target_domain, row)
+                for row in rows
+                if row.get(domain_id_key(target_domain)) or row.get("id")
+            ]
+            mapping.append(
+                {
+                    "member_id": source_id,
+                    "member_label": member_label,
+                    "targets": target_rows,
+                }
+            )
+
+        unique_targets = _dedupe_set_traversal_targets(mapping, target_domain)
+        displayed_targets = unique_targets[:_SET_TRAVERSAL_TARGET_CAP]
+        citations = _chat_citations_from_result_rows(displayed_targets)
+        structured_payload = {
+            "source_domain": source_domain,
+            "source_ids": capped_source_ids,
+            "source_total_count": len(all_source_ids),
+            "target_domain": target_domain,
+            "member_target_mapping": mapping,
+            "retrieval_evidence": displayed_targets,
+        }
+        if truncated_source_count:
+            structured_payload["truncated_source_count"] = truncated_source_count
         return _record_and_return(_build_chat_response(
             conn=conn,
             query=raw_query,
-            query_type="D_narrowing",
-            answer_text=answer_narrowed_results(domain, topic, rows, len(allowed_ids)),
+            query_type="C_cross_domain_related",
+            answer_text=_render_set_traversal_answer(
+                query=query,
+                source_domain=source_domain,
+                target_domain=target_domain,
+                mapping=mapping,
+                unique_targets=unique_targets,
+                displayed_targets=displayed_targets,
+                truncated_source_count=truncated_source_count,
+            ),
             citations=citations,
+            structured_payload=structured_payload,
+            # Set traversal is a deterministic join over verified relation tables;
+            # the rendered mapping (coverage statement + back-links + citations) is
+            # the complete auditable answer. Synthesis here only adds hallucination
+            # risk (verified: it ignored the mapping and web-searched the raw query).
+            skip_synthesis=True,
+        ))
+
+    def _set_referent_clarification(referent: SetReferent) -> ChatResponse:
+        available_domains = [
+            domain for domain, ids in session.last_result_set.items() if ids
+        ]
+        available_labels = [
+            _TARGET_DOMAIN_LABELS.get(domain, domain) for domain in available_domains
+        ]
+        if referent.domain:
+            referent_label = _TARGET_DOMAIN_LABELS.get(referent.domain, "结果")
+            answer_text = (
+                f"当前上下文没有可指代的{referent_label}列表，请先检索"
+                f"{referent_label}列表后再追问。"
+            )
+        else:
+            answer_text = "当前上下文没有可指代的结果列表，请先检索列表后再追问。"
+        if available_labels:
+            answer_text += f" 当前可指代的列表：{'、'.join(available_labels)}。"
+        else:
+            answer_text += " 当前没有其他可指代的列表。"
+        return _record_and_return(ChatResponse(
+            query=raw_query,
+            query_type="C_cross_domain_clarification",
+            answer_text=answer_text,
+            citations=[],
             structured_payload={
-                "narrowing_domain": domain,
-                "narrowing_topic": topic,
-                "narrowed_from_count": len(allowed_ids),
-                "retrieval_evidence": rows,
+                "referent_domain": referent.domain,
+                "available_result_set_domains": available_domains,
             },
         ))
 
@@ -5051,6 +6045,9 @@ def chat(
     if hint_response := _handle_entity_id_hint():
         return hint_response
 
+    if clarification_response := _singular_member_listing_clarification():
+        return clarification_response
+
     if m := _Q_PAPER_RELATED_PROFESSORS_RE.match(query):
         return _record_and_return(
             _build_paper_related_professors_response(
@@ -5059,6 +6056,24 @@ def chat(
                 paper_id=m.group("paper_id"),
             )
         )
+
+    set_referent = detect_set_referent(query)
+    resolved_set = (
+        session.resolve_set_referent(set_referent)
+        if set_referent is not None
+        else None
+    )
+    if set_referent is not None and resolved_set is None:
+        if set_referent.domain is not None or session.latest_result_domain() is None:
+            return _set_referent_clarification(set_referent)
+    if resolved_set is not None:
+        operation, target_domain = detect_set_operation(query, resolved_set[0])
+        if operation == "traverse" and target_domain is not None:
+            return _handle_set_traversal(
+                resolved_set[0],
+                resolved_set[1],
+                target_domain,
+            )
 
     if looks_like_narrowing_query(query):
         if narrowed_response := _handle_d_narrowing():

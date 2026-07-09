@@ -1,0 +1,1450 @@
+{
+  "meta": {
+    "created_at": "2026-07-09T13:48:11.169457+00:00",
+    "base": "http://localhost:18188",
+    "fixtures": [
+      "/home/longxiang/MiroThinker/apps/admin-console/tests/fixtures/test_cases.yaml",
+      "/home/longxiang/MiroThinker/apps/admin-console/tests/fixtures/multi_turn_cases.yaml"
+    ],
+    "coverage_threshold": 0.2,
+    "session_cookie": "miroflow_chat_session",
+    "proxy_env_unset": [
+      "no_proxy"
+    ],
+    "no_proxy": "localhost,127.0.0.1,::1"
+  },
+  "summary": {
+    "groups": 16,
+    "turns": 34,
+    "scored_cases": 18,
+    "passed_cases": 2,
+    "failed_cases": 16,
+    "required_recall": "7/37 (19%)",
+    "forbidden_violation_cases": 0,
+    "mean_answer_coverage": 0.033,
+    "query_type_assertions": "4/10",
+    "set_derived_assertions": "1/8",
+    "failed_qids": [
+      "2",
+      "4",
+      "5",
+      "8",
+      "10",
+      "12",
+      "15",
+      "25",
+      "S1-F",
+      "S2-F",
+      "S3-F",
+      "S5-F1",
+      "S5-F2",
+      "S6A-F",
+      "S6B-F",
+      "S6C-F"
+    ]
+  },
+  "rows": [
+    {
+      "qid": "1",
+      "turn_group": "问题1",
+      "turn_index": 1,
+      "session_id": "eval-mt-01-1-7e67a930",
+      "fixture": "apps/admin-console/tests/fixtures/test_cases.yaml",
+      "is_head_turn": true,
+      "scored": false,
+      "query": "介绍清华的丁文伯",
+      "http_status": 200,
+      "answer_excerpt": "## 基本信息\n- **姓名**：丁文伯 [1]\n- **机构/单位**：清华大学深圳国际研究生院 [2]\n- **职位/行业**：副教授，博士生导师 [3]\n\n## 核心技术或产品\n丁文伯的主要研究方向集中在以下领域 [8]：\n- **信号处理** [4]\n- **机器学习** [5]\n- **人机交互** [6]\n- **机器人学** [7]\n\n其具体研究内容包括：在联邦学习方面，提出自适应量化梯度框架，以降低通信开销并提升鲁棒性；在人机交互与传感技术方面，研发柔性摩擦电触觉传感器，实现材料与纹理同步识别，并开发智能手套等多维交互系统；此外，还提出了基于多智能体强化学习的车联网路由方案，以",
+      "citations_count": 1,
+      "structured_payload_keys": [
+        "academic_positions",
+        "awards",
+        "canonical_name",
+        "canonical_name_en",
+        "citation_count",
+        "discipline_family",
+        "education",
+        "h_index",
+        "institution",
+        "paper_count",
+        "professor_id",
+        "profile_summary",
+        "research_topics",
+        "title",
+        "verified_paper_count",
+        "web_evidence",
+        "work_experience"
+      ],
+      "query_type": "A_prof_profile",
+      "failure_notes": [],
+      "passed": null
+    },
+    {
+      "qid": "2",
+      "turn_group": "问题1",
+      "turn_index": 2,
+      "session_id": "eval-mt-01-1-7e67a930",
+      "fixture": "apps/admin-console/tests/fixtures/test_cases.yaml",
+      "is_head_turn": false,
+      "scored": true,
+      "query": "他是否有参与哪些企业的创立",
+      "http_status": 200,
+      "answer_excerpt": "未找到直接匹配的“他”所参与创立的企业信息。\n\n提供的证据中，虽然提到了多位人物及其创办的企业，但均未明确指向用户问题中特定的“他”：\n*   [2] 提到“他”曾在美国创立NeTrue通信公司，但未指明“他”是谁。\n*   [3]、[7]、[10] 提到张謇创办了20多个企业，包括大生纱厂等。\n*   [4] 提到张之洞创办了汉阳铁厂等企业。\n*   [8]、[9] 提到了王效勇、刘喆等人担任高管或投资的企业，但未明确提及“创立”。\n\n由于无法确定用户所指的“他”的具体身份，因此无法列出其参与创立的企业。",
+      "citations_count": 0,
+      "structured_payload_keys": [
+        "retrieval_evidence",
+        "source_domain",
+        "source_id",
+        "source_label",
+        "target_domain",
+        "web_evidence"
+      ],
+      "required_hit": "2/5",
+      "required_hit_count": 2,
+      "required_total": 5,
+      "missing": [
+        "无界智航",
+        "首席科学家",
+        "具身智能"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.0,
+      "answer_coverage_terms_hit": [],
+      "answer_coverage_terms_missing": [
+        "CEO",
+        "X-H1",
+        "X-Sim",
+        "丁文伯参与创立了深圳无界智航科技有限公司",
+        "上交前沿技术支撑",
+        "产品方向覆盖可穿戴数采套件",
+        "全链条创新",
+        "合成",
+        "合成仿真学习框架",
+        "数据",
+        "核心团队包括创始人",
+        "深圳无界智航科技有限公司是全球具身智能领域全栈解决方案提供商"
+      ],
+      "query_type": "C_cross_domain_related",
+      "routing_assertions": {},
+      "failure_notes": [
+        "missing required entities",
+        "answer coverage below threshold 20%"
+      ],
+      "passed": false
+    },
+    {
+      "qid": "3",
+      "turn_group": "问题2",
+      "turn_index": 1,
+      "session_id": "eval-mt-02-2-e3c54057",
+      "fixture": "apps/admin-console/tests/fixtures/test_cases.yaml",
+      "is_head_turn": true,
+      "scored": false,
+      "query": "中国有哪些成熟的酒店送餐机器人供应商",
+      "http_status": 200,
+      "answer_excerpt": "基于提供的证据，以下是直接相关的中国成熟酒店送餐机器人供应商：\n\n*   **普渡科技 [10]**\n    *   专注于室内外配送与清洁机器人研发，产品覆盖酒店等场景。\n    *   从智能送餐机器人起步，定位为全球领先的商用服务机器人解决方案提供商。\n\n*   **普波科技 [8]**\n    *   以智能配送机器人为核心，产品体系服务于酒店等行业，实现物品配送智能化升级。\n    *   主打产品HL100智能配送机器人，可承载30千克货物，适用于酒店等场景的配送。\n\n*   **小村机器人智能科技 [7]**\n    *   专注于服务类机器人，产品线包括贝贝、圆圆等系列机器人，",
+      "citations_count": 25,
+      "structured_payload_keys": [
+        "classifier_reason",
+        "classifier_target_domain",
+        "classifier_topic",
+        "match_count",
+        "matched_objects",
+        "matched_objects_enrich_limit",
+        "synthesis_list_limit",
+        "web_evidence"
+      ],
+      "query_type": "B_company_topic_search",
+      "failure_notes": [],
+      "passed": null
+    },
+    {
+      "qid": "4",
+      "turn_group": "问题2",
+      "turn_index": 2,
+      "session_id": "eval-mt-02-2-e3c54057",
+      "fixture": "apps/admin-console/tests/fixtures/test_cases.yaml",
+      "is_head_turn": false,
+      "scored": true,
+      "query": "上述企业里总部在深圳的企业有哪些",
+      "http_status": 200,
+      "answer_excerpt": "根据提供的证据，总部在深圳的企业如下：\n\n*   **招商银行股份有限公司** [5]\n*   **深圳华为投资控股有限公司** [5]\n*   **中国平安人寿保险股份有限公司** [5]\n*   **万科企业股份有限公司** [5]\n*   **华侨城集团** [6][9][10]\n*   **富士康** [9]\n*   **腾讯** [9]\n*   **中兴** [9]\n*   **创维** [9]\n*   **中国平安** [9]\n*   **茂业集团** [9]\n*   **赛格** [9]\n*   **深圳发展银行** [5][9]\n*   **天虹商场** [9]\n*   **金",
+      "citations_count": 0,
+      "structured_payload_keys": [
+        "narrowed_from_count",
+        "narrowing_domain",
+        "narrowing_topic",
+        "retrieval_evidence",
+        "web_evidence"
+      ],
+      "required_hit": "0/6",
+      "required_hit_count": 0,
+      "required_total": 6,
+      "missing": [
+        "安赛步",
+        "小村机器人",
+        "中科世界",
+        "艾唯尔",
+        "锐曼智能",
+        "普渡"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.0,
+      "answer_coverage_terms_hit": [],
+      "answer_coverage_terms_missing": [
+        "深圳中科世界机器人有限公司",
+        "深圳安赛步机器人有限公司",
+        "深圳市小村机器人智能科技有限公司",
+        "深圳市普渡科技股份有限公司",
+        "深圳市艾唯尔科技有限公司",
+        "深圳市锐曼智能技术有限公司"
+      ],
+      "query_type": "D_narrowing",
+      "routing_assertions": {},
+      "failure_notes": [
+        "missing required entities",
+        "answer coverage below threshold 20%"
+      ],
+      "passed": false
+    },
+    {
+      "qid": "5",
+      "turn_group": "问题2",
+      "turn_index": 3,
+      "session_id": "eval-mt-02-2-e3c54057",
+      "fixture": "apps/admin-console/tests/fixtures/test_cases.yaml",
+      "is_head_turn": false,
+      "scored": true,
+      "query": "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+      "http_status": 200,
+      "answer_excerpt": "我还没判断清楚要查哪类科创信息。请补充要查询的主体、方向或范围，例如：介绍某位教授、查某家企业、找某方向的论文/专利，或问“深圳做具身智能的教授和企业有哪些”。当前支持教授、企业、论文、专利四类数据。",
+      "citations_count": 0,
+      "structured_payload_keys": [],
+      "required_hit": "0/1",
+      "required_hit_count": 0,
+      "required_total": 1,
+      "missing": [
+        "普渡"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.0,
+      "answer_coverage_terms_hit": [],
+      "answer_coverage_terms_missing": [
+        "AGV",
+        "AMR",
+        "BellaBot",
+        "WIFI",
+        "与酒店配送机器人领域关联度较低",
+        "专注于表情",
+        "产品名称",
+        "产品线包括送餐机器人",
+        "从其官网和公开资料看",
+        "从技术栈上看",
+        "从有限的资料看",
+        "他们具备强大的移动机器人研发能力"
+      ],
+      "query_type": "unknown",
+      "routing_assertions": {},
+      "failure_notes": [
+        "missing required entities",
+        "answer coverage below threshold 20%"
+      ],
+      "passed": false
+    },
+    {
+      "qid": "7",
+      "turn_group": "问题4",
+      "turn_index": 1,
+      "session_id": "eval-mt-03-4-0e023528",
+      "fixture": "apps/admin-console/tests/fixtures/test_cases.yaml",
+      "is_head_turn": true,
+      "scored": false,
+      "query": "请介绍无界智航的相关信息",
+      "http_status": 200,
+      "answer_excerpt": "## 基本信息\n- **名称**：深圳无界智航科技 [1]\n- **机构/单位**：深圳无界智航科技有限公司 [1]；其北京分公司成立于2025年12月30日，负责人为穆世龙 [24]\n- **职位/行业**：人工智能行业 [2]；主营业务为超级具身智能系统研发商 [3]\n\n## 核心技术或产品\n- **超级具身智能系统**：基于数据采集套件，通过构建“真实+合成”通用具身数据引擎，研发全球领先的“稳定-可拓展的超级具身智能系统”，旨在重新定义机器人与物理世界的交互边界 [4][14][18]\n- **数据采集套件**：用于构建“真实+合成”通用具身数据引擎的数据采集硬件套件 [6][16]\n",
+      "citations_count": 1,
+      "structured_payload_keys": [
+        "application_scenarios",
+        "business",
+        "canonical_name",
+        "company_id",
+        "company_news",
+        "company_products",
+        "company_team",
+        "description",
+        "industry",
+        "products",
+        "recent_events",
+        "web_evidence"
+      ],
+      "query_type": "A_company_profile",
+      "failure_notes": [],
+      "passed": null
+    },
+    {
+      "qid": "8",
+      "turn_group": "问题4",
+      "turn_index": 2,
+      "session_id": "eval-mt-03-4-0e023528",
+      "fixture": "apps/admin-console/tests/fixtures/test_cases.yaml",
+      "is_head_turn": false,
+      "scored": true,
+      "query": "我关注的是深圳智航无界科技",
+      "http_status": 200,
+      "answer_excerpt": "没有找到与 '深圳智航无界科技' 匹配的企业。",
+      "citations_count": 0,
+      "structured_payload_keys": [
+        "classifier_reason",
+        "name",
+        "target_domain"
+      ],
+      "required_hit": "2/6",
+      "required_hit_count": 2,
+      "required_total": 6,
+      "missing": [
+        "丁文伯",
+        "穆世龙",
+        "具身智能",
+        "可穿戴数采套件"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.022,
+      "answer_coverage_terms_hit": [
+        "无界智航"
+      ],
+      "answer_coverage_terms_missing": [
+        "CEO",
+        "V600",
+        "V800",
+        "X-H1",
+        "X-Sim",
+        "与美团",
+        "两者均为深圳本地科技企业",
+        "乡村低空物流等场景",
+        "产品包括可穿戴数采套件",
+        "产品有",
+        "但分属具身智能与无人机不同细分赛道",
+        "全链条创新"
+      ],
+      "query_type": "G_ambiguous_not_found",
+      "routing_assertions": {},
+      "failure_notes": [
+        "missing required entities",
+        "answer coverage below threshold 20%"
+      ],
+      "passed": false
+    },
+    {
+      "qid": "9",
+      "turn_group": "问题5",
+      "turn_index": 1,
+      "session_id": "eval-mt-04-5-e5609146",
+      "fixture": "apps/admin-console/tests/fixtures/test_cases.yaml",
+      "is_head_turn": true,
+      "scored": false,
+      "query": "我想找PCB打板， 有哪些推荐",
+      "http_status": 200,
+      "answer_excerpt": "根据您“找PCB打板”的需求，以下是深圳地区直接相关的PCB打板/打样服务商推荐：\n\n*   **兴森快捷电路科技 [1]**\n    *   **核心业务**：专注于PCB快速样板及中小批量板，以样板快件服务为核心切入点，帮助客户在研发阶段实现快速打样和设计验证 [1]。\n*   **芯拓科技 [2]**\n    *   **核心业务**：提供PCB设计打板服务，作为其嵌入式物联网方案的一部分 [2]。\n*   **驭鹰者电子 [3]**\n    *   **核心业务**：以PCB打样及电路板制造为核心业务，产品包括多层板、高频板、金属基板等 [3]。\n*   **深圳顺易捷科技 [4]**",
+      "citations_count": 25,
+      "structured_payload_keys": [
+        "classifier_reason",
+        "classifier_target_domain",
+        "classifier_topic",
+        "match_count",
+        "matched_objects",
+        "matched_objects_enrich_limit",
+        "synthesis_list_limit",
+        "web_evidence"
+      ],
+      "query_type": "B_company_topic_search",
+      "failure_notes": [],
+      "passed": null
+    },
+    {
+      "qid": "10",
+      "turn_group": "问题5",
+      "turn_index": 2,
+      "session_id": "eval-mt-04-5-e5609146",
+      "fixture": "apps/admin-console/tests/fixtures/test_cases.yaml",
+      "is_head_turn": false,
+      "scored": true,
+      "query": "上述企业有哪些是深圳的企业",
+      "http_status": 200,
+      "answer_excerpt": "根据提供的证据，以下是总部位于深圳的企业：\n\n*   **腾讯控股 [10]**\n    *   上榜胡润中国500强非国有企业榜单前十 [10]。\n*   **中国平安保险 [10]**\n    *   上榜胡润中国500强非国有企业榜单前十 [10]。\n*   **比亚迪 [10]**\n    *   上榜胡润中国500强非国有企业榜单前十 [10]。\n*   **华为 [2][4][10]**\n    *   被列为深圳的大型企业 [2][4]，并上榜胡润中国500强非国有企业榜单前十 [10]。\n*   **富士康 [2][4]**\n    *   被列为深圳的大型企业 [2][4]。",
+      "citations_count": 0,
+      "structured_payload_keys": [
+        "narrowed_from_count",
+        "narrowing_domain",
+        "narrowing_topic",
+        "retrieval_evidence",
+        "web_evidence"
+      ],
+      "required_hit": "0/6",
+      "required_hit_count": 0,
+      "required_total": 6,
+      "missing": [
+        "嘉立创",
+        "华秋PCB",
+        "深南电路",
+        "兴森",
+        "一博",
+        "则成电子"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.0,
+      "answer_coverage_terms_hit": [],
+      "answer_coverage_terms_missing": [
+        "FPC",
+        "FPCA",
+        "HDI",
+        "PCB",
+        "PCBA",
+        "Top8",
+        "一博科技",
+        "上达电子",
+        "专业从事柔性电路板",
+        "专注",
+        "专注于",
+        "中信华"
+      ],
+      "query_type": "D_narrowing",
+      "routing_assertions": {},
+      "failure_notes": [
+        "missing required entities",
+        "answer coverage below threshold 20%"
+      ],
+      "passed": false
+    },
+    {
+      "qid": "11",
+      "turn_group": "问题6",
+      "turn_index": 1,
+      "session_id": "eval-mt-05-6-2e158501",
+      "fixture": "apps/admin-console/tests/fixtures/test_cases.yaml",
+      "is_head_turn": true,
+      "scored": false,
+      "query": "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning 这篇论文的详细信息",
+      "http_status": 200,
+      "answer_excerpt": "我还没判断清楚要查哪类科创信息。请补充要查询的主体、方向或范围，例如：介绍某位教授、查某家企业、找某方向的论文/专利，或问“深圳做具身智能的教授和企业有哪些”。当前支持教授、企业、论文、专利四类数据。",
+      "citations_count": 0,
+      "structured_payload_keys": [],
+      "query_type": "unknown",
+      "failure_notes": [],
+      "passed": null
+    },
+    {
+      "qid": "12",
+      "turn_group": "问题6",
+      "turn_index": 2,
+      "session_id": "eval-mt-05-6-2e158501",
+      "fixture": "apps/admin-console/tests/fixtures/test_cases.yaml",
+      "is_head_turn": false,
+      "scored": true,
+      "query": "这论文的链接是什么",
+      "http_status": 200,
+      "answer_excerpt": "请先确认要查询哪一个实体，再追问它关联的论文。",
+      "citations_count": 0,
+      "structured_payload_keys": [
+        "target_domain"
+      ],
+      "required_hit": "0/2",
+      "required_hit_count": 0,
+      "required_total": 2,
+      "missing": [
+        "PDF链接",
+        "arxiv"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.0,
+      "answer_coverage_terms_hit": [],
+      "answer_coverage_terms_missing": [
+        "PDF",
+        "arxiv",
+        "http",
+        "org",
+        "pdf",
+        "链接为"
+      ],
+      "query_type": "C_cross_domain_clarification",
+      "routing_assertions": {},
+      "failure_notes": [
+        "missing required entities",
+        "answer coverage below threshold 20%"
+      ],
+      "passed": false
+    },
+    {
+      "qid": "14",
+      "turn_group": "问题8",
+      "turn_index": 1,
+      "session_id": "eval-mt-06-8-ad4430f1",
+      "fixture": "apps/admin-console/tests/fixtures/test_cases.yaml",
+      "is_head_turn": true,
+      "scored": false,
+      "query": "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样",
+      "http_status": 200,
+      "answer_excerpt": "## 基本信息\n- **名称**：华力创科学（深圳）[1]\n- **机构/单位**：华力创科学（深圳）有限公司[1]\n- **职位/行业**：力传感技术开发商，属于先进制造行业[2][3]\n\n## 核心技术或产品\n- **核心技术**：基于首创的光基多维力传感原理，采用非激光光源测量纳米级形变，实现高精度、低串扰、微型化、高刚度及工业级可靠性的“感知+执行”一体化[4][15]。公司整体技术路线为高性能光学多模态感知技术[5][6][7]。\n- **主要产品**：\n    - **Photon系列**：基于上述光基多维力传感原理的六维力/力矩传感器[4][15]。\n    - **智能传感器与",
+      "citations_count": 1,
+      "structured_payload_keys": [
+        "application_scenarios",
+        "business",
+        "canonical_name",
+        "company_id",
+        "company_news",
+        "company_products",
+        "company_team",
+        "description",
+        "industry",
+        "products",
+        "recent_events",
+        "web_evidence"
+      ],
+      "query_type": "A_company_profile",
+      "failure_notes": [],
+      "passed": null
+    },
+    {
+      "qid": "15",
+      "turn_group": "问题8",
+      "turn_index": 2,
+      "session_id": "eval-mt-06-8-ad4430f1",
+      "fixture": "apps/admin-console/tests/fixtures/test_cases.yaml",
+      "is_head_turn": false,
+      "scored": true,
+      "query": "光基多维力传感原理具体展开说",
+      "http_status": 200,
+      "answer_excerpt": "基于提供的证据，无法对“光基多维力传感原理”进行具体展开。所有证据均未提及“多维力传感”这一概念或其相关原理。\n\n证据中仅包含光学传感器或光纤传感器的一般性原理介绍，具体如下：\n*   **光学传感器涉及的光学原理、效应** [1]\n*   **光纤传感中的光学原理及效应** [2][5]\n*   **光传感领域概述** [3]\n*   **光纤传感器的工作原理** [4]\n\n这些资料均未涉及多维力（如三维空间中的力和力矩）的测量原理。因此，证据不足以回答该问题。",
+      "citations_count": 0,
+      "structured_payload_keys": [
+        "classifier_reason",
+        "llm_error",
+        "retrieval_evidence"
+      ],
+      "required_hit": "1/6",
+      "required_hit_count": 1,
+      "required_total": 6,
+      "missing": [
+        "光学多模态感知",
+        "六维力/力矩",
+        "微形变",
+        "华力创科学",
+        "Photon Finger"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.046,
+      "answer_coverage_terms_hit": [
+        "光基多维力传感原理",
+        "波长",
+        "相位"
+      ],
+      "answer_coverage_terms_missing": [
+        "Finger",
+        "Max",
+        "Photon",
+        "为机器人智能化操作提供核心技术支持",
+        "传感器直径仅",
+        "信号滤波等算法",
+        "光基多维力传感是基于光学多模态感知技术的新型力觉测量原理",
+        "光学信号",
+        "光学感知微形变",
+        "光强",
+        "六维力",
+        "力矩"
+      ],
+      "query_type": "E_knowledge_qa",
+      "routing_assertions": {},
+      "failure_notes": [
+        "missing required entities",
+        "answer coverage below threshold 20%"
+      ],
+      "passed": false
+    },
+    {
+      "qid": "24",
+      "turn_group": "问题17",
+      "turn_index": 1,
+      "session_id": "eval-mt-07-17-05b205eb",
+      "fixture": "apps/admin-console/tests/fixtures/test_cases.yaml",
+      "is_head_turn": true,
+      "scored": false,
+      "query": "优必选有哪些专利",
+      "http_status": 200,
+      "answer_excerpt": "## 专利概览\n根据提供的证据，优必选（深圳市优必选科技股份有限公司）及其关联公司共涉及 10 项发明专利。这些专利的申请人包括深圳市优必选科技股份有限公司、深圳市优纪元科技有限公司、深圳市优必行科技有限公司和深圳市优世界机器人有限公司 [1][2][3][4][5][6][7][8][9][10]。具体专利号、标题和申请人如下：\n*   CN118208076A：一种水面清洁装置及清洁设备，申请人：深圳市优纪元科技有限公司；深圳市优必选科技股份有限公司 [1]\n*   CN117870645A：地图生成方法、装置、机器人及计算机可读存储介质，申请人：深圳市优纪元科技有限公司；深圳市优必选科技",
+      "citations_count": 10,
+      "structured_payload_keys": [
+        "company_name_query",
+        "match_count",
+        "patents",
+        "web_evidence"
+      ],
+      "query_type": "A_patent_by_applicant",
+      "failure_notes": [],
+      "passed": null
+    },
+    {
+      "qid": "25",
+      "turn_group": "问题17",
+      "turn_index": 2,
+      "session_id": "eval-mt-07-17-05b205eb",
+      "fixture": "apps/admin-console/tests/fixtures/test_cases.yaml",
+      "is_head_turn": false,
+      "scored": true,
+      "query": "专利 CN117873146A 的详细信息是什么",
+      "http_status": 200,
+      "answer_excerpt": "## 专利概览\n在提供的证据中，未找到关于专利号 **CN117873146A** 的任何信息。证据中提及了其他多个专利号、产品型号或化学物质编号，但均与查询的专利无关。\n\n## 技术摘要\n无相关信息。\n\n## 技术领域\n无相关信息。\n\n## 专利列表\n证据中未包含与 CN117873146A 相关的专利，但列出了其他一些专利或编号，具体如下：\n*   **CN117411248A**：标题为“超高精度伺服电机及电气设备”，来源为专利顾如网站 [1]。\n*   **CN117506246A**：标题为“端板焊接装置”，来源为专利顾如网站 [2]。\n*   **CN202410287119.5*",
+      "citations_count": 1,
+      "structured_payload_keys": [
+        "applicants_raw",
+        "patent_id",
+        "patent_number",
+        "patent_type",
+        "title_clean",
+        "web_evidence"
+      ],
+      "required_hit": "2/5",
+      "required_hit_count": 2,
+      "required_total": 5,
+      "missing": [
+        "机器人落地控制",
+        "腿部刚度",
+        "腰部高度"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.139,
+      "answer_coverage_terms_hit": [
+        "CN117873146A",
+        "一种机器人的落地控制方法",
+        "专利",
+        "机器人及终端设备",
+        "深圳市优必选科技股份有限公司"
+      ],
+      "answer_coverage_terms_missing": [
+        "以改变腿部刚度",
+        "优化地面接触状态",
+        "公告",
+        "公开",
+        "实现平稳站立",
+        "得到腰部高度控制量",
+        "技术功效",
+        "技术方案概述",
+        "提升稳定性",
+        "标题",
+        "核心步骤包括",
+        "根据落地时间计算腿部实际刚度"
+      ],
+      "query_type": "A_patent_profile",
+      "routing_assertions": {},
+      "failure_notes": [
+        "missing required entities",
+        "answer coverage below threshold 20%"
+      ],
+      "passed": false
+    },
+    {
+      "qid": "S1-H",
+      "turn_group": "S1-r2-o3-professor-company",
+      "turn_index": 1,
+      "session_id": "eval-mt-08-S1-r2-o3-professor-company-01069f17",
+      "fixture": "apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+      "is_head_turn": true,
+      "scored": false,
+      "query": "有哪些做具身智能和灵巧手的教授",
+      "http_status": 200,
+      "answer_excerpt": "基于提供的证据，为您找到以下直接相关的教授：\n\n*   **高庆** [1]\n    *   任职于中山大学（深圳）电子与通信工程学院，副教授。\n    *   研究方向直接涉及**人形机器人/灵巧手具身智能感知、交互与执行**，以及人体数据驱动的人形机器人动作与技巧学习 [1]。\n\n*   **罗健文** [7]\n    *   任职于中山大学（深圳）智能工程学院，副教授。\n    *   研究方向包括机器人动力学与控制、人形机器人以及**灵巧手** [7]。\n\n*   **邵奕天** [8]\n    *   任职于哈尔滨工业大学（深圳），教授。\n    *   研究方向聚焦人机交互与机器人",
+      "citations_count": 9,
+      "structured_payload_keys": [
+        "classifier_reason",
+        "classifier_topic",
+        "match_count",
+        "matched_professors",
+        "web_evidence"
+      ],
+      "query_type": "B_semantic_topic_search",
+      "failure_notes": [],
+      "passed": null
+    },
+    {
+      "qid": "S1-F",
+      "turn_group": "S1-r2-o3-professor-company",
+      "turn_index": 2,
+      "session_id": "eval-mt-08-S1-r2-o3-professor-company-01069f17",
+      "fixture": "apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+      "is_head_turn": false,
+      "scored": true,
+      "query": "上述教授参与的企业",
+      "http_status": 200,
+      "answer_excerpt": "未找到直接匹配的“上述教授参与的企业”的相关信息。\n\n现有证据中，[1] 和 [10] 提到的“尚福林”教授的合作研究者均为高校及科研院所人员（如西安交大材料学院李长久教授、航天科技41所等），未提及任何企业参与信息。其他证据[2]-[9]虽涉及企业导师、产业教授或具有企业工作经历的教授，但均未明确指向“上述教授”中的特定人物及其参与的企业。",
+      "citations_count": 0,
+      "structured_payload_keys": [
+        "narrowed_from_count",
+        "narrowing_domain",
+        "narrowing_topic",
+        "retrieval_evidence",
+        "web_evidence"
+      ],
+      "required_hit": "0/0",
+      "required_hit_count": 0,
+      "required_total": 0,
+      "missing": [],
+      "forbidden_hit": [],
+      "answer_coverage": 0.0,
+      "answer_coverage_terms_hit": [],
+      "answer_coverage_terms_missing": [
+        "上轮展示",
+        "企业",
+        "关联",
+        "覆盖"
+      ],
+      "query_type": "D_narrowing",
+      "routing_assertions": {
+        "query_type": {
+          "expected": [
+            "C_cross_domain_related"
+          ],
+          "actual": "D_narrowing",
+          "passed": false
+        },
+        "set_derived": {
+          "passed": false,
+          "reason": "structured_payload does not reference prior displayed set IDs",
+          "basis_ids": [
+            "PROF-418E17982AF1",
+            "PROF-6566EC6DB138",
+            "PROF-778ACC47302E",
+            "PROF-AE024E721DE1",
+            "PROF-C763046E5B2B",
+            "PROF-DDFD47318C27",
+            "PROF-ED08BBCE47BB",
+            "PROF-ED311EE2A76B",
+            "PROF-EE3CCB410D58"
+          ],
+          "payload_basis_overlap": [],
+          "source_like_ids_outside_basis": []
+        }
+      },
+      "failure_notes": [
+        "answer coverage below threshold 20%",
+        "query_type assertion failed",
+        "set-derived assertion failed"
+      ],
+      "passed": false
+    },
+    {
+      "qid": "S2-H",
+      "turn_group": "S2-bare-pronoun-professor-papers",
+      "turn_index": 1,
+      "session_id": "eval-mt-09-S2-bare-pronoun-professor-papers-fb77f372",
+      "fixture": "apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+      "is_head_turn": true,
+      "scored": false,
+      "query": "有哪些做具身智能和灵巧手的教授",
+      "http_status": 200,
+      "answer_excerpt": "基于提供的证据，为您找到以下直接相关的教授：\n\n*   **高庆** [1]\n    *   任职于中山大学（深圳）电子与通信工程学院，副教授。\n    *   研究方向明确包含**人形机器人/灵巧手具身智能感知、交互与执行**，以及人体数据驱动的人形机器人动作与技巧学习 [1]。\n\n*   **罗健文** [7]\n    *   任职于中山大学（深圳）智能工程学院，副教授。\n    *   研究方向包括机器人动力学与控制、人形机器人以及**灵巧手** [7]。\n\n*   **邵奕天** [8]\n    *   任职于哈尔滨工业大学（深圳），教授。\n    *   研究方向聚焦人机交互与机器人",
+      "citations_count": 9,
+      "structured_payload_keys": [
+        "classifier_reason",
+        "classifier_topic",
+        "match_count",
+        "matched_professors",
+        "web_evidence"
+      ],
+      "query_type": "B_semantic_topic_search",
+      "failure_notes": [],
+      "passed": null
+    },
+    {
+      "qid": "S2-F",
+      "turn_group": "S2-bare-pronoun-professor-papers",
+      "turn_index": 2,
+      "session_id": "eval-mt-09-S2-bare-pronoun-professor-papers-fb77f372",
+      "fixture": "apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+      "is_head_turn": false,
+      "scored": true,
+      "query": "他们发表了哪些论文",
+      "http_status": 200,
+      "answer_excerpt": "请先确认要查询哪一个实体，再追问它关联的论文。",
+      "citations_count": 0,
+      "structured_payload_keys": [
+        "target_domain"
+      ],
+      "required_hit": "0/0",
+      "required_hit_count": 0,
+      "required_total": 0,
+      "missing": [],
+      "forbidden_hit": [],
+      "answer_coverage": 0.0,
+      "answer_coverage_terms_hit": [],
+      "answer_coverage_terms_missing": [
+        "上轮展示",
+        "关联",
+        "教授",
+        "论文"
+      ],
+      "query_type": "C_cross_domain_clarification",
+      "routing_assertions": {
+        "query_type": {
+          "expected": [
+            "C_cross_domain_related"
+          ],
+          "actual": "C_cross_domain_clarification",
+          "passed": false
+        },
+        "set_derived": {
+          "passed": false,
+          "reason": "structured_payload does not reference prior displayed set IDs",
+          "basis_ids": [
+            "PROF-418E17982AF1",
+            "PROF-6566EC6DB138",
+            "PROF-778ACC47302E",
+            "PROF-AE024E721DE1",
+            "PROF-C763046E5B2B",
+            "PROF-DDFD47318C27",
+            "PROF-ED08BBCE47BB",
+            "PROF-ED311EE2A76B",
+            "PROF-EE3CCB410D58"
+          ],
+          "payload_basis_overlap": [],
+          "source_like_ids_outside_basis": []
+        }
+      },
+      "failure_notes": [
+        "answer coverage below threshold 20%",
+        "query_type assertion failed",
+        "set-derived assertion failed"
+      ],
+      "passed": false
+    },
+    {
+      "qid": "S3-H",
+      "turn_group": "S3-list-then-singular-clarification",
+      "turn_index": 1,
+      "session_id": "eval-mt-10-S3-list-then-singular-clarificat-557e09f7",
+      "fixture": "apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+      "is_head_turn": true,
+      "scored": false,
+      "query": "有哪些做具身智能和灵巧手的教授",
+      "http_status": 200,
+      "answer_excerpt": "基于提供的证据，为您找到以下直接相关的教授：\n\n*   **高庆** [1]\n    *   任职于中山大学（深圳）电子与通信工程学院，副教授。\n    *   研究方向直接涉及**人形机器人/灵巧手具身智能感知、交互与执行**，以及人体数据驱动的人形机器人动作与技巧学习。\n\n*   **罗健文** [7]\n    *   任职于中山大学（深圳）智能工程学院，副教授。\n    *   研究方向包括机器人动力学与控制、人形机器人以及**灵巧手**。\n\n*   **邵奕天** [8]\n    *   任职于哈尔滨工业大学（深圳），教授。\n    *   研究方向聚焦人机交互与机器人触觉传感，涉及*",
+      "citations_count": 9,
+      "structured_payload_keys": [
+        "classifier_reason",
+        "classifier_topic",
+        "match_count",
+        "matched_professors",
+        "web_evidence"
+      ],
+      "query_type": "B_semantic_topic_search",
+      "failure_notes": [],
+      "passed": null
+    },
+    {
+      "qid": "S3-F",
+      "turn_group": "S3-list-then-singular-clarification",
+      "turn_index": 2,
+      "session_id": "eval-mt-10-S3-list-then-singular-clarificat-557e09f7",
+      "fixture": "apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+      "is_head_turn": false,
+      "scored": true,
+      "query": "他的论文是哪些",
+      "http_status": 200,
+      "answer_excerpt": "请先确认要查询哪一个实体，再追问它关联的论文。",
+      "citations_count": 0,
+      "structured_payload_keys": [
+        "target_domain"
+      ],
+      "required_hit": "0/0",
+      "required_hit_count": 0,
+      "required_total": 0,
+      "missing": [],
+      "forbidden_hit": [],
+      "answer_coverage": 0.0,
+      "answer_coverage_terms_hit": [],
+      "answer_coverage_terms_missing": [
+        "哪位",
+        "教授",
+        "澄清",
+        "论文"
+      ],
+      "query_type": "C_cross_domain_clarification",
+      "routing_assertions": {
+        "query_type": {
+          "expected": [
+            "G_ambiguous_clarification",
+            "C_cross_domain_clarification"
+          ],
+          "actual": "C_cross_domain_clarification",
+          "passed": true
+        }
+      },
+      "failure_notes": [
+        "answer coverage below threshold 20%"
+      ],
+      "passed": false
+    },
+    {
+      "qid": "S4-H",
+      "turn_group": "S4-empty-set-domain-mismatch",
+      "turn_index": 1,
+      "session_id": "eval-mt-11-S4-empty-set-domain-mismatch-6cf3443f",
+      "fixture": "apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+      "is_head_turn": true,
+      "scored": false,
+      "query": "中国有哪些成熟的酒店送餐机器人供应商",
+      "http_status": 200,
+      "answer_excerpt": "基于提供的证据，未找到直接匹配的中国成熟酒店送餐机器人供应商。\n\n证据中提及的实体，其核心业务或产品定位与“酒店送餐机器人”存在差异，具体分析如下：\n*   **核心业务为烹饪/厨房设备**：如御膳智能科技 [14]、不停科技 [16]、全世萝卜机器人应用科技 [19] 等，主要研发烹饪机器人或双臂机器人用于食品制作，而非配送。\n*   **核心业务为其他服务机器人**：如深圳中科世界机器人 [4] 的明星产品是迎宾机器人；艾唯尔科技 [5] 的餐饮服务机器人“小艾”主要功能是点餐和排队；坎德拉 [17] 的酒店系列机器人功能覆盖垃圾清运、清洁等，并非专注射频送餐。\n*   **业务范围广泛但",
+      "citations_count": 25,
+      "structured_payload_keys": [
+        "classifier_reason",
+        "classifier_target_domain",
+        "classifier_topic",
+        "match_count",
+        "matched_objects",
+        "matched_objects_enrich_limit",
+        "synthesis_list_limit",
+        "web_evidence"
+      ],
+      "query_type": "B_company_topic_search",
+      "failure_notes": [],
+      "passed": null
+    },
+    {
+      "qid": "S4-F",
+      "turn_group": "S4-empty-set-domain-mismatch",
+      "turn_index": 2,
+      "session_id": "eval-mt-11-S4-empty-set-domain-mismatch-6cf3443f",
+      "fixture": "apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+      "is_head_turn": false,
+      "scored": true,
+      "query": "上述教授参与的企业",
+      "http_status": 200,
+      "answer_excerpt": "当前上下文没有可指代的教授列表，请先检索教授列表后再追问。 当前可指代的列表：企业。",
+      "citations_count": 0,
+      "structured_payload_keys": [
+        "available_result_set_domains",
+        "referent_domain"
+      ],
+      "required_hit": "0/0",
+      "required_hit_count": 0,
+      "required_total": 0,
+      "missing": [],
+      "forbidden_hit": [],
+      "answer_coverage": 0.25,
+      "answer_coverage_terms_hit": [
+        "企业"
+      ],
+      "answer_coverage_terms_missing": [
+        "上下文",
+        "教授",
+        "澄清"
+      ],
+      "query_type": "C_cross_domain_clarification",
+      "routing_assertions": {
+        "query_type": {
+          "expected": [
+            "G_ambiguous_clarification",
+            "C_cross_domain_clarification"
+          ],
+          "actual": "C_cross_domain_clarification",
+          "passed": true
+        }
+      },
+      "failure_notes": [],
+      "passed": true
+    },
+    {
+      "qid": "S5-H",
+      "turn_group": "S5-three-turn-prof-company-patent",
+      "turn_index": 1,
+      "session_id": "eval-mt-12-S5-three-turn-prof-company-paten-9794c9fd",
+      "fixture": "apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+      "is_head_turn": true,
+      "scored": false,
+      "query": "有哪些做具身智能和灵巧手的教授",
+      "http_status": 200,
+      "answer_excerpt": "基于提供的证据，为您找到以下直接相关的教授：\n\n*   **高庆** [1]\n    *   任职于中山大学（深圳）电子与通信工程学院，副教授。\n    *   研究方向直接涉及**人形机器人/灵巧手具身智能感知、交互与执行**，以及人体数据驱动的人形机器人动作与技巧学习 [1]。\n\n*   **罗健文** [7]\n    *   任职于中山大学（深圳）智能工程学院，副教授。\n    *   研究方向包括机器人动力学与控制、人形机器人以及**灵巧手** [7]。\n\n*   **邵奕天** [8]\n    *   任职于哈尔滨工业大学（深圳），教授。\n    *   研究方向聚焦人机交互与机器人",
+      "citations_count": 9,
+      "structured_payload_keys": [
+        "classifier_reason",
+        "classifier_topic",
+        "match_count",
+        "matched_professors",
+        "web_evidence"
+      ],
+      "query_type": "B_semantic_topic_search",
+      "failure_notes": [],
+      "passed": null
+    },
+    {
+      "qid": "S5-F1",
+      "turn_group": "S5-three-turn-prof-company-patent",
+      "turn_index": 2,
+      "session_id": "eval-mt-12-S5-three-turn-prof-company-paten-9794c9fd",
+      "fixture": "apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+      "is_head_turn": false,
+      "scored": true,
+      "query": "上述教授参与的企业",
+      "http_status": 200,
+      "answer_excerpt": "未找到直接匹配的“上述教授参与的企业”相关信息。\n\n现有证据中：\n- 证据[1]和[10]提到的是西安交通大学尚福林教授的合作研究者，均为校内教授、博士后等学术人员，未涉及企业参与。\n- 证据[2]列出的是计算机与信息工程实验教学示范中心的客座教授及企业导师，但未明确提及任何教授参与的企业。\n- 证据[3]、[4]、[7]仅列出教授的研究方向或联系方式，未提及企业参与。\n- 证据[5]提到一位教授曾担任企业董事或顾问，但未指明具体是哪位教授。\n- 证据[6]介绍的是产业教授的个人投资与合伙背景，未关联特定教授。\n- 证据[8]列出兼职教授及其工作单位，但未说明这些教授参与的企业。\n- 证据[9",
+      "citations_count": 0,
+      "structured_payload_keys": [
+        "narrowed_from_count",
+        "narrowing_domain",
+        "narrowing_topic",
+        "retrieval_evidence",
+        "web_evidence"
+      ],
+      "required_hit": "0/0",
+      "required_hit_count": 0,
+      "required_total": 0,
+      "missing": [],
+      "forbidden_hit": [],
+      "answer_coverage": 0.0,
+      "answer_coverage_terms_hit": [],
+      "answer_coverage_terms_missing": [
+        "上轮展示",
+        "企业",
+        "关联",
+        "覆盖"
+      ],
+      "query_type": "D_narrowing",
+      "routing_assertions": {
+        "query_type": {
+          "expected": [
+            "C_cross_domain_related"
+          ],
+          "actual": "D_narrowing",
+          "passed": false
+        },
+        "set_derived": {
+          "passed": false,
+          "reason": "structured_payload does not reference prior displayed set IDs",
+          "basis_ids": [
+            "PROF-418E17982AF1",
+            "PROF-6566EC6DB138",
+            "PROF-778ACC47302E",
+            "PROF-AE024E721DE1",
+            "PROF-C763046E5B2B",
+            "PROF-DDFD47318C27",
+            "PROF-ED08BBCE47BB",
+            "PROF-ED311EE2A76B",
+            "PROF-EE3CCB410D58"
+          ],
+          "payload_basis_overlap": [],
+          "source_like_ids_outside_basis": []
+        }
+      },
+      "failure_notes": [
+        "answer coverage below threshold 20%",
+        "query_type assertion failed",
+        "set-derived assertion failed"
+      ],
+      "passed": false
+    },
+    {
+      "qid": "S5-F2",
+      "turn_group": "S5-three-turn-prof-company-patent",
+      "turn_index": 3,
+      "session_id": "eval-mt-12-S5-three-turn-prof-company-paten-9794c9fd",
+      "fixture": "apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+      "is_head_turn": false,
+      "scored": true,
+      "query": "这些公司有哪些专利",
+      "http_status": 200,
+      "answer_excerpt": "当前上下文没有可指代的企业列表，请先检索企业列表后再追问。 当前可指代的列表：教授。",
+      "citations_count": 0,
+      "structured_payload_keys": [
+        "available_result_set_domains",
+        "referent_domain"
+      ],
+      "required_hit": "0/0",
+      "required_hit_count": 0,
+      "required_total": 0,
+      "missing": [],
+      "forbidden_hit": [],
+      "answer_coverage": 0.0,
+      "answer_coverage_terms_hit": [],
+      "answer_coverage_terms_missing": [
+        "上轮展示",
+        "专利",
+        "公司",
+        "关联",
+        "覆盖"
+      ],
+      "query_type": "C_cross_domain_clarification",
+      "routing_assertions": {
+        "query_type": {
+          "expected": [
+            "C_cross_domain_related"
+          ],
+          "actual": "C_cross_domain_clarification",
+          "passed": false
+        },
+        "set_derived": {
+          "passed": false,
+          "reason": "structured_payload does not reference prior displayed set IDs",
+          "basis_ids": [
+            "PROF-418E17982AF1",
+            "PROF-6566EC6DB138",
+            "PROF-778ACC47302E",
+            "PROF-AE024E721DE1",
+            "PROF-C763046E5B2B",
+            "PROF-DDFD47318C27",
+            "PROF-ED08BBCE47BB",
+            "PROF-ED311EE2A76B",
+            "PROF-EE3CCB410D58"
+          ],
+          "payload_basis_overlap": [],
+          "source_like_ids_outside_basis": []
+        }
+      },
+      "failure_notes": [
+        "answer coverage below threshold 20%",
+        "query_type assertion failed",
+        "set-derived assertion failed"
+      ],
+      "passed": false
+    },
+    {
+      "qid": "S6A-H",
+      "turn_group": "S6-chip-professor-papers",
+      "turn_index": 1,
+      "session_id": "eval-mt-13-S6-chip-professor-papers-6f09afef",
+      "fixture": "apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+      "is_head_turn": true,
+      "scored": false,
+      "query": "有哪些做具身智能和灵巧手的教授",
+      "http_status": 200,
+      "answer_excerpt": "基于提供的证据，为您找到以下直接相关的教授：\n\n*   **高庆** [1]\n    *   任职于中山大学（深圳）电子与通信工程学院，副教授。\n    *   研究方向直接涉及**人形机器人/灵巧手具身智能感知、交互与执行**，以及人体数据驱动的人形机器人动作与技巧学习 [1]。\n\n*   **罗健文** [7]\n    *   任职于中山大学（深圳）智能工程学院，副教授。\n    *   研究方向包括机器人动力学与控制、人形机器人以及**灵巧手** [7]。\n\n*   **邵奕天** [8]\n    *   任职于哈尔滨工业大学（深圳），教授。\n    *   研究方向聚焦人机交互与机器人",
+      "citations_count": 9,
+      "structured_payload_keys": [
+        "classifier_reason",
+        "classifier_topic",
+        "match_count",
+        "matched_professors",
+        "web_evidence"
+      ],
+      "query_type": "B_semantic_topic_search",
+      "failure_notes": [],
+      "passed": null
+    },
+    {
+      "qid": "S6A-F",
+      "turn_group": "S6-chip-professor-papers",
+      "turn_index": 2,
+      "session_id": "eval-mt-13-S6-chip-professor-papers-6f09afef",
+      "fixture": "apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+      "is_head_turn": false,
+      "scored": true,
+      "query": "看看这些教授的论文",
+      "http_status": 200,
+      "answer_excerpt": "我还没判断清楚要查哪类科创信息。请补充要查询的主体、方向或范围，例如：介绍某位教授、查某家企业、找某方向的论文/专利，或问“深圳做具身智能的教授和企业有哪些”。当前支持教授、企业、论文、专利四类数据。",
+      "citations_count": 0,
+      "structured_payload_keys": [],
+      "required_hit": "0/0",
+      "required_hit_count": 0,
+      "required_total": 0,
+      "missing": [],
+      "forbidden_hit": [],
+      "answer_coverage": null,
+      "answer_coverage_terms_hit": [],
+      "answer_coverage_terms_missing": [],
+      "query_type": "unknown",
+      "routing_assertions": {
+        "query_type": {
+          "expected": [
+            "C_cross_domain_related"
+          ],
+          "actual": "unknown",
+          "passed": false
+        },
+        "set_derived": {
+          "passed": false,
+          "reason": "response has no structured_payload mapping/evidence",
+          "basis_ids": [
+            "PROF-418E17982AF1",
+            "PROF-6566EC6DB138",
+            "PROF-778ACC47302E",
+            "PROF-AE024E721DE1",
+            "PROF-C763046E5B2B",
+            "PROF-DDFD47318C27",
+            "PROF-ED08BBCE47BB",
+            "PROF-ED311EE2A76B",
+            "PROF-EE3CCB410D58"
+          ],
+          "payload_basis_overlap": [],
+          "source_like_ids_outside_basis": []
+        }
+      },
+      "failure_notes": [
+        "query_type assertion failed",
+        "set-derived assertion failed"
+      ],
+      "passed": false
+    },
+    {
+      "qid": "S6B-H",
+      "turn_group": "S6-chip-professor-shenzhen",
+      "turn_index": 1,
+      "session_id": "eval-mt-14-S6-chip-professor-shenzhen-b5a9cf2e",
+      "fixture": "apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+      "is_head_turn": true,
+      "scored": false,
+      "query": "有哪些做具身智能和灵巧手的教授",
+      "http_status": 200,
+      "answer_excerpt": "基于提供的证据，为您找到以下直接相关的教授：\n\n*   **高庆** [1]\n    *   任职于中山大学（深圳）电子与通信工程学院，副教授。\n    *   研究方向直接涉及**人形机器人/灵巧手具身智能感知、交互与执行**，以及人体数据驱动的人形机器人动作与技巧学习 [1]。\n\n*   **罗健文** [7]\n    *   任职于中山大学（深圳）智能工程学院，副教授。\n    *   研究方向包括机器人动力学与控制、人形机器人以及**灵巧手** [7]。\n\n*   **邵奕天** [8]\n    *   任职于哈尔滨工业大学（深圳），教授。\n    *   研究方向聚焦人机交互与机器人",
+      "citations_count": 9,
+      "structured_payload_keys": [
+        "classifier_reason",
+        "classifier_topic",
+        "match_count",
+        "matched_professors",
+        "web_evidence"
+      ],
+      "query_type": "B_semantic_topic_search",
+      "failure_notes": [],
+      "passed": null
+    },
+    {
+      "qid": "S6B-F",
+      "turn_group": "S6-chip-professor-shenzhen",
+      "turn_index": 2,
+      "session_id": "eval-mt-14-S6-chip-professor-shenzhen-b5a9cf2e",
+      "fixture": "apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+      "is_head_turn": false,
+      "scored": true,
+      "query": "上述哪些在深圳",
+      "http_status": 200,
+      "answer_excerpt": "在上轮 9 个教授结果中，未筛选到与 '哪些在深圳' 相关的条目。",
+      "citations_count": 0,
+      "structured_payload_keys": [
+        "narrowed_from_count",
+        "narrowing_domain",
+        "narrowing_topic",
+        "retrieval_evidence"
+      ],
+      "required_hit": "0/0",
+      "required_hit_count": 0,
+      "required_total": 0,
+      "missing": [],
+      "forbidden_hit": [],
+      "answer_coverage": null,
+      "answer_coverage_terms_hit": [],
+      "answer_coverage_terms_missing": [],
+      "query_type": "D_narrowing",
+      "routing_assertions": {
+        "query_type": {
+          "expected": [
+            "D_narrowing"
+          ],
+          "actual": "D_narrowing",
+          "passed": true
+        },
+        "set_derived": {
+          "passed": false,
+          "reason": "structured_payload does not reference prior displayed set IDs",
+          "basis_ids": [
+            "PROF-418E17982AF1",
+            "PROF-6566EC6DB138",
+            "PROF-778ACC47302E",
+            "PROF-AE024E721DE1",
+            "PROF-C763046E5B2B",
+            "PROF-DDFD47318C27",
+            "PROF-ED08BBCE47BB",
+            "PROF-ED311EE2A76B",
+            "PROF-EE3CCB410D58"
+          ],
+          "payload_basis_overlap": [],
+          "source_like_ids_outside_basis": []
+        }
+      },
+      "failure_notes": [
+        "set-derived assertion failed"
+      ],
+      "passed": false
+    },
+    {
+      "qid": "S6C-H",
+      "turn_group": "S6-chip-company-patents",
+      "turn_index": 1,
+      "session_id": "eval-mt-15-S6-chip-company-patents-0b8f20d5",
+      "fixture": "apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+      "is_head_turn": true,
+      "scored": false,
+      "query": "中国有哪些成熟的酒店送餐机器人供应商",
+      "http_status": 200,
+      "answer_excerpt": "好的，作为深圳科创信息检索助手，我将基于您提供的证据，为您梳理中国成熟的酒店送餐机器人供应商。\n\n根据证据，以下实体直接相关，其核心业务包含酒店场景的配送/送餐机器人：\n\n*   **普渡科技 [10]**\n    *   关键特征：专注于室内外配送与清洁机器人，产品覆盖酒店等场景，从智能送餐机器人起步，定位为全球领先的商用服务机器人解决方案提供商。\n\n*   **普波科技 [8]**\n    *   关键特征：以智能配送机器人为核心载体，产品体系帮助酒店等行业实现物品配送智能化升级。主打产品HL100智能配送机器人可承载30千克货物，适用于酒店等场景。\n\n*   **锐曼智能技术 [6]**",
+      "citations_count": 25,
+      "structured_payload_keys": [
+        "classifier_reason",
+        "classifier_target_domain",
+        "classifier_topic",
+        "match_count",
+        "matched_objects",
+        "matched_objects_enrich_limit",
+        "synthesis_list_limit",
+        "web_evidence"
+      ],
+      "query_type": "B_company_topic_search",
+      "failure_notes": [],
+      "passed": null
+    },
+    {
+      "qid": "S6C-F",
+      "turn_group": "S6-chip-company-patents",
+      "turn_index": 2,
+      "session_id": "eval-mt-15-S6-chip-company-patents-0b8f20d5",
+      "fixture": "apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+      "is_head_turn": false,
+      "scored": true,
+      "query": "这些公司有哪些专利",
+      "http_status": 200,
+      "answer_excerpt": "根据提供的证据，未找到直接匹配“这些公司”的专利信息。\n\n证据中提到了多家公司及其专利情况，但由于您的问题中“这些公司”指代不明，无法确定具体目标。证据中出现的公司包括：\n*   **四维图新**：取得了多项发明专利，涉及命名实体确定、地图数据更新、路网匹配纠错等方法及装置 [1][2][7][9]。\n*   **蒙娜丽莎、东鹏控股、帝欧家居**：共计取得7项发明专利证书 [3]。\n*   **苏试试验**：取得了共计21项发明专利证书 [6]。\n*   **东方希望集团**：旗下包头化工、九原电石、陈旗煤化等公司取得了多项实用新型专利 [10]。\n\n如果您能明确“这些公司”的具体名称，我将为",
+      "citations_count": 0,
+      "structured_payload_keys": [
+        "narrowed_from_count",
+        "narrowing_domain",
+        "narrowing_topic",
+        "retrieval_evidence",
+        "web_evidence"
+      ],
+      "required_hit": "0/0",
+      "required_hit_count": 0,
+      "required_total": 0,
+      "missing": [],
+      "forbidden_hit": [],
+      "answer_coverage": null,
+      "answer_coverage_terms_hit": [],
+      "answer_coverage_terms_missing": [],
+      "query_type": "D_narrowing",
+      "routing_assertions": {
+        "query_type": {
+          "expected": [
+            "C_cross_domain_related"
+          ],
+          "actual": "D_narrowing",
+          "passed": false
+        },
+        "set_derived": {
+          "passed": false,
+          "reason": "structured_payload does not reference prior displayed set IDs",
+          "basis_ids": [
+            "COMP-023013d38e21",
+            "COMP-15486c5ac3ab",
+            "COMP-24961ffa983c",
+            "COMP-3637a12465ca",
+            "COMP-45932485fa9a",
+            "COMP-49b6821b000e",
+            "COMP-5df917957b4d",
+            "COMP-7aa8c87dc489",
+            "COMP-7bbe6a692490",
+            "COMP-8ed85d2c2d59",
+            "COMP-9da2e5125b3d",
+            "COMP-9eb740c0da81",
+            "COMP-af3dc86d6441",
+            "COMP-b25246ee7cc2",
+            "COMP-b2d164fc2a04",
+            "COMP-b9492d136a37",
+            "COMP-be4869a8187c",
+            "COMP-ccda7fe6afd5",
+            "COMP-d58de20d96f6",
+            "COMP-f4333315f1ca",
+            "http://www.lovechuangchuang.cn/",
+            "https://chaohu.11467.com/info/15841852.htm",
+            "https://www.cnblogs.com/robot-ai-lab/p/19543040",
+            "https://www.cnblogs.com/robot-ai-lab/p/19552855",
+            "https://www.keenon.com/cn/stories/index.html"
+          ],
+          "payload_basis_overlap": [],
+          "source_like_ids_outside_basis": []
+        }
+      },
+      "failure_notes": [
+        "query_type assertion failed",
+        "set-derived assertion failed"
+      ],
+      "passed": false
+    },
+    {
+      "qid": "S6D-H",
+      "turn_group": "S6-chip-patent-granted",
+      "turn_index": 1,
+      "session_id": "eval-mt-16-S6-chip-patent-granted-a36ba728",
+      "fixture": "apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+      "is_head_turn": true,
+      "scored": false,
+      "query": "优必选有哪些专利",
+      "http_status": 200,
+      "answer_excerpt": "## 专利概览\n根据提供的证据，优必选（深圳市优必选科技股份有限公司）及其关联公司共持有 10 项发明专利。这些专利的申请人涉及深圳市优必选科技股份有限公司、深圳市优纪元科技有限公司、深圳市优必行科技有限公司及深圳市优世界机器人有限公司 [1][2][3][4][5][6][7][8][9][10]。具体专利号、标题及申请人如下：\n*   CN118208076A，一种水面清洁装置及清洁设备，申请人：深圳市优纪元科技有限公司；深圳市优必选科技股份有限公司 [1]\n*   CN117870645A，地图生成方法、装置、机器人及计算机可读存储介质，申请人：深圳市优纪元科技有限公司；深圳市优必选科技",
+      "citations_count": 10,
+      "structured_payload_keys": [
+        "company_name_query",
+        "match_count",
+        "patents",
+        "web_evidence"
+      ],
+      "query_type": "A_patent_by_applicant",
+      "failure_notes": [],
+      "passed": null
+    },
+    {
+      "qid": "S6D-F",
+      "turn_group": "S6-chip-patent-granted",
+      "turn_index": 2,
+      "session_id": "eval-mt-16-S6-chip-patent-granted-a36ba728",
+      "fixture": "apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+      "is_head_turn": false,
+      "scored": true,
+      "query": "上述哪些已授权",
+      "http_status": 200,
+      "answer_excerpt": "根据检索结果置信度较低，以下仅供参考：根据您提供的证据，未找到直接匹配的已授权专利。\n\n证据 [1] 中提及的专利 CN118870362A，其法律状态为“发明专利申请公布”，并非已授权状态。",
+      "citations_count": 1,
+      "structured_payload_keys": [
+        "narrowed_from_count",
+        "narrowing_domain",
+        "narrowing_topic",
+        "retrieval_evidence",
+        "web_evidence"
+      ],
+      "required_hit": "0/0",
+      "required_hit_count": 0,
+      "required_total": 0,
+      "missing": [],
+      "forbidden_hit": [],
+      "answer_coverage": null,
+      "answer_coverage_terms_hit": [],
+      "answer_coverage_terms_missing": [],
+      "query_type": "D_narrowing",
+      "routing_assertions": {
+        "query_type": {
+          "expected": [
+            "D_narrowing"
+          ],
+          "actual": "D_narrowing",
+          "passed": true
+        },
+        "set_derived": {
+          "passed": true,
+          "reason": "ok",
+          "basis_ids": [
+            "PAT-A192439F9061",
+            "PAT-A1E22A7AD4F5",
+            "PAT-A2B9561AA92E",
+            "PAT-A2FCCFE080ED",
+            "PAT-A35155018AC0",
+            "PAT-A463C224FE02",
+            "PAT-A49B1067875C",
+            "PAT-A60F404963FB",
+            "PAT-A73FA26B82F9",
+            "PAT-A75E359D84F5"
+          ],
+          "payload_basis_overlap": [
+            "PAT-A463C224FE02"
+          ],
+          "source_like_ids_outside_basis": []
+        }
+      },
+      "failure_notes": [],
+      "passed": true
+    }
+  ]
+}

@@ -280,7 +280,7 @@ def test_institution_prefixed_professor_papers_query_routes_to_prof_papers(
     assert [citation.id for citation in response.citations] == ["PAPER-WANG-001"]
 
 
-def test_institution_prefixed_professor_topics_query_routes_to_prof_topics(
+def test_institution_prefixed_professor_topics_query_resolves_institution_and_profile(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     store = _FakeSessionStore()
@@ -311,6 +311,7 @@ def test_institution_prefixed_professor_topics_query_routes_to_prof_topics(
         "_prof_research_topics",
         lambda *_args: ["雷达信号处理", "抗干扰"],
     )
+    monkeypatch.setattr(chat_module, "_prof_paper_count", lambda *_args: 0)
 
     response = chat_module.chat(
         chat_module.ChatRequest(query="中山大学深圳王伟教授的研究方向是什么？"),
@@ -319,7 +320,7 @@ def test_institution_prefixed_professor_topics_query_routes_to_prof_topics(
         conn=object(),
     )
 
-    assert response.query_type == "D_prof_topics_followup"
+    assert response.query_type == "A_prof_profile"
     assert lookup_calls[-1] == ("王伟", ("中山大学（深圳）",))
     assert response.structured_payload["professor_id"] == "PROF-WANG"
     assert response.structured_payload["research_topics"] == ["雷达信号处理", "抗干扰"]
@@ -367,6 +368,10 @@ def test_independent_topic_switch_clears_previous_context(
         ]
 
     monkeypatch.setattr(chat_module, "_lookup_domain_by_topic", lookup_by_topic)
+    # Web augmentation fires a real Serper search here and injects URL rows that
+    # would pollute last_result_set["company"]; mock it to a no-op for determinism
+    # (same pattern as 535ed9e for the paper-topic tests).
+    monkeypatch.setattr(chat_module, "_augment_rows_with_web", lambda _q, rows, **_k: rows)
 
     response = chat_module.chat(
         chat_module.ChatRequest(query="对了，深圳哪些公司做激光雷达"),

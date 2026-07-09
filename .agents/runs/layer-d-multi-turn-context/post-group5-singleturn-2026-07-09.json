@@ -1,0 +1,305 @@
+{
+  "head_cases": 19,
+  "required_recall": "34/83 (41%)",
+  "forbidden_violation_cases": 0,
+  "mean_answer_coverage": 0.131,
+  "flag_counts": {
+    "coref": 1,
+    "refusal": 1,
+    "disambiguation": 1
+  },
+  "rows": [
+    {
+      "qid": 1,
+      "query": "介绍清华的丁文伯",
+      "required_hit": "6/6",
+      "missing": [],
+      "forbidden_hit": [],
+      "answer_coverage": 0.47,
+      "qtype": "A_prof_profile",
+      "coref": false,
+      "refusal": false,
+      "disambiguation": false
+    },
+    {
+      "qid": 3,
+      "query": "中国有哪些成熟的酒店送餐机器人供应商",
+      "required_hit": "2/5",
+      "missing": [
+        "开普勒机器人",
+        "云迹",
+        "九号机器人"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.26,
+      "qtype": "B_company_topic_search",
+      "coref": false,
+      "refusal": false,
+      "disambiguation": false
+    },
+    {
+      "qid": 6,
+      "query": "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的",
+      "required_hit": "0/0",
+      "missing": [],
+      "forbidden_hit": [],
+      "answer_coverage": 0.0,
+      "qtype": "F_out_of_scope",
+      "coref": false,
+      "refusal": true,
+      "disambiguation": false
+    },
+    {
+      "qid": 7,
+      "query": "请介绍无界智航的相关信息",
+      "required_hit": "3/6",
+      "missing": [
+        "丁文伯",
+        "X-H1",
+        "X-Sim"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.12,
+      "qtype": "A_company_profile",
+      "coref": false,
+      "refusal": false,
+      "disambiguation": true
+    },
+    {
+      "qid": 9,
+      "query": "我想找PCB打板， 有哪些推荐",
+      "required_hit": "2/3",
+      "missing": [
+        "深南电路"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.22,
+      "qtype": "B_company_topic_search",
+      "coref": false,
+      "refusal": false,
+      "disambiguation": false
+    },
+    {
+      "qid": 11,
+      "query": "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning 这篇论文的详细信息",
+      "required_hit": "1/6",
+      "missing": [
+        "扩散模型",
+        "联邦学习",
+        "参数聚合",
+        "个性化",
+        "非独立同分布"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.09,
+      "qtype": "unknown",
+      "coref": false,
+      "refusal": false,
+      "disambiguation": false
+    },
+    {
+      "qid": 13,
+      "query": "毕业于早稻田，且在深圳专注在机器人行业的企业家有谁",
+      "required_hit": "1/5",
+      "missing": [
+        "帕西尼感知",
+        "迈步机器人",
+        "奥达智声",
+        "瓦力"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.06,
+      "qtype": "B_semantic_topic_search",
+      "coref": false,
+      "refusal": false,
+      "disambiguation": false
+    },
+    {
+      "qid": 14,
+      "query": "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样",
+      "required_hit": "2/5",
+      "missing": [
+        "力传感器",
+        "六维力传感器",
+        "光学传感"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.2,
+      "qtype": "A_company_profile",
+      "coref": true,
+      "refusal": false,
+      "disambiguation": false
+    },
+    {
+      "qid": 16,
+      "query": "清华的王学谦的评价如何，他是否是属于大牛",
+      "required_hit": "4/5",
+      "missing": [
+        "青年领军人才"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.11,
+      "qtype": "A_prof_profile",
+      "coref": false,
+      "refusal": false,
+      "disambiguation": false
+    },
+    {
+      "qid": 17,
+      "query": "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何",
+      "required_hit": "5/5",
+      "missing": [],
+      "forbidden_hit": [],
+      "answer_coverage": 0.25,
+      "qtype": "A_company_profile",
+      "coref": false,
+      "refusal": false,
+      "disambiguation": false
+    },
+    {
+      "qid": 18,
+      "query": "具身智能厂商在数据方面目前存在几种技术路线",
+      "required_hit": "2/2",
+      "missing": [],
+      "forbidden_hit": [],
+      "answer_coverage": 0.11,
+      "qtype": "B_company_topic_search",
+      "coref": false,
+      "refusal": false,
+      "disambiguation": false
+    },
+    {
+      "qid": 19,
+      "query": "在真实数据采集路线中，有哪些具体方式",
+      "required_hit": "0/3",
+      "missing": [
+        "遥操作",
+        "动捕数据",
+        "真机实测"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.03,
+      "qtype": "E_knowledge_qa",
+      "coref": false,
+      "refusal": false,
+      "disambiguation": false
+    },
+    {
+      "qid": 20,
+      "query": "在模拟器生成数据路线中，有哪些具体方式",
+      "required_hit": "0/3",
+      "missing": [
+        "仿真数据",
+        "合成数据",
+        "合成方法包括"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.03,
+      "qtype": "E_knowledge_qa",
+      "coref": false,
+      "refusal": false,
+      "disambiguation": false
+    },
+    {
+      "qid": 21,
+      "query": "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线",
+      "required_hit": "2/5",
+      "missing": [
+        "忆海原识",
+        "赛博格机器人",
+        "宇数"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.2,
+      "qtype": "B_company_topic_search",
+      "coref": false,
+      "refusal": false,
+      "disambiguation": false
+    },
+    {
+      "qid": 22,
+      "query": "在具身智能的合成数据发展方向上，具体有几种实现方法，分别有哪些代表厂商",
+      "required_hit": "0/3",
+      "missing": [
+        "物理仿真引擎生成",
+        "生成式模型生成",
+        "基于规则生成"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.15,
+      "qtype": "E_knowledge_qa",
+      "coref": false,
+      "refusal": false,
+      "disambiguation": false
+    },
+    {
+      "qid": 23,
+      "query": "在具身智能的运动和操作层面，数据需求有什么不同，在实际落地层面分别采用了哪些数据采集方式",
+      "required_hit": "1/6",
+      "missing": [
+        "差异：本体感知数据",
+        "环境感知数据vs多模态交互数据\n主要采集方式：真机遥操作",
+        "仿真环境合成",
+        "全模态真机采集",
+        "仿真+真机强化学习"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.01,
+      "qtype": "E_knowledge_qa",
+      "coref": false,
+      "refusal": false,
+      "disambiguation": false
+    },
+    {
+      "qid": 24,
+      "query": "优必选有哪些专利",
+      "required_hit": "0/6",
+      "missing": [
+        "异常姿态检测系统",
+        "割草机器人",
+        "机器人障碍物感知",
+        "直线关节",
+        "扭矩传递组件",
+        "机器人关节限位机构"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.03,
+      "qtype": "A_patent_by_applicant",
+      "coref": false,
+      "refusal": false,
+      "disambiguation": false
+    },
+    {
+      "qid": 26,
+      "query": "深圳法本信息科技有限公司的产品特点以及团队介绍",
+      "required_hit": "2/5",
+      "missing": [
+        "数字化技术服务",
+        "全生命周期管理",
+        "客户服务团队"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.06,
+      "qtype": "A_company_profile",
+      "coref": false,
+      "refusal": false,
+      "disambiguation": false
+    },
+    {
+      "qid": 27,
+      "query": "有哪些做具身智能和灵巧手的教授",
+      "required_hit": "1/4",
+      "missing": [
+        "柯文德",
+        "任尔夫",
+        "刘桂良"
+      ],
+      "forbidden_hit": [],
+      "answer_coverage": 0.1,
+      "qtype": "B_semantic_topic_search",
+      "coref": false,
+      "refusal": false,
+      "disambiguation": false
+    }
+  ]
+}

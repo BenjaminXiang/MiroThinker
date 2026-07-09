@@ -129,6 +129,7 @@ def test_institution_topic_list_hydrates_and_filters_retrieval_rows(
 
     monkeypatch.setattr(chat_module, "get_retrieval_service", lambda: _FakeRetrievalService())
     monkeypatch.setattr(chat_module, "_lookup_professor_by_id", lookup_by_id)
+    monkeypatch.setattr(chat_module, "_prof_rich_profile_facts", lambda *_args: {})
 
     response = chat_module.chat(
         chat_module.ChatRequest(query="找清华大学深圳国际研究生院做信息论编码的教授"),
@@ -177,6 +178,7 @@ def test_institution_topic_list_falls_back_to_sql_when_retrieval_rows_filter_emp
             ]
 
     monkeypatch.setattr(chat_module, "get_retrieval_service", lambda: _FakeRetrievalService())
+    monkeypatch.setattr(chat_module, "_prof_rich_profile_facts", lambda *_args: {})
     monkeypatch.setattr(
         chat_module,
         "_lookup_professors_by_topic_sql",

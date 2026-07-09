@@ -334,7 +334,12 @@ def test_unit3_b_route_single_institution_applies_filter(monkeypatch):
         topic="机器人",
         limit=5,
     )
-    kwargs = fake_service.retrieve.call_args.kwargs
+    professor_call = next(
+        call
+        for call in fake_service.retrieve.call_args_list
+        if call.kwargs.get("domains") == ("professor",)
+    )
+    kwargs = professor_call.kwargs
     filters = kwargs.get("filters") or {}
     assert filters.get("institution") == "南方科技大学"
 
@@ -419,6 +424,8 @@ def test_unit4_d_route_retrieves_professor_and_paper_domains_separately(monkeypa
                     metadata={"title": "Seismic Wave Propagation Modeling"},
                 )
             ]
+        if domains == ("company",):
+            return []
         return [_evidence(object_type="professor", object_id="PROF-CROWDED")]
 
     fake_service.retrieve.side_effect = _retrieve
@@ -434,6 +441,7 @@ def test_unit4_d_route_retrieves_professor_and_paper_domains_separately(monkeypa
     assert [call.kwargs["domains"] for call in fake_service.retrieve.call_args_list] == [
         ("professor",),
         ("paper",),
+        ("company",),
     ]
     assert {row["type"] for row in merged} == {"professor", "paper"}
 
