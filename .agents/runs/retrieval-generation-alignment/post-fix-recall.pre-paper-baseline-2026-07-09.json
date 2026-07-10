@@ -1,7 +1,7 @@
 {
-  "total_hit": 30,
-  "total_req": 41,
-  "pct": 73.17073170731707,
+  "total_hit": 13,
+  "total_req": 24,
+  "pct": 54.166666666666664,
   "rows": [
     {
       "qid": 1,
@@ -15,18 +15,18 @@
       "qid": 4,
       "query_type": "B_company_topic_search",
       "hits": [
-        "普渡",
-        "擎朗"
+        "普渡"
       ],
       "misses": [
         "开普勒",
         "云迹",
-        "九号"
+        "九号",
+        "擎朗"
       ]
     },
     {
       "qid": 10,
-      "query_type": "A_company_profile",
+      "query_type": "G_ambiguous_not_found",
       "hits": [
         "无界智航"
       ],
@@ -70,7 +70,7 @@
     },
     {
       "qid": 24,
-      "query_type": "C_cross_domain_clarification",
+      "query_type": "A_prof_profile",
       "hits": [
         "王学谦"
       ],
@@ -78,7 +78,7 @@
     },
     {
       "qid": 26,
-      "query_type": "A_company_profile",
+      "query_type": "D_cross_domain_topic",
       "hits": [
         "爱博合创"
       ],
@@ -125,101 +125,6 @@
       "query_type": "A_patent_profile",
       "hits": [
         "CN117873146A"
-      ],
-      "misses": []
-    },
-    {
-      "qid": 100,
-      "query_type": "A_paper_profile",
-      "hits": [
-        "ShuffleNet V2"
-      ],
-      "misses": []
-    },
-    {
-      "qid": 101,
-      "query_type": "A_paper_profile",
-      "hits": [
-        "ESRGAN"
-      ],
-      "misses": []
-    },
-    {
-      "qid": 102,
-      "query_type": "A_paper_profile",
-      "hits": [
-        "Valley polarization"
-      ],
-      "misses": []
-    },
-    {
-      "qid": 103,
-      "query_type": "A_paper_profile",
-      "hits": [
-        "diffusive dynamics"
-      ],
-      "misses": []
-    },
-    {
-      "qid": 104,
-      "query_type": "A_paper_profile",
-      "hits": [
-        "TRPV1"
-      ],
-      "misses": []
-    },
-    {
-      "qid": 105,
-      "query_type": "A_paper_profile",
-      "hits": [
-        "Polymer electrolytes"
-      ],
-      "misses": []
-    },
-    {
-      "qid": 106,
-      "query_type": "A_prof_papers",
-      "hits": [
-        "VCSEL",
-        "Fabry-Perot",
-        "Grating"
-      ],
-      "misses": []
-    },
-    {
-      "qid": 107,
-      "query_type": "A_prof_papers",
-      "hits": [
-        "Glaucoma",
-        "Retinal",
-        "SkrGAN"
-      ],
-      "misses": []
-    },
-    {
-      "qid": 108,
-      "query_type": "A_prof_papers",
-      "hits": [
-        "Mamba-Transformer",
-        "Snapshot Compressive"
-      ],
-      "misses": [
-        "Quaternion"
-      ]
-    },
-    {
-      "qid": 109,
-      "query_type": "B_paper_topic_search",
-      "hits": [
-        "Perovskite"
-      ],
-      "misses": []
-    },
-    {
-      "qid": 110,
-      "query_type": "B_paper_topic_search",
-      "hits": [
-        "Federated Learning"
       ],
       "misses": []
     }

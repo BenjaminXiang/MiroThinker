@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from collections import defaultdict
 from dataclasses import dataclass, field
 
 # Defaults required before importing backend.deps (env-driven wiring).
@@ -67,6 +68,44 @@ CASES: list[Case] = [
          "Entity IS in the DB (COMP-d5c254c49820, ready)."),
     Case(40, "优必选有哪些专利", "patent", ["优必选"]),
     Case(41, "专利 CN117873146A 的详细信息是什么", "patent", ["CN117873146A"]),
+    # --- paper-retrievability-baseline (2026-07-09). Structural gold verified vs miroflow_real.
+    # See .agents/runs/paper-retrievability-baseline/slice-contract.md. Measures behavioral
+    # retrievability of PAPERS (recall leg). Type1=title-self; Type2=professor->paper (FM4
+    # territory — single-domain paper recall likely MISSes unless abstracts name the prof; the
+    # full /api/chat path in eval_recall_chat.py is the real cross-domain test); Type4=topic.
+    # Type3 (company->paper) has NO structural gold: professor_company_role is empty, so the
+    # company->prof->paper chain is dead — recorded as a gap, not a case.
+    Case(100, "ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design",
+         "paper", ["ShuffleNet V2"], "Type1 title-self"),
+    Case(101, "ESRGAN: Enhanced Super-Resolution Generative Adversarial Networks",
+         "paper", ["ESRGAN"], "Type1 title-self"),
+    Case(102, "Valley polarization in MoS2 monolayers by optical pumping",
+         "paper", ["Valley polarization"], "Type1 title-self"),
+    Case(103, "Memristors with diffusive dynamics as synaptic emulators for neuromorphic computing",
+         "paper", ["diffusive dynamics"], "Type1 title-self"),
+    Case(104, "Structure of the TRPV1 ion channel determined by electron cryo-microscopy",
+         "paper", ["TRPV1"], "Type1 title-self"),
+    Case(105, "Polymer electrolytes for lithium-based batteries: advances and prospects",
+         "paper", ["Polymer electrolytes"], "Type1 title-self"),
+    Case(106, "常瑞华教授发表了哪些论文",
+         "paper", ["VCSEL", "Fabry-Perot", "Grating"],
+         "Type2 professor->paper (常瑞华, 12 verified ready papers). Cross-domain; single-domain "
+         "paper recall expected to MISS unless abstracts mention the prof."),
+    Case(107, "刘江教授发表了哪些论文",
+         "paper", ["Glaucoma", "Retinal", "SkrGAN"],
+         "Type2 professor->paper (刘江, 12 verified ready papers)."),
+    Case(108, "陈勇勇教授发表了哪些论文",
+         "paper", ["Mamba-Transformer", "Quaternion", "Snapshot Compressive"],
+         "Type2 professor->paper (陈勇勇, 12 verified ready papers)."),
+    Case(109, "关于perovskite钙钛矿材料的论文有哪些",
+         "paper", ["Perovskite"],
+         "Type4 topic (284 ready papers). required=topic-indicative title token (capital 'Perovskite' "
+         "vs the lowercase query echo) -> measures 'did perovskite papers surface', not specific "
+         "notable papers (substring topic-recall is weak per Q3)."),
+    Case(110, "关于联邦学习federated learning的最新论文",
+         "paper", ["Federated Learning"],
+         "Type4 topic (145 ready papers). required=topic-indicative title token ('Federated Learning' "
+         "capital vs lowercase query) -> did FL papers surface."),
 ]
 
 
@@ -77,6 +116,8 @@ def run(top_k: int, relax: bool) -> None:
     fqs = False if relax else None  # None = env default (ready-gate ON); False = relax
     total_req = 0
     total_hit = 0
+    dom_req: dict[str, int] = defaultdict(int)
+    dom_hit: dict[str, int] = defaultdict(int)
     print(f"{'qid':>3} {'dom':<9} {'hit/req':>8}  query / misses")
     print("-" * 90)
     for c in CASES:
@@ -88,6 +129,7 @@ def run(top_k: int, relax: bool) -> None:
         except Exception as e:  # noqa: BLE001
             print(f"{c.qid:>3} {c.domain:<9} {'ERR':>8}  {c.query[:40]} -> {type(e).__name__}: {e}")
             total_req += len(c.required)
+            dom_req[c.domain] += len(c.required)
             continue
         snippets = [(e.snippet or "") for e in evs]
         hits, misses = [], []
@@ -95,6 +137,8 @@ def run(top_k: int, relax: bool) -> None:
             (hits if any(r in s for s in snippets) else misses).append(r)
         total_req += len(c.required)
         total_hit += len(hits)
+        dom_req[c.domain] += len(c.required)
+        dom_hit[c.domain] += len(hits)
         flag = "OK " if not misses else "MISS"
         print(f"{c.qid:>3} {c.domain:<9} {len(hits)}/{len(c.required):>3} {flag}  "
               f"{c.query[:34]}  miss={misses}")
@@ -106,6 +150,11 @@ def run(top_k: int, relax: bool) -> None:
     pct = 100.0 * total_hit / total_req if total_req else 0.0
     print(f"ENTITY RECALL: {total_hit}/{total_req} entities hit ({pct:.0f}%)  "
           f"[top_k={top_k} relax={relax}]")
+    print("-" * 90)
+    print("PER-DOMAIN RECALL:")
+    for d in sorted(dom_req):
+        dpct = 100.0 * dom_hit[d] / dom_req[d] if dom_req[d] else 0.0
+        print(f"  {d:<11} {dom_hit[d]}/{dom_req[d]} ({dpct:.0f}%)")
 
 
 def main() -> int:

@@ -1,7 +1,7 @@
 {
-  "total_hit": 30,
-  "total_req": 41,
-  "pct": 73.17073170731707,
+  "total_hit": 21,
+  "total_req": 43,
+  "pct": 48.83720930232558,
   "rows": [
     {
       "qid": 1,
@@ -178,50 +178,52 @@
     },
     {
       "qid": 106,
-      "query_type": "A_prof_papers",
+      "query_type": "A_prof_profile",
       "hits": [
-        "VCSEL",
+        "VCSEL"
+      ],
+      "misses": [
         "Fabry-Perot",
         "Grating"
-      ],
-      "misses": []
+      ]
     },
     {
       "qid": 107,
-      "query_type": "A_prof_papers",
-      "hits": [
+      "query_type": "A_prof_profile",
+      "hits": [],
+      "misses": [
         "Glaucoma",
         "Retinal",
         "SkrGAN"
-      ],
-      "misses": []
+      ]
     },
     {
       "qid": 108,
-      "query_type": "A_prof_papers",
-      "hits": [
-        "Mamba-Transformer",
-        "Snapshot Compressive"
-      ],
+      "query_type": "A_prof_profile",
+      "hits": [],
       "misses": [
-        "Quaternion"
+        "Mamba-Transformer",
+        "Quaternion",
+        "Snapshot Compressive"
       ]
     },
     {
       "qid": 109,
       "query_type": "B_paper_topic_search",
-      "hits": [
-        "Perovskite"
-      ],
-      "misses": []
+      "hits": [],
+      "misses": [
+        "Hybrid Halide Perovskites",
+        "Lead Iodide Perovskites"
+      ]
     },
     {
       "qid": 110,
       "query_type": "B_paper_topic_search",
-      "hits": [
-        "Federated Learning"
-      ],
-      "misses": []
+      "hits": [],
+      "misses": [
+        "Federated Learning Over Wireless",
+        "Convergence Time Optimization"
+      ]
     }
   ]
 }

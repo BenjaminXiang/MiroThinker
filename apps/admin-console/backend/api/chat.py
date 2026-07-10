@@ -634,7 +634,17 @@ def _classify_query_by_rules(query: str) -> dict[str, str] | None:
             target_domain="patent",
             reason="ambiguous patent title deterministic rule",
         )
-    if re.search(r"(方向|领域|主题|相关)\s*的?\s*(论文|文章|paper)s?$", q, re.IGNORECASE):
+    if re.search(r"(方向|领域|主题|相关)\s*的?\s*(论文|文章|paper)s?$", q, re.IGNORECASE) or (
+        # Topic-search intent over papers that does NOT end in 论文: "关于X的论文有哪些" /
+        # "X的最新论文" / "找X相关论文". Without this, the exact-paper rule below over-fires
+        # (论文 + an ASCII run like 'perovskite') and routes them to A/unknown — the
+        # paper-retrievability-baseline Type4 gap (qid109/110 were 0/4).
+        re.search(r"(论文|文章|paper)", q, re.IGNORECASE)
+        and re.search(r"(关于|有关|哪些|有哪些|有什么|有没有|找|查找|搜索|检索|推荐|最新|最近|相关)", q)
+        and not re.match(r"^[A-Za-z][A-Za-z0-9\s:,\-./]{15,}$", q)  # bare EN title -> english-title rule
+        and not re.search(r"(教授|研究员|创始人|企业家|公司|企业)", q)  # entity-anchored -> prof/company rules
+        and not re.search(r"(作者|团队|发明人)", q)  # paper-author lookup -> A/cross-domain, not topic search
+    ):
         return _classifier_response(
             "B",
             topic=_clean_classifier_topic(q),
@@ -690,7 +700,9 @@ def _classify_query_by_rules(query: str) -> dict[str, str] | None:
             target_domain="company",
             reason="exact company deterministic rule",
         )
-    if re.search(r"^(介绍)?\s*[\u4e00-\u9fffA-Za-z0-9]{2,12}\s*(是谁|的相关信息)$", q):
+    if re.search(r"^(介绍)?\s*[\u4e00-\u9fffA-Za-z0-9]{2,12}\s*(是谁|的相关信息)$", q) and not re.search(
+        r"(教授|研究员|博导|院士)", q
+    ):
         name = re.sub(r"^(介绍)\s*", "", q)
         name = re.sub(r"(是谁|的相关信息)$", "", name).strip()
         target_domain = "company" if len(name) > 3 else "professor"
@@ -3108,6 +3120,87 @@ def _answer_prof_profile(prof: dict, topics: list[str], n_papers: int) -> str:
     return " ".join(parts)
 
 
+def _prof_paper_list_intent(query: str) -> bool:
+    """True when a professor-anchored query asks to LIST the professor's papers (vs. a profile).
+
+    "X教授发表了哪些论文" / "X的代表作" / "X的论文" → True. A bare profile query
+    ("介绍X" / "X的研究方向") → False. Guards the A_prof_papers branch of
+    `_professor_profile_or_papers_response` (paper-retrievability-baseline Type2 fix).
+    """
+    return bool(
+        re.search(
+            r"(发表.{0,4}论文|哪些论文|什么论文|的论文|代表作|代表论文|著作|论文列表|所有论文)",
+            query,
+        )
+    )
+
+
+def _professor_profile_or_papers_response(
+    conn, query: str, prof: dict, topics: list[str], n_papers: int,
+):
+    """Return A_prof_papers (paper-list intent + verified papers) or A_prof_profile.
+
+    Paper-list intent ("X教授发表了哪些论文" / "X的代表作"): list the professor's verified
+    papers via the professor→paper related-objects SQL, instead of the count-only profile.
+    Closes the paper-retrievability-baseline Type2 gap (professor→paper was 1/9 — the profile
+    only mentioned papers incidentally). Falls back to the profile when there is no paper-list
+    intent or the professor has no verified papers.
+    """
+    prof_id = prof["professor_id"]
+    prof_citation = ChatCitation(
+        type="professor",
+        id=prof_id,
+        label=f"{prof['canonical_name']} - {prof.get('institution') or '单位未知'}",
+        url=f"/browse#professor/{prof_id}",
+    )
+    base_payload = {
+        "professor_id": prof_id,
+        "canonical_name": prof["canonical_name"],
+        "institution": prof.get("institution"),
+        "research_topics": topics,
+        "verified_paper_count": n_papers,
+        **_professor_metric_payload(prof),
+    }
+    if _prof_paper_list_intent(query):
+        papers = _lookup_verified_papers_for_prof(conn, professor_id=prof_id)
+        if papers:
+            return _build_chat_response(
+                conn=conn,
+                query=query,
+                query_type="A_prof_papers",
+                answer_text=_answer_prof_papers(prof, papers),
+                citations=[prof_citation] + [
+                    ChatCitation(
+                        type="paper",
+                        id=p["paper_id"],
+                        label=f"{p.get('year') or '?'} · {p.get('title_clean') or p['paper_id']}",
+                        url=_local_paper_detail_url(p["paper_id"]),
+                    )
+                    for p in papers
+                ],
+                structured_payload={
+                    **base_payload,
+                    "papers": [
+                        {
+                            "paper_id": p["paper_id"],
+                            "title_clean": p.get("title_clean"),
+                            "year": p.get("year"),
+                            "citation_count": p.get("citation_count"),
+                        }
+                        for p in papers
+                    ],
+                },
+            )
+    return _build_chat_response(
+        conn=conn,
+        query=query,
+        query_type="A_prof_profile",
+        answer_text=_answer_prof_profile(prof, topics, n_papers),
+        citations=[prof_citation],
+        structured_payload=base_payload,
+    )
+
+
 def _answer_prof_list(institutions: tuple[str, ...], topic: str, rows: list[dict]) -> str:
     if not rows:
         inst = "/".join(institutions)
@@ -4273,28 +4366,7 @@ def _build_c_fallback_a_response(
         prof = profs[0]
         topics = _prof_research_topics(conn, prof["professor_id"])
         n_papers = _prof_paper_count(conn, prof["professor_id"])
-        return _build_chat_response(
-            conn=conn,
-            query=query,
-            query_type="A_prof_profile",
-            answer_text=_answer_prof_profile(prof, topics, n_papers),
-            citations=[
-                ChatCitation(
-                    type="professor",
-                    id=prof["professor_id"],
-                    label=f"{prof['canonical_name']} - {prof.get('institution') or '单位未知'}",
-                    url=f"/browse#professor/{prof['professor_id']}",
-                )
-            ],
-            structured_payload={
-                "professor_id": prof["professor_id"],
-                "canonical_name": prof["canonical_name"],
-                "institution": prof.get("institution"),
-                "research_topics": topics,
-                "verified_paper_count": n_papers,
-                **_professor_metric_payload(prof),
-            },
-        )
+        return _professor_profile_or_papers_response(conn, query, prof, topics, n_papers)
     return None
 
 
@@ -6463,27 +6535,8 @@ def chat(
                     prof = profs[0]
                     topics = _prof_research_topics(conn, prof["professor_id"])
                     n_papers = _prof_paper_count(conn, prof["professor_id"])
-                    return _record_and_return(_build_chat_response(
-                        conn=conn,
-                        query=raw_query,
-                        query_type="A_prof_profile",
-                        answer_text=_answer_prof_profile(prof, topics, n_papers),
-                        citations=[
-                            ChatCitation(
-                                type="professor",
-                                id=prof["professor_id"],
-                                label=f"{prof['canonical_name']} - {prof.get('institution') or '单位未知'}",
-                                url=f"/browse#professor/{prof['professor_id']}",
-                            )
-                        ],
-                        structured_payload={
-                            "professor_id": prof["professor_id"],
-                            "canonical_name": prof["canonical_name"],
-                            "institution": prof.get("institution"),
-                            "research_topics": topics,
-                            "verified_paper_count": n_papers,
-                            **_professor_metric_payload(prof),
-                        },
+                    return _record_and_return(_professor_profile_or_papers_response(
+                        conn, raw_query, prof, topics, n_papers,
                     ))
 
         if ctype == "B" and topic:

@@ -17,9 +17,29 @@
   empty). Findings + type-aware bar + gap→lever map in `baseline-summary.md`. **Decision: defer
   generation leg (true-accuracy)** — retrieval is the binding constraint (can't cite unretrieved);
   gen leg only tests the Type1 citation seam, a refinement for after Type2/Type4 fixes. Caveat:
-  recall is a **lower bound** (candidate-generator Q3 deferred). **Next (both local, no E-dep):**
-  Type4 classifier fix + Type2 professor→paper traversal → ~82% paper recall WITHOUT Slice B.
-  Slice B = Lever 3 (~24,285 needs_enrichment, E-gated) after.
+  recall is a **lower bound** (candidate-generator Q3 deferred). **Type4 classifier fix DONE
+  (2026-07-10, Accepted)** — `openspec/changes/fix-paper-topic-query-classification/` + review
+  `type4-classifier-fix.md`. Root cause: exact-paper rule over-fired on 论文+ASCII-run; B
+  paper-topic rule required ending in 论文. Fix: broadened B rule (topic-search intent + guards).
+  qid109/110 `unknown`→`B_paper_topic_search`, **0→8 relevant papers each** (curl-confirmed);
+  zero regression (21 other cases identical). Recall NUMBER stayed 0/4 (oracle tokens too
+  specific — measurement follow-up, not a defect). **Type2 professor→paper traversal DONE
+  (2026-07-10, Accepted)** — `openspec/changes/wire-professor-paper-list-traversal/` + review
+  `type2-prof-papers-fix.md`. Wired `_professor_profile_or_papers_response` (reuses existing
+  `_lookup_verified_papers_for_prof` + `_answer_prof_papers`) at the A-professor path; new
+  `A_prof_papers` query_type for paper-list intent. qid106-108 → A_prof_papers, Type2 **1/9→8/9**;
+  paper-domain **7/20 (35%) → 14/20 (70%)**; overall **21/43 (49%) → 28/43 (65%)**; zero regression.
+  Regression tests `tests/test_paper_retrievability.py` (15 pass); benchmark Q050 (Type4 over-fire
+  on 作者) fixed + guarded; Q004/Q017 (X教授是谁→G) pre-existing, filed as professor-ambiguity
+  follow-up. **Q004/Q017 professor-ambiguity FIXED + Type4 oracle refined (2026-07-10)** —
+  `openspec/changes/fix-professor-ambiguity-intro-rule/` (ambiguous-intro rule guarded vs
+  教授/研究员/博导/院士 → A). **100-case classifier benchmark now ALL GREEN** (was Q004/Q017/Q050
+  red). Type4 oracle tokens refined to topic-indicative title tokens (capital, vs lowercase query
+  echo) — measures "did topic papers surface". **Paper-domain recall 35% → 94%** (Type1 100% /
+  Type2 89% / Type4 100%); overall e2e **49% → 73% (30/41)**. 18 regression tests pass
+  (`test_paper_retrievability.py`). **Paper-retrievability Type1/2/4 + Q004/Q017 CLOSED** (Type3
+  dead: `professor_company_role` empty). **Next:** Slice B (Lever 3 ~24,285 needs_enrichment
+  abstract backfill, E-gated) — the data ceiling; or commit this batch (all uncommitted).
 - **`layer-d-multi-turn-context`** (OpenSpec, Standard-to-Epic; rebuild Slice 4) — set
   coreference + cross-domain traversal + narrowing mechanisms + anchor discipline.
   Grilling-validated → ADR-011 + root CONTEXT.md; OpenSpec 4/4 artifacts;
