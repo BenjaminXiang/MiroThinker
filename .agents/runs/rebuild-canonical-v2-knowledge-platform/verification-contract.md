@@ -7,8 +7,9 @@ their corpus/ground-truth/threshold policy are Accepted. S2B/task 2.6 is Accepte
 manifest `a14c1eab…e59c8`, restore verification `98826e8d…d231`, and acceptance record
 `3155d890…fc5b`. Tasks 3.1–3.5 and the complete S3 interface/database foundation are Accepted;
 C2_0003 is the reviewed shared-foundation head. Task 4.1's four immutable-landing strict RED
-scenarios are Accepted; task 4.2 is next but has not started. No landing evidence, canonical
-business row, published projection, or index write has begun.
+scenarios and task 4.2's storage-independent EvidenceLanding/source adapters are Accepted. Task 4.3
+is next but has not started. No durable landing evidence, canonical business row, published
+projection, or index write has begun.
 
 ## Behavior owner
 
@@ -60,7 +61,7 @@ cannot mutate offline canonical identity decisions.
   inventoried historical SQLite/JSONL/XLSX/PDF/cache/raw-source families. Restore targets must be
   distinct from original and backup locations; original volumes/files remain read-only.
 
-Last identity/hash check recorded in `verification.md`: `2026-07-11T18:35:00Z`.
+Last identity/hash check recorded in `verification.md`: `2026-07-11T19:06:55Z`.
 
 ## Hard invariants
 
@@ -111,6 +112,15 @@ Last identity/hash check recorded in `verification.md`: `2026-07-11T18:35:00Z`.
 - Chain-of-custody replay and hash fixtures for every source-adapter family.
 - Identity/fusion/relationship/eligibility scenario matrices through module interfaces.
 - Candidate manifest, full-index build, exact parity, promotion rehearsal, and rollback rehearsal.
+
+### S4 — Immutable evidence landing
+
+- Task 4.1 freezes byte identity/copy lineage, parser replay, typed partial/corrupt preservation, and
+  zero placeholder/canonical invention through the public `EvidenceLanding.ingest/stream` seam.
+- Task 4.2 GREEN must use verified byte/envelope inputs only, retain prior parser outputs, reject
+  unverified original Milvus/source kinds, and expose no durable/canonical/publication/index effect.
+- Task 4.3 owns PostgreSQL persistence and transaction tests; task 4.4 owns the bounded actual-source
+  replay matrix. The ephemeral Task 4.2 composition is not evidence for either later task.
 
 ### S8–S10 — Query, answer, and feedback
 

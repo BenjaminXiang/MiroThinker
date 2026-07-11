@@ -65,3 +65,12 @@
   copy lineage, parser-version replay without mutation, typed partial/corrupt preservation, and zero
   placeholder/canonical invention through the `EvidenceLanding.ingest/stream` seam. Forced RED is
   exactly four absent-module failures; no landing implementation or source/database write began.
+- Completed and accepted task 4.2. A storage-independent `EvidenceLanding` core now verifies exact
+  bytes and parent/copy lineage before atomically exposing deterministic replay records. Offline
+  adapters cover verified WAL/FPI salvage envelopes, historical JSONL/JSON/CSV/XLSX/SQLite bytes,
+  verified Milvus copy exports, and already-collected response envelopes while preserving readable
+  partial evidence and typed failures. Two self-review RED/GREEN passes closed complete-run
+  idempotency, detached snapshot immutability, duplicate/misaligned structured fields, strict JSON,
+  source-identifier, and response-provenance defect classes across sibling paths. No durable landing
+  row, source, Milvus client, provider, canonical, publication, index, or runtime consumer was
+  touched; task 4.3 remains the persistence boundary.

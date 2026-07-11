@@ -12,8 +12,9 @@ contracts were Accepted at `2026-07-11T17:15:42Z`. Task 3.4's C2_0002 shared sch
 `2026-07-11T17:48:21Z`. Task 3.5 independently reviewed, repaired, and Accepted the complete S3
 foundation at `2026-07-11T18:22:18Z`; the isolated candidate is at reviewed head C2_0003 with zero
 business rows. Task 4.1's immutable-landing strict RED contract was Accepted at
-`2026-07-11T18:33:37Z`; task 4.2 is next but has not started. No landing evidence, publication
-projection, or index write has begun.
+`2026-07-11T18:33:37Z`. Task 4.2's storage-independent EvidenceLanding core and source adapters were
+Accepted at `2026-07-11T19:06:55Z`; task 4.3 is next but has not started. No durable landing
+evidence, publication projection, or index write has begun.
 
 ## Existing incident/recovery checkpoint used as planning evidence
 
@@ -664,6 +665,76 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 - Final read-only check at `2026-07-11T18:35:00Z` re-proved formal admission `accepted/50`, original
   pause/volume and hashes, recovery/candidate isolation, and candidate C2_0003/24 tables/zero landing
   or release rows.
+
+## S4B task 4.2 EvidenceLanding and source adapters — 2026-07-11T19:06:55Z
+
+- The implementation follows the approved deep-module boundary: `evidence_landing.py` owns strict
+  request/receipt/parser/draft types, exact-byte and pre-parse parent-lineage checks, separate
+  request/output fingerprints, deterministic identities, atomic visibility, replay retention, and
+  the public `ingest/stream` seam. `evidence_adapters.py`
+  owns format parsing only. Its composition uses an internal ephemeral repository; Task 4.3 still
+  owns PostgreSQL persistence and Task 4.4 still owns actual-source matrix replay.
+- Four pre-implementation adapter scenarios failed exactly with `ModuleNotFoundError` and covered
+  verified WAL/FPI salvage envelopes, shared JSON/CSV/XLSX/SQLite record behavior, verified-copy-
+  only Milvus exports, and already-collected response provenance. The Task 3.1 EvidenceLanding plus
+  four Task 4.1 effects and those four adapter cases then produced an initial `9 passed` GREEN.
+- Adapters consume only supplied immutable bytes. SQLite materializes those bytes to a temporary
+  file opened with `mode=ro&immutable=1`; XLSX uses read-only mode; WAL/FPI and Milvus accept verified
+  record envelopes rather than opening original stores; collected responses contain no acquisition
+  or provider client. No original/recovery path or real source was opened by the implementation or
+  behavior tests.
+- Candidate self-review first found three escaped sibling defects. A repeated run ID did not fingerprint
+  parent lineage, CSV/XLSX could silently overwrite duplicate columns, and collected-response
+  provenance checked field presence without validating field shape. Three new regressions produced
+  the expected `3 failed`; the shared fixes bind both parent identifiers, quarantine duplicate CSV
+  and XLSX headers before row construction, and preserve invalid response envelopes as partial
+  evidence with field-specific typed errors.
+- A second immutable/silent-loss audit found six sibling failures: observation time was absent from
+  run identity, returned payloads could mutate repository state, unheaded CSV cells were discarded,
+  JSON duplicate keys used last-write-wins, boolean/empty Milvus identifiers passed, and a non-time
+  retrieval string passed provenance validation. All six failed before their shared fixes and then
+  passed. Final focused landing verification was `16 passed`.
+- Default Canonical V2 verification was `39 passed, 24 skipped, 4 xfailed`; all skips require an
+  explicit disposable database and all four xfails are the untouched future KnowledgeBuild,
+  KnowledgeRead, KnowledgeAnswer, and ReleasePublication seams. Forced interface execution was
+  exactly one EvidenceLanding pass plus those four `ModuleNotFoundError` failures. S1 was
+  `10 passed, 5 explicit skips`; S2/S2B was `32 passed`.
+- Focused Ruff passed and Pyright reported zero errors/warnings/information. Strict OpenSpec and
+  `git diff --check` passed. No dependency, migration, database/schema row, actual source replay,
+  Milvus client, provider call, canonical/publication/index state, or legacy runtime consumer
+  changed.
+- Final read-only evidence re-proved formal admission `accepted/50`; original `pgtest` is paused on
+  volume `d81c6381…d241`; recovery and candidate containers remain network-none/no-port; original
+  Milvus and salvage hashes remain `43ef203e…67cc` and `cef8eb6b…bb7`. The candidate marker and
+  system ID match, revision is C2_0003, and it has 24 tables, 141 constraints, 44 non-internal
+  triggers, and exactly zero rows across all Canonical V2 business tables.
+- Task 4.2 is Accepted under the user's objective-verification self-approval authorization. This
+  accepts only the ephemeral core and safe source adapters; S4 remains unaccepted, and task 4.3 has
+  not started.
+
+## Task 4.2 pattern-fix report
+
+- Reported cases fixed: conflicting parent/time hidden behind one run ID; returned snapshots
+  mutating retained evidence; duplicate or unheaded structured values being overwritten/discarded;
+  ambiguous JSON, Milvus identifiers, and collected-response provenance treated as parsed.
+- Defect class: evidence identity or shape checks were locally present but incomplete across
+  idempotency, sibling structured adapters, and provenance fields.
+- Sibling search: run/artifact/parent/time fingerprints and conflict paths; stream snapshot
+  ownership; CSV/XLSX header and row-to-payload paths; every JSON-based adapter; Milvus record
+  identity; every required collected-response provenance field.
+- Sibling issues found/fixed: parent identity and normalized observation time enter the run
+  request fingerprint before lineage/parse, while parser output remains separately fingerprinted;
+  stream returns deep snapshots; CSV/XLSX enforce structural uniqueness and CSV keeps mapped fields
+  with typed overflow errors; every JSON adapter rejects duplicate object keys; Milvus rejects
+  empty/boolean identity; response URL/time/status/content type receive field-specific validation
+  without discarding readable body bytes.
+- Not fixed: durable cross-process idempotency and transactions belong to Task 4.3; real source-
+  format/count compatibility belongs to Task 4.4. Neither is claimed by this ephemeral slice.
+- New invariant/helper/contract/test: complete-run idempotency regressions, detached stream snapshot,
+  cross-format duplicate-header and JSON matrices, CSV overflow preservation, invalid Milvus/
+  provenance regressions, strict JSON loader, and non-shared parser defaults.
+- Remaining systemic risk: adapters added later must apply the same pre-construction uniqueness and
+  typed-degradation rules; Task 4.3 must re-prove atomicity/idempotency against real PostgreSQL.
 
 ## Explicit non-claims
 

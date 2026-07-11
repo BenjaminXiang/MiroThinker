@@ -5,16 +5,12 @@ import hashlib
 from importlib import import_module
 from typing import Any
 
-import pytest
-
 from src.data_agents.canonical_v2.contracts import SourceRecord as SharedSourceRecord
 
 
-RED_REASON = "Task 3.1 RED: Canonical V2 EvidenceLanding interface is not implemented"
-
-
-@pytest.mark.xfail(strict=True, raises=ModuleNotFoundError, reason=RED_REASON)
-def test_evidence_landing_ingest_and_stream_preserve_byte_identity_and_lineage() -> None:
+def test_evidence_landing_ingest_and_stream_preserve_byte_identity_and_lineage() -> (
+    None
+):
     module: Any = import_module("src.data_agents.canonical_v2.evidence_landing")
     assert module.SourceRecord is SharedSourceRecord
     content = b'{"source_id":"paper-1","title":"Evidence first"}\n'

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import hashlib
 from importlib import import_module
 from typing import Any
@@ -10,7 +10,6 @@ import pytest
 from src.data_agents.canonical_v2.contracts import SourceRecord as SharedSourceRecord
 
 
-RED_REASON = "Task 4.1 RED: immutable EvidenceLanding replay is not implemented"
 NOW = datetime(2026, 7, 11, 18, 30, tzinfo=timezone.utc)
 
 
@@ -38,6 +37,7 @@ def _request(
     expected_content_sha256: str | None = None,
     parent_artifact_id: str | None = None,
     parent_content_sha256: str | None = None,
+    observed_at: datetime = NOW,
 ) -> Any:
     return module.IngestEvidenceRequest(
         run_id=run_id,
@@ -45,7 +45,7 @@ def _request(
         source_kind=source_kind,
         source_locator=source_locator,
         content=content,
-        observed_at=NOW,
+        observed_at=observed_at,
         expected_content_sha256=expected_content_sha256,
         parser=_parser(module, parser_version),
         parent_artifact_id=parent_artifact_id,
@@ -53,7 +53,6 @@ def _request(
     )
 
 
-@pytest.mark.xfail(strict=True, raises=ModuleNotFoundError, reason=RED_REASON)
 def test_ingest_binds_exact_bytes_and_copy_lineage_before_streaming() -> None:
     module = _module()
     assert module.SourceRecord is SharedSourceRecord
@@ -115,7 +114,111 @@ def test_ingest_binds_exact_bytes_and_copy_lineage_before_streaming() -> None:
     assert tuple(landing.stream("batch-tampered-1")) == ()
 
 
-@pytest.mark.xfail(strict=True, raises=ModuleNotFoundError, reason=RED_REASON)
+def test_one_run_id_cannot_hide_conflicting_parent_lineage() -> None:
+    module = _module()
+    landing = module.create_ephemeral_evidence_landing()
+    child_content = b'{"source_id":"paper-child"}\n'
+    parents = []
+    for suffix in ("one", "two"):
+        parent_content = f'{{"source_id":"parent-{suffix}"}}\n'.encode()
+        parents.append(
+            landing.ingest(
+                _request(
+                    module,
+                    run_id=f"parent-run-{suffix}",
+                    source_batch_id=f"parent-batch-{suffix}",
+                    source_kind="forensic_source",
+                    source_locator=f"source/parent-{suffix}.jsonl",
+                    content=parent_content,
+                    expected_content_sha256=hashlib.sha256(parent_content).hexdigest(),
+                )
+            )
+        )
+    first_child = landing.ingest(
+        _request(
+            module,
+            run_id="child-copy-run",
+            source_batch_id="child-copy-batch",
+            source_kind="verified_copy",
+            source_locator="backup/child.jsonl",
+            content=child_content,
+            parent_artifact_id=parents[0].artifact_id,
+            parent_content_sha256=parents[0].content_sha256,
+        )
+    )
+
+    with pytest.raises(module.EvidenceIntegrityError, match="run_id"):
+        landing.ingest(
+            _request(
+                module,
+                run_id="child-copy-run",
+                source_batch_id="child-copy-batch",
+                source_kind="verified_copy",
+                source_locator="backup/child.jsonl",
+                content=child_content,
+                parent_artifact_id=parents[1].artifact_id,
+                parent_content_sha256=parents[1].content_sha256,
+            )
+        )
+    assert tuple(landing.stream("child-copy-batch")) == tuple(
+        landing.stream(first_child.source_batch_id)
+    )
+    assert first_child.parent_artifact_id == parents[0].artifact_id
+
+
+def test_one_run_id_is_idempotent_but_cannot_hide_conflicting_observation_time() -> (
+    None
+):
+    module = _module()
+    landing = module.create_ephemeral_evidence_landing()
+    content = b'{"source_id":"paper-observed"}\n'
+    request = _request(
+        module,
+        run_id="observed-run",
+        source_batch_id="observed-batch",
+        source_kind="historical_jsonl",
+        source_locator="history/observed.jsonl",
+        content=content,
+    )
+
+    first = landing.ingest(request)
+    assert landing.ingest(request) == first
+    assert len(landing.stream("observed-batch")) == 1
+    with pytest.raises(module.EvidenceIntegrityError, match="run_id"):
+        landing.ingest(
+            _request(
+                module,
+                run_id="observed-run",
+                source_batch_id="observed-batch",
+                source_kind="historical_jsonl",
+                source_locator="history/observed.jsonl",
+                content=content,
+                observed_at=NOW + timedelta(seconds=1),
+            )
+        )
+
+
+def test_stream_returns_detached_snapshots_of_committed_evidence() -> None:
+    module = _module()
+    landing = module.create_ephemeral_evidence_landing()
+    content = b'{"source_id":"paper-snapshot","title":"Original"}\n'
+    landing.ingest(
+        _request(
+            module,
+            run_id="snapshot-run",
+            source_batch_id="snapshot-batch",
+            source_kind="historical_jsonl",
+            source_locator="history/snapshot.jsonl",
+            content=content,
+        )
+    )
+
+    returned = landing.stream("snapshot-batch")[0]
+    returned.payload["title"] = "Caller mutation"
+
+    assert landing.stream("snapshot-batch")[0].payload["title"] == "Original"
+
+
 def test_replay_with_a_new_parser_version_retains_both_record_sets() -> None:
     module = _module()
     assert module.SourceRecord is SharedSourceRecord
@@ -161,7 +264,6 @@ def test_replay_with_a_new_parser_version_retains_both_record_sets() -> None:
     assert by_version["v1"].payload == by_version["v2"].payload
 
 
-@pytest.mark.xfail(strict=True, raises=ModuleNotFoundError, reason=RED_REASON)
 def test_partial_and_corrupt_records_keep_readable_fields_and_typed_errors() -> None:
     module = _module()
     assert module.SourceRecord is SharedSourceRecord
@@ -169,7 +271,7 @@ def test_partial_and_corrupt_records_keep_readable_fields_and_typed_errors() -> 
     content = (
         b'{"source_id":"paper-1","title":"Readable title",'
         b'"abstract":{"$unreadable_external":"toast:42"}}\n'
-        b'{not-valid-json\n'
+        b"{not-valid-json\n"
     )
     receipt = landing.ingest(
         _request(
@@ -200,8 +302,9 @@ def test_partial_and_corrupt_records_keep_readable_fields_and_typed_errors() -> 
     assert corrupt.errors[0].field_path is None
 
 
-@pytest.mark.xfail(strict=True, raises=ModuleNotFoundError, reason=RED_REASON)
-def test_unreadable_identity_fields_create_no_placeholder_fact_or_canonical_effect() -> None:
+def test_unreadable_identity_fields_create_no_placeholder_fact_or_canonical_effect() -> (
+    None
+):
     module = _module()
     assert module.SourceRecord is SharedSourceRecord
     landing = module.create_ephemeral_evidence_landing()
