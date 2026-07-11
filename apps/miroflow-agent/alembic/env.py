@@ -1,8 +1,7 @@
 """Alembic environment for the knowledge graph Postgres store.
 
-Reads DATABASE_URL from the environment. Does not use an ORM Metadata object
-(we manage DDL explicitly in each revision via op.create_table / op.execute),
-so `target_metadata` stays None.
+Destructive migration targets use a dedicated, fail-closed target contract.
+The migrations manage DDL explicitly, so ``target_metadata`` stays ``None``.
 """
 
 from __future__ import annotations
@@ -13,6 +12,11 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from src.data_agents.storage.database_target import (
+    DestructiveDatabaseTarget,
+    resolve_destructive_database_target,
+)
+
 config = context.config
 
 if config.config_file_name is not None:
@@ -22,28 +26,15 @@ if config.config_file_name is not None:
 target_metadata = None
 
 
-def _resolve_url() -> str:
-    # DATABASE_URL is the canonical name (real-data runs and ad-hoc use).
-    # DATABASE_URL_TEST is the test-only override that keeps pytest isolated
-    # from real data. See docs/plans/2026-04-18-002-real-data-e2e-and-db-
-    # separation.md §4.
-    url = os.environ.get("DATABASE_URL") or os.environ.get("DATABASE_URL_TEST")
-    if not url:
-        raise RuntimeError(
-            "DATABASE_URL (or DATABASE_URL_TEST) is required. "
-            "Example: postgresql+psycopg://user:pass@localhost:5432/miroflow"
-        )
-    # SQLAlchemy needs the '+psycopg' driver marker; bare 'postgresql://' would
-    # fall back to psycopg2 (which is intentionally NOT installed).
-    if url.startswith("postgresql://"):
-        url = "postgresql+psycopg://" + url[len("postgresql://"):]
-    return url
+def _resolve_target() -> DestructiveDatabaseTarget:
+    return resolve_destructive_database_target(config, os.environ)
 
 
 def run_migrations_offline() -> None:
     """Emit SQL to stdout instead of connecting to a database."""
+    target = _resolve_target()
     context.configure(
-        url=_resolve_url(),
+        url=target.url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -54,8 +45,9 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Connect to the configured database and run migrations."""
+    target = _resolve_target()
     cfg_section = config.get_section(config.config_ini_section) or {}
-    cfg_section["sqlalchemy.url"] = _resolve_url()
+    cfg_section["sqlalchemy.url"] = target.url
 
     connectable = engine_from_config(
         cfg_section,
@@ -64,6 +56,10 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
+        target.verify_connected_database(connection)
+        # The identity SELECT starts SQLAlchemy's implicit transaction. End that
+        # read-only transaction so Alembic owns and commits the migration one.
+        connection.rollback()
         context.configure(
             connection=connection,
             target_metadata=target_metadata,

@@ -6,18 +6,25 @@ independently of whichever alembic revision is current. Once V002 lands,
 `alembic upgrade head` creates the same tables and seed_loader works
 unchanged.
 
-Skipped when DATABASE_URL is not set. The test uses its own schema
-`seed_loader_test` to avoid polluting public tables.
+Skipped when no database target is configured. The test uses its own schema
+`seed_loader_test`, but still requires the shared destructive-target proof before
+creating or dropping that schema.
 """
 
 from __future__ import annotations
 
 import os
 
+from alembic.config import Config
 import psycopg
 import pytest
 from psycopg import sql
 
+from src.data_agents.storage.database_target import (
+    DatabaseTargetSafetyError,
+    DestructiveDatabaseTarget,
+    resolve_destructive_database_target,
+)
 from src.data_agents.storage.postgres import seed_loader
 from src.data_agents.storage.postgres.connection import resolve_dsn
 from src.data_agents.taxonomy.domain_tier import DOMAIN_TIER_SEEDS
@@ -25,25 +32,61 @@ from src.data_agents.taxonomy.seed_data import TAXONOMY_SEEDS
 
 
 SCHEMA = "seed_loader_test"
-_REAL_DB_NAMES = ("miroflow_real",)
+
+
+def _destructive_target() -> DestructiveDatabaseTarget:
+    dedicated_names = (
+        "ALEMBIC_DATABASE_URL",
+        "ALEMBIC_EXPECTED_DATABASE",
+        "ALEMBIC_TARGET_KIND",
+    )
+    if not any(os.environ.get(name) for name in dedicated_names):
+        if os.environ.get("DATABASE_URL") or os.environ.get("DATABASE_URL_TEST"):
+            pytest.fail(
+                "An explicit destructive database target is required; Generic "
+                "DATABASE_URL values cannot select the seed-loader test database."
+            )
+        pytest.skip("No explicit destructive database target is configured")
+
+    try:
+        return resolve_destructive_database_target(Config(), os.environ)
+    except DatabaseTargetSafetyError as exc:
+        pytest.fail(str(exc))
 
 
 @pytest.fixture(scope="module")
 def pg_dsn() -> str:
-    # Prefer DATABASE_URL_TEST (points at miroflow_test_mock) to keep real data isolated.
-    # See docs/plans/2026-04-18-002-real-data-e2e-and-db-separation.md §4.
-    dsn = os.environ.get("DATABASE_URL_TEST") or os.environ.get("DATABASE_URL")
-    if not dsn:
-        pytest.skip(
-            "Neither DATABASE_URL_TEST nor DATABASE_URL set; "
-            "skipping Postgres seed_loader test"
+    target = _destructive_target()
+    dsn = resolve_dsn(target.url)
+    with psycopg.connect(dsn) as conn:
+        row = conn.execute(
+            "SELECT current_database(), "
+            "shobj_description(oid, 'pg_database') "
+            "FROM pg_database WHERE datname = current_database()"
+        ).fetchone()
+        if row is None:
+            pytest.fail("Could not read the explicit database target identity")
+        target.verify_database_identity(
+            actual_database=row[0],
+            database_marker=row[1],
         )
-    if any(name in dsn for name in _REAL_DB_NAMES):
-        pytest.fail(
-            f"Refusing to run tests against a real-data database: {dsn!r}. "
-            "Set DATABASE_URL_TEST to miroflow_test_mock (or similar)."
-        )
-    return resolve_dsn(dsn)
+    return dsn
+
+
+def test_pg_dsn_refuses_generic_database_url_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("ALEMBIC_DATABASE_URL", raising=False)
+    monkeypatch.delenv("ALEMBIC_EXPECTED_DATABASE", raising=False)
+    monkeypatch.delenv("ALEMBIC_TARGET_KIND", raising=False)
+    monkeypatch.delenv("DATABASE_URL_TEST", raising=False)
+    monkeypatch.setenv(
+        "DATABASE_URL",
+        "postgresql+psycopg://miroflow:secret@example:5432/production_copy",
+    )
+
+    with pytest.raises(pytest.fail.Exception, match="explicit|Generic"):
+        _destructive_target()
 
 
 @pytest.fixture(scope="module")
@@ -119,9 +162,13 @@ def test_seed_loader_upserts_all_rows(schema_dsn: str):
 
     with psycopg.connect(schema_dsn) as conn, conn.cursor() as cur:
         cur.execute("SELECT count(*) FROM taxonomy_vocabulary")
-        (tx_count,) = cur.fetchone()
+        tx_row = cur.fetchone()
+        assert tx_row is not None
+        (tx_count,) = tx_row
         cur.execute("SELECT count(*) FROM source_domain_tier_registry")
-        (dt_count,) = cur.fetchone()
+        dt_row = cur.fetchone()
+        assert dt_row is not None
+        (dt_count,) = dt_row
 
     assert tx_count == len(TAXONOMY_SEEDS)
     assert dt_count == len(DOMAIN_TIER_SEEDS)
@@ -134,9 +181,13 @@ def test_seed_loader_is_idempotent(schema_dsn: str):
 
     with psycopg.connect(schema_dsn) as conn, conn.cursor() as cur:
         cur.execute("SELECT count(*) FROM taxonomy_vocabulary")
-        (tx_count,) = cur.fetchone()
+        tx_row = cur.fetchone()
+        assert tx_row is not None
+        (tx_count,) = tx_row
         cur.execute("SELECT count(*) FROM source_domain_tier_registry")
-        (dt_count,) = cur.fetchone()
+        dt_row = cur.fetchone()
+        assert dt_row is not None
+        (dt_count,) = dt_row
 
     assert tx_count == len(TAXONOMY_SEEDS)
     assert dt_count == len(DOMAIN_TIER_SEEDS)
