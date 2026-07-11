@@ -33,7 +33,7 @@
 
 ## 5. Assertions, Identity, Fusion, and Temporal Decisions
 
-- [ ] 5.1 Add RED contract/scenario coverage for retained competing assertions, deterministic constraints, structured LLM adjudication, unresolved conflicts, and current projections.
+- [x] 5.1 Add RED contract/scenario coverage for retained competing assertions, deterministic constraints, structured LLM adjudication, unresolved conflicts, and current projections.
 - [ ] 5.2 Implement append-only field/relationship assertions and reproducible canonical decisions with evidence, policy/model version, confidence, rationale, and conflict state.
 - [ ] 5.3 Add RED identity scenarios for strong-identifier merge, cross-format LLM decision, same-name separation, mistaken-merge split, and recovery lineage.
 - [ ] 5.4 Implement reversible offline canonical identity resolution and source-identity mapping without pre-launch ID compatibility constraints; query/answer paths remain read-only and may only emit identity-review gaps.

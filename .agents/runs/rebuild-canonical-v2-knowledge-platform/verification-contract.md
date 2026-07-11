@@ -8,8 +8,9 @@ interface/database foundation are Accepted. Tasks 4.1–4.5 and all S4 Immutable
 Accepted at `2026-07-11T22:07:12Z`. The isolated candidate is C2_0004 with the exact bounded
 six-family landing state and zero non-landing business rows. Checkpoint manifest
 `ab091aac…966b1`, restore verification `caf789ae…f0acc`, and frozen external tree
-`4ae5f2ce…b05012` prove full 26-table logical parity across distinct PostgreSQL systems. Task 5.1 is
-next and has not started; no canonical identity/assertion/domain row, published projection, release,
+`4ae5f2ce…b05012` prove full 26-table logical parity across distinct PostgreSQL systems. Task 5.1's
+five assertion/decision strict RED scenarios are Accepted at `2026-07-11T22:58:11Z`; task 5.2 is
+next and has not started. No canonical identity/assertion/domain row, published projection, release,
 or index write exists.
 
 ## Behavior owner
@@ -62,7 +63,7 @@ cannot mutate offline canonical identity decisions.
   inventoried historical SQLite/JSONL/XLSX/PDF/cache/raw-source families. Restore targets must be
   distinct from original and backup locations; original volumes/files remain read-only.
 
-Last identity/hash check recorded in `verification.md`: `2026-07-11T22:14:20Z`.
+Last identity/hash check recorded in `verification.md`: `2026-07-11T22:58:11Z`.
 
 ## Hard invariants
 
@@ -129,6 +130,19 @@ Last identity/hash check recorded in `verification.md`: `2026-07-11T22:14:20Z`.
 - Accepted S4 evidence is `s4-landing-review.md` plus `s4e/{checkpoint-manifest,
   restore-verification,checkpoint-freeze-receipt,acceptance-record}.json`. Later slices consume S4
   immutably and create new versioned checkpoints rather than rewriting it.
+
+### S5 — Assertions, decisions, identity, and temporal semantics
+
+- Task 5.1 freezes retained competing field/relationship assertions, deterministic candidate
+  constraints before LLM evidence, content-bound structured adjudication, explicit unresolved
+  conflicts, and decision-backed generic current selections through one package-internal deep
+  module. These selections are not S6 typed domain projections or S7 published projections.
+- Normal execution must report exactly five strict xfails; forced RED must report exactly five
+  failures for the exact absent `canonical_decision_engine` module. Nested missing dependencies are
+  not an accepted xfail reason.
+- Task 5.2 GREEN must reconcile release-scoped shared field decisions, relationship type versions,
+  raw/validated LLM output binding, and disjoint selected/conflicting evidence roles with the
+  existing storage foundation. Task 5.1 itself changes no production contract or storage.
 
 ### S8–S10 — Query, answer, and feedback
 

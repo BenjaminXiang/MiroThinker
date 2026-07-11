@@ -18,8 +18,9 @@ Accepted at `2026-07-11T19:06:55Z`. Task 4.3's C2_0004 and PostgreSQL repository
 `cef42a1e075d30c5a0e179f34ab543b4878edabd`. Task 4.5 independently reviewed and Accepted all S4 at
 `2026-07-11T22:07:12Z` after a content-addressed dump restored with exact 26-table logical parity in
 a distinct disposable PostgreSQL system. The durable candidate remains isolated at C2_0004 with
-only immutable landing evidence and zero canonical/publication/index rows. Task 5.1 is next and has
-not started.
+only immutable landing evidence and zero canonical/publication/index rows. Task 5.1's strict RED
+assertion/decision contract was Accepted at `2026-07-11T22:58:11Z`; task 5.2 is next and has not
+started.
 
 ## Existing incident/recovery checkpoint used as planning evidence
 
@@ -197,8 +198,9 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 
 ## Next pending evidence
 
-1. Task 5.1 assertion/fusion/decision RED scenarios require their own Ready slice; S4 acceptance
-   does not authorize or claim S5 implementation.
+1. Task 5.2 decision-core implementation requires its own Ready slice. Task 5.1 RED acceptance does
+   not authorize a production module, shared-contract/migration change, database write, or S5
+   acceptance claim.
 
 ## S2 task 2.1 source inventory — 2026-07-11T07:11:30Z
 
@@ -943,9 +945,64 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   network-none/no-port isolation; exact candidate marker/system/C2_0004/bounded counts; and zero
   non-landing rows. No original Postgres command or Milvus client was used.
 
+## S5A task 5.1 assertion/decision RED — 2026-07-11T22:58:11Z
+
+- Three independent read-only design reviews converged on a package-internal deep module,
+  `CanonicalDecisionEngine.decide(batch) -> result`, rather than extending `CandidateRelease`,
+  adding decision CRUD to `KnowledgeBuild`, or testing direct C2 tables. The future Task 7.2
+  `KnowledgeBuild` hides this module; Task 5.1 neither creates nor awakens that public seam.
+- Five independent scenarios freeze observable outcomes: all competing field assertions remain
+  distinct while a decision-backed current value retains supporting/conflicting evidence; identity,
+  source-state, field/entity, and build-as-of constraints filter LLM candidates without deleting
+  assertions; recorded structured output is schema/version/evidence/content-hash bound and order-
+  independent; material field ambiguity remains unresolved with no current fact; and accepted plus
+  unresolved relationship decisions retain all evidence while only accepted relations become
+  current.
+- The first formal review found three Important contract defects: any nested `ModuleNotFoundError`
+  could be masked as expected RED, the four Task 5.2 shared-contract/storage reconciliations were not
+  explicit, and unresolved relationship no-projection behavior lacked execution coverage. Exact
+  exception-name guarding, an explicit GREEN handoff, and an accepted/unresolved relation pair
+  closed them.
+- The second review found that an unbound `preferred_source_systems` input could change a winner
+  without changing the policy digest, and that arbitrary output hashes were not content-bound. The
+  source-preference shortcut was removed; conflicting winner selection now uses recorded structured
+  adjudication. Recorded responses now retain canonical raw bytes plus their computed expected
+  SHA-256, the trace exposes the validated output and computed digest, and a mismatched digest must
+  raise `AdjudicationIntegrityError`. Final independent review reported zero Critical/Important
+  findings and Ready.
+- Focused normal pytest exited `0` with exactly `5 xfailed`. Final forced
+  `--no-cov --runxfail` exited `1` with exactly `5 failed`, every failure the exact absent
+  `src.data_agents.canonical_v2.canonical_decision_engine`; there was no syntax, collection,
+  fixture, assertion, or nested-import failure.
+- One intermediate attempt ran normal and forced pytest concurrently in one worktree. Both
+  `pytest-cov` processes targeted shared coverage state; the forced process ended with a coverage
+  SQLite `no such table: file` internal error after its five intended failures. The exact empty
+  generated shard was removed, serial `--no-cov` replay produced the required five failures, and no
+  source/test behavior was changed. Same-worktree pytest verification is serial from this point.
+- Default Canonical V2 regression, with all four explicit integration settings removed, was
+  `73 passed, 33 explicit skips, 9 expected xfails`: the existing four future deep-module xfails plus
+  these five Task 5.1 cases. S1 target/seed-loader safety was `10 passed, 5 explicit skips`; S2/S2B
+  was `32 passed`. Ruff check/format, Pyright, strict OpenSpec, and `git diff --check` passed.
+- Formal S2B gate returned `state=accepted`, `source_count=50`, manifest
+  `a14c1eab...e59c8`, and restore verification `98826e8d...d231`. `pgtest` remained
+  `paused=true` on exact volume `d81c6381...d241`; it was not entered or connected. Recovery and
+  candidate containers remained running with network none and no ports; candidate restart policy
+  remained `no`.
+- Hash-only checks matched original/backup Milvus at `43ef203e...67cc` and original/backup FPI
+  salvage at `cef8eb6b...bb7`; no Milvus client opened the original. The S4 external checkpoint
+  remained directory mode 0550 and file mode 0440.
+- Corrected read-only candidate probes returned C2_0004, landing counts `15/6/6/21/6`, canonical
+  counts `0/0/0/0/0`, and release/build/active counts `0/0/0`. Two preceding read-only probes used
+  incorrect unqualified/schema relation names and failed without mutation before this exact query.
+- Task 5.1 is Accepted under the user's objective-verification self-approval authorization. This
+  accepts only the RED contract. No production/shared-contract/migration/database/source/index/
+  provider/runtime change or write occurred; Canonical knowledge acceptance and S5 overall remain
+  open.
+
 ## Explicit non-claims
 
 - S2B acceptance satisfies only the backup prerequisite; each later task still requires its own
   Ready slice, explicit isolated target, and verification loop.
 - No populated Canonical V2 candidate, serving projection, or Milvus release is accepted.
+- Task 5.1 does not claim Task 5.2 implementation or S5 acceptance.
 - No original source write or production-like cutover is authorized.

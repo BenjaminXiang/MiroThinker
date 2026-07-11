@@ -102,3 +102,11 @@
   `recorded_collected_response` evidence. No live Web/provider call or unknown HTTP provenance was
   invented. All five Evidence Landing acceptance checks are now closed; task 5.1 has not started,
   and no canonical/release/index or production-like state was created.
+- Completed and accepted task 5.1 as a test-only RED slice. Five strict scenarios define retained
+  field/relationship assertions, deterministic constraint outcomes before LLM evidence, content-
+  bound structured adjudication, unresolved no-projection behavior, order-independent decisions,
+  and evidence-backed generic current selections through one package-internal decision-module seam.
+  Two review passes closed exact missing-module masking, policy/config binding, structured-output
+  hash binding, relationship-unresolved coverage, and explicit Task 5.2 contract/schema handoff.
+  No production module, shared contract, migration, database row, source, provider, typed domain,
+  candidate release, publication, index, or runtime behavior changed.
