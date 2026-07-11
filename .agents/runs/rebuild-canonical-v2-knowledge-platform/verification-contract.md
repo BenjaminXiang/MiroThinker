@@ -2,15 +2,15 @@
 
 ## Status
 
-S1 database-target safety is Accepted at commit `a58184c`. S2 read-only baseline tasks 2.1–2.5 and
-their corpus/ground-truth/threshold policy are Accepted. S2B/task 2.6 is Accepted with backup
-manifest `a14c1eab…e59c8`, restore verification `98826e8d…d231`, and acceptance record
-`3155d890…fc5b`. Tasks 3.1–3.5 and the complete S3 interface/database foundation are Accepted;
-C2_0003 is the reviewed shared-foundation head. Task 4.1's four immutable-landing strict RED
-scenarios and task 4.2's storage-independent EvidenceLanding/source adapters are Accepted. Task
-4.3's PostgreSQL persistence is Accepted; C2_0004 is verified only on a deleted disposable, while
-the durable candidate intentionally remains C2_0003. Task 4.4 is next but has not started. No actual
-source landing evidence, canonical business row, published projection, or index write has begun.
+S1 database-target safety, S2 tasks 2.1–2.5 and corpus/ground-truth/threshold policy, and S2B/task
+2.6 backup/independent-restore gate are Accepted. Tasks 3.1–3.5 and the complete S3
+interface/database foundation are Accepted. Tasks 4.1–4.5 and all S4 Immutable Evidence Landing are
+Accepted at `2026-07-11T22:07:12Z`. The isolated candidate is C2_0004 with the exact bounded
+six-family landing state and zero non-landing business rows. Checkpoint manifest
+`ab091aac…966b1`, restore verification `caf789ae…f0acc`, and frozen external tree
+`4ae5f2ce…b05012` prove full 26-table logical parity across distinct PostgreSQL systems. Task 5.1 is
+next and has not started; no canonical identity/assertion/domain row, published projection, release,
+or index write exists.
 
 ## Behavior owner
 
@@ -62,7 +62,7 @@ cannot mutate offline canonical identity decisions.
   inventoried historical SQLite/JSONL/XLSX/PDF/cache/raw-source families. Restore targets must be
   distinct from original and backup locations; original volumes/files remain read-only.
 
-Last identity/hash check recorded in `verification.md`: `2026-07-11T19:42:20Z`.
+Last identity/hash check recorded in `verification.md`: `2026-07-11T22:14:20Z`.
 
 ## Hard invariants
 
@@ -122,6 +122,13 @@ Last identity/hash check recorded in `verification.md`: `2026-07-11T19:42:20Z`.
   unverified original Milvus/source kinds, and expose no durable/canonical/publication/index effect.
 - Task 4.3 owns PostgreSQL persistence and transaction tests; task 4.4 owns the bounded actual-source
   replay matrix. The ephemeral Task 4.2 composition is not evidence for either later task.
+- Task 4.5 owns independent S4 review plus the landing-only database checkpoint. Acceptance requires
+  exact gate/source/implementation/policy binding, byte-identical guarded replay, full user-table
+  hashes, normalized schema and integrity summaries, a distinct-system disposable restore, owned-ID
+  cleanup, immutable external dump evidence, and zero open Critical/Important review findings.
+- Accepted S4 evidence is `s4-landing-review.md` plus `s4e/{checkpoint-manifest,
+  restore-verification,checkpoint-freeze-receipt,acceptance-record}.json`. Later slices consume S4
+  immutably and create new versioned checkpoints rather than rewriting it.
 
 ### S8–S10 — Query, answer, and feedback
 

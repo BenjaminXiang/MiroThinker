@@ -58,15 +58,15 @@ targets throughout this change.
 
 ## 3. Evidence landing acceptance
 
-- [ ] Every registered artifact has source/copy identity, content hash, size, acquisition time,
+- [x] Every registered artifact has source/copy identity, content hash, size, acquisition time,
       run, and parent lineage where applicable.
-- [ ] Parser outputs identify artifact, record locator, parser/schema version, parse run, and error;
+- [x] Parser outputs identify artifact, record locator, parser/schema version, parse run, and error;
       a new parser run does not mutate prior outputs.
-- [ ] A bounded representative matrix covers WAL/FPI partial rows, SQLite, JSONL, XLSX, Milvus copy,
+- [x] A bounded representative matrix covers WAL/FPI partial rows, SQLite, JSONL, XLSX, Milvus copy,
       and recollected response inputs.
-- [ ] Readable partial fields survive; missing/corrupt fields are quarantined without invented
+- [x] Readable partial fields survive; missing/corrupt fields are quarantined without invented
       placeholders, parents, facts, or evidence.
-- [ ] Replay count/hash/error summaries match the accepted landing checkpoint.
+- [x] Replay count/hash/error summaries match the accepted landing checkpoint.
 
 ## 4. Canonical knowledge acceptance
 

@@ -1,0 +1,128 @@
+{
+  "command": {
+    "exit_code": 0,
+    "sanitized_argv": [
+      "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2/.agents/runs/rebuild-canonical-v2-knowledge-platform/s4d/replay_landing_matrix.py",
+      "replay",
+      "--matrix",
+      "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2/.agents/runs/rebuild-canonical-v2-knowledge-platform/s4d/landing-matrix.json",
+      "--evidence-root",
+      "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2/.agents/runs/rebuild-canonical-v2-knowledge-platform",
+      "--work-root",
+      "/var/tmp/mirothinker-canonical-v2/s4e-replay-work-20260711T215953Z-cef42a1",
+      "--output-root",
+      "/var/tmp/mirothinker-canonical-v2/s4e-replay-20260711T215953Z-cef42a1",
+      "--output",
+      "/var/tmp/mirothinker-canonical-v2/s4e-replay-20260711T215953Z-cef42a1/fresh-guarded-replay-summary.json",
+      "--execution-output",
+      "/var/tmp/mirothinker-canonical-v2/s4e-replay-20260711T215953Z-cef42a1/fresh-guarded-replay-execution.json",
+      "--run-id",
+      "canonical-v2-s4-landing-20260711T215953Z-cef42a1",
+      "--database-url",
+      "<explicit-dsn>",
+      "--expected-prestate",
+      "bounded-replay"
+    ]
+  },
+  "executed_at": "2026-07-11T22:00:56.717383+00:00",
+  "gate": {
+    "acceptance_record_sha256": "3155d8908ab560d8d97ed08881f067564f38e23c097e46fe111a056ef739fc5b",
+    "backup_manifest_sha256": "a14c1eab673f8fca2bdbf4d50dfe8e9b33cf077b9314855298d29a16a82e59c8",
+    "restore_verification_sha256": "98826e8da7ee66af20199c4998f4cdccc9276179119f30cd318f7ce8c0e7d231",
+    "source_count": 50,
+    "source_inventory_sha256": "83a9e2c82aee4cbe5c02f088ba0fdbf8d15359d87a85bf4ee901b0f58f70fa09",
+    "state": "accepted"
+  },
+  "git_commit": "cef42a1e075d30c5a0e179f34ab543b4878edabd",
+  "matrix_sha256": "eaba2ecb93f1418b90ece45e91d7071d638095897bdd6a2c012efe6a9db9a923",
+  "openspec_tree_sha256": "765b2b43fdaf587a8f4e3c76227189a5c3d69fdb4780c6b867dc0db99195c622",
+  "provider_calls": 0,
+  "replay_summary_sha256": "a88b44fab38d4e56a7894fabb93e56b46c043278082c200773c038a7dc6e80b5",
+  "replay_tool_sha256": "0efdf5625071c80c7225535d0f1d2460e55c720de9a92f1c03b07f6088c64e3d",
+  "run_id": "canonical-v2-s4-landing-20260711T215953Z-cef42a1",
+  "schema_version": "canonical-v2-s4d-replay-execution-v1",
+  "source_revalidation_after_destination": "passed",
+  "source_revalidation_before_destination": "passed",
+  "target_after": {
+    "container_name": "canonical-v2-s3b-pg-20260711",
+    "container_running": true,
+    "database": "miroflow_canonical_v2_candidate_s3b",
+    "database_marker": "miroflow:destructive-target:v1:isolated-candidate:miroflow_canonical_v2_candidate_s3b",
+    "error_kind_counts": {
+      "missing_external_content": 3,
+      "schema_mismatch": 3
+    },
+    "kind": "isolated-candidate",
+    "landing_counts": {
+      "evidence_artifact": 15,
+      "ingest_run": 6,
+      "parser_run": 6,
+      "source_error": 6,
+      "source_record": 21
+    },
+    "lineage_counts": {
+      "matching_parent_edges": 9,
+      "orphan_parent_edges": 0,
+      "parent_edges": 9,
+      "roots": 6
+    },
+    "network_mode": "none",
+    "non_landing_row_count": 0,
+    "pgdata_volume": "canonical-v2-s3b-pgdata-20260711",
+    "published_ports": [],
+    "record_status_counts": {
+      "parsed": 17,
+      "partial": 4
+    },
+    "restart_policy": "no",
+    "revision": "C2_0004",
+    "run_status_counts": {
+      "accepted": 4,
+      "partial": 2
+    },
+    "system_identifier": "7661313446684311592",
+    "validated_prestate": "bounded-replay"
+  },
+  "target_before": {
+    "container_name": "canonical-v2-s3b-pg-20260711",
+    "container_running": true,
+    "database": "miroflow_canonical_v2_candidate_s3b",
+    "database_marker": "miroflow:destructive-target:v1:isolated-candidate:miroflow_canonical_v2_candidate_s3b",
+    "error_kind_counts": {
+      "missing_external_content": 3,
+      "schema_mismatch": 3
+    },
+    "kind": "isolated-candidate",
+    "landing_counts": {
+      "evidence_artifact": 15,
+      "ingest_run": 6,
+      "parser_run": 6,
+      "source_error": 6,
+      "source_record": 21
+    },
+    "lineage_counts": {
+      "matching_parent_edges": 9,
+      "orphan_parent_edges": 0,
+      "parent_edges": 9,
+      "roots": 6
+    },
+    "network_mode": "none",
+    "non_landing_row_count": 0,
+    "pgdata_volume": "canonical-v2-s3b-pgdata-20260711",
+    "published_ports": [],
+    "record_status_counts": {
+      "parsed": 17,
+      "partial": 4
+    },
+    "restart_policy": "no",
+    "revision": "C2_0004",
+    "run_status_counts": {
+      "accepted": 4,
+      "partial": 2
+    },
+    "system_identifier": "7661313446684311592",
+    "validated_prestate": "bounded-replay"
+  },
+  "worktree_state": "task-worktree-dirty",
+  "worktree_status_sha256": "724597b92eee4048de422f81583fb11f9df65f4a086c0f4e2ad04d571133e59b"
+}

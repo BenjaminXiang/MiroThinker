@@ -1,0 +1,608 @@
+{
+  "candidate_target_after": {
+    "container_name": "canonical-v2-s3b-pg-20260711",
+    "container_running": true,
+    "database": "miroflow_canonical_v2_candidate_s3b",
+    "database_marker": "miroflow:destructive-target:v1:isolated-candidate:miroflow_canonical_v2_candidate_s3b",
+    "error_kind_counts": {
+      "missing_external_content": 3,
+      "schema_mismatch": 3
+    },
+    "kind": "isolated-candidate",
+    "landing_counts": {
+      "evidence_artifact": 15,
+      "ingest_run": 6,
+      "parser_run": 6,
+      "source_error": 6,
+      "source_record": 21
+    },
+    "lineage_counts": {
+      "matching_parent_edges": 9,
+      "orphan_parent_edges": 0,
+      "parent_edges": 9,
+      "roots": 6
+    },
+    "network_mode": "none",
+    "non_landing_row_count": 0,
+    "pgdata_volume": "canonical-v2-s3b-pgdata-20260711",
+    "published_ports": [],
+    "record_status_counts": {
+      "parsed": 17,
+      "partial": 4
+    },
+    "restart_policy": "no",
+    "revision": "C2_0004",
+    "run_status_counts": {
+      "accepted": 4,
+      "partial": 2
+    },
+    "system_identifier": "7661313446684311592",
+    "validated_prestate": "bounded-replay"
+  },
+  "candidate_target_before": {
+    "container_name": "canonical-v2-s3b-pg-20260711",
+    "container_running": true,
+    "database": "miroflow_canonical_v2_candidate_s3b",
+    "database_marker": "miroflow:destructive-target:v1:isolated-candidate:miroflow_canonical_v2_candidate_s3b",
+    "error_kind_counts": {
+      "missing_external_content": 3,
+      "schema_mismatch": 3
+    },
+    "kind": "isolated-candidate",
+    "landing_counts": {
+      "evidence_artifact": 15,
+      "ingest_run": 6,
+      "parser_run": 6,
+      "source_error": 6,
+      "source_record": 21
+    },
+    "lineage_counts": {
+      "matching_parent_edges": 9,
+      "orphan_parent_edges": 0,
+      "parent_edges": 9,
+      "roots": 6
+    },
+    "network_mode": "none",
+    "non_landing_row_count": 0,
+    "pgdata_volume": "canonical-v2-s3b-pgdata-20260711",
+    "published_ports": [],
+    "record_status_counts": {
+      "parsed": 17,
+      "partial": 4
+    },
+    "restart_policy": "no",
+    "revision": "C2_0004",
+    "run_status_counts": {
+      "accepted": 4,
+      "partial": 2
+    },
+    "system_identifier": "7661313446684311592",
+    "validated_prestate": "bounded-replay"
+  },
+  "checkpoint_id": "canonical-v2-s4-landing-20260711T215953Z-cef42a1",
+  "command_evidence": [
+    {
+      "command_id": "git-head",
+      "exit_code": 0,
+      "sanitized_argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "b337752c7056e32e8429448dce2905546a4c2e91219fd9e46ee72f89bd57b8b3"
+    },
+    {
+      "command_id": "git-status",
+      "exit_code": 0,
+      "sanitized_argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "724597b92eee4048de422f81583fb11f9df65f4a086c0f4e2ad04d571133e59b"
+    },
+    {
+      "command_id": "git-worktree-diff",
+      "exit_code": 0,
+      "sanitized_argv": [
+        "git",
+        "diff",
+        "--binary",
+        "HEAD",
+        "--"
+      ],
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "47b8d74c10ac11c7a34c9e70979f8e09cf14792627021c472e92fbf850d1324d"
+    },
+    {
+      "command_id": "docker-version",
+      "exit_code": 0,
+      "sanitized_argv": [
+        "docker",
+        "--version"
+      ],
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "20d1c8bb1403cc3bcc947938b90bedaba29bcf4a237196719851d5b434b0fd16"
+    },
+    {
+      "command_id": "pg-dump-version",
+      "exit_code": 0,
+      "sanitized_argv": [
+        "docker",
+        "exec",
+        "canonical-v2-s3b-pg-20260711",
+        "pg_dump",
+        "--version"
+      ],
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "3fe8f3bd9f4892d996415571862ea882dd4c0aad68af10e6d43493bd030be16d"
+    },
+    {
+      "command_id": "pg-restore-version",
+      "exit_code": 0,
+      "sanitized_argv": [
+        "docker",
+        "exec",
+        "canonical-v2-s3b-pg-20260711",
+        "pg_restore",
+        "--version"
+      ],
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "4ceeda1944f8c715d9fefc73307e8bdcf9425f393cb6305815415b83fefde394"
+    },
+    {
+      "command_id": "schema-fingerprint-dump",
+      "exit_code": 0,
+      "sanitized_argv": [
+        "docker",
+        "exec",
+        "canonical-v2-s3b-pg-20260711",
+        "pg_dump",
+        "-U",
+        "miroflow",
+        "-d",
+        "miroflow_canonical_v2_candidate_s3b",
+        "--schema-only",
+        "--no-owner",
+        "--no-privileges"
+      ],
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "2d1ca8ac647852650356e2d8ec927a43a1bb620d1ba75c0330e5364281e64a12"
+    },
+    {
+      "command_id": "candidate-pg-dump",
+      "exit_code": 0,
+      "sanitized_argv": [
+        "docker",
+        "exec",
+        "canonical-v2-s3b-pg-20260711",
+        "pg_dump",
+        "-U",
+        "miroflow",
+        "-d",
+        "miroflow_canonical_v2_candidate_s3b",
+        "--format=custom",
+        "--no-owner",
+        "--no-privileges",
+        "--serializable-deferrable"
+      ],
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command_id": "checkpoint-pg-restore-list",
+      "exit_code": 0,
+      "sanitized_argv": [
+        "docker",
+        "exec",
+        "-i",
+        "canonical-v2-s3b-pg-20260711",
+        "pg_restore",
+        "--list",
+        "<candidate-landing.dump"
+      ],
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "43c765fc1dd406ab71d268f3433733c0eb3852425048a375e8e35ac92face30d",
+      "toc_line_count": 225
+    },
+    {
+      "command_id": "schema-fingerprint-dump",
+      "exit_code": 0,
+      "sanitized_argv": [
+        "docker",
+        "exec",
+        "canonical-v2-s3b-pg-20260711",
+        "pg_dump",
+        "-U",
+        "miroflow",
+        "-d",
+        "miroflow_canonical_v2_candidate_s3b",
+        "--schema-only",
+        "--no-owner",
+        "--no-privileges"
+      ],
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3bf05185486a966e027d7538e31d5b74d44549e664814ae878fa28bb392ab33"
+    },
+    {
+      "command_id": "s4e-checkpoint-orchestration",
+      "exit_code": 0,
+      "sanitized_argv": [
+        "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2/.agents/runs/rebuild-canonical-v2-knowledge-platform/s4e/landing_checkpoint.py",
+        "--database-url",
+        "<explicit-dsn>",
+        "--evidence-root",
+        "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2/.agents/runs/rebuild-canonical-v2-knowledge-platform",
+        "--fresh-replay-summary",
+        "/var/tmp/mirothinker-canonical-v2/s4e-replay-20260711T215953Z-cef42a1/fresh-guarded-replay-summary.json",
+        "--fresh-replay-execution",
+        "/var/tmp/mirothinker-canonical-v2/s4e-replay-20260711T215953Z-cef42a1/fresh-guarded-replay-execution.json",
+        "--checkpoint-root",
+        "/md1/mirothinker-backups/canonical-v2-s4-landing-20260711T215953Z-cef42a1",
+        "--checkpoint-id",
+        "canonical-v2-s4-landing-20260711T215953Z-cef42a1",
+        "--restore-container",
+        "canonical-v2-s4e-restore-20260711t215953z",
+        "--restore-database",
+        "miroflow_canonical_v2_s4e_restore_20260711t215953z",
+        "--restore-socket-root",
+        "/var/tmp/mirothinker-canonical-v2/s4e-restore-20260711t215953z"
+      ]
+    }
+  ],
+  "created_at": "2026-07-11T22:01:27.056269+00:00",
+  "dump": {
+    "absolute_path": "/md1/mirothinker-backups/canonical-v2-s4-landing-20260711T215953Z-cef42a1/candidate-landing.dump",
+    "archive_list_exit_code": 0,
+    "archive_list_sha256": "43c765fc1dd406ab71d268f3433733c0eb3852425048a375e8e35ac92face30d",
+    "archive_toc_line_count": 225,
+    "byte_size": 163205,
+    "format": "postgresql-custom",
+    "relative_path": "candidate-landing.dump",
+    "sha256": "0a3da115bc590505ee375473421421badec8232e58315d0351ff476dc6dfcdd2"
+  },
+  "gate": {
+    "acceptance_record_sha256": "3155d8908ab560d8d97ed08881f067564f38e23c097e46fe111a056ef739fc5b",
+    "backup_manifest_sha256": "a14c1eab673f8fca2bdbf4d50dfe8e9b33cf077b9314855298d29a16a82e59c8",
+    "restore_verification_sha256": "98826e8da7ee66af20199c4998f4cdccc9276179119f30cd318f7ce8c0e7d231",
+    "source_count": 50,
+    "source_inventory_sha256": "83a9e2c82aee4cbe5c02f088ba0fdbf8d15359d87a85bf4ee901b0f58f70fa09",
+    "state": "accepted"
+  },
+  "implementation": {
+    "corpus_manifest_sha256": "dc7cc10ba08db341a38cc08da1edd2449594120a3861735edfd514b29be46088",
+    "git_commit": "cef42a1e075d30c5a0e179f34ab543b4878edabd",
+    "git_diff_sha256": "47b8d74c10ac11c7a34c9e70979f8e09cf14792627021c472e92fbf850d1324d",
+    "git_status_sha256": "724597b92eee4048de422f81583fb11f9df65f4a086c0f4e2ad04d571133e59b",
+    "implementation_artifacts": {
+      ".agents/runs/rebuild-canonical-v2-knowledge-platform/s4d/replay_landing_matrix.py": "0efdf5625071c80c7225535d0f1d2460e55c720de9a92f1c03b07f6088c64e3d",
+      ".agents/runs/rebuild-canonical-v2-knowledge-platform/s4e/landing_checkpoint.py": "8651e87c7f26311f8dc78704e76b83500c8daee6d9355fa4350b46fbba6fad9b",
+      ".agents/runs/rebuild-canonical-v2-knowledge-platform/s4e/test_landing_checkpoint.py": "b847162fe8ef28d7a564ef34ea61a311816609c9188e29f846e8f69345ed2ade",
+      "apps/miroflow-agent/tests/canonical_v2/test_landing_matrix_replay.py": "3ff486b0e7784602b2ab68c9387cdaef0d7ec5a08e4b0a18db3a8a0f3a611502"
+    },
+    "openspec_tree_sha256": "765b2b43fdaf587a8f4e3c76227189a5c3d69fdb4780c6b867dc0db99195c622",
+    "threshold_registry_sha256": "bce20bf959ba8a2b0997fe2bc1d71e5f727b857a2e374990cf76085c1e13b5cc",
+    "worktree_state": "task4.5-dirty"
+  },
+  "inputs": {
+    "fresh_guarded_replay_execution": {
+      "document": {
+        "command": {
+          "exit_code": 0,
+          "sanitized_argv": [
+            "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2/.agents/runs/rebuild-canonical-v2-knowledge-platform/s4d/replay_landing_matrix.py",
+            "replay",
+            "--matrix",
+            "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2/.agents/runs/rebuild-canonical-v2-knowledge-platform/s4d/landing-matrix.json",
+            "--evidence-root",
+            "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2/.agents/runs/rebuild-canonical-v2-knowledge-platform",
+            "--work-root",
+            "/var/tmp/mirothinker-canonical-v2/s4e-replay-work-20260711T215953Z-cef42a1",
+            "--output-root",
+            "/var/tmp/mirothinker-canonical-v2/s4e-replay-20260711T215953Z-cef42a1",
+            "--output",
+            "/var/tmp/mirothinker-canonical-v2/s4e-replay-20260711T215953Z-cef42a1/fresh-guarded-replay-summary.json",
+            "--execution-output",
+            "/var/tmp/mirothinker-canonical-v2/s4e-replay-20260711T215953Z-cef42a1/fresh-guarded-replay-execution.json",
+            "--run-id",
+            "canonical-v2-s4-landing-20260711T215953Z-cef42a1",
+            "--database-url",
+            "<explicit-dsn>",
+            "--expected-prestate",
+            "bounded-replay"
+          ]
+        },
+        "executed_at": "2026-07-11T22:00:56.717383+00:00",
+        "gate": {
+          "acceptance_record_sha256": "3155d8908ab560d8d97ed08881f067564f38e23c097e46fe111a056ef739fc5b",
+          "backup_manifest_sha256": "a14c1eab673f8fca2bdbf4d50dfe8e9b33cf077b9314855298d29a16a82e59c8",
+          "restore_verification_sha256": "98826e8da7ee66af20199c4998f4cdccc9276179119f30cd318f7ce8c0e7d231",
+          "source_count": 50,
+          "source_inventory_sha256": "83a9e2c82aee4cbe5c02f088ba0fdbf8d15359d87a85bf4ee901b0f58f70fa09",
+          "state": "accepted"
+        },
+        "git_commit": "cef42a1e075d30c5a0e179f34ab543b4878edabd",
+        "matrix_sha256": "eaba2ecb93f1418b90ece45e91d7071d638095897bdd6a2c012efe6a9db9a923",
+        "openspec_tree_sha256": "765b2b43fdaf587a8f4e3c76227189a5c3d69fdb4780c6b867dc0db99195c622",
+        "provider_calls": 0,
+        "replay_summary_sha256": "a88b44fab38d4e56a7894fabb93e56b46c043278082c200773c038a7dc6e80b5",
+        "replay_tool_sha256": "0efdf5625071c80c7225535d0f1d2460e55c720de9a92f1c03b07f6088c64e3d",
+        "run_id": "canonical-v2-s4-landing-20260711T215953Z-cef42a1",
+        "schema_version": "canonical-v2-s4d-replay-execution-v1",
+        "source_revalidation_after_destination": "passed",
+        "source_revalidation_before_destination": "passed",
+        "target_after": {
+          "container_name": "canonical-v2-s3b-pg-20260711",
+          "container_running": true,
+          "database": "miroflow_canonical_v2_candidate_s3b",
+          "database_marker": "miroflow:destructive-target:v1:isolated-candidate:miroflow_canonical_v2_candidate_s3b",
+          "error_kind_counts": {
+            "missing_external_content": 3,
+            "schema_mismatch": 3
+          },
+          "kind": "isolated-candidate",
+          "landing_counts": {
+            "evidence_artifact": 15,
+            "ingest_run": 6,
+            "parser_run": 6,
+            "source_error": 6,
+            "source_record": 21
+          },
+          "lineage_counts": {
+            "matching_parent_edges": 9,
+            "orphan_parent_edges": 0,
+            "parent_edges": 9,
+            "roots": 6
+          },
+          "network_mode": "none",
+          "non_landing_row_count": 0,
+          "pgdata_volume": "canonical-v2-s3b-pgdata-20260711",
+          "published_ports": [],
+          "record_status_counts": {
+            "parsed": 17,
+            "partial": 4
+          },
+          "restart_policy": "no",
+          "revision": "C2_0004",
+          "run_status_counts": {
+            "accepted": 4,
+            "partial": 2
+          },
+          "system_identifier": "7661313446684311592",
+          "validated_prestate": "bounded-replay"
+        },
+        "target_before": {
+          "container_name": "canonical-v2-s3b-pg-20260711",
+          "container_running": true,
+          "database": "miroflow_canonical_v2_candidate_s3b",
+          "database_marker": "miroflow:destructive-target:v1:isolated-candidate:miroflow_canonical_v2_candidate_s3b",
+          "error_kind_counts": {
+            "missing_external_content": 3,
+            "schema_mismatch": 3
+          },
+          "kind": "isolated-candidate",
+          "landing_counts": {
+            "evidence_artifact": 15,
+            "ingest_run": 6,
+            "parser_run": 6,
+            "source_error": 6,
+            "source_record": 21
+          },
+          "lineage_counts": {
+            "matching_parent_edges": 9,
+            "orphan_parent_edges": 0,
+            "parent_edges": 9,
+            "roots": 6
+          },
+          "network_mode": "none",
+          "non_landing_row_count": 0,
+          "pgdata_volume": "canonical-v2-s3b-pgdata-20260711",
+          "published_ports": [],
+          "record_status_counts": {
+            "parsed": 17,
+            "partial": 4
+          },
+          "restart_policy": "no",
+          "revision": "C2_0004",
+          "run_status_counts": {
+            "accepted": 4,
+            "partial": 2
+          },
+          "system_identifier": "7661313446684311592",
+          "validated_prestate": "bounded-replay"
+        },
+        "worktree_state": "task-worktree-dirty",
+        "worktree_status_sha256": "724597b92eee4048de422f81583fb11f9df65f4a086c0f4e2ad04d571133e59b"
+      },
+      "relative_path": "fresh-guarded-replay-execution.json",
+      "sha256": "b5dd980c97146d1b7a707de4eedfe5732868286adc0108cf8db8c9f06cac7d80"
+    },
+    "fresh_guarded_replay_summary": {
+      "relative_path": "fresh-guarded-replay-summary.json",
+      "sha256": "a88b44fab38d4e56a7894fabb93e56b46c043278082c200773c038a7dc6e80b5"
+    },
+    "landing_matrix_sha256": "eaba2ecb93f1418b90ece45e91d7071d638095897bdd6a2c012efe6a9db9a923",
+    "landing_replay_summary_sha256": "a88b44fab38d4e56a7894fabb93e56b46c043278082c200773c038a7dc6e80b5",
+    "matrix_entries_sha256": "5b77b4a4f3ea9f0a0fd4667dfccff6afefa968b5fb43124de816e652d1c58293"
+  },
+  "model_prompt_embedding_reranker_versions": "not_applicable",
+  "provider_calls": 0,
+  "provider_usage": "not_used",
+  "publication_or_index_effect": "none",
+  "schema_version": "canonical-v2-s4-landing-checkpoint-v1",
+  "snapshot": {
+    "landing_metrics": {
+      "artifact_kind_counts": {
+        "historical_jsonl": 1,
+        "historical_sqlite": 1,
+        "historical_xlsx": 1,
+        "milvus_verified_copy_records": 1,
+        "recorded_collected_response": 1,
+        "verified_backup_copy": 6,
+        "verified_restore_copy": 3,
+        "wal_fpi_salvage_records": 1
+      },
+      "error_kind_counts": {
+        "missing_external_content": 3,
+        "schema_mismatch": 3
+      },
+      "integrity_violation_counts": {
+        "artifact_cycle": 0,
+        "artifact_invalid_identity": 0,
+        "artifact_orphan_parent": 0,
+        "artifact_self_parent": 0,
+        "error_orphan_record": 0,
+        "ingest_orphan_artifact_or_parser": 0,
+        "parser_incomplete_identity": 0,
+        "parser_orphan_artifact": 0,
+        "partial_record_without_error": 0,
+        "record_incomplete_identity": 0,
+        "record_orphan_artifact_or_parser": 0
+      },
+      "lineage_counts": {
+        "matching_parent_edges": 9,
+        "orphan_parent_edges": 0,
+        "parent_edges": 9,
+        "roots": 6
+      },
+      "record_status_counts": {
+        "parsed": 17,
+        "partial": 4
+      },
+      "run_status_counts": {
+        "accepted": 4,
+        "partial": 2
+      }
+    },
+    "logical_sha256": "6328e811d9c63f519c47f4dd7fe1a662e34b71ca6afb266688a5171d063054e8",
+    "non_landing_row_count": 0,
+    "revision": "C2_0004",
+    "schema_fingerprint": {
+      "normalized_bytes": 67194,
+      "normalized_sha256": "7237483f3d3bc5f4776e149e2ba633b355f5711f451f6a72f93504e5629f4aef",
+      "removed_control_lines": 2
+    },
+    "schema_version": "canonical-v2-postgres-logical-snapshot-v1",
+    "table_count": 26,
+    "tables": {
+      "knowledge.canonical_decision": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.canonical_decision_assertion": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.canonical_identity": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.identity_decision": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.identity_decision_input": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.identity_decision_output": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.identity_decision_record": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.identity_decision_source_identity": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.policy": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.relationship_assertion": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.relationship_decision": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.relationship_decision_assertion": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.relationship_type": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.release": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.source_assertion": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.source_identity": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.source_identity_record": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "landing.evidence_artifact": {
+        "row_count": 15,
+        "rows_sha256": "dffd506908daf852d4a8ca37cea8e8ba6f63596472791be050f86212b12d8474"
+      },
+      "landing.ingest_run": {
+        "row_count": 6,
+        "rows_sha256": "a82942cd4cfc4c5a44f32eac2a9b31f48ffa40743dde60071a0823f98b2d25de"
+      },
+      "landing.parser_run": {
+        "row_count": 6,
+        "rows_sha256": "8db2d6e4ed5235accf670c95ab25c2dd1140354ecbc756c5c60103e3a1c478a7"
+      },
+      "landing.source_error": {
+        "row_count": 6,
+        "rows_sha256": "07eccc4b2f31c651c50c2c25345a1935d431ca26e2d8ed04328001adaa2cd4bc"
+      },
+      "landing.source_record": {
+        "row_count": 21,
+        "rows_sha256": "91004dd0ca28f5985575c5187c2ae26bbf12d705b5dde86abdd985951570a7c0"
+      },
+      "public.canonical_v2_alembic_version": {
+        "row_count": 1,
+        "rows_sha256": "08ebc122d9a5c39ff8a268ea77e1cea6f3b82e6f5261bd68496b1379a3768c9e"
+      },
+      "publish.active_release": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "publish.build_manifest": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "publish.manifest_section": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  "source_revalidation": {
+    "after_dump": "passed",
+    "before_dump": "passed",
+    "source_count": 6
+  },
+  "state": "candidate",
+  "tool_versions": {
+    "docker": "Docker version 28.5.1, build e180ab8",
+    "pg_dump": "pg_dump (PostgreSQL) 16.13 (Debian 16.13-1.pgdg12+1)",
+    "pg_restore": "pg_restore (PostgreSQL) 16.13 (Debian 16.13-1.pgdg12+1)",
+    "python": "3.12.12"
+  }
+}

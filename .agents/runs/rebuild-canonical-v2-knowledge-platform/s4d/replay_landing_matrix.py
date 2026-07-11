@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import argparse
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import hashlib
@@ -11,7 +11,9 @@ import json
 import os
 from pathlib import Path
 import re
+import stat
 import subprocess
+import sys
 import tempfile
 from typing import Any
 import warnings
@@ -50,6 +52,8 @@ def _strict_json_loads(value: str | bytes) -> Any:
 class VerifiedMember:
     source_id: str
     member_relative_path: str
+    restore_relative_path: str
+    original_path: Path
     backup_path: Path
     restore_path: Path
     content_sha256: str
@@ -86,6 +90,60 @@ class PreparedMatrix:
     gate: Any
 
 
+@dataclass(frozen=True, slots=True)
+class ReplayTargetContract:
+    container_name: str
+    database_name: str
+    target_kind: str
+    database_marker: str
+    system_identifier: str
+    pgdata_volume: str
+    revision: str
+
+
+@dataclass(frozen=True, slots=True)
+class ReplayTargetObservation:
+    container_name: str
+    database_name: str
+    database_marker: str
+    system_identifier: str
+    revision: str
+    container_running: bool
+    network_mode: str
+    published_ports: tuple[str, ...]
+    restart_policy: str
+    pgdata_volume: str
+    landing_counts: dict[str, int]
+    lineage_counts: dict[str, int]
+    run_status_counts: dict[str, int]
+    record_status_counts: dict[str, int]
+    error_kind_counts: dict[str, int]
+    non_landing_row_count: int
+
+    def to_document(self, *, target_kind: str | None = None) -> dict[str, Any]:
+        document: dict[str, Any] = {
+            "container_name": self.container_name,
+            "container_running": self.container_running,
+            "database": self.database_name,
+            "database_marker": self.database_marker,
+            "error_kind_counts": dict(sorted(self.error_kind_counts.items())),
+            "landing_counts": dict(sorted(self.landing_counts.items())),
+            "lineage_counts": dict(sorted(self.lineage_counts.items())),
+            "network_mode": self.network_mode,
+            "non_landing_row_count": self.non_landing_row_count,
+            "pgdata_volume": self.pgdata_volume,
+            "published_ports": list(self.published_ports),
+            "record_status_counts": dict(sorted(self.record_status_counts.items())),
+            "restart_policy": self.restart_policy,
+            "revision": self.revision,
+            "run_status_counts": dict(sorted(self.run_status_counts.items())),
+            "system_identifier": self.system_identifier,
+        }
+        if target_kind is not None:
+            document["kind"] = target_kind
+        return document
+
+
 _FAMILY_CONTRACT = {
     "wal_fpi_partial": ("wal_fpi", True),
     "sqlite": ("direct", False),
@@ -94,6 +152,42 @@ _FAMILY_CONTRACT = {
     "milvus_copy": ("milvus", True),
     "recorded_response": ("recorded_response", True),
 }
+
+_CANDIDATE_TARGET_CONTRACT = ReplayTargetContract(
+    container_name="canonical-v2-s3b-pg-20260711",
+    database_name="miroflow_canonical_v2_candidate_s3b",
+    target_kind="isolated-candidate",
+    database_marker=(
+        "miroflow:destructive-target:v1:isolated-candidate:"
+        "miroflow_canonical_v2_candidate_s3b"
+    ),
+    system_identifier="7661313446684311592",
+    pgdata_volume="canonical-v2-s3b-pgdata-20260711",
+    revision="C2_0004",
+)
+
+_BOUNDED_LANDING_COUNTS = {
+    "evidence_artifact": 15,
+    "ingest_run": 6,
+    "parser_run": 6,
+    "source_error": 6,
+    "source_record": 21,
+}
+_BOUNDED_LINEAGE_COUNTS = {
+    "matching_parent_edges": 9,
+    "orphan_parent_edges": 0,
+    "parent_edges": 9,
+    "roots": 6,
+}
+_BOUNDED_RUN_STATUS_COUNTS = {"accepted": 4, "partial": 2}
+_BOUNDED_RECORD_STATUS_COUNTS = {"parsed": 17, "partial": 4}
+_BOUNDED_ERROR_KIND_COUNTS = {
+    "missing_external_content": 3,
+    "schema_mismatch": 3,
+}
+_EXPECTED_REPLAY_SUMMARY_SHA256 = (
+    "a88b44fab38d4e56a7894fabb93e56b46c043278082c200773c038a7dc6e80b5"
+)
 
 
 def _load_json_object(path: Path, *, label: str) -> dict[str, Any]:
@@ -207,6 +301,99 @@ def _sha256_file(path: Path) -> str:
         while chunk := stream.read(1024 * 1024):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _read_verified_file(
+    path: Path,
+    *,
+    label: str,
+    expected_sha256: str,
+    expected_byte_size: int,
+    capture: bool = False,
+) -> tuple[bytes | None, tuple[int, int]]:
+    """Read one stable regular file and bind the bytes to its open descriptor."""
+    try:
+        resolved = path.resolve(strict=True)
+        descriptor = os.open(
+            resolved,
+            os.O_RDONLY | os.O_CLOEXEC | getattr(os, "O_NOFOLLOW", 0),
+        )
+    except OSError as exc:
+        raise MatrixReplayError(f"{label} is missing or unsafe") from exc
+    payload = bytearray() if capture else None
+    digest = hashlib.sha256()
+    try:
+        before = os.fstat(descriptor)
+        if not stat.S_ISREG(before.st_mode):
+            raise MatrixReplayError(f"{label} is not a regular file")
+        while chunk := os.read(descriptor, 1024 * 1024):
+            digest.update(chunk)
+            if payload is not None:
+                payload.extend(chunk)
+        after = os.fstat(descriptor)
+    finally:
+        os.close(descriptor)
+    stable_fields = ("st_dev", "st_ino", "st_size", "st_mtime_ns")
+    if any(getattr(before, field) != getattr(after, field) for field in stable_fields):
+        raise MatrixReplayError(f"{label} changed while it was being read")
+    if after.st_size != expected_byte_size:
+        raise MatrixReplayError(
+            f"{label} size mismatch: expected {expected_byte_size}, got {after.st_size}"
+        )
+    actual_sha256 = digest.hexdigest()
+    if actual_sha256 != expected_sha256:
+        raise MatrixReplayError(
+            f"{label} hash mismatch: expected {expected_sha256}, got {actual_sha256}"
+        )
+    return (bytes(payload) if payload is not None else None), (
+        after.st_dev,
+        after.st_ino,
+    )
+
+
+def _require_independent_file_identities(
+    identities: dict[str, tuple[int, int]],
+) -> None:
+    by_identity: dict[tuple[int, int], list[str]] = {}
+    for label, identity in identities.items():
+        by_identity.setdefault(identity, []).append(label)
+    aliases = [labels for labels in by_identity.values() if len(labels) > 1]
+    if aliases:
+        raise MatrixReplayError(
+            "original source, backup, and restore must be independent files: "
+            + json.dumps(aliases, sort_keys=True)
+        )
+
+
+def revalidate_prepared_sources(entries: tuple[PreparedEntry, ...]) -> None:
+    """Re-prove every original/backup/restore identity at a use boundary."""
+    members: dict[
+        tuple[str, str, str, str],
+        VerifiedMember,
+    ] = {}
+    for entry in entries:
+        member = entry.source
+        key = (
+            member.source_id,
+            str(member.original_path),
+            str(member.backup_path),
+            str(member.restore_path),
+        )
+        members[key] = member
+    for member in members.values():
+        identities: dict[str, tuple[int, int]] = {}
+        for label, path in (
+            ("original source", member.original_path),
+            ("backup", member.backup_path),
+            ("restore", member.restore_path),
+        ):
+            _, identities[label] = _read_verified_file(
+                path,
+                label=label,
+                expected_sha256=member.content_sha256,
+                expected_byte_size=member.byte_size,
+            )
+        _require_independent_file_identities(identities)
 
 
 def _resolve_beneath(root: Path, relative_path: str, *, label: str) -> Path:
@@ -329,35 +516,42 @@ def verify_member(
             f"selected member manifest identity mismatch: {mismatched_fields}"
         )
     object_path = member.get("object_path")
-    if not isinstance(object_path, str):
-        raise MatrixReplayError("selected member has no backup object path")
+    source_path_value = member.get("source_path")
+    if not isinstance(object_path, str) or not isinstance(source_path_value, str):
+        raise MatrixReplayError(
+            "selected member has no backup object or original source path"
+        )
+    original_path = Path(source_path_value)
+    if not original_path.is_absolute():
+        raise MatrixReplayError("selected original source path must be absolute")
+    try:
+        original_path = original_path.resolve(strict=True)
+    except OSError as exc:
+        raise MatrixReplayError("selected original source path is absent") from exc
     backup_path = _resolve_beneath(
         resolved_backup_root, object_path, label="backup object path"
     )
     restore_path = _resolve_beneath(
         restore_root, restore_relative_path, label="restore probe path"
     )
-    for label, path in (("backup", backup_path), ("restore", restore_path)):
-        actual_size = path.stat().st_size
-        if actual_size != expected_byte_size:
-            raise MatrixReplayError(
-                f"{label} size mismatch: expected {expected_byte_size}, got {actual_size}"
-            )
-        actual_sha256 = _sha256_file(path)
-        if actual_sha256 != expected_sha256:
-            raise MatrixReplayError(
-                f"{label} hash mismatch: expected {expected_sha256}, got {actual_sha256}"
-            )
-    backup_stat = backup_path.stat()
-    restore_stat = restore_path.stat()
-    if (backup_stat.st_dev, backup_stat.st_ino) == (
-        restore_stat.st_dev,
-        restore_stat.st_ino,
+    identities: dict[str, tuple[int, int]] = {}
+    for label, path in (
+        ("original source", original_path),
+        ("backup", backup_path),
+        ("restore", restore_path),
     ):
-        raise MatrixReplayError("backup and restore member must be independent files")
+        _, identities[label] = _read_verified_file(
+            path,
+            label=label,
+            expected_sha256=expected_sha256,
+            expected_byte_size=expected_byte_size,
+        )
+    _require_independent_file_identities(identities)
     return VerifiedMember(
         source_id=source_id,
         member_relative_path=member_relative_path,
+        restore_relative_path=restore_relative_path,
+        original_path=original_path,
         backup_path=backup_path,
         restore_path=restore_path,
         content_sha256=expected_sha256,
@@ -783,6 +977,8 @@ def execute_prepared_matrix(
     observed_at: datetime,
     expected_by_entry: dict[str, dict[str, Any]],
     landing_factory: Callable[[], Any] | None,
+    before_destination: Callable[[], None] | None = None,
+    after_destination: Callable[[], None] | None = None,
 ) -> dict[str, Any]:
     from src.data_agents.canonical_v2.evidence_landing import (
         create_ephemeral_evidence_landing,
@@ -804,6 +1000,10 @@ def execute_prepared_matrix(
         raise MatrixReplayError(
             "destination replay requires a frozen expected summary for every entry"
         )
+    if (before_destination is None) != (after_destination is None):
+        raise MatrixReplayError(
+            "destination boundary requires both before and after checks"
+        )
 
     preflight_landing = create_ephemeral_evidence_landing()
     preflight_summaries = tuple(
@@ -820,19 +1020,25 @@ def execute_prepared_matrix(
     if landing_factory is None:
         return document
 
-    destination = landing_factory()
-    destination_summaries = tuple(
-        replay_prepared_entry(destination, entry, observed_at=observed_at)
-        for entry in entries
-    )
-    for summary in destination_summaries:
-        require_expected_summary(summary, expected_by_entry[summary["entry_id"]])
-    destination_document = _matrix_summary(destination_summaries)
-    if destination_document != document:
-        raise MatrixReplayError(
-            "destination replay differs from the fully validated preflight summary"
+    if before_destination is not None:
+        before_destination()
+    try:
+        destination = landing_factory()
+        destination_summaries = tuple(
+            replay_prepared_entry(destination, entry, observed_at=observed_at)
+            for entry in entries
         )
-    return document
+        for summary in destination_summaries:
+            require_expected_summary(summary, expected_by_entry[summary["entry_id"]])
+        destination_document = _matrix_summary(destination_summaries)
+        if destination_document != document:
+            raise MatrixReplayError(
+                "destination replay differs from the fully validated preflight summary"
+            )
+        return document
+    finally:
+        if after_destination is not None:
+            after_destination()
 
 
 def _matrix_summary(summaries: tuple[dict[str, Any], ...]) -> dict[str, Any]:
@@ -852,6 +1058,323 @@ def _matrix_summary(summaries: tuple[dict[str, Any], ...]) -> dict[str, Any]:
         "replay_bytes": sum(int(entry["replay_bytes"]) for entry in entries),
         "source_bytes": sum(int(entry["source_bytes"]) for entry in entries),
     }
+
+
+def _count_map(value: Any, *, label: str) -> dict[str, int]:
+    if not isinstance(value, Mapping):
+        raise MatrixReplayError(f"{label} must be an object")
+    result: dict[str, int] = {}
+    for raw_key, raw_count in value.items():
+        if (
+            not isinstance(raw_key, str)
+            or not raw_key
+            or isinstance(raw_count, bool)
+            or not isinstance(raw_count, int)
+            or raw_count < 0
+        ):
+            raise MatrixReplayError(f"{label} contains an invalid count")
+        result[raw_key] = raw_count
+    return dict(sorted(result.items()))
+
+
+def build_replay_target_observation(
+    *,
+    container_inspect: Mapping[str, Any],
+    database_probe: Mapping[str, Any],
+) -> ReplayTargetObservation:
+    name = container_inspect.get("Name")
+    state = container_inspect.get("State")
+    host_config = container_inspect.get("HostConfig")
+    mounts = container_inspect.get("Mounts")
+    if (
+        not isinstance(name, str)
+        or not isinstance(state, Mapping)
+        or not isinstance(host_config, Mapping)
+        or not isinstance(mounts, list)
+    ):
+        raise MatrixReplayError("candidate container inspection is incomplete")
+    pgdata_mounts = [
+        mount
+        for mount in mounts
+        if isinstance(mount, Mapping)
+        and mount.get("Destination") == "/var/lib/postgresql/data"
+    ]
+    if len(pgdata_mounts) != 1:
+        raise MatrixReplayError("candidate must have exactly one PGDATA mount")
+    pgdata_mount = pgdata_mounts[0]
+    pgdata_volume = pgdata_mount.get("Name")
+    if pgdata_mount.get("Type") != "volume" or not isinstance(pgdata_volume, str):
+        raise MatrixReplayError("candidate PGDATA mount must be one named volume")
+    port_bindings = host_config.get("PortBindings")
+    if port_bindings is None:
+        port_bindings = {}
+    if not isinstance(port_bindings, Mapping):
+        raise MatrixReplayError("candidate published-port inspection is invalid")
+    restart = host_config.get("RestartPolicy")
+    if not isinstance(restart, Mapping):
+        raise MatrixReplayError("candidate restart-policy inspection is invalid")
+
+    def _probe_string(key: str) -> str:
+        value = database_probe.get(key)
+        if not isinstance(value, str) or not value:
+            raise MatrixReplayError(f"candidate database probe lacks {key}")
+        return value
+
+    non_landing = database_probe.get("non_landing_row_count")
+    if isinstance(non_landing, bool) or not isinstance(non_landing, int):
+        raise MatrixReplayError("candidate non-landing row probe is invalid")
+    return ReplayTargetObservation(
+        container_name=name.removeprefix("/"),
+        database_name=_probe_string("database_name"),
+        database_marker=_probe_string("database_marker"),
+        system_identifier=_probe_string("system_identifier"),
+        revision=_probe_string("revision"),
+        container_running=state.get("Running") is True,
+        network_mode=str(host_config.get("NetworkMode") or ""),
+        published_ports=tuple(sorted(str(port) for port in port_bindings)),
+        restart_policy=str(restart.get("Name") or ""),
+        pgdata_volume=pgdata_volume,
+        landing_counts=_count_map(
+            database_probe.get("landing_counts"), label="landing counts"
+        ),
+        lineage_counts=_count_map(
+            database_probe.get("lineage_counts"), label="lineage counts"
+        ),
+        run_status_counts=_count_map(
+            database_probe.get("run_status_counts"), label="run status counts"
+        ),
+        record_status_counts=_count_map(
+            database_probe.get("record_status_counts"),
+            label="record status counts",
+        ),
+        error_kind_counts=_count_map(
+            database_probe.get("error_kind_counts"), label="error kind counts"
+        ),
+        non_landing_row_count=non_landing,
+    )
+
+
+def require_replay_target(
+    observation: ReplayTargetObservation,
+    *,
+    contract: ReplayTargetContract,
+    expected_prestate: str,
+) -> dict[str, Any]:
+    exact_fields = (
+        ("container name", observation.container_name, contract.container_name),
+        ("database name", observation.database_name, contract.database_name),
+        ("database marker", observation.database_marker, contract.database_marker),
+        (
+            "system identifier",
+            observation.system_identifier,
+            contract.system_identifier,
+        ),
+        ("revision", observation.revision, contract.revision),
+        ("PGDATA volume", observation.pgdata_volume, contract.pgdata_volume),
+    )
+    for label, actual, expected in exact_fields:
+        if actual != expected:
+            raise MatrixReplayError(
+                f"candidate {label} mismatch: expected {expected}, got {actual}"
+            )
+    if not observation.container_running:
+        raise MatrixReplayError("candidate container is not running")
+    if observation.network_mode != "none":
+        raise MatrixReplayError("candidate network must be none")
+    if observation.published_ports:
+        raise MatrixReplayError("candidate must have no published ports")
+    if observation.restart_policy != "no":
+        raise MatrixReplayError("candidate restart policy must be no")
+    if observation.non_landing_row_count != 0:
+        raise MatrixReplayError("candidate has unexpected non-landing business rows")
+    if expected_prestate == "empty":
+        expected_landing = {key: 0 for key in _BOUNDED_LANDING_COUNTS}
+        expected_lineage = {key: 0 for key in _BOUNDED_LINEAGE_COUNTS}
+        expected_runs: dict[str, int] = {}
+        expected_records: dict[str, int] = {}
+        expected_errors: dict[str, int] = {}
+    elif expected_prestate == "bounded-replay":
+        expected_landing = _BOUNDED_LANDING_COUNTS
+        expected_lineage = _BOUNDED_LINEAGE_COUNTS
+        expected_runs = _BOUNDED_RUN_STATUS_COUNTS
+        expected_records = _BOUNDED_RECORD_STATUS_COUNTS
+        expected_errors = _BOUNDED_ERROR_KIND_COUNTS
+    else:
+        raise MatrixReplayError("candidate prestate must be empty or bounded-replay")
+    actual_prestate = (
+        observation.landing_counts,
+        observation.lineage_counts,
+        observation.run_status_counts,
+        observation.record_status_counts,
+        observation.error_kind_counts,
+    )
+    expected_state = (
+        expected_landing,
+        expected_lineage,
+        expected_runs,
+        expected_records,
+        expected_errors,
+    )
+    if actual_prestate != expected_state:
+        raise MatrixReplayError(
+            "candidate landing prestate mismatch: "
+            + json.dumps(
+                {
+                    "actual": actual_prestate,
+                    "expected": expected_state,
+                },
+                sort_keys=True,
+            )
+        )
+    result = observation.to_document(target_kind=contract.target_kind)
+    result["validated_prestate"] = expected_prestate
+    return result
+
+
+def _probe_replay_database(database_url: str) -> dict[str, Any]:
+    try:
+        import psycopg
+        from psycopg import sql
+        from psycopg.rows import dict_row
+        from sqlalchemy.engine import make_url
+
+        dsn = (
+            make_url(database_url)
+            .set(drivername="postgresql")
+            .render_as_string(hide_password=False)
+        )
+        connect: Any = psycopg.connect
+        connection: Any = connect(
+            dsn,
+            row_factory=dict_row,
+            options="-c default_transaction_read_only=on",
+        )
+    except Exception as exc:
+        raise MatrixReplayError("candidate database probe could not connect") from exc
+    try:
+        identity = connection.execute(
+            "SELECT current_database() AS database_name, "
+            "shobj_description(oid, 'pg_database') AS database_marker "
+            "FROM pg_database WHERE datname = current_database()"
+        ).fetchone()
+        control = connection.execute(
+            "SELECT system_identifier::text AS system_identifier "
+            "FROM pg_control_system()"
+        ).fetchone()
+        revision = connection.execute(
+            "SELECT version_num AS revision FROM public.canonical_v2_alembic_version"
+        ).fetchall()
+        if identity is None or control is None or len(revision) != 1:
+            raise MatrixReplayError("candidate identity/revision probe is incomplete")
+        landing_counts = {
+            table: int(
+                connection.execute(
+                    sql.SQL("SELECT count(*) FROM landing.{}").format(
+                        sql.Identifier(table)
+                    )
+                ).fetchone()["count"]
+            )
+            for table in _BOUNDED_LANDING_COUNTS
+        }
+        lineage = connection.execute(
+            "SELECT "
+            "count(*) FILTER (WHERE child.parent_artifact_id IS NULL)::int AS roots, "
+            "count(*) FILTER (WHERE child.parent_artifact_id IS NOT NULL)::int "
+            "AS parent_edges, "
+            "count(parent.artifact_id)::int AS matching_parent_edges, "
+            "count(*) FILTER (WHERE child.parent_artifact_id IS NOT NULL "
+            "AND parent.artifact_id IS NULL)::int AS orphan_parent_edges "
+            "FROM landing.evidence_artifact AS child "
+            "LEFT JOIN landing.evidence_artifact AS parent "
+            "ON parent.artifact_id = child.parent_artifact_id "
+            "AND parent.content_sha256 = child.parent_content_sha256"
+        ).fetchone()
+        assert lineage is not None
+
+        def _group_counts(table: str, column: str) -> dict[str, int]:
+            rows = connection.execute(
+                sql.SQL(
+                    "SELECT {column}::text AS key, count(*)::int AS value "
+                    "FROM {schema}.{table} GROUP BY {column} ORDER BY {column}"
+                ).format(
+                    column=sql.Identifier(column),
+                    schema=sql.Identifier("landing"),
+                    table=sql.Identifier(table),
+                )
+            ).fetchall()
+            return {str(row["key"]): int(row["value"]) for row in rows}
+
+        user_tables = connection.execute(
+            "SELECT table_schema, table_name FROM information_schema.tables "
+            "WHERE table_type = 'BASE TABLE' "
+            "AND table_schema NOT IN ('information_schema', 'pg_catalog') "
+            "AND table_schema NOT LIKE 'pg_toast%' "
+            "ORDER BY table_schema, table_name"
+        ).fetchall()
+        non_landing_rows = 0
+        for table in user_tables:
+            schema_name = str(table["table_schema"])
+            table_name = str(table["table_name"])
+            if schema_name == "landing" or (
+                schema_name == "public" and table_name == "canonical_v2_alembic_version"
+            ):
+                continue
+            count_row = connection.execute(
+                sql.SQL("SELECT count(*) FROM {}.{}").format(
+                    sql.Identifier(schema_name), sql.Identifier(table_name)
+                )
+            ).fetchone()
+            assert count_row is not None
+            non_landing_rows += int(count_row["count"])
+        run_status_counts = _group_counts("ingest_run", "landing_status")
+        record_status_counts = _group_counts("source_record", "parse_status")
+        error_kind_counts = _group_counts("source_error", "error_kind")
+        connection.rollback()
+        return {
+            "database_name": identity["database_name"],
+            "database_marker": identity["database_marker"],
+            "system_identifier": control["system_identifier"],
+            "revision": revision[0]["revision"],
+            "landing_counts": landing_counts,
+            "lineage_counts": dict(lineage),
+            "run_status_counts": run_status_counts,
+            "record_status_counts": record_status_counts,
+            "error_kind_counts": error_kind_counts,
+            "non_landing_row_count": non_landing_rows,
+        }
+    except MatrixReplayError:
+        raise
+    except Exception as exc:
+        raise MatrixReplayError("candidate database probe failed") from exc
+    finally:
+        connection.close()
+
+
+def observe_replay_target(
+    *, database_url: str, contract: ReplayTargetContract
+) -> ReplayTargetObservation:
+    completed = subprocess.run(
+        ["docker", "inspect", contract.container_name],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise MatrixReplayError("candidate container cannot be inspected")
+    try:
+        documents = _strict_json_loads(completed.stdout)
+    except (json.JSONDecodeError, _StrictJsonError) as exc:
+        raise MatrixReplayError("candidate container inspection is invalid") from exc
+    if (
+        not isinstance(documents, list)
+        or len(documents) != 1
+        or not isinstance(documents[0], dict)
+    ):
+        raise MatrixReplayError("candidate container inspection is ambiguous")
+    return build_replay_target_observation(
+        container_inspect=documents[0],
+        database_probe=_probe_replay_database(database_url),
+    )
 
 
 def _selected_strings(
@@ -1102,7 +1625,14 @@ def prepare_matrix(
         assert isinstance(materializer, dict)
         kind = materializer["kind"]
         if kind == "direct":
-            content = source.restore_path.read_bytes()
+            content, _ = _read_verified_file(
+                source.restore_path,
+                label=f"{entry['entry_id']} direct restore",
+                expected_sha256=source.content_sha256,
+                expected_byte_size=source.byte_size,
+                capture=True,
+            )
+            assert content is not None
         elif kind == "wal_fpi":
             record_keys = _selected_strings(
                 materializer.get("record_keys"),
@@ -1142,7 +1672,14 @@ def prepare_matrix(
                 copy_sha256=source.content_sha256,
             )
         elif kind == "recorded_response":
-            cache_content = source.restore_path.read_bytes()
+            cache_content, _ = _read_verified_file(
+                source.restore_path,
+                label=f"{entry['entry_id']} recorded response restore",
+                expected_sha256=source.content_sha256,
+                expected_byte_size=source.byte_size,
+                capture=True,
+            )
+            assert cache_content is not None
             content = materialize_recorded_response(
                 cache_content,
                 source_sha256=source.content_sha256,
@@ -1167,16 +1704,24 @@ def prepare_matrix(
                 derived=bool(entry["derived"]),
             )
         )
-    return PreparedMatrix(spec=spec, entries=tuple(prepared), gate=gate)
+    result = PreparedMatrix(spec=spec, entries=tuple(prepared), gate=gate)
+    revalidate_prepared_sources(result.entries)
+    return result
 
 
 def _result_document(
     prepared: PreparedMatrix,
     summary: dict[str, Any],
     *,
-    target: dict[str, str] | None,
+    target: ReplayTargetObservation | Mapping[str, Any] | None,
 ) -> dict[str, Any]:
     gate = prepared.gate
+    if isinstance(target, ReplayTargetObservation):
+        target_document: dict[str, Any] | None = target.to_document()
+    elif target is None:
+        target_document = None
+    else:
+        target_document = dict(target)
     return {
         "schema_version": "canonical-v2-landing-replay-summary-v1",
         "matrix_id": prepared.spec.matrix_id,
@@ -1189,19 +1734,192 @@ def _result_document(
             "source_inventory_sha256": gate.source_inventory_sha256,
             "state": gate.state,
         },
-        "target": target,
+        "target": target_document,
         **summary,
     }
 
 
-def _write_json(path: Path, value: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
+def build_execution_document(
+    *,
+    run_id: str,
+    executed_at: str,
+    git_commit: str,
+    openspec_tree_sha256: str,
+    replay_tool_sha256: str,
+    matrix_sha256: str,
+    replay_summary_sha256: str,
+    gate: Mapping[str, Any],
+    target_before: Mapping[str, Any],
+    target_after: Mapping[str, Any],
+    sanitized_command: list[str],
+    worktree_state: str = "recorded-by-caller",
+    worktree_status_sha256: str | None = None,
+) -> dict[str, Any]:
+    if not run_id or not executed_at or not sanitized_command:
+        raise MatrixReplayError("replay execution identity is incomplete")
+    for label, value, pattern in (
+        ("git commit", git_commit, r"[0-9a-f]{40}"),
+        ("OpenSpec tree", openspec_tree_sha256, r"[0-9a-f]{64}"),
+        ("replay tool", replay_tool_sha256, r"[0-9a-f]{64}"),
+        ("matrix", matrix_sha256, r"[0-9a-f]{64}"),
+        ("replay summary", replay_summary_sha256, r"[0-9a-f]{64}"),
+    ):
+        if re.fullmatch(pattern, value) is None:
+            raise MatrixReplayError(f"replay execution {label} is invalid")
+    if (
+        worktree_status_sha256 is not None
+        and re.fullmatch(r"[0-9a-f]{64}", worktree_status_sha256) is None
+    ):
+        raise MatrixReplayError("replay worktree status hash is invalid")
+    return {
+        "schema_version": "canonical-v2-s4d-replay-execution-v1",
+        "run_id": run_id,
+        "executed_at": executed_at,
+        "git_commit": git_commit,
+        "worktree_state": worktree_state,
+        "worktree_status_sha256": worktree_status_sha256,
+        "openspec_tree_sha256": openspec_tree_sha256,
+        "replay_tool_sha256": replay_tool_sha256,
+        "matrix_sha256": matrix_sha256,
+        "gate": dict(gate),
+        "replay_summary_sha256": replay_summary_sha256,
+        "target_before": dict(target_before),
+        "target_after": dict(target_after),
+        "source_revalidation_before_destination": "passed",
+        "source_revalidation_after_destination": "passed",
+        "command": {
+            "sanitized_argv": list(sanitized_command),
+            "exit_code": 0,
+        },
+        "provider_calls": 0,
+    }
+
+
+def _paths_overlap(left: Path, right: Path) -> bool:
+    for parent, child in ((left, right), (right, left)):
+        try:
+            child.relative_to(parent)
+            return True
+        except ValueError:
+            pass
+    return False
+
+
+def _validate_evidence_output(
+    path: Path,
+    *,
+    output_root: Path,
+    protected_roots: tuple[Path, ...],
+) -> Path:
+    if not path.is_absolute() or not output_root.is_absolute():
+        raise MatrixReplayError("evidence output and output root must be absolute")
+    resolved_root = output_root.resolve(strict=False)
+    resolved_path = path.resolve(strict=False)
+    try:
+        resolved_path.relative_to(resolved_root)
+    except ValueError as exc:
+        raise MatrixReplayError(
+            "evidence output escapes its explicit output root"
+        ) from exc
+    for raw_protected in protected_roots:
+        protected = raw_protected.resolve(strict=False)
+        if _paths_overlap(resolved_root, protected):
+            raise MatrixReplayError(
+                "evidence output root overlaps a protected evidence/source path"
+            )
+    if os.path.lexists(resolved_path):
+        raise MatrixReplayError("evidence output already exists and is immutable")
+    return resolved_path
+
+
+def write_evidence_json(
+    path: Path,
+    value: dict[str, Any],
+    *,
+    output_root: Path,
+    protected_roots: tuple[Path, ...],
+) -> None:
+    resolved = _validate_evidence_output(
+        path,
+        output_root=output_root,
+        protected_roots=protected_roots,
+    )
+    output_root.mkdir(parents=True, exist_ok=True)
+    resolved.parent.mkdir(parents=True, exist_ok=True)
+    resolved = _validate_evidence_output(
+        resolved,
+        output_root=output_root,
+        protected_roots=protected_roots,
+    )
     payload = (
         json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     ).encode()
-    temporary = path.with_name(f".{path.name}.tmp")
-    temporary.write_bytes(payload)
-    temporary.replace(path)
+    descriptor, temporary_name = tempfile.mkstemp(
+        dir=resolved.parent,
+        prefix=f".{resolved.name}.",
+        suffix=".tmp",
+    )
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        temporary.chmod(0o440)
+        try:
+            os.link(temporary, resolved, follow_symlinks=False)
+        except FileExistsError as exc:
+            raise MatrixReplayError(
+                "evidence output already exists and is immutable"
+            ) from exc
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def _tree_sha256(root: Path) -> str:
+    resolved = root.resolve(strict=True)
+    rows: list[str] = []
+    for path in sorted(path for path in resolved.rglob("*") if path.is_file()):
+        relative = path.relative_to(resolved).as_posix()
+        rows.append(f"{relative}|{path.stat().st_size}|{_sha256_file(path)}\n")
+    return hashlib.sha256("".join(rows).encode()).hexdigest()
+
+
+def _execution_identity() -> tuple[str, str, str]:
+    head = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=Path(__file__).resolve().parents[4],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    status = subprocess.run(
+        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+        cwd=Path(__file__).resolve().parents[4],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    return (
+        head,
+        "clean" if not status else "task-worktree-dirty",
+        hashlib.sha256(status.encode()).hexdigest(),
+    )
+
+
+def _sanitized_command(argv: list[str]) -> list[str]:
+    sanitized: list[str] = []
+    redact_next = False
+    for value in argv:
+        if redact_next:
+            sanitized.append("<explicit-dsn>")
+            redact_next = False
+        elif value.startswith("--database-url="):
+            sanitized.append("--database-url=<explicit-dsn>")
+        else:
+            sanitized.append(value)
+            redact_next = value == "--database-url"
+    return sanitized
 
 
 def main() -> None:
@@ -1211,13 +1929,45 @@ def main() -> None:
     parser.add_argument("--evidence-root", type=Path, required=True)
     parser.add_argument("--work-root", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--output-root", type=Path, required=True)
+    parser.add_argument("--execution-output", type=Path)
+    parser.add_argument("--run-id")
     parser.add_argument("--database-url")
-    parser.add_argument("--expected-database")
-    parser.add_argument("--target-kind")
+    parser.add_argument(
+        "--expected-prestate",
+        choices=("empty", "bounded-replay"),
+    )
     args = parser.parse_args()
-    if not args.evidence_root.is_absolute() or not args.work_root.is_absolute():
+    if (
+        not args.evidence_root.is_absolute()
+        or not args.work_root.is_absolute()
+        or not args.output_root.is_absolute()
+        or not args.output.is_absolute()
+        or (
+            args.execution_output is not None
+            and not args.execution_output.is_absolute()
+        )
+    ):
         raise MatrixReplayError(
-            "evidence and work roots must be explicit absolute paths"
+            "evidence, work, and output paths must be explicit absolute paths"
+        )
+    protected_roots: tuple[Path, ...] = (
+        args.evidence_root,
+        args.work_root,
+        args.matrix,
+    )
+    _validate_evidence_output(
+        args.output,
+        output_root=args.output_root,
+        protected_roots=protected_roots,
+    )
+    if args.execution_output is not None:
+        if args.execution_output == args.output:
+            raise MatrixReplayError("summary and execution outputs must be distinct")
+        _validate_evidence_output(
+            args.execution_output,
+            output_root=args.output_root,
+            protected_roots=protected_roots,
         )
     spec = load_matrix(args.matrix)
     prepared = prepare_matrix(
@@ -1225,41 +1975,155 @@ def main() -> None:
         evidence_root=args.evidence_root,
         work_root=args.work_root,
     )
+    protected_roots = protected_roots + tuple(
+        path
+        for entry in prepared.entries
+        for path in (
+            entry.source.original_path,
+            entry.source.backup_path,
+            entry.source.restore_path,
+        )
+    )
+    _validate_evidence_output(
+        args.output,
+        output_root=args.output_root,
+        protected_roots=protected_roots,
+    )
+    if args.execution_output is not None:
+        _validate_evidence_output(
+            args.execution_output,
+            output_root=args.output_root,
+            protected_roots=protected_roots,
+        )
     landing_factory: Callable[[], Any] | None = None
-    target: dict[str, str] | None = None
+    before_destination: Callable[[], None] | None = None
+    after_destination: Callable[[], None] | None = None
+    target: dict[str, Any] | None = None
+    target_state: dict[str, dict[str, Any]] = {}
     if args.mode == "replay":
-        if not all((args.database_url, args.expected_database, args.target_kind)):
-            raise MatrixReplayError("replay requires an explicit database target")
+        if (
+            not args.database_url
+            or not args.expected_prestate
+            or not args.execution_output
+            or not args.run_id
+        ):
+            raise MatrixReplayError(
+                "replay requires an explicit database URL, expected prestate, "
+                "run ID, and execution output"
+            )
         from src.data_agents.canonical_v2.evidence_landing_postgres import (
             create_postgres_evidence_landing,
         )
+        from src.data_agents.canonical_v2.rebuild_write_gate import (
+            require_accepted_backup_gate,
+        )
 
         database_url = str(args.database_url)
-        expected_database = str(args.expected_database)
-        target_kind = str(args.target_kind)
+        contract = _CANDIDATE_TARGET_CONTRACT
+
+        def _before_destination() -> None:
+            require_accepted_backup_gate(args.evidence_root)
+            revalidate_prepared_sources(prepared.entries)
+            observation = observe_replay_target(
+                database_url=database_url,
+                contract=contract,
+            )
+            target_state["before"] = require_replay_target(
+                observation,
+                contract=contract,
+                expected_prestate=str(args.expected_prestate),
+            )
+
+        def _after_destination() -> None:
+            require_accepted_backup_gate(args.evidence_root)
+            revalidate_prepared_sources(prepared.entries)
+            observation = observe_replay_target(
+                database_url=database_url,
+                contract=contract,
+            )
+            target_state["after"] = require_replay_target(
+                observation,
+                contract=contract,
+                expected_prestate="bounded-replay",
+            )
 
         def _landing_factory() -> Any:
             return create_postgres_evidence_landing(
                 database_url=database_url,
-                expected_database=expected_database,
-                target_kind=target_kind,
+                expected_database=contract.database_name,
+                target_kind=contract.target_kind,
                 backup_gate_root=args.evidence_root,
             )
 
         landing_factory = _landing_factory
-        target = {
-            "database": expected_database,
-            "kind": target_kind,
-            "revision": "C2_0004",
-        }
+        before_destination = _before_destination
+        after_destination = _after_destination
     summary = execute_prepared_matrix(
         prepared.entries,
         observed_at=spec.observed_at,
         expected_by_entry=spec.expected_by_entry,
         landing_factory=landing_factory,
+        before_destination=before_destination,
+        after_destination=after_destination,
     )
+    if args.mode == "replay":
+        if set(target_state) != {"before", "after"}:
+            raise MatrixReplayError("replay target boundary evidence is incomplete")
+        target = {
+            "database": _CANDIDATE_TARGET_CONTRACT.database_name,
+            "kind": _CANDIDATE_TARGET_CONTRACT.target_kind,
+            "revision": _CANDIDATE_TARGET_CONTRACT.revision,
+        }
+    else:
+        revalidate_prepared_sources(prepared.entries)
     result = _result_document(prepared, summary, target=target)
-    _write_json(args.output, result)
+    write_evidence_json(
+        args.output,
+        result,
+        output_root=args.output_root,
+        protected_roots=protected_roots,
+    )
+    if args.mode == "replay":
+        replay_summary_sha256 = _sha256_file(args.output)
+        if replay_summary_sha256 != _EXPECTED_REPLAY_SUMMARY_SHA256:
+            raise MatrixReplayError(
+                "guarded replay summary is not byte-identical to the frozen checkpoint"
+            )
+        assert args.execution_output is not None and args.run_id is not None
+        git_commit, worktree_state, worktree_status_sha256 = _execution_identity()
+        execution = build_execution_document(
+            run_id=str(args.run_id),
+            executed_at=datetime.now(timezone.utc).isoformat(),
+            git_commit=git_commit,
+            openspec_tree_sha256=_tree_sha256(
+                Path(__file__).resolve().parents[4]
+                / "openspec/changes/rebuild-canonical-v2-knowledge-platform"
+            ),
+            replay_tool_sha256=_sha256_file(Path(__file__).resolve()),
+            matrix_sha256=_sha256_file(args.matrix.resolve(strict=True)),
+            replay_summary_sha256=replay_summary_sha256,
+            gate={
+                "acceptance_record_sha256": prepared.gate.acceptance_record_sha256,
+                "backup_manifest_sha256": prepared.gate.backup_manifest_sha256,
+                "restore_verification_sha256": (
+                    prepared.gate.restore_verification_sha256
+                ),
+                "source_count": prepared.gate.source_count,
+                "source_inventory_sha256": prepared.gate.source_inventory_sha256,
+                "state": prepared.gate.state,
+            },
+            target_before=target_state["before"],
+            target_after=target_state["after"],
+            sanitized_command=_sanitized_command(sys.argv),
+            worktree_state=worktree_state,
+            worktree_status_sha256=worktree_status_sha256,
+        )
+        write_evidence_json(
+            args.execution_output,
+            execution,
+            output_root=args.output_root,
+            protected_roots=protected_roots,
+        )
     print(
         json.dumps(
             {

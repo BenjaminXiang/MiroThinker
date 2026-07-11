@@ -90,3 +90,15 @@
   The isolated candidate was forward-upgraded only to C2_0004 and idempotent replay produced the
   same checkpoint bytes without canonical/release rows. Task 4.5 still owns independent landing
   review, acceptance, and the candidate dump/manifest checkpoint.
+- Completed and accepted task 4.5/S4 after two independent read-only `Ready` reviews and repair of
+  replay target/source binding, immutable output separation, complete table/integrity snapshots,
+  and owned disposable-restore lifecycle safety. A fresh guarded six-family replay remained
+  byte-identical to `a88b44fa...e80b5`; checkpoint manifest `ab091aac...966b1` and restore evidence
+  `caf789ae...f0acc` prove exact C2_0004 schema/26-table/logical parity across distinct PostgreSQL
+  system identifiers. The external dump tree `4ae5f2ce...b05012` is frozen read-only, all temporary
+  containers/sockets are absent, and Docker volumes are unchanged.
+- Accepted the response-family requirement through two complementary observable paths: the Task 4.2
+  complete `newly_collected_response` contract and the Task 4.4 real degraded
+  `recorded_collected_response` evidence. No live Web/provider call or unknown HTTP provenance was
+  invented. All five Evidence Landing acceptance checks are now closed; task 5.1 has not started,
+  and no canonical/release/index or production-like state was created.

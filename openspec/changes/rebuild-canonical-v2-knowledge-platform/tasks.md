@@ -29,7 +29,7 @@
 - [x] 4.2 Implement `EvidenceLanding` plus source adapters for WAL/FPI salvage, historical structured files/databases, Milvus copy records, and newly collected responses.
 - [x] 4.3 Persist content-addressed artifact manifests, parser runs, record locators, errors, and parent/copy lineage without mutating prior evidence.
 - [x] 4.4 Replay a bounded representative source matrix into the isolated landing schema and verify hashes/counts/errors against the source inventory.
-- [ ] 4.5 Review/accept the landing slice and checkpoint its database dump/manifest before canonical construction.
+- [x] 4.5 Review/accept the landing slice and checkpoint its database dump/manifest before canonical construction.
 
 ## 5. Assertions, Identity, Fusion, and Temporal Decisions
 

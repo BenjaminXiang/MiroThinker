@@ -14,9 +14,12 @@ foundation at `2026-07-11T18:22:18Z`; the isolated candidate is at reviewed head
 business rows. Task 4.1's immutable-landing strict RED contract was Accepted at
 `2026-07-11T18:33:37Z`. Task 4.2's storage-independent EvidenceLanding core and source adapters were
 Accepted at `2026-07-11T19:06:55Z`. Task 4.3's C2_0004 and PostgreSQL repository were Accepted at
-`2026-07-11T19:42:20Z` on a subsequently deleted disposable database; task 4.4 is next. The durable
-candidate remains read-only at C2_0003 with no landing evidence, publication projection, or index
-write.
+`2026-07-11T19:42:20Z`; Task 4.4 replayed the bounded real-source matrix at commit
+`cef42a1e075d30c5a0e179f34ab543b4878edabd`. Task 4.5 independently reviewed and Accepted all S4 at
+`2026-07-11T22:07:12Z` after a content-addressed dump restored with exact 26-table logical parity in
+a distinct disposable PostgreSQL system. The durable candidate remains isolated at C2_0004 with
+only immutable landing evidence and zero canonical/publication/index rows. Task 5.1 is next and has
+not started.
 
 ## Existing incident/recovery checkpoint used as planning evidence
 
@@ -192,9 +195,10 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 - Tasks 1.3 and 1.4 are complete. The user accepted the reviewed Candidate evidence at
   2026-07-11T05:39:19Z, completing task 1.5 and removing the S1 gate for future S2 planning.
 
-## Pending evidence
+## Next pending evidence
 
-1. Task 4.2 EvidenceLanding/source-adapter implementation requires its own Ready slice.
+1. Task 5.1 assertion/fusion/decision RED scenarios require their own Ready slice; S4 acceptance
+   does not authorize or claim S5 implementation.
 
 ## S2 task 2.1 source inventory — 2026-07-11T07:11:30Z
 
@@ -878,10 +882,66 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   tables and 46 non-internal triggers; 15/6/6/21/6 landing counts; six roots/nine matching parent
   edges/no orphans; zero non-landing rows; no disposable database; and exact matrix/summary hashes
   `eaba2ecb…a923` / `a88b44fa…e80b5`.
-- Task 4.4 is complete as a reviewable Candidate. Task 4.5 remains required to independently review
-  the whole landing slice, decide its acceptance boxes, and create/restore-verify the candidate
-  database dump plus manifest checkpoint before canonical construction. No S4 acceptance or
-  production-like promotion is claimed.
+- At the Task 4.4 checkpoint it was complete only as a reviewable Candidate; Task 4.5 still had to
+  independently review the whole landing slice and restore-verify its database dump before S4 could
+  be accepted. No S4 acceptance or production-like promotion was claimed at that earlier point.
+
+## S4E task 4.5 landing review and checkpoint — 2026-07-11T22:07:12Z
+
+- Two independent read-only final reviews returned `Ready` with zero open Critical/Important
+  findings. The review first blocked operation and drove systemic repair of exact target admission,
+  source/inode revalidation, immutable evidence outputs, separate execution receipts, complete
+  table/integrity hashing, final Postgres readiness, restore image/socket/storage policy, and
+  owned-ID graceful cleanup. The accepted disposition is in `s4-landing-review.md`.
+- Focused S4D/S4E RED began with 13 replay-guard failures and 10 missing-checkpoint failures. Final
+  focused verification is `48 passed`; Ruff and Pyright report no findings. In addition to pure
+  guards, a real read-only C2_0004 candidate snapshot executed all table and landing-integrity SQL.
+- Fresh guarded replay ID `canonical-v2-s4-landing-20260711T215953Z-cef42a1` used the exact Task 4.4
+  commit, current S4D tool hash, OpenSpec/worktree identity, Accepted/50 gate, and explicit candidate
+  DSN. It returned six entries, 21 records, six expected typed errors, entry hash
+  `5b77b4a4...c58293`, and the exact frozen summary SHA-256 `a88b44fa...e80b5`. Candidate target and
+  bounded landing state matched before and after; provider calls were zero.
+- The checkpoint tool revalidated all six prepared source members before/after dump and after the
+  restore drill. It captured an atomic PostgreSQL custom archive only after the exact C2_0004
+  candidate and Accepted S2B gate passed. Pre/post snapshots contain the exact 26 user/revision
+  tables, normalized schema SHA-256 `7237483f...f4aef`, logical SHA-256 `6328e811...054e8`, the
+  15/6/6/21/6 landing counts, all required status/lineage/error aggregates, eleven zero integrity
+  violations, and zero non-landing business rows.
+- Checkpoint manifest SHA-256 is `ab091aac1cfbf2ba1699f521b9a5629d4d9b02dfb236e0600a4f711219c966b1`.
+  It binds full commit `cef42a1e075d30c5a0e179f34ab543b4878edabd`, current Git status/diff,
+  S4D/S4E tool/test hashes, OpenSpec tree, accepted threshold/corpus hashes, S2B gate, matrix/fresh
+  execution, candidate identity, tool versions, sanitized commands, dump hash/list, and complete
+  snapshot. No DSN/credential appears in committed evidence.
+- Independent restore used candidate image
+  `sha256:8ed3192326bb9d114cd5ef9acace453d5dae17425bd089d089330584c84c5a34`,
+  a new name/database, network-none, no ports, restart-no, read-only rootfs, tmpfs PGDATA, no Docker
+  volume, and a host-bounded Unix socket. PID 1 had exec'd `postgres` and three readiness probes were
+  stable before the marker or restore write. Source/restore system IDs are
+  `7661313446684311592`/`7661394091808735279`; revision/schema/all table hashes/logical hash match
+  exactly. Restore verification SHA-256 is
+  `caf789ae87dc4c0429e068dcc3421c8d1346bec02296f6d056d816a3416f0acc`.
+- Cleanup first re-proved the returned 64-character owned container ID, stopped PostgreSQL
+  gracefully, removed only that ID without force, and proved container/socket absence. Docker
+  volume-set hashes before/after match. The external root
+  `/md1/mirothinker-backups/canonical-v2-s4-landing-20260711T215953Z-cef42a1` is frozen with 0550
+  directories/0440 files and tree SHA-256 `4ae5f2ce...b05012`; repository copies are byte-identical.
+- Expanded verification passed: default Canonical V2 `73 passed, 33 explicit skips, 4 expected
+  xfails`; a second fresh isolated disposable PostgreSQL target passed `35` migration/integrity/
+  landing tests and was removed with unchanged Docker volumes; S1 was `10 passed, 5 explicit skips`;
+  S2/S2B was `32 passed`. The four expected xfails remain the approved future KnowledgeBuild,
+  KnowledgeRead, KnowledgeAnswer, and ReleasePublication RED interfaces.
+- The response-family acceptance uses complementary evidence: Task 4.2's complete
+  `newly_collected_response` adapter contract and Task 4.4's real degraded
+  `recorded_collected_response` bytes. Known URL/body survive, unknown HTTP metadata remains typed
+  missing provenance, and no live call or invented value is needed to accept the family.
+- Acceptance record SHA-256 is `20e11fbe2506a44913e58351ef27121065c0b63bfa12a85cdf9425db6578f58c`.
+  Tasks 4.1–4.5 and all five Evidence Landing acceptance checks are Accepted. Task 5.1 has not
+  started; no canonical/domain/release/index/provider or production-like state was created.
+- Final read-only invariants at `2026-07-11T22:14:20Z` re-proved Accepted/50; original `pgtest`
+  `paused=true` on exact volume `d81c6381...d241`; original/restore Milvus hashes both
+  `43ef203e...67cc`; original/restore FPI salvage hashes both `cef8eb6b...bb7`; recovery and candidate
+  network-none/no-port isolation; exact candidate marker/system/C2_0004/bounded counts; and zero
+  non-landing rows. No original Postgres command or Milvus client was used.
 
 ## Explicit non-claims
 

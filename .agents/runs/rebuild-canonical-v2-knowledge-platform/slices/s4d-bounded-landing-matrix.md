@@ -2,7 +2,10 @@
 
 ## Status
 
-Candidate
+Accepted — `2026-07-11T22:07:12Z`
+
+- Authority: user-authorized objective-verification self-approval through Task 4.5
+- Acceptance evidence: `../s4-landing-review.md` and `../s4e/acceptance-record.json`
 
 ## Parent
 
@@ -111,10 +114,10 @@ and expected summaries; abbreviated IDs above are only for readability.
   committed deterministic checkpoint; restart replay is idempotent.
 - Original sources and accepted evidence remain byte-identical, no canonical/published/index state
   changes, Task 4.4 evidence is complete, and the task has one reviewed commit.
-- Status becomes `Candidate`; Task 4.5 remains separately responsible for landing-slice review,
-  acceptance, and database dump/manifest checkpoint.
+- Status first became `Candidate`; Task 4.5 independently reviewed and Accepted it only after the
+  database dump/manifest passed independent restore parity.
 
-## Candidate evidence
+## Accepted evidence
 
 - Frozen matrix SHA-256: `eaba2ecb93f1418b90ece45e91d7071d638095897bdd6a2c012efe6a9db9a923`.
 - Durable replay-summary SHA-256: `a88b44fab38d4e56a7894fabb93e56b46c043278082c200773c038a7dc6e80b5`.
@@ -126,7 +129,9 @@ and expected summaries; abbreviated IDs above are only for readability.
 - Non-landing knowledge/publish tables remain exactly empty. Three repeated durable executions
   retained the same counts and byte-identical summary.
 - Real disposable database baseline/integrity/landing verification is `35 passed`; default Canonical
-  V2 is `57 passed, 33 explicit skips, 4 expected xfails`; S1 is `10 passed, 5 skips`; S2/S2B is
+  V2 is `73 passed, 33 explicit skips, 4 expected xfails`; S1 is `10 passed, 5 skips`; S2/S2B is
   `32 passed`.
-- Task 4.4 is complete as a Candidate only. No Task 4.5 review, database dump/checkpoint, S4
-  acceptance, canonical construction, recollection, release, index, or promotion is claimed.
+- Task 4.4 commit `cef42a1e075d30c5a0e179f34ab543b4878edabd` is Accepted by Task 4.5.
+  Checkpoint manifest `ab091aac...966b1` restored with exact logical parity under verification
+  `caf789ae...f0acc`. No canonical construction, live recollection, release, index, or promotion is
+  claimed.
