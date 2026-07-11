@@ -1,0 +1,357 @@
+{
+  "comparison_policy": {
+    "cross_population_comparison_allowed": false,
+    "rule": "Do not compare or aggregate results across changed database/index releases, corpus hashes, labels, scorers, provider/model versions, or metric definitions."
+  },
+  "corpus_approval_state": "pending_user_acceptance",
+  "corpus_schema_version": "canonical-v2-s2-corpus-manifest-v1",
+  "dimensions": {
+    "answer_support_and_citation": {
+      "current": {
+        "reason": "No current accepted evidence set, answer trace, Web lane, or provider run exists.",
+        "status": "unavailable",
+        "value": null
+      },
+      "legacy": [
+        {
+          "limitation": "Old V042/real-provider run on a different oracle and substrate; not comparable to Canonical V2 acceptance.",
+          "metric": "reviewed_true_accuracy",
+          "population": 19,
+          "status": "legacy",
+          "value": "10/19 (53%)"
+        },
+        {
+          "l1_hit": 24,
+          "l1_required": 120,
+          "l2_violations": 0,
+          "l3_mean": 0.3854938271604938,
+          "limitation": "Legacy evaluator output; scorer/gold quality was not revalidated in S2.",
+          "metric": "legacy_answer_eval",
+          "population": 27,
+          "status": "legacy"
+        },
+        {
+          "forbidden_violation_cases": 0,
+          "limitation": "Older legacy fixture/scorer run; retained as historical evidence only.",
+          "mean_answer_coverage": 0.071,
+          "metric": "legacy_full_testset_coverage",
+          "population": 19,
+          "required_recall": "23/83 (28%)",
+          "status": "legacy"
+        }
+      ]
+    },
+    "coverage_and_reach": {
+      "current": {
+        "recovery_public_core_counts": {
+          "company": 0,
+          "company_application_scenario": 0,
+          "company_patent_link": 0,
+          "company_product": 0,
+          "company_team_member": 0,
+          "paper": 0,
+          "paper_full_text": 0,
+          "paper_merge_alias": 0,
+          "patent": 0,
+          "pipeline_run": 1,
+          "professor": 0,
+          "professor_affiliation": 0,
+          "professor_company_role": 0,
+          "professor_fact": 0,
+          "professor_paper_link": 0,
+          "professor_patent_link": 0,
+          "source_row_lineage": 0
+        },
+        "retrieval_reach": {
+          "reason": "Recovery public domain tables are empty and no accepted canonical release or verified Milvus copy exists.",
+          "status": "unavailable",
+          "value": null
+        },
+        "salvage": {
+          "field_errors": 20773,
+          "paper_distinct_ids": 99437,
+          "paper_ids_in_links": 97285,
+          "professor_ids": 2826,
+          "professor_paper_link_distinct_ids": 101158
+        },
+        "scope": "source_evidence_and_recovery_substrate_only",
+        "source_domains_with_inventoried_evidence": [
+          "company",
+          "paper",
+          "patent",
+          "professor"
+        ],
+        "status": "measured_current"
+      },
+      "legacy": []
+    },
+    "intent": {
+      "current": {
+        "accuracy": 1.0,
+        "by_type": {
+          "A": {
+            "accuracy": 1.0,
+            "cases": 50,
+            "correct": 50
+          },
+          "B": {
+            "accuracy": 1.0,
+            "cases": 20,
+            "correct": 20
+          },
+          "C": {
+            "accuracy": 1.0,
+            "cases": 15,
+            "correct": 15
+          },
+          "D": {
+            "accuracy": 1.0,
+            "cases": 5,
+            "correct": 5
+          },
+          "E": {
+            "accuracy": 1.0,
+            "cases": 5,
+            "correct": 5
+          },
+          "F": {
+            "accuracy": 1.0,
+            "cases": 3,
+            "correct": 3
+          },
+          "G": {
+            "accuracy": 1.0,
+            "cases": 2,
+            "correct": 2
+          }
+        },
+        "cases": 100,
+        "command": "env -u DATABASE_URL -u DATABASE_URL_TEST -u ALEMBIC_DATABASE_URL -u MILVUS_URI -u MILVUS_USE_REAL_CLIENT python measure_offline_intent.py",
+        "correct": 100,
+        "fixture_sha256": "272a05559d9a796f8101ae4437a21b03a2f3cab089c7337610241ec1781e336d",
+        "limitations": [
+          "Does not measure the provider-backed LLM classifier.",
+          "Does not measure retrieval routing, database reach, query rewriting, or answer quality.",
+          "Uses the separate committed 100-case intent fixture, not the frozen S2 corpus."
+        ],
+        "metric": "deterministic_rule_fallback_accuracy",
+        "status": "measured_current"
+      },
+      "legacy": []
+    },
+    "latency": {
+      "current": {
+        "reason": "No current end-to-end retrieval/answer/provider path can run on the recovered substrate.",
+        "status": "unavailable",
+        "value": null
+      },
+      "legacy": [
+        {
+          "cases": 12,
+          "legacy_verdict": "PASS",
+          "limitation": "Old DB/Milvus path; excludes the future universal Web/LLM plan and answer cost.",
+          "metric": "retrieval_overall_p95",
+          "p95_seconds": 5.708854438737035,
+          "runs_per_case": 3,
+          "status": "legacy"
+        }
+      ]
+    },
+    "multi_turn": {
+      "current": {
+        "reason": "No accepted current canonical release or data-grounded session replay is available.",
+        "status": "unavailable",
+        "value": null
+      },
+      "legacy": [
+        {
+          "failed_cases": 17,
+          "failed_qids": [
+            "2",
+            "4",
+            "5",
+            "8",
+            "10",
+            "12",
+            "15",
+            "25",
+            "S1-F",
+            "S2-F",
+            "S3-F",
+            "S4-F",
+            "S5-F1",
+            "S5-F2",
+            "S6A-F",
+            "S6B-F",
+            "S6C-F"
+          ],
+          "forbidden_violation_cases": 0,
+          "groups": 16,
+          "limitation": "Pre-incident V042 run on legacy fixtures and response scorer.",
+          "mean_answer_coverage": 0.047,
+          "metric": "layer_d_red_baseline",
+          "passed_cases": 1,
+          "query_type_assertions": "3/10",
+          "required_recall": "6/37 (16%)",
+          "scored_cases": 18,
+          "set_derived_assertions": "1/8",
+          "status": "legacy",
+          "turns": 34
+        }
+      ]
+    },
+    "precision_at_k_and_rank": {
+      "current": {
+        "reason": "No current retrieval substrate and no complete reviewed relevance labels/rank oracle.",
+        "status": "unavailable",
+        "value": null
+      },
+      "legacy": [
+        {
+          "label_case_scaffolds": 4,
+          "label_status": "SCAFFOLD — labels to be filled per case. Once filled, eval_precision.py scores: precision = true_positives / (true_positives + false_positives) per case.",
+          "limitation": "The stored precision harness explicitly did not score precision; its label file remains incomplete, so zero listed false positives is not a precision value.",
+          "metric": "candidate_capture_only",
+          "precision_at_k": null,
+          "rank_metric": null,
+          "rows": 12,
+          "status": "legacy",
+          "unsourced_web_candidates": 0
+        }
+      ]
+    },
+    "provider_calls_and_cost": {
+      "current": {
+        "reason": "S2 performs no live Web/LLM/embedding/reranking calls and no current cost trace exists.",
+        "status": "unavailable",
+        "value": null
+      },
+      "legacy": [
+        {
+          "reason": "Stored legacy artifacts do not contain complete provider-call or cost accounting.",
+          "status": "unavailable",
+          "value": null
+        }
+      ]
+    },
+    "recall_at_k": {
+      "current": {
+        "reason": "No current canonical retrieval substrate or verified index copy can run the frozen corpus.",
+        "status": "unavailable",
+        "value": null
+      },
+      "legacy": [
+        {
+          "hit": 30,
+          "limitation": "Stored post-fix V042/real-Milvus run on a changed 41-entity oracle; not a Canonical V2 or frozen-corpus measurement.",
+          "metric": "required_entity_recall",
+          "paper_rollup": {
+            "cases": 11,
+            "hit": 16,
+            "recall": 0.9411764705882353,
+            "required": 17
+          },
+          "recall": 0.7317073170731707,
+          "required": 41,
+          "status": "legacy"
+        }
+      ]
+    },
+    "universal_web": {
+      "current": {
+        "reason": "S2 makes no live provider calls; universal invocation and provenance cannot be measured.",
+        "status": "unavailable",
+        "value": null
+      },
+      "legacy": [
+        {
+          "invocation_rate": null,
+          "limitation": "Candidate capture covered 12 legacy rows and cannot establish universal Web invocation, claim provenance, or source quality.",
+          "metric": "unsourced_web_candidates_in_capture",
+          "status": "legacy",
+          "value": 0
+        }
+      ]
+    }
+  },
+  "git_commit": "53da089a6c16aecc51a7f6d66e9d3a019304f51e",
+  "input_artifacts": {
+    "corpus_manifest": {
+      "bytes": 2680,
+      "path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s2/corpus-manifest.json",
+      "sha256": "dc7cc10ba08db341a38cc08da1edd2449594120a3861735edfd514b29be46088"
+    },
+    "legacy_answer": {
+      "bytes": 4170,
+      "path": ".agents/runs/retrieval-generation-alignment/true-accuracy-latest.json",
+      "sha256": "965327b4e7c769909949bf12b2a89364f7aa609b8defc9f80e88043859c208c4"
+    },
+    "legacy_full_testset": {
+      "bytes": 8404,
+      "path": ".agents/runs/retrieval-generation-alignment/full-testset-2026-07-05.json",
+      "sha256": "fa81b5a9d547323f89aeb281c5852b2caf1a0cd0d7d0c3bc8332b02617ab4053"
+    },
+    "legacy_golden_answer": {
+      "bytes": 40309,
+      "path": ".agents/runs/retrieval-eval/golden-baseline.json",
+      "sha256": "bd2469925f136b0a0be89ba0b672693accb792de35157c6d58d37eaefd33e08d"
+    },
+    "legacy_latency": {
+      "bytes": 2465,
+      "path": ".agents/runs/retrieval-generation-alignment/latency-baseline.json",
+      "sha256": "cca5137389df321a5a1827ed1205d4f0d232759a56b7af568e1d9bacc589e0f4"
+    },
+    "legacy_multi_turn": {
+      "bytes": 60428,
+      "path": ".agents/runs/layer-d-multi-turn-context/red-baseline-2026-07-09.json",
+      "sha256": "075c941843ff550c7bcd5e7df8a8a63c40b879229835ce173bb6e75994b3b293"
+    },
+    "legacy_precision": {
+      "bytes": 10301,
+      "path": ".agents/runs/retrieval-generation-alignment/precision-baseline.json",
+      "sha256": "a7fdefdda831b4f7856af9d6b159f0f6922b0e36d2779d5025b247c5a144080f"
+    },
+    "legacy_precision_labels": {
+      "bytes": 2450,
+      "path": "apps/admin-console/scripts/precision-labels.json",
+      "sha256": "c1397d940c0c8f3d2366d5f844716d9a915ad0ea1ab0de2e8a6020705275c3b3"
+    },
+    "legacy_recall": {
+      "bytes": 3891,
+      "path": ".agents/runs/retrieval-generation-alignment/post-fix-recall.json",
+      "sha256": "14fd2215615f4f49ca9b17d396cca9e29fdc04349b8c6ec1db3dfd2f561a47e1"
+    },
+    "offline_intent": {
+      "bytes": 1405,
+      "path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s2/offline-intent-baseline.json",
+      "sha256": "c7f68e5111250d84a2c30ab6712349d9d14772f636b021ea6d1e5c45c23624fa"
+    },
+    "source_inventory": {
+      "bytes": 32034,
+      "path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s2/source-inventory.json",
+      "sha256": "83a9e2c82aee4cbe5c02f088ba0fdbf8d15359d87a85bf4ee901b0f58f70fa09"
+    }
+  },
+  "legacy_oracle_limitations": [
+    "The old precision artifact was candidate capture, not scored Precision@K.",
+    "Legacy retrieval corpora changed over time and include unsatisfiable or incomplete gold.",
+    "Legacy answer judges/scorers were not validated against the frozen S2 corpus.",
+    "No legacy artifact provides complete Universal Web invocation, provider-call, or cost accounting."
+  ],
+  "measured_at": "2026-07-11T08:16:49Z",
+  "safety": {
+    "backup_restore_gate_accepted": false,
+    "database_reads": 0,
+    "milvus_client_opens": 0,
+    "provider_calls": 0,
+    "rebuild_writes_authorized": false,
+    "source_mutations": 0
+  },
+  "schema_version": "canonical-v2-s2-baseline-report-v1",
+  "source_checkpoint_at": "2026-07-11T07:11:30Z",
+  "status_definitions": {
+    "legacy": "Stored result from a previous substrate, corpus, scorer, or provider run.",
+    "measured_current": "Recomputed in S2 on this checkout using current immutable/offline inputs.",
+    "unavailable": "No valid current measurement is possible without a missing substrate, label, or provider run."
+  }
+}

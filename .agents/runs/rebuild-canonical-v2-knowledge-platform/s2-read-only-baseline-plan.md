@@ -73,14 +73,14 @@ read-only validation, `openpyxl` for workbook inspection.
 **Files:**
 - Create: `.agents/runs/rebuild-canonical-v2-knowledge-platform/s2/baseline-report.json`
 
-- [ ] Recount committed benchmark fixtures and stored reports without modifying their oracle,
+- [x] Recount committed benchmark fixtures and stored reports without modifying their oracle,
   scorer, corpus, or outputs.
-- [ ] Record read-only evidence coverage and relationship counts from Task 1.
-- [ ] Run deterministic/offline benchmark checks that do not require production data, Milvus, Web,
+- [x] Record read-only evidence coverage and relationship counts from Task 1.
+- [x] Run deterministic/offline benchmark checks that do not require production data, Milvus, Web,
   LLM, or secrets; record exact command, commit, corpus hash, and result.
-- [ ] Label each metric `measured_current`, `legacy`, or `unavailable`; explain destroyed/stale/missing
+- [x] Label each metric `measured_current`, `legacy`, or `unavailable`; explain destroyed/stale/missing
   substrate and prohibit comparisons across changed populations/oracles.
-- [ ] Include coverage/reach, Recall@K, Precision@K/rank, intent, answer support/citation, Universal
+- [x] Include coverage/reach, Recall@K, Precision@K/rank, intent, answer support/citation, Universal
   Web, multi-turn, latency, provider calls, and cost even when the honest value is unavailable.
 
 ### Task 5: Freeze thresholds and obtain acceptance

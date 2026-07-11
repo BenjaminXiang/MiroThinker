@@ -26,3 +26,7 @@
   restore-verify original PostgreSQL, Milvus, WAL/FPI, salvage, and every inventoried historical
   source family before task 3.2 or any Canonical V2/landing write. Also made offline data builds the
   sole canonical-identity mutation authority; query/answer paths are identity-read-only.
+- Completed S2 task 2.4: the deterministic nine-dimension report separates current measurements,
+  legacy evidence, and unavailable metrics. Current offline intent fallback is 100/100; current
+  retrieval/answer/Web/provider metrics remain unavailable, and legacy precision is explicitly
+  unscored rather than treated as zero-false-positive acceptance.

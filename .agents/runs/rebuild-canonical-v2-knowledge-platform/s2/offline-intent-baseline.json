@@ -1,0 +1,55 @@
+{
+  "accuracy": 1.0,
+  "by_type": {
+    "A": {
+      "accuracy": 1.0,
+      "cases": 50,
+      "correct": 50
+    },
+    "B": {
+      "accuracy": 1.0,
+      "cases": 20,
+      "correct": 20
+    },
+    "C": {
+      "accuracy": 1.0,
+      "cases": 15,
+      "correct": 15
+    },
+    "D": {
+      "accuracy": 1.0,
+      "cases": 5,
+      "correct": 5
+    },
+    "E": {
+      "accuracy": 1.0,
+      "cases": 5,
+      "correct": 5
+    },
+    "F": {
+      "accuracy": 1.0,
+      "cases": 3,
+      "correct": 3
+    },
+    "G": {
+      "accuracy": 1.0,
+      "cases": 2,
+      "correct": 2
+    }
+  },
+  "cases": 100,
+  "command": "env -u DATABASE_URL -u DATABASE_URL_TEST -u ALEMBIC_DATABASE_URL -u MILVUS_URI -u MILVUS_USE_REAL_CLIENT python measure_offline_intent.py",
+  "correct": 100,
+  "fixture_path": "apps/admin-console/tests/fixtures/intent_classifier_benchmark.jsonl",
+  "fixture_sha256": "272a05559d9a796f8101ae4437a21b03a2f3cab089c7337610241ec1781e336d",
+  "git_commit": "53da089a6c16aecc51a7f6d66e9d3a019304f51e",
+  "limitations": [
+    "Does not measure the provider-backed LLM classifier.",
+    "Does not measure retrieval routing, database reach, query rewriting, or answer quality."
+  ],
+  "measured_at": "2026-07-11T08:16:49Z",
+  "measurement_scope": "deterministic_rule_fallback_only",
+  "mismatches": [],
+  "schema_version": "canonical-v2-s2-offline-intent-v1",
+  "status": "measured_current"
+}

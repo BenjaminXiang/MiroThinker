@@ -182,7 +182,7 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 
 ## Pending evidence
 
-1. S2 baseline report and threshold freeze (tasks 2.4–2.5).
+1. S2 threshold freeze and acceptance (task 2.5).
 2. S2B complete source backup manifest and independent restore verification (task 2.6). Until this
    is reviewed and Accepted, task 3.2 and every Canonical V2/landing write remain blocked.
 
@@ -280,6 +280,41 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   must emit an offline review gap instead of mutating identity/source mappings.
 - This audit changed contracts only. It did not create a backup, run a restore, access a database,
   open Milvus, or authorize any rebuild write; task 2.6 remains incomplete.
+
+## S2 task 2.4 current/legacy/unavailable baseline — 2026-07-11T08:16:49Z
+
+- Added deterministic builders/tests for the offline intent measurement and nine-dimension baseline
+  report. Three builder contract tests passed after observed missing-implementation RED failures;
+  Ruff and Pyright passed with zero findings.
+- Exact offline check command removed `DATABASE_URL`, `DATABASE_URL_TEST`, Alembic, and Milvus
+  variables and ran only the 100-case fixture contract plus deterministic rule fallback. Targeted
+  pytest result: `2 passed, 1 deselected`; measured fallback intent accuracy: `100/100` overall and
+  `100%` for every A-G class. This does not measure the provider-backed classifier, retrieval,
+  rewriting, or answer behavior.
+- `s2/baseline-report.json` SHA-256 is
+  `c31b1c240ecc96661cf0b6c3057f02e631f34fcfae7356bb6f827cb5695352a1`; repeated generation from
+  the same inputs was byte-identical. `s2/offline-intent-baseline.json` SHA-256 is
+  `c7f68e5111250d84a2c30ab6712349d9d14772f636b021ea6d1e5c45c23624fa`.
+- Current source evidence covers all four domains, while both recovery public schemas still have
+  zero Professor/Company/Paper/Patent/relationship rows. Salvage retains 99,437 Papers, 101,158
+  Professor-Paper links, and 20,773 field errors. Current service reach cannot be measured because
+  there is no accepted canonical release or verified Milvus copy.
+- Stored legacy evidence is retained without cross-population comparison: entity recall `30/41`
+  (`73%`), Paper rollup `16/17` (`94%`), reviewed answer accuracy `10/19` (`53%`), multi-turn
+  `1/18` passed with required recall `6/37`, and retrieval p95 `5.7089s`. These used changed V042,
+  index, corpus, scorer, and/or provider conditions.
+- Legacy precision remains unscored: the 12-row artifact is candidate capture, and its four-case
+  label file is explicitly a scaffold. `0` listed unsourced-Web candidates is not Precision@K,
+  ranking quality, Universal Web invocation, or claim-provenance acceptance.
+- Current Recall@K, Precision@K/rank, answer support/citation, Universal Web, multi-turn, latency,
+  provider calls, and cost are `unavailable`, not zero. Task 2.5 must freeze future thresholds and
+  decide the evaluation-system replacement/calibration work without re-labeling legacy values.
+- Source-invariant check passed with `set -e`: original `pgtest` remains paused on volume
+  `d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241`; original Milvus and salvage
+  dump hashes match. An earlier composite check had an invalid Docker template and was discarded;
+  the corrected fail-fast command produced the accepted evidence.
+- No database query/write, Milvus client open, provider call, source mutation, backup claim, or
+  rebuild write occurred. Task 2.4 is complete; tasks 2.5–2.6 remain open.
 
 ## Explicit non-claims
 
