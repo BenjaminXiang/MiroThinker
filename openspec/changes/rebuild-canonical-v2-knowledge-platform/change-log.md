@@ -61,3 +61,7 @@
   subject decision lineage, and persisted structured-LLM traces; strict RED interfaces now reuse
   shared types, and the Canonical V2 test subtree prevents default xdist migration races. The empty
   durable candidate matches the reviewed disposable fingerprint and remains isolated at C2_0003.
+- Completed and accepted task 4.1 as a test-only RED slice. Four strict scenarios freeze exact byte/
+  copy lineage, parser-version replay without mutation, typed partial/corrupt preservation, and zero
+  placeholder/canonical invention through the `EvidenceLanding.ingest/stream` seam. Forced RED is
+  exactly four absent-module failures; no landing implementation or source/database write began.

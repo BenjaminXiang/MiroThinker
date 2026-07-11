@@ -11,8 +11,9 @@ Canonical V2 namespace baseline was Accepted at `2026-07-11T16:58:23Z`. Task 3.3
 contracts were Accepted at `2026-07-11T17:15:42Z`. Task 3.4's C2_0002 shared schema was Accepted at
 `2026-07-11T17:48:21Z`. Task 3.5 independently reviewed, repaired, and Accepted the complete S3
 foundation at `2026-07-11T18:22:18Z`; the isolated candidate is at reviewed head C2_0003 with zero
-business rows. Task 4.1 is next but has not started; no landing evidence, publication projection, or
-index write has begun.
+business rows. Task 4.1's immutable-landing strict RED contract was Accepted at
+`2026-07-11T18:33:37Z`; task 4.2 is next but has not started. No landing evidence, publication
+projection, or index write has begun.
 
 ## Existing incident/recovery checkpoint used as planning evidence
 
@@ -190,7 +191,7 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 
 ## Pending evidence
 
-1. Task 4.1 remains Specified until its own independently testable Ready slice is created.
+1. Task 4.2 EvidenceLanding/source-adapter implementation requires its own Ready slice.
 
 ## S2 task 2.1 source inventory — 2026-07-11T07:11:30Z
 
@@ -632,6 +633,37 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   default-serial Canonical V2 DB tests; deterministic matched candidate/disposable fingerprint.
 - Remaining systemic risk: later writers must enter through the shared typed/deep-module seams and
   add their own real transaction tests; direct caller SQL is not an accepted interface.
+
+## S4A task 4.1 immutable landing RED — 2026-07-11T18:33:37Z
+
+- The approved design keeps `EvidenceLanding.ingest/stream` deep and storage-independent. Task 4.1
+  therefore targets a future concrete ephemeral composition through those public methods, rather
+  than a local subclass that fabricates receipts or direct C2 table assertions that would leak Task
+  4.3 storage.
+- Four independent scenarios freeze observable effects: exact content hash and distinct source/copy
+  artifacts with parent lineage plus mismatch rejection before streaming; same-artifact replay with
+  distinct immutable parser v1/v2 record/run identities; partial and corrupt rows retaining readable
+  payload plus typed field/record errors; and unreadable identity fields producing neither
+  placeholders, parent IDs, canonical IDs, nor an active-release change.
+- Synthetic historical-JSONL bytes include one explicit unreadable-external marker and one corrupt
+  line solely to define the representative contract. No real recovery/historical/provider source was
+  opened or replayed; Task 4.2 owns adapter implementation and Task 4.4 owns the bounded source
+  matrix.
+- Normal focused pytest was exactly `4 xfailed`. Forced `--runxfail` was exactly `4 failed`; every
+  failure was `ModuleNotFoundError: src.data_agents.canonical_v2.evidence_landing`, with no syntax,
+  fixture, collection, or assertion error.
+- Normal Canonical V2 regression was `23 passed, 24 skipped, 9 xfailed`: real database cases skipped
+  without explicit test target, the original five Task 3.1 seams remained strict RED, and the four
+  new landing cases were the only additional xfails. S1 was `10 passed, 5 explicit skips`; S2/S2B
+  was `32 passed`; Ruff and Pyright reported no findings.
+- Strict OpenSpec and diff checks passed. Formal S2B admission, original pause/volume and source
+  hashes, recovery isolation, and the zero-row C2_0003 candidate remained unchanged. No production
+  module, migration, database, source, Milvus, provider, dependency, or runtime behavior changed.
+- Task 4.1 is Accepted under the user's objective-verification self-approval authorization. This
+  accepts only RED behavior; S4 remains unaccepted and task 4.2 has not started.
+- Final read-only check at `2026-07-11T18:35:00Z` re-proved formal admission `accepted/50`, original
+  pause/volume and hashes, recovery/candidate isolation, and candidate C2_0003/24 tables/zero landing
+  or release rows.
 
 ## Explicit non-claims
 
