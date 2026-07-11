@@ -17,6 +17,9 @@ release/index publication before any production-code or recovery-candidate write
   not compatibility requirements; all in-repository consumers migrate together.
 - Introduce an immutable recovery/source evidence landing contract for forensic salvage, historical
   artifacts, and new collection responses.
+- Require a complete pre-rebuild backup manifest and independent restore verification for original
+  Postgres, Milvus, WAL/FPI, salvage, and historical SQLite/JSONL/XLSX/PDF/cache evidence before any
+  Canonical V2 or landing write begins.
 - Introduce retained source assertions, reversible canonical identity resolution, field/relation
   fusion, minimal temporal semantics, an extensible typed relationship catalog, and domain-specific
   inclusion policies.
@@ -76,3 +79,6 @@ release/index publication before any production-code or recovery-candidate write
   missing numeric thresholds are frozen after the authorized read-only baseline.
 - Original `pgtest` and original Milvus remain frozen. This change does not authorize production-like
   cutover or writes outside the isolated recovery candidate environment.
+- Canonical identity mutation is an offline data-build responsibility. Query-time identity handling
+  may resolve user references against an accepted release but cannot create, merge, split, or update
+  canonical identities or source-identity mappings.

@@ -13,11 +13,12 @@
 - [x] 2.3 Establish the frozen regression corpus and versioned challenge corpus from workbook seeds, PRD families, reviewed badcases, and controlled variations.
 - [ ] 2.4 Run the isolated read-only baseline for coverage/reach, Recall@K, Precision@K, ranking, relation paths, answer support, Web provenance, latency, and provider cost.
 - [ ] 2.5 Freeze numeric thresholds not already fixed by PRD in `acceptance.md` without lowering existing PRD minima or hard invariants.
+- [ ] 2.6 Create and independently restore-verify content-addressed backups for original PostgreSQL, Milvus, WAL/FPI, salvage, and all inventoried historical SQLite/JSONL/XLSX/PDF/cache/raw-source families; review/accept this gate before task 3.2 or any Canonical V2/landing write.
 
 ## 3. Canonical V2 Interfaces and Database Baseline
 
 - [ ] 3.1 Add RED interface/contract tests for `EvidenceLanding`, `KnowledgeBuild`, `KnowledgeRead`, `KnowledgeAnswer`, and `ReleasePublication` using typed requests/results and observable outcomes.
-- [ ] 3.2 Create the clean Canonical V2 migration baseline in a new isolated database with landing, shared knowledge, typed domain, publish, and ops schemas.
+- [ ] 3.2 After task 2.6 is Accepted, create the clean Canonical V2 migration baseline in a new isolated database with landing, shared knowledge, typed domain, publish, and ops schemas.
 - [ ] 3.3 Implement shared typed contracts for artifacts, source records/assertions, canonical decisions, identities, relationship types/decisions, policies, gaps, releases, and manifests.
 - [ ] 3.4 Add schema and migration integration tests for foreign keys, uniqueness, append-only evidence, reversible decisions, release scoping, and rollback.
 - [ ] 3.5 Review/accept the database/interface foundation before source adapters or domain builders depend on it.
@@ -35,7 +36,7 @@
 - [ ] 5.1 Add RED contract/scenario coverage for retained competing assertions, deterministic constraints, structured LLM adjudication, unresolved conflicts, and current projections.
 - [ ] 5.2 Implement append-only field/relationship assertions and reproducible canonical decisions with evidence, policy/model version, confidence, rationale, and conflict state.
 - [ ] 5.3 Add RED identity scenarios for strong-identifier merge, cross-format LLM decision, same-name separation, mistaken-merge split, and recovery lineage.
-- [ ] 5.4 Implement reversible canonical identity resolution and source-identity mapping without pre-launch ID compatibility constraints.
+- [ ] 5.4 Implement reversible offline canonical identity resolution and source-identity mapping without pre-launch ID compatibility constraints; query/answer paths remain read-only and may only emit identity-review gaps.
 - [ ] 5.5 Implement proportional temporal semantics for observation/publication/event time and naturally changing validity intervals.
 - [ ] 5.6 Verify deterministic/recorded-fake LLM decisions, review queues, reversal, and current/history projections; review/accept the slice.
 

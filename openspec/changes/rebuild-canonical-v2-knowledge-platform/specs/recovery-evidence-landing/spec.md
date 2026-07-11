@@ -1,5 +1,37 @@
 ## ADDED Requirements
 
+### Requirement: Complete verified backups gate rebuild writes
+
+The system SHALL require a reviewed backup manifest before any Canonical V2 schema, landing,
+canonical, publication, or index-rebuild write begins. The manifest SHALL cover the original
+PostgreSQL source, original
+Milvus source, WAL/FPI and salvage evidence, and inventoried historical SQLite, JSONL, XLSX, PDF,
+cache, and equivalent raw-source families. Each manifest entry SHALL record source identity,
+backup-copy identity, byte size, SHA-256, copy time/run, and verification state. A missing family,
+hash mismatch, or unverified copy SHALL fail closed.
+
+#### Scenario: Candidate schema migration is requested before backup acceptance
+- **WHEN** a Canonical V2 migration or landing write is requested while any required source family
+  lacks an accepted verified backup
+- **THEN** the operation is rejected before the first write
+- **AND** the failed gate identifies every missing, mismatched, or unverified source family
+
+### Requirement: Backup recovery is independently verified
+
+Every required backup SHALL be restored or materialized into a target distinct from both the
+original and backup location, using the recovery method appropriate to its format. PostgreSQL SHALL
+be started/restored only from its backup in an isolated no-network target and verified by database
+identity, schema/revision, and agreed count/hash probes. Milvus SHALL be opened only from a verified
+copy and checked by collection/schema/count or equivalent manifest probes. File, cache, WAL/FPI,
+salvage, and structured-source backups SHALL be re-materialized and verified by SHA-256 plus bounded
+format/readability or replay probes. Verification evidence SHALL name the backup and restore targets,
+commands, results, and reviewer status.
+
+#### Scenario: Backup bytes match but restore verification has not run
+- **WHEN** a source backup has a matching copy hash but no independent recovery verification
+- **THEN** the pre-rebuild gate remains unaccepted
+- **AND** no Canonical V2 or landing write may use that backup as an accepted input
+
 ### Requirement: Recovery and collection evidence is immutable
 
 The system SHALL ingest forensic salvage, historical files, Milvus copies, and newly collected

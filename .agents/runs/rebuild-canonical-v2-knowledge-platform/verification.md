@@ -183,6 +183,8 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 ## Pending evidence
 
 1. S2 baseline report and threshold freeze (tasks 2.4–2.5).
+2. S2B complete source backup manifest and independent restore verification (task 2.6). Until this
+   is reviewed and Accepted, task 3.2 and every Canonical V2/landing write remain blocked.
 
 ## S2 task 2.1 source inventory — 2026-07-11T07:11:30Z
 
@@ -258,6 +260,26 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 - PRD/challenge cases remain `pending_user_review` and the manifest remains
   `pending_user_acceptance`; they define observable behavior, not unreviewed factual gold. Task 2.3
   is complete; tasks 2.4–2.5 and S2 acceptance remain open.
+
+## Backup/restore and offline-identity contract audit — 2026-07-11
+
+- The user confirmed that Canonical V2 is a clean logical rebuild in a new isolated database, not a
+  V042 patch. Existing proposal/design already satisfied this direction.
+- The audit found that recorded source hashes and the salvage-only recovery proof did not establish
+  complete backup coverage or independent recoverability for original PostgreSQL, original Milvus,
+  WAL/FPI/salvage, and all inventoried historical SQLite/JSONL/XLSX/PDF/cache/raw-source families.
+- OpenSpec now requires a content-addressed source-to-backup manifest and a distinct second-target
+  recovery/materialization drill. Hash equality alone is insufficient. Missing families, mismatches,
+  failed probes, or unreviewed evidence fail closed before the first rebuild write.
+- Added task 2.6 and Specified slice `slices/s2b-source-backup-restore.md`. Task 3.2 and every
+  Canonical V2 schema, landing, canonical, publication, or index write remain blocked until S2B is
+  reviewed and Accepted. Read-only tasks 2.4–2.5 may continue.
+- Canonical identity authority is now explicit: normalization, candidate recall, deterministic
+  rules, structured LLM adjudication, human review, and merge/split publication belong to versioned
+  offline builds. Query/answer paths may resolve user references against an accepted release but
+  must emit an offline review gap instead of mutating identity/source mappings.
+- This audit changed contracts only. It did not create a backup, run a restore, access a database,
+  open Milvus, or authorize any rebuild write; task 2.6 remains incomplete.
 
 ## Explicit non-claims
 

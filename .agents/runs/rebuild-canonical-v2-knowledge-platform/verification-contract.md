@@ -2,8 +2,9 @@
 
 ## Status
 
-S1 database-target safety is Accepted at commit `a58184c`. S2 read-only baseline may be Ready; all
-feature/data slices remain Specified and depend on S2 threshold/corpus freeze and acceptance.
+S1 database-target safety is Accepted at commit `a58184c`. S2 read-only baseline tasks 2.1–2.3 are
+complete; tasks 2.4–2.5 remain open. The S2B/task 2.6 backup-and-restore gate is not Accepted, so task
+3.2 and every Canonical V2/landing write slice remain blocked even after the read-only baseline.
 
 ## Behavior owner
 
@@ -16,7 +17,9 @@ feature/data slices remain Specified and depend on S2 threshold/corpus freeze an
 Prove that a clean isolated Canonical V2 platform can be reconstructed from immutable evidence,
 serve broad and precise four-domain/relationship retrieval with universal current-Web augmentation,
 produce claim-grounded progressive answers, and publish canonical/index releases consistently and
-reversibly without touching original forensic sources.
+reversibly without touching original forensic sources. Prove first that every required source family
+has a content-addressed backup and independently verified recovery path, and that online query paths
+cannot mutate offline canonical identity decisions.
 
 ## Environment and forbidden targets
 
@@ -45,6 +48,12 @@ reversibly without touching original forensic sources.
 - A generic `DATABASE_URL` is never accepted as fallback for migration/test/rebuild targets.
 - Real provider calls are allowed only in named acceptance runs with secrets from the approved
   environment and no credential values in logs/evidence.
+- Backup/restore gate: no accepted backup manifest or complete independent recovery drill exists
+  yet. Until S2B/task 2.6 is Accepted, no command may create or mutate Canonical V2 schemas, landing,
+  canonical projections, publication state, or candidate indexes.
+- S2B backup coverage MUST include original PostgreSQL, original Milvus, WAL/FPI, salvage, and all
+  inventoried historical SQLite/JSONL/XLSX/PDF/cache/raw-source families. Restore targets must be
+  distinct from original and backup locations; original volumes/files remain read-only.
 
 Last identity/hash check recorded in `verification.md`: `2026-07-11T05:37:16Z`.
 
@@ -60,6 +69,8 @@ Last identity/hash check recorded in `verification.md`: `2026-07-11T05:37:16Z`.
 8. Mixed canonical/published/Milvus release IDs: zero.
 9. Unexplained missing/extra/stale/cross-release index points: zero.
 10. Direct online Web/LLM write to active canonical/index: zero.
+11. Canonical V2/landing write before accepted complete backup and restore verification: zero.
+12. Query/answer-path canonical identity or source-identity mapping mutation: zero.
 
 ## RED artifacts by slice
 
@@ -75,6 +86,17 @@ Last identity/hash check recorded in `verification.md`: `2026-07-11T05:37:16Z`.
 - Baseline reports for data/relationship coverage, path reach, recall, precision, ranking, answer
   support, Web behavior, latency, and cost.
 - `acceptance-thresholds.json` approved before later slices become Ready.
+
+### S2B — Complete source backup and independent restore gate
+
+- A reviewed source-to-backup manifest proves family completeness, source/backup identities, byte
+  sizes, SHA-256, copy run/time, storage location, and no hard-link dependence.
+- A second isolated restore/materialization target proves PostgreSQL database/revision/schema/count,
+  Milvus copy schema/collection/count, and file/recovery-family hash plus bounded readability/replay.
+- RED gate tests prove missing families, hash mismatch, source-path use, absent restore evidence, or
+  failed probes reject task 3.2 and all Canonical V2/landing writes before their first write.
+- Original Postgres remains quiesced; any dedicated backup mount is read-only. Original Milvus is
+  copied without opening a client; only the verified copy may be inspected.
 
 ### S3–S7 — Data platform and release
 
@@ -107,20 +129,24 @@ Every verification run SHALL record:
 - counts, hashes, per-domain/path metrics, failures, and hard-invariant results;
 - provider availability, calls, latency, cost, and degradation path;
 - artifact paths and SHA-256 hashes;
+- for S2B, source/backup/restore identities, family completeness, copy independence, format-specific
+  recovery probes, and the accepted backup-manifest hash;
 - reviewer/acceptance status without claiming later-slice closure.
 
 ## Verification order
 
 1. Static/OpenSpec validation.
 2. Nearest pure/interface tests.
-3. Real isolated Postgres migration/integration tests.
-4. Recorded adapter/trace replay scenarios.
-5. Bounded isolated source/candidate replay.
-6. Full versioned Milvus candidate and parity.
-7. API/session/admin integration.
-8. Frozen regression then challenge evaluation.
-9. Named real-provider acceptance.
-10. Rollback rehearsal and final evidence review.
+3. Complete backup manifest and independent recovery verification; accept S2B before any rebuild
+   write.
+4. Real isolated Postgres migration/integration tests.
+5. Recorded adapter/trace replay scenarios.
+6. Bounded isolated source/candidate replay.
+7. Full versioned Milvus candidate and parity.
+8. API/session/admin integration.
+9. Frozen regression then challenge evaluation.
+10. Named real-provider acceptance.
+11. Rollback rehearsal and final evidence review.
 
 ## Stop conditions
 
@@ -131,6 +157,10 @@ Every verification run SHALL record:
 - A later slice depends on a predecessor not marked Accepted.
 - Threshold, corpus, schema, policy, or model version changes without a new versioned baseline.
 - Verification evidence cannot distinguish local, current-Web, LLM inference, or release identity.
+- A task 3.2+ or other rebuild-write command is proposed before complete S2B backup/restore evidence
+  is reviewed and Accepted.
+- Query/answer code attempts to create, merge, split, relink, or update canonical identities or
+  source-identity mappings instead of emitting an offline review gap.
 
 ## Completion rule
 

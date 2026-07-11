@@ -62,6 +62,20 @@ reversal history.
 - **THEN** the rebuilt release contains two canonical identities
 - **AND** source facts and relationships are reassigned through an auditable split decision
 
+### Requirement: Canonical identity is decided only by the offline data build
+
+The system SHALL execute normalization, identity candidate recall, deterministic matching,
+schema-validated LLM identity judgment, human review, merge/split decisions, and source-identity mapping through a
+versioned offline Canonical V2 build. Query and answer paths MAY resolve user wording, aliases,
+referents, and ambiguity against an accepted identity release, but SHALL be read-only with respect
+to canonical identities and identity decisions. Query-time Web or LLM output SHALL NOT create,
+merge, split, relink, or update canonical identities.
+
+#### Scenario: Query-time evidence suggests two Companies are the same
+- **WHEN** a query-time Web result or LLM plan suggests that two Companies may share an identity
+- **THEN** the current answer may disclose the ambiguity and create a traceable offline review gap
+- **AND** the query path does not mutate either canonical identity or their source-identity mappings
+
 ### Requirement: Canonical relationships use a typed extensible catalog
 
 Each canonical relationship SHALL use a registered type defining source and target types, direction,

@@ -22,3 +22,7 @@
   source/protected-slot/A-G metadata. User-confirmed workbook answers/key points are case-specific
   reference ground truth, including an explicitly marked known-bad historical response; generated
   PRD/challenge expectations remain pending review and are not treated as factual gold.
+- Added the user-confirmed pre-rebuild safety gate: task 2.6/S2B must back up and independently
+  restore-verify original PostgreSQL, Milvus, WAL/FPI, salvage, and every inventoried historical
+  source family before task 3.2 or any Canonical V2/landing write. Also made offline data builds the
+  sole canonical-identity mutation authority; query/answer paths are identity-read-only.

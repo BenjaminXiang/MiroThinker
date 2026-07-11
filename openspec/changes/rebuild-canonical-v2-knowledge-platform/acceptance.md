@@ -12,6 +12,8 @@ targets throughout this change.
       schema/replay write.
 - [ ] Slice S2 (read-only baseline) freezes `acceptance-thresholds.json` and corpus manifests before
       feature/data implementation slices become Ready.
+- [ ] Slice S2B/task 2.6 independently restore-verifies complete source backups and is Accepted
+      before task 3.2 or any Canonical V2 schema, landing, canonical, publication, or index write.
 - [ ] Every later slice has an independently testable/reviewable contract, immutable evidence, and
       Accepted predecessor; no Specified/Candidate slice is used as an accepted dependency.
 - [ ] Production-like cutover remains a separate explicit user authorization after final isolated
@@ -28,6 +30,14 @@ targets throughout this change.
 - [x] No accepted verification command connects or writes to the original `pgtest` or original
       Milvus file.
 - [x] Forensic/historical evidence chain-of-custody hashes remain intact.
+- [ ] A reviewed backup manifest covers original PostgreSQL, Milvus, WAL/FPI, salvage, and every
+      inventoried historical SQLite/JSONL/XLSX/PDF/cache/raw-source family with source/copy identity,
+      size, SHA-256, copy run/time, and no hard-link dependence on original bytes.
+- [ ] Every required backup passes an independent restore/materialization drill in a target distinct
+      from source and backup: PostgreSQL identity/revision/schema/count probes, Milvus copy
+      schema/collection/count probes, and file/recovery-family hash plus readability/replay probes.
+- [ ] Any missing family, mismatch, failed recovery probe, or unreviewed backup state rejects task
+      3.2 and all later rebuild writes before their first write.
 
 ## 2. Threshold and corpus freeze
 
@@ -68,6 +78,9 @@ targets throughout this change.
       to the wrong real-world object.
 - [ ] Strong identifier, same-name separation, cross-format LLM decision, reversible merge/split,
       source conflict, and temporal-history scenarios pass.
+- [ ] Normalization, candidate identity recall, deterministic rules, structured LLM adjudication,
+      human review, and merge/split publication run only in versioned offline builds; query/answer
+      paths create zero canonical identity/source-mapping mutations.
 - [ ] Every registered relationship type defines direction, roles, evidence, state, and time
       semantics; all relation endpoints exist and match allowed types.
 - [ ] Derived and session relations are not asserted as source-grounded canonical facts.

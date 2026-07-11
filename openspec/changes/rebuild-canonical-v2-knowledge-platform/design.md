@@ -29,6 +29,8 @@ Dependencies fall into three design categories:
 
 - Build a clean typed Canonical V2 database from immutable evidence while preserving source
   assertions, recovery lineage, conflicts, and reversible identity decisions.
+- Prove that every original Postgres/Milvus/recovery/historical source family has a content-addressed
+  backup and independently verified restore before the first Canonical V2 or landing write.
 - Keep Professor, Company, Paper, and Patent knowledge strongly typed while sharing identity,
   evidence, relationship, temporal, eligibility, release, and gap semantics.
 - Expose deep module interfaces that hide physical storage, provider, policy, and orchestration
@@ -49,11 +51,33 @@ Dependencies fall into three design categories:
 - Turn the four-domain platform into an unbounded national knowledge base.
 - Model every field as a generic graph property or apply full bitemporal storage to every value.
 - Let online Web results write directly to active canonical or Milvus state.
+- Let query-time reference resolution, Web results, or LLM output mutate the canonical identity
+  graph or source-identity mappings.
 - Generate exhaustive graph dumps or long-form research reports in one query.
 - Write to or cut over the original `pgtest` database or original Milvus file in this change without
   a separate explicit promotion authorization.
 
 ## Decisions
+
+### 0. Gate every rebuild write on complete backup and independent restore evidence
+
+The source inventory is not itself a backup. Before the first Canonical V2 schema, landing,
+canonical, publication, or index-rebuild write, a separate accepted S2B checkpoint must cover the
+original PostgreSQL volume or restorable database backup, original Milvus bytes, WAL/FPI and salvage
+artifacts, and all inventoried historical SQLite/JSONL/XLSX/PDF/cache/raw-source families.
+
+The backup manifest records source and backup identities, sizes, SHA-256 hashes, copy run/time, and
+storage location. Copies cannot be hard links to source bytes. Original Postgres remains quiesced;
+any volume copy mounts it read-only. Original Milvus is copied byte-for-byte without opening a
+client. Canonical V2 consumes only verified backup/restore outputs or immutable landing artifacts,
+never original paths.
+
+Hash equality alone is necessary but not sufficient. A second isolated restore target, distinct
+from source and backup locations, proves recoverability: PostgreSQL starts from the backup in a
+network-none lab and passes database/revision/schema/count probes; Milvus opens only the verified
+copy and passes schema/collection/count probes; file families are re-materialized and pass SHA-256
+plus bounded format/readability or replay checks. Missing coverage, mismatch, insufficient storage,
+or a failed recovery probe blocks all rebuild writes.
 
 ### 1. Build a clean typed platform, not V042 sidecars or a generic graph
 
@@ -103,6 +127,13 @@ and reversal lineage.
 Canonical V2 may assign new primary IDs. Historical IDs are source identities and lookup lineage,
 not compatibility obligations. All rebuilt cross-domain references use the accepted canonical
 identity graph.
+
+Identity construction is exclusively offline: normalization, candidate generation, deterministic
+rules, structured LLM adjudication, human review, and merge/split publication occur inside a
+versioned `KnowledgeBuild`. `KnowledgeRead` and `KnowledgeAnswer` may resolve aliases, session
+referents, and user ambiguity against an accepted identity release, but they are read-only. A
+query-time Web/LLM identity hypothesis can support the current answer or create an offline review
+gap; it cannot mutate canonical identity or source-identity mappings.
 
 ### 4. Use an extensible typed relationship catalog
 
@@ -270,6 +301,9 @@ offline run performs any canonical mutation.
   paths.
 - **[Risk] Recovery completeness is physically limited.** → Report source/baseline coverage honestly,
   recollect missing PRD evidence, keep unresolved gaps, and never manufacture parent rows or facts.
+- **[Risk] A hash-only copy can still be operationally unrestorable.** → Require a distinct restore
+  target and format-appropriate recovery/readability probes for every required source family before
+  accepting the backup gate.
 
 ## Migration Plan
 
@@ -277,17 +311,20 @@ offline run performs any canonical mutation.
    after read-only inventory work.
 2. Complete the source inventory and reviewed baseline in the isolated recovery lab. Freeze numeric
    acceptance thresholds without writing the original sources.
-3. Create the new Canonical V2 database baseline and module interface contract tests.
-4. Ingest forensic/historical sources into immutable landing through source adapters; checkpoint and
+3. Create content-addressed backups for every required original/recovery/historical source family,
+   restore them into independent isolated targets, and accept the backup/restore gate. No Canonical
+   V2 or landing write may occur before this checkpoint.
+4. Create the new Canonical V2 database baseline and module interface contract tests.
+5. Ingest forensic/historical sources into immutable landing through source adapters; checkpoint and
    verify chain-of-custody manifests.
-5. Build typed domain identity/assertion/relationship projections into a candidate release; add
+6. Build typed domain identity/assertion/relationship projections into a candidate release; add
    targeted recollection/enrichment for measured PRD gaps.
-6. Build versioned published projections and full Milvus indexes from the same candidate manifest.
-7. Run domain/path retrieval, relation, grounded-answer, Web, parity, latency/cost, and rollback
+7. Build versioned published projections and full Milvus indexes from the same candidate manifest.
+8. Run domain/path retrieval, relation, grounded-answer, Web, parity, latency/cost, and rollback
    acceptance. Iterate only inside isolated candidate releases.
-8. Migrate admin/chat/data consumers to the new module interfaces and run old/new scenario comparison
+9. Migrate admin/chat/data consumers to the new module interfaces and run old/new scenario comparison
    as evidence, not as a compatibility promise.
-9. Obtain explicit acceptance and separate cutover authorization. Promotion to any production-like
+10. Obtain explicit acceptance and separate cutover authorization. Promotion to any production-like
    target is outside this plan until then.
 
 Rollback during development discards or deactivates the rejected candidate and restores the prior
