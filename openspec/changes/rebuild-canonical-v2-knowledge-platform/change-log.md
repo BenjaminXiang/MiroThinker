@@ -43,3 +43,7 @@
   typed public seams and observable outcomes for EvidenceLanding, KnowledgeBuild, KnowledgeRead,
   KnowledgeAnswer, and ReleasePublication. Normal pytest stays green while `--runxfail` proves five
   genuine missing-module RED failures; no production module or database write was added.
+- Completed and accepted task 3.2: an independent `C2_0001` Alembic history verifies the exact S2B
+  admission before engine creation and target identity before DDL, then creates eight empty
+  Canonical V2 namespaces without replaying V001–V042. A new network-none/no-port, marked candidate
+  passed upgrade/downgrade/re-upgrade and remains at the clean baseline with no business rows.

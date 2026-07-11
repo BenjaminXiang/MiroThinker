@@ -5,9 +5,10 @@
 S1 database-target safety was accepted by the user at 2026-07-11T05:39:19Z. Explicit user acceptance
 of S2 tasks 2.1–2.5, including the corpus ground-truth policy and threshold Candidate, was recorded
 at 2026-07-11T15:10:32Z. S2B/task 2.6 was objectively verified and Accepted at
-2026-07-11T16:11:23Z under the user's self-approval authorization. No Canonical V2/landing write has
-started. Task 3.1's RED interface contracts were Accepted at `2026-07-11T16:31:48Z`; task 3.2 is
-next.
+2026-07-11T16:11:23Z under the user's self-approval authorization. Task 3.1's RED interface
+contracts were Accepted at `2026-07-11T16:31:48Z`. After re-verifying that gate, Task 3.2's empty
+Canonical V2 namespace baseline was Accepted at `2026-07-11T16:58:23Z`. Task 3.3 is next; no
+landing evidence, canonical business row, publication projection, or index write has begun.
 
 ## Existing incident/recovery checkpoint used as planning evidence
 
@@ -185,9 +186,8 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 
 ## Pending evidence
 
-1. Task 3.2 clean database baseline in a new explicitly marked isolated candidate target.
-2. Task 3.2 must verify the Accepted S2B record before its
-   first write and still requires its own Ready scope/target evidence.
+1. Task 3.3 shared typed contracts over the accepted empty namespace baseline.
+2. Task 3.4 business schema/integrity migrations and their own real disposable/candidate checks.
 
 ## S2 task 2.1 source inventory — 2026-07-11T07:11:30Z
 
@@ -423,9 +423,48 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   touched. Task 3.1 is Accepted under the user's self-approval authorization; task 3.2 must establish
   a separate Ready isolated-write slice before any database change.
 
+## S3B task 3.2 clean database baseline — 2026-07-11T16:58:23Z
+
+- The Ready slice fixed the boundary before writes: a separate Canonical V2 Alembic root, exact
+  S2B admission before engine creation, S1 target identity before DDL, eight empty business
+  namespaces, and no Task 3.3/3.4 tables or constraints.
+- RED first reported `6 failed, 1 skipped`: the gate module was absent in five cases and the
+  dedicated Alembic config/root was absent in one. After the isolated empty target was provisioned,
+  the opt-in real test also failed at the missing Alembic root while the database remained at zero
+  public tables and zero Canonical V2 schemas.
+- `rebuild_write_gate.py` now binds the exact source inventory
+  `83a9e2c8…0fa09`, backup manifest `a14c1eab…e59c8`, restore verification
+  `98826e8d…d231`, and acceptance record `3155d890…fc5b`. Missing, byte-changed, non-accepted,
+  coverage-mismatched, or failed-probe evidence rejects before migration engine creation.
+- `canonical_v2_alembic` is a one-revision independent history: base/head `C2_0001`, branch
+  `canonical_v2`, no V042 ancestry, and a distinct `public.canonical_v2_alembic_version` table. The
+  revision creates only `landing`, `knowledge`, `professor`, `company`, `paper`, `patent`, `publish`,
+  and `ops`; downgrade uses reverse-order non-cascading drops.
+- The new target is `miroflow_canonical_v2_candidate_s3b`, marker
+  `miroflow:destructive-target:v1:isolated-candidate:miroflow_canonical_v2_candidate_s3b`, system
+  identifier `7661313446684311592`, container `canonical-v2-s3b-pg-20260711`, and named labeled
+  volume `canonical-v2-s3b-pgdata-20260711`. It is healthy with network `none`, ports `{}`, restart
+  policy `no`, and only a dedicated host-local Unix socket.
+- The first socket used mode `0770`, but postgres retained primary GID 999 rather than the requested
+  supplemental group, so host connection was denied. No migration ran. Recreating only the
+  container over the same empty target volume with a `0777` socket inside a `0770` host directory
+  preserved network/port isolation and limited traversal to postgres plus the workspace user.
+- The real integration test deliberately set generic `DATABASE_URL` to the forbidden
+  `localhost:15432/miroflow_real` value while providing the explicit Unix-socket candidate target.
+  It passed base → `C2_0001` → base → `C2_0001`; final inspection found eight schemas, zero business
+  tables, zero legacy/extra public tables, and schema-dump SHA-256
+  `9605da198e468fe5bbf2d87270be411b9663d639d6fa1b427c6593401585f09b`.
+- Final checks: Canonical V2 `7 passed, 5 xfailed`; S1 safety `9 passed`; S2/S2B `32 passed`; Ruff
+  clean; Pyright `0 errors, 0 warnings, 0 informations`; strict OpenSpec and diff checks passed.
+  Formal admission remained `state=accepted`, `source_count=50`; original `pgtest` stayed paused on
+  its exact volume, recovery lab stayed network-none/no-port, and original Milvus/salvage hashes
+  matched.
+- Task 3.2 is Accepted under the user's self-approval authorization. The database is only an empty
+  accepted foundation; Task 3.3/3.4 must add typed contracts/tables in separate Ready slices.
+
 ## Explicit non-claims
 
 - S2B acceptance satisfies only the backup prerequisite; each later task still requires its own
   Ready slice, explicit isolated target, and verification loop.
-- No Canonical V2 database or Milvus release is accepted.
+- No populated Canonical V2 candidate, serving projection, or Milvus release is accepted.
 - No original source write or production-like cutover is authorized.
