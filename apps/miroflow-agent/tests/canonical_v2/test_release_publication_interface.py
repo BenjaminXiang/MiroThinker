@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from importlib import import_module
 from typing import Any
 
 import pytest
 
+from src.data_agents.canonical_v2.contracts import (
+    PublishedRelease as SharedPublishedRelease,
+    ReleaseVerification as SharedReleaseVerification,
+)
 
 RED_REASON = "Task 3.1 RED: Canonical V2 ReleasePublication interface is not implemented"
 
@@ -12,6 +17,9 @@ RED_REASON = "Task 3.1 RED: Canonical V2 ReleasePublication interface is not imp
 @pytest.mark.xfail(strict=True, raises=ModuleNotFoundError, reason=RED_REASON)
 def test_release_publication_verifies_exact_parity_then_promotes_and_rolls_back_one_release() -> None:
     module: Any = import_module("src.data_agents.canonical_v2.release_publication")
+    assert module.ReleaseVerification is SharedReleaseVerification
+    assert module.PublishedRelease is SharedPublishedRelease
+    now = datetime(2026, 7, 11, tzinfo=timezone.utc)
 
     class RecordingPublication(module.ReleasePublication):
         def __init__(self) -> None:
@@ -21,6 +29,7 @@ def test_release_publication_verifies_exact_parity_then_promotes_and_rolls_back_
         def verify(self, candidate_release_id: str) -> Any:
             verification = module.ReleaseVerification(
                 candidate_release_id=candidate_release_id,
+                manifest_sha256="a" * 64,
                 accepted=True,
                 canonical_index_parity=True,
                 missing_points=0,
@@ -28,6 +37,7 @@ def test_release_publication_verifies_exact_parity_then_promotes_and_rolls_back_
                 stale_points=0,
                 cross_release_points=0,
                 evidence_ids=("verification-e1",),
+                verified_at=now,
             )
             self.accepted.add(candidate_release_id)
             return verification
@@ -44,6 +54,8 @@ def test_release_publication_verifies_exact_parity_then_promotes_and_rolls_back_
                 published_projection_release_id=accepted_release_id,
                 index_release_id=accepted_release_id,
                 state="active",
+                changed_at=now,
+                verification_evidence_ids=("verification-e1",),
             )
 
         def rollback(self, published_release_id: str) -> Any:
@@ -57,6 +69,8 @@ def test_release_publication_verifies_exact_parity_then_promotes_and_rolls_back_
                 published_projection_release_id=previous,
                 index_release_id=previous,
                 state="active",
+                changed_at=now,
+                verification_evidence_ids=("rollback-e1",),
             )
 
     publication = RecordingPublication()

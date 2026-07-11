@@ -5,6 +5,8 @@ from typing import Any
 
 import pytest
 
+from src.data_agents.canonical_v2.contracts import CandidateRelease as SharedCandidateRelease
+
 
 RED_REASON = "Task 3.1 RED: Canonical V2 KnowledgeBuild interface is not implemented"
 
@@ -12,6 +14,7 @@ RED_REASON = "Task 3.1 RED: Canonical V2 KnowledgeBuild interface is not impleme
 @pytest.mark.xfail(strict=True, raises=ModuleNotFoundError, reason=RED_REASON)
 def test_knowledge_build_returns_isolated_candidate_with_versioned_manifest() -> None:
     module: Any = import_module("src.data_agents.canonical_v2.knowledge_build")
+    assert module.CandidateRelease is SharedCandidateRelease
     request = module.BuildCandidateRequest(
         run_id="build-run-1",
         candidate_release_id="candidate-r1",

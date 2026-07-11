@@ -21,7 +21,7 @@ from sqlalchemy.engine import make_url
 APP_ROOT = Path(__file__).resolve().parents[2]
 ALEMBIC_INI = APP_ROOT / "canonical_v2_alembic.ini"
 SCRIPT_LOCATION = APP_ROOT / "canonical_v2_alembic"
-EXPECTED_REVISION = "C2_0002"
+EXPECTED_REVISION = "C2_0003"
 EXPECTED_DATABASE = "miroflow_canonical_v2_s3d_disposable"
 EXPECTED_MARKER = (
     "miroflow:destructive-target:v1:disposable:miroflow_canonical_v2_s3d_disposable"
@@ -307,7 +307,25 @@ def _insert_identity(
     )
 
 
-def test_c2_0002_is_current_and_shared_tables_exist(target: _Target) -> None:
+def _insert_relationship_type(connection: psycopg.Connection[Any]) -> None:
+    connection.execute(
+        "INSERT INTO knowledge.relationship_type "
+        "(relationship_type_id, version, layer, source_entity_types, target_entity_types, "
+        "direction, roles, required_evidence_kinds, time_semantics, allowed_states, "
+        "eligible_paths) VALUES ('professor_founded_company', 'v1', 'canonical', "
+        "%s, %s, 'directed', '[]'::jsonb, %s, 'validity_interval', %s, %s) "
+        "ON CONFLICT DO NOTHING",
+        (
+            Jsonb(["professor"]),
+            Jsonb(["company"]),
+            Jsonb(["official_site"]),
+            Jsonb(["accepted", "rejected"]),
+            Jsonb(["relationship_traversal"]),
+        ),
+    )
+
+
+def test_c2_0003_is_current_and_shared_tables_exist(target: _Target) -> None:
     scripts = ScriptDirectory.from_config(target.config)
     assert scripts.get_revision(EXPECTED_REVISION) is not None
     assert target.connection.execute(
@@ -443,7 +461,49 @@ def test_operational_run_and_source_identity_metadata_can_progress(
     ).fetchone() == (later,)
 
 
-def test_identity_reversal_adds_history_and_requires_same_release_parent(
+def test_operational_metadata_cannot_rewrite_or_delete_history(target: _Target) -> None:
+    connection = target.connection
+    values = _insert_artifact_graph(connection)
+    connection.execute(
+        "INSERT INTO landing.parser_run "
+        "(parse_run_id, artifact_id, parser_name, parser_version, schema_version, "
+        "run_status, started_at) VALUES ('parse-run-unused', %s, 'jsonl', "
+        "'parser-v1', 'company-v1', 'running', %s)",
+        (values["artifact_id"], NOW),
+    )
+    connection.execute(
+        "INSERT INTO knowledge.source_identity "
+        "(source_identity_id, source_system, source_key, entity_type, normalized_keys, "
+        "first_observed_at, last_observed_at, state) VALUES ('source-unused', "
+        "'historical_jsonl', 'line:unused', 'company', '{}'::jsonb, %s, %s, 'active')",
+        (NOW, NOW),
+    )
+
+    _assert_database_error(
+        connection,
+        errors.ObjectNotInPrerequisiteState,
+        "UPDATE landing.parser_run SET parser_version = 'rewritten' "
+        "WHERE parse_run_id = 'parse-run-unused'",
+    )
+    _assert_database_error(
+        connection,
+        errors.ObjectNotInPrerequisiteState,
+        "UPDATE knowledge.source_identity SET source_key = 'rewritten' "
+        "WHERE source_identity_id = 'source-unused'",
+    )
+    _assert_database_error(
+        connection,
+        errors.ObjectNotInPrerequisiteState,
+        "DELETE FROM landing.parser_run WHERE parse_run_id = 'parse-run-unused'",
+    )
+    _assert_database_error(
+        connection,
+        errors.ObjectNotInPrerequisiteState,
+        "DELETE FROM knowledge.source_identity WHERE source_identity_id = 'source-unused'",
+    )
+
+
+def test_identity_reversal_adds_history_and_requires_an_existing_parent(
     target: _Target,
 ) -> None:
     connection = target.connection
@@ -504,20 +564,7 @@ def test_canonical_relationship_endpoints_cannot_cross_release_scope(
     _insert_policy(connection, "relationship-policy", "relationship")
     _insert_identity(connection, "release-r1", "professor-c1", "professor")
     _insert_identity(connection, "release-r2", "company-c1", "company")
-    connection.execute(
-        "INSERT INTO knowledge.relationship_type "
-        "(relationship_type_id, version, layer, source_entity_types, target_entity_types, "
-        "direction, roles, required_evidence_kinds, time_semantics, allowed_states, "
-        "eligible_paths) VALUES ('professor_founded_company', 'v1', 'canonical', "
-        "%s, %s, 'directed', '[]'::jsonb, %s, 'validity_interval', %s, %s)",
-        (
-            Jsonb(["professor"]),
-            Jsonb(["company"]),
-            Jsonb(["official_site"]),
-            Jsonb(["accepted", "rejected"]),
-            Jsonb(["relationship_traversal"]),
-        ),
-    )
+    _insert_relationship_type(connection)
 
     _assert_database_error(
         connection,
@@ -550,6 +597,399 @@ def test_canonical_relationship_endpoints_cannot_cross_release_scope(
         "SELECT release_id FROM knowledge.relationship_decision "
         "WHERE decision_id = 'relation-valid'"
     ).fetchone() == ("release-r1",)
+
+
+def test_artifact_parent_hash_must_match_the_referenced_parent(target: _Target) -> None:
+    connection = target.connection
+    connection.execute(
+        "INSERT INTO landing.evidence_artifact "
+        "(artifact_id, source_kind, source_locator, content_sha256, byte_size, acquired_at, run_id) "
+        "VALUES ('parent-artifact', 'forensic_source', 'source/parent', %s, 12, %s, 'copy-run-1')",
+        (_fingerprint("parent-bytes"), NOW),
+    )
+
+    _assert_database_error(
+        connection,
+        errors.ForeignKeyViolation,
+        "INSERT INTO landing.evidence_artifact "
+        "(artifact_id, source_kind, source_locator, content_sha256, byte_size, acquired_at, run_id, "
+        "parent_artifact_id, parent_content_sha256) "
+        "VALUES ('child-artifact', 'verified_copy', 'backup/child', %s, 12, %s, 'copy-run-1', "
+        "'parent-artifact', %s)",
+        (_fingerprint("child-bytes"), NOW, _fingerprint("not-the-parent-bytes")),
+    )
+
+
+def test_assertion_identity_must_be_linked_to_its_source_record(
+    target: _Target,
+) -> None:
+    connection = target.connection
+    values = _insert_artifact_graph(connection)
+    connection.execute(
+        "INSERT INTO knowledge.source_identity "
+        "(source_identity_id, source_system, source_key, entity_type, normalized_keys, "
+        "first_observed_at, last_observed_at, state) "
+        "VALUES ('source-company-unlinked', 'other-source', 'row:99', 'company', "
+        "'{}'::jsonb, %s, %s, 'active')",
+        (NOW, NOW),
+    )
+
+    _assert_database_error(
+        connection,
+        errors.ForeignKeyViolation,
+        "INSERT INTO knowledge.source_assertion "
+        "(assertion_id, source_record_id, source_identity_id, subject_entity_type, "
+        "field_path, value, assertion_fingerprint_sha256, observed_at, assertion_run_id) "
+        "VALUES ('assertion-unlinked', %s, 'source-company-unlinked', 'company', "
+        "'name', %s, %s, %s, 'assert-run-review')",
+        (
+            values["record_id"],
+            Jsonb("Other"),
+            _fingerprint("assertion-unlinked"),
+            NOW,
+        ),
+    )
+
+
+def test_relationship_endpoints_must_be_linked_to_the_evidence_record(
+    target: _Target,
+) -> None:
+    connection = target.connection
+    values = _insert_artifact_graph(connection)
+    connection.execute(
+        "INSERT INTO knowledge.source_identity "
+        "(source_identity_id, source_system, source_key, entity_type, normalized_keys, "
+        "first_observed_at, last_observed_at, state) "
+        "VALUES ('source-company-unlinked', 'other-source', 'row:99', 'company', "
+        "'{}'::jsonb, %s, %s, 'active')",
+        (NOW, NOW),
+    )
+    _insert_relationship_type(connection)
+
+    _assert_database_error(
+        connection,
+        errors.ForeignKeyViolation,
+        "INSERT INTO knowledge.relationship_assertion "
+        "(assertion_id, relationship_type_id, relationship_type_version, source_record_id, "
+        "source_identity_id, target_identity_id, attributes, assertion_fingerprint_sha256, "
+        "observed_at, assertion_run_id) VALUES ('relation-assertion-unlinked', "
+        "'professor_founded_company', 'v1', %s, %s, 'source-company-unlinked', "
+        "'{}'::jsonb, %s, %s, 'assert-run-review')",
+        (
+            values["record_id"],
+            values["source_identity_id"],
+            _fingerprint("relation-assertion-unlinked"),
+            NOW,
+        ),
+    )
+
+
+def test_append_only_history_rejects_bulk_truncate(target: _Target) -> None:
+    connection = target.connection
+    _insert_artifact_graph(connection)
+
+    _assert_database_error(
+        connection,
+        errors.ObjectNotInPrerequisiteState,
+        "TRUNCATE landing.evidence_artifact CASCADE",
+    )
+
+
+def test_identity_reversal_can_reference_a_previous_release_decision(
+    target: _Target,
+) -> None:
+    connection = target.connection
+    _insert_release(connection, "release-r1")
+    _insert_release(connection, "release-r2", previous_release_id="release-r1")
+    _insert_policy(connection, "identity-policy", "identity")
+    connection.execute(
+        "INSERT INTO knowledge.identity_decision "
+        "(release_id, decision_id, action, policy_id, policy_version, method, "
+        "method_version, decision_run_id, confidence, rationale, decided_at) "
+        "VALUES ('release-r1', 'merge-r1', 'merge', 'identity-policy', 'v1', "
+        "'human_review', 'identity-v1', 'build-r1', 0.98, 'merge evidence', %s)",
+        (NOW,),
+    )
+    connection.execute(
+        "INSERT INTO knowledge.identity_decision "
+        "(release_id, decision_id, action, policy_id, policy_version, method, "
+        "method_version, decision_run_id, confidence, rationale, decided_at, "
+        "reversal_of_decision_id) VALUES ('release-r2', 'reverse-r2', 'reverse', "
+        "'identity-policy', 'v1', 'human_review', 'identity-v1', 'build-r2', 1.0, "
+        "'reviewed reversal', %s, 'merge-r1')",
+        (NOW,),
+    )
+
+    assert connection.execute(
+        "SELECT reversal_of_decision_id FROM knowledge.identity_decision "
+        "WHERE release_id = 'release-r2' AND decision_id = 'reverse-r2'"
+    ).fetchone() == ("merge-r1",)
+
+
+def test_identity_reversal_cannot_reference_itself(target: _Target) -> None:
+    connection = target.connection
+    _insert_release(connection, "release-r1")
+    _insert_policy(connection, "identity-policy", "identity")
+    _assert_database_error(
+        connection,
+        errors.CheckViolation,
+        "INSERT INTO knowledge.identity_decision "
+        "(release_id, decision_id, action, policy_id, policy_version, method, "
+        "method_version, decision_run_id, confidence, rationale, decided_at, "
+        "reversal_of_decision_id) VALUES ('release-r1', 'reverse-self', 'reverse', "
+        "'identity-policy', 'v1', 'human_review', 'identity-v1', 'build-r1', 1.0, "
+        "'invalid self reversal', %s, 'reverse-self')",
+        (NOW,),
+    )
+
+
+def test_field_decision_can_supersede_a_previous_release_decision(
+    target: _Target,
+) -> None:
+    connection = target.connection
+    for release_id in ("release-r1", "release-r2"):
+        _insert_release(
+            connection,
+            release_id,
+            previous_release_id="release-r1" if release_id == "release-r2" else None,
+        )
+        _insert_identity(connection, release_id, "company-c1", "company")
+    _insert_policy(connection, "field-policy", "field_selection")
+    connection.execute(
+        "INSERT INTO knowledge.canonical_decision "
+        "(release_id, decision_id, canonical_identity_id, field_path, state, policy_id, "
+        "policy_version, method, method_version, decision_run_id, confidence, rationale, "
+        "decided_at) VALUES ('release-r1', 'field-r1', 'company-c1', 'name', 'selected', "
+        "'field-policy', 'v1', 'deterministic', 'field-v1', 'build-r1', 1.0, "
+        "'first selection', %s)",
+        (NOW,),
+    )
+    connection.execute(
+        "INSERT INTO knowledge.canonical_decision "
+        "(release_id, decision_id, canonical_identity_id, field_path, state, policy_id, "
+        "policy_version, method, method_version, decision_run_id, confidence, rationale, "
+        "decided_at, supersedes_decision_id) VALUES ('release-r2', 'field-r2', "
+        "'company-c1', 'name', 'selected', 'field-policy', 'v1', 'human_review', "
+        "'field-v1', 'build-r2', 0.99, 'updated selection', %s, 'field-r1')",
+        (NOW,),
+    )
+
+    assert connection.execute(
+        "SELECT supersedes_decision_id FROM knowledge.canonical_decision "
+        "WHERE release_id = 'release-r2' AND decision_id = 'field-r2'"
+    ).fetchone() == ("field-r1",)
+
+
+def test_field_decision_cannot_supersede_itself(target: _Target) -> None:
+    connection = target.connection
+    _insert_release(connection, "release-r1")
+    _insert_identity(connection, "release-r1", "company-c1", "company")
+    _insert_policy(connection, "field-policy", "field_selection")
+    _assert_database_error(
+        connection,
+        errors.CheckViolation,
+        "INSERT INTO knowledge.canonical_decision "
+        "(release_id, decision_id, canonical_identity_id, field_path, state, policy_id, "
+        "policy_version, method, method_version, decision_run_id, confidence, rationale, "
+        "decided_at, supersedes_decision_id) VALUES ('release-r1', 'field-self', "
+        "'company-c1', 'name', 'selected', 'field-policy', 'v1', 'human_review', "
+        "'field-v1', 'build-r1', 0.99, 'invalid self supersession', %s, 'field-self')",
+        (NOW,),
+    )
+
+
+def test_field_supersession_cannot_cross_identity_or_field(target: _Target) -> None:
+    connection = target.connection
+    for release_id in ("release-r1", "release-r2"):
+        _insert_release(
+            connection,
+            release_id,
+            previous_release_id="release-r1" if release_id == "release-r2" else None,
+        )
+        _insert_identity(connection, release_id, "company-c1", "company")
+        _insert_identity(connection, release_id, "company-c2", "company")
+    _insert_policy(connection, "field-policy", "field_selection")
+    connection.execute(
+        "INSERT INTO knowledge.canonical_decision "
+        "(release_id, decision_id, canonical_identity_id, field_path, state, policy_id, "
+        "policy_version, method, method_version, decision_run_id, confidence, rationale, "
+        "decided_at) VALUES ('release-r1', 'field-r1', 'company-c1', 'name', 'selected', "
+        "'field-policy', 'v1', 'deterministic', 'field-v1', 'build-r1', 1.0, "
+        "'first selection', %s)",
+        (NOW,),
+    )
+    for decision_id, identity_id, field_path in (
+        ("field-wrong-identity", "company-c2", "name"),
+        ("field-wrong-path", "company-c1", "address"),
+    ):
+        _assert_database_error(
+            connection,
+            errors.ForeignKeyViolation,
+            "INSERT INTO knowledge.canonical_decision "
+            "(release_id, decision_id, canonical_identity_id, field_path, state, policy_id, "
+            "policy_version, method, method_version, decision_run_id, confidence, rationale, "
+            "decided_at, supersedes_decision_id) VALUES ('release-r2', %s, %s, %s, "
+            "'selected', 'field-policy', 'v1', 'human_review', 'field-v1', 'build-r2', "
+            "0.99, 'invalid lineage subject', %s, 'field-r1')",
+            (decision_id, identity_id, field_path, NOW),
+        )
+
+
+def test_relationship_decision_can_supersede_a_previous_release_decision(
+    target: _Target,
+) -> None:
+    connection = target.connection
+    for release_id in ("release-r1", "release-r2"):
+        _insert_release(
+            connection,
+            release_id,
+            previous_release_id="release-r1" if release_id == "release-r2" else None,
+        )
+        _insert_identity(connection, release_id, "professor-c1", "professor")
+        _insert_identity(connection, release_id, "company-c1", "company")
+    _insert_policy(connection, "relationship-policy", "relationship")
+    _insert_relationship_type(connection)
+    for release_id, decision_id, supersedes in (
+        ("release-r1", "relation-r1", None),
+        ("release-r2", "relation-r2", "relation-r1"),
+    ):
+        connection.execute(
+            "INSERT INTO knowledge.relationship_decision "
+            "(release_id, decision_id, canonical_relationship_id, relationship_type_id, "
+            "relationship_type_version, source_canonical_identity_id, "
+            "target_canonical_identity_id, state, policy_id, policy_version, method, "
+            "method_version, decision_run_id, confidence, rationale, decided_at, "
+            "supersedes_decision_id) VALUES (%s, %s, 'canonical-relation-1', "
+            "'professor_founded_company', 'v1', 'professor-c1', 'company-c1', "
+            "'accepted', 'relationship-policy', 'v1', 'human_review', 'relation-v1', "
+            "%s, 0.95, 'reviewed relationship', %s, %s)",
+            (
+                release_id,
+                decision_id,
+                f"build-{release_id}",
+                NOW,
+                supersedes,
+            ),
+        )
+
+    assert connection.execute(
+        "SELECT supersedes_decision_id FROM knowledge.relationship_decision "
+        "WHERE release_id = 'release-r2' AND decision_id = 'relation-r2'"
+    ).fetchone() == ("relation-r1",)
+
+
+def test_relationship_decision_cannot_supersede_itself(target: _Target) -> None:
+    connection = target.connection
+    _insert_release(connection, "release-r1")
+    _insert_identity(connection, "release-r1", "professor-c1", "professor")
+    _insert_identity(connection, "release-r1", "company-c1", "company")
+    _insert_policy(connection, "relationship-policy", "relationship")
+    _insert_relationship_type(connection)
+    _assert_database_error(
+        connection,
+        errors.CheckViolation,
+        "INSERT INTO knowledge.relationship_decision "
+        "(release_id, decision_id, canonical_relationship_id, relationship_type_id, "
+        "relationship_type_version, source_canonical_identity_id, "
+        "target_canonical_identity_id, state, policy_id, policy_version, method, "
+        "method_version, decision_run_id, confidence, rationale, decided_at, "
+        "supersedes_decision_id) VALUES ('release-r1', 'relation-self', "
+        "'canonical-relation-1', 'professor_founded_company', 'v1', 'professor-c1', "
+        "'company-c1', 'accepted', 'relationship-policy', 'v1', 'human_review', "
+        "'relation-v1', 'build-r1', 0.95, 'invalid self supersession', %s, "
+        "'relation-self')",
+        (NOW,),
+    )
+
+
+def test_relationship_supersession_cannot_cross_logical_relationship(
+    target: _Target,
+) -> None:
+    connection = target.connection
+    for release_id in ("release-r1", "release-r2"):
+        _insert_release(
+            connection,
+            release_id,
+            previous_release_id="release-r1" if release_id == "release-r2" else None,
+        )
+        _insert_identity(connection, release_id, "professor-c1", "professor")
+        _insert_identity(connection, release_id, "company-c1", "company")
+    _insert_policy(connection, "relationship-policy", "relationship")
+    _insert_relationship_type(connection)
+    connection.execute(
+        "INSERT INTO knowledge.relationship_decision "
+        "(release_id, decision_id, canonical_relationship_id, relationship_type_id, "
+        "relationship_type_version, source_canonical_identity_id, "
+        "target_canonical_identity_id, state, policy_id, policy_version, method, "
+        "method_version, decision_run_id, confidence, rationale, decided_at) VALUES "
+        "('release-r1', 'relation-r1', 'canonical-relation-1', "
+        "'professor_founded_company', 'v1', 'professor-c1', 'company-c1', 'accepted', "
+        "'relationship-policy', 'v1', 'human_review', 'relation-v1', 'build-r1', "
+        "0.95, 'first relationship decision', %s)",
+        (NOW,),
+    )
+    _assert_database_error(
+        connection,
+        errors.ForeignKeyViolation,
+        "INSERT INTO knowledge.relationship_decision "
+        "(release_id, decision_id, canonical_relationship_id, relationship_type_id, "
+        "relationship_type_version, source_canonical_identity_id, "
+        "target_canonical_identity_id, state, policy_id, policy_version, method, "
+        "method_version, decision_run_id, confidence, rationale, decided_at, "
+        "supersedes_decision_id) VALUES ('release-r2', 'relation-wrong-subject', "
+        "'canonical-relation-2', 'professor_founded_company', 'v1', 'professor-c1', "
+        "'company-c1', 'accepted', 'relationship-policy', 'v1', 'human_review', "
+        "'relation-v1', 'build-r2', 0.95, 'invalid lineage subject', %s, 'relation-r1')",
+        (NOW,),
+    )
+
+
+def test_structured_llm_decisions_require_a_persisted_trace(target: _Target) -> None:
+    connection = target.connection
+    trace_columns = connection.execute(
+        "SELECT table_name FROM information_schema.columns "
+        "WHERE table_schema = 'knowledge' AND column_name = 'llm_trace' "
+        "AND table_name = ANY(%s) ORDER BY table_name",
+        (["identity_decision", "canonical_decision", "relationship_decision"],),
+    ).fetchall()
+    assert trace_columns == [
+        ("canonical_decision",),
+        ("identity_decision",),
+        ("relationship_decision",),
+    ]
+
+    _insert_release(connection, "release-r1")
+    _insert_policy(connection, "identity-policy", "identity")
+    _assert_database_error(
+        connection,
+        errors.CheckViolation,
+        "INSERT INTO knowledge.identity_decision "
+        "(release_id, decision_id, action, policy_id, policy_version, method, "
+        "method_version, decision_run_id, confidence, rationale, decided_at) "
+        "VALUES ('release-r1', 'llm-without-trace', 'create', 'identity-policy', 'v1', "
+        "'structured_llm', 'identity-v1', 'build-r1', 0.8, 'model judgment', %s)",
+        (NOW,),
+    )
+    connection.execute(
+        "INSERT INTO knowledge.identity_decision "
+        "(release_id, decision_id, action, policy_id, policy_version, method, "
+        "method_version, decision_run_id, confidence, rationale, decided_at, llm_trace) "
+        "VALUES ('release-r1', 'llm-with-trace', 'create', 'identity-policy', 'v1', "
+        "'structured_llm', 'identity-v1', 'build-r1', 0.8, 'model judgment', %s, %s)",
+        (
+            NOW,
+            Jsonb(
+                {
+                    "provider": "recorded-fake",
+                    "model": "identity-judge-v1",
+                    "prompt_version": "identity-prompt-v1",
+                    "schema_version": "identity-output-v1",
+                    "input_evidence_ids": ["record-1"],
+                    "output_sha256": _fingerprint("llm-output"),
+                }
+            ),
+        ),
+    )
 
 
 def test_active_release_pointer_cannot_mix_versions_and_transaction_rolls_back(
@@ -627,7 +1067,7 @@ def test_active_release_pointer_cannot_mix_versions_and_transaction_rolls_back(
     ).fetchone() == (2,)
 
 
-def test_zz_c2_0002_downgrades_to_empty_baseline_and_reupgrades(
+def test_zz_shared_storage_downgrades_to_empty_baseline_and_reupgrades(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     database_url, expected_database, target_kind, backup_gate_root = (

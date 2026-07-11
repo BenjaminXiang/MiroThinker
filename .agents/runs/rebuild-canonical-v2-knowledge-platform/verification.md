@@ -9,8 +9,10 @@ at 2026-07-11T15:10:32Z. S2B/task 2.6 was objectively verified and Accepted at
 contracts were Accepted at `2026-07-11T16:31:48Z`. After re-verifying that gate, Task 3.2's empty
 Canonical V2 namespace baseline was Accepted at `2026-07-11T16:58:23Z`. Task 3.3's shared typed
 contracts were Accepted at `2026-07-11T17:15:42Z`. Task 3.4's C2_0002 shared schema was Accepted at
-`2026-07-11T17:48:21Z`. Task 3.5 independent S3 review is next; no landing evidence, canonical
-business row, publication projection, or index write has begun.
+`2026-07-11T17:48:21Z`. Task 3.5 independently reviewed, repaired, and Accepted the complete S3
+foundation at `2026-07-11T18:22:18Z`; the isolated candidate is at reviewed head C2_0003 with zero
+business rows. Task 4.1 is next but has not started; no landing evidence, publication projection, or
+index write has begun.
 
 ## Existing incident/recovery checkpoint used as planning evidence
 
@@ -188,8 +190,7 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 
 ## Pending evidence
 
-1. Task 3.5 independent review/acceptance of the complete S3 database/interface foundation.
-2. Task 4.1 remains Specified until S3 is independently Accepted.
+1. Task 4.1 remains Specified until its own independently testable Ready slice is created.
 
 ## S2 task 2.1 source inventory — 2026-07-11T07:11:30Z
 
@@ -567,6 +568,70 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   revision baseline test with current-head restoration.
 - Remaining risk: new dump evidence must use the helper; new destructive migration tests must use
   freshly marked disposable databases.
+
+## S3E task 3.5 independent foundation review — 2026-07-11T18:22:18Z
+
+- Independent review compared S3 commits `905ca35..e7fffe2` and the repair candidate against the
+  OpenSpec design/specs, shared contracts, DDL, real tests, and predecessor gates. The full finding
+  matrix and disposition are in `s3-foundation-review.md`; no Critical/Important finding remains.
+- First review RED was eight serial database failures plus one contract failure: parent hashes were
+  not bound to parent bytes, assertion endpoints were not bound to record/identity mappings,
+  append-only history allowed bulk truncate, decision history could not cross releases, structured-
+  LLM traces had no storage, and relationship assertions could use canonical endpoints.
+- A default-xdist RED attempt produced one failure plus seven migration setup errors because workers
+  raced the same disposable database. This was classified and fixed as a destructive-test harness
+  defect; the Canonical V2 subtree now selects zero automatic xdist workers, and its default command
+  ran serially.
+- Second review RED added four database failures and two contract failures for mutable parser/source-
+  identity provenance rewrite/delete and self-referential decision lineage. A final review pass added
+  two wrong-subject supersession failures and one wrong-policy contract failure.
+- C2_0003 repairs the complete defect class without rewriting C2_0001/C2_0002: composite artifact
+  hash and record/identity provenance FKs; truncate guards; field-aware parser/source-identity
+  mutation guards; globally unambiguous cross-release decision lineage bound to the same logical
+  subject and never itself; and schema-validated JSONB LLM traces on identity, field, and
+  relationship decisions.
+- Shared contracts now require field-selection policy for canonical decisions, source identities for
+  source-grounded relationship assertions, and non-self decision lineage. Future EvidenceLanding,
+  KnowledgeBuild, and ReleasePublication modules must re-export the shared record/candidate/release
+  types rather than create drift-prone duplicates.
+- Full default Canonical V2 verification was `47 passed, 5 xfailed`; forced RED was exactly five
+  `ModuleNotFoundError` failures for the future deep modules. The real disposable exercised base/
+  C2_0001/C2_0002/C2_0003 downgrade/re-upgrade and all fixture rows rolled back.
+- Two disposable dumps and the durable candidate dump normalized identically to
+  `7d85702ecb0e84cbbbbbc175f88c4b735190e53f4a576c72e49088899dd94991` over 63,875 bytes, removing
+  exactly two random PostgreSQL control lines. Both targets reported 24 shared tables, zero rows,
+  141 constraints, 44 non-internal triggers, and three LLM-trace columns at C2_0003.
+- Durable candidate `miroflow_canonical_v2_candidate_s3b` was forward-upgraded only after GREEN and
+  exact gate/name/marker/system/network/volume proof. The test-only disposable was then dropped.
+- S1 safety was `10 passed, 5 explicit skips`; S2/S2B was `32 passed`; Ruff passed; Pyright reported
+  zero findings; strict OpenSpec and diff checks passed. Formal admission remained `accepted/50`.
+  Original `pgtest` stayed paused on its exact volume, recovery lab stayed network-none/no-port, and
+  original Milvus/salvage hashes matched.
+- Task 3.5 and all S3 are Accepted under the user's objective-verification self-approval
+  authorization. Task 4.1 remains unstarted until its own Ready slice.
+- Final read-only invariant check at `2026-07-11T18:25:59Z` re-proved formal admission
+  `accepted/50`, candidate C2_0003/24 tables/zero rows/141 constraints/44 triggers, disposable
+  absence, original pause/volume, recovery isolation, and both source hashes.
+
+## Task 3.5 pattern-fix report
+
+- Reported cases fixed: audit-chain gaps across interface types, artifact/record identity,
+  append-only/mutable history, reversible decisions, LLM trace storage, and test concurrency.
+- Defect class: typed audit intent was present in names/models but not closed across interface,
+  storage, cross-release lineage, bulk mutation, and test-execution boundaries.
+- Sibling search: all three decision families, every append-only/mutable history table, all source-
+  assertion endpoint paths, all Task 3.1 shared-type candidates, and all Canonical V2 destructive
+  migration tests.
+- Sibling issues found/fixed: three trace columns/checks, three decision lineage families, nineteen
+  append-only truncate triggers, two mutable-history field/delete guards, artifact plus three
+  assertion provenance FKs, three shared public type exports, and one subtree-wide xdist guard.
+- Not fixed: later-slice repositories still own association cardinality and transactional build
+  semantics; ReleasePublication owns verification/state authorization; domain/ops storage remains
+  intentionally absent. None is exposed as accepted behavior in S3.
+- New invariant/helper/contract/test: C2_0003 plus real RED/GREEN matrix; shared-contract validators;
+  default-serial Canonical V2 DB tests; deterministic matched candidate/disposable fingerprint.
+- Remaining systemic risk: later writers must enter through the shared typed/deep-module seams and
+  add their own real transaction tests; direct caller SQL is not an accepted interface.
 
 ## Explicit non-claims
 

@@ -7,6 +7,8 @@ from typing import Any
 
 import pytest
 
+from src.data_agents.canonical_v2.contracts import SourceRecord as SharedSourceRecord
+
 
 RED_REASON = "Task 3.1 RED: Canonical V2 EvidenceLanding interface is not implemented"
 
@@ -14,6 +16,7 @@ RED_REASON = "Task 3.1 RED: Canonical V2 EvidenceLanding interface is not implem
 @pytest.mark.xfail(strict=True, raises=ModuleNotFoundError, reason=RED_REASON)
 def test_evidence_landing_ingest_and_stream_preserve_byte_identity_and_lineage() -> None:
     module: Any = import_module("src.data_agents.canonical_v2.evidence_landing")
+    assert module.SourceRecord is SharedSourceRecord
     content = b'{"source_id":"paper-1","title":"Evidence first"}\n'
     digest = hashlib.sha256(content).hexdigest()
     observed_at = datetime(2026, 7, 11, tzinfo=timezone.utc)
@@ -43,12 +46,18 @@ def test_evidence_landing_ingest_and_stream_preserve_byte_identity_and_lineage()
             assert source_batch_id == request.source_batch_id
             return (
                 module.SourceRecord(
+                    record_id="record-paper-1",
                     artifact_id=f"sha256:{digest}",
                     source_batch_id=source_batch_id,
                     record_locator="line:1",
+                    parser_name="jsonl",
+                    parser_version="parser-v1",
+                    schema_version="paper-v1",
+                    parse_run_id="parse-run-1",
                     parse_status="parsed",
                     payload={"source_id": "paper-1", "title": "Evidence first"},
                     errors=(),
+                    parsed_at=observed_at,
                 ),
             )
 

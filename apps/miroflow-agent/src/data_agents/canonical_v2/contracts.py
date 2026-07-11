@@ -324,8 +324,12 @@ class CanonicalDecision(ContractModel):
                 )
         if self.state is DecisionState.rejected and self.selected_assertion_ids:
             raise ValueError("rejected decision cannot select an assertion")
+        if self.policy.policy_kind is not PolicyKind.field_selection:
+            raise ValueError("canonical decision requires a field-selection policy")
         if self.method is DecisionMethod.structured_llm and self.llm_trace is None:
             raise ValueError("structured_llm decision requires an LLM decision trace")
+        if self.supersedes_decision_id == self.decision_id:
+            raise ValueError("canonical decision cannot supersede itself")
         return self
 
 
@@ -426,6 +430,8 @@ class IdentityDecision(ContractModel):
                 raise ValueError("reverse requires input and output identity lineage")
         if self.method is DecisionMethod.structured_llm and self.llm_trace is None:
             raise ValueError("structured_llm identity decision requires an LLM trace")
+        if self.reversal_of_decision_id == self.decision_id:
+            raise ValueError("identity decision cannot reverse itself")
         return self
 
 
@@ -489,6 +495,13 @@ class RelationshipAssertion(ContractModel):
 
     @model_validator(mode="after")
     def validate_validity(self) -> RelationshipAssertion:
+        if (
+            self.source_endpoint.identity_space is not IdentitySpace.source
+            or self.target_endpoint.identity_space is not IdentitySpace.source
+        ):
+            raise ValueError(
+                "source-grounded relationship assertions require source identities"
+            )
         _validate_interval(self.valid_from, self.valid_to)
         return self
 
@@ -545,6 +558,8 @@ class RelationshipDecision(ContractModel):
             raise ValueError("relationship decision requires a relationship policy")
         if self.method is DecisionMethod.structured_llm and self.llm_trace is None:
             raise ValueError("structured_llm relationship decision requires an LLM trace")
+        if self.supersedes_decision_id == self.decision_id:
+            raise ValueError("relationship decision cannot supersede itself")
         _validate_interval(self.valid_from, self.valid_to)
         return self
 

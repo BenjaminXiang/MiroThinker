@@ -21,7 +21,7 @@
 - [x] 3.2 After task 2.6 is Accepted, create the clean Canonical V2 migration baseline in a new isolated database with landing, shared knowledge, typed domain, publish, and ops schemas.
 - [x] 3.3 Implement shared typed contracts for artifacts, source records/assertions, canonical decisions, identities, relationship types/decisions, policies, gaps, releases, and manifests.
 - [x] 3.4 Add schema and migration integration tests for foreign keys, uniqueness, append-only evidence, reversible decisions, release scoping, and rollback.
-- [ ] 3.5 Review/accept the database/interface foundation before source adapters or domain builders depend on it.
+- [x] 3.5 Review/accept the database/interface foundation before source adapters or domain builders depend on it.
 
 ## 4. Immutable Evidence Landing
 

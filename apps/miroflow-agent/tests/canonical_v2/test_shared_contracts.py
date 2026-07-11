@@ -221,6 +221,20 @@ def test_canonical_decision_can_select_evidence_or_preserve_unresolved_conflict(
                 "selected_assertion_ids": ("assertion-not-a-candidate",),
             }
         )
+    with pytest.raises(ValidationError, match="field-selection policy"):
+        module.CanonicalDecision(
+            **{
+                **selected.model_dump(),
+                "policy": _policy(module, "identity"),
+            }
+        )
+    with pytest.raises(ValidationError, match="itself"):
+        module.CanonicalDecision(
+            **{
+                **selected.model_dump(),
+                "supersedes_decision_id": selected.decision_id,
+            }
+        )
 
 
 def test_source_and_canonical_identities_keep_merge_split_and_reversal_lineage() -> None:
@@ -291,6 +305,13 @@ def test_source_and_canonical_identities_keep_merge_split_and_reversal_lineage()
             **{
                 **merge.model_dump(),
                 "input_canonical_identity_ids": ("company-c1",),
+            }
+        )
+    with pytest.raises(ValidationError, match="itself"):
+        module.IdentityDecision(
+            **{
+                **reversal.model_dump(),
+                "reversal_of_decision_id": reversal.decision_id,
             }
         )
 
@@ -409,6 +430,24 @@ def test_relationship_assertion_and_decision_keep_endpoint_evidence_and_conflict
     with pytest.raises(ValidationError, match="accepted relationship"):
         module.RelationshipDecision(
             **{**decision.model_dump(), "selected_assertion_ids": ()}
+        )
+    with pytest.raises(ValidationError, match="source identities"):
+        module.RelationshipAssertion(
+            **{
+                **assertion.model_dump(),
+                "target_endpoint": module.IdentityReference(
+                    identity_id="company-c1",
+                    identity_space="canonical",
+                    entity_type="company",
+                ),
+            }
+        )
+    with pytest.raises(ValidationError, match="itself"):
+        module.RelationshipDecision(
+            **{
+                **decision.model_dump(),
+                "supersedes_decision_id": decision.decision_id,
+            }
         )
 
 

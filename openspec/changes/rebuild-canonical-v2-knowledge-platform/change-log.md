@@ -56,3 +56,8 @@
   scope, pointer, transaction, and downgrade/re-upgrade tests. The empty durable candidate was
   forward-upgraded only; a deterministic pg_dump fingerprint repair also replaced volatile raw
   schema hashes and made destructive baseline tests disposable-only.
+- Completed and accepted task 3.5/S3 after independent review. C2_0003 repairs hash-bound parent
+  lineage, record/identity provenance, bulk and mutable-history erasure, cross-release/self/wrong-
+  subject decision lineage, and persisted structured-LLM traces; strict RED interfaces now reuse
+  shared types, and the Canonical V2 test subtree prevents default xdist migration races. The empty
+  durable candidate matches the reviewed disposable fingerprint and remains isolated at C2_0003.
