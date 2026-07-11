@@ -21,11 +21,7 @@ from sqlalchemy.engine import make_url
 APP_ROOT = Path(__file__).resolve().parents[2]
 ALEMBIC_INI = APP_ROOT / "canonical_v2_alembic.ini"
 SCRIPT_LOCATION = APP_ROOT / "canonical_v2_alembic"
-EXPECTED_REVISION = "C2_0003"
-EXPECTED_DATABASE = "miroflow_canonical_v2_s3d_disposable"
-EXPECTED_MARKER = (
-    "miroflow:destructive-target:v1:disposable:miroflow_canonical_v2_s3d_disposable"
-)
+EXPECTED_REVISION = "C2_0004"
 NOW = datetime(2026, 7, 11, 17, 30, tzinfo=timezone.utc)
 BUSINESS_SCHEMAS = {
     "landing",
@@ -42,6 +38,7 @@ EXPECTED_SHARED_TABLES = {
     ("landing", "parser_run"),
     ("landing", "source_record"),
     ("landing", "source_error"),
+    ("landing", "ingest_run"),
     ("knowledge", "release"),
     ("knowledge", "policy"),
     ("knowledge", "source_identity"),
@@ -131,8 +128,12 @@ def _verify_target(connection: psycopg.Connection[Any]) -> None:
         "shobj_description(oid, 'pg_database') "
         "FROM pg_database WHERE datname = current_database()"
     ).fetchone()  # type: ignore[misc]
-    assert actual_database == EXPECTED_DATABASE
-    assert marker == EXPECTED_MARKER
+    expected_database = os.environ["CANONICAL_V2_TEST_EXPECTED_DATABASE"]
+    target_kind = os.environ["CANONICAL_V2_TEST_TARGET_KIND"]
+    assert actual_database == expected_database
+    assert marker == (
+        f"miroflow:destructive-target:v1:{target_kind}:{expected_database}"
+    )
     connection.rollback()
 
 
@@ -141,7 +142,6 @@ def target(monkeypatch: pytest.MonkeyPatch) -> Iterator[_Target]:
     database_url, expected_database, target_kind, backup_gate_root = (
         _explicit_environment()
     )
-    assert expected_database == EXPECTED_DATABASE
     assert target_kind == "disposable"
     _prepare_environment(monkeypatch)
     config = _migration_config(
@@ -239,8 +239,8 @@ def _insert_artifact_graph(connection: psycopg.Connection[Any]) -> dict[str, str
     connection.execute(
         "INSERT INTO landing.source_record "
         "(record_id, artifact_id, source_batch_id, record_locator, parse_run_id, "
-        "parse_status, payload, parsed_at) "
-        "VALUES (%s, %s, 'batch-1', 'line:1', %s, 'parsed', %s, %s)",
+        "record_ordinal, parse_status, payload, parsed_at) "
+        "VALUES (%s, %s, 'batch-1', 'line:1', %s, 0, 'parsed', %s, %s)",
         (
             values["record_id"],
             values["artifact_id"],
@@ -325,7 +325,7 @@ def _insert_relationship_type(connection: psycopg.Connection[Any]) -> None:
     )
 
 
-def test_c2_0003_is_current_and_shared_tables_exist(target: _Target) -> None:
+def test_current_head_and_shared_tables_exist(target: _Target) -> None:
     scripts = ScriptDirectory.from_config(target.config)
     assert scripts.get_revision(EXPECTED_REVISION) is not None
     assert target.connection.execute(
@@ -349,9 +349,9 @@ def test_foreign_keys_and_logical_uniqueness_reject_orphans_and_replay(
         errors.ForeignKeyViolation,
         "INSERT INTO landing.source_record "
         "(record_id, artifact_id, source_batch_id, record_locator, parse_run_id, "
-        "parse_status, payload, parsed_at) "
+        "record_ordinal, parse_status, payload, parsed_at) "
         "VALUES ('orphan-record', 'missing-artifact', 'batch-1', 'line:2', "
-        "'missing-run', 'parsed', '{}'::jsonb, %s)",
+        "'missing-run', 1, 'parsed', '{}'::jsonb, %s)",
         (NOW,),
     )
     _assert_database_error(
@@ -359,8 +359,8 @@ def test_foreign_keys_and_logical_uniqueness_reject_orphans_and_replay(
         errors.UniqueViolation,
         "INSERT INTO landing.source_record "
         "(record_id, artifact_id, source_batch_id, record_locator, parse_run_id, "
-        "parse_status, payload, parsed_at) "
-        "VALUES ('record-replay', %s, 'batch-1', 'line:1', %s, 'parsed', "
+        "record_ordinal, parse_status, payload, parsed_at) "
+        "VALUES ('record-replay', %s, 'batch-1', 'line:1', %s, 1, 'parsed', "
         "'{}'::jsonb, %s)",
         (values["artifact_id"], values["parse_run_id"], NOW),
     )
@@ -1073,7 +1073,6 @@ def test_zz_shared_storage_downgrades_to_empty_baseline_and_reupgrades(
     database_url, expected_database, target_kind, backup_gate_root = (
         _explicit_environment()
     )
-    assert expected_database == EXPECTED_DATABASE
     assert target_kind == "disposable"
     _prepare_environment(monkeypatch)
     config = _migration_config(

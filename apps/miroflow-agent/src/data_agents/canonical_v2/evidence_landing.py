@@ -37,6 +37,10 @@ class EvidenceIntegrityError(EvidenceLandingError):
     """Evidence bytes or lineage do not match their declared identity."""
 
 
+class EvidenceLandingPersistenceError(EvidenceLandingError):
+    """A durable landing transaction failed before becoming visible."""
+
+
 class SourceAdapterError(EvidenceLandingError):
     """A configured source adapter cannot safely interpret the supplied input."""
 
@@ -142,6 +146,36 @@ class SourceAdapter(Protocol):
         ...
 
 
+@dataclass(frozen=True, slots=True)
+class PreparedLandingRun:
+    request_fingerprint: str
+    output_fingerprint: str
+    artifact: EvidenceArtifact
+    parser: ParserReference
+    receipt: LandingReceipt
+    records: tuple[SourceRecord, ...]
+
+
+class LandingRepository(Protocol):
+    def assert_admissible(
+        self,
+        *,
+        run_id: str,
+        request_fingerprint: str,
+        artifact: EvidenceArtifact,
+    ) -> None:
+        """Reject known run or lineage conflicts before parsing."""
+        ...
+
+    def commit(self, prepared: PreparedLandingRun) -> LandingReceipt:
+        """Atomically retain or idempotently return one complete prepared run."""
+        ...
+
+    def stream(self, source_batch_id: str) -> tuple[SourceRecord, ...]:
+        """Reconstruct detached records in committed parser-output order."""
+        ...
+
+
 class EvidenceLanding(ABC):
     """Deep public seam for immutable evidence registration and replay."""
 
@@ -163,7 +197,7 @@ class _CommittedRun:
 
 
 class _EphemeralLandingRepository:
-    """Atomic in-memory adapter used until Task 4.3 supplies PostgreSQL persistence."""
+    """Atomic in-memory adapter for local conformance and unit use."""
 
     def __init__(self) -> None:
         self.lock = RLock()
@@ -171,6 +205,59 @@ class _EphemeralLandingRepository:
         self.artifact_ids_by_source: dict[tuple[str, str, str], str] = {}
         self.runs_by_run_id: dict[str, _CommittedRun] = {}
         self.records_by_batch: dict[str, list[SourceRecord]] = {}
+
+    def assert_admissible(
+        self,
+        *,
+        run_id: str,
+        request_fingerprint: str,
+        artifact: EvidenceArtifact,
+    ) -> None:
+        with self.lock:
+            previous_run = self.runs_by_run_id.get(run_id)
+            if (
+                previous_run is not None
+                and previous_run.request_fingerprint != request_fingerprint
+            ):
+                raise EvidenceIntegrityError(
+                    "one landing run_id cannot identify different evidence or parser output"
+                )
+            _registered_artifact_for_lineage(self, artifact)
+
+    def commit(self, prepared: PreparedLandingRun) -> LandingReceipt:
+        with self.lock:
+            previous_run = self.runs_by_run_id.get(prepared.receipt.run_id)
+            if previous_run is not None:
+                if previous_run.fingerprint != prepared.output_fingerprint:
+                    raise EvidenceIntegrityError(
+                        "one landing run_id cannot identify different evidence or parser output"
+                    )
+                return previous_run.receipt
+
+            artifact = _registered_artifact_for_lineage(self, prepared.artifact)
+            if artifact is None:
+                artifact = prepared.artifact
+                self.artifacts[artifact.artifact_id] = artifact
+                self.artifact_ids_by_source[_artifact_key(artifact)] = (
+                    artifact.artifact_id
+                )
+            self.records_by_batch.setdefault(
+                prepared.receipt.source_batch_id, []
+            ).extend(prepared.records)
+            self.runs_by_run_id[prepared.receipt.run_id] = _CommittedRun(
+                request_fingerprint=prepared.request_fingerprint,
+                fingerprint=prepared.output_fingerprint,
+                receipt=prepared.receipt,
+                records=prepared.records,
+            )
+            return prepared.receipt
+
+    def stream(self, source_batch_id: str) -> tuple[SourceRecord, ...]:
+        with self.lock:
+            return tuple(
+                record.model_copy(deep=True)
+                for record in self.records_by_batch.get(source_batch_id, ())
+            )
 
 
 def _stable_id(prefix: str, *parts: str) -> str:
@@ -243,31 +330,38 @@ def _landing_status(records: tuple[SourceRecord, ...]) -> LandingStatus:
     return LandingStatus.partial
 
 
+def _artifact_key(artifact: EvidenceArtifact) -> tuple[str, str, str]:
+    return (
+        artifact.source_kind,
+        artifact.source_locator,
+        artifact.content_sha256,
+    )
+
+
 def _registered_artifact_for_lineage(
     repository: _EphemeralLandingRepository,
-    request: IngestEvidenceRequest,
-    *,
-    artifact_key: tuple[str, str, str],
-    artifact_id: str,
+    artifact: EvidenceArtifact,
 ) -> EvidenceArtifact | None:
-    if request.parent_artifact_id is not None:
-        parent = repository.artifacts.get(request.parent_artifact_id)
+    if artifact.parent_artifact_id is not None:
+        parent = repository.artifacts.get(artifact.parent_artifact_id)
         if parent is None:
             raise EvidenceIntegrityError("parent artifact is not registered")
-        if parent.content_sha256 != request.parent_content_sha256:
+        if parent.content_sha256 != artifact.parent_content_sha256:
             raise EvidenceIntegrityError(
                 "parent content hash does not match the registered parent artifact"
             )
-        if parent.artifact_id == artifact_id:
+        if parent.artifact_id == artifact.artifact_id:
             raise EvidenceIntegrityError("an artifact cannot be its own parent")
 
-    existing_artifact_id = repository.artifact_ids_by_source.get(artifact_key)
+    existing_artifact_id = repository.artifact_ids_by_source.get(
+        _artifact_key(artifact)
+    )
     if existing_artifact_id is None:
         return None
     existing_artifact = repository.artifacts[existing_artifact_id]
     if (
-        existing_artifact.parent_artifact_id != request.parent_artifact_id
-        or existing_artifact.parent_content_sha256 != request.parent_content_sha256
+        existing_artifact.parent_artifact_id != artifact.parent_artifact_id
+        or existing_artifact.parent_content_sha256 != artifact.parent_content_sha256
     ):
         raise EvidenceIntegrityError(
             "registered artifact lineage conflicts with the existing artifact"
@@ -281,7 +375,7 @@ class EvidenceLandingService(EvidenceLanding):
     def __init__(
         self,
         *,
-        repository: _EphemeralLandingRepository,
+        repository: LandingRepository,
         adapters: Iterable[SourceAdapter],
     ) -> None:
         self._repository = repository
@@ -312,33 +406,33 @@ class EvidenceLandingService(EvidenceLanding):
             parser=request.parser,
         )
         adapter.validate_source(adapter_input)
-        artifact_key = (
+        artifact_id = _stable_id(
+            "artifact",
             request.source_kind,
             request.source_locator,
             content_sha256,
         )
-        artifact_id = _stable_id("artifact", *artifact_key)
+        artifact = EvidenceArtifact(
+            artifact_id=artifact_id,
+            source_kind=request.source_kind,
+            source_locator=request.source_locator,
+            content_sha256=content_sha256,
+            byte_size=len(request.content),
+            acquired_at=request.observed_at,
+            run_id=request.run_id,
+            parent_artifact_id=request.parent_artifact_id,
+            parent_content_sha256=request.parent_content_sha256,
+        )
         request_fingerprint = _request_fingerprint(
             request,
             artifact_id=artifact_id,
             content_sha256=content_sha256,
         )
-        repository = self._repository
-        with repository.lock:
-            previous_run = repository.runs_by_run_id.get(request.run_id)
-            if (
-                previous_run is not None
-                and previous_run.request_fingerprint != request_fingerprint
-            ):
-                raise EvidenceIntegrityError(
-                    "one landing run_id cannot identify different evidence or parser output"
-                )
-            _registered_artifact_for_lineage(
-                repository,
-                request,
-                artifact_key=artifact_key,
-                artifact_id=artifact_id,
-            )
+        self._repository.assert_admissible(
+            run_id=request.run_id,
+            request_fingerprint=request_fingerprint,
+            artifact=artifact,
+        )
 
         drafts = tuple(adapter.parse(adapter_input))
         locators = tuple(draft.record_locator for draft in drafts)
@@ -356,93 +450,55 @@ class EvidenceLandingService(EvidenceLanding):
             request.parser.parser_version,
             request.parser.schema_version,
         )
-        fingerprint = _run_fingerprint(request_fingerprint, drafts)
-
-        with repository.lock:
-            previous_run = repository.runs_by_run_id.get(request.run_id)
-            if previous_run is not None:
-                if previous_run.fingerprint != fingerprint:
-                    raise EvidenceIntegrityError(
-                        "one landing run_id cannot identify different evidence or parser output"
-                    )
-                return previous_run.receipt
-
-            artifact = _registered_artifact_for_lineage(
-                repository,
-                request,
-                artifact_key=artifact_key,
-                artifact_id=artifact_id,
-            )
-            if artifact is None:
-                artifact = EvidenceArtifact(
-                    artifact_id=artifact_id,
-                    source_kind=request.source_kind,
-                    source_locator=request.source_locator,
-                    content_sha256=content_sha256,
-                    byte_size=len(request.content),
-                    acquired_at=request.observed_at,
-                    run_id=request.run_id,
-                    parent_artifact_id=request.parent_artifact_id,
-                    parent_content_sha256=request.parent_content_sha256,
-                )
-
-            records = tuple(
-                SourceRecord(
-                    record_id=_stable_id(
-                        "record",
-                        parse_run_id,
-                        draft.record_locator,
-                        _record_fingerprint(draft),
-                    ),
-                    artifact_id=artifact.artifact_id,
-                    source_batch_id=request.source_batch_id,
-                    record_locator=draft.record_locator,
-                    parser_name=request.parser.parser_name,
-                    parser_version=request.parser.parser_version,
-                    schema_version=request.parser.schema_version,
-                    parse_run_id=parse_run_id,
-                    parse_status=draft.parse_status,
-                    payload=draft.payload,
-                    errors=draft.errors,
-                    parsed_at=request.observed_at,
-                )
-                for draft in drafts
-            )
-            receipt = LandingReceipt(
-                run_id=request.run_id,
-                source_batch_id=request.source_batch_id,
+        output_fingerprint = _run_fingerprint(request_fingerprint, drafts)
+        records = tuple(
+            SourceRecord(
+                record_id=_stable_id(
+                    "record",
+                    parse_run_id,
+                    draft.record_locator,
+                    _record_fingerprint(draft),
+                ),
                 artifact_id=artifact.artifact_id,
-                content_sha256=content_sha256,
-                bytes_written=len(request.content),
-                status=_landing_status(records),
+                source_batch_id=request.source_batch_id,
+                record_locator=draft.record_locator,
+                parser_name=request.parser.parser_name,
+                parser_version=request.parser.parser_version,
+                schema_version=request.parser.schema_version,
                 parse_run_id=parse_run_id,
-                record_count=len(records),
-                parent_artifact_id=request.parent_artifact_id,
-                parent_content_sha256=request.parent_content_sha256,
-                active_release_id=None,
+                parse_status=draft.parse_status,
+                payload=draft.payload,
+                errors=draft.errors,
+                parsed_at=request.observed_at,
             )
-
-            # Commit only after all validation and typed construction succeeds.
-            if artifact.artifact_id not in repository.artifacts:
-                repository.artifacts[artifact.artifact_id] = artifact
-                repository.artifact_ids_by_source[artifact_key] = artifact.artifact_id
-            repository.records_by_batch.setdefault(request.source_batch_id, []).extend(
-                records
-            )
-            repository.runs_by_run_id[request.run_id] = _CommittedRun(
+            for draft in drafts
+        )
+        receipt = LandingReceipt(
+            run_id=request.run_id,
+            source_batch_id=request.source_batch_id,
+            artifact_id=artifact.artifact_id,
+            content_sha256=content_sha256,
+            bytes_written=len(request.content),
+            status=_landing_status(records),
+            parse_run_id=parse_run_id,
+            record_count=len(records),
+            parent_artifact_id=request.parent_artifact_id,
+            parent_content_sha256=request.parent_content_sha256,
+            active_release_id=None,
+        )
+        return self._repository.commit(
+            PreparedLandingRun(
                 request_fingerprint=request_fingerprint,
-                fingerprint=fingerprint,
+                output_fingerprint=output_fingerprint,
+                artifact=artifact,
+                parser=request.parser,
                 receipt=receipt,
                 records=records,
             )
-            return receipt
+        )
 
     def stream(self, source_batch_id: str) -> tuple[SourceRecord, ...]:
-        with self._repository.lock:
-            return tuple(
-                record.model_copy(deep=True)
-                for record in self._repository.records_by_batch.get(source_batch_id, ())
-            )
+        return self._repository.stream(source_batch_id)
 
 
 def create_ephemeral_evidence_landing() -> EvidenceLanding:
@@ -459,6 +515,7 @@ __all__ = [
     "EvidenceIntegrityError",
     "EvidenceLanding",
     "EvidenceLandingError",
+    "EvidenceLandingPersistenceError",
     "IngestEvidenceRequest",
     "LandingReceipt",
     "LandingStatus",

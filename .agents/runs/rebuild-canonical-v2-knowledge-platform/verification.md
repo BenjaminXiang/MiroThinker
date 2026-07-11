@@ -13,8 +13,10 @@ contracts were Accepted at `2026-07-11T17:15:42Z`. Task 3.4's C2_0002 shared sch
 foundation at `2026-07-11T18:22:18Z`; the isolated candidate is at reviewed head C2_0003 with zero
 business rows. Task 4.1's immutable-landing strict RED contract was Accepted at
 `2026-07-11T18:33:37Z`. Task 4.2's storage-independent EvidenceLanding core and source adapters were
-Accepted at `2026-07-11T19:06:55Z`; task 4.3 is next but has not started. No durable landing
-evidence, publication projection, or index write has begun.
+Accepted at `2026-07-11T19:06:55Z`. Task 4.3's C2_0004 and PostgreSQL repository were Accepted at
+`2026-07-11T19:42:20Z` on a subsequently deleted disposable database; task 4.4 is next. The durable
+candidate remains read-only at C2_0003 with no landing evidence, publication projection, or index
+write.
 
 ## Existing incident/recovery checkpoint used as planning evidence
 
@@ -735,6 +737,77 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   provenance regressions, strict JSON loader, and non-shared parser defaults.
 - Remaining systemic risk: adapters added later must apply the same pre-construction uniqueness and
   typed-degradation rules; Task 4.3 must re-prove atomicity/idempotency against real PostgreSQL.
+
+## S4C task 4.3 durable EvidenceLanding — 2026-07-11T19:42:20Z
+
+- The Task 4.2 core now depends on a small repository protocol for pre-parse admissibility, atomic
+  prepared-run commit, and ordered stream. Hashing, adapter behavior, typed records, receipts, and
+  the `EvidenceLanding.ingest/stream` seam remain shared by the ephemeral and PostgreSQL adapters;
+  storage table/SQL details do not enter the caller interface.
+- Initial RED was exactly `6 failed`: Alembic could not resolve C2_0004, four real behavior paths
+  could not import `evidence_landing_postgres`, and the forced-rollback path lacked a persistence
+  error type. The explicit Unix-socket DSN addressed only the newly marked
+  `miroflow_canonical_v2_s4c_disposable`; generic `DATABASE_URL` was deliberately set to forbidden
+  `localhost:15432/miroflow_real` and was not selected.
+- C2_0004 adds immutable `landing.ingest_run`, `parser_run.parser_options`, and
+  `source_record.record_ordinal` plus composite lineage/parser FKs, fingerprint/status/count checks,
+  uniqueness, and append-only/immutable triggers. Its upgrade transaction refuses any nonempty
+  C2_0003 landing because original run identities cannot be reconstructed without invention. A real
+  RED proved the old migration silently accepted such a row; GREEN proved the failed upgrade leaves
+  both C2_0003 revision and original artifact intact.
+- The PostgreSQL factory first requires an absolute exact Accepted S2B gate root, then resolves only
+  explicit target URL/name/kind, verifies connected database name/marker and C2_0004, and rechecks
+  the gate before every write connection. A relative path to the real Accepted root failed RED only
+  after attempting DNS; the reordered gate now rejects it before connect. A read-only probe of the
+  durable candidate correctly rejected its intentional C2_0003 revision without writing it.
+- Commit takes a transaction-scoped advisory lock per run ID, rechecks request/output fingerprints
+  and artifact lineage, then atomically inserts artifact, parser configuration, ordered records,
+  ordered errors, and the ingest-run receipt. Exact concurrent repeats commit once; conflicting
+  repeats add nothing; distinct concurrent runs share one artifact without losing either replay;
+  a forced record-insert trigger rolls back every preceding row.
+- Restart/replay reconstructs parser/schema identity, record order, payloads, and ordered typed
+  errors through shared contracts. `ingest_run` rejects update/delete/truncate and parser options
+  reject rewrite. Python's non-standard `NaN/Infinity` JSON behavior was found at the PostgreSQL
+  boundary: two REDs showed ephemeral false-parse and JSONB batch failure; the shared strict loader
+  now quarantines those records as corrupt while the batch commits.
+- Final real disposable verification was `34 passed`, including repeated C2_0001↔C2_0004
+  downgrade/re-upgrade, all prior shared-integrity tests, nine Task 4.3 scenarios, concurrency, and
+  transaction rollback. Focused ephemeral landing was `17 passed`. Default no-DB Canonical V2 was
+  `41 passed, 32 explicit skips, 4 xfailed`; forced interfaces remained exactly one EvidenceLanding
+  pass plus four missing future modules. S1 was `10 passed, 5 explicit skips`; S2/S2B was
+  `32 passed`; Ruff check/format, Pyright, strict OpenSpec, and diff checks passed.
+- Immediately before deletion, the disposable matched its marker/system ID at C2_0004 with 25
+  tables, 153 constraints, 46 non-internal triggers, both required landing columns, and zero total
+  business rows. It was then dropped and its database count became zero. The durable candidate
+  remained C2_0003/24 tables/zero rows; no actual source was replayed and no Milvus/provider,
+  canonical, publication, index, dependency, or legacy runtime state changed.
+- Task 4.3 is Accepted under the user's objective-verification self-approval authorization. This
+  accepts durable module behavior and disposable migration evidence only; S4 remains unaccepted,
+  task 4.4 must separately upgrade/populate the isolated candidate from a bounded verified source
+  matrix, and no production-like cutover is authorized.
+
+## Task 4.3 pattern-fix report
+
+- Reported cases fixed: in-memory-only idempotency/replay, cross-process run and artifact races,
+  partial transaction visibility, mutable ingest/parser history, relative gate acceptance,
+  unaccounted nonempty schema upgrade, and non-standard JSON crossing the Python/JSONB boundary.
+- Defect class: correct local evidence semantics were not yet closed across process, transaction,
+  migration, target-admission, serialization, and database-constraint boundaries.
+- Sibling search: request/output/artifact identities; same/different-run concurrency; parser options,
+  record/error order, every landing mutation trigger; gate-root and target/revision checks; C2_0003
+  upgrade states; all JSON-based source adapters.
+- Sibling issues found/fixed: one repository seam and advisory-locked transaction; persisted complete
+  run identity/configuration/order; append-only ingest/parser guards; absolute gate-before-connect;
+  candidate revision refusal; fail-closed nonempty upgrade; strict duplicate and non-finite JSON.
+- Not fixed: actual verified-source format/count compatibility, source-matrix throughput/capacity,
+  landing checkpoint hash/count summaries, and durable candidate C2_0004 upgrade belong to tasks 4.4
+  and 4.5. None is claimed by Task 4.3.
+- New invariant/helper/contract/test: C2_0004 empty-landing admission; PostgreSQL repository protocol;
+  restart/concurrency/rollback matrices; cross-layer strict JSON tests; per-test migration reset;
+  explicit read-only candidate-behind-head rejection.
+- Remaining systemic risk: Task 4.4 must use this public factory with the exact gate/target inputs,
+  verify real source bytes before parsing, and prove bounded replay counts/errors without bypassing
+  the repository or directly inserting landing rows.
 
 ## Explicit non-claims
 

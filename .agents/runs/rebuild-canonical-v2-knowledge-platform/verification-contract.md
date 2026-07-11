@@ -7,9 +7,10 @@ their corpus/ground-truth/threshold policy are Accepted. S2B/task 2.6 is Accepte
 manifest `a14c1eab…e59c8`, restore verification `98826e8d…d231`, and acceptance record
 `3155d890…fc5b`. Tasks 3.1–3.5 and the complete S3 interface/database foundation are Accepted;
 C2_0003 is the reviewed shared-foundation head. Task 4.1's four immutable-landing strict RED
-scenarios and task 4.2's storage-independent EvidenceLanding/source adapters are Accepted. Task 4.3
-is next but has not started. No durable landing evidence, canonical business row, published
-projection, or index write has begun.
+scenarios and task 4.2's storage-independent EvidenceLanding/source adapters are Accepted. Task
+4.3's PostgreSQL persistence is Accepted; C2_0004 is verified only on a deleted disposable, while
+the durable candidate intentionally remains C2_0003. Task 4.4 is next but has not started. No actual
+source landing evidence, canonical business row, published projection, or index write has begun.
 
 ## Behavior owner
 
@@ -61,7 +62,7 @@ cannot mutate offline canonical identity decisions.
   inventoried historical SQLite/JSONL/XLSX/PDF/cache/raw-source families. Restore targets must be
   distinct from original and backup locations; original volumes/files remain read-only.
 
-Last identity/hash check recorded in `verification.md`: `2026-07-11T19:06:55Z`.
+Last identity/hash check recorded in `verification.md`: `2026-07-11T19:42:20Z`.
 
 ## Hard invariants
 

@@ -45,8 +45,16 @@ def _unique_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     return value
 
 
+def _reject_json_constant(value: str) -> None:
+    raise _StrictJsonError(f"JSON contains non-standard numeric constant {value!r}")
+
+
 def _load_json(content: bytes) -> Any:
-    return json.loads(content, object_pairs_hook=_unique_json_object)
+    return json.loads(
+        content,
+        object_pairs_hook=_unique_json_object,
+        parse_constant=_reject_json_constant,
+    )
 
 
 def _is_aware_iso_timestamp(value: Any) -> bool:

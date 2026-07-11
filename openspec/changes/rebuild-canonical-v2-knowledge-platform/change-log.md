@@ -74,3 +74,11 @@
   source-identifier, and response-provenance defect classes across sibling paths. No durable landing
   row, source, Milvus client, provider, canonical, publication, index, or runtime consumer was
   touched; task 4.3 remains the persistence boundary.
+- Completed and accepted task 4.3. C2_0004 adds an immutable ingest-run identity, parser options,
+  ordered record positions, and fail-closed nonempty-C2_0003 admission; a PostgreSQL repository now
+  verifies the Accepted backup gate, explicit target marker, and revision before transactionally
+  retaining artifact/parser/record/error/run state. Restart, exact/conflicting/concurrent runs,
+  shared-artifact races, parent/parser replay, append-only guards, forced rollback, relative-gate
+  rejection, and invalid-JSON degradation passed on a new disposable database. The disposable was
+  deleted; the durable candidate remains untouched at C2_0003/zero rows, and task 4.4 remains the
+  actual-source replay boundary.

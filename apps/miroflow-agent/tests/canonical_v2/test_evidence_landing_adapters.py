@@ -295,6 +295,25 @@ def test_json_source_families_quarantine_duplicate_object_keys() -> None:
         assert record.errors[0].error_kind.value == "corrupt_content"
 
 
+def test_json_source_families_quarantine_nonstandard_numeric_constants() -> None:
+    module = _module()
+    landing = module.create_ephemeral_evidence_landing()
+    receipt = landing.ingest(
+        _request(
+            module,
+            batch="jsonl-nonstandard-number",
+            source_kind="historical_jsonl",
+            parser_name="historical_jsonl",
+            content=b'{"source_id":"paper-nan","score":NaN}\n',
+        )
+    )
+    record = tuple(landing.stream(receipt.source_batch_id))[0]
+
+    assert record.parse_status.value == "corrupt"
+    assert record.payload == {}
+    assert record.errors[0].error_kind.value == "corrupt_content"
+
+
 def test_milvus_adapter_accepts_verified_copy_records_and_rejects_original_source() -> (
     None
 ):

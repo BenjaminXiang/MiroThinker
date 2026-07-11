@@ -27,7 +27,7 @@
 
 - [x] 4.1 Add RED replay/chain-of-custody tests for byte identity, parser versioning, partial/corrupt records, and no placeholder fact invention.
 - [x] 4.2 Implement `EvidenceLanding` plus source adapters for WAL/FPI salvage, historical structured files/databases, Milvus copy records, and newly collected responses.
-- [ ] 4.3 Persist content-addressed artifact manifests, parser runs, record locators, errors, and parent/copy lineage without mutating prior evidence.
+- [x] 4.3 Persist content-addressed artifact manifests, parser runs, record locators, errors, and parent/copy lineage without mutating prior evidence.
 - [ ] 4.4 Replay a bounded representative source matrix into the isolated landing schema and verify hashes/counts/errors against the source inventory.
 - [ ] 4.5 Review/accept the landing slice and checkpoint its database dump/manifest before canonical construction.
 
