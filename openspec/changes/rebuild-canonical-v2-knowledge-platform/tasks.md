@@ -8,7 +8,7 @@
 
 ## 2. Read-only Recovery and Acceptance Baseline
 
-- [ ] 2.1 Complete the read-only source inventory for forensic salvage, historical SQLite/JSONL/XLSX/files, Milvus copy, and recollection-capable sources with counts and hashes.
+- [x] 2.1 Complete the read-only source inventory for forensic salvage, historical SQLite/JSONL/XLSX/files, Milvus copy, and recollection-capable sources with counts and hashes.
 - [ ] 2.2 Build a reviewed source-to-PRD coverage matrix for Professor, Company, Paper, Patent, relationships, evidence fields, and known workbook/PRD scenario families.
 - [ ] 2.3 Establish the frozen regression corpus and versioned challenge corpus from workbook seeds, PRD families, reviewed badcases, and controlled variations.
 - [ ] 2.4 Run the isolated read-only baseline for coverage/reach, Recall@K, Precision@K, ranking, relation paths, answer support, Web provenance, latency, and provider cost.

@@ -11,3 +11,7 @@
   protection, RED/GREEN coverage, and a real isolated upgrade/downgrade cycle.
 - Original Postgres and Milvus remained frozen; no recovery replay, Canonical V2 schema, broad
   migration suite, or cutover was performed.
+- Completed S2 task 2.1 at the S1 checkpoint: deterministic read-only inventory covers authoritative
+  PRDs, workbook/backfills, ignored historical SQLite/JSONL/XLSX/cache/release/PDF families,
+  forensic recovery artifacts, and recovery-database counts. Original Milvus remains hash-only
+  because no verified copy exists.

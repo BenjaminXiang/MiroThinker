@@ -182,7 +182,38 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 
 ## Pending evidence
 
-1. S2 read-only source/corpus baseline and frozen threshold artifact.
+1. S2 source-to-PRD coverage matrix review (task 2.2).
+2. S2 frozen regression/challenge corpus (task 2.3).
+3. S2 baseline report and threshold freeze (tasks 2.4–2.5).
+
+## S2 task 2.1 source inventory — 2026-07-11T07:11:30Z
+
+- Branch/worktree: `canonical-v2-s2-baseline` at accepted S1 commit
+  `a58184cee8d616cbcfc58c942f1b07790fc6ffdb`.
+- Builder version: `canonical-v2-s2-source-inventory-builder-v1`; builder SHA-256
+  `b94c29d6ec177df0dc43419e486e27eb1f6b55637abe05c868378cc57f85150c`.
+- Inventory: `s2/source-inventory.json`, 48 source/family records, SHA-256
+  `83a9e2c82aee4cbe5c02f088ba0fdbf8d15359d87a85bf4ee901b0f58f70fa09`.
+- Five TDD contract tests passed after observed RED failures. They prove byte hashing without source
+  mutation, immutable/read-only SQLite access, Milvus-like hash-only treatment, deterministic family
+  manifests, and committed/ignored/recovery/database source merging.
+- Repeated full generation with identical inputs was byte-identical (`cmp` exit `0`).
+- Recovery sessions used `PGOPTIONS=-c default_transaction_read_only=on` and proved current database,
+  `transaction_read_only=on`, and data directory before counts. Both recovery checkpoints are V042
+  with 42 empty public-domain tables and four salvage tables.
+- Salvage counts: 99,437 distinct Papers; 101,158 distinct Professor-Paper links covering 2,826
+  Professor source IDs and 97,285 Paper IDs; 20,773 field errors; 10 metadata rows.
+- Large historical families include 11,604 Professor fetch-cache files, 26,185 OpenAlex cache files,
+  351 SQLite snapshots, 1,544 data-agent JSONL files, 2,657 PDFs, and 97 Milvus-like files. Family
+  records are content-addressed manifests; S4 must register individual artifact lineage.
+- Original Milvus SHA-256 remained
+  `43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc`.
+  No verified copy was found, so S2 did not open any Milvus client or collection.
+- Original `pgtest` remained `paused=true` on forbidden port `15432` with source volume
+  `d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241`;
+  recovery lab remained network-none with no published ports.
+- No database/file source write, provider call, replay, migration, recollection, or production-code
+  change occurred. Task 2.1 is complete; tasks 2.2–2.5 remain open.
 
 ## Explicit non-claims
 

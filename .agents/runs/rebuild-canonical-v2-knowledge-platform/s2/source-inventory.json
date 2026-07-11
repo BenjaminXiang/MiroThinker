@@ -1,0 +1,957 @@
+{
+  "builder_sha256": "b94c29d6ec177df0dc43419e486e27eb1f6b55637abe05c868378cc57f85150c",
+  "builder_version": "canonical-v2-s2-source-inventory-builder-v1",
+  "captured_at": "2026-07-11T07:11:30Z",
+  "evidence_root": "/home/longxiang/MiroThinker",
+  "forensic_source_manifest_sha256": "bce14dce8fe2da4d053ac9cd930e1532f4abb436c5d03fff07aa69fd180e9e91",
+  "git_commit": "a58184cee8d616cbcfc58c942f1b07790fc6ffdb",
+  "known_hard_limits": [
+    "recovery public domain tables are empty; only salvage paper and professor-paper links contain rows",
+    "no verified Milvus copy exists, so S2 cannot inspect collections or current index contents",
+    "lost TOAST values listed in salvage.field_errors cannot be reconstructed from the dump",
+    "historical artifacts have heterogeneous identity, policy, and release semantics"
+  ],
+  "recovery_database_snapshot": {
+    "captured_at": "2026-07-11T07:11:30Z",
+    "container": {
+      "name": "pgtest-recovery-lab-01",
+      "network_mode": "none",
+      "published_ports": {},
+      "status": "running"
+    },
+    "databases": [
+      {
+        "bytes": 138017815,
+        "name": "miroflow_recovery_candidate",
+        "public_core_counts": {
+          "company": 0,
+          "company_application_scenario": 0,
+          "company_patent_link": 0,
+          "company_product": 0,
+          "company_team_member": 0,
+          "paper": 0,
+          "paper_full_text": 0,
+          "paper_merge_alias": 0,
+          "patent": 0,
+          "pipeline_run": 1,
+          "professor": 0,
+          "professor_affiliation": 0,
+          "professor_company_role": 0,
+          "professor_fact": 0,
+          "professor_paper_link": 0,
+          "professor_patent_link": 0,
+          "source_row_lineage": 0
+        },
+        "public_tables": 42,
+        "revision": "V042",
+        "salvage_tables": 4,
+        "server_data_directory": "/var/lib/postgresql/data",
+        "transaction_read_only": true
+      },
+      {
+        "bytes": 136125463,
+        "name": "miroflow_recovery_candidate_verify",
+        "public_core_counts": {
+          "company": 0,
+          "company_application_scenario": 0,
+          "company_patent_link": 0,
+          "company_product": 0,
+          "company_team_member": 0,
+          "paper": 0,
+          "paper_full_text": 0,
+          "paper_merge_alias": 0,
+          "patent": 0,
+          "pipeline_run": 1,
+          "professor": 0,
+          "professor_affiliation": 0,
+          "professor_company_role": 0,
+          "professor_fact": 0,
+          "professor_paper_link": 0,
+          "professor_patent_link": 0,
+          "source_row_lineage": 0
+        },
+        "public_tables": 42,
+        "revision": "V042",
+        "salvage_tables": 4,
+        "server_data_directory": "/var/lib/postgresql/data",
+        "transaction_read_only": true
+      }
+    ],
+    "query_contract": {
+      "connection": "docker exec through the network-none recovery lab Unix socket",
+      "environment": "PGOPTIONS=-c default_transaction_read_only=on",
+      "proof_columns": [
+        "current_database()",
+        "current_setting('transaction_read_only')",
+        "current_setting('data_directory')"
+      ],
+      "write_statements": 0
+    },
+    "salvage": {
+      "field_errors": {
+        "paper.abstract_clean": 13621,
+        "paper.authors_display": 33,
+        "paper.summary_zh": 7080,
+        "paper.title_clean": 2,
+        "paper.venue": 37,
+        "total": 20773
+      },
+      "paper": {
+        "distinct_ids": 99437,
+        "rows": 99437
+      },
+      "professor_paper_link": {
+        "distinct_ids": 101158,
+        "distinct_paper_ids": 97285,
+        "distinct_professor_ids": 2826,
+        "rows": 101158
+      },
+      "recovery_metadata": {
+        "incident_commit_time_utc": "2026-07-10T17:53:40.280969Z",
+        "incident_commit_xid": "538624",
+        "paper_baseline_rows": 103425,
+        "paper_downgrade_tuple_only_rows": 3522,
+        "paper_salvaged_rows": 99437,
+        "professor_paper_link_baseline_rows": 107496,
+        "professor_paper_link_downgrade_tuple_only_rows": 120,
+        "professor_paper_link_salvaged_rows": 101158,
+        "source_forensic_checkpoint": "20260711T022932Z-pgtest-forensic-freeze",
+        "source_manifest_sha256": "bce14dce8fe2da4d053ac9cd930e1532f4abb436c5d03fff07aa69fd180e9e91"
+      }
+    }
+  },
+  "recovery_root": "/home/longxiang/.mirothinker_recovery/20260711T022932Z-pgtest-forensic-freeze",
+  "schema_version": "canonical-v2-s2-source-inventory-v1",
+  "sources": [
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "prd_authoritative",
+      "bytes": 33340,
+      "domains": [
+        "shared"
+      ],
+      "kind": "authoritative_prd",
+      "limitation": "Requirements source; not row evidence.",
+      "path": "docs/Data-Agent-Shared-Spec.md",
+      "sha256": "4ddba2674fff54f135b8dec698fccf6feb2a75ff90f3fc39272f17c912969a07"
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "prd_authoritative",
+      "bytes": 30314,
+      "domains": [
+        "shared"
+      ],
+      "kind": "authoritative_prd",
+      "limitation": "Requirements source; not row evidence.",
+      "path": "docs/Agentic-RAG-PRD.md",
+      "sha256": "893fe21bed669e0d3eebf58a9e24b2a63b32e04ea4b67ae3416b93044939debd"
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "prd_authoritative",
+      "bytes": 9107,
+      "domains": [
+        "shared"
+      ],
+      "kind": "authoritative_prd",
+      "limitation": "Requirements source; not row evidence.",
+      "path": "docs/Company-Data-Agent-PRD.md",
+      "sha256": "4d902a04252a5fc4996560a5bdab46f10c313fc300c8ca599920e906b3f12eeb"
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "prd_authoritative",
+      "bytes": 26333,
+      "domains": [
+        "shared"
+      ],
+      "kind": "authoritative_prd",
+      "limitation": "Requirements source; not row evidence.",
+      "path": "docs/Professor-Data-Agent-Requirements-Audit-2026-05-09.md",
+      "sha256": "620671cbaf0f3b26a398e59cb7501e07709c2f2f959156276d045c7cebd2988c"
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "prd_authoritative",
+      "bytes": 15127,
+      "domains": [
+        "shared"
+      ],
+      "kind": "authoritative_prd",
+      "limitation": "Requirements source; not row evidence.",
+      "path": "docs/Paper-Data-Agent-PRD.md",
+      "sha256": "e81efaff5b1ec08c27d8a713d8ffdabbd7f9437f5ab49e0873db42f1cc57320f"
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "prd_authoritative",
+      "bytes": 7342,
+      "domains": [
+        "shared"
+      ],
+      "kind": "authoritative_prd",
+      "limitation": "Requirements source; not row evidence.",
+      "path": "docs/Patent-Data-Agent-PRD.md",
+      "sha256": "a632e5014fa2c7b26610f516b579792aead4e4526732232bd435c733f50a0949"
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "prd_authoritative",
+      "bytes": 14675,
+      "domains": [
+        "shared"
+      ],
+      "kind": "authoritative_prd",
+      "limitation": "Requirements source; not row evidence.",
+      "path": "docs/Multi-turn-Context-Manager-Design.md",
+      "sha256": "a8deec2bc6cacf8753945ce8e34ef83eda3faf7bb3181bf657758fb391e0ac60"
+    },
+    {
+      "access_mode": "openpyxl_read_only_data_only",
+      "authority": "user_seed_cases",
+      "bytes": 31832,
+      "domains": [
+        "professor",
+        "company",
+        "paper",
+        "patent",
+        "cross_domain"
+      ],
+      "kind": "seed_scenario_workbook",
+      "limitation": "Seed scenarios only; not the product boundary or sole gold corpus.",
+      "path": "docs/测试集答案.xlsx",
+      "sha256": "edd95009a8516c73831d889a0d221d85da0a9ffad9c9f7da244d12dfce280c5b",
+      "sheets": [
+        {
+          "columns": 3,
+          "name": "Sheet1",
+          "rows": 42
+        }
+      ]
+    },
+    {
+      "access_mode": "read_parse_no_write",
+      "authority": "historical_structured_evidence",
+      "bytes": 3609,
+      "domains": [
+        "mixed"
+      ],
+      "first_record_keys": [
+        "capability_facets",
+        "company_name",
+        "confidence",
+        "data_route_summary",
+        "data_route_types",
+        "modality_tags",
+        "movement_data_needs",
+        "operation_data_needs",
+        "real_data_methods",
+        "snippet",
+        "source_file"
+      ],
+      "invalid_lines": 0,
+      "kind": "committed_backfill_jsonl",
+      "limitation": "Historical backfill output requires identity/provenance review before canonical use.",
+      "lines": 8,
+      "path": "docs/source_backfills/company_knowledge_fields.jsonl",
+      "sha256": "954ad91b06d767550fef38700cae8fc854f68b1856bcb22824525c1cce384c5b",
+      "valid_object_lines": 8
+    },
+    {
+      "access_mode": "read_parse_no_write",
+      "authority": "historical_structured_evidence",
+      "bytes": 1619,
+      "domains": [
+        "mixed"
+      ],
+      "first_record_keys": [
+        "abstract",
+        "arxiv_id",
+        "authors",
+        "citation_count",
+        "doi",
+        "enrichment_sources",
+        "fields_of_study",
+        "funders",
+        "license",
+        "oa_status",
+        "paper_id",
+        "professor_ids",
+        "publication_date",
+        "reference_count",
+        "source_url",
+        "title",
+        "tldr",
+        "venue",
+        "year"
+      ],
+      "invalid_lines": 0,
+      "kind": "committed_backfill_jsonl",
+      "limitation": "Historical backfill output requires identity/provenance review before canonical use.",
+      "lines": 1,
+      "path": "docs/source_backfills/paper_exact_identifier_backfills.jsonl",
+      "sha256": "beb47502842916d8a37cadc06fe356b45b1111f8c4456852e50549fe3651c004",
+      "valid_object_lines": 1
+    },
+    {
+      "access_mode": "read_parse_no_write",
+      "authority": "historical_structured_evidence",
+      "bytes": 200307,
+      "domains": [
+        "mixed"
+      ],
+      "first_record_keys": [
+        "canonical_name",
+        "citation_count",
+        "dry_run",
+        "h_index",
+        "metrics_source",
+        "orcid",
+        "professor_id",
+        "run_id",
+        "status"
+      ],
+      "invalid_lines": 0,
+      "kind": "committed_backfill_jsonl",
+      "limitation": "Historical backfill output requires identity/provenance review before canonical use.",
+      "lines": 790,
+      "path": "docs/source_backfills/professor-metrics-backfill-2026-05-01.jsonl",
+      "sha256": "0a5ed3e96833cdb98de6e99d3c81d7fdc5f71a422bf760d6532b494e7297f8aa",
+      "valid_object_lines": 790
+    },
+    {
+      "access_mode": "read_parse_no_write",
+      "authority": "historical_structured_evidence",
+      "bytes": 851013,
+      "domains": [
+        "mixed"
+      ],
+      "first_record_keys": [
+        "canonical_name",
+        "citation_count",
+        "dry_run",
+        "h_index",
+        "metrics_source",
+        "orcid",
+        "professor_id",
+        "run_id",
+        "status"
+      ],
+      "invalid_lines": 0,
+      "kind": "committed_backfill_jsonl",
+      "limitation": "Historical backfill output requires identity/provenance review before canonical use.",
+      "lines": 3360,
+      "path": "docs/source_backfills/professor-metrics-backfill-2026-06-13.jsonl",
+      "sha256": "db343dc39022edffce16c51536eddd8d3f2b927b78ce2261b43f090239821fbd",
+      "valid_object_lines": 3360
+    },
+    {
+      "access_mode": "read_parse_no_write",
+      "authority": "historical_structured_evidence",
+      "bytes": 579,
+      "domains": [
+        "mixed"
+      ],
+      "first_record_keys": [
+        "company_name",
+        "confidence",
+        "professor_name",
+        "role",
+        "snippet",
+        "source_url"
+      ],
+      "invalid_lines": 0,
+      "kind": "committed_backfill_jsonl",
+      "limitation": "Historical backfill output requires identity/provenance review before canonical use.",
+      "lines": 2,
+      "path": "docs/source_backfills/professor_company_roles.jsonl",
+      "sha256": "8b3ffd1a8d4a9f5fda7ec760fc241b25de9417a2477d8ec51dbdb588de2e7e02",
+      "valid_object_lines": 2
+    },
+    {
+      "access_mode": "read_parse_no_write",
+      "authority": "historical_structured_evidence",
+      "bytes": 294047,
+      "domains": [
+        "mixed"
+      ],
+      "first_record_keys": [
+        "action_taken",
+        "apply_mode",
+        "canonical_name",
+        "canonical_name_en_before",
+        "confidence",
+        "decision",
+        "examined_index",
+        "institution",
+        "professor_id",
+        "reason",
+        "scan_started_at",
+        "source_url"
+      ],
+      "invalid_lines": 0,
+      "kind": "committed_backfill_jsonl",
+      "limitation": "Historical backfill output requires identity/provenance review before canonical use.",
+      "lines": 763,
+      "path": "docs/source_backfills/round-7-17-name-identity-clear-2026-05-02.jsonl",
+      "sha256": "58ff4731fcbf9a132269d41cf1c6c5745e91228864fbd12058eb23ba1d82153f",
+      "valid_object_lines": 763
+    },
+    {
+      "access_mode": "openpyxl_read_only_data_only",
+      "authority": "historical_structured_evidence",
+      "bytes": 6924,
+      "domains": [
+        "mixed"
+      ],
+      "kind": "committed_backfill_workbook",
+      "limitation": "Small supplement, not complete domain coverage.",
+      "path": "docs/source_backfills/company_workbook_critical_supplement.xlsx",
+      "sha256": "cdefadb03a4a804690d8ee9fe708a53c71f9a7b7ca858be0b8911dc767193790",
+      "sheets": [
+        {
+          "columns": 17,
+          "name": "sheet1",
+          "rows": 15
+        }
+      ]
+    },
+    {
+      "access_mode": "openpyxl_read_only_data_only",
+      "authority": "historical_structured_evidence",
+      "bytes": 5447,
+      "domains": [
+        "mixed"
+      ],
+      "kind": "committed_backfill_workbook",
+      "limitation": "Small supplement, not complete domain coverage.",
+      "path": "docs/source_backfills/patent_exact_identifier_supplement.xlsx",
+      "sha256": "9780b96ac6a97b5086a3acfc2324391c8611b8163515614661d3131d1ec94b5a",
+      "sheets": [
+        {
+          "columns": 8,
+          "name": "Sheet1",
+          "rows": 2
+        }
+      ]
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "legacy_evaluation_evidence",
+      "bytes": 28082,
+      "domains": [
+        "query_answer"
+      ],
+      "kind": "committed_eval_fixture",
+      "limitation": "Retain original corpus/scorer/time labels; not automatically current baseline.",
+      "path": "apps/admin-console/tests/fixtures/intent_classifier_benchmark.jsonl",
+      "sha256": "272a05559d9a796f8101ae4437a21b03a2f3cab089c7337610241ec1781e336d"
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "legacy_evaluation_evidence",
+      "bytes": 10038,
+      "domains": [
+        "query_answer"
+      ],
+      "kind": "committed_eval_fixture",
+      "limitation": "Retain original corpus/scorer/time labels; not automatically current baseline.",
+      "path": "apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+      "sha256": "b6e8d511d93e1e6302bd28fc593c5ab11e5951dad28fc2c0b7f6f5693c7aaa55"
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "legacy_evaluation_evidence",
+      "bytes": 2390,
+      "domains": [
+        "query_answer"
+      ],
+      "kind": "committed_eval_fixture",
+      "limitation": "Retain original corpus/scorer/time labels; not automatically current baseline.",
+      "path": "apps/admin-console/tests/fixtures/retrieval_gold.yaml",
+      "sha256": "74052e6cc1d1dbcca9bacfdd8ec689b6365ecf62f0e8c30c9918f4c4c8c9fb6d"
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "legacy_evaluation_evidence",
+      "bytes": 54804,
+      "domains": [
+        "query_answer"
+      ],
+      "kind": "committed_eval_fixture",
+      "limitation": "Retain original corpus/scorer/time labels; not automatically current baseline.",
+      "path": "apps/admin-console/tests/fixtures/test_cases.draft.yaml",
+      "sha256": "90e1d443643dbf9703a13300e68a71d5aedc267a136b1bddb1c8b08c7609c760"
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "legacy_evaluation_evidence",
+      "bytes": 56313,
+      "domains": [
+        "query_answer"
+      ],
+      "kind": "committed_eval_fixture",
+      "limitation": "Retain original corpus/scorer/time labels; not automatically current baseline.",
+      "path": "apps/admin-console/tests/fixtures/test_cases.yaml",
+      "sha256": "b083f73bacdcd080da32d2ab09a0d694080d62cf371dc29d0ac677d7f923cf8b"
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "legacy_evaluation_evidence",
+      "bytes": 2450,
+      "domains": [
+        "query_answer"
+      ],
+      "kind": "committed_eval_artifact",
+      "limitation": "Retain original corpus/scorer/time labels; not automatically current baseline.",
+      "path": "apps/admin-console/scripts/precision-labels.json",
+      "sha256": "c1397d940c0c8f3d2366d5f844716d9a915ad0ea1ab0de2e8a6020705275c3b3"
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "forensic_source_hash_only",
+      "bytes": 1298632704,
+      "domains": [
+        "professor",
+        "company",
+        "paper",
+        "patent"
+      ],
+      "kind": "milvus_lite_original",
+      "limitation": "No verified copy exists; client open and collection inspection are forbidden in S2.",
+      "path": "apps/miroflow-agent/milvus.db",
+      "sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc"
+    },
+    {
+      "access_mode": "openpyxl_read_only_data_only",
+      "authority": "historical_local_evidence",
+      "bytes": 3944804,
+      "domains": [
+        "company"
+      ],
+      "kind": "company_source_workbook",
+      "limitation": "Identity, freshness, and source-assertion mapping must be rebuilt.",
+      "path": "docs/企业总表.xlsx",
+      "sha256": "29329c63e12668edfe2ea00579ea18d319e617a500530073ef3b602dd79d379e",
+      "sheets": [
+        {
+          "columns": 16,
+          "name": "Sheet1",
+          "rows": 6529
+        },
+        {
+          "columns": 1,
+          "name": "Sheet2",
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "access_mode": "openpyxl_read_only_data_only",
+      "authority": "historical_local_evidence",
+      "bytes": 1645670,
+      "domains": [
+        "patent"
+      ],
+      "kind": "patent_source_workbook",
+      "limitation": "Identity, freshness, and source-assertion mapping must be rebuilt.",
+      "path": "docs/2025-12-05 专利.xlsx",
+      "sha256": "7a5d6eedeeb0cd34233b75310878545622e3d968d097100215b408ed52f43609",
+      "sheets": [
+        {
+          "columns": 1,
+          "name": "下载的著录项1",
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "access_mode": "read_parse_no_write",
+      "authority": "historical_local_evidence",
+      "bytes": 4638821,
+      "domains": [
+        "professor",
+        "paper"
+      ],
+      "first_record_keys": [
+        "academic_positions",
+        "awards",
+        "citation_count",
+        "company_roles",
+        "department",
+        "education_structured",
+        "email",
+        "enrichment_source",
+        "evaluation_summary",
+        "evidence_urls",
+        "extraction_status",
+        "field_provenance",
+        "h_index",
+        "homepage",
+        "institution",
+        "name",
+        "name_en",
+        "office",
+        "paper_count",
+        "patent_ids",
+        "profile_summary",
+        "profile_url",
+        "projects",
+        "research_directions",
+        "research_directions_source",
+        "roster_source",
+        "title",
+        "top_papers",
+        "work_experience"
+      ],
+      "invalid_lines": 0,
+      "kind": "professor_merged_jsonl",
+      "limitation": "Identity, freshness, and source-assertion mapping must be rebuilt.",
+      "lines": 825,
+      "path": "logs/data_agents/professor/enriched_v3_merged.jsonl",
+      "sha256": "3081df86f07284ec7f4f0eeec9356ca645120719677bb86dea4ff1e7a8b1baec",
+      "valid_object_lines": 825
+    },
+    {
+      "access_mode": "read_parse_no_write",
+      "authority": "historical_local_evidence",
+      "bytes": 6201116,
+      "domains": [
+        "professor"
+      ],
+      "first_record_keys": [
+        "academic_positions",
+        "awards",
+        "citation_count",
+        "company_roles",
+        "department",
+        "education_structured",
+        "email",
+        "enrichment_source",
+        "evaluation_summary",
+        "evidence_urls",
+        "extraction_status",
+        "field_provenance",
+        "h_index",
+        "homepage",
+        "institution",
+        "name",
+        "name_en",
+        "office",
+        "paper_count",
+        "patent_ids",
+        "profile_summary",
+        "profile_url",
+        "projects",
+        "research_directions",
+        "research_directions_source",
+        "roster_source",
+        "title",
+        "top_papers",
+        "work_experience"
+      ],
+      "invalid_lines": 0,
+      "kind": "legacy_professor_jsonl",
+      "limitation": "Identity, freshness, and source-assertion mapping must be rebuilt.",
+      "lines": 3274,
+      "path": "logs/legacy_v2/enriched_v2_2026-04-05.jsonl",
+      "sha256": "e85d2fa972c574e8ed374ea62ed63c826e0239afe3a1be456fea8b2b5fad283b",
+      "valid_object_lines": 3274
+    },
+    {
+      "access_mode": "sqlite_uri_mode_ro_immutable",
+      "authority": "historical_published_snapshot",
+      "bytes": 20267008,
+      "domains": [
+        "professor",
+        "company",
+        "paper",
+        "patent"
+      ],
+      "kind": "sqlite_snapshot",
+      "limitation": "Legacy projection, not canonical truth; inspect only through immutable SQLite mode.",
+      "object_type_counts": {
+        "company": 1037,
+        "paper": 574,
+        "patent": 1931,
+        "professor": 1439,
+        "professor_paper_link": 580
+      },
+      "path": "logs/data_agents/released_objects.db",
+      "sha256": "7637d808559685f1bcf0316cd22cfeac4e50bd0850c53652ec95b3dbb5e43bce",
+      "table_counts": {
+        "released_objects": 5561
+      },
+      "tables": [
+        "released_objects"
+      ]
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "historical_index_artifact",
+      "bytes": 114167808,
+      "domains": [
+        "professor",
+        "company",
+        "paper",
+        "patent"
+      ],
+      "kind": "legacy_milvus_hash_only",
+      "limitation": "Parent release parity is unproven; hash-only in S2.",
+      "path": "logs/legacy_v2/milvus_v2_2026-04-05.db",
+      "sha256": "8372e2214a4c7400d51152b662b992d107954683e90d9207f598383f62bafd82"
+    },
+    {
+      "access_mode": "read_hash_only",
+      "authority": "historical_family_manifest",
+      "bytes": 2475486396,
+      "domains": [
+        "professor"
+      ],
+      "files": 11604,
+      "kind": "professor_fetch_cache_family",
+      "limitation": "Family-level manifest; S4 landing must register individual artifacts and lineage.",
+      "manifest_sha256": "59e49e82c89ed33382048b2afbdee9334006c1d29ffe29e5a7def09d2bf6c652",
+      "root": "/home/longxiang/MiroThinker"
+    },
+    {
+      "access_mode": "read_hash_only",
+      "authority": "historical_family_manifest",
+      "bytes": 1608491000,
+      "domains": [
+        "paper"
+      ],
+      "files": 26185,
+      "kind": "paper_openalex_cache_family",
+      "limitation": "Family-level manifest; S4 landing must register individual artifacts and lineage.",
+      "manifest_sha256": "f2fe5919b45857f7b27e8733e80be9d5db12464f0f56dc0eea96ab67beb8a462",
+      "root": "/home/longxiang/MiroThinker"
+    },
+    {
+      "access_mode": "read_hash_only",
+      "authority": "historical_family_manifest",
+      "bytes": 13878857,
+      "domains": [
+        "paper",
+        "professor"
+      ],
+      "files": 14,
+      "kind": "paper_orcid_cache_family",
+      "limitation": "Family-level manifest; S4 landing must register individual artifacts and lineage.",
+      "manifest_sha256": "ee5b9ab5b98f81828c0859d4c1979b40babd80a03bfff5930ccde6741b200569",
+      "root": "/home/longxiang/MiroThinker"
+    },
+    {
+      "access_mode": "read_hash_only",
+      "authority": "historical_family_manifest",
+      "bytes": 433911090,
+      "domains": [
+        "mixed"
+      ],
+      "files": 55,
+      "kind": "legacy_release_jsonl_family",
+      "limitation": "Family-level manifest; S4 landing must register individual artifacts and lineage.",
+      "manifest_sha256": "a4d973199da391d44ed61a02224453fd62ed6b86cfadfc9376093d6468b693d8",
+      "root": "/home/longxiang/MiroThinker"
+    },
+    {
+      "access_mode": "read_hash_only",
+      "authority": "historical_family_manifest",
+      "bytes": 537133056,
+      "domains": [
+        "mixed"
+      ],
+      "files": 351,
+      "kind": "legacy_sqlite_snapshot_family",
+      "limitation": "Family-level manifest; S4 landing must register individual artifacts and lineage.",
+      "manifest_sha256": "3a7cfe787cf290547852003396bb5123fe2881681c2f6ce936ef2effb160ed90",
+      "root": "/home/longxiang/MiroThinker"
+    },
+    {
+      "access_mode": "read_hash_only",
+      "authority": "historical_family_manifest",
+      "bytes": 64577346,
+      "domains": [
+        "mixed"
+      ],
+      "files": 1544,
+      "kind": "legacy_data_agent_jsonl_family",
+      "limitation": "Family-level manifest; S4 landing must register individual artifacts and lineage.",
+      "manifest_sha256": "7eb315c0d9ad77c6c5c0580f022b363eeab032b9ff81cba3228a02c3e6447ca5",
+      "root": "/home/longxiang/MiroThinker"
+    },
+    {
+      "access_mode": "read_hash_only",
+      "authority": "historical_family_manifest",
+      "bytes": 24723587,
+      "domains": [
+        "company",
+        "patent"
+      ],
+      "files": 8,
+      "kind": "admin_upload_workbook_family",
+      "limitation": "Family-level manifest; S4 landing must register individual artifacts and lineage.",
+      "manifest_sha256": "b2b15773898fef6813c4691381ecbf4e56137aed7c00d21922595fe24442b175",
+      "root": "/home/longxiang/MiroThinker"
+    },
+    {
+      "access_mode": "read_hash_only",
+      "authority": "historical_family_manifest",
+      "bytes": 63006807,
+      "domains": [
+        "company",
+        "patent"
+      ],
+      "files": 2,
+      "kind": "admin_upload_jsonl_family",
+      "limitation": "Family-level manifest; S4 landing must register individual artifacts and lineage.",
+      "manifest_sha256": "d7bdbe9979ebf0a540be2c396e05d23e5190d519a856ced169f1a531fae81ad9",
+      "root": "/home/longxiang/MiroThinker"
+    },
+    {
+      "access_mode": "read_hash_only",
+      "authority": "historical_family_manifest",
+      "bytes": 890658,
+      "domains": [
+        "mixed"
+      ],
+      "files": 2,
+      "kind": "compressed_backup_family",
+      "limitation": "Family-level manifest; S4 landing must register individual artifacts and lineage.",
+      "manifest_sha256": "d27c7b9bea327a4637f6348ad464e1fb495ccdc22a5cfbef54d6415927e7cc99",
+      "root": "/home/longxiang/MiroThinker"
+    },
+    {
+      "access_mode": "read_hash_only",
+      "authority": "historical_family_manifest",
+      "bytes": 8313184961,
+      "domains": [
+        "paper"
+      ],
+      "files": 2657,
+      "kind": "raw_pdf_family",
+      "limitation": "Family-level manifest; S4 landing must register individual artifacts and lineage.",
+      "manifest_sha256": "bc985747c06520bf9d0c5d52555f932c8ec02e656c24b0ad4cf5ce9f8fbdbeb6",
+      "root": "/home/longxiang/MiroThinker"
+    },
+    {
+      "access_mode": "read_hash_only",
+      "authority": "historical_family_manifest",
+      "bytes": 335458304,
+      "domains": [
+        "mixed"
+      ],
+      "files": 97,
+      "kind": "historical_milvus_file_family",
+      "limitation": "Family-level manifest; S4 landing must register individual artifacts and lineage.",
+      "manifest_sha256": "ff4eda1a882d79745312812f691eb74183b31e76757bc34e2705e91f4d4e5b0e",
+      "root": "/home/longxiang/MiroThinker"
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "forensic_recovery_evidence",
+      "bytes": 1047,
+      "domains": [
+        "paper",
+        "professor_paper_relation"
+      ],
+      "kind": "forensic_checkpoint_document",
+      "limitation": "Evidence input only; partial recovery cannot supply missing values or other domains.",
+      "path": "FORENSIC-CHECKPOINT.md",
+      "sha256": "cb542decb9bceabee6d3c0bbdba2221d966f2660cc0d29bf55b48a4871184ca7"
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "forensic_recovery_evidence",
+      "bytes": 4032,
+      "domains": [
+        "paper",
+        "professor_paper_relation"
+      ],
+      "kind": "recovery_experiment_document",
+      "limitation": "Evidence input only; partial recovery cannot supply missing values or other domains.",
+      "path": "RECOVERY-EXPERIMENT-REPORT.md",
+      "sha256": "5f1e942ac84c16381888f39067c2c2f75da92afaf126e32e39083441374907b3"
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "forensic_recovery_evidence",
+      "bytes": 10615,
+      "domains": [
+        "paper",
+        "professor_paper_relation"
+      ],
+      "kind": "recovery_plan_document",
+      "limitation": "Evidence input only; partial recovery cannot supply missing values or other domains.",
+      "path": "LOGICAL-REBUILD-PLAN.md",
+      "sha256": "aa9ef89cc5424e16a3c95560f91651a70e158e549ae051025ffa536860a59159"
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "forensic_recovery_evidence",
+      "bytes": 1073741824,
+      "domains": [
+        "paper",
+        "professor_paper_relation"
+      ],
+      "kind": "host_ext4_journal_copy",
+      "limitation": "Evidence input only; partial recovery cannot supply missing values or other domains.",
+      "path": "host-ext4-journal-20260711T024500Z.bin",
+      "sha256": "e24b1ae32004cc7213e15b1da34a79774978e61d328807b45b715b755e045c65"
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "forensic_recovery_evidence",
+      "bytes": 20480,
+      "domains": [
+        "paper",
+        "professor_paper_relation"
+      ],
+      "kind": "ext4_directory_inode_copy",
+      "limitation": "Evidence input only; partial recovery cannot supply missing values or other domains.",
+      "path": "lab-01/ext4-dir-inode-27017891.bin",
+      "sha256": "74d990fd2e25cb0a8562d16643feacb2baf5322e93ebf00a81722c14ba98ef37"
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "forensic_recovery_evidence",
+      "bytes": 45218732,
+      "domains": [
+        "paper",
+        "professor_paper_relation"
+      ],
+      "kind": "postgres_salvage_dump",
+      "limitation": "Evidence input only; partial recovery cannot supply missing values or other domains.",
+      "path": "lab-01/miroflow-real-fpi-salvage.dump",
+      "sha256": "cef8eb6ba18ebd23fde3e47023222ecb82bc8f27582040efe5a212a7f9fdfbb7"
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "forensic_recovery_evidence",
+      "bytes": 2417117,
+      "domains": [
+        "paper",
+        "professor_paper_relation"
+      ],
+      "kind": "recovered_paper_id_manifest",
+      "limitation": "Evidence input only; partial recovery cannot supply missing values or other domains.",
+      "path": "lab-01/recovered-paper-ids.txt",
+      "sha256": "92cf87dc820a118c8eeee7924f7991314e825a31f699b70f6db4d014738adc9c"
+    },
+    {
+      "access_mode": "hash_only_never_opened",
+      "authority": "forensic_recovery_evidence",
+      "bytes": 3742846,
+      "domains": [
+        "paper",
+        "professor_paper_relation"
+      ],
+      "kind": "recovered_link_id_manifest",
+      "limitation": "Evidence input only; partial recovery cannot supply missing values or other domains.",
+      "path": "lab-01/recovered-link-ids.txt",
+      "sha256": "e137eb68ee174663eb7d563706ddaa9ee48574e4da8aa1130acb488a1918a292"
+    }
+  ],
+  "workspace": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2"
+}

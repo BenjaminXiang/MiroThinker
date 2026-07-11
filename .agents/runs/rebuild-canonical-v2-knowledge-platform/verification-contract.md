@@ -2,9 +2,8 @@
 
 ## Status
 
-Specified. No implementation slice is Accepted. After user approval, only S1 database-target safety
-may become Ready; S2 baseline depends on S1 Accepted, and all feature/data slices depend on S2
-threshold/corpus freeze.
+S1 database-target safety is Accepted at commit `a58184c`. S2 read-only baseline may be Ready; all
+feature/data slices remain Specified and depend on S2 threshold/corpus freeze and acceptance.
 
 ## Behavior owner
 
@@ -47,7 +46,7 @@ reversibly without touching original forensic sources.
 - Real provider calls are allowed only in named acceptance runs with secrets from the approved
   environment and no credential values in logs/evidence.
 
-Last identity/hash check recorded in `verification.md`: `2026-07-11T05:05:30Z`.
+Last identity/hash check recorded in `verification.md`: `2026-07-11T05:37:16Z`.
 
 ## Hard invariants
 
