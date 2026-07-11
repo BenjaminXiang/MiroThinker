@@ -7,8 +7,9 @@ of S2 tasks 2.1–2.5, including the corpus ground-truth policy and threshold Ca
 at 2026-07-11T15:10:32Z. S2B/task 2.6 was objectively verified and Accepted at
 2026-07-11T16:11:23Z under the user's self-approval authorization. Task 3.1's RED interface
 contracts were Accepted at `2026-07-11T16:31:48Z`. After re-verifying that gate, Task 3.2's empty
-Canonical V2 namespace baseline was Accepted at `2026-07-11T16:58:23Z`. Task 3.3 is next; no
-landing evidence, canonical business row, publication projection, or index write has begun.
+Canonical V2 namespace baseline was Accepted at `2026-07-11T16:58:23Z`. Task 3.3's shared typed
+contracts were Accepted at `2026-07-11T17:15:42Z`. Task 3.4 is next; no landing evidence, canonical
+business row, publication projection, or index write has begun.
 
 ## Existing incident/recovery checkpoint used as planning evidence
 
@@ -186,8 +187,8 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 
 ## Pending evidence
 
-1. Task 3.3 shared typed contracts over the accepted empty namespace baseline.
-2. Task 3.4 business schema/integrity migrations and their own real disposable/candidate checks.
+1. Task 3.4 business schema/integrity migrations and their own real disposable/candidate checks.
+2. Task 3.5 independent review/acceptance of the complete S3 database/interface foundation.
 
 ## S2 task 2.1 source inventory — 2026-07-11T07:11:30Z
 
@@ -461,6 +462,43 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   matched.
 - Task 3.2 is Accepted under the user's self-approval authorization. The database is only an empty
   accepted foundation; Task 3.3/3.4 must add typed contracts/tables in separate Ready slices.
+
+## S3C task 3.3 shared typed contracts — 2026-07-11T17:15:42Z
+
+- Domain-model review confirmed the approved glossary already distinguishes Canonical V2,
+  canonical/derived relations, relationship exploration, inclusion, and path eligibility. No new
+  product term or glossary conflict required a protected `CONTEXT.md` change.
+- Focused RED was `15 failed`, all caused solely by the absent
+  `src.data_agents.canonical_v2.contracts` module. No test collection, fixture, or syntax failure
+  occurred.
+- The new single shared seam defines 26 frozen, extra-forbid Pydantic models and 20 workflow enums.
+  It covers byte-addressed artifacts; replayable parser records and typed errors; temporal field and
+  relationship assertions; selected/unresolved canonical decisions; source/canonical identities and
+  merge/split/reversal lineage; canonical/derived/session relationships; versioned policies;
+  knowledge gaps; and candidate/publication/manifests.
+- Validators target hard contradictions rather than completeness gates: SHA and timezone identity,
+  parent lineage, typed non-parsed errors, valid intervals, decision evidence membership,
+  merge/split shapes, canonical-vs-derived evidence semantics, named hard exclusions, verified gap
+  resolution, one-release manifests, and zero-deviation accepted parity. Partial records, competing
+  assertions, unresolved decisions, optional enrichment, soft limitations, open catalogs, and
+  opaque non-legacy IDs remain valid.
+- Physical table/column/collection/provider contracts and typed domain business facts are absent.
+  Build manifests instead retain source/parser/policy/model/decision/object/relationship/
+  eligibility/publication/index versions, counts, and hashes through logical projection identities.
+- Focused GREEN was `15 passed`. An initial Pyright finding identified the Python enum-member name
+  `split` colliding with `str.split`; renaming only the member to `split_identity` retained external
+  value `"split"` and produced zero Pyright findings.
+- Expanded Canonical V2 checks were `21 passed, 1 skipped, 5 xfailed`: the opt-in real migration
+  cycle was deliberately not run because this slice is DB-write-free, while all Task 3.2 gate/static
+  checks and Task 3.1 strict RED contracts behaved as expected. S1 was `9 passed`; S2/S2B was
+  `32 passed`; Ruff, strict OpenSpec, formal admission, and diff checks passed.
+- Read-only candidate inspection preserved database/marker/system identifier
+  `7661313446684311592`, revision `C2_0001`, eight schemas, and zero business tables. Original
+  `pgtest` remained paused on its exact volume, recovery lab remained network-none/no-port, and
+  original Milvus/salvage hashes matched. No database/Milvus/provider/source/runtime/dependency write
+  occurred.
+- Task 3.3 is Accepted under the user's self-approval authorization. Task 3.4 must map these logical
+  values to integrity-tested storage in a separate Ready slice.
 
 ## Explicit non-claims
 

@@ -47,3 +47,7 @@
   admission before engine creation and target identity before DDL, then creates eight empty
   Canonical V2 namespaces without replaying V001–V042. A new network-none/no-port, marked candidate
   passed upgrade/downgrade/re-upgrade and remains at the clean baseline with no business rows.
+- Completed and accepted task 3.3: one storage-independent Pydantic seam now defines strict artifact,
+  record/assertion, decision, identity, canonical/derived/session relationship, policy, gap,
+  release, and manifest values. It rejects hard semantic contradictions while preserving partial
+  evidence, unresolved conflict, soft limitations, extensible catalogs, and opaque IDs.
