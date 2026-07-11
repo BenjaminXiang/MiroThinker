@@ -41,13 +41,13 @@ read-only validation, `openpyxl` for workbook inspection.
 **Files:**
 - Create: `.agents/runs/rebuild-canonical-v2-knowledge-platform/s2/source-coverage-matrix.md`
 
-- [ ] Extract domain inclusion, typed object/sub-object, evidence, identity, temporal, quality, and
+- [x] Extract domain inclusion, typed object/sub-object, evidence, identity, temporal, quality, and
   relation requirements from the authoritative shared/domain PRDs.
-- [ ] Map each requirement family to available recovery/historical/recollection sources and label it
+- [x] Map each requirement family to available recovery/historical/recollection sources and label it
   `covered`, `partial`, `missing`, or `recollectable` with an evidence reference.
-- [ ] Separate object coverage from exact/semantic/filter/relation retrieval reach and from answer
+- [x] Separate object coverage from exact/semantic/filter/relation retrieval reach and from answer
   synthesis; record the known ceiling and owning future slice for every gap.
-- [ ] Review the matrix against the six confirmed outcome requirements and relationship-family
+- [x] Review the matrix against the six confirmed outcome requirements and relationship-family
   catalog in the parent OpenSpec.
 
 ### Task 3: Freeze regression and challenge corpora

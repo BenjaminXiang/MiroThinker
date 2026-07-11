@@ -182,9 +182,8 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 
 ## Pending evidence
 
-1. S2 source-to-PRD coverage matrix review (task 2.2).
-2. S2 frozen regression/challenge corpus (task 2.3).
-3. S2 baseline report and threshold freeze (tasks 2.4–2.5).
+1. S2 frozen regression/challenge corpus (task 2.3).
+2. S2 baseline report and threshold freeze (tasks 2.4–2.5).
 
 ## S2 task 2.1 source inventory — 2026-07-11T07:11:30Z
 
@@ -214,6 +213,23 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   recovery lab remained network-none with no published ports.
 - No database/file source write, provider call, replay, migration, recollection, or production-code
   change occurred. Task 2.1 is complete; tasks 2.2–2.5 remain open.
+
+## S2 task 2.2 source-to-PRD coverage matrix — 2026-07-11
+
+- Reviewed `s2/source-coverage-matrix.md` against the task 2.1 inventory checkpoint
+  `83a9e2c82aee4cbe5c02f088ba0fdbf8d15359d87a85bf4ee901b0f58f70fa09`.
+- The matrix separates four-domain object/sub-object evidence, relationship families, and
+  exact/semantic/filter/relation retrieval reach from answer synthesis and operational readiness.
+- Every gap records its evidence status, known ceiling, and future owning slice. In particular, the
+  recovery public schemas are empty, Paper and Professor-Paper survive only in `salvage`, and no
+  verified Milvus copy is available for index inspection or parity claims.
+- The matrix covers all six confirmed effects: Knowledge coverage, Trusted data, Retrievability,
+  Generation fidelity, Continuous operations, and Scenario acceptance. It treats the workbook as
+  25 seed queries rather than a target-answer template.
+- A deterministic inventory-to-matrix fact check verified workbook, source-family, published
+  snapshot, and salvage counts. Contract checks verified all domain, relationship, outcome, and
+  seed-corpus requirements. No database, provider, Milvus client, or source mutation was used.
+- Task 2.2 is complete; tasks 2.3–2.5 remain open.
 
 ## Explicit non-claims
 

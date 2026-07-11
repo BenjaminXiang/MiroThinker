@@ -15,3 +15,6 @@
   PRDs, workbook/backfills, ignored historical SQLite/JSONL/XLSX/cache/release/PDF families,
   forensic recovery artifacts, and recovery-database counts. Original Milvus remains hash-only
   because no verified copy exists.
+- Completed S2 task 2.2: the reviewed source-to-PRD matrix maps four domains, typed sub-objects,
+  relationship families, retrieval/answer paths, and all six north-star effects to inventoried
+  evidence, explicit ceilings, and future owning slices.
