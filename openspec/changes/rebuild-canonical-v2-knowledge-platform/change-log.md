@@ -39,3 +39,7 @@
   plus original PostgreSQL and the forensic/WAL/FPI tree; PostgreSQL, Milvus, and forensic probes
   passed. A shared mount-policy repair also removed seven attributable empty anonymous volumes and
   prevents Postgres-image implicit volumes in S2B tool containers.
+- Completed and accepted task 3.1 as a test-only RED slice: five strict-xfail contracts freeze the
+  typed public seams and observable outcomes for EvidenceLanding, KnowledgeBuild, KnowledgeRead,
+  KnowledgeAnswer, and ReleasePublication. Normal pytest stays green while `--runxfail` proves five
+  genuine missing-module RED failures; no production module or database write was added.

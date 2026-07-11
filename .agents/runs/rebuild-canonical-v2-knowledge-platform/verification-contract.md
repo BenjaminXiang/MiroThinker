@@ -5,8 +5,8 @@
 S1 database-target safety is Accepted at commit `a58184c`. S2 read-only baseline tasks 2.1–2.5 and
 their corpus/ground-truth/threshold policy are Accepted. S2B/task 2.6 is Accepted with backup
 manifest `a14c1eab…e59c8`, restore verification `98826e8d…d231`, and acceptance record
-`3155d890…fc5b`. The backup prerequisite no longer blocks task 3.2; task 3.1 remains next and no
-Canonical V2/landing write has begun.
+`3155d890…fc5b`. Task 3.1's five deep-module RED interface contracts are Accepted. Task 3.2 is next,
+still requires its own Ready isolated-target slice, and no Canonical V2/landing write has begun.
 
 ## Behavior owner
 

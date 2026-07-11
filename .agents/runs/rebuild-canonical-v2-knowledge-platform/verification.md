@@ -6,7 +6,8 @@ S1 database-target safety was accepted by the user at 2026-07-11T05:39:19Z. Expl
 of S2 tasks 2.1–2.5, including the corpus ground-truth policy and threshold Candidate, was recorded
 at 2026-07-11T15:10:32Z. S2B/task 2.6 was objectively verified and Accepted at
 2026-07-11T16:11:23Z under the user's self-approval authorization. No Canonical V2/landing write has
-started; task 3.1 is next.
+started. Task 3.1's RED interface contracts were Accepted at `2026-07-11T16:31:48Z`; task 3.2 is
+next.
 
 ## Existing incident/recovery checkpoint used as planning evidence
 
@@ -184,8 +185,8 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 
 ## Pending evidence
 
-1. Task 3.1 RED interface/contract tests and its independently reviewable S3 slice checkpoint.
-2. Task 3.2 remains a later isolated write task; it must verify the Accepted S2B record before its
+1. Task 3.2 clean database baseline in a new explicitly marked isolated candidate target.
+2. Task 3.2 must verify the Accepted S2B record before its
    first write and still requires its own Ready scope/target evidence.
 
 ## S2 task 2.1 source inventory — 2026-07-11T07:11:30Z
@@ -397,6 +398,30 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   `59473d1739a5b072d9118d0fc76f92caa028d754c421d88a0c94e6db25d670f2`.
 - No original source write, provider call, recollection, Canonical V2/landing write, or production-
   like cutover occurred. Task 2.6 is complete; the next task is 3.1.
+
+## S3A task 3.1 deep-module RED interfaces — 2026-07-11T16:31:48Z
+
+- Added one public-interface contract for each OpenSpec design seam: `EvidenceLanding.ingest/stream`,
+  `KnowledgeBuild.build`, `KnowledgeRead.execute`, `KnowledgeAnswer.answer`, and
+  `ReleasePublication.verify/promote/rollback`.
+- The tests use typed request/result construction and local recording adapters to assert only
+  caller-visible outcomes: evidence byte identity/lineage, isolated candidate manifests, protected
+  query/evidence traces, material claim-evidence mapping with local/Web disclosure, and exact
+  release parity/promotion/rollback. They do not assert tables, collection names, helper calls,
+  execution order, or mock call counts.
+- Each test is `xfail(strict=True, raises=ModuleNotFoundError)`. The normal command
+  `uv run pytest tests/canonical_v2/test_*_interface.py -n0 -q` exited `0` with exactly five xfails
+  and no failure/error/XPASS. The same command with `--runxfail` exited `1` with exactly five
+  missing-`canonical_v2` failures and no collection/syntax/setup error.
+- The strict marker is temporary executable RED evidence: unexpected failures are not swallowed,
+  and a future implementation that satisfies a contract becomes XPASS/failure until the marker is
+  intentionally removed by its GREEN task.
+- Ruff passed and Pyright reported zero findings for all five files. The existing S2/S2B suite
+  remained `32 passed`; formal backup admission remained Accepted for 50 sources; strict OpenSpec,
+  original pause, Milvus hash, and salvage hash checks passed.
+- No production source file, dependency, schema, database/index, provider, or original evidence was
+  touched. Task 3.1 is Accepted under the user's self-approval authorization; task 3.2 must establish
+  a separate Ready isolated-write slice before any database change.
 
 ## Explicit non-claims
 
