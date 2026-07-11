@@ -74,7 +74,9 @@ not stale row counts, a single workbook, or metrics redefined after implementati
 - Every dynamic database command proves `transaction_read_only=on`, current database, and server
   identity in the same session before count queries.
 - Source hashes/counts are recomputed where readable and stale/conflicting records remain explicit.
-- Workbook cases are seed scenarios; PRD families and controlled variants supply broader coverage.
+- Workbook queries are seed scenarios, while their user-confirmed answers/key points are
+  case-specific reference ground truth. They are not a general answer template; PRD families and
+  controlled variants supply broader coverage and generalization pressure.
 - Legacy metrics retain their original corpus/time/substrate labels and cannot silently become S2
   acceptance measurements.
 - No same-model-generated expectation becomes human-reviewed gold without user review.

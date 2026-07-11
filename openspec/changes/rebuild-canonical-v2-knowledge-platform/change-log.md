@@ -18,3 +18,7 @@
 - Completed S2 task 2.2: the reviewed source-to-PRD matrix maps four domains, typed sub-objects,
   relationship families, retrieval/answer paths, and all six north-star effects to inventoried
   evidence, explicit ceilings, and future owning slices.
+- Completed S2 task 2.3: froze deterministic 40-case regression and 12-case challenge corpora with
+  source/protected-slot/A-G metadata. User-confirmed workbook answers/key points are case-specific
+  reference ground truth, including an explicitly marked known-bad historical response; generated
+  PRD/challenge expectations remain pending review and are not treated as factual gold.

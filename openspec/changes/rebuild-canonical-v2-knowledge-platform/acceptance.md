@@ -36,11 +36,14 @@ targets throughout this change.
 - [ ] Existing PRD minima remain lower bounds, including intent accuracy `>= 0.90`, applicable
       Top-5 relevance `>= 0.85`, applicable human summary quality `>= 4.0/5.0`, and applicable
       latency/import constraints.
-- [ ] The frozen regression corpus contains workbook seed scenarios plus PRD-derived exact,
+- [x] The frozen regression corpus contains workbook seed scenarios plus PRD-derived exact,
       semantic, structured-filter, relationship, A-G, multi-turn, Web, and assessment families.
-- [ ] The challenge corpus is separately versioned and includes reviewed badcases and controlled
+- [x] User-confirmed workbook answers and key points are case-specific reference ground truth with
+      row-level provenance; they are not generalized into a product-wide answer template or treated
+      as the sole acceptance source.
+- [x] The challenge corpus is separately versioned and includes reviewed badcases and controlled
       alias/constraint/relation/context variations.
-- [ ] Every gold expectation is human-reviewed; unreviewed same-model generation/judging cannot
+- [x] Every gold expectation is human-reviewed; unreviewed same-model generation/judging cannot
       establish gold truth.
 
 ## 3. Evidence landing acceptance

@@ -57,15 +57,16 @@ read-only validation, `openpyxl` for workbook inspection.
 - Create: `.agents/runs/rebuild-canonical-v2-knowledge-platform/s2/corpora/challenge-v1.jsonl`
 - Create: `.agents/runs/rebuild-canonical-v2-knowledge-platform/s2/corpus-manifest.json`
 
-- [ ] Read `docs/测试集答案.xlsx` without modification and convert its information-retrieval rows
-  into seed cases retaining workbook row identity and answer provenance.
-- [ ] Add PRD-derived exact, semantic, structured-filter, relationship, A-G, multi-turn, Universal
+- [x] Read `docs/测试集答案.xlsx` without modification and convert its information-retrieval rows
+  into seed cases retaining workbook row identity and user-confirmed, case-specific reference
+  answers/key points with provenance; do not generalize them into an answer template.
+- [x] Add PRD-derived exact, semantic, structured-filter, relationship, A-G, multi-turn, Universal
   Web, provenance, conflict, partial-answer, and evidence-based-assessment families.
-- [ ] Add separately versioned alias, spelling, time/geography/negation, relation-direction,
+- [x] Add separately versioned alias, spelling, time/geography/negation, relation-direction,
   referent, displayed-set, topic-switch, provider-failure, and insufficient-evidence challenges.
-- [ ] Give every case an observable expected behavior, protected slots, source, and review status;
+- [x] Give every case an observable expected behavior, protected slots, source, and review status;
   do not invent factual gold beyond workbook/PRD/verified evidence.
-- [ ] Parse every JSONL line, calculate corpus SHA-256/counts, and write `corpus-manifest.json`.
+- [x] Parse every JSONL line, calculate corpus SHA-256/counts, and write `corpus-manifest.json`.
 
 ### Task 4: Record current and legacy baseline
 

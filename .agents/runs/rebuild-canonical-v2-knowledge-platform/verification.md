@@ -182,8 +182,7 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 
 ## Pending evidence
 
-1. S2 frozen regression/challenge corpus (task 2.3).
-2. S2 baseline report and threshold freeze (tasks 2.4–2.5).
+1. S2 baseline report and threshold freeze (tasks 2.4–2.5).
 
 ## S2 task 2.1 source inventory — 2026-07-11T07:11:30Z
 
@@ -230,6 +229,35 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   snapshot, and salvage counts. Contract checks verified all domain, relationship, outcome, and
   seed-corpus requirements. No database, provider, Milvus client, or source mutation was used.
 - Task 2.2 is complete; tasks 2.3–2.5 remain open.
+
+## S2 task 2.3 regression and challenge corpora — 2026-07-11
+
+- Deterministic builder `s2/build_corpora.py` reads `docs/测试集答案.xlsx` without modification and
+  emits 40 regression cases: 25 workbook rows across 17 conversation groups plus 15 PRD-derived
+  cases. The separately versioned challenge corpus contains 12 cases: one user-reviewed badcase
+  derived from workbook row 12 and 11 controlled variations.
+- The user confirmed workbook answers/key points as case-specific reference ground truth. Each
+  workbook case records row provenance and `user_confirmed_reference_gold`; the workbook remains a
+  seed-query set rather than a general answer template or sole acceptance source.
+- Workbook row 12 explicitly labels its historical response inaccurate. The corpus preserves it as
+  a `known_bad_response`/`reviewed_badcase` and uses the key points as the correction constraint, so
+  evaluation cannot reward reproducing the known-wrong response.
+- PRD regression families cover exact, semantic, structured filter, relationship, A-G, multi-turn,
+  Universal Web, provenance/conflict, partial answer, and evidence-based assessment. Challenges
+  cover alias/spelling, time/geography/negation, relation direction, displayed-set/referent,
+  topic-switch, provider failure, and insufficient evidence.
+- Every case has A-G type, domain/family, source, protected slots, observable behavior, and review
+  status. All A/B/C/D/E/G information-retrieval cases require Web augmentation; F refusals do not.
+- Four TDD contract tests passed after observed RED failures for parser grouping, manifest hashes,
+  required families, source resolution, F refusal/Web policy, and known-bad-response semantics.
+  Ruff and Pyright passed with zero findings.
+- Repeated full generation was byte-identical. Frozen SHA-256 values: regression
+  `f2656e8c2f0803452af18fa0d478eec1b1e1b94eaa97ef48d06d0828401297da`, challenge
+  `ee46c677af668131fb8da568fabd6386659f3287d0bdb0fd740f7069497f6f9f`, manifest
+  `dc7cc10ba08db341a38cc08da1edd2449594120a3861735edfd514b29be46088`.
+- PRD/challenge cases remain `pending_user_review` and the manifest remains
+  `pending_user_acceptance`; they define observable behavior, not unreviewed factual gold. Task 2.3
+  is complete; tasks 2.4–2.5 and S2 acceptance remain open.
 
 ## Explicit non-claims
 
