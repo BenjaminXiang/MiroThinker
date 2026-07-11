@@ -12,7 +12,7 @@
 - [x] 2.2 Build a reviewed source-to-PRD coverage matrix for Professor, Company, Paper, Patent, relationships, evidence fields, and known workbook/PRD scenario families.
 - [x] 2.3 Establish the frozen regression corpus and versioned challenge corpus from workbook seeds, PRD families, reviewed badcases, and controlled variations.
 - [x] 2.4 Run the isolated read-only baseline for coverage/reach, Recall@K, Precision@K, ranking, relation paths, answer support, Web provenance, latency, and provider cost.
-- [ ] 2.5 Freeze numeric thresholds not already fixed by PRD in `acceptance.md` without lowering existing PRD minima or hard invariants.
+- [x] 2.5 Freeze numeric thresholds not already fixed by PRD in `acceptance.md` without lowering existing PRD minima or hard invariants.
 - [ ] 2.6 Create and independently restore-verify content-addressed backups for original PostgreSQL, Milvus, WAL/FPI, salvage, and all inventoried historical SQLite/JSONL/XLSX/PDF/cache/raw-source families; review/accept this gate before task 3.2 or any Canonical V2/landing write.
 
 ## 3. Canonical V2 Interfaces and Database Baseline

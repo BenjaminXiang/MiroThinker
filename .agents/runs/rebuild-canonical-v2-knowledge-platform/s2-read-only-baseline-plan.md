@@ -93,13 +93,14 @@ read-only validation, `openpyxl` for workbook inspection.
 - Modify: `openspec/changes/rebuild-canonical-v2-knowledge-platform/change-log.md`
 - Modify: `.agents/runs/rebuild-canonical-v2-knowledge-platform/verification.md`
 
-- [ ] Encode PRD minima unchanged: intent accuracy `>=0.90`, applicable Top-5 relevance `>=0.85`,
+- [x] Encode PRD minima unchanged: intent accuracy `>=0.90`, applicable Top-5 relevance `>=0.85`,
   applicable human summary quality `>=4.0/5.0`, company semantic retrieval `<=5s`, context resolve
   `<500ms`, session TTL `1800s`, and route TTFT `5–25s` where applicable.
-- [ ] Add hard invariants and calibrated per-domain/path recall, precision, relation, provenance,
+- [x] Add hard invariants and calibrated per-domain/path recall, precision, relation, provenance,
   support, Web invocation, multi-turn, latency, and cost gates with rationale and corpus version.
-- [ ] Mark unapproved calibrated values pending rather than choosing implementation-convenient gates.
-- [ ] Validate all JSON/JSONL, hashes/counts, OpenSpec strict validity, source invariants, and clean
+- [x] Mark unapproved calibrated values pending in the reviewed Candidate rather than choosing
+  implementation-convenient gates; bind the Accepted registry to that exact Candidate hash.
+- [x] Validate all JSON/JSONL, hashes/counts, OpenSpec strict validity, source invariants, and clean
   scope diff; write review evidence.
-- [ ] Present corpus/threshold decisions for user acceptance. Mark tasks 2.1–2.5 and S2 Accepted only
+- [x] Present corpus/threshold decisions for user acceptance. Mark tasks 2.1–2.5 and S2 Accepted only
   after review; do not start S3 in the same acceptance step.

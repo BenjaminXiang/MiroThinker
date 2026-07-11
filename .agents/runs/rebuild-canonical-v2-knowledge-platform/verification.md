@@ -2,9 +2,10 @@
 
 ## Current status
 
-S1 database-target safety was accepted by the user at 2026-07-11T05:39:19Z. Tasks 1.1–1.5 have
-RED/GREEN, real isolated Postgres, source-invariant, review, and acceptance evidence. No later slice
-has started.
+S1 database-target safety was accepted by the user at 2026-07-11T05:39:19Z. Explicit user acceptance
+of S2 tasks 2.1–2.5, including the corpus ground-truth policy and threshold Candidate, was recorded
+at 2026-07-11T15:10:32Z. S2B/task 2.6 has not started, and no Canonical V2/landing write is
+authorized.
 
 ## Existing incident/recovery checkpoint used as planning evidence
 
@@ -182,8 +183,7 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 
 ## Pending evidence
 
-1. S2 threshold freeze and acceptance (task 2.5).
-2. S2B complete source backup manifest and independent restore verification (task 2.6). Until this
+1. S2B complete source backup manifest and independent restore verification (task 2.6). Until this
    is reviewed and Accepted, task 3.2 and every Canonical V2/landing write remain blocked.
 
 ## S2 task 2.1 source inventory — 2026-07-11T07:11:30Z
@@ -314,7 +314,39 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   dump hashes match. An earlier composite check had an invalid Docker template and was discarded;
   the corrected fail-fast command produced the accepted evidence.
 - No database query/write, Milvus client open, provider call, source mutation, backup claim, or
-  rebuild write occurred. Task 2.4 is complete; tasks 2.5–2.6 remain open.
+  rebuild write occurred. Task 2.4 is complete; task 2.5 owns the threshold freeze.
+
+## S2 task 2.5 accepted threshold and corpus policy — 2026-07-11T15:10:32Z
+
+- The immutable pending Candidate contains 83 metrics: 24 PRD minima, 25 hard invariants, and 34
+  calibrated product-effect gates. Candidate SHA-256:
+  `15a99c284861854b98a4bbfb0653700103f7b3b26e58079296f2c24e4c6c81d0`.
+- TDD first produced two expected failures because the Candidate still reported
+  `pending_user_approval`, then a third expected failure because no candidate-hash approval binding
+  existed. GREEN added deterministic acceptance metadata and rejects any content whose SHA-256 does
+  not match the reviewed Candidate.
+- The Accepted registry SHA-256 is
+  `bce20bf959ba8a2b0997fe2bc1d71e5f727b857a2e374990cf76085c1e13b5cc`. All calibrated values are
+  `user_approved`; no PRD minimum, hard invariant, numeric threshold, population contract, or legacy
+  baseline value changed during acceptance.
+- The user explicitly approved the threshold Candidate, corpus ground-truth policy, and S2 tasks
+  2.1–2.5. Workbook answers/key points remain case-specific reference ground truth; row 12 remains a
+  known bad response with corrective key points. PRD/challenge cases are behavior contracts, not
+  generated factual gold. Their immutable manifest retains its generation-time Candidate metadata,
+  with this review providing the acceptance overlay.
+- The population contract remains honest: the frozen 52 seeds do not materialize every later sample
+  bank. Missing versioned/human-reviewed populations block only their owning metric and must be
+  supplied by tasks 6.1, 8.1, and 9.1 without rewriting the seed corpus.
+- Full S2 verification passed: all four S2 test modules reported `20 passed`; Ruff reported no
+  findings; Pyright reported `0 errors, 0 warnings, 0 informations`; every S2 JSON/JSONL parsed;
+  committed source/corpus/baseline/threshold hashes matched; regeneration of the Accepted registry
+  was byte-identical; and strict OpenSpec validation exited `0`.
+- Source invariants were rechecked at `2026-07-11T15:13:44Z`: original `pgtest` was still
+  `paused=true` on the frozen volume, the recovery lab remained network-none with no ports, and the
+  original Milvus plus verified salvage hashes matched. No database connection or Milvus client was
+  opened by Task 2.5.
+- Task 2.5 and S2 are Accepted. This does not accept task 2.6/S2B and does not authorize a database,
+  landing, publication, Milvus, recovery-replay, or production-like write.
 
 ## Explicit non-claims
 

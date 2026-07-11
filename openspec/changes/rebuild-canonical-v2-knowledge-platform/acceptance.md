@@ -10,7 +10,7 @@ targets throughout this change.
       validation and user review.
 - [x] Slice S1 (database target safety) is Accepted before any broad migration suite or candidate
       schema/replay write.
-- [ ] Slice S2 (read-only baseline) freezes `acceptance-thresholds.json` and corpus manifests before
+- [x] Slice S2 (read-only baseline) freezes `acceptance-thresholds.json` and corpus manifests before
       feature/data implementation slices become Ready.
 - [ ] Slice S2B/task 2.6 independently restore-verifies complete source backups and is Accepted
       before task 3.2 or any Canonical V2 schema, landing, canonical, publication, or index write.
@@ -41,9 +41,9 @@ targets throughout this change.
 
 ## 2. Threshold and corpus freeze
 
-- [ ] `acceptance-thresholds.json` records each metric, population/corpus version, threshold,
+- [x] `acceptance-thresholds.json` records each metric, population/corpus version, threshold,
       rationale, source (PRD or calibrated), and approval; implementation does not lower it.
-- [ ] Existing PRD minima remain lower bounds, including intent accuracy `>= 0.90`, applicable
+- [x] Existing PRD minima remain lower bounds, including intent accuracy `>= 0.90`, applicable
       Top-5 relevance `>= 0.85`, applicable human summary quality `>= 4.0/5.0`, and applicable
       latency/import constraints.
 - [x] The frozen regression corpus contains workbook seed scenarios plus PRD-derived exact,

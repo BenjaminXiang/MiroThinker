@@ -30,3 +30,7 @@
   legacy evidence, and unavailable metrics. Current offline intent fallback is 100/100; current
   retrieval/answer/Web/provider metrics remain unavailable, and legacy precision is explicitly
   unscored rather than treated as zero-false-positive acceptance.
+- Completed and accepted S2 task 2.5: froze 24 PRD minima, 25 hard invariants, and 34 calibrated
+  product-effect gates. The Accepted registry is cryptographically bound to the exact reviewed
+  Candidate; the user also accepted the corpus ground-truth policy and S2 tasks 2.1–2.5. Task 2.6
+  remains the mandatory backup/independent-restore gate before any rebuild write.

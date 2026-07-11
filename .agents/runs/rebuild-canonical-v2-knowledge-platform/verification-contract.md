@@ -2,9 +2,9 @@
 
 ## Status
 
-S1 database-target safety is Accepted at commit `a58184c`. S2 read-only baseline tasks 2.1–2.3 are
-complete; tasks 2.4–2.5 remain open. The S2B/task 2.6 backup-and-restore gate is not Accepted, so task
-3.2 and every Canonical V2/landing write slice remain blocked even after the read-only baseline.
+S1 database-target safety is Accepted at commit `a58184c`. S2 read-only baseline tasks 2.1–2.5 and
+their corpus/ground-truth/threshold policy are Accepted. The S2B/task 2.6 backup-and-restore gate is
+not Accepted, so task 3.2 and every Canonical V2/landing write slice remain blocked.
 
 ## Behavior owner
 
@@ -55,7 +55,7 @@ cannot mutate offline canonical identity decisions.
   inventoried historical SQLite/JSONL/XLSX/PDF/cache/raw-source families. Restore targets must be
   distinct from original and backup locations; original volumes/files remain read-only.
 
-Last identity/hash check recorded in `verification.md`: `2026-07-11T05:37:16Z`.
+Last identity/hash check recorded in `verification.md`: `2026-07-11T15:13:44Z`.
 
 ## Hard invariants
 
