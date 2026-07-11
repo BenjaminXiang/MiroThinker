@@ -34,3 +34,8 @@
   product-effect gates. The Accepted registry is cryptographically bound to the exact reviewed
   Candidate; the user also accepted the corpus ground-truth policy and S2 tasks 2.1–2.5. Task 2.6
   remains the mandatory backup/independent-restore gate before any rebuild write.
+- Completed and accepted task 2.6/S2B under the user's objective-verification self-approval
+  authorization. Content-addressed backup and independent restore cover 48 frozen inventory records
+  plus original PostgreSQL and the forensic/WAL/FPI tree; PostgreSQL, Milvus, and forensic probes
+  passed. A shared mount-policy repair also removed seven attributable empty anonymous volumes and
+  prevents Postgres-image implicit volumes in S2B tool containers.

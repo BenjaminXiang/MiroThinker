@@ -2,8 +2,11 @@
 
 ## Status
 
-Specified. It may become Ready only after S2 tasks 2.4–2.5 are complete, backup and restore target
-paths/capacity are recorded, and the source inventory checkpoint remains unchanged.
+Accepted at `2026-07-11T16:11:23Z` under the user's explicit authorization to self-approve when
+objective verification can decide. S2 tasks 2.4–2.5 were already Accepted; target identity/capacity,
+complete backup, independent restore, format-specific probes, source invariants, and fail-closed
+admission all passed. This acceptance satisfies the task 2.6 prerequisite but does not itself start
+or authorize a production-like cutover.
 
 ## Parent
 
@@ -43,6 +46,65 @@ Required source families:
 - original Milvus database file;
 - WAL/FPI, ext4, salvage dump/IDs, and recovery metadata/checkpoints;
 - every inventoried historical SQLite, JSONL, XLSX, PDF, cache, release, and raw-source family.
+
+## Ready preflight
+
+- Run ID: `canonical-v2-s2b-20260711T152222Z`.
+- Frozen inventory: 48 records, 16,447,082,378 recorded bytes, SHA-256
+  `83a9e2c82aee4cbe5c02f088ba0fdbf8d15359d87a85bf4ee901b0f58f70fa09`.
+  Re-running the accepted builder over all current members produced the same bytes and hash.
+- Original PostgreSQL volume:
+  `d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241`;
+  a Docker-inspected `rw=false` mount read as UID 999 reported 407,844 KiB and 3,762 files. The
+  original `pgtest` remained paused before and after the probe.
+- Backup root: `/md1/mirothinker-backups/canonical-v2-s2b-20260711T152222Z`, device `2305`,
+  3,109,684,568,064 bytes available at preflight. The path did not exist.
+- Independent materialization root:
+  `/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z`, device `66306`,
+  1,276,234,944,512 bytes available at preflight. The path did not exist.
+- Primary workspace/recovery evidence is on device `2049`. Backup, restore, and primary evidence
+  devices are pairwise distinct. PostgreSQL restore volumes must also have new Docker volume IDs.
+- The conservative capacity floor is 50,000,000,000 bytes on each target, covering the inventory,
+  raw PostgreSQL backup/restore, the required WAL/FPI/recovery tree, manifests, and probe copies.
+- Original Milvus and salvage hashes still matched at `2026-07-11T15:25:02Z`; the recovery lab
+  remained network-none/no-port. No database or Milvus client was opened during preflight.
+
+## Execution plan
+
+1. Add RED contract tests for target separation, complete inventory/family coverage, copy
+   independence, hash equality, restore evidence, and fail-closed rebuild admission.
+2. Implement deterministic content-addressed copy/manifests and run them only against the named
+   backup root, with the original PostgreSQL volume mounted `rw=false` and original Milvus treated
+   as bytes only.
+3. Materialize every backup into the named independent root, compare hashes/member manifests, and
+   run bounded JSON/JSONL/XLSX/PDF/SQLite/archive/recovery probes.
+4. Restore PostgreSQL into new no-network/no-port volumes and inspect Milvus only through the
+   verified restored copy; record identities, schemas/collections, counts, and failures.
+5. Run admission, source-invariant, strict OpenSpec, static, and test checks; update review and mark
+   task 2.6 Accepted only if every hard gate passes.
+
+## Acceptance checkpoint
+
+- Backup manifest: 50/50 required source records, SHA-256
+  `a14c1eab673f8fca2bdbf4d50dfe8e9b33cf077b9314855298d29a16a82e59c8`.
+- Restore verification: 50/50 passed, SHA-256
+  `98826e8da7ee66af20199c4998f4cdccc9276179119f30cd318f7ce8c0e7d231`.
+- Acceptance record: SHA-256
+  `3155d8908ab560d8d97ed08881f067564f38e23c097e46fe111a056ef739fc5b`.
+- Frozen inventory backup covered 42,556 logical members and 16,447,082,378 bytes. The original
+  PostgreSQL volume and the forensic recovery/WAL/FPI tree are additional independently archived
+  sources.
+- PostgreSQL exact materialization matched 3,762 tree entries; a second network-none/no-port probe
+  started `miroflow_real` at `V042`, found 42 public tables, and confirmed zero rows in the four core
+  domain tables.
+- The verified Milvus probe copy opened six collections with 70,780 rows; neither original nor first
+  restored copy changed. The forensic tree matched all 24,230 entries and passed dump, WAL, FPI, and
+  ext4 bounded probes.
+- A systemic Docker-image implicit-volume defect was repaired with a persistent-mount allowlist,
+  explicit PGDATA tmpfs override, and `docker rm -v`. Seven attributable anonymous volumes were
+  proved empty/unreferenced and removed; no recent anonymous dangling volume remained.
+- Full Candidate verification passed 32 tests, Ruff, Pyright, inventory regeneration, artifact/hash,
+  capacity/target, source-invariant, admission, and strict OpenSpec checks before acceptance.
 
 ## Forbidden changes
 
@@ -101,5 +163,6 @@ Required source families:
 - Every backup has passed an independent format-appropriate restore/materialization verification in
   a distinct isolated target.
 - Fail-closed admission tests prove task 3.2 and all rebuild writes require the accepted manifest.
-- Original source invariants still match, review evidence is complete, and the user accepts S2B.
+- Original source invariants still match, review evidence is complete, and S2B has reviewed
+  acceptance under the user's explicit self-approval authorization.
 - Only then may task 3.2 or any Canonical V2/landing write slice become Ready.

@@ -1,0 +1,9 @@
+{
+  "accepted_on": "2026-07-11T16:11:23Z",
+  "authority": "codex_self_approval_under_explicit_user_authorization",
+  "backup_manifest_sha256": "a14c1eab673f8fca2bdbf4d50dfe8e9b33cf077b9314855298d29a16a82e59c8",
+  "restore_verification_sha256": "98826e8da7ee66af20199c4998f4cdccc9276179119f30cd318f7ce8c0e7d231",
+  "schema_version": "canonical-v2-s2b-acceptance-v1",
+  "state": "accepted",
+  "statement": "Accepted after complete objective S2B verification under the user's instruction to self-approve when validation can decide."
+}

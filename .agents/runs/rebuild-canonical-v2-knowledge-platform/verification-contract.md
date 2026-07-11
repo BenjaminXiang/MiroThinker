@@ -3,8 +3,10 @@
 ## Status
 
 S1 database-target safety is Accepted at commit `a58184c`. S2 read-only baseline tasks 2.1–2.5 and
-their corpus/ground-truth/threshold policy are Accepted. The S2B/task 2.6 backup-and-restore gate is
-not Accepted, so task 3.2 and every Canonical V2/landing write slice remain blocked.
+their corpus/ground-truth/threshold policy are Accepted. S2B/task 2.6 is Accepted with backup
+manifest `a14c1eab…e59c8`, restore verification `98826e8d…d231`, and acceptance record
+`3155d890…fc5b`. The backup prerequisite no longer blocks task 3.2; task 3.1 remains next and no
+Canonical V2/landing write has begun.
 
 ## Behavior owner
 
@@ -28,7 +30,7 @@ cannot mutate offline canonical identity decisions.
 - Original Postgres volume:
   `d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241`. The paused
   source container still has its historical read-write mount, so no command may unpause or enter it;
-  implementation tests may not mount this volume.
+  only the Accepted S2B copy run mounted it `rw=false`, and implementation tests may not mount it.
 - Forensic checkpoint root:
   `/home/longxiang/.mirothinker_recovery/20260711T022932Z-pgtest-forensic-freeze/`;
   canonical source/copy manifest SHA-256:
@@ -48,14 +50,15 @@ cannot mutate offline canonical identity decisions.
 - A generic `DATABASE_URL` is never accepted as fallback for migration/test/rebuild targets.
 - Real provider calls are allowed only in named acceptance runs with secrets from the approved
   environment and no credential values in logs/evidence.
-- Backup/restore gate: no accepted backup manifest or complete independent recovery drill exists
-  yet. Until S2B/task 2.6 is Accepted, no command may create or mutate Canonical V2 schemas, landing,
-  canonical projections, publication state, or candidate indexes.
+- Backup/restore gate: Accepted S2B evidence is in
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s2b/`. Every future rebuild-write entry point
+  must verify the exact acceptance record before its first write; changed/missing evidence fails
+  closed.
 - S2B backup coverage MUST include original PostgreSQL, original Milvus, WAL/FPI, salvage, and all
   inventoried historical SQLite/JSONL/XLSX/PDF/cache/raw-source families. Restore targets must be
   distinct from original and backup locations; original volumes/files remain read-only.
 
-Last identity/hash check recorded in `verification.md`: `2026-07-11T15:13:44Z`.
+Last identity/hash check recorded in `verification.md`: `2026-07-11T16:19:12Z`.
 
 ## Hard invariants
 
@@ -97,6 +100,8 @@ Last identity/hash check recorded in `verification.md`: `2026-07-11T15:13:44Z`.
   failed probes reject task 3.2 and all Canonical V2/landing writes before their first write.
 - Original Postgres remains quiesced; any dedicated backup mount is read-only. Original Milvus is
   copied without opening a client; only the verified copy may be inspected.
+- Accepted evidence covers 50/50 source records and passed PostgreSQL, Milvus, forensic/WAL/FPI,
+  mount-policy, independent-materialization, and source-invariant probes.
 
 ### S3–S7 — Data platform and release
 

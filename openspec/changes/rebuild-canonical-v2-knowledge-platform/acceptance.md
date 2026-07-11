@@ -12,7 +12,7 @@ targets throughout this change.
       schema/replay write.
 - [x] Slice S2 (read-only baseline) freezes `acceptance-thresholds.json` and corpus manifests before
       feature/data implementation slices become Ready.
-- [ ] Slice S2B/task 2.6 independently restore-verifies complete source backups and is Accepted
+- [x] Slice S2B/task 2.6 independently restore-verifies complete source backups and is Accepted
       before task 3.2 or any Canonical V2 schema, landing, canonical, publication, or index write.
 - [ ] Every later slice has an independently testable/reviewable contract, immutable evidence, and
       Accepted predecessor; no Specified/Candidate slice is used as an accepted dependency.
@@ -30,13 +30,13 @@ targets throughout this change.
 - [x] No accepted verification command connects or writes to the original `pgtest` or original
       Milvus file.
 - [x] Forensic/historical evidence chain-of-custody hashes remain intact.
-- [ ] A reviewed backup manifest covers original PostgreSQL, Milvus, WAL/FPI, salvage, and every
+- [x] A reviewed backup manifest covers original PostgreSQL, Milvus, WAL/FPI, salvage, and every
       inventoried historical SQLite/JSONL/XLSX/PDF/cache/raw-source family with source/copy identity,
       size, SHA-256, copy run/time, and no hard-link dependence on original bytes.
-- [ ] Every required backup passes an independent restore/materialization drill in a target distinct
+- [x] Every required backup passes an independent restore/materialization drill in a target distinct
       from source and backup: PostgreSQL identity/revision/schema/count probes, Milvus copy
       schema/collection/count probes, and file/recovery-family hash plus readability/replay probes.
-- [ ] Any missing family, mismatch, failed recovery probe, or unreviewed backup state rejects task
+- [x] Any missing family, mismatch, failed recovery probe, or unreviewed backup state rejects task
       3.2 and all later rebuild writes before their first write.
 
 ## 2. Threshold and corpus freeze

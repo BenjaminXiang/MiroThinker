@@ -4,8 +4,9 @@
 
 S1 database-target safety was accepted by the user at 2026-07-11T05:39:19Z. Explicit user acceptance
 of S2 tasks 2.1–2.5, including the corpus ground-truth policy and threshold Candidate, was recorded
-at 2026-07-11T15:10:32Z. S2B/task 2.6 has not started, and no Canonical V2/landing write is
-authorized.
+at 2026-07-11T15:10:32Z. S2B/task 2.6 was objectively verified and Accepted at
+2026-07-11T16:11:23Z under the user's self-approval authorization. No Canonical V2/landing write has
+started; task 3.1 is next.
 
 ## Existing incident/recovery checkpoint used as planning evidence
 
@@ -183,8 +184,9 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 
 ## Pending evidence
 
-1. S2B complete source backup manifest and independent restore verification (task 2.6). Until this
-   is reviewed and Accepted, task 3.2 and every Canonical V2/landing write remain blocked.
+1. Task 3.1 RED interface/contract tests and its independently reviewable S3 slice checkpoint.
+2. Task 3.2 remains a later isolated write task; it must verify the Accepted S2B record before its
+   first write and still requires its own Ready scope/target evidence.
 
 ## S2 task 2.1 source inventory — 2026-07-11T07:11:30Z
 
@@ -271,15 +273,15 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 - OpenSpec now requires a content-addressed source-to-backup manifest and a distinct second-target
   recovery/materialization drill. Hash equality alone is insufficient. Missing families, mismatches,
   failed probes, or unreviewed evidence fail closed before the first rebuild write.
-- Added task 2.6 and Specified slice `slices/s2b-source-backup-restore.md`. Task 3.2 and every
-  Canonical V2 schema, landing, canonical, publication, or index write remain blocked until S2B is
-  reviewed and Accepted. Read-only tasks 2.4–2.5 may continue.
+- At this audit checkpoint, task 2.6 and Specified slice
+  `slices/s2b-source-backup-restore.md` were added. Task 3.2 and every Canonical V2 schema, landing,
+  canonical, publication, or index write were blocked until the later S2B acceptance recorded below.
 - Canonical identity authority is now explicit: normalization, candidate recall, deterministic
   rules, structured LLM adjudication, human review, and merge/split publication belong to versioned
   offline builds. Query/answer paths may resolve user references against an accepted release but
   must emit an offline review gap instead of mutating identity/source mappings.
-- This audit changed contracts only. It did not create a backup, run a restore, access a database,
-  open Milvus, or authorize any rebuild write; task 2.6 remains incomplete.
+- This audit changed contracts only. At that checkpoint it did not create a backup, run a restore,
+  access a database, open Milvus, or authorize any rebuild write; task 2.6 was still incomplete.
 
 ## S2 task 2.4 current/legacy/unavailable baseline — 2026-07-11T08:16:49Z
 
@@ -345,12 +347,60 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   `paused=true` on the frozen volume, the recovery lab remained network-none with no ports, and the
   original Milvus plus verified salvage hashes matched. No database connection or Milvus client was
   opened by Task 2.5.
-- Task 2.5 and S2 are Accepted. This does not accept task 2.6/S2B and does not authorize a database,
-  landing, publication, Milvus, recovery-replay, or production-like write.
+- Task 2.5 and S2 were Accepted at that checkpoint without authorizing task 2.6 or rebuild writes;
+  the independently verified S2B acceptance is recorded below.
+
+## S2B task 2.6 complete backup and independent restore — 2026-07-11T16:11:23Z
+
+- Named targets were physically separated: backup root
+  `/md1/mirothinker-backups/canonical-v2-s2b-20260711T152222Z` on device `2305`, independent restore
+  root `/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z` on device `66306`, and
+  primary evidence on device `2049`. Each target remained above the 50 GB capacity floor.
+- Backup manifest SHA-256
+  `a14c1eab673f8fca2bdbf4d50dfe8e9b33cf077b9314855298d29a16a82e59c8` covers all 48 frozen
+  inventory records plus original PostgreSQL and the complete forensic/WAL/FPI recovery tree. The
+  inventory expands to 42,556 logical members and 16,447,082,378 bytes; all hashes and copy-
+  independence checks passed.
+- The original PostgreSQL volume was mounted only `rw=false` while `pgtest` remained paused. Its
+  3,762-entry, 418,849,280-byte archive SHA-256 is
+  `509cf117eae7ae3069e8d41d247044cd43168086b33b231590d9605546288da9`.
+- The 24,230-entry forensic tree archive SHA-256 is
+  `59f5901ecae7f612848ce7142031ad1efa1c366ce00a50b99019732b2d4d1055`. It includes retained WAL,
+  FPI pages, ext4 journal/inode evidence, salvage and checkpoint dumps, forensic PostgreSQL bytes,
+  IDs, plans, tools, and metadata. Only the active derived recovery-lab PGDATA was excluded; its
+  immutable dump/checkpoint inputs are included and the original volume is backed separately.
+- Restore verification SHA-256
+  `98826e8da7ee66af20199c4998f4cdccc9276179119f30cd318f7ce8c0e7d231` reports 50/50 sources
+  passed. The 48 inventory records rematerialized with 42,556 hash checks and 86 bounded format
+  probes. The forensic tree manifest matched exactly; both dumps, one WAL record, 20,427 FPI pages,
+  and an ext4 journal block passed their format probes.
+- PostgreSQL exact materialization matched all 3,762 tree entries. A second labeled probe volume ran
+  with network none/no ports/read-only rootfs and proved `miroflow_real`, Alembic `V042`, 42 public
+  tables, and zero Company/Professor/Paper/Patent rows. The failed initial `postgres`-role assumption
+  was diagnosed as a probe bug; the original non-secret configured role `miroflow` succeeded without
+  creating or changing roles.
+- Original Milvus was never opened. A third verified probe copy opened six collections with 70,780
+  rows; neither original nor first restored copy changed, and the probe copy hash was unchanged.
+- A sibling-pattern audit found Postgres-image implicit anonymous volumes in S2B tool containers.
+  RED/GREEN mount-policy coverage now requires an exact persistent allowlist and explicit PGDATA
+  tmpfs override. Seven volumes attributable by ID/time were proved anonymous, dangling,
+  unreferenced, and empty before exact removal; no recent anonymous dangling volume remained.
+- Pre-acceptance verification passed 32 tests, Ruff, Pyright, full inventory regeneration, exact
+  archive/source hashes, capacity/target isolation, source invariants, strict OpenSpec validation,
+  and a temporary exact-hash admission run. Formal acceptance record SHA-256 is
+  `3155d8908ab560d8d97ed08881f067564f38e23c097e46fe111a056ef739fc5b`; the formal gate reports
+  `state=accepted`, `source_count=50`.
+- Final post-acceptance verification at `2026-07-11T16:19:12Z` repeated all 32 tests, Ruff, Pyright,
+  formal admission, artifact/control hashes, full inventory regeneration, capacity, target/source
+  identities, and strict OpenSpec validation. The backup root is read-only (`dr-x------`); its
+  control-evidence manifest SHA-256 is
+  `59473d1739a5b072d9118d0fc76f92caa028d754c421d88a0c94e6db25d670f2`.
+- No original source write, provider call, recollection, Canonical V2/landing write, or production-
+  like cutover occurred. Task 2.6 is complete; the next task is 3.1.
 
 ## Explicit non-claims
 
-- S1 acceptance does not authorize S2 writes, recovery replay, broad migration suites, or any
-  production-like cutover without the next Ready slice contract.
+- S2B acceptance satisfies only the backup prerequisite; each later task still requires its own
+  Ready slice, explicit isolated target, and verification loop.
 - No Canonical V2 database or Milvus release is accepted.
 - No original source write or production-like cutover is authorized.

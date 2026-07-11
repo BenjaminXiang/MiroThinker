@@ -1,0 +1,1734 @@
+{
+  "approval_state": "candidate_pending_review",
+  "backup_manifest_sha256": "a14c1eab673f8fca2bdbf4d50dfe8e9b33cf077b9314855298d29a16a82e59c8",
+  "backup_root": "/md1/mirothinker-backups/canonical-v2-s2b-20260711T152222Z",
+  "inventory_restore_fragment_sha256": "100625ac7d0ef065ccff98caf871788f7169102e51020d9f4765ed5b563f548d",
+  "post_restore_source_invariants": {
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_postgres_state": "paused paused=true",
+    "recovery_lab_state": "running network=none ports={}",
+    "restored_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "salvage_dump_sha256": "cef8eb6ba18ebd23fde3e47023222ecb82bc8f27582040efe5a212a7f9fdfbb7"
+  },
+  "required_probes": {
+    "forensic": {
+      "record_sha256": "50edfd87941aaeb55372ac2033bf4c8fce58a83d3dfa6ee16847383d78944fbe",
+      "status": "passed"
+    },
+    "milvus": {
+      "after_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+      "before_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+      "collection_count": 6,
+      "collections": [
+        {
+          "description": {
+            "aliases": [],
+            "auto_id": false,
+            "collection_id": 0,
+            "collection_name": "company_profiles",
+            "consistency_level": 0,
+            "description": "Company profiles for semantic retrieval",
+            "enable_dynamic_field": false,
+            "enable_namespace": false,
+            "fields": [
+              {
+                "description": "",
+                "field_id": 100,
+                "is_primary": true,
+                "name": "id",
+                "params": {
+                  "max_length": 64
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 101,
+                "name": "name",
+                "params": {
+                  "max_length": 256
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 102,
+                "name": "industry",
+                "params": {
+                  "max_length": 128
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 103,
+                "name": "hq_city",
+                "params": {
+                  "max_length": 64
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 104,
+                "name": "description",
+                "params": {
+                  "max_length": 2048
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 105,
+                "name": "profile_summary",
+                "params": {
+                  "max_length": 2048
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 106,
+                "name": "technology_route_summary",
+                "params": {
+                  "max_length": 2048
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 107,
+                "name": "profile_vector",
+                "params": {
+                  "dim": 4096
+                },
+                "type": 101
+              }
+            ],
+            "functions": [],
+            "num_partitions": 0,
+            "num_shards": 0,
+            "properties": {}
+          },
+          "name": "company_profiles",
+          "row_count": 6514
+        },
+        {
+          "description": {
+            "aliases": [],
+            "auto_id": false,
+            "collection_id": 0,
+            "collection_name": "paper_chunks",
+            "consistency_level": 0,
+            "description": "Paper chunks for semantic retrieval",
+            "enable_dynamic_field": false,
+            "enable_namespace": false,
+            "fields": [
+              {
+                "description": "",
+                "field_id": 100,
+                "is_primary": true,
+                "name": "chunk_id",
+                "params": {
+                  "max_length": 128
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 101,
+                "name": "paper_id",
+                "params": {
+                  "max_length": 64
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 102,
+                "name": "chunk_type",
+                "params": {
+                  "max_length": 32
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 103,
+                "name": "segment_index",
+                "params": {},
+                "type": 5
+              },
+              {
+                "description": "",
+                "field_id": 104,
+                "name": "year",
+                "params": {},
+                "type": 5
+              },
+              {
+                "description": "",
+                "field_id": 105,
+                "name": "venue",
+                "params": {
+                  "max_length": 128
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 106,
+                "name": "content_text",
+                "params": {
+                  "max_length": 2048
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 107,
+                "name": "content_vector",
+                "params": {
+                  "dim": 4096
+                },
+                "type": 101
+              }
+            ],
+            "functions": [],
+            "num_partitions": 0,
+            "num_shards": 0,
+            "properties": {}
+          },
+          "name": "paper_chunks",
+          "row_count": 46035
+        },
+        {
+          "description": {
+            "aliases": [],
+            "auto_id": false,
+            "collection_id": 0,
+            "collection_name": "patent_profiles",
+            "consistency_level": 0,
+            "description": "Patent profiles for semantic retrieval",
+            "enable_dynamic_field": false,
+            "enable_namespace": false,
+            "fields": [
+              {
+                "description": "",
+                "field_id": 100,
+                "is_primary": true,
+                "name": "id",
+                "params": {
+                  "max_length": 64
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 101,
+                "name": "patent_number",
+                "params": {
+                  "max_length": 64
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 102,
+                "name": "title",
+                "params": {
+                  "max_length": 512
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 103,
+                "name": "abstract",
+                "params": {
+                  "max_length": 2048
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 104,
+                "name": "technology_effect",
+                "params": {
+                  "max_length": 1024
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 105,
+                "name": "patent_type",
+                "params": {
+                  "max_length": 32
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 106,
+                "name": "ipc_codes",
+                "params": {
+                  "max_length": 512
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 107,
+                "name": "profile_vector",
+                "params": {
+                  "dim": 4096
+                },
+                "type": 101
+              }
+            ],
+            "functions": [],
+            "num_partitions": 0,
+            "num_shards": 0,
+            "properties": {}
+          },
+          "name": "patent_profiles",
+          "row_count": 11408
+        },
+        {
+          "description": {
+            "aliases": [],
+            "auto_id": false,
+            "collection_id": 0,
+            "collection_name": "professor_identity_profiles",
+            "consistency_level": 0,
+            "description": "Professor identity profiles for name and affiliation retrieval",
+            "enable_dynamic_field": false,
+            "enable_namespace": false,
+            "fields": [
+              {
+                "description": "",
+                "field_id": 100,
+                "is_primary": true,
+                "name": "id",
+                "params": {
+                  "max_length": 64
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 101,
+                "name": "name",
+                "params": {
+                  "max_length": 128
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 102,
+                "name": "name_en",
+                "params": {
+                  "max_length": 128
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 103,
+                "name": "institution",
+                "params": {
+                  "max_length": 256
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 104,
+                "name": "department",
+                "params": {
+                  "max_length": 128
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 105,
+                "name": "title",
+                "params": {
+                  "max_length": 64
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 106,
+                "name": "profile_url",
+                "params": {
+                  "max_length": 512
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 107,
+                "name": "identity_text",
+                "params": {
+                  "max_length": 4096
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 108,
+                "name": "identity_vector",
+                "params": {
+                  "dim": 4096
+                },
+                "type": 101
+              },
+              {
+                "description": "",
+                "field_id": 109,
+                "name": "quality_status",
+                "params": {
+                  "max_length": 32
+                },
+                "type": 21
+              }
+            ],
+            "functions": [],
+            "num_partitions": 0,
+            "num_shards": 0,
+            "properties": {}
+          },
+          "name": "professor_identity_profiles",
+          "row_count": 3409
+        },
+        {
+          "description": {
+            "aliases": [],
+            "auto_id": false,
+            "collection_id": 0,
+            "collection_name": "professor_profiles",
+            "consistency_level": 0,
+            "description": "Professor profiles for semantic retrieval",
+            "enable_dynamic_field": false,
+            "enable_namespace": false,
+            "fields": [
+              {
+                "description": "",
+                "field_id": 100,
+                "is_primary": true,
+                "name": "id",
+                "params": {
+                  "max_length": 64
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 101,
+                "name": "name",
+                "params": {
+                  "max_length": 128
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 102,
+                "name": "institution",
+                "params": {
+                  "max_length": 256
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 103,
+                "name": "department",
+                "params": {
+                  "max_length": 128
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 104,
+                "name": "title",
+                "params": {
+                  "max_length": 64
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 105,
+                "name": "profile_summary",
+                "params": {
+                  "max_length": 4096
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 106,
+                "name": "profile_vector",
+                "params": {
+                  "dim": 4096
+                },
+                "type": 101
+              },
+              {
+                "description": "",
+                "field_id": 107,
+                "name": "h_index",
+                "params": {},
+                "type": 4
+              },
+              {
+                "description": "",
+                "field_id": 108,
+                "name": "citation_count",
+                "params": {},
+                "type": 5
+              },
+              {
+                "description": "",
+                "field_id": 109,
+                "name": "paper_count",
+                "params": {},
+                "type": 4
+              }
+            ],
+            "functions": [],
+            "num_partitions": 0,
+            "num_shards": 0,
+            "properties": {}
+          },
+          "name": "professor_profiles",
+          "row_count": 5
+        },
+        {
+          "description": {
+            "aliases": [],
+            "auto_id": false,
+            "collection_id": 0,
+            "collection_name": "professor_research_profiles",
+            "consistency_level": 0,
+            "description": "Professor research profiles for expert and topic retrieval",
+            "enable_dynamic_field": false,
+            "enable_namespace": false,
+            "fields": [
+              {
+                "description": "",
+                "field_id": 100,
+                "is_primary": true,
+                "name": "id",
+                "params": {
+                  "max_length": 64
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 101,
+                "name": "research_text",
+                "params": {
+                  "max_length": 4096
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 102,
+                "name": "research_directions",
+                "params": {
+                  "max_length": 2048
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 103,
+                "name": "profile_summary",
+                "params": {
+                  "max_length": 4096
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 104,
+                "name": "paper_summary",
+                "params": {
+                  "max_length": 4096
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 105,
+                "name": "patent_summary",
+                "params": {
+                  "max_length": 4096
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 106,
+                "name": "quality_status",
+                "params": {
+                  "max_length": 32
+                },
+                "type": 21
+              },
+              {
+                "description": "",
+                "field_id": 107,
+                "name": "h_index",
+                "params": {},
+                "type": 4
+              },
+              {
+                "description": "",
+                "field_id": 108,
+                "name": "citation_count",
+                "params": {},
+                "type": 5
+              },
+              {
+                "description": "",
+                "field_id": 109,
+                "name": "paper_count",
+                "params": {},
+                "type": 4
+              },
+              {
+                "description": "",
+                "field_id": 110,
+                "name": "research_vector",
+                "params": {
+                  "dim": 4096
+                },
+                "type": 101
+              }
+            ],
+            "functions": [],
+            "num_partitions": 0,
+            "num_shards": 0,
+            "properties": {}
+          },
+          "name": "professor_research_profiles",
+          "row_count": 3409
+        }
+      ],
+      "path": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z/milvus-probe/milvus.db",
+      "probe_mutated_copy": false,
+      "record_sha256": "2a18bb5bfb90e9b4c7723d7d604e39923020676b0f2fdc93ee3e364551d92670",
+      "status": "passed",
+      "total_rows": 70780
+    },
+    "postgresql": {
+      "record_sha256": "9f3cce14e176a467e354de33f9bfe6dc042cb86957c9de01f747fd42a72652c8",
+      "status": "passed"
+    }
+  },
+  "required_source_count": 50,
+  "restore_root": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z",
+  "run_id": "canonical-v2-s2b-20260711T152222Z",
+  "schema_version": "canonical-v2-s2b-restore-verification-v1",
+  "side_effect_audit": {
+    "all_audited_volumes_empty": true,
+    "all_audited_volumes_unreferenced": true,
+    "anonymous_volumes_audited": 7,
+    "audit_jsonl_sha256": "c6d8844597f17d03f6762436aa3ff997a4e7ce1de1ebce2b13bbd547dd42baf2",
+    "audited_volumes_removed": true,
+    "defect_class": "implicit_postgres_image_volume",
+    "recent_anonymous_dangling_volumes": 0,
+    "retained_labeled_materialized_volume": "canonical-v2-s2b-pg-materialized-20260711T152222Z",
+    "shared_fix": "explicit PGDATA tmpfs override plus persistent-mount allowlist plus docker rm -v",
+    "status": "passed"
+  },
+  "source_inventory_sha256": "83a9e2c82aee4cbe5c02f088ba0fdbf8d15359d87a85bf4ee901b0f58f70fa09",
+  "sources": [
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "authoritative_prd",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "bounded_read",
+          "restore_path": "workspace/docs/Data-Agent-Shared-Spec.md",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 33340,
+      "source_id": "inventory:bfd2f9771e12452101507f8e0d10b2243f7f1807e96905ed35c327c430f349b6",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "authoritative_prd",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "bounded_read",
+          "restore_path": "workspace/docs/Agentic-RAG-PRD.md",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 30314,
+      "source_id": "inventory:c037008730833b28b5e9fb200a4ed9078d8571382b1250d36795d6ca18456e6b",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "authoritative_prd",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "bounded_read",
+          "restore_path": "workspace/docs/Company-Data-Agent-PRD.md",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 9107,
+      "source_id": "inventory:5b17380f2b046730ccda68910ee8dec2af10319093d7b86734780f6a19f4c847",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "authoritative_prd",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "bounded_read",
+          "restore_path": "workspace/docs/Professor-Data-Agent-Requirements-Audit-2026-05-09.md",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 26333,
+      "source_id": "inventory:531d3cb88f7c5605d5c3fe2d8c4e6564106c71cf3d278f23b3eea6daad08d145",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "authoritative_prd",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "bounded_read",
+          "restore_path": "workspace/docs/Paper-Data-Agent-PRD.md",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 15127,
+      "source_id": "inventory:5b0c06ada31be18bfb8ce8704c3e1a7cf04346f243756b451e5d37b414328d2f",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "authoritative_prd",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "bounded_read",
+          "restore_path": "workspace/docs/Patent-Data-Agent-PRD.md",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 7342,
+      "source_id": "inventory:619924e69182f9fffe9bef24455d50ebee787fabe9fb92b74e413a5e7a46544c",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "authoritative_prd",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "bounded_read",
+          "restore_path": "workspace/docs/Multi-turn-Context-Manager-Design.md",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 14675,
+      "source_id": "inventory:7bbd1e8e41e98162add1fbb385443061ac91b8a8fd7e0da3fa9a2a6a5dac47ee",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "seed_scenario_workbook",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "xlsx_read_only",
+          "restore_path": "workspace/docs/测试集答案.xlsx",
+          "sheets": 1,
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 31832,
+      "source_id": "inventory:e425f399185195b5e1c187db87869032e000e9c7e17b29353b61bce1b6ce025f",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "committed_backfill_jsonl",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "jsonl_parse",
+          "records": 8,
+          "restore_path": "workspace/docs/source_backfills/company_knowledge_fields.jsonl",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 3609,
+      "source_id": "inventory:f8fea06321bd45af4c88c9654497a8c504defbf56c5eaee1d758e26248ea2bae",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "committed_backfill_jsonl",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "jsonl_parse",
+          "records": 1,
+          "restore_path": "workspace/docs/source_backfills/paper_exact_identifier_backfills.jsonl",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 1619,
+      "source_id": "inventory:4384044cb138f62be89edc0f9457065d00f08ce44d8dd9d06e0caefc555c3eef",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "committed_backfill_jsonl",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "jsonl_parse",
+          "records": 790,
+          "restore_path": "workspace/docs/source_backfills/professor-metrics-backfill-2026-05-01.jsonl",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 200307,
+      "source_id": "inventory:82e601426705c3ab7ea24b9b9736975fc8f22128e077aa279075e19558309ee3",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "committed_backfill_jsonl",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "jsonl_parse",
+          "records": 3360,
+          "restore_path": "workspace/docs/source_backfills/professor-metrics-backfill-2026-06-13.jsonl",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 851013,
+      "source_id": "inventory:8c3084c6d7364e43089903d8bd60c182534aa199eb7c04e6721291ad0b358e99",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "committed_backfill_jsonl",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "jsonl_parse",
+          "records": 2,
+          "restore_path": "workspace/docs/source_backfills/professor_company_roles.jsonl",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 579,
+      "source_id": "inventory:1a987406c94c0f1e7b69e0272d8f06582f7f1fe2668f3cfbdd0e48780eed3026",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "committed_backfill_jsonl",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "jsonl_parse",
+          "records": 763,
+          "restore_path": "workspace/docs/source_backfills/round-7-17-name-identity-clear-2026-05-02.jsonl",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 294047,
+      "source_id": "inventory:98a87f5fea987e586f33ead0914b848d4acd9e03a3312eaa5a8eb01f7c8765f5",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "committed_backfill_workbook",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "xlsx_read_only",
+          "restore_path": "workspace/docs/source_backfills/company_workbook_critical_supplement.xlsx",
+          "sheets": 1,
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 6924,
+      "source_id": "inventory:b84a6eac6bc59c9b9431b94ae8735bcda813b3186c28455719ac3bd6718d41ae",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "committed_backfill_workbook",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "xlsx_read_only",
+          "restore_path": "workspace/docs/source_backfills/patent_exact_identifier_supplement.xlsx",
+          "sheets": 1,
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 5447,
+      "source_id": "inventory:b9a8975b2d147348ef47cbd08ad12c6e550c6012ecc29e2979a4db76e3b3c4a0",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "committed_eval_fixture",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "jsonl_parse",
+          "records": 100,
+          "restore_path": "workspace/apps/admin-console/tests/fixtures/intent_classifier_benchmark.jsonl",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 28082,
+      "source_id": "inventory:9d70d6f276e39cd177079766739fbce58723ef79435cf502eedd798207f5c720",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "committed_eval_fixture",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "bounded_read",
+          "restore_path": "workspace/apps/admin-console/tests/fixtures/multi_turn_cases.yaml",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 10038,
+      "source_id": "inventory:43c44a4cb584803b79fcd4760461af7dcd68304ac163d961a83643067e5227d8",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "committed_eval_fixture",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "bounded_read",
+          "restore_path": "workspace/apps/admin-console/tests/fixtures/retrieval_gold.yaml",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 2390,
+      "source_id": "inventory:03cdece09485247f5a036871021e770a9b3b35c25a515fb0314655589f5d9c44",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "committed_eval_fixture",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "bounded_read",
+          "restore_path": "workspace/apps/admin-console/tests/fixtures/test_cases.draft.yaml",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 54804,
+      "source_id": "inventory:c72421b11813abe836836545eb8925076e5e3c09b975a9a11387b7fef6e8bde4",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "committed_eval_fixture",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "bounded_read",
+          "restore_path": "workspace/apps/admin-console/tests/fixtures/test_cases.yaml",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 56313,
+      "source_id": "inventory:55c969432f588015934396a66874ea6b533d431aa3b521a61f5681c4f2f886a2",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "committed_eval_artifact",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "json_parse",
+          "restore_path": "workspace/apps/admin-console/scripts/precision-labels.json",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 2450,
+      "source_id": "inventory:d26dd2f6d1e9a24699d642b68760c03df65b13e07edc5335868d5923eab43189",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "milvus_lite_original",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "sqlite_quick_check",
+          "restore_path": "workspace/apps/miroflow-agent/milvus.db",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 1298632704,
+      "source_id": "inventory:65c4a289550957659155a00799158dd615be14005eb8f35afc778cfa3943accd",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "company_source_workbook",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "xlsx_read_only",
+          "restore_path": "workspace/docs/企业总表.xlsx",
+          "sheets": 2,
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 3944804,
+      "source_id": "inventory:306888219094fdee6713d1d21bf2716d8fd1326efaf5a7a4875c08ce3cbc58f5",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "patent_source_workbook",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "xlsx_read_only",
+          "restore_path": "workspace/docs/2025-12-05 专利.xlsx",
+          "sheets": 1,
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 1645670,
+      "source_id": "inventory:5eed796459843f74ecaebf4f0f8b20fd4570d2a343a442f9ddcbe0f26362d6ab",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "professor_merged_jsonl",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "jsonl_parse",
+          "records": 825,
+          "restore_path": "workspace/logs/data_agents/professor/enriched_v3_merged.jsonl",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 4638821,
+      "source_id": "inventory:6cf786f09478810a09cffe194d96e046a4d3e28a465c4418d8be2a13a126e5f7",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "legacy_professor_jsonl",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "jsonl_parse",
+          "records": 3274,
+          "restore_path": "workspace/logs/legacy_v2/enriched_v2_2026-04-05.jsonl",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 6201116,
+      "source_id": "inventory:27e2129243e993646d1e976814f26fd42590dd6c02639577c1ce6cdf36329ce7",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "sqlite_snapshot",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "sqlite_quick_check",
+          "restore_path": "workspace/logs/data_agents/released_objects.db",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 20267008,
+      "source_id": "inventory:ffe87de3fe5cefe929194235d43fe7bcf09be406976a81cea23efb464d4d34a0",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "legacy_milvus_hash_only",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "sqlite_quick_check",
+          "restore_path": "workspace/logs/legacy_v2/milvus_v2_2026-04-05.db",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 114167808,
+      "source_id": "inventory:5880891dd3b3c04f1f8e9b29c308dd9be12b233a3165338bf992c17f3aa848a8",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "professor_fetch_cache_family",
+      "member_count": 11604,
+      "probes": [
+        {
+          "probe": "json_parse",
+          "restore_path": "workspace/logs/debug/professor_fetch_cache/000160cbcf9b8c52ddd03121ae724d268af071e34a4b5f434c3ffdd5e0973816.json",
+          "status": "passed"
+        },
+        {
+          "probe": "json_parse",
+          "restore_path": "workspace/logs/debug/professor_fetch_cache/000cf7e0db34e6f79e1bbf36b825e5df7cf0faccb2948cee6e79eecffffddacb.json",
+          "status": "passed"
+        },
+        {
+          "probe": "json_parse",
+          "restore_path": "workspace/logs/debug/professor_fetch_cache/000dc41d89dbd328a8417fc7c93c556dd9464c9018e1cb22fd3667f26fd19052.json",
+          "status": "passed"
+        },
+        {
+          "probe": "json_parse",
+          "restore_path": "workspace/logs/debug/professor_fetch_cache/ffe34bf274b66a1da2b2b422547fd2fb5c5e1b1b739ab6ae537f01bfe90f7379.json",
+          "status": "passed"
+        },
+        {
+          "probe": "json_parse",
+          "restore_path": "workspace/logs/debug/professor_fetch_cache/fff6cb74bdf493df757759d64abed5358307880926453348064b98cc6dac215e.json",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 2475486396,
+      "source_id": "inventory:3bf673d8c10db3fc95558037794443a0b8f4a3994d5ae36ac7c85191440f1cd6",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "paper_openalex_cache_family",
+      "member_count": 26185,
+      "probes": [
+        {
+          "probe": "json_parse",
+          "restore_path": "workspace/logs/debug/paper_openalex_cache/0005e44a41934d32c66c2613c2e4edbc82a2912f411d1057e6389aefb05646ad.json",
+          "status": "passed"
+        },
+        {
+          "probe": "json_parse",
+          "restore_path": "workspace/logs/debug/paper_openalex_cache/000886885fbb0156c4f926d50a4b2883cb106e2fea4d998f5c1d2b1cd0169ec6.json",
+          "status": "passed"
+        },
+        {
+          "probe": "json_parse",
+          "restore_path": "workspace/logs/debug/paper_openalex_cache/000b982a6959ac593fa4f64be86b9e5bda4c409839dcf4e6389f2d1bd0365321.json",
+          "status": "passed"
+        },
+        {
+          "probe": "json_parse",
+          "restore_path": "workspace/logs/debug/paper_openalex_cache/fffb3bfbf382a0b0445bc3cd7d4d04aba68a9a3f06d71104117cf4f16e002f8f.json",
+          "status": "passed"
+        },
+        {
+          "probe": "json_parse",
+          "restore_path": "workspace/logs/debug/paper_openalex_cache/fffbc6ef6c5eb6512cbde9ab786ae985f9dd51d985b1b6ecde1773a7aa4e729c.json",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 1608491000,
+      "source_id": "inventory:2d237edecb0f22c141c270f0c9147e3c5a18824025d155f607bb58ef79acc1bb",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "paper_orcid_cache_family",
+      "member_count": 14,
+      "probes": [
+        {
+          "probe": "json_parse",
+          "restore_path": "workspace/logs/debug/paper_orcid_cache/0b90229b49b380c7093d396a6bf639356a7922aa7e1907d05ca52460cbb3cb5a.json",
+          "status": "passed"
+        },
+        {
+          "probe": "json_parse",
+          "restore_path": "workspace/logs/debug/paper_orcid_cache/318a5f6b66be4a2d04c1eb979f447fe0de7e7431af1c72f167502b5a7298db54.json",
+          "status": "passed"
+        },
+        {
+          "probe": "json_parse",
+          "restore_path": "workspace/logs/debug/paper_orcid_cache/339ab80dbb02a86c2aca9a57e7e8cc80f7e317c9c3718174c3d0d2c4c08a954e.json",
+          "status": "passed"
+        },
+        {
+          "probe": "json_parse",
+          "restore_path": "workspace/logs/debug/paper_orcid_cache/ebfa7b816424f0cc50e183d44fc87d9c06d54b52cc937b65bdfe417f7d096972.json",
+          "status": "passed"
+        },
+        {
+          "probe": "json_parse",
+          "restore_path": "workspace/logs/debug/paper_orcid_cache/eef21a7ae0096fbf0043d5d3b1ae056799c7d36630209ff3b1d3589f1c91c340.json",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 13878857,
+      "source_id": "inventory:603b9b33d7e8f3581d670659002768778ec06914a1f1586a0742619024038083",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "legacy_release_jsonl_family",
+      "member_count": 55,
+      "probes": [
+        {
+          "probe": "jsonl_parse",
+          "records": 1025,
+          "restore_path": "workspace/logs/debug/company_release_e2e_20260402T121059Z/company_records.jsonl",
+          "status": "passed"
+        },
+        {
+          "probe": "jsonl_parse",
+          "records": 1025,
+          "restore_path": "workspace/logs/debug/company_release_e2e_20260402T121059Z/released_objects.jsonl",
+          "status": "passed"
+        },
+        {
+          "probe": "jsonl_parse",
+          "records": 1025,
+          "restore_path": "workspace/logs/debug/company_release_e2e_20260403T001600Z/company_records.jsonl",
+          "status": "passed"
+        },
+        {
+          "probe": "jsonl_parse",
+          "records": 3274,
+          "restore_path": "workspace/logs/debug/professor_release_e2e_20260403T024530Z/professor_records.jsonl",
+          "status": "passed"
+        },
+        {
+          "probe": "jsonl_parse",
+          "records": 3274,
+          "restore_path": "workspace/logs/debug/professor_release_e2e_20260403T024530Z/released_objects.jsonl",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 433911090,
+      "source_id": "inventory:b2fd4e9bcf4238424785571f65e94161f07f9631a5b589ace749397527ac35ad",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "legacy_sqlite_snapshot_family",
+      "member_count": 351,
+      "probes": [
+        {
+          "probe": "sqlite_quick_check",
+          "restore_path": "workspace/logs/data_agents/professor/search_service/released_objects_milvus.db",
+          "status": "passed"
+        },
+        {
+          "probe": "sqlite_quick_check",
+          "restore_path": "workspace/logs/data_agents/professor_phase_a_retrieval_eval_prd_full_20260414/retrieval_eval_milvus.db",
+          "status": "passed"
+        },
+        {
+          "probe": "sqlite_quick_check",
+          "restore_path": "workspace/logs/data_agents/professor_phase_a_retrieval_eval_prd_full_after_dedupe_20260415/retrieval_eval_milvus.db",
+          "status": "passed"
+        },
+        {
+          "probe": "sqlite_quick_check",
+          "restore_path": "workspace/logs/data_agents/wave_snapshots/wave1-company-professor-refresh/released_objects.before_refresh.db",
+          "status": "passed"
+        },
+        {
+          "probe": "sqlite_quick_check",
+          "restore_path": "workspace/logs/data_agents/wave_snapshots/wave4_20260416/released_objects.db",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 537133056,
+      "source_id": "inventory:3371136d61fe041eb7e7ba087d9ddc37843330b4d39187b355310ba50599d1d2",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "legacy_data_agent_jsonl_family",
+      "member_count": 1544,
+      "probes": [
+        {
+          "probe": "jsonl_parse",
+          "records": 2,
+          "restore_path": "workspace/logs/data_agents/batch_reprocess_v3/batch_enriched.jsonl",
+          "status": "passed"
+        },
+        {
+          "probe": "jsonl_parse",
+          "records": 1037,
+          "restore_path": "workspace/logs/data_agents/company_release_with_knowledge_inputs_post_review_20260416/company_records.jsonl",
+          "status": "passed"
+        },
+        {
+          "probe": "jsonl_parse",
+          "records": 1037,
+          "restore_path": "workspace/logs/data_agents/company_release_with_knowledge_inputs_post_review_20260416/released_objects.jsonl",
+          "status": "passed"
+        },
+        {
+          "probe": "jsonl_parse",
+          "records": 2,
+          "restore_path": "workspace/logs/data_agents/professor_v3_e2e_test3/enriched_v3.jsonl",
+          "status": "passed"
+        },
+        {
+          "probe": "jsonl_parse",
+          "records": 3,
+          "restore_path": "workspace/logs/data_agents/professor_v3_round75_smoke_1776490106/enriched_v3.jsonl",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 64577346,
+      "source_id": "inventory:7a323115d06360192111c84e2a4da324146948d18c3189751885f6b95ac6d255",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "admin_upload_workbook_family",
+      "member_count": 8,
+      "probes": [
+        {
+          "probe": "xlsx_read_only",
+          "restore_path": "workspace/data/admin_uploads/company/29329c63e12668ed/3a27a0da-9f3b-4176-9b0c-f5a8c4f965e9/企业总表.xlsx",
+          "sheets": 2,
+          "status": "passed"
+        },
+        {
+          "probe": "xlsx_read_only",
+          "restore_path": "workspace/data/admin_uploads/company/29329c63e12668ed/6b1e9db8-0e1e-4cc5-bae9-3665b5fdcb6a/企业总表.xlsx",
+          "sheets": 2,
+          "status": "passed"
+        },
+        {
+          "probe": "xlsx_read_only",
+          "restore_path": "workspace/data/admin_uploads/company/29329c63e12668ed/d5bcedb0-69d4-45e9-828e-15bd6ba9f49d/企业总表.xlsx",
+          "sheets": 2,
+          "status": "passed"
+        },
+        {
+          "probe": "xlsx_read_only",
+          "restore_path": "workspace/data/admin_uploads/company/b59a5174d9d60ffb/b245b179-cdf9-4aa1-8cd2-05905c0a3c66/RES_中山大学（深圳）.xlsx",
+          "sheets": 1,
+          "status": "passed"
+        },
+        {
+          "probe": "xlsx_read_only",
+          "restore_path": "workspace/data/admin_uploads/patent/0dab0a5f9fdff2d7/63a4dc74-dc2c-43bd-8373-36923bf69e87/11月专利完整版.xlsx",
+          "sheets": 1,
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 24723587,
+      "source_id": "inventory:aa84883ccf6e8034b9ebe6d03fa91d6b265f4abd1f096ceb13d219d38a1a6435",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "admin_upload_jsonl_family",
+      "member_count": 2,
+      "probes": [
+        {
+          "probe": "jsonl_parse",
+          "records": 11408,
+          "restore_path": "workspace/data/admin_uploads/patent/0dab0a5f9fdff2d7/63a4dc74-dc2c-43bd-8373-36923bf69e87/11月专利完整版-patent-release/patent_records.jsonl",
+          "status": "passed"
+        },
+        {
+          "probe": "jsonl_parse",
+          "records": 11408,
+          "restore_path": "workspace/data/admin_uploads/patent/0dab0a5f9fdff2d7/63a4dc74-dc2c-43bd-8373-36923bf69e87/11月专利完整版-patent-release/released_objects.jsonl",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 63006807,
+      "source_id": "inventory:dc465266f3a71f9c820cba8cf83f860feb053f6da5bfef79ec02283e9f5ee673",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "compressed_backup_family",
+      "member_count": 2,
+      "probes": [
+        {
+          "probe": "gzip_stream",
+          "restore_path": "workspace/backups/professor_paper_link.pre-gate.20260418-070854.csv.gz",
+          "status": "passed"
+        },
+        {
+          "probe": "gzip_stream",
+          "restore_path": "workspace/backups/professor_paper_link.pre-gate.20260418-070901.csv.gz",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 890658,
+      "source_id": "inventory:c2199ac16504af74d0e8a0a00c7e9fea5cf79c65c9de9631ceaa81a3ad0347d2",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "raw_pdf_family",
+      "member_count": 2657,
+      "probes": [
+        {
+          "probe": "pdf_header",
+          "restore_path": "workspace/apps/admin-console/logs/raw_pdfs/00/006ea07f707cd2a9ea785e208edbd23064ee1baaedc09e54eeddba29ad7e3934.pdf",
+          "status": "passed"
+        },
+        {
+          "probe": "pdf_header",
+          "restore_path": "workspace/apps/admin-console/logs/raw_pdfs/00/00ae28f07caa2bb4ffe12193d9f8d10b9f9055012d9d95bf7d0ee713dad53ba3.pdf",
+          "status": "passed"
+        },
+        {
+          "probe": "pdf_header",
+          "restore_path": "workspace/apps/admin-console/logs/raw_pdfs/01/015dcc2387bf1334003bafe7cc7af53bb7e419cb32344817a4915d01c88f5bf8.pdf",
+          "status": "passed"
+        },
+        {
+          "probe": "pdf_header",
+          "restore_path": "workspace/apps/miroflow-agent/logs/raw_pdfs/ff/ffcfce477e8237a9113e28b04833435803738c9ad77f9bf52c402c9f760b1434.pdf",
+          "status": "passed"
+        },
+        {
+          "probe": "pdf_header",
+          "restore_path": "workspace/apps/miroflow-agent/logs/raw_pdfs/ff/ffd16246f4e5ed5ed024290e799003ef40126f5c456366740e81a255e73a7f91.pdf",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 8313184961,
+      "source_id": "inventory:6533126e9f7b14a478e8fc098541258d9b075ce70de16288b43dcf9abed59cc1",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "historical_milvus_file_family",
+      "member_count": 97,
+      "probes": [
+        {
+          "probe": "sqlite_quick_check",
+          "restore_path": "workspace/logs/data_agents/professor/search_service/released_objects_milvus.db",
+          "status": "passed"
+        },
+        {
+          "probe": "sqlite_quick_check",
+          "restore_path": "workspace/logs/data_agents/professor_phase_a_retrieval_eval_prd_full_20260414/retrieval_eval_milvus.db",
+          "status": "passed"
+        },
+        {
+          "probe": "sqlite_quick_check",
+          "restore_path": "workspace/logs/data_agents/professor_phase_a_retrieval_eval_prd_full_after_dedupe_20260415/retrieval_eval_milvus.db",
+          "status": "passed"
+        },
+        {
+          "probe": "sqlite_quick_check",
+          "restore_path": "workspace/logs/debug/milvus_lite_probe.db",
+          "status": "passed"
+        },
+        {
+          "probe": "sqlite_quick_check",
+          "restore_path": "workspace/logs/legacy_v2/milvus_v2_2026-04-05.db",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 335458304,
+      "source_id": "inventory:573305265d755bf3d85fb60e5e3d33e588838f7d71075d663f5f1b6836bf3ff7",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "forensic_checkpoint_document",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "bounded_read",
+          "restore_path": "recovery/FORENSIC-CHECKPOINT.md",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 1047,
+      "source_id": "inventory:11c9847d8bb362984a35e54c25d6f3f01f74b6209245d359e40f7dbd98738829",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "recovery_experiment_document",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "bounded_read",
+          "restore_path": "recovery/RECOVERY-EXPERIMENT-REPORT.md",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 4032,
+      "source_id": "inventory:eb4faa13a8f4c00f703b2fb014ecc5eb671cb29b3dd20e0836afb9b1024bf8a0",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "recovery_plan_document",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "bounded_read",
+          "restore_path": "recovery/LOGICAL-REBUILD-PLAN.md",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 10615,
+      "source_id": "inventory:d0306b9ab385b64379e437978a971e1d4a8abecee0de0863e0cdb53163b1028d",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "host_ext4_journal_copy",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "bounded_read",
+          "restore_path": "recovery/host-ext4-journal-20260711T024500Z.bin",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 1073741824,
+      "source_id": "inventory:1a873f91cf59065877e3b21a5b5a046c3c7705b128d9ae8c9db31c23588e439f",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "ext4_directory_inode_copy",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "bounded_read",
+          "restore_path": "recovery/lab-01/ext4-dir-inode-27017891.bin",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 20480,
+      "source_id": "inventory:20be9e411f58e2d8a13f82ff094c5424074ba95bf6668177f64edc2396463d07",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "postgres_salvage_dump",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "bounded_read",
+          "restore_path": "recovery/lab-01/miroflow-real-fpi-salvage.dump",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 45218732,
+      "source_id": "inventory:5e1ba9daab456914060f8df8b826a57006cb6ae8486ac816f7b1721186c17c73",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "recovered_paper_id_manifest",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "bounded_read",
+          "restore_path": "recovery/lab-01/recovered-paper-ids.txt",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 2417117,
+      "source_id": "inventory:909ada3e637a0220acc7d7a6335d3743045762e5c720e6120141c79ae5b0d8f8",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "hash_verified": true,
+      "kind": "recovered_link_id_manifest",
+      "member_count": 1,
+      "probes": [
+        {
+          "probe": "bounded_read",
+          "restore_path": "recovery/lab-01/recovered-link-ids.txt",
+          "status": "passed"
+        }
+      ],
+      "restore_bytes": 3742846,
+      "source_id": "inventory:bdb272f5232f7d7bdb9df3e6341f8be4235c57bcc7f11917cb628b216a7367b5",
+      "status": "passed"
+    },
+    {
+      "container_evidence": {
+        "materialize_inspect_sha256": "c8e7615b4b1ed5b679d2552b8ca97409ef422d2a7498aedeaa2a1bce5f1ac278",
+        "probe_inspect_sha256": "6398eb9e43559c00c12cfd5cb2df3d4dc398e99105a48c7cb6bc53b2ce06b7f7"
+      },
+      "copy_independent": true,
+      "database_probe": {
+        "alembic_revision": "V042",
+        "connected_role": "miroflow",
+        "core_counts": {
+          "company": 0,
+          "paper": 0,
+          "patent": 0,
+          "professor": 0
+        },
+        "database": "miroflow_real",
+        "public_table_count": 42
+      },
+      "hash_verified": true,
+      "kind": "original_postgresql_volume",
+      "materialized_tree_manifest_sha256": "ad2ccdde56244ab9eb9ce9c4ec227a498590eb6b28df87f2895b523031fa5d14",
+      "materialized_volume": {
+        "created_at": "2026-07-11T15:55:55Z",
+        "exact_tree_match": true,
+        "name": "canonical-v2-s2b-pg-materialized-20260711T152222Z"
+      },
+      "probe_container": {
+        "image_id": "sha256:8ed3192326bb9d114cd5ef9acace453d5dae17425bd089d089330584c84c5a34",
+        "name": "canonical-v2-s2b-pg-probe-20260711",
+        "network": "none",
+        "published_ports": 0,
+        "readonly_rootfs": true,
+        "state": "exited"
+      },
+      "probe_volume": {
+        "created_at": "2026-07-11T15:57:15Z",
+        "name": "canonical-v2-s2b-pg-probe-20260711T152222Z",
+        "postmaster_pid_removed_only_from_probe": true
+      },
+      "restore_archive_matches_backup": true,
+      "restore_archive_path": "archives/postgres-volume.tar",
+      "restore_archive_sha256": "509cf117eae7ae3069e8d41d247044cd43168086b33b231590d9605546288da9",
+      "source_id": "original_postgresql_volume",
+      "source_tree_entries": 3762,
+      "source_tree_manifest_sha256": "ad2ccdde56244ab9eb9ce9c4ec227a498590eb6b28df87f2895b523031fa5d14",
+      "status": "passed"
+    },
+    {
+      "copy_independent": true,
+      "format_probes": {
+        "checkpoint_dump_toc_entries": 350,
+        "fpi_bad_page_sizes": 0,
+        "fpi_pages": 20427,
+        "journal_first_block_sha256": "1a97697eb98299bf7f72b4b34737988468863099f7144e5e565f5244d59d29a2",
+        "salvage_dump_toc_entries": 29,
+        "wal_output_lines": 1,
+        "wal_path": "lab-01/wal-unrecycled/0000000100000004000000AA"
+      },
+      "hash_verified": true,
+      "isolation": {
+        "extract_container_inspect_sha256": "a1e23e5a3766cb974067b3761318e942192947167763d10a765c0614e2704997",
+        "network": "none",
+        "probe_container_inspect_sha256": "533d423c4625020d1e6bee1674a9fbd9928158d20cfa5b06178ffe5268ac30f9",
+        "published_ports": 0
+      },
+      "kind": "forensic_recovery_tree",
+      "restore_archive_matches_backup": true,
+      "restore_archive_path": "archives/forensic-recovery-tree.tar",
+      "restore_archive_sha256": "59f5901ecae7f612848ce7142031ad1efa1c366ce00a50b99019732b2d4d1055",
+      "restore_tree_bytes": 2202581597,
+      "restored_tree_manifest_sha256": "6bfd4ee541f23399b2673b49dcbfbaa1765ed50c1a15a063b60f1f5de00fb83b",
+      "source_id": "forensic_recovery_tree",
+      "source_tree_entries": 24230,
+      "source_tree_manifest_sha256": "6bfd4ee541f23399b2673b49dcbfbaa1765ed50c1a15a063b60f1f5de00fb83b",
+      "status": "passed"
+    }
+  ],
+  "target_identity": {
+    "backup_device": 2305,
+    "capacity_floor_each": 50000000000,
+    "evidence_device": 2049,
+    "pairwise_distinct_devices": true,
+    "restore_available_after": 1252546875392,
+    "restore_available_preflight": 1276234944512,
+    "restore_device": 66306
+  },
+  "verified_at": "2026-07-11T15:44:30Z"
+}
