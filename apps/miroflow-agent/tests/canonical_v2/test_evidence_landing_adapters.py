@@ -428,3 +428,113 @@ def test_collected_response_with_invalid_provenance_is_typed_partial_evidence() 
         "status_code",
         "content_type",
     }
+
+
+def test_recorded_collection_cache_preserves_known_fields_and_types_unknown_provenance() -> (
+    None
+):
+    module = _module()
+    landing = module.create_ephemeral_evidence_landing()
+    envelope = {
+        "source_url": "https://example.test/professor/one",
+        "body": "<html>recorded response body</html>",
+        "source_cache": {
+            "content_sha256": "1" * 64,
+            "relative_path": "logs/debug/professor_fetch_cache/one.json",
+        },
+    }
+    content = json.dumps(envelope, separators=(",", ":")).encode()
+    receipt = landing.ingest(
+        _request(
+            module,
+            batch="recorded-collected-response",
+            source_kind="recorded_collected_response",
+            parser_name="collected_response",
+            content=content,
+        )
+    )
+    record = landing.stream(receipt.source_batch_id)[0]
+
+    assert record.payload == envelope
+    assert record.parse_status.value == "partial"
+    assert {error.field_path for error in record.errors} == {
+        "retrieved_at",
+        "status_code",
+        "content_type",
+    }
+
+
+def test_sqlite_bounded_replay_is_primary_key_ordered_and_rejects_invalid_limits(
+    tmp_path: Path,
+) -> None:
+    module = _module()
+    landing = module.create_ephemeral_evidence_landing()
+    path = tmp_path / "bounded.sqlite"
+    connection = sqlite3.connect(path)
+    try:
+        connection.execute("CREATE TABLE records (id TEXT PRIMARY KEY, name TEXT)")
+        connection.executemany(
+            "INSERT INTO records (id, name) VALUES (?, ?)",
+            (("3", "Third"), ("1", "First"), ("2", "Second")),
+        )
+        connection.commit()
+    finally:
+        connection.close()
+    content = path.read_bytes()
+
+    receipt = landing.ingest(
+        _request(
+            module,
+            batch="sqlite-bounded",
+            source_kind="historical_sqlite",
+            parser_name="historical_sqlite",
+            content=content,
+            options={"table": "records", "limit": 2},
+        )
+    )
+    assert [
+        record.payload["id"] for record in landing.stream(receipt.source_batch_id)
+    ] == [
+        "1",
+        "2",
+    ]
+
+    for invalid_limit in (0, -1, 1001, True, "2"):
+        with pytest.raises(module.SourceAdapterError, match="limit"):
+            landing.ingest(
+                _request(
+                    module,
+                    batch=f"sqlite-invalid-limit-{invalid_limit!s}",
+                    source_kind="historical_sqlite",
+                    parser_name="historical_sqlite",
+                    content=content,
+                    options={"table": "records", "limit": invalid_limit},
+                )
+            )
+
+
+def test_sqlite_bounded_replay_requires_a_deterministic_primary_key(
+    tmp_path: Path,
+) -> None:
+    module = _module()
+    landing = module.create_ephemeral_evidence_landing()
+    path = tmp_path / "unordered.sqlite"
+    connection = sqlite3.connect(path)
+    try:
+        connection.execute("CREATE TABLE records (id TEXT, name TEXT)")
+        connection.execute("INSERT INTO records VALUES ('1', 'First')")
+        connection.commit()
+    finally:
+        connection.close()
+
+    with pytest.raises(module.SourceAdapterError, match="primary key"):
+        landing.ingest(
+            _request(
+                module,
+                batch="sqlite-unordered-bound",
+                source_kind="historical_sqlite",
+                parser_name="historical_sqlite",
+                content=path.read_bytes(),
+                options={"table": "records", "limit": 1},
+            )
+        )

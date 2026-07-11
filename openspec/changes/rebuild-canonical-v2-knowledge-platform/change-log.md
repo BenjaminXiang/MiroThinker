@@ -82,3 +82,11 @@
   rejection, and invalid-JSON degradation passed on a new disposable database. The disposable was
   deleted; the durable candidate remains untouched at C2_0003/zero rows, and task 4.4 remains the
   actual-source replay boundary.
+- Completed task 4.4 as a reviewable Candidate. The exact Accepted S2B backup/restore checkpoint now
+  drives a bounded six-family WAL/FPI, SQLite, JSONL, XLSX, verified-Milvus-copy, and recorded-
+  response matrix through the public landing interface. Streaming file-manifest registration and
+  explicit backup -> restore -> derived lineage avoid loading the 1.3 GB Milvus copy as parser
+  bytes; deterministic selectors retain 21 records and six typed errors in 15 immutable artifacts.
+  The isolated candidate was forward-upgraded only to C2_0004 and idempotent replay produced the
+  same checkpoint bytes without canonical/release rows. Task 4.5 still owns independent landing
+  review, acceptance, and the candidate dump/manifest checkpoint.

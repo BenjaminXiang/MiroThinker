@@ -13,6 +13,9 @@ from datetime import timezone
 from enum import Enum
 import hashlib
 import json
+import os
+from pathlib import Path
+import stat
 from threading import RLock
 from typing import Protocol
 
@@ -91,6 +94,28 @@ class IngestEvidenceRequest(ContractModel):
         return self
 
 
+class RegisterArtifactRequest(ContractModel):
+    """Register the manifest of a local evidence file without loading it for parsing."""
+
+    run_id: NonEmptyStr
+    source_kind: NonEmptyStr
+    source_locator: NonEmptyStr
+    content_path: Path
+    observed_at: AwareDatetime
+    expected_content_sha256: Sha256
+    expected_byte_size: int = Field(ge=0)
+    parent_artifact_id: NonEmptyStr | None = None
+    parent_content_sha256: Sha256 | None = None
+
+    @model_validator(mode="after")
+    def validate_parent_pair(self) -> RegisterArtifactRequest:
+        if (self.parent_artifact_id is None) != (self.parent_content_sha256 is None):
+            raise ValueError(
+                "parent_artifact_id and parent_content_sha256 must be provided together"
+            )
+        return self
+
+
 class LandingReceipt(ContractModel):
     run_id: NonEmptyStr
     source_batch_id: NonEmptyStr
@@ -157,6 +182,10 @@ class PreparedLandingRun:
 
 
 class LandingRepository(Protocol):
+    def register(self, artifact: EvidenceArtifact) -> EvidenceArtifact:
+        """Atomically retain or return one content-addressed artifact manifest."""
+        ...
+
     def assert_admissible(
         self,
         *,
@@ -178,6 +207,10 @@ class LandingRepository(Protocol):
 
 class EvidenceLanding(ABC):
     """Deep public seam for immutable evidence registration and replay."""
+
+    @abstractmethod
+    def register_artifact(self, request: RegisterArtifactRequest) -> EvidenceArtifact:
+        """Hash a file as a stream and retain its immutable evidence manifest."""
 
     @abstractmethod
     def ingest(self, request: IngestEvidenceRequest) -> LandingReceipt:
@@ -205,6 +238,15 @@ class _EphemeralLandingRepository:
         self.artifact_ids_by_source: dict[tuple[str, str, str], str] = {}
         self.runs_by_run_id: dict[str, _CommittedRun] = {}
         self.records_by_batch: dict[str, list[SourceRecord]] = {}
+
+    def register(self, artifact: EvidenceArtifact) -> EvidenceArtifact:
+        with self.lock:
+            existing = _registered_artifact_for_lineage(self, artifact)
+            if existing is not None:
+                return existing
+            self.artifacts[artifact.artifact_id] = artifact
+            self.artifact_ids_by_source[_artifact_key(artifact)] = artifact.artifact_id
+            return artifact
 
     def assert_admissible(
         self,
@@ -385,6 +427,67 @@ class EvidenceLandingService(EvidenceLanding):
                 raise ValueError(f"duplicate source adapter: {adapter.parser_name}")
             self._adapters[adapter.parser_name] = adapter
 
+    def register_artifact(self, request: RegisterArtifactRequest) -> EvidenceArtifact:
+        hasher = hashlib.sha256()
+        byte_size = 0
+        try:
+            with request.content_path.open("rb") as content_stream:
+                before = os.fstat(content_stream.fileno())
+                if not stat.S_ISREG(before.st_mode):
+                    raise EvidenceIntegrityError(
+                        "artifact registration path is not a regular file"
+                    )
+                while chunk := content_stream.read(1024 * 1024):
+                    hasher.update(chunk)
+                    byte_size += len(chunk)
+                after = os.fstat(content_stream.fileno())
+        except EvidenceIntegrityError:
+            raise
+        except OSError as exc:
+            raise EvidenceIntegrityError(
+                "artifact registration file is missing or unreadable"
+            ) from exc
+        if (
+            before.st_dev,
+            before.st_ino,
+            before.st_size,
+            before.st_mtime_ns,
+        ) != (
+            after.st_dev,
+            after.st_ino,
+            after.st_size,
+            after.st_mtime_ns,
+        ):
+            raise EvidenceIntegrityError(
+                "artifact registration file changed while hashing"
+            )
+        if byte_size != request.expected_byte_size:
+            raise EvidenceIntegrityError(
+                "artifact size mismatch: supplied file does not match the registered identity"
+            )
+        content_sha256 = hasher.hexdigest()
+        if content_sha256 != request.expected_content_sha256:
+            raise EvidenceIntegrityError(
+                "artifact hash mismatch: supplied file does not match the registered identity"
+            )
+        artifact = EvidenceArtifact(
+            artifact_id=_stable_id(
+                "artifact",
+                request.source_kind,
+                request.source_locator,
+                content_sha256,
+            ),
+            source_kind=request.source_kind,
+            source_locator=request.source_locator,
+            content_sha256=content_sha256,
+            byte_size=byte_size,
+            acquired_at=request.observed_at,
+            run_id=request.run_id,
+            parent_artifact_id=request.parent_artifact_id,
+            parent_content_sha256=request.parent_content_sha256,
+        )
+        return self._repository.register(artifact)
+
     def ingest(self, request: IngestEvidenceRequest) -> LandingReceipt:
         content_sha256 = hashlib.sha256(request.content).hexdigest()
         if (
@@ -521,6 +624,7 @@ __all__ = [
     "LandingStatus",
     "ParsedRecordDraft",
     "ParserReference",
+    "RegisterArtifactRequest",
     "SourceAdapterError",
     "SourceRecord",
     "UnverifiedSourceError",

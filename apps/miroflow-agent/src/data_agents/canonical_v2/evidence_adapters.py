@@ -420,6 +420,15 @@ class HistoricalSqliteAdapter(_KindBoundAdapter):
                 "historical_sqlite requires a non-empty table option"
             )
         table = table_option.strip()
+        limit_option = value.parser.options.get("limit")
+        if limit_option is not None and (
+            isinstance(limit_option, bool)
+            or not isinstance(limit_option, int)
+            or not 1 <= limit_option <= 1000
+        ):
+            raise SourceAdapterError(
+                "historical_sqlite limit must be an integer from 1 through 1000"
+            )
         temporary_path: Path | None = None
         try:
             with tempfile.NamedTemporaryFile(
@@ -447,7 +456,28 @@ class HistoricalSqliteAdapter(_KindBoundAdapter):
                         ),
                     )
                 quoted_table = table.replace('"', '""')
-                rows = connection.execute(f'SELECT * FROM "{quoted_table}"').fetchall()
+                query = f'SELECT * FROM "{quoted_table}"'
+                parameters: tuple[int, ...] = ()
+                if limit_option is not None:
+                    table_info = connection.execute(
+                        f'PRAGMA table_info("{quoted_table}")'
+                    ).fetchall()
+                    primary_key_columns = tuple(
+                        str(row[1])
+                        for row in sorted(table_info, key=lambda row: int(row[5]))
+                        if int(row[5]) > 0
+                    )
+                    if not primary_key_columns:
+                        raise SourceAdapterError(
+                            "bounded historical_sqlite replay requires a primary key"
+                        )
+                    quoted_primary_keys = ", ".join(
+                        f'"{column.replace(chr(34), chr(34) * 2)}"'
+                        for column in primary_key_columns
+                    )
+                    query += f" ORDER BY {quoted_primary_keys} LIMIT ?"
+                    parameters = (limit_option,)
+                rows = connection.execute(query, parameters).fetchall()
                 records: list[ParsedRecordDraft] = []
                 for row_number, row in enumerate(rows, start=1):
                     payload: dict[str, JsonValue] = {}
@@ -582,7 +612,9 @@ class MilvusCopyRecordsAdapter(_KindBoundAdapter):
 
 class CollectedResponseAdapter(_KindBoundAdapter):
     parser_name = "collected_response"
-    allowed_source_kinds = frozenset({"newly_collected_response"})
+    allowed_source_kinds = frozenset(
+        {"newly_collected_response", "recorded_collected_response"}
+    )
     required_fields = frozenset(
         {"source_url", "retrieved_at", "status_code", "content_type", "body"}
     )

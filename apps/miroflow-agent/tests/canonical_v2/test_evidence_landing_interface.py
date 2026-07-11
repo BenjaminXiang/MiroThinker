@@ -26,6 +26,11 @@ def test_evidence_landing_ingest_and_stream_preserve_byte_identity_and_lineage()
     )
 
     class RecordingLanding(module.EvidenceLanding):
+        def register_artifact(self, value: Any) -> Any:
+            raise AssertionError(
+                f"this ingest-only interface scenario must not register {value!r}"
+            )
+
         def ingest(self, value: Any) -> Any:
             assert value is request
             return module.LandingReceipt(

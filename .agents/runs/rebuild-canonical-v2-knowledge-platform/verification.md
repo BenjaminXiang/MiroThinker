@@ -809,6 +809,80 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   verify real source bytes before parsing, and prove bounded replay counts/errors without bypassing
   the repository or directly inserting landing rows.
 
+## S4D task 4.4 bounded real-source landing matrix — 2026-07-11T20:33:12Z
+
+- A Ready S4D contract froze six concrete members of the exact Accepted S2B checkpoint: the verified
+  FPI salvage dump; `released_objects.db`; the eight-row Company knowledge JSONL; the one-row Patent
+  identifier workbook; the 1.3 GB Milvus restore copy; and one verified Professor fetch-cache
+  response. The matrix records complete source IDs, member/restore paths, sizes, source SHA-256,
+  parser/schema/options, fixed selectors, and expected output summaries. Its SHA-256 is
+  `eaba2ecb93f1418b90ece45e91d7071d638095897bdd6a2c012efe6a9db9a923`.
+- Initial artifact/adapter RED was exactly seven failures: streaming artifact registration was
+  absent, recorded-response provenance was rejected as the wrong source kind, and SQLite ignored or
+  accepted invalid/non-deterministic bounds. Matrix/materializer RED was exactly five failures,
+  followed by individual REDs for destination-before-preflight, selected COPY filtering, strict
+  six-family loading, and two ambiguous-JSON cases. GREEN adds no fixture-only bypass: the same
+  public ephemeral/PostgreSQL landing seams execute tests and the real replay.
+- `RegisterArtifactRequest` hashes local files in 1 MiB chunks, validates stable file identity,
+  expected size/hash and parent pair, and persists an artifact manifest without parser bytes. Both
+  repositories retain it idempotently. This permits the accepted backup and restore Milvus/database
+  artifacts to form real parent chains without loading 1.3 GB into memory. Direct restored files
+  parent to their backup artifacts; WAL, Milvus, and recorded-response exports parent to restore
+  artifacts, which parent to their backup artifacts.
+- SQLite bounds accept only integer limits 1-1000 and require deterministic primary-key order. The
+  historical recorded response keeps the known URL/body/cache hash/path while deliberately omitting
+  unknown retrieval time, status, and content type; the shared response adapter preserves it as one
+  partial record with three typed `schema_mismatch` errors rather than invent provenance. A complete
+  newly collected HTTP envelope remains a later recollection input and is not claimed here.
+- The task tool first executes the hard-coded Accepted/50 gate, verifies each selected member in its
+  accepted member manifest, constrains all paths below distinct backup/restore roots, streams both
+  file hashes/sizes, and rejects shared inodes. WAL extraction scans the verified custom dump in a
+  read-only/network-none/tmpfs Docker invocation and retains only three fixed Paper keys/errors;
+  every invocation proves the Docker volume set unchanged. Milvus opens only an inode-independent
+  working copy of the verified restore, exports three fixed Company IDs/non-vector fields, and proves
+  both working and restore hashes unchanged. Matrix/member/cache JSON rejects duplicate keys and
+  non-standard numbers before paths or values are used.
+- Two read-only real-source observe executions produced byte-identical summary files with SHA-256
+  `f529a013e6ee3ea8f2a0b720ec67ea3ca4d4fc556f25ad5ce695e4e158e9277e`.
+  Both reported six entries, 21 records, six typed errors, and entry-summary SHA-256
+  `5b77b4a4f3ea9f0a0fd4667dfccff6afefa968b5fb43124de816e652d1c58293`.
+  The frozen per-entry result is: WAL 3 partial/3 missing-external errors; SQLite 5 parsed; JSONL 8
+  parsed; XLSX 1 parsed; Milvus 3 parsed; recorded response 1 partial/3 schema errors.
+- Immediately before the first candidate schema write, the gate returned `accepted/50`; container
+  isolation was network-none/no-port/restart-no; database name, isolated-candidate marker, and system
+  ID `7661313446684311592` matched; revision was C2_0003; and all landing/business rows were zero.
+  The candidate was upgraded forward only to C2_0004. No durable candidate downgrade was run.
+- Durable replay uses only `create_postgres_evidence_landing`; there are no direct landing inserts.
+  Resulting counts are 15 artifacts, six ingest runs, six parser runs, 21 source records, and six
+  errors. Artifact kinds are six backup copies, three restore copies, three direct structured
+  artifacts, and one each WAL/Milvus/recorded-response derived artifact. There are six roots and nine
+  valid parent edges with zero orphan/hash-mismatched edges. Run states are four accepted/two partial;
+  records are 17 parsed/four partial; errors are three missing-external/three schema-mismatch.
+- Three durable script executions retained exactly those counts. The latter two checkpoint outputs
+  compared byte-for-byte with the committed summary; all have SHA-256
+  `a88b44fab38d4e56a7894fabb93e56b46c043278082c200773c038a7dc6e80b5`.
+  The committed entry hash remains `5b77b4…c58293`. Every knowledge and publish table remains zero;
+  no active release, canonical assertion/identity/decision, provider call, live recollection, or
+  active/new Milvus index was created.
+- Real disposable baseline/integrity/landing validation reported `35 passed`, including migration
+  round trips, append-only/FK/reversal/release invariants, streaming parent registration,
+  concurrency, rollback, and a candidate-behind-head regression that no longer depends on durable
+  candidate state. The disposable was verified by exact marker and deleted; database count returned
+  to zero. Default Canonical V2 reported `57 passed, 33 explicit skips, 4 expected xfails`; S1 was
+  `10 passed, 5 explicit skips`; S2/S2B was `32 passed`.
+- Final static verification passed Ruff check/format, Pyright with zero findings, strict OpenSpec,
+  both JSON documents, and `git diff --check`. The final read-only audit at
+  `2026-07-11T20:38:12Z` re-proved Accepted/50; original `pgtest` paused on exact volume
+  `d81c6381…d241`; original/restore Milvus hash `43ef203e…67cc`; original/restore salvage hash
+  `cef8eb6b…bb7`; recovery/candidate network-none/no-port isolation; candidate C2_0004 with 25
+  tables and 46 non-internal triggers; 15/6/6/21/6 landing counts; six roots/nine matching parent
+  edges/no orphans; zero non-landing rows; no disposable database; and exact matrix/summary hashes
+  `eaba2ecb…a923` / `a88b44fa…e80b5`.
+- Task 4.4 is complete as a reviewable Candidate. Task 4.5 remains required to independently review
+  the whole landing slice, decide its acceptance boxes, and create/restore-verify the candidate
+  database dump plus manifest checkpoint before canonical construction. No S4 acceptance or
+  production-like promotion is claimed.
+
 ## Explicit non-claims
 
 - S2B acceptance satisfies only the backup prerequisite; each later task still requires its own

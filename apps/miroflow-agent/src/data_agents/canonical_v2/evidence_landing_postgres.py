@@ -155,6 +155,17 @@ class PostgresLandingRepository(LandingRepository):
         ).fetchone()
 
     @staticmethod
+    def _artifact(connection: Any, artifact_id: str) -> EvidenceArtifact | None:
+        row = connection.execute(
+            "SELECT artifact_id, source_kind, source_locator, content_sha256, "
+            "byte_size, acquired_at, run_id, parent_artifact_id, "
+            "parent_content_sha256 FROM landing.evidence_artifact "
+            "WHERE artifact_id = %s",
+            (artifact_id,),
+        ).fetchone()
+        return EvidenceArtifact.model_validate(row) if row is not None else None
+
+    @staticmethod
     def _receipt_from_row(row: dict[str, Any]) -> LandingReceipt:
         return LandingReceipt(
             run_id=row["run_id"],
@@ -253,6 +264,48 @@ class PostgresLandingRepository(LandingRepository):
                     request_fingerprint=request_fingerprint,
                 )
             self._assert_lineage(connection, artifact)
+
+    def register(self, artifact: EvidenceArtifact) -> EvidenceArtifact:
+        try:
+            with self._connection(write=True) as connection:
+                with connection.transaction():
+                    connection.execute(
+                        "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
+                        (artifact.artifact_id,),
+                    )
+                    self._assert_lineage(connection, artifact)
+                    connection.execute(
+                        "INSERT INTO landing.evidence_artifact "
+                        "(artifact_id, source_kind, source_locator, content_sha256, "
+                        "byte_size, acquired_at, run_id, parent_artifact_id, "
+                        "parent_content_sha256) "
+                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) "
+                        "ON CONFLICT (artifact_id) DO NOTHING",
+                        (
+                            artifact.artifact_id,
+                            artifact.source_kind,
+                            artifact.source_locator,
+                            artifact.content_sha256,
+                            artifact.byte_size,
+                            artifact.acquired_at,
+                            artifact.run_id,
+                            artifact.parent_artifact_id,
+                            artifact.parent_content_sha256,
+                        ),
+                    )
+                    self._assert_lineage(connection, artifact)
+                    registered = self._artifact(connection, artifact.artifact_id)
+                    if registered is None:
+                        raise EvidenceLandingPersistenceError(
+                            "PostgreSQL artifact registration was not retained"
+                        )
+            return registered
+        except (EvidenceIntegrityError, EvidenceLandingPersistenceError):
+            raise
+        except psycopg.Error as exc:
+            raise EvidenceLandingPersistenceError(
+                "PostgreSQL artifact registration rolled back"
+            ) from exc
 
     @staticmethod
     def _run_status(status: LandingStatus) -> str:

@@ -15,6 +15,7 @@ from alembic.config import Config
 from alembic.script import ScriptDirectory
 import psycopg
 from psycopg import errors
+from psycopg import sql
 import pytest
 from sqlalchemy import exc as sa_exc
 from sqlalchemy.engine import make_url
@@ -408,6 +409,51 @@ def test_parent_copy_and_new_parser_run_coexist_without_rewriting_prior_records(
         ).fetchone() == (2,)
 
 
+def test_registered_large_copy_survives_restart_and_can_parent_a_derived_run(
+    target: _Target,
+    tmp_path: Path,
+) -> None:
+    core = _core()
+    content_path = tmp_path / "verified-large-copy.bin"
+    content_path.write_bytes((b"registered-parent\0" * 8192) + b"tail")
+    parent_sha256 = hashlib.sha256(content_path.read_bytes()).hexdigest()
+    registration = core.RegisterArtifactRequest(
+        run_id="postgres-register-parent",
+        source_kind="verified_restore_copy",
+        source_locator="s2b-restore://run/verified-large-copy.bin",
+        content_path=content_path,
+        observed_at=NOW,
+        expected_content_sha256=parent_sha256,
+        expected_byte_size=content_path.stat().st_size,
+    )
+
+    parent = _landing(target).register_artifact(registration)
+    assert _landing(target).register_artifact(registration) == parent
+    derived_content = b'{"source_id":"derived-from-large-copy"}\n'
+    derived = _landing(target).ingest(
+        _request(
+            run_id="postgres-derived-child",
+            batch="postgres-derived-child",
+            source_kind="verified_copy",
+            source_locator="s2b-derived://run/child.jsonl",
+            content=derived_content,
+            parent_artifact_id=parent.artifact_id,
+            parent_content_sha256=parent.content_sha256,
+        )
+    )
+
+    assert derived.parent_artifact_id == parent.artifact_id
+    assert _landing(target).stream(derived.source_batch_id)[0].payload == {
+        "source_id": "derived-from-large-copy"
+    }
+    with _connect(target) as connection:
+        assert connection.execute(
+            "SELECT (SELECT count(*) FROM landing.evidence_artifact), "
+            "(SELECT count(*) FROM landing.ingest_run), "
+            "(SELECT count(*) FROM landing.source_record)"
+        ).fetchone() == (2, 1, 1)
+
+
 def test_database_failure_rolls_back_artifact_parser_records_errors_and_run(
     target: _Target,
 ) -> None:
@@ -486,17 +532,34 @@ def test_postgres_factory_rejects_unaccepted_gate_before_connect(
 def test_postgres_factory_refuses_read_only_candidate_behind_required_revision(
     target: _Target,
 ) -> None:
-    candidate_url = make_url(target.database_url).set(
-        database="miroflow_canonical_v2_candidate_s3b"
+    isolated_marker = (
+        f"miroflow:destructive-target:v1:isolated-candidate:{target.expected_database}"
     )
-
-    with pytest.raises(
-        _core().EvidenceLandingPersistenceError,
-        match="C2_0004",
-    ):
-        _module().create_postgres_evidence_landing(
-            database_url=candidate_url.render_as_string(hide_password=False),
-            expected_database="miroflow_canonical_v2_candidate_s3b",
-            target_kind="isolated-candidate",
-            backup_gate_root=target.backup_gate_root,
+    command.downgrade(target.config, "C2_0003")
+    with _connect(target, autocommit=True) as connection:
+        connection.execute(
+            sql.SQL("COMMENT ON DATABASE {} IS {}").format(
+                sql.Identifier(target.expected_database),
+                sql.Literal(isolated_marker),
+            )
         )
+    try:
+        with pytest.raises(
+            _core().EvidenceLandingPersistenceError,
+            match="C2_0004",
+        ):
+            _module().create_postgres_evidence_landing(
+                database_url=target.database_url,
+                expected_database=target.expected_database,
+                target_kind="isolated-candidate",
+                backup_gate_root=target.backup_gate_root,
+            )
+    finally:
+        with _connect(target, autocommit=True) as connection:
+            connection.execute(
+                sql.SQL("COMMENT ON DATABASE {} IS {}").format(
+                    sql.Identifier(target.expected_database),
+                    sql.Literal(EXPECTED_MARKER),
+                )
+            )
+        command.upgrade(target.config, "head")
