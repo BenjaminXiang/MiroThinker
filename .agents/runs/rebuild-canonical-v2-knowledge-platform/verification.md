@@ -8,7 +8,8 @@ at 2026-07-11T15:10:32Z. S2B/task 2.6 was objectively verified and Accepted at
 2026-07-11T16:11:23Z under the user's self-approval authorization. Task 3.1's RED interface
 contracts were Accepted at `2026-07-11T16:31:48Z`. After re-verifying that gate, Task 3.2's empty
 Canonical V2 namespace baseline was Accepted at `2026-07-11T16:58:23Z`. Task 3.3's shared typed
-contracts were Accepted at `2026-07-11T17:15:42Z`. Task 3.4 is next; no landing evidence, canonical
+contracts were Accepted at `2026-07-11T17:15:42Z`. Task 3.4's C2_0002 shared schema was Accepted at
+`2026-07-11T17:48:21Z`. Task 3.5 independent S3 review is next; no landing evidence, canonical
 business row, publication projection, or index write has begun.
 
 ## Existing incident/recovery checkpoint used as planning evidence
@@ -187,8 +188,8 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 
 ## Pending evidence
 
-1. Task 3.4 business schema/integrity migrations and their own real disposable/candidate checks.
-2. Task 3.5 independent review/acceptance of the complete S3 database/interface foundation.
+1. Task 3.5 independent review/acceptance of the complete S3 database/interface foundation.
+2. Task 4.1 remains Specified until S3 is independently Accepted.
 
 ## S2 task 2.1 source inventory — 2026-07-11T07:11:30Z
 
@@ -453,8 +454,10 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 - The real integration test deliberately set generic `DATABASE_URL` to the forbidden
   `localhost:15432/miroflow_real` value while providing the explicit Unix-socket candidate target.
   It passed base → `C2_0001` → base → `C2_0001`; final inspection found eight schemas, zero business
-  tables, zero legacy/extra public tables, and schema-dump SHA-256
-  `9605da198e468fe5bbf2d87270be411b9663d639d6fa1b427c6593401585f09b`.
+  tables, and zero legacy/extra public tables. Task 3.4 later invalidated the raw dump SHA because
+  PostgreSQL 16 randomizes `\\restrict` control tokens; disposable replay produced deterministic
+  normalized C2_0001 fingerprint
+  `4c9df650d4f039ca9ba67ff6169ef44c839e0610528c2b27c4338eeeddf454c3` over 3,054 bytes.
 - Final checks: Canonical V2 `7 passed, 5 xfailed`; S1 safety `9 passed`; S2/S2B `32 passed`; Ruff
   clean; Pyright `0 errors, 0 warnings, 0 informations`; strict OpenSpec and diff checks passed.
   Formal admission remained `state=accepted`, `source_count=50`; original `pgtest` stayed paused on
@@ -499,6 +502,71 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   occurred.
 - Task 3.3 is Accepted under the user's self-approval authorization. Task 3.4 must map these logical
   values to integrity-tested storage in a separate Ready slice.
+
+## S3D task 3.4 schema integrity migration — 2026-07-11T17:48:21Z
+
+- Task interpretation was effect-first: S3 could not become an adapter-ready foundation with empty
+  namespaces plus RED-only storage tests. Task 3.4 therefore used real tests to drive the smallest
+  C2_0002 shared evidence/decision/release storage GREEN, without implementing S4–S7 module
+  orchestration or typed domain facts.
+- The first real disposable run was `7 failed`: two absent-C2_0002 revision failures and five
+  undefined-table failures across actual SQL paths. The marked DB was
+  `miroflow_canonical_v2_s3d_disposable`, inside the existing network-none/no-port S3B container;
+  generic `DATABASE_URL` was deliberately set to forbidden `localhost:15432/miroflow_real` and was
+  not used.
+- First GREEN was `7 passed`. Self-review then challenged both precision and breadth: exact source
+  and verified copy artifacts must coexist with identical bytes; parser-run/source-identity
+  operational metadata must progress without rewriting evidence; and a build manifest hash must
+  match its release. Those regressions produced the expected `3 failed, 6 passed`; revised DDL then
+  produced `9 passed`.
+- C2_0002 creates 24 shared tables across `landing`, `knowledge`, and `publish`, 126 named
+  constraints, and 19 append-only triggers. It keeps `ops` and all typed domain schemas table-free.
+  Named composite FKs prevent cross-release canonical endpoints; logical unique constraints prevent
+  parser replay/assertion duplicates; immutable evidence/assertion/decision rows reject update and
+  delete while operational parser/source-identity metadata remains updateable.
+- Reversible identity decisions use a same-release self-FK and retain original plus reverse rows.
+  Build manifests are release/hash-bound. The singleton serving pointer requires canonical,
+  published-projection, and index release IDs to equal one manifest-backed active release; nested
+  transaction rollback restored the prior pointer without deleting either release manifest.
+- Downgrade names objects in reverse dependency order without CASCADE, returns to exactly the eight
+  C2_0001 schemas, and re-upgrades to C2_0002. All fixture transactions rolled back. Disposable and
+  durable candidate each reported C2_0002, 24 tables, zero rows, 126 constraints, and 19 triggers.
+- A pattern audit proved raw PostgreSQL 16 schema-dump SHA values were volatile because every dump
+  changes random `\\restrict`/`\\unrestrict` lines. Only two sibling claims existed, both in Task
+  3.2 evidence. `scripts/canonical_v2_schema_fingerprint.py` now removes only those control lines;
+  two tests prove random-token stability and real schema-change sensitivity.
+- Corrected C2_0001 fingerprint is
+  `4c9df650d4f039ca9ba67ff6169ef44c839e0610528c2b27c4338eeeddf454c3` over 3,054 normalized bytes.
+  C2_0002 candidate/disposable fingerprint matched at
+  `ffeb1c92cb6dbc5ee9475b37142f632250b21dd97beb5da02a7f0642a64b6faf` over 50,032 bytes, with two
+  random control lines removed from each.
+- The sibling audit also found Task 3.2's baseline test was coupled to the durable candidate and
+  dynamic head. After C2_0002, that could downgrade a future populated candidate and falsely require
+  head to contain no tables. RED was reproduced on the disposable; the test now requires target kind
+  `disposable`, verifies fixed revision C2_0001, and restores current head in `finally`.
+- Real migration/integrity/fingerprint verification was `13 passed`; normal no-DB Canonical V2 was
+  `23 passed, 10 skipped, 5 xfailed`; S1 was `9 passed`; S2/S2B was `32 passed`. Ruff, Pyright,
+  strict OpenSpec, formal admission, and diff checks passed.
+- After matched evidence capture, the disposable database was dropped. Durable
+  `miroflow_canonical_v2_candidate_s3b` remains healthy, network-none/no-port, system identifier
+  `7661313446684311592`, at C2_0002 with 24 tables and zero rows. Original `pgtest` stayed paused on
+  its exact volume; recovery lab isolation and original Milvus/salvage hashes matched.
+- Task 3.4 is Accepted under the user's self-approval authorization. This does not accept the whole
+  S3 foundation; Task 3.5 owns that independent review.
+
+## Task 3.4 pattern-fix report
+
+- Reported cases fixed: nondeterministic schema-dump hashes and a baseline rollback test whose
+  target/revision scope became unsafe after a second migration.
+- Defect class: volatile command output treated as content identity; destructive tests bound to a
+  durable target and dynamic head.
+- Sibling search: all repository schema-dump/hash claims and Canonical V2 migration rollback tests.
+- Sibling issues found/fixed: two raw Task 3.2 hash claims and one candidate-bound baseline test.
+- Not fixed: no other matching schema-hash claim or Canonical V2 destructive test exists.
+- New invariant/helper/test: normalized fingerprint CLI plus two tests; disposable-only fixed-
+  revision baseline test with current-head restoration.
+- Remaining risk: new dump evidence must use the helper; new destructive migration tests must use
+  freshly marked disposable databases.
 
 ## Explicit non-claims
 

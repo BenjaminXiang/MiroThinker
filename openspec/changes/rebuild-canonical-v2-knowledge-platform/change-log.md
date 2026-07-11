@@ -51,3 +51,8 @@
   record/assertion, decision, identity, canonical/derived/session relationship, policy, gap,
   release, and manifest values. It rejects hard semantic contradictions while preserving partial
   evidence, unresolved conflict, soft limitations, extensible catalogs, and opaque IDs.
+- Completed and accepted task 3.4: C2_0002 adds the constraint-backed shared landing/knowledge/
+  publish foundation and passes real disposable FK, uniqueness, append-only, reversal, release-
+  scope, pointer, transaction, and downgrade/re-upgrade tests. The empty durable candidate was
+  forward-upgraded only; a deterministic pg_dump fingerprint repair also replaced volatile raw
+  schema hashes and made destructive baseline tests disposable-only.

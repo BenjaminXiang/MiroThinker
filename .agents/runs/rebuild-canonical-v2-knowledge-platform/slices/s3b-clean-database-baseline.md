@@ -148,9 +148,11 @@ clear home without committing the product to V042 tables or a generic graph.
   999 rather than the requested supplemental group. No migration ran. The same empty target volume
   was remounted with a `0777` socket inside a host directory restricted to `0770`; network and port
   isolation remained unchanged, and the real DSN then passed.
-- The real integration test successfully ran base → `C2_0001` → base → `C2_0001`. Final state has
-  exactly the eight contracted schemas, zero business tables, only
-  `public.canonical_v2_alembic_version`, and schema-only dump SHA-256
-  `9605da198e468fe5bbf2d87270be411b9663d639d6fa1b427c6593401585f09b`.
+- The real integration test successfully ran base → `C2_0001` → base → `C2_0001`. Final state had
+  exactly the eight contracted schemas, zero business tables, and only
+  `public.canonical_v2_alembic_version`. Task 3.4 later proved the recorded raw `pg_dump` hash was
+  nondeterministic because PostgreSQL 16 emits random restriction tokens; replay on a disposable
+  target produced corrected normalized C2_0001 fingerprint
+  `4c9df650d4f039ca9ba67ff6169ef44c839e0610528c2b27c4338eeeddf454c3` over 3,054 bytes.
 - Canonical V2 tests reported `7 passed, 5 xfailed`; S1 target safety `9 passed`; S2/S2B `32 passed`;
   Ruff and Pyright were clean; strict OpenSpec and diff checks passed.

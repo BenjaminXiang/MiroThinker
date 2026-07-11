@@ -98,29 +98,28 @@ def _business_tables(connection: sa.Connection) -> set[tuple[str, str]]:
     return {(str(row[0]), str(row[1])) for row in rows}
 
 
-def test_canonical_v2_history_is_one_clean_base_not_a_v042_extension() -> None:
+def test_canonical_v2_history_has_one_clean_base_not_a_v042_extension() -> None:
     assert ALEMBIC_INI.is_file()
     assert SCRIPT_LOCATION.is_dir()
 
     scripts = ScriptDirectory.from_config(_migration_config())
     revisions = tuple(scripts.walk_revisions())
+    baseline = scripts.get_revision(BASELINE_REVISION)
 
-    assert scripts.get_heads() == [BASELINE_REVISION]
-    assert len(revisions) == 1
-    assert revisions[0].revision == BASELINE_REVISION
-    assert revisions[0].down_revision is None
-    assert revisions[0].branch_labels == {"canonical_v2"}
-    assert "V042" not in revisions[0].path
+    assert baseline is not None
+    assert baseline.down_revision is None
+    assert baseline.branch_labels == {"canonical_v2"}
+    assert all("V042" not in revision.path for revision in revisions)
+    assert sum(revision.down_revision is None for revision in revisions) == 1
 
 
-def test_real_isolated_candidate_round_trips_empty_namespace_baseline(
+def test_real_disposable_round_trips_empty_namespace_baseline(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     database_url, expected_database, target_kind, backup_gate_root = (
         _required_integration_environment()
     )
-    assert expected_database == "miroflow_canonical_v2_candidate_s3b"
-    assert target_kind == "isolated-candidate"
+    assert target_kind == "disposable"
 
     for name in (
         "ALEMBIC_DATABASE_URL",
@@ -141,6 +140,8 @@ def test_real_isolated_candidate_round_trips_empty_namespace_baseline(
         backup_gate_root=backup_gate_root,
     )
     engine = sa.create_engine(database_url)
+    current_head = ScriptDirectory.from_config(config).get_current_head()
+    assert current_head is not None
 
     try:
         with engine.connect() as connection:
@@ -155,15 +156,14 @@ def test_real_isolated_candidate_round_trips_empty_namespace_baseline(
                 )
             ).scalar_one()
             assert marker == (
-                "miroflow:destructive-target:v1:isolated-candidate:"
-                f"{expected_database}"
+                f"miroflow:destructive-target:v1:disposable:{expected_database}"
             )
 
         command.downgrade(config, "base")
         with engine.connect() as connection:
             assert _business_schemas(connection) == set()
 
-        command.upgrade(config, "head")
+        command.upgrade(config, BASELINE_REVISION)
         with engine.connect() as connection:
             assert _business_schemas(connection) == BUSINESS_SCHEMAS
             assert _business_tables(connection) == set()
@@ -188,12 +188,16 @@ def test_real_isolated_candidate_round_trips_empty_namespace_baseline(
             assert _business_schemas(connection) == set()
             assert _business_tables(connection) == set()
 
-        command.upgrade(config, "head")
+        command.upgrade(config, BASELINE_REVISION)
         with engine.connect() as connection:
             assert _business_schemas(connection) == BUSINESS_SCHEMAS
             assert _business_tables(connection) == set()
-            assert connection.execute(
-                sa.text(f"SELECT version_num FROM public.{VERSION_TABLE}")
-            ).scalar_one() == BASELINE_REVISION
+            assert (
+                connection.execute(
+                    sa.text(f"SELECT version_num FROM public.{VERSION_TABLE}")
+                ).scalar_one()
+                == BASELINE_REVISION
+            )
     finally:
+        command.upgrade(config, current_head)
         engine.dispose()
