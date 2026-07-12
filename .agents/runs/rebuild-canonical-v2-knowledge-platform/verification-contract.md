@@ -352,6 +352,21 @@ Last identity/hash check recorded in `verification.md`: `2026-07-12T08:40:35Z`.
 - Every admitted/review/excluded result binds the exact policy, release, manifest hash, and retained
   assertions. Inclusion has `path=None`, consumes no global `ready`, and performs no provider,
   storage, publication, index, query-time identity, or canonical write.
+- Task 6.6 freezes one package-internal `PathEligibilityEngine.evaluate(...)` behavior seam without
+  implementing Task 6.3 projections, Task 6.5 relationship construction, or Task 6.7 policies.
+  Normal execution reports exactly five strict xfails; forced RED reports exactly five failures
+  caused directly by absence of `src.data_agents.canonical_v2.path_eligibility`.
+- Published user paths are exactly `exact_lookup`, `structured_filter`,
+  `verified_relationship_traversal`, `semantic_recall`, `recommendation`, and `ranking`; internal
+  audit/identity paths do not satisfy this registry. Each result contains one unique named decision
+  carrying the applicable path-policy version.
+- Task 6.6 inputs explicitly consume a future typed current projection plus inclusion decision and
+  accepted shared relationship/identity decisions. Canonical lifecycle state remains distinct from
+  Paper domain identity status; inverse user traversal never reverses the registered canonical edge.
+- Ordinary quality gaps remain visible soft signals. Hard exclusions are named, evidence-bound, and
+  path-scoped: a broken relation reference does not poison unrelated exact/semantic paths, a rejected
+  attribution does not reject Paper existence, and a merged predecessor resolves to exactly one
+  survivor without gaining its own current projection or admitted inclusion.
 - Test-only Tasks 6.2, 6.4, and 6.6 use focused contract/static/OpenSpec/diff checks. They reference
   Accepted backup/source/Candidate evidence without replaying database, source, Candidate, Milvus,
   or provider safety totals because those tasks touch none of those boundaries.

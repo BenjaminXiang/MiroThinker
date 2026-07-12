@@ -1560,3 +1560,38 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 - This test-only task did not replay database/source/Candidate/Milvus/provider safety totals and did
   not mutate those boundaries. No product/shared-contract/migration/runtime file changed. Task 6.3
   remains the GREEN owner.
+
+## S6F task 6.6 path-eligibility RED acceptance — 2026-07-12T17:22:49Z
+
+- Five strict scenario families freeze the future package-internal
+  `PathEligibilityEngine.evaluate(PathEligibilityRequest) -> PathEligibilityResult` seam. Inputs
+  explicitly declare future Task 6.3 typed projection/inclusion and Task 6.5 relationship outputs;
+  no local fake implements either dependency.
+- The published user-path registry is exactly exact lookup, structured filter, verified relationship
+  traversal, semantic recall, recommendation, and ranking. Every result has one unique named
+  `PolicyDecision` with a path-policy version; internal audit/identity paths are excluded and a
+  legacy global-`ready` poison value has no effect.
+- Four-domain partial projections remain exactly reachable with visible limitations. Accepted edges
+  preserve Task 6.1 canonical source/target orientation while all eight user directions remain
+  traversable; incomplete target enrichment is soft. A rejected Professor-Paper attribution blocks
+  only traversal while the Paper remains exactly reachable.
+- Missing enrichment, partial summaries, ordinary uncertainty, and stale non-material facts never
+  become unnamed hard exclusions. Wrong identity, terminal rejection, unsafe exposure, no usable
+  source-grounded facts, and broken references are named and evidence-bound. Broken references are
+  scoped to dependent traversal; merged predecessors carry no current projection/admitted inclusion
+  and resolve through a shared identity decision to one survivor.
+- The one merged review initially found five Important defects: canonical lifecycle/Paper status
+  conflation, reverse-direction fixtures that inverted canonical edges, global broken-reference
+  exclusion, a current projection for a terminal merged predecessor, and rejected attribution
+  affecting Paper identity. The same review closed all five; final review has zero open
+  Critical/Important findings.
+- Final checkpoint commands and outcomes:
+  - focused normal RED -> exactly `5 xfailed`, exit 0;
+  - focused forced RED -> exactly five direct `_MissingTargetModule` failures for
+    `src.data_agents.canonical_v2.path_eligibility`, expected exit 1;
+  - Task 6.1 catalog/shared contracts plus Task 6.6 normal RED -> `24 passed, 5 xfailed`;
+  - Ruff check -> `All checks passed!`; Ruff format -> `1 file already formatted`;
+  - app-environment Pyright -> `0 errors, 0 warnings, 0 informations`;
+  - strict OpenSpec and staged diff/secret/cache/scope checks -> clean.
+- This test-only task did not replay database/source/Candidate/Milvus/provider safety totals and did
+  not mutate those boundaries. No product/shared-contract/migration/runtime file changed.

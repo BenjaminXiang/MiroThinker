@@ -233,3 +233,14 @@
   no-database contract checks, Ruff, Pyright, strict OpenSpec, and diff/scope checks passed. No
   production code, migration, database/source/Candidate/Milvus/provider/runtime state changed;
   Task 6.3 owns GREEN implementation.
+- Completed and accepted Task 6.6 in its independent worktree as a strict test-only RED slice. Five
+  scenario families freeze four-domain partial exact reach, all eight cross-domain traversal
+  directions, ordinary soft-quality behavior, path-scoped hard exclusions/merge redirect, and six
+  published path decisions independent of global `ready`.
+- The merged review repaired lifecycle/domain-status conflation, reversed canonical edge fixtures,
+  global broken-reference poisoning, a false merged predecessor projection, and rejected
+  Professor-Paper attribution leaking into Paper identity. Final tests consume future Task 6.3/6.5
+  outputs as typed inputs without implementing or fabricating them.
+- Focused normal/forced RED, 24 Accepted catalog/shared tests, Ruff, Pyright, strict OpenSpec, and
+  diff/scope checks passed. No production/shared/migration/database/source/Candidate/Milvus/provider
+  state changed; Tasks 6.3, 6.5, and 6.7 retain GREEN ownership.

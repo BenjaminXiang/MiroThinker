@@ -47,7 +47,7 @@
 - [ ] 6.3 Implement typed domain current projections and inclusion-policy adapters over retained assertions/identities.
 - [ ] 6.4 Add RED relationship scenarios across identity/lifecycle, organization/role, scholarly output, intellectual property, Company business/product/event, taxonomy/topic/geography, and evidence/lineage families.
 - [ ] 6.5 Implement the extensible typed relationship catalog, assertions, decisions, direction/role/time/state semantics, and cross-domain integrity.
-- [ ] 6.6 Add RED path-eligibility scenarios proving partial exact/traversal reach, soft quality signals, and named hard exclusions for every published path.
+- [x] 6.6 Add RED path-eligibility scenarios proving partial exact/traversal reach, soft quality signals, and named hard exclusions for every published path.
 - [ ] 6.7 Implement versioned inclusion and path-eligibility policies with limitations/gap output rather than one global `ready` gate.
 - [ ] 6.8 Verify per-domain/relationship coverage and sibling invariants on the bounded candidate; review/accept the slice.
 
