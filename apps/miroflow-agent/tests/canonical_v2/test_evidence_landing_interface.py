@@ -1,11 +1,52 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import hashlib
 from importlib import import_module
+from pathlib import Path
 from typing import Any
 
 from src.data_agents.canonical_v2.contracts import SourceRecord as SharedSourceRecord
+
+
+def test_landing_requests_canonicalize_equal_observation_instants_to_utc() -> None:
+    module: Any = import_module("src.data_agents.canonical_v2.evidence_landing")
+    observed_at = datetime(2026, 7, 11, tzinfo=timezone.utc)
+    offset_at = observed_at.astimezone(timezone(timedelta(hours=8)))
+    content = b"{}"
+    digest = hashlib.sha256(content).hexdigest()
+
+    ingest_utc = module.IngestEvidenceRequest(
+        run_id="landing-utc-run",
+        source_batch_id="landing-utc-batch",
+        source_kind="historical_jsonl",
+        source_locator="fixture://utc",
+        content=content,
+        observed_at=observed_at,
+    )
+    ingest_offset = ingest_utc.model_copy(update={"observed_at": offset_at})
+    ingest_offset = module.IngestEvidenceRequest.model_validate(
+        ingest_offset.model_dump(mode="python")
+    )
+    register_utc = module.RegisterArtifactRequest(
+        run_id="landing-register-utc-run",
+        source_kind="historical_file",
+        source_locator="fixture://utc-file",
+        content_path=Path("/tmp/canonical-v2-utc-fixture"),
+        observed_at=observed_at,
+        expected_content_sha256=digest,
+        expected_byte_size=len(content),
+    )
+    register_offset = module.RegisterArtifactRequest.model_validate(
+        {**register_utc.model_dump(mode="python"), "observed_at": offset_at}
+    )
+
+    assert ingest_offset == ingest_utc
+    assert register_offset == register_utc
+    assert ingest_offset.model_dump_json() == ingest_utc.model_dump_json()
+    assert register_offset.model_dump_json() == register_utc.model_dump_json()
+    assert ingest_offset.observed_at.utcoffset() == timedelta(0)
+    assert register_offset.observed_at.utcoffset() == timedelta(0)
 
 
 def test_evidence_landing_ingest_and_stream_preserve_byte_identity_and_lineage() -> (

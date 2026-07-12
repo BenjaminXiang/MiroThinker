@@ -215,12 +215,16 @@ def _request(
     canonical_identity_history: tuple[Any, ...] = (),
     prior_identity_decisions: tuple[Any, ...] = (),
     prior_decision_contexts: tuple[Any, ...] = (),
+    release_id: str = RELEASE_ID,
+    decision_run_id: str = RUN_ID,
+    as_of: datetime = NOW,
+    human_review_resolutions: tuple[Any, ...] = (),
 ) -> Any:
     return module.IdentityResolutionRequest(
-        release_id=RELEASE_ID,
-        decision_run_id=RUN_ID,
+        release_id=release_id,
+        decision_run_id=decision_run_id,
         identity_method_version="canonical-identity-resolution-v1",
-        as_of=NOW,
+        as_of=as_of,
         policy=_policy(module),
         source_identities=source_identities,
         identity_assertions=identity_assertions,
@@ -229,6 +233,7 @@ def _request(
         canonical_identity_history=canonical_identity_history,
         prior_identity_decisions=prior_identity_decisions,
         prior_decision_contexts=prior_decision_contexts,
+        human_review_resolutions=human_review_resolutions,
     )
 
 
@@ -1079,6 +1084,48 @@ def test_named_mistaken_merge_reversal_produces_exact_split_assignments() -> Non
     )
     create_a = _prior_create_decision(module, prior_a, source_identities=(source_a,))
     create_b = _prior_create_decision(module, prior_b, source_identities=(source_b,))
+    mistaken_review_case = module.create_review_case(
+        family="identity",
+        release_id=RELEASE_ID,
+        decision_run_id="legacy-review-case-run",
+        subject_id="legacy-company-identity-component",
+        path="canonical_identity",
+        originating_record_id="legacy-company-unresolved-verdict",
+        candidate_evidence_ids=tuple(
+            assertion.assertion_id for assertion in assertions
+        ),
+        conflicting_evidence_ids=tuple(
+            assertion.assertion_id for assertion in assertions
+        ),
+        source_identity_ids=(
+            source_a.source_identity_id,
+            source_b.source_identity_id,
+        ),
+        policy=_policy(module),
+        method="deterministic",
+        method_version="identity-v0",
+        confidence=0.0,
+        rationale="The historical identity evidence required operator review.",
+        uncertainty="The recovered sources could represent one or two Companies.",
+        reason_codes=("legacy_material_ambiguity",),
+        trace_content_sha256=None,
+        input_content_sha256="8" * 64,
+        created_at=NOW - timedelta(days=3),
+    )
+    mistaken_resolution = module.create_human_review_resolution(
+        review_case=mistaken_review_case,
+        outcome="same_entity",
+        source_identity_groups=(
+            (source_a.source_identity_id, source_b.source_identity_id),
+        ),
+        reviewer_id="reviewer:legacy-identity",
+        review_policy_id="canonical-review-policy",
+        review_policy_version="review-v0",
+        review_policy_content_sha256="7" * 64,
+        reviewed_at=NOW - timedelta(days=2),
+        rationale="Historical review treated the two registry rows as one Company.",
+        confidence=0.76,
+    )
     mistaken_merge = module.IdentityDecision(
         decision_id=wrong_combined.identity_decision_id,
         action="merge",
@@ -1102,6 +1149,7 @@ def test_named_mistaken_merge_reversal_produces_exact_split_assignments() -> Non
         confidence=0.76,
         rationale="Historical review incorrectly treated the two registry rows as one Company.",
         decided_at=NOW - timedelta(days=2),
+        human_review_resolution=mistaken_resolution,
     )
     create_context_a = _prior_create_context(
         module,
@@ -1485,8 +1533,441 @@ def test_ambiguous_pair_without_adjudicator_stays_separate_and_unresolved() -> N
     assert all(
         decision.action.value != "reject" for decision in result.identity_decisions
     )
+    assert len(result.review_cases) == 1
+    review_case = result.review_cases[0]
+    assert review_case.family.value == "identity"
+    assert review_case.release_id == RELEASE_ID
+    assert review_case.decision_run_id == RUN_ID
+    assert review_case.subject_id == verdict.component_id
+    assert review_case.path == "canonical_identity"
+    assert review_case.originating_record_id == verdict.verdict_id
+    assert review_case.candidate_evidence_ids == tuple(
+        sorted(assertion.assertion_id for assertion in assertions)
+    )
+    assert review_case.conflicting_evidence_ids == review_case.candidate_evidence_ids
+    assert review_case.source_identity_ids == (
+        source_a.source_identity_id,
+        source_b.source_identity_id,
+    )
+    assert review_case.reason_codes == ("structured_adjudication_unavailable",)
+    assert review_case.trace_content_sha256 is None
+    assert (
+        review_case.review_case_id == f"review-case:sha256:{review_case.content_sha256}"
+    )
     _assert_unique_current_assignments(
         result, {source_a.source_identity_id, source_b.source_identity_id}
+    )
+
+    resolution = module.create_human_review_resolution(
+        review_case=review_case,
+        outcome="same_entity",
+        source_identity_groups=(
+            (source_a.source_identity_id, source_b.source_identity_id),
+        ),
+        reviewer_id="reviewer:identity-operator-1",
+        review_policy_id="canonical-review-policy",
+        review_policy_version="review-v1",
+        review_policy_content_sha256="7" * 64,
+        reviewed_at=NOW + timedelta(hours=1),
+        rationale="Reviewed public identity evidence establishes one Company.",
+        confidence=0.97,
+    )
+    reviewed_release = "candidate-s5-identity-r2"
+    reviewed_current = tuple(
+        identity.model_copy(update={"release_id": reviewed_release})
+        for identity in result.current_canonical_identities
+    )
+    reviewed_assignments = tuple(
+        assignment.model_copy(update={"release_id": reviewed_release})
+        for assignment in result.source_identity_assignments
+    )
+    reviewed_contexts = tuple(
+        module.create_identity_decision_context(
+            release_id=reviewed_release,
+            decision=context.decision,
+            candidate_verdict=context.candidate_verdict,
+            source_identities=context.source_identities,
+            identity_assertions=context.identity_assertions,
+            input_canonical_identities=tuple(
+                identity.model_copy(update={"release_id": reviewed_release})
+                for identity in context.input_canonical_identities
+            ),
+            output_canonical_identities=tuple(
+                identity.model_copy(update={"release_id": reviewed_release})
+                for identity in context.output_canonical_identities
+            ),
+            input_source_assignments=tuple(
+                assignment.model_copy(update={"release_id": reviewed_release})
+                for assignment in context.input_source_assignments
+            ),
+            referenced_prior_decision_ids=context.referenced_prior_decision_ids,
+            output_allocations=context.output_allocations,
+        )
+        for context in result.decision_contexts
+    )
+    reviewed_result = (
+        module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+            _request(
+                module,
+                release_id=reviewed_release,
+                decision_run_id="identity-build-run-2",
+                as_of=NOW + timedelta(hours=1),
+                source_identities=(source_a, source_b),
+                identity_assertions=assertions,
+                current_canonical_identities=reviewed_current,
+                current_source_identity_assignments=reviewed_assignments,
+                prior_identity_decisions=result.identity_decisions,
+                prior_decision_contexts=reviewed_contexts,
+                human_review_resolutions=(resolution,),
+            )
+        )
+    )
+
+    reviewed_verdict = reviewed_result.candidate_verdicts[0]
+    assert reviewed_verdict.verdict.value == "same_entity"
+    assert reviewed_verdict.method.value == "human_review"
+    assert reviewed_verdict.human_review_resolution == resolution
+    assert reviewed_verdict.llm_trace is None
+    assert reviewed_result.review_cases == ()
+    assert len(reviewed_result.current_canonical_identities) == 1
+    assert len(reviewed_result.canonical_identity_history) == 2
+    reviewed_decision = reviewed_result.identity_decisions[0]
+    assert reviewed_decision.action.value == "merge"
+    assert reviewed_decision.method.value == "human_review"
+    assert reviewed_decision.human_review_resolution == resolution
+    assert set(reviewed_decision.input_canonical_identity_ids) == {
+        identity.canonical_identity_id for identity in reviewed_current
+    }
+    assert result.review_cases == (review_case,)
+
+
+def test_human_review_different_entities_applies_each_exact_source_group() -> None:
+    module = _module()
+    sources = tuple(
+        _source_identity(
+            module,
+            f"company-reviewed-separate-{suffix}",
+            source_system=f"landing-{suffix}",
+            source_key=f"company:reviewed-separate:{suffix}",
+            entity_type="company",
+            normalized_keys={"name_key": "同名待核企业"},
+        )
+        for suffix in ("a", "b", "c")
+    )
+    assertions = tuple(
+        _identity_assertion(
+            module,
+            f"assertion-{source.source_identity_id}",
+            source,
+            field_path="identity.name",
+            value="同名待核企业",
+        )
+        for source in sources
+    )
+    unresolved = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        _request(
+            module,
+            source_identities=sources,
+            identity_assertions=assertions,
+        )
+    )
+    review_case = unresolved.review_cases[0]
+    expected_groups = (
+        (sources[0].source_identity_id, sources[1].source_identity_id),
+        (sources[2].source_identity_id,),
+    )
+    resolution = module.create_human_review_resolution(
+        review_case=review_case,
+        outcome="different_entities",
+        source_identity_groups=expected_groups,
+        reviewer_id="reviewer:identity-separation",
+        review_policy_id="canonical-review-policy",
+        review_policy_version="review-v1",
+        review_policy_content_sha256="7" * 64,
+        reviewed_at=NOW + timedelta(hours=1),
+        rationale="Reviewed public records establish two distinct Companies.",
+        confidence=0.98,
+    )
+
+    reviewed = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        _request(
+            module,
+            release_id="candidate-s5-identity-separation-r2",
+            decision_run_id="identity-build-separation-run-2",
+            as_of=NOW + timedelta(hours=1),
+            source_identities=sources,
+            identity_assertions=assertions,
+            human_review_resolutions=(resolution,),
+        )
+    )
+
+    assert reviewed.candidate_verdicts[0].human_review_resolution == resolution
+    assert reviewed.candidate_verdicts[0].source_identity_groups == expected_groups
+    assert {
+        decision.source_identity_ids for decision in reviewed.identity_decisions
+    } == set(expected_groups)
+    assert all(
+        decision.human_review_resolution == resolution
+        for decision in reviewed.identity_decisions
+    )
+    assert {
+        identity.source_identity_ids
+        for identity in reviewed.current_canonical_identities
+    } == set(expected_groups)
+
+
+def test_human_review_grouped_merge_reversal_materializes_exact_partition() -> None:
+    module = _module()
+    sources = tuple(
+        _source_identity(
+            module,
+            f"company-grouped-reverse-{suffix}",
+            source_system=f"landing-{suffix}",
+            source_key=f"company:grouped-reverse:{suffix}",
+            entity_type="company",
+            normalized_keys={"name_key": "待纠正合并企业"},
+        )
+        for suffix in ("a", "b", "c")
+    )
+    assertions = tuple(
+        _identity_assertion(
+            module,
+            f"assertion-{source.source_identity_id}",
+            source,
+            field_path="identity.name",
+            value="待纠正合并企业",
+        )
+        for source in sources
+    )
+    combined_id = "company-grouped-reverse-wrong-combined"
+    prior_identities = tuple(
+        _canonical_identity(
+            module,
+            f"company-grouped-reverse-prior-{suffix}",
+            entity_type="company",
+            source_identity_ids=(source.source_identity_id,),
+            identity_decision_id=f"identity-create-grouped-reverse-{suffix}",
+            state="merged",
+            successor_identity_ids=(combined_id,),
+        )
+        for source, suffix in zip(sources, ("a", "b", "c"), strict=True)
+    )
+    wrong_combined = _canonical_identity(
+        module,
+        combined_id,
+        entity_type="company",
+        source_identity_ids=tuple(source.source_identity_id for source in sources),
+        identity_decision_id="identity-merge-grouped-reverse-wrong",
+        predecessor_identity_ids=tuple(
+            identity.canonical_identity_id for identity in prior_identities
+        ),
+    )
+    create_decisions = tuple(
+        _prior_create_decision(
+            module,
+            identity,
+            source_identities=(source,),
+        )
+        for source, identity in zip(sources, prior_identities, strict=True)
+    )
+    prior_at_create = tuple(
+        identity.model_copy(
+            update={
+                "state": module.CanonicalIdentityState.active,
+                "successor_identity_ids": (),
+            }
+        )
+        for identity in prior_identities
+    )
+    create_contexts = tuple(
+        _prior_create_context(
+            module,
+            decision,
+            identity,
+            source_identities=(source,),
+            identity_assertions=assertions,
+        )
+        for source, identity, decision in zip(
+            sources, prior_identities, create_decisions, strict=True
+        )
+    )
+    mistaken_merge = module.IdentityDecision(
+        decision_id=wrong_combined.identity_decision_id,
+        action="merge",
+        source_identity_ids=tuple(source.source_identity_id for source in sources),
+        input_canonical_identity_ids=tuple(
+            identity.canonical_identity_id for identity in prior_identities
+        ),
+        output_canonical_identity_ids=(wrong_combined.canonical_identity_id,),
+        supporting_record_ids=tuple(source.source_record_ids[0] for source in sources),
+        policy=_policy(module),
+        method="composite",
+        method_version="identity-v0",
+        decision_run_id="mistaken-grouped-merge-run",
+        confidence=0.7,
+        rationale="Historical build incorrectly merged three ambiguous Companies.",
+        decided_at=NOW - timedelta(days=1),
+    )
+    prior_assignments = tuple(
+        _current_assignment(
+            module,
+            source_identity_id=source.source_identity_id,
+            canonical_identity_id=identity.canonical_identity_id,
+            identity_decision_id=decision.decision_id,
+        )
+        for source, identity, decision in zip(
+            sources, prior_identities, create_decisions, strict=True
+        )
+    )
+    merge_context = module.create_identity_decision_context(
+        release_id=RELEASE_ID,
+        decision=mistaken_merge,
+        candidate_verdict=None,
+        source_identities=sources,
+        identity_assertions=assertions,
+        input_canonical_identities=prior_at_create,
+        input_source_assignments=prior_assignments,
+        referenced_prior_decision_ids=tuple(
+            decision.decision_id for decision in create_decisions
+        ),
+        output_canonical_identities=(wrong_combined,),
+        output_allocations=(
+            module.IdentityDecisionOutputAllocation(
+                canonical_identity_id=wrong_combined.canonical_identity_id,
+                source_identity_ids=tuple(
+                    source.source_identity_id for source in sources
+                ),
+            ),
+        ),
+    )
+    current_assignments = tuple(
+        _current_assignment(
+            module,
+            source_identity_id=source.source_identity_id,
+            canonical_identity_id=wrong_combined.canonical_identity_id,
+            identity_decision_id=mistaken_merge.decision_id,
+        )
+        for source in sources
+    )
+    initial_request = _request(
+        module,
+        source_identities=sources,
+        identity_assertions=assertions,
+        current_canonical_identities=(wrong_combined,),
+        current_source_identity_assignments=current_assignments,
+        canonical_identity_history=prior_identities,
+        prior_identity_decisions=(*create_decisions, mistaken_merge),
+        prior_decision_contexts=(*create_contexts, merge_context),
+    )
+    unresolved = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        initial_request
+    )
+    assert unresolved.candidate_verdicts[0].verdict.value == "unresolved"
+    review_case = unresolved.review_cases[0]
+    expected_groups = (
+        (sources[0].source_identity_id, sources[1].source_identity_id),
+        (sources[2].source_identity_id,),
+    )
+    resolution = module.create_human_review_resolution(
+        review_case=review_case,
+        outcome="different_entities",
+        source_identity_groups=expected_groups,
+        reviewer_id="reviewer:grouped-merge-reversal",
+        review_policy_id="canonical-review-policy",
+        review_policy_version="review-v1",
+        review_policy_content_sha256="7" * 64,
+        reviewed_at=NOW + timedelta(hours=1),
+        rationale="Review establishes two Companies, with the first two records co-referring.",
+        confidence=0.98,
+    )
+    reviewed_release = "candidate-s5-grouped-reverse-r2"
+
+    def rebase_context(context: Any) -> Any:
+        return module.create_identity_decision_context(
+            release_id=reviewed_release,
+            decision=context.decision,
+            candidate_verdict=context.candidate_verdict,
+            source_identities=context.source_identities,
+            identity_assertions=context.identity_assertions,
+            input_canonical_identities=tuple(
+                identity.model_copy(update={"release_id": reviewed_release})
+                for identity in context.input_canonical_identities
+            ),
+            output_canonical_identities=tuple(
+                identity.model_copy(update={"release_id": reviewed_release})
+                for identity in context.output_canonical_identities
+            ),
+            input_source_assignments=tuple(
+                assignment.model_copy(update={"release_id": reviewed_release})
+                for assignment in context.input_source_assignments
+            ),
+            referenced_prior_decision_ids=context.referenced_prior_decision_ids,
+            output_allocations=context.output_allocations,
+        )
+
+    reviewed_request = _request(
+        module,
+        release_id=reviewed_release,
+        decision_run_id="identity-build-grouped-reverse-r2",
+        as_of=NOW + timedelta(hours=1),
+        source_identities=sources,
+        identity_assertions=assertions,
+        current_canonical_identities=(
+            wrong_combined.model_copy(update={"release_id": reviewed_release}),
+        ),
+        current_source_identity_assignments=tuple(
+            assignment.model_copy(update={"release_id": reviewed_release})
+            for assignment in current_assignments
+        ),
+        canonical_identity_history=tuple(
+            identity.model_copy(update={"release_id": reviewed_release})
+            for identity in prior_identities
+        ),
+        prior_identity_decisions=(*create_decisions, mistaken_merge),
+        prior_decision_contexts=tuple(
+            rebase_context(context) for context in (*create_contexts, merge_context)
+        ),
+        human_review_resolutions=(resolution,),
+    )
+    reviewed = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        reviewed_request
+    )
+
+    reversal = reviewed.identity_decisions[0]
+    assert reversal.action.value == "reverse"
+    assert reversal.human_review_resolution == resolution
+    assert {
+        identity.source_identity_ids
+        for identity in reviewed.current_canonical_identities
+    } == set(expected_groups)
+    assignment_by_source = {
+        assignment.source_identity_id: assignment.canonical_identity_id
+        for assignment in reviewed.source_identity_assignments
+    }
+    assert (
+        assignment_by_source[sources[0].source_identity_id]
+        == assignment_by_source[sources[1].source_identity_id]
+    )
+    assert (
+        assignment_by_source[sources[2].source_identity_id]
+        != assignment_by_source[sources[0].source_identity_id]
+    )
+    corrected = next(
+        identity
+        for identity in reviewed.canonical_identity_history
+        if identity.canonical_identity_id == wrong_combined.canonical_identity_id
+    )
+    assert corrected.state.value == "split"
+    assert set(corrected.successor_identity_ids) == {
+        identity.canonical_identity_id
+        for identity in reviewed.current_canonical_identities
+    }
+    assert reviewed.decision_contexts[0].output_allocations == tuple(
+        module.IdentityDecisionOutputAllocation(
+            canonical_identity_id=identity.canonical_identity_id,
+            source_identity_ids=identity.source_identity_ids,
+        )
+        for identity in reviewed.current_canonical_identities
     )
 
 
@@ -2085,7 +2566,7 @@ def test_request_bound_validation_rejects_rehashed_verdict_tampering() -> None:
 
     with pytest.raises(
         module.IdentityResolutionIntegrityError,
-        match="verdict.*content|content.*verdict",
+        match="verdict.*content|content.*verdict|review.*case",
     ):
         module.validate_identity_resolution_result(request, tampered)
 
@@ -2861,6 +3342,13 @@ def test_low_confidence_llm_merge_degrades_to_unresolved_without_trace_relabelin
     )
     assert "below_auto_action_threshold" in verdict.reason_codes
     assert verdict.llm_trace is not None
+    assert len(result.review_cases) == 1
+    review_case = result.review_cases[0]
+    assert review_case.family.value == "identity"
+    assert review_case.originating_record_id == verdict.verdict_id
+    assert review_case.trace_content_sha256 == verdict.llm_trace.output_sha256
+    assert review_case.confidence == 0.41
+    assert review_case.uncertainty == "Identity evidence is weak and conflicting."
     assert len(result.current_canonical_identities) == 2
     assert {
         identity.source_identity_ids for identity in result.current_canonical_identities
@@ -3093,3 +3581,59 @@ def test_same_entity_component_merges_more_than_two_current_owners() -> None:
     assert len(result.current_canonical_identities) == 1
     assert result.identity_decisions[0].action.value == "merge"
     assert len(result.identity_decisions[0].input_canonical_identity_ids) == 3
+
+
+def test_identity_request_and_result_canonicalize_equal_instants_before_hashing() -> (
+    None
+):
+    module = _module()
+    sources = tuple(
+        _source_identity(
+            module,
+            f"utc-paper-{suffix}",
+            source_system=f"landing-{suffix}",
+            source_key=f"paper:utc:{suffix}",
+            entity_type="paper",
+            normalized_keys={"doi": "10.5555/utc-canonical"},
+        )
+        for suffix in ("a", "b")
+    )
+    assertions = tuple(
+        _identity_assertion(
+            module,
+            f"assertion-{source.source_identity_id}",
+            source,
+            field_path="identity.doi",
+            value="10.5555/utc-canonical",
+        )
+        for source in sources
+    )
+    utc_request = _request(
+        module,
+        source_identities=sources,
+        identity_assertions=assertions,
+        as_of=NOW,
+    )
+    offset_request = _request(
+        module,
+        source_identities=sources,
+        identity_assertions=assertions,
+        as_of=NOW.astimezone(timezone(timedelta(hours=8))),
+    )
+
+    utc_result = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        utc_request
+    )
+    offset_result = (
+        module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+            offset_request
+        )
+    )
+
+    assert offset_request.as_of.utcoffset() == timedelta(0)
+    assert offset_request == utc_request
+    assert module.canonical_identity_resolution_request_sha256(
+        offset_request
+    ) == module.canonical_identity_resolution_request_sha256(utc_request)
+    assert offset_result == utc_result
+    assert offset_result.content_sha256 == utc_result.content_sha256

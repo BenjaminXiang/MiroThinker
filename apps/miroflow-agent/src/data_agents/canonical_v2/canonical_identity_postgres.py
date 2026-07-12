@@ -33,7 +33,7 @@ from .contracts import IdentityAction, IdentityDecision, SourceAssertion
 from .rebuild_write_gate import require_accepted_backup_gate
 
 
-MINIMUM_REVISION = "C2_0006"
+MINIMUM_REVISION = "C2_0007"
 VERSION_TABLE = "public.canonical_v2_alembic_version"
 OFFLINE_BUILD_AUTHORITY = "offline_canonical_build"
 IDENTITY_LOCK_ORDER = (
@@ -390,6 +390,15 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
             sql.SQL("LOCK TABLE {} IN ROW EXCLUSIVE MODE").format(tables)
         )
 
+    @staticmethod
+    def _lock_release_boundary(
+        connection: psycopg.Connection[dict[str, Any]],
+    ) -> None:
+        # C2 migrations acquire release before every identity table. Establish
+        # that same ordering before even the replay lookup, so a migration can
+        # never hold release while this writer holds an identity-table lock.
+        connection.execute("LOCK TABLE knowledge.release IN ROW SHARE MODE")
+
     @contextmanager
     def _connection(
         self,
@@ -737,8 +746,10 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
                     "INSERT INTO knowledge.identity_decision "
                     "(release_id, decision_id, action, policy_id, policy_version, "
                     "method, method_version, decision_run_id, confidence, rationale, "
-                    "decided_at, reversal_of_decision_id, llm_trace) "
-                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                    "decided_at, reversal_of_decision_id, llm_trace, "
+                    "human_review_resolution) "
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
+                    "%s, %s)",
                     (
                         request.release_id,
                         decision.decision_id,
@@ -753,6 +764,13 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
                         decision.decided_at,
                         decision.reversal_of_decision_id,
                         _trace_json(decision),
+                        (
+                            Jsonb(
+                                decision.human_review_resolution.model_dump(mode="json")
+                            )
+                            if decision.human_review_resolution is not None
+                            else None
+                        ),
                     ),
                 )
                 inserted.add(decision.decision_id)
@@ -1002,7 +1020,8 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
         decision_rows = connection.execute(
             "SELECT decision_id, action, policy_id, policy_version, method, "
             "method_version, decision_run_id, confidence, rationale, decided_at, "
-            "reversal_of_decision_id, llm_trace FROM knowledge.identity_decision "
+            "reversal_of_decision_id, llm_trace, human_review_resolution "
+            "FROM knowledge.identity_decision "
             "WHERE release_id = %s ORDER BY decision_id",
             (result.release_id,),
         ).fetchall()
@@ -1019,6 +1038,7 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
                 row["decided_at"],
                 row["reversal_of_decision_id"],
                 row["llm_trace"],
+                row["human_review_resolution"],
             )
             for row in decision_rows
         }
@@ -1037,6 +1057,11 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
                 (
                     decision.llm_trace.model_dump(mode="json")
                     if decision.llm_trace is not None
+                    else None
+                ),
+                (
+                    decision.human_review_resolution.model_dump(mode="json")
+                    if decision.human_review_resolution is not None
                     else None
                 ),
             )
@@ -1294,6 +1319,7 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
                     "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
                     (validated_request.release_id,),
                 )
+                self._lock_release_boundary(connection)
                 existing = connection.execute(
                     "SELECT decision_run_id FROM knowledge.identity_resolution_run "
                     "WHERE release_id = %s",
@@ -1322,6 +1348,11 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
                 self._require_prerequisites(
                     connection, validated_request, validated_result
                 )
+                # Locks and prerequisite reads can wait. Re-validate the accepted
+                # evidence bytes and exact connected target only after they finish,
+                # immediately before the transaction's first durable mutation.
+                require_accepted_backup_gate(self._backup_gate_root)
+                self._verify_connected_target(connection)
                 self._insert_sources_and_assertions(
                     connection, validated_request, validated_result
                 )

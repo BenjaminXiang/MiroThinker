@@ -25,7 +25,7 @@ from src.data_agents.storage.database_target import set_alembic_database_url
 APP_ROOT = Path(__file__).resolve().parents[2]
 ALEMBIC_INI = APP_ROOT / "canonical_v2_alembic.ini"
 SCRIPT_LOCATION = APP_ROOT / "canonical_v2_alembic"
-EXPECTED_REVISION = "C2_0006"
+EXPECTED_REVISION = "C2_0007"
 NOW = datetime(2026, 7, 11, 17, 30, tzinfo=timezone.utc)
 BUSINESS_SCHEMAS = {
     "landing",
@@ -169,6 +169,7 @@ EXPECTED_TASK_5_2_COLUMNS = {
         "decided_at",
         "reversal_of_decision_id",
         "llm_trace",
+        "human_review_resolution",
     },
     "canonical_decision": {
         "release_id",
@@ -186,6 +187,7 @@ EXPECTED_TASK_5_2_COLUMNS = {
         "decided_at",
         "supersedes_decision_id",
         "llm_trace",
+        "human_review_resolution",
     },
     "canonical_decision_assertion": {
         "release_id",
@@ -244,6 +246,7 @@ EXPECTED_TASK_5_2_COLUMNS = {
         "decided_at",
         "supersedes_decision_id",
         "llm_trace",
+        "human_review_resolution",
     },
     "relationship_decision_assertion": {
         "release_id",
@@ -900,7 +903,7 @@ def test_identity_reversal_adds_history_and_requires_an_existing_parent(
         "(release_id, decision_id, action, policy_id, policy_version, method, "
         "method_version, decision_run_id, confidence, rationale, decided_at) "
         "VALUES ('release-r1', 'merge-1', 'merge', 'identity-policy', 'v1', "
-        "'human_review', 'identity-v1', 'build-r1', 0.98, 'merge evidence', %s)",
+        "'composite', 'identity-v1', 'build-r1', 0.98, 'merge evidence', %s)",
         (NOW,),
     )
     connection.execute(
@@ -909,7 +912,7 @@ def test_identity_reversal_adds_history_and_requires_an_existing_parent(
         "method_version, decision_run_id, confidence, rationale, decided_at, "
         "reversal_of_decision_id) "
         "VALUES ('release-r1', 'reverse-1', 'reverse', 'identity-policy', 'v1', "
-        "'human_review', 'identity-v1', 'build-r1', 1.0, 'split reviewed', %s, 'merge-1')",
+        "'composite', 'identity-v1', 'build-r1', 1.0, 'split reviewed', %s, 'merge-1')",
         (NOW,),
     )
 
@@ -929,7 +932,7 @@ def test_identity_reversal_adds_history_and_requires_an_existing_parent(
         "method_version, decision_run_id, confidence, rationale, decided_at, "
         "reversal_of_decision_id) "
         "VALUES ('release-r1', 'reverse-missing', 'reverse', 'identity-policy', 'v1', "
-        "'human_review', 'identity-v1', 'build-r1', 1.0, 'missing parent', %s, "
+        "'composite', 'identity-v1', 'build-r1', 1.0, 'missing parent', %s, "
         "'merge-does-not-exist')",
         (NOW,),
     )
@@ -962,7 +965,7 @@ def test_canonical_relationship_endpoints_cannot_cross_release_scope(
         "method_version, decision_run_id, confidence, rationale, decided_at) "
         "VALUES ('release-r1', 'relation-cross-release', 'canonical-relation-1', "
         "'professor_founded_company', 'v1', 'professor-c1', 'company-c1', 'accepted', "
-        "'relationship-policy', 'v1', 'human_review', 'relation-v1', 'build-r1', "
+        "'relationship-policy', 'v1', 'composite', 'relation-v1', 'build-r1', "
         "0.9, 'must fail cross release', %s)",
         (NOW,),
     )
@@ -975,7 +978,7 @@ def test_canonical_relationship_endpoints_cannot_cross_release_scope(
         "method_version, decision_run_id, confidence, rationale, decided_at) "
         "VALUES ('release-r1', 'relation-valid', 'canonical-relation-1', "
         "'professor_founded_company', 'v1', 'professor-c1', 'company-c1', 'accepted', "
-        "'relationship-policy', 'v1', 'human_review', 'relation-v1', 'build-r1', "
+        "'relationship-policy', 'v1', 'composite', 'relation-v1', 'build-r1', "
         "0.9, 'same release', %s)",
         (NOW,),
     )
@@ -1093,7 +1096,7 @@ def test_identity_reversal_can_reference_a_previous_release_decision(
         "(release_id, decision_id, action, policy_id, policy_version, method, "
         "method_version, decision_run_id, confidence, rationale, decided_at) "
         "VALUES ('release-r1', 'merge-r1', 'merge', 'identity-policy', 'v1', "
-        "'human_review', 'identity-v1', 'build-r1', 0.98, 'merge evidence', %s)",
+        "'composite', 'identity-v1', 'build-r1', 0.98, 'merge evidence', %s)",
         (NOW,),
     )
     connection.execute(
@@ -1101,7 +1104,7 @@ def test_identity_reversal_can_reference_a_previous_release_decision(
         "(release_id, decision_id, action, policy_id, policy_version, method, "
         "method_version, decision_run_id, confidence, rationale, decided_at, "
         "reversal_of_decision_id) VALUES ('release-r2', 'reverse-r2', 'reverse', "
-        "'identity-policy', 'v1', 'human_review', 'identity-v1', 'build-r2', 1.0, "
+        "'identity-policy', 'v1', 'composite', 'identity-v1', 'build-r2', 1.0, "
         "'reviewed reversal', %s, 'merge-r1')",
         (NOW,),
     )
@@ -1123,7 +1126,7 @@ def test_identity_reversal_cannot_reference_itself(target: _Target) -> None:
         "(release_id, decision_id, action, policy_id, policy_version, method, "
         "method_version, decision_run_id, confidence, rationale, decided_at, "
         "reversal_of_decision_id) VALUES ('release-r1', 'reverse-self', 'reverse', "
-        "'identity-policy', 'v1', 'human_review', 'identity-v1', 'build-r1', 1.0, "
+        "'identity-policy', 'v1', 'composite', 'identity-v1', 'build-r1', 1.0, "
         "'invalid self reversal', %s, 'reverse-self')",
         (NOW,),
     )
@@ -1155,7 +1158,7 @@ def test_field_decision_can_supersede_a_previous_release_decision(
         "(release_id, decision_id, canonical_identity_id, field_path, state, policy_id, "
         "policy_version, method, method_version, decision_run_id, confidence, rationale, "
         "decided_at, supersedes_decision_id) VALUES ('release-r2', 'field-r2', "
-        "'company-c1', 'name', 'selected', 'field-policy', 'v1', 'human_review', "
+        "'company-c1', 'name', 'selected', 'field-policy', 'v1', 'composite', "
         "'field-v1', 'build-r2', 0.99, 'updated selection', %s, 'field-r1')",
         (NOW,),
     )
@@ -1178,7 +1181,7 @@ def test_field_decision_cannot_supersede_itself(target: _Target) -> None:
         "(release_id, decision_id, canonical_identity_id, field_path, state, policy_id, "
         "policy_version, method, method_version, decision_run_id, confidence, rationale, "
         "decided_at, supersedes_decision_id) VALUES ('release-r1', 'field-self', "
-        "'company-c1', 'name', 'selected', 'field-policy', 'v1', 'human_review', "
+        "'company-c1', 'name', 'selected', 'field-policy', 'v1', 'composite', "
         "'field-v1', 'build-r1', 0.99, 'invalid self supersession', %s, 'field-self')",
         (NOW,),
     )
@@ -1210,12 +1213,12 @@ def test_field_supersession_cannot_cross_identity_or_field(target: _Target) -> N
     ):
         _assert_database_error(
             connection,
-            errors.ForeignKeyViolation,
+            errors.CheckViolation,
             "INSERT INTO knowledge.canonical_decision "
             "(release_id, decision_id, canonical_identity_id, field_path, state, policy_id, "
             "policy_version, method, method_version, decision_run_id, confidence, rationale, "
             "decided_at, supersedes_decision_id) VALUES ('release-r2', %s, %s, %s, "
-            "'selected', 'field-policy', 'v1', 'human_review', 'field-v1', 'build-r2', "
+            "'selected', 'field-policy', 'v1', 'composite', 'field-v1', 'build-r2', "
             "0.99, 'invalid lineage subject', %s, 'field-r1')",
             (decision_id, identity_id, field_path, NOW),
         )
@@ -1247,7 +1250,7 @@ def test_relationship_decision_can_supersede_a_previous_release_decision(
             "method_version, decision_run_id, confidence, rationale, decided_at, "
             "supersedes_decision_id) VALUES (%s, %s, 'canonical-relation-1', "
             "'professor_founded_company', 'v1', 'professor-c1', 'company-c1', "
-            "'accepted', 'relationship-policy', 'v1', 'human_review', 'relation-v1', "
+            "'accepted', 'relationship-policy', 'v1', 'composite', 'relation-v1', "
             "%s, 0.95, 'reviewed relationship', %s, %s)",
             (
                 release_id,
@@ -1281,7 +1284,7 @@ def test_relationship_decision_cannot_supersede_itself(target: _Target) -> None:
         "method_version, decision_run_id, confidence, rationale, decided_at, "
         "supersedes_decision_id) VALUES ('release-r1', 'relation-self', "
         "'canonical-relation-1', 'professor_founded_company', 'v1', 'professor-c1', "
-        "'company-c1', 'accepted', 'relationship-policy', 'v1', 'human_review', "
+        "'company-c1', 'accepted', 'relationship-policy', 'v1', 'composite', "
         "'relation-v1', 'build-r1', 0.95, 'invalid self supersession', %s, "
         "'relation-self')",
         (NOW,),
@@ -1310,13 +1313,13 @@ def test_relationship_supersession_cannot_cross_logical_relationship(
         "method_version, decision_run_id, confidence, rationale, decided_at) VALUES "
         "('release-r1', 'relation-r1', 'canonical-relation-1', "
         "'professor_founded_company', 'v1', 'professor-c1', 'company-c1', 'accepted', "
-        "'relationship-policy', 'v1', 'human_review', 'relation-v1', 'build-r1', "
+        "'relationship-policy', 'v1', 'composite', 'relation-v1', 'build-r1', "
         "0.95, 'first relationship decision', %s)",
         (NOW,),
     )
     _assert_database_error(
         connection,
-        errors.ForeignKeyViolation,
+        errors.CheckViolation,
         "INSERT INTO knowledge.relationship_decision "
         "(release_id, decision_id, canonical_relationship_id, relationship_type_id, "
         "relationship_type_version, source_canonical_identity_id, "
@@ -1324,7 +1327,7 @@ def test_relationship_supersession_cannot_cross_logical_relationship(
         "method_version, decision_run_id, confidence, rationale, decided_at, "
         "supersedes_decision_id) VALUES ('release-r2', 'relation-wrong-subject', "
         "'canonical-relation-2', 'professor_founded_company', 'v1', 'professor-c1', "
-        "'company-c1', 'accepted', 'relationship-policy', 'v1', 'human_review', "
+        "'company-c1', 'accepted', 'relationship-policy', 'v1', 'composite', "
         "'relation-v1', 'build-r2', 0.95, 'invalid lineage subject', %s, 'relation-r1')",
         (NOW,),
     )

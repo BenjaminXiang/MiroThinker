@@ -8,9 +8,10 @@ Durable history and typed domain projections are separate adapters/slices.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Mapping
+from collections.abc import Hashable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 import base64
 import hashlib
 import json
@@ -36,11 +37,15 @@ from .contracts import (
     ContractModel,
     DecisionMethod,
     DecisionState,
+    HumanReviewOutcome,
+    HumanReviewResolution,
     IdentityReference,
     LLMDecisionTrace,
     NonEmptyStr,
     PolicyKind,
     PolicyReference,
+    ReviewCase,
+    ReviewFamily,
     RelationshipAssertion,
     RelationshipDecision,
     RelationshipDecisionState,
@@ -48,6 +53,8 @@ from .contracts import (
     SourceAssertion,
     SourceIdentity,
     SourceIdentityState,
+    create_review_case,
+    create_human_review_resolution,
 )
 
 
@@ -59,12 +66,23 @@ class DecisionBatchIntegrityError(CanonicalDecisionEngineError):
     """A decision batch or derived result violates an integrity invariant."""
 
 
+class DecisionHistoryIntegrityError(CanonicalDecisionEngineError):
+    """An immutable release lineage has an invalid or ambiguous decision head."""
+
+
 class AdjudicationIntegrityError(CanonicalDecisionEngineError):
     """Recorded adjudication bytes do not match their declared identity."""
 
 
 class AdjudicationOutputError(CanonicalDecisionEngineError):
     """Structured adjudication output is invalid or unsafe to project."""
+
+
+class DecisionTransition(str, Enum):
+    """The only caller-selected decision transition; outcomes remain engine-owned."""
+
+    evaluate = "evaluate"
+    withdraw = "withdraw"
 
 
 def _canonical_json_bytes(value: JsonValue) -> bytes:
@@ -86,7 +104,7 @@ def _stable_content_id(prefix: str, value: JsonValue) -> str:
     return f"{prefix}:sha256:{_content_sha256(value)}"
 
 
-def _require_unique(values: tuple[str, ...], label: str) -> None:
+def _require_unique[T: Hashable](values: tuple[T, ...], label: str) -> None:
     if len(values) != len(set(values)):
         raise ValueError(f"{label} must not contain duplicates")
 
@@ -305,6 +323,7 @@ class FieldAssertionGroup(ContractModel):
     field_path: NonEmptyStr
     assertions: tuple[SourceAssertion, ...] = Field(min_length=1)
     policy: PolicyReference
+    transition: DecisionTransition = DecisionTransition.evaluate
 
     @field_validator("assertions")
     @classmethod
@@ -332,6 +351,7 @@ class RelationshipAssertionGroup(ContractModel):
     target_canonical_identity_id: NonEmptyStr
     assertions: tuple[RelationshipAssertion, ...] = Field(min_length=1)
     policy: PolicyReference
+    transition: DecisionTransition = DecisionTransition.evaluate
 
     @field_validator("assertions")
     @classmethod
@@ -362,6 +382,8 @@ class DecisionBatchRequest(ContractModel):
     canonical_identities: tuple[CanonicalIdentity, ...]
     field_groups: tuple[FieldAssertionGroup, ...] = ()
     relationship_groups: tuple[RelationshipAssertionGroup, ...] = ()
+    human_review_resolutions: tuple[HumanReviewResolution, ...] = ()
+    previous_history: DecisionHistoryProjection | None = None
 
     @field_validator("source_identities")
     @classmethod
@@ -421,6 +443,21 @@ class DecisionBatchRequest(ContractModel):
         cls, groups: tuple[RelationshipAssertionGroup, ...]
     ) -> tuple[RelationshipAssertionGroup, ...]:
         return tuple(sorted(groups, key=lambda group: group.canonical_relationship_id))
+
+    @field_validator("human_review_resolutions")
+    @classmethod
+    def sort_human_review_resolutions(
+        cls, resolutions: tuple[HumanReviewResolution, ...]
+    ) -> tuple[HumanReviewResolution, ...]:
+        _require_unique(
+            tuple(resolution.resolution_id for resolution in resolutions),
+            "human review resolution IDs",
+        )
+        _require_unique(
+            tuple(resolution.review_case.review_case_id for resolution in resolutions),
+            "human review case IDs",
+        )
+        return tuple(sorted(resolutions, key=lambda value: value.resolution_id))
 
     @model_validator(mode="after")
     def validate_batch_integrity(self) -> DecisionBatchRequest:
@@ -488,6 +525,80 @@ class DecisionBatchRequest(ContractModel):
                 assertion.assertion_id for assertion in group.assertions
             )
         _require_unique(tuple(assertion_ids), "batch assertion IDs")
+        group_keys = {
+            (ReviewFamily.field, group.canonical_identity_id, group.field_path)
+            for group in self.field_groups
+        } | {
+            (
+                ReviewFamily.relationship,
+                group.canonical_relationship_id,
+                group.relationship_type_id,
+            )
+            for group in self.relationship_groups
+        }
+        resolution_keys = tuple(
+            (
+                resolution.review_case.family,
+                resolution.review_case.subject_id,
+                resolution.review_case.path,
+            )
+            for resolution in self.human_review_resolutions
+        )
+        _require_unique(resolution_keys, "human review logical case keys")
+        if not set(resolution_keys) <= group_keys:
+            raise ValueError(
+                "human review resolution must match an exact decision group"
+            )
+        if any(
+            resolution.review_case.release_id == self.release_id
+            or resolution.reviewed_at > self.as_of
+            for resolution in self.human_review_resolutions
+        ):
+            raise ValueError(
+                "human review must come from a prior release and be available by as_of"
+            )
+        if self.previous_history is None:
+            if self.human_review_resolutions:
+                raise ValueError(
+                    "human review requires the exact validated previous history"
+                )
+        else:
+            if (
+                self.previous_history.as_of > self.as_of
+                or self.release_id in self.previous_history.release_lineage
+            ):
+                raise ValueError(
+                    "previous decision history must precede the new release and as_of"
+                )
+            open_cases = {
+                case.review_case_id: case
+                for case in self.previous_history.open_review_cases
+            }
+            if any(
+                open_cases.get(resolution.review_case.review_case_id)
+                != resolution.review_case
+                for resolution in self.human_review_resolutions
+            ):
+                raise ValueError(
+                    "human review must resolve an exact open case from previous history"
+                )
+        resolution_keys_set = set(resolution_keys)
+        if any(
+            group.transition is DecisionTransition.withdraw
+            and (ReviewFamily.field, group.canonical_identity_id, group.field_path)
+            in resolution_keys_set
+            for group in self.field_groups
+        ) or any(
+            group.transition is DecisionTransition.withdraw
+            and (
+                ReviewFamily.relationship,
+                group.canonical_relationship_id,
+                group.relationship_type_id,
+            )
+            in resolution_keys_set
+            for group in self.relationship_groups
+        ):
+            raise ValueError("withdrawal cannot also apply a human review resolution")
         return self
 
 
@@ -616,6 +727,15 @@ class _DecisionBatchContent(ContractModel):
     current_fields: tuple[CurrentFieldSelection, ...]
     current_relationships: tuple[CurrentRelationshipSelection, ...]
     unresolved_conflicts: tuple[UnresolvedConflict, ...]
+    review_cases: tuple[ReviewCase, ...]
+
+    @field_validator("review_cases")
+    @classmethod
+    def normalize_review_cases(
+        cls, cases: tuple[ReviewCase, ...]
+    ) -> tuple[ReviewCase, ...]:
+        _require_unique(tuple(case.review_case_id for case in cases), "review case IDs")
+        return tuple(sorted(cases, key=lambda case: case.review_case_id))
 
     @field_validator("canonical_identity_contexts")
     @classmethod
@@ -1190,6 +1310,116 @@ def _validate_unresolved_conflicts(
             )
 
 
+def _decision_review_uncertainty(
+    decision: CanonicalDecision | RelationshipDecision,
+) -> str | None:
+    if decision.llm_trace is None:
+        return None
+    uncertainty = decision.llm_trace.validated_output.get("uncertainty")
+    if not isinstance(uncertainty, str) or not uncertainty.strip():
+        raise ValueError(
+            "structured unresolved decision must retain non-empty uncertainty"
+        )
+    return uncertainty
+
+
+def _review_cases_for_decisions(
+    *,
+    field_decisions: Iterable[CanonicalDecision],
+    relationship_decisions: Iterable[RelationshipDecision],
+    manifests: Iterable[DecisionGroupManifest],
+) -> tuple[ReviewCase, ...]:
+    manifests_by_decision = {manifest.decision_id: manifest for manifest in manifests}
+    cases: list[ReviewCase] = []
+    for decision in field_decisions:
+        if (
+            decision.state is not DecisionState.unresolved
+            or len(decision.conflicting_assertion_ids) < 2
+        ):
+            continue
+        manifest = manifests_by_decision[decision.decision_id]
+        cases.append(
+            create_review_case(
+                family=ReviewFamily.field,
+                release_id=decision.release_id,
+                decision_run_id=decision.decision_run_id,
+                subject_id=decision.canonical_identity_id,
+                path=decision.field_path,
+                originating_record_id=decision.decision_id,
+                candidate_evidence_ids=decision.candidate_assertion_ids,
+                conflicting_evidence_ids=decision.conflicting_assertion_ids,
+                source_identity_ids=(),
+                policy=decision.policy,
+                method=decision.method,
+                method_version=decision.method_version,
+                confidence=decision.confidence,
+                rationale=decision.rationale,
+                uncertainty=_decision_review_uncertainty(decision),
+                reason_codes=(),
+                trace_content_sha256=(
+                    decision.llm_trace.output_sha256
+                    if decision.llm_trace is not None
+                    else None
+                ),
+                input_content_sha256=manifest.content_sha256,
+                created_at=decision.decided_at,
+            )
+        )
+    for decision in relationship_decisions:
+        if (
+            decision.state is not RelationshipDecisionState.unresolved
+            or len(decision.conflicting_assertion_ids) < 2
+        ):
+            continue
+        manifest = manifests_by_decision[decision.decision_id]
+        cases.append(
+            create_review_case(
+                family=ReviewFamily.relationship,
+                release_id=decision.release_id,
+                decision_run_id=decision.decision_run_id,
+                subject_id=decision.canonical_relationship_id,
+                path=decision.relationship_type_id,
+                originating_record_id=decision.decision_id,
+                candidate_evidence_ids=decision.candidate_assertion_ids,
+                conflicting_evidence_ids=decision.conflicting_assertion_ids,
+                source_identity_ids=(),
+                policy=decision.policy,
+                method=decision.method,
+                method_version=decision.method_version,
+                confidence=decision.confidence,
+                rationale=decision.rationale,
+                uncertainty=_decision_review_uncertainty(decision),
+                reason_codes=(),
+                trace_content_sha256=(
+                    decision.llm_trace.output_sha256
+                    if decision.llm_trace is not None
+                    else None
+                ),
+                input_content_sha256=manifest.content_sha256,
+                created_at=decision.decided_at,
+            )
+        )
+    return tuple(sorted(cases, key=lambda case: case.review_case_id))
+
+
+def _validate_review_cases(
+    *,
+    field_decisions: tuple[CanonicalDecision, ...],
+    relationship_decisions: tuple[RelationshipDecision, ...],
+    manifests: tuple[DecisionGroupManifest, ...],
+    cases: tuple[ReviewCase, ...],
+) -> None:
+    expected = _review_cases_for_decisions(
+        field_decisions=field_decisions,
+        relationship_decisions=relationship_decisions,
+        manifests=manifests,
+    )
+    if cases != expected:
+        raise ValueError(
+            "review cases must exactly cover every material unresolved decision"
+        )
+
+
 def _validate_identity_contexts_and_determinism(
     *,
     as_of: datetime,
@@ -1436,6 +1666,7 @@ class DecisionBatchResult(_DecisionBatchContent):
                 *self.current_fields,
                 *self.current_relationships,
                 *self.unresolved_conflicts,
+                *self.review_cases,
             )
         ):
             raise ValueError("all decision result records must share one release_id")
@@ -1497,6 +1728,12 @@ class DecisionBatchResult(_DecisionBatchContent):
             relationship_decisions=relationship_decisions,
             conflicts=self.unresolved_conflicts,
         )
+        _validate_review_cases(
+            field_decisions=self.canonical_decisions,
+            relationship_decisions=self.relationship_decisions,
+            manifests=self.decision_group_manifests,
+            cases=self.review_cases,
+        )
 
         expected_hash = _content_sha256(
             cast(
@@ -1507,6 +1744,453 @@ class DecisionBatchResult(_DecisionBatchContent):
         if self.content_sha256 != expected_hash:
             raise ValueError("content_sha256 must bind the complete decision result")
         return self
+
+
+class _DecisionHistoryContent(ContractModel):
+    release_lineage: tuple[NonEmptyStr, ...] = Field(min_length=1)
+    as_of: CanonicalDatetime
+    field_assertions: tuple[SourceAssertion, ...]
+    relationship_assertions: tuple[RelationshipAssertion, ...]
+    canonical_decision_history: tuple[CanonicalDecision, ...]
+    relationship_decision_history: tuple[RelationshipDecision, ...]
+    review_case_history: tuple[ReviewCase, ...]
+    open_review_cases: tuple[ReviewCase, ...]
+    current_fields: tuple[CurrentFieldSelection, ...]
+    current_relationships: tuple[CurrentRelationshipSelection, ...]
+
+
+class DecisionHistoryProjection(_DecisionHistoryContent):
+    content_sha256: Sha256
+
+    @model_validator(mode="after")
+    def validate_projection(self) -> DecisionHistoryProjection:
+        _validate_decision_history_projection(self)
+        expected_hash = decision_history_projection_sha256(self)
+        if self.content_sha256 != expected_hash:
+            raise ValueError("decision history projection content hash mismatch")
+        return self
+
+
+DecisionBatchRequest.model_rebuild()
+
+
+class _DecisionHistoryAsOf(ContractModel):
+    as_of: CanonicalDatetime
+
+
+def decision_history_projection_sha256(
+    projection: DecisionHistoryProjection | _DecisionHistoryContent,
+) -> str:
+    payload = projection.model_dump(mode="json")
+    payload.pop("content_sha256", None)
+    return _content_sha256(cast(JsonValue, payload))
+
+
+def _retained_by_id[T](
+    values: Iterable[T], *, id_field: str, label: str
+) -> tuple[T, ...]:
+    retained: dict[str, T] = {}
+    order: list[str] = []
+    for value in values:
+        identity = cast(str, getattr(value, id_field))
+        existing = retained.get(identity)
+        if existing is not None and existing != value:
+            raise ValueError(f"{label} ID cannot identify changed retained content")
+        if existing is None:
+            retained[identity] = value
+            order.append(identity)
+    return tuple(retained[identity] for identity in order)
+
+
+def _decision_history_heads(
+    *,
+    release_lineage: tuple[str, ...],
+    field_history: tuple[CanonicalDecision, ...],
+    relationship_history: tuple[RelationshipDecision, ...],
+) -> tuple[
+    dict[tuple[str, str], CanonicalDecision],
+    dict[str, RelationshipDecision],
+]:
+    release_position = {
+        release_id: position for position, release_id in enumerate(release_lineage)
+    }
+    if len(release_position) != len(release_lineage):
+        raise ValueError("decision history release lineage cannot contain duplicates")
+    all_decision_ids = tuple(
+        decision.decision_id for decision in (*field_history, *relationship_history)
+    )
+    _require_unique(all_decision_ids, "decision history decision IDs")
+
+    field_heads: dict[tuple[str, str], CanonicalDecision] = {}
+    field_by_id: dict[str, CanonicalDecision] = {}
+    last_release_position = -1
+    for decision in field_history:
+        position = release_position.get(decision.release_id)
+        if position is None or position < last_release_position:
+            raise ValueError("field history must follow the declared release lineage")
+        last_release_position = position
+        key = (decision.canonical_identity_id, decision.field_path)
+        prior_head = field_heads.get(key)
+        if prior_head is None:
+            if decision.supersedes_decision_id is not None:
+                raise ValueError(
+                    "field supersession target is missing from prior history"
+                )
+        elif decision.supersedes_decision_id != prior_head.decision_id:
+            raise ValueError(
+                "field decision creates a branch instead of superseding the exact head"
+            )
+        if decision.supersedes_decision_id is not None:
+            prior = field_by_id.get(decision.supersedes_decision_id)
+            if (
+                prior is None
+                or (
+                    prior.canonical_identity_id,
+                    prior.field_path,
+                )
+                != key
+            ):
+                raise ValueError("field decision supersession is cross-wired")
+        field_by_id[decision.decision_id] = decision
+        field_heads[key] = decision
+
+    relationship_heads: dict[str, RelationshipDecision] = {}
+    relationship_by_id: dict[str, RelationshipDecision] = {}
+    last_release_position = -1
+    for decision in relationship_history:
+        position = release_position.get(decision.release_id)
+        if position is None or position < last_release_position:
+            raise ValueError(
+                "relationship history must follow the declared release lineage"
+            )
+        last_release_position = position
+        key = decision.canonical_relationship_id
+        prior_head = relationship_heads.get(key)
+        if prior_head is None:
+            if decision.supersedes_decision_id is not None:
+                raise ValueError(
+                    "relationship supersession target is missing from prior history"
+                )
+        elif decision.supersedes_decision_id != prior_head.decision_id:
+            raise ValueError(
+                "relationship decision creates a branch instead of superseding the "
+                "exact head"
+            )
+        if prior_head is not None and (
+            decision.relationship_type_id,
+            decision.relationship_type_version,
+            decision.source_canonical_identity_id,
+            decision.target_canonical_identity_id,
+        ) != (
+            prior_head.relationship_type_id,
+            prior_head.relationship_type_version,
+            prior_head.source_canonical_identity_id,
+            prior_head.target_canonical_identity_id,
+        ):
+            raise ValueError(
+                "relationship supersession changes the lineage type or endpoints"
+            )
+        if decision.supersedes_decision_id is not None:
+            prior = relationship_by_id.get(decision.supersedes_decision_id)
+            if prior is None or (
+                prior.canonical_relationship_id,
+                prior.relationship_type_id,
+                prior.relationship_type_version,
+                prior.source_canonical_identity_id,
+                prior.target_canonical_identity_id,
+            ) != (
+                decision.canonical_relationship_id,
+                decision.relationship_type_id,
+                decision.relationship_type_version,
+                decision.source_canonical_identity_id,
+                decision.target_canonical_identity_id,
+            ):
+                raise ValueError("relationship decision supersession is cross-wired")
+        relationship_by_id[decision.decision_id] = decision
+        relationship_heads[key] = decision
+    return field_heads, relationship_heads
+
+
+def _history_current_projections(
+    *,
+    as_of: datetime,
+    field_assertions: tuple[SourceAssertion, ...],
+    field_heads: Mapping[tuple[str, str], CanonicalDecision],
+    relationship_heads: Mapping[str, RelationshipDecision],
+) -> tuple[
+    tuple[CurrentFieldSelection, ...],
+    tuple[CurrentRelationshipSelection, ...],
+]:
+    fields_by_id = {assertion.assertion_id: assertion for assertion in field_assertions}
+    current_fields: list[CurrentFieldSelection] = []
+    for decision in field_heads.values():
+        if decision.state is not DecisionState.selected:
+            continue
+        try:
+            selected_assertions = tuple(
+                fields_by_id[assertion_id]
+                for assertion_id in decision.selected_assertion_ids
+            )
+        except KeyError as exc:
+            raise ValueError(
+                "field history head references missing retained evidence"
+            ) from exc
+        valid_from, valid_to = _selected_validity(
+            selected_assertions, decision.selected_assertion_ids
+        )
+        if not _interval_contains(
+            as_of=as_of, valid_from=valid_from, valid_to=valid_to
+        ):
+            continue
+        selected_values = tuple(assertion.value for assertion in selected_assertions)
+        if not selected_values or any(
+            not _strict_json_equal(selected_values[0], value)
+            for value in selected_values[1:]
+        ):
+            raise ValueError("field history head selected materially different values")
+        current_fields.append(
+            CurrentFieldSelection(
+                release_id=decision.release_id,
+                canonical_identity_id=decision.canonical_identity_id,
+                field_path=decision.field_path,
+                value=selected_values[0],
+                decision_id=decision.decision_id,
+                supporting_assertion_ids=decision.selected_assertion_ids,
+                conflicting_assertion_ids=decision.conflicting_assertion_ids,
+                valid_from=valid_from,
+                valid_to=valid_to,
+            )
+        )
+    current_relationships = tuple(
+        CurrentRelationshipSelection(
+            release_id=decision.release_id,
+            canonical_relationship_id=decision.canonical_relationship_id,
+            relationship_type_id=decision.relationship_type_id,
+            relationship_type_version=decision.relationship_type_version,
+            source_canonical_identity_id=decision.source_canonical_identity_id,
+            target_canonical_identity_id=decision.target_canonical_identity_id,
+            role_bindings=decision.role_bindings,
+            decision_id=decision.decision_id,
+            supporting_assertion_ids=decision.selected_assertion_ids,
+            conflicting_assertion_ids=decision.conflicting_assertion_ids,
+            valid_from=decision.valid_from,
+            valid_to=decision.valid_to,
+        )
+        for decision in relationship_heads.values()
+        if decision.state is RelationshipDecisionState.accepted
+        and _interval_contains(
+            as_of=as_of,
+            valid_from=decision.valid_from,
+            valid_to=decision.valid_to,
+        )
+    )
+    return (
+        tuple(
+            sorted(
+                current_fields,
+                key=lambda value: (
+                    value.canonical_identity_id,
+                    value.field_path,
+                    value.decision_id,
+                ),
+            )
+        ),
+        tuple(
+            sorted(
+                current_relationships,
+                key=lambda value: (
+                    value.canonical_relationship_id,
+                    value.decision_id,
+                ),
+            )
+        ),
+    )
+
+
+def _validate_decision_history_projection(
+    projection: DecisionHistoryProjection,
+) -> None:
+    field_assertions = _retained_by_id(
+        projection.field_assertions,
+        id_field="assertion_id",
+        label="field assertion",
+    )
+    relationship_assertions = _retained_by_id(
+        projection.relationship_assertions,
+        id_field="assertion_id",
+        label="relationship assertion",
+    )
+    if (
+        field_assertions != projection.field_assertions
+        or relationship_assertions != projection.relationship_assertions
+    ):
+        raise ValueError("decision history assertions must be unique and ordered")
+    field_heads, relationship_heads = _decision_history_heads(
+        release_lineage=projection.release_lineage,
+        field_history=projection.canonical_decision_history,
+        relationship_history=projection.relationship_decision_history,
+    )
+    expected_fields, expected_relationships = _history_current_projections(
+        as_of=projection.as_of,
+        field_assertions=projection.field_assertions,
+        field_heads=field_heads,
+        relationship_heads=relationship_heads,
+    )
+    if (
+        projection.current_fields != expected_fields
+        or projection.current_relationships != expected_relationships
+    ):
+        raise ValueError(
+            "decision history current projections do not match lineage heads"
+        )
+    case_ids = tuple(case.review_case_id for case in projection.review_case_history)
+    _require_unique(case_ids, "decision history review case IDs")
+    head_ids = {
+        decision.decision_id
+        for decision in field_heads.values()
+        if decision.state is DecisionState.unresolved
+    } | {
+        decision.decision_id
+        for decision in relationship_heads.values()
+        if decision.state is RelationshipDecisionState.unresolved
+    }
+    expected_open = tuple(
+        sorted(
+            (
+                case
+                for case in projection.review_case_history
+                if case.originating_record_id in head_ids
+            ),
+            key=lambda case: case.review_case_id,
+        )
+    )
+    if projection.open_review_cases != expected_open:
+        raise ValueError(
+            "open review cases must exactly match unresolved lineage heads"
+        )
+
+
+def project_decision_history(
+    batches: Iterable[DecisionBatchResult],
+    *,
+    as_of: datetime,
+) -> DecisionHistoryProjection:
+    try:
+        validated_batches = tuple(
+            DecisionBatchResult.model_validate(batch.model_dump(mode="python"))
+            for batch in batches
+        )
+        if not validated_batches:
+            raise ValueError("decision history requires at least one batch")
+        canonical_as_of = _DecisionHistoryAsOf(as_of=as_of).as_of
+        if (
+            any(
+                later.as_of < earlier.as_of
+                for earlier, later in zip(
+                    validated_batches, validated_batches[1:], strict=False
+                )
+            )
+            or canonical_as_of < validated_batches[-1].as_of
+        ):
+            raise ValueError(
+                "decision batches and projection as_of must be chronologically ordered"
+            )
+        release_lineage: list[str] = []
+        seen_releases: set[str] = set()
+        for batch in validated_batches:
+            if not release_lineage or release_lineage[-1] != batch.release_id:
+                if batch.release_id in seen_releases:
+                    raise ValueError(
+                        "decision release lineage cannot re-enter a release"
+                    )
+                release_lineage.append(batch.release_id)
+                seen_releases.add(batch.release_id)
+        field_assertions = _retained_by_id(
+            (
+                assertion
+                for batch in validated_batches
+                for assertion in batch.field_assertions
+            ),
+            id_field="assertion_id",
+            label="field assertion",
+        )
+        relationship_assertions = _retained_by_id(
+            (
+                assertion
+                for batch in validated_batches
+                for assertion in batch.relationship_assertions
+            ),
+            id_field="assertion_id",
+            label="relationship assertion",
+        )
+        field_history = tuple(
+            decision
+            for batch in validated_batches
+            for decision in batch.canonical_decisions
+        )
+        relationship_history = tuple(
+            decision
+            for batch in validated_batches
+            for decision in batch.relationship_decisions
+        )
+        lineage = tuple(release_lineage)
+        field_heads, relationship_heads = _decision_history_heads(
+            release_lineage=lineage,
+            field_history=field_history,
+            relationship_history=relationship_history,
+        )
+        current_fields, current_relationships = _history_current_projections(
+            as_of=canonical_as_of,
+            field_assertions=field_assertions,
+            field_heads=field_heads,
+            relationship_heads=relationship_heads,
+        )
+        review_case_history = _retained_by_id(
+            (case for batch in validated_batches for case in batch.review_cases),
+            id_field="review_case_id",
+            label="review case",
+        )
+        head_ids = {
+            decision.decision_id
+            for decision in field_heads.values()
+            if decision.state is DecisionState.unresolved
+        } | {
+            decision.decision_id
+            for decision in relationship_heads.values()
+            if decision.state is RelationshipDecisionState.unresolved
+        }
+        open_review_cases = tuple(
+            sorted(
+                (
+                    case
+                    for case in review_case_history
+                    if case.originating_record_id in head_ids
+                ),
+                key=lambda case: case.review_case_id,
+            )
+        )
+        content = _DecisionHistoryContent(
+            release_lineage=lineage,
+            as_of=canonical_as_of,
+            field_assertions=field_assertions,
+            relationship_assertions=relationship_assertions,
+            canonical_decision_history=field_history,
+            relationship_decision_history=relationship_history,
+            review_case_history=review_case_history,
+            open_review_cases=open_review_cases,
+            current_fields=current_fields,
+            current_relationships=current_relationships,
+        )
+        return DecisionHistoryProjection(
+            **content.model_dump(mode="python"),
+            content_sha256=decision_history_projection_sha256(content),
+        )
+    except DecisionHistoryIntegrityError:
+        raise
+    except (AttributeError, UnicodeError, ValueError, ValidationError) as exc:
+        raise DecisionHistoryIntegrityError(
+            "decision history lineage, supersession head, or projection is invalid"
+        ) from exc
 
 
 class RecordedAdjudication(ContractModel):
@@ -1901,6 +2585,48 @@ def _validated_request(request: DecisionBatchRequest) -> DecisionBatchRequest:
         ) from exc
 
 
+def _previous_history_heads(
+    request: DecisionBatchRequest,
+) -> tuple[
+    dict[tuple[str, str], CanonicalDecision],
+    dict[str, RelationshipDecision],
+]:
+    if request.previous_history is None:
+        return {}, {}
+    try:
+        return _decision_history_heads(
+            release_lineage=request.previous_history.release_lineage,
+            field_history=request.previous_history.canonical_decision_history,
+            relationship_history=request.previous_history.relationship_decision_history,
+        )
+    except (TypeError, ValueError) as exc:
+        raise DecisionBatchIntegrityError(
+            "previous decision history has no unique exact lineage heads"
+        ) from exc
+
+
+def _relationship_predecessor(
+    group: RelationshipAssertionGroup,
+    heads: Mapping[str, RelationshipDecision],
+) -> RelationshipDecision | None:
+    predecessor = heads.get(group.canonical_relationship_id)
+    if predecessor is not None and (
+        group.relationship_type_id,
+        group.relationship_type_version,
+        group.source_canonical_identity_id,
+        group.target_canonical_identity_id,
+    ) != (
+        predecessor.relationship_type_id,
+        predecessor.relationship_type_version,
+        predecessor.source_canonical_identity_id,
+        predecessor.target_canonical_identity_id,
+    ):
+        raise DecisionBatchIntegrityError(
+            "relationship group cannot change its prior head type or endpoints"
+        )
+    return predecessor
+
+
 def _source_state_reason(identity: SourceIdentity) -> str | None:
     if identity.state is SourceIdentityState.active:
         return None
@@ -2102,6 +2828,48 @@ def _decision_trace(result: _ValidatedAdjudication) -> LLMDecisionTrace:
         ) from exc
 
 
+def _human_review_for_group(
+    *,
+    request: DecisionBatchRequest,
+    family: ReviewFamily,
+    subject_id: str,
+    path: str,
+    candidate_assertion_ids: tuple[str, ...],
+    policy: PolicyReference,
+    manifest_content_sha256: str,
+    predecessor_decision_id: str | None,
+) -> HumanReviewResolution | None:
+    matching = tuple(
+        resolution
+        for resolution in request.human_review_resolutions
+        if (
+            resolution.review_case.family,
+            resolution.review_case.subject_id,
+            resolution.review_case.path,
+        )
+        == (family, subject_id, path)
+    )
+    if not matching:
+        return None
+    if len(matching) != 1:
+        raise DecisionBatchIntegrityError(
+            "one logical decision group cannot apply multiple human reviews"
+        )
+    resolution = matching[0]
+    case = resolution.review_case
+    if (
+        predecessor_decision_id is None
+        or case.originating_record_id != predecessor_decision_id
+        or case.policy != policy
+        or case.candidate_evidence_ids != candidate_assertion_ids
+        or case.input_content_sha256 != manifest_content_sha256
+    ):
+        raise DecisionBatchIntegrityError(
+            "human review case does not bind the exact prior head, evidence, and policy"
+        )
+    return resolution
+
+
 def _decision_seed(
     *,
     decision: CanonicalDecision | RelationshipDecision,
@@ -2145,6 +2913,8 @@ def _field_decision(
     confidence: float,
     rationale: str,
     llm_trace: LLMDecisionTrace | None,
+    human_review_resolution: HumanReviewResolution | None,
+    supersedes_decision_id: str | None,
     evaluations: tuple[_ConstraintEvaluation, ...],
     decision_input_sha256: str,
     manifest_content_sha256: str,
@@ -2165,8 +2935,10 @@ def _field_decision(
             confidence=confidence,
             rationale=rationale,
             llm_trace=llm_trace,
+            human_review_resolution=human_review_resolution,
             release_id=request.release_id,
             decided_at=request.as_of,
+            supersedes_decision_id=supersedes_decision_id,
         )
         decision_id = _manifest_bound_decision_id(
             prefix="field-decision",
@@ -2194,6 +2966,7 @@ def _field_group_result(
     canonical_identity: CanonicalIdentity,
     source_identities: dict[str, SourceIdentity],
     adjudicator: StructuredAdjudicator | None,
+    predecessor: CanonicalDecision | None,
 ) -> _FieldGroupResult:
     canonical_context = _canonical_constraint_context(canonical_identity)
     evaluations = tuple(
@@ -2241,8 +3014,58 @@ def _field_group_result(
     selected_ids: tuple[str, ...] = ()
     conflicting_ids: tuple[str, ...] = ()
     trace: LLMDecisionTrace | None = None
+    human_review_resolution = _human_review_for_group(
+        request=request,
+        family=ReviewFamily.field,
+        subject_id=group.canonical_identity_id,
+        path=group.field_path,
+        candidate_assertion_ids=candidate_ids,
+        policy=group.policy,
+        manifest_content_sha256=manifest_content_sha256,
+        predecessor_decision_id=(
+            None if predecessor is None else predecessor.decision_id
+        ),
+    )
 
-    if not candidates:
+    if group.transition is DecisionTransition.withdraw:
+        if predecessor is None or predecessor.state is not DecisionState.selected:
+            raise DecisionBatchIntegrityError(
+                "field withdrawal requires an existing selected lineage head"
+            )
+        if not candidates:
+            raise DecisionBatchIntegrityError(
+                "field withdrawal requires admissible retained evidence"
+            )
+        state = DecisionState.superseded
+        method = DecisionMethod.composite
+        confidence = 1.0
+        rationale = "An explicit offline transition withdraws the prior field head."
+    elif human_review_resolution is not None:
+        selected_ids = human_review_resolution.selected_evidence_ids
+        conflicting_ids = tuple(
+            assertion_id
+            for assertion_id in candidate_ids
+            if assertion_id not in set(selected_ids)
+        )
+        state = (
+            DecisionState.selected
+            if human_review_resolution.outcome is HumanReviewOutcome.selected
+            else DecisionState.rejected
+        )
+        method = DecisionMethod.human_review
+        confidence = human_review_resolution.confidence
+        rationale = human_review_resolution.rationale
+        if state is DecisionState.selected:
+            by_id = {assertion.assertion_id: assertion for assertion in candidates}
+            selected_values = tuple(by_id[item].value for item in selected_ids)
+            if not all(
+                _strict_json_equal(selected_values[0], value)
+                for value in selected_values[1:]
+            ):
+                raise DecisionBatchIntegrityError(
+                    "human review selected field evidence with different values"
+                )
+    elif not candidates:
         state = DecisionState.unresolved
         method = DecisionMethod.deterministic
         confidence = 0.0
@@ -2333,6 +3156,10 @@ def _field_group_result(
         confidence=confidence,
         rationale=rationale,
         llm_trace=trace,
+        human_review_resolution=human_review_resolution,
+        supersedes_decision_id=(
+            None if predecessor is None else predecessor.decision_id
+        ),
         evaluations=evaluations,
         decision_input_sha256=decision_input_sha256,
         manifest_content_sha256=manifest_content_sha256,
@@ -2387,7 +3214,7 @@ def _field_group_result(
                 valid_from=valid_from,
                 valid_to=valid_to,
             )
-    else:
+    elif decision.state is DecisionState.unresolved:
         conflict = UnresolvedConflict(
             release_id=request.release_id,
             decision_id=decision.decision_id,
@@ -2420,6 +3247,8 @@ def _relationship_decision(
     valid_from: datetime | None,
     valid_to: datetime | None,
     llm_trace: LLMDecisionTrace | None,
+    human_review_resolution: HumanReviewResolution | None,
+    supersedes_decision_id: str | None,
     evaluations: tuple[_ConstraintEvaluation, ...],
     decision_input_sha256: str,
     manifest_content_sha256: str,
@@ -2448,7 +3277,9 @@ def _relationship_decision(
             valid_to=valid_to,
             release_id=request.release_id,
             decided_at=request.as_of,
+            supersedes_decision_id=supersedes_decision_id,
             llm_trace=llm_trace,
+            human_review_resolution=human_review_resolution,
         )
         decision_id = _manifest_bound_decision_id(
             prefix="relationship-decision",
@@ -2477,6 +3308,7 @@ def _relationship_group_result(
     target_canonical_identity: CanonicalIdentity,
     source_identities: dict[str, SourceIdentity],
     adjudicator: StructuredAdjudicator | None,
+    predecessor: RelationshipDecision | None,
 ) -> _RelationshipGroupResult:
     source_canonical_context = _canonical_constraint_context(source_canonical_identity)
     target_canonical_context = _canonical_constraint_context(target_canonical_identity)
@@ -2531,8 +3363,54 @@ def _relationship_group_result(
     conflicting_ids: tuple[str, ...] = ()
     role_bindings: dict[str, str] = {}
     trace: LLMDecisionTrace | None = None
+    human_review_resolution = _human_review_for_group(
+        request=request,
+        family=ReviewFamily.relationship,
+        subject_id=group.canonical_relationship_id,
+        path=group.relationship_type_id,
+        candidate_assertion_ids=candidate_ids,
+        policy=group.policy,
+        manifest_content_sha256=manifest_content_sha256,
+        predecessor_decision_id=(
+            None if predecessor is None else predecessor.decision_id
+        ),
+    )
 
-    if not candidates:
+    if group.transition is DecisionTransition.withdraw:
+        if (
+            predecessor is None
+            or predecessor.state is not RelationshipDecisionState.accepted
+        ):
+            raise DecisionBatchIntegrityError(
+                "relationship withdrawal requires an existing accepted lineage head"
+            )
+        if not candidates:
+            raise DecisionBatchIntegrityError(
+                "relationship withdrawal requires admissible retained evidence"
+            )
+        state = RelationshipDecisionState.superseded
+        method = DecisionMethod.composite
+        confidence = 1.0
+        rationale = (
+            "An explicit offline transition withdraws the prior relationship head."
+        )
+    elif human_review_resolution is not None:
+        selected_ids = human_review_resolution.selected_evidence_ids
+        conflicting_ids = tuple(
+            assertion_id
+            for assertion_id in candidate_ids
+            if assertion_id not in set(selected_ids)
+        )
+        state = (
+            RelationshipDecisionState.accepted
+            if human_review_resolution.outcome is HumanReviewOutcome.accepted
+            else RelationshipDecisionState.rejected
+        )
+        role_bindings = dict(human_review_resolution.role_bindings)
+        method = DecisionMethod.human_review
+        confidence = human_review_resolution.confidence
+        rationale = human_review_resolution.rationale
+    elif not candidates:
         state = RelationshipDecisionState.unresolved
         method = DecisionMethod.deterministic
         confidence = 0.0
@@ -2610,11 +3488,14 @@ def _relationship_group_result(
         rationale = output.rationale
         trace = _decision_trace(adjudication)
 
-    valid_from, valid_to = _generated_selected_validity(
-        candidates,
-        selected_ids,
-        method=method,
-    )
+    if group.transition is DecisionTransition.withdraw:
+        valid_from, valid_to = None, None
+    else:
+        valid_from, valid_to = _generated_selected_validity(
+            candidates,
+            selected_ids,
+            method=method,
+        )
     decision = _relationship_decision(
         request=request,
         group=group,
@@ -2629,6 +3510,10 @@ def _relationship_group_result(
         valid_from=valid_from,
         valid_to=valid_to,
         llm_trace=trace,
+        human_review_resolution=human_review_resolution,
+        supersedes_decision_id=(
+            None if predecessor is None else predecessor.decision_id
+        ),
         evaluations=evaluations,
         decision_input_sha256=decision_input_sha256,
         manifest_content_sha256=manifest_content_sha256,
@@ -2672,7 +3557,7 @@ def _relationship_group_result(
             valid_from=decision.valid_from,
             valid_to=decision.valid_to,
         )
-    elif decision.state is not RelationshipDecisionState.accepted:
+    elif decision.state is RelationshipDecisionState.unresolved:
         conflict = UnresolvedConflict(
             release_id=request.release_id,
             decision_id=decision.decision_id,
@@ -2829,6 +3714,13 @@ def _decision_result(
                 ),
             )
         ),
+        review_cases=_review_cases_for_decisions(
+            field_decisions=(result.decision for result in field_results),
+            relationship_decisions=(result.decision for result in relationship_results),
+            manifests=(
+                result.manifest for result in (*field_results, *relationship_results)
+            ),
+        ),
     )
     payload = cast(JsonValue, content.model_dump(mode="json"))
     try:
@@ -2848,6 +3740,7 @@ class _EphemeralCanonicalDecisionEngine(CanonicalDecisionEngine):
 
     def decide(self, request: DecisionBatchRequest) -> DecisionBatchResult:
         validated = _validated_request(request)
+        field_heads, relationship_heads = _previous_history_heads(validated)
         source_identities = {
             identity.source_identity_id: identity
             for identity in validated.source_identities
@@ -2863,6 +3756,9 @@ class _EphemeralCanonicalDecisionEngine(CanonicalDecisionEngine):
                 canonical_identity=canonical_identities[group.canonical_identity_id],
                 source_identities=source_identities,
                 adjudicator=self._adjudicator,
+                predecessor=field_heads.get(
+                    (group.canonical_identity_id, group.field_path)
+                ),
             )
             for group in validated.field_groups
         )
@@ -2878,6 +3774,7 @@ class _EphemeralCanonicalDecisionEngine(CanonicalDecisionEngine):
                 ],
                 source_identities=source_identities,
                 adjudicator=self._adjudicator,
+                predecessor=_relationship_predecessor(group, relationship_heads),
             )
             for group in validated.relationship_groups
         )
@@ -2909,11 +3806,17 @@ __all__ = [
     "DecisionBatchIntegrityError",
     "DecisionBatchRequest",
     "DecisionBatchResult",
+    "DecisionHistoryIntegrityError",
+    "DecisionHistoryProjection",
+    "DecisionTransition",
     "DecisionGroupManifest",
     "FieldAssertionGroup",
+    "HumanReviewOutcome",
+    "HumanReviewResolution",
     "IdentityReference",
     "PolicyReference",
     "RecordedAdjudication",
+    "ReviewCase",
     "RelationshipAssertion",
     "RelationshipAssertionGroup",
     "RelationshipDecision",
@@ -2923,5 +3826,8 @@ __all__ = [
     "UnresolvedConflict",
     "canonical_adjudication_input_sha256",
     "create_ephemeral_canonical_decision_engine",
+    "create_human_review_resolution",
     "create_recorded_structured_adjudicator",
+    "decision_history_projection_sha256",
+    "project_decision_history",
 ]

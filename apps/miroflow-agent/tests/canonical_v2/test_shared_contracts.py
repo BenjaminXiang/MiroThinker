@@ -240,6 +240,28 @@ def test_canonical_decision_can_select_evidence_or_preserve_unresolved_conflict(
 
     assert selected.selected_assertion_ids == ("assertion-a",)
     assert unresolved.conflicting_assertion_ids == ("assertion-a", "assertion-b")
+    withdrawn = module.CanonicalDecision(
+        **{
+            **selected.model_dump(),
+            "decision_id": "decision-title-withdrawal",
+            "release_id": "release-r2",
+            "decision_run_id": "build-run-2",
+            "state": "superseded",
+            "method": "composite",
+            "llm_trace": None,
+            "selected_assertion_ids": (),
+            "conflicting_assertion_ids": (),
+            "supersedes_decision_id": selected.decision_id,
+        }
+    )
+    assert withdrawn.selected_assertion_ids == ()
+    with pytest.raises(ValidationError, match="superseded|withdraw"):
+        module.CanonicalDecision(
+            **{
+                **withdrawn.model_dump(),
+                "selected_assertion_ids": ("assertion-a",),
+            }
+        )
     assert module.CanonicalDecision.model_fields["release_id"].is_required()
     selected_payload = selected.model_dump()
     selected_payload.pop("release_id")
@@ -602,6 +624,40 @@ def test_relationship_assertion_and_decision_keep_endpoint_evidence_and_conflict
         valid_to=None,
         assertion_run_id="assert-run-1",
     )
+    review_case = module.create_review_case(
+        family="relationship",
+        release_id="release-r0",
+        decision_run_id="build-run-0",
+        subject_id="canonical-relation-1",
+        path=assertion.relationship_type_id,
+        originating_record_id="relation-decision-unresolved",
+        candidate_evidence_ids=(assertion.assertion_id, "relation-assertion-2"),
+        conflicting_evidence_ids=(assertion.assertion_id, "relation-assertion-2"),
+        source_identity_ids=(),
+        policy=_policy(module, "relationship"),
+        method="deterministic",
+        method_version="relation-v1",
+        confidence=0.0,
+        rationale="The retained relationship evidence required review.",
+        uncertainty="The source role remained materially ambiguous.",
+        reason_codes=(),
+        trace_content_sha256=None,
+        input_content_sha256="8" * 64,
+        created_at=NOW - timedelta(hours=1),
+    )
+    resolution = module.create_human_review_resolution(
+        review_case=review_case,
+        outcome="accepted",
+        selected_evidence_ids=(assertion.assertion_id,),
+        role_bindings={"source": "founder"},
+        reviewer_id="reviewer:shared-contract",
+        review_policy_id="canonical-review-policy",
+        review_policy_version="review-v1",
+        review_policy_content_sha256="7" * 64,
+        reviewed_at=NOW,
+        rationale="Official biography supports founder role.",
+        confidence=0.95,
+    )
     decision = module.RelationshipDecision(
         decision_id="relation-decision-1",
         canonical_relationship_id="canonical-relation-1",
@@ -624,6 +680,8 @@ def test_relationship_assertion_and_decision_keep_endpoint_evidence_and_conflict
         valid_to=None,
         release_id="release-r1",
         decided_at=NOW,
+        supersedes_decision_id=review_case.originating_record_id,
+        human_review_resolution=resolution,
     )
 
     assert decision.selected_assertion_ids == (assertion.assertion_id,)
@@ -690,9 +748,35 @@ def test_relationship_assertion_and_decision_keep_endpoint_evidence_and_conflict
             **decision.model_dump(),
             "method": "structured_llm",
             "llm_trace": trace,
+            "human_review_resolution": None,
         }
     )
     assert structured.llm_trace == trace
+    withdrawn = module.RelationshipDecision(
+        **{
+            **structured.model_dump(),
+            "decision_id": "relation-decision-withdrawal",
+            "release_id": "release-r2",
+            "decision_run_id": "build-run-2",
+            "state": "superseded",
+            "method": "composite",
+            "llm_trace": None,
+            "selected_assertion_ids": (),
+            "conflicting_assertion_ids": (),
+            "role_bindings": {},
+            "valid_from": None,
+            "valid_to": None,
+            "supersedes_decision_id": decision.decision_id,
+        }
+    )
+    assert withdrawn.role_bindings == {}
+    with pytest.raises(ValidationError, match="superseded|withdraw"):
+        module.RelationshipDecision(
+            **{
+                **withdrawn.model_dump(),
+                "valid_from": NOW,
+            }
+        )
     for invalid_evidence_ids in (
         (assertion.assertion_id,),
         tuple(reversed(decision.candidate_assertion_ids)),

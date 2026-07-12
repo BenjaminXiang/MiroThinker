@@ -13,7 +13,6 @@ from typing import Iterable, Mapping, Protocol, cast
 import unicodedata
 
 from pydantic import (
-    AwareDatetime,
     Field,
     JsonValue,
     ValidationError,
@@ -22,21 +21,28 @@ from pydantic import (
 )
 
 from src.data_agents.canonical_v2.contracts import (
+    CanonicalDatetime,
     CanonicalIdentity,
     CanonicalIdentityState,
     Confidence,
     ContractModel,
     DecisionMethod,
+    HumanReviewOutcome,
+    HumanReviewResolution,
     IdentityAction,
     IdentityDecision,
     LLMDecisionTrace,
     NonEmptyStr,
     PolicyKind,
     PolicyReference,
+    ReviewCase,
+    ReviewFamily,
     Sha256,
     SourceAssertion,
     SourceIdentity,
     SourceIdentityState,
+    create_review_case,
+    create_human_review_resolution,
 )
 
 
@@ -116,7 +122,7 @@ class IdentityResolutionRequest(ContractModel):
     release_id: NonEmptyStr
     decision_run_id: NonEmptyStr
     identity_method_version: NonEmptyStr
-    as_of: AwareDatetime
+    as_of: CanonicalDatetime
     policy: PolicyReference
     source_identities: tuple[SourceIdentity, ...]
     identity_assertions: tuple[SourceAssertion, ...]
@@ -125,6 +131,7 @@ class IdentityResolutionRequest(ContractModel):
     canonical_identity_history: tuple[CanonicalIdentity, ...] = ()
     prior_identity_decisions: tuple[IdentityDecision, ...] = ()
     prior_decision_contexts: tuple[IdentityDecisionContext, ...] = ()
+    human_review_resolutions: tuple[HumanReviewResolution, ...] = ()
 
     @field_validator("source_identities")
     @classmethod
@@ -213,6 +220,21 @@ class IdentityResolutionRequest(ContractModel):
             "current source assignment IDs",
         )
         return tuple(sorted(values, key=lambda value: value.source_identity_id))
+
+    @field_validator("human_review_resolutions")
+    @classmethod
+    def normalize_human_review_resolutions(
+        cls, values: tuple[HumanReviewResolution, ...]
+    ) -> tuple[HumanReviewResolution, ...]:
+        _require_unique(
+            (value.resolution_id for value in values),
+            "identity human review resolution IDs",
+        )
+        _require_unique(
+            (value.review_case.review_case_id for value in values),
+            "identity human review case IDs",
+        )
+        return tuple(sorted(values, key=lambda value: value.resolution_id))
 
     @model_validator(mode="after")
     def validate_request(self) -> IdentityResolutionRequest:
@@ -354,6 +376,36 @@ class IdentityResolutionRequest(ContractModel):
                 raise ValueError(
                     "canonical identity references an unknown canonical lineage endpoint"
                 )
+        reviewed_source_ids: set[str] = set()
+        assertion_ids_by_source = {
+            source_id: {
+                assertion.assertion_id
+                for assertion in self.identity_assertions
+                if assertion.source_identity_id == source_id
+            }
+            for source_id in source_by_id
+        }
+        for resolution in self.human_review_resolutions:
+            case = resolution.review_case
+            case_source_ids = set(case.source_identity_ids)
+            expected_assertion_ids = {
+                assertion_id
+                for source_id in case_source_ids
+                for assertion_id in assertion_ids_by_source.get(source_id, set())
+            }
+            if (
+                case.family is not ReviewFamily.identity
+                or case.policy != self.policy
+                or case.release_id == self.release_id
+                or resolution.reviewed_at > self.as_of
+                or not case_source_ids <= set(source_by_id)
+                or reviewed_source_ids & case_source_ids
+                or set(case.candidate_evidence_ids) != expected_assertion_ids
+            ):
+                raise ValueError(
+                    "identity human review must bind one prior exact component"
+                )
+            reviewed_source_ids.update(case_source_ids)
         return self
 
 
@@ -372,6 +424,7 @@ class IdentityCandidateVerdict(ContractModel):
     rationale: NonEmptyStr
     uncertainty: NonEmptyStr
     llm_trace: LLMDecisionTrace | None = None
+    human_review_resolution: HumanReviewResolution | None = None
 
     @field_validator("source_identity_ids", "supporting_assertion_ids", "reason_codes")
     @classmethod
@@ -448,6 +501,32 @@ class IdentityCandidateVerdict(ContractModel):
         elif self.llm_trace is not None or self.proposed_outcome is not None:
             raise ValueError(
                 "non-LLM verdict cannot carry an LLM trace or proposed outcome"
+            )
+        if self.method is DecisionMethod.human_review:
+            resolution = self.human_review_resolution
+            if resolution is None:
+                raise ValueError("human review verdict requires its bound resolution")
+            expected_outcome = {
+                HumanReviewOutcome.same_entity: IdentityCandidateOutcome.same_entity,
+                HumanReviewOutcome.different_entities: (
+                    IdentityCandidateOutcome.different_entities
+                ),
+            }.get(resolution.outcome)
+            if (
+                resolution.review_case.family is not ReviewFamily.identity
+                or expected_outcome is not self.verdict
+                or resolution.source_identity_groups != self.source_identity_groups
+                or resolution.review_case.source_identity_ids
+                != self.source_identity_ids
+                or resolution.review_case.candidate_evidence_ids
+                != self.supporting_assertion_ids
+            ):
+                raise ValueError(
+                    "human review identity verdict must exactly apply its resolution"
+                )
+        elif self.human_review_resolution is not None:
+            raise ValueError(
+                "non-human identity verdict cannot carry a review resolution"
             )
         return self
 
@@ -735,7 +814,7 @@ class _IdentityResolutionContent(ContractModel):
     release_id: NonEmptyStr
     decision_run_id: NonEmptyStr
     identity_method_version: NonEmptyStr
-    as_of: AwareDatetime
+    as_of: CanonicalDatetime
     policy: PolicyReference
     source_identities: tuple[SourceIdentity, ...]
     identity_assertions: tuple[SourceAssertion, ...]
@@ -746,6 +825,58 @@ class _IdentityResolutionContent(ContractModel):
     source_identity_assignments: tuple[SourceIdentityAssignment, ...]
     decision_manifests: tuple[IdentityDecisionManifest, ...]
     decision_contexts: tuple[IdentityDecisionContext, ...] = ()
+    review_cases: tuple[ReviewCase, ...] = ()
+
+    @field_validator("review_cases")
+    @classmethod
+    def normalize_review_cases(
+        cls, cases: tuple[ReviewCase, ...]
+    ) -> tuple[ReviewCase, ...]:
+        _require_unique(
+            (case.review_case_id for case in cases), "identity review case IDs"
+        )
+        return tuple(sorted(cases, key=lambda case: case.review_case_id))
+
+
+def _identity_review_cases(
+    *,
+    release_id: str,
+    decision_run_id: str,
+    identity_method_version: str,
+    as_of: CanonicalDatetime,
+    policy: PolicyReference,
+    verdicts: Iterable[IdentityCandidateVerdict],
+) -> tuple[ReviewCase, ...]:
+    cases = tuple(
+        create_review_case(
+            family=ReviewFamily.identity,
+            release_id=release_id,
+            decision_run_id=decision_run_id,
+            subject_id=verdict.component_id,
+            path="canonical_identity",
+            originating_record_id=verdict.verdict_id,
+            candidate_evidence_ids=verdict.supporting_assertion_ids,
+            conflicting_evidence_ids=verdict.supporting_assertion_ids,
+            source_identity_ids=verdict.source_identity_ids,
+            policy=policy,
+            method=verdict.method,
+            method_version=identity_method_version,
+            confidence=verdict.confidence,
+            rationale=verdict.rationale,
+            uncertainty=verdict.uncertainty,
+            reason_codes=verdict.reason_codes,
+            trace_content_sha256=(
+                verdict.llm_trace.output_sha256
+                if verdict.llm_trace is not None
+                else None
+            ),
+            input_content_sha256=verdict.component_input_sha256,
+            created_at=as_of,
+        )
+        for verdict in verdicts
+        if verdict.verdict is IdentityCandidateOutcome.unresolved
+    )
+    return tuple(sorted(cases, key=lambda case: case.review_case_id))
 
 
 class IdentityResolutionResult(_IdentityResolutionContent):
@@ -755,6 +886,19 @@ class IdentityResolutionResult(_IdentityResolutionContent):
     def validate_result(self) -> IdentityResolutionResult:
         if canonical_identity_resolution_result_sha256(self) != self.content_sha256:
             raise ValueError("identity resolution content hash mismatch")
+
+        expected_review_cases = _identity_review_cases(
+            release_id=self.release_id,
+            decision_run_id=self.decision_run_id,
+            identity_method_version=self.identity_method_version,
+            as_of=self.as_of,
+            policy=self.policy,
+            verdicts=self.candidate_verdicts,
+        )
+        if self.review_cases != expected_review_cases:
+            raise ValueError(
+                "identity review cases must exactly cover unresolved candidate verdicts"
+            )
 
         source_ids = [value.source_identity_id for value in self.source_identities]
         _require_unique(source_ids, "result source identity IDs")
@@ -1112,7 +1256,17 @@ def _finalize_identity_result(
         current_canonical_identities=content.current_canonical_identities,
         canonical_identity_history=content.canonical_identity_history,
     )
-    finalized = content.model_copy(update={"decision_contexts": contexts})
+    review_cases = _identity_review_cases(
+        release_id=content.release_id,
+        decision_run_id=content.decision_run_id,
+        identity_method_version=content.identity_method_version,
+        as_of=content.as_of,
+        policy=content.policy,
+        verdicts=content.candidate_verdicts,
+    )
+    finalized = content.model_copy(
+        update={"decision_contexts": contexts, "review_cases": review_cases}
+    )
     return IdentityResolutionResult(
         **finalized.model_dump(mode="python"),
         content_sha256=canonical_identity_resolution_result_sha256(finalized),
@@ -1169,7 +1323,7 @@ def validate_identity_resolution_result(
         )
     except (AttributeError, ValueError, ValidationError) as exc:
         raise IdentityResolutionIntegrityError(
-            "identity resolution request or result content is invalid"
+            "identity resolution request, verdict/review case, or result content is invalid"
         ) from exc
     if (
         validated_result.release_id != validated_request.release_id
@@ -1255,6 +1409,15 @@ def validate_identity_resolution_result(
             raise IdentityResolutionIntegrityError(
                 "identity candidate verdict content binding mismatch"
             )
+    applied_review_resolutions = tuple(
+        verdict.human_review_resolution
+        for verdict in validated_result.candidate_verdicts
+        if verdict.human_review_resolution is not None
+    )
+    if applied_review_resolutions != validated_request.human_review_resolutions:
+        raise IdentityResolutionIntegrityError(
+            "identity result must apply every exact human review resolution once"
+        )
     manifest_by_decision_id = {
         manifest.decision_id: manifest
         for manifest in validated_result.decision_manifests
@@ -1441,6 +1604,37 @@ def validate_identity_resolution_result(
         if manifest.input_content_sha256 != expected_manifest_sha256:
             raise IdentityResolutionIntegrityError(
                 "identity decision manifest content hash mismatch"
+            )
+    for verdict in validated_result.candidate_verdicts:
+        if verdict.human_review_resolution is None:
+            continue
+        linked_decisions = tuple(
+            decision
+            for decision in validated_result.identity_decisions
+            if manifest_by_decision_id[decision.decision_id].candidate_verdict_id
+            == verdict.verdict_id
+        )
+        if linked_decisions:
+            materialized_groups = tuple(
+                sorted(
+                    tuple(sorted(result_identity_by_id[output_id].source_identity_ids))
+                    for decision in linked_decisions
+                    for output_id in decision.output_canonical_identity_ids
+                )
+            )
+        else:
+            verdict_sources = set(verdict.source_identity_ids)
+            materialized_groups = tuple(
+                sorted(
+                    tuple(sorted(identity.source_identity_ids))
+                    for identity in validated_result.current_canonical_identities
+                    if set(identity.source_identity_ids) <= verdict_sources
+                    and set(identity.source_identity_ids)
+                )
+            )
+        if materialized_groups != verdict.source_identity_groups:
+            raise IdentityResolutionIntegrityError(
+                "identity human review output groups must exactly apply its resolution"
             )
     return validated_result
 
@@ -1741,6 +1935,7 @@ def _unresolved_identity_result(
             ),
             decided_at=request.as_of,
             llm_trace=None,
+            human_review_resolution=verdict.human_review_resolution,
         )
         decision = _bind_applied_decision_id(
             decision, candidate_verdict_id=verdict.verdict_id
@@ -1875,6 +2070,7 @@ def _different_new_entities_result(
             ),
             decided_at=request.as_of,
             llm_trace=None,
+            human_review_resolution=verdict.human_review_resolution,
         )
         decision = _bind_applied_decision_id(
             decision, candidate_verdict_id=verdict.verdict_id
@@ -1971,21 +2167,25 @@ def _different_existing_owner_result(
             "named mistaken-merge correction requires its exact prior merge decision"
         )
 
+    source_by_id = {
+        source.source_identity_id: source for source in request.source_identities
+    }
     output_specs = tuple(
         (
-            source,
+            source_ids,
+            tuple(source_by_id[source_id] for source_id in source_ids),
             _canonical_identity_id(
                 request.release_id,
-                source.entity_type,
-                (source.source_identity_id,),
+                source_by_id[source_ids[0]].entity_type,
+                source_ids,
                 generation_key=(
                     f"reverse:{reversed_decision.decision_id}:{verdict.verdict_id}"
                 ),
             ),
         )
-        for source in request.source_identities
+        for source_ids in verdict.source_identity_groups
     )
-    output_ids = tuple(output_id for _, output_id in output_specs)
+    output_ids = tuple(output_id for _, _, output_id in output_specs)
     source_ids = tuple(
         source.source_identity_id for source in request.source_identities
     )
@@ -2020,6 +2220,7 @@ def _different_existing_owner_result(
         decided_at=request.as_of,
         reversal_of_decision_id=reversed_decision.decision_id,
         llm_trace=verdict.llm_trace,
+        human_review_resolution=verdict.human_review_resolution,
     )
     decision = _bind_applied_decision_id(
         decision, candidate_verdict_id=verdict.verdict_id
@@ -2028,15 +2229,15 @@ def _different_existing_owner_result(
     outputs = tuple(
         CanonicalIdentity(
             canonical_identity_id=output_id,
-            entity_type=source.entity_type,
+            entity_type=group_sources[0].entity_type,
             state=CanonicalIdentityState.active,
-            display_name=_display_name((source,)),
-            source_identity_ids=(source.source_identity_id,),
+            display_name=_display_name(group_sources),
+            source_identity_ids=source_ids,
             identity_decision_id=decision_id,
             predecessor_identity_ids=(predecessor.canonical_identity_id,),
             release_id=request.release_id,
         )
-        for source, output_id in output_specs
+        for source_ids, group_sources, output_id in output_specs
     )
     corrected_predecessor = CanonicalIdentity(
         **{
@@ -2049,11 +2250,12 @@ def _different_existing_owner_result(
     assignments = tuple(
         SourceIdentityAssignment(
             release_id=request.release_id,
-            source_identity_id=source.source_identity_id,
+            source_identity_id=source_identity_id,
             canonical_identity_id=output_id,
             identity_decision_id=decision_id,
         )
-        for source, output_id in output_specs
+        for source_ids, _, output_id in output_specs
+        for source_identity_id in source_ids
     )
     supporting_assertion_ids = tuple(
         assertion.assertion_id for assertion in request.identity_assertions
@@ -2268,6 +2470,11 @@ def _component_request(
             context
             for context in request.prior_decision_contexts
             if context.decision_id in decision_ids
+        ),
+        human_review_resolutions=tuple(
+            resolution
+            for resolution in request.human_review_resolutions
+            if set(resolution.review_case.source_identity_ids) == source_ids
         ),
     )
 
@@ -2568,6 +2775,11 @@ class _EphemeralCanonicalIdentityResolutionEngine(CanonicalIdentityResolutionEng
             prior_decision_contexts=validated.prior_decision_contexts,
             policy=validated.policy,
         )
+        human_review_resolution = next(iter(validated.human_review_resolutions), None)
+        if len(validated.human_review_resolutions) > 1:
+            raise IdentityResolutionIntegrityError(
+                "one identity component cannot apply multiple human reviews"
+            )
         proposed_outcome: IdentityCandidateOutcome | None = None
         matching_strong_key = _matching_strong_key(sources)
         conflicting_strong_key = _conflicting_strong_key(sources)
@@ -2597,6 +2809,10 @@ class _EphemeralCanonicalIdentityResolutionEngine(CanonicalIdentityResolutionEng
             verdict_uncertainty = "No material identity uncertainty remains."
             verdict_trace = None
         elif matching_composite_keys is not None:
+            if human_review_resolution is not None:
+                raise IdentityResolutionIntegrityError(
+                    "human review cannot override a deterministic identity outcome"
+                )
             candidate_outcome = IdentityCandidateOutcome.same_entity
             target_groups = (source_ids,)
             verdict_groups = target_groups
@@ -2610,6 +2826,24 @@ class _EphemeralCanonicalIdentityResolutionEngine(CanonicalIdentityResolutionEng
             verdict_uncertainty = (
                 "No strong public identifier is present; the accepted composite "
                 "rule supplies the identity evidence."
+            )
+            verdict_trace = None
+        elif human_review_resolution is not None:
+            candidate_outcome = {
+                HumanReviewOutcome.same_entity: IdentityCandidateOutcome.same_entity,
+                HumanReviewOutcome.different_entities: (
+                    IdentityCandidateOutcome.different_entities
+                ),
+            }[human_review_resolution.outcome]
+            target_groups = human_review_resolution.source_identity_groups
+            verdict_groups = target_groups
+            reason_codes = ("human_review_resolution",)
+            verdict_method = DecisionMethod.human_review
+            verdict_confidence = human_review_resolution.confidence
+            verdict_rationale = human_review_resolution.rationale
+            verdict_uncertainty = (
+                human_review_resolution.review_case.uncertainty
+                or "The named human reviewer resolved the material identity ambiguity."
             )
             verdict_trace = None
         else:
@@ -2669,6 +2903,7 @@ class _EphemeralCanonicalIdentityResolutionEngine(CanonicalIdentityResolutionEng
             rationale=verdict_rationale,
             uncertainty=verdict_uncertainty,
             llm_trace=verdict_trace,
+            human_review_resolution=human_review_resolution,
         )
         verdict = provisional_verdict.model_copy(
             update={
@@ -2759,6 +2994,7 @@ class _EphemeralCanonicalIdentityResolutionEngine(CanonicalIdentityResolutionEng
             rationale=verdict.rationale,
             decided_at=validated.as_of,
             llm_trace=verdict.llm_trace,
+            human_review_resolution=verdict.human_review_resolution,
         )
         decision = _bind_applied_decision_id(
             decision, candidate_verdict_id=verdict.verdict_id
@@ -2879,8 +3115,11 @@ __all__ = [
     "IdentityResolutionIntegrityError",
     "IdentityResolutionRequest",
     "IdentityResolutionResult",
+    "HumanReviewOutcome",
+    "HumanReviewResolution",
     "PolicyReference",
     "RecordedIdentityAdjudication",
+    "ReviewCase",
     "SourceAssertion",
     "SourceIdentity",
     "SourceIdentityAssignment",
@@ -2894,6 +3133,7 @@ __all__ = [
     "canonical_identity_resolution_request_sha256",
     "canonical_identity_rule_set_sha256",
     "create_ephemeral_canonical_identity_resolution_engine",
+    "create_human_review_resolution",
     "create_identity_decision_context",
     "create_recorded_structured_identity_adjudicator",
     "identity_decision_context_sha256",

@@ -98,6 +98,8 @@ def _field_assertion(
     field_path: str = "employment.current_title",
     entity_type: str = "professor",
     observed_at: datetime = NOW - timedelta(hours=1),
+    valid_from: datetime | None = None,
+    valid_to: datetime | None = None,
 ) -> Any:
     return module.SourceAssertion(
         assertion_id=assertion_id,
@@ -107,6 +109,8 @@ def _field_assertion(
         field_path=field_path,
         value=value,
         observed_at=observed_at,
+        valid_from=valid_from,
+        valid_to=valid_to,
         assertion_run_id="assertion-run-1",
     )
 
@@ -117,12 +121,14 @@ def _field_group(
     *,
     canonical_identity_id: str = "professor-c1",
     field_path: str = "employment.current_title",
+    transition: str = "evaluate",
 ) -> Any:
     return module.FieldAssertionGroup(
         canonical_identity_id=canonical_identity_id,
         field_path=field_path,
         assertions=assertions,
         policy=_policy(module, "field_selection"),
+        transition=transition,
     )
 
 
@@ -134,16 +140,22 @@ def _batch(
     field_groups: tuple[Any, ...] = (),
     relationship_groups: tuple[Any, ...] = (),
     as_of: datetime = NOW,
+    release_id: str = RELEASE_ID,
+    decision_run_id: str = RUN_ID,
+    human_review_resolutions: tuple[Any, ...] = (),
+    previous_history: Any | None = None,
 ) -> Any:
     return module.DecisionBatchRequest(
-        release_id=RELEASE_ID,
-        decision_run_id=RUN_ID,
+        release_id=release_id,
+        decision_run_id=decision_run_id,
         decision_method_version="canonical-decision-v1",
         as_of=as_of,
         source_identities=source_identities,
         canonical_identities=canonical_identities,
         field_groups=field_groups,
         relationship_groups=relationship_groups,
+        human_review_resolutions=human_review_resolutions,
+        previous_history=previous_history,
     )
 
 
@@ -933,10 +945,103 @@ def test_materially_ambiguous_field_remains_unresolved_without_current_fact() ->
     assert conflict.subject_id == "professor-c1"
     assert conflict.path == "employment.current_title"
     assert conflict.assertion_ids == decision.conflicting_assertion_ids
+    assert len(result.review_cases) == 1
+    review_case = result.review_cases[0]
+    assert review_case.family.value == "field"
+    assert review_case.release_id == RELEASE_ID
+    assert review_case.decision_run_id == RUN_ID
+    assert review_case.subject_id == "professor-c1"
+    assert review_case.path == "employment.current_title"
+    assert review_case.originating_record_id == decision.decision_id
+    assert review_case.candidate_evidence_ids == ("conflict-a", "conflict-b")
+    assert review_case.conflicting_evidence_ids == ("conflict-a", "conflict-b")
+    assert review_case.source_identity_ids == ()
+    assert review_case.confidence == 0.41
+    assert review_case.uncertainty == "Both values remain materially plausible."
+    assert review_case.trace_content_sha256 == decision.llm_trace.output_sha256
+    assert (
+        review_case.review_case_id == f"review-case:sha256:{review_case.content_sha256}"
+    )
     assert {item.assertion_id for item in result.field_assertions} == {
         "conflict-a",
         "conflict-b",
     }
+
+    tampered = result.model_dump(mode="json")
+    tampered["review_cases"][0]["subject_id"] = "company-cross-wire"
+    with pytest.raises(ValueError, match="review case|review.*subject|content hash"):
+        module.DecisionBatchResult.model_validate(_rehash_result_payload(tampered))
+
+    resolution = module.create_human_review_resolution(
+        review_case=review_case,
+        outcome="selected",
+        selected_evidence_ids=("conflict-b",),
+        reviewer_id="reviewer:canonical-operator-1",
+        review_policy_id="canonical-review-policy",
+        review_policy_version="review-v1",
+        review_policy_content_sha256="7" * 64,
+        reviewed_at=NOW + timedelta(hours=1),
+        rationale="The official appointment evidence supports Chair Professor.",
+        confidence=0.99,
+    )
+    reviewed_release = "candidate-s5-r2"
+    reviewed_result = module.create_ephemeral_canonical_decision_engine().decide(
+        _batch(
+            module,
+            release_id=reviewed_release,
+            decision_run_id="decision-build-run-2",
+            as_of=NOW + timedelta(hours=1),
+            source_identities=sources,
+            canonical_identities=(
+                canonical.model_copy(update={"release_id": reviewed_release}),
+            ),
+            field_groups=(_field_group(module, assertions),),
+            human_review_resolutions=(resolution,),
+            previous_history=module.project_decision_history((result,), as_of=NOW),
+        )
+    )
+
+    reviewed = reviewed_result.canonical_decisions[0]
+    assert reviewed.release_id == reviewed_release
+    assert reviewed.state.value == "selected"
+    assert reviewed.method.value == "human_review"
+    assert reviewed.selected_assertion_ids == ("conflict-b",)
+    assert reviewed.conflicting_assertion_ids == ("conflict-a",)
+    assert reviewed.supersedes_decision_id == decision.decision_id
+    assert reviewed.human_review_resolution == resolution
+    assert reviewed.llm_trace is None
+    assert reviewed_result.review_cases == ()
+    assert reviewed_result.current_fields[0].value == "Chair Professor"
+    assert result.canonical_decisions[0] == decision
+    assert result.review_cases == (review_case,)
+
+    history = module.project_decision_history(
+        (result, reviewed_result), as_of=NOW + timedelta(hours=1)
+    )
+    assert history.release_lineage == (RELEASE_ID, reviewed_release)
+    assert history.canonical_decision_history == (decision, reviewed)
+    assert history.relationship_decision_history == ()
+    assert history.review_case_history == (review_case,)
+    assert history.open_review_cases == ()
+    assert history.current_fields == reviewed_result.current_fields
+    assert history.current_relationships == ()
+    assert history.content_sha256 == module.decision_history_projection_sha256(history)
+
+    branched_release = "candidate-s5-r3-branch"
+    with pytest.raises(ValueError, match="open case|previous history|human review"):
+        _batch(
+            module,
+            release_id=branched_release,
+            decision_run_id="decision-build-run-3-branch",
+            as_of=NOW + timedelta(hours=2),
+            source_identities=sources,
+            canonical_identities=(
+                canonical.model_copy(update={"release_id": branched_release}),
+            ),
+            field_groups=(_field_group(module, assertions),),
+            human_review_resolutions=(resolution,),
+            previous_history=history,
+        )
 
 
 def test_relationship_assertions_follow_retention_and_current_selection_rules() -> None:
@@ -1119,6 +1224,73 @@ def test_relationship_assertions_follow_retention_and_current_selection_rules() 
     assert {conflict.subject_id for conflict in result.unresolved_conflicts} == {
         "canonical-relation-2"
     }
+    assert len(result.review_cases) == 1
+    relationship_case = result.review_cases[0]
+    assert relationship_case.family.value == "relationship"
+    assert relationship_case.subject_id == "canonical-relation-2"
+    assert relationship_case.path == "professor_company_affiliation"
+    assert relationship_case.originating_record_id == unresolved.decision_id
+    assert relationship_case.candidate_evidence_ids == (
+        "relation-contractor",
+        "relation-employee",
+    )
+    assert relationship_case.conflicting_evidence_ids == (
+        "relation-contractor",
+        "relation-employee",
+    )
+    assert relationship_case.trace_content_sha256 == (
+        unresolved.llm_trace.output_sha256
+    )
+
+    relationship_resolution = module.create_human_review_resolution(
+        review_case=relationship_case,
+        outcome="accepted",
+        selected_evidence_ids=("relation-employee",),
+        role_bindings={"source": "employee"},
+        reviewer_id="reviewer:canonical-operator-2",
+        review_policy_id="canonical-review-policy",
+        review_policy_version="review-v1",
+        review_policy_content_sha256="7" * 64,
+        reviewed_at=NOW + timedelta(hours=1),
+        rationale="The employment record establishes an employee relationship.",
+        confidence=0.98,
+    )
+    reviewed_release = "candidate-s5-r2"
+    reviewed_relationship_result = (
+        module.create_ephemeral_canonical_decision_engine().decide(
+            _batch(
+                module,
+                release_id=reviewed_release,
+                decision_run_id="decision-build-run-2",
+                as_of=NOW + timedelta(hours=1),
+                source_identities=sources,
+                canonical_identities=(
+                    canonical_professor.model_copy(
+                        update={"release_id": reviewed_release}
+                    ),
+                    canonical_company.model_copy(
+                        update={"release_id": reviewed_release}
+                    ),
+                ),
+                relationship_groups=(unresolved_group,),
+                human_review_resolutions=(relationship_resolution,),
+                previous_history=module.project_decision_history((result,), as_of=NOW),
+            )
+        )
+    )
+    reviewed_relationship = reviewed_relationship_result.relationship_decisions[0]
+    assert reviewed_relationship.state.value == "accepted"
+    assert reviewed_relationship.method.value == "human_review"
+    assert reviewed_relationship.selected_assertion_ids == ("relation-employee",)
+    assert reviewed_relationship.conflicting_assertion_ids == ("relation-contractor",)
+    assert reviewed_relationship.role_bindings == {"source": "employee"}
+    assert reviewed_relationship.supersedes_decision_id == unresolved.decision_id
+    assert reviewed_relationship.human_review_resolution == relationship_resolution
+    assert reviewed_relationship_result.review_cases == ()
+    assert (
+        reviewed_relationship_result.current_relationships[0].decision_id
+        == reviewed_relationship.decision_id
+    )
     assert not hasattr(current, "professor_projection")
     assert not hasattr(current, "company_projection")
 
@@ -1250,6 +1422,7 @@ def test_zero_survivor_group_keeps_rejected_evidence_and_an_audit_decision() -> 
     assert decision.conflicting_assertion_ids == ()
     assert decision.llm_trace is None
     assert result.current_fields == ()
+    assert result.review_cases == ()
 
     outcomes = {outcome.assertion_id: outcome for outcome in result.constraint_outcomes}
     assert set(outcomes) == {
@@ -1271,6 +1444,7 @@ def test_zero_survivor_group_keeps_rejected_evidence_and_an_audit_decision() -> 
     ].model_dump(mode="json")
     assert result.constraint_outcomes == reordered.constraint_outcomes
     assert result.unresolved_conflicts == reordered.unresolved_conflicts
+    assert result.review_cases == reordered.review_cases == ()
     assert result.current_fields == reordered.current_fields == ()
     assert result.current_relationships == reordered.current_relationships == ()
     assert result.content_sha256 == reordered.content_sha256
@@ -1957,3 +2131,419 @@ def test_field_current_projection_is_the_as_of_valid_subset(
             module.DecisionBatchResult.model_validate(
                 _rehash_result_payload(injected_current)
             )
+
+
+def test_engine_derives_field_replacement_and_withdrawal_from_validated_history() -> (
+    None
+):
+    module = _module()
+    source = _source_identity(
+        module,
+        "field-history-source",
+        source_system="official_profile",
+    )
+    canonical = _canonical_identity(
+        module,
+        "professor-c1",
+        (source.source_identity_id,),
+    )
+    first_assertion = _field_assertion(
+        module,
+        "field-history-r1",
+        source.source_identity_id,
+        "Professor",
+    )
+    engine = module.create_ephemeral_canonical_decision_engine()
+    first = engine.decide(
+        _batch(
+            module,
+            source_identities=(source,),
+            canonical_identities=(canonical,),
+            field_groups=(_field_group(module, (first_assertion,)),),
+        )
+    )
+    first_history = module.project_decision_history((first,), as_of=NOW)
+
+    second_release = "candidate-s5-r2-ordinary-replacement"
+    second_assertion = _field_assertion(
+        module,
+        "field-history-r2",
+        source.source_identity_id,
+        "Chair Professor",
+    )
+    second = engine.decide(
+        _batch(
+            module,
+            release_id=second_release,
+            decision_run_id="decision-build-run-r2-replacement",
+            as_of=NOW + timedelta(hours=1),
+            source_identities=(source,),
+            canonical_identities=(
+                canonical.model_copy(update={"release_id": second_release}),
+            ),
+            field_groups=(_field_group(module, (second_assertion,)),),
+            previous_history=first_history,
+        )
+    )
+    assert (
+        second.canonical_decisions[0].supersedes_decision_id
+        == first.canonical_decisions[0].decision_id
+    )
+    assert second.current_fields[0].value == "Chair Professor"
+    second_history = module.project_decision_history(
+        (first, second),
+        as_of=NOW + timedelta(hours=1),
+    )
+    assert second_history.current_fields == second.current_fields
+
+    third_release = "candidate-s5-r3-withdrawal"
+    withdrawn = engine.decide(
+        _batch(
+            module,
+            release_id=third_release,
+            decision_run_id="decision-build-run-r3-withdrawal",
+            as_of=NOW + timedelta(hours=2),
+            source_identities=(source,),
+            canonical_identities=(
+                canonical.model_copy(update={"release_id": third_release}),
+            ),
+            field_groups=(
+                _field_group(
+                    module,
+                    (second_assertion,),
+                    transition="withdraw",
+                ),
+            ),
+            previous_history=second_history,
+        )
+    )
+    withdrawal = withdrawn.canonical_decisions[0]
+    assert withdrawal.state.value == "superseded"
+    assert withdrawal.method.value == "composite"
+    assert (
+        withdrawal.supersedes_decision_id == second.canonical_decisions[0].decision_id
+    )
+    assert withdrawal.selected_assertion_ids == ()
+    assert withdrawal.conflicting_assertion_ids == ()
+    assert withdrawal.human_review_resolution is None
+    assert withdrawal.llm_trace is None
+    assert withdrawn.current_fields == ()
+    assert withdrawn.unresolved_conflicts == ()
+    assert withdrawn.review_cases == ()
+    final_history = module.project_decision_history(
+        (first, second, withdrawn),
+        as_of=NOW + timedelta(hours=2),
+    )
+    assert final_history.current_fields == ()
+    assert final_history.canonical_decision_history == (
+        first.canonical_decisions[0],
+        second.canonical_decisions[0],
+        withdrawal,
+    )
+
+
+@pytest.mark.parametrize(
+    ("valid_from", "valid_to"),
+    (
+        (NOW + timedelta(days=1), None),
+        (NOW - timedelta(days=10), NOW),
+    ),
+    ids=("future-head", "ended-head"),
+)
+def test_engine_supersedes_the_lineage_head_even_when_it_is_not_current(
+    valid_from: datetime | None,
+    valid_to: datetime | None,
+) -> None:
+    module = _module()
+    source = _source_identity(
+        module,
+        "noncurrent-head-source",
+        source_system="official_profile",
+    )
+    canonical = _canonical_identity(
+        module,
+        "professor-c1",
+        (source.source_identity_id,),
+    )
+    first = module.create_ephemeral_canonical_decision_engine().decide(
+        _batch(
+            module,
+            source_identities=(source,),
+            canonical_identities=(canonical,),
+            field_groups=(
+                _field_group(
+                    module,
+                    (
+                        _field_assertion(
+                            module,
+                            "noncurrent-head-r1",
+                            source.source_identity_id,
+                            "Professor",
+                            valid_from=valid_from,
+                            valid_to=valid_to,
+                        ),
+                    ),
+                ),
+            ),
+        )
+    )
+    assert first.current_fields == ()
+    history = module.project_decision_history((first,), as_of=NOW)
+    second_release = "candidate-s5-r2-after-noncurrent-head"
+    second = module.create_ephemeral_canonical_decision_engine().decide(
+        _batch(
+            module,
+            release_id=second_release,
+            decision_run_id="decision-build-run-after-noncurrent-head",
+            as_of=NOW + timedelta(hours=1),
+            source_identities=(source,),
+            canonical_identities=(
+                canonical.model_copy(update={"release_id": second_release}),
+            ),
+            field_groups=(
+                _field_group(
+                    module,
+                    (
+                        _field_assertion(
+                            module,
+                            "noncurrent-head-r2",
+                            source.source_identity_id,
+                            "Chair Professor",
+                        ),
+                    ),
+                ),
+            ),
+            previous_history=history,
+        )
+    )
+    assert (
+        second.canonical_decisions[0].supersedes_decision_id
+        == first.canonical_decisions[0].decision_id
+    )
+    assert second.current_fields[0].value == "Chair Professor"
+
+
+def test_rejected_review_supersedes_unresolved_head_without_restoring_old_current() -> (
+    None
+):
+    module = _module()
+    sources = (
+        _source_identity(module, "review-chain-a", source_system="official-a"),
+        _source_identity(module, "review-chain-b", source_system="official-b"),
+    )
+    canonical = _canonical_identity(
+        module,
+        "professor-c1",
+        tuple(source.source_identity_id for source in sources),
+    )
+    engine = module.create_ephemeral_canonical_decision_engine()
+    first = engine.decide(
+        _batch(
+            module,
+            source_identities=sources,
+            canonical_identities=(canonical,),
+            field_groups=(
+                _field_group(
+                    module,
+                    (
+                        _field_assertion(
+                            module, "review-chain-r1", "review-chain-a", "Professor"
+                        ),
+                    ),
+                ),
+            ),
+        )
+    )
+    second_release = "candidate-s5-r2-unresolved-head"
+    conflicting = (
+        _field_assertion(module, "review-chain-r2-a", "review-chain-a", "Professor"),
+        _field_assertion(
+            module, "review-chain-r2-b", "review-chain-b", "Chair Professor"
+        ),
+    )
+    second = engine.decide(
+        _batch(
+            module,
+            release_id=second_release,
+            decision_run_id="decision-build-run-r2-unresolved-head",
+            as_of=NOW + timedelta(hours=1),
+            source_identities=sources,
+            canonical_identities=(
+                canonical.model_copy(update={"release_id": second_release}),
+            ),
+            field_groups=(_field_group(module, conflicting),),
+            previous_history=module.project_decision_history((first,), as_of=NOW),
+        )
+    )
+    unresolved = second.canonical_decisions[0]
+    assert unresolved.state.value == "unresolved"
+    assert unresolved.supersedes_decision_id == first.canonical_decisions[0].decision_id
+    second_history = module.project_decision_history(
+        (first, second), as_of=NOW + timedelta(hours=1)
+    )
+    assert second_history.current_fields == ()
+    resolution = module.create_human_review_resolution(
+        review_case=second.review_cases[0],
+        outcome="rejected",
+        reviewer_id="reviewer:reject-conflicting-field",
+        review_policy_id="canonical-review-policy",
+        review_policy_version="review-v1",
+        review_policy_content_sha256="7" * 64,
+        reviewed_at=NOW + timedelta(hours=2),
+        rationale="Neither retained assertion is safe to publish as canonical.",
+        confidence=0.99,
+    )
+    third_release = "candidate-s5-r3-rejected-head"
+    third = engine.decide(
+        _batch(
+            module,
+            release_id=third_release,
+            decision_run_id="decision-build-run-r3-rejected-head",
+            as_of=NOW + timedelta(hours=2),
+            source_identities=sources,
+            canonical_identities=(
+                canonical.model_copy(update={"release_id": third_release}),
+            ),
+            field_groups=(_field_group(module, conflicting),),
+            human_review_resolutions=(resolution,),
+            previous_history=second_history,
+        )
+    )
+    rejected = third.canonical_decisions[0]
+    assert rejected.state.value == "rejected"
+    assert rejected.supersedes_decision_id == unresolved.decision_id
+    final_history = module.project_decision_history(
+        (first, second, third), as_of=NOW + timedelta(hours=2)
+    )
+    assert final_history.current_fields == ()
+    assert final_history.open_review_cases == ()
+
+
+def test_engine_derives_relationship_replacement_and_withdrawal_from_history() -> None:
+    module = _module()
+    professor_source = _source_identity(
+        module,
+        "relationship-history-professor",
+        source_system="official_profile",
+        record_ids=("record:relationship-history",),
+    )
+    company_source = _source_identity(
+        module,
+        "relationship-history-company",
+        source_system="company_registry",
+        entity_type="company",
+    )
+    professor = _canonical_identity(
+        module,
+        "relationship-history-professor-c1",
+        (professor_source.source_identity_id,),
+    )
+    company = _canonical_identity(
+        module,
+        "relationship-history-company-c1",
+        (company_source.source_identity_id,),
+        entity_type="company",
+    )
+
+    def assertion(assertion_id: str, role: str) -> Any:
+        return module.RelationshipAssertion(
+            assertion_id=assertion_id,
+            relationship_type_id="professor_company_role",
+            relationship_type_version="v1",
+            source_record_id="record:relationship-history",
+            source_endpoint=module.IdentityReference(
+                identity_id=professor_source.source_identity_id,
+                identity_space="source",
+                entity_type="professor",
+            ),
+            target_endpoint=module.IdentityReference(
+                identity_id=company_source.source_identity_id,
+                identity_space="source",
+                entity_type="company",
+            ),
+            attributes={"role": role},
+            observed_at=NOW - timedelta(hours=1),
+            assertion_run_id="relationship-history-assertion-run",
+        )
+
+    def group(item: Any, *, transition: str = "evaluate") -> Any:
+        return module.RelationshipAssertionGroup(
+            canonical_relationship_id="relationship-history-c1",
+            relationship_type_id="professor_company_role",
+            relationship_type_version="v1",
+            source_canonical_identity_id=professor.canonical_identity_id,
+            target_canonical_identity_id=company.canonical_identity_id,
+            assertions=(item,),
+            policy=_policy(module, "relationship"),
+            transition=transition,
+        )
+
+    engine = module.create_ephemeral_canonical_decision_engine()
+    first_assertion = assertion("relationship-history-r1", "advisor")
+    first = engine.decide(
+        _batch(
+            module,
+            source_identities=(professor_source, company_source),
+            canonical_identities=(professor, company),
+            relationship_groups=(group(first_assertion),),
+        )
+    )
+    second_release = "candidate-s5-r2-relationship-replacement"
+    second_assertion = assertion("relationship-history-r2", "founder")
+    second = engine.decide(
+        _batch(
+            module,
+            release_id=second_release,
+            decision_run_id="decision-build-run-r2-relationship-replacement",
+            as_of=NOW + timedelta(hours=1),
+            source_identities=(professor_source, company_source),
+            canonical_identities=(
+                professor.model_copy(update={"release_id": second_release}),
+                company.model_copy(update={"release_id": second_release}),
+            ),
+            relationship_groups=(group(second_assertion),),
+            previous_history=module.project_decision_history((first,), as_of=NOW),
+        )
+    )
+    assert (
+        second.relationship_decisions[0].supersedes_decision_id
+        == first.relationship_decisions[0].decision_id
+    )
+    second_history = module.project_decision_history(
+        (first, second), as_of=NOW + timedelta(hours=1)
+    )
+    third_release = "candidate-s5-r3-relationship-withdrawal"
+    third = engine.decide(
+        _batch(
+            module,
+            release_id=third_release,
+            decision_run_id="decision-build-run-r3-relationship-withdrawal",
+            as_of=NOW + timedelta(hours=2),
+            source_identities=(professor_source, company_source),
+            canonical_identities=(
+                professor.model_copy(update={"release_id": third_release}),
+                company.model_copy(update={"release_id": third_release}),
+            ),
+            relationship_groups=(group(second_assertion, transition="withdraw"),),
+            previous_history=second_history,
+        )
+    )
+    withdrawal = third.relationship_decisions[0]
+    assert withdrawal.state.value == "superseded"
+    assert withdrawal.method.value == "composite"
+    assert (
+        withdrawal.supersedes_decision_id
+        == second.relationship_decisions[0].decision_id
+    )
+    assert withdrawal.selected_assertion_ids == ()
+    assert withdrawal.conflicting_assertion_ids == ()
+    assert withdrawal.role_bindings == {}
+    assert withdrawal.valid_from is None
+    assert withdrawal.valid_to is None
+    assert third.current_relationships == ()
+    assert (
+        module.project_decision_history(
+            (first, second, third), as_of=NOW + timedelta(hours=2)
+        ).current_relationships
+        == ()
+    )

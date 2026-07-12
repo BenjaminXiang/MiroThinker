@@ -19,9 +19,10 @@ import stat
 from threading import RLock
 from typing import Protocol
 
-from pydantic import AwareDatetime, Field, JsonValue, model_validator
+from pydantic import Field, JsonValue, model_validator
 
 from .contracts import (
+    CanonicalDatetime,
     ContractModel,
     EvidenceArtifact,
     NonEmptyStr,
@@ -79,7 +80,7 @@ class IngestEvidenceRequest(ContractModel):
     source_kind: NonEmptyStr
     source_locator: NonEmptyStr
     content: bytes
-    observed_at: AwareDatetime
+    observed_at: CanonicalDatetime
     expected_content_sha256: Sha256 | None = None
     parser: ParserReference = Field(default_factory=_default_parser_reference)
     parent_artifact_id: NonEmptyStr | None = None
@@ -101,7 +102,7 @@ class RegisterArtifactRequest(ContractModel):
     source_kind: NonEmptyStr
     source_locator: NonEmptyStr
     content_path: Path
-    observed_at: AwareDatetime
+    observed_at: CanonicalDatetime
     expected_content_sha256: Sha256
     expected_byte_size: int = Field(ge=0)
     parent_artifact_id: NonEmptyStr | None = None

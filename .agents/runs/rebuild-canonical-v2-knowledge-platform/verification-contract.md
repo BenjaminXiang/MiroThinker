@@ -96,6 +96,32 @@
   findings and ended `APPROVED` with zero open Critical/Important findings. Relationship
   `superseded` interval semantics are explicitly deferred to Task 5.6 rather than invented here.
 
+## Task 5.6 review/history extension
+
+- RED paths: `tests/canonical_v2/test_canonical_decision_engine_contract.py`,
+  `tests/canonical_v2/test_canonical_identity_resolution_contract.py`,
+  `tests/canonical_v2/test_canonical_decision_postgres.py`, and
+  `tests/canonical_v2/test_canonical_identity_postgres.py`.
+- Observable GREEN: unresolved field, relationship, and identity outcomes yield deterministic
+  immutable review cases; an exact evidence-bound human resolution creates a new offline decision
+  or verdict and cannot mutate the originating decision, assertions, or review case. Stale,
+  unsupported, cross-wired, or invented resolutions fail closed.
+- History GREEN: replacement, withdrawal, unresolved, rejected, future, ended, and accepted
+  lineages retain complete history and derive only the unique as-of-valid unsuperseded head as
+  current. Exact replay/reordering is byte-identical, and identity review preserves complete
+  merge/split/reversal source allocation.
+- Storage GREEN: C2_0007 retains reviewer/policy/outcome/rationale/time provenance and enforces one
+  logical root, one child per predecessor, strict release ancestry, subject/relationship continuity,
+  cycle refusal, append-only replay, atomic rollback, restart reconstruction, populated-upgrade
+  preflight, and retained-review downgrade refusal. Both adapter and direct-SQL paths are covered.
+- Review policy: one merged specification/code-quality review plus the migration/write-boundary
+  safety exception permitted by lean execution. Both reviews ended with zero open Critical or
+  Important findings.
+- Commit checkpoint: complete no-database and real-disposable Canonical V2 regressions, fixed-name
+  S4C compatibility, S1/S2/S2B/S4E gates, C2_0001 through C2_0007 migration safety, Ruff, Pyright,
+  wheel contents, strict OpenSpec, diff/formal/secret/import checks, frozen source and forced-read-
+  only candidate audits, and owned-resource cleanup must all pass before acceptance.
+
 ## Status
 
 S1 database-target safety, S2 tasks 2.1–2.5 and corpus/ground-truth/threshold policy, and S2B/task
@@ -115,9 +141,10 @@ Accepted at `2026-07-12T08:40:35Z`: one complete-release identity module plus C2
 offline/disposable-only store retain exact decision-time evidence, output allocation, current
 ownership, terminal history, replay, rollback, and reversible migration safety. Task 5.5 is
 Accepted at `2026-07-12T09:58:35Z`: proportional UTC-canonical temporal semantics now retain exact
-observation/source-event/validity evidence and derive only the as-of-valid generic current subset
-without a new migration. The durable candidate remains C2_0004 with zero canonical/non-landing
-rows; Task 5.6 has not started.
+observation/source-event/validity evidence and derive only the as-of-valid generic current subset.
+Task 5.6 is Accepted at `2026-07-12T15:04:36Z`: immutable review provenance, exact human resolution,
+and generic current/history reconstruction are closed through C2_0007 on owned disposable targets.
+The durable candidate remains C2_0004 with zero canonical/non-landing rows; Task 6.1 has not started.
 
 ## Behavior owner
 

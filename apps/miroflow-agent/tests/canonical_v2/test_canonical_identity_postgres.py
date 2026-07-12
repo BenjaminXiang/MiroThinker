@@ -33,7 +33,7 @@ from src.data_agents.storage.database_target import set_alembic_database_url
 APP_ROOT = Path(__file__).resolve().parents[2]
 ALEMBIC_INI = APP_ROOT / "canonical_v2_alembic.ini"
 SCRIPT_LOCATION = APP_ROOT / "canonical_v2_alembic"
-EXPECTED_REVISION = "C2_0006"
+EXPECTED_REVISION = "C2_0007"
 RELEASE_ID = "identity-postgres-release-r1"
 RUN_ID = "identity-postgres-run-1"
 NOW = datetime(2026, 7, 12, 6, 30, tzinfo=timezone.utc)
@@ -206,19 +206,19 @@ def _script_directory() -> ScriptDirectory:
     return ScriptDirectory.from_config(config)
 
 
-def test_c2_0006_is_the_single_canonical_v2_head() -> None:
+def test_c2_0007_is_the_single_canonical_v2_head() -> None:
     scripts = _script_directory()
 
     assert scripts.get_heads() == [EXPECTED_REVISION]
-    revision = scripts.get_revision(EXPECTED_REVISION)
+    revision = scripts.get_revision("C2_0007")
     assert revision is not None
-    assert revision.down_revision == "C2_0005"
+    assert revision.down_revision == "C2_0006"
 
 
 def test_c2_0006_schema_is_append_only_and_empty_downgrade_is_reversible(
     target: _Target,
 ) -> None:
-    revision = _script_directory().get_revision(EXPECTED_REVISION)
+    revision = _script_directory().get_revision("C2_0006")
     assert revision is not None
     migration = revision.module
     postgres = _postgres_module()
@@ -312,7 +312,7 @@ def _policy(module):
     )
 
 
-def _strong_paper_request_and_result():
+def _strong_paper_request_and_result(*, as_of: datetime = NOW):
     module = _identity_module()
     sources = tuple(
         module.SourceIdentity(
@@ -345,7 +345,7 @@ def _strong_paper_request_and_result():
         release_id=RELEASE_ID,
         decision_run_id=RUN_ID,
         identity_method_version="canonical-identity-resolution-v1",
-        as_of=NOW,
+        as_of=as_of,
         policy=_policy(module),
         source_identities=sources,
         identity_assertions=assertions,
@@ -354,6 +354,80 @@ def _strong_paper_request_and_result():
         request
     )
     return request, result
+
+
+def _reviewed_company_request_and_result():
+    module = _identity_module()
+    sources = tuple(
+        module.SourceIdentity(
+            source_identity_id=f"company-review-{suffix}",
+            source_system=f"landing-{suffix}",
+            source_key=f"company:{suffix}",
+            entity_type="company",
+            source_record_ids=(f"record:company-review:{suffix}",),
+            normalized_keys={"name_key": "reviewed company"},
+            first_observed_at=NOW - timedelta(days=30),
+            last_observed_at=NOW,
+            state="active",
+        )
+        for suffix in ("a", "b")
+    )
+    assertions = tuple(
+        module.SourceAssertion(
+            assertion_id=f"assertion-company-review-{suffix}",
+            source_record_id=source.source_record_ids[0],
+            source_identity_id=source.source_identity_id,
+            subject_entity_type="company",
+            field_path="identity.name",
+            value="Reviewed Company",
+            observed_at=NOW,
+            assertion_run_id="identity-review-assertion-run",
+        )
+        for suffix, source in zip(("a", "b"), sources, strict=True)
+    )
+    origin_request = module.IdentityResolutionRequest(
+        release_id="identity-postgres-review-origin-r0",
+        decision_run_id="identity-postgres-review-run-0",
+        identity_method_version="canonical-identity-resolution-v1",
+        as_of=NOW,
+        policy=_policy(module),
+        source_identities=sources,
+        identity_assertions=assertions,
+    )
+    origin_result = (
+        module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+            origin_request
+        )
+    )
+    review_case = origin_result.review_cases[0]
+    resolution = module.create_human_review_resolution(
+        review_case=review_case,
+        outcome="same_entity",
+        source_identity_groups=(
+            tuple(source.source_identity_id for source in sources),
+        ),
+        reviewer_id="reviewer:identity-postgres",
+        review_policy_id="canonical-review-policy",
+        review_policy_version="review-v1",
+        review_policy_content_sha256="7" * 64,
+        reviewed_at=NOW + timedelta(hours=1),
+        rationale="Reviewed public evidence establishes one Company.",
+        confidence=0.98,
+    )
+    request = module.IdentityResolutionRequest(
+        release_id=RELEASE_ID,
+        decision_run_id=RUN_ID,
+        identity_method_version="canonical-identity-resolution-v1",
+        as_of=NOW + timedelta(hours=1),
+        policy=_policy(module),
+        source_identities=sources,
+        identity_assertions=assertions,
+        human_review_resolutions=(resolution,),
+    )
+    result = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        request
+    )
+    return origin_request, origin_result, request, result
 
 
 def _source(
@@ -539,135 +613,118 @@ def _link_request_and_result():
 
 def _reverse_request_and_result():
     module = _identity_module()
-    source_a = _source(
-        module,
-        "company-registry-a",
-        entity_type="company",
-        normalized_keys={
-            "name_key": "pengcheng innovation",
-            "unified_social_credit_code": "91440300AAA000001A",
-        },
+    sources = tuple(
+        _source(
+            module,
+            f"company-registry-{suffix}",
+            entity_type="company",
+            normalized_keys={
+                "name_key": "pengcheng innovation",
+                "unified_social_credit_code": credit_code,
+            },
+        )
+        for suffix, credit_code in (
+            ("a1", "91440300AAA000001A"),
+            ("a2", "91440300AAA000001A"),
+            ("b", "91440300BBB000002B"),
+        )
     )
-    source_b = _source(
-        module,
-        "company-registry-b",
-        entity_type="company",
-        normalized_keys={
-            "name_key": "pengcheng innovation",
-            "unified_social_credit_code": "91440300BBB000002B",
-        },
-    )
-    prior_a = _canonical(
-        module,
-        "company-prior-a",
-        entity_type="company",
-        source_identity_ids=(source_a.source_identity_id,),
-        identity_decision_id="identity-create-company-a",
-        state="merged",
-        successor_identity_ids=("company-wrong-combined",),
-    )
-    prior_b = _canonical(
-        module,
-        "company-prior-b",
-        entity_type="company",
-        source_identity_ids=(source_b.source_identity_id,),
-        identity_decision_id="identity-create-company-b",
-        state="merged",
-        successor_identity_ids=("company-wrong-combined",),
+    prior_identities = tuple(
+        _canonical(
+            module,
+            f"company-prior-{suffix}",
+            entity_type="company",
+            source_identity_ids=(source.source_identity_id,),
+            identity_decision_id=f"identity-create-company-{suffix}",
+            state="merged",
+            successor_identity_ids=("company-wrong-combined",),
+        )
+        for source, suffix in zip(sources, ("a1", "a2", "b"), strict=True)
     )
     wrong_combined = _canonical(
         module,
         "company-wrong-combined",
         entity_type="company",
-        source_identity_ids=(source_a.source_identity_id, source_b.source_identity_id),
+        source_identity_ids=tuple(source.source_identity_id for source in sources),
         identity_decision_id="identity-merge-company-wrong",
-        predecessor_identity_ids=(
-            prior_a.canonical_identity_id,
-            prior_b.canonical_identity_id,
+        predecessor_identity_ids=tuple(
+            identity.canonical_identity_id for identity in prior_identities
         ),
     )
-    create_a = _prior_create(module, prior_a, (source_a,))
-    create_b = _prior_create(module, prior_b, (source_b,))
+    create_decisions = tuple(
+        _prior_create(module, identity, (source,))
+        for source, identity in zip(sources, prior_identities, strict=True)
+    )
     mistaken_merge = module.IdentityDecision(
         decision_id=wrong_combined.identity_decision_id,
         action="merge",
-        source_identity_ids=(source_a.source_identity_id, source_b.source_identity_id),
-        input_canonical_identity_ids=(
-            prior_a.canonical_identity_id,
-            prior_b.canonical_identity_id,
+        source_identity_ids=tuple(source.source_identity_id for source in sources),
+        input_canonical_identity_ids=tuple(
+            identity.canonical_identity_id for identity in prior_identities
         ),
         output_canonical_identity_ids=(wrong_combined.canonical_identity_id,),
-        supporting_record_ids=(
-            source_a.source_record_ids[0],
-            source_b.source_record_ids[0],
-        ),
+        supporting_record_ids=tuple(source.source_record_ids[0] for source in sources),
         policy=_policy(module),
-        method="human_review",
+        method="composite",
         method_version="identity-v0",
         decision_run_id="mistaken-merge-run",
         confidence=0.76,
         rationale="Historical mistaken Company merge.",
         decided_at=NOW - timedelta(days=2),
     )
-    assertions = (
+    assertions = tuple(
         _assertion(
             module,
-            "assertion-company-uscc-a",
-            source_a,
+            f"assertion-company-uscc-{suffix}",
+            source,
             field_path="identity.unified_social_credit_code",
-            value="91440300AAA000001A",
-        ),
-        _assertion(
+            value=source.normalized_keys["unified_social_credit_code"],
+        )
+        for source, suffix in zip(sources, ("a1", "a2", "b"), strict=True)
+    )
+    prior_at_create = tuple(
+        identity.model_copy(
+            update={
+                "state": identity.state.__class__.active,
+                "successor_identity_ids": (),
+            }
+        )
+        for identity in prior_identities
+    )
+    create_contexts = tuple(
+        _decision_context(
             module,
-            "assertion-company-uscc-b",
-            source_b,
-            field_path="identity.unified_social_credit_code",
-            value="91440300BBB000002B",
-        ),
+            decision,
+            sources=(source,),
+            assertions=(assertion,),
+            output_identities=(identity,),
+        )
+        for source, assertion, identity, decision in zip(
+            sources, assertions, prior_at_create, create_decisions, strict=True
+        )
     )
-    prior_a_at_create = prior_a.model_copy(
-        update={"state": prior_a.state.__class__.active, "successor_identity_ids": ()}
-    )
-    prior_b_at_create = prior_b.model_copy(
-        update={"state": prior_b.state.__class__.active, "successor_identity_ids": ()}
-    )
-    create_a_context = _decision_context(
-        module,
-        create_a,
-        sources=(source_a,),
-        assertions=(assertions[0],),
-        output_identities=(prior_a_at_create,),
-    )
-    create_b_context = _decision_context(
-        module,
-        create_b,
-        sources=(source_b,),
-        assertions=(assertions[1],),
-        output_identities=(prior_b_at_create,),
-    )
-    merge_input_assignments = (
+    merge_input_assignments = tuple(
         module.SourceIdentityAssignment(
             release_id=RELEASE_ID,
-            source_identity_id=source_a.source_identity_id,
-            canonical_identity_id=prior_a.canonical_identity_id,
-            identity_decision_id=create_a.decision_id,
-        ),
-        module.SourceIdentityAssignment(
-            release_id=RELEASE_ID,
-            source_identity_id=source_b.source_identity_id,
-            canonical_identity_id=prior_b.canonical_identity_id,
-            identity_decision_id=create_b.decision_id,
-        ),
+            source_identity_id=source.source_identity_id,
+            canonical_identity_id=identity.canonical_identity_id,
+            identity_decision_id=decision.decision_id,
+        )
+        for source, identity, decision in zip(
+            sources, prior_identities, create_decisions, strict=True
+        )
     )
     merge_context = _decision_context(
         module,
         mistaken_merge,
-        sources=(source_a, source_b),
+        sources=sources,
         assertions=assertions,
-        input_identities=(prior_a_at_create, prior_b_at_create),
+        input_identities=prior_at_create,
         output_identities=(wrong_combined,),
         input_assignments=merge_input_assignments,
-        referenced_prior_decision_ids=(create_a.decision_id, create_b.decision_id),
+        referenced_prior_decision_ids=tuple(
+            decision.decision_id for decision in create_decisions
+        ),
     )
     request = module.IdentityResolutionRequest(
         release_id=RELEASE_ID,
@@ -675,7 +732,7 @@ def _reverse_request_and_result():
         identity_method_version="canonical-identity-resolution-v1",
         as_of=NOW,
         policy=_policy(module),
-        source_identities=(source_a, source_b),
+        source_identities=sources,
         identity_assertions=assertions,
         current_canonical_identities=(wrong_combined,),
         current_source_identity_assignments=tuple(
@@ -685,15 +742,11 @@ def _reverse_request_and_result():
                 canonical_identity_id=wrong_combined.canonical_identity_id,
                 identity_decision_id=mistaken_merge.decision_id,
             )
-            for source in (source_a, source_b)
+            for source in sources
         ),
-        canonical_identity_history=(prior_a, prior_b),
-        prior_identity_decisions=(create_a, create_b, mistaken_merge),
-        prior_decision_contexts=(
-            create_a_context,
-            create_b_context,
-            merge_context,
-        ),
+        canonical_identity_history=prior_identities,
+        prior_identity_decisions=(*create_decisions, mistaken_merge),
+        prior_decision_contexts=(*create_contexts, merge_context),
     )
     result = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
         request
@@ -756,6 +809,30 @@ def _insert_identity_prerequisites(target: _Target, request) -> None:
                 request.policy.policy_kind.value,
                 request.policy.content_sha256,
                 request.policy.effective_at,
+            ),
+        )
+        connection.commit()
+
+
+def _insert_identity_successor_release(
+    target: _Target,
+    request,
+    *,
+    previous_release_id: str,
+) -> None:
+    with _connect(target) as connection:
+        connection.execute(
+            "INSERT INTO knowledge.release "
+            "(release_id, build_run_id, state, manifest_sha256, previous_release_id, "
+            "created_at) VALUES (%s, %s, 'candidate', %s, %s, %s)",
+            (
+                request.release_id,
+                request.decision_run_id,
+                hashlib.sha256(
+                    f"identity-release-manifest:{request.release_id}".encode()
+                ).hexdigest(),
+                previous_release_id,
+                request.as_of,
             ),
         )
         connection.commit()
@@ -825,6 +902,323 @@ def test_identity_result_round_trips_restarts_and_replays_exactly(
             ).fetchone()
             == counts_after_first
         )
+
+
+def test_non_utc_identity_resolution_restarts_identically_under_shanghai_session(
+    target: _Target,
+) -> None:
+    utc_request, utc_result = _strong_paper_request_and_result()
+    offset_request, offset_result = _strong_paper_request_and_result(
+        as_of=NOW.astimezone(timezone(timedelta(hours=8)))
+    )
+    assert offset_request == utc_request
+    assert offset_result == utc_result
+    assert offset_result.content_sha256 == utc_result.content_sha256
+    assert offset_request.as_of.utcoffset() == timedelta(0)
+
+    with _connect(target) as connection:
+        connection.execute(
+            sql.SQL("ALTER DATABASE {} SET timezone TO 'Asia/Shanghai'").format(
+                sql.Identifier(target.expected_database)
+            )
+        )
+        connection.commit()
+    with _connect(target) as connection:
+        assert connection.execute("SHOW timezone").fetchone() == ("Asia/Shanghai",)
+
+    _insert_identity_prerequisites(target, offset_request)
+    assert _store(target).persist(offset_request, offset_result) == offset_result
+    restarted = _store(target).load(
+        offset_request.release_id,
+        offset_request.decision_run_id,
+    )
+    assert restarted == utc_result
+    assert restarted.content_sha256 == utc_result.content_sha256
+    assert restarted.as_of.utcoffset() == timedelta(0)
+
+
+def test_human_reviewed_identity_result_restarts_with_exact_provenance(
+    target: _Target,
+) -> None:
+    origin_request, origin_result, request, result = (
+        _reviewed_company_request_and_result()
+    )
+    _insert_identity_prerequisites(target, origin_request)
+    assert _store(target).persist(origin_request, origin_result) == origin_result
+    _insert_identity_successor_release(
+        target,
+        request,
+        previous_release_id=origin_request.release_id,
+    )
+
+    assert _store(target).persist(request, result) == result
+    restarted = _store(target).load(request.release_id, request.decision_run_id)
+    assert restarted == result
+    decision = result.identity_decisions[0]
+    assert decision.method.value == "human_review"
+    assert decision.human_review_resolution is not None
+    assert restarted.identity_decisions[0].human_review_resolution == (
+        decision.human_review_resolution
+    )
+    with _connect(target) as connection:
+        assert connection.execute(
+            "SELECT human_review_resolution FROM knowledge.identity_decision "
+            "WHERE release_id = %s AND decision_id = %s",
+            (request.release_id, decision.decision_id),
+        ).fetchone() == (decision.human_review_resolution.model_dump(mode="json"),)
+        origin_verdict = origin_result.candidate_verdicts[0]
+        assert connection.execute(
+            "SELECT verdict, method, verdict_content FROM "
+            "knowledge.identity_candidate_verdict WHERE release_id = %s "
+            "AND decision_run_id = %s AND verdict_id = %s",
+            (
+                origin_request.release_id,
+                origin_request.decision_run_id,
+                origin_verdict.verdict_id,
+            ),
+        ).fetchone() == (
+            "unresolved",
+            origin_verdict.method.value,
+            origin_verdict.model_dump(mode="json"),
+        )
+
+
+def test_direct_sql_identity_review_rejects_null_hash_and_cross_wiring(
+    target: _Target,
+) -> None:
+    origin_request, origin_result, request, result = (
+        _reviewed_company_request_and_result()
+    )
+    _insert_identity_prerequisites(target, origin_request)
+    assert _store(target).persist(origin_request, origin_result) == origin_result
+    _insert_identity_successor_release(
+        target,
+        request,
+        previous_release_id=origin_request.release_id,
+    )
+    assert _store(target).persist(request, result) == result
+    decision = result.identity_decisions[0]
+    resolution = decision.human_review_resolution
+    assert resolution is not None
+    valid_payload = resolution.model_dump(mode="json")
+    wrong_hash = json.loads(json.dumps(valid_payload))
+    wrong_hash["content_sha256"] = "0" * 64
+    module = _identity_module()
+    different_resolution = module.create_human_review_resolution(
+        review_case=origin_result.review_cases[0],
+        outcome="different_entities",
+        source_identity_groups=tuple(
+            (source.source_identity_id,) for source in origin_request.source_identities
+        ),
+        reviewer_id="reviewer:identity-partition",
+        review_policy_id="canonical-review-policy",
+        review_policy_version="review-v1",
+        review_policy_content_sha256="7" * 64,
+        reviewed_at=NOW + timedelta(hours=1),
+        rationale="Reviewed evidence preserves two distinct Companies.",
+        confidence=1.0,
+    )
+    insert_decision = (
+        "INSERT INTO knowledge.identity_decision "
+        "(release_id, decision_id, action, policy_id, policy_version, method, "
+        "method_version, decision_run_id, confidence, rationale, decided_at, "
+        "reversal_of_decision_id, llm_trace, human_review_resolution) "
+        "SELECT release_id, %s, %s, policy_id, policy_version, method, "
+        "method_version, decision_run_id, confidence, rationale, decided_at, NULL, "
+        "llm_trace, %s::jsonb FROM knowledge.identity_decision "
+        "WHERE release_id = %s AND decision_id = %s"
+    )
+
+    current_verdict = result.candidate_verdicts[0]
+    valid_verdict_content = current_verdict.model_dump(mode="json")
+    null_resolution_content = json.loads(json.dumps(valid_verdict_content))
+    null_resolution_content["human_review_resolution"] = None
+    wrong_resolution_content = json.loads(json.dumps(valid_verdict_content))
+    wrong_resolution_content["human_review_resolution"]["content_sha256"] = "1" * 64
+    insert_verdict = (
+        "INSERT INTO knowledge.identity_candidate_verdict "
+        "(release_id, decision_run_id, verdict_id, verdict, method, confidence, "
+        "verdict_content, content_sha256) "
+        "SELECT release_id, decision_run_id, %s, %s, method, %s, %s::jsonb, "
+        "%s FROM knowledge.identity_candidate_verdict "
+        "WHERE release_id = %s AND decision_run_id = %s AND verdict_id = %s"
+    )
+
+    def content_sha256(content: dict[str, object]) -> str:
+        return hashlib.sha256(
+            json.dumps(
+                content,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+                allow_nan=False,
+            ).encode("utf-8")
+        ).hexdigest()
+
+    def rebind_review_hashes(payload: dict[str, object]) -> dict[str, object]:
+        review_case = payload["review_case"]
+        assert isinstance(review_case, dict)
+        case_content = {
+            key: value
+            for key, value in review_case.items()
+            if key not in {"review_case_id", "content_sha256"}
+        }
+        case_hash = content_sha256(case_content)
+        review_case["content_sha256"] = case_hash
+        review_case["review_case_id"] = f"review-case:sha256:{case_hash}"
+        resolution_content = {
+            key: value
+            for key, value in payload.items()
+            if key not in {"resolution_id", "content_sha256"}
+        }
+        resolution_hash = content_sha256(resolution_content)
+        payload["content_sha256"] = resolution_hash
+        payload["resolution_id"] = f"human-review-resolution:sha256:{resolution_hash}"
+        return payload
+
+    canonical_group_order = json.loads(
+        json.dumps(different_resolution.model_dump(mode="json"))
+    )
+    canonical_group_order["review_case"]["source_identity_ids"] = [
+        '"identity-source',
+        "#identity-source",
+    ]
+    canonical_group_order["source_identity_groups"] = [
+        ['"identity-source'],
+        ["#identity-source"],
+    ]
+    rebind_review_hashes(canonical_group_order)
+    json_escaped_group_order = json.loads(json.dumps(canonical_group_order))
+    json_escaped_group_order["source_identity_groups"].reverse()
+    rebind_review_hashes(json_escaped_group_order)
+
+    def changed_verdict_content(suffix: str) -> dict[str, object]:
+        content = json.loads(json.dumps(valid_verdict_content))
+        content["verdict_id"] = f"direct-identity-verdict-{suffix}"
+        return content
+
+    integer_outer_confidence = changed_verdict_content("integer-confidence")
+    integer_outer_confidence["confidence"] = 1
+    extra_outer_key = changed_verdict_content("extra-key")
+    extra_outer_key["unexpected"] = "not part of IdentityCandidateVerdict"
+    unicode_outer_rationale = changed_verdict_content("unicode-rationale")
+    unicode_outer_rationale["rationale"] = (
+        "\u00a0" + str(unicode_outer_rationale["rationale"]) + "\u3000"
+    )
+
+    with _connect(target) as connection:
+        assert connection.execute(
+            "SELECT knowledge.is_valid_human_review_resolution(%s)",
+            (Jsonb(different_resolution.model_dump(mode="json")),),
+        ).fetchone() == (True,)
+        assert connection.execute(
+            "SELECT knowledge.is_valid_human_review_resolution(%s)",
+            (Jsonb(canonical_group_order),),
+        ).fetchone() == (True,)
+        assert connection.execute(
+            "SELECT knowledge.is_valid_human_review_resolution(%s)",
+            (Jsonb(json_escaped_group_order),),
+        ).fetchone() == (False,)
+        for label, content, confidence in (
+            ("integer outer confidence", integer_outer_confidence, 1.0),
+            ("extra outer key", extra_outer_key, current_verdict.confidence),
+            (
+                "Unicode outer rationale",
+                unicode_outer_rationale,
+                current_verdict.confidence,
+            ),
+        ):
+            with pytest.raises(psycopg.errors.CheckViolation), connection.transaction():
+                connection.execute(
+                    insert_verdict,
+                    (
+                        content["verdict_id"],
+                        current_verdict.verdict.value,
+                        confidence,
+                        Jsonb(content),
+                        content_sha256(content),
+                        request.release_id,
+                        request.decision_run_id,
+                        current_verdict.verdict_id,
+                    ),
+                )
+        for suffix, payload in (("sql-null", None), ("wrong-hash", wrong_hash)):
+            with pytest.raises(psycopg.errors.CheckViolation):
+                with connection.transaction():
+                    connection.execute(
+                        insert_decision,
+                        (
+                            f"direct-identity-{suffix}",
+                            decision.action.value,
+                            Jsonb(payload) if payload is not None else None,
+                            request.release_id,
+                            decision.decision_id,
+                        ),
+                    )
+        with pytest.raises(
+            psycopg.errors.CheckViolation,
+            match="human review|review provenance|review binding",
+        ):
+            with connection.transaction():
+                connection.execute(
+                    insert_decision,
+                    (
+                        "direct-identity-crosswired",
+                        "reject",
+                        Jsonb(valid_payload),
+                        request.release_id,
+                        decision.decision_id,
+                    ),
+                )
+                connection.execute(
+                    "SET CONSTRAINTS knowledge."
+                    "trg_validate_identity_human_review_binding IMMEDIATE"
+                )
+
+        for suffix, content in (
+            ("null-resolution", null_resolution_content),
+            ("wrong-resolution-hash", wrong_resolution_content),
+        ):
+            with pytest.raises(psycopg.errors.CheckViolation):
+                with connection.transaction():
+                    connection.execute(
+                        insert_verdict,
+                        (
+                            f"direct-identity-verdict-{suffix}",
+                            current_verdict.verdict.value,
+                            current_verdict.confidence,
+                            Jsonb(content),
+                            content_sha256(content),
+                            request.release_id,
+                            request.decision_run_id,
+                            current_verdict.verdict_id,
+                        ),
+                    )
+        duplicate_verdict_id = "direct-identity-verdict-crosswired"
+        duplicate_content = json.loads(json.dumps(valid_verdict_content))
+        duplicate_content["verdict_id"] = duplicate_verdict_id
+        with pytest.raises(
+            psycopg.errors.CheckViolation,
+            match="human review|review provenance|review binding",
+        ):
+            with connection.transaction():
+                connection.execute(
+                    insert_verdict,
+                    (
+                        duplicate_verdict_id,
+                        current_verdict.verdict.value,
+                        current_verdict.confidence,
+                        Jsonb(duplicate_content),
+                        content_sha256(duplicate_content),
+                        request.release_id,
+                        request.decision_run_id,
+                        current_verdict.verdict_id,
+                    ),
+                )
+                connection.execute(
+                    "SET CONSTRAINTS knowledge."
+                    "trg_validate_identity_human_review_verdict_binding IMMEDIATE"
+                )
 
 
 @pytest.mark.parametrize(
@@ -1529,9 +1923,16 @@ def test_reverse_persists_terminal_history_lineage_and_exact_split_allocation(
         (
             reversal.decision_id,
             identity.canonical_identity_id,
-            identity.source_identity_ids[0],
+            source_identity_id,
         )
         for identity in result.current_canonical_identities
+        for source_identity_id in identity.source_identity_ids
+    }
+    assert {
+        identity.source_identity_ids for identity in result.current_canonical_identities
+    } == {
+        ("company-registry-a1", "company-registry-a2"),
+        ("company-registry-b",),
     }
     with _connect(target) as connection:
         reverse_allocations = {
@@ -1571,7 +1972,7 @@ def test_reverse_persists_terminal_history_lineage_and_exact_split_allocation(
             "SELECT count(*) FROM knowledge.identity_decision_output_source "
             "WHERE release_id = %s AND decision_id = %s",
             (RELEASE_ID, reversed_decision_id),
-        ).fetchone() == (2,)
+        ).fetchone() == (len(request.source_identities),)
     assert _store(target).load(RELEASE_ID, RUN_ID) == result
 
 
@@ -1837,7 +2238,7 @@ def test_factory_rejects_non_disposable_and_low_revision_targets(
         )
     command.downgrade(target.config, "C2_0005")
     with pytest.raises(
-        module.CanonicalIdentityPersistenceError, match="minimum revision C2_0006"
+        module.CanonicalIdentityPersistenceError, match="minimum revision C2_0007"
     ):
         module.create_postgres_canonical_identity_store(
             database_url=target.database_url,
@@ -1887,7 +2288,7 @@ def test_backup_gate_is_rechecked_immediately_before_first_write(
         nonlocal calls
         calls += 1
         receipt = require_accepted_backup_gate(root)
-        if calls == 4:
+        if calls == 5:
             raise RebuildWriteGateError("synthetic gate expiry before first write")
         return receipt
 
@@ -1897,7 +2298,7 @@ def test_backup_gate_is_rechecked_immediately_before_first_write(
 
     with pytest.raises(RebuildWriteGateError, match="before first write"):
         store.persist(request, result)
-    assert calls == 4
+    assert calls == 5
     with _connect(target) as connection:
         assert connection.execute(
             "SELECT "
@@ -2085,73 +2486,58 @@ def test_c2_0006_downgrade_serializes_with_late_resolution_run(
 
 def test_store_and_downgrade_share_parent_first_lock_order(
     target: _Target,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     request, result = _strong_paper_request_and_result()
     _insert_identity_prerequisites(target, request)
-    advisory_key = 5_400_006
     store_application_name = "canonical_v2_identity_store_lock_race"
     migration_application_name = "canonical_v2_identity_downgrade_lock_race"
     migration_config = _config_with_application_name(target, migration_application_name)
-    with _connect(target) as connection:
-        connection.execute(
-            sql.SQL(
-                "CREATE FUNCTION knowledge.pause_identity_source_assertion() "
-                "RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN "
-                "PERFORM pg_advisory_xact_lock({advisory_key}); "
-                "RETURN NEW; END; $$"
-            ).format(advisory_key=sql.Literal(advisory_key))
-        )
-        connection.execute(
-            "CREATE TRIGGER pause_identity_source_assertion AFTER INSERT ON "
-            "knowledge.source_assertion FOR EACH ROW EXECUTE FUNCTION "
-            "knowledge.pause_identity_source_assertion()"
-        )
-        connection.commit()
+    module = _postgres_module()
+    store_type = module._PostgresCanonicalIdentityStore
+    original_lock_release = store_type._lock_release_boundary
+    release_locked = Event()
+    resume_writer = Event()
 
+    def pause_after_release_before_identity(connection) -> None:
+        original_lock_release(connection)
+        release_locked.set()
+        assert resume_writer.wait(timeout=10.0)
+
+    monkeypatch.setattr(
+        store_type,
+        "_lock_release_boundary",
+        staticmethod(pause_after_release_before_identity),
+    )
     controller = _connect(target, autocommit=True)
     executor = ThreadPoolExecutor(max_workers=2)
     persist = None
     downgrade = None
-    advisory_released = False
     try:
-        assert controller.execute(
-            "SELECT pg_advisory_lock(%s)", (advisory_key,)
-        ).fetchone() == ("",)
         store = _store_with_application_name(target, store_application_name)
         persist = executor.submit(store.persist, request, result)
-
-        deadline = time.monotonic() + 10.0
-        store_wait = None
-        while time.monotonic() < deadline:
-            store_wait = controller.execute(
-                "SELECT wait_event_type, wait_event FROM pg_stat_activity "
-                "WHERE datname = current_database() AND application_name = %s",
-                (store_application_name,),
-            ).fetchone()
-            if store_wait is not None and store_wait[0] == "Lock":
-                break
-            if persist.done():
-                break
-            time.sleep(0.01)
-        assert store_wait is not None
-        assert store_wait[0] == "Lock"
+        assert release_locked.wait(timeout=10.0)
         assert not persist.done()
-        granted_identity_write_locks = {
-            row[0]
+        granted_locks = {
+            (row[0], row[1])
             for row in controller.execute(
-                "SELECT relation.relname FROM pg_locks AS lock "
+                "SELECT relation.relname, lock.mode FROM pg_locks AS lock "
                 "JOIN pg_stat_activity AS activity ON activity.pid = lock.pid "
                 "JOIN pg_class AS relation ON relation.oid = lock.relation "
                 "JOIN pg_namespace AS namespace ON namespace.oid = relation.relnamespace "
                 "WHERE activity.datname = current_database() "
                 "AND activity.application_name = %s "
                 "AND namespace.nspname = 'knowledge' "
-                "AND relation.relname = ANY(%s) "
-                "AND lock.mode = 'RowExclusiveLock' AND lock.granted",
-                (store_application_name, list(IDENTITY_LOCK_ORDER)),
+                "AND lock.granted",
+                (store_application_name,),
             ).fetchall()
         }
-        assert granted_identity_write_locks == set(IDENTITY_LOCK_ORDER)
+        assert ("release", "RowShareLock") in granted_locks
+        assert not {
+            relation_name
+            for relation_name, _ in granted_locks
+            if relation_name in IDENTITY_LOCK_ORDER
+        }
 
         downgrade = executor.submit(command.downgrade, migration_config, "C2_0005")
         _wait_for_migration_lock(
@@ -2160,10 +2546,7 @@ def test_store_and_downgrade_share_parent_first_lock_order(
             future=downgrade,
         )
 
-        assert controller.execute(
-            "SELECT pg_advisory_unlock(%s)", (advisory_key,)
-        ).fetchone() == (True,)
-        advisory_released = True
+        resume_writer.set()
         assert persist.result(timeout=10.0) == result
         with pytest.raises(sa_exc.DBAPIError) as error:
             downgrade.result(timeout=10.0)
@@ -2175,8 +2558,7 @@ def test_store_and_downgrade_share_parent_first_lock_order(
             ).fetchone() == (EXPECTED_REVISION,)
         assert store.load(RELEASE_ID, RUN_ID) == result
     finally:
-        if not advisory_released:
-            controller.execute("SELECT pg_advisory_unlock(%s)", (advisory_key,))
+        resume_writer.set()
         controller.close()
         if persist is not None and not persist.done():
             persist.result(timeout=10.0)

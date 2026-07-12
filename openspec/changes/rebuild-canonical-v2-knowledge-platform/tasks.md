@@ -38,7 +38,7 @@
 - [x] 5.3 Add RED identity scenarios for strong-identifier merge, cross-format LLM decision, same-name separation, mistaken-merge split, and recovery lineage.
 - [x] 5.4 Implement reversible offline canonical identity resolution and source-identity mapping without pre-launch ID compatibility constraints; query/answer paths remain read-only and may only emit identity-review gaps.
 - [x] 5.5 Implement proportional temporal semantics for observation/publication/event time and naturally changing validity intervals.
-- [ ] 5.6 Verify deterministic/recorded-fake LLM decisions, review queues, reversal, and current/history projections; review/accept the slice.
+- [x] 5.6 Verify deterministic/recorded-fake LLM decisions, review queues, reversal, and current/history projections; review/accept the slice.
 
 ## 6. Typed Domains, Relationships, Inclusion, and Eligibility
 

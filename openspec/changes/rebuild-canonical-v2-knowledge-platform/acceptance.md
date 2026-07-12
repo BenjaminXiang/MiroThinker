@@ -76,7 +76,7 @@ targets throughout this change.
       canonical decision; selecting a value does not delete competing assertions.
 - [ ] Reviewed identity gold has zero wrong-identity merges/splits and zero cross-domain references
       to the wrong real-world object.
-- [ ] Strong identifier, same-name separation, cross-format LLM decision, reversible merge/split,
+- [x] Strong identifier, same-name separation, cross-format LLM decision, reversible merge/split,
       source conflict, and temporal-history scenarios pass.
 - [ ] Normalization, candidate identity recall, deterministic rules, structured LLM adjudication,
       human review, and merge/split publication run only in versioned offline builds; query/answer

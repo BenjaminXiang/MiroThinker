@@ -1353,3 +1353,97 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 - Remaining systemic risk: Task 5.6 must freeze review/supersession history before S6 assigns typed
   relationship time semantics; the durable candidate deliberately remains C2_0004 until a later
   explicitly authorized candidate write.
+
+## S5F task 5.6 review/history acceptance — 2026-07-12T15:04:36Z
+
+- Unresolved field, relationship, and identity outcomes now expose deterministic immutable
+  `ReviewCase` values bound to the originating decision/verdict, exact candidates and conflicts,
+  policy/method/confidence, and evidence. An admissible `HumanReviewResolution` binds reviewer,
+  review policy/version, outcome, rationale, reviewed time, and exact selected/rejected evidence;
+  it produces a new offline `human_review` decision or verdict and never mutates prior history.
+- Field review can select only one exact equal-value/validity set or reject all evidence;
+  relationship review requires exact endpoints/type/version/roles and one exact validity set;
+  identity review preserves exact output-specific source groups for create/link/merge/split/reverse/
+  reject. Stale, unsupported, cross-wired, future, or invented resolutions fail closed.
+- `DecisionHistoryProjection` retains all assertions, decisions, and review cases across the linear
+  release ancestry while deriving only the unique as-of-valid unsuperseded lineage head as current.
+  Ordinary replacement, explicit withdrawal, unresolved/rejected, future/ended, and accepted heads
+  reconstruct identically from memory and PostgreSQL restart; an inactive latest head never revives
+  an older head.
+- C2_0007 retains immutable human-review provenance and hardens decision lineage at both the adapter
+  and direct-SQL boundaries. Migration preflight and triggers reject release/decision cycles,
+  duplicate logical roots, child forks, non-ancestral or same-release supersession, field-subject
+  drift, and relationship ID/type/version/endpoint drift. Partial unique root indexes plus global
+  predecessor uniqueness close concurrent forks; downgrade removes the new boundary symmetrically
+  under the parent-first lock and refuses retained review provenance.
+- Checkpoint regression on the final code state:
+  - explicit no-database Canonical V2 -> `145 passed, 107 skipped, 4 approved xfails`;
+  - real marked disposable Canonical V2 excluding fixed-name S4C -> `242 passed, 4 approved xfails`;
+  - independent fixed-name S4C PostgreSQL compatibility -> `10 passed`;
+  - focused final decision engine/PostgreSQL matrix -> `66 passed`;
+  - S1 target plus write-gate safety -> `17 passed`; S2/S2B harnesses -> `32 passed`; S4E
+    checkpoint harness -> `23 passed`;
+  - formal S2B gate -> `state=accepted`, `source_count=50`, backup manifest
+    `a14c1eab…e59c8`, restore verification `98826e8d…7d231`;
+  - a fresh empty marked database upgraded through C2_0001–C2_0007; the real suite's migration
+    preflight, downgrade/re-upgrade, retained-data refusal, direct-SQL, restart, rollback, and
+    concurrency scenarios all passed.
+- Ruff check/format passed for all Task 5.6 Python files; targeted Pyright returned `0 errors, 0
+  warnings, 0 informations`. The wheel contains C2_0001–C2_0007 plus the shared contracts,
+  decision/history engine/store, identity engine/store, and landing module. Strict OpenSpec,
+  `git diff --check`, the formal verification-contract gate, high-confidence secret scan, and
+  offline-writer import isolation passed.
+- The single merged specification/code-quality review and the focused migration/write-boundary
+  safety review both ended with zero open Critical or Important findings. Repairs covered exact
+  previous-history binding, engine-owned replacement/withdrawal, all three review families,
+  grouped identity source allocation, stale branches, concurrent duplicate roots, direct-SQL
+  ancestry/metadata enforcement, cycle-safe migration preflight, and symmetric downgrade cleanup.
+- Frozen-source/candidate audit:
+  - formal S2B remains accepted for 50 sources; acceptance hash is `3155d890…739fc5b`;
+  - original `pgtest` remains paused on exact volume
+    `d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241`; it was inspected only
+    through Docker metadata and was never exec'd or connected;
+  - original/restore Milvus hashes remain `43ef203e…67cc`, and original/restore FPI salvage hashes
+    remain `cef8eb6b…bb7`; no Milvus client opened the original;
+  - recovery lab and durable candidate remain network-none/no-port/restart-no. A forced read-only,
+    serializable, deferrable candidate transaction re-proved the exact isolated-candidate marker,
+    system ID `7661313446684311592`, C2_0004, landing artifact/run/parser/record/error counts
+    `15/6/6/21/6`, and zero rows in all 20 knowledge/publish tables, then rolled back;
+  - S4 manifest/restore/acceptance hashes remain `ab091aac…966b1`, `caf789ae…f0acc`, and
+    `20e11fbe…f58c`.
+- Owned disposable container `b7476c77f828…744e19` used system ID `7661598327849119792`, network
+  `none`, no ports, restart `no`, read-only rootfs, tmpfs PGDATA, and exact disposable markers. All
+  six Task 5.6 test databases, the container, socket root, and wheel-check directory were removed;
+  Docker volume-set SHA-256 remained
+  `8314a2b0200baffdf78d25ebfe0a9f11c5b22f129f8f33c05f1aa4f859ec896c`.
+- Task 5.6 and aggregate S5 are Accepted. Task 6.1 has not started. No durable-candidate migration,
+  original/recovery write, Milvus open/rebuild, live provider call, typed domain projection,
+  publication, query/chat change, push, PR, or cutover is claimed.
+
+## Task 5.6 pattern-fix report
+
+- Reported cases fixed: unresolved decisions lacked one durable review contract; human outcomes
+  could not be bound to exact prior evidence; latest-head replacement/withdrawal was incomplete;
+  identity review allocation and direct-SQL supersession safety were not closed end to end.
+- Defect class: append-only records existed, but review provenance and lineage-head semantics were
+  not one shared invariant across Pydantic contracts, the two deep engines, persistence adapters,
+  migration preflight, database constraints/triggers, restart reconstruction, and current views.
+- Sibling patterns searched: field, relationship, and identity review families; deterministic and
+  recorded-LLM decisions; create/link/merge/split/reverse/reject; replacement/withdrawal/unresolved/
+  rejected/future/ended heads; UTC hashes; adapter/direct-SQL writes; populated upgrade/downgrade;
+  release and decision cycles; root/fork races; and query/runtime writer imports.
+- Sibling issues found/fixed: one typed review-case/resolution family, exact predecessor-history
+  validation, engine-owned transitions, grouped identity source allocation, one generic history
+  projection, strict root/child/ancestry/subject invariants, migration preflight, direct-write
+  triggers, concurrent unique indexes, restart parity, and rollback/refusal tests.
+- Not fixed and why: reviewer authorization/signatures, mutable claim/lock/SLA/priority state, Admin
+  UI, and incomplete-case transfer are explicitly S10 concerns; typed domain/relationship catalogs
+  and projections remain S6; branching release graphs are outside the approved linear-history
+  contract.
+- New invariant/helper/contract/test: `ReviewCase`, `HumanReviewResolution`, explicit decision
+  transitions, `DecisionHistoryProjection`, exact-head store admission, C2_0007 lineage validators,
+  three-family review matrices, grouped identity restart, root/fork concurrency, direct-SQL and
+  populated-migration refusal coverage.
+- Remaining systemic risk: S6 must consume the accepted generic history without weakening evidence
+  or lineage semantics, and S10 must add operational review state without converting immutable cases
+  or resolutions into mutable canonical truth.

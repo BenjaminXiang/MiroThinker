@@ -7,7 +7,7 @@ from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, LiteralString, cast
 
 import psycopg
 from psycopg import sql
@@ -42,7 +42,7 @@ from .contracts import (
 from .rebuild_write_gate import require_accepted_backup_gate
 
 
-MINIMUM_REVISION = "C2_0005"
+MINIMUM_REVISION = "C2_0007"
 VERSION_TABLE = "public.canonical_v2_alembic_version"
 
 
@@ -71,6 +71,16 @@ class CanonicalDecisionStore(ABC):
         decision_run_id: str,
     ) -> _engine.DecisionBatchResult:
         """Reconstruct one complete batch from immutable durable history."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def load_history(
+        self,
+        release_id: str,
+        *,
+        as_of: datetime,
+    ) -> _engine.DecisionHistoryProjection:
+        """Reconstruct one release ancestry and its unique current/history heads."""
         raise NotImplementedError
 
 
@@ -177,6 +187,50 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
         with self._connection(write=False) as connection:
             connection.rollback()
 
+    def _verify_connected_target(
+        self,
+        connection: psycopg.Connection[dict[str, Any]],
+    ) -> None:
+        identity = connection.execute(
+            "SELECT current_database() AS database_name, "
+            "shobj_description(oid, 'pg_database') AS database_marker "
+            "FROM pg_database WHERE datname = current_database()"
+        ).fetchone()
+        if identity is None:
+            raise CanonicalDecisionPersistenceError(
+                "PostgreSQL canonical-decision target identity cannot be read"
+            )
+        try:
+            self._target.verify_database_identity(
+                actual_database=identity["database_name"],
+                database_marker=identity["database_marker"],
+            )
+        except DatabaseTargetSafetyError as exc:
+            raise CanonicalDecisionPersistenceError(
+                "PostgreSQL canonical-decision target identity is invalid"
+            ) from exc
+
+        revision_rows = connection.execute(
+            f"SELECT version_num FROM {VERSION_TABLE}"
+        ).fetchall()
+        if len(revision_rows) != 1:
+            raise CanonicalDecisionPersistenceError(
+                "PostgreSQL canonical-decision target requires exactly one "
+                "Alembic revision row"
+            )
+        current_revision = revision_rows[0]["version_num"]
+        try:
+            require_minimum_canonical_revision(
+                scripts=load_canonical_v2_script_directory(),
+                current_revision=current_revision,
+                minimum_revision=MINIMUM_REVISION,
+            )
+        except CanonicalRevisionError as exc:
+            raise CanonicalDecisionPersistenceError(
+                "PostgreSQL canonical-decision target does not satisfy the "
+                f"required minimum revision {MINIMUM_REVISION!r}"
+            ) from exc
+
     @contextmanager
     def _connection(
         self,
@@ -200,46 +254,12 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                 "PostgreSQL canonical-decision target cannot be connected"
             ) from exc
         try:
-            identity = connection.execute(
-                "SELECT current_database() AS database_name, "
-                "shobj_description(oid, 'pg_database') AS database_marker "
-                "FROM pg_database WHERE datname = current_database()"
-            ).fetchone()
-            if identity is None:
-                raise CanonicalDecisionPersistenceError(
-                    "PostgreSQL canonical-decision target identity cannot be read"
-                )
-            try:
-                self._target.verify_database_identity(
-                    actual_database=identity["database_name"],
-                    database_marker=identity["database_marker"],
-                )
-            except DatabaseTargetSafetyError as exc:
-                raise CanonicalDecisionPersistenceError(
-                    "PostgreSQL canonical-decision target identity is invalid"
-                ) from exc
-
-            revision_rows = connection.execute(
-                f"SELECT version_num FROM {VERSION_TABLE}"
-            ).fetchall()
-            if len(revision_rows) != 1:
-                raise CanonicalDecisionPersistenceError(
-                    "PostgreSQL canonical-decision target requires exactly one "
-                    "Alembic revision row"
-                )
-            current_revision = revision_rows[0]["version_num"]
-            try:
-                require_minimum_canonical_revision(
-                    scripts=load_canonical_v2_script_directory(),
-                    current_revision=current_revision,
-                    minimum_revision=MINIMUM_REVISION,
-                )
-            except CanonicalRevisionError as exc:
-                raise CanonicalDecisionPersistenceError(
-                    "PostgreSQL canonical-decision target does not satisfy the "
-                    f"required minimum revision {MINIMUM_REVISION!r}"
-                ) from exc
+            self._verify_connected_target(connection)
             connection.rollback()
+            if not write:
+                connection.execute(
+                    "BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
+                )
             yield connection
         except psycopg.Error as exc:
             connection.rollback()
@@ -272,6 +292,15 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
         return validated
 
     @staticmethod
+    def _lock_release_boundary(
+        connection: psycopg.Connection[dict[str, Any]],
+    ) -> None:
+        # C2 migrations acquire release before the reviewed decision tables.
+        # Establish the same order before replay lookup so neither side can
+        # hold one boundary while queueing a conflicting lock on the other.
+        connection.execute("LOCK TABLE knowledge.release IN ROW SHARE MODE")
+
+    @staticmethod
     def _batch_decision_count(
         connection: psycopg.Connection[dict[str, Any]],
         *,
@@ -291,6 +320,89 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                 "canonical-decision batch presence cannot be read"
             )
         return cast(int, row["decision_count"])
+
+    @staticmethod
+    def _require_exact_supersession_heads(
+        connection: psycopg.Connection[dict[str, Any]],
+        result: _engine.DecisionBatchResult,
+    ) -> None:
+        families = (
+            (
+                "canonical_decision",
+                result.canonical_decisions,
+                ("canonical_identity_id", "field_path"),
+            ),
+            (
+                "relationship_decision",
+                result.relationship_decisions,
+                (
+                    "canonical_relationship_id",
+                    "relationship_type_id",
+                    "relationship_type_version",
+                    "source_canonical_identity_id",
+                    "target_canonical_identity_id",
+                ),
+            ),
+        )
+        for table, decisions, subject_columns in families:
+            for decision in decisions:
+                predecessor_id = decision.supersedes_decision_id
+                subject_predicate = " AND ".join(
+                    f"predecessor.{column} = %s" for column in subject_columns
+                )
+                subject_values = tuple(
+                    cast(str, getattr(decision, column)) for column in subject_columns
+                )
+                lineage_sql = (
+                    "WITH RECURSIVE release_lineage AS ("
+                    "SELECT release_id, previous_release_id FROM knowledge.release "
+                    "WHERE release_id = %s UNION "
+                    "SELECT parent.release_id, parent.previous_release_id "
+                    "FROM knowledge.release AS parent JOIN release_lineage AS child "
+                    "ON parent.release_id = child.previous_release_id) "
+                )
+                if predecessor_id is None:
+                    existing = connection.execute(
+                        cast(
+                            LiteralString,
+                            lineage_sql
+                            + f"SELECT predecessor.decision_id FROM knowledge.{table} "
+                            "AS predecessor JOIN release_lineage AS lineage "
+                            "ON lineage.release_id = predecessor.release_id "
+                            f"WHERE {subject_predicate} LIMIT 1",
+                        ),
+                        (result.release_id, *subject_values),
+                    ).fetchone()
+                    if existing is not None:
+                        raise CanonicalDecisionPersistenceError(
+                            "a later release cannot create a new root for an existing "
+                            "decision lineage head"
+                        )
+                    continue
+                row = connection.execute(
+                    cast(
+                        LiteralString,
+                        lineage_sql
+                        + f"SELECT predecessor.decision_id, EXISTS (SELECT 1 FROM knowledge.{table} "
+                        "AS child WHERE child.supersedes_decision_id = "
+                        "predecessor.decision_id) AS already_superseded "
+                        f"FROM knowledge.{table} AS predecessor JOIN release_lineage AS lineage "
+                        "ON lineage.release_id = predecessor.release_id "
+                        "WHERE predecessor.decision_id = %s "
+                        f"AND predecessor.release_id <> %s AND {subject_predicate}",
+                    ),
+                    (
+                        result.release_id,
+                        predecessor_id,
+                        result.release_id,
+                        *subject_values,
+                    ),
+                ).fetchone()
+                if row is None or row["already_superseded"]:
+                    raise CanonicalDecisionPersistenceError(
+                        "decision supersession must target the exact unsuperseded head "
+                        "in the target release ancestry"
+                    )
 
     @staticmethod
     def _insert_field_assertions(
@@ -361,6 +473,14 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
             return None
         return Jsonb(decision.llm_trace.model_dump(mode="json"))
 
+    @staticmethod
+    def _review_json(
+        decision: CanonicalDecision | RelationshipDecision,
+    ) -> Jsonb | None:
+        if decision.human_review_resolution is None:
+            return None
+        return Jsonb(decision.human_review_resolution.model_dump(mode="json"))
+
     @classmethod
     def _insert_field_decisions(
         cls,
@@ -372,9 +492,10 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                 "INSERT INTO knowledge.canonical_decision "
                 "(release_id, decision_id, canonical_identity_id, field_path, state, "
                 "policy_id, policy_version, method, method_version, decision_run_id, "
-                "confidence, rationale, decided_at, supersedes_decision_id, llm_trace) "
+                "confidence, rationale, decided_at, supersedes_decision_id, llm_trace, "
+                "human_review_resolution) "
                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
-                "%s, %s)",
+                "%s, %s, %s)",
                 (
                     decision.release_id,
                     decision.decision_id,
@@ -391,6 +512,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                     decision.decided_at,
                     decision.supersedes_decision_id,
                     cls._trace_json(decision),
+                    cls._review_json(decision),
                 ),
             )
 
@@ -408,9 +530,10 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                 "source_canonical_identity_id, target_canonical_identity_id, state, "
                 "role_bindings, policy_id, policy_version, method, method_version, "
                 "decision_run_id, confidence, rationale, valid_from, valid_to, "
-                "decided_at, supersedes_decision_id, llm_trace) "
+                "decided_at, supersedes_decision_id, llm_trace, "
+                "human_review_resolution) "
                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
-                "%s, %s, %s, %s, %s, %s, %s, %s)",
+                "%s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (
                     decision.release_id,
                     decision.decision_id,
@@ -433,6 +556,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                     decision.decided_at,
                     decision.supersedes_decision_id,
                     cls._trace_json(decision),
+                    cls._review_json(decision),
                 ),
             )
 
@@ -534,6 +658,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                         "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
                         (lock_identity,),
                     )
+                    self._lock_release_boundary(connection)
                     if self._batch_decision_count(
                         connection,
                         release_id=validated.release_id,
@@ -553,6 +678,12 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                         return existing
 
                     self._require_durable_identity_contexts(connection, validated)
+                    self._require_exact_supersession_heads(connection, validated)
+                    # Re-check the accepted evidence bytes and the connected target
+                    # after every read/advisory prerequisite, immediately before the
+                    # first durable mutation in this transaction.
+                    require_accepted_backup_gate(self._backup_gate_root)
+                    self._verify_connected_target(connection)
                     self._insert_field_assertions(
                         connection, validated.field_assertions
                     )
@@ -621,6 +752,113 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
         except (KeyError, TypeError, UnicodeError, ValueError, ValidationError) as exc:
             raise CanonicalDecisionPersistenceError(
                 "durable canonical-decision batch is incomplete or corrupt"
+            ) from exc
+
+    @staticmethod
+    def _release_lineage(
+        connection: psycopg.Connection[dict[str, Any]],
+        *,
+        release_id: str,
+    ) -> tuple[str, ...]:
+        lineage: list[str] = []
+        seen: set[str] = set()
+        current_release_id: str | None = release_id
+        while current_release_id is not None:
+            if current_release_id in seen:
+                raise CanonicalDecisionPersistenceError(
+                    "durable release lineage contains a cycle"
+                )
+            row = connection.execute(
+                "SELECT release_id, previous_release_id FROM knowledge.release "
+                "WHERE release_id = %s",
+                (current_release_id,),
+            ).fetchone()
+            if row is None:
+                raise CanonicalDecisionPersistenceError(
+                    "durable release lineage references a missing release"
+                )
+            seen.add(current_release_id)
+            lineage.append(current_release_id)
+            current_release_id = row["previous_release_id"]
+        return tuple(reversed(lineage))
+
+    @staticmethod
+    def _release_decision_runs(
+        connection: psycopg.Connection[dict[str, Any]],
+        *,
+        release_id: str,
+    ) -> tuple[str, ...]:
+        rows = connection.execute(
+            "SELECT decision_run_id, min(decided_at) AS first_decided_at FROM ("
+            "SELECT decision_run_id, decided_at FROM knowledge.canonical_decision "
+            "WHERE release_id = %s UNION ALL "
+            "SELECT decision_run_id, decided_at FROM knowledge.relationship_decision "
+            "WHERE release_id = %s) AS decisions "
+            "GROUP BY decision_run_id ORDER BY first_decided_at, decision_run_id",
+            (release_id, release_id),
+        ).fetchall()
+        return tuple(row["decision_run_id"] for row in rows)
+
+    def load_history(
+        self,
+        release_id: str,
+        *,
+        as_of: datetime,
+    ) -> _engine.DecisionHistoryProjection:
+        try:
+            with self._connection(write=False) as connection:
+                lineage = self._release_lineage(
+                    connection,
+                    release_id=release_id,
+                )
+                batches = tuple(
+                    self._load_result(
+                        connection,
+                        release_id=lineage_release_id,
+                        decision_run_id=decision_run_id,
+                    )
+                    for lineage_release_id in lineage
+                    for decision_run_id in self._release_decision_runs(
+                        connection,
+                        release_id=lineage_release_id,
+                    )
+                )
+                if not batches:
+                    raise CanonicalDecisionNotFoundError(
+                        "canonical-decision release lineage has no decision batches"
+                    )
+                projection = _engine.project_decision_history(
+                    batches,
+                    as_of=as_of,
+                )
+                if projection.release_lineage != tuple(
+                    batch_release_id
+                    for position, batch_release_id in enumerate(
+                        batch.release_id for batch in batches
+                    )
+                    if position == 0
+                    or batch_release_id != batches[position - 1].release_id
+                ):
+                    raise CanonicalDecisionPersistenceError(
+                        "durable decision history release ordering is corrupt"
+                    )
+                connection.rollback()
+                return projection
+        except (
+            CanonicalDecisionNotFoundError,
+            CanonicalDecisionPersistenceError,
+        ):
+            raise
+        except (
+            KeyError,
+            TypeError,
+            UnicodeError,
+            ValueError,
+            ValidationError,
+            _engine.DecisionHistoryIntegrityError,
+        ) as exc:
+            raise CanonicalDecisionPersistenceError(
+                "durable canonical-decision history is incomplete or corrupt"
             ) from exc
 
     @staticmethod
@@ -697,7 +935,8 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
             "policy.effective_at AS policy_effective_at, decision.method, "
             "decision.method_version, decision.decision_run_id, decision.confidence, "
             "decision.rationale, decision.decided_at, "
-            "decision.supersedes_decision_id, decision.llm_trace "
+            "decision.supersedes_decision_id, decision.llm_trace, "
+            "decision.human_review_resolution "
             "FROM knowledge.canonical_decision AS decision "
             "JOIN knowledge.policy AS policy ON policy.policy_id = decision.policy_id "
             "AND policy.policy_version = decision.policy_version "
@@ -740,6 +979,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                     release_id=row["release_id"],
                     decided_at=row["decided_at"],
                     supersedes_decision_id=row["supersedes_decision_id"],
+                    human_review_resolution=row["human_review_resolution"],
                 )
             )
         return tuple(decisions)
@@ -763,7 +1003,8 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
             "policy.effective_at AS policy_effective_at, decision.method, "
             "decision.method_version, decision.decision_run_id, decision.confidence, "
             "decision.rationale, decision.valid_from, decision.valid_to, "
-            "decision.decided_at, decision.supersedes_decision_id, decision.llm_trace "
+            "decision.decided_at, decision.supersedes_decision_id, decision.llm_trace, "
+            "decision.human_review_resolution "
             "FROM knowledge.relationship_decision AS decision "
             "JOIN knowledge.policy AS policy ON policy.policy_id = decision.policy_id "
             "AND policy.policy_version = decision.policy_version "
@@ -811,6 +1052,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                     decided_at=row["decided_at"],
                     supersedes_decision_id=row["supersedes_decision_id"],
                     llm_trace=row["llm_trace"],
+                    human_review_resolution=row["human_review_resolution"],
                 )
             )
         return tuple(decisions)
@@ -1553,6 +1795,11 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
             current_fields=current_fields,
             current_relationships=current_relationships,
             unresolved_conflicts=conflicts,
+            review_cases=_engine._review_cases_for_decisions(
+                field_decisions=field_decisions,
+                relationship_decisions=relationship_decisions,
+                manifests=manifests,
+            ),
         )
         payload = cast(JsonValue, content.model_dump(mode="json"))
         return _engine.DecisionBatchResult(

@@ -184,3 +184,22 @@
   checkpoints plus static, packaging, strict OpenSpec, formal gate, frozen-source/candidate audits,
   and owned cleanup passed. Original sources and the C2_0004 durable candidate are unchanged; task
   5.6 owns aggregate S5 review queues and superseded-decision history semantics.
+- Completed and accepted task 5.6. Deterministic unresolved field, relationship, and identity
+  outcomes now expose immutable evidence-bound review cases; admissible human resolutions create a
+  new offline `human_review` decision or verdict without mutating the originating history. Review
+  IDs and resolution content bind the logical subject, exact candidates/conflicts, policy/method,
+  reviewer, outcome, rationale, and reviewed time; unsupported, stale, cross-wired, or invented
+  resolutions fail closed.
+- A generic decision-history projection now retains every assertion, review case, and decision while
+  deriving only the unique as-of-valid unsuperseded head as current. Replacement, withdrawal,
+  rejected/unresolved, future, ended, and accepted lineages reconstruct identically after restart;
+  reviewed identity merge/split/reversal preserves exact source allocation. C2_0007 durably retains
+  human-review provenance and enforces one logical root, one child per predecessor, strict release
+  ancestry, subject continuity, cycle refusal, append-only replay, and safe downgrade refusal in
+  adapter and direct-SQL paths.
+- The focused migration/safety review and the single merged task review ended with zero open
+  Critical/Important findings. Final checkpoint regression passed in no-database and real
+  disposable modes, including C2_0001 through C2_0007 upgrade/downgrade, S4C compatibility, prior
+  S1/S2/S2B/S4 gates, static typing/lint, wheel contents, strict OpenSpec, formal admission,
+  frozen-source/read-only-candidate audit, and owned cleanup. Original sources and the C2_0004
+  durable candidate remain unchanged; task 6.1 has not started.

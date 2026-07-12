@@ -9,7 +9,7 @@ import hashlib
 import json
 import math
 from enum import Enum
-from typing import Annotated, NoReturn
+from typing import Annotated, NoReturn, cast
 
 from pydantic import (
     AfterValidator,
@@ -19,6 +19,7 @@ from pydantic import (
     Field,
     JsonValue,
     StringConstraints,
+    field_validator,
     model_validator,
 )
 
@@ -180,6 +181,20 @@ class ReviewState(str, Enum):
     rejected = "rejected"
 
 
+class ReviewFamily(str, Enum):
+    field = "field"
+    relationship = "relationship"
+    identity = "identity"
+
+
+class HumanReviewOutcome(str, Enum):
+    selected = "selected"
+    accepted = "accepted"
+    rejected = "rejected"
+    same_entity = "same_entity"
+    different_entities = "different_entities"
+
+
 class GapSeverity(str, Enum):
     low = "low"
     medium = "medium"
@@ -249,6 +264,18 @@ def _strict_json_equal(left: JsonValue, right: JsonValue) -> bool:
             _strict_json_equal(left[key], right[key]) for key in left
         )
     return left == right
+
+
+def _canonical_content_sha256(value: JsonValue) -> str:
+    return hashlib.sha256(
+        json.dumps(
+            value,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8")
+    ).hexdigest()
 
 
 class EvidenceArtifact(ContractModel):
@@ -376,6 +403,269 @@ class LLMDecisionTrace(ContractModel):
         return self
 
 
+class _ReviewCaseContent(ContractModel):
+    family: ReviewFamily
+    release_id: NonEmptyStr
+    decision_run_id: NonEmptyStr
+    subject_id: NonEmptyStr
+    path: NonEmptyStr
+    originating_record_id: NonEmptyStr
+    candidate_evidence_ids: tuple[NonEmptyStr, ...] = Field(min_length=1)
+    conflicting_evidence_ids: tuple[NonEmptyStr, ...] = Field(min_length=2)
+    source_identity_ids: tuple[NonEmptyStr, ...] = ()
+    policy: PolicyReference
+    method: DecisionMethod
+    method_version: NonEmptyStr
+    confidence: Confidence
+    rationale: NonEmptyStr
+    uncertainty: NonEmptyStr | None = None
+    reason_codes: tuple[NonEmptyStr, ...] = ()
+    trace_content_sha256: Sha256 | None = None
+    input_content_sha256: Sha256
+    created_at: CanonicalDatetime
+
+    @field_validator("confidence")
+    @classmethod
+    def normalize_confidence_zero(cls, value: float) -> float:
+        return 0.0 if value == 0.0 else value
+
+    @field_validator(
+        "candidate_evidence_ids",
+        "conflicting_evidence_ids",
+        "source_identity_ids",
+        "reason_codes",
+    )
+    @classmethod
+    def normalize_review_values(cls, values: tuple[str, ...]) -> tuple[str, ...]:
+        _require_unique(values, "review case values")
+        return tuple(sorted(values))
+
+    @model_validator(mode="after")
+    def validate_review_shape(self) -> _ReviewCaseContent:
+        if not set(self.conflicting_evidence_ids) <= set(self.candidate_evidence_ids):
+            raise ValueError(
+                "review case conflicting evidence must be candidate evidence"
+            )
+        expected_policy_kind = {
+            ReviewFamily.field: PolicyKind.field_selection,
+            ReviewFamily.relationship: PolicyKind.relationship,
+            ReviewFamily.identity: PolicyKind.identity,
+        }[self.family]
+        if self.policy.policy_kind is not expected_policy_kind:
+            raise ValueError("review case family must match its policy kind")
+        if self.family is ReviewFamily.identity:
+            if len(self.source_identity_ids) < 2:
+                raise ValueError(
+                    "identity review case requires multiple source identities"
+                )
+        elif self.source_identity_ids:
+            raise ValueError(
+                "field and relationship review cases cannot carry source identities"
+            )
+        if self.method is DecisionMethod.structured_llm:
+            if self.trace_content_sha256 is None:
+                raise ValueError(
+                    "structured LLM review case requires its trace content hash"
+                )
+        elif self.trace_content_sha256 is not None:
+            raise ValueError(
+                "non-LLM review case cannot carry a structured trace content hash"
+            )
+        return self
+
+
+class ReviewCase(_ReviewCaseContent):
+    review_case_id: NonEmptyStr
+    content_sha256: Sha256
+
+    @model_validator(mode="after")
+    def validate_content_binding(self) -> ReviewCase:
+        expected = review_case_content_sha256(self)
+        if self.content_sha256 != expected:
+            raise ValueError("review case content hash mismatch")
+        if self.review_case_id != f"review-case:sha256:{expected}":
+            raise ValueError("review case ID must bind its exact content hash")
+        return self
+
+
+def review_case_content_sha256(case: ReviewCase | _ReviewCaseContent) -> str:
+    payload = case.model_dump(mode="json")
+    payload.pop("review_case_id", None)
+    payload.pop("content_sha256", None)
+    return _canonical_content_sha256(cast(JsonValue, payload))
+
+
+def create_review_case(**values: object) -> ReviewCase:
+    content = _ReviewCaseContent.model_validate(values)
+    content_sha256 = review_case_content_sha256(content)
+    return ReviewCase(
+        **content.model_dump(mode="python"),
+        review_case_id=f"review-case:sha256:{content_sha256}",
+        content_sha256=content_sha256,
+    )
+
+
+class _HumanReviewResolutionContent(ContractModel):
+    review_case: ReviewCase
+    outcome: HumanReviewOutcome
+    selected_evidence_ids: tuple[NonEmptyStr, ...] = ()
+    role_bindings: dict[NonEmptyStr, NonEmptyStr] = Field(default_factory=dict)
+    source_identity_groups: tuple[tuple[NonEmptyStr, ...], ...] = ()
+    reviewer_id: NonEmptyStr
+    review_policy_id: NonEmptyStr
+    review_policy_version: NonEmptyStr
+    review_policy_content_sha256: Sha256
+    reviewed_at: CanonicalDatetime
+    rationale: NonEmptyStr
+    confidence: Confidence
+
+    @field_validator("confidence")
+    @classmethod
+    def normalize_confidence_zero(cls, value: float) -> float:
+        return 0.0 if value == 0.0 else value
+
+    @field_validator("selected_evidence_ids")
+    @classmethod
+    def normalize_selected_evidence_ids(
+        cls, values: tuple[str, ...]
+    ) -> tuple[str, ...]:
+        _require_unique(values, "human review selected evidence IDs")
+        return tuple(sorted(values))
+
+    @field_validator("source_identity_groups")
+    @classmethod
+    def normalize_source_identity_groups(
+        cls, groups: tuple[tuple[str, ...], ...]
+    ) -> tuple[tuple[str, ...], ...]:
+        normalized = tuple(tuple(sorted(group)) for group in groups)
+        if any(not group for group in normalized):
+            raise ValueError("human review source identity groups cannot be empty")
+        flattened = tuple(source_id for group in normalized for source_id in group)
+        _require_unique(flattened, "human review grouped source identity IDs")
+        return tuple(sorted(normalized))
+
+    @field_validator("role_bindings")
+    @classmethod
+    def normalize_role_bindings(cls, values: dict[str, str]) -> dict[str, str]:
+        return {key: values[key] for key in sorted(values)}
+
+    @model_validator(mode="after")
+    def validate_review_outcome(self) -> _HumanReviewResolutionContent:
+        if self.reviewed_at < self.review_case.created_at:
+            raise ValueError("human review cannot predate its review case")
+        if not set(self.selected_evidence_ids) <= set(
+            self.review_case.candidate_evidence_ids
+        ):
+            raise ValueError(
+                "human review may select only exact review-case candidate evidence"
+            )
+        if self.review_case.family is ReviewFamily.field:
+            if self.outcome not in {
+                HumanReviewOutcome.selected,
+                HumanReviewOutcome.rejected,
+            }:
+                raise ValueError("field review requires selected or rejected outcome")
+            if self.outcome is HumanReviewOutcome.selected:
+                if not self.selected_evidence_ids:
+                    raise ValueError("selected field review requires evidence")
+            elif self.selected_evidence_ids:
+                raise ValueError("rejected field review cannot select evidence")
+            if self.role_bindings or self.source_identity_groups:
+                raise ValueError(
+                    "field review cannot carry roles or source identity groups"
+                )
+        elif self.review_case.family is ReviewFamily.relationship:
+            if self.outcome not in {
+                HumanReviewOutcome.accepted,
+                HumanReviewOutcome.rejected,
+            }:
+                raise ValueError(
+                    "relationship review requires accepted or rejected outcome"
+                )
+            if self.outcome is HumanReviewOutcome.accepted:
+                if not self.selected_evidence_ids or not self.role_bindings:
+                    raise ValueError(
+                        "accepted relationship review requires evidence and roles"
+                    )
+            elif self.selected_evidence_ids or self.role_bindings:
+                raise ValueError(
+                    "rejected relationship review cannot select evidence or roles"
+                )
+            if self.source_identity_groups:
+                raise ValueError(
+                    "relationship review cannot carry source identity groups"
+                )
+        else:
+            if self.outcome not in {
+                HumanReviewOutcome.same_entity,
+                HumanReviewOutcome.different_entities,
+            }:
+                raise ValueError(
+                    "identity review requires same_entity or different_entities outcome"
+                )
+            if self.selected_evidence_ids or self.role_bindings:
+                raise ValueError(
+                    "identity review cannot carry selected field evidence or roles"
+                )
+            flattened = tuple(
+                source_id
+                for group in self.source_identity_groups
+                for source_id in group
+            )
+            if set(flattened) != set(self.review_case.source_identity_ids):
+                raise ValueError(
+                    "identity review groups must partition the exact case sources"
+                )
+            if (
+                self.outcome is HumanReviewOutcome.same_entity
+                and len(self.source_identity_groups) != 1
+            ):
+                raise ValueError("same_entity review requires one source group")
+            if (
+                self.outcome is HumanReviewOutcome.different_entities
+                and len(self.source_identity_groups) < 2
+            ):
+                raise ValueError(
+                    "different_entities review requires multiple source groups"
+                )
+        return self
+
+
+class HumanReviewResolution(_HumanReviewResolutionContent):
+    resolution_id: NonEmptyStr
+    content_sha256: Sha256
+
+    @model_validator(mode="after")
+    def validate_content_binding(self) -> HumanReviewResolution:
+        expected = human_review_resolution_content_sha256(self)
+        if self.content_sha256 != expected:
+            raise ValueError("human review resolution content hash mismatch")
+        if self.resolution_id != f"human-review-resolution:sha256:{expected}":
+            raise ValueError(
+                "human review resolution ID must bind its exact content hash"
+            )
+        return self
+
+
+def human_review_resolution_content_sha256(
+    resolution: HumanReviewResolution | _HumanReviewResolutionContent,
+) -> str:
+    payload = resolution.model_dump(mode="json")
+    payload.pop("resolution_id", None)
+    payload.pop("content_sha256", None)
+    return _canonical_content_sha256(cast(JsonValue, payload))
+
+
+def create_human_review_resolution(**values: object) -> HumanReviewResolution:
+    content = _HumanReviewResolutionContent.model_validate(values)
+    content_sha256 = human_review_resolution_content_sha256(content)
+    return HumanReviewResolution(
+        **content.model_dump(mode="python"),
+        resolution_id=f"human-review-resolution:sha256:{content_sha256}",
+        content_sha256=content_sha256,
+    )
+
+
 class CanonicalDecision(ContractModel):
     decision_id: NonEmptyStr
     canonical_identity_id: NonEmptyStr
@@ -394,6 +684,7 @@ class CanonicalDecision(ContractModel):
     release_id: NonEmptyStr
     decided_at: CanonicalDatetime
     supersedes_decision_id: NonEmptyStr | None = None
+    human_review_resolution: HumanReviewResolution | None = None
 
     @model_validator(mode="after")
     def validate_decision_evidence(self) -> CanonicalDecision:
@@ -432,6 +723,16 @@ class CanonicalDecision(ContractModel):
                 )
         if self.state is DecisionState.rejected and self.selected_assertion_ids:
             raise ValueError("rejected decision cannot select an assertion")
+        if self.state is DecisionState.superseded:
+            if (
+                self.selected_assertion_ids
+                or self.conflicting_assertion_ids
+                or self.supersedes_decision_id is None
+            ):
+                raise ValueError(
+                    "superseded withdrawal requires prior lineage and no selected or "
+                    "conflicting evidence"
+                )
         if self.policy.policy_kind is not PolicyKind.field_selection:
             raise ValueError("canonical decision requires a field-selection policy")
         if self.method is DecisionMethod.structured_llm:
@@ -449,6 +750,35 @@ class CanonicalDecision(ContractModel):
                 )
         if self.supersedes_decision_id == self.decision_id:
             raise ValueError("canonical decision cannot supersede itself")
+        if self.method is DecisionMethod.human_review:
+            resolution = self.human_review_resolution
+            if resolution is None:
+                raise ValueError(
+                    "human_review canonical decision requires a bound resolution"
+                )
+            if (
+                resolution.review_case.family is not ReviewFamily.field
+                or self.supersedes_decision_id
+                != resolution.review_case.originating_record_id
+                or self.selected_assertion_ids != resolution.selected_evidence_ids
+                or (
+                    resolution.outcome is HumanReviewOutcome.selected
+                    and self.state is not DecisionState.selected
+                )
+                or (
+                    resolution.outcome is HumanReviewOutcome.rejected
+                    and self.state is not DecisionState.rejected
+                )
+            ):
+                raise ValueError(
+                    "human review field decision must exactly apply its resolution"
+                )
+            if self.llm_trace is not None:
+                raise ValueError("human review decision cannot carry an LLM trace")
+        elif self.human_review_resolution is not None:
+            raise ValueError(
+                "non-human canonical decision cannot carry a review resolution"
+            )
         return self
 
 
@@ -518,6 +848,7 @@ class IdentityDecision(ContractModel):
     decided_at: CanonicalDatetime
     reversal_of_decision_id: NonEmptyStr | None = None
     llm_trace: LLMDecisionTrace | None = None
+    human_review_resolution: HumanReviewResolution | None = None
 
     @model_validator(mode="after")
     def validate_action_shape(self) -> IdentityDecision:
@@ -563,6 +894,45 @@ class IdentityDecision(ContractModel):
             raise ValueError("structured_llm identity decision requires an LLM trace")
         if self.reversal_of_decision_id == self.decision_id:
             raise ValueError("identity decision cannot reverse itself")
+        if self.method is DecisionMethod.human_review:
+            resolution = self.human_review_resolution
+            if resolution is None:
+                raise ValueError(
+                    "human_review identity decision requires a bound resolution"
+                )
+            decision_sources = tuple(sorted(self.source_identity_ids))
+            exact_sources = resolution.review_case.source_identity_ids
+            applies_exact_partition = (
+                resolution.outcome is HumanReviewOutcome.same_entity
+                and decision_sources == exact_sources
+                and self.action
+                in {IdentityAction.create, IdentityAction.link, IdentityAction.merge}
+            ) or (
+                resolution.outcome is HumanReviewOutcome.different_entities
+                and (
+                    (
+                        self.action is IdentityAction.create
+                        and decision_sources in resolution.source_identity_groups
+                    )
+                    or (
+                        self.action
+                        in {IdentityAction.split_identity, IdentityAction.reverse}
+                        and decision_sources == exact_sources
+                    )
+                )
+            )
+            if (
+                resolution.review_case.family is not ReviewFamily.identity
+                or not applies_exact_partition
+                or self.llm_trace is not None
+            ):
+                raise ValueError(
+                    "human review identity decision must exactly apply its resolution"
+                )
+        elif self.human_review_resolution is not None:
+            raise ValueError(
+                "non-human identity decision cannot carry a review resolution"
+            )
         return self
 
 
@@ -665,6 +1035,7 @@ class RelationshipDecision(ContractModel):
     decided_at: CanonicalDatetime
     supersedes_decision_id: NonEmptyStr | None = None
     llm_trace: LLMDecisionTrace | None = None
+    human_review_resolution: HumanReviewResolution | None = None
 
     @model_validator(mode="after")
     def validate_decision_evidence(self) -> RelationshipDecision:
@@ -710,6 +1081,19 @@ class RelationshipDecision(ContractModel):
             and self.selected_assertion_ids
         ):
             raise ValueError("rejected relationship cannot select an assertion")
+        if self.state is RelationshipDecisionState.superseded:
+            if (
+                self.selected_assertion_ids
+                or self.conflicting_assertion_ids
+                or self.role_bindings
+                or self.valid_from is not None
+                or self.valid_to is not None
+                or self.supersedes_decision_id is None
+            ):
+                raise ValueError(
+                    "superseded relationship withdrawal requires prior lineage and no "
+                    "selected evidence, conflicts, roles, or validity"
+                )
         if self.policy.policy_kind is not PolicyKind.relationship:
             raise ValueError("relationship decision requires a relationship policy")
         if self.method is DecisionMethod.structured_llm:
@@ -727,6 +1111,36 @@ class RelationshipDecision(ContractModel):
                 )
         if self.supersedes_decision_id == self.decision_id:
             raise ValueError("relationship decision cannot supersede itself")
+        if self.method is DecisionMethod.human_review:
+            resolution = self.human_review_resolution
+            if resolution is None:
+                raise ValueError(
+                    "human_review relationship decision requires a bound resolution"
+                )
+            if (
+                resolution.review_case.family is not ReviewFamily.relationship
+                or self.supersedes_decision_id
+                != resolution.review_case.originating_record_id
+                or self.selected_assertion_ids != resolution.selected_evidence_ids
+                or self.role_bindings != resolution.role_bindings
+                or (
+                    resolution.outcome is HumanReviewOutcome.accepted
+                    and self.state is not RelationshipDecisionState.accepted
+                )
+                or (
+                    resolution.outcome is HumanReviewOutcome.rejected
+                    and self.state is not RelationshipDecisionState.rejected
+                )
+            ):
+                raise ValueError(
+                    "human review relationship decision must exactly apply its resolution"
+                )
+            if self.llm_trace is not None:
+                raise ValueError("human review decision cannot carry an LLM trace")
+        elif self.human_review_resolution is not None:
+            raise ValueError(
+                "non-human relationship decision cannot carry a review resolution"
+            )
         _validate_interval(self.valid_from, self.valid_to)
         return self
 
