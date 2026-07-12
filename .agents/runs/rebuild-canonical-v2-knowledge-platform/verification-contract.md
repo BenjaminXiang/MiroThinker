@@ -9,9 +9,11 @@ Accepted at `2026-07-11T22:07:12Z`. The isolated candidate is C2_0004 with the e
 six-family landing state and zero non-landing business rows. Checkpoint manifest
 `ab091aac…966b1`, restore verification `caf789ae…f0acc`, and frozen external tree
 `4ae5f2ce…b05012` prove full 26-table logical parity across distinct PostgreSQL systems. Task 5.1's
-five assertion/decision strict RED scenarios are Accepted at `2026-07-11T22:58:11Z`; task 5.2 is
-next and has not started. No canonical identity/assertion/domain row, published projection, release,
-or index write exists.
+five assertion/decision strict RED scenarios are Accepted at `2026-07-11T22:58:11Z`. Task 5.2 is
+Accepted at `2026-07-12T04:32:46Z`: C2_0005, the reproducible decision core, and disposable-only
+PostgreSQL history retain complete assertion/outcome/decision/context evidence. No durable-candidate
+canonical identity/assertion/domain row, published projection, release, or index write exists;
+task 5.3 has not started.
 
 ## Behavior owner
 
@@ -52,6 +54,10 @@ cannot mutate offline canonical identity decisions.
   evidence checkpoints.
 - Candidate and disposable database DSNs: explicit full DSNs only; target database name/identity
   must be asserted before any destructive command.
+- The durable candidate is not persistently configured with
+  `default_transaction_read_only=on`. Read-only inspections therefore MUST force a read-only session
+  and transaction. Task 5.2 writers additionally reject every non-`disposable` target; no evidence
+  claims that the candidate has database-level immutable enforcement.
 - A generic `DATABASE_URL` is never accepted as fallback for migration/test/rebuild targets.
 - Real provider calls are allowed only in named acceptance runs with secrets from the approved
   environment and no credential values in logs/evidence.
@@ -63,7 +69,7 @@ cannot mutate offline canonical identity decisions.
   inventoried historical SQLite/JSONL/XLSX/PDF/cache/raw-source families. Restore targets must be
   distinct from original and backup locations; original volumes/files remain read-only.
 
-Last identity/hash check recorded in `verification.md`: `2026-07-11T22:58:11Z`.
+Last identity/hash check recorded in `verification.md`: `2026-07-12T04:32:46Z`.
 
 ## Hard invariants
 
@@ -142,11 +148,24 @@ Last identity/hash check recorded in `verification.md`: `2026-07-11T22:58:11Z`.
   not an accepted xfail reason.
 - Task 5.2 GREEN must reconcile release-scoped shared field decisions, relationship type versions,
   raw/validated LLM output binding, and disjoint selected/conflicting evidence roles with the
-  existing storage foundation. Task 5.1 itself changes no production contract or storage.
+  existing storage foundation. Accepted GREEN additionally binds exact deterministic outcomes and
+  identity ownership into every decision seed, validates current authoritative mappings before the
+  first write, and loads historical decisions from immutable decision-time context snapshots rather
+  than mutable current identity state. Task 5.1 itself changes no production contract or storage.
 
 ### S8–S10 — Query, answer, and feedback
 
 - Scenario eval and trace replay are mandatory RED/GREEN evidence; unit-only evidence is insufficient.
+- S8 institution-query replay records the original query, matched institution span, resolution
+  state, canonical candidate IDs/names or unresolved raw text, catalog and accepted-release
+  versions, pure topic, protected slots, and every lane query/filter.
+- The S8 institution matrix covers several institutions in canonical and alias forms, an ambiguous
+  alias where supported, an unknown institution, no institution, and repeated/overlapping
+  institution-topic words. Full-name/alias pairs yield the same canonical constraint and topical
+  text.
+- An S8 catalog-injection contract proves that query resolution and retrieval filtering consume one
+  catalog snapshot: a newly supplied fixture alias resolves without editing query-rewrite code.
+  Generic topic stopwords contain no institution names or aliases.
 - Recorded external-provider adapters cover success, timeout, invalid schema, conflict, duplicate,
   missing evidence, and budget exhaustion.
 - Named real-provider acceptance run covers Universal Web, LLM plan/rerank/sufficiency/synthesis,

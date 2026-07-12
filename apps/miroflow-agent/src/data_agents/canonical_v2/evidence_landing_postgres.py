@@ -17,6 +17,11 @@ from src.data_agents.storage.database_target import (
     resolve_destructive_database_target,
 )
 
+from .canonical_revision import (
+    CanonicalRevisionError,
+    load_canonical_v2_script_directory,
+    require_minimum_canonical_revision,
+)
 from .contracts import EvidenceArtifact, ParseStatus, SourceError, SourceRecord
 from .evidence_adapters import default_source_adapters
 from .evidence_landing import (
@@ -32,7 +37,7 @@ from .evidence_landing import (
 from .rebuild_write_gate import require_accepted_backup_gate
 
 
-EXPECTED_REVISION = "C2_0004"
+MINIMUM_REVISION = "C2_0004"
 VERSION_TABLE = "public.canonical_v2_alembic_version"
 
 
@@ -122,13 +127,33 @@ class PostgresLandingRepository(LandingRepository):
                 actual_database=identity["database_name"],
                 database_marker=identity["database_marker"],
             )
-            revision = connection.execute(
+            revision_rows = connection.execute(
                 f"SELECT version_num FROM {VERSION_TABLE}"
-            ).fetchone()
-            if revision is None or revision["version_num"] != EXPECTED_REVISION:
-                raise EvidenceLandingPersistenceError(
-                    "PostgreSQL landing target is not at the required C2_0004 revision"
+            ).fetchall()
+            if len(revision_rows) != 1:
+                current_context = (
+                    "<none>"
+                    if not revision_rows
+                    else repr(sorted(repr(row["version_num"]) for row in revision_rows))
                 )
+                raise EvidenceLandingPersistenceError(
+                    "PostgreSQL landing target revision check requires exactly one "
+                    f"current row; minimum={MINIMUM_REVISION!r}, "
+                    f"current={current_context}"
+                )
+            current_revision = revision_rows[0]["version_num"]
+            try:
+                require_minimum_canonical_revision(
+                    scripts=load_canonical_v2_script_directory(),
+                    current_revision=current_revision,
+                    minimum_revision=MINIMUM_REVISION,
+                )
+            except CanonicalRevisionError as exc:
+                raise EvidenceLandingPersistenceError(
+                    "PostgreSQL landing target does not satisfy the required "
+                    f"minimum revision {MINIMUM_REVISION!r}; "
+                    f"current={current_revision!r}: {exc}"
+                ) from exc
             connection.rollback()
             yield connection
         except psycopg.Error as exc:

@@ -20,6 +20,8 @@ import pytest
 from sqlalchemy import exc as sa_exc
 from sqlalchemy.engine import make_url
 
+from src.data_agents.storage.database_target import set_alembic_database_url
+
 
 APP_ROOT = Path(__file__).resolve().parents[2]
 ALEMBIC_INI = APP_ROOT / "canonical_v2_alembic.ini"
@@ -60,7 +62,7 @@ def _explicit_environment() -> tuple[str, str, str, str]:
 def _migration_config(target: _Target) -> Config:
     config = Config(str(ALEMBIC_INI))
     config.set_main_option("script_location", str(SCRIPT_LOCATION))
-    config.set_main_option("sqlalchemy.url", target.database_url)
+    set_alembic_database_url(config, target.database_url)
     config.set_main_option("miroflow.expected_database", target.expected_database)
     config.set_main_option("miroflow.target_kind", target.target_kind)
     config.set_main_option("miroflow.backup_gate_root", str(target.backup_gate_root))

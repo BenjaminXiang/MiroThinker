@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
+import base64
+import binascii
+import hashlib
+import json
+import math
 from enum import Enum
-from typing import Annotated
+from typing import Annotated, NoReturn
 
 from pydantic import (
     AwareDatetime,
@@ -193,6 +198,47 @@ def _require_unique(values: tuple[str, ...], label: str) -> None:
         raise ValueError(f"{label} must not contain duplicates")
 
 
+def _reject_duplicate_json_keys(
+    pairs: list[tuple[str, JsonValue]],
+) -> dict[str, JsonValue]:
+    result: dict[str, JsonValue] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"JSON object keys must be unique; duplicate key: {key!r}")
+        result[key] = value
+    return result
+
+
+def _reject_non_finite_json_constant(value: str) -> NoReturn:
+    raise ValueError(f"JSON numbers must be finite; {value} is forbidden")
+
+
+def _require_finite_json(value: JsonValue) -> None:
+    if isinstance(value, float) and not math.isfinite(value):
+        raise ValueError("JSON numbers must be finite; NaN and Infinity are forbidden")
+    if isinstance(value, list):
+        for item in value:
+            _require_finite_json(item)
+    elif isinstance(value, dict):
+        for item in value.values():
+            _require_finite_json(item)
+
+
+def _strict_json_equal(left: JsonValue, right: JsonValue) -> bool:
+    if type(left) is not type(right):
+        return False
+    if isinstance(left, list) and isinstance(right, list):
+        return len(left) == len(right) and all(
+            _strict_json_equal(left_item, right_item)
+            for left_item, right_item in zip(left, right, strict=True)
+        )
+    if isinstance(left, dict) and isinstance(right, dict):
+        return left.keys() == right.keys() and all(
+            _strict_json_equal(left[key], right[key]) for key in left
+        )
+    return left == right
+
+
 class EvidenceArtifact(ContractModel):
     artifact_id: NonEmptyStr
     source_kind: NonEmptyStr
@@ -240,7 +286,9 @@ class SourceRecord(ContractModel):
     @model_validator(mode="after")
     def validate_parse_outcome(self) -> SourceRecord:
         if self.parse_status is not ParseStatus.parsed and not self.errors:
-            raise ValueError("a non-parsed source record requires at least one typed error")
+            raise ValueError(
+                "a non-parsed source record requires at least one typed error"
+            )
         return self
 
 
@@ -277,11 +325,42 @@ class LLMDecisionTrace(ContractModel):
     prompt_version: NonEmptyStr
     schema_version: NonEmptyStr
     input_evidence_ids: tuple[NonEmptyStr, ...] = Field(min_length=1)
+    raw_output_base64: Annotated[str, Field(min_length=1)]
     output_sha256: Sha256
+    validated_output: dict[NonEmptyStr, JsonValue]
 
     @model_validator(mode="after")
-    def validate_evidence_ids(self) -> LLMDecisionTrace:
+    def validate_trace_integrity(self) -> LLMDecisionTrace:
         _require_unique(self.input_evidence_ids, "input_evidence_ids")
+        if any(character in " \t\n\v\f\r" for character in self.raw_output_base64):
+            raise ValueError("raw_output_base64 must not contain ASCII whitespace")
+        try:
+            raw_output = base64.b64decode(self.raw_output_base64, validate=True)
+        except (binascii.Error, ValueError) as exc:
+            raise ValueError("raw_output_base64 must be valid base64") from exc
+        if base64.b64encode(raw_output).decode("ascii") != self.raw_output_base64:
+            raise ValueError("raw_output_base64 must use canonical base64 padding")
+        if hashlib.sha256(raw_output).hexdigest() != self.output_sha256:
+            raise ValueError(
+                "output_sha256 must be the SHA-256 of the exact raw output"
+            )
+        try:
+            raw_text = raw_output.decode("utf-8", errors="strict")
+        except UnicodeDecodeError as exc:
+            raise ValueError("raw output must be strict UTF-8") from exc
+        try:
+            parsed_output: JsonValue = json.loads(
+                raw_text,
+                object_pairs_hook=_reject_duplicate_json_keys,
+                parse_constant=_reject_non_finite_json_constant,
+            )
+        except json.JSONDecodeError as exc:
+            raise ValueError("raw output must be valid JSON") from exc
+        if not isinstance(parsed_output, dict):
+            raise ValueError("raw output JSON must be an object")
+        _require_finite_json(self.validated_output)
+        if not _strict_json_equal(parsed_output, self.validated_output):
+            raise ValueError("decoded raw output must equal validated_output")
         return self
 
 
@@ -290,7 +369,7 @@ class CanonicalDecision(ContractModel):
     canonical_identity_id: NonEmptyStr
     field_path: NonEmptyStr
     state: DecisionState
-    candidate_assertion_ids: tuple[NonEmptyStr, ...] = Field(min_length=1)
+    candidate_assertion_ids: tuple[NonEmptyStr, ...]
     selected_assertion_ids: tuple[NonEmptyStr, ...] = ()
     conflicting_assertion_ids: tuple[NonEmptyStr, ...] = ()
     policy: PolicyReference
@@ -300,6 +379,7 @@ class CanonicalDecision(ContractModel):
     confidence: Confidence
     rationale: NonEmptyStr
     llm_trace: LLMDecisionTrace | None = None
+    release_id: NonEmptyStr
     decided_at: AwareDatetime
     supersedes_decision_id: NonEmptyStr | None = None
 
@@ -309,16 +389,32 @@ class CanonicalDecision(ContractModel):
         _require_unique(self.candidate_assertion_ids, "candidate_assertion_ids")
         _require_unique(self.selected_assertion_ids, "selected_assertion_ids")
         _require_unique(self.conflicting_assertion_ids, "conflicting_assertion_ids")
+        if set(self.selected_assertion_ids) & set(self.conflicting_assertion_ids):
+            raise ValueError("selected and conflicting assertion IDs must be disjoint")
         if not set(self.selected_assertion_ids) <= candidates:
             raise ValueError("selected assertion IDs must be candidate assertions")
         if not set(self.conflicting_assertion_ids) <= candidates:
             raise ValueError("conflicting assertion IDs must be candidate assertions")
+        if not self.candidate_assertion_ids:
+            if (
+                self.state is not DecisionState.unresolved
+                or self.method is not DecisionMethod.deterministic
+                or self.selected_assertion_ids
+                or self.conflicting_assertion_ids
+                or self.llm_trace is not None
+            ):
+                raise ValueError(
+                    "empty candidates require an unresolved deterministic decision "
+                    "with no selected/conflicting assertions or LLM trace"
+                )
         if self.state is DecisionState.selected and not self.selected_assertion_ids:
             raise ValueError("selected decision requires a selected assertion")
         if self.state is DecisionState.unresolved:
             if self.selected_assertion_ids:
-                raise ValueError("unresolved decision cannot select a canonical assertion")
-            if len(self.conflicting_assertion_ids) < 2:
+                raise ValueError(
+                    "unresolved decision cannot select a canonical assertion"
+                )
+            if self.candidate_assertion_ids and len(self.conflicting_assertion_ids) < 2:
                 raise ValueError(
                     "unresolved decision requires at least two conflicting assertions"
                 )
@@ -326,8 +422,19 @@ class CanonicalDecision(ContractModel):
             raise ValueError("rejected decision cannot select an assertion")
         if self.policy.policy_kind is not PolicyKind.field_selection:
             raise ValueError("canonical decision requires a field-selection policy")
-        if self.method is DecisionMethod.structured_llm and self.llm_trace is None:
-            raise ValueError("structured_llm decision requires an LLM decision trace")
+        if self.method is DecisionMethod.structured_llm:
+            if self.llm_trace is None:
+                raise ValueError(
+                    "structured_llm decision requires an LLM decision trace"
+                )
+            if not self.candidate_assertion_ids:
+                raise ValueError(
+                    "structured_llm decision requires candidate assertions"
+                )
+            if self.llm_trace.input_evidence_ids != self.candidate_assertion_ids:
+                raise ValueError(
+                    "LLM trace input_evidence_ids must exactly equal candidate_assertion_ids"
+                )
         if self.supersedes_decision_id == self.decision_id:
             raise ValueError("canonical decision cannot supersede itself")
         return self
@@ -368,13 +475,18 @@ class CanonicalIdentity(ContractModel):
         _require_unique(self.source_identity_ids, "source_identity_ids")
         _require_unique(self.predecessor_identity_ids, "predecessor_identity_ids")
         _require_unique(self.successor_identity_ids, "successor_identity_ids")
-        if self.state is CanonicalIdentityState.merged and not self.successor_identity_ids:
+        if (
+            self.state is CanonicalIdentityState.merged
+            and not self.successor_identity_ids
+        ):
             raise ValueError("merged identity requires successor identity lineage")
         if (
             self.state is CanonicalIdentityState.split_identity
             and len(self.successor_identity_ids) < 2
         ):
-            raise ValueError("split identity requires at least two successor identities")
+            raise ValueError(
+                "split identity requires at least two successor identities"
+            )
         return self
 
 
@@ -412,21 +524,28 @@ class IdentityDecision(ContractModel):
                 raise ValueError(f"{self.action.value} requires one output identity")
         elif self.action is IdentityAction.merge:
             if len(self.input_canonical_identity_ids) < 2:
-                raise ValueError("merge requires at least two input canonical identities")
+                raise ValueError(
+                    "merge requires at least two input canonical identities"
+                )
             if len(self.output_canonical_identity_ids) != 1:
                 raise ValueError("merge requires exactly one output canonical identity")
         elif self.action is IdentityAction.split_identity:
             if len(self.input_canonical_identity_ids) != 1:
                 raise ValueError("split requires exactly one input canonical identity")
             if len(self.output_canonical_identity_ids) < 2:
-                raise ValueError("split requires at least two output canonical identities")
+                raise ValueError(
+                    "split requires at least two output canonical identities"
+                )
         elif self.action is IdentityAction.reject:
             if self.output_canonical_identity_ids:
                 raise ValueError("reject cannot create an output canonical identity")
         elif self.action is IdentityAction.reverse:
             if self.reversal_of_decision_id is None:
                 raise ValueError("reverse requires reversal_of_decision_id")
-            if not self.input_canonical_identity_ids or not self.output_canonical_identity_ids:
+            if (
+                not self.input_canonical_identity_ids
+                or not self.output_canonical_identity_ids
+            ):
                 raise ValueError("reverse requires input and output identity lineage")
         if self.method is DecisionMethod.structured_llm and self.llm_trace is None:
             raise ValueError("structured_llm identity decision requires an LLM trace")
@@ -462,7 +581,10 @@ class RelationshipType(ContractModel):
         _require_unique(self.required_evidence_kinds, "required_evidence_kinds")
         _require_unique(self.allowed_states, "allowed_states")
         _require_unique(self.eligible_paths, "eligible_paths")
-        if self.layer is RelationshipLayer.canonical and not self.required_evidence_kinds:
+        if (
+            self.layer is RelationshipLayer.canonical
+            and not self.required_evidence_kinds
+        ):
             raise ValueError("canonical relationship type requires source evidence")
         if (
             self.layer in {RelationshipLayer.derived, RelationshipLayer.session}
@@ -483,6 +605,7 @@ class IdentityReference(ContractModel):
 class RelationshipAssertion(ContractModel):
     assertion_id: NonEmptyStr
     relationship_type_id: NonEmptyStr
+    relationship_type_version: NonEmptyStr
     source_record_id: NonEmptyStr
     source_endpoint: IdentityReference
     target_endpoint: IdentityReference
@@ -510,10 +633,11 @@ class RelationshipDecision(ContractModel):
     decision_id: NonEmptyStr
     canonical_relationship_id: NonEmptyStr
     relationship_type_id: NonEmptyStr
+    relationship_type_version: NonEmptyStr
     source_canonical_identity_id: NonEmptyStr
     target_canonical_identity_id: NonEmptyStr
     state: RelationshipDecisionState
-    candidate_assertion_ids: tuple[NonEmptyStr, ...] = Field(min_length=1)
+    candidate_assertion_ids: tuple[NonEmptyStr, ...]
     selected_assertion_ids: tuple[NonEmptyStr, ...] = ()
     conflicting_assertion_ids: tuple[NonEmptyStr, ...] = ()
     role_bindings: dict[NonEmptyStr, NonEmptyStr]
@@ -536,16 +660,36 @@ class RelationshipDecision(ContractModel):
         _require_unique(self.candidate_assertion_ids, "candidate_assertion_ids")
         _require_unique(self.selected_assertion_ids, "selected_assertion_ids")
         _require_unique(self.conflicting_assertion_ids, "conflicting_assertion_ids")
+        if set(self.selected_assertion_ids) & set(self.conflicting_assertion_ids):
+            raise ValueError(
+                "selected and conflicting relationship assertion IDs must be disjoint"
+            )
         if not set(self.selected_assertion_ids) <= candidates:
             raise ValueError("selected relationship assertions must be candidates")
         if not set(self.conflicting_assertion_ids) <= candidates:
             raise ValueError("conflicting relationship assertions must be candidates")
-        if self.state is RelationshipDecisionState.accepted and not self.selected_assertion_ids:
+        if not self.candidate_assertion_ids:
+            if (
+                self.state is not RelationshipDecisionState.unresolved
+                or self.method is not DecisionMethod.deterministic
+                or self.selected_assertion_ids
+                or self.conflicting_assertion_ids
+                or self.role_bindings
+                or self.llm_trace is not None
+            ):
+                raise ValueError(
+                    "empty candidates require an unresolved deterministic relationship "
+                    "with no roles, selected/conflicting assertions, or LLM trace"
+                )
+        if (
+            self.state is RelationshipDecisionState.accepted
+            and not self.selected_assertion_ids
+        ):
             raise ValueError("accepted relationship requires a selected assertion")
         if self.state is RelationshipDecisionState.unresolved:
             if self.selected_assertion_ids:
                 raise ValueError("unresolved relationship cannot select an assertion")
-            if len(self.conflicting_assertion_ids) < 2:
+            if self.candidate_assertion_ids and len(self.conflicting_assertion_ids) < 2:
                 raise ValueError(
                     "unresolved relationship requires at least two conflicting assertions"
                 )
@@ -556,8 +700,19 @@ class RelationshipDecision(ContractModel):
             raise ValueError("rejected relationship cannot select an assertion")
         if self.policy.policy_kind is not PolicyKind.relationship:
             raise ValueError("relationship decision requires a relationship policy")
-        if self.method is DecisionMethod.structured_llm and self.llm_trace is None:
-            raise ValueError("structured_llm relationship decision requires an LLM trace")
+        if self.method is DecisionMethod.structured_llm:
+            if self.llm_trace is None:
+                raise ValueError(
+                    "structured_llm relationship decision requires an LLM trace"
+                )
+            if not self.candidate_assertion_ids:
+                raise ValueError(
+                    "structured_llm relationship decision requires candidate assertions"
+                )
+            if self.llm_trace.input_evidence_ids != self.candidate_assertion_ids:
+                raise ValueError(
+                    "LLM trace input_evidence_ids must exactly equal candidate_assertion_ids"
+                )
         if self.supersedes_decision_id == self.decision_id:
             raise ValueError("relationship decision cannot supersede itself")
         _validate_interval(self.valid_from, self.valid_to)
@@ -661,16 +816,16 @@ class KnowledgeGap(ContractModel):
                 self.telemetry_key,
             )
         ):
-            raise ValueError("knowledge gap requires a query, answer, benchmark, or telemetry trace")
+            raise ValueError(
+                "knowledge gap requires a query, answer, benchmark, or telemetry trace"
+            )
         if self.created_at > self.updated_at:
             raise ValueError("created_at must not be after updated_at")
         _require_unique(self.affected_domains, "affected_domains")
         _require_unique(self.affected_paths, "affected_paths")
         _require_unique(self.evidence_ids, "evidence_ids")
         _require_unique(self.scenario_families, "scenario_families")
-        _require_unique(
-            self.resolution_verification_ids, "resolution_verification_ids"
-        )
+        _require_unique(self.resolution_verification_ids, "resolution_verification_ids")
         if self.status is GapStatus.resolved:
             if (
                 self.resolved_release_id is None
@@ -688,7 +843,9 @@ class KnowledgeGap(ContractModel):
             or self.resolved_release_state is not None
             or self.resolution_verification_ids
         ):
-            raise ValueError("unresolved knowledge gap cannot carry resolution evidence")
+            raise ValueError(
+                "unresolved knowledge gap cannot carry resolution evidence"
+            )
         return self
 
 

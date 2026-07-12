@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from contextlib import nullcontext
 from dataclasses import dataclass, field
+import hmac
 from pathlib import Path
 import runpy
 from typing import Any
@@ -12,6 +13,10 @@ from alembic import context as alembic_context
 from alembic.config import Config
 import pytest
 import sqlalchemy
+from sqlalchemy import URL
+from sqlalchemy.engine import make_url
+
+from src.data_agents.storage import database_target as database_target_module
 
 
 APP_ROOT = Path(__file__).resolve().parents[2]
@@ -22,9 +27,77 @@ DISPOSABLE_URL = (
 )
 DISPOSABLE_DATABASE = "miroflow_s1_disposable_contract"
 DISPOSABLE_MARKER = (
-    "miroflow:destructive-target:v1:disposable:"
-    "miroflow_s1_disposable_contract"
+    "miroflow:destructive-target:v1:disposable:miroflow_s1_disposable_contract"
 )
+
+
+@pytest.mark.parametrize(
+    ("raw_url", "expected_password", "expected_query"),
+    (
+        pytest.param(
+            URL.create(
+                "postgresql+psycopg",
+                username="probe",
+                password="plain-secret",
+                database="sibling",
+                query={"host": "/tmp/canonical-v2"},
+            ).render_as_string(hide_password=False),
+            "plain-secret",
+            {"host": "/tmp/canonical-v2"},
+            id="encoded-unix-socket",
+        ),
+        pytest.param(
+            URL.create(
+                "postgresql+psycopg",
+                username="probe",
+                password="plain-secret",
+                host="isolated-lab",
+                port=5432,
+                database="sibling",
+            ).render_as_string(hide_password=False),
+            "plain-secret",
+            {},
+            id="ordinary-tcp",
+        ),
+        pytest.param(
+            URL.create(
+                "postgresql+psycopg",
+                username="probe",
+                password="p%word/with@reserved",
+                host="isolated-lab",
+                database="sibling",
+                query={"application_name": "100%probe"},
+            ).render_as_string(hide_password=False),
+            "p%word/with@reserved",
+            {"application_name": "100%probe"},
+            id="percent-credential-and-query",
+        ),
+    ),
+)
+def test_alembic_database_url_boundary_round_trips_rendered_urls(
+    raw_url: str,
+    expected_password: str,
+    expected_query: dict[str, str],
+) -> None:
+    direct_config = Config()
+    if "%" in raw_url:
+        with pytest.raises(ValueError):
+            direct_config.set_main_option("sqlalchemy.url", raw_url)
+    else:
+        direct_config.set_main_option("sqlalchemy.url", raw_url)
+
+    setter = getattr(database_target_module, "set_alembic_database_url", None)
+    assert callable(setter)
+    config = Config()
+    setter(config, raw_url)
+
+    configured_url = config.get_main_option("sqlalchemy.url")
+    assert configured_url is not None
+    assert hmac.compare_digest(configured_url, raw_url)
+    parsed = make_url(configured_url)
+    assert parsed.password is not None
+    assert hmac.compare_digest(parsed.password, expected_password)
+    assert dict(parsed.query) == expected_query
 
 
 @dataclass
@@ -112,7 +185,7 @@ def _run_alembic_env(
 
     config = Config()
     if explicit_url is not None:
-        config.set_main_option("sqlalchemy.url", explicit_url)
+        database_target_module.set_alembic_database_url(config, explicit_url)
     if expected_database is not None:
         config.set_main_option("miroflow.expected_database", expected_database)
     if target_kind is not None:
@@ -178,8 +251,7 @@ def test_generic_database_url_is_not_an_explicit_destructive_target(
             target_kind=None,
             environment={
                 "DATABASE_URL": (
-                    "postgresql+psycopg://miroflow:secret@localhost:15432/"
-                    "miroflow_real"
+                    "postgresql+psycopg://miroflow:secret@localhost:15432/miroflow_real"
                 )
             },
         )
@@ -198,8 +270,7 @@ def test_known_non_disposable_target_is_rejected_before_connect(
             target_kind="disposable",
             environment={
                 "DATABASE_URL": (
-                    "postgresql+psycopg://miroflow:secret@localhost:15432/"
-                    "miroflow_real"
+                    "postgresql+psycopg://miroflow:secret@localhost:15432/miroflow_real"
                 )
             },
         )
@@ -222,8 +293,7 @@ def test_conflicting_explicit_target_sources_are_rejected(
                 "ALEMBIC_EXPECTED_DATABASE": "other_disposable",
                 "ALEMBIC_TARGET_KIND": "disposable",
                 "DATABASE_URL": (
-                    "postgresql+psycopg://miroflow:secret@localhost:15432/"
-                    "miroflow_real"
+                    "postgresql+psycopg://miroflow:secret@localhost:15432/miroflow_real"
                 ),
             },
         )

@@ -13,6 +13,8 @@ from alembic.config import Config
 import pytest
 import sqlalchemy
 
+from src.data_agents.storage.database_target import set_alembic_database_url
+
 
 APP_ROOT = Path(__file__).resolve().parents[2]
 REPO_ROOT = APP_ROOT.parents[1]
@@ -22,15 +24,12 @@ EVIDENCE_ROOT = (
 ALEMBIC_ENV = APP_ROOT / "canonical_v2_alembic" / "env.py"
 EXPECTED_DATABASE = "miroflow_canonical_v2_candidate_s3b"
 EXPLICIT_URL = (
-    "postgresql+psycopg://miroflow:local-test@isolated-lab:5432/"
-    f"{EXPECTED_DATABASE}"
+    f"postgresql+psycopg://miroflow:local-test@isolated-lab:5432/{EXPECTED_DATABASE}"
 )
 
 
 def _gate_module() -> Any:
-    return importlib.import_module(
-        "src.data_agents.canonical_v2.rebuild_write_gate"
-    )
+    return importlib.import_module("src.data_agents.canonical_v2.rebuild_write_gate")
 
 
 def _copy_gate_evidence(destination: Path) -> Path:
@@ -96,7 +95,7 @@ def test_rejected_backup_gate_stops_alembic_before_engine_creation(
 ) -> None:
     module = _gate_module()
     config = Config()
-    config.set_main_option("sqlalchemy.url", EXPLICIT_URL)
+    set_alembic_database_url(config, EXPLICIT_URL)
     config.set_main_option("miroflow.expected_database", EXPECTED_DATABASE)
     config.set_main_option("miroflow.target_kind", "isolated-candidate")
     config.set_main_option("miroflow.backup_gate_root", "/missing/accepted-gate")

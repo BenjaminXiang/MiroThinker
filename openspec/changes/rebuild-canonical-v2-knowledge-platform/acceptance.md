@@ -111,6 +111,18 @@ targets throughout this change.
 - [ ] A-G behavior scenarios pass while validated plans may combine supported retrieval lanes.
 - [ ] Exact identifiers, names/titles, dates, geography, negation, set membership, and relation
       direction survive all rewrites/plans with zero protected-slot loss in the frozen corpus.
+- [ ] Institution-bearing queries resolve canonical full names and aliases into typed, release-
+      scoped institution slots before topic rewriting; query filters and alias rewrites consume one
+      accepted, versioned institution catalog.
+- [ ] Parameterized institution trace replay covers several institutions by canonical full name and
+      alias, ambiguous aliases where applicable, unknown institutions, queries without an
+      institution, and institution/topic word overlap, with zero protected-slot loss, false
+      canonicalization, or topical-term loss.
+- [ ] Every evaluated institution rewrite records the matched source span, resolution state,
+      canonical candidate identity or retained unresolved text, catalog/release version, pure
+      topic, and resulting lane query/filter.
+- [ ] Query orchestration contains no institution-name or alias enumeration in generic topic
+      stopwords and no independent alias-to-canonical source consumed by planning or retrieval.
 - [ ] Query, rewrite, lane, attempt, provider/model, candidate decision, release, and evidence traces
       are complete for every evaluated answer.
 - [ ] Exact/structured, lexical, vector, relationship, and Web lanes meet their per-domain/path

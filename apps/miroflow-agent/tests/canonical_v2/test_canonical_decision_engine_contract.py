@@ -22,8 +22,6 @@ from src.data_agents.canonical_v2.contracts import (
 )
 
 
-RED_REASON = "Task 5.1 RED: Canonical V2 canonical decision engine is not implemented"
-RED = pytest.mark.xfail(strict=True, raises=ModuleNotFoundError, reason=RED_REASON)
 TARGET_MODULE = "src.data_agents.canonical_v2.canonical_decision_engine"
 NOW = datetime(2026, 7, 11, 22, 40, tzinfo=timezone.utc)
 RELEASE_ID = "candidate-s5-r1"
@@ -160,8 +158,11 @@ def _recorded_adjudicator(module: Any, *responses: Any) -> Any:
 
 def _recorded_response(
     module: Any,
-    input_evidence_ids: tuple[str, ...],
+    assertions: tuple[Any, ...],
     *,
+    decision_kind: str,
+    subject_id: str,
+    path: str,
     state: str,
     selected_assertion_ids: tuple[str, ...],
     conflicting_assertion_ids: tuple[str, ...],
@@ -186,14 +187,91 @@ def _recorded_response(
         separators=(",", ":"),
         sort_keys=True,
     ).encode()
+    ordered_assertions = tuple(
+        sorted(assertions, key=lambda assertion: assertion.assertion_id)
+    )
     return module.RecordedAdjudication(
-        input_evidence_ids=input_evidence_ids,
+        input_evidence_ids=tuple(
+            assertion.assertion_id for assertion in ordered_assertions
+        ),
+        input_evidence_sha256=module.canonical_adjudication_input_sha256(
+            decision_kind=decision_kind,
+            subject_id=subject_id,
+            path=path,
+            assertions=ordered_assertions,
+        ),
         raw_output=raw_output,
         expected_output_sha256=hashlib.sha256(raw_output).hexdigest(),
     )
 
 
-@RED
+def _rehash_result_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    content = {key: value for key, value in payload.items() if key != "content_sha256"}
+    payload["content_sha256"] = hashlib.sha256(
+        json.dumps(
+            content,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8")
+    ).hexdigest()
+    return payload
+
+
+def _rebind_changed_group(
+    payload: dict[str, Any],
+    *,
+    decision_collection: str,
+    assertion_collection: str,
+    decision_index: int = 0,
+) -> None:
+    decision = payload[decision_collection][decision_index]
+    old_decision_id = decision["decision_id"]
+    manifest = next(
+        item
+        for item in payload["decision_group_manifests"]
+        if item["decision_id"] == old_decision_id
+    )
+    assertions_by_id = {
+        assertion["assertion_id"]: assertion
+        for assertion in payload[assertion_collection]
+    }
+    manifest_hash = hashlib.sha256(
+        json.dumps(
+            {
+                "group_key": manifest["group_key"],
+                "assertions": [
+                    assertions_by_id[assertion_id]
+                    for assertion_id in manifest["assertion_ids"]
+                ],
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8")
+    ).hexdigest()
+    new_decision_id = old_decision_id.replace(
+        manifest["content_sha256"],
+        manifest_hash,
+        1,
+    )
+    assert new_decision_id != old_decision_id
+    decision["decision_id"] = new_decision_id
+    manifest["decision_id"] = new_decision_id
+    manifest["content_sha256"] = manifest_hash
+    for collection in (
+        "constraint_outcomes",
+        "current_fields",
+        "current_relationships",
+        "unresolved_conflicts",
+    ):
+        for item in payload[collection]:
+            if item["decision_id"] == old_decision_id:
+                item["decision_id"] = new_decision_id
+
+
 def test_competing_field_assertions_are_retained_and_current_value_is_traceable() -> (
     None
 ):
@@ -221,7 +299,10 @@ def test_competing_field_assertions_are_retained_and_current_value_is_traceable(
     )
     response = _recorded_response(
         module,
-        ("title-historical", "title-official-a", "title-official-b"),
+        assertions,
+        decision_kind="field",
+        subject_id="professor-c1",
+        path="employment.current_title",
         state="selected",
         selected_assertion_ids=("title-official-a", "title-official-b"),
         conflicting_assertion_ids=("title-historical",),
@@ -274,8 +355,53 @@ def test_competing_field_assertions_are_retained_and_current_value_is_traceable(
     assert current.supporting_assertion_ids == decision.selected_assertion_ids
     assert current.conflicting_assertion_ids == decision.conflicting_assertion_ids
 
+    invented_value = result.model_dump(mode="json")
+    invented_value["current_fields"][0]["value"] = "Invented title"
+    with pytest.raises(ValueError, match="current.*value|selected.*value"):
+        module.DecisionBatchResult.model_validate(
+            _rehash_result_payload(invented_value)
+        )
 
-@RED
+    invented_support = result.model_dump(mode="json")
+    invented_support["current_fields"][0]["supporting_assertion_ids"] = [
+        "title-official-a"
+    ]
+    with pytest.raises(ValueError, match="current.*support|support.*decision"):
+        module.DecisionBatchResult.model_validate(
+            _rehash_result_payload(invented_support)
+        )
+
+    trace_selection_mismatch = result.model_dump(mode="json")
+    trace_selection_mismatch["canonical_decisions"][0]["selected_assertion_ids"] = [
+        "title-historical"
+    ]
+    trace_selection_mismatch["canonical_decisions"][0]["conflicting_assertion_ids"] = [
+        "title-official-a",
+        "title-official-b",
+    ]
+    trace_selection_mismatch["current_fields"][0]["value"] = "Lecturer"
+    trace_selection_mismatch["current_fields"][0]["supporting_assertion_ids"] = [
+        "title-historical"
+    ]
+    trace_selection_mismatch["current_fields"][0]["conflicting_assertion_ids"] = [
+        "title-official-a",
+        "title-official-b",
+    ]
+    with pytest.raises(ValueError, match="trace.*selected|structured.*selected"):
+        module.DecisionBatchResult.model_validate(
+            _rehash_result_payload(trace_selection_mismatch)
+        )
+
+    trace_metadata_tamper = result.model_dump(mode="json")
+    trace_metadata_tamper["canonical_decisions"][0]["llm_trace"]["prompt_version"] = (
+        "tampered-semantic-neutral-prompt"
+    )
+    with pytest.raises(ValueError, match="decision.*seed|decision.*ID|seed.*hash"):
+        module.DecisionBatchResult.model_validate(
+            _rehash_result_payload(trace_metadata_tamper)
+        )
+
+
 def test_deterministic_constraints_filter_llm_candidates_but_retain_evidence() -> None:
     module = _module()
     sources = (
@@ -297,8 +423,20 @@ def test_deterministic_constraints_filter_llm_candidates_but_retain_evidence() -
     assertions = (
         _field_assertion(module, "valid-a-title", "valid-a", "Professor"),
         _field_assertion(module, "valid-b-title", "valid-b", "Chair Professor"),
-        _field_assertion(module, "rejected-source-title", "rejected-source", "Dean"),
-        _field_assertion(module, "wrong-identity-title", "foreign", "Lecturer"),
+        _field_assertion(
+            module,
+            "rejected-source-title",
+            "rejected-source",
+            "Dean",
+            field_path="affiliation.city",
+        ),
+        _field_assertion(
+            module,
+            "wrong-identity-title",
+            "foreign",
+            "Lecturer",
+            field_path="affiliation.city",
+        ),
         _field_assertion(
             module,
             "future-title",
@@ -318,12 +456,16 @@ def test_deterministic_constraints_filter_llm_candidates_but_retain_evidence() -
             "wrong-entity",
             "valid-a",
             "Company title",
+            field_path="affiliation.city",
             entity_type="company",
         ),
     )
     response = _recorded_response(
         module,
-        ("valid-a-title", "valid-b-title"),
+        assertions[:2],
+        decision_kind="field",
+        subject_id="professor-c1",
+        path="employment.current_title",
         state="selected",
         selected_assertion_ids=("valid-b-title",),
         conflicting_assertion_ids=("valid-a-title",),
@@ -373,8 +515,240 @@ def test_deterministic_constraints_filter_llm_candidates_but_retain_evidence() -
     assert rejected["wrong-entity"].reason_codes == ("entity_type_mismatch",)
     assert all(outcome.policy_version == "v1" for outcome in rejected.values())
 
+    wrong_reason = result.model_dump(mode="json")
+    for outcome in wrong_reason["constraint_outcomes"]:
+        if outcome["assertion_id"] == "rejected-source-title":
+            outcome["reason_codes"] = ["identity_mismatch"]
+            break
+    with pytest.raises(ValueError, match="deterministic.*outcome|outcome.*constraint"):
+        module.DecisionBatchResult.model_validate(_rehash_result_payload(wrong_reason))
 
-@RED
+
+def test_field_assertion_cannot_be_rebound_to_wrong_canonical_owner() -> None:
+    module = _module()
+    professor_source = _source_identity(
+        module,
+        "professor-source",
+        source_system="professor-source",
+    )
+    company_source = _source_identity(
+        module,
+        "company-source",
+        source_system="company-source",
+        entity_type="company",
+    )
+    assertion = _field_assertion(
+        module,
+        "owned-title",
+        "professor-source",
+        "Professor",
+    )
+    result = module.create_ephemeral_canonical_decision_engine().decide(
+        _batch(
+            module,
+            source_identities=(professor_source, company_source),
+            canonical_identities=(
+                _canonical_identity(module, "professor-c1", ("professor-source",)),
+                _canonical_identity(
+                    module,
+                    "company-c1",
+                    ("company-source",),
+                    entity_type="company",
+                ),
+            ),
+            field_groups=(_field_group(module, (assertion,)),),
+        )
+    )
+    wrong_owner = result.model_dump(mode="json")
+    wrong_owner["field_assertions"][0]["source_identity_id"] = "company-source"
+    wrong_owner["field_assertions"][0]["source_record_id"] = "record:company-source"
+    _rebind_changed_group(
+        wrong_owner,
+        decision_collection="canonical_decisions",
+        assertion_collection="field_assertions",
+    )
+
+    with pytest.raises(ValueError, match="identity.*context|deterministic.*constraint"):
+        module.DecisionBatchResult.model_validate(_rehash_result_payload(wrong_owner))
+
+
+def test_decision_id_binds_complete_assertion_and_constraint_inputs() -> None:
+    module = _module()
+    source = _source_identity(module, "source-a", source_system="source-a")
+    canonical = _canonical_identity(module, "professor-c1", ("source-a",))
+    assertion = _field_assertion(module, "stable-id", "source-a", "Professor")
+
+    def decide(assertion_value: Any, source_value: Any = source) -> Any:
+        return module.create_ephemeral_canonical_decision_engine().decide(
+            _batch(
+                module,
+                source_identities=(source_value,),
+                canonical_identities=(canonical,),
+                field_groups=(_field_group(module, (assertion_value,)),),
+            )
+        )
+
+    baseline = decide(assertion).canonical_decisions[0].decision_id
+    changed_value = (
+        decide(assertion.model_copy(update={"value": "Chair Professor"}))
+        .canonical_decisions[0]
+        .decision_id
+    )
+    changed_provenance = (
+        decide(
+            assertion,
+            source.model_copy(update={"source_system": "changed-source"}),
+        )
+        .canonical_decisions[0]
+        .decision_id
+    )
+
+    assert len({baseline, changed_value, changed_provenance}) == 3
+
+
+def test_rejected_outcome_remains_bound_to_its_owning_group() -> None:
+    module = _module()
+    sources = (
+        _source_identity(module, "active-source", source_system="active"),
+        _source_identity(
+            module,
+            "rejected-source",
+            source_system="rejected",
+            state="rejected",
+        ),
+    )
+    canonical = _canonical_identity(
+        module,
+        "professor-c1",
+        ("active-source", "rejected-source"),
+    )
+    title_assertions = (
+        _field_assertion(module, "title-active", "active-source", "Professor"),
+        _field_assertion(module, "title-rejected", "rejected-source", "Dean"),
+    )
+    city_assertions = (
+        _field_assertion(
+            module,
+            "city-active",
+            "active-source",
+            "Shenzhen",
+            field_path="affiliation.city",
+        ),
+        _field_assertion(
+            module,
+            "city-rejected",
+            "rejected-source",
+            "Hong Kong",
+            field_path="affiliation.city",
+        ),
+    )
+    result = module.create_ephemeral_canonical_decision_engine().decide(
+        _batch(
+            module,
+            source_identities=sources,
+            canonical_identities=(canonical,),
+            field_groups=(
+                _field_group(module, title_assertions),
+                _field_group(
+                    module,
+                    city_assertions,
+                    field_path="affiliation.city",
+                ),
+            ),
+        )
+    )
+    decisions = {
+        decision.field_path: decision for decision in result.canonical_decisions
+    }
+    outcomes = {outcome.assertion_id: outcome for outcome in result.constraint_outcomes}
+    manifests = {
+        manifest.decision_id: manifest for manifest in result.decision_group_manifests
+    }
+    title_decision = decisions["employment.current_title"]
+    title_manifest = manifests[title_decision.decision_id]
+    assertion_by_id = {
+        assertion.assertion_id: assertion for assertion in result.field_assertions
+    }
+    expected_manifest_hash = hashlib.sha256(
+        json.dumps(
+            {
+                "group_key": title_manifest.group_key,
+                "assertions": [
+                    assertion_by_id[assertion_id].model_dump(mode="json")
+                    for assertion_id in title_manifest.assertion_ids
+                ],
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8")
+    ).hexdigest()
+
+    assert outcomes["title-rejected"].group_key != outcomes["city-rejected"].group_key
+    assert title_manifest.assertion_ids == ("title-active", "title-rejected")
+    assert title_manifest.content_sha256 == expected_manifest_hash
+    assert (
+        f":manifest-sha256:{title_manifest.content_sha256}:seed-sha256:"
+        in title_decision.decision_id
+    )
+    assert {
+        assertion_id
+        for manifest in result.decision_group_manifests
+        for assertion_id in manifest.assertion_ids
+    } == {assertion.assertion_id for assertion in result.field_assertions}
+
+    relinked = result.model_dump(mode="json")
+    for outcome in relinked["constraint_outcomes"]:
+        if outcome["assertion_id"] == "title-rejected":
+            outcome["decision_id"] = decisions["affiliation.city"].decision_id
+            outcome["group_key"] = outcomes["city-rejected"].group_key
+            break
+    with pytest.raises(ValueError, match="manifest.*assertion|assertion.*manifest"):
+        module.DecisionBatchResult.model_validate(_rehash_result_payload(relinked))
+
+    partition_tamper = result.model_dump(mode="json")
+    for manifest in partition_tamper["decision_group_manifests"]:
+        if manifest["decision_id"] == title_decision.decision_id:
+            manifest["assertion_ids"] = ["title-active"]
+            break
+    with pytest.raises(ValueError, match="manifest.*partition|partition.*manifest"):
+        module.DecisionBatchResult.model_validate(
+            _rehash_result_payload(partition_tamper)
+        )
+
+    content_tamper = result.model_dump(mode="json")
+    for manifest in content_tamper["decision_group_manifests"]:
+        if manifest["decision_id"] == title_decision.decision_id:
+            manifest["content_sha256"] = "0" * 64
+            break
+    with pytest.raises(ValueError, match="decision.*manifest|manifest.*content"):
+        module.DecisionBatchResult.model_validate(
+            _rehash_result_payload(content_tamper)
+        )
+
+
+def test_adjudication_input_hash_rejects_duplicate_and_wrong_assertion_kind() -> None:
+    module = _module()
+    left = _field_assertion(module, "candidate-a", "source-a", "Professor")
+    right = _field_assertion(module, "candidate-b", "source-b", "Chair Professor")
+
+    with pytest.raises(module.DecisionBatchIntegrityError, match="duplicate"):
+        module.canonical_adjudication_input_sha256(
+            decision_kind="field",
+            subject_id="professor-c1",
+            path="employment.current_title",
+            assertions=(left, left),
+        )
+    with pytest.raises(module.DecisionBatchIntegrityError, match="kind|relationship"):
+        module.canonical_adjudication_input_sha256(
+            decision_kind="relationship",
+            subject_id="canonical-relation-1",
+            path="professor_company_role",
+            assertions=(left, right),
+        )
+
+
 def test_structured_llm_decision_is_versioned_and_order_independent() -> None:
     module = _module()
     sources = (
@@ -403,6 +777,12 @@ def test_structured_llm_decision_is_versioned_and_order_independent() -> None:
         sort_keys=True,
     ).encode()
     expected_output_sha256 = hashlib.sha256(raw_output).hexdigest()
+    input_evidence_sha256 = module.canonical_adjudication_input_sha256(
+        decision_kind="field",
+        subject_id="professor-c1",
+        path="employment.current_title",
+        assertions=(left, right),
+    )
 
     def request(assertions: tuple[Any, ...]) -> Any:
         return _batch(
@@ -412,15 +792,17 @@ def test_structured_llm_decision_is_versioned_and_order_independent() -> None:
             field_groups=(_field_group(module, assertions),),
         )
 
+    response = module.RecordedAdjudication(
+        input_evidence_ids=("ambiguous-a", "ambiguous-b"),
+        input_evidence_sha256=input_evidence_sha256,
+        raw_output=raw_output,
+        expected_output_sha256=expected_output_sha256,
+    )
+    engine = module.create_ephemeral_canonical_decision_engine(
+        adjudicator=_recorded_adjudicator(module, response)
+    )
+
     def decide(assertions: tuple[Any, ...]) -> Any:
-        response = module.RecordedAdjudication(
-            input_evidence_ids=("ambiguous-a", "ambiguous-b"),
-            raw_output=raw_output,
-            expected_output_sha256=expected_output_sha256,
-        )
-        engine = module.create_ephemeral_canonical_decision_engine(
-            adjudicator=_recorded_adjudicator(module, response)
-        )
         return engine.decide(request(assertions))
 
     first = decide((left, right))
@@ -445,11 +827,28 @@ def test_structured_llm_decision_is_versioned_and_order_independent() -> None:
     assert decision.model_dump(mode="json") == reordered.canonical_decisions[
         0
     ].model_dump(mode="json")
+    assert first.canonical_decisions == reordered.canonical_decisions
+    assert first.relationship_decisions == reordered.relationship_decisions
     assert first.current_fields == reordered.current_fields
+    assert first.current_relationships == reordered.current_relationships
+    assert first.constraint_outcomes == reordered.constraint_outcomes
+    assert first.unresolved_conflicts == reordered.unresolved_conflicts
     assert first.content_sha256 == reordered.content_sha256
+
+    with pytest.raises(
+        module.AdjudicationIntegrityError,
+        match="content|hash|bound|candidate",
+    ):
+        decide(
+            (
+                left,
+                right.model_copy(update={"value": "Distinguished Professor"}),
+            )
+        )
 
     mismatched_response = module.RecordedAdjudication(
         input_evidence_ids=("ambiguous-a", "ambiguous-b"),
+        input_evidence_sha256=input_evidence_sha256,
         raw_output=raw_output,
         expected_output_sha256="0" * 64,
     )
@@ -459,7 +858,30 @@ def test_structured_llm_decision_is_versioned_and_order_independent() -> None:
         ).decide(request((left, right)))
 
 
-@RED
+def test_recorded_adjudicator_rejects_duplicate_candidate_response_keys() -> None:
+    module = _module()
+    assertions = (
+        _field_assertion(module, "candidate-a", "source-a", "Professor"),
+        _field_assertion(module, "candidate-b", "source-b", "Chair Professor"),
+    )
+    response = _recorded_response(
+        module,
+        assertions,
+        decision_kind="field",
+        subject_id="professor-c1",
+        path="employment.current_title",
+        state="selected",
+        selected_assertion_ids=("candidate-a",),
+        conflicting_assertion_ids=("candidate-b",),
+        confidence=0.8,
+        rationale="One exact response may bind one ordered candidate key.",
+        uncertainty="The other candidate remains retained as a conflict.",
+    )
+
+    with pytest.raises(module.AdjudicationIntegrityError, match="ambiguous|duplicate"):
+        _recorded_adjudicator(module, response, response)
+
+
 def test_materially_ambiguous_field_remains_unresolved_without_current_fact() -> None:
     module = _module()
     sources = (
@@ -477,7 +899,10 @@ def test_materially_ambiguous_field_remains_unresolved_without_current_fact() ->
     )
     response = _recorded_response(
         module,
-        ("conflict-a", "conflict-b"),
+        assertions,
+        decision_kind="field",
+        subject_id="professor-c1",
+        path="employment.current_title",
         state="unresolved",
         selected_assertion_ids=(),
         conflicting_assertion_ids=("conflict-a", "conflict-b"),
@@ -513,7 +938,6 @@ def test_materially_ambiguous_field_remains_unresolved_without_current_fact() ->
     }
 
 
-@RED
 def test_relationship_assertions_follow_retention_and_current_selection_rules() -> None:
     module = _module()
     assert module.RelationshipAssertion is SharedRelationshipAssertion
@@ -530,7 +954,7 @@ def test_relationship_assertions_follow_retention_and_current_selection_rules() 
             module,
             "company-source",
             source_system="company_registry",
-            record_ids=(relation_record,),
+            record_ids=("record:company-source",),
             entity_type="company",
         ),
     )
@@ -595,7 +1019,10 @@ def test_relationship_assertions_follow_retention_and_current_selection_rules() 
     )
     accepted_response = _recorded_response(
         module,
-        ("relation-advisor", "relation-founder"),
+        assertions,
+        decision_kind="relationship",
+        subject_id="canonical-relation-1",
+        path="professor_company_role",
         state="selected",
         selected_assertion_ids=("relation-founder",),
         conflicting_assertion_ids=("relation-advisor",),
@@ -606,7 +1033,10 @@ def test_relationship_assertions_follow_retention_and_current_selection_rules() 
     )
     unresolved_response = _recorded_response(
         module,
-        ("relation-contractor", "relation-employee"),
+        unresolved_assertions,
+        decision_kind="relationship",
+        subject_id="canonical-relation-2",
+        path="professor_company_affiliation",
         state="unresolved",
         selected_assertion_ids=(),
         conflicting_assertion_ids=("relation-contractor", "relation-employee"),
@@ -635,8 +1065,8 @@ def test_relationship_assertions_follow_retention_and_current_selection_rules() 
     result = module.create_ephemeral_canonical_decision_engine(
         adjudicator=_recorded_adjudicator(
             module,
-            accepted_response,
             unresolved_response,
+            accepted_response,
         )
     ).decide(
         _batch(
@@ -666,6 +1096,7 @@ def test_relationship_assertions_follow_retention_and_current_selection_rules() 
         decision.conflicting_assertion_ids
     )
     unresolved = decisions["canonical-relation-2"]
+    outcomes = {item.assertion_id: item for item in result.constraint_outcomes}
     assert unresolved.state.value == "unresolved"
     assert unresolved.selected_assertion_ids == ()
     assert unresolved.conflicting_assertion_ids == (
@@ -689,3 +1120,180 @@ def test_relationship_assertions_follow_retention_and_current_selection_rules() 
     }
     assert not hasattr(current, "professor_projection")
     assert not hasattr(current, "company_projection")
+
+    invented_roles = result.model_dump(mode="json")
+    invented_roles["current_relationships"][0]["role_bindings"] = {"source": "advisor"}
+    with pytest.raises(ValueError, match="current.*role|role.*decision"):
+        module.DecisionBatchResult.model_validate(
+            _rehash_result_payload(invented_roles)
+        )
+
+    trace_role_mismatch = result.model_dump(mode="json")
+    trace_role_mismatch["relationship_decisions"][0]["role_bindings"] = {
+        "source": "advisor"
+    }
+    trace_role_mismatch["current_relationships"][0]["role_bindings"] = {
+        "source": "advisor"
+    }
+    with pytest.raises(ValueError, match="trace.*role|structured.*role"):
+        module.DecisionBatchResult.model_validate(
+            _rehash_result_payload(trace_role_mismatch)
+        )
+
+    relinked_outcome = result.model_dump(mode="json")
+    unresolved_decision_id = unresolved.decision_id
+    for outcome in relinked_outcome["constraint_outcomes"]:
+        if outcome["assertion_id"] == "relation-founder":
+            outcome["decision_id"] = unresolved_decision_id
+            outcome["group_key"] = outcomes["relation-employee"].group_key
+            break
+    with pytest.raises(ValueError, match="manifest.*assertion|assertion.*manifest"):
+        module.DecisionBatchResult.model_validate(
+            _rehash_result_payload(relinked_outcome)
+        )
+
+    wrong_endpoint = result.model_dump(mode="json")
+    for assertion in wrong_endpoint["relationship_assertions"]:
+        if assertion["assertion_id"] == "relation-founder":
+            assertion["source_endpoint"] = {
+                "identity_id": "company-source",
+                "identity_space": "source",
+                "entity_type": "company",
+            }
+            assertion["target_endpoint"] = {
+                "identity_id": "professor-source",
+                "identity_space": "source",
+                "entity_type": "professor",
+            }
+            break
+    _rebind_changed_group(
+        wrong_endpoint,
+        decision_collection="relationship_decisions",
+        assertion_collection="relationship_assertions",
+    )
+    with pytest.raises(ValueError, match="identity.*context|deterministic.*constraint"):
+        module.DecisionBatchResult.model_validate(
+            _rehash_result_payload(wrong_endpoint)
+        )
+
+    falsified_conflict = result.model_dump(mode="json")
+    falsified_conflict["unresolved_conflicts"][0]["subject_id"] = "canonical-relation-1"
+    falsified_conflict["unresolved_conflicts"][0]["path"] = "professor_company_role"
+    with pytest.raises(ValueError, match="conflict.*subject|conflict.*path"):
+        module.DecisionBatchResult.model_validate(
+            _rehash_result_payload(falsified_conflict)
+        )
+
+
+def test_zero_survivor_group_keeps_rejected_evidence_and_an_audit_decision() -> None:
+    module = _module()
+    sources = (
+        _source_identity(
+            module,
+            "rejected-source",
+            source_system="rejected_source",
+            state="rejected",
+        ),
+        _source_identity(module, "foreign-source", source_system="foreign_source"),
+    )
+    canonical = _canonical_identity(
+        module,
+        "professor-c1",
+        ("rejected-source",),
+    )
+    assertions = (
+        _field_assertion(
+            module,
+            "rejected-source-title",
+            "rejected-source",
+            "Dean",
+        ),
+        _field_assertion(
+            module,
+            "foreign-identity-title",
+            "foreign-source",
+            "Lecturer",
+        ),
+    )
+
+    def decide(
+        ordered_sources: tuple[Any, ...], ordered_assertions: tuple[Any, ...]
+    ) -> Any:
+        return module.create_ephemeral_canonical_decision_engine(
+            adjudicator=_recorded_adjudicator(module)
+        ).decide(
+            _batch(
+                module,
+                source_identities=ordered_sources,
+                canonical_identities=(canonical,),
+                field_groups=(_field_group(module, ordered_assertions),),
+            )
+        )
+
+    result = decide(sources, assertions)
+    reordered = decide(tuple(reversed(sources)), tuple(reversed(assertions)))
+
+    assert {item.assertion_id for item in result.field_assertions} == {
+        item.assertion_id for item in assertions
+    }
+    assert len(result.field_assertions) == len(assertions)
+    assert len(result.canonical_decisions) == 1
+    decision = result.canonical_decisions[0]
+    assert decision.release_id == RELEASE_ID
+    assert decision.canonical_identity_id == "professor-c1"
+    assert decision.field_path == "employment.current_title"
+    assert decision.state.value == "unresolved"
+    assert decision.method.value == "deterministic"
+    assert decision.candidate_assertion_ids == ()
+    assert decision.selected_assertion_ids == ()
+    assert decision.conflicting_assertion_ids == ()
+    assert decision.llm_trace is None
+    assert result.current_fields == ()
+
+    outcomes = {outcome.assertion_id: outcome for outcome in result.constraint_outcomes}
+    assert set(outcomes) == {
+        "rejected-source-title",
+        "foreign-identity-title",
+    }
+    assert all(not outcome.admitted for outcome in outcomes.values())
+    assert outcomes["rejected-source-title"].reason_codes == (
+        "source_identity_rejected",
+    )
+    assert outcomes["foreign-identity-title"].reason_codes == ("identity_mismatch",)
+    assert {outcome.release_id for outcome in outcomes.values()} == {RELEASE_ID}
+    assert {outcome.decision_id for outcome in outcomes.values()} == {
+        decision.decision_id
+    }
+    assert {outcome.policy_version for outcome in outcomes.values()} == {"v1"}
+    assert decision.model_dump(mode="json") == reordered.canonical_decisions[
+        0
+    ].model_dump(mode="json")
+    assert result.constraint_outcomes == reordered.constraint_outcomes
+    assert result.unresolved_conflicts == reordered.unresolved_conflicts
+    assert result.current_fields == reordered.current_fields == ()
+    assert result.current_relationships == reordered.current_relationships == ()
+    assert result.content_sha256 == reordered.content_sha256
+
+    duplicate_logical = result.model_dump(mode="json")
+    duplicate_decision = dict(duplicate_logical["canonical_decisions"][0])
+    duplicate_decision["decision_id"] = "duplicate-logical-decision"
+    duplicate_logical["canonical_decisions"].append(duplicate_decision)
+    with pytest.raises(
+        ValueError,
+        match="logical.*field|field.*logical|identity.*path",
+    ):
+        module.DecisionBatchResult.model_validate(
+            _rehash_result_payload(duplicate_logical)
+        )
+
+    wrong_run = result.model_dump(mode="json")
+    wrong_run["canonical_decisions"][0]["decision_run_id"] = "wrong-run"
+    with pytest.raises(ValueError, match="decision_run_id|batch.*run"):
+        module.DecisionBatchResult.model_validate(_rehash_result_payload(wrong_run))
+
+    wrong_as_of = result.model_dump(mode="json")
+    wrong_as_of["canonical_decisions"][0]["decided_at"] = (
+        NOW + timedelta(seconds=1)
+    ).isoformat()
+    with pytest.raises(ValueError, match="decided_at|as_of"):
+        module.DecisionBatchResult.model_validate(_rehash_result_payload(wrong_as_of))

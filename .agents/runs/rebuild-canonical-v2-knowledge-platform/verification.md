@@ -999,6 +999,97 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   provider/runtime change or write occurred; Canonical knowledge acceptance and S5 overall remain
   open.
 
+## S5B task 5.2 canonical decision GREEN — 2026-07-12T04:32:46Z
+
+- The Accepted Task 5.1 scenarios were implemented behind one package-internal
+  `CanonicalDecisionEngine.decide` seam. Every supplied field/relationship assertion is retained;
+  deterministic source state, canonical ownership, entity/type/version/path, source-record, and
+  build-as-of constraints run before any recorded structured adjudication. Zero survivors and
+  material ambiguity remain explicit unresolved decisions with no current projection.
+- Recorded LLM output is strict UTF-8/finite JSON with exact base64/raw-byte SHA-256 binding,
+  validated-output equality, ordered input evidence, provider/model/prompt/schema versions, and
+  disjoint selected/conflicting roles. Selected fields must strictly equal their retained assertion
+  values; accepted relationships retain exact typed endpoints and role bindings.
+- Decision-group manifests partition every retained assertion and bind complete assertion models.
+  Field and relationship IDs now recompute a canonical seed over every serialized decision field,
+  policy/method/run/time/trace content, exact deterministic outcomes, the manifest, and identity
+  constraint input. Rehashed trace metadata, falsified rejection reasons, wrong canonical owners,
+  and reversed relationship endpoints all fail typed result validation.
+- C2_0005 hardens all three structured-decision trace families, adds partial unique terminal-role
+  indexes, and adds two exact five-column append-only constraint-outcome ledgers. It also adds
+  FK-linked append-only field/relationship decision-time identity-context snapshot ledgers. Upgrade
+  refuses a populated C2_0004 field or relationship decision table with SQLSTATE `55000` because no
+  safe historical context backfill exists; failed upgrades preserve C2_0004 and the original rows.
+  Downgrade takes `ACCESS EXCLUSIVE` locks across outcome/context ledgers and refuses any nonempty
+  append-only history before dropping C2_0005 objects.
+- The explicit-target PostgreSQL store revalidates the Accepted S2B gate, connected database marker,
+  disposable kind, and minimum known revision before use. Under one transaction/advisory lock it
+  validates current authoritative `identity_decision_output` and source-membership/record context,
+  persists assertions, decisions, immutable context snapshots, roles, and outcomes, reconstructs the
+  uncommitted typed result, and commits only on exact equality. Exact replay is idempotent; changed
+  run content conflicts; missing parents/membership create nothing; no current projection table is
+  materialized.
+- One merged Task 5.2 review initially found incomplete seed reconstruction and absent
+  source-to-canonical ownership checks. Vertical RED/GREEN repairs added complete seed recomputation,
+  deterministic outcome replay, field/relationship ownership matrices, and durable mapping
+  preflight. Closure then found that loading from mutable current identity state would break old
+  decisions after incremental collection. Immutable decision-time snapshots plus
+  `persist -> append source record/update allowed source state -> exact historical load` closed that
+  defect. The final migration closure added populated-C2_0004 refusal for both decision families.
+  Final reviewer disposition: `APPROVED`, zero open Critical/Important findings.
+- Commit-checkpoint verification passed:
+  - default Canonical V2: `93 passed, 48 explicit integration skips, 4 approved xfails`;
+  - real disposable baseline/integrity/decision: `41 passed`;
+  - separate S4C landing compatibility: `10 passed`;
+  - decision-engine contract: `11 passed`;
+  - S1 target plus backup-gate safety and S2/S2B: `49 passed` (`17 + 32`);
+  - S4 checkpoint harness: `23 passed`;
+  - Ruff check/format, Pyright (`0 errors, 0 warnings, 0 informations`), strict OpenSpec, wheel
+    contents, secret scan, and `git diff --check` all passed.
+- The real test system was container
+  `b748e6b66ac9b3ae2c39d2c25747b7b03072d13d5673784e5ca81ad9e67a7ac3`, network `none`, no
+  ports, restart `no`, read-only rootfs, tmpfs PGDATA, system ID `7661462653419962415`, with exact
+  disposable database markers. Fresh C2_0005 snapshot and S4C databases ended at zero business rows;
+  no sibling database remained. The container was gracefully stopped/removed, its host socket and
+  wheel-check roots were deleted, and the Docker volume-set hash remained
+  `8314a2b0200baffdf78d25ebfe0a9f11c5b22f129f8f33c05f1aa4f859ec896c`.
+- Final source/candidate audit re-proved Accepted S2B `accepted/50`, original `pgtest`
+  `paused=true` on volume `d81c6381…d241`, original Milvus hash-only
+  `43ef203e…67cc`, S4 manifest/restore/acceptance hashes, and the exact C2_0004 candidate marker,
+  system ID `7661313446684311592`, landing counts, and zero knowledge/publish rows. No original
+  Postgres exec/connection or Milvus client was used.
+- The audit corrected an earlier shorthand: the durable candidate has no persistent database/role
+  `default_transaction_read_only` setting and its unforced value is `off`. All Task 5.2 candidate
+  probes explicitly forced read-only sessions/transactions, the decision store rejects non-
+  `disposable` targets, and candidate revision/counts remained unchanged. Task 5.2 therefore claims
+  zero candidate writes, not database-level immutable enforcement; persistent candidate hardening is
+  a pre-existing operational risk for a future authorized infrastructure slice.
+- Task 5.2 is Accepted. Task 5.3 identity RED has not started; no canonical candidate release,
+  domain projection, index, provider call, legacy `chat.py`, or production-like cutover is claimed.
+
+## Task 5.2 pattern-fix report
+
+- Reported cases fixed: trace/role content gaps, outcome/group relinking, incomplete decision seed
+  validation, field/relationship ownership rebinding, historical context drift, unsafe populated
+  migration, and ConfigParser percent interpolation across Alembic test targets.
+- Defect class: evidence identities were locally typed but not completely content-bound across
+  result reconstruction, mutable identity context, persistence, and migration/replay boundaries.
+- Sibling search: all three decision trace families, both assertion/decision families, every
+  terminal role/outcome ledger, identity source/output mappings, source-record evolution, all
+  Alembic URL setters, migration upgrade/downgrade/race paths, and restart/replay behavior.
+- Sibling issues found/fixed: one canonical decision seed helper; deterministic constraint replay;
+  batch identity contexts; authoritative pre-write mapping checks; immutable per-family context
+  snapshots; two-family populated-upgrade refusal; one percent-escaping configuration boundary.
+- Not fixed: offline merge/split identity decisions, temporal intervals, typed domain projections,
+  publication, and query institution slots belong to Tasks 5.3–S8. Persistent read-only enforcement
+  for the already accepted candidate is recorded but was not mutated in this forbidden-write slice.
+- New invariant/helper/contract/test: manifest-bound full seeds, exact deterministic outcomes,
+  context-snapshot ledgers, historical-load-after-identity-evolution, membership omission matrices,
+  SQLSTATE `55000` two-family preflight, minimum-revision lineage, and rendered-socket URL matrices.
+- Remaining systemic risk: Task 5.3 must define reversible identity action context for general
+  merge/split outputs; future candidate-writing slices must explicitly decide and verify persistent
+  candidate access control before broadening authorized writers.
+
 ## Explicit non-claims
 
 - S2B acceptance satisfies only the backup prerequisite; each later task still requires its own

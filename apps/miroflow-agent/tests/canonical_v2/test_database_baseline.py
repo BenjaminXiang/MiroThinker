@@ -9,6 +9,8 @@ from alembic.script import ScriptDirectory
 import pytest
 import sqlalchemy as sa
 
+from src.data_agents.storage.database_target import set_alembic_database_url
+
 
 APP_ROOT = Path(__file__).resolve().parents[2]
 ALEMBIC_INI = APP_ROOT / "canonical_v2_alembic.ini"
@@ -50,7 +52,7 @@ def _migration_config(
     config = Config(str(ALEMBIC_INI))
     config.set_main_option("script_location", str(SCRIPT_LOCATION))
     if database_url is not None:
-        config.set_main_option("sqlalchemy.url", database_url)
+        set_alembic_database_url(config, database_url)
     if expected_database is not None:
         config.set_main_option("miroflow.expected_database", expected_database)
     if target_kind is not None:

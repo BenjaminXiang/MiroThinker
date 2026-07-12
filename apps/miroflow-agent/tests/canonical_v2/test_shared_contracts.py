@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import base64
+import binascii
 from datetime import datetime, timedelta, timezone
+import hashlib
 import importlib
 import json
 from typing import Any
@@ -23,6 +26,35 @@ def _policy(module: Any, kind: str = "field_selection") -> Any:
         policy_kind=kind,
         content_sha256="1" * 64,
         effective_at=NOW,
+    )
+
+
+def _llm_trace(
+    module: Any,
+    *,
+    input_evidence_ids: tuple[str, ...] = ("assertion-a", "assertion-b"),
+    validated_output: dict[str, Any] | None = None,
+) -> Any:
+    output = validated_output or {
+        "state": "selected",
+        "selected_assertion_ids": ["assertion-a"],
+        "conflicting_assertion_ids": ["assertion-b"],
+    }
+    raw_output = json.dumps(
+        output,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    return module.LLMDecisionTrace(
+        provider="recorded-fake",
+        model="identity-judge-v1",
+        prompt_version="prompt-v2",
+        schema_version="decision-v1",
+        input_evidence_ids=input_evidence_ids,
+        raw_output_base64=base64.b64encode(raw_output).decode("ascii"),
+        output_sha256=hashlib.sha256(raw_output).hexdigest(),
+        validated_output=output,
     )
 
 
@@ -89,16 +121,14 @@ def test_artifact_rejects_bad_hash_naive_time_and_half_parent_lineage() -> None:
     with pytest.raises(ValidationError, match="content_sha256"):
         module.EvidenceArtifact(**{**base, "content_sha256": "not-a-hash"})
     with pytest.raises(ValidationError, match="timezone"):
-        module.EvidenceArtifact(
-            **{**base, "acquired_at": datetime(2026, 7, 11, 17, 0)}
-        )
+        module.EvidenceArtifact(**{**base, "acquired_at": datetime(2026, 7, 11, 17, 0)})
     with pytest.raises(ValidationError, match="parent"):
-        module.EvidenceArtifact(
-            **{**base, "parent_artifact_id": "artifact-parent"}
-        )
+        module.EvidenceArtifact(**{**base, "parent_artifact_id": "artifact-parent"})
 
 
-def test_nonparsed_source_record_requires_typed_errors_and_keeps_partial_payload() -> None:
+def test_nonparsed_source_record_requires_typed_errors_and_keeps_partial_payload() -> (
+    None
+):
     module = _contracts()
     error = module.SourceError(
         error_code="missing_toast",
@@ -173,16 +203,11 @@ def test_source_assertion_retains_source_identity_time_and_conflicting_values() 
         )
 
 
-def test_canonical_decision_can_select_evidence_or_preserve_unresolved_conflict() -> None:
+def test_canonical_decision_can_select_evidence_or_preserve_unresolved_conflict() -> (
+    None
+):
     module = _contracts()
-    trace = module.LLMDecisionTrace(
-        provider="recorded-fake",
-        model="identity-judge-v1",
-        prompt_version="prompt-v2",
-        schema_version="decision-v1",
-        input_evidence_ids=("assertion-a", "assertion-b"),
-        output_sha256="3" * 64,
-    )
+    trace = _llm_trace(module)
     selected = module.CanonicalDecision(
         decision_id="decision-title-1",
         canonical_identity_id="professor-c1",
@@ -198,6 +223,7 @@ def test_canonical_decision_can_select_evidence_or_preserve_unresolved_conflict(
         confidence=0.83,
         rationale="Official current page is newer than the historical row.",
         llm_trace=trace,
+        release_id="release-r1",
         decided_at=NOW,
     )
     unresolved = module.CanonicalDecision(
@@ -214,6 +240,11 @@ def test_canonical_decision_can_select_evidence_or_preserve_unresolved_conflict(
 
     assert selected.selected_assertion_ids == ("assertion-a",)
     assert unresolved.conflicting_assertion_ids == ("assertion-a", "assertion-b")
+    assert module.CanonicalDecision.model_fields["release_id"].is_required()
+    selected_payload = selected.model_dump()
+    selected_payload.pop("release_id")
+    with pytest.raises(ValidationError, match="release_id"):
+        module.CanonicalDecision(**selected_payload)
     with pytest.raises(ValidationError, match="selected assertion"):
         module.CanonicalDecision(
             **{
@@ -235,9 +266,175 @@ def test_canonical_decision_can_select_evidence_or_preserve_unresolved_conflict(
                 "supersedes_decision_id": selected.decision_id,
             }
         )
+    with pytest.raises(
+        ValidationError,
+        match="selected.*conflicting|conflicting.*selected|disjoint|overlap",
+    ):
+        module.CanonicalDecision(
+            **{
+                **selected.model_dump(),
+                "conflicting_assertion_ids": selected.selected_assertion_ids,
+            }
+        )
+    for invalid_evidence_ids in (
+        ("assertion-a",),
+        ("assertion-b", "assertion-a"),
+    ):
+        with pytest.raises(
+            ValidationError,
+            match="input_evidence_ids|trace.*candidate|candidate.*trace",
+        ):
+            module.CanonicalDecision(
+                **{
+                    **selected.model_dump(),
+                    "llm_trace": trace.model_copy(
+                        update={"input_evidence_ids": invalid_evidence_ids}
+                    ),
+                }
+            )
 
 
-def test_source_and_canonical_identities_keep_merge_split_and_reversal_lineage() -> None:
+def test_llm_decision_trace_binds_exact_raw_bytes_hash_and_validated_object() -> None:
+    module = _contracts()
+    output = {
+        "rationale": "保留原始字节，而不是重新序列化输出。",
+        "selected_assertion_ids": ["assertion-a"],
+        "state": "selected",
+    }
+    raw_output = (
+        b'{  "rationale": "\xe4\xbf\x9d\xe7\x95\x99\xe5\x8e\x9f\xe5\xa7\x8b\xe5\xad\x97\xe8\x8a\x82\xef\xbc\x8c\xe8\x80\x8c\xe4\xb8\x8d\xe6\x98\xaf\xe9\x87\x8d\xe6\x96\xb0\xe5\xba\x8f\xe5\x88\x97\xe5\x8c\x96\xe8\xbe\x93\xe5\x87\xba\xe3\x80\x82", '
+        b'"selected_assertion_ids": ["assertion-a"], "state": "selected" }'
+    )
+    trace = module.LLMDecisionTrace(
+        provider="recorded-fake",
+        model="canonical-judge-v1",
+        prompt_version="prompt-v1",
+        schema_version="decision-v1",
+        input_evidence_ids=("assertion-a",),
+        raw_output_base64=base64.b64encode(raw_output).decode("ascii"),
+        output_sha256=hashlib.sha256(raw_output).hexdigest(),
+        validated_output=output,
+    )
+
+    assert base64.b64decode(trace.raw_output_base64, validate=True) == raw_output
+    assert trace.output_sha256 == hashlib.sha256(raw_output).hexdigest()
+    assert trace.validated_output == json.loads(raw_output)
+    for required_field in ("raw_output_base64", "validated_output"):
+        assert module.LLMDecisionTrace.model_fields[required_field].is_required()
+        missing_field_payload = trace.model_dump()
+        missing_field_payload.pop(required_field)
+        with pytest.raises(ValidationError, match=required_field):
+            module.LLMDecisionTrace(**missing_field_payload)
+
+    canonical_encoded = base64.b64encode(raw_output).decode("ascii")
+    whitespace_encoded = canonical_encoded[:12] + "\n" + canonical_encoded[12:]
+    padded_raw_output = b'{"answer":1}'
+    noncanonical_padding = base64.b64encode(padded_raw_output).decode("ascii") + "="
+    assert base64.b64decode(whitespace_encoded, validate=False) == raw_output
+    with pytest.raises(binascii.Error):
+        base64.b64decode(whitespace_encoded, validate=True)
+    decoded_noncanonical = base64.b64decode(noncanonical_padding, validate=False)
+    assert decoded_noncanonical == padded_raw_output
+    assert (
+        base64.b64encode(decoded_noncanonical).decode("ascii") != noncanonical_padding
+    )
+
+    invalid_cases = (
+        (
+            "base64 containing ASCII whitespace",
+            whitespace_encoded,
+            hashlib.sha256(raw_output).hexdigest(),
+            output,
+            "base64|encoded",
+        ),
+        (
+            "non-canonical base64 padding",
+            noncanonical_padding,
+            hashlib.sha256(padded_raw_output).hexdigest(),
+            {"answer": 1},
+            "base64|padding|canonical",
+        ),
+        (
+            "hash mismatch",
+            base64.b64encode(raw_output).decode("ascii"),
+            "0" * 64,
+            output,
+            "SHA-256|sha256|hash",
+        ),
+        (
+            "invalid UTF-8",
+            base64.b64encode(b"\xff").decode("ascii"),
+            hashlib.sha256(b"\xff").hexdigest(),
+            {},
+            "UTF-8|utf-8",
+        ),
+        (
+            "malformed JSON",
+            base64.b64encode(b"{not-json").decode("ascii"),
+            hashlib.sha256(b"{not-json").hexdigest(),
+            {},
+            "JSON|json",
+        ),
+        (
+            "JSON value is not an object",
+            base64.b64encode(b"[]").decode("ascii"),
+            hashlib.sha256(b"[]").hexdigest(),
+            {},
+            "object",
+        ),
+        (
+            "validated output differs",
+            base64.b64encode(b'{"answer":1}').decode("ascii"),
+            hashlib.sha256(b'{"answer":1}').hexdigest(),
+            {"answer": 2},
+            "validated_output|validated output|decoded",
+        ),
+        (
+            "duplicate JSON object keys",
+            base64.b64encode(b'{"answer":1,"answer":2}').decode("ascii"),
+            hashlib.sha256(b'{"answer":1,"answer":2}').hexdigest(),
+            {"answer": 2},
+            "duplicate|unique.*key|repeated.*key",
+        ),
+        (
+            "non-finite JSON number NaN",
+            base64.b64encode(b'{"answer":NaN}').decode("ascii"),
+            hashlib.sha256(b'{"answer":NaN}').hexdigest(),
+            {"answer": float("nan")},
+            "finite|NaN",
+        ),
+        (
+            "non-finite JSON number Infinity",
+            base64.b64encode(b'{"answer":Infinity}').decode("ascii"),
+            hashlib.sha256(b'{"answer":Infinity}').hexdigest(),
+            {"answer": float("inf")},
+            "finite|Infinity",
+        ),
+        (
+            "non-finite JSON number -Infinity",
+            base64.b64encode(b'{"answer":-Infinity}').decode("ascii"),
+            hashlib.sha256(b'{"answer":-Infinity}').hexdigest(),
+            {"answer": float("-inf")},
+            "finite|Infinity",
+        ),
+    )
+    for _, encoded, output_sha256, validated_output, message in invalid_cases:
+        with pytest.raises(ValidationError, match=message):
+            module.LLMDecisionTrace(
+                provider="recorded-fake",
+                model="canonical-judge-v1",
+                prompt_version="prompt-v1",
+                schema_version="decision-v1",
+                input_evidence_ids=("assertion-a",),
+                raw_output_base64=encoded,
+                output_sha256=output_sha256,
+                validated_output=validated_output,
+            )
+
+
+def test_source_and_canonical_identities_keep_merge_split_and_reversal_lineage() -> (
+    None
+):
     module = _contracts()
     source_identity = module.SourceIdentity(
         source_identity_id="source-company-1",
@@ -379,11 +576,14 @@ def test_relationship_catalog_expresses_canonical_derived_and_session_layers() -
         )
 
 
-def test_relationship_assertion_and_decision_keep_endpoint_evidence_and_conflict() -> None:
+def test_relationship_assertion_and_decision_keep_endpoint_evidence_and_conflict() -> (
+    None
+):
     module = _contracts()
     assertion = module.RelationshipAssertion(
         assertion_id="relation-assertion-1",
         relationship_type_id="professor_founded_company",
+        relationship_type_version="v1",
         source_record_id="record-official-bio",
         source_endpoint=module.IdentityReference(
             identity_id="source-professor-1",
@@ -406,6 +606,7 @@ def test_relationship_assertion_and_decision_keep_endpoint_evidence_and_conflict
         decision_id="relation-decision-1",
         canonical_relationship_id="canonical-relation-1",
         relationship_type_id=assertion.relationship_type_id,
+        relationship_type_version=assertion.relationship_type_version,
         source_canonical_identity_id="professor-c1",
         target_canonical_identity_id="company-c1",
         state="accepted",
@@ -427,6 +628,20 @@ def test_relationship_assertion_and_decision_keep_endpoint_evidence_and_conflict
 
     assert decision.selected_assertion_ids == (assertion.assertion_id,)
     assert decision.conflicting_assertion_ids == ("relation-assertion-2",)
+    assert module.RelationshipAssertion.model_fields[
+        "relationship_type_version"
+    ].is_required()
+    assert module.RelationshipDecision.model_fields[
+        "relationship_type_version"
+    ].is_required()
+    assertion_payload = assertion.model_dump()
+    assertion_payload.pop("relationship_type_version")
+    with pytest.raises(ValidationError, match="relationship_type_version"):
+        module.RelationshipAssertion(**assertion_payload)
+    decision_payload = decision.model_dump()
+    decision_payload.pop("relationship_type_version")
+    with pytest.raises(ValidationError, match="relationship_type_version"):
+        module.RelationshipDecision(**decision_payload)
     with pytest.raises(ValidationError, match="accepted relationship"):
         module.RelationshipDecision(
             **{**decision.model_dump(), "selected_assertion_ids": ()}
@@ -449,9 +664,56 @@ def test_relationship_assertion_and_decision_keep_endpoint_evidence_and_conflict
                 "supersedes_decision_id": decision.decision_id,
             }
         )
+    with pytest.raises(
+        ValidationError,
+        match="selected.*conflicting|conflicting.*selected|disjoint|overlap",
+    ):
+        module.RelationshipDecision(
+            **{
+                **decision.model_dump(),
+                "conflicting_assertion_ids": decision.selected_assertion_ids,
+            }
+        )
+
+    trace = _llm_trace(
+        module,
+        input_evidence_ids=decision.candidate_assertion_ids,
+        validated_output={
+            "state": "accepted",
+            "selected_assertion_ids": [assertion.assertion_id],
+            "conflicting_assertion_ids": ["relation-assertion-2"],
+            "role_bindings": {"source": "founder"},
+        },
+    )
+    structured = module.RelationshipDecision(
+        **{
+            **decision.model_dump(),
+            "method": "structured_llm",
+            "llm_trace": trace,
+        }
+    )
+    assert structured.llm_trace == trace
+    for invalid_evidence_ids in (
+        (assertion.assertion_id,),
+        tuple(reversed(decision.candidate_assertion_ids)),
+    ):
+        with pytest.raises(
+            ValidationError,
+            match="input_evidence_ids|trace.*candidate|candidate.*trace",
+        ):
+            module.RelationshipDecision(
+                **{
+                    **structured.model_dump(),
+                    "llm_trace": trace.model_copy(
+                        update={"input_evidence_ids": invalid_evidence_ids}
+                    ),
+                }
+            )
 
 
-def test_derived_and_session_relationships_are_not_source_grounded_canonical_facts() -> None:
+def test_derived_and_session_relationships_are_not_source_grounded_canonical_facts() -> (
+    None
+):
     module = _contracts()
     derived = module.DerivedRelationship(
         derived_relationship_id="derived-paper-sim-1",
@@ -484,7 +746,9 @@ def test_derived_and_session_relationships_are_not_source_grounded_canonical_fac
         )
 
 
-def test_policy_decisions_separate_soft_limitations_from_named_hard_exclusions() -> None:
+def test_policy_decisions_separate_soft_limitations_from_named_hard_exclusions() -> (
+    None
+):
     module = _contracts()
     limited = module.PolicyDecision(
         decision_id="eligibility-paper-1",
@@ -531,9 +795,7 @@ def test_policy_decisions_separate_soft_limitations_from_named_hard_exclusions()
             }
         )
     with pytest.raises(ValidationError, match="limitation"):
-        module.PolicyDecision(
-            **{**limited.model_dump(), "limitations": ()}
-        )
+        module.PolicyDecision(**{**limited.model_dump(), "limitations": ()})
 
 
 def test_inclusion_policy_is_not_a_path_eligibility_decision() -> None:
@@ -554,9 +816,7 @@ def test_inclusion_policy_is_not_a_path_eligibility_decision() -> None:
 
     assert inclusion.path is None
     with pytest.raises(ValidationError, match="path"):
-        module.PolicyDecision(
-            **{**inclusion.model_dump(), "path": "semantic_recall"}
-        )
+        module.PolicyDecision(**{**inclusion.model_dump(), "path": "semantic_recall"})
 
 
 def test_knowledge_gap_covers_required_classes_and_requires_proven_resolution() -> None:
@@ -604,9 +864,7 @@ def test_knowledge_gap_covers_required_classes_and_requires_proven_resolution() 
     assert gap.status.value == "open"
     assert gap.demand_count == 12
     with pytest.raises(ValidationError, match="accepted release"):
-        module.KnowledgeGap(
-            **{**gap.model_dump(), "status": "resolved"}
-        )
+        module.KnowledgeGap(**{**gap.model_dump(), "status": "resolved"})
     resolved = module.KnowledgeGap(
         **{
             **gap.model_dump(),
@@ -621,7 +879,9 @@ def test_knowledge_gap_covers_required_classes_and_requires_proven_resolution() 
     assert resolved.resolved_release_id == "release-r2"
 
 
-def test_build_manifest_accounts_for_every_versioned_projection_on_one_release() -> None:
+def test_build_manifest_accounts_for_every_versioned_projection_on_one_release() -> (
+    None
+):
     module = _contracts()
     published = module.ProjectionManifest(
         projection_id="published-paper",
@@ -694,7 +954,9 @@ def test_build_manifest_accounts_for_every_versioned_projection_on_one_release()
         )
 
 
-def test_candidate_verification_publication_and_rollback_keep_exact_release_parity() -> None:
+def test_candidate_verification_publication_and_rollback_keep_exact_release_parity() -> (
+    None
+):
     module = _contracts()
     candidate = module.CandidateRelease(
         release_id="release-r1",
@@ -747,9 +1009,7 @@ def test_candidate_verification_publication_and_rollback_keep_exact_release_pari
     assert promoted.release_id == promoted.index_release_id
     assert rollback.previous_release_id == promoted.release_id
     with pytest.raises(ValidationError, match="zero deviations"):
-        module.ReleaseVerification(
-            **{**verification.model_dump(), "extra_points": 1}
-        )
+        module.ReleaseVerification(**{**verification.model_dump(), "extra_points": 1})
     with pytest.raises(ValidationError, match="same release"):
         module.PublishedRelease(
             **{**promoted.model_dump(), "index_release_id": "release-r2"}

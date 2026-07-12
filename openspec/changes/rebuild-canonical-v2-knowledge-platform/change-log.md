@@ -110,3 +110,23 @@
   hash binding, relationship-unresolved coverage, and explicit Task 5.2 contract/schema handoff.
   No production module, shared contract, migration, database row, source, provider, typed domain,
   candidate release, publication, index, or runtime behavior changed.
+- Clarified the future S8 institution-query invariant after identifying the legacy Tsinghua topic-
+  stopword case as a systemic single-case patch. S8 must resolve a typed, release-scoped
+  institution slot from one canonical/alias catalog before span-aware pure-topic rewriting and must
+  cover multi-institution full-name/alias, ambiguous/unknown/absent, and overlap scenarios. Task 5.2
+  and legacy `chat.py` remain unchanged.
+- Completed and accepted task 5.2. A storage-independent decision engine now retains every field and
+  relationship assertion, applies deterministic identity/type/path/time constraints before optional
+  recorded structured adjudication, emits explicit outcomes/conflicts, and derives only evidence-
+  backed current selections. Decision IDs bind the complete decision, assertion-group manifest,
+  deterministic outcomes, policy/model/trace data, and decision-time identity context.
+- Added C2_0005 and an explicit disposable-only PostgreSQL store. Structured LLM bytes and validated
+  JSON are content-bound; selected/conflicting roles are disjoint; outcome and per-family identity-
+  context snapshot ledgers are FK-linked, hash-checked by the adapter, append-only, transactionally
+  replayable, and protected by downgrade locks/refusal. C2_0005 fails with SQLSTATE `55000` rather
+  than inventing snapshots when C2_0004 already contains field or relationship decisions.
+- Closed the systemic Alembic URL interpolation defect with one boundary helper used by all affected
+  tests, including encoded Unix-socket and reserved-character URLs. Final review found zero open
+  Critical/Important findings. Disposable databases/container/socket/wheel artifacts were removed;
+  the accepted C2_0004 candidate and all original sources remained unchanged. Task 5.3 has not
+  started.

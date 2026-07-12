@@ -34,7 +34,7 @@
 ## 5. Assertions, Identity, Fusion, and Temporal Decisions
 
 - [x] 5.1 Add RED contract/scenario coverage for retained competing assertions, deterministic constraints, structured LLM adjudication, unresolved conflicts, and current projections.
-- [ ] 5.2 Implement append-only field/relationship assertions and reproducible canonical decisions with evidence, policy/model version, confidence, rationale, and conflict state.
+- [x] 5.2 Implement append-only field/relationship assertions and reproducible canonical decisions with evidence, policy/model version, confidence, rationale, and conflict state.
 - [ ] 5.3 Add RED identity scenarios for strong-identifier merge, cross-format LLM decision, same-name separation, mistaken-merge split, and recovery lineage.
 - [ ] 5.4 Implement reversible offline canonical identity resolution and source-identity mapping without pre-launch ID compatibility constraints; query/answer paths remain read-only and may only emit identity-review gaps.
 - [ ] 5.5 Implement proportional temporal semantics for observation/publication/event time and naturally changing validity intervals.
@@ -63,14 +63,14 @@
 
 ## 8. Evidence-first Query Orchestration
 
-- [ ] 8.1 Add RED trace-replay scenarios for A-G behavior semantics, deterministic protected slots, contextual/alias/domain/Web rewrites, and invalid-plan rejection.
-- [ ] 8.2 Implement typed query understanding, protected-slot extraction, multi-view rewriting, and schema-validated LLM retrieval planning.
+- [ ] 8.1 Add RED trace-replay scenarios for A-G behavior semantics, deterministic protected slots, contextual/alias/domain/Web rewrites, invalid-plan rejection, and a parameterized institution-slot matrix covering several canonical full names and aliases, ambiguous/unknown/absent institutions, and institution/topic word overlap.
+- [ ] 8.2 Implement typed query understanding, protected-slot extraction, institution-span resolution against one accepted release-scoped alias catalog, span-aware pure-topic rewriting, multi-view rewriting, and schema-validated LLM retrieval planning; do not use institution topic-stopword enumeration.
 - [ ] 8.3 Implement `KnowledgeRead.execute` with concurrent exact/structured, lexical, vector, relationship, and current-Web adapters and full candidate traceability.
 - [ ] 8.4 Add RED scenarios proving Universal Web runs for all information-retrieval requests, skips refusal/clarification/control input, and degrades safely on provider failure.
 - [ ] 8.5 Implement identity-aware fusion, evidence aggregation, deterministic constraints, and structured LLM late reranking without blanket early quality exclusion.
 - [ ] 8.6 Add RED sufficiency/retry scenarios for supported, conflicting, and missing material question parts plus time/call/cost exhaustion.
 - [ ] 8.7 Implement structured evidence-sufficiency decisions and targeted bounded supplemental retrieval.
-- [ ] 8.8 Verify route/domain recall, precision, rank, trace replay, Web provenance, latency, and cost against frozen gates; review/accept the query slice.
+- [ ] 8.8 Verify route/domain recall, precision, rank, institution-slot/pure-topic invariants, trace replay, Web provenance, latency, and cost against frozen gates; review/accept the query slice.
 
 ## 9. Grounded Progressive Answers and Sessions
 

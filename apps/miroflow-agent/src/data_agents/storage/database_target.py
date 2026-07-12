@@ -14,6 +14,10 @@ class _AlembicConfig(Protocol):
     def get_main_option(self, name: str, default: str | None = None) -> str | None: ...
 
 
+class _WritableAlembicConfig(Protocol):
+    def set_main_option(self, name: str, value: str) -> None: ...
+
+
 class DatabaseTargetSafetyError(RuntimeError):
     """Raised before a destructive operation can use an unproven target."""
 
@@ -30,6 +34,14 @@ _FORBIDDEN_DATABASES = frozenset(
     }
 )
 _FORBIDDEN_PORTS = frozenset({15432})
+
+
+def set_alembic_database_url(
+    config: _WritableAlembicConfig,
+    raw_url: str,
+) -> None:
+    """Set a raw URL while escaping ConfigParser interpolation exactly once."""
+    config.set_main_option("sqlalchemy.url", raw_url.replace("%", "%%"))
 
 
 @dataclass(frozen=True)
@@ -93,7 +105,9 @@ def _select_explicit_value(
 ) -> str | None:
     if config_value and environment_value:
         left = normalize(config_value) if callable(normalize) else config_value
-        right = normalize(environment_value) if callable(normalize) else environment_value
+        right = (
+            normalize(environment_value) if callable(normalize) else environment_value
+        )
         if left != right:
             raise DatabaseTargetSafetyError(
                 f"Ambiguous explicit {label}: Alembic config and dedicated "
