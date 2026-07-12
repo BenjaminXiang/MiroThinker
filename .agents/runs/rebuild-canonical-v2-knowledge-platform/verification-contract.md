@@ -122,6 +122,39 @@
   wheel contents, strict OpenSpec, diff/formal/secret/import checks, frozen source and forced-read-
   only candidate audits, and owned-resource cleanup must all pass before acceptance.
 
+## Task 6.1 PRD domain/relationship catalog extension
+
+- Artifact/source RED/GREEN: the checked-in canonical JSON binds every authority file to one exact
+  repository-confined path, full-file SHA-256, authority tier, citation range, and required source
+  terms. Duplicate keys, source drift, path escape, unknown fields, nondeterministic bytes, or a
+  self-hash mismatch fail closed.
+- Domain RED/GREEN: one shared envelope plus exactly four domain catalogs freeze 9 shared fields,
+  101 domain fields, and 28 typed sub-objects. Locked precedence requires Paper title/year/venue/
+  authors and Professor `patent_ids`; Paper summaries are conditional for canonical inclusion and
+  required only by the quality-ready policy. `last_updated` is observation metadata, and each
+  sub-object names its parent domain.
+- Relationship RED/GREEN: 34 exact source-cited types cover seven canonical families and round-trip
+  through the Accepted `RelationshipType` contract. Identity/evidence lineage is immutable and
+  persistence-deferred; business facts retain proportional decision states. Role ownership,
+  same-domain identity lineage, decision/assertion family-subject compatibility, Professor-Paper
+  attribution evidence, Professor-Company role exclusivity, and conditional Company/Professor
+  cross-domain endpoints are validator-enforced.
+- Layer/scenario GREEN: canonical evidence-bearing types are separated from deferred release-derived
+  and session relations. Forty-two accounting scenarios cover every type/family plus all eight
+  Professor↔Paper, Professor↔Company, Professor↔Patent, and Company↔Patent directions with explicit
+  `supported`, `absent`, or `insufficient_evidence` outcomes. These outcomes describe S2 source
+  potential, not built or accepted edges.
+- Builder safety: output is confined to the approved S6 root, symlinks/escapes fail before write,
+  rendered bytes validate in a same-filesystem temporary file, and only then atomically replace the
+  prior artifact. Validation failure preserves the prior file.
+- Review policy: the one merged Task 6.1 specification/code-quality review closed five Important
+  findings and ended `Ready: Yes` with zero open Critical/Important findings. No migration or safety
+  exception review applies because the slice changes no production/storage boundary.
+- Commit checkpoint: deterministic build/check, the Task 6.1 plus Accepted shared-contract tests,
+  Ruff format/check, app-environment Pyright, strict OpenSpec, the formal S2B gate, diff/secret/
+  source-drift/scope checks, and generated-cache cleanup must pass before acceptance. No database,
+  Milvus, provider, runtime, or candidate write is permitted or required.
+
 ## Status
 
 S1 database-target safety, S2 tasks 2.1–2.5 and corpus/ground-truth/threshold policy, and S2B/task
@@ -144,7 +177,8 @@ Accepted at `2026-07-12T09:58:35Z`: proportional UTC-canonical temporal semantic
 observation/source-event/validity evidence and derive only the as-of-valid generic current subset.
 Task 5.6 is Accepted at `2026-07-12T15:04:36Z`: immutable review provenance, exact human resolution,
 and generic current/history reconstruction are closed through C2_0007 on owned disposable targets.
-The durable candidate remains C2_0004 with zero canonical/non-landing rows; Task 6.1 has not started.
+The durable candidate remains C2_0004 with zero canonical/non-landing rows. Task 6.1 is Accepted at
+`2026-07-12T16:40:08Z`; no database, Milvus, provider, runtime, or candidate write occurred.
 
 ## Behavior owner
 

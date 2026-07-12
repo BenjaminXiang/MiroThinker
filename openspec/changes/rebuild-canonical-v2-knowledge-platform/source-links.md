@@ -12,10 +12,20 @@
 - `docs/Agentic-RAG-PRD.md`
 - `docs/Company-Data-Agent-PRD.md`
 - `docs/Professor-Data-Agent-Requirements-Audit-2026-05-09.md`
+- `docs/Professor-Requirement-Review-2026-05-10.md` — explicit locked decisions override the
+  Professor audit where they differ; the audit plus review replace the legacy Professor PRD
 - `docs/Paper-Data-Agent-PRD.md`
+- `docs/Paper-Requirement-Review-2026-05-10.md` — explicit locked decisions override the Paper PRD
+  where they differ
 - `docs/Patent-Data-Agent-PRD.md`
 - `docs/Multi-turn-Context-Manager-Design.md`
-- `docs/测试集答案.xlsx` — seed scenarios only, not an answer template or sole gold source
+- `docs/测试集答案.xlsx` — its query/answer rows are high-value case-specific ground truth and seed
+  scenarios; they are not a generalized answer template or the sole acceptance source
+
+For Canonical V2 domain-catalog work, precedence is the active OpenSpec behavior contract, then the
+shared data-agent contract, then each domain's authoritative PRD/audit plus its explicit locked
+review decisions, then accepted S2 coverage evidence. Legacy code and workbook vocabulary are
+evidence, not schema authority.
 
 ## Existing OpenSpec capabilities affected
 

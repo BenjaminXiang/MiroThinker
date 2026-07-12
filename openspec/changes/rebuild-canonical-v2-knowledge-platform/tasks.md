@@ -42,7 +42,7 @@
 
 ## 6. Typed Domains, Relationships, Inclusion, and Eligibility
 
-- [ ] 6.1 Derive and freeze the typed Professor, Company, Paper, Patent field/sub-object and relationship catalog from authoritative PRDs in the verification evidence.
+- [x] 6.1 Derive and freeze the typed Professor, Company, Paper, Patent field/sub-object and relationship catalog from authoritative PRDs in the verification evidence.
 - [ ] 6.2 Add RED domain inclusion scenarios for approved Professor seeds, roster-anchored Papers, approved Patent exports, Company skeleton batches, and validated incremental Shenzhen Companies.
 - [ ] 6.3 Implement typed domain current projections and inclusion-policy adapters over retained assertions/identities.
 - [ ] 6.4 Add RED relationship scenarios across identity/lifecycle, organization/role, scholarly output, intellectual property, Company business/product/event, taxonomy/topic/geography, and evidence/lineage families.

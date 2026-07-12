@@ -5,22 +5,32 @@
 - OpenSpec owns behavior, scope, acceptance, and verification intent.
 - Each slice has one active writer.
 - Independent review owns Candidate-to-Accepted promotion.
-- No subagent or parallel writer is authorized by this artifact.
+- The primary agent may delegate bounded work to subagents. Parallel writers use isolated
+  branches/worktrees and separately named disposable resources; subagents do not approve an entire
+  task, push, promote, or mutate shared active pointers.
+- Each final Accepted OpenSpec task is integrated, verified, and committed separately by the
+  primary agent.
 
-## Slice dependency chain
+## Slice dependency DAG
 
-1. S1 database-target safety — first Ready slice after spec/user approval.
-2. S2 read-only inventory/baseline/threshold freeze — depends on S1 Accepted.
-3. S3 interface/database foundation — depends on S2 Accepted.
-4. S4 immutable landing — depends on S3 Accepted.
-5. S5 assertions/identity/fusion — depends on S4 Accepted.
-6. S6 typed domains/relationships/eligibility — depends on S5 Accepted.
-7. S7 candidate release/Milvus — depends on S6 Accepted.
-8. S8 query orchestration — depends on S7 Accepted.
-9. S9 grounded answer/session — depends on S8 Accepted.
-10. S10 gap/operations — depends on S9 Accepted.
-11. S11 consumer migration/legacy removal — depends on S10 Accepted.
-12. S12 full isolated candidate acceptance — depends on S11 Accepted.
+S1 through S5 are Accepted. Remaining work follows interface/data dependencies rather than task
+number alone:
 
-Later slices remain Specified until the predecessor is Accepted. A slice may be decomposed further
-when its contract remains independently testable, reviewable, and reversible.
+- S6 typed domain/relationship/eligibility production work consumes the Accepted S5 assertion,
+  identity, review, and history seams.
+- S7 release/index RED contracts may start once their public release seams are frozen; candidate
+  construction, typed projections, and index builders consume Accepted S6 catalogs/policies.
+- S8 query trace RED contracts may start against frozen interfaces and corpora; executable local
+  retrieval consumes an Accepted release, typed relationship/eligibility catalog, and index seam.
+- S9 answer/session RED contracts may start against typed evidence fixtures; production answer and
+  session behavior consumes the Accepted S8 evidence/trace result.
+- S10 gap RED contracts may start against shared typed gap/trace fixtures; operational closure and
+  admin migration consume accepted build/release/query/answer evidence.
+- S11 consumer migration depends on the replacement deep modules it migrates to being Accepted.
+- S12 candidate construction and final acceptance depend on all required build, release, index,
+  query, answer, gap, and consumer seams being Accepted.
+
+Two or more tasks may be In Progress when their dependencies are Accepted or their consumed
+interfaces are frozen, their writers and resources do not overlap, and each remains independently
+testable and commit-scoped. If a shared contract, migration head, database, Milvus release, output
+directory, or active pointer would have multiple writers, that seam returns to serial integration.

@@ -1447,3 +1447,78 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 - Remaining systemic risk: S6 must consume the accepted generic history without weakening evidence
   or lineage semantics, and S10 must add operational review state without converting immutable cases
   or resolutions into mutable canonical truth.
+
+## S6A task 6.1 PRD domain/relationship catalog acceptance — 2026-07-12T16:40:08Z
+
+- Four vertical TDD increments froze exact source/citation identity, typed four-domain fields and
+  sub-objects, seven relationship families plus three layer boundaries, and complete type/family/
+  direction scenario accounting. Observed REDs included a missing validator, empty domain and
+  relationship ledgers, missing scenario references/content hash, accepted schema drift, uniform
+  relationship states, unsupported alias semantics, broad type citations, wrong role ownership,
+  unconstrained union endpoints, unsafe builder output, and the stricter app-environment Pyright
+  failures. Each RED failed for the intended missing/broken contract before its GREEN.
+- The frozen catalog binds 14 repository-confined authority files and 27 exact citation ranges/
+  source-term checks. It contains 9 shared projection fields, 101 Professor/Company/Paper/Patent
+  fields, 28 typed sub-objects with explicit parents, 7 canonical relationship families, 34 exact
+  `RelationshipType` rows, 42 accounting scenarios, 8 approved traversal directions, and 5 deferred
+  owners. Catalog content SHA-256 is `c7730380…08d2`; checked-in file SHA-256 is
+  `e0c72585…55e3`.
+- Locked precedence now requires Paper `venue` and Professor `patent_ids`. Paper summaries remain
+  conditional for canonical inclusion and are scoped to the quality-ready policy, avoiding a global
+  completeness gate. `quality_status` remains a signal rather than path admission, `last_updated`
+  is observation metadata, and `top_papers` remains a deferred release-derived result.
+- Identity and evidence lineage rows are immutable, row-bound, and explicitly persistence-deferred
+  to Task 6.5. Business facts retain accepted/unresolved/rejected/superseded decision semantics.
+  Same-domain identity constraints, decision/assertion family-subject compatibility, exact role
+  ownership, Professor-Company role exclusivity, Professor-Paper attribution/evidence separation,
+  applicant-not-owner semantics, and conditional Company/Professor endpoint paths fail closed in
+  the validator and negative mutation matrix.
+- Relationship source accounting reports 2 absent, 7 insufficient-evidence, and 33 supported
+  scenarios. `supported` means retained S2 source material exists; none of these labels claims a
+  canonical edge, endpoint population, publication, or retrieval admission. Concrete derived types
+  remain S7/S8-owned and session types remain S9-owned.
+- Builder output is confined to the approved S6 root, rejects symlink/path escapes, validates a
+  same-filesystem temporary artifact before atomic replacement, and preserves the prior file on
+  validation failure. Strict JSON duplicate/unknown-key, deterministic ordering, source hash/range/
+  term, content self-hash, family/type/scenario completeness, role/state/time/path, and deferred-
+  owner drift cases are covered.
+- The one merged specification/code-quality review initially found five Important issues. The same
+  review closed requiredness precedence, role/evidence semantics, endpoint compatibility, atomic
+  output safety, and app-environment Pyright, found no Critical/Important regression, and returned
+  final `Ready: Yes`.
+- Commit-checkpoint evidence on the final implementation state:
+  - deterministic `build_domain_catalog.py --check` passed;
+  - Task 6.1 catalog plus Accepted shared-contract tests -> `24 passed in 0.62s`;
+  - Ruff check -> `All checks passed!`; Ruff format check -> `3 files already formatted`;
+  - app-environment Pyright -> `0 errors, 0 warnings, 0 informations`;
+  - formal S2B gate -> `state=accepted`, `source_count=50`, backup manifest
+    `a14c1eab…e59c8`, restore verification `98826e8d…7d231`;
+  - strict OpenSpec -> valid; tracked diff/whitespace, high-confidence secret,
+    generated-cache, and final artifact-scope checks -> clean.
+- Task 6.1 is Accepted. No production Python/public interface, migration, domain table/model,
+  PostgreSQL, Milvus, provider, durable-candidate, runtime/query/chat/admin behavior, push, PR, or
+  cutover changed. The original sources and C2_0004 durable candidate were not opened or written.
+
+## Task 6.1 pattern-fix report
+
+- Reported cases fixed: broad relationship-family citations, unsupported canonical alias edge,
+  uniform state/binding defaults, generic Company-role bypass, and unconditional union-endpoint
+  traversal paths.
+- Defect class: L6 evidence/provenance violation plus L4 schema/state contract drift and C1 missing
+  sibling matrix. One helper default and broad citations affected identity, organization, scholarly,
+  intellectual-property, Company-business, taxonomy, and evidence-lineage siblings.
+- Sibling patterns searched: legacy admin relationship/query paths; Accepted canonical identity and
+  relationship contracts; all four domain fields/sub-objects; active OpenSpec design/recovery specs;
+  authoritative PRD/reviews; S2 typed-business/relationship evidence; and Multi-turn directions.
+- Sibling issues found/fixed: exact authority additions, per-row endpoint binding/state/citation,
+  role ownership, attribution evidence separation, same-domain/family/subject constraints,
+  requiredness scopes, output confinement, parent/observation semantics, and negative drift tests.
+- Not fixed and why: production persistence/endpoint representation is Task 6.5; inclusion and typed
+  projections are Tasks 6.2–6.3; path admission is Tasks 6.6–6.7; institution slot/query rewriting
+  is S8; legacy `chat.py` institution stopwords remain untouched by explicit scope.
+- New invariant/helper/contract/test: exact manifest/citation and self-hash validator, deterministic
+  catalog builder, row-specific relationship semantics, total scenario/deferred ledgers, atomic
+  output guard, shared-contract round-trip, and source/schema/semantic mutation matrices.
+- Remaining systemic risk: Task 6.5 must choose executable persistence for metadata/sub-object
+  endpoints without falsely routing them through canonical-identity-only decisions, and S8 must
+  obtain one accepted release-scoped institution/alias catalog rather than reuse legacy name maps.

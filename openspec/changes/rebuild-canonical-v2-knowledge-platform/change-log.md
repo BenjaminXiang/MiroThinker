@@ -203,3 +203,20 @@
   S1/S2/S2B/S4 gates, static typing/lint, wheel contents, strict OpenSpec, formal admission,
   frozen-source/read-only-candidate audit, and owned cleanup. Original sources and the C2_0004
   durable candidate remain unchanged; task 6.1 has not started.
+- Completed and accepted Task 6.1 as an evidence-only PRD catalog freeze. A deterministic,
+  content-hashed artifact binds 14 authority files and 27 exact citations to 9 shared fields,
+  101 four-domain fields, 28 typed sub-objects, 34 canonical relationship types across all seven
+  required families, three relationship-layer boundaries, 42 source-accounting scenarios, and all
+  eight approved cross-domain traversal directions. Supported/absent/insufficient-evidence labels
+  describe source potential and never claim a built or accepted edge.
+- The systemic review repair removed an unsupported canonical alias edge, replaced broad family
+  citations with exact lineage/business/multi-turn evidence, made identity endpoint bindings and
+  business-role ownership proportional, separated Professor-Paper evidence from business roles,
+  constrained union endpoints against cross-domain identity mistakes, reconciled locked Paper/
+  Professor requiredness without a global completeness gate, and confined builder output to
+  validated atomic replacement inside the S6 root.
+- The single merged specification/code-quality review closed five Important findings and returned
+  final `Ready: Yes`. Deterministic build/check, 24 Task 6.1/shared-contract tests, Ruff,
+  app-environment Pyright, strict source/hash validation, and the formal Accepted S2B gate passed.
+  No production code, migration, database/Milvus/provider/candidate write, runtime/query change,
+  push, PR, or cutover occurred; Tasks 6.2–6.7 retain their declared ownership.
