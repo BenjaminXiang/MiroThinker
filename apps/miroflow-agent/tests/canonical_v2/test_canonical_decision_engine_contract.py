@@ -133,12 +133,13 @@ def _batch(
     canonical_identities: tuple[Any, ...],
     field_groups: tuple[Any, ...] = (),
     relationship_groups: tuple[Any, ...] = (),
+    as_of: datetime = NOW,
 ) -> Any:
     return module.DecisionBatchRequest(
         release_id=RELEASE_ID,
         decision_run_id=RUN_ID,
         decision_method_version="canonical-decision-v1",
-        as_of=NOW,
+        as_of=as_of,
         source_identities=source_identities,
         canonical_identities=canonical_identities,
         field_groups=field_groups,
@@ -1297,3 +1298,662 @@ def test_zero_survivor_group_keeps_rejected_evidence_and_an_audit_decision() -> 
     ).isoformat()
     with pytest.raises(ValueError, match="decided_at|as_of"):
         module.DecisionBatchResult.model_validate(_rehash_result_payload(wrong_as_of))
+
+
+def test_professor_affiliation_transition_keeps_history_and_projects_only_current() -> (
+    None
+):
+    module = _module()
+    professor_source = _source_identity(
+        module,
+        "professor-source-temporal",
+        source_system="official_profile",
+        record_ids=("record:affiliation-old", "record:affiliation-new"),
+    )
+    institution_a_source = _source_identity(
+        module,
+        "institution-a-source",
+        source_system="institution_registry",
+        entity_type="institution",
+    )
+    institution_b_source = _source_identity(
+        module,
+        "institution-b-source",
+        source_system="institution_registry",
+        entity_type="institution",
+    )
+    professor = _canonical_identity(
+        module,
+        "professor-temporal-c1",
+        (professor_source.source_identity_id,),
+    )
+    institution_a = _canonical_identity(
+        module,
+        "institution-a-c1",
+        (institution_a_source.source_identity_id,),
+        entity_type="institution",
+    )
+    institution_b = _canonical_identity(
+        module,
+        "institution-b-c1",
+        (institution_b_source.source_identity_id,),
+        entity_type="institution",
+    )
+
+    transition = NOW
+    old_start = NOW - timedelta(days=3650)
+    new_start = transition
+    old_assertion = module.RelationshipAssertion(
+        assertion_id="affiliation-old-evidence",
+        relationship_type_id="professor_affiliated_with_institution",
+        relationship_type_version="v1",
+        source_record_id="record:affiliation-old",
+        source_endpoint=module.IdentityReference(
+            identity_id=professor_source.source_identity_id,
+            identity_space="source",
+            entity_type="professor",
+        ),
+        target_endpoint=module.IdentityReference(
+            identity_id=institution_a_source.source_identity_id,
+            identity_space="source",
+            entity_type="institution",
+        ),
+        attributes={"role": "faculty"},
+        observed_at=NOW - timedelta(days=30),
+        source_event_time=old_start,
+        valid_from=old_start,
+        valid_to=transition,
+        assertion_run_id="temporal-assertion-run-1",
+    )
+    new_assertion = module.RelationshipAssertion(
+        assertion_id="affiliation-new-evidence",
+        relationship_type_id="professor_affiliated_with_institution",
+        relationship_type_version="v1",
+        source_record_id="record:affiliation-new",
+        source_endpoint=module.IdentityReference(
+            identity_id=professor_source.source_identity_id,
+            identity_space="source",
+            entity_type="professor",
+        ),
+        target_endpoint=module.IdentityReference(
+            identity_id=institution_b_source.source_identity_id,
+            identity_space="source",
+            entity_type="institution",
+        ),
+        attributes={"role": "faculty"},
+        observed_at=NOW - timedelta(days=7),
+        source_event_time=new_start,
+        valid_from=new_start,
+        valid_to=None,
+        assertion_run_id="temporal-assertion-run-1",
+    )
+
+    def relationship_group(
+        canonical_relationship_id: str,
+        target_canonical_identity_id: str,
+        assertion: Any,
+    ) -> Any:
+        return module.RelationshipAssertionGroup(
+            canonical_relationship_id=canonical_relationship_id,
+            relationship_type_id=assertion.relationship_type_id,
+            relationship_type_version=assertion.relationship_type_version,
+            source_canonical_identity_id=professor.canonical_identity_id,
+            target_canonical_identity_id=target_canonical_identity_id,
+            assertions=(assertion,),
+            policy=_policy(module, "relationship", "temporal-v1"),
+        )
+
+    request = _batch(
+        module,
+        source_identities=(
+            institution_b_source,
+            professor_source,
+            institution_a_source,
+        ),
+        canonical_identities=(institution_b, professor, institution_a),
+        relationship_groups=(
+            relationship_group(
+                "affiliation-episode-b",
+                institution_b.canonical_identity_id,
+                new_assertion,
+            ),
+            relationship_group(
+                "affiliation-episode-a",
+                institution_a.canonical_identity_id,
+                old_assertion,
+            ),
+        ),
+    )
+    engine = module.create_ephemeral_canonical_decision_engine()
+    result = engine.decide(request)
+
+    decisions = {
+        decision.canonical_relationship_id: decision
+        for decision in result.relationship_decisions
+    }
+    assert set(decisions) == {"affiliation-episode-a", "affiliation-episode-b"}
+    assert decisions["affiliation-episode-a"].valid_from == old_start
+    assert decisions["affiliation-episode-a"].valid_to == transition
+    assert decisions["affiliation-episode-b"].valid_from == new_start
+    assert decisions["affiliation-episode-b"].valid_to is None
+
+    assert tuple(
+        selection.canonical_relationship_id
+        for selection in result.current_relationships
+    ) == ("affiliation-episode-b",)
+    current = result.current_relationships[0]
+    assert current.valid_from == new_start
+    assert current.valid_to is None
+    assert {
+        assertion.assertion_id: assertion.source_event_time
+        for assertion in result.relationship_assertions
+    } == {
+        "affiliation-new-evidence": new_start,
+        "affiliation-old-evidence": old_start,
+    }
+
+    replay = engine.decide(
+        request.model_copy(
+            update={
+                "source_identities": tuple(reversed(request.source_identities)),
+                "canonical_identities": tuple(reversed(request.canonical_identities)),
+                "relationship_groups": tuple(reversed(request.relationship_groups)),
+            }
+        )
+    )
+    assert replay == result
+
+    missing_current = result.model_dump(mode="json")
+    missing_current["current_relationships"] = []
+    with pytest.raises(ValueError, match="accepted.*current|current.*accepted"):
+        module.DecisionBatchResult.model_validate(
+            _rehash_result_payload(missing_current)
+        )
+
+    changed_current_interval = result.model_dump(mode="json")
+    changed_current_interval["current_relationships"][0]["valid_from"] = (
+        new_start - timedelta(days=1)
+    ).isoformat()
+    with pytest.raises(ValueError, match="current.*validity|validity.*current"):
+        module.DecisionBatchResult.model_validate(
+            _rehash_result_payload(changed_current_interval)
+        )
+
+    changed_decision_interval = result.model_dump(mode="json")
+    changed_decision_interval["relationship_decisions"][1]["valid_from"] = (
+        new_start - timedelta(days=1)
+    ).isoformat()
+    changed_decision_interval["current_relationships"][0]["valid_from"] = (
+        new_start - timedelta(days=1)
+    ).isoformat()
+    with pytest.raises(
+        ValueError,
+        match="validity|decision.*seed|decision.*ID",
+    ):
+        module.DecisionBatchResult.model_validate(
+            _rehash_result_payload(changed_decision_interval)
+        )
+
+    old_decision = decisions["affiliation-episode-a"]
+    historical_as_current = result.model_dump(mode="json")
+    historical_as_current["current_relationships"].append(
+        {
+            "release_id": RELEASE_ID,
+            "canonical_relationship_id": "affiliation-episode-a",
+            "relationship_type_id": old_decision.relationship_type_id,
+            "relationship_type_version": old_decision.relationship_type_version,
+            "source_canonical_identity_id": professor.canonical_identity_id,
+            "target_canonical_identity_id": institution_a.canonical_identity_id,
+            "role_bindings": {},
+            "decision_id": old_decision.decision_id,
+            "supporting_assertion_ids": [old_assertion.assertion_id],
+            "conflicting_assertion_ids": [],
+            "valid_from": old_start.isoformat(),
+            "valid_to": transition.isoformat(),
+        }
+    )
+    with pytest.raises(ValueError, match="accepted.*current|current.*accepted"):
+        module.DecisionBatchResult.model_validate(
+            _rehash_result_payload(historical_as_current)
+        )
+
+
+def test_equal_field_values_with_different_validity_do_not_auto_merge() -> None:
+    module = _module()
+    sources = (
+        _source_identity(module, "temporal-field-a", source_system="official_a"),
+        _source_identity(module, "temporal-field-b", source_system="official_b"),
+    )
+    canonical = _canonical_identity(
+        module,
+        "professor-c1",
+        tuple(source.source_identity_id for source in sources),
+    )
+    first = module.SourceAssertion(
+        **{
+            **_field_assertion(
+                module,
+                "institution-evidence-a",
+                sources[0].source_identity_id,
+                "Institution B",
+                field_path="employment.institution",
+            ).model_dump(mode="python"),
+            "valid_from": NOW - timedelta(days=365),
+            "valid_to": None,
+        }
+    )
+    second = module.SourceAssertion(
+        **{
+            **_field_assertion(
+                module,
+                "institution-evidence-b",
+                sources[1].source_identity_id,
+                "Institution B",
+                field_path="employment.institution",
+            ).model_dump(mode="python"),
+            "valid_from": NOW - timedelta(days=30),
+            "valid_to": None,
+        }
+    )
+
+    result = module.create_ephemeral_canonical_decision_engine().decide(
+        _batch(
+            module,
+            source_identities=sources,
+            canonical_identities=(canonical,),
+            field_groups=(
+                _field_group(
+                    module,
+                    (second, first),
+                    field_path="employment.institution",
+                ),
+            ),
+        )
+    )
+
+    decision = result.canonical_decisions[0]
+    assert decision.state.value == "unresolved"
+    assert decision.selected_assertion_ids == ()
+    assert decision.conflicting_assertion_ids == (
+        "institution-evidence-a",
+        "institution-evidence-b",
+    )
+    assert result.current_fields == ()
+    assert {assertion.assertion_id for assertion in result.field_assertions} == {
+        "institution-evidence-a",
+        "institution-evidence-b",
+    }
+
+    response = _recorded_response(
+        module,
+        (first, second),
+        decision_kind="field",
+        subject_id=canonical.canonical_identity_id,
+        path="employment.institution",
+        state="selected",
+        selected_assertion_ids=(first.assertion_id, second.assertion_id),
+        conflicting_assertion_ids=(),
+        confidence=0.9,
+        rationale="The recorded fixture attempts to combine both intervals.",
+        uncertainty="The evidence intervals differ.",
+    )
+    with pytest.raises(module.AdjudicationOutputError, match="validity|interval"):
+        module.create_ephemeral_canonical_decision_engine(
+            adjudicator=_recorded_adjudicator(module, response)
+        ).decide(
+            _batch(
+                module,
+                source_identities=sources,
+                canonical_identities=(canonical,),
+                field_groups=(
+                    _field_group(
+                        module,
+                        (first, second),
+                        field_path="employment.institution",
+                    ),
+                ),
+            )
+        )
+
+    with pytest.raises(ValueError, match="validity|interval"):
+        module._selected_validity(
+            (first, second),
+            (first.assertion_id, second.assertion_id),
+        )
+
+
+def _temporal_relationship_context(module: Any) -> tuple[Any, ...]:
+    relationship_record = "record:temporal-relationship"
+    professor_source = _source_identity(
+        module,
+        "temporal-professor-source",
+        source_system="official_profile",
+        record_ids=(relationship_record,),
+    )
+    company_source = _source_identity(
+        module,
+        "temporal-company-source",
+        source_system="company_registry",
+        record_ids=(relationship_record,),
+        entity_type="company",
+    )
+    professor = _canonical_identity(
+        module,
+        "temporal-professor-c1",
+        (professor_source.source_identity_id,),
+    )
+    company = _canonical_identity(
+        module,
+        "temporal-company-c1",
+        (company_source.source_identity_id,),
+        entity_type="company",
+    )
+    endpoints = {
+        "source_endpoint": module.IdentityReference(
+            identity_id=professor_source.source_identity_id,
+            identity_space="source",
+            entity_type="professor",
+        ),
+        "target_endpoint": module.IdentityReference(
+            identity_id=company_source.source_identity_id,
+            identity_space="source",
+            entity_type="company",
+        ),
+    }
+    return professor_source, company_source, professor, company, endpoints
+
+
+def test_equal_temporal_instants_are_canonicalized_to_utc_before_hashing() -> None:
+    module = _module()
+    professor_source, company_source, professor, company, endpoints = (
+        _temporal_relationship_context(module)
+    )
+
+    def decide_with(zone: timezone) -> Any:
+        assertion = module.RelationshipAssertion(
+            assertion_id="timezone-equivalent-evidence",
+            relationship_type_id="professor_company_role",
+            relationship_type_version="v1",
+            source_record_id="record:temporal-relationship",
+            attributes={"role": "founder"},
+            observed_at=(NOW - timedelta(hours=1)).astimezone(zone),
+            source_event_time=(NOW - timedelta(days=90)).astimezone(zone),
+            valid_from=(NOW - timedelta(days=365)).astimezone(zone),
+            valid_to=(NOW + timedelta(days=30)).astimezone(zone),
+            assertion_run_id="temporal-assertion-run-1",
+            **endpoints,
+        )
+        return module.create_ephemeral_canonical_decision_engine().decide(
+            _batch(
+                module,
+                source_identities=(professor_source, company_source),
+                canonical_identities=(professor, company),
+                as_of=NOW.astimezone(zone),
+                relationship_groups=(
+                    module.RelationshipAssertionGroup(
+                        canonical_relationship_id="timezone-relationship-c1",
+                        relationship_type_id=assertion.relationship_type_id,
+                        relationship_type_version=assertion.relationship_type_version,
+                        source_canonical_identity_id=professor.canonical_identity_id,
+                        target_canonical_identity_id=company.canonical_identity_id,
+                        assertions=(assertion,),
+                        policy=_policy(module, "relationship", "temporal-v1"),
+                    ),
+                ),
+            )
+        )
+
+    utc_result = decide_with(timezone.utc)
+    offset_result = decide_with(timezone(timedelta(hours=8)))
+
+    assert offset_result == utc_result
+    assert offset_result.as_of.utcoffset() == timedelta(0)
+    assertion = offset_result.relationship_assertions[0]
+    assert assertion.observed_at.utcoffset() == timedelta(0)
+    assert assertion.source_event_time is not None
+    assert assertion.source_event_time.utcoffset() == timedelta(0)
+    assert assertion.valid_from is not None
+    assert assertion.valid_from.utcoffset() == timedelta(0)
+    assert assertion.valid_to is not None
+    assert assertion.valid_to.utcoffset() == timedelta(0)
+    serialized = assertion.model_dump_json()
+    assert "+08:00" not in serialized
+
+
+@pytest.mark.parametrize(
+    ("valid_from", "valid_to", "source_event_time", "is_current"),
+    (
+        (
+            NOW - timedelta(days=30),
+            NOW + timedelta(days=30),
+            NOW - timedelta(days=90),
+            True,
+        ),
+        (
+            NOW - timedelta(days=30),
+            NOW,
+            NOW - timedelta(days=90),
+            False,
+        ),
+        (
+            NOW + timedelta(days=1),
+            None,
+            NOW - timedelta(days=90),
+            False,
+        ),
+        (None, None, NOW + timedelta(days=30), True),
+    ),
+    ids=("active", "ended-at-boundary", "future", "unknown"),
+)
+def test_relationship_current_projection_is_the_as_of_valid_subset(
+    valid_from: datetime | None,
+    valid_to: datetime | None,
+    source_event_time: datetime,
+    is_current: bool,
+) -> None:
+    module = _module()
+    professor_source, company_source, professor, company, endpoints = (
+        _temporal_relationship_context(module)
+    )
+    assertion = module.RelationshipAssertion(
+        assertion_id="temporal-relationship-evidence",
+        relationship_type_id="professor_company_role",
+        relationship_type_version="v1",
+        source_record_id="record:temporal-relationship",
+        attributes={"role": "founder"},
+        observed_at=NOW - timedelta(hours=1),
+        source_event_time=source_event_time,
+        valid_from=valid_from,
+        valid_to=valid_to,
+        assertion_run_id="temporal-assertion-run-1",
+        **endpoints,
+    )
+    group = module.RelationshipAssertionGroup(
+        canonical_relationship_id="temporal-relationship-c1",
+        relationship_type_id=assertion.relationship_type_id,
+        relationship_type_version=assertion.relationship_type_version,
+        source_canonical_identity_id=professor.canonical_identity_id,
+        target_canonical_identity_id=company.canonical_identity_id,
+        assertions=(assertion,),
+        policy=_policy(module, "relationship", "temporal-v1"),
+    )
+
+    result = module.create_ephemeral_canonical_decision_engine().decide(
+        _batch(
+            module,
+            source_identities=(professor_source, company_source),
+            canonical_identities=(professor, company),
+            relationship_groups=(group,),
+        )
+    )
+
+    decision = result.relationship_decisions[0]
+    assert decision.state.value == "accepted"
+    assert decision.valid_from == valid_from
+    assert decision.valid_to == valid_to
+    assert result.relationship_assertions[0].source_event_time == source_event_time
+    if valid_from is None and valid_to is None:
+        assert decision.valid_from is None
+        assert decision.valid_to is None
+    if is_current:
+        assert len(result.current_relationships) == 1
+        assert result.current_relationships[0].valid_from == valid_from
+        assert result.current_relationships[0].valid_to == valid_to
+    else:
+        assert result.current_relationships == ()
+
+
+def test_equal_relationship_attributes_with_different_validity_do_not_auto_merge() -> (
+    None
+):
+    module = _module()
+    professor_source, company_source, professor, company, endpoints = (
+        _temporal_relationship_context(module)
+    )
+    assertions = tuple(
+        module.RelationshipAssertion(
+            assertion_id=assertion_id,
+            relationship_type_id="professor_company_role",
+            relationship_type_version="v1",
+            source_record_id="record:temporal-relationship",
+            attributes={"role": "founder"},
+            observed_at=NOW - timedelta(hours=1),
+            valid_from=valid_from,
+            valid_to=None,
+            assertion_run_id="temporal-assertion-run-1",
+            **endpoints,
+        )
+        for assertion_id, valid_from in (
+            ("relationship-interval-old", NOW - timedelta(days=365)),
+            ("relationship-interval-new", NOW - timedelta(days=30)),
+        )
+    )
+    group = module.RelationshipAssertionGroup(
+        canonical_relationship_id="temporal-relationship-c1",
+        relationship_type_id="professor_company_role",
+        relationship_type_version="v1",
+        source_canonical_identity_id=professor.canonical_identity_id,
+        target_canonical_identity_id=company.canonical_identity_id,
+        assertions=tuple(reversed(assertions)),
+        policy=_policy(module, "relationship", "temporal-v1"),
+    )
+
+    result = module.create_ephemeral_canonical_decision_engine().decide(
+        _batch(
+            module,
+            source_identities=(professor_source, company_source),
+            canonical_identities=(professor, company),
+            relationship_groups=(group,),
+        )
+    )
+
+    decision = result.relationship_decisions[0]
+    assert decision.state.value == "unresolved"
+    assert decision.selected_assertion_ids == ()
+    assert decision.conflicting_assertion_ids == (
+        "relationship-interval-new",
+        "relationship-interval-old",
+    )
+    assert decision.valid_from is None
+    assert decision.valid_to is None
+    assert result.current_relationships == ()
+    assert result.unresolved_conflicts[0].assertion_ids == (
+        "relationship-interval-new",
+        "relationship-interval-old",
+    )
+
+
+@pytest.mark.parametrize(
+    ("valid_from", "valid_to", "is_current"),
+    (
+        (NOW - timedelta(days=30), NOW + timedelta(days=30), True),
+        (NOW - timedelta(days=30), NOW, False),
+        (NOW + timedelta(days=1), None, False),
+        (None, None, True),
+    ),
+    ids=("active", "ended-at-boundary", "future", "unknown"),
+)
+def test_field_current_projection_is_the_as_of_valid_subset(
+    valid_from: datetime | None,
+    valid_to: datetime | None,
+    is_current: bool,
+) -> None:
+    module = _module()
+    source = _source_identity(
+        module,
+        "temporal-field-source",
+        source_system="official_profile",
+    )
+    canonical = _canonical_identity(
+        module,
+        "professor-c1",
+        (source.source_identity_id,),
+    )
+    assertion = module.SourceAssertion(
+        **{
+            **_field_assertion(
+                module,
+                "temporal-title-evidence",
+                source.source_identity_id,
+                "Professor",
+            ).model_dump(mode="python"),
+            "source_event_time": NOW - timedelta(days=90),
+            "valid_from": valid_from,
+            "valid_to": valid_to,
+        }
+    )
+
+    result = module.create_ephemeral_canonical_decision_engine().decide(
+        _batch(
+            module,
+            source_identities=(source,),
+            canonical_identities=(canonical,),
+            field_groups=(_field_group(module, (assertion,)),),
+        )
+    )
+
+    assert result.canonical_decisions[0].state.value == "selected"
+    assert result.field_assertions == (assertion,)
+    assert result.field_assertions[0].source_event_time == NOW - timedelta(days=90)
+    if is_current:
+        assert len(result.current_fields) == 1
+        assert result.current_fields[0].valid_from == valid_from
+        assert result.current_fields[0].valid_to == valid_to
+
+        missing_current = result.model_dump(mode="json")
+        missing_current["current_fields"] = []
+        with pytest.raises(ValueError, match="selected.*current|current.*selected"):
+            module.DecisionBatchResult.model_validate(
+                _rehash_result_payload(missing_current)
+            )
+
+        changed_current = result.model_dump(mode="json")
+        changed_current["current_fields"][0]["valid_from"] = (
+            NOW - timedelta(days=29)
+        ).isoformat()
+        with pytest.raises(ValueError, match="current.*validity|validity.*current"):
+            module.DecisionBatchResult.model_validate(
+                _rehash_result_payload(changed_current)
+            )
+    else:
+        assert result.current_fields == ()
+
+        injected_current = result.model_dump(mode="json")
+        decision = result.canonical_decisions[0]
+        injected_current["current_fields"] = [
+            {
+                "release_id": RELEASE_ID,
+                "canonical_identity_id": canonical.canonical_identity_id,
+                "field_path": decision.field_path,
+                "value": assertion.value,
+                "decision_id": decision.decision_id,
+                "supporting_assertion_ids": list(decision.selected_assertion_ids),
+                "conflicting_assertion_ids": list(decision.conflicting_assertion_ids),
+                "valid_from": (None if valid_from is None else valid_from.isoformat()),
+                "valid_to": None if valid_to is None else valid_to.isoformat(),
+            }
+        ]
+        with pytest.raises(ValueError, match="selected.*current|current.*selected"):
+            module.DecisionBatchResult.model_validate(
+                _rehash_result_payload(injected_current)
+            )

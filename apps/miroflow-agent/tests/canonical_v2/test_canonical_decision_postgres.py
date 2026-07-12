@@ -354,8 +354,18 @@ def _recorded_response(
     )
 
 
-def _decision_result(*, changed: bool = False) -> Any:
+def _decision_result(
+    *,
+    changed: bool = False,
+    temporal_history: bool = False,
+    non_utc_temporal: bool = False,
+) -> Any:
     module = _engine_module()
+    input_zone = timezone(timedelta(hours=8)) if non_utc_temporal else timezone.utc
+
+    def input_time(value: datetime | None) -> datetime | None:
+        return None if value is None else value.astimezone(input_zone)
+
     changed_field_id = "field-b-changed" if changed else "field-b"
     sources = (
         _source_identity(
@@ -444,6 +454,38 @@ def _decision_result(*, changed: bool = False) -> Any:
             entity_type="company",
         ),
     }
+    relationship_rows = (
+        (
+            (
+                "relation-role-old",
+                "founder",
+                60 * 24 * 400,
+                NOW - timedelta(days=365),
+                NOW - timedelta(days=365),
+                NOW,
+            ),
+            (
+                "relation-role-current",
+                "founder",
+                60 * 24,
+                NOW,
+                NOW,
+                None,
+            ),
+        )
+        if temporal_history
+        else (
+            (
+                "relation-founder",
+                "founder",
+                50,
+                NOW - timedelta(days=365),
+                NOW - timedelta(days=365),
+                None,
+            ),
+            ("relation-advisor", "advisor", 40, None, None, None),
+        )
+    )
     relationship_assertions = tuple(
         module.RelationshipAssertion(
             assertion_id=assertion_id,
@@ -451,14 +493,21 @@ def _decision_result(*, changed: bool = False) -> Any:
             relationship_type_version="v1",
             source_record_id="record:relationship",
             attributes={"role": role},
-            observed_at=NOW - timedelta(minutes=minutes),
+            observed_at=(NOW - timedelta(minutes=minutes)).astimezone(input_zone),
+            source_event_time=input_time(source_event_time),
+            valid_from=input_time(valid_from),
+            valid_to=input_time(valid_to),
             assertion_run_id="relationship-assertion-run-1",
             **endpoints,
         )
-        for assertion_id, role, minutes in (
-            ("relation-founder", "founder", 50),
-            ("relation-advisor", "advisor", 40),
-        )
+        for (
+            assertion_id,
+            role,
+            minutes,
+            source_event_time,
+            valid_from,
+            valid_to,
+        ) in relationship_rows
     )
     field_response = _recorded_response(
         module,
@@ -475,23 +524,56 @@ def _decision_result(*, changed: bool = False) -> Any:
             else "The newer official profile supports the chair title."
         ),
     )
-    relationship_response = _recorded_response(
-        module,
-        decision_kind="relationship",
-        subject_id="canonical-relationship-1",
-        path="professor_company_role",
-        assertions=relationship_assertions,
-        state="selected",
-        selected_assertion_ids=("relation-founder",),
-        conflicting_assertion_ids=("relation-advisor",),
-        rationale="The official evidence supports the founder role.",
-        role_bindings={"source": "founder"},
+    relationship_groups = (
+        tuple(
+            module.RelationshipAssertionGroup(
+                canonical_relationship_id=canonical_relationship_id,
+                relationship_type_id="professor_company_role",
+                relationship_type_version="v1",
+                source_canonical_identity_id="professor-c1",
+                target_canonical_identity_id="company-c1",
+                assertions=(assertion,),
+                policy=_policy(module, "relationship", version="v2"),
+            )
+            for canonical_relationship_id, assertion in (
+                ("canonical-relationship-old", relationship_assertions[0]),
+                ("canonical-relationship-current", relationship_assertions[1]),
+            )
+        )
+        if temporal_history
+        else (
+            module.RelationshipAssertionGroup(
+                canonical_relationship_id="canonical-relationship-1",
+                relationship_type_id="professor_company_role",
+                relationship_type_version="v1",
+                source_canonical_identity_id="professor-c1",
+                target_canonical_identity_id="company-c1",
+                assertions=relationship_assertions,
+                policy=_policy(module, "relationship", version="v2"),
+            ),
+        )
     )
+    recorded_responses = [field_response]
+    if not temporal_history:
+        recorded_responses.append(
+            _recorded_response(
+                module,
+                decision_kind="relationship",
+                subject_id="canonical-relationship-1",
+                path="professor_company_role",
+                assertions=relationship_assertions,
+                state="selected",
+                selected_assertion_ids=("relation-founder",),
+                conflicting_assertion_ids=("relation-advisor",),
+                rationale="The official evidence supports the founder role.",
+                role_bindings={"source": "founder"},
+            )
+        )
     request = module.DecisionBatchRequest(
         release_id=RELEASE_ID,
         decision_run_id=RUN_ID,
         decision_method_version="canonical-decision-v1",
-        as_of=NOW,
+        as_of=NOW.astimezone(input_zone),
         source_identities=sources,
         canonical_identities=(professor, company),
         field_groups=(
@@ -502,24 +584,14 @@ def _decision_result(*, changed: bool = False) -> Any:
                 policy=_policy(module, "field_selection"),
             ),
         ),
-        relationship_groups=(
-            module.RelationshipAssertionGroup(
-                canonical_relationship_id="canonical-relationship-1",
-                relationship_type_id="professor_company_role",
-                relationship_type_version="v1",
-                source_canonical_identity_id="professor-c1",
-                target_canonical_identity_id="company-c1",
-                assertions=relationship_assertions,
-                policy=_policy(module, "relationship", version="v2"),
-            ),
-        ),
+        relationship_groups=relationship_groups,
     )
     adjudicator = module.create_recorded_structured_adjudicator(
         provider="recorded",
         model="canonical-judge-fixture-v1",
         prompt_version="canonical-adjudication-v1",
         schema_version="canonical-adjudication-output-v1",
-        responses=(field_response, relationship_response),
+        responses=tuple(recorded_responses),
     )
     return module.create_ephemeral_canonical_decision_engine(
         adjudicator=adjudicator
@@ -704,7 +776,7 @@ def _insert_prerequisites(
             "target_entity_types, direction, roles, required_evidence_kinds, "
             "time_semantics, allowed_states, eligible_paths) VALUES "
             "('professor_company_role', 'v1', 'canonical', %s, %s, 'directed', %s, "
-            "%s, 'observed_at', %s, %s)",
+            "%s, 'validity_interval', %s, %s)",
             (
                 Jsonb(["professor"]),
                 Jsonb(["company"]),
@@ -808,6 +880,175 @@ def test_complete_field_and_relationship_result_round_trips_and_replays_exactly(
             "SELECT version_num FROM public.canonical_v2_alembic_version"
         ).fetchone() == ("C2_0005",)
     assert _store(target).load(RELEASE_ID, RUN_ID) == result
+
+
+def test_temporal_relationship_history_restarts_with_only_as_of_current(
+    target: _Target,
+) -> None:
+    result = _decision_result(temporal_history=True)
+    changed = _decision_result(changed=True, temporal_history=True)
+    _insert_prerequisites(target)
+
+    persisted = _store(target).persist(result)
+    counts = _persisted_counts(target)
+    loaded = _store(target).load(RELEASE_ID, RUN_ID)
+
+    assert persisted == loaded == result
+    assert len(loaded.relationship_assertions) == 2
+    assert len(loaded.relationship_decisions) == 2
+    assert tuple(
+        current.canonical_relationship_id for current in loaded.current_relationships
+    ) == ("canonical-relationship-current",)
+    assert {
+        decision.canonical_relationship_id: (
+            decision.valid_from,
+            decision.valid_to,
+        )
+        for decision in loaded.relationship_decisions
+    } == {
+        "canonical-relationship-current": (NOW, None),
+        "canonical-relationship-old": (NOW - timedelta(days=365), NOW),
+    }
+    assert {
+        assertion.assertion_id: (
+            assertion.observed_at,
+            assertion.source_event_time,
+            assertion.valid_from,
+            assertion.valid_to,
+        )
+        for assertion in loaded.relationship_assertions
+    } == {
+        "relation-role-current": (
+            NOW - timedelta(days=1),
+            NOW,
+            NOW,
+            None,
+        ),
+        "relation-role-old": (
+            NOW - timedelta(days=400),
+            NOW - timedelta(days=365),
+            NOW - timedelta(days=365),
+            NOW,
+        ),
+    }
+
+    with _connect(target) as connection:
+        assert connection.execute(
+            "SELECT assertion_id, observed_at, source_event_time, valid_from, valid_to "
+            "FROM knowledge.relationship_assertion ORDER BY assertion_id"
+        ).fetchall() == [
+            (
+                "relation-role-current",
+                NOW - timedelta(days=1),
+                NOW,
+                NOW,
+                None,
+            ),
+            (
+                "relation-role-old",
+                NOW - timedelta(days=400),
+                NOW - timedelta(days=365),
+                NOW - timedelta(days=365),
+                NOW,
+            ),
+        ]
+        assert connection.execute(
+            "SELECT canonical_relationship_id, valid_from, valid_to "
+            "FROM knowledge.relationship_decision "
+            "ORDER BY canonical_relationship_id"
+        ).fetchall() == [
+            ("canonical-relationship-current", NOW, None),
+            (
+                "canonical-relationship-old",
+                NOW - timedelta(days=365),
+                NOW,
+            ),
+        ]
+
+    with pytest.raises(
+        _postgres_module().CanonicalDecisionPersistenceError,
+        match="content|conflict|replay|decision_run_id|run",
+    ):
+        _store(target).persist(changed)
+
+    assert _store(target).load(RELEASE_ID, RUN_ID) == result
+    assert _persisted_counts(target) == counts
+    with _connect(target) as connection:
+        assert connection.execute(
+            "SELECT count(*) FROM knowledge.source_assertion "
+            "WHERE assertion_id = 'field-b-changed'"
+        ).fetchone() == (0,)
+
+
+def test_non_utc_temporal_inputs_restart_as_one_canonical_instant(
+    target: _Target,
+) -> None:
+    result = _decision_result(
+        temporal_history=True,
+        non_utc_temporal=True,
+    )
+    _insert_prerequisites(target)
+    with _connect(target, autocommit=True) as connection:
+        connection.execute(
+            sql.SQL("ALTER DATABASE {} SET timezone TO 'Asia/Shanghai'").format(
+                sql.Identifier(target.expected_database)
+            )
+        )
+    with _connect(target) as connection:
+        assert connection.execute("SHOW timezone").fetchone() == ("Asia/Shanghai",)
+
+    persisted = _store(target).persist(result)
+    loaded = _store(target).load(RELEASE_ID, RUN_ID)
+
+    assert persisted == loaded == result
+    for assertion in loaded.relationship_assertions:
+        assert assertion.observed_at.utcoffset() == timedelta(0)
+        if assertion.source_event_time is not None:
+            assert assertion.source_event_time.utcoffset() == timedelta(0)
+        if assertion.valid_from is not None:
+            assert assertion.valid_from.utcoffset() == timedelta(0)
+        if assertion.valid_to is not None:
+            assert assertion.valid_to.utcoffset() == timedelta(0)
+    assert all(
+        decision.valid_from is None or decision.valid_from.utcoffset() == timedelta(0)
+        for decision in loaded.relationship_decisions
+    )
+    assert loaded.content_sha256 == result.content_sha256
+
+
+def test_corrupt_temporal_restart_is_wrapped_by_store_abstraction(
+    target: _Target,
+) -> None:
+    result = _decision_result(temporal_history=True)
+    _insert_prerequisites(target)
+    assert _store(target).persist(result) == result
+
+    with _connect(target, autocommit=True) as connection:
+        connection.execute(
+            "ALTER TABLE knowledge.relationship_assertion DISABLE TRIGGER USER"
+        )
+        try:
+            connection.execute(
+                "UPDATE knowledge.relationship_assertion "
+                "SET valid_from = valid_from - interval '1 day' "
+                "WHERE assertion_id = 'relation-role-current'"
+            )
+        finally:
+            connection.execute(
+                "ALTER TABLE knowledge.relationship_assertion ENABLE TRIGGER USER"
+            )
+
+    module = _postgres_module()
+    with pytest.raises(
+        module.CanonicalDecisionPersistenceError,
+        match="incomplete|corrupt",
+    ) as caught:
+        _store(target).load(RELEASE_ID, RUN_ID)
+    assert isinstance(caught.value.__cause__, ValueError)
+    assert not isinstance(
+        caught.value.__cause__,
+        _engine_module().DecisionBatchIntegrityError,
+    )
 
 
 @pytest.mark.parametrize("omitted_membership", ("prof-source-b", "company-source"))

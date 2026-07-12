@@ -73,6 +73,29 @@
 - Real interaction / contract / trace command: run C2_0006 migration, persistence, replay, conflict, concurrency, rollback, and downgrade tests against the named network-none/no-port/tmpfs disposable PostgreSQL target
 - OpenSpec validation command: `openspec validate rebuild-canonical-v2-knowledge-platform --strict`
 
+## Task 5.5 temporal extension
+
+- RED paths: `tests/canonical_v2/test_canonical_decision_engine_contract.py` and
+  `tests/canonical_v2/test_canonical_decision_postgres.py`.
+- Observed REDs: relationship decisions dropped selected validity; all accepted/selected decisions
+  were projected as current; equal evidence with different intervals auto-merged; PostgreSQL load
+  reconstructed current selections without validity; equal non-UTC instants changed assertion and
+  batch hashes; validation-time interval disagreement leaked an engine-private exception.
+- Observable GREEN: Professor affiliation-like episodes retain old/new evidence and decisions while
+  only the episode valid at `as_of` is current; fields and relationships use half-open intervals,
+  preserve unknown endpoints, keep future/ended decisions as history, and retain source event time
+  without synthesizing validity.
+- Integrity GREEN: selected evidence has one exact validity pair, relationship decisions/current
+  selections copy it exactly, rehashed current/interval tampering fails closed, all Canonical V2
+  datetimes canonicalize to UTC, and corrupt restart remains behind the storage error abstraction.
+- Real interaction: a marked network-none/no-port/read-only-rootfs/tmpfs PostgreSQL disposable ran
+  the complete decision restart matrix, including `+08:00` input under an `Asia/Shanghai` database
+  session, replay conflict rollback, append-only siblings, and owned cleanup. No C2_0007 migration
+  was needed because C2_0002/C2_0005 already retain the required assertion and decision time fields.
+- Review policy: one merged specification/code-quality review for Task 5.5; it closed two Important
+  findings and ended `APPROVED` with zero open Critical/Important findings. Relationship
+  `superseded` interval semantics are explicitly deferred to Task 5.6 rather than invented here.
+
 ## Status
 
 S1 database-target safety, S2 tasks 2.1–2.5 and corpus/ground-truth/threshold policy, and S2B/task
@@ -90,8 +113,11 @@ strong-ID merge, content-bound cross-format LLM judgment, same-name separation, 
 with exact split allocation, and recovered-source linkage through one deep seam. Task 5.4 is
 Accepted at `2026-07-12T08:40:35Z`: one complete-release identity module plus C2_0006 and an
 offline/disposable-only store retain exact decision-time evidence, output allocation, current
-ownership, terminal history, replay, rollback, and reversible migration safety. The durable
-candidate remains C2_0004 with zero canonical/non-landing rows; task 5.5 has not started.
+ownership, terminal history, replay, rollback, and reversible migration safety. Task 5.5 is
+Accepted at `2026-07-12T09:58:35Z`: proportional UTC-canonical temporal semantics now retain exact
+observation/source-event/validity evidence and derive only the as-of-valid generic current subset
+without a new migration. The durable candidate remains C2_0004 with zero canonical/non-landing
+rows; Task 5.6 has not started.
 
 ## Behavior owner
 

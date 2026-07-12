@@ -19,7 +19,6 @@ from types import MappingProxyType
 from typing import Annotated, Literal, NoReturn, Protocol, cast
 
 from pydantic import (
-    AwareDatetime,
     ConfigDict,
     Field,
     JsonValue,
@@ -30,6 +29,7 @@ from pydantic import (
 
 from .contracts import (
     CanonicalDecision,
+    CanonicalDatetime,
     CanonicalIdentity,
     CanonicalIdentityState,
     Confidence,
@@ -357,7 +357,7 @@ class DecisionBatchRequest(ContractModel):
     release_id: NonEmptyStr
     decision_run_id: NonEmptyStr
     decision_method_version: NonEmptyStr
-    as_of: AwareDatetime
+    as_of: CanonicalDatetime
     source_identities: tuple[SourceIdentity, ...]
     canonical_identities: tuple[CanonicalIdentity, ...]
     field_groups: tuple[FieldAssertionGroup, ...] = ()
@@ -536,6 +536,8 @@ class CurrentFieldSelection(ContractModel):
     decision_id: NonEmptyStr
     supporting_assertion_ids: tuple[NonEmptyStr, ...] = Field(min_length=1)
     conflicting_assertion_ids: tuple[NonEmptyStr, ...] = ()
+    valid_from: CanonicalDatetime | None = None
+    valid_to: CanonicalDatetime | None = None
 
     @model_validator(mode="after")
     def validate_roles(self) -> CurrentFieldSelection:
@@ -545,6 +547,12 @@ class CurrentFieldSelection(ContractModel):
             raise ValueError(
                 "supporting and conflicting assertion IDs must be disjoint"
             )
+        if (
+            self.valid_from is not None
+            and self.valid_to is not None
+            and self.valid_from > self.valid_to
+        ):
+            raise ValueError("valid_from must not be after valid_to")
         return self
 
 
@@ -559,6 +567,8 @@ class CurrentRelationshipSelection(ContractModel):
     decision_id: NonEmptyStr
     supporting_assertion_ids: tuple[NonEmptyStr, ...] = Field(min_length=1)
     conflicting_assertion_ids: tuple[NonEmptyStr, ...] = ()
+    valid_from: CanonicalDatetime | None = None
+    valid_to: CanonicalDatetime | None = None
 
     @model_validator(mode="after")
     def validate_roles(self) -> CurrentRelationshipSelection:
@@ -568,6 +578,12 @@ class CurrentRelationshipSelection(ContractModel):
             raise ValueError(
                 "supporting and conflicting assertion IDs must be disjoint"
             )
+        if (
+            self.valid_from is not None
+            and self.valid_to is not None
+            and self.valid_from > self.valid_to
+        ):
+            raise ValueError("valid_from must not be after valid_to")
         return self
 
 
@@ -588,7 +604,7 @@ class UnresolvedConflict(ContractModel):
 class _DecisionBatchContent(ContractModel):
     release_id: NonEmptyStr
     decision_run_id: NonEmptyStr
-    as_of: AwareDatetime
+    as_of: CanonicalDatetime
     canonical_identity_contexts: tuple[CanonicalIdentityConstraintContext, ...]
     source_identity_contexts: tuple[SourceIdentity, ...]
     field_assertions: tuple[SourceAssertion, ...]
@@ -976,7 +992,9 @@ def _validate_constraint_outcome_links(
 
 def _validate_current_selections(
     *,
+    as_of: datetime,
     field_assertions: Mapping[str, SourceAssertion],
+    relationship_assertions: Mapping[str, RelationshipAssertion],
     field_decisions: Mapping[str, CanonicalDecision],
     relationship_decisions: Mapping[str, RelationshipDecision],
     current_fields: tuple[CurrentFieldSelection, ...],
@@ -987,20 +1005,59 @@ def _validate_current_selections(
     )
     _require_unique(current_decision_ids, "current selection decision IDs")
 
-    expected_field_ids = {
-        decision.decision_id
-        for decision in field_decisions.values()
-        if decision.state is DecisionState.selected
-    }
+    expected_field_ids: set[str] = set()
+    field_validity_by_decision: dict[str, tuple[datetime | None, datetime | None]] = {}
+    for decision in field_decisions.values():
+        if decision.state is not DecisionState.selected:
+            continue
+        selected_assertions = tuple(
+            field_assertions[assertion_id]
+            for assertion_id in decision.selected_assertion_ids
+        )
+        valid_from, valid_to = _selected_validity(
+            selected_assertions,
+            decision.selected_assertion_ids,
+        )
+        field_validity_by_decision[decision.decision_id] = (valid_from, valid_to)
+        if _interval_contains(
+            as_of=as_of,
+            valid_from=valid_from,
+            valid_to=valid_to,
+        ):
+            expected_field_ids.add(decision.decision_id)
     if {current.decision_id for current in current_fields} != expected_field_ids:
         raise ValueError(
             "selected field decisions and current field selections must match"
         )
-    expected_relationship_ids = {
-        decision.decision_id
-        for decision in relationship_decisions.values()
-        if decision.state is RelationshipDecisionState.accepted
-    }
+    expected_relationship_ids: set[str] = set()
+    for decision in relationship_decisions.values():
+        if decision.state is not RelationshipDecisionState.accepted:
+            if decision.valid_from is not None or decision.valid_to is not None:
+                raise ValueError(
+                    "non-accepted relationship decision cannot carry validity"
+                )
+            continue
+        selected_assertions = tuple(
+            relationship_assertions[assertion_id]
+            for assertion_id in decision.selected_assertion_ids
+        )
+        expected_valid_from, expected_valid_to = _selected_validity(
+            selected_assertions,
+            decision.selected_assertion_ids,
+        )
+        if (
+            decision.valid_from != expected_valid_from
+            or decision.valid_to != expected_valid_to
+        ):
+            raise ValueError(
+                "relationship decision validity must exactly match selected evidence"
+            )
+        if _interval_contains(
+            as_of=as_of,
+            valid_from=decision.valid_from,
+            valid_to=decision.valid_to,
+        ):
+            expected_relationship_ids.add(decision.decision_id)
     if {
         current.decision_id for current in current_relationships
     } != expected_relationship_ids:
@@ -1026,6 +1083,12 @@ def _validate_current_selections(
         if current.conflicting_assertion_ids != decision.conflicting_assertion_ids:
             raise ValueError(
                 "current field conflicts must exactly match decision conflicts"
+            )
+        if (current.valid_from, current.valid_to) != field_validity_by_decision[
+            decision.decision_id
+        ]:
+            raise ValueError(
+                "current field validity must exactly match selected evidence"
             )
         selected_values = tuple(
             field_assertions[assertion_id].value
@@ -1069,6 +1132,13 @@ def _validate_current_selections(
         if current.conflicting_assertion_ids != decision.conflicting_assertion_ids:
             raise ValueError(
                 "current relationship conflicts must exactly match decision conflicts"
+            )
+        if (
+            current.valid_from != decision.valid_from
+            or current.valid_to != decision.valid_to
+        ):
+            raise ValueError(
+                "current relationship validity must exactly match its decision"
             )
 
 
@@ -1414,7 +1484,9 @@ class DecisionBatchResult(_DecisionBatchContent):
             outcomes=self.constraint_outcomes,
         )
         _validate_current_selections(
+            as_of=self.as_of,
             field_assertions=field_assertions,
+            relationship_assertions=relationship_assertions,
             field_decisions=field_decisions,
             relationship_decisions=relationship_decisions,
             current_fields=self.current_fields,
@@ -1924,6 +1996,52 @@ def _relationship_rejection_reason(
     return None
 
 
+def _selected_validity(
+    assertions: tuple[SourceAssertion, ...] | tuple[RelationshipAssertion, ...],
+    selected_assertion_ids: tuple[str, ...],
+) -> tuple[datetime | None, datetime | None]:
+    if not selected_assertion_ids:
+        return None, None
+    by_id = {assertion.assertion_id: assertion for assertion in assertions}
+    intervals = {
+        (by_id[assertion_id].valid_from, by_id[assertion_id].valid_to)
+        for assertion_id in selected_assertion_ids
+    }
+    if len(intervals) != 1:
+        raise ValueError("selected assertions must have one exact validity interval")
+    return next(iter(intervals))
+
+
+def _generated_selected_validity(
+    assertions: tuple[SourceAssertion, ...] | tuple[RelationshipAssertion, ...],
+    selected_assertion_ids: tuple[str, ...],
+    *,
+    method: DecisionMethod,
+) -> tuple[datetime | None, datetime | None]:
+    try:
+        return _selected_validity(assertions, selected_assertion_ids)
+    except ValueError as exc:
+        if method is DecisionMethod.structured_llm:
+            raise AdjudicationOutputError(
+                "structured adjudication selected evidence with different validity "
+                "intervals"
+            ) from exc
+        raise DecisionBatchIntegrityError(
+            "generated decision selected evidence with different validity intervals"
+        ) from exc
+
+
+def _interval_contains(
+    *,
+    as_of: datetime,
+    valid_from: datetime | None,
+    valid_to: datetime | None,
+) -> bool:
+    return (valid_from is None or valid_from <= as_of) and (
+        valid_to is None or as_of < valid_to
+    )
+
+
 def _validated_adjudication(
     adjudicator: StructuredAdjudicator,
     request: _AdjudicationRequest,
@@ -2137,13 +2255,21 @@ def _field_group_result(
         rationale = "The sole surviving field assertion satisfies all constraints."
     elif all(
         _strict_json_equal(candidates[0].value, assertion.value)
+        and (
+            candidates[0].valid_from,
+            candidates[0].valid_to,
+        )
+        == (assertion.valid_from, assertion.valid_to)
         for assertion in candidates[1:]
     ):
         state = DecisionState.selected
         method = DecisionMethod.deterministic
         selected_ids = candidate_ids
         confidence = 1.0
-        rationale = "All surviving field assertions have strictly equal values."
+        rationale = (
+            "All surviving field assertions have strictly equal values and validity "
+            "intervals."
+        )
     elif adjudicator is None:
         state = DecisionState.unresolved
         method = DecisionMethod.deterministic
@@ -2240,15 +2366,27 @@ def _field_group_result(
         assertion_by_id = {
             assertion.assertion_id: assertion for assertion in candidates
         }
-        current = CurrentFieldSelection(
-            release_id=request.release_id,
-            canonical_identity_id=group.canonical_identity_id,
-            field_path=group.field_path,
-            value=assertion_by_id[selected_assertion_id].value,
-            decision_id=decision.decision_id,
-            supporting_assertion_ids=selected_ids,
-            conflicting_assertion_ids=conflicting_ids,
+        valid_from, valid_to = _generated_selected_validity(
+            candidates,
+            selected_ids,
+            method=method,
         )
+        if _interval_contains(
+            as_of=request.as_of,
+            valid_from=valid_from,
+            valid_to=valid_to,
+        ):
+            current = CurrentFieldSelection(
+                release_id=request.release_id,
+                canonical_identity_id=group.canonical_identity_id,
+                field_path=group.field_path,
+                value=assertion_by_id[selected_assertion_id].value,
+                decision_id=decision.decision_id,
+                supporting_assertion_ids=selected_ids,
+                conflicting_assertion_ids=conflicting_ids,
+                valid_from=valid_from,
+                valid_to=valid_to,
+            )
     else:
         conflict = UnresolvedConflict(
             release_id=request.release_id,
@@ -2279,6 +2417,8 @@ def _relationship_decision(
     method: DecisionMethod,
     confidence: float,
     rationale: str,
+    valid_from: datetime | None,
+    valid_to: datetime | None,
     llm_trace: LLMDecisionTrace | None,
     evaluations: tuple[_ConstraintEvaluation, ...],
     decision_input_sha256: str,
@@ -2304,8 +2444,8 @@ def _relationship_decision(
             decision_run_id=request.decision_run_id,
             confidence=confidence,
             rationale=rationale,
-            valid_from=None,
-            valid_to=None,
+            valid_from=valid_from,
+            valid_to=valid_to,
             release_id=request.release_id,
             decided_at=request.as_of,
             llm_trace=llm_trace,
@@ -2407,6 +2547,11 @@ def _relationship_group_result(
         )
     elif all(
         _strict_json_equal(candidates[0].attributes, assertion.attributes)
+        and (
+            candidates[0].valid_from,
+            candidates[0].valid_to,
+        )
+        == (assertion.valid_from, assertion.valid_to)
         for assertion in candidates[1:]
     ):
         state = RelationshipDecisionState.accepted
@@ -2414,7 +2559,8 @@ def _relationship_group_result(
         selected_ids = candidate_ids
         confidence = 1.0
         rationale = (
-            "All surviving relationship assertions have strictly equal attributes."
+            "All surviving relationship assertions have strictly equal attributes and "
+            "validity intervals."
         )
     elif adjudicator is None:
         state = RelationshipDecisionState.unresolved
@@ -2464,6 +2610,11 @@ def _relationship_group_result(
         rationale = output.rationale
         trace = _decision_trace(adjudication)
 
+    valid_from, valid_to = _generated_selected_validity(
+        candidates,
+        selected_ids,
+        method=method,
+    )
     decision = _relationship_decision(
         request=request,
         group=group,
@@ -2475,6 +2626,8 @@ def _relationship_group_result(
         method=method,
         confidence=confidence,
         rationale=rationale,
+        valid_from=valid_from,
+        valid_to=valid_to,
         llm_trace=trace,
         evaluations=evaluations,
         decision_input_sha256=decision_input_sha256,
@@ -2500,7 +2653,11 @@ def _relationship_group_result(
     )
     current: CurrentRelationshipSelection | None = None
     conflict: UnresolvedConflict | None = None
-    if decision.state is RelationshipDecisionState.accepted:
+    if decision.state is RelationshipDecisionState.accepted and _interval_contains(
+        as_of=request.as_of,
+        valid_from=decision.valid_from,
+        valid_to=decision.valid_to,
+    ):
         current = CurrentRelationshipSelection(
             release_id=request.release_id,
             canonical_relationship_id=group.canonical_relationship_id,
@@ -2512,8 +2669,10 @@ def _relationship_group_result(
             decision_id=decision.decision_id,
             supporting_assertion_ids=selected_ids,
             conflicting_assertion_ids=conflicting_ids,
+            valid_from=decision.valid_from,
+            valid_to=decision.valid_to,
         )
-    else:
+    elif decision.state is not RelationshipDecisionState.accepted:
         conflict = UnresolvedConflict(
             release_id=request.release_id,
             decision_id=decision.decision_id,

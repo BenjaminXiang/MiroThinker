@@ -167,3 +167,20 @@
   checkpoints plus Ruff, Pyright, wheel contents, strict OpenSpec, formal gate, source/candidate
   read-only audits, and cleanup checks passed. Original sources and the C2_0004 durable candidate are
   unchanged; task 5.5 has not started.
+- Completed and accepted task 5.5 without a new migration. The existing decision seam now retains
+  exact observation/source-event/validity times, copies one exact selected evidence interval into
+  relationship decisions and generic current selections, and derives `current_fields` and
+  `current_relationships` as the half-open `[valid_from, valid_to)` subset at the offline build's
+  `as_of`. Prior and future selected decisions remain immutable history; unknown validity is not a
+  hard gate; equal values or attributes with different intervals do not auto-merge.
+- Canonical V2 aware datetimes are normalized to UTC before IDs, JSON hashes, fingerprints, or
+  persistence. Equivalent `+08:00` input and an `Asia/Shanghai` PostgreSQL session restart now
+  produce byte-identical decisions and content hashes. Validation-time interval disagreement uses
+  `ValueError`, structured generation maps it to a typed adjudication error, and corrupt durable
+  replay remains behind the store persistence-error abstraction.
+- A real network-none/no-port/tmpfs disposable proved affiliation-like history/current restart,
+  exact time retention, replay, tamper rejection, and atomic rollback. The one merged review closed
+  both Important findings and returned `APPROVED`; complete Canonical V2, S1, S2/S2B, and S4
+  checkpoints plus static, packaging, strict OpenSpec, formal gate, frozen-source/candidate audits,
+  and owned cleanup passed. Original sources and the C2_0004 durable candidate are unchanged; task
+  5.6 owns aggregate S5 review queues and superseded-decision history semantics.

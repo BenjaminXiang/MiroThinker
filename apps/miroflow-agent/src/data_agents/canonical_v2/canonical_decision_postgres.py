@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 from typing import Any, cast
 
@@ -1325,6 +1326,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
     def _derive_projections(
         *,
         release_id: str,
+        as_of: datetime,
         field_assertions: tuple[SourceAssertion, ...],
         field_decisions: tuple[CanonicalDecision, ...],
         relationship_decisions: tuple[RelationshipDecision, ...],
@@ -1335,6 +1337,14 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
     ]:
         fields_by_id = {
             assertion.assertion_id: assertion for assertion in field_assertions
+        }
+        field_validity_by_decision = {
+            decision.decision_id: _engine._selected_validity(
+                field_assertions,
+                decision.selected_assertion_ids,
+            )
+            for decision in field_decisions
+            if decision.state is DecisionState.selected
         }
         current_fields = tuple(
             sorted(
@@ -1347,9 +1357,16 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                         decision_id=decision.decision_id,
                         supporting_assertion_ids=decision.selected_assertion_ids,
                         conflicting_assertion_ids=decision.conflicting_assertion_ids,
+                        valid_from=field_validity_by_decision[decision.decision_id][0],
+                        valid_to=field_validity_by_decision[decision.decision_id][1],
                     )
                     for decision in field_decisions
                     if decision.state is DecisionState.selected
+                    and _engine._interval_contains(
+                        as_of=as_of,
+                        valid_from=field_validity_by_decision[decision.decision_id][0],
+                        valid_to=field_validity_by_decision[decision.decision_id][1],
+                    )
                 ),
                 key=lambda current: (
                     current.canonical_identity_id,
@@ -1376,9 +1393,16 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                         decision_id=decision.decision_id,
                         supporting_assertion_ids=decision.selected_assertion_ids,
                         conflicting_assertion_ids=decision.conflicting_assertion_ids,
+                        valid_from=decision.valid_from,
+                        valid_to=decision.valid_to,
                     )
                     for decision in relationship_decisions
                     if decision.state is RelationshipDecisionState.accepted
+                    and _engine._interval_contains(
+                        as_of=as_of,
+                        valid_from=decision.valid_from,
+                        valid_to=decision.valid_to,
+                    )
                 ),
                 key=lambda current: (
                     current.canonical_relationship_id,
@@ -1498,8 +1522,11 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                 key=lambda outcome: (outcome.assertion_id, outcome.decision_id),
             )
         )
+        all_decisions = (*field_decisions, *relationship_decisions)
+        as_of = all_decisions[0].decided_at
         current_fields, current_relationships, conflicts = cls._derive_projections(
             release_id=release_id,
+            as_of=as_of,
             field_assertions=field_assertions,
             field_decisions=field_decisions,
             relationship_decisions=relationship_decisions,
@@ -1511,8 +1538,6 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
             field_decisions=field_decisions,
             relationship_decisions=relationship_decisions,
         )
-        all_decisions = (*field_decisions, *relationship_decisions)
-        as_of = all_decisions[0].decided_at
         content = _engine._DecisionBatchContent(
             release_id=release_id,
             decision_run_id=decision_run_id,

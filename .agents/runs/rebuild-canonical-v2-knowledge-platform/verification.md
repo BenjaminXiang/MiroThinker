@@ -1257,3 +1257,99 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 - No populated Canonical V2 candidate, serving projection, or Milvus release is accepted.
 - Task 5.3 does not claim Task 5.4 implementation, durable identity storage, or S5 acceptance.
 - No original source write or production-like cutover is authorized.
+
+## S5E task 5.5 proportional temporal semantics — 2026-07-12T09:58:35Z
+
+- `CanonicalDecisionEngine.decide` remains the one deep decision seam. Assertions retain
+  `observed_at`, optional source publication/event time, and optional natural validity. Selected
+  evidence must share one exact interval; equal values/attributes with different intervals remain
+  unresolved unless a structured adjudicator selects one exact interval-bound subset.
+- Validity membership is half-open `[valid_from, valid_to)`. Field and relationship decisions
+  outside their interval remain immutable history while only the as-of-valid subset appears in
+  generic current selections. Null endpoints remain open/unknown and are never synthesized;
+  `source_event_time` neither replaces `observed_at <= as_of` nor creates validity.
+- A Professor A→B affiliation-like scenario retains both generic relationship episodes and their
+  evidence, copies exact selected validity into relationship decisions/current selections, treats
+  the shared boundary correctly, and returns only B as current. Active, ended-at-boundary, future,
+  unknown-validity, static-field, overlapping-conflict, reordered replay, and rehashed tamper cases
+  are covered for both field and relationship families.
+- All Canonical V2 aware timestamps now use one `CanonicalDatetime` contract that normalizes the
+  instant to UTC before JSON, IDs, hashes, fingerprints, or persistence. UTC and `+08:00` inputs
+  produce byte-identical results; a real PostgreSQL restart under an `Asia/Shanghai` session proves
+  session timezone cannot change durable hashes.
+- Validation-time selected-interval disagreement now raises `ValueError`, which Pydantic and the
+  PostgreSQL adapter can translate. Generation maps an invalid structured selection to
+  `AdjudicationOutputError`; corrupt durable restart remains wrapped as
+  `CanonicalDecisionPersistenceError` rather than leaking an engine-private exception.
+- No C2_0007 migration was added. C2_0002 and C2_0005 already retain assertion observation/event/
+  validity and relationship-decision validity; field current validity is derived from immutable
+  selected assertions, avoiding a duplicate temporal store.
+- Focused evidence:
+  - `test_shared_contracts.py` plus `test_canonical_decision_engine_contract.py` -> `39 passed`;
+  - complete `test_canonical_decision_postgres.py` on the named disposable -> `16 passed`;
+  - targeted Ruff format/check -> clean; targeted Pyright -> `0 errors, 0 warnings, 0
+    informations`.
+- Commit-checkpoint regression:
+  - explicit no-database Canonical V2 -> `136 passed, 82 skipped, 4 approved xfails`;
+  - real S5E disposable Canonical V2 excluding the fixed-name S4C module -> `208 passed, 4 approved
+    xfails`;
+  - independent fixed-name S4C PostgreSQL compatibility -> `10 passed`;
+  - S1 target plus write-gate safety -> `17 passed`; four S2 harnesses plus S2B -> `32 passed`; S4E
+    checkpoint harness -> `23 passed`;
+  - formal S2B gate -> `state=accepted`, `source_count=50`, backup manifest
+    `a14c1eab…e59c8`, restore verification `98826e8d…7d231`;
+  - wheel contents include C2_0001–C2_0006, shared contracts, decision engine/store, and identity
+    engine/store; strict OpenSpec, diff/whitespace, high-confidence secret scan, and offline-writer
+    import isolation passed.
+- The one merged specification/code-quality review found two Important defects: offset-dependent
+  time hashes/restart and an engine-private validation exception. The repair loop closed both plus
+  two Minor audit-wording/fixture-semantics findings. Final disposition is `APPROVED`, with zero open
+  Critical/Important findings. Relationship `superseded` interval semantics and projector
+  deduplication remain non-blocking Task 5.6/deepening follow-ups.
+- Frozen-source/candidate audit:
+  - original `pgtest` remains `paused=true` on exact volume
+    `d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241`;
+  - original Milvus hash-only check remains `43ef203e…67cc`; verified FPI salvage remains
+    `cef8eb6b…bb7`; the initial worktree-relative Milvus path was absent, then the exact frozen
+    source path `/home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db` matched;
+  - recovery lab and durable candidate remain network-none/no-port/restart-no. A forced read-only
+    candidate transaction re-proved exact marker, system ID `7661313446684311592`, C2_0004, landing
+    `15/6/6/21/6`, and zero rows in all 20 knowledge/publish tables;
+  - S4 manifest/restore/acceptance hashes remain `ab091aac…966b1`, `caf789ae…f0acc`, and
+    `20e11fbe…f58c`.
+- Owned disposable container
+  `75195921959bd8f4252cc363fdc447bfdc24c2134eb438b39167934e25c94ce9` used system ID
+  `7661567410199961641`, network `none`, no ports, restart `no`, read-only rootfs, tmpfs PGDATA, and
+  exact disposable markers. Its S5E/S4C bases ended at C2_0006 with zero business rows and no test
+  sibling database. Container, socket root, databases, and wheel-check artifacts were removed;
+  Docker volume-set SHA-256 remained
+  `8314a2b0200baffdf78d25ebfe0a9f11c5b22f129f8f33c05f1aa4f859ec896c`.
+- Task 5.5 is Accepted. Task 5.6 production work did not start in this commit; no durable-candidate
+  migration, original/recovery write, Milvus open/rebuild, live provider call, domain projection,
+  publication, query/chat change, push, PR, or cutover is claimed.
+
+## Task 5.5 pattern-fix report
+
+- Reported cases fixed: historical/future decisions incorrectly projected as current, exact
+  intervals dropped on restart, equal interval-conflicting evidence auto-merged, non-UTC instants
+  changed hashes, and validation corruption leaked a private exception.
+- Defect class: temporal meaning was retained in row fields but not treated as one canonical,
+  hash-stable invariant across decision generation, current projection, model validation, and
+  restart reconstruction.
+- Sibling patterns searched: every `AwareDatetime` in the shared Canonical V2 contract and engine;
+  field and relationship deterministic/LLM paths; selected/current validation; assertion
+  fingerprints; PostgreSQL write/load/replay; timezone session behavior; and query/runtime writer
+  imports.
+- Sibling issues found/fixed: one UTC-normalized timestamp type across all shared contract fields;
+  UTC-normalized batch/current fields; one exact-validity primitive; typed generation translation;
+  both field/relationship current subsets; faithful validity-interval fixture metadata; and corrupt
+  restart wrapping.
+- Not fixed and why: `superseded` relationship interval shape is not emitted or specified by Task
+  5.5 and belongs to Task 5.6; consolidating the adapter projector is a non-blocking future deepening
+  because shared primitives plus result validation already fail closed.
+- New invariant/helper/contract/test: `CanonicalDatetime`, `_selected_validity`,
+  `_generated_selected_validity`, `_interval_contains`, affiliation transition/membership matrices,
+  offset-equivalence hashing, Asia/Shanghai restart, tamper cases, and corruption abstraction.
+- Remaining systemic risk: Task 5.6 must freeze review/supersession history before S6 assigns typed
+  relationship time semantics; the durable candidate deliberately remains C2_0004 until a later
+  explicitly authorized candidate write.

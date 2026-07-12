@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import binascii
+from datetime import datetime, timezone
 import hashlib
 import json
 import math
@@ -11,6 +12,7 @@ from enum import Enum
 from typing import Annotated, NoReturn
 
 from pydantic import (
+    AfterValidator,
     AwareDatetime,
     BaseModel,
     ConfigDict,
@@ -25,6 +27,16 @@ NonEmptyStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length
 Sha256 = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
 Confidence = Annotated[float, Field(ge=0.0, le=1.0)]
 NonNegativeInt = Annotated[int, Field(ge=0)]
+
+
+def _canonical_utc_datetime(value: datetime) -> datetime:
+    return value.astimezone(timezone.utc)
+
+
+CanonicalDatetime = Annotated[
+    AwareDatetime,
+    AfterValidator(_canonical_utc_datetime),
+]
 
 
 class ContractModel(BaseModel):
@@ -186,8 +198,8 @@ class ReleaseState(str, Enum):
 
 
 def _validate_interval(
-    valid_from: AwareDatetime | None,
-    valid_to: AwareDatetime | None,
+    valid_from: CanonicalDatetime | None,
+    valid_to: CanonicalDatetime | None,
 ) -> None:
     if valid_from is not None and valid_to is not None and valid_from > valid_to:
         raise ValueError("valid_from must not be after valid_to")
@@ -245,7 +257,7 @@ class EvidenceArtifact(ContractModel):
     source_locator: NonEmptyStr
     content_sha256: Sha256
     byte_size: NonNegativeInt
-    acquired_at: AwareDatetime
+    acquired_at: CanonicalDatetime
     run_id: NonEmptyStr
     parent_artifact_id: NonEmptyStr | None = None
     parent_content_sha256: Sha256 | None = None
@@ -281,7 +293,7 @@ class SourceRecord(ContractModel):
     parse_status: ParseStatus
     payload: dict[NonEmptyStr, JsonValue]
     errors: tuple[SourceError, ...] = ()
-    parsed_at: AwareDatetime
+    parsed_at: CanonicalDatetime
 
     @model_validator(mode="after")
     def validate_parse_outcome(self) -> SourceRecord:
@@ -299,10 +311,10 @@ class SourceAssertion(ContractModel):
     subject_entity_type: NonEmptyStr
     field_path: NonEmptyStr
     value: JsonValue
-    observed_at: AwareDatetime
-    source_event_time: AwareDatetime | None = None
-    valid_from: AwareDatetime | None = None
-    valid_to: AwareDatetime | None = None
+    observed_at: CanonicalDatetime
+    source_event_time: CanonicalDatetime | None = None
+    valid_from: CanonicalDatetime | None = None
+    valid_to: CanonicalDatetime | None = None
     assertion_run_id: NonEmptyStr
 
     @model_validator(mode="after")
@@ -316,7 +328,7 @@ class PolicyReference(ContractModel):
     policy_version: NonEmptyStr
     policy_kind: PolicyKind
     content_sha256: Sha256
-    effective_at: AwareDatetime
+    effective_at: CanonicalDatetime
 
 
 class LLMDecisionTrace(ContractModel):
@@ -380,7 +392,7 @@ class CanonicalDecision(ContractModel):
     rationale: NonEmptyStr
     llm_trace: LLMDecisionTrace | None = None
     release_id: NonEmptyStr
-    decided_at: AwareDatetime
+    decided_at: CanonicalDatetime
     supersedes_decision_id: NonEmptyStr | None = None
 
     @model_validator(mode="after")
@@ -447,8 +459,8 @@ class SourceIdentity(ContractModel):
     entity_type: NonEmptyStr
     source_record_ids: tuple[NonEmptyStr, ...] = Field(min_length=1)
     normalized_keys: dict[NonEmptyStr, NonEmptyStr]
-    first_observed_at: AwareDatetime
-    last_observed_at: AwareDatetime
+    first_observed_at: CanonicalDatetime
+    last_observed_at: CanonicalDatetime
     state: SourceIdentityState
 
     @model_validator(mode="after")
@@ -503,7 +515,7 @@ class IdentityDecision(ContractModel):
     decision_run_id: NonEmptyStr
     confidence: Confidence
     rationale: NonEmptyStr
-    decided_at: AwareDatetime
+    decided_at: CanonicalDatetime
     reversal_of_decision_id: NonEmptyStr | None = None
     llm_trace: LLMDecisionTrace | None = None
 
@@ -610,10 +622,10 @@ class RelationshipAssertion(ContractModel):
     source_endpoint: IdentityReference
     target_endpoint: IdentityReference
     attributes: dict[NonEmptyStr, JsonValue]
-    observed_at: AwareDatetime
-    source_event_time: AwareDatetime | None = None
-    valid_from: AwareDatetime | None = None
-    valid_to: AwareDatetime | None = None
+    observed_at: CanonicalDatetime
+    source_event_time: CanonicalDatetime | None = None
+    valid_from: CanonicalDatetime | None = None
+    valid_to: CanonicalDatetime | None = None
     assertion_run_id: NonEmptyStr
 
     @model_validator(mode="after")
@@ -647,10 +659,10 @@ class RelationshipDecision(ContractModel):
     decision_run_id: NonEmptyStr
     confidence: Confidence
     rationale: NonEmptyStr
-    valid_from: AwareDatetime | None = None
-    valid_to: AwareDatetime | None = None
+    valid_from: CanonicalDatetime | None = None
+    valid_to: CanonicalDatetime | None = None
     release_id: NonEmptyStr
-    decided_at: AwareDatetime
+    decided_at: CanonicalDatetime
     supersedes_decision_id: NonEmptyStr | None = None
     llm_trace: LLMDecisionTrace | None = None
 
@@ -728,7 +740,7 @@ class DerivedRelationship(ContractModel):
     computation_version: NonEmptyStr
     input_content_sha256: tuple[Sha256, ...] = Field(min_length=1)
     score: float | None = None
-    computed_at: AwareDatetime
+    computed_at: CanonicalDatetime
 
 
 class SessionRelationship(ContractModel):
@@ -739,8 +751,8 @@ class SessionRelationship(ContractModel):
     release_id: NonEmptyStr
     source_reference: NonEmptyStr
     target_reference: NonEmptyStr
-    created_at: AwareDatetime
-    expires_at: AwareDatetime | None = None
+    created_at: CanonicalDatetime
+    expires_at: CanonicalDatetime | None = None
 
     @model_validator(mode="after")
     def validate_lifetime(self) -> SessionRelationship:
@@ -760,7 +772,7 @@ class PolicyDecision(ContractModel):
     limitations: tuple[NonEmptyStr, ...] = ()
     hard_exclusion_codes: tuple[NonEmptyStr, ...] = ()
     supporting_assertion_ids: tuple[NonEmptyStr, ...] = ()
-    evaluated_at: AwareDatetime
+    evaluated_at: CanonicalDatetime
 
     @model_validator(mode="after")
     def validate_policy_effect(self) -> PolicyDecision:
@@ -800,8 +812,8 @@ class KnowledgeGap(ContractModel):
     demand_count: NonNegativeInt
     scenario_families: tuple[NonEmptyStr, ...] = ()
     severity: GapSeverity
-    created_at: AwareDatetime
-    updated_at: AwareDatetime
+    created_at: CanonicalDatetime
+    updated_at: CanonicalDatetime
     resolved_release_id: NonEmptyStr | None = None
     resolved_release_state: ReleaseState | None = None
     resolution_verification_ids: tuple[NonEmptyStr, ...] = ()
@@ -900,7 +912,7 @@ class BuildManifest(ContractModel):
     expected_index_projections: tuple[IndexProjectionManifest, ...] = Field(
         min_length=1
     )
-    created_at: AwareDatetime
+    created_at: CanonicalDatetime
     manifest_sha256: Sha256
 
     @model_validator(mode="after")
@@ -967,7 +979,7 @@ class ReleaseVerification(ContractModel):
     stale_points: NonNegativeInt
     cross_release_points: NonNegativeInt
     evidence_ids: tuple[NonEmptyStr, ...] = Field(min_length=1)
-    verified_at: AwareDatetime
+    verified_at: CanonicalDatetime
 
     @model_validator(mode="after")
     def validate_acceptance_parity(self) -> ReleaseVerification:
@@ -994,7 +1006,7 @@ class PublishedRelease(ContractModel):
     published_projection_release_id: NonEmptyStr
     index_release_id: NonEmptyStr
     state: ReleaseState
-    changed_at: AwareDatetime
+    changed_at: CanonicalDatetime
     verification_evidence_ids: tuple[NonEmptyStr, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
