@@ -130,3 +130,19 @@
   Critical/Important findings. Disposable databases/container/socket/wheel artifacts were removed;
   the accepted C2_0004 candidate and all original sources remained unchanged. Task 5.3 has not
   started.
+
+## 2026-07-12
+
+- Completed and accepted task 5.3 as a strict test-only RED slice. Five scenarios now define a deep
+  offline identity-resolution seam for deterministic Paper strong-ID merge, content-bound
+  cross-format Professor LLM adjudication, same-name Professor separation, named Company merge
+  reversal with exact 1-to-N assignments, and recovered Patent linkage without legacy-ID
+  compatibility.
+- Candidate comparison verdicts are separate from applied identity actions; `different_entities`
+  never terminally rejects valid objects. Current active identities, terminal history, exact source
+  assignments, decision provenance, assertion/record evidence, recorded LLM bytes, manifests, and
+  mutation-sensitive hashes are independently checked. One merged review closed all Important
+  findings and returned `APPROVED`.
+- Checkpoint regression and frozen-source audits passed without a database write or provider/index
+  call. The durable candidate remains C2_0004 with its accepted landing checkpoint and zero
+  knowledge/publish rows. Task 5.4 production/storage work has not started.

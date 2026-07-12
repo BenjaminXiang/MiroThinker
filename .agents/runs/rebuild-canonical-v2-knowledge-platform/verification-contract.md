@@ -11,9 +11,12 @@ six-family landing state and zero non-landing business rows. Checkpoint manifest
 `4ae5f2ce…b05012` prove full 26-table logical parity across distinct PostgreSQL systems. Task 5.1's
 five assertion/decision strict RED scenarios are Accepted at `2026-07-11T22:58:11Z`. Task 5.2 is
 Accepted at `2026-07-12T04:32:46Z`: C2_0005, the reproducible decision core, and disposable-only
-PostgreSQL history retain complete assertion/outcome/decision/context evidence. No durable-candidate
-canonical identity/assertion/domain row, published projection, release, or index write exists;
-task 5.3 has not started.
+PostgreSQL history retain complete assertion/outcome/decision/context evidence. Task 5.3's five
+strict offline identity-resolution RED scenarios are Accepted at `2026-07-12T05:21:29Z`; they define
+strong-ID merge, content-bound cross-format LLM judgment, same-name separation, named merge reversal
+with exact split allocation, and recovered-source linkage through one deep seam. No durable-
+candidate canonical identity/assertion/domain row, published projection, release, or index write
+exists; task 5.4 has not started.
 
 ## Behavior owner
 
@@ -69,7 +72,7 @@ cannot mutate offline canonical identity decisions.
   inventoried historical SQLite/JSONL/XLSX/PDF/cache/raw-source families. Restore targets must be
   distinct from original and backup locations; original volumes/files remain read-only.
 
-Last identity/hash check recorded in `verification.md`: `2026-07-12T04:32:46Z`.
+Last identity/hash check recorded in `verification.md`: `2026-07-12T05:21:29Z`.
 
 ## Hard invariants
 
@@ -152,6 +155,19 @@ Last identity/hash check recorded in `verification.md`: `2026-07-12T04:32:46Z`.
   identity ownership into every decision seed, validates current authoritative mappings before the
   first write, and loads historical decisions from immutable decision-time context snapshots rather
   than mutable current identity state. Task 5.1 itself changes no production contract or storage.
+- Task 5.3 freezes one offline identity-resolution request/result seam. Candidate verdicts are
+  `same_entity`, `different_entities`, or `unresolved` and are not terminal identity actions. The
+  result separates unique active current identities, terminal identity history, output-specific
+  source assignments, applied decisions, and release-scoped assertion-bound manifests.
+- A named prior mistaken merge is corrected by one `reverse` action with 1-to-N replacement
+  topology and exact source partition; standalone `split` remains available for 1-to-N correction
+  without a named prior decision. Recovered historical IDs remain source lookup lineage and need not
+  become canonical IDs.
+- Task 5.4 must close the exposed shared/storage gaps without inference: release/content-bound
+  identity decisions, exact supporting assertions/records, immutable decision-time inputs, explicit
+  per-output source allocation, append-only current/history semantics, and offline-only writes. Any
+  new migration must fail closed on nonempty history it cannot reconstruct and receive the migration
+  safety checks exempted from ordinary lean review reduction.
 
 ### S8–S10 — Query, answer, and feedback
 

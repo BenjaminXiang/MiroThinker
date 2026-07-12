@@ -1090,10 +1090,73 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   merge/split outputs; future candidate-writing slices must explicitly decide and verify persistent
   candidate access control before broadening authorized writers.
 
+## Task 5.3 canonical identity-resolution RED acceptance — 2026-07-12
+
+- Slice `s5c-canonical-identity-red` used only the approved OpenSpec and slice contract as plan
+  sources. No production/shared-contract/migration/database/provider/index/runtime file or state was
+  changed.
+- Five scenarios cross one future package-internal
+  `canonical_identity_resolution` request/result seam:
+  - matching normalized DOI evidence merges two prior Paper identities deterministically and
+    order-independently;
+  - bilingual/cross-format Professor evidence uses an exact-input, raw-byte-bound recorded
+    structured-LLM verdict and rejects changed evidence;
+  - same-name Professors with conflicting ORCID/institution evidence remain two active objects under
+    `different_entities`, with no terminal reject or LLM override;
+  - a named mistaken Company merge is reversed once into an exact disjoint/exhaustive 1-to-N source
+    allocation while prior identities/decisions remain history;
+  - recovered WAL/FPI Patent evidence links to an existing official canonical identity while the
+    V042 ID, source system/key, records, assertions, and mapping lineage remain retained.
+- One shared invariant proves unique active source ownership, no missing/duplicate/cross-wired
+  assignments, source-to-decision-to-output consistency, active/history separation, exact
+  source/record/assertion retention, request policy/run/method binding, output decision linkage, one
+  release-scoped manifest per decision, and mutation-sensitive decision/result hashes. Candidate
+  verdicts stay independent from applied actions; only direct `same_entity` actions inherit the
+  verdict confidence/rationale/trace.
+- The intentional RED marker catches only a private sentinel emitted for the exact absent target
+  module. A nested or lazy `ModuleNotFoundError` after import is not an accepted xfail.
+- Focused verification:
+  - `uv run pytest -n0 tests/canonical_v2/test_canonical_identity_resolution_contract.py -q
+    --tb=short` -> exactly `5 xfailed`;
+  - the same command with `--no-cov --runxfail` -> exactly five failures, each
+    `_MissingTargetModule` directly caused by the exact target `ModuleNotFoundError`;
+  - focused Ruff check/format and Pyright -> clean, `0 errors, 0 warnings, 0 informations`.
+- Commit-checkpoint verification:
+  - explicit no-database `uv run pytest -n0 tests/canonical_v2 -q --tb=short` -> `93 passed, 48
+    skipped, 9 expected xfails`;
+  - `test_database_target_safety.py` plus `test_rebuild_write_gate.py` -> `17 passed`;
+  - the four S2 harnesses plus S2B backup/restore -> `32 passed`;
+  - S4E checkpoint harness -> `23 passed`;
+  - formal `backup_restore.py verify-gate` -> `state=accepted`, `source_count=50`, backup manifest
+    `a14c1eab…e59c8`, restore verification `98826e8d…7d231`;
+  - strict OpenSpec, `git diff --check`, high-confidence secret scan, Ruff check/format, and Pyright
+    all passed.
+- The single merged specification/code-quality review found and closed assignment completeness and
+  cross-wiring, overly broad xfail masking, recovery create-vs-link, decision/result evidence
+  binding, and candidate-verdict/action coupling defects. Final disposition: `APPROVED`, zero open
+  Critical/Important findings.
+- Read-only source/candidate audit:
+  - original `pgtest` remains `paused=true` on exact volume `d81c6381…d241`; no exec or connection
+    was made against it;
+  - original Milvus was hash-only and remains `43ef203e…67cc`; S4 checkpoint/restore/acceptance hashes
+    remain `ab091aac…966b1`, `caf789ae…f0acc`, and `20e11fbe…f58c`;
+  - durable candidate container remains network-none/no-port/restart-no at exact ID
+    `c0bf2374…b21849`. A forced read-only transaction proved the exact isolated-candidate marker,
+    revision C2_0004, landing counts `15/6/21/6/6`, and zero rows in all 20 knowledge/publish tables;
+  - the candidate's unforced persistent default remains `default_transaction_read_only=off`. Task
+    5.3 made no connection without the explicit read-only setting except the read-only `SHOW` probe
+    and claims no database-level immutable enforcement.
+- Task 5.4 handoff is explicit: current identity tables cannot express output-specific split
+  allocation, immutable decision-time identity context, or complete release/assertion-bound
+  decision replay. GREEN must add these effects without inferred backfill, preserve unique current
+  ownership separately from terminal history, and keep all identity mutation inside the offline
+  build. Migration and downgrade safety receive the extra review/testing permitted by lean
+  execution.
+
 ## Explicit non-claims
 
 - S2B acceptance satisfies only the backup prerequisite; each later task still requires its own
   Ready slice, explicit isolated target, and verification loop.
 - No populated Canonical V2 candidate, serving projection, or Milvus release is accepted.
-- Task 5.1 does not claim Task 5.2 implementation or S5 acceptance.
+- Task 5.3 does not claim Task 5.4 implementation, durable identity storage, or S5 acceptance.
 - No original source write or production-like cutover is authorized.
