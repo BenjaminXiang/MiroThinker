@@ -1522,3 +1522,41 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 - Remaining systemic risk: Task 6.5 must choose executable persistence for metadata/sub-object
   endpoints without falsely routing them through canonical-identity-only decisions, and S8 must
   obtain one accepted release-scoped institution/alias catalog rather than reuse legacy name maps.
+
+## S6B task 6.2 domain-inclusion RED acceptance — 2026-07-12T17:17:06Z
+
+- Five exact-target scenarios freeze the future package-internal
+  `DomainInclusionEngine.evaluate(InclusionBatchRequest) -> DomainInclusionResult` seam. They cover
+  approved/unapproved Professor seeds, roster-anchored/global-only Papers, approved/unapproved
+  Patent exports, Company skeleton and four-dimension incremental admission, incomplete review,
+  contrary scope, and query-time Web-only exclusion.
+- The request binds four shared `PolicyReference` values, active canonical/source identities,
+  retained `EvidenceArtifact`/record/assertion values, Professor discovery anchors, offline Company
+  validation decisions, and a deterministic approved-source-scope manifest. Manifest entries bind
+  exact batch/artifact/content hashes; evaluation records the manifest hash and rejects an artifact
+  hash mismatch.
+- Professor admission depends on approved seed membership without a runtime institution-name or
+  geography whitelist. Paper discovery evidence is retained separately from Professor authorship.
+  Patent export rows remain included despite missing optional type/inventor/IPC/linkage/enrichment.
+  Company skeleton records bypass completeness gates; incremental auto-admission requires supported
+  basic identity, Shenzhen geography, innovation/business relevance, and source validation, while
+  incomplete evidence yields review and contrary scope yields a named exclusion.
+- Every admitted, review, and excluded decision is a shared `PolicyDecision`, has `path=None`, binds
+  the exact domain policy/release and retained assertions, and appears in one deterministic per-domain
+  outcome set. Input reversal is byte/result stable where exercised. Query-time Web evidence remains
+  outside canonical inclusion and the request remains unchanged.
+- The one merged specification/code-quality review initially found two Important issues: approved
+  manifest identity was not observably bound to the result, and non-admitted decisions could lack
+  supporting evidence. The same review closed both; final review has zero open Critical/Important
+  findings.
+- Checkpoint commands and final outcomes:
+  - focused normal RED -> exactly `5 xfailed`, exit 0;
+  - focused forced RED -> exactly five direct `_MissingTargetModule` failures for
+    `src.data_agents.canonical_v2.domain_inclusion`, expected exit 1;
+  - Task 6.1 catalog/shared contracts plus Task 6.2 normal RED -> `24 passed, 5 xfailed`;
+  - Ruff check -> `All checks passed!`; Ruff format -> `1 file already formatted`;
+  - app-environment Pyright -> `0 errors, 0 warnings, 0 informations`;
+  - strict OpenSpec -> valid; staged diff/secret/cache/scope checks -> clean.
+- This test-only task did not replay database/source/Candidate/Milvus/provider safety totals and did
+  not mutate those boundaries. No product/shared-contract/migration/runtime file changed. Task 6.3
+  remains the GREEN owner.

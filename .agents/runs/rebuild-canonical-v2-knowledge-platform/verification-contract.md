@@ -331,6 +331,31 @@ Last identity/hash check recorded in `verification.md`: `2026-07-12T08:40:35Z`.
   new migration must fail closed on nonempty history it cannot reconstruct and receive the migration
   safety checks exempted from ordinary lean review reduction.
 
+### S6 — Typed domains, relationships, inclusion, and eligibility
+
+- Task 6.2 freezes one package-internal `DomainInclusionEngine.evaluate(...)` behavior seam without
+  implementing it. Normal execution reports exactly five strict xfails; forced RED reports exactly
+  five failures caused directly by absence of
+  `src.data_agents.canonical_v2.domain_inclusion`. Nested missing dependencies fail normally.
+- The inclusion request binds four shared versioned inclusion policies, active resolved identities,
+  retained artifacts/records/assertions, included Professor anchors, offline incremental-Company
+  validation decisions, and one deterministic content-bound approved-source-scope manifest.
+- Professor evaluation uses approved seed membership, not a runtime institution whitelist. Paper
+  evaluation requires approved Professor-roster discovery without conflating discovery/existence
+  with authorship. Patent evaluation admits identity-resolved approved-export rows without topic,
+  linkage, type, inventor, IPC, or enrichment prefilters.
+- Company skeleton membership admits without a completeness gate. Incremental Company automatic
+  admission requires retained offline support for basic identity, Shenzhen geography,
+  innovation/business relevance, and source validation; incomplete/ambiguous evidence produces a
+  visible review result, explicit contrary scope is excluded, and query-time Web alone never
+  promotes canonical inclusion.
+- Every admitted/review/excluded result binds the exact policy, release, manifest hash, and retained
+  assertions. Inclusion has `path=None`, consumes no global `ready`, and performs no provider,
+  storage, publication, index, query-time identity, or canonical write.
+- Test-only Tasks 6.2, 6.4, and 6.6 use focused contract/static/OpenSpec/diff checks. They reference
+  Accepted backup/source/Candidate evidence without replaying database, source, Candidate, Milvus,
+  or provider safety totals because those tasks touch none of those boundaries.
+
 ### S8–S10 — Query, answer, and feedback
 
 - Scenario eval and trace replay are mandatory RED/GREEN evidence; unit-only evidence is insufficient.

@@ -220,3 +220,16 @@
   app-environment Pyright, strict source/hash validation, and the formal Accepted S2B gate passed.
   No production code, migration, database/Milvus/provider/candidate write, runtime/query change,
   push, PR, or cutover occurred; Tasks 6.2–6.7 retain their declared ownership.
+- Completed and accepted Task 6.2 as a strict test-only RED slice. Five scenarios freeze versioned,
+  evidence-bound inclusion for approved/unapproved Professor seeds, roster/global Paper discovery,
+  approved/unapproved Patent exports, Company skeleton/incremental/review/contrary scope, and
+  query-time Web-only Companies through one future `DomainInclusionEngine` seam.
+- Approved source scope is deterministic and content-bound to retained artifact hashes; results bind
+  the manifest hash and tampering fails closed. Professor evaluation uses operator-approved seed
+  membership without a runtime institution whitelist; Paper existence is independent of authorship;
+  Patent export membership is not narrowed by topic/linkage/completeness; Company incremental
+  admission requires four offline evidence dimensions while ambiguous evidence remains reviewable.
+- The single merged review closed two Important evidence-binding findings. Focused normal/forced RED,
+  no-database contract checks, Ruff, Pyright, strict OpenSpec, and diff/scope checks passed. No
+  production code, migration, database/source/Candidate/Milvus/provider/runtime state changed;
+  Task 6.3 owns GREEN implementation.
