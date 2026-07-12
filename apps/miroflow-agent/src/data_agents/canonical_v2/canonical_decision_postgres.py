@@ -954,23 +954,61 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
     ) -> tuple[_engine.CanonicalIdentityConstraintContext, ...]:
         if not canonical_identity_ids:
             return ()
-        rows = connection.execute(
-            "SELECT identity.canonical_identity_id, identity.entity_type, "
-            "identity.state, membership.source_identity_id "
-            "FROM knowledge.canonical_identity AS identity "
-            "JOIN knowledge.identity_decision_output AS decision_output "
-            "ON decision_output.release_id = identity.release_id "
-            "AND decision_output.decision_id = identity.identity_decision_id "
-            "AND decision_output.canonical_identity_id = "
-            "identity.canonical_identity_id "
-            "JOIN knowledge.identity_decision_source_identity AS membership "
-            "ON membership.release_id = identity.release_id "
-            "AND membership.decision_id = identity.identity_decision_id "
-            "WHERE identity.release_id = %s "
-            "AND identity.canonical_identity_id = ANY(%s) "
-            "ORDER BY identity.canonical_identity_id, membership.source_identity_id",
-            (release_id, list(canonical_identity_ids)),
-        ).fetchall()
+        has_explicit_membership = connection.execute(
+            "SELECT to_regclass('knowledge.canonical_identity_source_membership') "
+            "IS NOT NULL AS available"
+        ).fetchone()
+        if has_explicit_membership is not None and has_explicit_membership["available"]:
+            rows = connection.execute(
+                "SELECT identity.canonical_identity_id, identity.entity_type, "
+                "identity.state, membership.source_identity_id "
+                "FROM knowledge.canonical_identity AS identity "
+                "JOIN knowledge.canonical_identity_source_membership AS membership "
+                "ON membership.release_id = identity.release_id "
+                "AND membership.canonical_identity_id = "
+                "identity.canonical_identity_id "
+                "WHERE identity.release_id = %s "
+                "AND identity.canonical_identity_id = ANY(%s) "
+                "ORDER BY identity.canonical_identity_id, "
+                "membership.source_identity_id",
+                (release_id, list(canonical_identity_ids)),
+            ).fetchall()
+        else:
+            ambiguous_legacy_decisions = connection.execute(
+                "SELECT identity.identity_decision_id "
+                "FROM knowledge.canonical_identity AS identity "
+                "LEFT JOIN knowledge.identity_decision_output AS decision_output "
+                "ON decision_output.release_id = identity.release_id "
+                "AND decision_output.decision_id = identity.identity_decision_id "
+                "WHERE identity.release_id = %s "
+                "AND identity.canonical_identity_id = ANY(%s) "
+                "GROUP BY identity.identity_decision_id "
+                "HAVING count(DISTINCT decision_output.canonical_identity_id) <> 1",
+                (release_id, list(canonical_identity_ids)),
+            ).fetchall()
+            if ambiguous_legacy_decisions:
+                raise ValueError(
+                    "legacy decision-wide identity membership requires exactly "
+                    "one output per producing decision"
+                )
+            rows = connection.execute(
+                "SELECT identity.canonical_identity_id, identity.entity_type, "
+                "identity.state, membership.source_identity_id "
+                "FROM knowledge.canonical_identity AS identity "
+                "JOIN knowledge.identity_decision_output AS decision_output "
+                "ON decision_output.release_id = identity.release_id "
+                "AND decision_output.decision_id = identity.identity_decision_id "
+                "AND decision_output.canonical_identity_id = "
+                "identity.canonical_identity_id "
+                "JOIN knowledge.identity_decision_source_identity AS membership "
+                "ON membership.release_id = identity.release_id "
+                "AND membership.decision_id = identity.identity_decision_id "
+                "WHERE identity.release_id = %s "
+                "AND identity.canonical_identity_id = ANY(%s) "
+                "ORDER BY identity.canonical_identity_id, "
+                "membership.source_identity_id",
+                (release_id, list(canonical_identity_ids)),
+            ).fetchall()
         grouped: dict[str, dict[str, Any]] = {}
         for row in rows:
             context = grouped.setdefault(

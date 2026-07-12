@@ -36,7 +36,7 @@
 - [x] 5.1 Add RED contract/scenario coverage for retained competing assertions, deterministic constraints, structured LLM adjudication, unresolved conflicts, and current projections.
 - [x] 5.2 Implement append-only field/relationship assertions and reproducible canonical decisions with evidence, policy/model version, confidence, rationale, and conflict state.
 - [x] 5.3 Add RED identity scenarios for strong-identifier merge, cross-format LLM decision, same-name separation, mistaken-merge split, and recovery lineage.
-- [ ] 5.4 Implement reversible offline canonical identity resolution and source-identity mapping without pre-launch ID compatibility constraints; query/answer paths remain read-only and may only emit identity-review gaps.
+- [x] 5.4 Implement reversible offline canonical identity resolution and source-identity mapping without pre-launch ID compatibility constraints; query/answer paths remain read-only and may only emit identity-review gaps.
 - [ ] 5.5 Implement proportional temporal semantics for observation/publication/event time and naturally changing validity intervals.
 - [ ] 5.6 Verify deterministic/recorded-fake LLM decisions, review queues, reversal, and current/history projections; review/accept the slice.
 

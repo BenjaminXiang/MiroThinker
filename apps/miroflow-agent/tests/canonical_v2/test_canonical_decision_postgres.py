@@ -218,7 +218,7 @@ def target(
             backup_gate_root=provisional.backup_gate_root,
             config=_migration_config(provisional),
         )
-        command.upgrade(configured.config, "head")
+        command.upgrade(configured.config, EXPECTED_REVISION)
         _verify_target(configured)
         yield configured
     finally:
@@ -543,6 +543,10 @@ def _insert_prerequisites(
         "record:rejected-source",
     )
     with _connect(target) as connection:
+        has_explicit_membership = connection.execute(
+            "SELECT to_regclass('knowledge.canonical_identity_source_membership') "
+            "IS NOT NULL"
+        ).fetchone() == (True,)
         connection.execute(
             "INSERT INTO landing.evidence_artifact "
             "(artifact_id, source_kind, source_locator, content_sha256, byte_size, "
@@ -687,6 +691,13 @@ def _insert_prerequisites(
                     "VALUES (%s, %s, %s)",
                     (RELEASE_ID, decision_id, source_identity_id),
                 )
+                if has_explicit_membership:
+                    connection.execute(
+                        "INSERT INTO knowledge.canonical_identity_source_membership "
+                        "(release_id, canonical_identity_id, source_identity_id) "
+                        "VALUES (%s, %s, %s)",
+                        (RELEASE_ID, canonical_identity_id, source_identity_id),
+                    )
         connection.execute(
             "INSERT INTO knowledge.relationship_type "
             "(relationship_type_id, version, layer, source_entity_types, "
@@ -726,6 +737,13 @@ def _persisted_counts(target: _Target) -> tuple[int, ...]:
 def test_complete_field_and_relationship_result_round_trips_and_replays_exactly(
     target: _Target,
 ) -> None:
+    with _connect(target) as connection:
+        assert connection.execute(
+            "SELECT version_num FROM public.canonical_v2_alembic_version"
+        ).fetchone() == ("C2_0005",)
+        assert connection.execute(
+            "SELECT to_regclass('knowledge.canonical_identity_source_membership')"
+        ).fetchone() == (None,)
     result = _decision_result()
     _insert_prerequisites(target)
     module = _postgres_module()
@@ -803,6 +821,37 @@ def test_missing_authoritative_identity_membership_fails_before_decision_writes(
     with pytest.raises(
         _postgres_module().CanonicalDecisionPersistenceError,
         match="identity|ownership|context|membership",
+    ):
+        _store(target).persist(result)
+
+    assert _persisted_counts(target) == (0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+
+def test_c2_0005_legacy_membership_rejects_multi_output_identity_decision(
+    target: _Target,
+) -> None:
+    result = _decision_result()
+    _insert_prerequisites(target)
+    with _connect(target) as connection:
+        connection.execute(
+            "INSERT INTO knowledge.canonical_identity "
+            "(release_id, canonical_identity_id, entity_type, state, display_name, "
+            "identity_decision_id) VALUES (%s, 'professor-c2', 'professor', "
+            "'active', 'Ambiguous second output', "
+            "'identity-decision:professor-c1')",
+            (RELEASE_ID,),
+        )
+        connection.execute(
+            "INSERT INTO knowledge.identity_decision_output "
+            "(release_id, decision_id, canonical_identity_id) VALUES "
+            "(%s, 'identity-decision:professor-c1', 'professor-c2')",
+            (RELEASE_ID,),
+        )
+        connection.commit()
+
+    with pytest.raises(
+        _postgres_module().CanonicalDecisionPersistenceError,
+        match="identity ownership|constraint context|single output",
     ):
         _store(target).persist(result)
 
@@ -1034,6 +1083,7 @@ def test_c2_0005_refuses_existing_decisions_without_inventing_context_snapshots(
 def test_downgrade_serializes_with_an_uncommitted_outcome_insert(
     target: _Target,
 ) -> None:
+    command.downgrade(target.config, "C2_0005")
     _insert_prerequisites(target)
     assertion_id = "downgrade-race-assertion"
     decision_id = "downgrade-race-decision"
@@ -1133,7 +1183,6 @@ def test_downgrade_serializes_with_an_uncommitted_outcome_insert(
         if downgrade is not None and not downgrade.done():
             downgrade.result(timeout=10.0)
         executor.shutdown(wait=True, cancel_futures=True)
-        command.upgrade(target.config, "head")
 
 
 def test_missing_parents_are_not_created_and_no_current_projection_is_durable(

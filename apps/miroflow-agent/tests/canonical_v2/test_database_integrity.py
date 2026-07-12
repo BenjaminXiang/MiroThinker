@@ -25,7 +25,7 @@ from src.data_agents.storage.database_target import set_alembic_database_url
 APP_ROOT = Path(__file__).resolve().parents[2]
 ALEMBIC_INI = APP_ROOT / "canonical_v2_alembic.ini"
 SCRIPT_LOCATION = APP_ROOT / "canonical_v2_alembic"
-EXPECTED_REVISION = "C2_0005"
+EXPECTED_REVISION = "C2_0006"
 NOW = datetime(2026, 7, 11, 17, 30, tzinfo=timezone.utc)
 BUSINESS_SCHEMAS = {
     "landing",
@@ -64,11 +64,83 @@ EXPECTED_SHARED_TABLES = {
     ("knowledge", "relationship_decision_assertion"),
     ("knowledge", "relationship_decision_constraint_outcome"),
     ("knowledge", "relationship_decision_identity_context"),
+    ("knowledge", "identity_resolution_run"),
+    ("knowledge", "identity_candidate_verdict"),
+    ("knowledge", "identity_decision_context"),
+    ("knowledge", "identity_decision_assertion"),
+    ("knowledge", "canonical_identity_source_membership"),
+    ("knowledge", "identity_decision_output_source"),
+    ("knowledge", "canonical_identity_lineage"),
+    ("knowledge", "current_source_identity_assignment"),
     ("publish", "build_manifest"),
     ("publish", "manifest_section"),
     ("publish", "active_release"),
 }
 EXPECTED_TASK_5_2_COLUMNS = {
+    "identity_resolution_run": {
+        "release_id",
+        "decision_run_id",
+        "identity_method_version",
+        "as_of",
+        "policy_id",
+        "policy_version",
+        "build_authority",
+        "request_content",
+        "request_content_sha256",
+        "result_content",
+        "result_content_sha256",
+        "created_at",
+    },
+    "identity_candidate_verdict": {
+        "release_id",
+        "decision_run_id",
+        "verdict_id",
+        "verdict",
+        "method",
+        "confidence",
+        "verdict_content",
+        "content_sha256",
+    },
+    "identity_decision_context": {
+        "release_id",
+        "decision_id",
+        "decision_run_id",
+        "candidate_verdict_id",
+        "context_content",
+        "content_sha256",
+        "supporting_assertion_ids",
+    },
+    "identity_decision_assertion": {
+        "release_id",
+        "decision_id",
+        "assertion_id",
+        "source_identity_id",
+        "source_record_id",
+    },
+    "canonical_identity_source_membership": {
+        "release_id",
+        "canonical_identity_id",
+        "source_identity_id",
+    },
+    "identity_decision_output_source": {
+        "release_id",
+        "decision_id",
+        "canonical_identity_id",
+        "source_identity_id",
+    },
+    "canonical_identity_lineage": {
+        "release_id",
+        "decision_id",
+        "predecessor_identity_id",
+        "successor_identity_id",
+        "transition",
+    },
+    "current_source_identity_assignment": {
+        "release_id",
+        "source_identity_id",
+        "canonical_identity_id",
+        "identity_decision_id",
+    },
     "source_assertion": {
         "assertion_id",
         "source_record_id",

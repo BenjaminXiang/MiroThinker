@@ -1153,6 +1153,103 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   build. Migration and downgrade safety receive the extra review/testing permitted by lean
   execution.
 
+## S5D task 5.4 canonical identity GREEN — 2026-07-12T08:40:35Z
+
+- The Accepted Task 5.3 pair scenarios now run through one complete-release
+  `CanonicalIdentityResolver.resolve(request) -> result` seam. The engine normalizes DOI, ORCID,
+  patent, company, and textual keys; recalls deterministic multi-domain components; applies strong-
+  identifier, Professor composite, and recorded structured-LLM rules; and materializes stable no-op,
+  create, link, merge, split, reverse, reject, or unresolved effects with generation-safe successor
+  IDs.
+- Candidate verdicts, applied decisions, manifests, exact decision-time contexts, output-specific
+  source allocations, active current owners, terminal history, and lineage remain independently
+  content-bound. Pair/component LLM evidence is never copied onto unrelated local decisions;
+  contradictory groups, confidence below the versioned threshold, tampered raw bytes, changed
+  assignments, unknown lineage, entity conflicts, and rehashed action/output substitutions fail
+  validation or degrade without terminally rejecting valid objects.
+- C2_0006 adds immutable identity-resolution runs, candidate verdicts, complete context snapshots,
+  assertion/source/record edges, output membership, current assignments, and lifecycle lineage.
+  Deferred PostgreSQL validators enforce action cardinality, exact non-reject source partitions,
+  context/evidence/LLM-edge equality, active-membership/current-assignment equality, canonical state,
+  and lineage topology. All identity tables are locked in one parent-to-child order by the store,
+  upgrade, and downgrade; downgrade refuses nonempty append-only history with SQLSTATE `55000`.
+- The explicit PostgreSQL adapter rechecks the Accepted backup gate and connected disposable marker
+  before its first write, locks the full projection, compares existing source rows, complete record
+  sets, and assertion fingerprints before inserting a run, persists atomically, forces deferred
+  constraints before commit, and reloads the exact typed snapshot. Same-ID/different-content,
+  missing parents, row-key substitution, late rollback, and concurrent replay leave no partial
+  identity rows. The C2_0005 decision store retains its legacy path but rejects multi-output
+  decision-wide ownership rather than inferring an unsafe source mapping.
+- One merged specification/code-quality review reported one Critical and five Important findings;
+  the vertical repair loop closed complete-batch resolution, prior-context binding, action/output
+  hashes, decision-local evidence, exact base-row conflict checks, and deep-module exports. The one
+  focused migration/database-safety review reported five Important and one Minor finding; closure
+  added deferred release/action validators, exact relational release checks, full parent-first
+  writer/downgrade locks, store-vs-downgrade race coverage, tolerant in-development downgrade, and
+  lock/trigger inventory assertions. Closure audit found zero open Critical/Important findings; no
+  second merged review was performed under lean execution.
+- Commit-checkpoint verification passed:
+  - focused identity/decision/head matrix: `75 passed` (`29` pure identity, `32` identity Postgres,
+    `13` C2_0005 decision compatibility, `1` head inventory);
+  - explicit no-database Canonical V2: `124 passed, 79 explicit integration skips, 4 approved
+    future-interface xfails`;
+  - real S5D disposable Canonical V2 excluding the separately named S4C module: `193 passed, 4
+    approved xfails`; independent S4C landing compatibility: `10 passed`;
+  - S1 target plus gate safety: `17 passed`; four S2 harnesses plus S2B: `32 passed`; S4E checkpoint:
+    `23 passed`;
+  - Ruff check/format, targeted Pyright (`0 errors, 0 warnings, 0 informations`), strict OpenSpec,
+    formal verification-contract gate, wheel contents, cached diff, high-confidence secret scan,
+    and writer-import isolation all passed. The wheel contains C2_0001–C2_0006 and both canonical
+    identity modules.
+- One initial all-in-one integration invocation produced nine setup errors because the frozen S4C
+  test correctly rejected the S5D expected database name. No behavior assertion failed. Running the
+  suite on its two explicitly named, independently marked disposable bases produced the passing
+  `193 + 10` results above; the safety rejection was not weakened.
+- Formal S2B admission remains `state=accepted`, `source_count=50`, backup manifest
+  `a14c1eab…e59c8`, and independent restore verification `98826e8d…7d231`. Docker metadata shows
+  original `pgtest` still `paused=true` on exact volume `d81c6381…d241`; it was neither entered nor
+  connected. Recovery and durable-candidate containers remain network-none/no-port/restart-no.
+  SHA-256 hash-only checks matched original/restored Milvus at `43ef203e…67cc` and original/restored
+  FPI salvage at `cef8eb6b…bb7`; no Milvus client opened the original.
+- A forced read-only candidate transaction re-proved exact isolated-candidate marker, PostgreSQL
+  system ID `7661313446684311592`, revision C2_0004, landing counts `15/6/6/21/6`, and zero rows
+  across all 20 knowledge/publish tables. S4 manifest, restore, and acceptance hashes remain
+  `ab091aac…966b1`, `caf789ae…f0acc`, and `20e11fbe…f58c`.
+- The real disposable was container `ef1768e1df66b3a119ba93f975171f045ef2fb99bbee27ddd11f09c4f2c6b501`,
+  network `none`, no ports, restart `no`, read-only rootfs, tmpfs PGDATA, PostgreSQL system ID
+  `7661462653419962415`, with exact disposable markers. Its S5D and S4C bases ended at C2_0006 with
+  zero business rows and no test sibling database. The container, host socket, and wheel artifacts
+  were removed; Docker volume-set SHA-256 remained
+  `8314a2b0200baffdf78d25ebfe0a9f11c5b22f129f8f33c05f1aa4f859ec896c`.
+- Task 5.4 is Accepted under the existing objective-verification authorization. Task 5.5 has not
+  started; no durable-candidate migration, original/recovery write, domain projection, release,
+  publication, Milvus rebuild, provider call, query/chat behavior, or cutover is claimed.
+
+## Task 5.4 pattern-fix report
+
+- Reported cases fixed: pair-only identity resolution, content-rehash bypasses, decision-wide split
+  ownership, missing decision-time context, unsafe same-ID replay, incomplete cross-row constraints,
+  and migration/store lock races.
+- Defect class: identity effects were locally typed but not completely bound across release-batch
+  planning, immutable evidence context, relational projection, current ownership, lifecycle history,
+  and concurrent migration boundaries.
+- Sibling patterns searched: every action and entity domain; candidate verdict and structured-LLM
+  trace paths; source/assertion/record identity; current and terminal mappings; store/load/replay;
+  upgrade/downgrade/preflight; C2_0005 ownership compatibility; and query/admin/runtime writer use.
+- Sibling issues found/fixed: one release-batch engine and rule-set hash; explicit prior decision
+  contexts; per-output allocation; complete base-row comparison; deferred action/release validators;
+  one shared parent-first lock order; and fail-closed legacy multi-output ownership.
+- Not fixed: temporal intervals, review queues, typed domain projections, eligibility, publication,
+  query institution slots, Web augmentation, answer generation, and index work belong to Tasks 5.5+
+  and S6–S10.
+- New invariant/helper/contract/test: complete context hashes, generation-safe identity IDs, exact
+  decision/output binding, multi-component four-domain matrix, create→merge→reverse round-trip,
+  low-confidence degradation, relational topology validators, conflict-before-run tests, and real
+  store/downgrade serialization.
+- Remaining systemic risk: future temporal and aggregate S5 work must preserve these immutable
+  decision-time contexts while adding validity/current-history projections; the durable candidate
+  remains deliberately behind at C2_0004 until a later explicitly authorized candidate write.
+
 ## Explicit non-claims
 
 - S2B acceptance satisfies only the backup prerequisite; each later task still requires its own

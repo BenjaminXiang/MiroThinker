@@ -146,3 +146,24 @@
 - Checkpoint regression and frozen-source audits passed without a database write or provider/index
   call. The durable candidate remains C2_0004 with its accepted landing checkpoint and zero
   knowledge/publish rows. Task 5.4 production/storage work has not started.
+- Completed and accepted task 5.4. One package-internal offline identity module now resolves complete
+  multi-component releases across Professor, Company, Paper, and Patent through versioned
+  normalization, strong/composite candidate recall, deterministic rules, and content-bound recorded
+  structured adjudication. Candidate verdicts remain distinct from applied create/link/merge/split/
+  reverse/reject actions; low-confidence or ambiguous evidence degrades without flattening valid
+  identities or relabeling component-wide LLM evidence as decision-local evidence.
+- Added C2_0006 and an explicit offline/disposable-only PostgreSQL store for identity runs, verdicts,
+  immutable decision-time contexts, assertion/source/record evidence, output-specific source
+  allocation, current membership, terminal history, and lineage. Deferred constraints enforce exact
+  action shapes, evidence/context sets, allocation partitions, current ownership, state transitions,
+  and lineage. Store, upgrade, and downgrade share one parent-first lock order; unsafe populated
+  downgrade or unreconstructable pre-existing history fails closed without inferred backfill.
+- Exact restart load, idempotent/concurrent replay, same-ID content conflicts, mid-transaction
+  rollback, structured-trace binding, create-to-merge-to-reverse lifecycle, and migration races pass
+  on a real network-none/no-port/tmpfs PostgreSQL disposable. C2_0005 decision persistence remains
+  compatible and now refuses ambiguous legacy multi-output ownership rather than smearing sources.
+- The single merged specification/code-quality review and focused migration-safety review findings
+  were closed with zero open Critical/Important items. Complete Canonical V2, S1, S2/S2B, and S4
+  checkpoints plus Ruff, Pyright, wheel contents, strict OpenSpec, formal gate, source/candidate
+  read-only audits, and cleanup checks passed. Original sources and the C2_0004 durable candidate are
+  unchanged; task 5.5 has not started.

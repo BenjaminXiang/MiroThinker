@@ -1,5 +1,78 @@
 # Verification Contract: rebuild-canonical-v2-knowledge-platform
 
+## Change
+
+- Change ID: `rebuild-canonical-v2-knowledge-platform`
+- OpenSpec path: `openspec/changes/rebuild-canonical-v2-knowledge-platform/`
+- Run workspace: `.agents/runs/rebuild-canonical-v2-knowledge-platform/`
+
+## Change Type
+
+- `data_contract_or_storage`
+
+## Superpowers Mode
+
+- `contract_first`
+
+## RED Artifact
+
+- Type: contract test and PostgreSQL integration test
+- Path: `apps/miroflow-agent/tests/canonical_v2/test_canonical_identity_resolution_contract.py` and `apps/miroflow-agent/tests/canonical_v2/test_canonical_identity_postgres.py`
+- Expected failing reason: the Accepted Task 5.3 deep module was absent, then Task 5.4 storage and cross-row release invariants were absent
+- Behavior class covered: offline multi-domain identity resolution, reversible lifecycle topology, exact evidence binding, append-only persistence, replay, and rollback safety
+
+## Oracle Strength
+
+- Observable behavior checked: exact typed request/result equality, mutation-sensitive hashes, source-to-output partitions, lifecycle lineage, restart load, invalid-row rejection, idempotency, concurrency, and reversible migration behavior
+- Why this is stronger than a single string, DOM node, snapshot, or visible example: the tests exercise complete multi-component releases and database transactions across create, link, merge, split, reverse, reject, unresolved, and no-op outcomes
+- For web/UI changes, browser/API/state workflow to verify: not applicable to this offline Task 5.4 storage slice; query and answer paths remain unchanged and read-only
+- For LLM/agentic changes, scenario/eval/trace contract to verify: recorded structured-LLM verdicts bind exact raw bytes, validated content, evidence IDs, model/prompt/schema versions, and confidence thresholds without a live provider call
+
+## Diagnosis / Anti-Overfit Check
+
+- Root-cause hypothesis: the Accepted pair-only RED seam and C2_0005 identity tables could not represent release batches, decision-time context, output-specific source allocation, or exact reversible lifecycle replay
+- Sibling patterns searched: all identity actions and entity domains, decision/source/assertion tables, current and terminal ownership, structured-LLM trace families, migration preflight/downgrade locks, replay conflicts, and query/runtime writer imports
+- Why this RED covers a behavior class rather than one visible example: the matrix crosses four domains, multiple components, every lifecycle action, deterministic and recorded-LLM paths, tampering, replay, and concurrent migration/store boundaries
+- Why the implementation cannot pass by hardcoding or bypassing the case: IDs and hashes are recomputed from complete canonical content, relational projections must round-trip to the same typed result, and deferred database validators reject incomplete topology independently of Python
+
+## Context / Dependency Surface
+
+- Source OpenSpec requirement(s): Task 5.4 and the approved canonical identity, trusted data, immutable landing, backup, and operational-safety requirements under `openspec/changes/rebuild-canonical-v2-knowledge-platform/specs/`
+- Legacy/source-of-truth docs consulted: `docs/Data-Agent-Shared-Spec.md`, the four-domain PRDs, and the accepted Canonical V2 outcome requirements in this run workspace
+- Affected modules: canonical identity resolution, explicit-disposable PostgreSQL persistence, C2_0006, C2_0005 decision-store compatibility, and their contract/integration tests
+- Existing tests/evals likely affected: Canonical V2 shared storage, decision persistence, landing compatibility, database target safety, S2/S2B backup admission, and S4 checkpoint tests
+- Regression surface: migration upgrade/downgrade, append-only evidence and identity history, exact replay/load, current ownership, decision-time context, wheel packaging, and forbidden query/runtime writes
+- External/provider/browser/storage dependencies: an Accepted S2B backup gate and a network-none/no-port/tmpfs disposable PostgreSQL system; no live provider, browser, original source, Milvus client, or durable-candidate write
+
+## Mock Policy
+
+- Mocks used: none for the identity engine or real PostgreSQL acceptance paths; boundary spies are limited to proving fail-before-connect and fail-before-write ordering
+- Behavior not mocked away: target identity, Alembic migrations, PostgreSQL constraints/triggers/locks, transaction rollback, restart load, replay, and concurrent downgrade behavior
+- Complementary real interaction / contract / trace / browser check: the complete contract matrix runs with real code and the storage matrix runs against an owned isolated PostgreSQL system with exact marker, gate, revision, and cleanup checks
+
+## GREEN Criteria
+
+- The Accepted Task 5.3 scenarios and all Task 5.4 integrity siblings pass through one deep module.
+- A fresh process persists and loads the exact typed result; invalid or conflicting writes leave no partial identity history.
+- C2_0006 is append-only, reversible only when safe, fail-closed on unreconstructable history, and serialized with the offline writer through one parent-first lock order.
+- Query/answer/runtime code cannot invoke the identity writer; all writes require offline authority, an Accepted backup gate, and an explicit disposable target.
+- Complete checkpoint regression, static, packaging, OpenSpec, source/candidate, and cleanup gates pass without weakening prior tests or acceptance.
+
+## Forbidden Shortcuts
+
+- No visible-case entity mapping, institution list, legacy-ID compatibility rule, or test-only production branch.
+- No inferred historical context, partial output allocation, mutable-evidence replay, generic DSN fallback, or bypass of backup/target checks.
+- No live Web/LLM write, query/answer identity mutation, durable-candidate migration, original-source connection, or Milvus open.
+
+## Verification Plan
+
+- RED command: `uv run pytest -n0 tests/canonical_v2/test_canonical_identity_resolution_contract.py -q --no-cov --runxfail`
+- Focused GREEN command: `uv run pytest -n0 tests/canonical_v2/test_canonical_identity_resolution_contract.py tests/canonical_v2/test_canonical_identity_postgres.py tests/canonical_v2/test_canonical_decision_postgres.py -q`
+- Regression command: run the complete Canonical V2 suite on explicit no-database and isolated S5D/S4C targets, then the frozen S1, S2/S2B, and S4E harnesses
+- Browser/API/state workflow command: verify by repository-wide import search that query, answer, admin, and runtime paths do not import the offline identity writer; no browser workflow belongs to Task 5.4
+- Real interaction / contract / trace command: run C2_0006 migration, persistence, replay, conflict, concurrency, rollback, and downgrade tests against the named network-none/no-port/tmpfs disposable PostgreSQL target
+- OpenSpec validation command: `openspec validate rebuild-canonical-v2-knowledge-platform --strict`
+
 ## Status
 
 S1 database-target safety, S2 tasks 2.1–2.5 and corpus/ground-truth/threshold policy, and S2B/task
@@ -14,9 +87,11 @@ Accepted at `2026-07-12T04:32:46Z`: C2_0005, the reproducible decision core, and
 PostgreSQL history retain complete assertion/outcome/decision/context evidence. Task 5.3's five
 strict offline identity-resolution RED scenarios are Accepted at `2026-07-12T05:21:29Z`; they define
 strong-ID merge, content-bound cross-format LLM judgment, same-name separation, named merge reversal
-with exact split allocation, and recovered-source linkage through one deep seam. No durable-
-candidate canonical identity/assertion/domain row, published projection, release, or index write
-exists; task 5.4 has not started.
+with exact split allocation, and recovered-source linkage through one deep seam. Task 5.4 is
+Accepted at `2026-07-12T08:40:35Z`: one complete-release identity module plus C2_0006 and an
+offline/disposable-only store retain exact decision-time evidence, output allocation, current
+ownership, terminal history, replay, rollback, and reversible migration safety. The durable
+candidate remains C2_0004 with zero canonical/non-landing rows; task 5.5 has not started.
 
 ## Behavior owner
 
@@ -72,7 +147,7 @@ cannot mutate offline canonical identity decisions.
   inventoried historical SQLite/JSONL/XLSX/PDF/cache/raw-source families. Restore targets must be
   distinct from original and backup locations; original volumes/files remain read-only.
 
-Last identity/hash check recorded in `verification.md`: `2026-07-12T05:21:29Z`.
+Last identity/hash check recorded in `verification.md`: `2026-07-12T08:40:35Z`.
 
 ## Hard invariants
 
