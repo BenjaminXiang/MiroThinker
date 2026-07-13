@@ -1711,3 +1711,26 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 - The merged specification/code-quality review has zero open Critical/Important findings. Task 6.4
   is Accepted as a test-only slice; Task 6.5 owns all production relationship implementation and
   persistence.
+
+## S6A2 catalog authority source rebind — 2026-07-13T10:49:49Z
+
+- Reported case reproduced: the Task 6.1 catalog/shared baseline failed seven of its eight catalog
+  tests at the first full-file authority check. Accepted S5G commit `5771abf` had added temporal-
+  precision behavior to both `design.md` and `canonical-v2-knowledge/spec.md` after Task 6.1 froze
+  their SHA-256 values; the catalog builder constant and seed manifest were not rebound.
+- Sibling search compared all 14 authority paths. Exactly those two S5G files drifted; the other 12
+  matched. The review and packaged catalog copies were mutually byte-identical but jointly stale,
+  and runtime/test constants named the same stale content/file identity.
+- The deterministic builder source identity, catalog seed, content self-hash, packaged copy, runtime
+  constants, and relationship RED identity were rebound as one set. Catalog semantics are unchanged:
+  14 sources, 9 shared fields, 101 domain fields, 28 subobjects, 7 families, 34 relationship types,
+  42 scenarios, 8 traversal directions, and 5 deferred owners. A normalized diff excluding only
+  source SHA and content self-hash fields was empty.
+- Current catalog content SHA-256 is `8ad9e719579b834f51128788f49d091913c0c90e3b047aac9b2f83cc794441d7`;
+  file SHA-256 is `b227285fef5d49ad0b30871e5ccb0c1932443206fac99f5fa708ae586c5383c0`.
+- Deterministic builder write/check passed; eight catalog plus sixteen Accepted shared-contract tests
+  passed (`24 passed`); review/runtime bytes matched; runtime import returned the exact new hashes;
+  Ruff, Pyright, and the post-fix all-14-source scan were clean.
+- Defect class: L6 Evidence/Provenance Violation + C1 Test-Matrix Gap. The invariant is now required
+  in every later S6 acceptance and the aggregate mainline promotion gate. No catalog semantics,
+  database, migration, Milvus, provider, release, source, or product data changed.

@@ -198,7 +198,7 @@ NEW_AUTHORITY_SOURCES = {
                 ],
             },
         ),
-        "sha256": "8f9bcaeaf2c665217761e8ca3fc9b4d80d345fadd246ad1ba0cf99e446c0224c",
+        "sha256": "10e2b8458765a0f9e1cb62564986bc763e7871b6d43ce98e6e83e9c95477a9fc",
     },
     "openspec/changes/rebuild-canonical-v2-knowledge-platform/specs/recovery-evidence-landing/spec.md": {
         "authority_tier": "openspec_behavior",

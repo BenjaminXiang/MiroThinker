@@ -1,6 +1,6 @@
 {
   "catalog_version": "canonical-v2-prd-catalog-2026-07-12",
-  "content_sha256": "c7730380f4534dc4c38a62e85550672d6d05b9c23d4a4a3f87df5eb397d808d2",
+  "content_sha256": "8ad9e719579b834f51128788f49d091913c0c90e3b047aac9b2f83cc794441d7",
   "deferred_owners": [
     {
       "citation_ids": [
@@ -5208,7 +5208,7 @@
         }
       ],
       "path": "openspec/changes/rebuild-canonical-v2-knowledge-platform/design.md",
-      "sha256": "8f9bcaeaf2c665217761e8ca3fc9b4d80d345fadd246ad1ba0cf99e446c0224c"
+      "sha256": "10e2b8458765a0f9e1cb62564986bc763e7871b6d43ce98e6e83e9c95477a9fc"
     },
     {
       "authority_tier": "openspec_behavior",
@@ -5265,7 +5265,7 @@
         }
       ],
       "path": "openspec/changes/rebuild-canonical-v2-knowledge-platform/specs/canonical-v2-knowledge/spec.md",
-      "sha256": "97afcb6687aad8ad7d785e54aff3c5afdf91545f9406c60236afd3b433e04da1"
+      "sha256": "ec88d35157303f18b1185780aba3ed1502b63640772bd3bbbd7ad7dc57785e27"
     },
     {
       "authority_tier": "openspec_behavior",

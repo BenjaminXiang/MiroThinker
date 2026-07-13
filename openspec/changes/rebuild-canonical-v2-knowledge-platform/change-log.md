@@ -34,6 +34,11 @@
   exact content-validated Task 6.3 domain roots and nested typed subobjects, with explicit dangling
   canonical-identity and typed-subobject REDs. Normal RED is exactly nine xfails; forced RED is
   exactly nine missing-target failures; Ruff and Pyright are green.
+- Accepted corrective S6A2 at `2026-07-13T10:49:49Z`: S5G had changed the OpenSpec design and
+  canonical-knowledge spec after Task 6.1 without rebinding their full-file catalog source hashes.
+  A 14-source sibling scan found exactly those two drifts. The deterministic catalog set now binds
+  content/file SHA-256 `8ad9e719…41d7` / `b227285f…83c0`; semantic rows are unchanged and the 24-test
+  catalog/shared baseline is green. Later S6 and promotion gates must rerun this invariant.
 
 ## 2026-07-11
 

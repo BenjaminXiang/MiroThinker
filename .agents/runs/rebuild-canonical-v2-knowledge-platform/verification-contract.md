@@ -209,6 +209,11 @@ shared temporal interface. The user selected `explicit-calendar-v1`; S5G was Acc
 `verification.md`. Task 6.4 relationship RED was integrated and Accepted at
 `2026-07-13T10:12:13Z` after its side-branch contract was rebound to the Accepted Task 6.3 typed
 projection registry; Task 6.5 owns GREEN implementation.
+An S6A2 prerequisite rebind was Accepted at `2026-07-13T10:49:49Z` after S5G changed two catalog
+authority files without refreshing their full-file source hashes. The catalog semantics are
+unchanged; the current content/file identities are `8ad9e719…41d7` and `b227285f…83c0`. Every later
+S6 acceptance and the mainline promotion gate must run the deterministic catalog check plus the
+24-test catalog/shared baseline so authority drift cannot escape again.
 
 Git `main` promotion is separately blocked on aggregate S6 acceptance. The execution session must
 re-prove a clean V2 integration worktree, complete side-branch accounting, preservation of root dirty
