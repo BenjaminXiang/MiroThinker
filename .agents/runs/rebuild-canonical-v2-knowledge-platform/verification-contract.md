@@ -204,8 +204,9 @@ The durable candidate remains C2_0004 with zero canonical/non-landing rows. Task
 `2026-07-12T16:40:08Z`; no database, Milvus, provider, runtime, or candidate write occurred. On
 2026-07-13 ADR-012 added Task 5.7/S5G to preserve date-only versus instant precision across the
 shared temporal interface. The user selected `explicit-calendar-v1`; S5G was Accepted at
-`2026-07-13T09:19:45Z` with zero open Critical/Important review findings. Task 6.3 is In Progress /
-unblocked and is not Candidate or Accepted.
+`2026-07-13T09:19:45Z` with zero open Critical/Important review findings. Task 6.3 was Accepted at
+`2026-07-13T09:56:27Z` with the complete typed/inclusion/C2_0009 evidence recorded in
+`verification.md`.
 
 Git `main` promotion is separately blocked on aggregate S6 acceptance. The execution session must
 re-prove a clean V2 integration worktree, complete side-branch accounting, preservation of root dirty

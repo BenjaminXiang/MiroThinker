@@ -18,6 +18,14 @@
 - Selected aggregate S6 acceptance as the Git `main` fast-forward checkpoint. Promotion is
   fast-forward-only, requires clean/integrated worktrees and side branches plus current verification,
   and does not authorize push or product/data/index cutover.
+- Completed and Accepted Task 6.3 at `2026-07-13T09:56:27Z`. Four versioned inclusion adapters and
+  explicit Professor, Company, Paper, and Patent projections cover all frozen fields/subobjects,
+  preserve exact S5 evidence/decision/temporal lineage, package the Accepted catalog, and restart
+  exactly through C2_0009 on an owned disposable PostgreSQL target. The task count is now 32/75.
+- The merged review closed permanent-head coupling, precision-bearing storage, scope-evidence and
+  Company-validation cross-wiring, candidate-assertion ownership, and active-release direct-SQL
+  write bypass. Final review has zero open Critical/Important findings; relationship RED integration
+  is the next slice.
 
 ## 2026-07-11
 

@@ -70,7 +70,7 @@ targets throughout this change.
 
 ## 4. Canonical knowledge acceptance
 
-- [ ] Professor, Company, Paper, and Patent projections satisfy their authoritative PRD field,
+- [x] Professor, Company, Paper, and Patent projections satisfy their authoritative PRD field,
       inclusion, and typed-subobject contracts.
 - [ ] Every material current field/relationship traces to retained source assertion(s) and a
       canonical decision; selecting a value does not delete competing assertions.

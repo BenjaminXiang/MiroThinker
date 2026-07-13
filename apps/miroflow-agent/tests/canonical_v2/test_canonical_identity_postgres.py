@@ -207,10 +207,16 @@ def _script_directory() -> ScriptDirectory:
     return ScriptDirectory.from_config(config)
 
 
-def test_c2_0007_is_the_single_canonical_v2_head() -> None:
+def test_identity_minimum_revision_remains_on_one_linear_history() -> None:
     scripts = _script_directory()
 
-    assert scripts.get_heads() == [EXPECTED_REVISION]
+    heads = scripts.get_heads()
+    assert len(heads) == 1
+    _postgres_module().require_minimum_canonical_revision(
+        scripts=scripts,
+        current_revision=heads[0],
+        minimum_revision=EXPECTED_REVISION,
+    )
     revision = scripts.get_revision("C2_0007")
     assert revision is not None
     assert revision.down_revision == "C2_0006"

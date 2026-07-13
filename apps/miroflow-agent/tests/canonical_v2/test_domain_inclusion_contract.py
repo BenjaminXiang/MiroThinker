@@ -24,7 +24,6 @@ from src.data_agents.canonical_v2.contracts import SourceRecord
 
 
 TARGET_MODULE = "src.data_agents.canonical_v2.domain_inclusion"
-RED_REASON = "Task 6.2 RED: Canonical V2 domain inclusion is not implemented"
 NOW = datetime(2026, 7, 12, 17, 0, tzinfo=timezone.utc)
 RELEASE_ID = "candidate-s6-domain-r1"
 RUN_ID = "domain-inclusion-run-1"
@@ -32,13 +31,6 @@ RUN_ID = "domain-inclusion-run-1"
 
 class _MissingTargetModule(RuntimeError):
     """Exact Task 6.2 RED sentinel; nested missing dependencies fail normally."""
-
-
-pytestmark = pytest.mark.xfail(
-    strict=True,
-    raises=_MissingTargetModule,
-    reason=RED_REASON,
-)
 
 
 def _module() -> Any:
@@ -1329,3 +1321,212 @@ def test_query_time_web_only_national_company_stays_outside_canonical_inclusion(
         web_identity.canonical_identity_id,
     )
     assert request.model_dump(mode="json") == request_before
+
+
+def test_approved_scope_requires_a_cited_record_not_an_uncited_candidate_record() -> (
+    None
+):
+    module = _module()
+    approved_artifact = _artifact(
+        artifact_id="artifact:approved-scope-record",
+        content_sha256="7" * 64,
+    )
+    outside_artifact = _artifact(
+        artifact_id="artifact:outside-scope-evidence",
+        content_sha256="8" * 64,
+    )
+    approved_record = _source_record(
+        record_id="record:approved-but-uncited",
+        source_batch_id="batch:approved-but-uncited",
+        artifact_id=approved_artifact.artifact_id,
+        payload={"name": "Uncited approved row"},
+    )
+    outside_record = _source_record(
+        record_id="record:outside-but-cited",
+        source_batch_id="batch:outside-but-cited",
+        artifact_id=outside_artifact.artifact_id,
+        payload={"name": "Cited outside row"},
+    )
+    source_identity = SourceIdentity(
+        source_identity_id="source-professor-mixed-scope",
+        source_system="recorded-domain-fixture",
+        source_key="mixed-scope-professor",
+        entity_type="professor",
+        source_record_ids=(approved_record.record_id, outside_record.record_id),
+        normalized_keys={"source_key": "mixed-scope-professor"},
+        first_observed_at=NOW - timedelta(days=30),
+        last_observed_at=NOW - timedelta(hours=1),
+        state=SourceIdentityState.active,
+    )
+    identity = _canonical_identity(
+        canonical_identity_id="professor-mixed-scope-c1",
+        entity_type="professor",
+        source_identity_id=source_identity.source_identity_id,
+    )
+    assertion = SourceAssertion(
+        assertion_id="assertion:outside-scope-professor-name",
+        source_record_id=outside_record.record_id,
+        source_identity_id=source_identity.source_identity_id,
+        subject_entity_type="professor",
+        field_path="name",
+        value="Cited Outside Professor",
+        observed_at=NOW - timedelta(hours=1),
+        assertion_run_id="domain-assertion-run-1",
+    )
+    candidate = module.InclusionCandidate(
+        canonical_identity_id=identity.canonical_identity_id,
+        domain="professor",
+        source_identity_ids=(source_identity.source_identity_id,),
+        source_record_ids=(approved_record.record_id, outside_record.record_id),
+        supporting_assertion_ids=(assertion.assertion_id,),
+        evidence_lane="offline_landing",
+    )
+    manifest = _approved_manifest(
+        module,
+        (
+            "professor",
+            "professor_seed",
+            approved_record.source_batch_id,
+            approved_artifact.artifact_id,
+            approved_artifact.content_sha256,
+        ),
+    )
+
+    result = _evaluate(
+        module,
+        _request(
+            module,
+            manifest=manifest,
+            candidates=(candidate,),
+            identities=(identity,),
+            source_identities=(source_identity,),
+            artifacts=(approved_artifact, outside_artifact),
+            records=(approved_record, outside_record),
+            assertions=(assertion,),
+        ),
+    )
+
+    assert _decision(result, identity.canonical_identity_id).outcome.value == "excluded"
+
+
+def test_incremental_company_validation_evidence_cannot_cross_wire_subjects() -> None:
+    module = _module()
+    candidate_artifact = _artifact(
+        artifact_id="artifact:incremental-company",
+        content_sha256="5" * 64,
+    )
+    candidate_record = _source_record(
+        record_id="record:incremental-company",
+        source_batch_id="batch:incremental-company",
+        artifact_id=candidate_artifact.artifact_id,
+        payload={"name": "Incremental Company"},
+    )
+    candidate_source = _source_identity(
+        source_identity_id="source-incremental-company",
+        entity_type="company",
+        record_id=candidate_record.record_id,
+        source_key="incremental-company",
+    )
+    candidate_identity = _canonical_identity(
+        canonical_identity_id="company-incremental-c1",
+        entity_type="company",
+        source_identity_id=candidate_source.source_identity_id,
+    )
+    candidate_assertion = _assertion(
+        assertion_id="assertion:incremental-company-name",
+        source_identity=candidate_source,
+        field_path="name",
+        value="Incremental Company",
+    )
+
+    foreign_artifact = _artifact(
+        artifact_id="artifact:foreign-company",
+        content_sha256="6" * 64,
+    )
+    foreign_record = _source_record(
+        record_id="record:foreign-company",
+        source_batch_id="batch:foreign-company",
+        artifact_id=foreign_artifact.artifact_id,
+        payload={"name": "Foreign Company"},
+    )
+    foreign_source = _source_identity(
+        source_identity_id="source-foreign-company",
+        entity_type="company",
+        record_id=foreign_record.record_id,
+        source_key="foreign-company",
+    )
+    foreign_identity = _canonical_identity(
+        canonical_identity_id="company-foreign-c1",
+        entity_type="company",
+        source_identity_id=foreign_source.source_identity_id,
+    )
+    foreign_assertion = _assertion(
+        assertion_id="assertion:foreign-company-validation",
+        source_identity=foreign_source,
+        field_path="validation.source",
+        value="foreign evidence",
+    )
+    validation = _incremental_company_validation(
+        module,
+        company_identity_id=candidate_identity.canonical_identity_id,
+        dimensions={
+            dimension: ("supported", (foreign_assertion.assertion_id,))
+            for dimension in (
+                "basic_identity",
+                "innovation_business_relevance",
+                "shenzhen_geography",
+                "source_validation",
+            )
+        },
+    )
+    candidate = _candidate(
+        module,
+        identity=candidate_identity,
+        source_identity=candidate_source,
+        record=candidate_record,
+        assertions=(candidate_assertion,),
+        incremental_company_validation_decision_id=validation.decision_id,
+    )
+    approved_artifact = _artifact(
+        artifact_id="artifact:unrelated-approved-company",
+        content_sha256="4" * 64,
+    )
+    approved_record = _source_record(
+        record_id="record:unrelated-approved-company",
+        source_batch_id="batch:unrelated-approved-company",
+        artifact_id=approved_artifact.artifact_id,
+        payload={"name": "Approved unrelated row"},
+    )
+    manifest = _approved_manifest(
+        module,
+        (
+            "company",
+            "company_skeleton",
+            approved_record.source_batch_id,
+            approved_artifact.artifact_id,
+            approved_artifact.content_sha256,
+        ),
+    )
+
+    with pytest.raises(
+        module.DomainInclusionIntegrityError,
+        match="validation.*evidence|assertion.*candidate",
+    ):
+        _evaluate(
+            module,
+            _request(
+                module,
+                manifest=manifest,
+                candidates=(candidate,),
+                identities=(candidate_identity, foreign_identity),
+                source_identities=(candidate_source, foreign_source),
+                artifacts=(
+                    candidate_artifact,
+                    foreign_artifact,
+                    approved_artifact,
+                ),
+                records=(candidate_record, foreign_record, approved_record),
+                assertions=(candidate_assertion, foreign_assertion),
+                incremental_company_validation_decisions=(validation,),
+            ),
+        )

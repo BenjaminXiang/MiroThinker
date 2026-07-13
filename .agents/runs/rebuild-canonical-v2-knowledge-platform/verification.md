@@ -7,17 +7,17 @@ the narrow Task 5.7/S5G precision-preserving temporal correction after a real S6
 the user selected `explicit-calendar-v1`, and S5G was Accepted at `2026-07-13T09:19:45Z` after its
 pure, real-disposable PostgreSQL, static, strict OpenSpec, scope, and review gates passed. Tasks 6.1
 (PRD domain/relationship catalog), 6.2 (domain-inclusion RED), and 6.6 (path-eligibility RED) remain
-Accepted. OpenSpec reports 31/75 tasks complete on the V2 integration line. Task 6.3 typed domain
-projection is In Progress / unblocked in the
+Accepted. OpenSpec reports 32/75 tasks complete on the V2 integration line. Task 6.3 typed domain
+projection was Accepted at `2026-07-13T09:56:27Z` in the
 `canonical-v2-s2-baseline` worktree; the branch name is historical and no longer describes its
-scope. The active uncommitted implementation includes the four-domain projection/inclusion Modules,
-packaged catalog, PostgreSQL Adapter, `C2_0009`, and focused tests. A 2026-07-13 no-external-database
+scope. It includes the four-domain projection/inclusion Modules, packaged catalog, PostgreSQL
+Adapter, `C2_0009`, and focused tests. A 2026-07-13 no-external-database
 run produced 178 passed, 118 skipped, 9 expected xfails, and 2 real failures: stale exact-head
 coupling to `C2_0007`, and date-only versus instant validity representation at the S5/S6 interface.
-S5G closed the latter without coercion. A current 2026-07-13 no-external-database run has 188 passed,
-125 skipped, 9 expected xfails, and only the Task 6.3-owned permanent-head coupling failure. Task 6.3
-is not Candidate or Accepted. S7-S12 remain unstarted. The user selected aggregate S6 acceptance as
-the Git `main` fast-forward checkpoint; no branch reference has moved.
+S5G closed the latter without coercion; Task 6.3 replaced the permanent-head assertion with the
+linear minimum-revision contract. The current no-external-database run has 192 passed, 125 skipped,
+and 9 expected xfails with no real failure. S7-S12 remain unstarted. The user selected aggregate S6
+acceptance as the Git `main` fast-forward checkpoint; no branch reference has moved.
 
 The code-grounded continuation plan is
 `.agents/runs/rebuild-canonical-v2-knowledge-platform/code-grounded-mainline-plan-2026-07-13.md`.
@@ -1636,3 +1636,50 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   Milvus, recovery checkpoint, active pointer, product cutover, push, PR, or archive mutation.
 - The final merged specification/code-quality and migration/write-safety self-review found zero
   open Critical/Important findings. Task 5.7/S5G is Accepted; Task 6.3 may resume.
+
+## S6C task 6.3 typed domain projection acceptance — 2026-07-13T09:56:27Z
+
+- The Accepted Task 6.2 scenarios are GREEN through one deterministic `DomainInclusionEngine`.
+  Professor/Paper/Patent approved scope and Company skeleton/incremental validation remain
+  evidence-bound; query-time Web remains outside canonical inclusion. Review REDs proved and then
+  closed two sibling defects: an uncited approved record cannot admit evidence from an out-of-scope
+  record, and Company validation dimensions cannot cite another canonical subject's assertions.
+- One `DomainProjectionBuilder` emits explicit Professor, Company, Paper, and Patent Pydantic roots,
+  all 28 catalog subobject types, proportional optional fields, deterministic manifests/counts/
+  hashes, exact inclusion lineage, and exact S5 selected assertion/decision lineage. Unknown fields,
+  duplicate scalars, dangling/cross-wired candidate evidence, future observations, release/domain/
+  cardinality drift, and validity invention/drop/mismatch fail closed.
+- The packaged runtime catalog is byte-identical to Accepted Task 6.1 and has no `.agents` runtime
+  dependency. The built wheel contains the catalog, all five S6c modules, and C2_0009; the wheel and
+  source catalog SHA-256 both equal `e0c72585…55e3`.
+- C2_0009 is the single descendant of C2_0008. It creates typed/filterable four-domain roots and
+  typed subobject tables, inclusion/manifest/lineage tables, append-only guards, exact foreign keys,
+  candidate release/build checks on every insert surface, precision-valid date/instant storage,
+  wrong-domain reference guards, deterministic restart reconstruction, and populated-downgrade
+  refusal. No active release/index pointer exists in or is changed by this slice.
+- The original stale test that treated C2_0007/C2_0008 as a permanent head failed RED with C2_0009;
+  it now proves one linear history and the identity adapter's accepted minimum revision while each
+  owning migration retains its exact parent test.
+- The first post-S5G Pyright run produced eight RED errors: the adapter called `isoformat()` on
+  temporal wrappers and fixtures passed native dates into explicit temporal fields. Shared
+  `TemporalDateValue`/`TemporalInstantValue` encoding/decoding closed them; a real Professor project
+  now restarts with `date` precision and exact `2025-01-01`/`2027-12-31` bounds.
+- Migration review added two real PostgreSQL REDs: non-canonical naive instant text was accepted by
+  the old shape check, and child rows could be appended by direct SQL after the release became
+  active. C2_0009 now reuses C2_0008 canonical temporal validation and gates every manifest,
+  inclusion, root, subobject, and lineage insert on the exact candidate release/build.
+- Final pure inclusion/projection matrix: `36 passed`. Current complete no-external-database
+  Canonical V2 matrix: `192 passed, 125 skipped, 9 xfailed`; all xfails are future public
+  build/read/answer/publication and Accepted Task 6.6 path-policy REDs.
+- Final real network-none/no-port disposable PostgreSQL projection matrix: `13 passed`. It covers
+  schema/catalog materialization, exact restart/replay, multiple roots, rejected/zero-child state,
+  conflict/rollback, simultaneous identical/conflicting writers, writer/downgrade locking,
+  cross-domain inclusion ownership, direct SQL shape/lineage/hash/time/candidate guards, empty
+  downgrade/re-upgrade, and populated downgrade refusal.
+- Ruff format/check passed on ten S6c files; app-environment Pyright reported `0 errors, 0 warnings,
+  0 informations`; strict OpenSpec and diff checks passed. The explicit backup gate and disposable
+  target are rechecked by every adapter/test boundary. No original/recovery/durable-candidate
+  database, Milvus, provider, legacy V042, publication/query/answer path, push, PR, archive, or
+  product/data/index cutover changed.
+- The merged specification/code-quality and migration/write-safety review closed six Important
+  findings and has zero open Critical/Important findings. Task 6.3/S6c is Accepted.
