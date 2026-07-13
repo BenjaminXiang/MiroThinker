@@ -214,6 +214,12 @@ authority files without refreshing their full-file source hashes. The catalog se
 unchanged; the current content/file identities are `8ad9e719…41d7` and `b227285f…83c0`. Every later
 S6 acceptance and the mainline promotion gate must run the deterministic catalog check plus the
 24-test catalog/shared baseline so authority drift cannot escape again.
+Task 6.5's pure projection sub-slice S6E was Accepted at `2026-07-13T12:35:08Z`: the package-internal
+`RelationshipProjection.project(...)` interface validates the installed 34-type catalog, exact S6c
+roots/subobjects, retained evidence, source assignments, assertions, decisions, roles, state, time,
+layers, and all eight directions. Date-only currentness requires the explicit S5G calendar context
+and otherwise reports `indeterminate`. Task 6.5 remains unchecked until its separately Ready and
+verified persistence slice is Accepted.
 
 Git `main` promotion is separately blocked on aggregate S6 acceptance. The execution session must
 re-prove a clean V2 integration worktree, complete side-branch accounting, preservation of root dirty

@@ -1734,3 +1734,37 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 - Defect class: L6 Evidence/Provenance Violation + C1 Test-Matrix Gap. The invariant is now required
   in every later S6 acceptance and the aggregate mainline promotion gate. No catalog semantics,
   database, migration, Milvus, provider, release, source, or product data changed.
+
+## S6E Task 6.5 pure relationship projection — 2026-07-13T12:35:08Z
+
+- Implemented one package-internal deep module seam,
+  `RelationshipProjection.project(RelationshipProjectionRequest)`, over the installed packaged
+  34-type catalog. Product code never reads `.agents`; it verifies the supplied catalog identity
+  against the content-addressed runtime resource.
+- The module validates exact Task 6.3 content-bound canonical roots and typed subobjects, including
+  parent and concrete subobject type; catalog endpoint orientation, role vocabulary/ownership,
+  state, proportional time, required evidence kinds, and retained reference closure; and exact
+  source-assignment/assertion/decision/policy/evidence continuity. Rejected constraints produce no
+  decision/current projection; accepted rejected-state decisions retain evidence but are not current.
+- Four-domain root relationships retain the shared S5 `RelationshipAssertion` and
+  `RelationshipDecision` models. Registry/subobject/lineage endpoints retain typed assertions and
+  typed decisions without fabricating canonical identity IDs. Derived/session probes cannot project
+  canonical facts, source-potential scenarios remain non-evidence, and direction probes validate the
+  exact catalog scenario, endpoint registry, and type list without invoking path eligibility.
+- S5G temporal precision remains exact. Candidate/assertion intervals reject mixed precision or
+  reversed values. A date-only validity boundary compared with request `as_of` returns currentness
+  `indeterminate` and `explicit_calendar_context_required` unless the caller supplies the named
+  Gregorian/timezone `TemporalComparisonContext`; no date is coerced to an instant.
+- Review found and closed four Important gaps beyond the original RED: typed subobject ID/parent
+  checks did not bind concrete type; shared assertion attributes/time were not field-for-field
+  continuous; date-only currentness was silently omitted without an indeterminate result; and
+  direction probes did not prove their endpoints existed in the S6c registry. A fifth decision-
+  shape guard now rejects accepted typed decisions that select no assertion. Zero Critical/Important
+  findings remain.
+- GREEN evidence: focused relationship contract `9 passed`; deterministic Task 6.1 catalog/shared
+  baseline `24 passed`; full no-external Canonical V2 `201 passed, 125 skipped, 9 expected xfailed`;
+  Ruff format/check passed; app-environment Pyright reported zero errors; builder `--check` passed.
+- This pure sub-slice is Accepted independently. OpenSpec Task 6.5 remains unchecked and the task
+  count remains 33/75 because durable relationship assertion/decision/current persistence is still
+  required. No migration, database, Milvus, provider, release, query, answer, admin, source, product
+  data, push, PR, archive, or cutover changed.

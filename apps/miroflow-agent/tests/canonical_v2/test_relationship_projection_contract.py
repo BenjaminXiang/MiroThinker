@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 import hashlib
 from importlib import import_module
 import json
@@ -22,6 +22,7 @@ from src.data_agents.canonical_v2.contracts import (
 from src.data_agents.canonical_v2.contracts import (
     RelationshipType as SharedRelationshipType,
 )
+from src.data_agents.canonical_v2.contracts import TemporalComparisonContext
 from src.data_agents.canonical_v2 import domain_projection_models as domain_models
 from src.data_agents.canonical_v2.domain_catalog import (
     CATALOG_CONTENT_SHA256 as INSTALLED_CATALOG_CONTENT_SHA256,
@@ -35,7 +36,6 @@ from src.data_agents.canonical_v2.domain_catalog import (
 
 
 TARGET_MODULE = "src.data_agents.canonical_v2.relationship_projection"
-RED_REASON = "Task 6.4 RED: typed relationship projection is not implemented"
 REPO_ROOT = Path(__file__).resolve().parents[4]
 CATALOG_PATH = (
     REPO_ROOT / ".agents/runs/rebuild-canonical-v2-knowledge-platform/s6/"
@@ -592,6 +592,7 @@ def _projection_request(
     retained_artifacts: tuple[Any, ...],
     direction_probes: tuple[Any, ...] = (),
     layer_probes: tuple[Any, ...] = (),
+    temporal_comparison_context: TemporalComparisonContext | None = None,
 ) -> Any:
     policy = _relationship_policy()
     (
@@ -601,26 +602,29 @@ def _projection_request(
         assignments,
         decision_inputs,
     ) = _bound_projection_inputs(module, candidates, policy)
-    return module.RelationshipProjectionRequest(
-        catalog=_catalog_reference(module),
-        release_id="candidate-s6d-r1",
-        projection_run_id=run_id,
-        as_of=NOW,
-        decision_policy=policy,
-        domain_projections=_domain_projection_registry(
+    values = {
+        "catalog": _catalog_reference(module),
+        "release_id": "candidate-s6d-r1",
+        "projection_run_id": run_id,
+        "as_of": NOW,
+        "decision_policy": policy,
+        "domain_projections": _domain_projection_registry(
             bound_candidates,
             direction_probes,
         ),
-        candidates=bound_candidates,
-        relationship_assertions=shared_assertions,
-        typed_relationship_assertions=typed_assertions,
-        source_canonical_assignments=assignments,
-        decision_inputs=decision_inputs,
-        direction_probes=direction_probes,
-        layer_probes=layer_probes,
-        retained_assertions=retained_assertions,
-        retained_artifacts=retained_artifacts,
-    )
+        "candidates": bound_candidates,
+        "relationship_assertions": shared_assertions,
+        "typed_relationship_assertions": typed_assertions,
+        "source_canonical_assignments": assignments,
+        "decision_inputs": decision_inputs,
+        "direction_probes": direction_probes,
+        "layer_probes": layer_probes,
+        "retained_assertions": retained_assertions,
+        "retained_artifacts": retained_artifacts,
+    }
+    if temporal_comparison_context is not None:
+        values["temporal_comparison_context"] = temporal_comparison_context
+    return module.RelationshipProjectionRequest.model_validate(values)
 
 
 def _assert_canonical_decision_layers(
@@ -747,7 +751,6 @@ def _assert_typed_decision_layers(request: Any, result: Any, candidate_id: str) 
     ) == request.decision_policy.model_dump(mode="json")
 
 
-@pytest.mark.xfail(strict=True, raises=_MissingTargetModule, reason=RED_REASON)
 def test_identity_lifecycle_requires_same_domain_typed_lineage() -> None:
     catalog = _catalog()
     relationships = tuple(
@@ -1031,7 +1034,6 @@ def test_identity_lifecycle_requires_same_domain_typed_lineage() -> None:
     }
 
 
-@pytest.mark.xfail(strict=True, raises=_MissingTargetModule, reason=RED_REASON)
 def test_organization_roles_enforce_vocabulary_and_role_ownership() -> None:
     catalog = _catalog()
     relationships = tuple(
@@ -1218,8 +1220,40 @@ def test_organization_roles_enforce_vocabulary_and_role_ownership() -> None:
     assert wrong_target.admitted is False
     assert "company_targets_require_professor_company_role" in wrong_target.reason_codes
 
+    tampered_assertion = next(
+        assertion
+        for assertion in request.relationship_assertions
+        if assertion.assertion_id
+        == "relationship-assertion:valid:professor_company_role"
+    )
+    tampered_assertion = tampered_assertion.model_copy(
+        update={
+            "attributes": {
+                **tampered_assertion.attributes,
+                "role_bindings": {"investor": professor.stable_reference},
+            }
+        }
+    )
+    tampered_request = request.model_copy(
+        update={
+            "relationship_assertions": tuple(
+                tampered_assertion
+                if assertion.assertion_id == tampered_assertion.assertion_id
+                else assertion
+                for assertion in request.relationship_assertions
+            )
+        }
+    )
+    tampered_result = module.create_ephemeral_relationship_projection().project(
+        tampered_request
+    )
+    tampered = _outcome(tampered_result, "valid:professor_company_role")
+    assert tampered.admitted is False
+    assert "source_relationship_assertion_continuity_mismatch" in (
+        tampered.reason_codes
+    )
 
-@pytest.mark.xfail(strict=True, raises=_MissingTargetModule, reason=RED_REASON)
+
 def test_scholarly_output_keeps_attribution_evidence_separate_from_identity() -> None:
     catalog = _catalog()
     relationships = tuple(
@@ -1387,7 +1421,6 @@ def test_scholarly_output_keeps_attribution_evidence_separate_from_identity() ->
     assert result.identity_state_changes == ()
 
 
-@pytest.mark.xfail(strict=True, raises=_MissingTargetModule, reason=RED_REASON)
 def test_intellectual_property_preserves_applicant_and_inventor_semantics() -> None:
     catalog = _catalog()
     relationships = tuple(
@@ -1557,7 +1590,6 @@ def test_intellectual_property_preserves_applicant_and_inventor_semantics() -> N
     assert result.inferred_relationship_type_ids == ()
 
 
-@pytest.mark.xfail(strict=True, raises=_MissingTargetModule, reason=RED_REASON)
 def test_company_business_product_event_uses_catalog_time_semantics() -> None:
     catalog = _catalog()
     relationships = tuple(
@@ -1646,6 +1678,43 @@ def test_company_business_product_event_uses_catalog_time_semantics() -> None:
         )
         if relationship["relationship_type_id"] == product["relationship_type_id"]
     )
+    product_index = next(
+        index
+        for index, candidate in enumerate(candidates)
+        if candidate.relationship_type_id == product["relationship_type_id"]
+    )
+    capability = _relationship(catalog, "company_has_capability")
+    capability_evidence = next(
+        evidence
+        for relationship, (_, _, evidence) in zip(
+            relationships, registries, strict=True
+        )
+        if relationship["relationship_type_id"] == capability["relationship_type_id"]
+    )
+    candidates.insert(
+        product_index,
+        module.RelationshipProjectionCandidate(
+            candidate_id="invalid:typed-subobject-type-mismatch",
+            relationship_type_id=capability["relationship_type_id"],
+            relationship_type_version=capability["version"],
+            source_endpoint=company,
+            target_endpoint=module.RelationshipEndpointReference(
+                reference_kind="typed_subobject",
+                endpoint_type="capability",
+                stable_reference="subobject:product:product-1",
+                canonical_identity_id=None,
+                parent_canonical_identity_ref=company.stable_reference,
+            ),
+            role_bindings={},
+            evidence_metadata={},
+            requested_paths=(),
+            observed_at=NOW,
+            source_event_time=None,
+            valid_from=NOW,
+            valid_to=None,
+            evidence_bindings=capability_evidence,
+        ),
+    )
     candidates.append(
         module.RelationshipProjectionCandidate(
             candidate_id="invalid:dangling-domain-endpoint:typed-subobject",
@@ -1702,15 +1771,106 @@ def test_company_business_product_event_uses_catalog_time_semantics() -> None:
     dangling_subobject = _outcome(
         result, "invalid:dangling-domain-endpoint:typed-subobject"
     )
+    wrong_subobject_type = _outcome(result, "invalid:typed-subobject-type-mismatch")
     assert invalid_time.admitted is False
     assert "invalid_time_semantics" in invalid_time.reason_codes
     assert dangling_subobject.admitted is False
     assert "typed_subobject_not_in_domain_projection" in (
         dangling_subobject.reason_codes
     )
+    assert wrong_subobject_type.admitted is False
+    assert "typed_subobject_not_in_domain_projection" in (
+        wrong_subobject_type.reason_codes
+    )
+
+    date_assertions, date_artifacts, date_evidence = _retained_evidence(
+        module,
+        "company-product-date",
+        product["required_evidence_kinds"],
+    )
+    date_candidate = module.RelationshipProjectionCandidate(
+        candidate_id="valid:company_has_product:date-only",
+        relationship_type_id=product["relationship_type_id"],
+        relationship_type_version=product["version"],
+        source_endpoint=company,
+        target_endpoint=_subobject_endpoint(
+            module,
+            "product",
+            "product-date-only",
+            parent_canonical_identity_ref=company.stable_reference,
+        ),
+        role_bindings={},
+        evidence_metadata={},
+        requested_paths=(),
+        observed_at=NOW,
+        source_event_time=None,
+        valid_from=date(2026, 7, 12),
+        valid_to=None,
+        evidence_bindings=date_evidence,
+    )
+    no_context_request = _projection_request(
+        module,
+        run_id="relationship-projection-run-date-no-context",
+        candidates=(date_candidate,),
+        retained_assertions=date_assertions,
+        retained_artifacts=date_artifacts,
+    )
+    no_context_result = module.create_ephemeral_relationship_projection().project(
+        no_context_request
+    )
+    no_context = _outcome(no_context_result, "valid:company_has_product:date-only")
+    assert no_context.admitted is True
+    assert no_context.current_projection_state == "indeterminate"
+    assert "explicit_calendar_context_required" in (
+        no_context.current_projection_reason_codes
+    )
+    assert no_context.projected_relationship_id is None
+
+    explicit_context_request = _projection_request(
+        module,
+        run_id="relationship-projection-run-date-context",
+        candidates=(date_candidate,),
+        retained_assertions=date_assertions,
+        retained_artifacts=date_artifacts,
+        temporal_comparison_context=TemporalComparisonContext(timezone="Asia/Shanghai"),
+    )
+    explicit_context_result = module.create_ephemeral_relationship_projection().project(
+        explicit_context_request
+    )
+    explicit_context = _outcome(
+        explicit_context_result, "valid:company_has_product:date-only"
+    )
+    assert explicit_context.admitted is True
+    assert explicit_context.current_projection_state == "current"
+    assert explicit_context.current_projection_reason_codes == ()
+    assert explicit_context.projected_relationship_id is not None
+
+    with pytest.raises(
+        ValueError,
+        match="valid_from and valid_to must have the same temporal precision",
+    ):
+        module.RelationshipProjectionCandidate(
+            candidate_id="invalid:mixed-temporal-precision",
+            relationship_type_id=product["relationship_type_id"],
+            relationship_type_version=product["version"],
+            source_endpoint=company,
+            target_endpoint=_subobject_endpoint(
+                module,
+                "product",
+                "product-mixed-time",
+                parent_canonical_identity_ref=company.stable_reference,
+            ),
+            role_bindings={},
+            evidence_metadata={},
+            requested_paths=(),
+            observed_at=NOW,
+            source_event_time=None,
+            valid_from=date(2026, 7, 12),
+            valid_to=NOW,
+            evidence_bindings=date_evidence,
+        )
 
 
-@pytest.mark.xfail(strict=True, raises=_MissingTargetModule, reason=RED_REASON)
 def test_taxonomy_topic_geography_keeps_typed_noncanonical_targets() -> None:
     catalog = _catalog()
     relationships = tuple(
@@ -1847,8 +2007,34 @@ def test_taxonomy_topic_geography_keeps_typed_noncanonical_targets() -> None:
     assert reversed_endpoint.admitted is False
     assert "endpoint_type_not_allowed" in reversed_endpoint.reason_codes
 
+    typed_candidate = next(
+        candidate
+        for candidate in request.candidates
+        if candidate.candidate_id == f"valid:{relationships[0]['relationship_type_id']}"
+    )
+    tampered_decision = next(
+        decision
+        for decision in request.decision_inputs
+        if decision.decision_input_id == typed_candidate.decision_input_id
+    ).model_copy(update={"selected_assertion_ids": ()})
+    tampered_request = request.model_copy(
+        update={
+            "decision_inputs": tuple(
+                tampered_decision
+                if decision.decision_input_id == tampered_decision.decision_input_id
+                else decision
+                for decision in request.decision_inputs
+            )
+        }
+    )
+    tampered_result = module.create_ephemeral_relationship_projection().project(
+        tampered_request
+    )
+    tampered = _outcome(tampered_result, typed_candidate.candidate_id)
+    assert tampered.admitted is False
+    assert "relationship_decision_input_continuity_mismatch" in (tampered.reason_codes)
 
-@pytest.mark.xfail(strict=True, raises=_MissingTargetModule, reason=RED_REASON)
+
 def test_evidence_lineage_uses_retained_metadata_references() -> None:
     catalog = _catalog()
     relationships = tuple(
@@ -2017,7 +2203,6 @@ def test_evidence_lineage_uses_retained_metadata_references() -> None:
     assert "state_not_allowed" in wrong_state.reason_codes
 
 
-@pytest.mark.xfail(strict=True, raises=_MissingTargetModule, reason=RED_REASON)
 def test_cross_domain_directions_validate_orientation_without_fabricating_edges() -> (
     None
 ):
@@ -2065,6 +2250,20 @@ def test_cross_domain_directions_validate_orientation_without_fabricating_edges(
             retained_relationship_refs=(),
         )
     )
+    probes.append(
+        module.RelationshipDirectionProbe(
+            probe_id="invalid:dangling-domain-endpoint:direction",
+            scenario_id=first["scenario_id"],
+            source_endpoint=_canonical_endpoint(
+                module, first_source_type, f"{first_source_type}-missing"
+            ),
+            target_endpoint=_canonical_endpoint(
+                module, first_target_type, f"{first_target_type}-missing"
+            ),
+            relationship_type_ids=tuple(first["relationship_type_ids"]),
+            retained_relationship_refs=(),
+        )
+    )
     request = _projection_request(
         module,
         run_id="relationship-projection-run-directions",
@@ -2077,9 +2276,9 @@ def test_cross_domain_directions_validate_orientation_without_fabricating_edges(
 
     result = module.create_ephemeral_relationship_projection().project(request)
 
-    assert len(result.direction_outcomes) == 9
+    assert len(result.direction_outcomes) == 10
     outcomes = {outcome.probe_id: outcome for outcome in result.direction_outcomes}
-    assert len(outcomes) == 9
+    assert len(outcomes) == 10
     for scenario in scenarios:
         outcome = outcomes[scenario["scenario_id"]]
         assert outcome.orientation_valid is True
@@ -2090,10 +2289,13 @@ def test_cross_domain_directions_validate_orientation_without_fabricating_edges(
     assert reversed_direction.orientation_valid is False
     assert "direction_orientation_mismatch" in reversed_direction.reason_codes
     assert reversed_direction.available is False
+    dangling = outcomes["invalid:dangling-domain-endpoint:direction"]
+    assert dangling.orientation_valid is False
+    assert "canonical_endpoint_not_in_domain_projection" in dangling.reason_codes
+    assert dangling.available is False
     assert result.path_eligibility_results == ()
 
 
-@pytest.mark.xfail(strict=True, raises=_MissingTargetModule, reason=RED_REASON)
 def test_layers_and_source_potential_never_fabricate_canonical_facts() -> None:
     catalog = _catalog()
     layer_contracts = {item["layer"]: item for item in catalog["layer_contracts"]}

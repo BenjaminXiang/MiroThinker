@@ -39,6 +39,13 @@
   A 14-source sibling scan found exactly those two drifts. The deterministic catalog set now binds
   content/file SHA-256 `8ad9e719…41d7` / `b227285f…83c0`; semantic rows are unchanged and the 24-test
   catalog/shared baseline is green. Later S6 and promotion gates must rerun this invariant.
+- Accepted Task 6.5 pure projection sub-slice S6E at `2026-07-13T12:35:08Z`. The installed-catalog
+  relationship module now enforces all seven families, exact typed endpoints, retained evidence and
+  assertion/decision continuity, roles/state/time semantics, layers, and eight directions. Review
+  additionally closed concrete subobject-type, shared assertion, decision-shape, direction-registry,
+  and explicit-calendar currentness gaps. Focused `9 passed`, full no-external Canonical V2
+  `201 passed, 125 skipped, 9 expected xfailed`, and static/catalog gates are green. Task 6.5 remains
+  unchecked at 33/75 until relationship persistence is independently Accepted.
 
 ## 2026-07-11
 

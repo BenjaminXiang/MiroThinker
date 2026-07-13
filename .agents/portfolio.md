@@ -8,7 +8,8 @@
 - **`rebuild-canonical-v2-knowledge-platform`** (OpenSpec, breaking Epic) is the sole implementation
   mainline by user decision. Current task ledger: 33/75. Tasks 5.1-5.7 retain their Accepted
   evidence; S5G/Task 5.7 closed the temporal-precision contract; Task 6.3 typed domain projection is
-  Accepted; Tasks 6.1, 6.2 RED, 6.4 RED, and 6.6 RED are Accepted.
+  Accepted; Tasks 6.1, 6.2 RED, 6.4 RED, and 6.6 RED are Accepted. Task 6.5's pure relationship
+  projection sub-slice is Accepted; relationship persistence remains before Task 6.5 acceptance.
 - Overlapping V1/V042 retrieval/Web changes are Frozen as implementation authorities. Their valid
   contracts, evaluators, corpora, manifests, and RED evidence remain mapping inputs before S7-S11;
   no in-flight legacy change becomes an Accepted V2 dependency.
