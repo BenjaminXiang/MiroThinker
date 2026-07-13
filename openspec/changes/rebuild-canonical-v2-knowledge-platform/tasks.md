@@ -50,7 +50,7 @@
 - [x] 6.5 Implement the extensible typed relationship catalog, assertions, decisions, direction/role/time/state semantics, and cross-domain integrity.
 - [x] 6.6 Add RED path-eligibility scenarios proving partial exact/traversal reach, soft quality signals, and named hard exclusions for every published path.
 - [x] 6.7 Implement versioned inclusion and path-eligibility policies with limitations/gap output rather than one global `ready` gate.
-- [ ] 6.8 Verify per-domain/relationship coverage and sibling invariants on the bounded candidate; review/accept the slice.
+- [x] 6.8 Verify per-domain/relationship coverage and sibling invariants on the bounded candidate; review/accept the slice.
 
 ## 7. Candidate Releases and Versioned Milvus Publication
 

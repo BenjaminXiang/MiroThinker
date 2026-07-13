@@ -313,3 +313,18 @@
 - Focused normal/forced RED, 24 Accepted catalog/shared tests, Ruff, Pyright, strict OpenSpec, and
   diff/scope checks passed. No production/shared/migration/database/source/Candidate/Milvus/provider
   state changed; Tasks 6.3, 6.5, and 6.7 retain GREEN ownership.
+- Completed and accepted Task 6.8/Aggregate S6. The bounded review accounts for four typed domains,
+  101 domain fields, 28 typed subobjects, all 34 relationship types/seven families, eight
+  cross-domain traversal directions, and six independent published paths. Focused pure S6 was 54
+  passed; no-external Canonical V2 was 211 passed/137 skipped/4 expected xfailed.
+- The first complete real-PostgreSQL aggregate run exposed one systemic historical-fixture defect:
+  four relationship-integrity tests inserted decisions after creating an already accepted release,
+  so C2_0010's candidate-write guard caused three early failures and one false positive. All four
+  now exercise candidate writes and real predecessor acceptance before successor construction.
+  Focused GREEN was 4 passed; the corrected real matrix was 338 passed/4 expected xfailed plus 10
+  fixed-name S4C passes. C2_0010 production behavior was not weakened.
+- Every Canonical V2 side branch/worktree patch is accounted for as integrated, strengthened, or
+  intentionally superseded. All owned PostgreSQL targets were removed, the S6c base remains empty,
+  `pgtest` remains paused, and the original Milvus hash is unchanged. Zero open Critical/Important
+  findings remain; Tasks 6.1-6.8 are Accepted at 36/75. S7, release/index publication, product/data
+  cutover, push, PR, and OpenSpec archive remain unstarted/forbidden.

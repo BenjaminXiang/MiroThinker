@@ -999,8 +999,8 @@ def test_canonical_relationship_endpoints_cannot_cross_release_scope(
     target: _Target,
 ) -> None:
     connection = target.connection
-    _insert_release(connection, "release-r1")
-    _insert_release(connection, "release-r2")
+    _insert_release(connection, "release-r1", state="candidate")
+    _insert_release(connection, "release-r2", state="candidate")
     _insert_policy(connection, "relationship-policy", "relationship")
     _insert_identity(connection, "release-r1", "professor-c1", "professor")
     _insert_identity(connection, "release-r2", "company-c1", "company")
@@ -1279,38 +1279,48 @@ def test_relationship_decision_can_supersede_a_previous_release_decision(
     target: _Target,
 ) -> None:
     connection = target.connection
-    for release_id in ("release-r1", "release-r2"):
-        _insert_release(
-            connection,
-            release_id,
-            previous_release_id="release-r1" if release_id == "release-r2" else None,
-        )
-        _insert_identity(connection, release_id, "professor-c1", "professor")
-        _insert_identity(connection, release_id, "company-c1", "company")
+    _insert_release(connection, "release-r1", state="candidate")
+    _insert_identity(connection, "release-r1", "professor-c1", "professor")
+    _insert_identity(connection, "release-r1", "company-c1", "company")
     _insert_policy(connection, "relationship-policy", "relationship")
     _insert_relationship_type(connection)
-    for release_id, decision_id, supersedes in (
-        ("release-r1", "relation-r1", None),
-        ("release-r2", "relation-r2", "relation-r1"),
-    ):
-        connection.execute(
-            "INSERT INTO knowledge.relationship_decision "
-            "(release_id, decision_id, canonical_relationship_id, relationship_type_id, "
-            "relationship_type_version, source_canonical_identity_id, "
-            "target_canonical_identity_id, state, policy_id, policy_version, method, "
-            "method_version, decision_run_id, confidence, rationale, decided_at, "
-            "supersedes_decision_id) VALUES (%s, %s, 'canonical-relation-1', "
-            "'professor_founded_company', 'v1', 'professor-c1', 'company-c1', "
-            "'accepted', 'relationship-policy', 'v1', 'composite', 'relation-v1', "
-            "%s, 0.95, 'reviewed relationship', %s, %s)",
-            (
-                release_id,
-                decision_id,
-                f"build-{release_id}",
-                NOW,
-                supersedes,
-            ),
-        )
+    connection.execute(
+        "INSERT INTO knowledge.relationship_decision "
+        "(release_id, decision_id, canonical_relationship_id, relationship_type_id, "
+        "relationship_type_version, source_canonical_identity_id, "
+        "target_canonical_identity_id, state, policy_id, policy_version, method, "
+        "method_version, decision_run_id, confidence, rationale, decided_at, "
+        "supersedes_decision_id) VALUES ('release-r1', 'relation-r1', "
+        "'canonical-relation-1', 'professor_founded_company', 'v1', 'professor-c1', "
+        "'company-c1', 'accepted', 'relationship-policy', 'v1', 'composite', "
+        "'relation-v1', 'build-release-r1', 0.95, 'reviewed relationship', %s, NULL)",
+        (NOW,),
+    )
+    connection.execute(
+        "UPDATE knowledge.release SET state = 'accepted' "
+        "WHERE release_id = 'release-r1'"
+    )
+    _insert_release(
+        connection,
+        "release-r2",
+        state="candidate",
+        previous_release_id="release-r1",
+    )
+    _insert_identity(connection, "release-r2", "professor-c1", "professor")
+    _insert_identity(connection, "release-r2", "company-c1", "company")
+    connection.execute(
+        "INSERT INTO knowledge.relationship_decision "
+        "(release_id, decision_id, canonical_relationship_id, relationship_type_id, "
+        "relationship_type_version, source_canonical_identity_id, "
+        "target_canonical_identity_id, state, policy_id, policy_version, method, "
+        "method_version, decision_run_id, confidence, rationale, decided_at, "
+        "supersedes_decision_id) VALUES ('release-r2', 'relation-r2', "
+        "'canonical-relation-1', 'professor_founded_company', 'v1', 'professor-c1', "
+        "'company-c1', 'accepted', 'relationship-policy', 'v1', 'composite', "
+        "'relation-v1', 'build-release-r2', 0.95, 'reviewed relationship', %s, "
+        "'relation-r1')",
+        (NOW,),
+    )
 
     assert connection.execute(
         "SELECT supersedes_decision_id FROM knowledge.relationship_decision "
@@ -1320,7 +1330,7 @@ def test_relationship_decision_can_supersede_a_previous_release_decision(
 
 def test_relationship_decision_cannot_supersede_itself(target: _Target) -> None:
     connection = target.connection
-    _insert_release(connection, "release-r1")
+    _insert_release(connection, "release-r1", state="candidate")
     _insert_identity(connection, "release-r1", "professor-c1", "professor")
     _insert_identity(connection, "release-r1", "company-c1", "company")
     _insert_policy(connection, "relationship-policy", "relationship")
@@ -1346,14 +1356,9 @@ def test_relationship_supersession_cannot_cross_logical_relationship(
     target: _Target,
 ) -> None:
     connection = target.connection
-    for release_id in ("release-r1", "release-r2"):
-        _insert_release(
-            connection,
-            release_id,
-            previous_release_id="release-r1" if release_id == "release-r2" else None,
-        )
-        _insert_identity(connection, release_id, "professor-c1", "professor")
-        _insert_identity(connection, release_id, "company-c1", "company")
+    _insert_release(connection, "release-r1", state="candidate")
+    _insert_identity(connection, "release-r1", "professor-c1", "professor")
+    _insert_identity(connection, "release-r1", "company-c1", "company")
     _insert_policy(connection, "relationship-policy", "relationship")
     _insert_relationship_type(connection)
     connection.execute(
@@ -1368,6 +1373,18 @@ def test_relationship_supersession_cannot_cross_logical_relationship(
         "0.95, 'first relationship decision', %s)",
         (NOW,),
     )
+    connection.execute(
+        "UPDATE knowledge.release SET state = 'accepted' "
+        "WHERE release_id = 'release-r1'"
+    )
+    _insert_release(
+        connection,
+        "release-r2",
+        state="candidate",
+        previous_release_id="release-r1",
+    )
+    _insert_identity(connection, "release-r2", "professor-c1", "professor")
+    _insert_identity(connection, "release-r2", "company-c1", "company")
     _assert_database_error(
         connection,
         errors.CheckViolation,

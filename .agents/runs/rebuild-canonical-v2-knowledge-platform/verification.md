@@ -2,14 +2,14 @@
 
 ## Current status
 
-Tasks 5.1-5.7 and the corrected aggregate S5 surface are Accepted. On 2026-07-13 ADR-012 introduced
+Tasks 5.1-5.7, the corrected aggregate S5 surface, and Tasks 6.1-6.8/Aggregate S6 are Accepted. On 2026-07-13 ADR-012 introduced
 the narrow Task 5.7/S5G precision-preserving temporal correction after a real S6c interface failure;
 the user selected `explicit-calendar-v1`, and S5G was Accepted at `2026-07-13T09:19:45Z` after its
 pure, real-disposable PostgreSQL, static, strict OpenSpec, scope, and review gates passed. Tasks 6.1
 (PRD domain/relationship catalog), 6.2 (domain-inclusion RED), 6.3 (typed domain projection), 6.4
-(relationship RED), 6.5 (relationship projection/persistence), 6.6 (path-eligibility RED), and 6.7
-(path-eligibility GREEN) are Accepted. OpenSpec reports 35/75 tasks
-complete on the V2 integration line. Task 6.3 typed domain
+(relationship RED), 6.5 (relationship projection/persistence), 6.6 (path-eligibility RED), 6.7
+(path-eligibility GREEN), and 6.8 (aggregate bounded-candidate review) are Accepted. OpenSpec reports
+36/75 tasks complete on the V2 integration line. Task 6.3 typed domain
 projection was Accepted at `2026-07-13T09:56:27Z` in the
 `canonical-v2-s2-baseline` worktree; the branch name is historical and no longer describes its
 scope. It includes the four-domain projection/inclusion Modules, packaged catalog, PostgreSQL
@@ -20,8 +20,9 @@ S5G closed the latter without coercion; Task 6.3 replaced the permanent-head ass
 linear minimum-revision contract. The current pre-6.4 no-external-database run had 192 passed, 125
 skipped, and 9 expected xfails with no real failure. Task 6.5 converted the nine relationship REDs
 to GREEN and added C2_0010 persistence; Task 6.7 converted the five path-policy REDs to GREEN.
-Task 6.8/Aggregate S6 is next. S7-S12 remain unstarted. The user selected aggregate S6
-acceptance as the Git `main` fast-forward checkpoint; no branch reference has moved.
+Aggregate S6 was Accepted at `2026-07-13T14:48:01Z`; S7-S12 remain unstarted. The user selected this
+checkpoint for the separate Git `main` fast-forward gate; no product database/index/release state
+changed.
 
 The code-grounded continuation plan is
 `.agents/runs/rebuild-canonical-v2-knowledge-platform/code-grounded-mainline-plan-2026-07-13.md`.
@@ -1840,3 +1841,36 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 - Task 6.7 and its three path acceptance criteria are Accepted at 35/75 tasks. No migration,
   database, Milvus, provider, release/index pointer, retrieval/public interface, source/product data,
   push, PR, archive, or cutover changed. Task 6.8/Aggregate S6 is next.
+
+## S6H Task 6.8 / Aggregate S6 acceptance — 2026-07-13T14:48:01Z
+
+- The aggregate review accounts for exactly four typed domain roots, 9 shared and 101 domain fields,
+  28 typed subobjects, 34 relationship types across seven families, 42 source-accounting scenarios,
+  all eight cross-domain directions, and six independently evaluated published paths. The detailed
+  requirement, sibling, and side-branch matrix is in `s6-aggregate-review.md`.
+- Focused inclusion/domain/relationship/path verification was `54 passed`; complete no-external
+  Canonical V2 was `211 passed, 137 skipped, 4 expected xfailed`. The xfails are exactly
+  KnowledgeBuild, KnowledgeRead, KnowledgeAnswer, and ReleasePublication, owned by S7-S9.
+- Focused C2_0009/C2_0010 real persistence was `26 passed`. The first full real-PostgreSQL run was
+  `336 passed, 3 failed, 9 errors, 4 xfailed`: nine errors were the known S4C exact-database-name
+  harness contract; three failures revealed older relationship-integrity tests creating accepted
+  releases before their decisions. Sibling search found a fourth self-supersession false positive
+  hidden by the same candidate-release guard.
+- All four relationship tests now follow the real candidate→accepted→next-candidate lifecycle. The
+  focused repair was `4 passed`; corrected general real Canonical V2 was `338 passed, 4 xfailed` and
+  the separately owned fixed-name S4C matrix was `10 passed`, for 348 real passes. C2_0010 and all
+  production/migration behavior remain unchanged.
+- Side-branch accounting is complete: S6c's stale C2_0008 patch is superseded by S5G C2_0008 plus
+  the accepted C2_0009 superset; all 9 S6d and 5 S6f RED groups are present and strengthened; the
+  Task 6.1 preparation-only artifacts explicitly defer now-accepted policy and remain abandoned and
+  untouched in their owner worktree.
+- Every owned S6H and fixed-name S4C database was dropped. The explicit S6c base has zero schemas and
+  user tables; `pgtest` remains paused; original Milvus SHA-256 remains
+  `43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc`.
+- Deterministic catalog `--check` passed; catalog/shared contracts were `24 passed`; Ruff format and
+  check passed; app-environment Pyright reported zero findings; strict OpenSpec is valid at exactly
+  36/75; the formal S2B gate remains `accepted/50`. Frozen FPI salvage and original Milvus hashes
+  remain `cef8eb6b...fdfbb7` and `43ef203e...867cc`; the recovery lab remains network-none/no-port.
+- The merged specification/code-quality, persistence/write-safety, sibling-pattern, and side-branch
+  review has zero open Critical/Important findings. Task 6.8 and Aggregate S6 are Accepted at 36/75.
+  S7-S12, release/index/product cutover, push, PR, and OpenSpec archive remain unstarted/forbidden.

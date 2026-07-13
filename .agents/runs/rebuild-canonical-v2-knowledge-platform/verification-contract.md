@@ -228,9 +228,19 @@ owned disposable sibling databases. Task 6.5 is Accepted. Task 6.7 was Accepted 
 content-bound shared `PolicyDecision` for each of the six published paths, keeps inclusion separate,
 retains ordinary quality as evidence-bound limitations/gaps, applies named hard exclusions only to
 their affected paths, validates all eight catalog traversal orientations, and redirects a merged
-predecessor only to one current survivor. Task 6.8/Aggregate S6 is next.
+predecessor only to one current survivor.
 
-Git `main` promotion is separately blocked on aggregate S6 acceptance. The execution session must
+Task 6.8/Aggregate S6 was Accepted at `2026-07-13T14:48:01Z`. The review accounts for all four
+domain roots, 101 domain fields, 28 typed subobjects, 34 relationship types/seven families, eight
+cross-domain directions, and six independently evaluated paths. Its first full real-PostgreSQL run
+found four historical relationship-integrity fixtures that inserted decisions after a release was
+already accepted: three failed early and one was a false positive. The fixtures now follow the
+candidate→accepted→next-candidate lifecycle; focused GREEN is 4/4 and the complete corrected real
+matrix is 348 passed with only the four future public-module xfails. No production implementation or
+migration was weakened. The aggregate review has zero open Critical/Important findings, all owned
+databases were removed, and the durable candidate remains C2_0004.
+
+Git `main` promotion is separately gated after aggregate S6 acceptance. The execution session must
 re-prove a clean V2 integration worktree, complete side-branch accounting, preservation of root dirty
 state, strict-ancestor topology, and all aggregate checks before a fast-forward-only ref move. This
 gate never authorizes merge/rebase, push, or database/index cutover.

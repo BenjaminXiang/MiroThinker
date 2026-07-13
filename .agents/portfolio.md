@@ -6,17 +6,17 @@
 ## Canonical V2 implementation mainline (2026-07-13)
 
 - **`rebuild-canonical-v2-knowledge-platform`** (OpenSpec, breaking Epic) is the sole implementation
-  mainline by user decision. Current task ledger: 35/75. Tasks 5.1-5.7 retain their Accepted
+  mainline by user decision. Current task ledger: 36/75. Tasks 5.1-5.7 retain their Accepted
   evidence; S5G/Task 5.7 closed the temporal-precision contract; Task 6.3 typed domain projection is
-  Accepted; Tasks 6.1-6.7 are Accepted, including the 6.2/6.4/6.6 RED-to-GREEN dependency chain.
-  Task 6.8 bounded candidate and sibling-invariant acceptance is next.
+  Accepted; Tasks 6.1-6.8 and Aggregate S6 are Accepted, including the 6.2/6.4/6.6 RED-to-GREEN
+  dependency chain and the full real-PostgreSQL sibling review. S7 remains unstarted.
 - Overlapping V1/V042 retrieval/Web changes are Frozen as implementation authorities. Their valid
   contracts, evaluators, corpora, manifests, and RED evidence remain mapping inputs before S7-S11;
   no in-flight legacy change becomes an Accepted V2 dependency.
-- Git `main` promotion is gated on **aggregate S6 Accepted**. At that checkpoint the V2 integration
-  line must be clean, all unique side-branch work must be integrated or explicitly abandoned, the
-  root dirty worktree must be preserved/reconciled, and `main` must still be a strict ancestor so the
-  move is fast-forward-only. No merge/rebase or branch movement is authorized before the gate.
+- Aggregate S6 now satisfies the selected Git `main` checkpoint. The separate promotion gate must
+  still prove the exact Accepted commit is clean, all unique side-branch work is accounted for, the
+  root dirty worktree is unchanged, and `main` remains a strict ancestor before its fast-forward-only
+  ref move. No merge/rebase, push, product/data/index cutover, or OpenSpec archive is authorized.
 
 ## Legacy retrieval portfolio (status as of 2026-07-10)
 
