@@ -33,6 +33,17 @@
   sibling databases. Focused PostgreSQL was `13 passed`; full no-external Canonical V2 was
   `202 passed, 137 skipped, 9 expected xfailed`; catalog/shared was `24 passed`; Ruff, Pyright,
   strict OpenSpec, and head inventory passed. The task count is now 34/75 and Task 6.7 is next.
+- Completed and Accepted Task 6.7 at `2026-07-13T14:18:02Z`. One deterministic package-internal
+  path-policy seam now returns content-bound shared decisions for all six published paths, keeps
+  inclusion review separate from path admission, retains ordinary quality as visible limitations/
+  gaps, applies evidence-backed hard exclusions only to their named paths, validates all eight
+  installed catalog traversal orientations, and resolves merged predecessors only to one current
+  survivor. No global `ready` field exists.
+- The merged review closed duplicate cross-projection quality codes, partial policy identity,
+  release/subject/path/evidence cross-wires, incomplete target endpoint lineage, unused relationship
+  input, and inclusion-review promotion. Focused path policy was `9 passed`; full no-external
+  Canonical V2 was `211 passed, 137 skipped, 4 expected xfailed`; catalog/shared was `24 passed`;
+  Ruff and Pyright passed. The task count is now 35/75 and Task 6.8/Aggregate S6 is next.
 - The merged review closed permanent-head coupling, precision-bearing storage, scope-evidence and
   Company-validation cross-wiring, candidate-assertion ownership, and active-release direct-SQL
   write bypass. Final review has zero open Critical/Important findings; relationship RED integration

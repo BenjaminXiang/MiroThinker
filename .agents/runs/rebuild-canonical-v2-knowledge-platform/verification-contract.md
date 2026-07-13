@@ -223,7 +223,12 @@ and otherwise reports `indeterminate`. Task 6.5's persistence sub-slice S6E2 was
 typed assertion/decision, shared-ledger membership, and unified current surfaces while reusing rather
 than duplicating existing shared relationship rows. Exact replay/restart, candidate/append-only,
 endpoint/evidence lineage, backup/target identity, atomic rollback, and safe downgrade gates pass on
-owned disposable sibling databases. Task 6.5 is Accepted; Task 6.7 is next.
+owned disposable sibling databases. Task 6.5 is Accepted. Task 6.7 was Accepted at
+`2026-07-13T14:18:02Z`: one deterministic package-internal path-policy seam produces one
+content-bound shared `PolicyDecision` for each of the six published paths, keeps inclusion separate,
+retains ordinary quality as evidence-bound limitations/gaps, applies named hard exclusions only to
+their affected paths, validates all eight catalog traversal orientations, and redirects a merged
+predecessor only to one current survivor. Task 6.8/Aggregate S6 is next.
 
 Git `main` promotion is separately blocked on aggregate S6 acceptance. The execution session must
 re-prove a clean V2 integration worktree, complete side-branch accounting, preservation of root dirty
@@ -417,6 +422,10 @@ Last identity/hash check recorded in `verification.md`: `2026-07-12T08:40:35Z`.
   path-scoped: a broken relation reference does not poison unrelated exact/semantic paths, a rejected
   attribution does not reject Paper existence, and a merged predecessor resolves to exactly one
   survivor without gaining its own current projection or admitted inclusion.
+- Task 6.7 implements the frozen seam without a global `ready` input/output. Path decision identity
+  binds the complete path policy and observable outcome; primary and traversal-target field lineage,
+  relationship evidence, inclusion evidence, hard-invariant evidence, release, subject, and time
+  continuity fail closed. Inclusion `review` cannot promote an identity without a current projection.
 - Test-only Tasks 6.2, 6.4, and 6.6 use focused contract/static/OpenSpec/diff checks. They reference
   Accepted backup/source/Candidate evidence without replaying database, source, Candidate, Milvus,
   or provider safety totals because those tasks touch none of those boundaries.

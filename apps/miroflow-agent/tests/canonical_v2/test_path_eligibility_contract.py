@@ -18,7 +18,6 @@ from src.data_agents.canonical_v2.contracts import RelationshipDecisionState
 
 
 TARGET_MODULE = "src.data_agents.canonical_v2.path_eligibility"
-RED_REASON = "Task 6.6 RED: Canonical V2 path eligibility is not implemented"
 NOW = datetime(2026, 7, 12, 17, 0, tzinfo=timezone.utc)
 RELEASE_ID = "candidate-s6-path-r1"
 PUBLISHED_USER_PATHS = (
@@ -31,21 +30,8 @@ PUBLISHED_USER_PATHS = (
 )
 
 
-class _MissingTargetModule(RuntimeError):
-    """Exact Task 6.6 RED sentinel; nested missing dependencies fail normally."""
-
-
 def _module() -> Any:
-    try:
-        module = import_module(TARGET_MODULE)
-    except ModuleNotFoundError as exc:
-        if exc.name != TARGET_MODULE:
-            raise AssertionError(
-                f"{TARGET_MODULE} has an unexpected missing dependency: {exc.name}"
-            ) from exc
-        raise _MissingTargetModule(
-            f"exact target module is absent: {TARGET_MODULE}"
-        ) from exc
+    module = import_module(TARGET_MODULE)
     assert module.PolicyDecision is PolicyDecision
     assert module.PolicyReference is PolicyReference
     return module
@@ -193,7 +179,6 @@ def _decisions_by_path(result: Any) -> dict[str, PolicyDecision]:
     return decisions
 
 
-@pytest.mark.xfail(strict=True, raises=_MissingTargetModule, reason=RED_REASON)
 def test_partial_four_domain_projections_remain_exactly_reachable() -> None:
     module = _module()
     cases = (
@@ -270,7 +255,6 @@ def test_partial_four_domain_projections_remain_exactly_reachable() -> None:
         assert exact.policy.policy_version == "path-eligibility-v1"
 
 
-@pytest.mark.xfail(strict=True, raises=_MissingTargetModule, reason=RED_REASON)
 def test_partial_relationships_remain_reachable_in_all_eight_directions() -> None:
     module = _module()
     cases = (
@@ -445,6 +429,11 @@ def test_partial_relationships_remain_reachable_in_all_eight_directions() -> Non
         assert set(relationship.selected_assertion_ids) <= set(
             traversal.supporting_assertion_ids
         )
+        assert {
+            assertion_id
+            for assertion_ids in requested_target_projection.field_assertion_ids.values()
+            for assertion_id in assertion_ids
+        } <= set(traversal.supporting_assertion_ids)
 
     paper_id = "paper:valid-with-rejected-attribution"
     professor_id = "professor:rejected-attribution"
@@ -494,7 +483,6 @@ def test_partial_relationships_remain_reachable_in_all_eight_directions() -> Non
     )
 
 
-@pytest.mark.xfail(strict=True, raises=_MissingTargetModule, reason=RED_REASON)
 def test_ordinary_quality_gaps_are_visible_soft_signals_on_every_path() -> None:
     module = _module()
     identity_id = "professor:soft-quality"
@@ -556,7 +544,6 @@ def test_ordinary_quality_gaps_are_visible_soft_signals_on_every_path() -> None:
     assert {signal.code for signal in signals} <= visible_codes
 
 
-@pytest.mark.xfail(strict=True, raises=_MissingTargetModule, reason=RED_REASON)
 def test_named_hard_exclusions_cover_every_path_and_merge_redirects() -> None:
     module = _module()
     object_level_hard_exclusions = (
@@ -706,7 +693,6 @@ def test_named_hard_exclusions_cover_every_path_and_merge_redirects() -> None:
     assert merge_result.result_identity_ids == (survivor_id,)
 
 
-@pytest.mark.xfail(strict=True, raises=_MissingTargetModule, reason=RED_REASON)
 def test_published_paths_are_independent_and_ignore_global_ready_poison() -> None:
     module = _module()
     internal_only_paths = {"audit_lineage", "identity_resolution"}
@@ -768,3 +754,263 @@ def test_published_paths_are_independent_and_ignore_global_ready_poison() -> Non
     )
     assert ready_result.decisions == rejected_result.decisions
     assert ready_result.gaps == rejected_result.gaps
+
+
+def test_request_rejects_policy_release_subject_path_and_evidence_cross_wires() -> None:
+    module = _module()
+    identity_id = "professor:integrity"
+    projection = _projection(
+        module,
+        domain="professor",
+        identity_id=identity_id,
+        fields=("name",),
+    )
+    inclusion = _inclusion(identity_id)
+    values = {
+        "release_id": RELEASE_ID,
+        "policy": _policy(PolicyKind.path_eligibility, "path-eligibility-v1"),
+        "projection": projection,
+        "inclusion_decision": inclusion,
+        "relationship_decisions": (),
+        "published_paths": PUBLISHED_USER_PATHS,
+        "evaluated_at": NOW,
+    }
+    bad_signal = module.QualitySignal(
+        code="cross-wired-quality",
+        affected_paths=("exact_lookup",),
+        supporting_assertion_ids=("assertion:other:name",),
+    )
+    invalid_cases = (
+        (
+            {"policy": _policy(PolicyKind.inclusion, "path-eligibility-v1")},
+            "path-eligibility policy",
+        ),
+        (
+            {
+                "projection": projection.model_copy(
+                    update={"release_id": "other-release"}
+                )
+            },
+            "projection release",
+        ),
+        (
+            {
+                "inclusion_decision": inclusion.model_copy(
+                    update={"subject_identity_id": "professor:other"}
+                )
+            },
+            "resolved identity",
+        ),
+        (
+            {"published_paths": PUBLISHED_USER_PATHS[:-1]},
+            "published paths",
+        ),
+        (
+            {
+                "inclusion_decision": inclusion.model_copy(
+                    update={"supporting_assertion_ids": ()}
+                )
+            },
+            "inclusion decision requires evidence",
+        ),
+        (
+            {
+                "projection": projection.model_copy(
+                    update={"quality_signals": (bad_signal,)}
+                )
+            },
+            "quality signals require projection assertion lineage",
+        ),
+    )
+    for update, message in invalid_cases:
+        with pytest.raises(ValueError, match=message):
+            module.PathEligibilityRequest.model_validate({**values, **update})
+
+
+def test_request_rejects_duplicate_quality_codes_and_cross_wired_topology() -> None:
+    module = _module()
+    professor_id = "professor:topology"
+    company_id = "company:topology"
+    professor_signal = module.QualitySignal(
+        code="duplicate-quality",
+        affected_paths=("verified_relationship_traversal",),
+        supporting_assertion_ids=(f"assertion:{professor_id}:name",),
+    )
+    company_signal = module.QualitySignal(
+        code="duplicate-quality",
+        affected_paths=("verified_relationship_traversal",),
+        supporting_assertion_ids=(f"assertion:{company_id}:name",),
+    )
+    professor = _projection(
+        module,
+        domain="professor",
+        identity_id=professor_id,
+        fields=("name",),
+        quality_signals=(professor_signal,),
+    )
+    company = _projection(
+        module,
+        domain="company",
+        identity_id=company_id,
+        fields=("name",),
+        quality_signals=(company_signal,),
+    )
+    relationship = _relationship_decision(
+        decision_id="relationship-decision:topology",
+        relationship_type_id="professor_company_role",
+        source_identity_id=professor_id,
+        target_identity_id=company_id,
+        state=RelationshipDecisionState.accepted,
+        role_bindings={"founder": professor_id},
+    )
+    values = {
+        "release_id": RELEASE_ID,
+        "policy": _policy(PolicyKind.path_eligibility, "path-eligibility-v1"),
+        "projection": professor,
+        "related_projections": (company,),
+        "inclusion_decision": _inclusion(professor_id),
+        "relationship_decisions": (relationship,),
+        "requested_traversal_direction": "professor_to_company",
+        "published_paths": PUBLISHED_USER_PATHS,
+        "evaluated_at": NOW,
+    }
+    with pytest.raises(ValueError, match="quality signal codes"):
+        module.PathEligibilityRequest.model_validate(values)
+
+    clean_values = {
+        **values,
+        "projection": professor.model_copy(update={"quality_signals": ()}),
+        "related_projections": (company.model_copy(update={"quality_signals": ()}),),
+    }
+    cross_wired_relationship = relationship.model_copy(
+        update={
+            "source_canonical_identity_id": company_id,
+            "target_canonical_identity_id": professor_id,
+        }
+    )
+    with pytest.raises(ValueError, match="catalog orientation"):
+        module.PathEligibilityRequest.model_validate(
+            {
+                **clean_values,
+                "relationship_decisions": (cross_wired_relationship,),
+            }
+        )
+
+    with pytest.raises(ValueError, match="require a requested traversal"):
+        module.PathEligibilityRequest.model_validate(
+            {
+                **clean_values,
+                "requested_traversal_direction": None,
+            }
+        )
+
+    survivor_id = "paper:topology-survivor"
+    survivor = _projection(
+        module,
+        domain="paper",
+        identity_id=survivor_id,
+        fields=("title",),
+        paper_identity_status="confirmed",
+    )
+    redirect = _merge_decision(
+        merged_identity_id="paper:topology-merged",
+        merge_peer_identity_id="paper:topology-peer",
+        survivor_identity_id=survivor_id,
+    ).model_copy(update={"output_canonical_identity_ids": ("paper:wrong",)})
+    with pytest.raises(ValueError, match="one exact merge survivor"):
+        module.PathEligibilityRequest(
+            release_id=RELEASE_ID,
+            policy=values["policy"],
+            referenced_identity_id="paper:topology-merged",
+            projection=survivor,
+            inclusion_decision=_inclusion(survivor_id),
+            identity_redirect_decision=redirect,
+            relationship_decisions=(),
+            published_paths=PUBLISHED_USER_PATHS,
+            evaluated_at=NOW,
+        )
+
+
+def test_path_decision_identity_binds_complete_policy_content() -> None:
+    module = _module()
+    identity_id = "professor:policy-identity"
+    projection = _projection(
+        module,
+        domain="professor",
+        identity_id=identity_id,
+        fields=("name",),
+    )
+    inclusion = _inclusion(identity_id)
+    policy = _policy(PolicyKind.path_eligibility, "path-eligibility-v1")
+
+    def evaluate(value: PolicyReference) -> Any:
+        return module.PathEligibilityEngine().evaluate(
+            module.PathEligibilityRequest(
+                release_id=RELEASE_ID,
+                policy=value,
+                projection=projection,
+                inclusion_decision=inclusion,
+                relationship_decisions=(),
+                published_paths=PUBLISHED_USER_PATHS,
+                evaluated_at=NOW,
+            )
+        )
+
+    baseline = evaluate(policy)
+    changed = evaluate(
+        policy.model_copy(
+            update={
+                "policy_id": "canonical-v2-path-eligibility-alternate",
+                "content_sha256": "7" * 64,
+            }
+        )
+    )
+
+    assert {decision.decision_id for decision in baseline.decisions}.isdisjoint(
+        decision.decision_id for decision in changed.decisions
+    )
+    tampered = baseline.model_copy(update={"content_sha256": "0" * 64})
+    with pytest.raises(ValueError, match="content_sha256"):
+        module.PathEligibilityResult.model_validate(tampered.model_dump(mode="python"))
+
+
+def test_inclusion_review_never_promotes_an_identity_without_current_projection() -> (
+    None
+):
+    module = _module()
+    identity_id = "company:inclusion-review"
+    inclusion = PolicyDecision(
+        decision_id=f"inclusion:{identity_id}",
+        policy=_policy(PolicyKind.inclusion, "domain-inclusion-v1"),
+        subject_identity_id=identity_id,
+        release_id=RELEASE_ID,
+        path=None,
+        outcome=PolicyOutcome.review,
+        score=None,
+        limitations=("company_scope_requires_review",),
+        hard_exclusion_codes=(),
+        supporting_assertion_ids=(f"assertion:{identity_id}:scope",),
+        evaluated_at=NOW,
+    )
+    result = module.PathEligibilityEngine().evaluate(
+        module.PathEligibilityRequest(
+            release_id=RELEASE_ID,
+            policy=_policy(PolicyKind.path_eligibility, "path-eligibility-v1"),
+            referenced_identity_id=identity_id,
+            projection=None,
+            inclusion_decision=inclusion,
+            relationship_decisions=(),
+            published_paths=PUBLISHED_USER_PATHS,
+            evaluated_at=NOW,
+        )
+    )
+
+    assert result.projection_id is None
+    assert result.result_identity_ids == ()
+    assert all(
+        decision.outcome is PolicyOutcome.review for decision in result.decisions
+    )
+    assert all(
+        "company_scope_requires_review" in decision.limitations
+        for decision in result.decisions
+    )

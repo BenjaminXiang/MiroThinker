@@ -88,11 +88,11 @@ targets throughout this change.
 - [x] Every registered relationship type defines direction, roles, evidence, state, and time
       semantics; all relation endpoints exist and match allowed types.
 - [x] Derived and session relations are not asserted as source-grounded canonical facts.
-- [ ] Inclusion/path eligibility scenarios prove partial exact/traversal reach and independent
+- [x] Inclusion/path eligibility scenarios prove partial exact/traversal reach and independent
       semantic/recommendation/ranking admission.
-- [ ] Ordinary incomplete enrichment is never a hard-exclusion reason; every hard exclusion cites a
+- [x] Ordinary incomplete enrichment is never a hard-exclusion reason; every hard exclusion cites a
       named invariant and decision evidence.
-- [ ] Professor-attribution rejection does not reject Paper existence without an independent Paper
+- [x] Professor-attribution rejection does not reject Paper existence without an independent Paper
       identity decision.
 
 ## 5. Release and Milvus acceptance

@@ -7,8 +7,8 @@ the narrow Task 5.7/S5G precision-preserving temporal correction after a real S6
 the user selected `explicit-calendar-v1`, and S5G was Accepted at `2026-07-13T09:19:45Z` after its
 pure, real-disposable PostgreSQL, static, strict OpenSpec, scope, and review gates passed. Tasks 6.1
 (PRD domain/relationship catalog), 6.2 (domain-inclusion RED), 6.3 (typed domain projection), 6.4
-(relationship RED), 6.5 (relationship projection/persistence), and 6.6 (path-eligibility RED) are
-Accepted. OpenSpec reports 34/75 tasks
+(relationship RED), 6.5 (relationship projection/persistence), 6.6 (path-eligibility RED), and 6.7
+(path-eligibility GREEN) are Accepted. OpenSpec reports 35/75 tasks
 complete on the V2 integration line. Task 6.3 typed domain
 projection was Accepted at `2026-07-13T09:56:27Z` in the
 `canonical-v2-s2-baseline` worktree; the branch name is historical and no longer describes its
@@ -19,8 +19,8 @@ coupling to `C2_0007`, and date-only versus instant validity representation at t
 S5G closed the latter without coercion; Task 6.3 replaced the permanent-head assertion with the
 linear minimum-revision contract. The current pre-6.4 no-external-database run had 192 passed, 125
 skipped, and 9 expected xfails with no real failure. Task 6.5 converted the nine relationship REDs
-to GREEN and added C2_0010 persistence; Task 6.7 is the next GREEN owner. S7-S12 remain unstarted.
-The user selected aggregate S6
+to GREEN and added C2_0010 persistence; Task 6.7 converted the five path-policy REDs to GREEN.
+Task 6.8/Aggregate S6 is next. S7-S12 remain unstarted. The user selected aggregate S6
 acceptance as the Git `main` fast-forward checkpoint; no branch reference has moved.
 
 The code-grounded continuation plan is
@@ -1807,3 +1807,36 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
 - Task 6.5 and its three relationship acceptance criteria are Accepted at 34/75 tasks. The original
   pgtest, original Milvus, S6c base business tables, recovery checkpoint, source/product data,
   release/index pointers, push, PR, archive, and cutover were not modified. Task 6.7 is next.
+
+## S6G Task 6.7 path eligibility acceptance — 2026-07-13T14:18:02Z
+
+- Implemented one deterministic, storage/provider-independent deep module,
+  `PathEligibilityEngine.evaluate(PathEligibilityRequest)`, over the exact six-path published
+  registry. It consumes separate inclusion, typed current projection, accepted/rejected relationship,
+  named hard-invariant, and optional merge-redirect decisions; it exposes no global `ready` field or
+  compatibility branch.
+- Every path returns one shared `PolicyDecision` whose content-addressed identity binds the complete
+  policy, subject, release, path, outcome, limitations, hard exclusions, evidence, and evaluation
+  time. The result is also content-bound. Ordinary incomplete enrichment and Paper `unverified`
+  status remain evidence-backed limitations/gaps; inclusion `review` remains review and cannot
+  promote an identity without a current projection.
+- Verified relationship traversal consumes the installed content-addressed Task 6.1 catalog,
+  preserves its canonical source/target orientation for all eight forward/inverse request
+  directions, and binds source inclusion, relationship assertion, and complete target typed-field
+  lineage. Rejected attribution excludes only traversal and does not reject independent Paper exact
+  lookup. Broken references remain path-scoped; object-level named invariants cover all paths; a
+  merged predecessor resolves only to one current survivor.
+- The merged specification/code-quality review closed six Important findings: duplicate quality
+  codes across projections could overwrite evidence; decision identity omitted policy ID/content;
+  release/subject/path/evidence continuity lacked negative coverage; traversal omitted part of the
+  target endpoint lineage; related relationship inputs could be silently ignored without a requested
+  direction; and inclusion review could be promoted as admitted. Zero Critical/Important findings
+  remain.
+- RED evidence remained exact before implementation: normal execution was `5 xfailed`; forced RED
+  was five direct missing-target failures. GREEN focused path-policy evidence is `9 passed`; complete
+  no-external Canonical V2 is `211 passed, 137 skipped, 4 expected xfailed`; deterministic catalog
+  builder `--check` plus catalog/shared contracts is `24 passed`; Ruff and app-environment Pyright
+  pass. Strict OpenSpec and staged diff/secret/scope checks passed at the commit checkpoint.
+- Task 6.7 and its three path acceptance criteria are Accepted at 35/75 tasks. No migration,
+  database, Milvus, provider, release/index pointer, retrieval/public interface, source/product data,
+  push, PR, archive, or cutover changed. Task 6.8/Aggregate S6 is next.
