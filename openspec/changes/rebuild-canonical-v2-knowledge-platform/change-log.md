@@ -22,6 +22,17 @@
   explicit Professor, Company, Paper, and Patent projections cover all frozen fields/subobjects,
   preserve exact S5 evidence/decision/temporal lineage, package the Accepted catalog, and restart
   exactly through C2_0009 on an owned disposable PostgreSQL target. The task count is now 32/75.
+- Completed and Accepted Task 6.5 at `2026-07-13T13:54:12Z`. The Accepted pure relationship seam now
+  uses explicit upstream durable decision/relationship IDs and content-bound results. C2_0010 plus
+  an explicit backup-gated disposable PostgreSQL adapter retain typed relationship assertions,
+  decisions, outcomes, shared-ledger memberships, and one unified current surface without
+  duplicating existing Canonical V2 shared assertion/decision rows.
+- Exact replay/restart, advisory-lock convergence, atomic rollback, append-only/candidate release,
+  endpoint ownership, retained artifact/source-record lineage, shared same-hash/wrong-content,
+  run-envelope integrity, empty downgrade/re-upgrade, and populated downgrade refusal pass on owned
+  sibling databases. Focused PostgreSQL was `13 passed`; full no-external Canonical V2 was
+  `202 passed, 137 skipped, 9 expected xfailed`; catalog/shared was `24 passed`; Ruff, Pyright,
+  strict OpenSpec, and head inventory passed. The task count is now 34/75 and Task 6.7 is next.
 - The merged review closed permanent-head coupling, precision-bearing storage, scope-evidence and
   Company-validation cross-wiring, candidate-assertion ownership, and active-release direct-SQL
   write bypass. Final review has zero open Critical/Important findings; relationship RED integration

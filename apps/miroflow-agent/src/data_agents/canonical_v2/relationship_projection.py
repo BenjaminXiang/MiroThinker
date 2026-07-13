@@ -10,11 +10,18 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from functools import lru_cache
+import hashlib
 from importlib.resources import files
 import json
 from typing import Any, Literal, cast
 
-from pydantic import Field, JsonValue, field_validator, model_validator
+from pydantic import (
+    Field,
+    JsonValue,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 from .contracts import (
     CanonicalDatetime,
@@ -75,6 +82,18 @@ def _unique(values: Iterable[str], label: str) -> tuple[str, ...]:
     if len(result) != len(set(result)):
         raise ValueError(f"{label} must not contain duplicates")
     return result
+
+
+def _canonical_sha256(value: JsonValue) -> str:
+    return hashlib.sha256(
+        json.dumps(
+            value,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8")
+    ).hexdigest()
 
 
 def _index_unique[T](values: Iterable[T], attribute: str, label: str) -> dict[str, T]:
@@ -222,6 +241,8 @@ class TypedRelationshipAssertionInput(ContractModel):
 
 class RelationshipDecisionInput(ContractModel):
     decision_input_id: NonEmptyStr
+    decision_id: NonEmptyStr
+    canonical_relationship_id: NonEmptyStr
     state: DecisionStateValue
     candidate_assertion_ids: tuple[NonEmptyStr, ...]
     selected_assertion_ids: tuple[NonEmptyStr, ...] = ()
@@ -405,6 +426,20 @@ class RelationshipProjectionResult(ContractModel):
     identity_state_changes: tuple[NonEmptyStr, ...] = ()
     inferred_relationship_type_ids: tuple[NonEmptyStr, ...] = ()
     path_eligibility_results: tuple[NonEmptyStr, ...] = ()
+    content_sha256: Sha256
+
+    @model_validator(mode="after")
+    def validate_content_hash(
+        self, info: ValidationInfo
+    ) -> RelationshipProjectionResult:
+        if not (info.context or {}).get("allow_unbound_content_hash"):
+            payload = cast(
+                JsonValue,
+                self.model_dump(mode="json", exclude={"content_sha256"}),
+            )
+            if self.content_sha256 != _canonical_sha256(payload):
+                raise ValueError("content_sha256 must bind the relationship result")
+        return self
 
 
 @lru_cache(maxsize=1)
@@ -669,6 +704,16 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
         decision_inputs = _index_unique(
             request.decision_inputs, "decision_input_id", "relationship decision input"
         )
+        _index_unique(
+            request.decision_inputs,
+            "decision_id",
+            "relationship decision ID",
+        )
+        _index_unique(
+            request.decision_inputs,
+            "canonical_relationship_id",
+            "canonical relationship ID",
+        )
         _index_unique(request.candidates, "candidate_id", "relationship candidate")
         _index_unique(
             request.direction_probes, "probe_id", "relationship direction probe"
@@ -776,10 +821,14 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
 
             admitted = not reasons
             decision_id = (
-                f"relationship-decision:{candidate.candidate_id}" if admitted else None
+                decision_input.decision_id
+                if admitted and decision_input is not None
+                else None
             )
             relationship_id = (
-                f"canonical-relationship:{candidate.candidate_id}" if admitted else None
+                decision_input.canonical_relationship_id
+                if admitted and decision_input is not None
+                else None
             )
             projected_relationship_id: str | None = None
             selected_evidence_refs: tuple[str, ...] = ()
@@ -946,40 +995,55 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
             canonical_registry,
         )
         layer_outcomes = self._project_layer_probes(request.layer_probes)
-        return RelationshipProjectionResult(
-            release_id=request.release_id,
-            projection_run_id=request.projection_run_id,
-            as_of=request.as_of,
-            catalog=request.catalog,
-            relationship_types=relationship_types,
-            candidate_outcomes=tuple(candidate_outcomes),
-            retained_assertion_refs=tuple(sorted(retained_assertions)),
-            retained_artifact_refs=tuple(sorted(retained_artifacts)),
-            retained_relationship_assertions=tuple(
-                sorted(
-                    request.relationship_assertions, key=lambda item: item.assertion_id
-                )
-            ),
-            typed_relationship_assertions=tuple(
-                sorted(
-                    request.typed_relationship_assertions,
-                    key=lambda item: item.assertion_id,
-                )
-            ),
-            relationship_decisions=tuple(
-                sorted(canonical_decisions, key=lambda item: item.decision_id)
-            ),
-            typed_relationship_decisions=tuple(
-                sorted(typed_decisions, key=lambda item: item.decision_id)
-            ),
-            current_relationships=tuple(
-                sorted(
-                    current_relationships,
-                    key=lambda item: item.canonical_relationship_id,
-                )
-            ),
-            direction_outcomes=direction_outcomes,
-            layer_outcomes=layer_outcomes,
+        provisional = RelationshipProjectionResult.model_validate(
+            {
+                "release_id": request.release_id,
+                "projection_run_id": request.projection_run_id,
+                "as_of": request.as_of,
+                "catalog": request.catalog,
+                "relationship_types": relationship_types,
+                "candidate_outcomes": tuple(candidate_outcomes),
+                "retained_assertion_refs": tuple(sorted(retained_assertions)),
+                "retained_artifact_refs": tuple(sorted(retained_artifacts)),
+                "retained_relationship_assertions": tuple(
+                    sorted(
+                        request.relationship_assertions,
+                        key=lambda item: item.assertion_id,
+                    )
+                ),
+                "typed_relationship_assertions": tuple(
+                    sorted(
+                        request.typed_relationship_assertions,
+                        key=lambda item: item.assertion_id,
+                    )
+                ),
+                "relationship_decisions": tuple(
+                    sorted(canonical_decisions, key=lambda item: item.decision_id)
+                ),
+                "typed_relationship_decisions": tuple(
+                    sorted(typed_decisions, key=lambda item: item.decision_id)
+                ),
+                "current_relationships": tuple(
+                    sorted(
+                        current_relationships,
+                        key=lambda item: item.canonical_relationship_id,
+                    )
+                ),
+                "direction_outcomes": direction_outcomes,
+                "layer_outcomes": layer_outcomes,
+                "content_sha256": "0" * 64,
+            },
+            context={"allow_unbound_content_hash": True},
+        )
+        payload = cast(
+            JsonValue,
+            provisional.model_dump(mode="json", exclude={"content_sha256"}),
+        )
+        return RelationshipProjectionResult.model_validate(
+            {
+                **provisional.model_dump(mode="python"),
+                "content_sha256": _canonical_sha256(payload),
+            }
         )
 
     @staticmethod

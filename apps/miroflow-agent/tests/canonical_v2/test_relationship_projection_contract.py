@@ -547,6 +547,10 @@ def _bound_projection_inputs(
         decision_inputs.append(
             module.RelationshipDecisionInput(
                 decision_input_id=decision_input_id,
+                decision_id=f"relationship-decision:{candidate.candidate_id}",
+                canonical_relationship_id=(
+                    f"canonical-relationship:{candidate.candidate_id}"
+                ),
                 state=decision_state,
                 candidate_assertion_ids=(assertion_id,),
                 selected_assertion_ids=(assertion_id,)
@@ -689,6 +693,10 @@ def _assert_canonical_decision_layers(
         decision.target_canonical_identity_id == target_assignment.canonical_identity_id
     )
     assert decision.state.value == decision_input.state
+    assert decision.decision_id == decision_input.decision_id
+    assert (
+        decision.canonical_relationship_id == decision_input.canonical_relationship_id
+    )
     assert decision.candidate_assertion_ids == decision_input.candidate_assertion_ids
     assert (
         decision.selected_assertion_ids
@@ -993,6 +1001,29 @@ def test_identity_lifecycle_requires_same_domain_typed_lineage() -> None:
     )
 
     result = module.create_ephemeral_relationship_projection().project(request)
+    replayed = module.create_ephemeral_relationship_projection().project(request)
+
+    assert replayed == result
+    assert len(result.content_sha256) == 64
+    first_decision, second_decision, *remaining_decisions = request.decision_inputs
+    for identity_field in ("decision_id", "canonical_relationship_id"):
+        duplicated = second_decision.model_copy(
+            update={identity_field: getattr(first_decision, identity_field)}
+        )
+        tampered = request.model_copy(
+            update={
+                "decision_inputs": (
+                    first_decision,
+                    duplicated,
+                    *remaining_decisions,
+                )
+            }
+        )
+        with pytest.raises(
+            module.RelationshipProjectionIntegrityError,
+            match="duplicate (relationship decision ID|canonical relationship ID)",
+        ):
+            module.create_ephemeral_relationship_projection().project(tampered)
 
     valid_outcomes = tuple(
         _outcome(result, f"valid:{relationship_id}")

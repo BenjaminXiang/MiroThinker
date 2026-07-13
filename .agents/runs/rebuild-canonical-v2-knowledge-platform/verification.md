@@ -7,7 +7,8 @@ the narrow Task 5.7/S5G precision-preserving temporal correction after a real S6
 the user selected `explicit-calendar-v1`, and S5G was Accepted at `2026-07-13T09:19:45Z` after its
 pure, real-disposable PostgreSQL, static, strict OpenSpec, scope, and review gates passed. Tasks 6.1
 (PRD domain/relationship catalog), 6.2 (domain-inclusion RED), 6.3 (typed domain projection), 6.4
-(relationship RED), and 6.6 (path-eligibility RED) are Accepted. OpenSpec reports 33/75 tasks
+(relationship RED), 6.5 (relationship projection/persistence), and 6.6 (path-eligibility RED) are
+Accepted. OpenSpec reports 34/75 tasks
 complete on the V2 integration line. Task 6.3 typed domain
 projection was Accepted at `2026-07-13T09:56:27Z` in the
 `canonical-v2-s2-baseline` worktree; the branch name is historical and no longer describes its
@@ -17,8 +18,9 @@ run produced 178 passed, 118 skipped, 9 expected xfails, and 2 real failures: st
 coupling to `C2_0007`, and date-only versus instant validity representation at the S5/S6 interface.
 S5G closed the latter without coercion; Task 6.3 replaced the permanent-head assertion with the
 linear minimum-revision contract. The current pre-6.4 no-external-database run had 192 passed, 125
-skipped, and 9 expected xfails with no real failure. Task 6.4 adds nine intentional relationship
-xfails; Task 6.5 is the next GREEN owner. S7-S12 remain unstarted. The user selected aggregate S6
+skipped, and 9 expected xfails with no real failure. Task 6.5 converted the nine relationship REDs
+to GREEN and added C2_0010 persistence; Task 6.7 is the next GREEN owner. S7-S12 remain unstarted.
+The user selected aggregate S6
 acceptance as the Git `main` fast-forward checkpoint; no branch reference has moved.
 
 The code-grounded continuation plan is
@@ -1768,3 +1770,40 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   count remains 33/75 because durable relationship assertion/decision/current persistence is still
   required. No migration, database, Milvus, provider, release, query, answer, admin, source, product
   data, push, PR, archive, or cutover changed.
+
+## S6E2 Task 6.5 relationship persistence acceptance — 2026-07-13T13:54:12Z
+
+- C2_0010 is the sole linear descendant of C2_0009. It adds immutable relationship projection run,
+  shared-ledger membership, typed assertion/decision/decision-edge, candidate-outcome, and unified
+  current surfaces. It refuses populated downgrade, gates every new release-scoped row plus existing
+  shared relationship decision/edge inserts to candidate releases, and validates canonical or typed
+  subobject endpoints against durable release-scoped owners.
+- `RelationshipProjectionStore.persist(request, result)` reprojects exact typed input, content-binds
+  request and result, rechecks the accepted backup gate and explicit disposable target, verifies
+  retained artifact/source-record lineage, reuses exact existing shared assertions/decisions, and
+  atomically persists typed and current surfaces. Exact replay is a no-op under an advisory lock;
+  restart rejects run-envelope, normalized-row, role-edge, shared-content, and retained-evidence
+  cross-wires.
+- The merged implementation/migration review closed five Important findings: explicit upstream
+  shared decision/relationship IDs replaced locally synthesized IDs; exact replay now binds request
+  content as well as result content; restart binds payload to the durable run envelope; and shared
+  assertion plus retained artifact lineage is reconstructed and checked rather than trusting a
+  stored hash alone; and factory preflight requires all eight C2_0010 tables. Durable
+  decision/canonical-relationship IDs are unique before persistence. Zero Critical/Important
+  findings remain.
+- Real PostgreSQL evidence used only marked, owned disposable sibling databases under
+  `canonical_v2_s6c_base`. The focused relationship matrix passed `13 passed`; it covers fresh and
+  empty downgrade/re-upgrade, typed and pre-existing shared-ledger round trips, exact replay/restart,
+  concurrent convergence, changed-request conflict, transaction rollback, append-only and
+  candidate-release guards, target/marker/backup failure, endpoint rejection, retained artifact
+  mismatch, shared same-hash/wrong-content rejection, run-envelope corruption rejection, and
+  incomplete-schema factory refusal. The
+  separate current-head inventory check passed `1 passed` on
+  `canonical_v2_s6c_base_s6e2_compat`.
+- Final checkpoints: relationship pure plus no-database store surface `10 passed, 12 skipped`;
+  complete no-external Canonical V2 `202 passed, 137 skipped, 9 expected xfailed`; deterministic
+  catalog builder `--check` plus catalog/shared contracts `24 passed`; Ruff check/format passed;
+  app-environment Pyright reported `0 errors, 0 warnings, 0 informations`; strict OpenSpec passed.
+- Task 6.5 and its three relationship acceptance criteria are Accepted at 34/75 tasks. The original
+  pgtest, original Milvus, S6c base business tables, recovery checkpoint, source/product data,
+  release/index pointers, push, PR, archive, and cutover were not modified. Task 6.7 is next.

@@ -218,8 +218,12 @@ Task 6.5's pure projection sub-slice S6E was Accepted at `2026-07-13T12:35:08Z`:
 `RelationshipProjection.project(...)` interface validates the installed 34-type catalog, exact S6c
 roots/subobjects, retained evidence, source assignments, assertions, decisions, roles, state, time,
 layers, and all eight directions. Date-only currentness requires the explicit S5G calendar context
-and otherwise reports `indeterminate`. Task 6.5 remains unchecked until its separately Ready and
-verified persistence slice is Accepted.
+and otherwise reports `indeterminate`. Task 6.5's persistence sub-slice S6E2 was Accepted at
+`2026-07-13T13:54:12Z`: C2_0010 and the guarded PostgreSQL adapter retain content-bound run/outcome,
+typed assertion/decision, shared-ledger membership, and unified current surfaces while reusing rather
+than duplicating existing shared relationship rows. Exact replay/restart, candidate/append-only,
+endpoint/evidence lineage, backup/target identity, atomic rollback, and safe downgrade gates pass on
+owned disposable sibling databases. Task 6.5 is Accepted; Task 6.7 is next.
 
 Git `main` promotion is separately blocked on aggregate S6 acceptance. The execution session must
 re-prove a clean V2 integration worktree, complete side-branch accounting, preservation of root dirty

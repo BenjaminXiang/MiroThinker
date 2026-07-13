@@ -72,7 +72,7 @@ targets throughout this change.
 
 - [x] Professor, Company, Paper, and Patent projections satisfy their authoritative PRD field,
       inclusion, and typed-subobject contracts.
-- [ ] Every material current field/relationship traces to retained source assertion(s) and a
+- [x] Every material current field/relationship traces to retained source assertion(s) and a
       canonical decision; selecting a value does not delete competing assertions.
 - [ ] Reviewed identity gold has zero wrong-identity merges/splits and zero cross-domain references
       to the wrong real-world object.
@@ -85,9 +85,9 @@ targets throughout this change.
 - [ ] Normalization, candidate identity recall, deterministic rules, structured LLM adjudication,
       human review, and merge/split publication run only in versioned offline builds; query/answer
       paths create zero canonical identity/source-mapping mutations.
-- [ ] Every registered relationship type defines direction, roles, evidence, state, and time
+- [x] Every registered relationship type defines direction, roles, evidence, state, and time
       semantics; all relation endpoints exist and match allowed types.
-- [ ] Derived and session relations are not asserted as source-grounded canonical facts.
+- [x] Derived and session relations are not asserted as source-grounded canonical facts.
 - [ ] Inclusion/path eligibility scenarios prove partial exact/traversal reach and independent
       semantic/recommendation/ranking admission.
 - [ ] Ordinary incomplete enrichment is never a hard-exclusion reason; every hard exclusion cites a
