@@ -26,6 +26,14 @@
   Company-validation cross-wiring, candidate-assertion ownership, and active-release direct-SQL
   write bypass. Final review has zero open Critical/Important findings; relationship RED integration
   is the next slice.
+- Integrated and Accepted Task 6.4 at `2026-07-13T10:12:13Z` after comparing its side branch against
+  the current S5G/S6c line rather than blindly cherry-picking it. Nine strict RED groups cover all
+  seven relationship families, all eight directions, typed endpoints, retained evidence, time/
+  state/role semantics, layers, and non-fabrication. The task count is now 33/75.
+- Integration review closed one additional Important issue: relationship endpoints now bind the
+  exact content-validated Task 6.3 domain roots and nested typed subobjects, with explicit dangling
+  canonical-identity and typed-subobject REDs. Normal RED is exactly nine xfails; forced RED is
+  exactly nine missing-target failures; Ruff and Pyright are green.
 
 ## 2026-07-11
 

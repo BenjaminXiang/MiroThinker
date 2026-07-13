@@ -206,7 +206,9 @@ The durable candidate remains C2_0004 with zero canonical/non-landing rows. Task
 shared temporal interface. The user selected `explicit-calendar-v1`; S5G was Accepted at
 `2026-07-13T09:19:45Z` with zero open Critical/Important review findings. Task 6.3 was Accepted at
 `2026-07-13T09:56:27Z` with the complete typed/inclusion/C2_0009 evidence recorded in
-`verification.md`.
+`verification.md`. Task 6.4 relationship RED was integrated and Accepted at
+`2026-07-13T10:12:13Z` after its side-branch contract was rebound to the Accepted Task 6.3 typed
+projection registry; Task 6.5 owns GREEN implementation.
 
 Git `main` promotion is separately blocked on aggregate S6 acceptance. The execution session must
 re-prove a clean V2 integration worktree, complete side-branch accounting, preservation of root dirty

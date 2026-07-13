@@ -6,8 +6,9 @@ Tasks 5.1-5.7 and the corrected aggregate S5 surface are Accepted. On 2026-07-13
 the narrow Task 5.7/S5G precision-preserving temporal correction after a real S6c interface failure;
 the user selected `explicit-calendar-v1`, and S5G was Accepted at `2026-07-13T09:19:45Z` after its
 pure, real-disposable PostgreSQL, static, strict OpenSpec, scope, and review gates passed. Tasks 6.1
-(PRD domain/relationship catalog), 6.2 (domain-inclusion RED), and 6.6 (path-eligibility RED) remain
-Accepted. OpenSpec reports 32/75 tasks complete on the V2 integration line. Task 6.3 typed domain
+(PRD domain/relationship catalog), 6.2 (domain-inclusion RED), 6.3 (typed domain projection), 6.4
+(relationship RED), and 6.6 (path-eligibility RED) are Accepted. OpenSpec reports 33/75 tasks
+complete on the V2 integration line. Task 6.3 typed domain
 projection was Accepted at `2026-07-13T09:56:27Z` in the
 `canonical-v2-s2-baseline` worktree; the branch name is historical and no longer describes its
 scope. It includes the four-domain projection/inclusion Modules, packaged catalog, PostgreSQL
@@ -15,8 +16,9 @@ Adapter, `C2_0009`, and focused tests. A 2026-07-13 no-external-database
 run produced 178 passed, 118 skipped, 9 expected xfails, and 2 real failures: stale exact-head
 coupling to `C2_0007`, and date-only versus instant validity representation at the S5/S6 interface.
 S5G closed the latter without coercion; Task 6.3 replaced the permanent-head assertion with the
-linear minimum-revision contract. The current no-external-database run has 192 passed, 125 skipped,
-and 9 expected xfails with no real failure. S7-S12 remain unstarted. The user selected aggregate S6
+linear minimum-revision contract. The current pre-6.4 no-external-database run had 192 passed, 125
+skipped, and 9 expected xfails with no real failure. Task 6.4 adds nine intentional relationship
+xfails; Task 6.5 is the next GREEN owner. S7-S12 remain unstarted. The user selected aggregate S6
 acceptance as the Git `main` fast-forward checkpoint; no branch reference has moved.
 
 The code-grounded continuation plan is
@@ -1683,3 +1685,29 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   product/data/index cutover changed.
 - The merged specification/code-quality and migration/write-safety review closed six Important
   findings and has zero open Critical/Important findings. Task 6.3/S6c is Accepted.
+
+## S6D task 6.4 relationship RED acceptance — 2026-07-13T10:12:13Z
+
+- Branch comparison proved `codex/canonical-v2-s6d-red` diverged before Tasks 6.2/6.3 and contained
+  exactly two unique files: the S6D slice contract and one relationship RED module. The original
+  branch independently reproduced exactly `9 xfailed`; forced RED produced exactly nine
+  `_MissingTargetModule` failures for the absent exact product module.
+- The integration used the reviewed patch without committing the old branch topology. No product,
+  shared-contract, migration, catalog, database, Milvus, provider, release, path, query, answer, or
+  consumer behavior was copied from the side branch.
+- Nine strict groups cover identity/lifecycle, organization/role, scholarly output, intellectual
+  property, Company business/product/event, taxonomy/topic/geography, evidence/lineage, all eight
+  cross-domain directions, and canonical/derived/session layer non-fabrication. They bind catalog
+  type/version, endpoint orientation/kind, roles, proportional time/state, required evidence kinds,
+  retained artifacts/assertions, source-to-canonical assignments, and explicit selected decisions.
+- Integration review found one additional Important gap: the parallel RED branch accepted
+  string-only canonical/typed-subobject endpoints without proving those objects existed in the now
+  Accepted Task 6.3 output. The request now carries content-validated S6c typed domain roots and
+  nested Company subobjects. Dedicated RED cases reject a dangling canonical identity and a
+  dangling typed subobject; assignments remain insufficient without the projection registry.
+- Current-line normal RED remains exactly `9 xfailed`; forced `--runxfail --no-cov` remains exactly
+  nine missing-target failures. Ruff format/check passed and app-environment Pyright reported
+  `0 errors, 0 warnings, 0 informations`.
+- The merged specification/code-quality review has zero open Critical/Important findings. Task 6.4
+  is Accepted as a test-only slice; Task 6.5 owns all production relationship implementation and
+  persistence.
