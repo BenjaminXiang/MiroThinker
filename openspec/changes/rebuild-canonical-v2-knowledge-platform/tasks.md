@@ -39,12 +39,13 @@
 - [x] 5.4 Implement reversible offline canonical identity resolution and source-identity mapping without pre-launch ID compatibility constraints; query/answer paths remain read-only and may only emit identity-review gaps.
 - [x] 5.5 Implement proportional temporal semantics for observation/publication/event time and naturally changing validity intervals.
 - [x] 5.6 Verify deterministic/recorded-fake LLM decisions, review queues, reversal, and current/history projections; review/accept the slice.
+- [x] 5.7 Introduce one precision-preserving temporal value contract for date-only and instant validity across assertions, current selections, typed sub-objects, hashes, PostgreSQL, and restart reconstruction; implement `explicit-calendar-v1` so cross-precision comparison requires caller-supplied calendar/timezone context and otherwise returns `indeterminate`; rerun the affected S5 contract/persistence matrix and accept S5G before Task 6.3 resumes.
 
 ## 6. Typed Domains, Relationships, Inclusion, and Eligibility
 
 - [x] 6.1 Derive and freeze the typed Professor, Company, Paper, Patent field/sub-object and relationship catalog from authoritative PRDs in the verification evidence.
 - [x] 6.2 Add RED domain inclusion scenarios for approved Professor seeds, roster-anchored Papers, approved Patent exports, Company skeleton batches, and validated incremental Shenzhen Companies.
-- [ ] 6.3 Implement typed domain current projections and inclusion-policy adapters over retained assertions/identities.
+- [ ] 6.3 After Task 5.7 is Accepted, implement typed domain current projections and inclusion-policy adapters over retained assertions/identities without coercing date-only validity to an instant.
 - [ ] 6.4 Add RED relationship scenarios across identity/lifecycle, organization/role, scholarly output, intellectual property, Company business/product/event, taxonomy/topic/geography, and evidence/lineage families.
 - [ ] 6.5 Implement the extensible typed relationship catalog, assertions, decisions, direction/role/time/state semantics, and cross-domain integrity.
 - [x] 6.6 Add RED path-eligibility scenarios proving partial exact/traversal reach, soft quality signals, and named hard exclusions for every published path.

@@ -129,9 +129,38 @@ exposure, broken reference, or no usable source-grounded facts.
 
 Every assertion SHALL retain observation/fetch time and SHALL retain source publication/event time
 when present. Naturally changing facts SHALL support validity start/end when known. Static fields
-without time-dependent meaning SHALL NOT be required to implement full bitemporal history.
+without time-dependent meaning SHALL NOT be required to implement full bitemporal history. Every
+validity value SHALL retain whether the source supplied a calendar date or a timezone-aware instant.
+Temporal precision SHALL participate in content identity, lineage equality, persistence, and restart
+reconstruction. A date-only value SHALL NOT be coerced to UTC midnight or treated as exactly equal
+to an instant. Cross-precision ordering or overlap SHALL use a named versioned policy and SHALL fail
+closed or remain indeterminate when that policy cannot establish the relation. Under
+`explicit-calendar-v1`, the caller SHALL provide an explicit Gregorian calendar/timezone context. A
+date SHALL be interpreted as a half-open civil-day interval only for that comparison; the retained
+value SHALL remain date-only. An instant inside the interval SHALL overlap the date but SHALL NOT be
+exactly equal to it. Missing context SHALL return `indeterminate`; ambient or system-default timezone
+selection is forbidden.
 
 #### Scenario: Professor changes institution
 - **WHEN** accepted evidence establishes a Professor's move from one institution to another
 - **THEN** the current projection shows the new affiliation
 - **AND** the prior affiliation and its validity/evidence remain available for history and audit
+
+#### Scenario: Affiliation source provides only a start date
+- **WHEN** an official source records an affiliation start as `2024-09-01` without a time or timezone
+- **THEN** the retained assertion and typed projection preserve calendar-date precision
+- **AND** neither layer rewrites it as `2024-09-01T00:00:00Z`
+- **AND** exact lineage equality binds both the precision and the date value
+
+#### Scenario: Date and instant are compared without calendar context
+- **WHEN** a validity check compares date-only `2024-09-01` with a timezone-aware instant
+- **AND** the caller supplies no named calendar/timezone context
+- **THEN** `explicit-calendar-v1` returns `indeterminate`
+- **AND** it does not read an ambient timezone or treat the values as equal
+
+#### Scenario: Explicit calendar context permits bounded comparison
+- **WHEN** the caller compares date-only `2024-09-01` with an instant under an explicit
+  `Asia/Shanghai` Gregorian context
+- **THEN** the date is treated as that civil day's half-open interval only for comparison
+- **AND** an instant inside the interval returns overlap rather than exact equality
+- **AND** the stored date remains unchanged

@@ -4,17 +4,19 @@ from __future__ import annotations
 
 import base64
 import binascii
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 import hashlib
 import json
 import math
 from enum import Enum
-from typing import Annotated, NoReturn, cast
+from typing import Annotated, Literal, NoReturn, cast
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import (
     AfterValidator,
     AwareDatetime,
     BaseModel,
+    BeforeValidator,
     ConfigDict,
     Field,
     JsonValue,
@@ -44,6 +46,124 @@ class ContractModel(BaseModel):
     """Strict immutable value at the shared Canonical V2 seam."""
 
     model_config = ConfigDict(extra="forbid", frozen=True, validate_default=True)
+
+
+class TemporalDateValue(ContractModel):
+    """A source-supplied calendar date with no fabricated time or timezone."""
+
+    precision: Literal["date"] = "date"
+    value: date
+
+
+class TemporalInstantValue(ContractModel):
+    """A source-supplied timezone-aware instant canonicalized to UTC."""
+
+    precision: Literal["instant"] = "instant"
+    value: CanonicalDatetime
+
+
+def _coerce_native_temporal_value(value: object) -> object:
+    """Wrap native Python temporal values without changing their precision."""
+    if isinstance(value, datetime):
+        return {"precision": "instant", "value": value}
+    if isinstance(value, date):
+        return {"precision": "date", "value": value}
+    return value
+
+
+TemporalValue = Annotated[
+    Annotated[
+        TemporalDateValue | TemporalInstantValue,
+        Field(discriminator="precision"),
+    ],
+    BeforeValidator(_coerce_native_temporal_value),
+]
+
+
+class TemporalRelation(str, Enum):
+    before = "before"
+    after = "after"
+    overlap = "overlap"
+    equal = "equal"
+    indeterminate = "indeterminate"
+
+
+class TemporalComparisonContext(ContractModel):
+    """Caller-owned context for the explicit-calendar-v1 policy."""
+
+    policy_version: Literal["explicit-calendar-v1"] = "explicit-calendar-v1"
+    calendar: Literal["gregorian"] = "gregorian"
+    timezone: NonEmptyStr
+
+    @field_validator("timezone")
+    @classmethod
+    def validate_named_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except (ValueError, ZoneInfoNotFoundError) as exc:
+            raise ValueError("timezone must be a valid named IANA timezone") from exc
+        return value
+
+
+def _civil_day_interval(
+    value: TemporalDateValue,
+    *,
+    context: TemporalComparisonContext,
+) -> tuple[datetime, datetime]:
+    zone = ZoneInfo(context.timezone)
+    start = datetime.combine(value.value, datetime.min.time(), tzinfo=zone)
+    end = datetime.combine(
+        value.value + timedelta(days=1),
+        datetime.min.time(),
+        tzinfo=zone,
+    )
+    return start.astimezone(timezone.utc), end.astimezone(timezone.utc)
+
+
+def compare_temporal_values(
+    left: TemporalDateValue | TemporalInstantValue,
+    right: TemporalDateValue | TemporalInstantValue,
+    *,
+    context: TemporalComparisonContext | None = None,
+) -> TemporalRelation:
+    """Compare two precision-bearing values without ambient calendar assumptions."""
+    if isinstance(left, TemporalDateValue) and isinstance(right, TemporalDateValue):
+        if left.value == right.value:
+            return TemporalRelation.equal
+        return (
+            TemporalRelation.before
+            if left.value < right.value
+            else TemporalRelation.after
+        )
+    if isinstance(left, TemporalInstantValue) and isinstance(
+        right, TemporalInstantValue
+    ):
+        if left.value == right.value:
+            return TemporalRelation.equal
+        return (
+            TemporalRelation.before
+            if left.value < right.value
+            else TemporalRelation.after
+        )
+    if context is None:
+        return TemporalRelation.indeterminate
+
+    if isinstance(left, TemporalDateValue):
+        start, end = _civil_day_interval(left, context=context)
+        instant = cast(TemporalInstantValue, right).value
+        if instant < start:
+            return TemporalRelation.after
+        if instant >= end:
+            return TemporalRelation.before
+        return TemporalRelation.overlap
+
+    start, end = _civil_day_interval(cast(TemporalDateValue, right), context=context)
+    instant = left.value
+    if instant < start:
+        return TemporalRelation.before
+    if instant >= end:
+        return TemporalRelation.after
+    return TemporalRelation.overlap
 
 
 class ParseStatus(str, Enum):
@@ -213,10 +333,17 @@ class ReleaseState(str, Enum):
 
 
 def _validate_interval(
-    valid_from: CanonicalDatetime | None,
-    valid_to: CanonicalDatetime | None,
+    valid_from: TemporalDateValue | TemporalInstantValue | None,
+    valid_to: TemporalDateValue | TemporalInstantValue | None,
 ) -> None:
-    if valid_from is not None and valid_to is not None and valid_from > valid_to:
+    if valid_from is None or valid_to is None:
+        return
+    if type(valid_from) is not type(valid_to):
+        raise ValueError(
+            "valid_from and valid_to must have the same temporal precision"
+        )
+    relation = compare_temporal_values(valid_from, valid_to)
+    if relation is TemporalRelation.after:
         raise ValueError("valid_from must not be after valid_to")
 
 
@@ -340,8 +467,8 @@ class SourceAssertion(ContractModel):
     value: JsonValue
     observed_at: CanonicalDatetime
     source_event_time: CanonicalDatetime | None = None
-    valid_from: CanonicalDatetime | None = None
-    valid_to: CanonicalDatetime | None = None
+    valid_from: TemporalValue | None = None
+    valid_to: TemporalValue | None = None
     assertion_run_id: NonEmptyStr
 
     @model_validator(mode="after")
@@ -994,8 +1121,8 @@ class RelationshipAssertion(ContractModel):
     attributes: dict[NonEmptyStr, JsonValue]
     observed_at: CanonicalDatetime
     source_event_time: CanonicalDatetime | None = None
-    valid_from: CanonicalDatetime | None = None
-    valid_to: CanonicalDatetime | None = None
+    valid_from: TemporalValue | None = None
+    valid_to: TemporalValue | None = None
     assertion_run_id: NonEmptyStr
 
     @model_validator(mode="after")
@@ -1029,8 +1156,8 @@ class RelationshipDecision(ContractModel):
     decision_run_id: NonEmptyStr
     confidence: Confidence
     rationale: NonEmptyStr
-    valid_from: CanonicalDatetime | None = None
-    valid_to: CanonicalDatetime | None = None
+    valid_from: TemporalValue | None = None
+    valid_to: TemporalValue | None = None
     release_id: NonEmptyStr
     decided_at: CanonicalDatetime
     supersedes_decision_id: NonEmptyStr | None = None
@@ -1039,6 +1166,7 @@ class RelationshipDecision(ContractModel):
 
     @model_validator(mode="after")
     def validate_decision_evidence(self) -> RelationshipDecision:
+        _validate_interval(self.valid_from, self.valid_to)
         candidates = set(self.candidate_assertion_ids)
         _require_unique(self.candidate_assertion_ids, "candidate_assertion_ids")
         _require_unique(self.selected_assertion_ids, "selected_assertion_ids")

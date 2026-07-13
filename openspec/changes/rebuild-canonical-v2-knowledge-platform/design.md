@@ -116,6 +116,14 @@ does not erase the previous decision or its assertions.
 Minimal temporal semantics apply: every assertion has observation/fetch time and optional source
 publication/event time; inherently changing facts may have valid-from/valid-to. Full bitemporal
 storage is not imposed on static identifiers or fields without a time-dependent product meaning.
+Temporal precision is retained: a source calendar date remains a date and a known timezone-aware
+instant remains an instant. Precision participates in canonical equality, hashes, persistence, and
+restart reconstruction. Date-only values are never coerced to UTC midnight; any cross-precision
+ordering or overlap uses `explicit-calendar-v1`. The caller must provide an explicit Gregorian
+calendar/timezone context; a date becomes a half-open civil-day interval only inside that comparison
+operation and is never rewritten. An instant may be before, after, or overlap that interval, but is
+never exactly equal to the date. Missing context returns `indeterminate`; ambient/system timezone
+defaults are forbidden.
 
 ### 3. Resolve identity reversibly and separate identity from source records
 

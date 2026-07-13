@@ -34,3 +34,22 @@ Two or more tasks may be In Progress when their dependencies are Accepted or the
 interfaces are frozen, their writers and resources do not overlap, and each remains independently
 testable and commit-scoped. If a shared contract, migration head, database, Milvus release, output
 directory, or active pointer would have multiple writers, that seam returns to serial integration.
+
+## Git mainline promotion gate
+
+The user selected aggregate S6 acceptance as the checkpoint for moving Git `main` to Canonical V2.
+Promotion is fast-forward-only and requires all of the following in the execution session:
+
+1. Task 5.7/S5G and Tasks 6.1-6.8 are Accepted with linked review/verification evidence.
+2. The V2 integration worktree is clean and contains no untracked implementation/evidence required
+   by the accepted checkpoint.
+3. Every Canonical V2 side branch has been integrated, proven redundant, or explicitly abandoned;
+   no unique accepted patch remains outside the integration line.
+4. The root worktree's unrelated dirty files are preserved and reconciled without overwrite.
+5. `git merge-base main <v2-integration>` still equals `main`; ahead/behind inspection proves a pure
+   fast-forward, with no merge or rebase.
+6. Strict OpenSpec, aggregate S6 checks, frozen-source safety, and diff/secret/scope checks pass on
+   the exact promotion commit.
+
+Meeting this gate does not authorize database/index promotion, production-like cutover, push, PR, or
+archive. If any condition fails, Git `main` remains unchanged.

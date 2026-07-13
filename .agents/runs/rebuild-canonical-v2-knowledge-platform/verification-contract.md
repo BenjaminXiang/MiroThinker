@@ -122,6 +122,29 @@
   wheel contents, strict OpenSpec, diff/formal/secret/import checks, frozen source and forced-read-
   only candidate audits, and owned-resource cleanup must all pass before acceptance.
 
+## Task 5.7 temporal-precision correction
+
+- Decision owner: ADR-012 and the `Temporal precision` term in root `CONTEXT.md`.
+- RED paths: affected shared-contract, decision/history, persistence, typed-subobject, and domain-
+  projection temporal matrices. The current Professor affiliation date-only reproduction must remain
+  RED until the shared precision-bearing contract exists.
+- Observable GREEN: date-only validity remains a calendar date, instant validity canonicalizes to an
+  equivalent UTC instant, precision changes content identity, and both forms persist/restart without
+  coercion or loss.
+- Exact lineage GREEN: assertion, current selection, and typed projection equality bind precision
+  plus value. A date and instant on the same lexical day are not exact equality.
+- Comparison GREEN: cross-precision ordering/overlap is owned by one named versioned fail-closed
+  policy. `explicit-calendar-v1` requires caller-supplied Gregorian calendar/timezone context,
+  interprets dates as half-open civil-day intervals for comparison only, returns `indeterminate`
+  without context, and never reads ambient defaults or reports cross-precision exact equality.
+- Storage GREEN: any representation change uses only an explicit owned disposable target, has
+  reversible migration/restart evidence, and leaves the durable candidate and C2_0004 landing
+  checkpoint unchanged.
+- Review policy: one merged specification/code-quality review, plus a focused migration/write-safety
+  review if persistence changes; both end with zero open Critical/Important findings.
+- Downstream gate: Task 6.3 stays stopped and its dirty worktree is not Candidate evidence until
+  Task 5.7 is Accepted and the affected S5 regression surface is GREEN.
+
 ## Task 6.1 PRD domain/relationship catalog extension
 
 - Artifact/source RED/GREEN: the checked-in canonical JSON binds every authority file to one exact
@@ -178,7 +201,16 @@ observation/source-event/validity evidence and derive only the as-of-valid gener
 Task 5.6 is Accepted at `2026-07-12T15:04:36Z`: immutable review provenance, exact human resolution,
 and generic current/history reconstruction are closed through C2_0007 on owned disposable targets.
 The durable candidate remains C2_0004 with zero canonical/non-landing rows. Task 6.1 is Accepted at
-`2026-07-12T16:40:08Z`; no database, Milvus, provider, runtime, or candidate write occurred.
+`2026-07-12T16:40:08Z`; no database, Milvus, provider, runtime, or candidate write occurred. On
+2026-07-13 ADR-012 added Task 5.7/S5G to preserve date-only versus instant precision across the
+shared temporal interface. The user selected `explicit-calendar-v1`; S5G was Accepted at
+`2026-07-13T09:19:45Z` with zero open Critical/Important review findings. Task 6.3 is In Progress /
+unblocked and is not Candidate or Accepted.
+
+Git `main` promotion is separately blocked on aggregate S6 acceptance. The execution session must
+re-prove a clean V2 integration worktree, complete side-branch accounting, preservation of root dirty
+state, strict-ancestor topology, and all aggregate checks before a fast-forward-only ref move. This
+gate never authorizes merge/rebase, push, or database/index cutover.
 
 ## Behavior owner
 

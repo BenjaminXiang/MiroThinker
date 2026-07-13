@@ -29,11 +29,16 @@ from .canonical_revision import (
     load_canonical_v2_script_directory,
     require_minimum_canonical_revision,
 )
-from .contracts import IdentityAction, IdentityDecision, SourceAssertion
+from .contracts import (
+    IdentityAction,
+    IdentityDecision,
+    SourceAssertion,
+    TemporalInstantValue,
+)
 from .rebuild_write_gate import require_accepted_backup_gate
 
 
-MINIMUM_REVISION = "C2_0007"
+MINIMUM_REVISION = "C2_0008"
 VERSION_TABLE = "public.canonical_v2_alembic_version"
 OFFLINE_BUILD_AUTHORITY = "offline_canonical_build"
 IDENTITY_LOCK_ORDER = (
@@ -127,6 +132,16 @@ def _canonical_json_sha256(value: JsonValue) -> str:
 
 def _assertion_fingerprint(assertion: SourceAssertion) -> str:
     return _canonical_json_sha256(cast(JsonValue, assertion.model_dump(mode="json")))
+
+
+def _temporal_json(value: object | None) -> Jsonb | None:
+    if value is None:
+        return None
+    return Jsonb(cast(Any, value).model_dump(mode="json"))
+
+
+def _legacy_instant(value: object | None) -> Any | None:
+    return value.value if isinstance(value, TemporalInstantValue) else None
 
 
 def _trace_json(decision: IdentityDecision) -> Jsonb | None:
@@ -564,8 +579,10 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
                 "(assertion_id, source_record_id, source_identity_id, "
                 "subject_entity_type, field_path, value, "
                 "assertion_fingerprint_sha256, observed_at, source_event_time, "
-                "valid_from, valid_to, assertion_run_id) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
+                "valid_from, valid_to, valid_from_temporal, valid_to_temporal, "
+                "assertion_run_id) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
+                "%s, %s) "
                 "ON CONFLICT (assertion_id) DO NOTHING",
                 (
                     assertion.assertion_id,
@@ -577,8 +594,10 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
                     _assertion_fingerprint(assertion),
                     assertion.observed_at,
                     assertion.source_event_time,
-                    assertion.valid_from,
-                    assertion.valid_to,
+                    _legacy_instant(assertion.valid_from),
+                    _legacy_instant(assertion.valid_to),
+                    _temporal_json(assertion.valid_from),
+                    _temporal_json(assertion.valid_to),
                     assertion.assertion_run_id,
                 ),
             )
@@ -650,23 +669,26 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
         assertion_ids = [assertion.assertion_id for assertion in assertions]
         durable_assertions = {
             row["assertion_id"]: (
-                row["source_record_id"],
-                row["source_identity_id"],
-                row["subject_entity_type"],
-                row["field_path"],
-                row["value"],
+                SourceAssertion(
+                    assertion_id=row["assertion_id"],
+                    source_record_id=row["source_record_id"],
+                    source_identity_id=row["source_identity_id"],
+                    subject_entity_type=row["subject_entity_type"],
+                    field_path=row["field_path"],
+                    value=row["value"],
+                    observed_at=row["observed_at"],
+                    source_event_time=row["source_event_time"],
+                    valid_from=row["valid_from_temporal"],
+                    valid_to=row["valid_to_temporal"],
+                    assertion_run_id=row["assertion_run_id"],
+                ),
                 row["assertion_fingerprint_sha256"],
-                row["observed_at"],
-                row["source_event_time"],
-                row["valid_from"],
-                row["valid_to"],
-                row["assertion_run_id"],
             )
             for row in connection.execute(
                 "SELECT assertion_id, source_record_id, source_identity_id, "
                 "subject_entity_type, field_path, value, "
                 "assertion_fingerprint_sha256, observed_at, source_event_time, "
-                "valid_from, valid_to, assertion_run_id "
+                "valid_from_temporal, valid_to_temporal, assertion_run_id "
                 "FROM knowledge.source_assertion WHERE assertion_id = ANY(%s) "
                 "ORDER BY assertion_id",
                 (assertion_ids,),
@@ -674,17 +696,8 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
         }
         expected_assertions = {
             assertion.assertion_id: (
-                assertion.source_record_id,
-                assertion.source_identity_id,
-                assertion.subject_entity_type,
-                assertion.field_path,
-                assertion.value,
+                assertion,
                 _assertion_fingerprint(assertion),
-                assertion.observed_at,
-                assertion.source_event_time,
-                assertion.valid_from,
-                assertion.valid_to,
-                assertion.assertion_run_id,
             )
             for assertion in assertions
         }

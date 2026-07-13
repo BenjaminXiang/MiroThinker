@@ -78,6 +78,10 @@ targets throughout this change.
       to the wrong real-world object.
 - [x] Strong identifier, same-name separation, cross-format LLM decision, reversible merge/split,
       source conflict, and temporal-history scenarios pass.
+- [x] Date-only and instant validity preserve their source precision through assertions, current
+      selections, typed projections, hashes, PostgreSQL, and restart; no date is fabricated as UTC
+      midnight. `explicit-calendar-v1` uses only caller-supplied calendar/timezone context, returns
+      `indeterminate` without it, and never treats an overlapping instant as exact date equality.
 - [ ] Normalization, candidate identity recall, deterministic rules, structured LLM adjudication,
       human review, and merge/split publication run only in versioned offline builds; query/answer
       paths create zero canonical identity/source-mapping mutations.

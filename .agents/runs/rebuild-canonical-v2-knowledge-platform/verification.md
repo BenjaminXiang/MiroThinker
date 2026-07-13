@@ -2,25 +2,25 @@
 
 ## Current status
 
-S1 database-target safety was accepted by the user at 2026-07-11T05:39:19Z. Explicit user acceptance
-of S2 tasks 2.1–2.5, including the corpus ground-truth policy and threshold Candidate, was recorded
-at 2026-07-11T15:10:32Z. S2B/task 2.6 was objectively verified and Accepted at
-2026-07-11T16:11:23Z under the user's self-approval authorization. Task 3.1's RED interface
-contracts were Accepted at `2026-07-11T16:31:48Z`. After re-verifying that gate, Task 3.2's empty
-Canonical V2 namespace baseline was Accepted at `2026-07-11T16:58:23Z`. Task 3.3's shared typed
-contracts were Accepted at `2026-07-11T17:15:42Z`. Task 3.4's C2_0002 shared schema was Accepted at
-`2026-07-11T17:48:21Z`. Task 3.5 independently reviewed, repaired, and Accepted the complete S3
-foundation at `2026-07-11T18:22:18Z`; the isolated candidate is at reviewed head C2_0003 with zero
-business rows. Task 4.1's immutable-landing strict RED contract was Accepted at
-`2026-07-11T18:33:37Z`. Task 4.2's storage-independent EvidenceLanding core and source adapters were
-Accepted at `2026-07-11T19:06:55Z`. Task 4.3's C2_0004 and PostgreSQL repository were Accepted at
-`2026-07-11T19:42:20Z`; Task 4.4 replayed the bounded real-source matrix at commit
-`cef42a1e075d30c5a0e179f34ab543b4878edabd`. Task 4.5 independently reviewed and Accepted all S4 at
-`2026-07-11T22:07:12Z` after a content-addressed dump restored with exact 26-table logical parity in
-a distinct disposable PostgreSQL system. The durable candidate remains isolated at C2_0004 with
-only immutable landing evidence and zero canonical/publication/index rows. Task 5.1's strict RED
-assertion/decision contract was Accepted at `2026-07-11T22:58:11Z`; task 5.2 is next and has not
-started.
+Tasks 5.1-5.7 and the corrected aggregate S5 surface are Accepted. On 2026-07-13 ADR-012 introduced
+the narrow Task 5.7/S5G precision-preserving temporal correction after a real S6c interface failure;
+the user selected `explicit-calendar-v1`, and S5G was Accepted at `2026-07-13T09:19:45Z` after its
+pure, real-disposable PostgreSQL, static, strict OpenSpec, scope, and review gates passed. Tasks 6.1
+(PRD domain/relationship catalog), 6.2 (domain-inclusion RED), and 6.6 (path-eligibility RED) remain
+Accepted. OpenSpec reports 31/75 tasks complete on the V2 integration line. Task 6.3 typed domain
+projection is In Progress / unblocked in the
+`canonical-v2-s2-baseline` worktree; the branch name is historical and no longer describes its
+scope. The active uncommitted implementation includes the four-domain projection/inclusion Modules,
+packaged catalog, PostgreSQL Adapter, `C2_0009`, and focused tests. A 2026-07-13 no-external-database
+run produced 178 passed, 118 skipped, 9 expected xfails, and 2 real failures: stale exact-head
+coupling to `C2_0007`, and date-only versus instant validity representation at the S5/S6 interface.
+S5G closed the latter without coercion. A current 2026-07-13 no-external-database run has 188 passed,
+125 skipped, 9 expected xfails, and only the Task 6.3-owned permanent-head coupling failure. Task 6.3
+is not Candidate or Accepted. S7-S12 remain unstarted. The user selected aggregate S6 acceptance as
+the Git `main` fast-forward checkpoint; no branch reference has moved.
+
+The code-grounded continuation plan is
+`.agents/runs/rebuild-canonical-v2-knowledge-platform/code-grounded-mainline-plan-2026-07-13.md`.
 
 ## Existing incident/recovery checkpoint used as planning evidence
 
@@ -1595,3 +1595,44 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   - strict OpenSpec and staged diff/secret/cache/scope checks -> clean.
 - This test-only task did not replay database/source/Candidate/Milvus/provider safety totals and did
   not mutate those boundaries. No product/shared-contract/migration/runtime file changed.
+
+## S5G task 5.7 temporal-precision correction acceptance — 2026-07-13T09:19:45Z
+
+- Initial pure RED failed collection because `TemporalComparisonContext` and the precision-bearing
+  value contract did not exist. The first real-disposable PostgreSQL RED then failed with
+  `cannot adapt type 'TemporalDateValue'`, proving the legacy adapter could not persist date-only
+  validity without coercion.
+- The shared discriminated temporal contract now retains `date` and UTC-canonical `instant` as
+  different values. Exact equality and hashes bind precision plus value. Cross-precision comparison
+  returns `indeterminate` without context; `explicit-calendar-v1` uses only a caller-supplied named
+  Gregorian timezone and reports a date/inside-instant pair as overlap, never equality.
+- Assertions, generic current selections, relationship decisions, history projections, and the
+  Task 6.3 typed-subobject consumer carry the same precision-bearing value. Date-only affiliation
+  evidence reaches the S6 projection seam without UTC-midnight fabrication.
+- C2_0008 stores the precision object in JSONB, retains the legacy `timestamptz` mirror only for
+  instants, hashes the exact representation, persists explicit comparison context, and reconstructs
+  both adapters exactly after restart. Direct SQL constraints reject malformed representation,
+  non-accepted relationship validity, inconsistent selected validity, and decision/assertion
+  temporal cross-wiring.
+- Migration review found two Important risks and closed both. C2_0008 temporarily suspends only the
+  owned append-only mutation trigger while rehashing standalone legacy instant assertions, and
+  refuses to rewrite already referenced temporal decision evidence. A regression first exposed an
+  over-broad table-nonempty preflight; the corrected gate follows actual decision edges, so
+  standalone evidence backfills while referenced evidence fails closed.
+- Pure GREEN command over temporal/shared/identity/decision contracts: `85 passed`.
+- Real network-none/no-port disposable decision-persistence command: `44 passed`; it covers
+  C2_0001→C2_0008, two standalone instant backfill/downgrade/re-upgrade cycles, referenced-evidence
+  refusal, date downgrade refusal, direct-SQL precision cross-wire rejection, restart, replay,
+  history, tamper, transaction, and lock ordering.
+- Real network-none/no-port disposable identity-persistence command: `35 passed, 1 deselected`.
+  The deselected permanent-single-head assertion is explicitly Task 6.3-owned because its dirty
+  C2_0009 descendant is present; all S5 identity behavior including date restart passed.
+- Current no-external-database Canonical V2 result: `188 passed, 125 skipped, 9 xfailed, 1 failed`.
+  The only failure is that same stale exact-head assertion (`C2_0009` observed versus `C2_0008`
+  expected), retained as Task 6.3 RED rather than hidden in the S5G commit.
+- Ruff format/check passed on all S5G implementation and test files. App-environment Pyright
+  reported `0 errors, 0 warnings, 0 informations`. Strict OpenSpec is valid; `git diff --check`
+  passed. Scope/frozen-source review found no legacy V042, source corpus, original PostgreSQL,
+  Milvus, recovery checkpoint, active pointer, product cutover, push, PR, or archive mutation.
+- The final merged specification/code-quality and migration/write-safety self-review found zero
+  open Critical/Important findings. Task 5.7/S5G is Accepted; Task 6.3 may resume.

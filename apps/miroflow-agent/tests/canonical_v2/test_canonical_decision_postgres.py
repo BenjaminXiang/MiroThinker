@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 import hashlib
 from importlib import import_module
 import inspect
@@ -34,7 +34,7 @@ from src.data_agents.storage.database_target import set_alembic_database_url
 APP_ROOT = Path(__file__).resolve().parents[2]
 ALEMBIC_INI = APP_ROOT / "canonical_v2_alembic.ini"
 SCRIPT_LOCATION = APP_ROOT / "canonical_v2_alembic"
-EXPECTED_REVISION = "C2_0007"
+EXPECTED_REVISION = "C2_0008"
 RELEASE_ID = "decision-postgres-release-r1"
 RUN_ID = "decision-postgres-run-1"
 REVIEWED_RELEASE_ID = "decision-postgres-release-r2"
@@ -369,6 +369,7 @@ def _decision_result(
     non_utc_temporal: bool = False,
     field_unresolved: bool = False,
     relationship_unresolved: bool = False,
+    date_only_field: bool = False,
 ) -> Any:
     module = _engine_module()
     input_zone = timezone(timedelta(hours=8)) if non_utc_temporal else timezone.utc
@@ -439,6 +440,7 @@ def _decision_result(
             field_path="employment.current_title",
             value="Distinguished Professor" if changed else "Chair Professor",
             observed_at=NOW - timedelta(hours=1),
+            valid_from=date(2024, 9, 1) if date_only_field else None,
             assertion_run_id="field-assertion-run-1",
         ),
         module.SourceAssertion(
@@ -600,6 +602,15 @@ def _decision_result(
         decision_run_id=RUN_ID,
         decision_method_version="canonical-decision-v1",
         as_of=NOW.astimezone(input_zone),
+        temporal_comparison_context=(
+            module.TemporalComparisonContext(
+                policy_version="explicit-calendar-v1",
+                calendar="gregorian",
+                timezone="Asia/Shanghai",
+            )
+            if date_only_field
+            else None
+        ),
         source_identities=sources,
         canonical_identities=(professor, company),
         field_groups=(
@@ -2107,12 +2118,14 @@ def test_direct_sql_review_rows_reject_null_hash_and_relational_cross_wiring(
             "source_canonical_identity_id, target_canonical_identity_id, state, "
             "role_bindings, policy_id, policy_version, method, method_version, "
             "decision_run_id, confidence, rationale, valid_from, valid_to, decided_at, "
-            "supersedes_decision_id, llm_trace, human_review_resolution) "
+            "valid_from_temporal, valid_to_temporal, supersedes_decision_id, "
+            "llm_trace, human_review_resolution) "
             "SELECT release_id, %s, %s, relationship_type_id, "
             "relationship_type_version, source_canonical_identity_id, "
             "target_canonical_identity_id, %s, role_bindings, policy_id, "
             "policy_version, method, method_version, decision_run_id, confidence, "
-            "rationale, valid_from, valid_to, decided_at, NULL, "
+            "rationale, valid_from, valid_to, decided_at, valid_from_temporal, "
+            "valid_to_temporal, NULL, "
             "llm_trace, %s::jsonb FROM knowledge.relationship_decision "
             "WHERE decision_id = %s"
         )
@@ -2276,11 +2289,13 @@ def test_concurrent_late_origin_edge_and_review_cannot_both_commit(
                 "(assertion_id, relationship_type_id, relationship_type_version, "
                 "source_record_id, source_identity_id, target_identity_id, "
                 "attributes, assertion_fingerprint_sha256, observed_at, "
-                "source_event_time, valid_from, valid_to, assertion_run_id) "
+                "source_event_time, valid_from, valid_to, valid_from_temporal, "
+                "valid_to_temporal, assertion_run_id) "
                 "SELECT %s, relationship_type_id, relationship_type_version, "
                 "source_record_id, source_identity_id, target_identity_id, "
                 "attributes, %s, observed_at, source_event_time, valid_from, "
-                "valid_to, assertion_run_id FROM knowledge.relationship_assertion "
+                "valid_to, valid_from_temporal, valid_to_temporal, "
+                "assertion_run_id FROM knowledge.relationship_assertion "
                 "WHERE assertion_id = 'relation-founder'",
                 (assertion_id, _fingerprint(assertion_id)),
             )
@@ -2708,8 +2723,14 @@ def test_temporal_relationship_history_restarts_with_only_as_of_current(
         )
         for decision in loaded.relationship_decisions
     } == {
-        "canonical-relationship-current": (NOW, None),
-        "canonical-relationship-old": (NOW - timedelta(days=365), NOW),
+        "canonical-relationship-current": (
+            _engine_module().TemporalInstantValue(value=NOW),
+            None,
+        ),
+        "canonical-relationship-old": (
+            _engine_module().TemporalInstantValue(value=NOW - timedelta(days=365)),
+            _engine_module().TemporalInstantValue(value=NOW),
+        ),
     }
     assert {
         assertion.assertion_id: (
@@ -2723,14 +2744,14 @@ def test_temporal_relationship_history_restarts_with_only_as_of_current(
         "relation-role-current": (
             NOW - timedelta(days=1),
             NOW,
-            NOW,
+            _engine_module().TemporalInstantValue(value=NOW),
             None,
         ),
         "relation-role-old": (
             NOW - timedelta(days=400),
             NOW - timedelta(days=365),
-            NOW - timedelta(days=365),
-            NOW,
+            _engine_module().TemporalInstantValue(value=NOW - timedelta(days=365)),
+            _engine_module().TemporalInstantValue(value=NOW),
         ),
     }
 
@@ -2782,6 +2803,249 @@ def test_temporal_relationship_history_restarts_with_only_as_of_current(
         ).fetchone() == (0,)
 
 
+def test_date_only_temporal_precision_restarts_without_utc_midnight_coercion(
+    target: _Target,
+) -> None:
+    result = _decision_result(date_only_field=True)
+    _insert_prerequisites(target)
+
+    persisted = _store(target).persist(result)
+    restarted = _store(target).load(RELEASE_ID, RUN_ID)
+    selected = next(
+        assertion
+        for assertion in restarted.field_assertions
+        if assertion.assertion_id == "field-b"
+    )
+
+    assert persisted == restarted == result
+    assert selected.valid_from == _engine_module().TemporalDateValue(
+        value=date(2024, 9, 1)
+    )
+    assert restarted.current_fields[0].valid_from == selected.valid_from
+    assert restarted.temporal_comparison_context == result.temporal_comparison_context
+    with _connect(target) as connection:
+        assert connection.execute(
+            "SELECT valid_from_temporal, valid_from FROM knowledge.source_assertion "
+            "WHERE assertion_id = 'field-b'"
+        ).fetchone() == (
+            {"precision": "date", "value": "2024-09-01"},
+            None,
+        )
+
+
+def test_c2_0008_backfills_and_rehashes_existing_instant_assertions(
+    target: _Target,
+) -> None:
+    command.downgrade(target.config, "C2_0007")
+    _insert_prerequisites(target)
+    module = _engine_module()
+    field_assertion = module.SourceAssertion(
+        assertion_id="legacy-field-instant",
+        source_record_id="record:prof-source-a",
+        source_identity_id="prof-source-a",
+        subject_entity_type="professor",
+        field_path="employment.started_at",
+        value="Chair Professor",
+        observed_at=NOW,
+        valid_from=NOW - timedelta(days=365),
+        assertion_run_id="legacy-temporal-run",
+    )
+    relationship_assertion = module.RelationshipAssertion(
+        assertion_id="legacy-relationship-instant",
+        relationship_type_id="professor_company_role",
+        relationship_type_version="v1",
+        source_record_id="record:relationship",
+        source_endpoint=module.IdentityReference(
+            identity_id="prof-source-a",
+            identity_space="source",
+            entity_type="professor",
+        ),
+        target_endpoint=module.IdentityReference(
+            identity_id="company-source",
+            identity_space="source",
+            entity_type="company",
+        ),
+        attributes={"role": "founder"},
+        observed_at=NOW,
+        valid_from=NOW - timedelta(days=365),
+        assertion_run_id="legacy-temporal-run",
+    )
+    with _connect(target) as connection:
+        connection.execute(
+            "INSERT INTO knowledge.source_assertion "
+            "(assertion_id, source_record_id, source_identity_id, "
+            "subject_entity_type, field_path, value, assertion_fingerprint_sha256, "
+            "observed_at, source_event_time, valid_from, valid_to, assertion_run_id) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NULL, %s, NULL, %s)",
+            (
+                field_assertion.assertion_id,
+                field_assertion.source_record_id,
+                field_assertion.source_identity_id,
+                field_assertion.subject_entity_type,
+                field_assertion.field_path,
+                Jsonb(field_assertion.value),
+                "a" * 64,
+                field_assertion.observed_at,
+                field_assertion.valid_from.value,
+                field_assertion.assertion_run_id,
+            ),
+        )
+        connection.execute(
+            "INSERT INTO knowledge.relationship_assertion "
+            "(assertion_id, relationship_type_id, relationship_type_version, "
+            "source_record_id, source_identity_id, target_identity_id, attributes, "
+            "assertion_fingerprint_sha256, observed_at, source_event_time, "
+            "valid_from, valid_to, assertion_run_id) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NULL, %s, NULL, %s)",
+            (
+                relationship_assertion.assertion_id,
+                relationship_assertion.relationship_type_id,
+                relationship_assertion.relationship_type_version,
+                relationship_assertion.source_record_id,
+                relationship_assertion.source_endpoint.identity_id,
+                relationship_assertion.target_endpoint.identity_id,
+                Jsonb(relationship_assertion.attributes),
+                "b" * 64,
+                relationship_assertion.observed_at,
+                relationship_assertion.valid_from.value,
+                relationship_assertion.assertion_run_id,
+            ),
+        )
+        connection.commit()
+
+    for _ in range(2):
+        command.upgrade(target.config, EXPECTED_REVISION)
+        with _connect(target) as connection:
+            assert connection.execute(
+                "SELECT assertion_fingerprint_sha256, valid_from_temporal "
+                "FROM knowledge.source_assertion WHERE assertion_id = %s",
+                (field_assertion.assertion_id,),
+            ).fetchone() == (
+                _postgres_module()._assertion_fingerprint(field_assertion),
+                {
+                    "precision": "instant",
+                    "value": "2025-07-11T23:30:00Z",
+                },
+            )
+            assert connection.execute(
+                "SELECT assertion_fingerprint_sha256, valid_from_temporal "
+                "FROM knowledge.relationship_assertion WHERE assertion_id = %s",
+                (relationship_assertion.assertion_id,),
+            ).fetchone() == (
+                _postgres_module()._assertion_fingerprint(relationship_assertion),
+                {
+                    "precision": "instant",
+                    "value": "2025-07-11T23:30:00Z",
+                },
+            )
+        command.downgrade(target.config, "C2_0007")
+
+
+def test_c2_0008_refuses_to_rehash_referenced_temporal_evidence(
+    target: _Target,
+) -> None:
+    result = _decision_result(temporal_history=True)
+    _insert_prerequisites(target)
+    assert _store(target).persist(result) == result
+    command.downgrade(target.config, "C2_0007")
+
+    with pytest.raises(sa_exc.DBAPIError, match="referenced decision evidence"):
+        command.upgrade(target.config, EXPECTED_REVISION)
+
+    with _connect(target) as connection:
+        assert connection.execute(
+            "SELECT version_num FROM public.canonical_v2_alembic_version"
+        ).fetchone() == ("C2_0007",)
+
+
+def test_temporal_precision_tampering_is_rejected_on_restart(target: _Target) -> None:
+    result = _decision_result(date_only_field=True)
+    _insert_prerequisites(target)
+    assert _store(target).persist(result) == result
+
+    with _connect(target, autocommit=True) as connection:
+        connection.execute(
+            "ALTER TABLE knowledge.source_assertion DISABLE TRIGGER USER"
+        )
+        try:
+            with pytest.raises(psycopg.errors.CheckViolation):
+                connection.execute(
+                    "UPDATE knowledge.source_assertion SET valid_from_temporal = "
+                    "jsonb_set(valid_from_temporal, '{precision}', '\"instant\"') "
+                    "WHERE assertion_id = 'field-b'"
+                )
+        finally:
+            connection.execute(
+                "ALTER TABLE knowledge.source_assertion ENABLE TRIGGER USER"
+            )
+
+    assert _store(target).load(RELEASE_ID, RUN_ID) == result
+
+
+def test_c2_0008_downgrade_refuses_to_discard_date_precision(
+    target: _Target,
+) -> None:
+    result = _decision_result(date_only_field=True)
+    _insert_prerequisites(target)
+    assert _store(target).persist(result) == result
+
+    with pytest.raises(sa_exc.DBAPIError, match="date precision|temporal context"):
+        command.downgrade(target.config, "C2_0007")
+
+    with _connect(target) as connection:
+        assert connection.execute(
+            "SELECT version_num FROM public.canonical_v2_alembic_version"
+        ).fetchone() == (EXPECTED_REVISION,)
+    assert _store(target).load(RELEASE_ID, RUN_ID) == result
+
+
+def test_direct_sql_cannot_cross_wire_relationship_temporal_precision(
+    target: _Target,
+) -> None:
+    result = _decision_result(temporal_history=True)
+    _insert_prerequisites(target)
+    assert _store(target).persist(result) == result
+
+    with _connect(target) as connection:
+        with pytest.raises(psycopg.errors.CheckViolation, match="temporal validity"):
+            with connection.transaction():
+                connection.execute(
+                    "INSERT INTO knowledge.relationship_decision "
+                    "(release_id, decision_id, canonical_relationship_id, "
+                    "relationship_type_id, relationship_type_version, "
+                    "source_canonical_identity_id, target_canonical_identity_id, "
+                    "state, role_bindings, policy_id, policy_version, method, "
+                    "method_version, decision_run_id, confidence, rationale, "
+                    "valid_from, valid_to, valid_from_temporal, valid_to_temporal, "
+                    "decided_at, supersedes_decision_id, llm_trace, "
+                    "human_review_resolution) "
+                    "SELECT release_id, 'temporal-crosswire-decision', "
+                    "'temporal-crosswire-relationship', relationship_type_id, "
+                    "relationship_type_version, source_canonical_identity_id, "
+                    "target_canonical_identity_id, state, role_bindings, policy_id, "
+                    "policy_version, method, method_version, decision_run_id, "
+                    "confidence, rationale, valid_from - interval '1 day', valid_to, "
+                    "knowledge.temporal_instant_value(valid_from - interval '1 day'), "
+                    "valid_to_temporal, decided_at, NULL, llm_trace, "
+                    "human_review_resolution FROM knowledge.relationship_decision "
+                    "WHERE canonical_relationship_id = "
+                    "'canonical-relationship-current'"
+                )
+                connection.execute(
+                    "INSERT INTO knowledge.relationship_decision_assertion "
+                    "(release_id, decision_id, assertion_id, assertion_role) "
+                    "VALUES (%s, 'temporal-crosswire-decision', "
+                    "'relation-role-current', 'selected')",
+                    (RELEASE_ID,),
+                )
+                connection.execute(
+                    "SET CONSTRAINTS "
+                    "knowledge.trg_validate_relationship_temporal_binding, "
+                    "knowledge.trg_validate_relationship_assertion_temporal_binding "
+                    "IMMEDIATE"
+                )
+
+
 def test_non_utc_temporal_inputs_restart_as_one_canonical_instant(
     target: _Target,
 ) -> None:
@@ -2808,11 +3072,12 @@ def test_non_utc_temporal_inputs_restart_as_one_canonical_instant(
         if assertion.source_event_time is not None:
             assert assertion.source_event_time.utcoffset() == timedelta(0)
         if assertion.valid_from is not None:
-            assert assertion.valid_from.utcoffset() == timedelta(0)
+            assert assertion.valid_from.value.utcoffset() == timedelta(0)
         if assertion.valid_to is not None:
-            assert assertion.valid_to.utcoffset() == timedelta(0)
+            assert assertion.valid_to.value.utcoffset() == timedelta(0)
     assert all(
-        decision.valid_from is None or decision.valid_from.utcoffset() == timedelta(0)
+        decision.valid_from is None
+        or decision.valid_from.value.utcoffset() == timedelta(0)
         for decision in loaded.relationship_decisions
     )
     assert loaded.content_sha256 == result.content_sha256
@@ -2832,7 +3097,9 @@ def test_corrupt_temporal_restart_is_wrapped_by_store_abstraction(
         try:
             connection.execute(
                 "UPDATE knowledge.relationship_assertion "
-                "SET valid_from = valid_from - interval '1 day' "
+                "SET valid_from = valid_from - interval '1 day', "
+                "valid_from_temporal = knowledge.temporal_instant_value("
+                "valid_from - interval '1 day') "
                 "WHERE assertion_id = 'relation-role-current'"
             )
         finally:

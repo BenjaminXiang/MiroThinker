@@ -1,5 +1,24 @@
 # Change Log
 
+## 2026-07-13
+
+- The user selected Canonical V2 as the implementation mainline and froze overlapping legacy
+  retrieval/Web changes as implementation authorities pending evidence/obligation mapping.
+- Code-grounded audit found the V2 integration line at 30/74 tasks before this correction, with
+  S1-S5 plus Tasks 6.1/6.2/6.6 Accepted and Task 6.3 In Progress.
+- Accepted ADR-012: preserve date-only versus instant temporal precision; never invent UTC midnight.
+- Added and Accepted Task 5.7/S5G as a narrow shared-contract correction. The shared contract,
+  decision/history engine, C2_0008 storage, identity/decision adapters, restart reconstruction, and
+  typed-projection consumer preserve date-only versus instant validity without UTC-midnight
+  fabrication. The task count is now 31/75 and Task 6.3 may resume.
+- Selected `explicit-calendar-v1`: cross-precision comparison requires caller-supplied Gregorian
+  calendar/timezone context and returns `indeterminate` without it. S5G was Accepted at
+  `2026-07-13T09:19:45Z` after pure, real-disposable PostgreSQL, static, strict OpenSpec, scope, and
+  merged specification/code-quality review evidence reached zero open Critical/Important findings.
+- Selected aggregate S6 acceptance as the Git `main` fast-forward checkpoint. Promotion is
+  fast-forward-only, requires clean/integrated worktrees and side branches plus current verification,
+  and does not authorize push or product/data/index cutover.
+
 ## 2026-07-11
 
 - Created the breaking pre-launch Canonical V2 Epic from the user-confirmed PRD/effect grill.

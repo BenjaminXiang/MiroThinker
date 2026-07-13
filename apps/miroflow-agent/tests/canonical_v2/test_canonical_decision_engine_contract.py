@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 import hashlib
 from importlib import import_module
 import json
@@ -98,8 +98,8 @@ def _field_assertion(
     field_path: str = "employment.current_title",
     entity_type: str = "professor",
     observed_at: datetime = NOW - timedelta(hours=1),
-    valid_from: datetime | None = None,
-    valid_to: datetime | None = None,
+    valid_from: date | datetime | None = None,
+    valid_to: date | datetime | None = None,
 ) -> Any:
     return module.SourceAssertion(
         assertion_id=assertion_id,
@@ -144,12 +144,14 @@ def _batch(
     decision_run_id: str = RUN_ID,
     human_review_resolutions: tuple[Any, ...] = (),
     previous_history: Any | None = None,
+    temporal_comparison_context: Any | None = None,
 ) -> Any:
     return module.DecisionBatchRequest(
         release_id=release_id,
         decision_run_id=decision_run_id,
         decision_method_version="canonical-decision-v1",
         as_of=as_of,
+        temporal_comparison_context=temporal_comparison_context,
         source_identities=source_identities,
         canonical_identities=canonical_identities,
         field_groups=field_groups,
@@ -157,6 +159,17 @@ def _batch(
         human_review_resolutions=human_review_resolutions,
         previous_history=previous_history,
     )
+
+
+def _instant_value(module: Any, value: datetime | None) -> Any | None:
+    return None if value is None else module.TemporalInstantValue(value=value)
+
+
+def _instant_json(value: datetime | None) -> dict[str, str] | None:
+    if value is None:
+        return None
+    canonical = value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+    return {"precision": "instant", "value": canonical}
 
 
 def _recorded_adjudicator(module: Any, *responses: Any) -> Any:
@@ -1606,9 +1619,15 @@ def test_professor_affiliation_transition_keeps_history_and_projects_only_curren
         for decision in result.relationship_decisions
     }
     assert set(decisions) == {"affiliation-episode-a", "affiliation-episode-b"}
-    assert decisions["affiliation-episode-a"].valid_from == old_start
-    assert decisions["affiliation-episode-a"].valid_to == transition
-    assert decisions["affiliation-episode-b"].valid_from == new_start
+    assert decisions["affiliation-episode-a"].valid_from == _instant_value(
+        module, old_start
+    )
+    assert decisions["affiliation-episode-a"].valid_to == _instant_value(
+        module, transition
+    )
+    assert decisions["affiliation-episode-b"].valid_from == _instant_value(
+        module, new_start
+    )
     assert decisions["affiliation-episode-b"].valid_to is None
 
     assert tuple(
@@ -1616,7 +1635,7 @@ def test_professor_affiliation_transition_keeps_history_and_projects_only_curren
         for selection in result.current_relationships
     ) == ("affiliation-episode-b",)
     current = result.current_relationships[0]
-    assert current.valid_from == new_start
+    assert current.valid_from == _instant_value(module, new_start)
     assert current.valid_to is None
     assert {
         assertion.assertion_id: assertion.source_event_time
@@ -1645,9 +1664,9 @@ def test_professor_affiliation_transition_keeps_history_and_projects_only_curren
         )
 
     changed_current_interval = result.model_dump(mode="json")
-    changed_current_interval["current_relationships"][0]["valid_from"] = (
+    changed_current_interval["current_relationships"][0]["valid_from"] = _instant_json(
         new_start - timedelta(days=1)
-    ).isoformat()
+    )
     with pytest.raises(ValueError, match="current.*validity|validity.*current"):
         module.DecisionBatchResult.model_validate(
             _rehash_result_payload(changed_current_interval)
@@ -1655,11 +1674,11 @@ def test_professor_affiliation_transition_keeps_history_and_projects_only_curren
 
     changed_decision_interval = result.model_dump(mode="json")
     changed_decision_interval["relationship_decisions"][1]["valid_from"] = (
+        _instant_json(new_start - timedelta(days=1))
+    )
+    changed_decision_interval["current_relationships"][0]["valid_from"] = _instant_json(
         new_start - timedelta(days=1)
-    ).isoformat()
-    changed_decision_interval["current_relationships"][0]["valid_from"] = (
-        new_start - timedelta(days=1)
-    ).isoformat()
+    )
     with pytest.raises(
         ValueError,
         match="validity|decision.*seed|decision.*ID",
@@ -1682,8 +1701,8 @@ def test_professor_affiliation_transition_keeps_history_and_projects_only_curren
             "decision_id": old_decision.decision_id,
             "supporting_assertion_ids": [old_assertion.assertion_id],
             "conflicting_assertion_ids": [],
-            "valid_from": old_start.isoformat(),
-            "valid_to": transition.isoformat(),
+            "valid_from": _instant_json(old_start),
+            "valid_to": _instant_json(transition),
         }
     )
     with pytest.raises(ValueError, match="accepted.*current|current.*accepted"):
@@ -1887,9 +1906,9 @@ def test_equal_temporal_instants_are_canonicalized_to_utc_before_hashing() -> No
     assert assertion.source_event_time is not None
     assert assertion.source_event_time.utcoffset() == timedelta(0)
     assert assertion.valid_from is not None
-    assert assertion.valid_from.utcoffset() == timedelta(0)
+    assert assertion.valid_from.value.utcoffset() == timedelta(0)
     assert assertion.valid_to is not None
-    assert assertion.valid_to.utcoffset() == timedelta(0)
+    assert assertion.valid_to.value.utcoffset() == timedelta(0)
     serialized = assertion.model_dump_json()
     assert "+08:00" not in serialized
 
@@ -1963,16 +1982,20 @@ def test_relationship_current_projection_is_the_as_of_valid_subset(
 
     decision = result.relationship_decisions[0]
     assert decision.state.value == "accepted"
-    assert decision.valid_from == valid_from
-    assert decision.valid_to == valid_to
+    assert decision.valid_from == _instant_value(module, valid_from)
+    assert decision.valid_to == _instant_value(module, valid_to)
     assert result.relationship_assertions[0].source_event_time == source_event_time
     if valid_from is None and valid_to is None:
         assert decision.valid_from is None
         assert decision.valid_to is None
     if is_current:
         assert len(result.current_relationships) == 1
-        assert result.current_relationships[0].valid_from == valid_from
-        assert result.current_relationships[0].valid_to == valid_to
+        assert result.current_relationships[0].valid_from == _instant_value(
+            module, valid_from
+        )
+        assert result.current_relationships[0].valid_to == _instant_value(
+            module, valid_to
+        )
     else:
         assert result.current_relationships == ()
 
@@ -2091,8 +2114,8 @@ def test_field_current_projection_is_the_as_of_valid_subset(
     assert result.field_assertions[0].source_event_time == NOW - timedelta(days=90)
     if is_current:
         assert len(result.current_fields) == 1
-        assert result.current_fields[0].valid_from == valid_from
-        assert result.current_fields[0].valid_to == valid_to
+        assert result.current_fields[0].valid_from == _instant_value(module, valid_from)
+        assert result.current_fields[0].valid_to == _instant_value(module, valid_to)
 
         missing_current = result.model_dump(mode="json")
         missing_current["current_fields"] = []
@@ -2102,9 +2125,9 @@ def test_field_current_projection_is_the_as_of_valid_subset(
             )
 
         changed_current = result.model_dump(mode="json")
-        changed_current["current_fields"][0]["valid_from"] = (
+        changed_current["current_fields"][0]["valid_from"] = _instant_json(
             NOW - timedelta(days=29)
-        ).isoformat()
+        )
         with pytest.raises(ValueError, match="current.*validity|validity.*current"):
             module.DecisionBatchResult.model_validate(
                 _rehash_result_payload(changed_current)
@@ -2123,14 +2146,74 @@ def test_field_current_projection_is_the_as_of_valid_subset(
                 "decision_id": decision.decision_id,
                 "supporting_assertion_ids": list(decision.selected_assertion_ids),
                 "conflicting_assertion_ids": list(decision.conflicting_assertion_ids),
-                "valid_from": (None if valid_from is None else valid_from.isoformat()),
-                "valid_to": None if valid_to is None else valid_to.isoformat(),
+                "valid_from": _instant_json(valid_from),
+                "valid_to": _instant_json(valid_to),
             }
         ]
         with pytest.raises(ValueError, match="selected.*current|current.*selected"):
             module.DecisionBatchResult.model_validate(
                 _rehash_result_payload(injected_current)
             )
+
+
+def test_date_only_validity_requires_explicit_calendar_context_for_current_projection() -> (
+    None
+):
+    module = _module()
+    source = _source_identity(
+        module,
+        "date-only-field-source",
+        source_system="official_profile",
+    )
+    canonical = _canonical_identity(
+        module,
+        "professor-c1",
+        (source.source_identity_id,),
+    )
+    assertion = _field_assertion(
+        module,
+        "date-only-affiliation-evidence",
+        source.source_identity_id,
+        "Example University",
+        field_path="affiliations.current.institution",
+        valid_from=date(2024, 9, 1),
+    )
+    group = _field_group(
+        module,
+        (assertion,),
+        field_path="affiliations.current.institution",
+    )
+
+    without_context = module.create_ephemeral_canonical_decision_engine().decide(
+        _batch(
+            module,
+            source_identities=(source,),
+            canonical_identities=(canonical,),
+            field_groups=(group,),
+        )
+    )
+    context = module.TemporalComparisonContext(
+        policy_version="explicit-calendar-v1",
+        calendar="gregorian",
+        timezone="Asia/Shanghai",
+    )
+    with_context = module.create_ephemeral_canonical_decision_engine().decide(
+        _batch(
+            module,
+            source_identities=(source,),
+            canonical_identities=(canonical,),
+            field_groups=(group,),
+            temporal_comparison_context=context,
+        )
+    )
+
+    assert without_context.current_fields == ()
+    assert len(with_context.current_fields) == 1
+    assert with_context.temporal_comparison_context == context
+    assert with_context.current_fields[0].valid_from == module.TemporalDateValue(
+        value=date(2024, 9, 1)
+    )
+    assert with_context.content_sha256 != without_context.content_sha256
 
 
 def test_engine_derives_field_replacement_and_withdrawal_from_validated_history() -> (

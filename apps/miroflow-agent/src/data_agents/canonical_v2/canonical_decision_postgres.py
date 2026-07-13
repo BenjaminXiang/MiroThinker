@@ -38,11 +38,13 @@ from .contracts import (
     RelationshipDecision,
     RelationshipDecisionState,
     SourceAssertion,
+    TemporalComparisonContext,
+    TemporalInstantValue,
 )
 from .rebuild_write_gate import require_accepted_backup_gate
 
 
-MINIMUM_REVISION = "C2_0007"
+MINIMUM_REVISION = "C2_0008"
 VERSION_TABLE = "public.canonical_v2_alembic_version"
 
 
@@ -79,6 +81,7 @@ class CanonicalDecisionStore(ABC):
         release_id: str,
         *,
         as_of: datetime,
+        temporal_comparison_context: TemporalComparisonContext | None = None,
     ) -> _engine.DecisionHistoryProjection:
         """Reconstruct one release ancestry and its unique current/history heads."""
         raise NotImplementedError
@@ -118,6 +121,16 @@ def _assertion_fingerprint(
     assertion: SourceAssertion | RelationshipAssertion,
 ) -> str:
     return _engine._content_sha256(cast(JsonValue, assertion.model_dump(mode="json")))
+
+
+def _temporal_json(value: object | None) -> Jsonb | None:
+    if value is None:
+        return None
+    return Jsonb(cast(Any, value).model_dump(mode="json"))
+
+
+def _legacy_instant(value: object | None) -> datetime | None:
+    return value.value if isinstance(value, TemporalInstantValue) else None
 
 
 def _decision_identity_context_payload(
@@ -415,8 +428,10 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                 "(assertion_id, source_record_id, source_identity_id, "
                 "subject_entity_type, field_path, value, "
                 "assertion_fingerprint_sha256, observed_at, source_event_time, "
-                "valid_from, valid_to, assertion_run_id) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
+                "valid_from, valid_to, valid_from_temporal, valid_to_temporal, "
+                "assertion_run_id) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
+                "%s, %s) "
                 "ON CONFLICT DO NOTHING",
                 (
                     assertion.assertion_id,
@@ -428,8 +443,10 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                     _assertion_fingerprint(assertion),
                     assertion.observed_at,
                     assertion.source_event_time,
-                    assertion.valid_from,
-                    assertion.valid_to,
+                    _legacy_instant(assertion.valid_from),
+                    _legacy_instant(assertion.valid_to),
+                    _temporal_json(assertion.valid_from),
+                    _temporal_json(assertion.valid_to),
                     assertion.assertion_run_id,
                 ),
             )
@@ -445,8 +462,10 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                 "(assertion_id, relationship_type_id, relationship_type_version, "
                 "source_record_id, source_identity_id, target_identity_id, "
                 "attributes, assertion_fingerprint_sha256, observed_at, "
-                "source_event_time, valid_from, valid_to, assertion_run_id) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
+                "source_event_time, valid_from, valid_to, valid_from_temporal, "
+                "valid_to_temporal, assertion_run_id) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
+                "%s, %s) "
                 "ON CONFLICT DO NOTHING",
                 (
                     assertion.assertion_id,
@@ -459,8 +478,10 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                     _assertion_fingerprint(assertion),
                     assertion.observed_at,
                     assertion.source_event_time,
-                    assertion.valid_from,
-                    assertion.valid_to,
+                    _legacy_instant(assertion.valid_from),
+                    _legacy_instant(assertion.valid_to),
+                    _temporal_json(assertion.valid_from),
+                    _temporal_json(assertion.valid_to),
                     assertion.assertion_run_id,
                 ),
             )
@@ -530,10 +551,11 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                 "source_canonical_identity_id, target_canonical_identity_id, state, "
                 "role_bindings, policy_id, policy_version, method, method_version, "
                 "decision_run_id, confidence, rationale, valid_from, valid_to, "
-                "decided_at, supersedes_decision_id, llm_trace, "
+                "valid_from_temporal, valid_to_temporal, decided_at, "
+                "supersedes_decision_id, llm_trace, "
                 "human_review_resolution) "
                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
-                "%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                "%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (
                     decision.release_id,
                     decision.decision_id,
@@ -551,14 +573,37 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                     decision.decision_run_id,
                     decision.confidence,
                     decision.rationale,
-                    decision.valid_from,
-                    decision.valid_to,
+                    _legacy_instant(decision.valid_from),
+                    _legacy_instant(decision.valid_to),
+                    _temporal_json(decision.valid_from),
+                    _temporal_json(decision.valid_to),
                     decision.decided_at,
                     decision.supersedes_decision_id,
                     cls._trace_json(decision),
                     cls._review_json(decision),
                 ),
             )
+
+    @staticmethod
+    def _insert_temporal_context(
+        connection: psycopg.Connection[dict[str, Any]],
+        result: _engine.DecisionBatchResult,
+    ) -> None:
+        context = result.temporal_comparison_context
+        if context is None:
+            return
+        payload = cast(JsonValue, context.model_dump(mode="json"))
+        connection.execute(
+            "INSERT INTO knowledge.decision_batch_temporal_context "
+            "(release_id, decision_run_id, comparison_context, content_sha256) "
+            "VALUES (%s, %s, %s, %s)",
+            (
+                result.release_id,
+                result.decision_run_id,
+                Jsonb(payload),
+                _engine._content_sha256(payload),
+            ),
+        )
 
     @staticmethod
     def _insert_roles(
@@ -696,6 +741,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                     self._insert_relationship_decisions(
                         connection, validated.relationship_decisions
                     )
+                    self._insert_temporal_context(connection, validated)
                     self._insert_identity_context_snapshots(connection, validated)
                     for decision in validated.canonical_decisions:
                         self._insert_roles(
@@ -804,6 +850,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
         release_id: str,
         *,
         as_of: datetime,
+        temporal_comparison_context: TemporalComparisonContext | None = None,
     ) -> _engine.DecisionHistoryProjection:
         try:
             with self._connection(write=False) as connection:
@@ -830,6 +877,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                 projection = _engine.project_decision_history(
                     batches,
                     as_of=as_of,
+                    temporal_comparison_context=temporal_comparison_context,
                 )
                 if projection.release_lineage != tuple(
                     batch_release_id
@@ -1003,6 +1051,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
             "policy.effective_at AS policy_effective_at, decision.method, "
             "decision.method_version, decision.decision_run_id, decision.confidence, "
             "decision.rationale, decision.valid_from, decision.valid_to, "
+            "decision.valid_from_temporal, decision.valid_to_temporal, "
             "decision.decided_at, decision.supersedes_decision_id, decision.llm_trace, "
             "decision.human_review_resolution "
             "FROM knowledge.relationship_decision AS decision "
@@ -1046,8 +1095,8 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                     decision_run_id=row["decision_run_id"],
                     confidence=row["confidence"],
                     rationale=row["rationale"],
-                    valid_from=row["valid_from"],
-                    valid_to=row["valid_to"],
+                    valid_from=row["valid_from_temporal"],
+                    valid_to=row["valid_to_temporal"],
                     release_id=row["release_id"],
                     decided_at=row["decided_at"],
                     supersedes_decision_id=row["supersedes_decision_id"],
@@ -1098,7 +1147,8 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
         rows = connection.execute(
             "SELECT assertion_id, source_record_id, source_identity_id, "
             "subject_entity_type, field_path, value, assertion_fingerprint_sha256, "
-            "observed_at, source_event_time, valid_from, valid_to, assertion_run_id "
+            "observed_at, source_event_time, valid_from_temporal, valid_to_temporal, "
+            "assertion_run_id "
             "FROM knowledge.source_assertion WHERE assertion_id = ANY(%s) "
             "ORDER BY assertion_id",
             (list(assertion_ids),),
@@ -1113,8 +1163,8 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                 value=row["value"],
                 observed_at=row["observed_at"],
                 source_event_time=row["source_event_time"],
-                valid_from=row["valid_from"],
-                valid_to=row["valid_to"],
+                valid_from=row["valid_from_temporal"],
+                valid_to=row["valid_to_temporal"],
                 assertion_run_id=row["assertion_run_id"],
             )
             for row in rows
@@ -1143,7 +1193,8 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
             "target_identity.entity_type AS target_entity_type, "
             "assertion.attributes, assertion.assertion_fingerprint_sha256, "
             "assertion.observed_at, assertion.source_event_time, "
-            "assertion.valid_from, assertion.valid_to, assertion.assertion_run_id "
+            "assertion.valid_from_temporal, assertion.valid_to_temporal, "
+            "assertion.assertion_run_id "
             "FROM knowledge.relationship_assertion AS assertion "
             "JOIN knowledge.source_identity AS source_identity "
             "ON source_identity.source_identity_id = assertion.source_identity_id "
@@ -1171,8 +1222,8 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                 attributes=row["attributes"],
                 observed_at=row["observed_at"],
                 source_event_time=row["source_event_time"],
-                valid_from=row["valid_from"],
-                valid_to=row["valid_to"],
+                valid_from=row["valid_from_temporal"],
+                valid_to=row["valid_to_temporal"],
                 assertion_run_id=row["assertion_run_id"],
             )
             for row in rows
@@ -1569,6 +1620,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
         *,
         release_id: str,
         as_of: datetime,
+        temporal_comparison_context: TemporalComparisonContext | None,
         field_assertions: tuple[SourceAssertion, ...],
         field_decisions: tuple[CanonicalDecision, ...],
         relationship_decisions: tuple[RelationshipDecision, ...],
@@ -1608,6 +1660,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                         as_of=as_of,
                         valid_from=field_validity_by_decision[decision.decision_id][0],
                         valid_to=field_validity_by_decision[decision.decision_id][1],
+                        context=temporal_comparison_context,
                     )
                 ),
                 key=lambda current: (
@@ -1644,6 +1697,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                         as_of=as_of,
                         valid_from=decision.valid_from,
                         valid_to=decision.valid_to,
+                        context=temporal_comparison_context,
                     )
                 ),
                 key=lambda current: (
@@ -1686,6 +1740,26 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
             )
         )
         return current_fields, current_relationships, conflicts
+
+    @staticmethod
+    def _load_temporal_context(
+        connection: psycopg.Connection[dict[str, Any]],
+        *,
+        release_id: str,
+        decision_run_id: str,
+    ) -> TemporalComparisonContext | None:
+        row = connection.execute(
+            "SELECT comparison_context, content_sha256 FROM "
+            "knowledge.decision_batch_temporal_context "
+            "WHERE release_id = %s AND decision_run_id = %s",
+            (release_id, decision_run_id),
+        ).fetchone()
+        if row is None:
+            return None
+        payload = cast(JsonValue, row["comparison_context"])
+        if row["content_sha256"] != _engine._content_sha256(payload):
+            raise ValueError("durable temporal comparison context hash is invalid")
+        return TemporalComparisonContext.model_validate(payload)
 
     @classmethod
     def _load_result(
@@ -1766,9 +1840,15 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
         )
         all_decisions = (*field_decisions, *relationship_decisions)
         as_of = all_decisions[0].decided_at
+        temporal_comparison_context = cls._load_temporal_context(
+            connection,
+            release_id=release_id,
+            decision_run_id=decision_run_id,
+        )
         current_fields, current_relationships, conflicts = cls._derive_projections(
             release_id=release_id,
             as_of=as_of,
+            temporal_comparison_context=temporal_comparison_context,
             field_assertions=field_assertions,
             field_decisions=field_decisions,
             relationship_decisions=relationship_decisions,
@@ -1784,6 +1864,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
             release_id=release_id,
             decision_run_id=decision_run_id,
             as_of=as_of,
+            temporal_comparison_context=temporal_comparison_context,
             canonical_identity_contexts=canonical_contexts,
             source_identity_contexts=source_contexts,
             field_assertions=field_assertions,

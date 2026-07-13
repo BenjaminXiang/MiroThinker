@@ -197,6 +197,16 @@ The present user-facing selection from retained time-bound assertions. It does n
 assertions or imply that every fact needs a full bitemporal model.
 _Avoid_: latest row wins, history overwrite
 
+**Temporal precision (时间精度)**:
+The retained granularity of a source time value: a calendar date remains a date and a known instant
+remains an instant. Precision is part of provenance and canonical equality.
+_Avoid_: coercing an unknown time to UTC midnight, treating date and instant as identical
+
+**Cross-precision temporal comparison (跨精度时间比较)**:
+A comparison between date-only and instant values that is valid only under an explicit named
+calendar/timezone policy; without that context the result is indeterminate.
+_Avoid_: ambient timezone, system-default calendar, implicit UTC or Asia/Shanghai comparison
+
 **Retrieval plan (检索计划)**:
 A validated, typed description of domains, exact constraints, semantic intents, relationship paths,
 and retrieval lanes needed for one turn. LLM reasoning may propose it; deterministic parsing and

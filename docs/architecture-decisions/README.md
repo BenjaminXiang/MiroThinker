@@ -10,6 +10,7 @@ explain. Short, dated, and referenced back from the code it governs.
 | ADR-003 | Chinese full-text search strategy | deferred | 2b |
 | ADR-004 | Scheduler — APScheduler (Postgres jobstore) | deferred | 2 |
 | [ADR-005](./ADR-005-single-pipeline-run-table.md) | Single `pipeline_run` table | accepted | 0 |
+| [ADR-012](./ADR-012-canonical-v2-preserve-temporal-precision.md) | Canonical V2 preserves temporal precision | accepted | Canonical V2 S5G/S6 |
 
 ## Conventions
 

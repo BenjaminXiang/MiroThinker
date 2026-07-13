@@ -4,7 +4,7 @@ import base64
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 import hashlib
 from importlib import import_module
 import json
@@ -27,13 +27,14 @@ from src.data_agents.canonical_v2.rebuild_write_gate import (
     RebuildWriteGateError,
     require_accepted_backup_gate,
 )
+from src.data_agents.canonical_v2.contracts import TemporalDateValue
 from src.data_agents.storage.database_target import set_alembic_database_url
 
 
 APP_ROOT = Path(__file__).resolve().parents[2]
 ALEMBIC_INI = APP_ROOT / "canonical_v2_alembic.ini"
 SCRIPT_LOCATION = APP_ROOT / "canonical_v2_alembic"
-EXPECTED_REVISION = "C2_0007"
+EXPECTED_REVISION = "C2_0008"
 RELEASE_ID = "identity-postgres-release-r1"
 RUN_ID = "identity-postgres-run-1"
 NOW = datetime(2026, 7, 12, 6, 30, tzinfo=timezone.utc)
@@ -189,7 +190,7 @@ def target(
         config=_migration_config(provisional),
     )
     try:
-        command.upgrade(configured.config, "head")
+        command.upgrade(configured.config, EXPECTED_REVISION)
         yield configured
     finally:
         with psycopg.connect(_psycopg_dsn(database_url), autocommit=True) as admin:
@@ -287,7 +288,7 @@ def test_c2_0006_schema_is_append_only_and_empty_downgrade_is_reversible(
         assert connection.execute(
             "SELECT to_regclass('knowledge.identity_resolution_run')"
         ).fetchone() == (None,)
-    command.upgrade(target.config, "head")
+    command.upgrade(target.config, EXPECTED_REVISION)
     with _connect(target) as connection:
         assert connection.execute(
             "SELECT version_num FROM public.canonical_v2_alembic_version"
@@ -312,7 +313,9 @@ def _policy(module):
     )
 
 
-def _strong_paper_request_and_result(*, as_of: datetime = NOW):
+def _strong_paper_request_and_result(
+    *, as_of: datetime = NOW, date_only_validity: bool = False
+):
     module = _identity_module()
     sources = tuple(
         module.SourceIdentity(
@@ -337,6 +340,7 @@ def _strong_paper_request_and_result(*, as_of: datetime = NOW):
             field_path="identity.doi",
             value="10.5555/canonical-v2",
             observed_at=NOW,
+            valid_from=date(2024, 9, 1) if date_only_validity else None,
             assertion_run_id="identity-assertion-run-1",
         )
         for suffix, source in zip(("a", "b"), sources, strict=True)
@@ -902,6 +906,30 @@ def test_identity_result_round_trips_restarts_and_replays_exactly(
             ).fetchone()
             == counts_after_first
         )
+
+
+def test_identity_assertion_date_precision_round_trips_without_coercion(
+    target: _Target,
+) -> None:
+    request, result = _strong_paper_request_and_result(date_only_validity=True)
+    _insert_identity_prerequisites(target, request)
+
+    assert _store(target).persist(request, result) == result
+    restarted = _store(target).load(request.release_id, request.decision_run_id)
+
+    assert restarted == result
+    assert all(
+        assertion.valid_from == TemporalDateValue(value=date(2024, 9, 1))
+        for assertion in request.identity_assertions
+    )
+    with _connect(target) as connection:
+        assert connection.execute(
+            "SELECT valid_from_temporal, valid_from FROM "
+            "knowledge.source_assertion ORDER BY assertion_id"
+        ).fetchall() == [
+            ({"precision": "date", "value": "2024-09-01"}, None),
+            ({"precision": "date", "value": "2024-09-01"}, None),
+        ]
 
 
 def test_non_utc_identity_resolution_restarts_identically_under_shanghai_session(
@@ -1723,8 +1751,10 @@ def test_deferred_lifecycle_lineage_equals_decision_topology(
             "(assertion_id, source_record_id, source_identity_id, "
             "subject_entity_type, field_path, value, "
             "assertion_fingerprint_sha256, observed_at, source_event_time, "
-            "valid_from, valid_to, assertion_run_id) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            "valid_from, valid_to, valid_from_temporal, valid_to_temporal, "
+            "assertion_run_id) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
+            "%s, %s)",
             (
                 assertion.assertion_id,
                 assertion.source_record_id,
@@ -1735,8 +1765,10 @@ def test_deferred_lifecycle_lineage_equals_decision_topology(
                 _postgres_module()._assertion_fingerprint(assertion),
                 assertion.observed_at,
                 assertion.source_event_time,
-                assertion.valid_from,
-                assertion.valid_to,
+                _postgres_module()._legacy_instant(assertion.valid_from),
+                _postgres_module()._legacy_instant(assertion.valid_to),
+                _postgres_module()._temporal_json(assertion.valid_from),
+                _postgres_module()._temporal_json(assertion.valid_to),
                 assertion.assertion_run_id,
             ),
         )
@@ -2083,8 +2115,10 @@ def test_same_id_base_content_conflicts_before_identity_run(
                 "(assertion_id, source_record_id, source_identity_id, "
                 "subject_entity_type, field_path, value, "
                 "assertion_fingerprint_sha256, observed_at, source_event_time, "
-                "valid_from, valid_to, assertion_run_id) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                "valid_from, valid_to, valid_from_temporal, valid_to_temporal, "
+                "assertion_run_id) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
+                "%s, %s)",
                 (
                     conflicting_assertion.assertion_id,
                     conflicting_assertion.source_record_id,
@@ -2095,8 +2129,12 @@ def test_same_id_base_content_conflicts_before_identity_run(
                     _postgres_module()._assertion_fingerprint(conflicting_assertion),
                     conflicting_assertion.observed_at,
                     conflicting_assertion.source_event_time,
-                    conflicting_assertion.valid_from,
-                    conflicting_assertion.valid_to,
+                    _postgres_module()._legacy_instant(
+                        conflicting_assertion.valid_from
+                    ),
+                    _postgres_module()._legacy_instant(conflicting_assertion.valid_to),
+                    _postgres_module()._temporal_json(conflicting_assertion.valid_from),
+                    _postgres_module()._temporal_json(conflicting_assertion.valid_to),
                     conflicting_assertion.assertion_run_id,
                 ),
             )
@@ -2238,7 +2276,7 @@ def test_factory_rejects_non_disposable_and_low_revision_targets(
         )
     command.downgrade(target.config, "C2_0005")
     with pytest.raises(
-        module.CanonicalIdentityPersistenceError, match="minimum revision C2_0007"
+        module.CanonicalIdentityPersistenceError, match="minimum revision C2_0008"
     ):
         module.create_postgres_canonical_identity_store(
             database_url=target.database_url,

@@ -3,6 +3,25 @@
 > Per CLAUDE.md §7. Tracks Active / Candidate / Blocked / Frozen / Abandoned / Accepted / Archived
 > work for the retrieval-augmented refactor.
 
+## Canonical V2 implementation mainline (2026-07-13)
+
+- **`rebuild-canonical-v2-knowledge-platform`** (OpenSpec, breaking Epic) is the sole implementation
+  mainline by user decision. Current task ledger: 31/75. Tasks 5.1-5.7 retain their Accepted
+  evidence; S5G/Task 5.7 closed the temporal-precision contract; Task 6.3 is In Progress and
+  unblocked; Tasks 6.1, 6.2 RED, and 6.6 RED are Accepted.
+- Overlapping V1/V042 retrieval/Web changes are Frozen as implementation authorities. Their valid
+  contracts, evaluators, corpora, manifests, and RED evidence remain mapping inputs before S7-S11;
+  no in-flight legacy change becomes an Accepted V2 dependency.
+- Git `main` promotion is gated on **aggregate S6 Accepted**. At that checkpoint the V2 integration
+  line must be clean, all unique side-branch work must be integrated or explicitly abandoned, the
+  root dirty worktree must be preserved/reconciled, and `main` must still be a strict ancestor so the
+  move is fast-forward-only. No merge/rebase or branch movement is authorized before the gate.
+
+## Legacy retrieval portfolio (status as of 2026-07-10)
+
+The entries below retain historical evidence but are not the current implementation authority when
+their V1/V042 assumptions conflict with Canonical V2.
+
 ## Active (2026-07-09)
 - **`paper-retrievability-baseline`** (slice-contract; Measurement — NO OpenSpec, no prod-code
   change) — establish the **behavioral retrievability baseline for the paper domain** (recall +

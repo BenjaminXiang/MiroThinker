@@ -53,6 +53,12 @@ from .contracts import (
     SourceAssertion,
     SourceIdentity,
     SourceIdentityState,
+    TemporalComparisonContext,
+    TemporalDateValue,
+    TemporalInstantValue,
+    TemporalRelation,
+    TemporalValue,
+    compare_temporal_values,
     create_review_case,
     create_human_review_resolution,
 )
@@ -102,6 +108,21 @@ def _content_sha256(value: JsonValue) -> str:
 
 def _stable_content_id(prefix: str, value: JsonValue) -> str:
     return f"{prefix}:sha256:{_content_sha256(value)}"
+
+
+def _validate_temporal_interval(
+    valid_from: TemporalDateValue | TemporalInstantValue | None,
+    valid_to: TemporalDateValue | TemporalInstantValue | None,
+) -> None:
+    if valid_from is None or valid_to is None:
+        return
+    relation = compare_temporal_values(valid_from, valid_to)
+    if relation is TemporalRelation.indeterminate:
+        raise ValueError(
+            "valid_from and valid_to must have the same temporal precision"
+        )
+    if relation is TemporalRelation.after:
+        raise ValueError("valid_from must not be after valid_to")
 
 
 def _require_unique[T: Hashable](values: tuple[T, ...], label: str) -> None:
@@ -378,6 +399,7 @@ class DecisionBatchRequest(ContractModel):
     decision_run_id: NonEmptyStr
     decision_method_version: NonEmptyStr
     as_of: CanonicalDatetime
+    temporal_comparison_context: TemporalComparisonContext | None = None
     source_identities: tuple[SourceIdentity, ...]
     canonical_identities: tuple[CanonicalIdentity, ...]
     field_groups: tuple[FieldAssertionGroup, ...] = ()
@@ -647,8 +669,8 @@ class CurrentFieldSelection(ContractModel):
     decision_id: NonEmptyStr
     supporting_assertion_ids: tuple[NonEmptyStr, ...] = Field(min_length=1)
     conflicting_assertion_ids: tuple[NonEmptyStr, ...] = ()
-    valid_from: CanonicalDatetime | None = None
-    valid_to: CanonicalDatetime | None = None
+    valid_from: TemporalValue | None = None
+    valid_to: TemporalValue | None = None
 
     @model_validator(mode="after")
     def validate_roles(self) -> CurrentFieldSelection:
@@ -658,12 +680,7 @@ class CurrentFieldSelection(ContractModel):
             raise ValueError(
                 "supporting and conflicting assertion IDs must be disjoint"
             )
-        if (
-            self.valid_from is not None
-            and self.valid_to is not None
-            and self.valid_from > self.valid_to
-        ):
-            raise ValueError("valid_from must not be after valid_to")
+        _validate_temporal_interval(self.valid_from, self.valid_to)
         return self
 
 
@@ -678,8 +695,8 @@ class CurrentRelationshipSelection(ContractModel):
     decision_id: NonEmptyStr
     supporting_assertion_ids: tuple[NonEmptyStr, ...] = Field(min_length=1)
     conflicting_assertion_ids: tuple[NonEmptyStr, ...] = ()
-    valid_from: CanonicalDatetime | None = None
-    valid_to: CanonicalDatetime | None = None
+    valid_from: TemporalValue | None = None
+    valid_to: TemporalValue | None = None
 
     @model_validator(mode="after")
     def validate_roles(self) -> CurrentRelationshipSelection:
@@ -689,12 +706,7 @@ class CurrentRelationshipSelection(ContractModel):
             raise ValueError(
                 "supporting and conflicting assertion IDs must be disjoint"
             )
-        if (
-            self.valid_from is not None
-            and self.valid_to is not None
-            and self.valid_from > self.valid_to
-        ):
-            raise ValueError("valid_from must not be after valid_to")
+        _validate_temporal_interval(self.valid_from, self.valid_to)
         return self
 
 
@@ -716,6 +728,7 @@ class _DecisionBatchContent(ContractModel):
     release_id: NonEmptyStr
     decision_run_id: NonEmptyStr
     as_of: CanonicalDatetime
+    temporal_comparison_context: TemporalComparisonContext | None = None
     canonical_identity_contexts: tuple[CanonicalIdentityConstraintContext, ...]
     source_identity_contexts: tuple[SourceIdentity, ...]
     field_assertions: tuple[SourceAssertion, ...]
@@ -1113,6 +1126,7 @@ def _validate_constraint_outcome_links(
 def _validate_current_selections(
     *,
     as_of: datetime,
+    temporal_comparison_context: TemporalComparisonContext | None,
     field_assertions: Mapping[str, SourceAssertion],
     relationship_assertions: Mapping[str, RelationshipAssertion],
     field_decisions: Mapping[str, CanonicalDecision],
@@ -1126,7 +1140,13 @@ def _validate_current_selections(
     _require_unique(current_decision_ids, "current selection decision IDs")
 
     expected_field_ids: set[str] = set()
-    field_validity_by_decision: dict[str, tuple[datetime | None, datetime | None]] = {}
+    field_validity_by_decision: dict[
+        str,
+        tuple[
+            TemporalDateValue | TemporalInstantValue | None,
+            TemporalDateValue | TemporalInstantValue | None,
+        ],
+    ] = {}
     for decision in field_decisions.values():
         if decision.state is not DecisionState.selected:
             continue
@@ -1143,6 +1163,7 @@ def _validate_current_selections(
             as_of=as_of,
             valid_from=valid_from,
             valid_to=valid_to,
+            context=temporal_comparison_context,
         ):
             expected_field_ids.add(decision.decision_id)
     if {current.decision_id for current in current_fields} != expected_field_ids:
@@ -1176,6 +1197,7 @@ def _validate_current_selections(
             as_of=as_of,
             valid_from=decision.valid_from,
             valid_to=decision.valid_to,
+            context=temporal_comparison_context,
         ):
             expected_relationship_ids.add(decision.decision_id)
     if {
@@ -1716,6 +1738,7 @@ class DecisionBatchResult(_DecisionBatchContent):
         )
         _validate_current_selections(
             as_of=self.as_of,
+            temporal_comparison_context=self.temporal_comparison_context,
             field_assertions=field_assertions,
             relationship_assertions=relationship_assertions,
             field_decisions=field_decisions,
@@ -1749,6 +1772,7 @@ class DecisionBatchResult(_DecisionBatchContent):
 class _DecisionHistoryContent(ContractModel):
     release_lineage: tuple[NonEmptyStr, ...] = Field(min_length=1)
     as_of: CanonicalDatetime
+    temporal_comparison_context: TemporalComparisonContext | None = None
     field_assertions: tuple[SourceAssertion, ...]
     relationship_assertions: tuple[RelationshipAssertion, ...]
     canonical_decision_history: tuple[CanonicalDecision, ...]
@@ -1914,6 +1938,7 @@ def _decision_history_heads(
 def _history_current_projections(
     *,
     as_of: datetime,
+    temporal_comparison_context: TemporalComparisonContext | None,
     field_assertions: tuple[SourceAssertion, ...],
     field_heads: Mapping[tuple[str, str], CanonicalDecision],
     relationship_heads: Mapping[str, RelationshipDecision],
@@ -1939,7 +1964,10 @@ def _history_current_projections(
             selected_assertions, decision.selected_assertion_ids
         )
         if not _interval_contains(
-            as_of=as_of, valid_from=valid_from, valid_to=valid_to
+            as_of=as_of,
+            valid_from=valid_from,
+            valid_to=valid_to,
+            context=temporal_comparison_context,
         ):
             continue
         selected_values = tuple(assertion.value for assertion in selected_assertions)
@@ -1982,6 +2010,7 @@ def _history_current_projections(
             as_of=as_of,
             valid_from=decision.valid_from,
             valid_to=decision.valid_to,
+            context=temporal_comparison_context,
         )
     )
     return (
@@ -2032,6 +2061,7 @@ def _validate_decision_history_projection(
     )
     expected_fields, expected_relationships = _history_current_projections(
         as_of=projection.as_of,
+        temporal_comparison_context=projection.temporal_comparison_context,
         field_assertions=projection.field_assertions,
         field_heads=field_heads,
         relationship_heads=relationship_heads,
@@ -2074,6 +2104,7 @@ def project_decision_history(
     batches: Iterable[DecisionBatchResult],
     *,
     as_of: datetime,
+    temporal_comparison_context: TemporalComparisonContext | None = None,
 ) -> DecisionHistoryProjection:
     try:
         validated_batches = tuple(
@@ -2141,6 +2172,7 @@ def project_decision_history(
         )
         current_fields, current_relationships = _history_current_projections(
             as_of=canonical_as_of,
+            temporal_comparison_context=temporal_comparison_context,
             field_assertions=field_assertions,
             field_heads=field_heads,
             relationship_heads=relationship_heads,
@@ -2172,6 +2204,7 @@ def project_decision_history(
         content = _DecisionHistoryContent(
             release_lineage=lineage,
             as_of=canonical_as_of,
+            temporal_comparison_context=temporal_comparison_context,
             field_assertions=field_assertions,
             relationship_assertions=relationship_assertions,
             canonical_decision_history=field_history,
@@ -2725,7 +2758,10 @@ def _relationship_rejection_reason(
 def _selected_validity(
     assertions: tuple[SourceAssertion, ...] | tuple[RelationshipAssertion, ...],
     selected_assertion_ids: tuple[str, ...],
-) -> tuple[datetime | None, datetime | None]:
+) -> tuple[
+    TemporalDateValue | TemporalInstantValue | None,
+    TemporalDateValue | TemporalInstantValue | None,
+]:
     if not selected_assertion_ids:
         return None, None
     by_id = {assertion.assertion_id: assertion for assertion in assertions}
@@ -2743,7 +2779,10 @@ def _generated_selected_validity(
     selected_assertion_ids: tuple[str, ...],
     *,
     method: DecisionMethod,
-) -> tuple[datetime | None, datetime | None]:
+) -> tuple[
+    TemporalDateValue | TemporalInstantValue | None,
+    TemporalDateValue | TemporalInstantValue | None,
+]:
     try:
         return _selected_validity(assertions, selected_assertion_ids)
     except ValueError as exc:
@@ -2760,12 +2799,29 @@ def _generated_selected_validity(
 def _interval_contains(
     *,
     as_of: datetime,
-    valid_from: datetime | None,
-    valid_to: datetime | None,
+    valid_from: TemporalDateValue | TemporalInstantValue | None,
+    valid_to: TemporalDateValue | TemporalInstantValue | None,
+    context: TemporalComparisonContext | None = None,
 ) -> bool:
-    return (valid_from is None or valid_from <= as_of) and (
-        valid_to is None or as_of < valid_to
+    point = TemporalInstantValue(value=as_of)
+    lower_relation = (
+        None
+        if valid_from is None
+        else compare_temporal_values(valid_from, point, context=context)
     )
+    upper_relation = (
+        None
+        if valid_to is None
+        else compare_temporal_values(point, valid_to, context=context)
+    )
+    lower_contains = lower_relation in {
+        None,
+        TemporalRelation.before,
+        TemporalRelation.equal,
+        TemporalRelation.overlap,
+    }
+    upper_contains = upper_relation in {None, TemporalRelation.before}
+    return lower_contains and upper_contains
 
 
 def _validated_adjudication(
@@ -3202,6 +3258,7 @@ def _field_group_result(
             as_of=request.as_of,
             valid_from=valid_from,
             valid_to=valid_to,
+            context=request.temporal_comparison_context,
         ):
             current = CurrentFieldSelection(
                 release_id=request.release_id,
@@ -3244,8 +3301,8 @@ def _relationship_decision(
     method: DecisionMethod,
     confidence: float,
     rationale: str,
-    valid_from: datetime | None,
-    valid_to: datetime | None,
+    valid_from: TemporalDateValue | TemporalInstantValue | None,
+    valid_to: TemporalDateValue | TemporalInstantValue | None,
     llm_trace: LLMDecisionTrace | None,
     human_review_resolution: HumanReviewResolution | None,
     supersedes_decision_id: str | None,
@@ -3542,6 +3599,7 @@ def _relationship_group_result(
         as_of=request.as_of,
         valid_from=decision.valid_from,
         valid_to=decision.valid_to,
+        context=request.temporal_comparison_context,
     ):
         current = CurrentRelationshipSelection(
             release_id=request.release_id,
@@ -3608,6 +3666,7 @@ def _decision_result(
         release_id=request.release_id,
         decision_run_id=request.decision_run_id,
         as_of=request.as_of,
+        temporal_comparison_context=request.temporal_comparison_context,
         canonical_identity_contexts=tuple(
             _canonical_constraint_context(identity)
             for identity in request.canonical_identities
