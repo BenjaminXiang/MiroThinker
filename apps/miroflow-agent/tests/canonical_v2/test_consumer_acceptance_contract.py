@@ -5,11 +5,12 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import posixpath
 import shlex
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 import pytest
@@ -169,6 +170,13 @@ _PRODUCTION_AUTHORITY = {
         "c5a151b82cf308ec8504c31c10f6e6d997a3286ef18613d530088314a7f8f940"
     ),
     "inventory_sha256_pointer": _INVENTORY_SHA256_POINTER,
+    # Historical S11C execution provenance, never the current checkout locator.
+    "frozen_execution_repository_root": (
+        "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2"
+    ),
+    "retired_failure_ledger_sha256": (
+        "271f4f9808a206e06cd616c95a778178f453fb67cf9284e9b93c33623fb75e7d"
+    ),
     "hardcoded_owner_nodeids_by_family": {
         "s11b_admin_quarantine": _S11B_ADMIN_QUARANTINE_OWNER_NODEIDS,
         "s2c_task_2_7_structural": _S2C_OWNER_NODEIDS,
@@ -464,10 +472,35 @@ def _required_owner_nodeids_by_family(
     return required
 
 
+def _lexical_posix_join(root: PurePosixPath, value: str) -> PurePosixPath:
+    return PurePosixPath(posixpath.normpath(posixpath.join(root.as_posix(), value)))
+
+
+def _frozen_capture_repository_root(
+    ledger_runs: Any, *, authority: dict[str, Any]
+) -> PurePosixPath:
+    if not isinstance(ledger_runs, list) or not ledger_runs:
+        raise ValueError("ledger runs must freeze one repository root")
+    frozen_root = authority.get("frozen_execution_repository_root")
+    repository_roots = [
+        run.get("repository_root") if isinstance(run, dict) else None
+        for run in ledger_runs
+    ]
+    if not isinstance(frozen_root, str) or any(
+        root != frozen_root for root in repository_roots
+    ):
+        raise ValueError("ledger run repository_root must equal frozen repo root")
+    frozen_path = PurePosixPath(frozen_root)
+    if not frozen_path.is_absolute() or posixpath.normpath(frozen_root) != frozen_root:
+        raise ValueError("ledger run repository_root must equal frozen repo root")
+    return frozen_path
+
+
 def _guarded_signature_temp_roots(
     guarded_receipt: dict[str, Any],
     *,
     ledger_runs: Any,
+    capture_repository_root: PurePosixPath,
     authority: dict[str, Any],
 ) -> dict[str, str]:
     if (
@@ -512,7 +545,6 @@ def _guarded_signature_temp_roots(
         ("junit_xml_path", "junit_xml_path"),
         ("junit_xml_sha256", "junit_xml_sha256"),
     )
-    repository_root = Path(authority["repository_root"]).resolve()
     for run_id, guarded_run in guarded_by_run.items():
         ledger_run = ledger_by_run[run_id]
         if any(
@@ -522,10 +554,21 @@ def _guarded_signature_temp_roots(
             raise ValueError("guarded partitions receipt run content mismatch")
         guarded_cwd = guarded_run.get("cwd")
         ledger_cwd = ledger_run.get("cwd")
+        guarded_cwd_path = (
+            PurePosixPath(guarded_cwd) if isinstance(guarded_cwd, str) else None
+        )
+        ledger_cwd_path = (
+            PurePosixPath(ledger_cwd) if isinstance(ledger_cwd, str) else None
+        )
         if (
-            not isinstance(guarded_cwd, str)
-            or not isinstance(ledger_cwd, str)
-            or (repository_root / guarded_cwd).resolve() != Path(ledger_cwd).resolve()
+            guarded_cwd_path is None
+            or guarded_cwd_path.is_absolute()
+            or ".." in guarded_cwd_path.parts
+            or ledger_cwd_path is None
+            or not ledger_cwd_path.is_absolute()
+            or posixpath.normpath(ledger_cwd) != ledger_cwd
+            or _lexical_posix_join(capture_repository_root, guarded_cwd)
+            != ledger_cwd_path
         ):
             raise ValueError("guarded partitions receipt run cwd mismatch")
 
@@ -545,10 +588,10 @@ def _guarded_signature_temp_roots(
     owned_temp_root_value = guard.get("owned_temp_root")
     if not isinstance(owned_temp_root_value, str):
         raise ValueError("guard owned_temp_root must be exact")
-    owned_temp_root = Path(owned_temp_root_value)
+    owned_temp_root = PurePosixPath(owned_temp_root_value)
     if (
         not owned_temp_root.is_absolute()
-        or str(owned_temp_root.resolve()) != owned_temp_root_value
+        or posixpath.normpath(owned_temp_root_value) != owned_temp_root_value
     ):
         raise ValueError("guard owned_temp_root must be an exact absolute path")
 
@@ -563,10 +606,10 @@ def _guarded_signature_temp_roots(
         run_root_value = mode_roots.get("run") if isinstance(mode_roots, dict) else None
         if not isinstance(run_root_value, str):
             raise ValueError("guard run root must be exact")
-        run_root = Path(run_root_value)
+        run_root = PurePosixPath(run_root_value)
         if (
             not run_root.is_absolute()
-            or str(run_root.resolve()) != run_root_value
+            or posixpath.normpath(run_root_value) != run_root_value
             or run_root == owned_temp_root
             or not run_root.is_relative_to(owned_temp_root)
         ):
@@ -727,6 +770,7 @@ def _validate_predecessor_reruns(
     evidence: dict[str, Any],
     accepted_receipt: dict[str, Any],
     authority: dict[str, Any],
+    capture_repository_root: PurePosixPath,
     run_records: dict[str, dict[str, Any]],
     all_cases: dict[tuple[str, str], dict[str, str]],
 ) -> None:
@@ -762,7 +806,7 @@ def _validate_predecessor_reruns(
     for run_id, pointer in _PREDECESSOR_COMMAND_POINTERS.items():
         row = by_id[run_id]
         command = _json_pointer_value(accepted_receipt, pointer)
-        if row.get("cwd") != authority["repository_root"]:
+        if row.get("cwd") != str(capture_repository_root):
             raise ValueError("predecessor rerun repository cwd mismatch")
         if set(row) != {
             "accepted_command",
@@ -794,7 +838,7 @@ def _validate_predecessor_reruns(
             or row.get("accepted_command_json_pointer") != pointer
             or row.get("accepted_command") != command
             or row.get("accepted_command_sha256") != _sha256_raw_bytes(command.encode())
-            or row.get("cwd") != authority["repository_root"]
+            or row.get("cwd") != str(capture_repository_root)
             or row.get("launcher_argv") != ["/bin/bash", "-lc", command]
             or row.get("sanitized_env_unset") != ["HF_TOKEN"]
             or finished_at < started_at
@@ -1039,6 +1083,12 @@ def _validate_evidence_bundle(
     assert isinstance(predecessor_reruns_v1_raw, bytes)
     assert isinstance(predecessor_reruns_v2_raw, bytes)
     assert isinstance(disposable_postgres_receipt_raw, bytes)
+    frozen_ledger_sha256 = authority.get("retired_failure_ledger_sha256")
+    if frozen_ledger_sha256 is not None and (
+        not _is_sha256(frozen_ledger_sha256)
+        or _sha256_raw_bytes(ledger_raw) != frozen_ledger_sha256
+    ):
+        raise ValueError("frozen ledger raw-byte SHA-256 mismatch")
     if _sha256_raw_bytes(receipt_raw) != authority["accepted_s11b_receipt_sha256"]:
         raise ValueError("Accepted S11B receipt raw-byte SHA-256 mismatch")
     if _sha256_raw_bytes(inventory_raw) != authority["inventory_sha256"]:
@@ -1214,9 +1264,11 @@ def _validate_evidence_bundle(
     runs = ledger.get("runs")
     if not isinstance(runs, list):
         raise ValueError("ledger runs must be a list")
+    capture_repository_root = _frozen_capture_repository_root(runs, authority=authority)
     signature_basetemp_roots = _guarded_signature_temp_roots(
         guarded_partitions_receipt,
         ledger_runs=runs,
+        capture_repository_root=capture_repository_root,
         authority=authority,
     )
     run_records: dict[str, dict[str, Any]] = {}
@@ -1257,18 +1309,33 @@ def _validate_evidence_bundle(
         ]
         if len(basetemp_tokens) != 1:
             raise ValueError("ledger command must bind one exact --basetemp root")
-        if repository_root != authority["repository_root"]:
+        if repository_root != str(capture_repository_root):
             raise ValueError("ledger run repository_root must equal frozen repo root")
         cwd = run.get("cwd")
-        if not isinstance(cwd, str) or not Path(cwd).is_absolute():
+        cwd_path = PurePosixPath(cwd) if isinstance(cwd, str) else None
+        if (
+            cwd_path is None
+            or not cwd_path.is_absolute()
+            or posixpath.normpath(cwd) != cwd
+        ):
             raise ValueError("ledger run cwd must be an exact absolute path")
-        command_basetemp = Path(basetemp_tokens[0].split("=", 1)[1])
-        if not command_basetemp.is_absolute():
-            command_basetemp = Path(cwd) / command_basetemp
-        resolved_basetemp = command_basetemp.resolve()
-        expected_basetemp = (
-            Path(authority["evidence_root"]) / "tmp" / run_id / "pytest"
-        ).resolve()
+        command_basetemp_value = basetemp_tokens[0].split("=", 1)[1]
+        command_basetemp = PurePosixPath(command_basetemp_value)
+        resolved_basetemp = (
+            PurePosixPath(posixpath.normpath(command_basetemp_value))
+            if command_basetemp.is_absolute()
+            else _lexical_posix_join(cwd_path, command_basetemp_value)
+        )
+        try:
+            evidence_relative = Path(authority["evidence_root"]).relative_to(
+                Path(authority["repository_root"])
+            )
+        except (KeyError, TypeError, ValueError):
+            raise ValueError("evidence root must be repository-relative") from None
+        expected_basetemp = _lexical_posix_join(
+            capture_repository_root,
+            (evidence_relative / "tmp" / run_id / "pytest").as_posix(),
+        )
         if resolved_basetemp != expected_basetemp:
             raise ValueError("ledger command --basetemp root mismatch")
         nodeids = _parse_collected_nodeids(collected_raw)
@@ -1499,6 +1566,7 @@ def _validate_evidence_bundle(
         evidence=evidence,
         accepted_receipt=receipt,
         authority=authority,
+        capture_repository_root=capture_repository_root,
         run_records=run_records,
         all_cases=all_cases,
     )
@@ -2126,6 +2194,7 @@ def _synthetic_acceptance_evidence(
         "inventory_path": "inventory.json",
         "inventory_sha256": inventory_sha256,
         "inventory_sha256_pointer": "/legacy_consumer_inventory/sha256",
+        "frozen_execution_repository_root": "/repo",
         "repository_root": "/repo",
         "guarded_capture_accepted_s11b": synthetic_guard_authority,
         "predecessor_required_nodeids_by_run": {
@@ -2764,6 +2833,31 @@ def test_helper_validator_accepts_complete_synthetic_evidence() -> None:
         _SYNTHETIC_ADMIN_RUN
     ]["run"]
     assert command_basetemp != effective_basetemp
+
+    _validate_evidence_bundle(evidence, authority=authority)
+
+
+def test_helper_validator_accepts_frozen_evidence_after_checkout_relocation() -> None:
+    evidence, authority = _synthetic_acceptance_evidence()
+    evidence_relative = Path(authority["evidence_root"]).relative_to(
+        Path(authority["repository_root"])
+    )
+    relocated_root = Path("/relocated/canonical-v2-checkout")
+    authority["repository_root"] = str(relocated_root)
+    authority["evidence_root"] = str(relocated_root / evidence_relative)
+
+    _validate_evidence_bundle(evidence, authority=authority)
+
+
+def test_helper_validator_does_not_resolve_historical_paths_on_live_filesystem(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    evidence, authority = _synthetic_acceptance_evidence()
+
+    def reject_live_resolution(*_args: Any, **_kwargs: Any) -> None:
+        raise AssertionError("historical evidence paths must be compared lexically")
+
+    monkeypatch.setattr(Path, "resolve", reject_live_resolution)
 
     _validate_evidence_bundle(evidence, authority=authority)
 
