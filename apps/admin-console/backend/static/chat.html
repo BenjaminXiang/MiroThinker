@@ -1,297 +1,825 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>深圳科创检索 · v0</title>
-<style>
-  :root {
-    --bg: #fafafa;
-    --surface: #ffffff;
-    --ink: #111418;
-    --ink-soft: #5a6168;
-    --accent: #2b64d9;
-    --accent-soft: #e8f0ff;
-    --border: #e5e7eb;
-    --shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-    --radius: 10px;
-  }
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0; padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC",
-      "Helvetica Neue", "Microsoft YaHei", sans-serif;
-    font-size: 15px;
-    line-height: 1.55;
-    background: var(--bg);
-    color: var(--ink);
-  }
-  .app {
-    max-width: 820px;
-    margin: 0 auto;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-  header {
-    padding: 16px 20px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-  }
-  header h1 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-  }
-  header .subtitle {
-    margin: 2px 0 0;
-    font-size: 12px;
-    color: var(--ink-soft);
-  }
-  .examples {
-    padding: 12px 20px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .examples .label {
-    font-size: 12px;
-    color: var(--ink-soft);
-    margin-right: 4px;
-    align-self: center;
-  }
-  .example-chip {
-    font-size: 13px;
-    background: var(--accent-soft);
-    color: var(--accent);
-    border: 1px solid transparent;
-    border-radius: 999px;
-    padding: 4px 10px;
-    cursor: pointer;
-  }
-  .example-chip:hover { border-color: var(--accent); }
-  main.messages {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-  }
-  .msg {
-    margin-bottom: 20px;
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-  }
-  .msg .avatar {
-    flex: 0 0 28px;
-    width: 28px;
-    height: 28px;
-    border-radius: 14px;
-    background: var(--accent-soft);
-    color: var(--accent);
-    font-size: 13px;
-    font-weight: 600;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .msg.user .avatar { background: #e7e7e7; color: var(--ink-soft); }
-  .msg .bubble {
-    flex: 1;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 14px;
-    box-shadow: var(--shadow);
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  .msg.user .bubble { background: #f5f6f8; }
-  .meta {
-    font-size: 11px;
-    color: var(--ink-soft);
-    margin-top: 4px;
-  }
-  .citations {
-    margin-top: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .citation {
-    font-size: 13px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 6px 10px;
-    background: #fdfdfd;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-  .citation .badge {
-    font-size: 11px;
-    padding: 1px 6px;
-    border-radius: 4px;
-    background: var(--accent-soft);
-    color: var(--accent);
-  }
-  .citation a {
-    color: var(--accent);
-    text-decoration: none;
-    flex: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .citation a:hover { text-decoration: underline; }
-  .err { color: #c62828; }
-  footer {
-    padding: 12px 20px;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-  }
-  .input-row {
-    display: flex;
-    gap: 8px;
-  }
-  input[type="text"] {
-    flex: 1;
-    font: inherit;
-    padding: 10px 12px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    outline: none;
-  }
-  input[type="text"]:focus { border-color: var(--accent); }
-  button {
-    font: inherit;
-    padding: 0 16px;
-    border-radius: var(--radius);
-    border: none;
-    background: var(--accent);
-    color: white;
-    cursor: pointer;
-  }
-  button:disabled { opacity: 0.6; cursor: not-allowed; }
-  .empty-state {
-    color: var(--ink-soft);
-    padding: 40px 20px;
-    text-align: center;
-  }
-</style>
-</head>
-<body>
-<div class="app">
-  <header>
-    <h1>深圳科创检索 · v0</h1>
-    <div class="subtitle">模板化回答 · 无 LLM 合成 · 单轮无上下文</div>
-  </header>
-  <div class="examples">
-    <span class="label">试试：</span>
-    <span class="example-chip" data-q="介绍清华的丁文伯">介绍清华的丁文伯</span>
-    <span class="example-chip" data-q="清华做人工智能的教授">清华做人工智能的教授</span>
-    <span class="example-chip" data-q="优必选有哪些专利">优必选有哪些专利</span>
-  </div>
-  <main class="messages" id="messages">
-    <div class="empty-state">问一个问题开始</div>
-  </main>
-  <footer>
-    <form id="chat-form">
-      <div class="input-row">
-        <input id="chat-input" type="text" autocomplete="off" placeholder="问一个问题…（支持三种句式：介绍学校的教授 / 学校做方向的教授 / 公司有哪些专利）">
-        <button id="chat-submit" type="submit">发送</button>
-      </div>
-    </form>
-  </footer>
-</div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Canonical V2 智能检索</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23143d59'/%3E%3Cpath d='M17 19h8v11l12-11h10L33 32l15 13H37L25 34v11h-8z' fill='white'/%3E%3C/svg%3E" />
+    <style>
+      :root {
+        --ink: #17252f;
+        --muted: #677984;
+        --navy: #143d59;
+        --navy-strong: #0d2c41;
+        --teal: #168b82;
+        --teal-soft: #e7f5f2;
+        --blue-soft: #edf4f8;
+        --canvas: #f3f6f7;
+        --surface: #ffffff;
+        --line: #dce4e7;
+        --amber: #a86319;
+        --amber-soft: #fff4df;
+        --danger: #a83f4c;
+        --shadow: 0 18px 42px rgba(24, 55, 70, 0.09);
+      }
 
-<script>
-const $messages = document.getElementById('messages');
-const $form = document.getElementById('chat-form');
-const $input = document.getElementById('chat-input');
-const $submit = document.getElementById('chat-submit');
+      * { box-sizing: border-box; }
 
-function esc(s) {
-  return String(s ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
+      body {
+        margin: 0;
+        min-width: 320px;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 90% 0%, rgba(22, 139, 130, 0.08), transparent 26rem),
+          var(--canvas);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        line-height: 1.55;
+      }
 
-function renderUserMsg(query) {
-  const el = document.createElement('div');
-  el.className = 'msg user';
-  el.innerHTML = `<div class="avatar">我</div><div class="bubble">${esc(query)}</div>`;
-  $messages.appendChild(el);
-  $messages.scrollTop = $messages.scrollHeight;
-}
+      button, input, a { font: inherit; }
+      button:focus-visible, input:focus-visible, a:focus-visible {
+        outline: 3px solid rgba(22, 139, 130, 0.26);
+        outline-offset: 2px;
+      }
 
-function renderBotMsg({ answer_text, citations, query_type, structured_payload }) {
-  const el = document.createElement('div');
-  el.className = 'msg bot';
-  let citationsHtml = '';
-  if (citations && citations.length) {
-    const items = citations.map(c => {
-      const url = c.url ? `href="${esc(c.url)}"` : '';
-      return `<div class="citation"><span class="badge">${esc(c.type)}</span>`
-           + `<a ${url} target="_blank">${esc(c.label)}</a></div>`;
-    }).join('');
-    citationsHtml = `<div class="citations">${items}</div>`;
-  }
-  const topics = (structured_payload?.research_topics || []).slice(0, 5);
-  const topicsLine = topics.length ? `<div class="meta">研究方向: ${topics.map(esc).join(' · ')}</div>` : '';
-  el.innerHTML = `<div class="avatar">检</div>`
-    + `<div class="bubble">${esc(answer_text)}`
-    + `<div class="meta">类型: ${esc(query_type)}</div>`
-    + topicsLine
-    + citationsHtml
-    + `</div>`;
-  $messages.appendChild(el);
-  $messages.scrollTop = $messages.scrollHeight;
-}
+      .shell {
+        width: min(980px, calc(100% - 32px));
+        min-height: 100vh;
+        margin: 0 auto;
+        display: grid;
+        grid-template-rows: auto auto minmax(320px, 1fr) auto;
+      }
 
-function renderError(msg) {
-  const el = document.createElement('div');
-  el.className = 'msg bot';
-  el.innerHTML = `<div class="avatar">!</div><div class="bubble err">${esc(msg)}</div>`;
-  $messages.appendChild(el);
-  $messages.scrollTop = $messages.scrollHeight;
-}
+      .header {
+        margin-top: 18px;
+        padding: 18px 20px;
+        color: #fff;
+        background: var(--navy-strong);
+        border-radius: 19px 19px 0 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
 
-async function sendQuery(query) {
-  query = query.trim();
-  if (!query) return;
-  const empty = $messages.querySelector('.empty-state');
-  if (empty) empty.remove();
-  renderUserMsg(query);
-  $input.value = '';
-  $submit.disabled = true;
-  try {
-    const resp = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query }),
-    });
-    if (!resp.ok) {
-      renderError(`请求失败：HTTP ${resp.status}`);
-      return;
-    }
-    const data = await resp.json();
-    renderBotMsg(data);
-  } catch (e) {
-    renderError(`错误：${e.message || e}`);
-  } finally {
-    $submit.disabled = false;
-    $input.focus();
-  }
-}
+      .brand { display: flex; align-items: center; gap: 13px; min-width: 0; }
+      .brand-mark {
+        width: 43px;
+        height: 43px;
+        flex: 0 0 auto;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 13px;
+        background: rgba(255, 255, 255, 0.08);
+        font-weight: 800;
+      }
+      .header h1 { margin: 0; font-size: clamp(19px, 2.5vw, 25px); }
+      .header p { margin: 3px 0 0; color: #bdd0d9; font-size: 12px; }
+      .browse-link {
+        padding: 8px 12px;
+        color: var(--navy-strong);
+        background: #fff;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 760;
+        text-decoration: none;
+        white-space: nowrap;
+      }
 
-$form.addEventListener('submit', e => {
-  e.preventDefault();
-  sendQuery($input.value);
-});
-document.querySelectorAll('.example-chip').forEach(chip => {
-  chip.addEventListener('click', () => sendQuery(chip.dataset.q));
-});
-$input.focus();
-</script>
-</body>
+      .demo-strip {
+        padding: 15px 18px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-top: 0;
+      }
+
+      .demo-title { margin: 0 0 10px; color: var(--muted); font-size: 12px; font-weight: 700; }
+      .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+      .demo-chip {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: start;
+        gap: 9px;
+        padding: 11px 12px;
+        color: var(--ink);
+        background: #f8fafb;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        cursor: pointer;
+        text-align: left;
+      }
+      .demo-chip:hover { border-color: #85bbb7; background: var(--teal-soft); }
+      .step {
+        min-width: 28px;
+        padding: 3px 6px;
+        color: #fff;
+        background: var(--teal);
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 800;
+        text-align: center;
+      }
+      .demo-chip:nth-child(2) .step { color: var(--amber); background: var(--amber-soft); }
+      .demo-copy strong { display: block; margin-bottom: 2px; font-size: 11px; }
+      .demo-copy span { display: block; color: #354853; font-size: 12px; }
+      .demo-empty {
+        grid-column: 1 / -1;
+        margin: 0;
+        padding: 10px 12px;
+        color: var(--muted);
+        background: #f8fafb;
+        border: 1px dashed var(--line);
+        border-radius: 12px;
+        font-size: 11px;
+      }
+
+      .messages {
+        padding: 22px;
+        overflow-y: auto;
+        background: rgba(255, 255, 255, 0.65);
+        border-inline: 1px solid var(--line);
+      }
+
+      .welcome {
+        max-width: 620px;
+        margin: 58px auto;
+        padding: 25px;
+        color: var(--muted);
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 17px;
+        box-shadow: 0 10px 30px rgba(24, 55, 70, 0.05);
+        text-align: center;
+      }
+      .welcome strong { display: block; margin-bottom: 6px; color: var(--ink); font-size: 17px; }
+
+      .message { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 18px; }
+      .message.user { flex-direction: row-reverse; }
+      .avatar {
+        width: 32px;
+        height: 32px;
+        flex: 0 0 auto;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        background: var(--teal);
+        border-radius: 11px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .message.user .avatar { color: var(--navy); background: var(--blue-soft); }
+      .bubble {
+        width: min(760px, calc(100% - 46px));
+        padding: 14px 15px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 4px 15px 15px 15px;
+        box-shadow: 0 7px 22px rgba(24, 55, 70, 0.05);
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .message.user .bubble {
+        width: auto;
+        max-width: 76%;
+        background: var(--navy);
+        border-color: var(--navy);
+        border-radius: 15px 4px 15px 15px;
+        color: #fff;
+      }
+      .message.error .bubble { color: var(--danger); background: #fff1f3; border-color: #efc9cf; }
+
+      .answer { margin: 0; font-size: 14px; }
+      .response-meta { margin-top: 13px; color: var(--muted); font-size: 10px; }
+      .trace-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 7px;
+        margin-top: 14px;
+      }
+      .trace-card { padding: 9px; background: #f5f8f9; border-radius: 9px; }
+      .trace-card span { display: block; color: var(--muted); font-size: 9px; }
+      .trace-card strong { display: block; margin-top: 3px; overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+
+      .subsection { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+      .subsection-title { margin: 0 0 7px; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+      .tokens { display: flex; flex-wrap: wrap; gap: 5px; }
+      .token { padding: 4px 7px; color: #36505b; background: var(--blue-soft); border-radius: 7px; font-size: 10px; }
+      .token.warning { color: var(--amber); background: var(--amber-soft); }
+
+      .citations { display: grid; gap: 6px; }
+      .citation {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        padding: 7px 9px;
+        color: var(--ink);
+        background: #f8fafb;
+        border-radius: 9px;
+        font-size: 11px;
+        text-decoration: none;
+      }
+      .citation-badge { padding: 2px 6px; color: var(--teal); background: var(--teal-soft); border-radius: 5px; font-size: 9px; }
+      .citation-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+      .web-evidence-list { display: grid; gap: 7px; }
+      .web-evidence-card {
+        padding: 10px;
+        background: #f8fafb;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+      .web-evidence-snippet { margin: 0; color: #354853; font-size: 11px; }
+      .web-evidence-link {
+        display: inline-block;
+        max-width: 100%;
+        margin-top: 6px;
+        overflow: hidden;
+        color: var(--teal);
+        font-size: 10px;
+        font-weight: 700;
+        text-decoration: none;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .web-evidence-link:hover { text-decoration: underline; }
+
+      .option-list { display: flex; flex-wrap: wrap; gap: 6px; }
+      .option-button {
+        padding: 6px 9px;
+        color: var(--navy);
+        background: #fff;
+        border: 1px solid #b8cbd3;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 10px;
+        text-align: left;
+      }
+      .option-button:hover { color: #fff; background: var(--navy); }
+
+      .composer {
+        padding: 15px 18px 18px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 0 0 19px 19px;
+        box-shadow: var(--shadow);
+      }
+      .input-row { display: flex; gap: 9px; }
+      .input-row input {
+        min-width: 0;
+        flex: 1;
+        padding: 11px 13px;
+        color: var(--ink);
+        background: #f8fafb;
+        border: 1px solid var(--line);
+        border-radius: 11px;
+      }
+      .input-row input:focus { border-color: var(--teal); background: #fff; }
+      .submit {
+        padding: 0 19px;
+        color: #fff;
+        background: var(--teal);
+        border: 0;
+        border-radius: 11px;
+        cursor: pointer;
+        font-weight: 760;
+      }
+      .submit:hover { background: #0e756d; }
+      .submit:disabled { opacity: 0.55; cursor: wait; }
+      .composer-note { margin: 8px 1px 0; color: var(--muted); font-size: 10px; }
+
+      @media (max-width: 720px) {
+        .shell { width: 100%; }
+        .header { margin: 0; border-radius: 0; align-items: flex-start; }
+        .brand-mark { display: none; }
+        .demo-grid { grid-template-columns: 1fr; }
+        .messages { padding: 15px; }
+        .trace-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .composer { border-radius: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="header">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">V2</div>
+          <div>
+            <h1>Canonical V2 智能检索</h1>
+            <p>证据优先 · 发布版本绑定 · 支持连续追问的多轮检索</p>
+          </div>
+        </div>
+        <a class="browse-link" href="/browse">返回数据目录</a>
+      </header>
+
+      <section class="demo-strip" aria-labelledby="demo-title">
+        <p class="demo-title" id="demo-title">正在根据当前候选版本准备可核验问题</p>
+        <div class="demo-grid" id="demo-grid" aria-live="polite" aria-busy="true"></div>
+      </section>
+
+      <main class="messages" id="messages" aria-live="polite">
+        <div class="welcome" id="welcome">
+          <strong>从一条可核验的问题开始</strong>
+          系统会展示版本、检索通道、证据与主张数量，并明确呈现限制项。
+        </div>
+      </main>
+
+      <footer class="composer">
+        <form id="chat-form">
+          <div class="input-row">
+            <input id="chat-input" type="text" maxlength="500" autocomplete="off" aria-label="检索问题" placeholder="请输入企业、教授或论文名称开始检索" />
+            <button class="submit" id="chat-submit" type="submit">发送</button>
+          </div>
+          <p class="composer-note">回答仅使用当前发布版本允许的检索通道；未获证据支持的内容会保留为限制。</p>
+        </form>
+      </footer>
+    </div>
+
+    <script>
+      const messages = document.getElementById("messages");
+      const form = document.getElementById("chat-form");
+      const input = document.getElementById("chat-input");
+      const submit = document.getElementById("chat-submit");
+      const demoTitle = document.getElementById("demo-title");
+      const demoGrid = document.getElementById("demo-grid");
+      const candidateDomainPath = "/api/canonical-v2/admin/domains/";
+      const candidateDomains = Object.freeze(["company", "professor", "paper"]);
+      const relatedTypes = Object.freeze({
+        company: "company_has_patent",
+        professor: "professor_authored_paper",
+      });
+      const unsafePublicTextPatterns = Object.freeze([
+        /(?:^|[^a-f0-9])[a-f0-9]{64}(?=$|[^a-f0-9])/i,
+        /\b(?:COMP|PROF|PAPER|PAT)-[A-Z0-9][A-Z0-9_-]*\b/i,
+        /\b(?:canonical|company|professor|paper|patent|evidence|snapshot|release|query|answer|trace|plan|run|source|record|artifact|object|handle|assertion|decision)[_:](?:sha256:)?[a-z0-9][a-z0-9:._-]*\b/i,
+        /\b(?:web-(?:object|handle|snapshot)|evidence-set|query-request|continuation-option):[a-z0-9][a-z0-9:._-]*\b/i,
+        /\b(?:source_nature|source_authority|identity_kind|reference_kind|content_sha256|snapshot_id)\s*[:=]\s*[a-z0-9_:-]+\b/i,
+        /\b(?:current_web|official_snapshot|local_projection|canonical_identity|internal_reference|semantic_recall|llm_synthesized)\b/i,
+      ]);
+      let requestPending = false;
+      let queuedDemoQuery = null;
+
+      function create(tag, className, text) {
+        const element = document.createElement(tag);
+        if (className) element.className = className;
+        if (text !== undefined && text !== null) element.textContent = String(text);
+        return element;
+      }
+
+      function safePublicText(value) {
+        if (typeof value !== "string") return null;
+        const text = value.trim();
+        if (!text || text.length > 8000 || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text)) return null;
+        return unsafePublicTextPatterns.some((pattern) => pattern.test(text)) ? null : text;
+      }
+
+      async function fetchJson(path) {
+        const response = await fetch(path, {
+          credentials: "same-origin",
+          headers: { Accept: "application/json" },
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      }
+
+      function candidateName(item) {
+        if (!item || typeof item !== "object") return null;
+        for (const field of ["name", "canonical_name_zh", "title_zh", "title", "normalized_name"]) {
+          const value = safePublicText(item[field]);
+          if (value) return value;
+        }
+        return null;
+      }
+
+      function namedCandidates(page) {
+        const items = Array.isArray(page?.items) ? page.items : [];
+        return items.flatMap((item) => {
+          const name = candidateName(item);
+          const id = typeof item?.canonical_identity_id === "string"
+            ? item.canonical_identity_id.trim()
+            : "";
+          return name && id ? [{ id, name, item }] : [];
+        });
+      }
+
+      async function loadCandidatePages() {
+        const entries = await Promise.all(candidateDomains.map(async (domain) => {
+          const page = await fetchJson(`${candidateDomainPath}${encodeURIComponent(domain)}?limit=25&offset=0`);
+          return [domain, page];
+        }));
+        return Object.fromEntries(entries);
+      }
+
+      async function firstVerifiedRelation(domain, sources, resolveTarget) {
+        const relationType = relatedTypes[domain];
+        if (!relationType) return null;
+        for (const source of sources) {
+          const path = `${candidateDomainPath}${encodeURIComponent(domain)}/${encodeURIComponent(source.id)}/related`
+            + `?relation_type=${encodeURIComponent(relationType)}&limit=20`;
+          try {
+            const page = await fetchJson(path);
+            const targets = Array.isArray(page?.items) ? page.items : [];
+            for (const item of targets) {
+              const target = resolveTarget(item);
+              if (target) return { source, target };
+            }
+          } catch {
+            // A failed relation check must not turn an identifier into visible fallback copy.
+          }
+        }
+        return null;
+      }
+
+      async function loadVerifiedRelations(candidatePages) {
+        const companies = namedCandidates(candidatePages.company);
+        const professors = namedCandidates(candidatePages.professor);
+        const papersById = new Map(
+          namedCandidates(candidatePages.paper).map((paper) => [paper.id, paper]),
+        );
+        const [company, professor] = await Promise.all([
+          firstVerifiedRelation("company", companies, (item) => {
+            const name = candidateName(item);
+            return name ? { name } : null;
+          }),
+          firstVerifiedRelation("professor", professors, (item) => {
+            const id = typeof item?.canonical_identity_id === "string"
+              ? item.canonical_identity_id.trim()
+              : "";
+            return papersById.get(id) || null;
+          }),
+        ]);
+        return { company, professor };
+      }
+
+      function buildSemanticQuestions(candidatePages, verifiedRelations) {
+        const questions = [];
+        const seen = new Set();
+        const add = (step, label, query) => {
+          const normalized = String(query || "").trim();
+          if (!normalized || seen.has(normalized)) return;
+          seen.add(normalized);
+          questions.push({ step, label, query: normalized });
+        };
+
+        const companies = namedCandidates(candidatePages.company);
+        const company = verifiedRelations.company?.source || companies[0];
+        if (company) {
+          add("企业", "核验企业近况", `介绍“${company.name}”，并用当前网页证据核实最新动态`);
+        }
+        if (verifiedRelations.company) {
+          add(
+            "追问",
+            "核验企业专利关系",
+            `列出已展示“${verifiedRelations.company.source.name}”作为申请人的代表性专利`,
+          );
+        }
+
+        const professors = namedCandidates(candidatePages.professor);
+        const professor = verifiedRelations.professor?.source || professors[0];
+        if (professor) {
+          add("教授", "查看教授研究概况", `介绍“${professor.name}”的研究方向与当前任职信息`);
+        }
+        if (verifiedRelations.professor) {
+          add(
+            "关系",
+            "核验教授论文署名",
+            `核验“${verifiedRelations.professor.source.name}”与论文“${verifiedRelations.professor.target.name}”之间的署名关系`,
+          );
+        }
+
+        const papers = namedCandidates(candidatePages.paper);
+        const paper = verifiedRelations.professor?.target || papers[0];
+        if (paper) {
+          add("论文", "查看论文证据", `概述论文“${paper.name}”的研究主题，并说明证据限制`);
+        }
+        return questions.slice(0, 5);
+      }
+
+      function renderDemoQuestions(questions) {
+        demoGrid.setAttribute("aria-busy", "false");
+        if (!questions.length) {
+          demoTitle.textContent = "当前候选版本暂无可用名称";
+          demoGrid.replaceChildren(create("p", "demo-empty", "仍可在下方输入框中直接提问。"));
+          return;
+        }
+        const buttons = questions.map((question) => {
+          const button = create("button", "demo-chip");
+          button.type = "button";
+          button.dataset.query = question.query;
+          const copy = create("span", "demo-copy");
+          copy.append(
+            create("strong", "", question.label),
+            create("span", "", question.query),
+          );
+          button.append(create("span", "step", question.step), copy);
+          return button;
+        });
+        demoTitle.textContent = "根据当前候选数据生成的可核验问题";
+        demoGrid.replaceChildren(...buttons);
+      }
+
+      function removeWelcome() {
+        document.getElementById("welcome")?.remove();
+      }
+
+      function scrollToLatest() {
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      function messageShell(kind) {
+        const row = create("article", `message ${kind}`);
+        row.append(create("div", "avatar", kind === "user" ? "我" : kind === "error" ? "!" : "V2"));
+        const bubble = create("div", "bubble");
+        row.append(bubble);
+        return { row, bubble };
+      }
+
+      function renderUser(query) {
+        const view = messageShell("user");
+        view.bubble.textContent = query;
+        messages.append(view.row);
+        scrollToLatest();
+      }
+
+      function renderError(message) {
+        const view = messageShell("error");
+        view.bubble.textContent = message;
+        messages.append(view.row);
+        scrollToLatest();
+      }
+
+      function safeCitationUrl(value) {
+        if (!value) return null;
+        try {
+          const parsed = new URL(value, location.origin);
+          return ["http:", "https:"].includes(parsed.protocol) ? parsed.href : null;
+        } catch {
+          return null;
+        }
+      }
+
+      const limitationLabels = Object.freeze({
+        material_evidence_missing: "缺少支持证据",
+        material_evidence_conflicting: "证据存在冲突",
+        direct_product_capability_evidence_missing: "缺少直接产品能力证据",
+      });
+      const laneLabels = Object.freeze({
+        exact: "精确检索",
+        structured: "结构化筛选",
+        lexical: "关键词检索",
+        semantic: "语义检索",
+        relationship: "关系检索",
+        internal_reference: "内部参考",
+        web: "当前网页",
+      });
+      const enumerationLabels = Object.freeze({
+        exhaustive: "完整范围",
+        representative: "代表性结果",
+        open_world: "开放范围",
+      });
+      const citationTypeLabels = Object.freeze({
+        company: "企业",
+        professor: "教授",
+        paper: "论文",
+        patent: "专利",
+      });
+
+      function limitationText(value) {
+        if (!value || typeof value !== "object") return "已记录限制";
+        return limitationLabels[value.code] || "已记录限制";
+      }
+
+      function continuationText(option) {
+        if (option?.operation === "targeted_evidence_search") return "继续检索针对性证据";
+        return safePublicText(option?.label) || safePublicText(option?.title) || "继续";
+      }
+
+      function enumerationText(coverage) {
+        if (!coverage || typeof coverage !== "object") return "不适用";
+        const mode = coverage.mode || coverage.coverage_mode;
+        return enumerationLabels[mode] || "范围已记录";
+      }
+
+      function traceCard(label, value, title) {
+        const card = create("div", "trace-card");
+        const strong = create("strong", "", value);
+        if (title) strong.title = title;
+        card.append(create("span", "", label), strong);
+        return card;
+      }
+
+      function subsection(title) {
+        const section = create("section", "subsection");
+        section.append(create("p", "subsection-title", title));
+        return section;
+      }
+
+      function renderTrace(container, trace) {
+        if (!trace || typeof trace !== "object") return;
+        const lanes = Array.isArray(trace.lanes) ? trace.lanes : [];
+        const evidence = Array.isArray(trace.evidence_ids) ? trace.evidence_ids : [];
+        const claims = Array.isArray(trace.claims) ? trace.claims : [];
+        const laneCopy = lanes.map((lane) => laneLabels[lane] || "其他检索");
+        const grid = create("div", "trace-grid");
+        grid.append(
+          traceCard("发布版本", trace.release_id ? "已绑定" : "—"),
+          traceCard("检索通道", laneCopy.length ? laneCopy.join(" · ") : "—"),
+          traceCard("证据 / 主张", `${evidence.length} / ${claims.length}`),
+          traceCard("枚举模式", enumerationText(trace.enumeration_coverage)),
+        );
+        container.append(grid);
+
+        const limitations = Array.isArray(trace.limitations) ? trace.limitations : [];
+        if (limitations.length) {
+          const section = subsection("限制与不确定性");
+          const tokens = create("div", "tokens");
+          for (const limitation of limitations) tokens.append(create("span", "token warning", limitationText(limitation)));
+          section.append(tokens);
+          container.append(section);
+        }
+      }
+
+      function safeCurrentWebUrl(value) {
+        if (!value) return null;
+        try {
+          const parsed = new URL(String(value));
+          if (parsed.protocol !== "https:" || parsed.username || parsed.password) return null;
+          const hostname = safePublicText(parsed.hostname);
+          return hostname ? { href: parsed.href, hostname } : null;
+        } catch {
+          return null;
+        }
+      }
+
+      function currentWebEvidenceRows(evidence) {
+        if (!Array.isArray(evidence)) return [];
+        const rows = [];
+        const seen = new Set();
+        for (const item of evidence) {
+          if (!item || item.source_nature !== "current_web") continue;
+          const source = safeCurrentWebUrl(item.source_locator);
+          const snippet = safePublicText(item.snippet);
+          if (!source || !snippet) continue;
+          const dedupeKey = `${source.href}\n${snippet}`;
+          if (seen.has(dedupeKey)) continue;
+          seen.add(dedupeKey);
+          rows.push({ href: source.href, hostname: source.hostname, snippet });
+          if (rows.length === 6) break;
+        }
+        return rows;
+      }
+
+      function renderCurrentWebEvidence(container, evidence) {
+        const rows = currentWebEvidenceRows(evidence);
+        if (!rows.length) return;
+        const section = subsection("当前网页证据");
+        const list = create("div", "web-evidence-list");
+        for (const row of rows) {
+          const card = create("article", "web-evidence-card");
+          const link = create("a", "web-evidence-link", `查看 HTTPS 来源 · ${row.hostname}`);
+          link.href = row.href;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          card.append(create("p", "web-evidence-snippet", row.snippet), link);
+          list.append(card);
+        }
+        section.append(list);
+        container.append(section);
+      }
+
+      function renderCitations(container, citations) {
+        if (!Array.isArray(citations) || !citations.length) return;
+        const section = subsection("引用");
+        const list = create("div", "citations");
+        citations.forEach((citation, index) => {
+          const url = safeCitationUrl(citation.url);
+          const row = create(url ? "a" : "div", "citation");
+          if (url) {
+            row.href = url;
+            row.target = "_blank";
+            row.rel = "noopener noreferrer";
+          }
+          row.append(
+            create("span", "citation-badge", `${index + 1} · ${citationTypeLabels[citation.type] || "证据"}`),
+            create("span", "citation-label", safePublicText(citation.label) || "相关证据"),
+          );
+          list.append(row);
+        });
+        section.append(list);
+        container.append(section);
+      }
+
+      function renderContinuation(container, trace, originalQuery) {
+        const offer = trace && typeof trace === "object" ? trace.continuation_offer : null;
+        const options = Array.isArray(offer?.options) ? offer.options : [];
+        if (!options.length) return;
+        const section = subsection("可继续探索");
+        const list = create("div", "option-list");
+        for (const option of options) {
+          const label = continuationText(option);
+          const button = create("button", "option-button", label);
+          button.type = "button";
+          button.addEventListener("click", () => sendQuery(originalQuery, option.option_id || null, `选择：${label}`));
+          list.append(button);
+        }
+        section.append(list);
+        container.append(section);
+      }
+
+      function renderAssistant(data, originalQuery) {
+        const view = messageShell("assistant");
+        const answer = safePublicText(data.answer_text) || "当前版本未生成可安全展示的回答。";
+        view.bubble.append(create("p", "answer", answer));
+        const trace = data.structured_payload?.canonical_v2;
+        renderTrace(view.bubble, trace);
+        renderCurrentWebEvidence(view.bubble, data.evidence || []);
+        renderCitations(view.bubble, data.citations || []);
+        renderContinuation(view.bubble, trace, originalQuery);
+        const answerStyle = data.answer_style === "llm_synthesized" ? "综合回答" : "模板回答";
+        view.bubble.append(create("div", "response-meta", `Canonical V2 · ${answerStyle}`));
+        messages.append(view.row);
+        scrollToLatest();
+      }
+
+      async function sendQuery(query, optionId = null, displayQuery = null) {
+        const normalized = String(query || "").trim();
+        if (!normalized || requestPending) return;
+        requestPending = true;
+        removeWelcome();
+        renderUser(displayQuery || normalized);
+        input.value = "";
+        submit.disabled = true;
+        submit.textContent = "检索中";
+        const body = { query: normalized };
+        if (optionId) body.entity_id_hint = optionId;
+        try {
+          const response = await fetch("/api/chat", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          if (!response.ok) {
+            renderError(`请求失败：HTTP ${response.status}`);
+            return;
+          }
+          renderAssistant(await response.json(), normalized);
+        } catch (error) {
+          renderError(`连接失败：${error.message || error}`);
+        } finally {
+          requestPending = false;
+          submit.disabled = false;
+          submit.textContent = "发送";
+          input.focus();
+          if (queuedDemoQuery) {
+            const nextQuery = queuedDemoQuery;
+            queuedDemoQuery = null;
+            queueMicrotask(() => sendQuery(nextQuery));
+          }
+        }
+      }
+
+      function runDemoQuery(query) {
+        const normalized = String(query || "").trim();
+        if (!normalized) return;
+        input.value = normalized;
+        if (requestPending) {
+          queuedDemoQuery = normalized;
+          input.focus();
+          return;
+        }
+        sendQuery(normalized);
+      }
+
+      async function loadDemoQuestions() {
+        demoGrid.replaceChildren(create("p", "demo-empty", "正在读取企业、教授与论文候选数据…"));
+        try {
+          const candidatePages = await loadCandidatePages();
+          const verifiedRelations = await loadVerifiedRelations(candidatePages);
+          const questions = buildSemanticQuestions(candidatePages, verifiedRelations);
+          renderDemoQuestions(questions);
+        } catch {
+          demoGrid.setAttribute("aria-busy", "false");
+          demoTitle.textContent = "当前候选问题暂不可用";
+          demoGrid.replaceChildren(create("p", "demo-empty", "仍可在下方输入框中直接提问。"));
+        }
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        sendQuery(input.value);
+      });
+
+      demoGrid.addEventListener("click", (event) => {
+        const chip = event.target.closest(".demo-chip");
+        if (chip && demoGrid.contains(chip)) runDemoQuery(chip.dataset.query);
+      });
+
+      loadDemoQuestions();
+      input.focus();
+    </script>
+  </body>
 </html>

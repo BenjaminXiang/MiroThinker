@@ -3,16 +3,24 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any
 
-import pytest
+
+TARGET_MODULE = "src.data_agents.canonical_v2.knowledge_answer"
+READ_TARGET_MODULE = "src.data_agents.canonical_v2.knowledge_read"
 
 
-RED_REASON = "Task 3.1 RED: Canonical V2 KnowledgeAnswer interface is not implemented"
+def _answer_module() -> Any:
+    return import_module(TARGET_MODULE)
 
 
-@pytest.mark.xfail(strict=True, raises=ModuleNotFoundError, reason=RED_REASON)
-def test_knowledge_answer_maps_material_claims_to_distinct_local_and_web_evidence() -> None:
-    read_module: Any = import_module("src.data_agents.canonical_v2.knowledge_read")
-    answer_module: Any = import_module("src.data_agents.canonical_v2.knowledge_answer")
+def _read_module() -> Any:
+    return import_module(READ_TARGET_MODULE)
+
+
+def test_knowledge_answer_maps_material_claims_to_distinct_local_and_web_evidence() -> (
+    None
+):
+    read_module = _read_module()
+    answer_module = _answer_module()
     evidence = read_module.EvidenceSet(
         release_id="release-r1",
         original_query="这项专利的申请人是谁，有没有最新状态？",

@@ -2,10 +2,20 @@
 
 ## Status
 
-Ready for the post-commit fast-forward-only execution. Aggregate S6 was Accepted at
-`2026-07-13T14:48:01Z`; the exact promotion target is the independent local commit containing this
-gate and `s6-aggregate-review.md`. The ref move is performed only after that commit passes the final
-exact-commit checks. No branch reference had moved when this record was prepared.
+Completed at `2026-07-13T15:00:36Z`. Aggregate S6 was Accepted at
+`2026-07-13T14:48:01Z`; local Git `main` fast-forwarded to the exact Accepted commit `f0e6224` after
+the recorded exact-commit checks. This historical development-mainline move did not push, publish,
+promote product data/indexes, or authorize a production-like cutover.
+
+Post-gate implementation status: S11A and its S9J successor correction were Accepted at the
+historical `65/80` OpenSpec ledger with receipts
+`b0b1848b2a15aca7f8d1fa33587f2276b19f2c1183327a28c0bf128a864c97f3` and
+`ae34240cde353a272faa23710bfdf3818763ac261891bf48bc5307048a8759bc`. S11B is also Accepted at the
+same historical ledger with receipt `cee1beebe2bdb1eba3f09b06e4e3c819167bbba14d5b6d6072f1f4cbafb0a945`.
+S11C subsequently accepted Tasks 11.1-11.5 atomically at `70/80`; receipt
+`281b28244a9fb5043a10df4e7eaa8f4e9e9385825babdae6204a461661a99717`. S12A is next. These
+uncommitted checkpoints do not move Git
+`main`, reopen this historical gate, or authorize Push, PR, product promotion, or Cutover.
 
 ## Goal
 

@@ -5,6 +5,16 @@
 - `.agents/runs/canonical-v2-logical-rebuild/requirements-grill.md`
 - `.agents/runs/canonical-v2-logical-rebuild/outcome-requirements.md`
 - `CONTEXT.md`
+- `docs/architecture-decisions/ADR-013-canonical-v2-hybrid-enumeration-coverage.md`
+- `docs/architecture-decisions/ADR-014-canonical-v2-internal-person-projection.md`
+- `docs/architecture-decisions/ADR-015-canonical-v2-internal-technology-model.md`
+- `docs/architecture-decisions/ADR-016-product-capability-remains-answer-scoped.md`
+- `docs/architecture-decisions/ADR-017-web-only-entities-use-session-handles.md`
+- `docs/architecture-decisions/ADR-018-machine-readable-claim-level-case-contract.md`
+- `docs/architecture-decisions/ADR-019-conditional-structured-continuation-offers.md`
+- `docs/architecture-decisions/ADR-020-local-safety-questions-use-safety-guidance.md`
+- `docs/architecture-decisions/ADR-021-confidence-gated-entity-ambiguity.md`
+- `docs/architecture-decisions/ADR-022-llm-selected-assessment-dimensions.md`
 
 ## Authoritative product/data sources
 
@@ -19,8 +29,9 @@
   where they differ
 - `docs/Patent-Data-Agent-PRD.md`
 - `docs/Multi-turn-Context-Manager-Design.md`
-- `docs/测试集答案.xlsx` — its query/answer rows are high-value case-specific ground truth and seed
-  scenarios; they are not a generalized answer template or the sole acceptance source
+- `docs/测试集答案.xlsx` — its query/answer rows are high-value case-specific requirement evidence and
+  seed scenarios; prose/key points are not normative pass/fail truth, a generalized answer template,
+  or the sole acceptance source
 
 For Canonical V2 domain-catalog work, precedence is the active OpenSpec behavior contract, then the
 shared data-agent contract, then each domain's authoritative PRD/audit plus its explicit locked

@@ -1,0 +1,627 @@
+{
+  "base_inventory_sha256": "c5a151b82cf308ec8504c31c10f6e6d997a3286ef18613d530088314a7f8f940",
+  "evidence_family_labels": {
+    "disposable_postgres": [
+      "disposable-postgres"
+    ],
+    "interface_scenario_trace": [
+      "interface-trace"
+    ],
+    "release_index_adapter": [
+      "release-index-adapters"
+    ],
+    "s11a_http_session": [
+      "s11a-http-session"
+    ],
+    "s11b_admin_quarantine": [
+      "s11b-focused-agent-junit",
+      "s11b-focused-admin-junit",
+      "s10o-operations-junit"
+    ],
+    "s2c_task_2_7_structural": [
+      "s2c-task-2-7"
+    ]
+  },
+  "failures": [
+    {
+      "baseline_signature_sha256": "ef7cd813e62cfaddb23cf6e62a426ce18ae9363f553608bc2ef53dd783111fb0",
+      "disposition": "unrelated_preexisting",
+      "inventory_category": null,
+      "inventory_path": null,
+      "nodeid": "tests/test_admin_professor_api.py::test_admin_professor_detail_extracts_research_overview_from_raw_profile",
+      "normalized_failure_signature_sha256": "ef7cd813e62cfaddb23cf6e62a426ce18ae9363f553608bc2ef53dd783111fb0",
+      "outcome": "failure",
+      "phase": "call",
+      "reason": "Exact unchanged Accepted S11B baseline failure with a passing non-consumer scope owner.",
+      "replacement_owner_nodeids": [],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": "tests/test_canonical_v2_operations_api.py::test_canonical_v2_operations_api_is_bounded_read_only_and_quarantined"
+    },
+    {
+      "baseline_signature_sha256": "cfcfb5cdab85e10df0348f8d6d62875ac9f9b65eaa39a693152adc63ad816aee",
+      "disposition": "unrelated_preexisting",
+      "inventory_category": null,
+      "inventory_path": null,
+      "nodeid": "tests/test_admin_professor_api.py::test_admin_professor_detail_prefers_persisted_chinese_research_overview",
+      "normalized_failure_signature_sha256": "cfcfb5cdab85e10df0348f8d6d62875ac9f9b65eaa39a693152adc63ad816aee",
+      "outcome": "failure",
+      "phase": "call",
+      "reason": "Exact unchanged Accepted S11B baseline failure with a passing non-consumer scope owner.",
+      "replacement_owner_nodeids": [],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": "tests/test_canonical_v2_operations_api.py::test_canonical_v2_operations_api_is_bounded_read_only_and_quarantined"
+    },
+    {
+      "baseline_signature_sha256": "abbb6278b5d11a706e94a258e00273a5fd39eb5d4fc009b1eb019ce455eef921",
+      "disposition": "unrelated_preexisting",
+      "inventory_category": null,
+      "inventory_path": null,
+      "nodeid": "tests/test_admin_professor_api.py::test_admin_professor_detail_returns_canonical_paper_link_fields",
+      "normalized_failure_signature_sha256": "abbb6278b5d11a706e94a258e00273a5fd39eb5d4fc009b1eb019ce455eef921",
+      "outcome": "failure",
+      "phase": "call",
+      "reason": "Exact unchanged Accepted S11B baseline failure with a passing non-consumer scope owner.",
+      "replacement_owner_nodeids": [],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": "tests/test_canonical_v2_operations_api.py::test_canonical_v2_operations_api_is_bounded_read_only_and_quarantined"
+    },
+    {
+      "baseline_signature_sha256": "fcdbe08f93716718e35048626ad93ddb8756b73f6e6bf0b2cebb8f6c71b5e04b",
+      "disposition": "unrelated_preexisting",
+      "inventory_category": null,
+      "inventory_path": null,
+      "nodeid": "tests/test_admin_professor_api.py::test_admin_professor_detail_returns_seven_sections",
+      "normalized_failure_signature_sha256": "fcdbe08f93716718e35048626ad93ddb8756b73f6e6bf0b2cebb8f6c71b5e04b",
+      "outcome": "failure",
+      "phase": "call",
+      "reason": "Exact unchanged Accepted S11B baseline failure with a passing non-consumer scope owner.",
+      "replacement_owner_nodeids": [],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": "tests/test_canonical_v2_operations_api.py::test_canonical_v2_operations_api_is_bounded_read_only_and_quarantined"
+    },
+    {
+      "baseline_signature_sha256": "cfef39fc0889ec1b37c07fdc9f902f812157c9dff79e458865c537c8e5d07992",
+      "disposition": "unrelated_preexisting",
+      "inventory_category": null,
+      "inventory_path": null,
+      "nodeid": "tests/test_admin_professor_api.py::test_admin_professor_list_filters_by_quality_and_reason_rule",
+      "normalized_failure_signature_sha256": "cfef39fc0889ec1b37c07fdc9f902f812157c9dff79e458865c537c8e5d07992",
+      "outcome": "failure",
+      "phase": "call",
+      "reason": "Exact unchanged Accepted S11B baseline failure with a passing non-consumer scope owner.",
+      "replacement_owner_nodeids": [],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": "tests/test_canonical_v2_operations_api.py::test_canonical_v2_operations_api_is_bounded_read_only_and_quarantined"
+    },
+    {
+      "baseline_signature_sha256": "031e6375921a340a6b1d7c00373775b43f2843ddc01ab4224a6295b7d1efc7c2",
+      "disposition": "unrelated_preexisting",
+      "inventory_category": null,
+      "inventory_path": null,
+      "nodeid": "tests/test_admin_professor_api.py::test_admin_professor_mark_confirm_ready_updates_status_and_audits",
+      "normalized_failure_signature_sha256": "031e6375921a340a6b1d7c00373775b43f2843ddc01ab4224a6295b7d1efc7c2",
+      "outcome": "failure",
+      "phase": "call",
+      "reason": "Exact unchanged Accepted S11B baseline failure with a passing non-consumer scope owner.",
+      "replacement_owner_nodeids": [],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": "tests/test_canonical_v2_operations_api.py::test_canonical_v2_operations_api_is_bounded_read_only_and_quarantined"
+    },
+    {
+      "baseline_signature_sha256": "e102b7f8b67ccd3fe039712b265959380c51e7ebed95dae8709223067b6a7c10",
+      "disposition": "unrelated_preexisting",
+      "inventory_category": null,
+      "inventory_path": null,
+      "nodeid": "tests/test_admin_professor_api.py::test_admin_professor_mark_flag_recrawl_keeps_status_and_files_issue",
+      "normalized_failure_signature_sha256": "e102b7f8b67ccd3fe039712b265959380c51e7ebed95dae8709223067b6a7c10",
+      "outcome": "failure",
+      "phase": "call",
+      "reason": "Exact unchanged Accepted S11B baseline failure with a passing non-consumer scope owner.",
+      "replacement_owner_nodeids": [],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": "tests/test_canonical_v2_operations_api.py::test_canonical_v2_operations_api_is_bounded_read_only_and_quarantined"
+    },
+    {
+      "baseline_signature_sha256": "47530d28a5d662f792716c3f51d17b748863ad2818e5d0f33b1560469c838d86",
+      "disposition": "unrelated_preexisting",
+      "inventory_category": null,
+      "inventory_path": null,
+      "nodeid": "tests/test_admin_professor_api.py::test_admin_professor_mark_send_to_review_updates_status_and_audits",
+      "normalized_failure_signature_sha256": "47530d28a5d662f792716c3f51d17b748863ad2818e5d0f33b1560469c838d86",
+      "outcome": "failure",
+      "phase": "call",
+      "reason": "Exact unchanged Accepted S11B baseline failure with a passing non-consumer scope owner.",
+      "replacement_owner_nodeids": [],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": "tests/test_canonical_v2_operations_api.py::test_canonical_v2_operations_api_is_bounded_read_only_and_quarantined"
+    },
+    {
+      "baseline_signature_sha256": "f26a8055b4a530d7b27302be9d1a8cd0f90ced474264a01f8f41ae4838b50ca2",
+      "disposition": "unrelated_preexisting",
+      "inventory_category": null,
+      "inventory_path": null,
+      "nodeid": "tests/test_chat_context_helpers.py::test_lookup_company_uses_jsonb_alias_lookup",
+      "normalized_failure_signature_sha256": "f26a8055b4a530d7b27302be9d1a8cd0f90ced474264a01f8f41ae4838b50ca2",
+      "outcome": "failure",
+      "phase": "call",
+      "reason": "Exact unchanged Accepted S11B baseline failure with a passing non-consumer scope owner.",
+      "replacement_owner_nodeids": [],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": "tests/test_canonical_v2_operations_api.py::test_canonical_v2_operations_api_is_bounded_read_only_and_quarantined"
+    },
+    {
+      "baseline_signature_sha256": null,
+      "disposition": "retired_replaced",
+      "inventory_category": "retired_http_routers",
+      "inventory_path": "backend.api.chat",
+      "nodeid": "tests/test_chat_v1.py::test_chat_profile_accepts_institution_prefixed_research_direction_query",
+      "normalized_failure_signature_sha256": "e3e64280ec3162aabcef6b4b730ed1cda5d8d57740fcec7e4de599e520bece7d",
+      "outcome": "failure",
+      "phase": "call",
+      "reason": "Legacy chat-router expectation is replaced by the passing release-bound Canonical V2 chat owner.",
+      "replacement_owner_nodeids": [
+        "tests/test_canonical_v2_chat_http_adapter.py::test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql"
+      ],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": null
+    },
+    {
+      "baseline_signature_sha256": null,
+      "disposition": "retired_replaced",
+      "inventory_category": "retired_http_routers",
+      "inventory_path": "backend.api.chat",
+      "nodeid": "tests/test_chat_v1.py::test_chat_profile_accepts_introduce_once_professor_variant",
+      "normalized_failure_signature_sha256": "12f49181073525f71714ef3b8342b5e60e55be0edc22dd5ada5b864f930f516b",
+      "outcome": "failure",
+      "phase": "call",
+      "reason": "Legacy chat-router expectation is replaced by the passing release-bound Canonical V2 chat owner.",
+      "replacement_owner_nodeids": [
+        "tests/test_canonical_v2_chat_http_adapter.py::test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql"
+      ],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": null
+    },
+    {
+      "baseline_signature_sha256": null,
+      "disposition": "retired_replaced",
+      "inventory_category": "retired_http_routers",
+      "inventory_path": "backend.api.chat",
+      "nodeid": "tests/test_chat_v1.py::test_chat_profile_accepts_name_institution_research_and_papers_query",
+      "normalized_failure_signature_sha256": "57b302c3eb2dabaf6a77a63665afa22f917e67ea975ce022f4ed7af2341d478c",
+      "outcome": "failure",
+      "phase": "call",
+      "reason": "Legacy chat-router expectation is replaced by the passing release-bound Canonical V2 chat owner.",
+      "replacement_owner_nodeids": [
+        "tests/test_canonical_v2_chat_http_adapter.py::test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql"
+      ],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": null
+    },
+    {
+      "baseline_signature_sha256": null,
+      "disposition": "retired_replaced",
+      "inventory_category": "retired_http_routers",
+      "inventory_path": "backend.api.chat",
+      "nodeid": "tests/test_chat_v1.py::test_chat_v1_dangling_marker_falls_back_for_ambiguous_professors",
+      "normalized_failure_signature_sha256": "f39c79574b540c2300d328a249bd951c3d600b4a63fc01c89487683152ed15d3",
+      "outcome": "failure",
+      "phase": "call",
+      "reason": "Legacy chat-router expectation is replaced by the passing release-bound Canonical V2 chat owner.",
+      "replacement_owner_nodeids": [
+        "tests/test_canonical_v2_chat_http_adapter.py::test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql"
+      ],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": null
+    },
+    {
+      "baseline_signature_sha256": null,
+      "disposition": "retired_replaced",
+      "inventory_category": "retired_http_routers",
+      "inventory_path": "backend.api.chat",
+      "nodeid": "tests/test_chat_v1.py::test_chat_v1_patent_falls_back_to_template_and_files_pipeline_issue",
+      "normalized_failure_signature_sha256": "34f456ce7fd196b34773a6b23da95b730bcf2754333ed52465bd8f0c4e0287fb",
+      "outcome": "failure",
+      "phase": "call",
+      "reason": "Legacy chat-router expectation is replaced by the passing release-bound Canonical V2 chat owner.",
+      "replacement_owner_nodeids": [
+        "tests/test_canonical_v2_chat_http_adapter.py::test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql"
+      ],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": null
+    },
+    {
+      "baseline_signature_sha256": null,
+      "disposition": "retired_replaced",
+      "inventory_category": "retired_http_routers",
+      "inventory_path": "backend.api.chat",
+      "nodeid": "tests/test_chat_v1.py::test_chat_v1_profile_uses_llm_synthesis_and_returns_citation_map",
+      "normalized_failure_signature_sha256": "00d723715686fa2f16538c358c2c59dd5b737b21b04344398734e3903a43a6c0",
+      "outcome": "failure",
+      "phase": "call",
+      "reason": "Legacy chat-router expectation is replaced by the passing release-bound Canonical V2 chat owner.",
+      "replacement_owner_nodeids": [
+        "tests/test_canonical_v2_chat_http_adapter.py::test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql"
+      ],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": null
+    },
+    {
+      "baseline_signature_sha256": "82e4c22fa94f5ce56ba627b9384762cdcc9ed391292e34c151487e7b775b48f4",
+      "disposition": "unrelated_preexisting",
+      "inventory_category": null,
+      "inventory_path": null,
+      "nodeid": "tests/test_data_api.py::test_facets_route_exists_with_dependency_override",
+      "normalized_failure_signature_sha256": "82e4c22fa94f5ce56ba627b9384762cdcc9ed391292e34c151487e7b775b48f4",
+      "outcome": "failure",
+      "phase": "call",
+      "reason": "Exact unchanged Accepted S11B baseline failure with a passing non-consumer scope owner.",
+      "replacement_owner_nodeids": [],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": "tests/test_canonical_v2_operations_api.py::test_canonical_v2_operations_api_is_bounded_read_only_and_quarantined"
+    },
+    {
+      "baseline_signature_sha256": "49b0aeed0c056f7d8172216ee6b72cdb26a58d1fce8bed6f9e0b602e8816608b",
+      "disposition": "unrelated_preexisting",
+      "inventory_category": null,
+      "inventory_path": null,
+      "nodeid": "tests/test_data_api_quality_status.py::test_get_paper_detail_returns_quality_status",
+      "normalized_failure_signature_sha256": "49b0aeed0c056f7d8172216ee6b72cdb26a58d1fce8bed6f9e0b602e8816608b",
+      "outcome": "failure",
+      "phase": "call",
+      "reason": "Exact unchanged Accepted S11B baseline failure with a passing non-consumer scope owner.",
+      "replacement_owner_nodeids": [],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": "tests/test_canonical_v2_operations_api.py::test_canonical_v2_operations_api_is_bounded_read_only_and_quarantined"
+    },
+    {
+      "baseline_signature_sha256": null,
+      "disposition": "retired_reference_only",
+      "inventory_category": "retired_frontend_routes",
+      "inventory_path": "apps/admin-console/frontend/src/main.tsx",
+      "nodeid": "tests/test_main_freshness.py::test_freshness_silent_when_dist_fresh",
+      "normalized_failure_signature_sha256": "b88254d26e8cc39b5d1d3866e4ecd554798736de1248f91b57525edf77a54c00",
+      "outcome": "error",
+      "phase": "setup",
+      "reason": "Legacy frontend freshness behavior is quarantined from the candidate application by the passing consumer boundary.",
+      "replacement_owner_nodeids": [
+        "tests/test_canonical_v2_consumer_migration.py::test_s11b_candidate_app_exposes_only_release_bound_v2_consumers"
+      ],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": null
+    },
+    {
+      "baseline_signature_sha256": null,
+      "disposition": "retired_reference_only",
+      "inventory_category": "retired_frontend_routes",
+      "inventory_path": "apps/admin-console/frontend/src/main.tsx",
+      "nodeid": "tests/test_main_freshness.py::test_freshness_warns_when_dist_missing",
+      "normalized_failure_signature_sha256": "3a6b79d1a491627d84dcdc8211f8097537b16130aced15e63f7dd906e5344985",
+      "outcome": "error",
+      "phase": "setup",
+      "reason": "Legacy frontend freshness behavior is quarantined from the candidate application by the passing consumer boundary.",
+      "replacement_owner_nodeids": [
+        "tests/test_canonical_v2_consumer_migration.py::test_s11b_candidate_app_exposes_only_release_bound_v2_consumers"
+      ],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": null
+    },
+    {
+      "baseline_signature_sha256": null,
+      "disposition": "retired_reference_only",
+      "inventory_category": "retired_frontend_routes",
+      "inventory_path": "apps/admin-console/frontend/src/main.tsx",
+      "nodeid": "tests/test_main_freshness.py::test_freshness_warns_when_src_newer_than_dist",
+      "normalized_failure_signature_sha256": "3340a3a68043e2290f6cb0f149924c84cdc68ebc75f46ac55f1aed5d3c3863d6",
+      "outcome": "error",
+      "phase": "setup",
+      "reason": "Legacy frontend freshness behavior is quarantined from the candidate application by the passing consumer boundary.",
+      "replacement_owner_nodeids": [
+        "tests/test_canonical_v2_consumer_migration.py::test_s11b_candidate_app_exposes_only_release_bound_v2_consumers"
+      ],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": null
+    },
+    {
+      "baseline_signature_sha256": null,
+      "disposition": "retired_reference_only",
+      "inventory_category": "retired_frontend_routes",
+      "inventory_path": "apps/admin-console/frontend/src/main.tsx",
+      "nodeid": "tests/test_main_freshness.py::test_freshness_within_grace_period_silent",
+      "normalized_failure_signature_sha256": "538190789200877d8ab33122249377a1c8ef39c145cec36bf377e355c71293b3",
+      "outcome": "error",
+      "phase": "setup",
+      "reason": "Legacy frontend freshness behavior is quarantined from the candidate application by the passing consumer boundary.",
+      "replacement_owner_nodeids": [
+        "tests/test_canonical_v2_consumer_migration.py::test_s11b_candidate_app_exposes_only_release_bound_v2_consumers"
+      ],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": null
+    },
+    {
+      "baseline_signature_sha256": null,
+      "disposition": "retired_reference_only",
+      "inventory_category": "legacy_modules",
+      "inventory_path": "src.data_agents.storage.milvus_store",
+      "nodeid": "tests/test_main_milvus_env.py::test_main_sets_milvus_real_client_env_when_absent",
+      "normalized_failure_signature_sha256": "a56cdcab45c610120956b0b7b5ab7270c8f570ac018772bc160090312a0062ba",
+      "outcome": "failure",
+      "phase": "call",
+      "reason": "Legacy global Milvus readiness behavior is quarantined from sanctioned Canonical V2 entrypoints.",
+      "replacement_owner_nodeids": [
+        "tests/canonical_v2/test_consumer_migration_boundary.py::test_s11b_sanctioned_entrypoints_classify_and_exclude_legacy_consumers"
+      ],
+      "run_id": "admin-no-external",
+      "scope_owner_nodeid": null
+    }
+  ],
+  "guarded_partitions_receipt_sha256": "9b5e1c786bc62e6df5b7736e3fd9f1bf47ef6b5a26ea46c8f1338172b3245493",
+  "runs": [
+    {
+      "collected_nodeids_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/collected/admin-no-external.txt",
+      "collected_nodeids_sha256": "b54da3fa9ce707775848ab00cd071b8678017395ec97a527fb264fc33c025457",
+      "command": [
+        "uv",
+        "run",
+        "pytest",
+        "-o",
+        "addopts=",
+        "-p",
+        "no:cacheprovider",
+        "-m",
+        "not requires_classifier_llm",
+        "tests",
+        "--basetemp=../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/tmp/admin-no-external/pytest",
+        "--junitxml=../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/admin-no-external.xml",
+        "-q"
+      ],
+      "cwd": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2/apps/admin-console",
+      "exit_code": 1,
+      "junit_xml_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/admin-no-external.xml",
+      "junit_xml_sha256": "9e03b138fb5628d7d91dd5f97330f8e44cd14c66e55bfe044f77da8b57966c29",
+      "repository_root": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2",
+      "run_id": "admin-no-external"
+    },
+    {
+      "collected_nodeids_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/collected/canonical-v2-predecessors.txt",
+      "collected_nodeids_sha256": "2d70c10e585eca77836d15912fc70c6bd0a51dcc5dcbc6cb7a402894148611bd",
+      "command": [
+        "uv",
+        "run",
+        "pytest",
+        "-o",
+        "addopts=",
+        "-p",
+        "no:cacheprovider",
+        "tests/canonical_v2",
+        "--ignore=tests/canonical_v2/test_consumer_acceptance_contract.py",
+        "--basetemp=../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/tmp/canonical-v2-predecessors/pytest",
+        "--junitxml=../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/canonical-v2-predecessors.xml",
+        "-q"
+      ],
+      "cwd": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2/apps/miroflow-agent",
+      "exit_code": 0,
+      "junit_xml_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/canonical-v2-predecessors.xml",
+      "junit_xml_sha256": "8423692c128ebd819d187e1af7728c6d2474e8f2f8e4656f3438e870d800c914",
+      "repository_root": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2",
+      "run_id": "canonical-v2-predecessors"
+    },
+    {
+      "collected_nodeids_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/collected/s2c-task-2-7.txt",
+      "collected_nodeids_sha256": "8f5701601a71076625cfd4ffd6bde2efcceb3c61900da0a3735828e6c6c75bb2",
+      "command": [
+        "uv",
+        "run",
+        "pytest",
+        "-o",
+        "addopts=",
+        "-p",
+        "no:cacheprovider",
+        "-W",
+        "error",
+        "../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s2c/test_claim_level_case_contract.py",
+        "../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s2c/test_claim_level_corpus_migration.py",
+        "--basetemp=../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/tmp/s2c-task-2-7/pytest",
+        "--junitxml=../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/s2c-task-2-7.xml",
+        "-q"
+      ],
+      "cwd": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2/apps/miroflow-agent",
+      "exit_code": 0,
+      "junit_xml_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/s2c-task-2-7.xml",
+      "junit_xml_sha256": "735b98c91e795bba69268e6b9c4b71f1af5f8aecdb03b023e755097518d38bca",
+      "repository_root": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2",
+      "run_id": "s2c-task-2-7"
+    },
+    {
+      "collected_nodeids_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/collected/interface-trace.txt",
+      "collected_nodeids_sha256": "3cd422099b98f134e256f490a431c9ad0822fe19283f8b332636e8bf782412a5",
+      "command": [
+        "uv",
+        "run",
+        "pytest",
+        "-o",
+        "addopts=",
+        "-p",
+        "no:cacheprovider",
+        "-W",
+        "error",
+        "tests/canonical_v2/test_evidence_landing_replay_contract.py",
+        "tests/canonical_v2/test_knowledge_read_retrieval_fusion_contract.py",
+        "tests/canonical_v2/test_knowledge_read_sufficiency_retry_contract.py",
+        "tests/canonical_v2/test_knowledge_answer_grounding_contract.py",
+        "tests/canonical_v2/test_knowledge_answer_multiturn_contract.py",
+        "--basetemp=../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/tmp/interface-trace/pytest",
+        "--junitxml=../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/interface-trace.xml",
+        "-q"
+      ],
+      "cwd": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2/apps/miroflow-agent",
+      "exit_code": 0,
+      "junit_xml_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/interface-trace.xml",
+      "junit_xml_sha256": "4fa9d6b13d2b467f2e34d23b54b7a9d566c1a22048d556fea0709a12f1580100",
+      "repository_root": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2",
+      "run_id": "interface-trace"
+    },
+    {
+      "collected_nodeids_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/collected/release-index-adapters.txt",
+      "collected_nodeids_sha256": "0e143297e6f6460594e15f3d48bb7b4f7e937a7fb7017a7b98d0ae8a9b86bd67",
+      "command": [
+        "uv",
+        "run",
+        "pytest",
+        "-o",
+        "addopts=",
+        "-p",
+        "no:cacheprovider",
+        "-W",
+        "error",
+        "tests/canonical_v2/test_release_publication_interface.py",
+        "tests/canonical_v2/test_internal_reference_projection_contract.py",
+        "--basetemp=../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/tmp/release-index-adapters/pytest",
+        "--junitxml=../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/release-index-adapters.xml",
+        "-q"
+      ],
+      "cwd": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2/apps/miroflow-agent",
+      "exit_code": 0,
+      "junit_xml_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/release-index-adapters.xml",
+      "junit_xml_sha256": "a125fcc204598a57917f46c671debf906c7c4ef66a0d708a6eb8392d69551705",
+      "repository_root": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2",
+      "run_id": "release-index-adapters"
+    },
+    {
+      "collected_nodeids_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/collected/disposable-postgres.txt",
+      "collected_nodeids_sha256": "1d12f872efb7415aede3a080e3eaaf2291e8e11dfdbe06e6faab9dceeae3aea3",
+      "command": [
+        "uv",
+        "run",
+        "pytest",
+        "-o",
+        "addopts=",
+        "-p",
+        "no:cacheprovider",
+        "-n0",
+        "-W",
+        "error",
+        "tests/canonical_v2/test_evidence_landing_postgres.py",
+        "tests/canonical_v2/test_canonical_decision_postgres.py",
+        "tests/canonical_v2/test_canonical_identity_postgres.py",
+        "tests/canonical_v2/test_domain_projection_postgres.py",
+        "tests/canonical_v2/test_relationship_projection_postgres.py",
+        "--basetemp=../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/tmp/disposable-postgres/pytest",
+        "--junitxml=../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/disposable-postgres.xml",
+        "-q"
+      ],
+      "cwd": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2/apps/miroflow-agent",
+      "exit_code": 0,
+      "junit_xml_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/disposable-postgres.xml",
+      "junit_xml_sha256": "0cc9fedfd76ff9aa66b485d6a64a92cb61bf419cda865fe53e38b3837ee78f36",
+      "repository_root": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2",
+      "run_id": "disposable-postgres"
+    },
+    {
+      "collected_nodeids_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/collected/s11b-focused-agent-junit.txt",
+      "collected_nodeids_sha256": "ec9cdd10a582f7c3ae36dd182bac19a924f60d8df7e74099b315e07fe4e6f9e8",
+      "command": [
+        "uv",
+        "run",
+        "pytest",
+        "-o",
+        "addopts=",
+        "-p",
+        "no:cacheprovider",
+        "-W",
+        "error",
+        "tests/canonical_v2/test_consumer_migration_boundary.py",
+        "--basetemp=../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/tmp/s11b-focused-agent-junit/pytest",
+        "--junitxml=../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/s11b-focused-agent-junit.xml",
+        "-q"
+      ],
+      "cwd": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2/apps/miroflow-agent",
+      "exit_code": 0,
+      "junit_xml_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/s11b-focused-agent-junit.xml",
+      "junit_xml_sha256": "d436f4273303349366b07e760d620d193cc6d74d6a9b5580d90a84d696cb38db",
+      "repository_root": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2",
+      "run_id": "s11b-focused-agent-junit"
+    },
+    {
+      "collected_nodeids_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/collected/s11b-focused-admin-junit.txt",
+      "collected_nodeids_sha256": "b0f956d55cd8d97d352f91dcb53e7adc4cbc1e6170375896fec195fb73acfc05",
+      "command": [
+        "uv",
+        "run",
+        "pytest",
+        "-o",
+        "addopts=",
+        "-p",
+        "no:cacheprovider",
+        "--noconftest",
+        "-W",
+        "error",
+        "tests/test_canonical_v2_consumer_migration.py::test_s11b_candidate_app_exposes_only_release_bound_v2_consumers",
+        "tests/test_smoke_canonical_v2_candidate.py",
+        "--basetemp=../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/tmp/s11b-focused-admin-junit/pytest",
+        "--junitxml=../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/s11b-focused-admin-junit.xml",
+        "-q"
+      ],
+      "cwd": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2/apps/admin-console",
+      "exit_code": 0,
+      "junit_xml_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/s11b-focused-admin-junit.xml",
+      "junit_xml_sha256": "4c3b7cd4cdb1bd088e5895e6f77007347b4759b7e12b48decc908d65794255d2",
+      "repository_root": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2",
+      "run_id": "s11b-focused-admin-junit"
+    },
+    {
+      "collected_nodeids_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/collected/s10o-operations-junit.txt",
+      "collected_nodeids_sha256": "d31e176e4d692e6bf79353750e4436da0e782bb7900641f6b823ffe28374bae1",
+      "command": [
+        "uv",
+        "run",
+        "pytest",
+        "-o",
+        "addopts=",
+        "-p",
+        "no:cacheprovider",
+        "-q",
+        "--tb=short",
+        "tests/test_canonical_v2_operations_api.py",
+        "--basetemp=../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/tmp/s10o-operations-junit/pytest",
+        "--junitxml=../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/s10o-operations-junit.xml"
+      ],
+      "cwd": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2/apps/admin-console",
+      "exit_code": 0,
+      "junit_xml_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/s10o-operations-junit.xml",
+      "junit_xml_sha256": "7fdff84efeb05c60e3587c7c67c306eec32fcbf4ca9ff7689e482430b0b3d544",
+      "repository_root": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2",
+      "run_id": "s10o-operations-junit"
+    },
+    {
+      "collected_nodeids_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/collected/s11a-http-session.txt",
+      "collected_nodeids_sha256": "d6b5101d026cf6b41f9aeabd998fdd119107cd2bef9eb7f7fefb59c40fa63700",
+      "command": [
+        "uv",
+        "run",
+        "pytest",
+        "-o",
+        "addopts=",
+        "-p",
+        "no:cacheprovider",
+        "-W",
+        "error",
+        "-W",
+        "ignore::DeprecationWarning:backend.main",
+        "-W",
+        "ignore::DeprecationWarning:fastapi.applications",
+        "tests/test_canonical_v2_chat_http_adapter.py",
+        "--basetemp=../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/tmp/s11a-http-session/pytest",
+        "--junitxml=../../.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/s11a-http-session.xml",
+        "-q"
+      ],
+      "cwd": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2/apps/admin-console",
+      "exit_code": 0,
+      "junit_xml_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/s11a-http-session.xml",
+      "junit_xml_sha256": "5fc6239cb01fabae8519644474e770e8e9bf7c25b874771e7acba69c40c2711c",
+      "repository_root": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2",
+      "run_id": "s11a-http-session"
+    }
+  ],
+  "schema_version": "canonical-v2-s11c-retired-failure-ledger-v1",
+  "signature_schema_version": "canonical-v2-s11b-baseline-signature-v3"
+}

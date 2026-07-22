@@ -1,0 +1,78 @@
+{
+  "acceptance_eligible_count": 0,
+  "approval_state": "pending_human_review",
+  "case_contract_schema_version": "canonical-v2-claim-level-case-contract-v1",
+  "content_sha256": "df3a7b09a4f049ac6b34bfd1f128329dc9e7effb3ec61398317026778dc0c8ff",
+  "contract_as_of": "2026-07-13T17:44:15Z",
+  "contract_case_count": 52,
+  "contract_version": "claim-level-contract-v1",
+  "conversion_outcome_counts": {
+    "blocked_missing_evidence": 23,
+    "excluded_not_applicable": 0,
+    "migrated": 29
+  },
+  "corpus_id": "canonical-v2-s2c-v1",
+  "family_counts": {
+    "a_g_interaction": 4,
+    "alias_spelling": 3,
+    "evidence_based_assessment": 4,
+    "exact_lookup": 5,
+    "general_information": 1,
+    "insufficient_evidence": 2,
+    "knowledge_synthesis": 6,
+    "multi_turn": 9,
+    "partial_answer": 1,
+    "protected_constraints": 1,
+    "provenance_conflict": 1,
+    "provider_failure": 2,
+    "referent_displayed_set": 2,
+    "relation_direction": 1,
+    "relationship_traversal": 3,
+    "semantic_search": 4,
+    "structured_filter": 1,
+    "topic_switch": 1,
+    "universal_web": 1
+  },
+  "frozen_inputs": {
+    ".agents/runs/rebuild-canonical-v2-knowledge-platform/s2/corpus-manifest.json": {
+      "sha256": "dc7cc10ba08db341a38cc08da1edd2449594120a3861735edfd514b29be46088"
+    },
+    ".agents/runs/rebuild-canonical-v2-knowledge-platform/s2/source-inventory.json": {
+      "sha256": "83a9e2c82aee4cbe5c02f088ba0fdbf8d15359d87a85bf4ee901b0f58f70fa09"
+    },
+    "docs/测试集答案.xlsx": {
+      "sha256": "edd95009a8516c73831d889a0d221d85da0a9ffad9c9f7da244d12dfce280c5b"
+    }
+  },
+  "outputs": {
+    "case-accounting-v1.jsonl": {
+      "sha256": "e953c2fcf64daf66614e26831f0d1263f087263bcdb9771fc20b6123e34fbc48"
+    },
+    "claim-level-corpus-v1.jsonl": {
+      "sha256": "75ff02e0610b93274eba530994a3b04c2bc2a427df9db2ae6d07aaee690a6668"
+    },
+    "source-snapshots-v1.jsonl": {
+      "sha256": "85c1e4c1660e151526d54f9b1416917782f961b318091550bb3ef8042d16e253"
+    }
+  },
+  "review_state_counts": {
+    "blocked_missing_evidence": 23,
+    "human_reviewed": 0,
+    "pending_user_review": 29
+  },
+  "schema_version": "canonical-v2-s2c-corpus-manifest-v1",
+  "snapshot_count": 53,
+  "source_case_count": 52,
+  "sources": {
+    "challenge-v1": {
+      "case_count": 12,
+      "path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s2/corpora/challenge-v1.jsonl",
+      "sha256": "ee46c677af668131fb8da568fabd6386659f3287d0bdb0fd740f7069497f6f9f"
+    },
+    "regression-v1": {
+      "case_count": 40,
+      "path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s2/corpora/regression-v1.jsonl",
+      "sha256": "f2656e8c2f0803452af18fa0d478eec1b1e1b94eaa97ef48d06d0828401297da"
+    }
+  }
+}

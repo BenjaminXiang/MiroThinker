@@ -1,0 +1,160 @@
+{
+  "schema_version": "canonical-v2-s8r3-professor-paper-retrieval-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s8r3-release-scoped-displayed-professor-paper-traversal",
+  "status": "accepted",
+  "ready_at": "2026-07-19T22:53:22Z",
+  "in_progress_at": "2026-07-19T23:27:54Z",
+  "candidate_at": "2026-07-20T00:27:15Z",
+  "candidate_review_repair_at": "2026-07-20T02:07:17Z",
+  "accepted_at": "2026-07-20T02:13:12Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "git_branch": "canonical-v2-s2-baseline",
+  "formal_task_ledger_before": "56/80",
+  "formal_task_ledger_after": "56/80",
+  "artifacts": {
+    "reviewed_specified_contract_sha256": "31eb604d75865118f7125a1231876bd72b54151aaf4492a52e094447dc246c9f",
+    "reviewed_specified_plan_sha256": "3a6cf522f9812903582e73b7246bbc5119bd81c7504e5455409241c508a450ab",
+    "ready_contract_sha256": "84892baa367036f9a5d2a38298e9e5ee9a69d560cbdc6ede0e54fcd01e819454",
+    "ready_plan_sha256": "cbbe6f016656c64f8ada929ed80ae5114829519cb92371d18f4302779d1310a1",
+    "ready_dependency_audit_sha256": "c3928b7f99d67b3515d376c5e2931042e8946a21f441edde6fbd0e06668c275f",
+    "candidate_contract_sha256": "b197db43533797f76468d15d59fedaab98290b18e904f42e6b16dccb87e5653e",
+    "candidate_plan_sha256": "274d006204a9986b6c479a8d39c67ff2772fdb521ac8773e26a20dae459fc321",
+    "accepted_contract_sha256": "1394d487447b4253c2a4330cad75a03cb1ef82fc266979754570fca01fef0c12",
+    "accepted_plan_sha256": "69f89edca022695d24dad1816037a82f145c3ba2c77e5e44054470cfe7ef20d1",
+    "knowledge_read_sha256": "4daa5d2c7db813462b799bac9d92b35176fd13a869ea6f7825b1bae4e2137bd3",
+    "knowledge_read_isolated_sha256": "fefa40ec43405ef13db08ddcfe8a19483e118fae3a4af3e1899d851c5958fa23",
+    "physical_owner_test_sha256": "98dc9796ea9c01a1bb122597b64e69011d167b41eea67b6d07f2d5b2383b6959",
+    "tasks_sha256_unchanged": "5f61c097729e1107ff387a89c9f6f62b3783ef88debf1612b6156fb2056cdd7d",
+    "acceptance_sha256_unchanged": "742b29dc9805214b4b7059d5c801189209c26e35831f3f834ef01e4ac9f6df50"
+  },
+  "mapping": {
+    "planner_path": "professor_authored_paper/professor_to_paper/professor-to-paper",
+    "canonical_relationship": "professor_attributed_to_paper@canonical-v2-relationship-v1",
+    "orientation": "forward Professor-to-Paper",
+    "source_witness": "one protected displayed Professor",
+    "returned_domain": "paper",
+    "enumeration": "representative open-world non-exhaustive with continuation"
+  },
+  "review": {
+    "contract": {
+      "critical": 0,
+      "important": 0,
+      "minor": 0,
+      "yagni": 0,
+      "verdict": "ready"
+    },
+    "implementation_feasibility": {
+      "critical": 0,
+      "important": 0,
+      "minor": 1,
+      "yagni": 0,
+      "verdict": "ready",
+      "minor_resolution": "wording was repaired before Ready hash freeze"
+    },
+    "red_test_contract": {
+      "critical": 0,
+      "important": 0,
+      "minor": 0,
+      "yagni": 0,
+      "verdict": "ready"
+    },
+    "candidate_implementation": {
+      "critical": 0,
+      "important": 0,
+      "minor": 0,
+      "yagni": 0,
+      "verdict": "accept",
+      "note": "one proposed retained assertion-ID equality was withdrawn because it conflated intentionally distinct source-evidence and shared-relationship namespaces"
+    },
+    "candidate_spec_repair": {
+      "critical": 0,
+      "important": 0,
+      "minor": 0,
+      "yagni": 0,
+      "verdict": "accept",
+      "closed_finding": "a plan retaining relationship paths without the relationship lane is rejected before delegate/Web effects"
+    },
+    "candidate_evidence": {
+      "critical": 0,
+      "important": 0,
+      "minor": 0,
+      "yagni": 0,
+      "verdict": "acceptance_allowed",
+      "note": "current source and artifact hashes, task ledger, cache cleanup, branch, HEAD, and forbidden-action evidence are internally consistent"
+    }
+  },
+  "verification": {
+    "strict_openspec": "passed",
+    "target_document_diff_check": "passed",
+    "existing_scholarly_relationship_test": "1 passed, 8 deselected",
+    "existing_eight_direction_path_test": "1 passed, 8 deselected",
+    "red_normal": "60 deselected, 1 xfailed in 2.06 seconds at _MissingS8R3ProfessorPaperTraversal",
+    "red_forced": "1 failed, 60 deselected in 1.15 seconds only at _MissingS8R3ProfessorPaperTraversal before lazy fixture acquisition",
+    "real_red": "1 failed, 60 deselected in 4.14 seconds only at relationship request path is unsupported after the exact trace interface and real release fixture",
+    "positive_path_green": "1 passed, 60 deselected in 4.11 seconds",
+    "predecessor_regression_red": "S8R2 failed while S8R3 passed because the accepted auxiliary-trace diagnostic changed from canonical relationship output to canonical public relationship output",
+    "predecessor_regression_repair": "restored the accepted shared diagnostic without changing the rejection condition",
+    "review_red_green": [
+      "the S8R3 matrix was initially placed under the S8R2 owner; the ownership defect was removed and the exact S8R2/S8R3 owners were rerun independently and together",
+      "same-Paper Web exact-identifier rejection exposed relationship-only constraint replay; postvalidation now independently replays the actual fused group and verifies complete receipts and handles",
+      "authoritative-zero current-Web evidence could assert a fabricated Professor-Paper relationship; S8R3 now accepts those predicates only from the exact local Professor-Paper trace",
+      "hostile fused origin lane, attempt, and raw score were accepted; fused provenance now replays every contributing CandidateTrace",
+      "shared source endpoint entity type and retained source record crosswires were accepted; the adapter now requires source-space Professor/Paper endpoints and exact retained/shared source-record continuity",
+      "Candidate review found that an exact relationship path could survive after the relationship lane was removed and invoke Web; release-bound execution now rejects path/lane drift before delegate effects"
+    ],
+    "focused_green_warnings_as_errors": "1 passed, 60 deselected in 50.77 seconds after Candidate review repair",
+    "s8r1_literal_s8r1_s8r2_s8r3_matrix": "4 passed, 57 deselected in 118.59 seconds after Candidate review repair",
+    "s8r2_s8r3_combined_green": "2 passed, 59 deselected in 104.49 seconds",
+    "exact_predecessor_matrix_after_format": "9 passed, 52 deselected in 127.92 seconds after Candidate review repair",
+    "shared_physical_release_owner": "59 passed, 2 skipped in 151.49 seconds",
+    "relationship_and_release_publication_owners": "15 passed in 0.64 seconds",
+    "knowledge_read_and_query_planning_owners": "17 passed in 0.59 seconds",
+    "canonical_v2_no_external": "348 passed, 141 skipped, 3 intentional hostile-model serializer warnings in 155.70 seconds after Candidate review repair",
+    "ruff_check": "passed for complete src/data_agents/canonical_v2 and tests/canonical_v2",
+    "ruff_format": "74 files already formatted after formatting the three S8R3-owned files",
+    "py_compile": "passed for both changed production files and the physical owner test",
+    "pyright": "0 errors, 0 warnings, 0 informations for complete Canonical V2 source/tests",
+    "git_diff_check": "passed",
+    "untracked_whitespace_and_eof_check": "passed for the S8R3-owned source, test, contract, plan, and receipt files",
+    "uv_lock_check_offline": "resolved 194 packages without lock drift",
+    "high_confidence_secret_assignment_scan": "no matches in the S8R3-owned file set",
+    "stale_s8r3_xfail_scan": "no stale pytest xfail or exact RED reason remains"
+  },
+  "wheel": {
+    "path_before_owned_cleanup": "/var/tmp/canonical-v2-s8r3-wheel-NLmEn1/miroflow_agent-0.1.0-py3-none-any.whl",
+    "sha256": "e7f27aa16884ab7efd65db4e75445231bb698d8b0cfb0a538bf25f94a852c217",
+    "entry_count": 276,
+    "contains_tests_or_agents": false,
+    "knowledge_read_source_and_entry_sha256": "4daa5d2c7db813462b799bac9d92b35176fd13a869ea6f7825b1bae4e2137bd3",
+    "knowledge_read_isolated_source_and_entry_sha256": "fefa40ec43405ef13db08ddcfe8a19483e118fae3a4af3e1899d851c5958fa23",
+    "packaged_production_hashes_match_source": true,
+    "owned_output_cleanup_complete": true
+  },
+  "owned_generated_outputs": {
+    "wheel_directory": "/var/tmp/canonical-v2-s8r3-wheel-NLmEn1",
+    "cache_files": [
+      "apps/miroflow-agent/.ruff_cache/0.15.10/5428004810763614316",
+      "apps/miroflow-agent/.ruff_cache/0.15.10/7466570645398254889",
+      "apps/miroflow-agent/src/data_agents/canonical_v2/__pycache__/knowledge_read.cpython-312.pyc",
+      "apps/miroflow-agent/src/data_agents/canonical_v2/__pycache__/knowledge_read_isolated.cpython-312.pyc",
+      "apps/miroflow-agent/tests/canonical_v2/__pycache__/test_internal_reference_projection_contract.cpython-312-pytest-8.4.1.pyc",
+      "apps/miroflow-agent/tests/canonical_v2/__pycache__/test_internal_reference_projection_contract.cpython-312.pyc"
+    ],
+    "cleanup_complete": true
+  },
+  "frozen_targets": {
+    "original_milvus_path": "/home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db",
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_state": "paused true true",
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "original_pgtest_host_port": "15432",
+    "recovery_lab_network": "none",
+    "recovery_lab_published_ports": false,
+    "recovery_lab_restart_policy": "no",
+    "git_branch": "canonical-v2-s2-baseline",
+    "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6"
+  },
+  "next_required_action": "return to the outer goal loop and select the next independently Ready Task 8.3 relationship-family slice while keeping Task 8.3 unchecked and the formal 56/80 ledger unchanged",
+  "forbidden_actions_performed": []
+}

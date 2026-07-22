@@ -1,1548 +1,955 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<title>深圳科创数据浏览</title>
-<style>
-  :root {
-    --bg: #f4f6fa;
-    --fg: #1c2a3a;
-    --fg-muted: #6b7689;
-    --fg-faint: #a8b1c0;
-    --panel: #ffffff;
-    --panel-alt: #f9fafc;
-    --border: #e5e9f0;
-    --border-strong: #cfd6e0;
-    --accent: #2f5fd4;
-    --accent-hover: #1f4db8;
-    --accent-soft: #e5edff;
-    --warn: #c66100;
-    --warn-soft: #fff4e5;
-    --danger: #b8253b;
-    --danger-soft: #fbe7ea;
-    --ok: #1e7a3a;
-    --ok-soft: #e4f5ea;
-    --low: #8b6a00;
-    --low-accent: #d8a51a;
-    --low-soft: #fff6da;
-    --chip-bg: #eef2f9;
-    --shadow: 0 1px 3px rgba(20,30,60,0.05), 0 0 0 1px rgba(20,30,60,0.02);
-    --radius: 8px;
-    --radius-sm: 4px;
-  }
-  * { box-sizing: border-box; }
-  body {
-    font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Helvetica Neue",
-                 "Segoe UI", "Microsoft YaHei", "Source Han Sans CN", sans-serif;
-    margin: 0; background: var(--bg); color: var(--fg); font-size: 14px; line-height: 1.5;
-  }
-  header {
-    background: #fff; border-bottom: 1px solid var(--border);
-    padding: 12px 24px; display: flex; align-items: center; gap: 20px;
-    position: sticky; top: 0; z-index: 10;
-  }
-  header h1 {
-    margin: 0; font-size: 16px; font-weight: 600; color: var(--fg); letter-spacing: -0.01em;
-  }
-  header h1 .env { color: var(--fg-muted); font-weight: 400; font-size: 13px; margin-left: 8px; }
-  nav { display: flex; gap: 2px; }
-  nav button {
-    background: transparent; color: var(--fg-muted); border: none;
-    padding: 6px 14px; border-radius: var(--radius-sm); cursor: pointer;
-    font-size: 13px; font-weight: 500;
-  }
-  nav button.active { background: var(--accent-soft); color: var(--accent); }
-  nav button:hover:not(.active) { color: var(--fg); background: var(--panel-alt); }
-  #search {
-    flex: 1; max-width: 300px; margin-left: auto;
-    padding: 7px 12px; border: 1px solid var(--border); background: var(--panel-alt);
-    color: var(--fg); border-radius: var(--radius-sm); font-size: 13px;
-    transition: border-color 0.15s;
-  }
-  #search:focus { outline: none; border-color: var(--accent); background: #fff; }
-  main { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
-  .stats { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
-  .stat {
-    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 10px 16px; min-width: 110px;
-  }
-  .stat .label { color: var(--fg-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 500; }
-  .stat .value { font-size: 22px; font-weight: 600; color: var(--fg); margin-top: 2px; }
-  .filter-bar {
-    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 12px 16px; margin-bottom: 16px;
-    display: none; align-items: center; gap: 14px; flex-wrap: wrap;
-  }
-  .filter-bar.visible { display: flex; }
-  .filter-bar label {
-    display: flex; flex-direction: column; gap: 4px; font-size: 11px;
-    color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 500;
-  }
-  .filter-bar select, .filter-bar input[type=text] {
-    padding: 5px 9px; border: 1px solid var(--border); border-radius: var(--radius-sm);
-    font-size: 13px; font-family: inherit; color: var(--fg); background: #fff;
-    min-width: 140px;
-  }
-  .filter-bar select:focus, .filter-bar input:focus { outline: none; border-color: var(--accent); }
-  .filter-bar .toggle {
-    flex-direction: row; align-items: center; gap: 6px; font-size: 13px; color: var(--fg);
-    cursor: pointer; padding: 7px 12px; background: var(--panel-alt);
-    border: 1px solid var(--border); border-radius: var(--radius-sm);
-    text-transform: none; letter-spacing: 0; font-weight: 500;
-    align-self: flex-end;
-  }
-  .filter-bar .toggle:hover { border-color: var(--border-strong); }
-  .filter-bar .toggle input { margin: 0; accent-color: var(--accent); }
-  .filter-bar button.clear {
-    margin-left: auto; padding: 5px 10px; background: transparent; color: var(--fg-muted);
-    border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer;
-    font-size: 12px;
-  }
-  .filter-bar button.clear:hover { color: var(--fg); border-color: var(--border-strong); }
-  table {
-    background: var(--panel); border-collapse: separate; border-spacing: 0; width: 100%;
-    border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
-  }
-  th, td {
-    padding: 9px 14px; text-align: left; font-size: 13px; vertical-align: top;
-    border-bottom: 1px solid var(--border);
-  }
-  th {
-    background: var(--panel-alt); color: var(--fg-muted); font-weight: 500;
-    font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
-  }
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr { transition: background 0.1s; }
-  tbody tr:hover td {
-    background: var(--accent-soft);
-    cursor: pointer;
-    box-shadow: inset 2px 0 0 var(--accent);
-  }
-  tbody tr.anomaly td { background: var(--warn-soft); }
-  tbody tr.anomaly:hover td { background: #ffe8c7; }
-  tbody tr.issue-detail-row:hover td {
-    background: var(--panel-alt); box-shadow: none; cursor: default;
-  }
-  .pager {
-    margin-top: 14px; display: flex; gap: 8px; align-items: center;
-    font-size: 13px; color: var(--fg-muted);
-  }
-  .pager button {
-    padding: 5px 12px; border: 1px solid var(--border); background: #fff;
-    border-radius: var(--radius-sm); cursor: pointer; font-size: 12px; color: var(--fg);
-  }
-  .pager button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-  .pager button:disabled { opacity: 0.4; cursor: not-allowed; }
-  .badge {
-    display: inline-block; padding: 2px 7px; border-radius: 3px; font-size: 11px;
-    background: var(--chip-bg); color: var(--fg-muted); font-weight: 500; margin-right: 4px;
-  }
-  .badge.verified { background: var(--ok-soft); color: var(--ok); }
-  .badge.candidate { background: var(--warn-soft); color: var(--warn); }
-  .badge.rejected { background: var(--danger-soft); color: var(--danger); }
-  .badge.accent { background: var(--accent-soft); color: var(--accent); }
-  .chip {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 10px; border-radius: 12px; font-size: 12px;
-    background: var(--chip-bg); color: var(--fg); margin: 2px 4px 2px 0;
-  }
-  .chip.zh { background: #eff3f9; color: #334b69; }
-  .chip.en { background: #f3edf7; color: #523e66; }
-  .chip.mix { background: #eef5f0; color: #3f5b45; }
-  .lang-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; }
-  .chip.zh .lang-dot { background: #5b7aa5; }
-  .chip.en .lang-dot { background: #8a6fa3; }
-  .chip.mix .lang-dot { background: #6d9076; }
-  .topic-bar {
-    display: inline-block; width: 40px; height: 6px; background: var(--border);
-    border-radius: 3px; vertical-align: middle; margin-left: 6px; position: relative;
-  }
-  .topic-bar > span {
-    display: block; height: 100%; border-radius: 3px; background: var(--ok);
-  }
-  .topic-bar.low > span { background: var(--warn); }
-  .topic-bar.verylow > span { background: var(--danger); }
-  /* Round 9.1c — right-side slide-in drawer for professor detail */
-  #detail-overlay {
-    position: fixed; inset: 0;
-    background: rgba(15, 18, 22, 0.32);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 180ms ease;
-    z-index: 900;
-  }
-  #detail-overlay.open { opacity: 1; pointer-events: auto; }
-  #detail {
-    position: fixed; top: 0; right: 0; bottom: 0;
-    width: min(780px, 60vw);
-    background: var(--panel); border-left: 1px solid var(--border);
-    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.08);
-    padding: 28px 32px; padding-right: 44px;
-    overflow-y: auto;
-    transform: translateX(100%);
-    transition: transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
-    z-index: 1000;
-    display: block;
-  }
-  #detail.open { transform: translateX(0); }
-  #detail-close {
-    position: absolute; top: 18px; right: 18px;
-    width: 30px; height: 30px;
-    border: none; background: transparent;
-    border-radius: 50%;
-    font-size: 20px; color: var(--fg-muted);
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-  }
-  #detail-close:hover { background: var(--border); color: var(--fg); }
-  @media (max-width: 900px) {
-    #detail { width: 100vw; padding: 20px 22px; padding-right: 22px; }
-  }
-  #detail h3 { margin: 0 0 6px; font-size: 22px; font-weight: 600; letter-spacing: -0.015em; }
-  #detail h3 .en-name { color: var(--fg-muted); font-weight: 400; font-size: 15px; margin-left: 8px; }
-  #detail h3 .zh-alt { color: var(--accent); font-weight: 400; font-size: 15px; margin-left: 8px; }
-  #detail h3 .detail-actions { float: right; display: inline-flex; gap: 8px; margin-top: 4px; }
-  #detail h3 .chip-btn {
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: 999px;
-    background: var(--accent-soft);
-    color: var(--accent);
-    text-decoration: none;
-    border: 1px solid transparent;
-    font-weight: 500;
-  }
-  #detail h3 .chip-btn:hover { border-color: var(--accent); }
-  #detail .sub { color: var(--fg-muted); font-size: 13px; margin-bottom: 20px; }
-  #detail section { margin-bottom: 22px; }
-  #detail section:last-child { margin-bottom: 0; }
-  #detail section h4 {
-    font-size: 11px; margin: 0 0 10px; color: var(--fg-muted);
-    text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
-    padding-bottom: 6px; border-bottom: 1px solid var(--border);
-  }
-  #detail h4 .count { color: var(--fg-faint); font-weight: 400; margin-left: 6px; }
-  /* Round 9.1b — AI 画像 / 官网简介 卡片 */
-  .summary-card {
-    padding: 14px 16px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--surface);
-  }
-  .summary-card--ai {
-    background: var(--accent-soft);
-    border-color: transparent;
-    border-left: 3px solid var(--accent);
-  }
-  .summary-card--raw {
-    background: var(--surface);
-  }
-  .summary-card .summary-body {
-    margin: 0;
-    font-size: 13px;
-    line-height: 1.7;
-    color: var(--fg);
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  .summary-card--raw.collapsed .summary-body {
-    max-height: 4.5em;
-    overflow: hidden;
-    mask-image: linear-gradient(to bottom, #000 50%, transparent);
-  }
-  .summary-card .collapse-toggle {
-    float: right;
-    font-size: 10px;
-    padding: 2px 8px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    cursor: pointer;
-    color: var(--fg-muted);
-    text-transform: none;
-    letter-spacing: normal;
-  }
-  .summary-card .collapse-toggle:hover { color: var(--accent); border-color: var(--accent); }
-  .grid { display: grid; grid-template-columns: 110px 1fr; gap: 6px 16px; font-size: 13px; }
-  .grid dt { color: var(--fg-muted); font-weight: 500; }
-  .grid dd { margin: 0; color: var(--fg); word-break: break-word; }
-  .grid dd a { color: var(--accent); text-decoration: none; }
-  .grid dd a:hover { text-decoration: underline; }
-  .paper-item {
-    padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
-    margin-bottom: 6px; background: var(--panel-alt);
-  }
-  .paper-item .title { font-weight: 500; color: var(--fg); margin-bottom: 4px; }
-  .paper-item .meta { font-size: 12px; color: var(--fg-muted); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-  .paper-item .meta a { color: var(--accent); text-decoration: none; }
-  .paper-item .meta a:hover { text-decoration: underline; }
-  .empty { text-align: center; padding: 40px; color: var(--fg-faint); font-style: italic; }
-  #error {
-    background: var(--danger-soft); border: 1px solid #f4c7ce; padding: 10px 14px;
-    border-radius: var(--radius-sm); color: var(--danger); margin: 10px 0; display: none;
-  }
-  .load-more {
-    display: inline-block; margin-top: 8px; padding: 5px 12px; background: var(--panel-alt);
-    border: 1px solid var(--border); color: var(--fg-muted); border-radius: var(--radius-sm);
-    cursor: pointer; font-size: 12px;
-  }
-  .load-more:hover { color: var(--fg); border-color: var(--border-strong); }
-  .flag-btn {
-    padding: 4px 10px; background: #fff; border: 1px solid var(--border);
-    border-radius: var(--radius-sm); cursor: pointer; font-size: 12px; color: var(--fg);
-  }
-  .flag-btn:hover { border-color: var(--warn); color: var(--warn); }
-  code { background: var(--panel-alt); padding: 1px 5px; border-radius: 2px; font-size: 12px; }
-
-  /* ============ Guard-runs strip (数据质量动态) ============ */
-  .guard-strip-wrap {
-    background: var(--panel);
-    border-bottom: 1px solid var(--border);
-    padding: 12px 24px 14px;
-  }
-  .guard-strip-header {
-    display: flex; align-items: baseline; gap: 10px;
-    max-width: 1400px; margin: 0 auto 10px;
-  }
-  .guard-strip-header .title {
-    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
-    color: var(--fg); font-weight: 700;
-  }
-  .guard-strip-header .title::before {
-    content: ""; display: inline-block; width: 6px; height: 6px;
-    border-radius: 50%; background: var(--accent);
-    margin-right: 8px; vertical-align: 2px;
-    box-shadow: 0 0 0 3px var(--accent-soft);
-  }
-  .guard-strip-header .sub {
-    color: var(--fg-muted); font-size: 11px;
-  }
-  .guard-strip-scroll {
-    position: relative; max-width: 1400px; margin: 0 auto;
-  }
-  .guard-strip-scroll::after {
-    content: ""; position: absolute; top: 0; bottom: 4px; right: 0; width: 36px;
-    background: linear-gradient(to right, transparent, var(--panel) 80%);
-    pointer-events: none; border-radius: 0 var(--radius) var(--radius) 0;
-  }
-  .guard-strip {
-    display: flex; gap: 10px;
-    overflow-x: auto;
-    scrollbar-width: thin;
-    padding-bottom: 4px;
-  }
-  .guard-strip::-webkit-scrollbar { height: 6px; }
-  .guard-strip::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
-  .guard-card {
-    flex: 0 0 232px;
-    background: var(--panel-alt);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 11px 13px 12px;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
-    position: relative;
-  }
-  .guard-card::before {
-    content: ""; position: absolute; left: 0; top: 10px; bottom: 10px;
-    width: 3px; border-radius: 2px;
-    background: var(--border-strong);
-    transition: background 0.15s;
-  }
-  .guard-card.has-high::before { background: var(--danger); }
-  .guard-card.has-medium::before { background: var(--warn); }
-  .guard-card.has-low::before { background: var(--low-accent); }
-  .guard-card:hover {
-    border-color: var(--accent);
-    background: #fff;
-    box-shadow: 0 2px 6px rgba(47,95,212,0.08);
-  }
-  .guard-card .gc-round {
-    font-size: 12px; font-weight: 600; color: var(--fg);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    letter-spacing: -0.005em;
-  }
-  .guard-card .gc-round .gc-tag {
-    display: inline-block; font-variant-numeric: tabular-nums;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    background: var(--chip-bg); color: var(--fg); padding: 0 5px;
-    border-radius: 3px; margin-right: 5px; font-weight: 600;
-  }
-  .guard-card .gc-time {
-    font-size: 11px; color: var(--fg-muted); margin-top: 2px;
-  }
-  .guard-card .gc-footer {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-top: 9px; gap: 8px;
-  }
-  .guard-card .gc-rows {
-    font-size: 11px; color: var(--fg-muted);
-  }
-  .guard-card .gc-rows b {
-    color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums;
-  }
-  .guard-card .gc-sev {
-    display: flex; gap: 6px;
-  }
-  .sev-dot {
-    display: inline-flex; align-items: center; gap: 3px;
-    font-size: 11px; color: var(--fg); font-weight: 600;
-    font-variant-numeric: tabular-nums;
-  }
-  .sev-dot::before {
-    content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%;
-  }
-  .sev-dot.high::before { background: var(--danger); box-shadow: 0 0 0 2px var(--danger-soft); }
-  .sev-dot.medium::before { background: var(--warn); box-shadow: 0 0 0 2px var(--warn-soft); }
-  .sev-dot.low::before { background: var(--low-accent); box-shadow: 0 0 0 2px var(--low-soft); }
-  .sev-dot.none { color: var(--fg-faint); }
-  .sev-dot.none::before { background: var(--border-strong); }
-  .guard-card.skeleton {
-    pointer-events: none;
-    background: linear-gradient(90deg, var(--panel-alt) 0%, #f0f3f8 50%, var(--panel-alt) 100%);
-    background-size: 200% 100%;
-    animation: shimmer 1.4s infinite;
-    min-height: 72px;
-  }
-  .guard-card.skeleton::before { display: none; }
-  @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-
-  /* ============ Issues tab ============ */
-  .badge.sev-high {
-    background: var(--danger-soft); color: var(--danger); font-weight: 600;
-  }
-  .badge.sev-medium {
-    background: var(--warn-soft); color: var(--warn); font-weight: 600;
-  }
-  .badge.sev-low {
-    background: var(--low-soft); color: var(--low); font-weight: 600;
-  }
-  .badge.sev-high::before,
-  .badge.sev-medium::before,
-  .badge.sev-low::before {
-    content: ""; display: inline-block; width: 5px; height: 5px; border-radius: 50%;
-    margin-right: 5px; vertical-align: middle;
-  }
-  .badge.sev-high::before { background: var(--danger); }
-  .badge.sev-medium::before { background: var(--warn); }
-  .badge.sev-low::before { background: var(--low-accent); }
-  .badge.resolved-yes { background: var(--ok-soft); color: var(--ok); }
-  .badge.resolved-no { background: var(--chip-bg); color: var(--fg-muted); }
-
-  .issue-row .desc-cell {
-    max-width: 480px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .issue-row .reported-cell {
-    font-size: 12px; line-height: 1.35; white-space: nowrap;
-  }
-  .issue-row .reported-cell .rc-when {
-    font-variant-numeric: tabular-nums; color: var(--fg);
-  }
-  .issue-row .reported-cell .rc-tag {
-    display: inline-block; margin-top: 3px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 10.5px; color: var(--fg-muted);
-    background: var(--chip-bg); padding: 1px 6px; border-radius: 3px;
-    max-width: 140px; overflow: hidden; text-overflow: ellipsis; vertical-align: middle;
-  }
-  tr.issue-detail-row td {
-    background: var(--panel-alt); padding: 14px 18px;
-  }
-  tr.issue-detail-row pre {
-    margin: 0; font-size: 12px; line-height: 1.5;
-    background: #fff; border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: 12px; overflow-x: auto;
-    color: var(--fg); max-height: 420px;
-  }
-  tr.issue-detail-row .detail-meta {
-    display: flex; gap: 16px; margin-bottom: 10px;
-    font-size: 12px; color: var(--fg-muted);
-  }
-  tr.issue-detail-row .detail-meta b { color: var(--fg); font-weight: 600; }
-
-  /* Table row hover + skeleton shimmer */
-  tbody tr.skeleton-row td {
-    background: linear-gradient(90deg, var(--panel) 0%, var(--panel-alt) 50%, var(--panel) 100%);
-    background-size: 200% 100%;
-    animation: shimmer 1.4s infinite;
-    height: 34px;
-  }
-  tbody tr.skeleton-row td > span {
-    display: inline-block; height: 10px; border-radius: 3px;
-    background: var(--border); width: 70%;
-  }
-
-  /* Responsive down to 900px */
-  @media (max-width: 1024px) {
-    header { padding: 10px 16px; flex-wrap: wrap; gap: 12px; }
-    header h1 { font-size: 15px; }
-    #search { max-width: none; width: 100%; margin-left: 0; order: 3; }
-    main { padding: 16px; }
-    .guard-strip-wrap { padding: 10px 16px; }
-    .guard-strip-header, .guard-strip { max-width: none; }
-  }
-  @media (max-width: 900px) {
-    nav { flex-wrap: wrap; }
-    .filter-bar { padding: 10px 12px; gap: 10px; }
-    .filter-bar select, .filter-bar input[type=text] { min-width: 120px; }
-    #list-wrapper { overflow-x: auto; }
-    table { min-width: 720px; }
-  }
-</style>
-</head>
-<body>
-
-<header>
-  <h1>深圳科创数据 <span class="env">· miroflow_real</span></h1>
-  <nav id="tabs">
-    <button data-domain="companies" class="active">企业</button>
-    <button data-domain="professors">教授</button>
-    <button data-domain="papers">论文</button>
-    <button data-domain="patents">专利</button>
-    <button data-domain="issues">Issues</button>
-    <button data-domain="pipeline">Pipeline 诊断</button>
-    <button data-domain="review">人工审核</button>
-  </nav>
-  <input id="search" placeholder="按名称 / 关键词搜索…（回车）">
-</header>
-
-<!-- 数据质量动态 strip (guard runs) -->
-<div class="guard-strip-wrap" id="guard-strip-wrap">
-  <div class="guard-strip-header">
-    <span class="title">数据质量动态</span>
-    <span class="sub" id="guard-strip-sub">最近 7 天 guard 轮次 · 点击跳转到 Issues</span>
-  </div>
-  <div class="guard-strip-scroll">
-    <div class="guard-strip" id="guard-strip"></div>
-  </div>
-</div>
-
-<main>
-  <div class="stats" id="stats"></div>
-
-  <!-- Pipeline Issues filter bar -->
-  <div class="filter-bar" id="issues-filters">
-    <label>Stage
-      <select id="if-stage">
-        <option value="">全部 stage</option>
-        <option value="discovery">discovery</option>
-        <option value="name_extraction">name_extraction</option>
-        <option value="affiliation">affiliation</option>
-        <option value="paper_attribution">paper_attribution</option>
-        <option value="paper_quality">paper_quality</option>
-        <option value="research_directions">research_directions</option>
-        <option value="identity_gate">identity_gate</option>
-        <option value="coverage">coverage</option>
-        <option value="data_quality_flag">data_quality_flag</option>
-      </select>
-    </label>
-    <label>Severity
-      <select id="if-severity">
-        <option value="">全部 severity</option>
-        <option value="high">high</option>
-        <option value="medium">medium</option>
-        <option value="low">low</option>
-      </select>
-    </label>
-    <label>Reported by
-      <select id="if-reported-by"><option value="">全部来源</option></select>
-    </label>
-    <label class="toggle">
-      <input type="checkbox" id="if-resolved">
-      只看未解决
-    </label>
-    <label>描述搜索
-      <input type="text" id="if-q" placeholder="关键词…（回车）">
-    </label>
-    <button class="clear" id="if-clear">清空筛选</button>
-  </div>
-
-  <!-- Professor-specific faceted filters -->
-  <div class="filter-bar" id="prof-filters">
-    <label>机构
-      <select id="f-institution"><option value="">全部机构</option></select>
-    </label>
-    <label>学科
-      <select id="f-discipline">
-        <option value="">全部学科</option>
-        <option value="computer_science">计算机科学</option>
-        <option value="electrical_engineering">电气工程</option>
-        <option value="mechanical_engineering">机械工程</option>
-        <option value="materials">材料科学</option>
-        <option value="biomedical">生物医学</option>
-        <option value="mathematics">数学</option>
-        <option value="physics">物理</option>
-        <option value="chemistry">化学</option>
-        <option value="interdisciplinary">交叉学科</option>
-        <option value="other">其他</option>
-      </select>
-    </label>
-    <label class="toggle">
-      <input type="checkbox" id="f-verified-only">
-      只看有 verified 论文的
-    </label>
-    <button class="clear" id="f-clear">清空筛选</button>
-  </div>
-
-  <div id="error"></div>
-  <div id="list-wrapper">
-    <table id="list-table"><thead></thead><tbody></tbody></table>
-    <div class="pager">
-      <button id="prev">上一页</button>
-      <span id="page-info"></span>
-      <button id="next">下一页</button>
-    </div>
-  </div>
-</main>
-<div id="detail-overlay"></div>
-<aside id="detail">
-  <button id="detail-close" aria-label="关闭详情">×</button>
-  <div id="detail-body"></div>
-</aside>
-
-<script>
-// ============ Discipline i18n (Round 9.1a) ============
-// Maps canonical professor.discipline_family enum → Chinese display label.
-// DB contract (enum values) unchanged; filter dropdown uses the codes as value.
-const DISCIPLINE_LABEL = {
-  computer_science: "计算机科学",
-  electrical_engineering: "电气工程",
-  mechanical_engineering: "机械工程",
-  materials: "材料科学",
-  biomedical: "生物医学",
-  mathematics: "数学",
-  physics: "物理",
-  chemistry: "化学",
-  interdisciplinary: "交叉学科",
-  other: "其他",
-};
-function disciplineLabel(code) {
-  return DISCIPLINE_LABEL[code] || code || "";
-}
-
-// ============ State ============
-let currentDomain = "companies";
-let currentPage = 1;
-const PAGE_SIZE = 20;
-let currentQuery = "";
-let currentTotal = 0;
-let profFilters = { institution: "", discipline_family: "", has_verified_papers: false };
-let issueFilters = { stage: "", severity: "", reported_by: "", resolved: false, q: "" };
-let expandedIssueId = null;
-let guardRunsCache = null;
-
-// ============ DOM refs ============
-const listTable = document.getElementById("list-table");
-const detail = document.getElementById("detail");
-const detailBody = document.getElementById("detail-body");
-const detailOverlay = document.getElementById("detail-overlay");
-const detailClose = document.getElementById("detail-close");
-const statsBox = document.getElementById("stats");
-const pageInfo = document.getElementById("page-info");
-
-// Round 9.1c — open/close helpers
-function openDetail() {
-  detail.classList.add("open");
-  detailOverlay.classList.add("open");
-  document.body.style.overflow = "hidden";
-}
-function closeDetail() {
-  detail.classList.remove("open");
-  detailOverlay.classList.remove("open");
-  document.body.style.overflow = "";
-  if (location.hash) history.replaceState(null, "", location.pathname);
-}
-detailClose.addEventListener("click", closeDetail);
-detailOverlay.addEventListener("click", closeDetail);
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && detail.classList.contains("open")) closeDetail();
-});
-const searchBox = document.getElementById("search");
-const errorBox = document.getElementById("error");
-const profFiltersEl = document.getElementById("prof-filters");
-const fInst = document.getElementById("f-institution");
-const fDisc = document.getElementById("f-discipline");
-const fVerified = document.getElementById("f-verified-only");
-const issueFiltersEl = document.getElementById("issues-filters");
-const ifStage = document.getElementById("if-stage");
-const ifSeverity = document.getElementById("if-severity");
-const ifReportedBy = document.getElementById("if-reported-by");
-const ifResolved = document.getElementById("if-resolved");
-const ifQ = document.getElementById("if-q");
-const guardStripEl = document.getElementById("guard-strip");
-
-// ============ Utilities ============
-function detectLang(text) {
-  if (!text) return "";
-  const hasZh = /[\u4e00-\u9fff]/.test(text);
-  const hasEn = /[A-Za-z]/.test(text);
-  if (hasZh && hasEn) return "mix";
-  if (hasZh) return "zh";
-  if (hasEn) return "en";
-  return "";
-}
-
-function esc(s) {
-  if (s == null) return "";
-  return String(s).replace(/[&<>"']/g, c => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[c]));
-}
-
-function topicBar(score) {
-  if (score == null) return "";
-  const pct = Math.round(score * 100);
-  const cls = score < 0.7 ? "verylow" : score < 0.85 ? "low" : "";
-  return `<span class="topic-bar ${cls}" title="topic consistency ${score.toFixed(2)}">
-    <span style="width:${pct}%"></span></span>`;
-}
-
-// Format guard-run round ID like "round_7_18c_institution_cleanup" -> "R7.18c Institution Cleanup"
-function prettyGuardRound(reportedBy) {
-  if (!reportedBy) return "-";
-  const m = reportedBy.match(/^round_(\d+)_(\d+)([a-z]?)(?:_(.+))?$/i);
-  if (!m) {
-    return reportedBy.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-  }
-  const [, major, minor, suffix, rest] = m;
-  const tag = `R${major}.${minor}${suffix || ""}`;
-  const label = rest
-    ? rest.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())
-    : "";
-  return label ? `${tag} · ${label}` : tag;
-}
-
-// "3h ago" / "yesterday" / "2d ago" / "just now"
-function relativeTime(iso) {
-  if (!iso) return "-";
-  const then = new Date(iso);
-  if (isNaN(then)) return "-";
-  const diffMs = Date.now() - then.getTime();
-  const sec = Math.floor(diffMs / 1000);
-  if (sec < 60) return "just now";
-  const min = Math.floor(sec / 60);
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  const day = Math.floor(hr / 24);
-  if (day === 1) return "yesterday";
-  if (day < 7) return `${day}d ago`;
-  if (day < 30) return `${Math.floor(day / 7)}w ago`;
-  return then.toISOString().slice(0, 10);
-}
-
-// ============ API wrappers ============
-async function apiList(domain, extraParams = {}) {
-  const qs = new URLSearchParams({ page: currentPage, page_size: PAGE_SIZE });
-  if (currentQuery) qs.set("q", currentQuery);
-  for (const [k, v] of Object.entries(extraParams)) {
-    if (v !== "" && v !== null && v !== undefined && v !== false) qs.set(k, v);
-  }
-  const url = `/api/data/${domain}?${qs}`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error(`${url}: ${r.status}`);
-  return r.json();
-}
-async function apiDetail(domain, id) {
-  const r = await fetch(`/api/data/${domain}/${encodeURIComponent(id)}`);
-  if (!r.ok) throw new Error(`detail ${r.status}`);
-  return r.json();
-}
-async function apiInstitutionFacets() {
-  try {
-    const r = await fetch("/api/data/facets/professor-institutions");
-    if (r.ok) return r.json();
-  } catch (_) {}
-  return [];
-}
-async function apiIndustryFacets() {
-  try {
-    const r = await fetch("/api/data/facets/industries");
-    if (r.ok) return r.json();
-  } catch (_) {}
-  return [];
-}
-
-// ============ Column layouts ============
-const COLUMNS = {
-  companies: [
-    { key: "canonical_name", label: "公司名" },
-    { key: "industry", label: "行业" },
-    { key: "latest_funding_round", label: "最近融资轮次" },
-    { key: "is_shenzhen", label: "深圳",
-      render: (r) => r.is_shenzhen ? "✓" : "" },
-    { key: "last_refreshed_at", label: "更新时间",
-      render: (r) => r.last_refreshed_at ? r.last_refreshed_at.slice(0, 10) : "" },
-  ],
-  professors: [
-    { key: "canonical_name", label: "姓名",
-      render: (r) => `${esc(r.canonical_name)}${r.canonical_name_en
-        ? `<br><small style="color:var(--fg-muted);font-size:11px">${esc(r.canonical_name_en)}</small>`
-        : ""}` },
-    { key: "institution", label: "机构" },
-    { key: "discipline_family", label: "学科",
-      render: (r) => disciplineLabel(r.discipline_family) },
-    { key: "research_topic_count", label: "研究方向",
-      render: (r) => r.research_topic_count || 0 },
-    { key: "h_index", label: "H-index",
-      render: (r) => r.h_index == null ? "—" : r.h_index },
-    { key: "citation_count", label: "引用",
-      render: (r) => r.citation_count == null ? "—" : r.citation_count },
-    { key: "paper_count", label: "论文数",
-      render: (r) => {
-        if (r.paper_count == null) return "—";
-        const n = r.paper_count;
-        return n > 0 ? `<span class="badge verified">${n}</span>` : `<span style="color:var(--fg-faint)">0</span>`;
-      }},
-  ],
-  papers: [
-    { key: "title_clean", label: "标题" },
-    { key: "pdf_url", label: "PDF",
-      render: (r) => r.pdf_url
-        ? `<a href="${esc(r.pdf_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">PDF</a>`
-        : "—" },
-    { key: "year", label: "年份" },
-    { key: "venue", label: "期刊 / 会议" },
-    { key: "citation_count", label: "引用" },
-    { key: "linked_professor_count", label: "关联教授" },
-  ],
-  patents: [
-    { key: "patent_number", label: "专利号" },
-    { key: "title_clean", label: "标题" },
-    { key: "patent_type", label: "类型" },
-    { key: "filing_date", label: "申请日" },
-  ],
-};
-
-// ============ List rendering ============
-function renderList(payload) {
-  const cols = COLUMNS[currentDomain] || [];
-  const thead = listTable.querySelector("thead");
-  const tbody = listTable.querySelector("tbody");
-  thead.innerHTML = "<tr>" + cols.map(c => `<th>${c.label}</th>`).join("") + "</tr>";
-  const items = payload.items || [];
-  currentTotal = payload.total || items.length || 0;
-  if (items.length === 0) {
-    tbody.innerHTML = `<tr><td class="empty" colspan="${cols.length || 1}">
-      暂无数据${currentDomain === "patents" ? "（专利待 xlsx 导入）" : ""}</td></tr>`;
-  } else {
-    tbody.innerHTML = items.map(row => {
-      const tds = cols.map(c => {
-        const v = c.render ? c.render(row) : row[c.key];
-        return `<td>${v == null ? "" : String(v)}</td>`;
-      }).join("");
-      const id = row.company_id || row.professor_id || row.paper_id || row.patent_id;
-      return `<tr data-id="${id || ''}">${tds}</tr>`;
-    }).join("");
-    tbody.querySelectorAll("tr").forEach(tr => {
-      tr.addEventListener("click", () => showDetail(tr.dataset.id));
-    });
-  }
-  const pageCount = Math.max(1, Math.ceil(currentTotal / PAGE_SIZE));
-  pageInfo.textContent = `共 ${currentTotal} 条 · 第 ${currentPage} / ${pageCount} 页`;
-  document.getElementById("prev").disabled = currentPage <= 1;
-  document.getElementById("next").disabled = currentPage * PAGE_SIZE >= currentTotal;
-}
-
-// ============ Detail rendering ============
-async function showDetail(id) {
-  if (!id) return;
-  detailBody.innerHTML = "<em>加载中…</em>";
-  openDetail();
-  // Sync URL hash so /browse#professor/{id} deep-links the drawer
-  if (currentDomain === "professors" && !location.hash.includes(id)) {
-    history.replaceState(null, "", `#professor/${encodeURIComponent(id)}`);
-  }
-  try {
-    const d = await apiDetail(currentDomain, id);
-    detailBody.innerHTML = renderDetail(d);
-    detail.scrollTop = 0;
-  } catch (e) {
-    detailBody.innerHTML = `<div class="empty">详情加载失败: ${esc(e.message)}</div>`;
-  }
-}
-
-// Round 9.1c — deep-link handler: /browse#professor/{id} auto-opens that drawer on load
-function _handleDeepLink() {
-  const m = /^#professor\/([A-Za-z0-9-]+)$/.exec(location.hash);
-  if (!m) return;
-  const profId = decodeURIComponent(m[1]);
-  // Switch to professors tab first, then open the drawer
-  const btn = document.querySelector('nav#tabs button[data-domain="professors"]');
-  if (btn && !btn.classList.contains("active")) btn.click();
-  setTimeout(() => showDetail(profId), 120);
-}
-window.addEventListener("load", _handleDeepLink);
-window.addEventListener("hashchange", _handleDeepLink);
-
-function renderFact(f) {
-  const text = f.value_raw || f.value_normalized || "";
-  const lang = detectLang(text);
-  const langDot = lang ? `<span class="lang-dot"></span>` : "";
-  const cls = lang ? `chip ${lang}` : "chip";
-  return `<span class="${cls}" title="${lang === 'mix' ? '中英混合' : lang === 'en' ? '英文' : '中文'}">
-    ${langDot}${esc(text)}</span>`;
-}
-
-function renderPaperItem(p, statusClass) {
-  const y = p.year ? `<span class="badge ${statusClass}">${p.year}</span>` : "";
-  const cite = p.citation_count ? `<span>被引 ${p.citation_count}</span>` : "";
-  const venue = p.venue ? `<span title="${esc(p.venue)}">${esc(p.venue).slice(0, 40)}</span>` : "";
-  const tc = topicBar(p.topic_consistency_score);
-  const src = p.source_page_url
-    ? `<a href="${esc(p.source_page_url)}" target="_blank" rel="noopener">来源 ↗</a>`
-    : "";
-  const doi = p.doi ? `<a href="https://doi.org/${esc(p.doi)}" target="_blank" rel="noopener">DOI ↗</a>` : "";
-  return `<div class="paper-item">
-    <div class="title">${esc(p.title_clean || "(无标题)")}</div>
-    <div class="meta">${y}${venue ? "· " + venue : ""}${cite ? "· " + cite : ""}
-      ${tc}${src ? "· " + src : ""}${doi ? "· " + doi : ""}</div>
-  </div>`;
-}
-
-function renderProfessorDetail(d) {
-  const p = d.professor || {};
-  const affs = d.affiliations || [];
-  const fbt = d.facts_by_type || {};
-  const vp = d.verified_papers || [];
-  const cp = d.candidate_papers || [];
-  const rp = d.rejected_papers || [];
-  const rpTotal = d.rejected_papers_total || rp.length || 0;
-  const primaryAff = affs[0] || {};
-
-  const factSection = (title, key, statusClass = "") => {
-    const rows = fbt[key];
-    if (!rows || rows.length === 0) return "";
-    return `<section><h4>${title}<span class="count">${rows.length}</span></h4>
-      <div>${rows.map(renderFact).join("")}</div></section>`;
-  };
-
-  const paperSection = (label, arr, total, cls) => {
-    if (!arr || arr.length === 0) return total > 0
-      ? `<section><h4>${label}<span class="count">${total}</span></h4>
-          <p class="empty" style="padding:20px;margin:0">共 ${total} 条，后端返回 0 条（请求参数或筛选条件问题）</p></section>`
-      : "";
-    const extraCount = total > arr.length ? ` / ${total}` : "";
-    return `<section><h4>${label}<span class="count">${arr.length}${extraCount}</span></h4>
-      <div>${arr.map(p => renderPaperItem(p, cls)).join("")}</div></section>`;
-  };
-
-  const profileUrl = p.primary_profile_url
-    ? `<a href="${esc(p.primary_profile_url)}" target="_blank" rel="noopener">${esc(p.primary_profile_url)}</a>`
-    : "-";
-
-  const rdSource = p.research_directions_source
-    ? `<span class="badge accent">${esc(p.research_directions_source)}</span>`
-    : "";
-
-  const disciplineZh = disciplineLabel(p.discipline_family);
-  const zhName = p.canonical_name_zh && p.canonical_name_zh !== p.canonical_name
-    ? ` <span class="zh-alt">${esc(p.canonical_name_zh)}</span>` : "";
-  const enName = p.canonical_name_en && p.canonical_name_en !== p.canonical_name
-    ? ` <span class="en-name">${esc(p.canonical_name_en)}</span>` : "";
-  const detailUrl = `/browse#professor/${encodeURIComponent(p.professor_id || "")}`;
-  const exportJson = `data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(d, null, 2))}`;
-
-  return `
-    <h3>
-      ${esc(p.canonical_name || "(未知)")}${zhName}${enName}
-      <span class="detail-actions">
-        <a class="chip-btn" href="${detailUrl}" target="_blank" rel="noopener">新窗口 ↗</a>
-        <a class="chip-btn" href="${exportJson}" download="${esc(p.professor_id || 'professor')}.json">导出 JSON</a>
-      </span>
-    </h3>
-    <div class="sub">
-      ${esc(primaryAff.institution || "")} · ${esc(primaryAff.department || "")} · ${esc(primaryAff.title || "")}
-      ${disciplineZh ? ` · <span class="badge accent">${esc(disciplineZh)}</span>` : ""}
-    </div>
-    <section>
-      <h4>身份与出处</h4>
-      <dl class="grid">
-        <dt>professor_id</dt><dd><code>${esc(p.professor_id)}</code></dd>
-        <dt>官方主页</dt><dd>${profileUrl}</dd>
-        <dt>研究方向来源</dt><dd>${rdSource || "-"}</dd>
-        <dt>所用源页数</dt><dd>${d.source_pages_used || 0}</dd>
-        <dt>最后刷新</dt><dd>${p.last_refreshed_at ? p.last_refreshed_at.slice(0, 10) : "-"}</dd>
-      </dl>
-    </section>
-    ${p.profile_summary ? `
-    <section class="summary-card summary-card--ai">
-      <h4>AI 教授画像</h4>
-      <p class="summary-body">${esc(p.profile_summary)}</p>
-    </section>` : ""}
-    ${p.profile_raw_text ? `
-    <section class="summary-card summary-card--raw">
-      <h4>官网简介
-        <button class="collapse-toggle" onclick="this.parentElement.parentElement.classList.toggle('collapsed')">折叠/展开</button>
-      </h4>
-      <p class="summary-body">${esc(p.profile_raw_text)}</p>
-    </section>` : ""}
-    ${factSection("研究方向", "research_topic")}
-    ${factSection("教育背景", "education")}
-    ${factSection("工作经历", "work_experience")}
-    ${factSection("获奖荣誉", "award")}
-    ${factSection("学术任职", "academic_position")}
-    ${factSection("联系方式", "contact")}
-    ${paperSection("已验证论文", vp, vp.length, "verified")}
-    ${paperSection("候选论文", cp, cp.length, "candidate")}
-    ${paperSection("已拒绝论文", rp, rpTotal, "rejected")}`;
-}
-
-function renderDetail(d) {
-  if (currentDomain === "companies") {
-    const c = d.company || {};
-    const snap = d.latest_snapshot || {};
-    const fe = (d.funding_events || []).slice(0, 5);
-    const tm = (d.team_members || []).slice(0, 10);
-    return `
-      <h3>${esc(c.canonical_name || "(未知)")}</h3>
-      <div class="sub">${esc(snap.industry || "-")} · ${esc(c.hq_city || "")} ${c.is_shenzhen ? "· 深圳" : ""}</div>
-      <section><h4>身份</h4><dl class="grid">
-        <dt>company_id</dt><dd><code>${esc(c.company_id)}</code></dd>
-        <dt>网址</dt><dd>${c.website
-          ? `<a href="${esc(c.website)}" target="_blank" rel="noopener">${esc(c.website)}</a>` : "-"}</dd>
-        <dt>法人代表</dt><dd>${esc(snap.legal_representative || "-")}</dd>
-        <dt>成立日期</dt><dd>${esc(snap.established_date || "-")}</dd>
-        <dt>注册资金</dt><dd>${esc(snap.registered_capital || "-")}</dd>
-      </dl></section>
-      <section><h4>公司简介</h4><p style="line-height:1.6;margin:0">${esc((snap.description || "").slice(0, 500))}</p></section>
-      <section><h4>团队成员<span class="count">${tm.length}</span></h4>
-        <div>${tm.map(m => `<span class="chip">${esc(m.raw_name)}${m.raw_role
-          ? ` · <span style="color:var(--fg-muted)">${esc(m.raw_role)}</span>` : ""}</span>`).join("")}</div>
-      </section>
-      <section><h4>融资事件<span class="count">${fe.length}</span></h4>
-        <div>${fe.map(e => `<div class="paper-item">
-          <div class="title">${esc(e.event_summary || "")}</div>
-          <div class="meta">${esc(e.event_date || "")}</div></div>`).join("")}</div>
-      </section>`;
-  }
-  if (currentDomain === "professors") return renderProfessorDetail(d);
-  if (currentDomain === "papers") {
-    const p = d.paper || {};
-    const lp = d.linked_professors || {};
-    return `
-      <h3>${esc(p.title_clean)}</h3>
-      <div class="sub">${esc(p.venue || "")} · ${esc(p.year || "")} · 被引 ${p.citation_count || 0}</div>
-      <section><h4>作者</h4><p style="margin:0">${esc(p.authors_display || "-")}</p></section>
-      <section><h4>摘要</h4><p style="margin:0;line-height:1.6">${esc((p.abstract_clean || "").slice(0, 800))}</p></section>
-      <section><h4>标识</h4><dl class="grid">
-        <dt>DOI</dt><dd>${p.doi
-          ? `<a href="https://doi.org/${esc(p.doi)}" target="_blank" rel="noopener">${esc(p.doi)}</a>` : "-"}</dd>
-        <dt>PDF</dt><dd>${p.pdf_url
-          ? `<a href="${esc(p.pdf_url)}" target="_blank" rel="noopener">打开 PDF</a>` : "-"}</dd>
-        <dt>OpenAlex</dt><dd><code>${esc(p.openalex_id || "-")}</code></dd>
-        <dt>arXiv</dt><dd><code>${esc(p.arxiv_id || "-")}</code></dd>
-        <dt>全文来源</dt><dd><code>${esc(p.full_text_source || "-")}</code></dd>
-        <dt>标题匹配</dt><dd><code>${esc(p.title_match_source || "-")}</code>${p.title_match_confidence == null ? "" : ` · ${p.title_match_confidence}`}</dd>
-      </dl></section>
-      <section><h4>关联教授 verified<span class="count">${(lp.verified || []).length}</span></h4>
-        <div>${(lp.verified || []).map(x => `<span class="chip">${esc(x.canonical_name)}
-          <span style="color:var(--fg-muted);font-size:11px">${esc(x.institution || "")}</span></span>`).join("")}</div>
-      </section>
-      <section><h4>关联教授 candidate<span class="count">${(lp.candidate || []).length}</span></h4>
-        <div>${(lp.candidate || []).map(x => `<span class="chip">${esc(x.canonical_name)}
-          <span style="color:var(--fg-muted);font-size:11px">${esc(x.institution || "")}</span></span>`).join("")}</div>
-      </section>`;
-  }
-  return `<pre>${esc(JSON.stringify(d, null, 2))}</pre>`;
-}
-
-// ============ Pipeline view ============
-async function loadPipelineView() {
-  errorBox.style.display = "none";
-  closeDetail();
-  profFiltersEl.classList.remove("visible");
-  statsBox.innerHTML = "";
-  const tbody = listTable.querySelector("tbody");
-  const thead = listTable.querySelector("thead");
-  tbody.innerHTML = `<tr><td class="empty">加载中…</td></tr>`;
-  try {
-    const [coverage, sources] = await Promise.all([
-      fetch("/api/pipeline/coverage-by-institution").then(r => r.json()),
-      fetch("/api/pipeline/source-breakdown").then(r => r.json()),
-    ]);
-    const sb = sources.by_link_status || {};
-    statsBox.innerHTML = Object.entries(sb).map(
-      ([k, v]) => `<div class="stat"><div class="label">${esc(k)}</div><div class="value">${v}</div></div>`
-    ).join("") + `<div class="stat"><div class="label">机构数</div><div class="value">${coverage.length}</div></div>`;
-    thead.innerHTML = `<tr>
-      <th>机构</th><th>教授</th><th>有 verified 论文</th><th>有研究方向</th>
-      <th>空作者论文</th><th>Gate 拒绝率</th><th>平均主题贴合</th><th>异常</th>
-    </tr>`;
-    tbody.innerHTML = coverage.map(c => {
-      const flags = (c.anomaly_flags || []).map(f => `<span class="badge candidate">${esc(f)}</span>`).join("");
-      const rate = (c.identity_gate_rejection_rate * 100).toFixed(1);
-      const topic = c.avg_topic_consistency_score == null ? "-" : c.avg_topic_consistency_score.toFixed(3);
-      const rowCls = flags ? 'class="anomaly"' : "";
-      return `<tr ${rowCls}><td>${esc(c.institution)}</td><td>${c.professor_count}</td>
-        <td>${c.with_verified_papers}</td><td>${c.with_research_directions}</td>
-        <td>${c.empty_authors_papers}</td><td>${rate}%</td>
-        <td>${topic}</td><td>${flags || "-"}</td></tr>`;
-    }).join("");
-    const byApi = sources.by_evidence_api_source || {};
-    const byVby = sources.by_verified_by || {};
-    openDetail();
-    detailBody.innerHTML = `
-      <h3>论文链来源分布</h3>
-      <section><h4>按 evidence_api_source</h4>
-        <dl class="grid">${Object.entries(byApi).sort((a,b) => b[1]-a[1]).slice(0,15).map(
-          ([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join("")}</dl></section>
-      <section><h4>按 verified_by</h4>
-        <dl class="grid">${Object.entries(byVby).map(
-          ([k, v]) => `<dt>${esc(k || "(null)")}</dt><dd>${v}</dd>`).join("")}</dl></section>`;
-    document.getElementById("prev").disabled = true;
-    document.getElementById("next").disabled = true;
-    pageInfo.textContent = `${coverage.length} 所机构`;
-  } catch (e) {
-    errorBox.style.display = "block";
-    errorBox.textContent = `Pipeline 视图加载失败: ${e.message}`;
-    tbody.innerHTML = "";
-  }
-}
-
-// ============ Review view ============
-async function loadReviewView() {
-  errorBox.style.display = "none";
-  closeDetail();
-  profFiltersEl.classList.remove("visible");
-  statsBox.innerHTML = "";
-  const tbody = listTable.querySelector("tbody");
-  const thead = listTable.querySelector("thead");
-  tbody.innerHTML = `<tr><td class="empty">随机抽取教授审核样本中…</td></tr>`;
-  try {
-    const seed = new URLSearchParams(location.search).get("seed") || "";
-    const qs = new URLSearchParams({ n: 10 });
-    if (seed) qs.set("seed", seed);
-    const [samples, issues] = await Promise.all([
-      fetch(`/api/review/sample?${qs}`).then(r => r.json()),
-      fetch("/api/review/issues?resolved=false&limit=50").then(r => r.json()),
-    ]);
-    statsBox.innerHTML = `
-      <div class="stat"><div class="label">抽样数</div><div class="value">${samples.length}</div></div>
-      <div class="stat"><div class="label">未解决 issue</div><div class="value">${issues.length}</div></div>`;
-    thead.innerHTML = `<tr>
-      <th>姓名</th><th>机构</th><th>研究方向</th>
-      <th>Verified 论文 top 3</th><th>Rejected 论文 top 3</th><th>操作</th>
-    </tr>`;
-    tbody.innerHTML = samples.map(s => {
-      const directions = (s.research_directions || []).slice(0, 3).map(d =>
-        `<span class="chip ${detectLang(d)}"><span class="lang-dot"></span>${esc(d)}</span>`
-      ).join("");
-      const mkList = (arr) => (arr || []).slice(0,3).map(p =>
-        `<div style="font-size:12px;margin-bottom:3px;line-height:1.4">
-          <div style="color:var(--fg)">${esc((p.title_clean||"").slice(0, 55))}</div>
-          <div style="color:var(--fg-muted);font-size:11px">
-            ${p.year || "-"} ${topicBar(p.topic_consistency_score)}
-          </div></div>`
-      ).join("");
-      const url = s.primary_profile_url
-        ? `<a href="${esc(s.primary_profile_url)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11px">官网 ↗</a>`
-        : "";
-      return `<tr>
-        <td><div><b>${esc(s.canonical_name)}</b></div>
-          <div style="color:var(--fg-muted);font-size:11px">${esc(s.canonical_name_en || "")}</div></td>
-        <td><div>${esc(s.institution || "-")}</div><div>${url}</div></td>
-        <td>${directions || "-"}</td>
-        <td>${mkList(s.verified_papers) || "-"}</td>
-        <td>${mkList(s.rejected_papers) || "-"}</td>
-        <td><button class="flag-btn" onclick="flagProf('${esc(s.professor_id)}', '${esc(s.canonical_name)}')">🚩 标记</button></td>
-      </tr>`;
-    }).join("");
-    openDetail();
-    detailBody.innerHTML = `
-      <h3>未解决 Pipeline Issues <span class="count">${issues.length}</span></h3>
-      ${issues.length === 0 ? '<p class="empty">暂无未解决 issue</p>' : issues.map(i => `
-        <section style="border-left:3px solid var(--border);padding-left:14px;margin-bottom:14px">
-          <div><span class="badge accent">${esc(i.stage)}</span>
-            <span class="badge ${i.severity === 'high' ? 'rejected' : i.severity === 'medium' ? 'candidate' : ''}">${esc(i.severity)}</span>
-            <small style="color:var(--fg-muted)">${esc(i.reported_at.slice(0,16))} by ${esc(i.reported_by)}</small></div>
-          <p style="margin:6px 0 2px">${esc(i.description)}</p>
-          <small style="color:var(--fg-faint)">
-            target: prof=${esc(i.professor_id||"-")} link=${esc(i.link_id||"-")} inst=${esc(i.institution||"-")}</small>
-        </section>`).join("")}
-      <p style="color:var(--fg-muted);font-size:12px;margin-top:20px">
-        抽样可通过 URL 参数 <code>?seed=xxx</code> 固定；同一 seed 返回同一批教授。
-      </p>`;
-    document.getElementById("prev").disabled = true;
-    document.getElementById("next").disabled = true;
-    pageInfo.textContent = `${samples.length} 位随机教授 · ${issues.length} 条未解决 issue`;
-  } catch (e) {
-    errorBox.style.display = "block";
-    errorBox.textContent = `审核视图加载失败: ${e.message}`;
-    tbody.innerHTML = "";
-  }
-}
-
-// ============ Guard-runs strip ============
-async function loadGuardStrip() {
-  // Skeleton
-  guardStripEl.innerHTML = Array.from({ length: 4 }, () =>
-    `<div class="guard-card skeleton"></div>`).join("");
-  try {
-    const r = await fetch("/api/pipeline-issues/guard-runs");
-    if (!r.ok) throw new Error(`${r.status}`);
-    const runs = await r.json();
-    guardRunsCache = runs;
-    populateReportedByDropdown(runs);
-    if (!runs.length) {
-      guardStripEl.innerHTML = `<div class="empty" style="padding:18px;width:100%">暂无 guard 轮次记录</div>`;
-      return;
-    }
-    guardStripEl.innerHTML = runs.map(renderGuardCard).join("");
-    guardStripEl.querySelectorAll(".guard-card").forEach(el => {
-      el.addEventListener("click", () => {
-        const rb = el.dataset.reportedBy;
-        switchToIssuesFiltered({ reported_by: rb });
-      });
-    });
-  } catch (e) {
-    guardStripEl.innerHTML =
-      `<div class="empty" style="padding:18px;width:100%;color:var(--danger)">
-         guard 动态加载失败: ${esc(e.message)}
-       </div>`;
-  }
-}
-
-function renderGuardCard(run) {
-  const sev = run.severity_breakdown || {};
-  const sevHtml = ["high", "medium", "low"]
-    .filter(k => sev[k])
-    .map(k => `<span class="sev-dot ${k}">${sev[k]}</span>`)
-    .join("");
-  const rows7d = run.rows_last_7_days ?? 0;
-  const pretty = prettyGuardRound(run.reported_by);
-  // Split "R7.18c · Institution Cleanup" into tag + label
-  const parts = pretty.split(" · ");
-  const tag = parts[0];
-  const label = parts.slice(1).join(" · ");
-  // Dominant severity class for left border accent
-  const dominant = sev.high ? "has-high" : sev.medium ? "has-medium" : sev.low ? "has-low" : "";
-  return `
-    <div class="guard-card ${dominant}" data-reported-by="${esc(run.reported_by)}"
-         title="${esc(run.reported_by)}">
-      <div class="gc-round">
-        <span class="gc-tag">${esc(tag)}</span>${esc(label)}
-      </div>
-      <div class="gc-time">${esc(relativeTime(run.last_run_at))}</div>
-      <div class="gc-footer">
-        <span class="gc-rows"><b>${rows7d}</b> rows · 7d</span>
-        <span class="gc-sev">${sevHtml || '<span class="sev-dot none">0</span>'}</span>
-      </div>
-    </div>`;
-}
-
-function populateReportedByDropdown(runs) {
-  // Preserve current value
-  const current = ifReportedBy.value;
-  ifReportedBy.innerHTML = `<option value="">全部来源</option>` +
-    runs.map(r => `<option value="${esc(r.reported_by)}">
-      ${esc(prettyGuardRound(r.reported_by))}
-    </option>`).join("");
-  if (current) ifReportedBy.value = current;
-}
-
-function switchToIssuesFiltered(filters) {
-  issueFilters = {
-    stage: "", severity: "", reported_by: "", resolved: false, q: "",
-    ...filters,
-  };
-  currentPage = 1;
-  // Update filter-bar UI to reflect the filter
-  ifStage.value = issueFilters.stage;
-  ifSeverity.value = issueFilters.severity;
-  ifReportedBy.value = issueFilters.reported_by;
-  ifResolved.checked = issueFilters.resolved;
-  ifQ.value = issueFilters.q;
-  // Switch tab
-  document.querySelectorAll("#tabs button").forEach(b => {
-    b.classList.toggle("active", b.dataset.domain === "issues");
-  });
-  currentDomain = "issues";
-  loadDomain();
-}
-
-// ============ Issues view ============
-async function loadIssuesView() {
-  errorBox.style.display = "none";
-  closeDetail();
-  profFiltersEl.classList.remove("visible");
-  issueFiltersEl.classList.add("visible");
-  statsBox.innerHTML = "";
-  expandedIssueId = null;
-
-  const tbody = listTable.querySelector("tbody");
-  const thead = listTable.querySelector("thead");
-  thead.innerHTML = `<tr>
-    <th style="width:160px">Stage</th>
-    <th style="width:90px">Severity</th>
-    <th>描述</th>
-    <th style="width:120px">Reported</th>
-    <th style="width:90px">Resolved</th>
-  </tr>`;
-  tbody.innerHTML = skeletonRows(5, 5);
-
-  // Ensure guard runs loaded for dropdown
-  if (!guardRunsCache) {
-    await loadGuardStrip();
-  }
-
-  try {
-    const qs = new URLSearchParams({ page: currentPage, page_size: PAGE_SIZE });
-    if (issueFilters.stage) qs.set("stage", issueFilters.stage);
-    if (issueFilters.severity) qs.set("severity", issueFilters.severity);
-    if (issueFilters.reported_by) qs.set("reported_by", issueFilters.reported_by);
-    if (issueFilters.q) qs.set("q", issueFilters.q);
-    if (issueFilters.resolved) qs.set("resolved", "false"); // only unresolved when checked
-    const r = await fetch(`/api/pipeline-issues?${qs}`);
-    if (!r.ok) throw new Error(`${r.status}`);
-    const payload = await r.json();
-    renderIssuesTable(payload);
-    currentTotal = payload.total || 0;
-    const pageCount = Math.max(1, Math.ceil(currentTotal / PAGE_SIZE));
-    pageInfo.textContent = `共 ${currentTotal} 条 · 第 ${currentPage} / ${pageCount} 页`;
-    document.getElementById("prev").disabled = currentPage <= 1;
-    document.getElementById("next").disabled = currentPage * PAGE_SIZE >= currentTotal;
-    renderIssuesStats(payload);
-  } catch (e) {
-    errorBox.style.display = "block";
-    errorBox.textContent = `Issues 加载失败: ${e.message}`;
-    tbody.innerHTML = "";
-  }
-}
-
-function renderIssuesStats(payload) {
-  const sevCount = (guardRunsCache || []).reduce((acc, r) => {
-    const s = r.severity_breakdown || {};
-    acc.high += s.high || 0;
-    acc.medium += s.medium || 0;
-    acc.low += s.low || 0;
-    return acc;
-  }, { high: 0, medium: 0, low: 0 });
-  statsBox.innerHTML = `
-    <div class="stat"><div class="label">总数</div><div class="value">${payload.total}</div></div>
-    <div class="stat"><div class="label">High (7d)</div><div class="value" style="color:var(--danger)">${sevCount.high}</div></div>
-    <div class="stat"><div class="label">Medium (7d)</div><div class="value" style="color:var(--warn)">${sevCount.medium}</div></div>
-    <div class="stat"><div class="label">Low (7d)</div><div class="value" style="color:var(--low)">${sevCount.low}</div></div>
-  `;
-}
-
-function renderIssuesTable(payload) {
-  const tbody = listTable.querySelector("tbody");
-  const items = payload.items || [];
-  if (!items.length) {
-    tbody.innerHTML = `<tr><td class="empty" colspan="5">暂无匹配的 issues</td></tr>`;
-    return;
-  }
-  tbody.innerHTML = items.map(it => {
-    const sevCls = `sev-${it.severity || "low"}`;
-    const resolvedBadge = it.resolved
-      ? `<span class="badge resolved-yes">已解决</span>`
-      : `<span class="badge resolved-no">未解决</span>`;
-    // Compact reported: "R7.9" tag + relative time, full label in tooltip
-    const roundPretty = prettyGuardRound(it.reported_by);
-    const roundTag = roundPretty.split(" · ")[0];
-    return `
-      <tr class="issue-row" data-issue-id="${esc(it.issue_id)}">
-        <td><code>${esc(it.stage || "-")}</code></td>
-        <td><span class="badge ${sevCls}">${esc(it.severity || "-")}</span></td>
-        <td class="desc-cell" title="${esc(it.description || "")}">${esc(it.description || "-")}</td>
-        <td class="reported-cell">
-          <div class="rc-when">${esc(relativeTime(it.reported_at))}</div>
-          <span class="rc-tag" title="${esc(roundPretty)}">${esc(roundTag)}</span>
-        </td>
-        <td>${resolvedBadge}</td>
-      </tr>`;
-  }).join("");
-  // Row click → toggle expanded detail row
-  tbody.querySelectorAll(".issue-row").forEach(tr => {
-    tr.addEventListener("click", () => {
-      const id = tr.dataset.issueId;
-      if (expandedIssueId === id) {
-        expandedIssueId = null;
-        renderIssuesTable(payload);
-        return;
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Canonical V2 科创知识平台</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23143d59'/%3E%3Cpath d='M17 19h8v11l12-11h10L33 32l15 13H37L25 34v11h-8z' fill='white'/%3E%3C/svg%3E" />
+    <style>
+      :root {
+        --ink: #17252f;
+        --muted: #62727d;
+        --navy: #143d59;
+        --navy-strong: #0d2c41;
+        --teal: #168b82;
+        --teal-soft: #e7f5f2;
+        --blue-soft: #edf4f8;
+        --amber: #b66916;
+        --amber-soft: #fff4df;
+        --danger: #a83f4c;
+        --danger-soft: #fff0f2;
+        --surface: #ffffff;
+        --canvas: #f3f6f7;
+        --line: #dce4e7;
+        --line-strong: #c5d2d7;
+        --shadow: 0 18px 42px rgba(24, 55, 70, 0.08);
+        --radius: 18px;
       }
-      expandedIssueId = id;
-      const item = items.find(i => i.issue_id === id);
-      if (!item) return;
-      // Remove any existing detail row
-      tbody.querySelectorAll("tr.issue-detail-row").forEach(r => r.remove());
-      const detailTr = document.createElement("tr");
-      detailTr.className = "issue-detail-row";
-      detailTr.innerHTML = `<td colspan="5">
-        <div class="detail-meta">
-          <span><b>issue_id:</b> <code>${esc(item.issue_id)}</code></span>
-          ${item.professor_id ? `<span><b>professor_id:</b> <code>${esc(item.professor_id)}</code></span>` : ""}
-          ${item.link_id ? `<span><b>link_id:</b> <code>${esc(item.link_id)}</code></span>` : ""}
-          ${item.institution ? `<span><b>institution:</b> ${esc(item.institution)}</span>` : ""}
+
+      * { box-sizing: border-box; }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 8% 0%, rgba(22, 139, 130, 0.09), transparent 28rem),
+          var(--canvas);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        line-height: 1.55;
+      }
+
+      button, a { font: inherit; }
+
+      button:focus-visible, a:focus-visible {
+        outline: 3px solid rgba(22, 139, 130, 0.28);
+        outline-offset: 2px;
+      }
+
+      .topbar {
+        color: #fff;
+        background:
+          linear-gradient(112deg, rgba(255, 255, 255, 0.05), transparent 50%),
+          var(--navy-strong);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .topbar-inner {
+        width: min(1480px, calc(100% - 40px));
+        margin: 0 auto;
+        padding: 24px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+
+      .brand-mark {
+        width: 46px;
+        height: 46px;
+        flex: 0 0 auto;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.09);
+        font-weight: 760;
+        letter-spacing: -0.04em;
+      }
+
+      .brand h1 { margin: 0; font-size: clamp(20px, 2vw, 27px); line-height: 1.25; }
+      .brand p { margin: 4px 0 0; color: #bfd0d9; font-size: 13px; }
+
+      .top-actions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+
+      .release-pill {
+        max-width: 310px;
+        padding: 8px 12px;
+        overflow: hidden;
+        color: #dbe9ee;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 999px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .chat-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 14px;
+        color: var(--navy-strong);
+        background: #fff;
+        border-radius: 999px;
+        text-decoration: none;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .page {
+        width: min(1480px, calc(100% - 40px));
+        margin: 0 auto;
+        padding: 28px 0 48px;
+      }
+
+      .section-heading {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 15px;
+      }
+
+      .eyebrow {
+        margin: 0 0 4px;
+        color: var(--teal);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      h2, h3, p { overflow-wrap: anywhere; }
+      .section-heading h2 { margin: 0; font-size: 22px; }
+      .section-note { margin: 0; color: var(--muted); font-size: 13px; text-align: right; }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 30px;
+      }
+
+      .metric-card {
+        min-height: 116px;
+        padding: 18px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: 0 8px 24px rgba(24, 55, 70, 0.04);
+      }
+
+      .metric-card.accent { border-color: #b9ddd8; background: linear-gradient(145deg, #fff, #eff9f7); }
+      .metric-label { color: var(--muted); font-size: 13px; }
+      .metric-value { display: block; margin-top: 12px; font-size: 31px; font-weight: 760; line-height: 1; }
+      .metric-caption { display: block; margin-top: 9px; color: var(--muted); font-size: 12px; }
+
+      .catalog-shell {
+        overflow: hidden;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+      }
+
+      .tabs {
+        display: flex;
+        gap: 5px;
+        padding: 10px;
+        overflow-x: auto;
+        background: #f8fafb;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .tab {
+        min-width: max-content;
+        padding: 9px 15px;
+        color: var(--muted);
+        background: transparent;
+        border: 0;
+        border-radius: 11px;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      .tab:hover { color: var(--navy); background: var(--blue-soft); }
+      .tab.active { color: #fff; background: var(--navy); }
+      .tab.gap-tab.active { background: var(--amber); }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+        min-height: 590px;
+      }
+
+      .list-pane { min-width: 0; padding: 20px; border-right: 1px solid var(--line); }
+      .inspector { min-width: 0; padding: 20px; background: #fbfcfc; }
+
+      .pane-header {
+        min-height: 45px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+
+      .pane-header h3 { margin: 0; font-size: 17px; }
+      .pane-header p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+
+      .count-badge, .status-badge, .type-badge, .quality-badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 760;
+      }
+
+      .count-badge { color: var(--navy); background: var(--blue-soft); }
+      .type-badge { color: var(--navy); background: #e8f0f5; }
+      .quality-badge { color: #126e67; background: var(--teal-soft); }
+      .status-badge { color: var(--amber); background: var(--amber-soft); }
+
+      .item-list { display: grid; gap: 10px; }
+
+      .item-card {
+        display: block;
+        width: 100%;
+        padding: 16px;
+        color: inherit;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 15px;
+        cursor: pointer;
+        text-decoration: none;
+        text-align: left;
+        transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+      }
+
+      .item-card:hover, .item-card.selected {
+        border-color: #75b9b2;
+        box-shadow: 0 10px 24px rgba(24, 70, 78, 0.08);
+        transform: translateY(-1px);
+      }
+
+      .card-top { display: flex; align-items: center; gap: 7px; }
+      .card-title { margin: 10px 0 2px; font-size: 17px; font-weight: 760; }
+      .canonical-id { color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
+      .facts { display: grid; gap: 6px; margin: 13px 0 0; }
+      .fact { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 9px; font-size: 12px; }
+      .fact dt { color: var(--muted); }
+      .fact dd { margin: 0; color: #33444f; }
+      .card-limitation { margin: 11px 0 0; color: var(--amber); font-size: 11px; }
+
+      .empty, .loading, .error {
+        min-height: 210px;
+        display: grid;
+        place-items: center;
+        padding: 30px;
+        border: 1px dashed var(--line-strong);
+        border-radius: 15px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .loading::before {
+        content: "";
+        width: 24px;
+        height: 24px;
+        margin: 0 auto 8px;
+        border: 3px solid var(--line);
+        border-top-color: var(--teal);
+        border-radius: 50%;
+        animation: spin 0.75s linear infinite;
+      }
+
+      .error { color: var(--danger); background: var(--danger-soft); border-color: #efc9cf; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      .inspector-card {
+        padding: 19px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+      }
+
+      .inspector-title { margin: 9px 0 3px; font-size: 20px; }
+      .inspector-section { margin-top: 20px; padding-top: 17px; border-top: 1px solid var(--line); }
+      .inspector-section h4 { margin: 0 0 10px; font-size: 13px; }
+      .data-rows { display: grid; gap: 9px; margin: 0; }
+      .data-row { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 10px; font-size: 12px; }
+      .data-row dt { color: var(--muted); }
+      .data-row dd { margin: 0; }
+
+      .token-list { display: flex; flex-wrap: wrap; gap: 6px; }
+      .token {
+        max-width: 100%;
+        padding: 4px 8px;
+        overflow: hidden;
+        color: #39505d;
+        background: #f0f4f6;
+        border-radius: 7px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 10px;
+        text-overflow: ellipsis;
+      }
+
+      .primary-action {
+        width: 100%;
+        margin-top: 16px;
+        padding: 10px 14px;
+        color: #fff;
+        background: var(--teal);
+        border: 0;
+        border-radius: 11px;
+        cursor: pointer;
+        font-weight: 760;
+      }
+
+      .primary-action:hover { background: #0d756d; }
+      .related-list { display: grid; gap: 8px; }
+      .related-card { padding: 11px; background: var(--teal-soft); border-radius: 11px; }
+      .related-card strong { display: block; font-size: 13px; }
+      .related-card span { color: var(--muted); font-size: 10px; }
+
+      .transparency {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin-top: 20px;
+      }
+
+      .notice-card {
+        padding: 17px 19px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 15px;
+      }
+
+      .notice-card h3 { margin: 0 0 7px; font-size: 14px; }
+      .notice-card p, .notice-card ul { margin: 0; color: var(--muted); font-size: 12px; }
+      .notice-card ul { padding-left: 18px; }
+
+      @media (max-width: 1040px) {
+        .summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .workspace { grid-template-columns: 1fr; }
+        .list-pane { border-right: 0; border-bottom: 1px solid var(--line); }
+        .inspector { min-height: 360px; }
+      }
+
+      @media (max-width: 680px) {
+        .topbar-inner, .page { width: min(100% - 24px, 1480px); }
+        .topbar-inner { align-items: flex-start; flex-direction: column; }
+        .top-actions { width: 100%; justify-content: space-between; }
+        .release-pill { max-width: calc(100% - 126px); }
+        .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .metric-card { min-height: 100px; padding: 14px; }
+        .section-heading { align-items: flex-start; flex-direction: column; }
+        .section-note { text-align: left; }
+        .list-pane, .inspector { padding: 14px; }
+        .transparency { grid-template-columns: 1fr; }
+        .data-row, .fact { grid-template-columns: 1fr; gap: 2px; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">V2</div>
+          <div>
+            <h1>Canonical V2 科创知识平台</h1>
+            <p>发布版本绑定 · 可追溯证据 · 四域知识目录</p>
+          </div>
         </div>
-        <pre>${esc(JSON.stringify(item.evidence_snapshot || {}, null, 2))}</pre>
-      </td>`;
-      tr.insertAdjacentElement("afterend", detailTr);
-    });
-  });
-}
+        <div class="top-actions">
+          <span class="release-pill" id="release-pill" aria-live="polite">正在连接候选版本…</span>
+          <a class="chat-link" href="/chat">进入 V2 对话 <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </header>
 
-function skeletonRows(n, cols) {
-  return Array.from({ length: n }, () =>
-    `<tr class="skeleton-row">${
-      Array.from({ length: cols }, () => `<td><span></span></td>`).join("")
-    }</tr>`
-  ).join("");
-}
+    <main class="page">
+      <section aria-labelledby="overview-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Release snapshot</p>
+            <h2 id="overview-title">版本概览</h2>
+          </div>
+          <p class="section-note" id="as-of">正在读取发布时间点…</p>
+        </div>
+        <div class="summary-grid" id="summary-grid" aria-live="polite"></div>
+      </section>
 
-async function flagProf(professorId, name) {
-  const description = prompt(`为教授 ${name} 填写问题描述（是哪一步出了问题？）`);
-  if (!description) return;
-  const stage = prompt(
-    "问题属于哪个 pipeline stage？\n" +
-    "discovery / name_extraction / affiliation / paper_attribution / " +
-    "paper_quality / research_directions / identity_gate / coverage / data_quality_flag",
-    "data_quality_flag"
-  );
-  if (!stage) return;
-  const reportedBy = prompt("你的名字 / 邮箱：", "admin");
-  if (!reportedBy) return;
-  try {
-    const r = await fetch("/api/review/issues", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ professor_id: professorId, stage, severity: "medium", description, reported_by: reportedBy }),
-    });
-    if (r.status === 409) { alert("已有重复的未解决 issue"); return; }
-    if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
-    alert("已记录到 pipeline_issue 队列 ✓");
-    loadReviewView();
-  } catch (e) {
-    alert(`提交失败: ${e.message}`);
-  }
-}
+      <section aria-labelledby="catalog-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Evidence-bound catalog</p>
+            <h2 id="catalog-title">数据目录</h2>
+          </div>
+          <p class="section-note">选择条目查看字段证据、血缘与关联结果</p>
+        </div>
 
-// ============ Load domain ============
-async function loadDomain() {
-  if (currentDomain === "pipeline") return loadPipelineView();
-  if (currentDomain === "review") return loadReviewView();
-  if (currentDomain === "issues") return loadIssuesView();
-  errorBox.style.display = "none";
-  closeDetail();
-  statsBox.innerHTML = "";
-  issueFiltersEl.classList.remove("visible");
-  listTable.querySelector("tbody").innerHTML = skeletonRows(5, 5);
+        <div class="catalog-shell">
+          <nav class="tabs" id="domain-tabs" aria-label="知识域切换"></nav>
+          <div class="workspace">
+            <section class="list-pane" aria-labelledby="list-title">
+              <div class="pane-header">
+                <div>
+                  <h3 id="list-title">企业</h3>
+                  <p id="list-caption">正在读取发布投影…</p>
+                </div>
+                <span class="count-badge" id="list-count">—</span>
+              </div>
+              <div class="item-list" id="item-list" aria-live="polite"></div>
+            </section>
 
-  // Show/hide filter bar
-  if (currentDomain === "professors") {
-    profFiltersEl.classList.add("visible");
-    // Lazy-load institution dropdown
-    if (fInst.options.length <= 1) {
-      const facets = await apiInstitutionFacets();
-      facets.forEach(f => {
-        const opt = document.createElement("option");
-        opt.value = f.institution;
-        opt.textContent = `${f.institution} (${f.count})`;
-        fInst.appendChild(opt);
+            <aside class="inspector" aria-labelledby="inspector-heading">
+              <div class="pane-header">
+                <div>
+                  <h3 id="inspector-heading">证据与限制</h3>
+                  <p>从发布版本中的类型化投影读取</p>
+                </div>
+              </div>
+              <div id="inspector-content" aria-live="polite"></div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="transparency" aria-label="平台说明">
+        <article class="notice-card">
+          <h3>可追溯展示</h3>
+          <p>条目、关联与知识缺口均绑定当前发布版本；页面只呈现接口返回的证据标识和字段血缘。</p>
+        </article>
+        <article class="notice-card">
+          <h3>只读候选环境</h3>
+          <ul>
+            <li>不提供编辑、删除、上传或发布操作。</li>
+            <li>限制项会与结果同时展示，不补造缺失字段。</li>
+          </ul>
+        </article>
+      </section>
+    </main>
+
+    <script>
+      const statusPath = "/api/canonical-v2/admin/status";
+      const domainPath = "/api/canonical-v2/admin/domains/";
+      const gapsPath = "/api/canonical-v2/operations/gaps";
+
+      const domains = ["company", "paper", "patent", "professor"];
+      const domainLabels = {
+        company: "企业",
+        paper: "论文",
+        patent: "专利",
+        professor: "教授",
+      };
+      const relations = {
+        company: "company_has_patent",
+        patent: "company_has_patent",
+        professor: "professor_authored_paper",
+        paper: "professor_authored_paper",
+      };
+      const fieldLabels = {
+        industry: "所属行业",
+        geography: "地域",
+        founded_at: "成立日期",
+        profile_summary: "简介",
+        venue: "发表场所",
+        year: "年份",
+        citation_count: "引用数",
+        publication_date: "公开日期",
+        filing_date: "申请日期",
+        patent_type: "专利类型",
+        institution: "机构",
+        department: "院系",
+        h_index: "H 指数",
+        research_directions: "研究方向",
+        quality_status: "质量状态",
+        status: "状态",
+        severity: "严重度",
+        demand_count: "需求次数",
+        affected_domains: "涉及数据域",
+        affected_paths: "涉及路径",
+        observed_symptom: "观察到的问题",
+      };
+      const factFields = {
+        company: ["industry", "geography", "founded_at", "profile_summary"],
+        paper: ["venue", "year", "citation_count", "publication_date"],
+        patent: ["patent_type", "publication_date", "filing_date"],
+        professor: ["institution", "department", "h_index", "citation_count"],
+      };
+      const qualityLabels = Object.freeze({
+        ready: "已核验",
+        verified_preview: "已核验",
+        accepted: "已验收",
       });
-    }
-  } else {
-    profFiltersEl.classList.remove("visible");
-  }
-
-  try {
-    const extra = currentDomain === "professors" ? profFilters : {};
-    const payload = await apiList(currentDomain, extra);
-    renderList(payload);
-    statsBox.innerHTML = `<div class="stat"><div class="label">总数</div><div class="value">${currentTotal}</div></div>`;
-    if (currentDomain === "companies") {
-      const facets = await apiIndustryFacets();
-      facets.slice(0, 5).forEach(f => {
-        statsBox.innerHTML += `<div class="stat"><div class="label">${esc(f.industry)}</div><div class="value">${f.count}</div></div>`;
+      const limitationLabels = Object.freeze({
+        preview_selection_only: "当前仅展示少量只读真实数据",
       });
-    }
-  } catch (e) {
-    errorBox.style.display = "block";
-    errorBox.textContent = `加载失败: ${e.message}`;
-    listTable.querySelector("tbody").innerHTML = "";
-  }
-}
 
-// ============ Event wiring ============
-document.querySelectorAll("#tabs button").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll("#tabs button").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    currentDomain = btn.dataset.domain;
-    currentPage = 1;
-    currentQuery = "";
-    searchBox.value = "";
-    loadDomain();
-  });
-});
+      const releasePill = document.getElementById("release-pill");
+      const asOf = document.getElementById("as-of");
+      const summaryGrid = document.getElementById("summary-grid");
+      const tabs = document.getElementById("domain-tabs");
+      const listTitle = document.getElementById("list-title");
+      const listCaption = document.getElementById("list-caption");
+      const listCount = document.getElementById("list-count");
+      const itemList = document.getElementById("item-list");
+      const inspector = document.getElementById("inspector-content");
 
-document.getElementById("prev").addEventListener("click", () => {
-  if (currentPage > 1) { currentPage -= 1; loadDomain(); }
-});
-document.getElementById("next").addEventListener("click", () => {
-  if (currentPage * PAGE_SIZE < currentTotal) { currentPage += 1; loadDomain(); }
-});
-searchBox.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    currentQuery = searchBox.value.trim();
-    currentPage = 1;
-    loadDomain();
-  }
-});
+      let activeView = "company";
+      let selectedId = null;
 
-// Filter-bar wiring (professors only)
-[fInst, fDisc, fVerified].forEach(el => {
-  el.addEventListener("change", () => {
-    profFilters = {
-      institution: fInst.value,
-      discipline_family: fDisc.value,
-      has_verified_papers: fVerified.checked,
-    };
-    currentPage = 1;
-    loadDomain();
-  });
-});
-document.getElementById("f-clear").addEventListener("click", () => {
-  fInst.value = ""; fDisc.value = ""; fVerified.checked = false;
-  profFilters = { institution: "", discipline_family: "", has_verified_papers: false };
-  currentPage = 1;
-  loadDomain();
-});
+      function create(tag, className, text) {
+        const element = document.createElement(tag);
+        if (className) element.className = className;
+        if (text !== undefined && text !== null) element.textContent = String(text);
+        return element;
+      }
 
-// Filter-bar wiring (issues)
-[ifStage, ifSeverity, ifReportedBy, ifResolved].forEach(el => {
-  el.addEventListener("change", () => {
-    issueFilters = {
-      stage: ifStage.value,
-      severity: ifSeverity.value,
-      reported_by: ifReportedBy.value,
-      resolved: ifResolved.checked,
-      q: ifQ.value.trim(),
-    };
-    currentPage = 1;
-    loadDomain();
-  });
-});
-ifQ.addEventListener("keydown", e => {
-  if (e.key === "Enter") {
-    issueFilters.q = ifQ.value.trim();
-    currentPage = 1;
-    loadDomain();
-  }
-});
-document.getElementById("if-clear").addEventListener("click", () => {
-  ifStage.value = ""; ifSeverity.value = ""; ifReportedBy.value = "";
-  ifResolved.checked = false; ifQ.value = "";
-  issueFilters = { stage: "", severity: "", reported_by: "", resolved: false, q: "" };
-  currentPage = 1;
-  if (currentDomain === "issues") loadDomain();
-});
+      function esc(value) {
+        return String(value ?? "");
+      }
 
-// Initial load: guard strip + default domain
-loadGuardStrip();
-loadDomain();
-</script>
-</body></html>
+      function errorText(error) {
+        if (error && typeof error.message === "string") return error.message;
+        try {
+          return esc(JSON.stringify(error));
+        } catch {
+          return esc(error);
+        }
+      }
+
+      function displayName(item) {
+        return item.name || item.title || item.canonical_name_zh || item.normalized_name || item.gap_id || "未命名条目";
+      }
+
+      function readable(value, depth = 0) {
+        if (value === null || value === undefined || value === "") return "—";
+        if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value);
+        if (Array.isArray(value)) {
+          if (!value.length) return "—";
+          const shown = value.slice(0, 5).map((item) => readable(item, depth + 1));
+          return shown.join("、") + (value.length > 5 ? ` 等 ${value.length} 项` : "");
+        }
+        if (typeof value === "object") {
+          if (value.name && value.reference_id) return `${value.name} · ${value.reference_id}`;
+          if (value.label) return String(value.label);
+          if (value.code) return String(value.code);
+          if (depth > 1) return "类型化记录";
+          const parts = Object.entries(value)
+            .filter(([, child]) => child !== null && child !== undefined && child !== "")
+            .slice(0, 4)
+            .map(([key, child]) => `${fieldLabels[key] || key}: ${readable(child, depth + 1)}`);
+          return parts.join(" · ") || "类型化记录";
+        }
+        return String(value);
+      }
+
+      function qualityText(value) {
+        return qualityLabels[value] || "状态已记录";
+      }
+
+      function limitationText(value) {
+        if (!value || typeof value !== "object") return "存在已记录限制";
+        return limitationLabels[value.code] || "存在已记录限制";
+      }
+
+      function limitationsText(values) {
+        if (!Array.isArray(values) || !values.length) return "未返回额外限制";
+        return [...new Set(values.map(limitationText))].join("；");
+      }
+
+      function formatTime(value) {
+        if (!value) return "时间点未提供";
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime()) ? String(value) : parsed.toLocaleString("zh-CN", { hour12: false });
+      }
+
+      async function fetchJson(path) {
+        const response = await fetch(path, { headers: { Accept: "application/json" } });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      }
+
+      function stateBox(kind, message) {
+        return create("div", kind, message);
+      }
+
+      function renderMetrics(status) {
+        const countByDomain = new Map((status.domains || []).map((entry) => [entry.domain, entry.record_count]));
+        const cards = domains.map((domain) => {
+          const card = create("article", "metric-card");
+          card.append(
+            create("span", "metric-label", domainLabels[domain]),
+            create("strong", "metric-value", countByDomain.get(domain) ?? 0),
+            create("span", "metric-caption", "已发布类型化条目"),
+          );
+          return card;
+        });
+        const gapCard = create("article", "metric-card accent");
+        gapCard.append(
+          create("span", "metric-label", "知识缺口"),
+          create("strong", "metric-value", status.gap_summary?.total ?? 0),
+          create("span", "metric-caption", "当前版本相关记录"),
+        );
+        summaryGrid.replaceChildren(...cards, gapCard);
+      }
+
+      async function loadStatus() {
+        summaryGrid.replaceChildren(stateBox("loading", "正在汇总版本数据"));
+        try {
+          const status = await fetchJson(statusPath);
+          releasePill.textContent = "真实数据预览 · 版本已绑定";
+          releasePill.title = "当前页面已绑定只读候选版本";
+          asOf.textContent = `数据时间点：${formatTime(status.as_of)}`;
+          renderMetrics(status);
+        } catch (error) {
+          releasePill.textContent = "候选运行时暂不可用";
+          asOf.textContent = "无法读取版本时间点";
+          summaryGrid.replaceChildren(stateBox("error", `版本概览加载失败 · ${errorText(error)}`));
+        }
+      }
+
+      function buildTabs() {
+        const buttons = domains.map((domain) => {
+          const button = create("button", "tab", domainLabels[domain]);
+          button.type = "button";
+          button.dataset.view = domain;
+          button.setAttribute("aria-label", `查看${domainLabels[domain]}目录`);
+          button.addEventListener("click", () => {
+            history.replaceState(null, "", location.pathname);
+            loadDomain(domain);
+          });
+          return button;
+        });
+        const gapButton = create("button", "tab gap-tab", "V2 Gaps / 知识缺口");
+        gapButton.type = "button";
+        gapButton.dataset.view = "gaps";
+        gapButton.setAttribute("aria-label", "查看知识缺口列表");
+        gapButton.addEventListener("click", () => {
+          history.replaceState(null, "", "#gaps");
+          loadGaps();
+        });
+        tabs.replaceChildren(...buttons, gapButton);
+      }
+
+      function setActiveTab(view) {
+        activeView = view;
+        for (const button of tabs.querySelectorAll("button")) {
+          const active = button.dataset.view === view;
+          button.classList.toggle("active", active);
+          button.setAttribute("aria-current", active ? "page" : "false");
+        }
+      }
+
+      function addFactList(container, item, fields) {
+        const facts = create("dl", "facts");
+        for (const field of fields) {
+          const value = item[field];
+          if (value === null || value === undefined || value === "" || (Array.isArray(value) && !value.length)) continue;
+          const row = create("div", "fact");
+          row.append(create("dt", "", fieldLabels[field] || field), create("dd", "", readable(value)));
+          facts.append(row);
+        }
+        if (facts.childElementCount) container.append(facts);
+      }
+
+      function itemCard(item, domain, pageLimitations) {
+        const card = create("a", "item-card");
+        const targetHash = `#${domain}/${encodeURIComponent(item.canonical_identity_id)}`;
+        card.href = targetHash;
+        card.dataset.id = item.canonical_identity_id;
+        card.setAttribute("aria-label", `查看${displayName(item)}详情`);
+
+        const top = create("div", "card-top");
+        top.append(create("span", "type-badge", domainLabels[domain]));
+        if (item.quality_status) top.append(create("span", "quality-badge", qualityText(item.quality_status)));
+        card.append(
+          top,
+          create("div", "card-title", displayName(item)),
+        );
+        addFactList(card, item, factFields[domain]);
+        const limitations = item.limitations?.length ? item.limitations : pageLimitations;
+        if (limitations?.length) card.append(create("p", "card-limitation", `限制：${limitationsText(limitations)}`));
+        return card;
+      }
+
+      function inspectorPrompt(message = "请选择左侧条目，查看字段证据、血缘和关联结果。") {
+        inspector.replaceChildren(stateBox("empty", message));
+      }
+
+      function updateSelectedCard(id) {
+        for (const card of itemList.querySelectorAll(".item-card")) {
+          card.classList.toggle("selected", card.dataset.id === id);
+        }
+      }
+
+      async function loadDomain(domain, requestedId = null) {
+        setActiveTab(domain);
+        selectedId = null;
+        listTitle.textContent = domainLabels[domain];
+        listCaption.textContent = "正在读取发布投影…";
+        listCount.textContent = "—";
+        itemList.replaceChildren(stateBox("loading", `正在加载${domainLabels[domain]}目录`));
+        inspectorPrompt();
+        try {
+          const page = await fetchJson(domainPath + encodeURIComponent(domain));
+          const items = Array.isArray(page.items) ? page.items : [];
+          listCaption.textContent = `发布于 ${formatTime(page.as_of)}`;
+          listCount.textContent = `${page.total ?? items.length} 条`;
+          if (!items.length) {
+            itemList.replaceChildren(stateBox("empty", `当前版本暂无${domainLabels[domain]}条目`));
+          } else {
+            itemList.replaceChildren(...items.map((item) => itemCard(item, domain, page.limitations || [])));
+          }
+          if (requestedId) await loadDetail(domain, requestedId);
+        } catch (error) {
+          itemList.replaceChildren(stateBox("error", `目录加载失败 · ${errorText(error)}`));
+          listCaption.textContent = "候选运行时暂不可用";
+        }
+      }
+
+      function dataRows(values) {
+        const rows = create("dl", "data-rows");
+        for (const [label, value] of values) {
+          if (value === null || value === undefined || value === "" || (Array.isArray(value) && !value.length)) continue;
+          const row = create("div", "data-row");
+          row.append(create("dt", "", label), create("dd", "", readable(value)));
+          rows.append(row);
+        }
+        return rows;
+      }
+
+      function tokenList(values) {
+        const holder = create("div", "token-list");
+        for (const value of values || []) {
+          const token = create("span", "token", value);
+          token.title = String(value);
+          holder.append(token);
+        }
+        if (!holder.childElementCount) holder.append(create("span", "canonical-id", "未返回标识"));
+        return holder;
+      }
+
+      function inspectorSection(title, content) {
+        const section = create("section", "inspector-section");
+        section.append(create("h4", "", title), content);
+        return section;
+      }
+
+      function renderDetail(detail, domain) {
+        const card = create("article", "inspector-card");
+        const top = create("div", "card-top");
+        top.append(create("span", "type-badge", domainLabels[domain]));
+        if (detail.quality_status) top.append(create("span", "quality-badge", qualityText(detail.quality_status)));
+        card.append(
+          top,
+          create("h3", "inspector-title", displayName(detail)),
+          inspectorSection(
+            "关键字段",
+            dataRows((factFields[domain] || []).map((field) => [fieldLabels[field] || field, detail[field]])),
+          ),
+          inspectorSection(
+            "证据标识",
+            createEvidenceSummary(detail),
+          ),
+          inspectorSection(
+            "字段血缘",
+            dataRows([
+              ["血缘记录", `${detail.field_lineage?.length || 0} 条`],
+              ["检索轨迹", `${detail.retrieval_traces?.length || 0} 条`],
+            ]),
+          ),
+          inspectorSection(
+            "限制",
+            create("p", "card-limitation", limitationsText(detail.limitations)),
+          ),
+        );
+        const relatedButton = create("button", "primary-action", "查看关联");
+        relatedButton.type = "button";
+        relatedButton.dataset.action = "related";
+        relatedButton.dataset.domain = domain;
+        relatedButton.dataset.id = detail.canonical_identity_id;
+        const relatedRegion = create("div", "inspector-section");
+        relatedRegion.id = "related-region";
+        relatedRegion.setAttribute("aria-live", "polite");
+        card.append(relatedButton, relatedRegion);
+        inspector.replaceChildren(card);
+      }
+
+      function createEvidenceSummary(detail) {
+        const wrap = create("div", "");
+        const evidenceIds = detail.evidence_ids || [];
+        wrap.append(create("p", "section-note", `${evidenceIds.length} 项证据已绑定当前版本`));
+        return wrap;
+      }
+
+      async function loadDetail(domain, id) {
+        selectedId = id;
+        updateSelectedCard(id);
+        inspector.replaceChildren(stateBox("loading", "正在读取条目证据"));
+        try {
+          const detail = await fetchJson(domainPath + encodeURIComponent(domain) + "/" + encodeURIComponent(id));
+          renderDetail(detail, domain);
+        } catch (error) {
+          inspector.replaceChildren(stateBox("error", `详情加载失败 · ${errorText(error)}`));
+        }
+      }
+
+      async function loadRelated(domain, id, button) {
+        const region = document.getElementById("related-region");
+        if (!region) return;
+        button.disabled = true;
+        region.replaceChildren(stateBox("loading", "正在读取版本内关联"));
+        try {
+          const path = domainPath + encodeURIComponent(domain) + "/" + encodeURIComponent(id) + "/related?relation_type=" + encodeURIComponent(relations[domain]);
+          const response = await fetchJson(path);
+          const items = Array.isArray(response.items) ? response.items : [];
+          const content = create("div", "");
+          content.append(create("h4", "", "关联结果"));
+          if (!items.length) {
+            content.append(create("p", "card-limitation", "当前发布版本未返回符合条件的关联条目。"));
+          } else {
+            const list = create("div", "related-list");
+            for (const item of items) {
+              const row = create("div", "related-card");
+              row.append(create("strong", "", displayName(item)));
+              list.append(row);
+            }
+            content.append(list);
+          }
+          if (response.limitations?.length) content.append(create("p", "card-limitation", `限制：${limitationsText(response.limitations)}`));
+          region.replaceChildren(content);
+        } catch (error) {
+          region.replaceChildren(stateBox("error", `关联加载失败 · ${errorText(error)}`));
+        } finally {
+          button.disabled = false;
+        }
+      }
+
+      function gapCard(gap) {
+        const card = create("a", "item-card");
+        const targetHash = `#gaps/${encodeURIComponent(gap.gap_id)}`;
+        card.href = targetHash;
+        card.dataset.id = gap.gap_id;
+        card.setAttribute("aria-label", `查看知识缺口 ${gap.gap_id}`);
+        const top = create("div", "card-top");
+        top.append(
+          create("span", "status-badge", readable(gap.status || "待处理")),
+          create("span", "type-badge", readable(gap.severity || gap.gap_class || "缺口")),
+        );
+        card.append(top, create("div", "card-title", gap.observed_symptom || "知识缺口"), create("div", "canonical-id", gap.gap_id || "—"));
+        addFactList(card, gap, ["affected_domains", "affected_paths", "demand_count"]);
+        return card;
+      }
+
+      async function loadGaps(requestedId = null) {
+        setActiveTab("gaps");
+        selectedId = null;
+        listTitle.textContent = "知识缺口";
+        listCaption.textContent = "正在读取类型化运营记录…";
+        listCount.textContent = "—";
+        itemList.replaceChildren(stateBox("loading", "正在加载知识缺口"));
+        inspectorPrompt("请选择一个知识缺口，查看证据和处理历史。");
+        try {
+          const page = await fetchJson(gapsPath);
+          const items = Array.isArray(page.items) ? page.items : [];
+          listCaption.textContent = "按严重度、需求次数和更新时间排列";
+          listCount.textContent = `${page.total ?? items.length} 条`;
+          itemList.replaceChildren(...(items.length ? items.map(gapCard) : [stateBox("empty", "当前版本没有知识缺口记录")]));
+          if (requestedId) await loadGapDetail(requestedId);
+        } catch (error) {
+          itemList.replaceChildren(stateBox("error", `知识缺口加载失败 · ${errorText(error)}`));
+        }
+      }
+
+      async function loadGapDetail(id) {
+        selectedId = id;
+        updateSelectedCard(id);
+        inspector.replaceChildren(stateBox("loading", "正在读取缺口证据"));
+        try {
+          const response = await fetchJson(gapsPath + "/" + encodeURIComponent(id));
+          const gap = response.gap || {};
+          const card = create("article", "inspector-card");
+          const top = create("div", "card-top");
+          top.append(create("span", "status-badge", readable(gap.status || "待处理")), create("span", "type-badge", readable(gap.severity || gap.gap_class || "缺口")));
+          card.append(
+            top,
+            create("h3", "inspector-title", gap.observed_symptom || "知识缺口"),
+            create("div", "canonical-id", gap.gap_id || id),
+            inspectorSection("缺口信息", dataRows([
+              ["分类", gap.gap_class],
+              ["涉及数据域", gap.affected_domains],
+              ["涉及路径", gap.affected_paths],
+              ["需求次数", gap.demand_count],
+              ["更新时间", formatTime(gap.updated_at)],
+            ])),
+            inspectorSection("证据标识", tokenList(gap.evidence_ids || [])),
+            inspectorSection("处理记录", dataRows([
+              ["状态变更", `${response.transitions?.length || 0} 条`],
+              ["本地字段断言", `${response.field_assertions?.length || 0} 条`],
+              ["本地关系断言", `${response.relationship_assertions?.length || 0} 条`],
+              ["未解析证据", response.unresolved_evidence_ids || []],
+            ])),
+          );
+          inspector.replaceChildren(card);
+        } catch (error) {
+          inspector.replaceChildren(stateBox("error", `缺口详情加载失败 · ${errorText(error)}`));
+        }
+      }
+
+      function routeFromHash() {
+        const raw = location.hash.replace(/^#/, "");
+        if (!raw) return { view: "company", id: null };
+        const [view, encodedId] = raw.split("/", 2);
+        const id = encodedId ? decodeURIComponent(encodedId) : null;
+        if (view === "gaps") return { view, id };
+        if (domains.includes(view)) return { view, id };
+        return { view: "company", id: null };
+      }
+
+      function loadRoute() {
+        const route = routeFromHash();
+        if (route.view === "gaps") loadGaps(route.id);
+        else loadDomain(route.view, route.id);
+      }
+
+      inspector.addEventListener("click", (event) => {
+        const target = event.target instanceof Element
+          ? event.target.closest('[data-action="related"]')
+          : null;
+        if (target && inspector.contains(target)) {
+          loadRelated(target.dataset.domain, target.dataset.id, target);
+        }
+      });
+
+      buildTabs();
+      loadStatus();
+      loadRoute();
+      window.addEventListener("hashchange", loadRoute);
+    </script>
+  </body>
+</html>

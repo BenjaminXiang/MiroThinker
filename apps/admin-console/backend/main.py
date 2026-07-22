@@ -1,165 +1,99 @@
+"""Canonical V2-only candidate application shell and explicit factory."""
+
 from __future__ import annotations
 
-import logging
-import os
-from datetime import datetime
 from pathlib import Path
 
-# admin-console serves real users; ensure Milvus uses real client (not in-memory mock).
-# The mock is intentional for unit tests but unsafe for production retrieval.
-# See .agents/specs/2026-05-02-w13-9-milvus-real-client-explicit.md.
-os.environ.setdefault("MILVUS_USE_REAL_CLIENT", "1")
-
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from backend.api.admin_professors import router as admin_professors_router
-from backend.api.batch import router as batch_router
-from backend.api.chat import router as chat_router
-from backend.api.data import router as data_router
-from backend.api.dashboard import router as dashboard_router
-from backend.api.export import router as export_router
-from backend.api.pipeline import router as pipeline_router
-from backend.api.pipeline_issues import router as pipeline_issues_router
-from backend.api.review import router as review_router
-from backend.api.seeds import router as seeds_router
-from backend.api.upload import router as upload_router
-from backend.api.domains import router as domains_router
-from backend.seed_cron import (
-    shutdown_seed_cron_scheduler,
-    start_seed_cron_scheduler,
+from backend.api.canonical_v2_chat import router as canonical_v2_chat_router
+from backend.api.canonical_v2_consumers import router as canonical_v2_consumers_router
+from backend.api.canonical_v2_operations import router as canonical_v2_operations_router
+from backend.canonical_v2_deps import (
+    get_canonical_v2_candidate_chat_adapter,
+    get_canonical_v2_chat_adapter,
+    get_canonical_v2_gap_operations,
+    get_knowledge_gap_operations,
 )
-
-app = FastAPI(title="深圳科创数据管理平台 - Admin Console")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+from backend.services.canonical_v2_admin import (
+    CanonicalV2ConsumerRuntime,
+    require_canonical_v2_consumer_runtime,
 )
 
 
-@app.get("/api/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+_STATIC_DIR = Path(__file__).resolve().parent / "static"
+_REJECT_METHODS = ("GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE")
 
 
-@app.on_event("startup")
-def _start_seed_cron() -> None:
-    app.state.seed_cron_scheduler = start_seed_cron_scheduler()
+def _create_canonical_v2_route_shell() -> FastAPI:
+    """Create one fresh V2-only route graph with no installed runtime."""
 
-
-@app.on_event("shutdown")
-def _shutdown_seed_cron() -> None:
-    shutdown_seed_cron_scheduler(
-        getattr(app.state, "seed_cron_scheduler", None)
+    shell = FastAPI(
+        title="Canonical V2 Candidate",
+        openapi_url=None,
+        docs_url=None,
+        redoc_url=None,
     )
 
+    @shell.get("/api/health")
+    def health() -> dict[str, str]:
+        return {"status": "ok"}
 
-# Register specific-prefix routers BEFORE the domain catch-all
-app.include_router(dashboard_router)
-app.include_router(upload_router)
-app.include_router(export_router)
-app.include_router(batch_router)
-app.include_router(data_router)
-app.include_router(pipeline_router)
-app.include_router(review_router)
-app.include_router(chat_router)
-app.include_router(pipeline_issues_router)
-app.include_router(seeds_router)
-app.include_router(admin_professors_router)
-app.include_router(domains_router)
+    shell.include_router(canonical_v2_chat_router)
+    shell.include_router(canonical_v2_operations_router)
+    shell.include_router(canonical_v2_consumers_router)
 
+    @shell.api_route("/api/{path:path}", methods=list(_REJECT_METHODS))
+    def reject_unknown_api(path: str) -> None:
+        del path
+        raise HTTPException(status_code=404, detail="canonical_v2_route_not_found")
 
-# Lightweight built-in data browser (no React build required).
-# Visit /browse to inspect companies/professors/papers/patents through the
-# Legacy /api/data/* endpoints now redirect to the Postgres-backed /api/{domain}
-# API. The React SPA at /assets/* is the legacy dashboard (now fed real Postgres
-# numbers from /api/dashboard per Round 9). The `/` root redirects to /browse
-# because that's the primary operator surface; the SPA is still reachable at the
-# filename paths it serves from /assets.
-_STATIC_DIR = Path(__file__).resolve().parent / "static"
-if (_STATIC_DIR / "browse.html").is_file():
-    app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static-files")
+    shell.mount(
+        "/static",
+        StaticFiles(directory=_STATIC_DIR),
+        name="static-files",
+    )
 
-    @app.get("/", include_in_schema=False)
+    @shell.get("/", include_in_schema=False)
     def redirect_root_to_browse() -> RedirectResponse:
         return RedirectResponse(url="/browse", status_code=302)
 
-    @app.get("/browse")
+    @shell.get("/browse")
     def serve_browse() -> FileResponse:
         return FileResponse(_STATIC_DIR / "browse.html")
 
-    if (_STATIC_DIR / "chat.html").is_file():
+    @shell.get("/chat")
+    def serve_chat() -> FileResponse:
+        return FileResponse(_STATIC_DIR / "chat.html")
 
-        @app.get("/chat")
-        def serve_chat() -> FileResponse:
-            return FileResponse(_STATIC_DIR / "chat.html")
+    return shell
 
 
-# Serve React SPA static files
-_FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+def create_canonical_v2_candidate_app(
+    *,
+    runtime: CanonicalV2ConsumerRuntime,
+) -> FastAPI:
+    """Install one exact aggregate and its two predecessor dependency overrides."""
 
-if _FRONTEND_DIST.is_dir():
-    app.mount(
-        "/assets", StaticFiles(directory=_FRONTEND_DIST / "assets"), name="assets"
+    exact_runtime = require_canonical_v2_consumer_runtime(runtime)
+    candidate = _create_canonical_v2_route_shell()
+    candidate.state.canonical_v2_consumer_runtime = exact_runtime
+    candidate.dependency_overrides[get_canonical_v2_chat_adapter] = (
+        get_canonical_v2_candidate_chat_adapter
     )
-
-    @app.get("/{full_path:path}")
-    def serve_spa(full_path: str) -> FileResponse:
-        """Serve index.html for all non-API routes (React Router client-side routing)."""
-        return FileResponse(_FRONTEND_DIST / "index.html")
-
-
-_LOGGER = logging.getLogger(__name__)
-_FRONTEND_STALENESS_GRACE_SECONDS = 5.0
+    candidate.dependency_overrides[get_knowledge_gap_operations] = (
+        get_canonical_v2_gap_operations
+    )
+    return candidate
 
 
-def _check_frontend_dist_freshness() -> None:
-    try:
-        dist_index = _FRONTEND_DIST / "index.html"
-        if not dist_index.is_file():
-            _LOGGER.warning(
-                "ADMIN_CONSOLE_FRONTEND_MISSING: dist/index.html not found at %s. "
-                "SPA routes will 404. Run `just frontend-fresh` to build.",
-                dist_index,
-            )
-            return
-
-        dist_mtime = dist_index.stat().st_mtime
-
-        frontend_root = _FRONTEND_DIST.parent
-        src_root = frontend_root / "src"
-        candidates: list[Path] = []
-        if src_root.is_dir():
-            for ext in ("ts", "tsx", "js", "jsx", "css", "html"):
-                candidates.extend(src_root.rglob(f"*.{ext}"))
-        for extra in ("index.html", "package.json", "vite.config.ts"):
-            p = frontend_root / extra
-            if p.is_file():
-                candidates.append(p)
-
-        if not candidates:
-            return
-
-        latest = max(candidates, key=lambda p: p.stat().st_mtime)
-        latest_mtime = latest.stat().st_mtime
-
-        if latest_mtime > dist_mtime + _FRONTEND_STALENESS_GRACE_SECONDS:
-            _LOGGER.warning(
-                "ADMIN_CONSOLE_FRONTEND_STALE: dist/index.html built at %s, "
-                "but src has newer file (%s at %s). Browser will see stale "
-                "React SPA. Run `just frontend-fresh` to rebuild, or "
-                "`just frontend-dev` for HMR on http://localhost:5180.",
-                datetime.fromtimestamp(dist_mtime).isoformat(timespec="seconds"),
-                latest.relative_to(frontend_root.parent),
-                datetime.fromtimestamp(latest_mtime).isoformat(timespec="seconds"),
-            )
-    except Exception as exc:  # noqa: BLE001
-        _LOGGER.debug("frontend dist freshness check skipped: %s", exc)
+app = _create_canonical_v2_route_shell()
 
 
-_check_frontend_dist_freshness()
+__all__ = [
+    "_create_canonical_v2_route_shell",
+    "app",
+    "create_canonical_v2_candidate_app",
+]

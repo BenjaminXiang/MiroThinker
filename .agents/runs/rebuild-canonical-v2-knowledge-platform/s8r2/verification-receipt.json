@@ -1,0 +1,137 @@
+{
+  "schema_version": "canonical-v2-s8r2-company-patent-retrieval-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s8r2-release-scoped-displayed-company-patent-traversal",
+  "status": "accepted",
+  "candidate_at": "2026-07-19T22:16:33Z",
+  "accepted_at": "2026-07-19T22:19:19Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "git_branch": "canonical-v2-s2-baseline",
+  "formal_task_ledger_before": "56/80",
+  "formal_task_ledger_after": "56/80",
+  "implementation": {
+    "knowledge_read_sha256": "5c41a94a2ebb7df8a62d0521dc10a9ae94574745065f068c0a1620c9c4990e87",
+    "knowledge_read_isolated_sha256": "a67ee520794f2acc49ad642e476d71fdfb3b8dcd72187b3c344ad814bfc43561",
+    "physical_owner_test_sha256": "c1bf7f873557b591300080262590230de6bf94b5ce81651cf1534dc0c200884a",
+    "dependency_audit_sha256": "c5b9ff0f6ac617605cb288b9d180505dcfcef133b2ba5f57a94fb11a9a365fbe",
+    "ready_contract_sha256": "bff5de56db2f367dfc950db54801231924d7a672fadff4a5dda0e62c3402f982",
+    "ready_plan_sha256": "49c9f3073aef6295b71853502065a5cf0d5562e85b2082cf67e16cd8f80ad9ed",
+    "candidate_contract_sha256": "26a5cdae9a3c83ed74cff31d4738d46b834b08c892e83f061145c892e765dd86",
+    "candidate_plan_sha256": "3ead28171477574740d6d09166505a9860c7e5aad607582793c5cbcd38652514",
+    "accepted_contract_sha256": "090d128e57fba213a1d92445f7f012e4765790a6161c5d8a4daecaa61bdd3f9d",
+    "accepted_plan_sha256": "9472303dc17795093f3671e5a3e4f96057095247a43cf90a6aef40b61cb95850",
+    "tasks_sha256_unchanged": "5f61c097729e1107ff387a89c9f6f62b3783ef88debf1612b6156fb2056cdd7d",
+    "acceptance_sha256_unchanged": "742b29dc9805214b4b7059d5c801189209c26e35831f3f834ef01e4ac9f6df50"
+  },
+  "behavior": {
+    "query_mapping": "company_has_patent/company_to_patent/company-to-patent reverse-traverses only exact accepted patent_has_applicant@canonical-v2-relationship-v1 Patent-to-Company applicant authority",
+    "source_authority": "one protected displayed Company is source-side witness only; returned identity, non-displayed constraints, coverage, fused result, and handle remain Patent-scoped",
+    "trace": "LocalCanonicalRelationshipTrace binds release, query policy, candidate, typed assertion, outcome, typed/current decision, retained/public source record, observed/source-event and validity times, applicant subobject, Company and Patent projections, and both direction-bound eligibility results",
+    "valid_zero": "authoritative zero, valid Company with nonzero but nonmatching relationship authority, endpoint exclusion, unknown direct source, and max_candidates zero remain distinct from invalid public source authority",
+    "temporal": "earlier queries fail closed; equal time has no freshness flag; later queries disclose the canonical relationship snapshot timestamp and compose deterministically with endpoint limitations",
+    "web": "a current-Web Company cannot satisfy the displayed source witness; legitimate snapshot-bound Web evidence for the same returned Patent may fuse without taking ownership of canonical relationship evidence",
+    "postvalidation": "the release wrapper replays expected output and binds the EvidenceSet envelope, top-level and fused evidence, candidate and auxiliary traces, constraint receipts, coverage, canonical handles, and cross-lane raw/evidence ownership",
+    "effects": "the traversal and every check remain in memory and perform no relationship-store, Postgres, Milvus, provider, canonical, index, or active-pointer write"
+  },
+  "upstream_evidence_mapping": {
+    "type_version_orientation_role": "test_relationship_projection_contract.py plus test_technology_relationships_preserve_three_evidence_states_without_capability own generic installed type/version, endpoint orientation, role-bound projection, and invalid-role rejection",
+    "source_record_and_exact_replay": "test_release_bundle_binds_exact_relationship_publication_authority_before_effects owns candidate/assertion/decision/source-record and request/result/release cross-wire replay",
+    "s8r2_specific_trace": "test_s8r2_executes_release_scoped_company_to_patent_relationship_traversal binds every new trace ID/hash/time and both direction-bound eligibility results to the exact S7K authority"
+  },
+  "tdd": {
+    "legacy_literal_before_production": "1 passed, 59 deselected",
+    "red_normal": "1 xfailed at the exact missing S8R2 public seams",
+    "red_forced": "1 failed only at the exact target sentinel before fixture/effect acquisition",
+    "real_red": "1 failed only at relationship request path is unsupported after interface-only seams",
+    "green_focused": "1 passed, 59 deselected with warnings treated as errors",
+    "review_red_green": [
+      "limited plus later snapshot flags were not globally sorted, then GREEN",
+      "duplicate CandidateTrace ownership was accepted, then rejected",
+      "current-Web Company displayed-source witness was accepted, then rejected",
+      "missing/duplicate top-level evidence, extra auxiliary trace, and forged exhaustive coverage were accepted, then rejected",
+      "valid Patent target constraint rejection raised integrity error, then returned an audited hard_constraint_rejected zero",
+      "same-Patent Web fusion conflicted with exact receipt comparison, then passed through projected relationship ownership",
+      "cross-lane raw/evidence reuse and a drifted EvidenceSet envelope were accepted, then rejected",
+      "three Optional outcome IDs produced Pyright errors, then complete Canonical V2 Pyright returned zero errors"
+    ]
+  },
+  "verification": {
+    "legacy_and_relationship_regressions": "3 passed, 57 deselected",
+    "focused_green": "1 passed, 59 deselected in 57.15 seconds",
+    "exact_predecessor_matrix": "8 passed, 52 deselected",
+    "shared_physical_release_owner": "58 passed, 2 skipped",
+    "relationship_and_release_publication_owners": "15 passed",
+    "knowledge_read_and_query_planning_owners": "17 passed",
+    "canonical_v2_no_external": "347 passed, 141 skipped, 3 intentional hostile-model serializer warnings",
+    "ruff_check": "passed for complete src/data_agents/canonical_v2 and tests/canonical_v2",
+    "ruff_format": "74 files already formatted",
+    "py_compile": "passed for both changed production files and the owner test",
+    "pyright": "0 errors, 0 warnings, 0 informations for complete Canonical V2 source/tests",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "uv_lock_check_offline": "resolved 194 packages without lock drift",
+    "scope_secret_cache": "six Ready-owned source/contract files plus this receipt; high-confidence credential assignment and stale S8R2 xfail scans passed; one hide_password=False false positive was reviewed",
+    "original_relative_milvus_path_check": "not applicable in the worktree because the frozen original is intentionally outside it; the accepted absolute original path was checked instead"
+  },
+  "wheel": {
+    "path_before_owned_cleanup": "/var/tmp/canonical-v2-s8r2-wheel-BgmHGH/miroflow_agent-0.1.0-py3-none-any.whl",
+    "sha256": "2d01948dccfb3cbf01ba36cd662881443f98e11ede4c4f547fe0af5732013e46",
+    "entry_count": 276,
+    "contains_tests_or_agents": false,
+    "knowledge_read_source_and_entry_sha256": "5c41a94a2ebb7df8a62d0521dc10a9ae94574745065f068c0a1620c9c4990e87",
+    "knowledge_read_isolated_source_and_entry_sha256": "a67ee520794f2acc49ad642e476d71fdfb3b8dcd72187b3c344ad814bfc43561",
+    "packaged_production_hashes_match_source": true,
+    "owned_output_cleaned_after_receipt_inputs_recorded": true
+  },
+  "owned_generated_outputs": {
+    "wheel_directory": "/var/tmp/canonical-v2-s8r2-wheel-BgmHGH",
+    "cache_files": [
+      "apps/miroflow-agent/.ruff_cache/0.15.10/5428004810763614316",
+      "apps/miroflow-agent/.ruff_cache/0.15.10/7466570645398254889",
+      "apps/miroflow-agent/src/data_agents/canonical_v2/__pycache__/knowledge_read.cpython-312.pyc",
+      "apps/miroflow-agent/src/data_agents/canonical_v2/__pycache__/knowledge_read_isolated.cpython-312.pyc",
+      "apps/miroflow-agent/tests/canonical_v2/__pycache__/test_internal_reference_projection_contract.cpython-312-pytest-8.4.1.pyc",
+      "apps/miroflow-agent/tests/canonical_v2/__pycache__/test_internal_reference_projection_contract.cpython-312.pyc"
+    ],
+    "cleanup_complete": true
+  },
+  "frozen_targets": {
+    "original_milvus_path": "/home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db",
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_state": "paused true true",
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "original_pgtest_host_port": "15432",
+    "recovery_lab_network": "none",
+    "recovery_lab_published_ports": false,
+    "recovery_lab_restart_policy": "no",
+    "active_pointer_readback": "not performed because no explicit isolated target DSN is configured; S8R2 executes no pointer mutation path"
+  },
+  "review": {
+    "final_contract": {
+      "critical": 0,
+      "important": 0,
+      "minor": 0,
+      "yagni": 0,
+      "verdict": "candidate_allowed"
+    },
+    "final_static_and_test": {
+      "critical": 0,
+      "important": 0,
+      "minor": 0,
+      "yagni": 0,
+      "verdict": "candidate_allowed"
+    },
+    "final_implementation": {
+      "critical": 0,
+      "important": 0,
+      "minor": 1,
+      "yagni": 0,
+      "verdict": "acceptance_allowed"
+    }
+  },
+  "nonblocking_minor_yagni": [
+    "Minor: one legacy generic postvalidation error still says Company locator where canonical locator is more precise; behavior and evidence are unaffected."
+  ],
+  "next_required_action": "return to the outer goal loop and select the next independently Ready Task 8.3 predecessor while keeping 56/80 unchanged",
+  "forbidden_actions_performed": []
+}

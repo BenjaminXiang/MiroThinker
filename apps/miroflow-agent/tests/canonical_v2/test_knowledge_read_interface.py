@@ -3,14 +3,10 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any
 
-import pytest
 
-
-RED_REASON = "Task 3.1 RED: Canonical V2 KnowledgeRead interface is not implemented"
-
-
-@pytest.mark.xfail(strict=True, raises=ModuleNotFoundError, reason=RED_REASON)
-def test_knowledge_read_preserves_query_constraints_release_and_evidence_trace() -> None:
+def test_knowledge_read_preserves_query_constraints_release_and_evidence_trace() -> (
+    None
+):
     module: Any = import_module("src.data_agents.canonical_v2.knowledge_read")
     slot = module.ProtectedSlot(kind="exact_identifier", value="CN117873146A")
     plan = module.RetrievalPlan(
