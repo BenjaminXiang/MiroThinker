@@ -122,7 +122,20 @@ Completed on the isolated consolidation worktree:
 - Current Admin S11A HTTP owner, without the historical ignored root helper on `PYTHONPATH` —
   `7 passed`.
 - Focused Ruff check and format check for the relocation correction — passed.
-- `git diff --check` — passed before each checkpoint.
+- `git diff --check 641278f01b005c66bd356533d4df0fd11b678394..HEAD` — passed for the
+  relocation correction and control-plane acceptance commits.
+- `git diff --check f0e6224e1c675c6d6c58993676783b2fbe0cd8f6..HEAD` — exits `2` only on
+  four verbatim imported, content-addressed historical artifacts; they are intentionally not
+  whitespace-normalized because their exact hashes are acceptance authority:
+  `.agents/runs/canonical-v2-provider-compat-self-contained/verification.md`,
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s7i/implementation-plan.md`,
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s11b/baseline/junit/admin-no-external.xml`,
+  and `.agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/junit/admin-no-external.xml`. Their
+  current SHA-256 values remain respectively
+  `64ae8d8755a6cde55d26cf12c20fc3e0cb97a2ade664cd5d2219cc452e84c890`,
+  `8c701a07be6c0fa84bb52e812725dc77928a6e1685fb27b76a6605060cbf336e`,
+  `1feaf63e10e29eede180dd6098c787cfe4e51866c3b501ba62375fff55a96e5e`, and
+  `9e03b138fb5628d7d91dd5f97330f8e44cd14c66e55bfe044f77da8b57966c29`.
 - Strict receipt JSON/hash audit — S9I, S9J, S10O, S11A, S11B, and S11C receipt hashes match their
   recorded authorities; receipt-bound S9J/S11B/S11C evidence is present.
 - Recovery audit — 354/354 archive paths independently rehashed; recovery bundle verified;

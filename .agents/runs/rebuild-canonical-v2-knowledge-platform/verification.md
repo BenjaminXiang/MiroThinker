@@ -88,7 +88,9 @@ are now Accepted, while S2C3 review, Tasks 8.1/8.8/9.8, and S12 remain open. Git
 - Verification passed: strict OpenSpec; unique Alembic head `C2_0011`; 26 safe S7/S8 owners; 58
   S11C/S11B owners including relocation and tamper coverage; 7 current S11A Admin owners without the
   historical ignored root helper; focused Ruff check/format; archive/bundle/hash/scope/Git identity
-  audits. Exact evidence is in `git-consolidation-baseline-2026-07-22.md`.
+  audits. The successor range passes `git diff --check`; the full imported range reports only four
+  exact-hash-bound historical whitespace artifacts, retained verbatim rather than normalized. Exact
+  evidence and path/hash inventory are in `git-consolidation-baseline-2026-07-22.md`.
 - The branch `codex/canonical-v2-s11-consolidation` is Accepted as the sole local parent for future
   Ready slices. The Epic stays In Progress at `70/80`; Tasks 2.8, 8.1, 8.8, 9.8, and 12.1-12.6
   remain open. `main` remains `f0e6224`; S12, push, Cutover, and branch deletion remain unauthorized.
