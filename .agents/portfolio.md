@@ -3,7 +3,20 @@
 > Per CLAUDE.md §7. Tracks Active / Candidate / Blocked / Frozen / Abandoned / Accepted / Archived
 > work for the retrieval-augmented refactor.
 
-## Canonical V2 implementation mainline (2026-07-13)
+## Canonical V2 implementation mainline (updated 2026-07-22)
+
+- **Development baseline consolidation:** the user designated the accumulated S11 worktree as the
+  sole implementation authority, paused S12, and required preservation before further development.
+  Aggregate recovery commit `8fd5f26c0749599860d4a08a26e6a9694d05a017` retains every nonignored
+  byte. Aggregate import commit `641278f01b005c66bd356533d4df0fd11b678394` retains the formal
+  S2C2/S6R/S7-S11 implementation and acceptance authority while quarantining preview-only artifacts
+  in the recovery archive/ref. Successor correction commit `438c715190d4f8b5c2bbf9f29b6abe3899ec2330`
+  separates current artifact location from frozen S11C execution provenance without rewriting any
+  Accepted receipt. Branch `codex/canonical-v2-s11-consolidation` is the Accepted future development
+  parent under the verification recorded in
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/git-consolidation-baseline-2026-07-22.md`.
+  Git `main` remains at the historical Aggregate-S6 checkpoint `f0e6224`; no push, cutover, or S12
+  implementation is authorized by this consolidation.
 
 - **`rebuild-canonical-v2-knowledge-platform`** (OpenSpec, breaking Epic) is the sole implementation
   mainline by user decision. Current task ledger: 70/80. Tasks 5.1-5.7 retain their Accepted

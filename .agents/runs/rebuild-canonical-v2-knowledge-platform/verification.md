@@ -75,6 +75,24 @@ are now Accepted, while S2C3 review, Tasks 8.1/8.8/9.8, and S12 remain open. Git
 `main` fast-forwarded locally to the exact Accepted checkpoint `f0e6224` at
 `2026-07-13T15:00:36Z`; no product database/index/release state changed and no push/cutover occurred.
 
+## Accepted S11 consolidated Git baseline — 2026-07-22
+
+- Exact recovery commit `8fd5f26c0749599860d4a08a26e6a9694d05a017` preserves every one of
+  the 354 changed/nonignored source-worktree paths; aggregate import
+  `641278f01b005c66bd356533d4df0fd11b678394` retains 299 formal implementation and acceptance
+  paths while 55 preview-only paths remain in recovery.
+- Successor correction `438c715190d4f8b5c2bbf9f29b6abe3899ec2330` makes the immutable S11C
+  evidence relocation-safe. Current checkout paths locate bytes; frozen historical repository,
+  cwd, basetemp, and temp-root fields are raw-hash-bound and compared lexically. No Accepted receipt,
+  JUnit, ledger, screenshot, or collected-nodeid byte changed.
+- Verification passed: strict OpenSpec; unique Alembic head `C2_0011`; 26 safe S7/S8 owners; 58
+  S11C/S11B owners including relocation and tamper coverage; 7 current S11A Admin owners without the
+  historical ignored root helper; focused Ruff check/format; archive/bundle/hash/scope/Git identity
+  audits. Exact evidence is in `git-consolidation-baseline-2026-07-22.md`.
+- The branch `codex/canonical-v2-s11-consolidation` is Accepted as the sole local parent for future
+  Ready slices. The Epic stays In Progress at `70/80`; Tasks 2.8, 8.1, 8.8, 9.8, and 12.1-12.6
+  remain open. `main` remains `f0e6224`; S12, push, Cutover, and branch deletion remain unauthorized.
+
 ## S11C aggregate consumer acceptance — 2026-07-21T19:10:41Z
 
 - Tasks 11.1-11.5 closed atomically at `70/80`. Exact S11A/S11B reruns, Accepted Task 2.7

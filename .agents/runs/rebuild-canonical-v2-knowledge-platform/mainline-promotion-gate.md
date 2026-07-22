@@ -13,9 +13,15 @@ historical `65/80` OpenSpec ledger with receipts
 `ae34240cde353a272faa23710bfdf3818763ac261891bf48bc5307048a8759bc`. S11B is also Accepted at the
 same historical ledger with receipt `cee1beebe2bdb1eba3f09b06e4e3c819167bbba14d5b6d6072f1f4cbafb0a945`.
 S11C subsequently accepted Tasks 11.1-11.5 atomically at `70/80`; receipt
-`281b28244a9fb5043a10df4e7eaa8f4e9e9385825babdae6204a461661a99717`. S12A is next. These
-uncommitted checkpoints do not move Git
-`main`, reopen this historical gate, or authorize Push, PR, product promotion, or Cutover.
+`281b28244a9fb5043a10df4e7eaa8f4e9e9385825babdae6204a461661a99717`. On 2026-07-22 the user
+paused S12 and selected the current final bytes as the sole source for a durable development
+baseline. Recovery commit `8fd5f26c0749599860d4a08a26e6a9694d05a017` preserves the complete
+nonignored worktree, and aggregate import commit `641278f01b005c66bd356533d4df0fd11b678394`
+creates a clean consolidation baseline without pretending to reconstruct task-level history.
+Successor correction `438c715190d4f8b5c2bbf9f29b6abe3899ec2330` makes historical S11C evidence
+relocation-safe while preserving every receipt byte. The consolidation branch is Accepted only as
+the parent for future Ready development slices. Git `main` remains at `f0e6224`; this does not reopen
+the historical promotion gate or authorize Push, PR, product promotion, Cutover, or S12.
 
 ## Goal
 

@@ -1,5 +1,23 @@
 # Change Log
 
+## 2026-07-22
+
+- The user designated the accumulated Canonical V2 S11 worktree as the sole implementation
+  authority, paused S12, and required a durable, non-destructive development baseline before any
+  further feature work. A permission-restricted archive captured and independently rehashed all 354
+  changed/nonignored paths. Aggregate recovery commit
+  `8fd5f26c0749599860d4a08a26e6a9694d05a017` preserves the exact worktree, and aggregate import
+  commit `641278f01b005c66bd356533d4df0fd11b678394` retains 299 formal implementation/acceptance paths
+  while keeping 55 preview-only paths solely in recovery. This is an honest current-state import,
+  not fabricated task-level history. Tasks 2.8, 8.1, 8.8, 9.8, and 12.1-12.6 remain open; `main`
+  remains `f0e6224`. Successor correction `438c715190d4f8b5c2bbf9f29b6abe3899ec2330`
+  separates the current evidence locator from frozen S11C execution roots and uses lexical checks
+  for historical temp paths; no historical receipt changed. The safe S7/S8 matrix passed 26 cases,
+  the current S11C/S11B owner matrix passed 58, and the current S11A Admin owner passed 7 without its
+  historical ignored root helper. The consolidation branch is Accepted as the sole parent for
+  subsequent Ready development. No push, PR, Cutover, product-data/index promotion, original-source
+  mutation, branch deletion, or S12 implementation occurred.
+
 ## 2026-07-21
 
 - Accepted S11C and Tasks 11.1-11.5 atomically at `2026-07-21T19:10:41Z`, moving the formal ledger

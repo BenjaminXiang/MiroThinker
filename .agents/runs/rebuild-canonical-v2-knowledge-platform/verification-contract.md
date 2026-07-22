@@ -241,10 +241,11 @@ migration was weakened. The aggregate review has zero open Critical/Important fi
 databases were removed, and the durable candidate remains C2_0004.
 
 ADR-013 through ADR-022 later clarified requirements that were not part of the historical S2/S6
-acceptance contracts. Tasks 2.7-2.8/S2C and 6.9-6.11/S6R are therefore pending reconciliation gates:
-S2C must be Accepted before S8/S9 acceptance-oracle execution, and S6R must be Accepted before S7.
-This specification update does not reopen, relabel, or claim implementation of the historical S2/S6
-slices; it records the new predecessor obligations explicitly.
+acceptance contracts. S2C2/Task 2.7 and S6R/Tasks 6.9-6.11 are Accepted. S2C3/Task 2.8 remains open
+and must be Accepted before Task 8.1 calibration or Tasks 8.8/9.8 use the claim-level corpus as an
+acceptance oracle. The accepted deterministic S7-S11 implementation slices do not close those
+aggregate gates. This specification update does not reopen or relabel the historical S2/S6 slices;
+it records the added predecessor obligations and their current state explicitly.
 
 Git `main` promotion is separately gated after aggregate S6 acceptance. The execution session must
 re-prove a clean V2 integration worktree, complete side-branch accounting, preservation of root dirty

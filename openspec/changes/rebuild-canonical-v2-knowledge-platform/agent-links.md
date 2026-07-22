@@ -8,8 +8,13 @@
 - The primary agent may delegate bounded work to subagents. Parallel writers use isolated
   branches/worktrees and separately named disposable resources; subagents do not approve an entire
   task, push, promote, or mutate shared active pointers.
-- Each final Accepted OpenSpec task is integrated, verified, and committed separately by the
-  primary agent.
+- From the S11 consolidated baseline forward, each final Accepted OpenSpec task is integrated,
+  verified, and committed separately by the primary agent.
+- Recovery exception: the final bytes accumulated between 2026-07-13 and 2026-07-21 were never
+  committed and their intermediate blobs do not exist. By explicit user decision on 2026-07-22,
+  those bytes are imported once as an aggregate S11 baseline after an exact recovery snapshot. The
+  import is not represented as reconstructed task history; the original slice contracts and
+  receipts remain the historical evidence.
 
 ## Slice dependency DAG
 
@@ -156,6 +161,12 @@ requirements add two pending reconciliation gates without rewriting that accepta
   JUnit/failure reconciliation, execution provenance, generated cleanup, and independent evidence/
   protected-scope reviews all pass with zero open Critical/Important findings. Receipt SHA-256:
   `281b28244a9fb5043a10df4e7eaa8f4e9e9385825babdae6204a461661a99717`. S12A/Task 12.1 is next.
+- The 2026-07-22 S11 consolidation preserves all accumulated bytes at recovery commit
+  `8fd5f26c0749599860d4a08a26e6a9694d05a017` and imports the formal final state at
+  `641278f01b005c66bd356533d4df0fd11b678394`. Relocation correction
+  `438c715190d4f8b5c2bbf9f29b6abe3899ec2330` preserves frozen S11C provenance while allowing the
+  same raw-hash-bound evidence to validate from the clean checkout. Baseline verification passed;
+  this consolidation branch is the sole parent for later Ready slices. `main` remains `f0e6224`.
 - S11 consumer migration depends on the replacement deep modules it migrates to being Accepted.
 - S12 candidate construction and final acceptance depend on all required build, release, index,
   query, answer, gap, and consumer seams being Accepted.
