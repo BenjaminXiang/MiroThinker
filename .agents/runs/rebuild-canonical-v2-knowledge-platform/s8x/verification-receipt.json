@@ -1,0 +1,120 @@
+{
+  "slice_id": "S8X",
+  "status": "Accepted",
+  "candidate_at": "2026-07-20T17:20:26Z",
+  "accepted_at": "2026-07-20T17:26:45Z",
+  "goal": "Materialize exact continuation, blocking-ambiguity, and typed-traversal successor handoffs across the real public KnowledgeRead-to-KnowledgeAnswer seam.",
+  "ledger": {
+    "before": "65/80",
+    "after": "65/80",
+    "tasks_changed": [],
+    "acceptance_changed": false,
+    "portfolio_changed": false,
+    "s11a_changed": false
+  },
+  "scope": {
+    "production_files": [
+      "apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_read.py",
+      "apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_answer.py"
+    ],
+    "dedicated_owner": "apps/miroflow-agent/tests/canonical_v2/test_knowledge_read_answer_successor_handoff.py",
+    "physical_owner_assertions": "apps/miroflow-agent/tests/canonical_v2/test_internal_reference_projection_contract.py",
+    "evidence_files": [
+      ".agents/runs/rebuild-canonical-v2-knowledge-platform/s8x/dependency-audit.md",
+      ".agents/runs/rebuild-canonical-v2-knowledge-platform/s8x/implementation-plan.md",
+      ".agents/runs/rebuild-canonical-v2-knowledge-platform/s8x/verification-receipt.json",
+      ".agents/runs/rebuild-canonical-v2-knowledge-platform/slices/s8x-successor-handoff-materialization.md"
+    ]
+  },
+  "final_hashes": {
+    "knowledge_read_sha256": "a28488c400a8e1dea66b3ad9f87fc048895b4f96f0da15548bcc9590e85b86fc",
+    "knowledge_answer_sha256": "386ce550f9b3f1c47c76f854307d9461cb8177bf44968dd7f4f51678ee104d9e",
+    "dedicated_owner_sha256": "29191a15c875cf95f4d2c6c432a2c6136c3f4cd9571369ef00306a4767b79d01",
+    "physical_owner_sha256": "61c9ec362e39d7e4eca9a3db7e02d9bf5ebde095e4acb0f02c989437baed147f",
+    "pre_candidate_dependency_audit_sha256": "458018f95fdc75ee3bdd38c6d905b621b25f5e0bd4dae8200600f23fa74eafd6",
+    "pre_candidate_implementation_plan_sha256": "2762ada4b9682eced87f896b7357c775aeab2e3e7bd25cde34c22000d31665f5",
+    "pre_candidate_slice_contract_sha256": "7405e8b8128708c63dcc620980853b725e2301301a752733a111703f1de7d01b",
+    "unchanged_tasks_sha256": "87eb7c1e6d9e5b80e535cb94398f42798cdf4f3c83fb818011d0948519e32e54",
+    "unchanged_acceptance_sha256": "1943943ee6fbc50b33357db1cceb987af93eba129042e6e4d6edfb68c9d5261f"
+  },
+  "tdd_evidence": {
+    "initial_successor_red": "The original five dedicated public Read-to-Answer cases failed only because continuation and blocking successor materialization was absent.",
+    "initial_successor_green": "All five original dedicated cases passed after the shared Read materializer and current-turn Answer authorization guard.",
+    "traversal_red_a": "4 failed in 10.72 seconds; each failed only because requested_traversal was None in the real S8R2/S8R5/S8R3/S8R4 node.",
+    "traversal_green_a": "4 passed in 149.34 seconds after the exact four-tuple Read whitelist; zero, multiple, unknown, and technology paths remained None.",
+    "traversal_red_b": "1 failed in 3.10 seconds; the public S8R2 Answer receipt existed with the correct source/path and an empty target.",
+    "traversal_green_b": "1 passed in 55.87 seconds with exact source company-robotics, target patent-ada, and company_to_patent path.",
+    "subject_authority_red": "2 failed in 6.65 seconds: Canonical object-id cross-wire and mixed-Web-object authority each emitted an invalid candidate.",
+    "subject_authority_green": "The six-test dedicated owner passed after exact Canonical subject matching and singleton Web object authority.",
+    "defect_class": "L4+C1 producer-consumer handoff mismatch, followed by one exact-subject authority sibling repair.",
+    "bounded_sibling_search": "The Answer offer, blocking, and traversal matchers did not repeat the object-id subject-authority defect; no broader repair was required."
+  },
+  "verification": {
+    "final_dedicated_owner": "6 passed in 0.41 seconds",
+    "final_physical_four": "4 passed in 149.57 seconds",
+    "focused_read_answer_matrix": "42 passed in 10.68 seconds with the three retained hostile serializer warnings",
+    "affected_subject_authority_matrix": "25 passed in 10.42 seconds",
+    "final_canonical_v2_no_external": "363 passed, 148 skipped, 3 retained hostile Pydantic serializer warnings in 327.91 seconds",
+    "complete_ruff_check": "passed for src/data_agents/canonical_v2 and tests/canonical_v2",
+    "complete_ruff_format": "79 files already formatted",
+    "py_compile": "passed for complete Canonical V2 source and tests",
+    "complete_pyright": "0 errors, 0 warnings, 0 informations",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "uv_lock_check_offline": "resolved 194 packages without lock drift",
+    "owned_file_hygiene": "No conflict markers or missing final newlines; no high-confidence credential literal in production; the dedicated owner has exactly six tests and no xfail/skip marker. The physical owner retains one unrelated pre-existing environment-gated Task 7.7 skip.",
+    "owned_generated_cache_cleanup": "The exact S8X Python cache files and exact disposable wheel directory were removed."
+  },
+  "wheel": {
+    "sha256": "72c07e7334acfa53ba8aa5a49923bf6ac5fb362f9257802603c60ae9fa13ec2e",
+    "entry_count": 278,
+    "knowledge_read_entry_count": 1,
+    "knowledge_answer_entry_count": 1,
+    "contains_tests_or_agents": false,
+    "knowledge_read_source_and_entry_sha256": "a28488c400a8e1dea66b3ad9f87fc048895b4f96f0da15548bcc9590e85b86fc",
+    "knowledge_answer_source_and_entry_sha256": "386ce550f9b3f1c47c76f854307d9461cb8177bf44968dd7f4f51678ee104d9e",
+    "packaged_production_hashes_match_source": true,
+    "owned_output_cleanup_complete": true
+  },
+  "frozen_targets": {
+    "inspection_mode": "read-only docker inspect and direct file hashing only; no container exec, database or Milvus connection, volume mount, start, unpause, restart, or write",
+    "original_milvus_path": "/home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db",
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_milvus_size": 1298632704,
+    "original_pgtest_container_id": "dabafbdc0fdd9f4f61f10bfa3d1d799e3ff78a9461430edd1b3f4b7e85d36328",
+    "original_pgtest_state": "status=paused running=true paused=true restart=no",
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "original_pgtest_host_port": "15432",
+    "recovery_lab_state": "running=true network=none ports={} restart=no",
+    "forensic_sentinels": {
+      "FORENSIC-CHECKPOINT.md": "cb542decb9bceabee6d3c0bbdba2221d966f2660cc0d29bf55b48a4871184ca7",
+      "RECOVERY-EXPERIMENT-REPORT.md": "5f1e942ac84c16381888f39067c2c2f75da92afaf126e32e39083441374907b3",
+      "LOGICAL-REBUILD-PLAN.md": "aa9ef89cc5424e16a3c95560f91651a70e158e549ae051025ffa536860a59159",
+      "host-ext4-journal-20260711T024500Z.bin": "e24b1ae32004cc7213e15b1da34a79774978e61d328807b45b715b755e045c65",
+      "lab-01/ext4-dir-inode-27017891.bin": "74d990fd2e25cb0a8562d16643feacb2baf5322e93ebf00a81722c14ba98ef37",
+      "lab-01/miroflow-real-fpi-salvage.dump": "cef8eb6ba18ebd23fde3e47023222ecb82bc8f27582040efe5a212a7f9fdfbb7",
+      "lab-01/recovered-paper-ids.txt": "92cf87dc820a118c8eeee7924f7991314e825a31f699b70f6db4d014738adc9c",
+      "lab-01/recovered-link-ids.txt": "e137eb68ee174663eb7d563706ddaa9ee48574e4da8aa1130acb488a1918a292"
+    },
+    "forensic_postgresql_data_file_count": 3762,
+    "forensic_pg_version_sha256": "e6c21e8d260fe71882debdb339d2402a2ca7648529bc2303f48649bce0380017",
+    "forensic_pg_control_sha256": "fe23076c3a33fe22fc025ed4e34366f57cde423432835df79097f7fc2587c73c",
+    "recorded_forensic_manifest_identity": "bce14dce8fe2da4d053ac9cd930e1532f4abb436c5d03fff07aa69fd180e9e91",
+    "recorded_forensic_manifest_identity_note": "Consistent across the verification contract, checkpoint, and source inventory, but not independently recomputed because the original manifest file and generation algorithm were not retained.",
+    "accepted_s8c_receipt_sha256": "9e912de80fad1d82c6b6e27d71f04b458a0c78799c104ff6ca0e659e0f43ebca",
+    "accepted_s9i_receipt_sha256": "658c12f519a55d3e5ca02eea7b2a5deba36d47954fe04d9233934a434e0ac366"
+  },
+  "reviews": {
+    "specified": "Critical=0, Important=0",
+    "traversal_replan": "Critical=0, Important=0",
+    "final_implementation_and_test_integrity": "Critical=0, Important=0, Minor=0, YAGNI=0",
+    "post_pyright_explicit_value_narrowing": "Critical=0, Important=0, Minor=0; empty normalized values are not executable explicit constraints and are correctly omitted",
+    "candidate_artifact_review": "Critical=0, Important=0, Minor=0, YAGNI=0; JSON, live hashes, final test/static/package/source evidence, ledger non-delta, and Candidate status were exact"
+  },
+  "branch": {
+    "name": "canonical-v2-s2-baseline",
+    "head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6"
+  },
+  "next_required_action": "Return S11A to Specified, bind the final Accepted S8X receipt and live hashes, revalidate the baseline, and obtain one lean review before marking S11A Ready.",
+  "forbidden_actions_performed": []
+}

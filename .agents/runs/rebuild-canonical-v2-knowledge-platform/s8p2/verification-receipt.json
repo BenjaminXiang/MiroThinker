@@ -1,0 +1,110 @@
+{
+  "schema_version": "canonical-v2-s8p2-planning-taxonomy-assessment-intent-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s8p2-planning-taxonomy-and-assessment-intent",
+  "status": "accepted",
+  "accepted_at": "2026-07-19T07:28:02Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "git_branch": "canonical-v2-s2-baseline",
+  "formal_task_ledger_before": "55/80",
+  "formal_task_ledger_after": "56/80",
+  "implementation": {
+    "knowledge_read_sha256": "b599e117e27af94883f316d2ea2af0bd8b3942d4e09e1157c9c36ecc3d01f691",
+    "knowledge_answer_sha256": "d617058f6783ebcae68bacee7e48b118f9d9ce7f08ce1e68eabea3690217aa78",
+    "knowledge_read_isolated_sha256_unchanged": "60d0de623b3f24280528b7c161feafc1c79bf4884f0fd894f519b3efb0bb2d50",
+    "query_owner_test_sha256": "6fa0ae7fbd3622dfc5651dc0587a800ac5943c0187231ad20a7fd5df2144eabf",
+    "physical_owner_test_sha256": "3696f1c5231aed428b6d6161359b9f2c97579b346c03386cb688c504a333a519",
+    "slice_contract_sha256_before_acceptance_evidence": "5d6dcb0b2a4e6cef33760e80df3f4a996c28e0d73d849ed1790bec61d44ca3f0",
+    "implementation_plan_sha256_before_acceptance_evidence": "eb506166ed6f1c6ed1a2eae11b86750d264454d2c93cf400ff45c3cf2ca50c6b",
+    "tasks_sha256_before_task_8_2_acceptance": "5c71f296c81b7a8ef2f76dac09489a05529ae43ae31f8342e378dd4353f17328",
+    "acceptance_sha256_unchanged": "742b29dc9805214b4b7059d5c801189209c26e35831f3f834ef01e4ac9f6df50"
+  },
+  "behavior": {
+    "finite_proposal_schema": "retrieval-plan-proposal-v1 with finite behavior/interaction/enumeration/internal-reference/Web axes",
+    "safety_policy": "ordinary refusal, interface control, default safety, and server-allowlisted bounded official-only safety are cross-field validated",
+    "assessment_intent": "one open trimmed kind and ordered unique explicit user criteria are content-bound and copied unchanged",
+    "material_parts": "unique material answer parts are content-bound and copied unchanged into RetrievalPlan",
+    "web_budget": "provider calls are positive for information retrieval, result counts are nonnegative and server bounded, and zero policy is never raised",
+    "ambiguity": "institution/entity blocking clarification is derived only for information retrieval",
+    "legacy_compatibility": "empty official-domain/material/assessment fields are omitted and frozen S8P1 identities remain exact"
+  },
+  "tdd": {
+    "initial_red_normal": "2 xfailed, 52 deselected",
+    "initial_red_forced": "2 failed, 52 deselected; exact proposal-taxonomy and AssessmentIntent sentinels",
+    "initial_green": "2 passed, 52 deselected",
+    "candidate_review_red": "2 failed, 52 deselected; exact planning-hardening and material-parts sentinels",
+    "candidate_review_green": "2 passed, 52 deselected"
+  },
+  "legacy_identities": {
+    "planning_policy_content_sha256": "b16b7e156dce15205104bd2f42d203ad16eaae05cf4c6e69af217c5660ffdefd",
+    "proposal_content_sha256": "935d3c6805603b82339331e82390254ca1f49e8f2b3be9c5e5988fb167dc4acd",
+    "proposal_serialized_sha256": "d078246e79cfe8b8c5f6ed1c5d5ef3b4a0eb6923369a41b940cc5794b9e65e1b",
+    "plan_content_sha256": "c89a484f9a7fb39ff604859545d98ee76daac77346ab12b589b68d06b45d5675",
+    "plan_serialized_sha256": "e25a67563bd026475affcfc5a7bc20938c860a65dfb764f4da54a5a36bb0fefb"
+  },
+  "verification": {
+    "focused_s8p2": "2 passed, 52 deselected",
+    "query_planning_owner": "5 passed",
+    "s8p1_focused": "2 passed",
+    "shared_physical_release_owner": "47 passed, 2 skipped",
+    "knowledge_read_owner_matrix": "17 passed",
+    "knowledge_answer_owner_matrix": "13 passed, 3 intentional hostile-model serializer warnings",
+    "canonical_v2_no_external": "336 passed, 141 skipped, 0 xfailed, 3 intentional hostile-model serializer warnings",
+    "ruff_check": "passed for complete src/data_agents/canonical_v2 and tests/canonical_v2",
+    "ruff_format": "passed for all four changed production/test files",
+    "py_compile": "passed for all four changed production/test files",
+    "pyright": "0 errors, 0 warnings, 0 informations for complete Canonical V2 source/tests",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "scope_secret_cache": "passed"
+  },
+  "wheel": {
+    "path_before_owned_cleanup": "/var/tmp/canonical-v2-s8p2-rereview-wheel-mRtIp6Th/miroflow_agent-0.1.0-py3-none-any.whl",
+    "sha256": "b8016548c0f75eb5ce5bf5be0cf8dc2fc44e07b80ad2a3c4f794a4ad65670f33",
+    "entry_count": 276,
+    "contains_knowledge_read": true,
+    "contains_knowledge_answer": true,
+    "contains_tests_or_agents": false,
+    "packaged_production_hashes_match_source": true,
+    "owned_output_cleaned_after_receipt": true
+  },
+  "frozen_targets": {
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_paused": true,
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "recovery_lab_network": "none",
+    "recovery_lab_published_ports": false,
+    "recovery_lab_restart_policy": "no"
+  },
+  "review": {
+    "initial": {
+      "critical": 0,
+      "important": 4,
+      "closed_important": [
+        "official-only proposal domains are a subset of a server-owned policy allowlist",
+        "Web result/call budgets are nonnegative, positive where required, and server bounded",
+        "expected material answer parts propagate from the recorded proposal into the plan",
+        "ambiguity clarification cannot replace refusal, safety, or interface-control behavior"
+      ]
+    },
+    "targeted_re_review": {
+      "critical": 0,
+      "important": 0,
+      "minor": 1,
+      "verdict": "accept"
+    },
+    "fresh_final_review": {
+      "critical": 0,
+      "important": 0,
+      "minor": 1,
+      "verdict": "accept"
+    }
+  },
+  "nonblocking_minor_yagni": [
+    "Unknown enumeration-mode and internal-reference-target Literal values lack dedicated explicit negative cases; Pydantic already rejects them.",
+    "Information proposals may retain allowed_web_domains in their trace although actual information execution replaces it with the server Universal Web policy.",
+    "Canonical host syntax and non-empty MaterialQuestionPart text fields can be tightened later if real inputs require it."
+  ],
+  "next_ready_slice": "select the smallest release-bound Task 8.3 execution slice after S8P2 acceptance",
+  "forbidden_actions_performed": []
+}

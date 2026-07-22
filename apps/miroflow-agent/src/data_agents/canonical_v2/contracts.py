@@ -1411,21 +1411,61 @@ class ManifestSection(ContractModel):
     content_sha256: Sha256
 
 
+class ProjectionScope(str, Enum):
+    public_domain = "public_domain"
+    internal_auxiliary = "internal_auxiliary"
+
+
+PublicProjectionDomain = Literal["company", "paper", "patent", "professor"]
+InternalReferenceType = Literal["person", "technology_concept", "technology_route"]
+
+
+def _validate_projection_ownership(
+    *,
+    projection_scope: ProjectionScope,
+    domain: PublicProjectionDomain | None,
+    reference_type: InternalReferenceType | None,
+) -> None:
+    if projection_scope is ProjectionScope.public_domain:
+        if domain is None or reference_type is not None:
+            raise ValueError(
+                "public_domain projection requires one public domain and no reference_type"
+            )
+        return
+    if domain is not None or reference_type is None:
+        raise ValueError(
+            "internal_auxiliary projection requires one reference_type and no domain"
+        )
+
+
 class ProjectionManifest(ContractModel):
     projection_id: NonEmptyStr
     release_id: NonEmptyStr
+    projection_scope: ProjectionScope
     projection_kind: NonEmptyStr
-    domain: NonEmptyStr
+    domain: PublicProjectionDomain | None
+    reference_type: InternalReferenceType | None
     path: NonEmptyStr | None = None
     projection_version: NonEmptyStr
     record_count: NonNegativeInt
     content_sha256: Sha256
 
+    @model_validator(mode="after")
+    def validate_projection_scope(self) -> ProjectionManifest:
+        _validate_projection_ownership(
+            projection_scope=self.projection_scope,
+            domain=self.domain,
+            reference_type=self.reference_type,
+        )
+        return self
+
 
 class IndexProjectionManifest(ContractModel):
     projection_id: NonEmptyStr
     release_id: NonEmptyStr
-    domain: NonEmptyStr
+    projection_scope: ProjectionScope
+    domain: PublicProjectionDomain | None
+    reference_type: InternalReferenceType | None
     path: NonEmptyStr
     projection_version: NonEmptyStr
     schema_version: NonEmptyStr
@@ -1436,9 +1476,18 @@ class IndexProjectionManifest(ContractModel):
     content_sha256: Sha256
     full_rebuild: bool
 
+    @model_validator(mode="after")
+    def validate_projection_scope(self) -> IndexProjectionManifest:
+        _validate_projection_ownership(
+            projection_scope=self.projection_scope,
+            domain=self.domain,
+            reference_type=self.reference_type,
+        )
+        return self
+
 
 class BuildManifest(ContractModel):
-    manifest_version: NonEmptyStr
+    manifest_version: Literal["canonical-v2-build-manifest-v2"]
     release_id: NonEmptyStr
     build_run_id: NonEmptyStr
     source_batch_ids: tuple[NonEmptyStr, ...] = Field(min_length=1)

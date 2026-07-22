@@ -2,7 +2,9 @@
 
 ## Status
 
-Ready. S1 was accepted at commit `a58184c`; no later slice has started.
+Accepted at `2026-07-11T15:10:32Z`. This historical contract covers Tasks 2.1-2.5 only; pending
+S2C/tasks 2.7-2.8 supersede its prose/key-point acceptance-oracle assumptions for S8/S9 without
+rewriting this checkpoint.
 
 ## Parent
 

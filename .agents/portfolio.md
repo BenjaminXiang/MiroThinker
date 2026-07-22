@@ -6,17 +6,128 @@
 ## Canonical V2 implementation mainline (2026-07-13)
 
 - **`rebuild-canonical-v2-knowledge-platform`** (OpenSpec, breaking Epic) is the sole implementation
-  mainline by user decision. Current task ledger: 36/75. Tasks 5.1-5.7 retain their Accepted
+  mainline by user decision. Current task ledger: 70/80. Tasks 5.1-5.7 retain their Accepted
   evidence; S5G/Task 5.7 closed the temporal-precision contract; Task 6.3 typed domain projection is
   Accepted; Tasks 6.1-6.8 and Aggregate S6 are Accepted, including the 6.2/6.4/6.6 RED-to-GREEN
-  dependency chain and the full real-PostgreSQL sibling review. S7 remains unstarted.
+  dependency chain and the full real-PostgreSQL sibling review. ADR-013-ADR-022 add S2C and S6R
+  correction gates without rewriting that history. S6R1/Task 6.9 is Accepted as the seven-group RED
+  contract; S6R2, the additive internal-reference catalog/shared-boundary increment, is Accepted;
+  S6R3 Person projection, S6R4 Technology/relationship integration, and S6R5 aggregate S6
+  reacceptance are Accepted. S7A/Task 7.1's five-scenario release-lifecycle RED, S7B/Task 7.2
+  KnowledgeBuild implementation, S7C/Task 7.3 four-public/three-internal typed candidate projection,
+  S7D/Task 7.4 four-scenario strict index/point-parity RED, and S7E/Task 7.5 isolated lookup/vector
+  index construction plus first full rebuild are Accepted. S7F/Task 7.6 deterministic reconciliation
+  and ephemeral ReleasePublication is also Accepted. S7G's exact three-scenario Task 7.7 RED and
+  S7H's fresh isolated DB/index parity plus rollback rehearsal are Accepted; Task 7.7 and aggregate
+  S7 are Accepted. S7I's narrow exact-eligibility lineage and complete-document manifest-binding
+  correction is also Accepted without changing the 55/80 ledger; S8L1 and S8L2 are its Accepted
+  release-bundle-bound exact and displayed-set structured consumers. S2C1 RED and S2C2/Task 2.7's
+  strict validator plus complete 52-case draft
+  migration, S2C3A's exact five-group oracle RED, and S2C3B's mechanical evaluator/recorded-fake
+  GREEN and S2C3C1's deterministic unapproved external-review packet are Accepted at 47/80. S2C3C2
+  is Ready but awaits attributable external human decisions, a second calibration reviewer, judge
+  authorization, measured calibration, and explicit exclusions; S2C3C3/Task 2.8 still owns reviewed-
+  corpus application and aggregate S2C acceptance before S8/S9 acceptance-oracle execution. The
+  independent S10A/Task 10.1 fixture-only knowledge-gap trigger RED and S10B/Task 10.2 pure typed
+  gap/classifier GREEN are Accepted. S10C's fixture-only offline-remediation/accepted-release-plus-
+  effect RED predecessor and S10D's pure content-bound lineage/transition/replay mechanics GREEN are
+  also Accepted without checking Task 10.3 or changing the ledger. S9A/
+  Task 9.3's evidence-based AssessmentFrame RED, S8W/Task
+  8.4's Universal-Web/skip/official-safety/failure RED, S8S/Task 8.6's sufficiency/enumeration/
+  bounded-supplemental RED, and S9M/Task 9.5's Canonical/Web session, ambiguity, continuation, and
+  topic-switch RED are Accepted. S8Q1's taxonomy/safety/enumeration, protected rewrite/institution,
+  injected ambiguity, and internal Person/Technology fixture RED predecessor is Accepted without
+  checking Task 8.1 or changing 54/80. S8RF's seven-lane/candidate-trace, late-fusion/rerank, and Web-
+  handle lifecycle fixture RED predecessor is also Accepted without checking Tasks 8.3/8.5 or
+  changing 54/80. S8RG's atomic KnowledgeRead synthetic mechanics GREEN is Accepted at the same
+  ledger: all 16 read-owner groups are GREEN through one deep module with bounded supplemental
+  budgets/lanes, full server-limit candidate trace, and the re-Accepted optional continuation-
+  coverage successor shape, with no provider/persistence/runtime claim.
+  S8L1's real physical exact lookup is Accepted at the unchanged 55/80 ledger: it binds one
+  serviceable publication to the exact accepted isolated bundle snapshot, preserves S7I eligibility
+  lineage, and closes planner-text/domain/exclusion review gaps without claiming full Task 8.3.
+  S8L2's real displayed-set structured lookup is also Accepted at 55/80: it reuses that physical
+  boundary, preserves exact identity compatibility, and rejects empty/mismatched/cross-lane input
+  without claiming Tasks 8.3/8.5.
+  S8P1's release-bound query planner was Accepted at the prior ledger: it replays the exact S7 graph,
+  validates release-observed institutions/policy, derives evidence-bound internal Person/Technology
+  records, preserves legacy plan identity, and closes all Critical/Important review findings without
+  claiming Task 8.2. S8P2/Task 8.2 is now Accepted at 56/80 with finite proposal taxonomy/safety,
+  server-owned official-Web authority and budgets, material-part propagation, and one open
+  lightweight assessment intent. Two final independent reviews report zero Critical/Important.
+  S8E1 is Accepted at the unchanged 56/80 ledger as the first release-bound `KnowledgeRead`
+  composition root: it hides exact/structured physical adapters, accepts only bounded Universal-
+  Web/snapshot ports, and verifies execution-relevant plan/release binding before effects. S8L3 is
+  Accepted at the same ledger as its first real lexical successor, with guarded typed-public
+  normalized substring recall and collision-free lexical lineage. S7J is Accepted at the same
+  ledger as the mandatory vector-lineage correction: exact semantic decision effects now survive in
+  public points and builder/release parity shares one full-point hash. S8V1 is Accepted at the same
+  ledger as the audited release-scoped vector successor: the S8E1 composition owns its explicit
+  embedding port, complete snapshot/bundle audit, deterministic cosine recall, and release-
+  authority trace validation. S8V2 is Accepted at the same ledger: its finite recorded selector
+  chooses Professor identity/research/both points before the existing bound, the audited Professor
+  lookup supplies display authority, and the release seam rejects unselected views and forged
+  names. S8IR1 is Accepted at the same ledger: the paired release replay executes exact Person
+  filters and Technology definitions, binds internal claims separately from public origins, and
+  postvalidates public fusion/handle identity without reopening storage. S7K is Accepted at the
+  same ledger as the relationship-publication authority correction: exact combined-registry replay,
+  seven projection manifests, the relationship section, and complete manifest hash are bound to
+  fresh release bundles before effects, while legacy no-pair zero bundles remain non-authoritative.
+  S8R1 is Accepted at the same ledger as the first real relationship adapter: it executes the exact
+  Technology-route-to-Company family and three Product-to-Technology states from the release graph,
+  keeps claims Product-scoped and Company identity locator-only, and reopens no physical store.
+  S8R2 is Accepted at the same ledger as the displayed Company-to-Patent applicant family: it
+  reverse-traverses exact accepted applicant authority, keeps the Company source-side, and returns
+  fully traced Patent results with constraint-aware and Web-safe ownership. S8R3 is Accepted at the
+  same ledger as the displayed Professor-to-Paper attribution family: it follows only exact accepted
+  current attribution authority, returns Paper with Professor source-side, preserves honest open-
+  world coverage, and rejects relationship path/lane drift before Web effects. S8R4 is Accepted at
+  the same ledger as the inverse displayed Paper-to-Professor family: it returns Professor while
+  preserving the Canonical Professor-to-Paper claim, prevents inverse pre-filter cap loss, and
+  retains Accepted Web aliases without allowing Canonical identity crosswires. S8R5 is Accepted at
+  the same ledger as displayed Patent-to-Company applicant traversal: it returns Company from exact
+  applicant-only authority, applies caller caps only after displayed-Patent filtering, and retains
+  the same finite Web identity boundary. S8C is Accepted at `59/80`: one public release-bound read
+  service executes all seven lanes, forwards the accepted fusion/rerank/sufficiency/supplemental/
+  handle ports, and enforces exact-release/exact-session read-only replay. Tasks 8.3/8.5/8.7 are
+  closed; Tasks 8.1/8.8 remain open for S2C-calibrated aggregate acceptance.
+  S9G/Task 9.1's exact grounded-claim/citation, direct Product-
+  capability, Industry-Brief/representative-coverage, and deterministic-fallback RED is Accepted at
+  54/80 against synthetic typed evidence/adapters without claiming S8/S2C oracle or real-provider
+  execution. S9AG's atomic synthetic KnowledgeAnswer mechanics GREEN is Accepted at the unchanged
+  ledger: all 13 owners are GREEN through one deep module, including exact fail-closed state
+  rollback, claim-suppression/Product interaction, and current-turn unresolved-Web traversal
+  refusal. S9C1/Task 9.7 is Accepted at 55/80 with exact executable option mapping, server-neutral
+  labels, traversal-only relationship types, and unchanged next-turn binding. S9I is Accepted at
+  `62/80`: complete structured claim/conflict/inference binding, sanitized rendering, traceable
+  selector degradation, evidence-bound free per-turn assessment, typed release/session referents,
+  bounded safety guidance, and the real Read-to-Answer handoff are GREEN with final `C0/I0/M0`.
+  S10O is Accepted at `65/80`: append-only durable gap/remediation history, exact Accepted
+  release/manifest/effect closure truth, bounded V2-only admin operations/UI, and the online/offline
+  no-canonical/index-write owners are GREEN with final `C0/I0`. S11A is Accepted at the unchanged
+  `65/80` ledger: the registered `POST /api/chat` now uses one explicitly installed release-bound
+  V2 planner/Read/Answer adapter, exact typed continuation/session binding, bounded observable
+  trace, and atomic immutable feedback checkpoint with no legacy SQL fallback. Receipt:
+  `b0b1848b2a15aca7f8d1fa33587f2276b19f2c1183327a28c0bf128a864c97f3`. S9J is also Accepted at
+  the unchanged `65/80` ledger: its public-answer-integrity correction keeps opaque audit values
+  structured-only and gives every unspecialized material missing/conflicting result both a typed
+  limitation and a bounded public gap sentence. Receipt:
+  `ae34240cde353a272faa23710bfdf3818763ac261891bf48bc5307048a8759bc`. S11B is Accepted at the
+  unchanged `65/80` ledger with V2-only candidate Admin/UI/feedback, explicit ingest/smoke/baseline
+  CLIs, and machine-enforced legacy quarantine. Receipt:
+  `cee1beebe2bdb1eba3f09b06e4e3c819167bbba14d5b6d6072f1f4cbafb0a945`. S11C and Tasks
+  11.1-11.5 are Accepted atomically at `70/80`: exact reruns, interface/trace/real-PostgreSQL/index
+  owners, immutable legacy disposition, broad failure reconciliation, and final `C0/I0` evidence/
+  protected-scope reviews are bound by receipt
+  `281b28244a9fb5043a10df4e7eaa8f4e9e9385825babdae6204a461661a99717`. S12A/Task 12.1 is next.
+  Tasks 8.1, 8.8, 9.8, and aggregate S8-S9 remain open; S2C3C2 blocks only
+  reviewed calibration/claim-level oracle execution, not independent Ready fixture slices.
 - Overlapping V1/V042 retrieval/Web changes are Frozen as implementation authorities. Their valid
   contracts, evaluators, corpora, manifests, and RED evidence remain mapping inputs before S7-S11;
   no in-flight legacy change becomes an Accepted V2 dependency.
-- Aggregate S6 now satisfies the selected Git `main` checkpoint. The separate promotion gate must
-  still prove the exact Accepted commit is clean, all unique side-branch work is accounted for, the
-  root dirty worktree is unchanged, and `main` remains a strict ancestor before its fast-forward-only
-  ref move. No merge/rebase, push, product/data/index cutover, or OpenSpec archive is authorized.
+- Aggregate S6 satisfied the selected Git `main` checkpoint. Local `main` fast-forwarded to exact
+  Accepted commit `f0e6224` at `2026-07-13T15:00:36Z` after the recorded gate; no merge/rebase, push,
+  product/data/index cutover, or OpenSpec archive is authorized.
 
 ## Legacy retrieval portfolio (status as of 2026-07-10)
 

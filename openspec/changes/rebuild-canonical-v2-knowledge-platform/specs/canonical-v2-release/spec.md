@@ -32,6 +32,20 @@ independent canonical fact source.
 - **THEN** its metadata identifies the Paper, release, projection version, embedding model, and
   embedded content hash
 
+### Requirement: Internal Person and Technology projections remain release-scoped auxiliaries
+
+Any internal Person or Technology lookup/vector projection SHALL identify its accepted Canonical
+release, projection schema/policy, content hash, and source public-domain evidence. Such a projection
+SHALL NOT create a fifth public-domain inclusion population or independently promoted business-domain
+index. Every projection/index manifest SHALL carry a machine-validated scope discriminator that
+separates `public_domain` from `internal_auxiliary`; internal auxiliaries SHALL identify their owning
+reference type and SHALL NOT masquerade as a Professor, Company, Paper, or Patent publication.
+
+#### Scenario: Internal Person projection is rebuilt
+- **WHEN** accepted Company-personnel evidence or Person identity decisions change
+- **THEN** the internal Person projection is rebuilt/versioned with the owning release
+- **AND** Professor, Company, Paper, and Patent remain the only public-domain publication populations
+
 ### Requirement: Initial and policy-changing releases rebuild indexes fully
 
 The system SHALL build new versioned indexes fully for the first Canonical V2 release and any change

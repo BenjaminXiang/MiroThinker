@@ -9,8 +9,57 @@ pure, real-disposable PostgreSQL, static, strict OpenSpec, scope, and review gat
 (PRD domain/relationship catalog), 6.2 (domain-inclusion RED), 6.3 (typed domain projection), 6.4
 (relationship RED), 6.5 (relationship projection/persistence), 6.6 (path-eligibility RED), 6.7
 (path-eligibility GREEN), and 6.8 (aggregate bounded-candidate review) are Accepted. OpenSpec reports
-36/75 tasks complete on the V2 integration line. Task 6.3 typed domain
-projection was Accepted at `2026-07-13T09:56:27Z` in the
+70/80 tasks complete on the V2 integration line. ADR-013 through ADR-022 add S2C/tasks
+2.7-2.8 and the now-Accepted S6R/tasks 6.9-6.11 without rewriting the historical S2/S6 acceptance.
+S6R1-S6R5, S7A/Task 7.1 release-lifecycle RED, S7B/Task 7.2 KnowledgeBuild, S7C/Task 7.3 typed
+candidate projection, S7D/Task 7.4 index RED, S7E/Task 7.5 isolated index construction, and
+S7F/Task 7.6 deterministic reconciliation/release publication, S7G/Task 7.7 RED, and S7H/Task 7.7
+isolated DB/index parity and rollback rehearsal are Accepted; aggregate S7 and its S7I lookup-
+eligibility lineage correction are Accepted. S8L1's release-bundle-bound physical exact lookup and
+S8L2's displayed-set structured lookup are Accepted as Task 8.3 predecessors without checking Task
+8.3. S8P1's release-bound query planner and S8P2's finite proposal taxonomy/safety, material-part,
+and assessment-intent completion are Accepted; Task 8.2 is closed. S8E1's release-bound
+exact/structured plus current-Web composition root is Accepted as a Task 8.3 predecessor without
+checking Task 8.3. S8L3's release-scoped lexical phrase adapter is also Accepted as a Task 8.3
+predecessor without checking Task 8.3. S7J's vector eligibility-lineage and full-point inventory-
+hash correction is Accepted without changing historical S7 task status or Task 8.3. S8V1's audited
+release-scoped vector adapter and release-authority trace seam are Accepted as another Task 8.3
+predecessor without checking Task 8.3. S8V2's finite Professor identity/research/both selector,
+audited lookup-derived display authority, and release-bound view/name validation are also Accepted
+at the unchanged ledger without checking Task 8.3. S8IR1's release-scoped internal Person filter
+and Technology definition lookup is also Accepted at the unchanged ledger: it replays S7 internal
+authority, retains public-origin identity/display, and leaves relationship state to the still-open
+relationship path. S7K's release-scoped relationship-publication authority correction is now
+Accepted at the same ledger: exact S6 relationship replay, seven projection manifests, the
+relationship section, complete build-manifest hash, and fresh effect-before-validation bundles are
+bound without changing historical S7 task status. S8R1's release-scoped Technology-to-Company
+relationship traversal is also Accepted at the unchanged ledger: it executes the three exact
+Product-to-Technology states from the S7K authority, keeps claims Product-scoped and Company identity
+locator-only, and performs no physical relationship reopen. S8R2's displayed Company-to-Patent
+applicant traversal is also Accepted at the unchanged ledger: it reverse-traverses only exact
+current `patent_has_applicant` authority, returns Patent-scoped results with complete lineage, and
+keeps the displayed Company source-side only. S8R3's displayed Professor-to-Paper attribution
+traversal is now also Accepted at the unchanged ledger: it follows only exact accepted current
+`professor_attributed_to_paper` authority, returns Paper, keeps Professor source-side only, and
+rejects relationship path/lane drift before Web effects. S8R4's displayed Paper-to-Professor
+inverse traversal is also Accepted at the unchanged ledger: it reuses that exact authority,
+preserves the Canonical Professor-to-Paper claim, returns Professor, and supports both directly
+Canonical and evidence-subject-alias Web corroboration without accepting identity crosswires.
+S8R5's displayed Patent-to-Company traversal is also Accepted: it replays applicant-only authority,
+returns Company, preserves Patent-to-Company orientation, and protects inverse-view cap ordering
+and Web identity boundaries. S8C now accepts the aggregate release-bound runtime and Tasks 8.3,
+8.5, and 8.7: all seven lanes, fusion/rerank, sufficiency/supplemental execution, bounded Web
+snapshots, and exact-release/exact-session read-only handle replay execute through the public
+composition. Tasks 8.1/8.8 remain open for reviewed calibration and aggregate acceptance. S2C1 RED and
+S2C2/Task 2.7 schema/corpus migration are Accepted, while S2C3/Task 2.8 remains pending. Aggregate
+S2C must be Accepted before S8/S9 uses the corpus as an acceptance oracle. S10A/Task 10.1's
+fixture-only knowledge-gap RED, S10B/Task 10.2's pure gap creation/classification GREEN, S10C/S10D's
+offline-remediation mechanics, and S10O's durable PostgreSQL/admin/no-write closure are Accepted;
+Tasks 10.3-10.5 are closed at `65/80`. S9A/Task 9.3, S8W/Task 8.4, S8S/Task 8.6, S8Q1's fixture-only Task 8.1
+RED predecessor, S9M/Task 9.5, and S9G/Task 9.1 are Accepted fixture-only RED slices; S2C still
+blocks only claim-level acceptance-oracle execution and Task 8.1 reviewed calibration, not
+independent Ready fixture RED slices. Task 6.3 typed domain projection was Accepted at
+`2026-07-13T09:56:27Z` in the
 `canonical-v2-s2-baseline` worktree; the branch name is historical and no longer describes its
 scope. It includes the four-domain projection/inclusion Modules, packaged catalog, PostgreSQL
 Adapter, `C2_0009`, and focused tests. A 2026-07-13 no-external-database
@@ -20,12 +69,1766 @@ S5G closed the latter without coercion; Task 6.3 replaced the permanent-head ass
 linear minimum-revision contract. The current pre-6.4 no-external-database run had 192 passed, 125
 skipped, and 9 expected xfails with no real failure. Task 6.5 converted the nine relationship REDs
 to GREEN and added C2_0010 persistence; Task 6.7 converted the five path-policy REDs to GREEN.
-Aggregate S6 was Accepted at `2026-07-13T14:48:01Z`; S7-S12 remain unstarted. The user selected this
-checkpoint for the separate Git `main` fast-forward gate; no product database/index/release state
-changed.
+Aggregate S6 was Accepted at `2026-07-13T14:48:01Z`; S6R, aggregate S7, S2C1 RED, S2C2/Task 2.7,
+S8C, S9I, S10O, S11A, the S9J public-answer-integrity correction, S11B, and S11C/Tasks 11.1-11.5
+are now Accepted, while S2C3 review, Tasks 8.1/8.8/9.8, and S12 remain open. Git
+`main` fast-forwarded locally to the exact Accepted checkpoint `f0e6224` at
+`2026-07-13T15:00:36Z`; no product database/index/release state changed and no push/cutover occurred.
+
+## S11C aggregate consumer acceptance — 2026-07-21T19:10:41Z
+
+- Tasks 11.1-11.5 closed atomically at `70/80`. Exact S11A/S11B reruns, Accepted Task 2.7
+  structural owners, interface/trace owners, `122` disposable-PostgreSQL cases, and `70` release/
+  index cases are pass-only and machine-bound to persisted JUnit/collected-nodeid hashes.
+- The guarded broad runs record `596` Admin nodeids with `18` failures plus `4` errors and `530`
+  Canonical V2 predecessor nodeids with zero failure/error. All `22` rows reconcile exactly as
+  `6 retired_replaced + 5 retired_reference_only + 11 unrelated_preexisting`; unaccounted and
+  accepted-behavior failures are zero.
+- The traceability repair preserves v1, binds four v2 predecessor reruns to exact repository cwd/
+  UTC/command/output hashes, and recomputes both broad UTC windows from raw-hash-bound JUnit.
+  Focused/full validator results are `1 passed` and `55 passed`; capture owner is `2 passed`.
+- Static, strict OpenSpec, package/source-parity, generated cleanup, secret/scope, disposable-target,
+  and frozen PostgreSQL/Milvus/forensic checks pass. Independent evidence and protected-scope
+  reviews are `Critical=0 / Important=0 / Minor=0 / YAGNI=0`. Receipt SHA-256:
+  `281b28244a9fb5043a10df4e7eaa8f4e9e9385825babdae6204a461661a99717`.
+- S2C Task 2.8 remains only an S8/S9 acceptance-oracle gate. S12A/Task 12.1 is next. No Commit,
+  Push, PR, Archive, promotion, original-source mutation, or Cutover occurred.
+
+## S11B consumer migration and legacy quarantine acceptance — 2026-07-21T12:54:16Z
+
+- The candidate application now exposes only the release-bound S11A chat, S10O gap operations, and
+  one typed read-only four-domain admin runtime. Feedback binds the immutable server checkpoint;
+  three explicit sanctioned CLIs cover accepted-restore evidence ingest, black-box chat smoke, and
+  guarded baseline capture. V042 writers, direct SQL/retrieval, old collection assumptions, global
+  readiness, direct active-index mutation, and the legacy React tree are quarantined from the
+  candidate route/import/command graph.
+- Focused current-byte evidence is `24 passed` for the agent quarantine/ingest/producer owners, `2
+  passed` for the Admin consumer/smoke owners, `7 passed` for the S11A HTTP predecessor, and `1
+  passed` for S10O operations. The guarded signature-v3 baseline records 530 Canonical V2 nodeids at
+  exit `0` and 596 Admin nodeids at exit `1`, with 18 failures plus 4 setup errors retained for S11C,
+  22/22 persisted-JUnit signatures independently replayed, 15 attributable blocked attempts, zero
+  forbidden attempts, and complete owned-root cleanup.
+- Exact route/inventory/script/React discovery, Ruff/format, `py_compile`, Pyright, strict OpenSpec,
+  diff, package/source parity, and frozen original Postgres/Milvus/forensic checks pass. Final
+  independent review is `Critical=0 / Important=0`; one shorthand-ID Minor is nonblocking. Receipt
+  SHA-256: `cee1beebe2bdb1eba3f09b06e4e3c819167bbba14d5b6d6072f1f4cbafb0a945`.
+- S11B changed no OpenSpec task or acceptance checkbox; the formal ledger remained `65/80`. Tasks
+  11.1-11.5 remained open and S11C remained Specified at that historical checkpoint. No Commit,
+  Push, PR, Archive, promotion, source/database/index write, or Cutover occurred.
+
+## S9J public-answer-integrity correction acceptance — 2026-07-21T09:57:11Z
+
+- One escaped `suppress_claims`/degradation class is closed across missing/conflicting selector
+  failures, unresolved Web traversal, and blocking ambiguity: every unspecialized material gap now
+  retains exactly one typed limitation and one bounded server-owned public sentence. Opaque SHA,
+  canonical/reference identifiers, evidence/continuation IDs, and raw execution enums remain in
+  structured audit fields and cannot become admitted public answer copy.
+- The original pre-implementation terminal RED was not retained and is not reconstructed. The
+  acceptance audit reproduced four exact branch failures plus three killed mutations before the
+  shared repair. Final answer/multi-turn evidence is `29 passed`; existing answer owners are `9
+  passed`, the corrected S11A HTTP owner is `7 passed`, the S9J/S11B/preview owner group is `11
+  passed`, and the S10O UI owner is `1 passed`.
+- Evidence ownership is explicit: the S11A HTTP owner proves the recorded missing-revenue gap and
+  structured continuation; an executable Node harness proves the localized continuation label;
+  the disposable `18190` real-data browser/API replay proves two bound turns, HTTPS Web evidence,
+  desktop/mobile layout, clean console, and absence of opaque/operational public copy. Existing
+  `18188/18189` preview listeners remained available.
+- Ruff/format, `py_compile`, changed-scope Pyright, strict OpenSpec, and `git diff --check` pass.
+  Final independent reviews have zero open Critical/Important findings; Minor/YAGNI are recorded
+  and non-blocking. Receipt SHA-256:
+  `ae34240cde353a272faa23710bfdf3818763ac261891bf48bc5307048a8759bc`.
+- S9J changes no OpenSpec task or acceptance checkbox; the ledger remains `65/80`. S11B is the next
+  execution slice. No Commit, Push, PR, Archive, promotion, source/database/index write, or Cutover
+  occurred.
+
+## S11A release-bound chat HTTP adapter acceptance — 2026-07-20T19:56:07Z
+
+- The registered `POST /api/chat` now resolves one explicitly installed release-bound adapter and
+  executes the real planner, `KnowledgeRead`, and `KnowledgeAnswer` with exact release validation,
+  typed continuation selection, canonical displayed context, and no legacy SQL/fixed-handler
+  fallback. Missing/wrong runtime fails closed with `503`.
+- Compatibility mapping preserves the frozen HTTP schemas and executable `/browse#...` citation
+  links while exposing bounded release/plan/lane/evidence/claim/citation/limitation/session traces.
+  The answer-session fork, mapped response, public context/offer, and immutable feedback checkpoint
+  commit atomically; every staged failure leaves prior state byte-identical.
+- Exact RED was one xfail and one forced `_MissingS11AChatAdapter` failure. Final focused GREEN is
+  `1 passed` with warnings denied; relevant predecessors are `26 passed`, S10O Admin is `1 passed`,
+  and the four physical traversal owners are `4 passed`. The legacy chat signature is byte-identical
+  at `250 passed, 7 failed, 3 skipped, 4 warnings` with canonical SHA-256
+  `de88a0b8a64bba955d80fe06b8e54a1783a46fda36549f43c9cb11ac192bc959`.
+- Complete Canonical V2 no-external evidence is `363 passed, 148 skipped` with three retained
+  hostile-serializer warnings. Strictly guarded Admin evidence is `440 passed, 130 skipped, 8
+  failed, 1 deselected, 12 warnings, 0 errors`; seven failures are the frozen legacy set and one is
+  an unrelated pre-existing diff-clean `backend/api/domains.py`/quality-status-test call-order
+  mismatch. S11A-related unexpected failures are zero. The unsafe dotenv-restored run is excluded.
+- Ruff, non-legacy format, `py_compile`, Pyright `0 errors`, route/import guards, strict OpenSpec,
+  diff/scope/secret/cache, locked-offline package/source parity, and protected-source checks pass.
+  Two final reviews and two exception audits have zero open Critical/Important findings. Original
+  Milvus/Postgres/forensic state remains exact. Receipt SHA-256:
+  `b0b1848b2a15aca7f8d1fa33587f2276b19f2c1183327a28c0bf128a864c97f3`.
+- S11A changed no OpenSpec task or acceptance checkbox; the formal ledger remained `65/80` and
+  Tasks 11.1-11.5 remained open for S11B/S11C at that historical checkpoint. No Commit, Push, PR,
+  Archive, promotion, or Cutover
+  occurred.
+
+## S8C Tasks 8.3/8.5/8.7 aggregate runtime acceptance — 2026-07-20T10:50:22Z
+
+- Exact TDD evidence was `1 xfailed` and one forced `_MissingS8CAggregateRuntimeClosure` failure for
+  the seven absent release-bound ports. After pass-through existed, the second real RED was the
+  public wrapper's `planner-owned plan has an unsupported interaction mode` rejection for an exact-
+  binding handle replay.
+- The final public vertical executes exact, structured, lexical, vector, relationship,
+  internal-reference, and current-Web lanes through one release-bound service. It proves actual
+  overlap, identity fusion before constraints/rerank, representative coverage, per-part
+  sufficiency, bounded supplemental search, content-addressed snapshot admission, and read-only
+  handle resolution with exact release/session binding and zero canonical/index/source-map writes.
+- Final focused GREEN was `1 passed, 63 deselected`; detailed mechanics were `8 passed`; physical/
+  release owners were `13 passed, 51 deselected`; complete no-external Canonical V2 was
+  `351 passed, 141 skipped` with three already-documented hostile-model serializer warnings.
+- Complete Ruff/format/Pyright/py_compile, strict OpenSpec, diff, offline lock, wheel source parity,
+  scope/secret/cache/EOF, frozen Milvus, and paused-pgtest checks passed. The final negative-TTL
+  probe closes the only implementation-review Important; targeted review is `C=0/I=0/M=0`.
+- Tasks 8.3, 8.5, and 8.7 close atomically at `59/80`. Tasks 8.1 and 8.8 remain unchecked; S2C still
+  gates only reviewed calibration and claim-level/provider aggregate acceptance. No Commit, Push,
+  PR, Archive, promotion, Cutover, original-source write, or active-pointer mutation occurred.
+
+## S9I Tasks 9.2/9.4/9.6 implementation acceptance — 2026-07-20T12:03:04Z
+
+- The exact six-function owner first failed `6/6` only at the intended implementation seams. Four
+  Important reviewer counterexamples plus one Minor were then added inside those same six functions,
+  producing a second `5 failed, 1 passed` RED before repair.
+- Final exact-owner evidence is `6 passed` with warnings denied; the complete answer owner matrix is
+  `20 passed`, the relevant read predecessor matrix is `11 passed`, and complete no-external
+  Canonical V2 is `357 passed, 141 skipped` with only the three intentional hostile-model serializer
+  warnings.
+- `KnowledgeAnswer` now fail-closes structured supported/conflicting/inference claims, never renders
+  raw selector drafts, exposes accepted/degraded selector traces, builds evidence-relevant arbitrary
+  per-turn assessment dimensions, resolves session referents through typed release-bound directives,
+  and renders only bounded server-owned safety guidance. One owner passes an actual public
+  `KnowledgeRead.execute` result into the answer seam.
+- Complete Ruff/format/Pyright/py_compile, strict OpenSpec, diff, offline lock, wheel source parity,
+  scope/secret/cache, frozen Milvus, and paused-pgtest gates pass. The final frozen-hash independent
+  review is `C=0/I=0/M=0/YAGNI=0`.
+- Tasks 9.2, 9.4, and 9.6 close atomically at `62/80`. Task 9.8 and aggregate S9 remain unchecked;
+  S2C still gates only reviewed claim-level/provider/latency acceptance. No Commit, Push, PR,
+  Archive, promotion, Cutover, original-source write, or active-pointer mutation occurred.
+
+## S10O Tasks 10.3/10.4/10.5 durable operations acceptance — 2026-07-20T13:25:40Z
+
+- Exact initial RED was seven absent durable-module failures plus one absent V2-admin-router failure.
+  Six independent-review categories were then encoded into the same eight owner functions, producing
+  focused counterexample RED before repair.
+- C2_0011 and the explicit-target adapter provide append-only gap/transition history, deterministic
+  replay and concurrency behavior, complete searchable-column/payload/hash revalidation, and exact
+  Accepted release/build-manifest/effect truth. Bounded V2-only admin list/detail operations expose
+  honest assertions, decisions, releases, provenance, unresolved IDs, filters, ordering, and pages.
+- Final real disposable PostgreSQL plus online evidence is `7 passed` with warnings denied; unchanged
+  S10A-S10D is `8 passed`; the V2 admin owner is `1 passed`; complete no-external Canonical V2 is
+  `357 passed, 148 skipped` with only three pre-existing hostile-model serializer warnings.
+- The real online Read-to-Answer-to-gap path and separate offline linked-to-resolved rehearsal mutate
+  only append-only `ops.*` rows. Canonical/relationship assertions and decisions, release/manifest/
+  active state, index adapter calls, and original Milvus remain byte-identical.
+- Complete Ruff/Pyright/py_compile, strict OpenSpec, diff, single migration head, offline lock/wheel
+  source parity, JavaScript, scope/import-quarantine, disposable cleanup, frozen Milvus, and paused-
+  pgtest gates pass. Final frozen-hash review is `C=0/I=0`; Minor/YAGNI are nonblocking.
+- Tasks 10.3, 10.4, and 10.5 close atomically at `65/80`. No Commit, Push, PR, Archive, promotion,
+  Cutover, original-source write, or active-pointer mutation occurred.
 
 The code-grounded continuation plan is
 `.agents/runs/rebuild-canonical-v2-knowledge-platform/code-grounded-mainline-plan-2026-07-13.md`.
+
+## S8R5 displayed Patent-to-Company applicant traversal acceptance — 2026-07-20T09:38:32Z
+
+- S8R5 maps only `company_has_patent/patent_to_company/patent -> company` to exact accepted current
+  `patent_has_applicant@canonical-v2-relationship-v1` authority. The displayed Patent is the source
+  witness, the returned identity is Company, and applicant is never relabeled as owner, assignee,
+  inventor, or a generic organization relation.
+- The dedicated trace replays the complete S8R2 candidate/assertion/decision/current/retained-
+  source/PatentApplicant/public-projection/paired-eligibility chain. Internal Company-to-Patent
+  replay uses the finite authoritative current count; the caller result cap applies only after the
+  exact displayed Patent is retained.
+- Review repair added the core ordering and Web identity matrix: authority count two with caller cap
+  one still returns Company; a same-Company Web alias fuses; a direct Canonical object crosswire
+  becomes invalid Web output while local evidence survives; another Canonical Company subject fails
+  release-bound postvalidation.
+- Final evidence is focused warnings-as-errors `1 passed, 62 deselected`, exact relationship matrix
+  `6 passed, 57 deselected`, and complete no-external Canonical V2 `350 passed, 141 skipped`, plus
+  three intentional hostile-model serializer warnings. Complete Ruff/format/compile, Pyright
+  (`0/0/0`), strict OpenSpec, diff/whitespace, offline wheel/source parity, secret/xfail scan,
+  generated-output cleanup, and frozen-target checks pass.
+- Acceptance receipt:
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s8r5/verification-receipt.json`. Final
+  targeted review reports `C=0/I=0/M=0/YAGNI=0`. Task 8.3 and the formal `56/80` ledger remain
+  unchanged; no provider, original source/database/index, pointer, Commit, Push, PR, Archive,
+  promotion, or Cutover changed.
+
+## S8R4 displayed Paper-to-Professor attribution traversal acceptance — 2026-07-20T08:53:38Z
+
+- S8R4 maps only `professor_authored_paper/paper_to_professor/paper -> professor` to inverse replay
+  of exact accepted current `professor_attributed_to_paper@canonical-v2-relationship-v1` authority.
+  It returns Professor while the protected displayed Paper remains a source witness and the
+  Canonical claim remains Professor-to-Paper.
+- The dedicated trace binds the complete S8R3 relationship, assignment, decision, retained-source,
+  public-projection, paired eligibility, release, and evidence chain. Internal forward replay uses
+  the finite authoritative current-relationship count; the caller result cap applies only after
+  exact displayed-Paper filtering, preventing false zero results.
+- The final trust boundary distinguishes direct `canonical`, alias-bearing `web_candidate`, and
+  unresolved `web_only` states. Direct Canonical evidence binds the exact object; an Accepted Web
+  alias may retain its evidence subject while fusing to the local Professor; unknown/inconsistent
+  states and another Canonical Professor subject fail closed. Local evidence alone owns the
+  Professor-Paper relation and displayed-Paper witness.
+- Final evidence is focused warnings-as-errors `1 passed, 61 deselected`, exact relationship matrix
+  `5 passed, 57 deselected`, and complete no-external Canonical V2 `349 passed, 141 skipped`, plus
+  three intentional hostile-model serializer warnings. Complete Ruff/format/compile, Pyright
+  (`0/0/0`), strict OpenSpec, diff/whitespace, offline wheel/source parity, secret/xfail scan,
+  generated-output cleanup, and frozen-target checks pass.
+- Acceptance receipt:
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s8r4/verification-receipt.json`. Final
+  independent review reports `C=0/I=0/M=0/YAGNI=0`. Task 8.3 and the formal `56/80` ledger remain
+  unchanged; no provider, original source/database/index, pointer, Commit, Push, PR, Archive,
+  promotion, or Cutover changed.
+
+## S8R3 displayed Professor-to-Paper attribution traversal acceptance — 2026-07-20T02:13:12Z
+
+- S8R3 maps only `professor_authored_paper/professor_to_paper/professor -> paper` to exact
+  accepted current `professor_attributed_to_paper@canonical-v2-relationship-v1` authority. It
+  returns Paper while the protected displayed Professor remains a source-side witness; it does not
+  infer `paper_has_author`, authorship prose, Person/name/ORCID links, or Paper existence state.
+- The dedicated trace binds the shared source assertion, exact Professor/Paper assignments,
+  decision input/outcome/current decision, retained source record, both public projections, paired
+  direction-bound path eligibility, Paper identity status, complete evidence envelope, and all
+  content-derived IDs/hashes. Unsupported multi-reference members are omitted under honest
+  representative open-world coverage.
+- Review-driven RED/GREEN closed same-Paper Web constraint replay, fabricated Web relationship
+  claims, fused provenance, complete receipt/handle ownership, shared endpoint entity-type,
+  retained/shared source-record continuity, and the Candidate-review path/lane bypass. Public
+  invalid source/path/policy requests, including a retained relationship path with its relationship
+  lane removed, fail before Web effects; an unknown current-release Professor remains a local zero
+  and the independent Web lane may still run.
+- Fresh Candidate evidence is focused warnings-as-errors `1 passed, 60 deselected`, exact
+  predecessors `9 passed, 52 deselected`, physical/release owner `59 passed, 2 skipped`,
+  relationship/publication owners `15 passed`, KnowledgeRead/planning owners `17 passed`, and
+  complete no-external Canonical V2 `348 passed, 141 skipped`, plus three intentional hostile-model
+  serializer warnings. Ruff/format/compile, Pyright (`0/0/0`), strict OpenSpec, diff/whitespace,
+  offline wheel/source parity, scoped secret/xfail scan, and frozen-target checks pass.
+- Acceptance receipt:
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s8r3/verification-receipt.json`.
+  Final implementation, targeted spec-repair, and evidence reviews report
+  `C=0/I=0/M=0/YAGNI=0` and allow acceptance. Task 8.3 and the formal `56/80` ledger remain
+  unchanged; no provider, original source/database/index, pointer, Commit, Push, PR, Archive,
+  promotion, or Cutover changed.
+
+## S8R2 displayed Company-to-Patent applicant traversal acceptance — 2026-07-19T22:19:19Z
+
+- S8R2 maps the planner's `company_has_patent/company_to_patent/company -> patent` path only to the
+  reverse traversal of exact accepted current `patent_has_applicant@canonical-v2-relationship-v1`
+  authority. Applicant is never relabeled as owner, assignee, inventor, or a generic organization;
+  the displayed Company is a protected source witness while the returned identity remains Patent.
+- The release-owned trace binds candidate, typed assertion, outcome, typed/current decision,
+  retained/public source record, observed/source-event and validity time, Patent applicant
+  subobject, Company/Patent projections, and both direction-bound eligibility results. Valid
+  authoritative-zero, nonmatching nonzero authority, endpoint exclusion, max-zero, and target-
+  constraint rejection remain distinct from invalid source/path/policy authority.
+- Review-driven RED/GREEN closed quality-flag ordering, duplicate/cross-lane ownership, Web Company
+  witness, top-level evidence, auxiliary, coverage, envelope, constraint-rejection, and legitimate
+  same-Patent Web-fusion findings. Final independent reviews report zero Critical/Important; one
+  wording Minor is recorded and nonblocking.
+- Final evidence is exact predecessors `8 passed`, physical/release owner `58 passed, 2 skipped`,
+  relationship/publication owners `15 passed`, KnowledgeRead/planning owners `17 passed`, and
+  complete no-external Canonical V2 `347 passed, 141 skipped`, plus three intentional hostile-model
+  serializer warnings. Complete Ruff/format/compile, Pyright (`0/0/0`), strict OpenSpec, diff,
+  offline wheel/source parity, scope/secret/cache, and frozen-target gates pass. The secret-free
+  receipt is `.agents/runs/rebuild-canonical-v2-knowledge-platform/s8r2/verification-receipt.json`.
+- Task 8.3 and aggregate S8 remain open at formal `56/80`. No provider, source/original database or
+  index, active pointer, Commit, Push, PR, Archive, promotion, or Cutover changed. S2C3C2 still gates
+  only reviewed calibration/oracle execution, not the next independently Ready deterministic slice.
+
+## S8R1 release-scoped Technology relationship traversal acceptance — 2026-07-19T20:05:54Z
+
+- S8R1 carries omission-preserving relationship paths plus Technology-only reference queries into
+  the relationship lane and installs its in-memory adapter only for the exact S7K relationship pair
+  plus the replayed S7 index/internal-reference authority. Authoritative zero remains supported;
+  legacy no-pair zero remains non-authoritative and unsupported for traversal.
+- The adapter executes exactly `technology_route -> company` for discussion/mention, claimed
+  adoption, and demonstrated use. Each result binds the current relationship, retained public
+  assertion/source identity, route-owned Technology anchor, Product subobject, parent Company, and
+  `verified_relationship_traversal` decision. The claim subject remains the Product stable
+  reference; Company identity is only a result locator and Product capability is never inferred.
+- Exact RED/GREEN was `1 xfailed` followed by `1 passed`; review-driven regressions closed all seven
+  Important contract/code issues, including request-time identity, hostile fused-output ownership,
+  required freshness flags, trace identity, and duplicate auxiliary traces. Final independent
+  re-reviews report zero Critical/Important/Minor/YAGNI with `Accept`.
+- Final evidence is corrected predecessors `13 passed`, physical/release owner `56 passed, 2
+  skipped`, relationship/publication owners `15 passed`, KnowledgeRead/planning owners `17 passed`,
+  and complete no-external Canonical V2 `345 passed, 141 skipped`, plus three intentional hostile-
+  model serializer warnings. Complete Ruff/format/compile, Pyright (`0/0/0`), strict OpenSpec,
+  diff/whitespace, offline wheel/source parity, scope/secret/cache, and frozen-target gates pass.
+  The secret-free receipt is
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s8r1/verification-receipt.json`.
+- Task 8.3 and aggregate S8 remain open at formal `56/80`. No provider, source/original database or
+  index, active pointer, Commit, Push, PR, Archive, promotion, or Cutover changed. A fresh dependency
+  audit selects the next smallest real relationship family; S2C3C2 still gates only reviewed
+  calibration/oracle execution.
+
+## S7K relationship publication authority correction acceptance — 2026-07-19T17:05:53Z
+
+- S7K deepens only `IsolatedReleaseBundle`: a present relationship request/result pair is exact-
+  replayed through the installed combined registry, must carry its internal-reference graph, and
+  replays the same four-public/three-internal projection manifests as the release. The relationships
+  section binds its role, release, projection schema, accepted current count, and complete result
+  hash. A no-pair zero section remains legacy compatibility only; an authoritative zero release
+  retains a present pair.
+- Publication preflight accepts only the exact bundle type, reconstructs fresh typed copies,
+  recomputes the complete build-manifest hash, and uses only those copies before backup-gate,
+  target/index, state, or PostgreSQL registry effects. The hostile matrix proves zero effects for
+  partial/absent/cross-wired pairs, missing internal authority, wrong registry/release/as-of,
+  replay mismatch, legacy-zero section drift, all five relationship-section axes, seven-manifest
+  drift, stale full hash, and subclass/model-construct bypasses.
+- Exact TDD was `1 xfailed`; forced RED was the direct
+  `_MissingS7KRelationshipPublicationAuthority` before fixture or external-target acquisition;
+  focused GREEN is `1 passed` with warnings treated as errors. Initial contract reviews closed six
+  Important findings. Independent implementation review found and closed two Important section-
+  role/effect-coverage gaps; targeted re-review reports zero Critical/Important/Minor/YAGNI with
+  `Accept`.
+- Final evidence is focused/predecessor `1/7 passed`, shared physical/release owner `55 passed, 2
+  skipped`, release interface `6 passed`, relationship persistence `19 passed` against a newly
+  created and removed disposable PostgreSQL container, and complete no-external Canonical V2 `344
+  passed, 141 skipped`, plus three intentional hostile-model serializer warnings. Complete Ruff/
+  format/compile, Pyright (`0/0/0`), strict OpenSpec, `git diff --check`, locked offline wheel/source
+  parity, scope/secret/cache, and frozen-target gates pass. The secret-free receipt is
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s7k/verification-receipt.json`.
+- Task 8.3 and aggregate S8 remain open at formal `56/80`. No provider, source/original database or
+  index, active pointer, Commit, Push, PR, Archive, promotion, or Cutover changed. S8R1 release-
+  scoped relationship retrieval is next; S2C3C2 still gates only reviewed calibration/oracle
+  execution.
+
+## S8IR1 release-scoped internal-reference lookup acceptance — 2026-07-19T16:07:14Z
+
+- S8IR1 copies typed `internal_reference_queries` only into its lane request and installs one real
+  isolated adapter only with the paired index-request/institution-catalog replay authority. It
+  verifies all four planning-binding hashes before effects, audits exact Person/Technology lookup
+  documents, and postvalidates returned evidence/fusion/handles from the in-memory release graph
+  without reopening physical storage.
+- Resolved Person matches are filtered by exact education, Company-role, and geography facts;
+  unresolved/nonmatching and valid zero-match Person queries remain trace-only. Technology output
+  carries only the exact internal route definition plus a separately bound public-origin locator;
+  it does not claim discussion, adoption, use, Product capability, or traversal authority.
+- Exact TDD was `1 xfailed`; forced RED was the direct
+  `_MissingIsolatedInternalReferenceLookupAdapter` before fixture acquisition; focused GREEN is
+  `1 passed` with warnings treated as errors. Independent review found one Important zero-match
+  Person lane failure; the focused regression reproduced and closed it, and targeted re-review is
+  zero Critical/Important/Minor/YAGNI with `Accept`.
+- Final evidence is focused/predecessor `9 passed`, complete physical/release owner `54 passed, 2
+  skipped`, KnowledgeRead plus query-planning owners `17 passed`, and complete no-external
+  Canonical V2 `343 passed, 141 skipped`, plus three intentional hostile-model serializer warnings.
+  Complete Ruff/format/compile, Pyright (`0/0/0`), strict OpenSpec, `git diff --check`, locked
+  offline wheel/source parity, scope/secret/cache, and frozen-source/target gates pass. The
+  secret-free receipt is
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s8ir1/verification-receipt.json`.
+- Task 8.3 and aggregate S8 remain open at formal `56/80`. No provider/network, persistence,
+  source/index/database, pointer, Commit, Push, PR, Archive, promotion, or Cutover changed. A
+  release-bound relationship adapter still requires the named S7 relationship-publication
+  authority correction; that local prerequisite does not block independent Ready work.
+
+## S8V2 Professor typed vector-view selection acceptance — 2026-07-19T14:45:45Z
+
+- S8V2 carries one finite `professor_vector_view` from the exact recorded proposal through a
+  nonblocking planner-owned plan into only its vector `LaneRequest`. It requires the selector for
+  Professor+vector recorded/release-bound execution, preserves omission and literal hashes for
+  existing unbound values, and rejects real isolated omission before physical or embedding effects.
+- The audited S8V1 adapter now filters identity, research, or both Professor points before scoring
+  and the unchanged raw-point bound. Research display identity comes only from one structurally
+  unique same-release Professor public identity lookup document whose manifest, canonical ID,
+  typed projection hash, and point source hash agree. Release post-validation rejects unselected
+  views and forged fused/handle display names without reopening physical storage.
+- Exact TDD was `1 xfailed`; forced RED was the direct
+  `_MissingProfessorVectorViewSelection` before fixture acquisition; focused GREEN is `1 passed`
+  with warnings treated as errors. Independent review found one Important different-source
+  duplicate-authority bypass; the same group reproduced it, structural-uniqueness-before-hash
+  repair closed it, and targeted re-review reports zero Critical/Important/Minor/YAGNI.
+- Final evidence is focused/predecessor `8 passed`, complete physical/release owner `53 passed, 2
+  skipped`, KnowledgeRead plus query-planning owners `17 passed`, and complete no-external
+  Canonical V2 `342 passed, 141 skipped, 0 xfailed`, plus the three intentional hostile-model
+  serializer warnings. Complete Ruff/format/compile, Pyright (`0/0/0`), strict OpenSpec,
+  `git diff --check`, locked offline wheel/source parity, scope/secret/cache, and frozen-source/
+  target gates pass. The secret-free receipt is
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s8v2/verification-receipt.json`.
+- Task 8.3 and aggregate S8 remain open at formal `56/80`. No provider/network, persistence,
+  source/index/database, pointer, Commit, Push, PR, Archive, promotion, or Cutover changed. S8IR1
+  release-scoped internal-reference lookup/filter is the next independent real-lane slice.
+
+## S8V1 release-scoped vector retrieval acceptance — 2026-07-19T10:16:54Z
+
+- S8V1 adds one package-internal audited vector adapter and installs it in the Accepted S8E1
+  composition only when an explicit release-model embedding port is supplied. It validates the
+  complete marked physical snapshot against every bound bundle axis, scores only accepted public
+  points with deterministic finite cosine, filters domains/displayed IDs/exclusions, retains S7J
+  eligibility effects, and emits a content-bound `LocalVectorTrace` under the unchanged
+  `local_projection_trace` key. Professor requests remain fail-closed until S8V2 supplies the typed
+  identity/research/both plan selector.
+- Exact TDD was `1 xfailed`; forced RED was one direct
+  `_MissingIsolatedVectorRecallAdapter`; focused GREEN is `1 passed`. Review-driven RED/GREEN closes
+  receipt-target identity and the one Important opaque-authority gap: release-bound
+  `KnowledgeRead.execute` now checks complete point/target/manifest/publication lineage and
+  recomputes query embedding plus cosine/score, so self-consistent query-embedding, source-
+  projection, and score mutations cannot escape the public seam.
+- Final evidence is predecessor matrix `8 passed`, complete physical/release owner `51 passed, 2
+  skipped`, KnowledgeRead matrix `17 passed`, and complete no-external Canonical V2 `340 passed,
+  141 skipped, 0 xfailed`, plus the three intentional hostile-model serializer warnings. Complete
+  Ruff/format/compile, Pyright (`0/0/0`), strict OpenSpec, `git diff --check`, locked offline wheel/
+  source parity, scope/secret/cache, and frozen-source/target gates pass.
+- Final independent review reports zero Critical/Important, one nonblocking broad-exception-test
+  Minor, zero YAGNI, and verdict `Accept`. The secret-free receipt is
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s8v1/verification-receipt.json`.
+- Task 8.3 and aggregate S8 remain open at the unchanged formal `56/80` ledger. No external
+  provider/network, persistence, source/index/database, pointer, Commit, Push, PR, Archive,
+  promotion, or Cutover changed. S8V2 Professor typed vector-view selection is the next named
+  successor.
+
+## S8P2 planning taxonomy and assessment intent acceptance — 2026-07-19T07:28:02Z
+
+- S8P2 completes Task 8.2 through the existing release-bound `QueryPlanner.plan` seam. It adds a
+  finite recorded-proposal taxonomy and cross-field matrix, server-owned official-Web allowlisting
+  and bounded budgets, proposal-to-plan material-question parts, one open lightweight
+  `AssessmentIntent`, malformed same-class proposal revalidation, and information-only ambiguity
+  derivation while preserving frozen S8P1 omission/hash identities.
+- Initial exact TDD was `2 xfailed, 52 deselected`, forced RED was `2 failed, 52 deselected` at the
+  two named sentinels, and GREEN was `2 passed, 52 deselected`. The first independent review found
+  zero Critical and four Important issues; review-driven RED reproduced all four classes plus the
+  absent material-parts contract, and repaired GREEN returned `2 passed, 52 deselected`.
+- Final owner evidence is: query planning `5 passed`; S8P1 focused `2 passed`; shared physical/
+  release `47 passed, 2 skipped`; KnowledgeRead matrix `17 passed`; KnowledgeAnswer matrix
+  `13 passed`; complete no-external Canonical V2 `336 passed, 141 skipped, 0 xfailed`. Ruff,
+  format/compile, complete Pyright (`0 errors, 0 warnings, 0 informations`), strict OpenSpec,
+  `git diff --check`, locked offline wheel/source parity, scope/secret/cache, and frozen-target gates
+  pass.
+- Targeted re-review and a fresh final independent review each report zero Critical/Important and
+  verdict `Accept`. Minor/YAGNI notes are recorded without blocking. The content-bound receipt is
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s8p2/verification-receipt.json`.
+- Task 8.2 alone is checked, moving the formal ledger from `55/80` to `56/80`; `acceptance.md` is
+  unchanged. No provider, persistence, database/index/source, active pointer, Commit, Push, PR,
+  Archive, promotion, or Cutover changed. S2C3C2 remains only the external reviewed-oracle gate for
+  Task 8.1 calibration and later S8/S9 claim-level acceptance execution, not a global goal blocker.
+
+## S8E1 release-bound KnowledgeRead composition acceptance — 2026-07-19T08:08:07Z
+
+- S8E1 adds one package-internal `create_isolated_release_knowledge_read` composition root. Callers
+  supply only the bounded Universal-Web port/policies; the factory owns the existing real physical
+  exact/structured adapters and delegates through the sole public `KnowledgeRead.execute` seam.
+  Every plan is exact-revalidated and its execution-relevant release, publication state/hash/
+  evidence, manifest, and index-result binding must match before any physical or Web call. Missing,
+  cross-wired, or unsupported local lanes fail as configuration errors rather than provider
+  degradation.
+- Exact TDD was `1 xfailed, 49 deselected`, forced RED was `1 failed, 49 deselected` at
+  `_MissingIsolatedReleaseKnowledgeReadFactory`, and GREEN is `1 passed, 49 deselected`.
+  Review-driven hardening independently mutates every owned binding axis, uses explicit reader/Web
+  spies for fail-before-effect, rejects invalid Universal-Web bounds, and proves accepted/oversize/
+  missing snapshot receipts while exact/structured local evidence remains available.
+- Final evidence is: predecessor-focused `6 passed, 44 deselected`; complete physical/release owner
+  `48 passed, 2 skipped`; KnowledgeRead matrix `17 passed`; complete no-external Canonical V2
+  `337 passed, 141 skipped, 0 xfailed`. Complete Ruff, format/compile, Pyright (`0/0/0`), strict
+  OpenSpec, `git diff --check`, offline wheel/source parity, scope/secret/cache, and frozen-target
+  checks pass.
+- The final independent review reports zero Critical/Important/Minor/YAGNI and verdict `Accept`.
+  The content-bound receipt is
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s8e1/verification-receipt.json`.
+- Task 8.3 remains open and the formal ledger remains `56/80`; lexical, vector, relationship, and
+  internal-reference real adapters remain downstream. No external provider/network, persistence,
+  database/index/source, active pointer, Commit, Push, PR, Archive, promotion, or Cutover changed.
+  S8L3 release-scoped lexical lookup is the next smallest Ready target.
+
+## S8L3 release-scoped lexical lookup acceptance — 2026-07-19T08:35:45Z
+
+- S8L3 adds the first real lexical lane to the Accepted S8E1 composition without exposing a caller
+  adapter map. One non-empty NFKC/casefold/whitespace-normalized phrase must occur within typed
+  public projection scalar content. The adapter strips only one exact trailing `[lane=lexical]`
+  marker and one matched curly or ASCII double-quote pair; it adds no ranking, stemming, synonym,
+  stopword, threshold, provider, or persistence framework.
+- Exact TDD was `1 xfailed, 50 deselected`, forced RED was `1 failed, 50 deselected` at
+  `_MissingIsolatedLexicalLookupAdapter`, and focused GREEN is `1 passed`. Review-driven hardening
+  closes the exact-name shortcut, pre-read release/domain gaps, and finite quote/marker/
+  normalization loophole with a no-protected-slot proper substring probe and compact positive/
+  negative literal matrix.
+- Final evidence is: predecessor-focused `6 passed`; complete physical/release owner `49 passed,
+  2 skipped`; KnowledgeRead matrix `17 passed`; complete no-external Canonical V2 `338 passed,
+  141 skipped, 0 xfailed`, plus the three intentional hostile-model serializer warnings. Complete
+  Ruff, format/compile, Pyright (`0/0/0`), strict OpenSpec, `git diff --check`, locked offline wheel/
+  source parity, scope/secret/cache, and frozen-target checks pass.
+- Final independent review reports zero Critical/Important and verdict `Accept`. One nonblocking
+  Minor records the absence of a dedicated multi-hit lexical ordering probe; deterministic ordering
+  still reuses the Accepted shared candidate ordering. The secret-free receipt is
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s8l3/verification-receipt.json`.
+- Task 8.3 remains open and the formal ledger remains `56/80`; vector, relationship, and internal-
+  reference real adapters remain downstream. No external provider/network, persistence, database/
+  index/source, active pointer, Commit, Push, PR, Archive, promotion, or Cutover changed. S8V1
+  release-scoped vector retrieval is the next candidate Slice.
+
+## S7J vector eligibility lineage correction acceptance — 2026-07-19T09:11:49Z
+
+- The S8V1 design gate found one material Accepted-S7 omission: public vector points retained only
+  semantic policy version and undifferentiated evidence IDs, so a read adapter could not preserve
+  exact decision ID, outcome, or visible limitations. S7J adds those exact replayed effects to each
+  public point; internal Person/Technology points remain decision-free admitted auxiliaries.
+- Builder manifests and `ReleasePublication` now consume one production-owned canonical hash of the
+  complete typed point envelope. The review-driven RED locks every required field family with a
+  fourteen-row valid mutation matrix and proves equal mutated expected/actual points plus identical
+  old manifests are rejected only by expected/actual inventory evidence, with zero point or manifest
+  discrepancies.
+- Exact TDD was `1 xfailed`; forced RED was one direct
+  `_MissingS7JSemanticEligibilityLineage`; focused GREEN and S7I were each `1 passed`. Final owner
+  evidence is release publication `6 passed`, S8 physical successors `4 passed`, complete physical/
+  release `50 passed, 2 skipped`, and complete no-external Canonical V2 `339 passed, 141 skipped,
+  0 xfailed`, plus the three intentional hostile-model serializer warnings.
+- Complete Ruff, format/compile, Pyright (`0/0/0`), strict OpenSpec, `git diff --check`, locked
+  offline wheel/source parity, scope/secret/cache, and frozen-target checks pass. Final independent
+  review is zero Critical/Important/Minor/YAGNI and `Accept`; the secret-free receipt is
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s7j/verification-receipt.json`.
+- S7J changes no point population/ID/content/vector, Milvus schema, policy semantics, release
+  pointer, Task checkbox, or formal `56/80` ledger. No Commit, Push, PR, Archive, promotion, or
+  Cutover occurred. S8V1 release-scoped vector retrieval may now proceed.
+
+## S7I lookup-eligibility lineage correction acceptance — 2026-07-16T04:55:58Z
+
+- The S8L1 design gate found one material S7 projection omission: public lookup documents retained
+  only the path-policy version, not the replay-validated exact decision, outcome, or visible
+  limitations. S7I adds those three typed fields, preserves decision-free admitted internal
+  auxiliaries, and binds the complete normalized document envelope into manifest parity without
+  changing document populations, IDs, lookup content, policy semantics, or any public S7 method.
+- Exact TDD evidence is one intended RED at missing `eligibility_decision_id`, then one focused
+  pass. The complete shared S7 owner returned `42 passed, 2 skipped`; S7 sibling owners returned
+  `14 passed`; complete no-external Canonical V2 returned `330 passed, 141 skipped, 0 xfailed`.
+  Ruff check/format, `py_compile`, complete Canonical V2 Pyright, strict OpenSpec,
+  `git diff --check`, wheel/source parity, scope/secret/cache, and frozen-source checks pass.
+- The independent merged review reran the focused and shared-owner checks and reported zero
+  Critical, Important, Minor, and YAGNI findings. S7I is Accepted without reopening historical S7
+  evidence or changing the formal 55/80 ledger. S8L1 may now bind a real read to an
+  `IsolatedReleaseBundle`; the receipt is under the S7I run directory.
+
+## S8L1 release-scoped physical exact lookup acceptance — 2026-07-16T05:31:12Z
+
+- S8L1 composes the existing `KnowledgeRead` exact lane with one same-class revalidated
+  `PublishedRelease` plus `IsolatedReleaseBundle`. Every call uses the real guarded S7 reader and
+  requires exact physical equality with the bundle's accepted lookup-document snapshot before any
+  mapping. Only four public domains are eligible; internal Person/Technology auxiliaries remain
+  excluded. Typed projection JSON, release/object/domain/source hashes, exact eligibility decisions
+  and limitations, bundle/target/manifest/index identities, publication evidence, candidate IDs,
+  evidence IDs, and item/candidate trace axes are content-bound and cross-validated.
+- Exact TDD was `1 xfailed` and one forced missing-module failure, followed by focused `1 passed`.
+  The unchanged S7 physical node plus S8L1 returned `2 passed`; the complete shared file returned
+  `43 passed, 2 skipped`; all 16 existing KnowledgeRead owners passed; complete no-external
+  Canonical V2 returned `331 passed, 141 skipped, 0 xfailed` with the three existing hostile-model
+  warnings. Complete Ruff, format, compile, Pyright, strict OpenSpec, diff, wheel/source parity,
+  scope/secret/cache, and frozen-target gates pass.
+- The merged review found three Important issues in query-text fallback, empty/cross-domain output,
+  and non-identity excluded terms. Each was reproduced, repaired, and regression-covered; targeted
+  re-review closed all three with zero new Critical/Important. The source-authority naming Minor and
+  redundant state-check YAGNI are recorded but nonblocking. S8L1 is Accepted at the unchanged 55/80
+  ledger; Task 8.3 and aggregate S8 remain open. The secret-free receipt is under the S8L1 run
+  directory.
+
+## S8L2 release-scoped displayed-set structured lookup acceptance — 2026-07-16T06:17:22Z
+
+- S8L2 reuses S8L1's same-class `PublishedRelease`/`IsolatedReleaseBundle`, real guarded lookup
+  readback, exact bundle snapshot equality, four-domain typed projection validation, internal-
+  auxiliary exclusion, and eligibility lineage. It adds only the structured displayed-set lane:
+  empty sets return before read, protected-set disagreement fails before read, and exact Canonical
+  members are filtered by requested public domains, complete typed-content exclusions, and candidate
+  bounds. `LocalProjectionTrace.execution_lane` separates exact and structured identities while the
+  default exact lane preserves its prior raw/evidence/content identities and serialized replay.
+- Exact RED was `1 xfailed` and one forced missing-adapter failure, followed by focused `1 passed`.
+  The unchanged S8L1 focused group is `1 passed`; the complete shared file is `44 passed, 2 skipped`;
+  all 16 KnowledgeRead owners pass; complete no-external Canonical V2 is `332 passed, 141 skipped,
+  0 xfailed` with the three existing hostile-model warnings. Complete Ruff/format/compile/Pyright,
+  strict OpenSpec, diff, wheel/source parity, scope/secret/cache, and frozen-target gates pass. The
+  fresh 276-entry wheel at `/var/tmp/canonical-v2-s8l2-wheel-20260716T061359Z/` has SHA-256
+  `081046b91078e918f006e126f7eae01af358c7c3c5eebe87d554cc3c8064dcd9`, contains both read modules,
+  excludes tests/`.agents`, and matches source hashes.
+- The merged review found two Important test-integrity gaps: legacy exact evidence/serialization
+  compatibility and service-level model-valid cross-lane rejection. Both were repaired in the one
+  allowed test, and a mechanical format-gate failure was reproduced and formatted. Final targeted
+  re-review is zero Critical/Important/Minor/YAGNI. S8L2 is Accepted at the unchanged 55/80 ledger;
+  Tasks 8.3/8.5 and aggregate S8 remain open. The secret-free receipt is under the S8L2 run directory.
+
+## S8P1 release-bound query planner acceptance — 2026-07-16T08:02:11Z
+
+- S8P1 binds the existing query-planning seam to one same-class revalidated serviceable publication,
+  complete isolated S7 bundle, exact replayed index/candidate/internal graph, recomputed manifest
+  hash, exact release-observed institution catalog, and validated four-domain/lane policy. Resolved
+  and unresolved Person records plus Technology routes are derived only from accepted typed
+  projections/evidence; internal references remain non-public. The returned plan carries one
+  content-bound release trace while unbound legacy plan JSON and content hashes remain byte/value
+  identical.
+- Exact RED was `2 xfailed, 46 deselected` and forced execution was two direct missing-factory
+  failures. Final focused/shared/query-owner/read-owner/full results are `2 passed`, `46 passed, 2
+  skipped`, `4 passed`, `16 passed`, and `334 passed, 141 skipped, 0 xfailed`; the three full-suite
+  warnings are the existing hostile-model serializer warnings. Complete Ruff/format/compile/Pyright,
+  strict OpenSpec, diff, fresh offline wheel/source parity, scope/secret/cache, and frozen-target
+  gates pass.
+- Review-driven repairs close valid manifest-order comparison, bound-plan catalog/release/public-
+  population cross-wires, multi-Company fact Cartesian matching, authoritative Technology lineage,
+  exact evidence/hash assertions, and missing/shared institution-alias coverage. Targeted re-review
+  reports zero Critical/Important. S8P1 is Accepted at the unchanged `55/80` ledger; Task 8.2 stays
+  open and S8P2 is the next Ready successor. No provider, persistence, database/index/source, active
+  pointer, Commit, Push, PR, archive, promotion, or Cutover changed.
+
+## ADR-013-ADR-022 reconciliation gate — 2026-07-13T17:44:15Z
+
+- The user selected each ADR decision during the requirements grill, confirmed that the Spec should
+  be finalized, and then explicitly instructed this Canonical V2 goal to continue. That sequence is
+  the recorded user review for this contract gate; it is not implementation or cutover acceptance.
+- Independent review round one found two Critical and five Important gaps. Corrections added
+  mandatory Person materialization for resolved evidence, Person typed-filter retrieval, Technology
+  alias/route comparison, scoped/as-of Industry Brief answers, exact S6R/S2C/S7 dependencies,
+  historical S2 preservation, calibrated G ambiguity, Web-handle lifecycle cases, and explicit hard
+  invariants.
+- Independent re-review found three Important consistency residues; mandatory ambiguity switching,
+  non-adoption discussion-or-mention semantics, and ADR S6R/S2C phase ownership were aligned. Final
+  re-check returned `Ready: Yes` with zero open Critical/Important findings.
+- `openspec validate rebuild-canonical-v2-knowledge-platform --strict` passed; `git diff --check`
+  passed. The task ledger remains 36/80 because this gate changes no implementation checkbox.
+- S6R1/Task 6.9 is the only critical-path implementation slice made Ready. S6R2+ and all S7 work
+  remain Specified/blocked; S2C may be separately contracted without sharing a writer.
+
+## S6R1 Task 6.9 internal-reference RED acceptance — 2026-07-13T18:21:59Z
+
+- Seven strict RED groups freeze the additive internal-reference catalog and manifest scope seam,
+  role-neutral Person materialization from resolved Professor/company-personnel/Paper-author/
+  Patent-inventor evidence, unresolved same-name Person non-materialization, Technology concept/
+  route lineage, exact discussion-or-mention versus claimed-adoption versus demonstrated-use
+  relationship IDs, exact v1/v2 relationship coexistence, explicit internal endpoint registry, and
+  the four-public-domain/Product-capability negatives.
+- Masking is exact. Normal focused RED returned `7 xfailed in 5.18s`, exit 0. Forced RED with
+  `--runxfail` returned `7 failed in 5.14s`, expected exit 1; failures were the named missing
+  `PACKAGED_REFERENCE_CATALOG`/`ProjectionScope`/internal-reference Module/relationship-registry
+  contracts, not nested imports or unrelated dependencies.
+- Existing `test_domain_inclusion_contract.py`, `test_domain_projection_contract.py`, and
+  `test_path_eligibility_contract.py` returned `45 passed in 6.03s`, proving the accepted four-domain
+  and path behavior was unchanged.
+- Ruff check and format passed for both new files; app-environment Pyright returned `0 errors, 0
+  warnings, 0 informations`. Strict OpenSpec and `git diff --check` passed. Production-source scope,
+  high-confidence secret, and generated-cache checks were clean.
+- Historical `build_domain_catalog.py --check` failed only with the already-recorded
+  `authority source hash changed: openspec/changes/rebuild-canonical-v2-knowledge-platform/design.md`.
+  This is expected correction evidence: S6R2 owns an additive catalog bound to exact v1 content/file
+  hashes and may not rewrite or hash-only rebind the accepted v1 artifact.
+- The original independent review found five Important test-depth defects; re-review found three
+  remaining Important gaps. All were corrected. Final re-review returned `Ready: Yes` with no
+  Critical, Important, or Minor findings.
+- Task 6.9 and S6R1 are Accepted as a test contract only. The ledger is 37/80. S6R2 is Ready; Task
+  6.10 remains unchecked, later S6R projection/relationship increments remain Specified, and S7
+  remains blocked until aggregate S6R acceptance.
+
+## S6R2 catalog/shared-boundary acceptance — 2026-07-13T18:57:32Z
+
+- Added a separate deterministic internal-reference catalog for `person`, `technology_concept`, and
+  `technology_route`, bound to exact accepted v1 content/file identities and exact ADR/release-spec
+  source hashes/citation ranges. Evidence and packaged bytes have content SHA-256
+  `ff347833…45a7` and file SHA-256 `84d77838…dbbf`; historical v1 remains byte-identical at
+  `b227285f…c0`.
+- Person relationship v2 rows change only target ownership/version binding: predecessor role,
+  evidence, time, and eligible-path semantics remain frozen. Technology rows distinguish
+  discussion-or-mention, claimed adoption, and demonstrated use, reject unresolved terms as
+  canonical endpoints, and explicitly do not entail Product capability.
+- Projection and index manifests require explicit scope plus domain/reference ownership under
+  `canonical-v2-build-manifest-v2`. The new installed catalog is a separate deep module and the
+  compatibility names on `domain_catalog` load lazily, so unchanged v1 consumers keep their former
+  import/failure surface.
+- Builder/validator TDD moved from ten missing-script/artifact RED failures to `13 passed`, including
+  rehashed semantic mutations and symlink-parent write escape. The final catalog/shared suite was
+  `32 passed, 5 xfailed`; full no-external-database Canonical V2 was
+  `214 passed, 137 skipped, 9 xfailed` with no real failure.
+- Deterministic `--write`/`--check`, evidence/package and historical-v1 `cmp`, wheel inclusion of
+  both catalogs, Ruff check/format, Pyright, strict OpenSpec, diff, scope, high-confidence secret,
+  and generated-cache checks passed.
+- Initial main review found three Important defects; the focused integrity audit found three more:
+  unresolved Technology policy, eager v1 coupling, incomplete semantic validation, v1 manifest
+  byte drift, symlink-parent escape, and unapproved Person role/path/time changes. All six were
+  corrected. Both final reviews returned `Ready: Yes` with zero Critical/Important findings.
+- Known Minor/YAGNI risk: the two development artifact replacements are sequential, so interruption
+  can temporarily break parity; `--check` detects the condition. This slice writes no database,
+  index, release pointer, provider, or product state.
+- S6R2 is Accepted. Task 6.10 stays unchecked and the ledger stays 37/80. S6R3 Person projection is
+  Ready; S7 remains blocked until S6R4 and aggregate S6R acceptance.
+
+## S6R3 Person reference projection acceptance — 2026-07-13T20:37:07Z
+
+- Added a package-internal pure `InternalReferenceProjectionBuilder` for the Person increment. Its
+  request carries exact domain-projection and Person-identity request/result pairs; the builder
+  deterministically rebuilds the domain result, applies the identity module's exact-result
+  validator, and rejects any pair or envelope drift before deriving output.
+- Domain and Person assertions remain separate. Every Person reference binds an exact typed public
+  root/subobject, domain lineage, shared source record, exact `identity.name`, and a content-bound
+  object crosswalk. Same-record/same-name author sources cannot swap object ownership. ORCID uses
+  the identity module's version-stable normalization, requires a retained assertion owned by the
+  exact Person source, permits that assertion on another validated profile record, and rejects a
+  mismatch with typed `PaperAuthor.orcid`.
+- Person admission is derived rather than caller-declared. Accepted current verdicts may upgrade
+  prior unresolved topology; current unresolved evidence does not silently downgrade accepted
+  topology; name-only ambiguity remains explicit unresolved references. Anchors and references are
+  1:1, resolved projections retain assignment/topology verdict lineage and shared source records,
+  and aliases/display names derive only from references.
+- Results are deterministic/content-addressed and expose
+  `validate_internal_reference_projection_result(request, result)`. The verifier replays the full
+  closed graph and rejects even a completely rehashed fabricated name/result. S7 publication and
+  later consumers must use this verifier rather than trusting a standalone output hash.
+- Focused Person/reference was `14 passed, 3 expected xfailed`; the domain/identity/import-order
+  matrix was `76 passed, 3 expected xfailed`; complete no-external Canonical V2 was
+  `229 passed, 137 skipped, 7 expected xfailed`. The three local xfails are exact S6R4 Technology/
+  relationship REDs; the other four are the existing future public-module REDs. Ruff check/format,
+  Pyright over both changed source files and all three changed test files, strict OpenSpec,
+  `git diff --check`, scope, and high-confidence secret checks passed.
+- Two final independent read-only reviews returned `Ready: Yes` with zero Critical, Important, or
+  Minor findings after closing exact-pair, rehashed-name, anchor-reuse, historical-verdict,
+  forged/cross-record ORCID, same-record object-swap, and stale-future-RED/static counterexamples.
+- S6R3 is Accepted without persistence, migration, database/index/provider/release writes, or a
+  fifth public domain. Task 6.10 and the ledger remain unchecked/37 of 80; S6R4 is Ready, aggregate
+  S6R and S7 remain blocked.
+
+## S6R4 Technology/relationship acceptance — 2026-07-13T22:30:44Z
+
+- The inherited S6R1 contract first exposed seven strict RED groups. After S6R3, the three remaining
+  Technology/relationship groups were still expected xfails; the final complete Canonical V2 run
+  leaves only the four named future public-module xfails, proving the S6R4 groups crossed to GREEN.
+- Added a versioned Technology identity method with exact strong/recall keys. Pure TechnologyConcept
+  and TechnologyRoute projections retain aliases, definitions, hierarchy, public crosswalks,
+  source records, observations, release identity, content hashes, and assertion-level field
+  lineage. Sparse unresolved evidence remains a noncanonical reference. Repeated equivalent
+  append-only observations, including reordered set-like alias values, remain in lineage.
+- Relationship projection now uses an explicit, versioned combined registry while preserving the
+  exact legacy 34-type profile. Checked internal Person and Technology endpoints fail closed on
+  unresolved, registry, lineage, assertion-to-record, artifact, term, time, semantic-state, or
+  typed Professor-path drift. Technology relations preserve separate discussion-or-mention,
+  claimed-adoption, and demonstrated-use semantics. They create neither Product capability nor an
+  Industry Brief fact and do not widen the four public root domains.
+- The PostgreSQL adapter persists and queries exact `(relationship_type_id, version)` pairs, retains
+  current/legacy request/result hash profiles, replays raw historical C2_0010 rows, and rejects new
+  internal-reference persistence until S7. No migration was needed or changed. On the owned,
+  explicitly marked disposable target `canonical_v2_s6r4_base`, the complete relationship adapter
+  file returned `19 passed in 22.33s`, including restart/replay, old/new coexistence, concurrency,
+  rollback, and safety. Only the unchanged base database remained after the run; the owned container
+  `codex-canonical-v2-s6r4-pg` was then stopped and removed.
+- Final pure evidence: the six-file focused matrix returned `75 passed, 14 skipped`; all skips were
+  explicit real-PostgreSQL tests with no target configured. Complete no-external Canonical V2
+  returned `244 passed, 139 skipped, 4 expected xfailed in 12.15s`. The four xfails are exactly the
+  future KnowledgeBuild, KnowledgeRead, KnowledgeAnswer, and ReleasePublication interfaces.
+- Ruff check and format passed for the nine focused source/test files; Pyright reported `0 errors, 0
+  warnings, 0 informations`. The deterministic internal-reference catalog `--check`, strict
+  OpenSpec, `git diff --check`, migration scope, generated-cache scope, and high-confidence secret
+  checks passed. The final code change was internal pure comparison logic, so the already-green,
+  unchanged PostgreSQL adapter/test inputs did not require a second disposable run.
+- Final independent specification and integrity reviews each returned zero Critical, zero Important,
+  and one shared Minor. Persistence review returned zero findings. The accepted nonblocking Minor is
+  that the combined registry hash binds source catalog hashes plus adapter metadata rather than a
+  direct fingerprint of the final serialized rows; current factory/input validation prevents an
+  injection bypass. S6R5 aggregate review retains this as future drift-defense risk rather than
+  expanding S6R4 beyond the user-selected non-idealized design.
+- S6R4 and Task 6.10 are Accepted. The ledger is 38/80. S6R5 aggregate S6 reacceptance is Ready;
+  S7 remains blocked. No original/recovery/durable-candidate database, Milvus index, provider,
+  release pointer, commit, push, PR, archive, or cutover was touched.
+
+## S6R5 aggregate S6 reacceptance — 2026-07-14T02:05:34Z
+
+- Aggregate contract accounting proves exactly four public domains, three internal auxiliary
+  reference types, six public paths, the preserved 34-row legacy relationship registry, and the
+  additive 40-pair combined registry. `product_has_capability`, a fifth public Person/Technology
+  domain, and an Industry Brief canonical fact remain absent. Detailed hashes, counts, fixture
+  projections, and the Pattern-fix report are in `s6r-aggregate-review.md`.
+- The historical v1 catalog remains byte-identical at `b227285f…c0`; its accepted 14-source/four-
+  domain snapshot audit is retained rather than rebinding immutable history to moved current
+  documentation. The current internal-reference evidence/package pair remains byte-identical at
+  `84d77838…dbbf`, validated content `ff347833…45a7`; builder `--check` and 13 validator tests passed.
+- The exact identity transition contract closes internal unresolved ownership, method/entity,
+  recalled-component verdict, owner/source/input/output/assignment/history, accepted topology,
+  reject, split, and reversal continuity bidirectionally. Final identity was `53 passed`; identity
+  plus internal reference projection was `79 passed`.
+- Final pure aggregate verification was `167 passed`. Complete no-external Canonical V2 was `265
+  passed, 139 skipped, 4 expected xfailed`; the four xfails are exactly the future KnowledgeBuild,
+  KnowledgeRead, KnowledgeAnswer, and ReleasePublication interfaces.
+- The final owned tmpfs PostgreSQL identity/domain/relationship lifecycle matrix was `68 passed in
+  73.11s`. It exercised migrations, exact target gates, restart/replay, conflicts, concurrency,
+  rollback, and relationship-version coexistence. Only the marked empty base and `postgres`
+  remained before cleanup; the base had zero non-system tables, no sibling database remained, and
+  the owned container plus loopback port were removed. The unchanged database-integrity matrix had
+  already returned `27 passed` at unique head `C2_0010` with 83 non-system tables before its own
+  cleanup.
+- Ruff check passed; the 17 S6R-owned Python files were formatted; complete Canonical V2 Pyright
+  returned zero findings. A fresh wheel contained 266 entries, all seven required S6R package
+  entries, and zero `.agents` entries. Nine imports, lazy historical catalog loading, and the unique
+  `C2_0010` Alembic head passed.
+- Strict OpenSpec, formal S2B `accepted/50`, original-`pgtest` pause, diff, migration-scope,
+  generated-cache, high-confidence secret, and import checks passed. Two final independent delta
+  re-reviews returned zero Critical, zero Important, and zero Minor findings.
+- The earlier aggregate review's direct-final-row registry fingerprint and transactional two-copy
+  catalog replacement ideas remain recorded nonblocking Minor/YAGNI hardening. Per explicit user
+  direction, S6R5 was not expanded beyond its Required checks and zero-Critical/Important bar.
+- S6R5, aggregate S6R, and Task 6.11 are Accepted. The ledger is 39/80. S7 release/index RED is Ready;
+  S2C still gates S8/S9 acceptance-oracle execution. No original/recovery/durable-candidate database,
+  Milvus index, provider, active pointer, commit, push, PR, archive, or cutover was touched.
+
+## S7A Task 7.1 release-lifecycle RED acceptance — 2026-07-14T02:39:06Z
+
+- Five minimal scenarios freeze the six existing Task 7.1 behaviors through the design-frozen
+  `KnowledgeBuild.build` and `ReleasePublication.verify/promote/rollback` methods: isolated failed
+  candidate/retry, candidate-manifest binding, immutable deterministic public/auxiliary hashes,
+  parity-mismatch refusal with repair evidence, one-release promotion, and auditable rollback.
+- Package-internal ephemeral factories are composition seams only. Fixture dependencies supply
+  upstream materialized sections, actual index manifests, stores, a clock, and a failure boundary;
+  the target modules must produce candidate/manifest hashes, failure receipts, parity decisions,
+  pointer transitions, verification records, and publication history. Test-local subclasses do not
+  implement target behavior.
+- Normal focused RED was exactly `5 xfailed`. Forced RED was exactly five guarded target-module
+  failures: three for absent `knowledge_build`, two for absent `release_publication`. Each importer
+  checks `ModuleNotFoundError.name`; a nested missing dependency is a real failure rather than an
+  accepted xfail.
+- Shared manifest/release controls were `16 passed`. Complete no-external Canonical V2 was `265
+  passed, 139 skipped, 7 expected xfailed`; the five Task 7.1 xfails plus future KnowledgeRead and
+  KnowledgeAnswer are the complete expected set.
+- Ruff check/format passed for both S7A owner files; targeted Pyright returned zero findings. Strict
+  OpenSpec, `git diff --check`, owner scope, generated-cache scope, and high-confidence secret checks
+  passed. No database, index, candidate data, provider, or active pointer was used.
+- Initial independent review found two Important false-GREEN/masking gaps; the first re-review found
+  one remaining Important intermediate-state gap. Concrete module composition, mutation-sensitive
+  hashes, exact missing-target sentinels, and the post-promote/pre-rollback three-pointer assertion
+  closed them. Final review returned zero Critical, zero Important, and one nonblocking Minor.
+- The Minor is intentionally deferred rather than expanded: Company/Person and one extra-point
+  mismatch are representative here; Tasks 7.3/7.4 own the complete public/Person/Technology and
+  missing/extra/stale/cross-release matrices.
+- S7A and Task 7.1 are Accepted at 40/80. Task 7.2 is Ready. No KnowledgeBuild/ReleasePublication
+  implementation, PostgreSQL/Milvus/pointer write, commit, push, PR, archive, or cutover occurred.
+
+## S7B Task 7.2 KnowledgeBuild acceptance — 2026-07-14T06:00:15Z
+
+- `KnowledgeBuild` now exposes only `build(BuildCandidateRequest) -> CandidateRelease`; its
+  package-internal composition seam consumes already-materialized typed sections and does not own
+  Task 7.3 projection production, Task 7.4/7.5 index construction, or Task 7.6 publication.
+- Canonical source-batch identities and parser/policy/model versions, complete decision/object/
+  relationship/eligibility sections, public/internal published projections, expected index
+  projections, UTC creation time, and the run/release identity are bound by a full canonical-JSON
+  manifest self-hash. Candidate and manifest nested version/count maps reject in-place mutation.
+- Materialization failure retains its first inspectable/retryable receipt, publishes neither store,
+  and re-raises the original error. Fully validated candidates are retained only after construction;
+  exact same-ID replays are idempotent and different content cannot overwrite either immutable
+  store. The active canonical/published/index mapping is observed but never written.
+- Pre-implementation RED was exactly three named xfails and three exact missing-target forced
+  failures. Final owner verification was `3 passed`; combined KnowledgeBuild/ReleasePublication was
+  `3 passed, 2 expected xfailed`; shared contracts were `16 passed`.
+- Complete no-external Canonical V2 was `268 passed, 139 skipped, 4 expected xfailed`. The remaining
+  xfails are exactly KnowledgeRead, KnowledgeAnswer, and the two Task 7.6 ReleasePublication cases.
+- Focused Ruff check/format and complete Canonical V2 Pyright passed with zero findings. A fresh
+  267-entry wheel includes `knowledge_build.py` and no `.agents` entries. Strict OpenSpec,
+  `git diff --check`, production-scope, high-confidence secret, and generated-cache checks passed.
+- Independent review returned zero Critical, zero Important, zero Minor, and one nonblocking YAGNI:
+  a durable adapter may later define a real transaction boundary and typed multi-stage failure
+  receipt; Task 7.2 does not require either.
+- S7B and Task 7.2 are Accepted at 41/80; Task 7.3 is Ready. No PostgreSQL, Milvus, provider,
+  candidate-data, active-pointer, commit, push, PR, archive, publication, or cutover write occurred.
+
+## S7C Task 7.3 candidate projection acceptance — 2026-07-14T06:57:15Z
+
+- The pure package-internal `compose_candidate_projections` function revalidates its request and
+  calls the Accepted S6R exact closed-graph replay validator before producing output. It consumes no
+  database, index, provider, active-pointer, relationship, or path-eligibility adapter.
+- Every result contains typed public-domain, Person, Technology-concept, and Technology-route
+  records plus exactly seven `ProjectionManifest` envelopes. The public owner set is exactly
+  Company/Paper/Patent/Professor; internal Person/Technology owners remain
+  `internal_auxiliary`, including explicit zero-count populations.
+- Each owner manifest binds only its release, scope, owner, projection kind/version, and sorted
+  record identity/content hashes. A real fixture change from one resolved Technology route to an
+  unresolved route preserves all four public hashes while changing the route count/hash and bundle
+  hash. Repeated identical composition is byte-identical.
+- Resolved Person and Technology records preserve their upstream source-anchor/assertion/decision/
+  time lineage. Two same-name unresolved Person references remain upstream diagnostics and produce
+  a zero-count Person manifest; no Person, Technology, Product, Industry Brief, or Product-
+  capability population widens the four public domains.
+- Pre-implementation RED was exactly `4 xfailed`; forced RED was four exact absent-target failures.
+  Final focused Task 7.3 was `4 passed`; complete Internal Reference was `28 passed`; combined
+  KnowledgeBuild/ReleasePublication was `3 passed, 2 expected xfailed`; shared contracts were `16
+  passed`.
+- Complete no-external Canonical V2 was `272 passed, 139 skipped, 4 expected xfailed`. The remaining
+  xfails are exactly KnowledgeRead, KnowledgeAnswer, and the two Task 7.6 ReleasePublication cases.
+- Focused Ruff check/format and complete Canonical V2 Pyright passed with zero findings. A fresh
+  268-entry wheel includes both S7B/S7C modules and no `.agents` entry. Strict OpenSpec,
+  `git diff --check`, production-scope, high-confidence secret, and generated-cache checks passed.
+- Independent review returned Accept with zero Critical, zero Important, and zero Minor. Task
+  7.4-7.6 index/lookup/vector/publication work remains correctly deferred YAGNI.
+- S7C and Task 7.3 are Accepted at 42/80; Task 7.4 is Ready. No new Release/Milvus acceptance box
+  closes until its actual index/lookup owners pass. No database, index, pointer, provider, commit,
+  push, PR, archive, publication, or cutover write occurred.
+
+## S7D Task 7.4 index-projection RED acceptance — 2026-07-14T08:11:49Z
+
+- Four minimal strict RED scenarios freeze the Task 7.4 contract without production implementation:
+  release/object/content/version metadata and Professor split; evidence-anchored internal
+  Technology/no-fifth-domain ownership; derived initial/schema/embedding/eligibility full rebuild;
+  and point-level missing/extra/stale/cross-release parity through future ReleasePublication.
+- The future package-internal seam is one `IndexProjectionBuilder.build(IndexProjectionRequest) ->
+  IndexProjectionResult`. Its request binds the exact S7C request/result and exact replayable public
+  PathEligibility request/result pairs. Internal Person/Technology use a separate versioned
+  evidence-anchor policy rather than fabricating a fifth public PathEligibility domain.
+- The admitted real fixture freezes exactly six points: Company, Paper, Patent, Professor identity,
+  Professor research, and internal Person. A real semantic-recall exclusion removes only Paper and
+  changes its owner count/entity/content hashes. A second real fixture freezes Company plus two
+  Technology concepts/one route while empty owners retain manifests.
+- Every point binds canonical object, release, opaque projection join, typed scope/domain/reference/
+  Professor view, path, projection/schema/embedding/eligibility versions, exact source-projection
+  hash, exact embedded-content hash, and source evidence. Person/Technology points retain accepted
+  public evidence anchors; every expected manifest's count/policy agrees with its joined points.
+- Point parity uses typed expected/actual inventories, classifies each defect exactly once, persists
+  point/projection/object/release/version/content repair evidence, blocks promotion, and leaves all
+  active pointers unchanged. Aggregate-only manifest counters are not treated as repair evidence.
+- Final normal RED is exactly `4 xfailed`; forced RED is exactly four guarded target-module failures:
+  three absent `index_projection` and one absent `release_publication`. The complete owner pair is
+  `28 passed, 6 xfailed`; KnowledgeBuild/ReleasePublication is `3 passed, 3 xfailed`; shared
+  contracts are `16 passed`.
+- Complete no-external Canonical V2 is `272 passed, 139 skipped, 8 expected xfailed`: the three Task
+  7.4 index REDs, three ReleasePublication REDs, KnowledgeRead, and KnowledgeAnswer. Ruff check/
+  format and complete Canonical V2 Pyright pass with zero findings.
+- Strict OpenSpec, `git diff --check`, production-scope, high-confidence secret, generated-cache,
+  and package-content gates pass. A fresh 268-entry wheel retains S7B/S7C and includes neither
+  `.agents` nor the intentionally absent Task 7.4/7.6 production modules.
+- Independent review found five Important false-green gaps across point repair content, exact
+  eligible population/Person ownership, eligibility-outcome consumption, Professor manifest split,
+  and manifest policy binding. All were repaired; final review is zero Critical, zero Important,
+  zero Minor. Two YAGNI notes are nonblocking: do not split the long fixture or freeze physical
+  collection/vector-dimension/durable-adapter details in RED.
+- S7D and Task 7.4 are Accepted at 43/80; Task 7.5 is Ready. No Release/Milvus acceptance checkbox
+  closes, and no production module, database, index, pointer, provider, commit, push, PR, archive,
+  publication, or cutover write occurred.
+
+## S7E Task 7.5 index-projection GREEN acceptance — 2026-07-14T10:22:52Z
+
+- `IndexProjectionBuilder.build(IndexProjectionRequest) -> IndexProjectionResult` now exactly
+  replays its S7C candidate and each public PathEligibility decision before constructing stable,
+  release-independent lookup-document and vector-point identities. It retains empty owner envelopes,
+  separates Professor identity/research content, keeps exact lookup independent of semantic
+  exclusion, and materializes internal Person/Technology only from accepted evidence anchors.
+- Eight vector manifests and seven lookup manifests bind release, object/content, projection/schema,
+  embedding, eligibility, evidence, count, and full-rebuild state. Initial/schema/embedding/
+  eligibility changes derive a full rebuild rather than trusting the caller's requested mode.
+- The package-internal isolated adapter accepts only a fresh absolute marked target, revalidates the
+  Accepted S2B gate before target/client preparation and immediately before first write, then writes
+  and reads back deterministic recorded embeddings in real Milvus Lite plus lookup documents,
+  manifests, and a successful receipt in SQLite. Original, relative, network, unmarked, symlink-
+  escaping, and invalid-identity targets fail before client open or write.
+- Pre-implementation normal RED was exactly three index-projection xfails; forced RED was exactly
+  three absent-module failures. Final owner verification is `40 passed`; owner plus release
+  interfaces is `40 passed, 3 xfailed`. The three remaining release-interface xfails belong exactly
+  to Task 7.6.
+- Complete no-external Canonical V2 is `284 passed, 139 skipped, 5 xfailed`: only KnowledgeRead,
+  KnowledgeAnswer, and the three Task 7.6 scenarios remain expected RED. Accepted S2B admission is
+  freshly `5 passed`; the retained real-target acceptance run is `1 passed in 12.98s`.
+- Complete Canonical V2 Ruff and Pyright pass; focused format passes. A fresh 270-entry wheel at
+  `/var/tmp/canonical-v2-s7e-wheel-20260714T101559Z/miroflow_agent-0.1.0-py3-none-any.whl` has SHA-256
+  `fa84842d50e4d5980bd63b9a28ce4fcb0a9944126089e8a59a79e0a3f35073a1`, includes both index modules,
+  and excludes `.agents`. Strict OpenSpec, imports, diff, source/write-boundary, secret, and generated-
+  cache gates pass.
+- Content-addressed execution evidence is persisted at
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s7e/isolated-index-rebuild-receipt.json`.
+  It records six Milvus points, five lookup documents, all 8/7 owner manifests, exact target artifact
+  hashes, Accepted S2B hashes, and the absent release-pointer capability. Original Milvus remains
+  SHA-256 `43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc`;
+  original `pgtest` remains paused on its exact recorded volume.
+- Three independent final reviews report zero Critical and zero Important findings. Receipt-root
+  binding, aggregate-manifest limits, illustrative in-memory active-state evidence, durable cleanup,
+  production adapters, and fixture splitting remain recorded nonblocking Minor/YAGNI; Task 7.6 keeps
+  full point-level reconciliation ownership.
+- S7E and Task 7.5 are Accepted at 44/80; Task 7.6 is Ready. No commit, push, PR, publication,
+  promotion, rollback, archive, or cutover occurred.
+
+## S7F Task 7.6 release-publication GREEN acceptance — 2026-07-14T11:00:20Z
+
+- The new deep `ReleasePublication` module preserves the frozen `verify`, `promote`, and `rollback`
+  interface and shared `ReleaseVerification`/`PublishedRelease` identities. Its only composition seam
+  consumes explicit in-memory candidate manifests, expected/actual index manifests and points, the
+  three-key snapshot, evidence stores, history, and clock; it has no file, database, Milvus, network,
+  environment, alias, or real-pointer capability.
+- Verify compares complete expected/actual manifest objects and mutually exclusive point inventories.
+  Both inventories independently bind count, exact S7E entity-ID/content hashes, release, scope,
+  domain/reference owner, path, projection/schema/embedding/eligibility versions, and point metadata.
+  Missing/extra/stale/cross-release point evidence is deterministic and persists complete immutable
+  expected/actual snapshots before any promotion decision.
+- Promotion is an explicit method call and requires a stored accepted verification bound to the exact
+  candidate manifest; every rejected path is a state no-op. The accepted in-process rehearsal updates
+  exactly canonical/published/index release keys to one release and appends history. Rollback requires
+  that release still be active, restores the promotion's recorded prior three-key snapshot, and
+  retains candidate, verification, discrepancy, and history evidence.
+- Pre-GREEN normal RED was exactly three xfails and forced RED exactly three absent-target failures.
+  The original owner scenarios are GREEN. Review exposed three executable Important gaps—matching
+  forged aggregate hashes, lost evidence on actual manifest/count drift, and incomplete stale repair
+  details. Three focused RED/GREEN regressions closed them; final owner is `6 passed`.
+- `KnowledgeBuild` plus ReleasePublication is `9 passed`; S7E owner plus ReleasePublication is
+  `46 passed`; shared contracts are `16 passed`. Complete no-external Canonical V2 is
+  `290 passed, 139 skipped, 2 xfailed`, leaving only KnowledgeRead and KnowledgeAnswer expected RED.
+- Complete Ruff and Pyright pass; focused format/import pass. The fresh 271-entry wheel at
+  `/var/tmp/canonical-v2-s7f-wheel-20260714T105913Z/miroflow_agent-0.1.0-py3-none-any.whl` has SHA-256
+  `7f6986509d6b758920483f179e51c0a476774295e3018bd4889856301dab9316`, includes the module, and
+  excludes `.agents`. Strict OpenSpec, diff, production-scope, secret, cache, frozen-source, and
+  original-target checks pass.
+- Final independent re-review is zero Critical and zero Important. A custom failure/concurrency-aware
+  mutable-store transaction, durable repositories, production authorization, real pointer adapters,
+  and physical DB/index rollback are nonblocking Minor/YAGNI and remain Task 7.7/later ownership.
+- S7F and Task 7.6 are Accepted at 45/80; Task 7.7 is Ready. No real publication/promotion/rollback,
+  database/index/alias/pointer mutation, commit, push, PR, archive, or cutover occurred.
+
+## S7G Task 7.7 isolated-release rehearsal RED acceptance — 2026-07-14T11:49:32Z
+
+- Exactly three strict integration scenarios freeze the missing package-internal isolated
+  publication adapter: full physical lookup/Milvus parity plus real disposable-PostgreSQL pointer
+  promotion/rollback; refusal of one receipt-external physical Milvus point with retained repair
+  evidence; and fail-closed explicit database/index/release identity before connect, client open, or
+  pointer write. The future adapter must reuse S7F `verify/promote/rollback`; no public interface or
+  migration is introduced by RED.
+- Normal focused execution returned exactly `3 xfailed in 6.68s`. Forced `--runxfail` returned
+  exactly three `_MissingIsolatedReleasePublicationModule` failures in `6.69s`, each rooted only in
+  absent `src.data_agents.canonical_v2.release_publication_isolated`. Import happens before external
+  target setup, so environment skip cannot hide RED.
+- S7E owner plus S7F publication returned `46 passed, 3 xfailed`; complete no-external Canonical V2
+  returned `290 passed, 139 skipped, 5 xfailed`. The five are exactly S7G's three scenarios and the
+  existing KnowledgeRead/KnowledgeAnswer future-interface REDs.
+- Complete Ruff check and Canonical V2 Pyright passed; focused format, strict OpenSpec,
+  `git diff --check`, scope/secret/cache, absent-production-module, frozen-source, and original-target
+  checks passed. Original Milvus remains SHA-256
+  `43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc`; original `pgtest` remains
+  paused on its recorded volume.
+- Two independent read-only reviews bound to test SHA-256
+  `111dbaabe230932a31a3b5cd4879a0960611d7babf290604223036ffbc61477a` report zero Critical and zero
+  Important findings. Fixture extraction, fixed IDs on the required fresh disposable database, and
+  duplicating already-covered physical missing/stale/cross-release variants remain nonblocking
+  Minor/YAGNI.
+- S7G RED is Accepted at 45/80. Task 7.7 and its rollback acceptance item remain unchecked; S7H
+  GREEN is Ready. No production module, external target, database/index/pointer state, migration,
+  commit, push, PR, publication, rollback, archive, or cutover changed.
+
+## S7H Task 7.7 / Aggregate S7 acceptance — 2026-07-14T12:46:02Z
+
+- Added a package-internal complete physical audit that validates the marked target, exact two-key
+  release/collection metadata, receipt, lookup documents/manifests, every Milvus point JSON/scalar/
+  vector, and the target's only collection. Milvus points are enumerated independently of receipt
+  IDs, so one unreceipted point reaches S7F reconciliation as exactly one repairable `extra` instead
+  of being hidden or raised before evidence persistence.
+- Added a package-internal isolated publication adapter over the unchanged S7F
+  `ReleasePublication.verify/promote/rollback` interface. It admits only an explicit identity-checked
+  `disposable` PostgreSQL target, ignores generic `DATABASE_URL`, validates exact release/build-
+  manifest registry continuity, requires prior accepted verification, re-audits the candidate and
+  compares its complete snapshot before promotion, and exact-audits the prior target before rollback.
+- The three-key active state is a guarded mapping backed by one SQL `UPDATE` transaction that changes
+  primary/canonical/published/index release IDs plus predecessor/time together and uses the complete
+  prior row as an optimistic condition. Partial key mutation is forbidden; a rejected or drifted
+  candidate leaves the prior pointer unchanged.
+- On fresh owned network-none/no-port PostgreSQL at existing head `C2_0010`, the existing active-
+  pointer mixed-version/transaction invariant passed `1 passed`; the final current-code rehearsal
+  passed exactly `3 passed, 40 deselected in 20.45s`. It verified/promoted/read/rolled back two fresh
+  physical releases, refused one extra point with retained evidence, and rejected malformed/
+  cross-wired targets before connect/client open/pointer write. Final DB state restored all release
+  fields to `accepted-s7g-r0`, retained both release/manifests, and kept landing counts `0/0/0`.
+- A review found one Important complete-audit gap: SQLite `build_metadata.release_id` was not read.
+  Exact two-key metadata/release validation plus a zero-Milvus-open regression closed it. Two final
+  independent reviews then reported zero Critical/Important findings.
+- Final siblings are S7F `6 passed`, S7E/S7F owner `47 passed, 2 skipped`, KnowledgeBuild plus
+  ReleasePublication `9 passed`, and shared contracts `16 passed`. Complete no-external Canonical V2
+  is `291 passed, 141 skipped, 2 xfailed`; only KnowledgeRead and KnowledgeAnswer remain RED.
+- Complete Ruff/format/Pyright, import, 272-entry wheel, strict OpenSpec, diff/scope/secret/cache,
+  frozen-target, and resource-cleanup gates pass. Wheel SHA-256 is
+  `aa9471c025dd129fe181e0fbb82823f57f93abb2420794e7736dcf0c4276136a`. The secret-free receipt at
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s7h/isolated-release-rehearsal-receipt.json`
+  records DB evidence SHA-256
+  `f1d775f0dd24aad07500b48330a653f16f57d29c2c8a25978c2f1df263b08e18` and cleaned resource IDs.
+- Original Milvus remains SHA-256
+  `43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc`; `pgtest` remains paused on
+  its exact volume. S7H, Task 7.7, and aggregate S7 are Accepted at 46/80. S2C is the next prerequisite
+  before S8/S9 acceptance-oracle execution. No Commit, Push, PR, production promotion, archive, or
+  Cutover occurred.
+
+## S2C1 claim-level case-contract RED acceptance — 2026-07-14T15:46:46Z
+
+- Added exactly six strict-xfail test groups under the run-local S2C boundary. They freeze strict
+  schema/version/content identity, atomic claim/entity/variant constraints, replayable snapshot/
+  as-of/enumeration coverage, observable stage oracles, closed per-case hard outcomes, and
+  reference prose as review-only context.
+- Normal focused RED returned exactly `6 xfailed in 0.11s`. Forced `--runxfail` returned exactly
+  `6 failed in 0.11s`, all `_MissingClaimLevelCaseContractModule` for the exact absent future
+  `claim_level_case_contract.py`; there were no skips, nested dependency failures, or fixture masks.
+- Ruff check/format passed and Pyright reported zero findings. Strict OpenSpec and
+  `git diff --check` passed; the production tree and historical S2 artifacts were not modified.
+- Historical challenge, regression, manifest, and threshold SHA-256 values remain
+  `ee46c677...f9f`, `f2656e8c...97da`, `dc7cc10b...088`, and `bce20bf9...b5cc` respectively.
+- The initial review found two Important omissions: explicit version/required-field negatives and
+  a closed atomic hard-ID set. Both were corrected. Final review bound to test SHA-256
+  `8253c84efe0e86a1dad15afb8097f1b3577dc720c4e35fe86894af33991d0b0a` reports zero Critical,
+  zero Important, and zero Minor findings.
+- S2C1 is Accepted. Task 2.7 stays unchecked and the ledger stays 46/80; S2C2 owns the validator and
+  corpus migration, while S2C3 owns judging/human review and aggregate acceptance. No runtime,
+  database/index/provider state, Commit, Push, PR, archive, or Cutover changed.
+
+## S2C2 Task 2.7 claim-level corpus migration acceptance — 2026-07-14T16:53:22Z
+
+- Implemented one strict run-local Pydantic contract/validator with exact schema/contract versions,
+  canonical content hashes, recursively forbidden extras, deep immutable JSON, stable dump/revalidate
+  identity, global ID/reference closure, and a closed per-case hard atomic set. Stale `model_copy`,
+  nested mutation, semantic required/forbidden contradiction, entity/type cross-wire, vacuous
+  acceptance, and pending claim-evidence acceptance all fail closed.
+- Deterministic conversion emits exactly 52 contracts and 53 retained snapshots from the exact 40
+  regression plus 12 challenge inputs. Every source ID and family has one accounting row: 29 are
+  `pending_user_review`, 23 workbook fact cases are `blocked_missing_evidence`, and zero are
+  `human_reviewed` or `acceptance_eligible`. Reference prose/key points remain `review_only`; no
+  prose fact or S2C1 synthetic founder/Product claim becomes normative truth.
+- Safety case `wb-r009` is a non-enumeration `safety_guidance` case with Web=false, retained exact
+  OpenSpec bytes, required lawful guidance, atomic location/business/category allegation,
+  discovery/evasion, and unrelated-lifestyle prohibitions, plus bounded official-resource variants.
+  The two reviewed near-name cases require the selected target and forbid the near-name Company.
+  Named open-world Paper and structured Company list cases use `representative` enumeration.
+- Builder `--write` and byte-for-byte `--check` agree on manifest content SHA-256
+  `df3a7b09a4f049ac6b34bfd1f128329dc9e7effb3ec61398317026778dc0c8ff`.
+  Corpus/accounting/snapshot/manifest file hashes are `75ff02e0...6668`, `e953c2fc...bc48`,
+  `85c1e4c1...e253`, and `fbc95a25...682f` respectively.
+- Final focused verification is `11 passed in 0.90s`; historical S2 is `20 passed in 0.27s`. Ruff
+  check/format, Pyright with zero findings, strict OpenSpec, `git diff --check`, frozen source hashes,
+  scope/secret/cache checks, and deterministic rebuild all pass.
+- Two independent final reviews report zero Critical/Important findings. Retained snapshot replay,
+  enumeration mapping, safety obligations/variants, deep immutability/round-trip identity, stale-
+  instance validation, acceptance eligibility, and entity reference findings were closed. Cross-case
+  checking in the artifact validator and unset numeric coverage on pending representative cases are
+  recorded Minor/YAGNI and nonblocking.
+- Task 2.7/S2C2 is Accepted at 47/80. S2C3/Task 2.8 exclusively owns human review, judge calibration,
+  eligible-corpus selection, aggregate S2C acceptance, and S8/S9 unlock. No runtime/provider/
+  database/index state, Commit, Push, PR, archive, or Cutover changed.
+
+## S2C3A claim-level oracle RED acceptance — 2026-07-14T17:36:19Z
+
+- Accepted the exact five-group run-local RED contract without changing Task 2.8 or the 47/80
+  ledger. Normal execution is `5 xfailed`; forced `--runxfail` is exactly five direct
+  `_MissingClaimLevelOracleEvaluationModule` failures for the absent
+  `s2c/claim_level_oracle_evaluation.py` target. Combined S2C is `11 passed, 5 xfailed`; historical
+  S2 is `20 passed`.
+- The RED freezes evaluator-derived atomic required/forbidden claim/entity outcomes, protected slots,
+  evidence support, false-exhaustiveness, session transitions, stage localization, hard-case closure,
+  and soft-score non-masking. Caller-supplied hard outcomes, private call order, and judge-routing
+  flags cannot select acceptance semantics.
+- Admission refuses byte drift across all four artifacts and a coherently rehashed accounting-to-
+  contract cross-wire before judge invocation. Recorded-fake judge requests bind exact contract,
+  `as_of`, structured requirement/observation, and the complete named snapshot while excluding
+  reference prose/key points and unrelated snapshots; response identities are canonical hashes.
+  Invalid identity, memory, extra-field, snapshot, or timeout decisions make only the exact judged
+  requirement unresolved while retaining the complete deterministic outcome projection.
+- The single-case synthetic fixture proves only gate reachability. It requires exact human review,
+  hard-ID/snapshot/family binding, per-family judge calibration, complete eligible-case accounting,
+  and an acceptance record binding artifact, review, calibration, hard-outcome, reviewer-state, and
+  exclusion identities. Agent/model review and absent, cross-wired, under-sampled, low-agreement, or
+  silently omitted inputs fail closed. Mixed non-empty exclusion evidence remains S2C3C ownership.
+- Deterministic builder `--check` preserves 52 contracts/53 snapshots and the Accepted S2C2 corpus,
+  accounting, snapshot, and manifest file hashes. Ruff format/check, targeted Pyright with zero
+  findings, strict OpenSpec, `git diff --check`, absent-target, source/scope/secret/cache gates pass.
+  Two targeted final independent reviews returned `0 Critical / 0 Important / 0 Minor`.
+- Final pre-evidence test SHA-256 is
+  `185e39e5770b51733cf6deece435e5f49d7827ff6cc521eef4aa8aaa4f4ff0ca`; pre-acceptance Slice
+  Contract SHA-256 is `a765d98871572cdaf131fae11a5367f65770d0a27988cabb72fdf5dbcd59c58b`.
+  No runtime/provider/database/index/source state, Commit, Push, PR, archive, or Cutover changed.
+
+## S2C3B claim-level oracle GREEN acceptance — 2026-07-14T18:27:07Z
+
+- Implemented the one run-local `evaluate_oracle_run(...)` seam and kept every other model/helper
+  private. The final implementation/test SHA-256 values are
+  `63c33ef3832855a6a02bf0cc03d1036e7c919c5c4fdd4bf166328b7822e626fd` and
+  `0235c3306412acd96aad28177fb4f52745486b831f213a4b57707bbdec9cc3e9`.
+- Exact owner GREEN is `5 passed`; combined S2C is `16 passed`; historical S2 is `20 passed`.
+  A bounded target-absence recovery check restored exact `5 xfailed` and five forced direct missing-
+  target failures, then restored the target byte-identically. The five markers are now conditional
+  only on target absence; all test assertions and strict sentinel behavior are unchanged.
+- Artifact admission validates deterministic manifest/JSONL bytes, schema/version/content/file/
+  output/record identities, exact contract validation, and contract/account/snapshot/source-corpus/
+  review/family/eligibility cross-references before any judge request. Coherently rehashed sibling
+  cross-wires fail closed.
+- Atomic outcomes preserve contract order and canonical JSON type identity, honor allowed variants,
+  detect forbidden semantics independent of caller claim/evidence IDs, localize every atomic/stage/
+  enumeration outcome, preserve deterministic results on judge failure, and never use soft metrics
+  to mask a hard non-pass.
+- Recorded judge request/response identities are exact and evidence-bounded. Malformed, mutated,
+  unbound, memory-bearing, or failed responses become unresolved. No reference context/prose, live
+  provider, network, write, database, or index seam exists.
+- Results and acceptance records are deeply immutable and content-addressed. Only an exact one-case
+  synthetic fixture can prove human/calibration-gate reachability; non-synthetic/multi-case inputs
+  cannot become ready in S2C3B. S2C3C retains real provenance, mixed exclusions, and aggregate
+  acceptance ownership.
+- Deterministic builder `--check`, Ruff format/check, targeted Pyright with zero findings, strict
+  OpenSpec, `git diff --check`, source-hash, focused secret, and cache gates pass. Two final reviews
+  bound to the exact SHAs returned zero Critical/Important; the implementation/spec review had zero
+  Minor, and the safety review recorded three nonblocking Minor/YAGNI notes: real human provenance
+  remains process-owned by S2C3C; first-failure display follows hard-ID order while complete stage
+  results remain available; calibration agreement is not capped above `1.0`.
+- S2C3B is Accepted without checking Task 2.8 or changing 47/80. Accepted S2C2 artifacts and all
+  external state remain unchanged; no Commit, Push, PR, archive, or Cutover occurred.
+
+## S2C3C1 deterministic human-review packet acceptance — 2026-07-14T18:48:51Z
+
+- Accepted only the external-review preparation Slice. Initial RED was `1 xfailed`; forced RED was
+  one direct absent-builder sentinel. Final focused packet verification is `1 passed`; combined S2C
+  plus packet is `17 passed`; historical S2 remains `20 passed`.
+- The builder invokes only the public S2C3B admission seam with the fixed Accepted manifest content
+  SHA, captures manifest plus all three output bytes after admission, checks their hashes against the
+  returned artifact identity, and parses only those same captured bytes. The closed TOCTOU finding
+  cannot attach unadmitted case/account bytes to an admitted identity.
+- Packet content self-hash is
+  `d4aa2a74cd09956f01fcff9b774a55fc0627a412eb604c0de0be46ebd5bf2ffb`; builder/test/packet file
+  SHA-256 values are `6aa0007b...8272`, `c9939066...b2f4`, and `22277721...7d2e`.
+- Exactly 52 cases are accounted once: 29 pending-review templates, 23 blocked evidence-gap
+  exclusion candidates, and 18 family calibration templates. No decision is approved; reviewer,
+  agreement, sample, and model identity remain null/empty, with model selection explicitly pending
+  external authorization. Reference prose/key points are absent; only review-only locator/hashes
+  remain.
+- Deterministic write/check, Ruff format/check, targeted Pyright with zero findings, strict OpenSpec,
+  diff/source/secret/cache gates pass. Independent final review returned zero Critical/Important/
+  Minor and Accepted only S2C3C1.
+- S2C3C2 is Ready but requires attributable external human decisions, a second human for calibration,
+  an authorized real judge model identity, measured family calibration, and explicit decisions on
+  every exclusion proposal. Task 2.8/S2C/S8/S9 remain open at 47/80. No external state, Commit, Push,
+  PR, archive, or Cutover changed.
+
+## S10A Task 10.1 knowledge-gap trigger RED acceptance — 2026-07-14T19:23:58Z
+
+- Accepted one test-only deep-module RED contract around
+  `KnowledgeGapFeedback.record(GapSignal) -> KnowledgeGap`. Three strict groups account for all
+  eight Task 10.1 triggers: no result, insufficient evidence, repeated current-Web dependence,
+  recurring answer-scoped Product-capability demand, missing relationship, user feedback,
+  benchmark failure, and index parity.
+- Synthetic signals bind release, affected domains/paths, symptom, available evidence, and at least
+  one query/answer/benchmark/telemetry trace. The caller cannot submit final gap identity,
+  classification/confidence, review/lifecycle, demand/PRD-impact accounting, severity, owner/
+  remediation, timestamps, or resolution evidence. Repeated/recurring demand derives counts from
+  raw observation IDs and produces a nonempty trigger-relevant scenario family.
+- The Product case names `delivery-robot-x1`, capability
+  `autonomous_elevator_button_operation`, its answer trace, Product identity evidence, Company-only
+  general capability evidence, and the missing direct binding. Its only accepted proposal is
+  `collect_direct_product_capability_evidence`; the gap remains open/unreviewed and cannot become a
+  canonical Product-capability relation.
+- Final exact RED evidence is `3 xfailed`; forced `--runxfail` is exactly three
+  `_MissingKnowledgeGapFeedbackModule` failures for the absent target. Shared contract plus RED is
+  `16 passed, 3 xfailed`; complete no-external Canonical V2 is `291 passed, 141 skipped, 5 xfailed`,
+  with only KnowledgeRead, KnowledgeAnswer, and these three named S10A future-interface xfails.
+- Complete Canonical V2 Ruff rule checking passed; the changed test passed Ruff format checking;
+  complete Canonical V2 Pyright returned zero findings. Strict OpenSpec, `git diff --check`,
+  scope/secret/cache, and fresh wheel checks passed. Candidate contract/test SHA-256 values are
+  `aebb3a71...a1c4` and `9b8dd6e0...d4b7`; wheel SHA-256 is `aa9471c0...136a` and contains no S10
+  implementation/test/evidence artifact.
+- Original `pgtest` remains paused on exact volume `d81c6381...d241`; recovery lab remains
+  network-none/no-port; original Milvus hash-only check remains `43ef203e...67cc`. No database,
+  index, source, provider, runtime, or release pointer was touched.
+- Independent review closed three Important false-green classes: caller-owned module outcomes,
+  Product-capability canonical-remediation ambiguity, and repeated/recurring demand/PRD-impact
+  collapse. Final review reports zero Critical/Important and one nonblocking construction-helper
+  YAGNI. Task 10.1/S10A is Accepted at 48/80; Task 10.2 and aggregate S10 remain open. No Commit,
+  Push, PR, archive, or Cutover occurred.
+
+## S10B Task 10.2 knowledge-gap feedback GREEN acceptance — 2026-07-15T02:10:55Z
+
+- Added one storage/provider-independent deep module,
+  `KnowledgeGapFeedback.record(GapSignal) -> KnowledgeGap`. `GapSignal` accepts only normalized
+  observation facts and rejects caller-owned identity, classification, priority, lifecycle, time,
+  owner/remediation, and resolution outcomes.
+- Complete classifier input binds signal/release/domain/path/trace/symptom/evidence/raw-demand/time,
+  module-owned demand count, trigger family, and policy version. Same signals produce stable gap IDs;
+  one changed field changes request/gap hashes; stale-digest reconstruction is rejected.
+- Optional recorded classification is schema-validated and binding-checked. Wrong binding, invalid
+  schema, timeout, and connection failure degrade to the deterministic unreviewed proposal;
+  `AssertionError`/other implementation defects propagate. Same-class unvalidated Pydantic instances
+  are converted to primitive mappings and revalidated before use.
+- Repeated-Web, Product-capability, missing-relationship, and index-parity triggers remain
+  deterministic under a hostile valid proposal. Product-capability output exclusively proposes
+  `collect_direct_product_capability_evidence`; no canonical/Milvus/runtime write path exists.
+- Exact RED before implementation was `5 xfailed`; forced RED was five exact missing-target
+  sentinel failures. Final focused owner is `5 passed`; shared plus owner is `21 passed`; complete
+  no-external Canonical V2 is `296 passed, 141 skipped, 2 xfailed`, only KnowledgeRead/KnowledgeAnswer.
+- Ruff rule/changed-file format and complete Canonical V2 Pyright pass. Strict OpenSpec, diff/scope/
+  secret/cache, source invariants, and wheel content pass. Candidate contract/module/S10A-GREEN/
+  S10B-test hashes are `850bb167...0b9b`, `18d06249...1302`, `661cd849...a29`, and
+  `27b13824...f11`; final wheel hash is `af7332f6...4d00`.
+- Original `pgtest` remains paused on exact volume `d81c6381...d241`; recovery lab remains
+  network-none/no-port; original Milvus hash-only check remains `43ef203e...67cc`.
+- Two independent final reviews report zero Critical/Important. Nonblocking Minor/YAGNI: synthetic
+  trigger-level scenario families await Task 10.4/aggregate operational mapping; protected triggers
+  still pay classifier cost before discarding proposals; proposal rationale affects gap identity but
+  durable dedup/update is outside S10B.
+- Task 10.2/S10B is Accepted at 49/80. Tasks 10.3-10.5 and aggregate S10 remain open. No database,
+  index, provider, source, release pointer, Commit, Push, PR, archive, or Cutover occurred.
+
+## S9A Task 9.3 evidence-based assessment RED acceptance — 2026-07-15T02:32:31Z
+
+- Accepted one test-only RED contract through the single future
+  `KnowledgeAnswer.answer(TurnRequest) -> TurnResult` seam. Three strict groups cover technical
+  strength, competitiveness, maturity, and expert standing; explicit user criteria override an
+  extra model-selected dimension, while absent criteria permit a small different dimension set per
+  question/evidence turn rather than a global registry.
+- Every returned supported/conflicting dimension binds only current EvidenceSet IDs. Unknown model-
+  memory evidence is removed and the affected explicit criterion becomes `insufficient_evidence`
+  with uncertainty rather than poor performance. The overall frame is conditional answer-scoped
+  synthesis, with no required fixed/universal weighting, numeric score, or canonical label.
+- Final focused normal execution is exactly `3 xfailed`; forced `--runxfail` is three exact
+  `_MissingKnowledgeAnswerModule` failures. Complete no-external Canonical V2 is `296 passed, 141
+  skipped, 5 xfailed`, exactly KnowledgeRead, the existing S3A KnowledgeAnswer interface, and the
+  three S9A assessment groups.
+- Complete Canonical V2 Ruff/Pyright, changed-file format, strict OpenSpec, diff/scope/secret/cache,
+  and fresh wheel checks pass. Candidate contract/test SHA-256 values are `1378e7d9...1e80` and
+  `33f80279...fd34c`; wheel SHA-256 remains `af7332f6...4d00` and excludes tests/`.agents`.
+- Original `pgtest` remains paused on exact volume `d81c6381...d241`; recovery lab remains network-
+  none/no-port; original Milvus hash remains `43ef203e...67cc`. No provider, database, index,
+  release pointer, source, or production code was touched.
+- Independent review closed conflict-disclosure and supported-outcome false-green findings. Final
+  counts are zero Critical/Important. Nonblocking Minor/YAGNI: generic `weights` absence is broader
+  than the fixed/universal-weighting requirement, and `canonical is False` is redundant negative
+  shape evidence.
+- Task 9.3/S9A is Accepted at 50/80. Tasks 9.1-9.2 and 9.4-9.8 remain open; S2C3C2/S2C3C3 still gate
+  claim-level S8/S9 acceptance-oracle execution only. No Commit, Push, PR, archive, or Cutover
+  occurred.
+
+## S8W Task 8.4 Universal Web RED acceptance — 2026-07-15T02:55:04Z
+
+- Accepted one test-only RED contract through the single future
+  `KnowledgeRead.execute(RetrievalPlan) -> EvidenceSet` seam. A/B/C/D/E/G information plans
+  explicitly omit and disable Web, but a server-owned policy must still execute a bounded Web lane
+  after usable exact local evidence and return distinct local/current-Web evidence plus trace.
+- Ordinary refusal, blocking clarification, interface control, and default safety guidance use a
+  fail-on-call Web adapter and return no Web trace/unavailability limitation. Explicit current-
+  official safety lookup is one-call/three-result/official-only, filters a nonofficial result, and
+  accepts only official evidence bound to a content-addressed snapshot ID/hash, retrieval time, and
+  positive byte length; a missing-snapshot official result becomes invalid/unavailable.
+- Timeout, connection, and schema-invalid provider outcomes retain exact usable local evidence,
+  return no current-Web evidence or succeeded-Web trace, record the exact unavailable failure kind,
+  and expose one material freshness limitation.
+- Final focused normal execution is exactly `3 xfailed`; forced `--runxfail` is three exact
+  `_MissingKnowledgeReadModule` failures. Complete no-external Canonical V2 is `296 passed, 141
+  skipped, 8 xfailed`, exactly the existing KnowledgeRead, KnowledgeAnswer/S9A, and three S8W groups.
+- Complete Canonical V2 Ruff/Pyright, changed-file format, strict OpenSpec, diff/scope/secret/cache,
+  and fresh wheel checks pass. Candidate contract/test SHA-256 values are `5c255b07...9a22` and
+  `f6e0e75e...cdb7`; wheel SHA-256 remains `af7332f6...4d00` and excludes tests/`.agents`.
+- Original `pgtest` remains paused on exact volume `d81c6381...d241`; recovery lab remains network-
+  none/no-port; original Milvus hash remains `43ef203e...67cc`. No provider, database, index,
+  release pointer, source, or production code was touched.
+- Pre-review closed server-policy opt-out, official snapshot grounding, request-count/order, and
+  freshness-limitation false-green findings. Both targeted re-reviews end zero Critical/Important.
+  Nonblocking YAGNI: S3A-compatible `web_required` and the structured policy mode remain redundant
+  inputs pending Task 8.2/8.3 plan consolidation.
+- Task 8.4/S8W is Accepted at 51/80. Tasks 8.1-8.3 and 8.5-8.8 remain open; Task 8.1 and claim-level
+  S8/S9 acceptance-oracle execution still await S2C. No Commit, Push, PR, archive, or Cutover
+  occurred.
+
+## S8S Task 8.6 sufficiency/retry RED acceptance — 2026-07-15T03:28:45Z
+
+- Accepted one test-only RED contract through the single future
+  `KnowledgeRead.execute(RetrievalPlan) -> EvidenceSet` seam. Three strict groups freeze material-
+  part supported/conflicting/missing sufficiency, all three enumeration modes, and targeted bounded
+  supplemental retrieval without introducing a second public service or a test-local read module.
+- Named Product capability is answer-scoped/noncanonical and supported only by evidence bound to the
+  same Product, capability predicate, requested capability value, source nature, and observation
+  time. Company, other-Product, Technology, same-Product/wrong-capability, and model-memory evidence
+  remain negative cases.
+- Enumeration coverage content-binds scope/as-of and ID/count-consistent checked/eligible/retrieved/
+  displayed/omitted/unknown accounting. Only one fully accounted finite universe may be exhaustive;
+  required members each have one included-with-exact-evidence or unsupported-with-reason outcome.
+- Supplemental retrieval records exactly one real boundary request per scenario for only unresolved
+  conflicting/missing parts. Independent wall-time/provider-call/retry/cost axes stop with exact
+  usage/limit receipt, aligned trace, retained initial evidence, limitation, and typed continuation;
+  supported parts are never targeted.
+- Final focused normal execution is exactly `3 xfailed`; forced `--runxfail` is three exact
+  `_MissingKnowledgeReadModule` failures. Complete no-external Canonical V2 is `296 passed, 141
+  skipped, 11 xfailed`, exactly the existing KnowledgeRead, KnowledgeAnswer/S9A, S8W, and three S8S
+  groups.
+- Complete Canonical V2 Ruff/Pyright and applicable dirty-file format checks pass. Strict OpenSpec,
+  `git diff --check`, scope/secret/cache, and fresh wheel checks pass. Candidate contract/test
+  SHA-256 values are `f1ef5064...f2c5` and `4bbb8298...3bdf`; wheel SHA-256 remains
+  `af7332f6...4d00`, contains Accepted `knowledge_gap_feedback.py`, and excludes tests/`.agents`.
+- Original `pgtest` remains paused on exact volume `d81c6381...d241`; recovery lab remains network-
+  none/no-port; original Milvus remains `43ef203e...67cc`. No provider, database, index, release
+  pointer, source, or production code was touched.
+- Pre-review and targeted re-review closed capability-value, required-member evidence, actual
+  supplemental-call, conflict eligibility, false-exhaustiveness, full-accounting, four-axis budget,
+  and retained-evidence false-green gaps. Final candidate identity review reports zero Critical/
+  Important. No additional Minor/YAGNI finding blocks the deliberately test-only contract.
+- Task 8.6/S8S is Accepted at 52/80. Tasks 8.1-8.3, 8.5, and 8.7-8.8 remain open; S2C3C2/S2C3C3
+  still gate only Task 8.1 reviewed calibration and S8/S9 claim-level acceptance-oracle execution.
+  No Commit, Push, PR, archive, or Cutover occurred.
+
+## S9M Task 9.5 multi-turn RED acceptance — 2026-07-15T04:19:34Z
+
+- Accepted one synthetic test-only RED contract through the single future
+  `KnowledgeAnswer.answer(TurnRequest) -> TurnResult` seam. Four strict groups freeze Canonical
+  anchor/displayed-set behavior, unresolved Web-handle behavior, ambiguity/clarification selection,
+  all conditional continuation reasons, and explicit topic-switch active-state replacement.
+- Canonical follow-up binds the exact ordered prior result-set ID and its `representative`/
+  `open_world` coverage, retains protected constraints, and uses registered
+  `professor_attributed_to_paper` forward/inverse traversal. Hidden evidence/proposal entries occur
+  first, so naive truncation cannot exclude them without reading the prior displayed set.
+- Mixed Canonical/Web display order, Web snapshot/resolution lineage, ordinal coreference, and
+  unresolved traversal refusal remain typed. Hostile proposals cannot turn a Web handle/URL into a
+  Canonical ID or produce canonical target claims.
+- Non-blocking ambiguity provides an interpretation and switch; blocking ambiguity suppresses
+  hostile primary claims/text and returns clarification only. Opaque selections with hostile
+  proposals bind exact stored Canonical/Web options and retain decision/snapshot lineage.
+- Six continuation triggers, unavailable-option filtering before the three-option cap, exact
+  candidate/handle-or-result-set/constraint/evidence/operation/relation binding, stored selection,
+  and an independent complete-simple no-offer negative are executable. Explicit topic switch keeps
+  only new active state.
+- Final focused normal execution is exactly `4 xfailed`; forced `--runxfail` is four exact
+  `_MissingKnowledgeAnswerModule` failures. Complete no-external Canonical V2 is `296 passed, 141
+  skipped, 15 xfailed`, exactly the existing KnowledgeRead, KnowledgeAnswer/S9A, S8W, S8S, and four
+  S9M groups.
+- Complete Canonical V2 Ruff/Pyright and changed-test format checks pass. Strict OpenSpec,
+  `git diff --check`, scope/secret/cache, and package checks pass. The first isolated wheel attempt
+  hit an external mirror TLS failure; a locked offline build succeeded with unchanged SHA-256
+  `af7332f6...4d00` and no tests/`.agents` or S9M production module. Candidate contract/test hashes
+  are `d3f3e1fe...bcfd` and `441b6e54...1f8f`.
+- Original `pgtest` remains paused on exact volume `d81c6381...d241`; recovery remains network-none/
+  no-port; original Milvus remains `43ef203e...67cc`. Two review tracks plus Candidate identity
+  review end zero Critical/Important. Nonblocking Minor/YAGNI: stale local variable labels,
+  Task-9.6-owned cross-release misuse, and no separate first-traversal receipt assertion.
+- Task 9.5/S9M is Accepted at 53/80. Tasks 9.1-9.2 and 9.4/9.6-9.8 remain open; S2C3C2/S2C3C3
+  still gate only claim-level S8/S9 acceptance-oracle execution. No production code, provider,
+  database, index, source, release pointer, Commit, Push, PR, archive, or Cutover changed.
+
+## S9G Task 9.1 grounded-answer RED acceptance — 2026-07-15T04:58:03Z
+
+- Accepted one synthetic test-only RED contract through the single future
+  `KnowledgeAnswer.answer(TurnRequest) -> TurnResult` seam. Four strict groups freeze material claim/
+  evidence/citation closure, direct named-Product capability/status, derived Industry Brief route/
+  representative-coverage semantics, and deterministic grounded fallback after prose timeout.
+- General claims retain exact expected subject/predicate/value/status/outcome/evidence tuples and
+  exact local/current-Web citation provenance. Orthogonal subject/predicate/value traps prevent
+  claim/map co-drift; material conflict cannot collapse silently; model memory cannot become
+  provenance; a bounded maturity conclusion remains uncertain answer-scoped noncanonical inference.
+- Product binding traps independently cover Company, other Product, wrong capability, Technology,
+  model memory, and direct-evidence commercial-status promotion. The unsupported result has one
+  explicit empty-evidence mapping and zero citations; the supported result retains only direct
+  same-Product/exact-capability demonstrated evidence. Both full results forbid canonical Product-
+  capability propagation.
+- Industry output retains exact route definitions plus discussion, claimed-adoption, demonstrated-
+  use, and conflicting semantics for four displayed Companies. TurnResult mirrors the derived brief
+  for claims/maps/citations/conflicts/representative coverage and exposes the same open-world
+  limitation; hidden, semantic-promotion, and unsupported-Product proposals cannot survive anywhere
+  in the serialized result.
+- Prose timeout returns an exact one-claim/one-map/one-citation deterministic fallback with supplied
+  coverage and typed timeout limitation across independent ephemeral instances, excluding the
+  poisoned raw draft and all extra facts.
+- Final focused normal execution is exactly `4 xfailed`; forced `--runxfail` is four exact
+  `_MissingKnowledgeAnswerModule` failures. Complete no-external Canonical V2 is `296 passed, 141
+  skipped, 19 xfailed`, exactly the existing KnowledgeRead, KnowledgeAnswer/S9A/S9M, S8W/S8S, and
+  four S9G groups.
+- Complete Canonical V2 Ruff check/Pyright and changed-test format checks pass. Strict OpenSpec,
+  `git diff --check`, scope/secret/cache, and package checks pass. The whole-directory format
+  inventory reports only two unchanged historical S3A interface RED files. A fresh locked offline
+  wheel retains SHA-256 `af7332f6...4d00`, includes Accepted `knowledge_gap_feedback.py`, and excludes
+  tests/`.agents` and any S9G production module. Candidate contract/test hashes are
+  `789df77a...aae0e` and `1836f8b4...e5df9`.
+- Original `pgtest` remains paused on exact volume `d81c6381...d241`; recovery remains network-none/
+  no-port/restart-no; original Milvus remains `43ef203e...67cc`. Two independent review tracks end
+  zero Critical/Important after closing semantic-binding/status masking, negative/top-level leakage,
+  exact retained-claim semantics, and top-level Industry coverage/limitation gaps. Nonblocking
+  Minor: fallback SHA identity is compared across runs but not separately content-bound.
+- Task 9.1/S9G is Accepted at 54/80. Task 9.2 and Tasks 9.4/9.6-9.8 remain open; S2C3C2/S2C3C3
+  still gate only claim-level S8/S9 acceptance-oracle execution. No production code, provider,
+  database, index, source, release pointer, Commit, Push, PR, archive, or Cutover changed.
+
+## S10C Task 10.3 gap-remediation RED predecessor acceptance — 2026-07-15T05:35:23Z
+
+- Accepted one synthetic fixture-only RED predecessor through an extension of the existing deep
+  module seam, `KnowledgeGapFeedback.apply_remediation(GapRemediationRequest) ->
+  GapRemediationResult`. Task 10.3 stays unchecked and the task ledger stays 54/80.
+- Three strict groups freeze: reviewed offline relationship-repair linkage while the exact gap
+  remains active-unresolved; closure only after the exact candidate release, accepted exact-parity
+  verification, and later accepted intended-effect verification; and fail-closed hostile cross-wire,
+  stale/tamper, duplicate, caller-final-gap, incomplete-lifecycle, and online-only inputs.
+- The active-link result preserves original gap facts and binds exact release/trace/scope/offline-
+  run/source-batch/landing/build/candidate lineage. The resolved result adds only accepted review,
+  resolving release, verification/effect lineage, transition receipt, and a later update time. Bare
+  labels, candidate-only or release-only evidence, Web/model output, and unrelated verifications
+  cannot close a gap.
+- Content identities bind nested receipts and the outer request/result. Same input is stable;
+  changed input separates; caller extras are rejected; constructed Pydantic instances are
+  revalidated; the original immutable gap remains unchanged after every rejection. The tests avoid
+  freezing a universal remediation-kind matrix or transition-ID encoding.
+- Final focused normal execution is exactly `3 xfailed`; forced `--runxfail` is three exact
+  `_MissingKnowledgeGapRemediationContract` failures for the absent Task 10.3 surface. Accepted
+  S10A/S10B, shared lifecycle, KnowledgeBuild, and ReleasePublication owner regressions are `15
+  passed`. Complete no-external Canonical V2 is `296 passed, 141 skipped, 22 xfailed` with no real
+  failures.
+- Targeted Ruff check/format and Canonical V2 Pyright pass. Strict OpenSpec, `git diff --check`,
+  scope/secret/cache, and package checks pass. The locked offline wheel retains SHA-256
+  `af7332f6...4d00`, contains 273 entries and Accepted `knowledge_gap_feedback.py`, and excludes
+  tests/`.agents` and any S10C production module. Candidate contract/test hashes are
+  `9eb04505...ac0d` and `21baad02...0d3f`.
+- Original `pgtest` remains paused on exact volume `d81c6381...d241`; recovery remains network-none/
+  no-port/restart-no; original Milvus remains `43ef203e...67cc`. Specification and test-integrity
+  final reviews each end zero Critical/Important. Nonblocking YAGNI: do not expand a universal
+  remediation-kind compatibility matrix and do not freeze transition-ID encoding.
+- S10C RED is Accepted only as Task 10.3's predecessor. Task 10.3 GREEN still requires its own Ready
+  contract and accepted operational inputs; Tasks 10.4-10.5 and aggregate S10 remain open. No S2C
+  oracle, production/shared code, provider, database, index, source, release pointer, Commit, Push,
+  PR, archive, or Cutover changed.
+
+## S8Q1 Task 8.1 fixture query-planning RED predecessor acceptance — 2026-07-15T06:16:26Z
+
+- Accepted one synthetic fixture-only RED predecessor through package-internal
+  `create_ephemeral_query_planner(...).plan(QueryPlanningRequest) -> RetrievalPlan`. It remains
+  future-hidden by `KnowledgeAnswer`, adds no sixth public module or `KnowledgeRead.plan`, does not
+  check Task 8.1, and leaves the ledger at 54/80.
+- Four strict groups freeze A-G/safety/enumeration planning, deterministic protected slots and
+  displayed-set rewrites plus the full injected institution matrix, ambiguity mechanics under
+  mandatory synthetic policies, and internal Person/Technology plan semantics. The same A class
+  admits different typed lane/domain plans, so taxonomy is not frozen as one handler switch.
+- Ordinary refusal, default safety guidance, blocking clarification, and interface control generate
+  no general-Web plan. Explicit current official safety lookup is bounded `official_only` and cannot
+  plan venue/district/business discovery. Enumeration requires exact finite-universe or required-
+  member evidence; open world remains representative.
+- Exact ID/name/year/geography/negation/direction/displayed-set slots survive original/contextual/
+  alias/semantic/domain/relationship/Web views. The release/catalog-driven institution matrix binds
+  exact raw spans, candidate IDs/names, pure topics, lane filters, aliases, and catalog identity for
+  full/alias/multi/ambiguous/unknown/absent/repeated/overlap cases; an injected new alias works
+  without a code-specific name list.
+- Two independent synthetic ambiguity policies plus a same-request/candidate margin-only flip prove
+  the module must consume injected evidence-count/confidence/margin values. Candidate evidence,
+  constraints, eligibility, discriminators, qualifying sets, lead math, policy/candidate manifests,
+  and proposal identity remain traced; no real calibrated default is frozen or inferred.
+- Resolved Person education/Company-role/geography filters bind exact originating public evidence.
+  Resolved-nonmatching and unresolved references remain separately traceable and cannot satisfy
+  identity-dependent filters/traversal. Exactly two requested accepted Technology routes bind
+  definitions and distinct discussion/claimed/demonstrated semantics; a third accepted route stays
+  unqueried and an unknown term remains a search view/gap. Person/Technology stay auxiliary and no
+  Product-capability relation is planned.
+- Raw recorded hostile proposals independently reject lost slots, invented paths, wrong supported-
+  path direction, unsupported operations, excessive budgets, request/catalog/release/reference
+  cross-wires, public internal-reference promotion, Product capability, and false exhaustiveness.
+  Same input is stable; request-only, proposal-only, and policy-only changes separate content
+  identities.
+- Final focused normal execution is exactly `4 xfailed`; forced `--runxfail` is four exact
+  `_MissingKnowledgeReadModule` failures. The unchanged KnowledgeRead interface/S8W/S8S owner matrix
+  plus S8Q1 is exactly `11 xfailed`. Complete no-external Canonical V2 is `296 passed, 141 skipped,
+  26 xfailed` with no real failure.
+- Complete Canonical V2 Pyright/Ruff and changed-test Ruff format/`py_compile` pass. Strict OpenSpec,
+  `git diff --check`, scope/secret/cache, and package gates pass. The locked offline wheel retains
+  SHA-256 `af7332f6...4d00`, contains 273 entries, and excludes `knowledge_read.py`, tests, and
+  `.agents`. Candidate contract/test hashes are `1623d676...4503` and `cb0e8361...c62`.
+- Original `pgtest` remains paused on exact volume `d81c6381...d241`; recovery remains network-none/
+  no-port/restart-no; original Milvus remains `43ef203e...67cc`. Independent contract and two test
+  final-gate reviews end zero Critical/Important/Minor/YAGNI.
+- S8Q1 is Accepted only as a fixture RED predecessor. Task 8.1 reviewed calibration and claim-level
+  oracle execution still await S2C; Tasks 8.1-8.3, 8.5, and 8.7-8.8 remain open. No production/
+  shared code, provider, database, index, source, release pointer, Commit, Push, PR, archive, or
+  Cutover changed.
+
+## S10D Task 10.3 pure gap-remediation mechanics GREEN acceptance — 2026-07-15T06:47:34Z
+
+- Extended the existing `KnowledgeGapFeedback` deep module with strict, immutable, content-bound
+  offline remediation/effect receipts, request/result records, and one hidden transition/replay
+  implementation. Task 10.3 stays unchecked and the global ledger stays 54/80 because this slice
+  consumes only synthetic typed inputs, not Accepted query/answer operational effects.
+- A candidate receipt produces only an unresolved linked gap. Resolution requires a different exact
+  accepted candidate release, exact accepted release verification, and strictly later accepted
+  intended-effect verification bound to the original gap, scope, traces, scenario, build, source
+  batches, and receipt. Caller-final state, online evidence, incomplete lifecycle, cross-wires,
+  duplicates, stale/tampered models, source-release self-closure, and time reversal fail closed.
+- Constructed Pydantic requests and nested records are revalidated before lineage and replay lookup.
+  Successful results are immutable and stable for the same exact request within an ephemeral
+  instance even when its clock advances; changed input separates. The original input gap remains
+  unchanged on every accepted and rejected path.
+- Exact pre-GREEN execution was three `_MissingKnowledgeGapRemediationContract` failures after only
+  removing the three S10C xfail wrappers. Final focused warnings-as-errors is `3 passed`; the exact
+  S10A/S10B/shared-lifecycle/KnowledgeBuild/ReleasePublication owner matrix is `18 passed`.
+  Complete no-external Canonical V2 is `299 passed, 141 skipped, 23 xfailed` with no real failure.
+- Complete Canonical V2 Ruff and Pyright, changed-file format, strict OpenSpec, `git diff --check`,
+  scope/secret/cache, and package checks pass. The final production/test SHA-256 values are
+  `c611acd7...d7115` and `03dece88...be89`; Candidate contract SHA-256 is `17b2b66a...6160`.
+  The locked offline 273-entry wheel SHA-256 is `78f4cd8a...a4791`; it contains the updated module
+  and excludes tests/`.agents`.
+- Original `pgtest` remains paused on exact volume `d81c6381...d241`; recovery remains network-none/
+  no-port/restart-no; original Milvus remains `43ef203e...67cc`. Two independent final reviews end
+  zero Critical/Important. Nonblocking Minor: future long-lived instance cache bounds, opaque
+  transition-ID content binding, and one base-gap rather than stale-gap loop assertion (the exact
+  stale input was independently probed immutable). Nonblocking YAGNI: external receipt truth,
+  universal remediation-kind rules, and cross-instance/concurrent/durable replay.
+- S10D is Accepted as pure mechanics only. Task 10.3, Tasks 10.4-10.5, and aggregate S10 remain
+  open. No provider, persistence, database/index/source, active pointer, Commit, Push, PR, archive,
+  or Cutover changed.
+
+## S8RF Tasks 8.3/8.5 retrieval-fusion/Web-handle RED acceptance — 2026-07-15T07:29:28Z
+
+- Accepted one synthetic fixture-only RED predecessor through the single future
+  `KnowledgeRead.execute(RetrievalPlan) -> EvidenceSet` seam. Tasks 8.3/8.5 stay unchecked and the
+  global ledger stays 54/80; no reviewed S2C case, real provider, persistence, or runtime acceptance
+  is claimed.
+- The first strict group executes all seven exact/structured/lexical/vector/relationship/internal-
+  reference/Web lanes in one batch and proves real independent overlap without freezing scheduler
+  width. Every recalled, fused, selected, rejected, or unresolved raw candidate retains exact query,
+  lane, attempt, release, adapter/provider, score, evidence, and disposition trace. Person/
+  Technology auxiliary results retain public origins and semantics without a fifth public domain or
+  Product-capability propagation.
+- The second group aggregates same accepted-ID aliases and local/Web evidence before hard constraints
+  and late rerank, while same-name different accepted IDs remain separate. Ordinary quality gaps
+  reach rerank; hard rejects retain exact failed-slot/evidence receipts. A hostile conflicting-ID
+  merge fails to deterministic server-owned fusion, and wrong-bound/unknown/duplicate/timeout
+  reranker output degrades with exact reasons without evidence loss or candidate resurrection.
+- The third group gives two same-URL Web-only entities distinct session handles bound to snapshots,
+  evidence, originating query/lane/attempt, and provider trace. Snapshot-byte tamper and independent
+  live-provider change cannot replace the accepted snapshot; expired handles stop. Exact accepted-
+  release lookup permits read-only resolution while wrong release, invented same-release ID, and
+  wrong Canonical evidence reject with zero canonical/index/source-map mutation and unchanged input
+  handle/snapshot/identity fixtures.
+- Final focused normal execution is exactly `3 xfailed`; forced `--runxfail --tb=line` is three exact
+  line-34 `_MissingKnowledgeReadModule` failures. Existing KnowledgeRead interface/S8Q1/S8W/S8S plus
+  S8RF are exactly `14 xfailed`. Complete no-external Canonical V2 is `299 passed, 141 skipped, 26
+  xfailed` with no real failure.
+- Complete Canonical V2 Ruff/Pyright and changed-test Ruff format/`py_compile` pass. Strict OpenSpec,
+  `git diff --check`, scope/secret/cache, and package gates pass. Candidate contract/test SHA-256
+  values are `0d9af4e0...a5ae0` and `1fd10efe...9b0fc`. The locked offline wheel remains 273 entries
+  at SHA-256 `78f4cd8a...a4791` and contains no `knowledge_read.py`, tests, or `.agents` artifact.
+- Original `pgtest` remains paused on exact volume `d81c6381...d241`; recovery remains network-none/
+  no-port/restart-no; original Milvus remains `43ef203e...67cc`. Two independent final reviews on
+  the exact identities end zero Critical/Important/Minor/YAGNI. Explicit later scope—not findings—
+  includes ambiguity execution handoff, cross-session state, policy-owned max-bytes/oversize, and
+  broader provider/schema permutations.
+- S8RF is Accepted only as a fixture RED predecessor. Tasks 8.1-8.3, 8.5, and 8.7-8.8 plus aggregate
+  S8 remain open. Adding a partial `knowledge_read.py` would awaken all 14 strict owner groups, so a
+  GREEN slice must be atomic or first explicitly re-sentinel and re-accept those contracts. No
+  production/shared code, provider, database/index/source, active pointer, Commit, Push, PR,
+  archive, or Cutover changed.
+
+## S8RG atomic KnowledgeRead synthetic mechanics GREEN acceptance — 2026-07-15T16:17:31Z
+
+- Introduced one public `KnowledgeRead.execute(RetrievalPlan) -> EvidenceSet` deep module plus the
+  package-internal ephemeral planner/factory. It makes the complete 14-group Accepted read-owner
+  bundle and two new ambiguity-handoff/bounded-snapshot groups GREEN atomically without checking
+  Tasks 8.1-8.3/8.5/8.7-8.8 or aggregate S8. The OpenSpec ledger remains 54/80.
+- Planning preserves A-G, safety/enumeration, protected rewrite, institution, injected ambiguity,
+  and internal Person/Technology behavior. Execution owns Universal Web, lane validation and full
+  trace, content-addressed snapshot admission, identity/evidence-late fusion, protected constraints,
+  structured rerank degradation, material-part sufficiency, bounded supplemental retrieval, and
+  evidence-bound Web-handle replay/read-only resolution without persistence or query-time writes.
+- Final review repairs close direct/candidate hard-constraint parity, evidence-subject/primary-
+  identity cross-wires, accepted alias evidence, missing Web-handle execution context, supplemental
+  constraint/max-result bypass, official-only source-trace loss, non-finite/negative supplemental
+  budget values, forged supplemental lane, and universal/official max-results candidate-trace loss.
+  Truncated raw candidates retain exact provider/evidence trace as `result_limit_rejected` and never
+  enter fusion, rerank, or selection.
+- Exact focused and owner results are `2 passed` and `16 passed`. Complete no-external Canonical V2
+  is `315 passed, 141 skipped, 12 xfailed`; all 12 expected xfails belong only to untouched
+  KnowledgeAnswer/S9 RED owners. Current complete Canonical V2 Pyright is zero findings; complete
+  Ruff check, changed-file format, `py_compile`, strict OpenSpec, `git diff --check`, scope/secret/
+  cache, and package checks pass. One untouched pre-existing KnowledgeAnswer test remains the only
+  broader format-inventory finding and was not changed.
+- Under the later managed sandbox, three full `.venv` attempts were externally terminated at 61%
+  without a pytest failure or terminal result and are not counted as evidence. The approved read-
+  only `uv run pytest` execution outside that sandbox completed the exact 315/141/12 matrix. The
+  sandbox-local offline wheel attempt lacked cached `hatchling`; the approved local-cache offline
+  build completed without network access.
+- Locked production/test SHA-256 values are
+  `0e9029942ea0d20ebe049e4000df283b871dcea2d1d3b711a7b90e2f391213b7` and
+  `53787a215536ff9032ac16182e6d9055b9597b007ad4cc5ca589f38a87e810b0`. The fresh 274-entry wheel
+  SHA-256 is `b5ed895f43f1a43476198b32af6af8887adcdc29454bc337bdbc016045d4994f`; it includes
+  `knowledge_read.py` and excludes tests/`.agents`.
+- Original `pgtest` remains paused on exact volume `d81c6381...d241`; recovery remains network-none/
+  no-port/restart-no; original Milvus remains `43ef203e...67cc`. No provider, persistence, database/
+  index/source, active pointer, Commit, Push, PR, archive, or Cutover changed.
+- Comprehensive independent review and the final exact-SHA two-finding delta review leave zero open
+  Critical/Important findings. One nonblocking Minor records conservative negation substring recall
+  loss; real-provider cancellation/latency calibration, cross-session equality, multi-snapshot live
+  reconciliation, and broader provider/schema matrices remain downstream/YAGNI.
+- S8RG is Accepted as synthetic mechanics only. S2C3C2 remains an external human gate only for
+  reviewed Task 8.1 calibration and S8/S9 claim-level oracle execution; it is not a global Goal or
+  independent-Ready-slice blocker.
+
+## S8RG successor-shape compatibility correction — 2026-07-16T02:12:44Z
+
+- The S9 atomic readiness audit exposed one Accepted predecessor-shape defect: non-
+  `partial_coverage` continuation fixtures use `coverage_state=None`, while
+  `ContinuationCandidate` required a string. A focused regression reproduced the Pydantic
+  validation failure before production repair.
+- `ContinuationCandidate.coverage_state` is now `str | None = None`. The atomic successor-shape
+  regression carries both explicit `"open_world"` and explicit `None` candidates through the full
+  JSON `EvidenceSet` round trip and verifies the absent state is preserved.
+- Focused atomic and complete KnowledgeRead owner executions are `2 passed` and `16 passed`.
+  Complete no-external Canonical V2 remains `315 passed, 141 skipped, 12 xfailed`, with all 12 xfails
+  only in the untouched KnowledgeAnswer/S9 owners. Ruff check/format, `py_compile`, targeted Pyright,
+  strict OpenSpec, `git diff --check`, secret/cache, and wheel-content checks pass.
+- Corrected production/test SHA-256 values are
+  `37420ec2075d4ed3527ad73c7960c5158f54057e5287d4cdc8cc0eb430a3bad0` and
+  `d8e753331a55938ff7f894ddb397fea6cedaa9a0d6f6d05d1649fd7fd1979699`. The fresh 274-entry wheel
+  SHA-256 is `53e56339ecaf107f6fc1c915f2261f27b8373078bbeb30fef30f9e0225446bba`; it contains
+  `knowledge_read.py` and excludes tests/`.agents`.
+- Independent review found one Important missing complete-result round-trip assertion. The targeted
+  repair and re-review leave zero open Critical/Important/Minor/YAGNI. Original `pgtest` remains
+  paused on exact volume `d81c6381...d241`; recovery remains network-none/no-port/restart-no;
+  original Milvus SHA-256 remains `43ef203e...67cc`.
+- S8RG is re-Accepted as synthetic mechanics only. No OpenSpec checkbox changed; the ledger remains
+  54/80. No provider, persistence, database/index/source, active pointer, Commit, Push, PR, archive,
+  or Cutover changed. The next independent candidate is the S9 atomic KnowledgeAnswer GREEN
+  predecessor; reviewed S2C calibration/oracle execution remains downstream.
+
+## S9AG atomic KnowledgeAnswer synthetic mechanics GREEN acceptance — 2026-07-16T03:36:43Z
+
+- Introduced one package-local `KnowledgeAnswer.answer(TurnRequest) -> TurnResult` deep module and an
+  ephemeral factory. It atomically turns the S3A/S9A/S9G/S9M owners plus one new trust-boundary owner
+  GREEN without checking Tasks 9.2/9.4/9.6/9.7/9.8 or aggregate S9. The ledger remains 54/80.
+- Immutable request binding covers query, release, and the complete validated `EvidenceSet`.
+  Recorded answer/assessment proposals are schema- and input-bound, revalidated even when supplied
+  as same-class `model_construct` values, and treated only as proposals. Server logic owns claim/
+  evidence/citation/conflict/status closure, Product insufficiency, Industry-Brief scope/coverage,
+  assessment grounding, deterministic prose fallback, Canonical/Web context, typed traversal,
+  ambiguity, topic switch, and at most three conditional continuation options.
+- RED evidence was exact: the new group was one strict xfail/one exact forced target sentinel; the
+  combined owner bundle was 13 strict xfails/13 exact forced sentinels; wrapper removal exposed
+  exactly 13 target-module failures. Final focused/owner/full results are `1 passed`, `13 passed`,
+  and `328 passed, 141 skipped, 0 xfailed`. The three warnings are intentional hostile
+  `model_construct` serializer warnings in the atomic owner.
+- The single merged independent review found three Important cross-path failures. Unsupported
+  current-turn output could establish state before rejection; claim-suppressed clarification/refusal
+  could still synthesize a Product insufficiency claim; and a first-current-turn unresolved Web
+  source could traverse. Three regressions first failed exactly, then passed after transactional
+  session restoration, suppression-aware Product handling, and source-first unresolved-Web refusal.
+  Targeted exact-hash re-review returned `ACCEPTED` with zero Critical/Important/Minor/YAGNI.
+- Complete Canonical V2 Pyright is zero findings. Scoped Ruff check/format, `py_compile`, strict
+  OpenSpec, `git diff --check`, scope, high-confidence secret, generated-cache, and package checks
+  pass. Accepted production SHA-256 is
+  `4847de614c0f9fb6b080b1dad763d7e6f5300d91d1b2742b3d7426e4aee444b6`; atomic and multi-turn
+  owner SHA-256 values are `c881c7cf...90048` and `4b252f85...ac13e`; the other three owners are
+  unchanged from Candidate.
+- The fresh 275-entry offline wheel SHA-256 is
+  `e1fc009a49d57307834ab97fb34621cdfe859124dcd98294cb3e67f1c92e4419`; it includes
+  `knowledge_answer.py`, `knowledge_read.py`, and `knowledge_gap_feedback.py`, and excludes tests/
+  `.agents`. Original `pgtest` remains paused on exact volume `d81c6381...d241`; recovery remains
+  network-none/no-port/restart-no; original Milvus remains `43ef203e...67cc`.
+- S9AG is Accepted only as synthetic mechanics. Reviewed claim-level replay, completeness
+  calibration, safety-guidance rendering, real provider/runtime behavior, durable sessions, full
+  response acceptance, consumer migration, Commit, Push, PR, archive, and Cutover remain unchanged
+  or downstream.
+
+## S9C1 Task 9.7 continuation-offer acceptance — 2026-07-16T04:08:02Z
+
+- Completed Task 9.7 through the existing `KnowledgeAnswer` deep module. A private immutable table
+  now accepts only the six S9M-frozen reason/operation/target combinations, generates neutral server-
+  owned labels, requires a non-empty relationship type only for executable next-hop traversal, and
+  rejects relationship facts on non-traversal options. No public model or method changed.
+- One public-behavior group first failed exactly once: invalid operation/target candidates survived,
+  caller factual prose became an option label, and the three-option cap displaced a later valid
+  candidate. After GREEN, only sanitized executable candidates survive in original order; valid
+  handle/result-set, constraint, evidence, relation, source identity, and next-turn selection
+  bindings remain exact; an invalid-only set yields no offer.
+- The merged review found one Important remaining executable-contract gap: a traversal without
+  `relation_type` and a non-traversal option with a stray relation were accepted. Both cases were
+  added to the same group, reproduced one exact failure, and turned GREEN after a five-line fail-
+  closed check. Targeted exact-hash re-review returned `ACCEPTED` with zero Critical/Important/
+  Minor/YAGNI findings.
+- Focused and multi-turn results are `1 passed` and `5 passed`; all KnowledgeAnswer owners are
+  `14 passed`. Complete no-external Canonical V2 is exactly `329 passed, 141 skipped, 0 xfailed`.
+  The three warnings remain intentional S9AG hostile-`model_construct` serializer warnings.
+  Complete Canonical V2 Pyright is zero findings; Ruff check/format, `py_compile`, strict OpenSpec,
+  `git diff --check`, scope, secret, generated-cache, and package checks pass.
+- Accepted production/test SHA-256 values are
+  `43207a6b2aa5619d6c7780af15ee06326c691f316f9b8b8c701b9f6fa37c8f41` and
+  `faeba7a23db63143f39f3a5b090c1002607a3d717e3a5cef83064c1cb8aa077d`. The fresh 275-entry offline
+  wheel SHA-256 is `17d82aa5ce6e0410904b7462d7337603320b1ed3766d00b4052a8312bbe90914`;
+  it includes the three Canonical V2 read/answer/gap modules and excludes tests/`.agents`.
+- Original `pgtest` remains paused on exact volume `d81c6381...d241`; recovery remains network-none/
+  no-port/restart-no; original Milvus remains `43ef203e...67cc`. No provider, persistence, database/
+  index/source, active pointer, Commit, Push, PR, archive, or Cutover changed.
+- Task 9.7 and its matching continuation acceptance criterion are Accepted, moving the formal ledger
+  to 55/80. Aggregate S9 and Tasks 9.2/9.4/9.6/9.8 remain open; reviewed S2C oracle execution remains
+  downstream rather than a blocker for independent mechanics.
 
 ## Existing incident/recovery checkpoint used as planning evidence
 

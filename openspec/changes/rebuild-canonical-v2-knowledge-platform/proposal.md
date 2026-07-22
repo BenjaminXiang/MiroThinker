@@ -32,6 +32,15 @@ release/index publication before any production-code or recovery-candidate write
   all information-retrieval requests, late evidence-aware reranking, and bounded sufficiency retry.
 - Introduce claim-to-evidence grounded answers, evidence-based assessments, progressive multi-turn
   relationship exploration, and validated next-hop suggestions.
+- Add explicit enumeration modes and coverage reports so bounded exhaustive, required-member, and
+  representative list answers cannot be confused with one another.
+- Keep four public PRD domains while adding internal evidence-backed Person and Technology reference
+  projections; keep product capability answer-scoped unless direct evidence binds a named product.
+- Allow displayed Web-only entities to continue across turns only through evidence-bound session
+  handles, and add confidence-gated ambiguity, narrow safety guidance, and conditional structured
+  continuation offers.
+- Replace prose/key-point acceptance as the pass/fail oracle with versioned machine-readable
+  claim-level case contracts and stage outcomes; reference prose remains explanatory.
 - Introduce a query/acceptance feedback loop that turns no-result, insufficient-evidence,
   Web-dependent, relation, user-feedback, and benchmark failures into traceable knowledge gaps.
 - Rebuild Milvus from the accepted Canonical V2 release into versioned indexes; allow later
@@ -46,16 +55,21 @@ release/index publication before any production-code or recovery-candidate write
 - `recovery-evidence-landing`: Immutable, content-addressed, replayable evidence inputs and chain of
   custody for forensic recovery, historical sources, and recollection.
 - `canonical-v2-knowledge`: Typed domain objects, retained source assertions, reversible identity,
-  canonical value selection, temporal semantics, relationships, inclusion, and path eligibility.
+  canonical value selection, temporal semantics, relationships, inclusion, path eligibility, and
+  internal Person/Technology reference knowledge without adding public domains.
 - `canonical-v2-release`: Candidate construction, acceptance, publication, canonical/index parity,
   rollback, and release-scoped Milvus projection behavior.
 - `evidence-first-query-orchestration`: A-G behavior semantics, protected query rewriting, validated
-  LLM planning, structured/lexical/vector/relation/Web recall, fusion, rerank, and bounded retry.
+  LLM planning, enumeration policy, structured/lexical/vector/relation/Web recall, Web entity
+  handles, confidence-gated ambiguity, safety policy, fusion, rerank, and bounded retry.
 - `grounded-progressive-answer`: Claim-evidence mapping, source-lane disclosure, evidence-based
-  assessment, structured LLM contracts, progressive relationship exploration, and safe degradation.
+  assessment, enumeration coverage, conditional continuation offers, structured LLM contracts,
+  progressive relationship exploration, and safe degradation.
 - `knowledge-gap-feedback`: Structured query/acceptance gaps that drive reviewed recollection,
   enrichment, relationship repair, and retrieval improvement without online direct-to-canonical
   writes.
+- `claim-level-acceptance`: Versioned machine-readable case contracts, source snapshots, as-of,
+  enumeration policy, stage oracles, and hard per-case requirements; reference prose is explanatory.
 
 ### Modified Capabilities
 
@@ -76,7 +90,9 @@ release/index publication before any production-code or recovery-candidate write
 - External adapters for LLM, Web search, embeddings, reranking, Postgres, Milvus, and source files;
   deterministic/local test adapters at each real seam.
 - New reviewed acceptance corpus and multidimensional gates. Existing PRD minima remain lower bounds;
-  missing numeric thresholds are frozen after the authorized read-only baseline.
+  missing numeric thresholds are frozen after the authorized read-only baseline. Before S8/S9 use
+  the corpus as an oracle, each accepted case is migrated to a claim-level machine-readable contract
+  with source snapshots, as-of, enumeration policy, and stage outcomes.
 - Original `pgtest` and original Milvus remain frozen. This change does not authorize production-like
   cutover or writes outside the isolated recovery candidate environment.
 - Canonical identity mutation is an offline data-build responsibility. Query-time identity handling

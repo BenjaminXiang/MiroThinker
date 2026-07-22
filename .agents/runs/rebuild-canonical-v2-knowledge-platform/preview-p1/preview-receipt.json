@@ -1,0 +1,70 @@
+{
+  "schema_version": "canonical-v2-real-data-preview-receipt-v1",
+  "recorded_at": "2026-07-21T08:51:01Z",
+  "status": "operational_preview",
+  "formal_openspec_task_status_changed": false,
+  "release_id": "preview-p1-real-data-20260721",
+  "listen_host": "0.0.0.0",
+  "display_port": 18188,
+  "staging_port": 18189,
+  "entrypoints": [
+    "http://10.16.70.46:18188/browse",
+    "http://10.16.70.46:18188/chat",
+    "http://100.64.0.4:18188/browse",
+    "http://127.0.0.1:18188/browse"
+  ],
+  "selected_records": {
+    "source_row_count": 5,
+    "public_domain_counts": {
+      "company": 1,
+      "paper": 1,
+      "patent": 1,
+      "professor": 1
+    },
+    "relationship_counts": {
+      "company_has_patent": 1,
+      "professor_authored_paper": 1
+    }
+  },
+  "web_search": {
+    "configured": true,
+    "live_lan_probe_status": 200,
+    "live_lan_probe_https_evidence_count": 3,
+    "failure_policy": "retain local answer and record a limitation"
+  },
+  "verification": {
+    "extractor_and_service_tests_passed": 24,
+    "ui_and_existing_static_tests_passed": 10,
+    "browser_critical": 0,
+    "browser_important": 0,
+    "final_review_critical": 0,
+    "final_review_important": 0
+  },
+  "source_invariant": {
+    "restore_relative_path": "workspace/logs/data_agents/released_objects.db",
+    "bytes": 20267008,
+    "mode": "0440",
+    "sha256": "7637d808559685f1bcf0316cd22cfeac4e50bd0850c53652ec95b3dbb5e43bce",
+    "unchanged_after_verification": true,
+    "sidecars": []
+  },
+  "artifact_sha256": {
+    "preview_selection_manifest": "ba392b1086e10f1575d75ed232efebff5a614065bde9232776572d4faab09e51",
+    "extractor": "bdd70dc058d6e0e27f2fe1f8e02a701f9a207d03a90de8705e15d52660e8c8c3",
+    "preview_service": "e51a8ebff881d2bde818c6a412c3c5111f52a72b229a7c3c6df9e056461fdddf",
+    "browse_ui": "1dcc5013e9c46d4f0030b8c547046de5c80deb69183d6efd5bc2f45d0691a4c2",
+    "chat_ui": "657c7d68c22e19ec1fd9470531dd0a71ed2b6587224d648fc842ea6223da463a",
+    "ui_test": "b808e6918b5ed8b5400457149d1282b64f8f5fbf81dbeead516fdb01e52b176d"
+  },
+  "non_blocking_minors": [
+    "An unmatched arbitrary free-form query falls back to the selected company answer.",
+    "Answer copy says Current Web Search evidence while the UI heading says current web evidence."
+  ],
+  "forbidden_actions_performed": {
+    "commit": false,
+    "push": false,
+    "pull_request": false,
+    "production_release_pointer_cutover": false,
+    "source_mutation": false
+  }
+}

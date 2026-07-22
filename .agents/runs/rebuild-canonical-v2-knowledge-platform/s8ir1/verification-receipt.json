@@ -1,0 +1,98 @@
+{
+  "schema_version": "canonical-v2-s8ir1-internal-reference-lookup-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s8ir1-release-scoped-internal-reference-lookup-filter",
+  "status": "accepted",
+  "candidate_at": "2026-07-19T16:05:31Z",
+  "accepted_at": "2026-07-19T16:07:14Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "git_branch": "canonical-v2-s2-baseline",
+  "formal_task_ledger_before": "56/80",
+  "formal_task_ledger_after": "56/80",
+  "implementation": {
+    "knowledge_read_sha256": "5826a9983c47fb7581ee23d544f8f11e7c3c6446c33136472f02e884da2dbf0b",
+    "knowledge_read_isolated_sha256": "d78ad51991b76c6310c20136f86478601255788fb9a22992faa48718d8b1f724",
+    "physical_owner_test_sha256": "8604313044fcb95ebb6d08c0f27806888f49846b7d4462e99dc71f5218b46337",
+    "slice_contract_candidate_sha256": "b78430977b48a9adb5b9aeb6bc23edf14690e49ed81370b62b53e28aa996997a",
+    "implementation_plan_candidate_sha256": "ee16726a14f0a49c78d8942ebcf37c05b89b4d5d5d95c81ee819cda7d1fda06c",
+    "slice_contract_accepted_sha256": "54dfc00a00159d6d36e21cbd937cbb41ef6bffe46be90e88d2261bba1cf60ba4",
+    "implementation_plan_accepted_sha256": "565ada3f6e3bb5b7a2e0ae4f6f797d9b9002f1cb9076da745ab52bc0adec4a22",
+    "tasks_sha256_unchanged": "5f61c097729e1107ff387a89c9f6f62b3783ef88debf1612b6156fb2056cdd7d",
+    "acceptance_sha256_unchanged": "742b29dc9805214b4b7059d5c801189209c26e35831f3f834ef01e4ac9f6df50"
+  },
+  "behavior": {
+    "request": "LaneRequest carries the exact typed internal_reference_queries only for the internal_reference lane and omits an empty tuple so legacy payloads and hashes remain exact",
+    "person": "release-replayed education, Company-role, and geography filters admit only resolved eligible Person IDs; nonmatching and unresolved records remain trace-only, including the valid zero-match shape",
+    "technology": "release-owned route ID, alias, definition, field-lineage, record/projection hash, as_of, and public anchors are rechecked while request-owned scope/enumeration identity is copied unchanged",
+    "evidence": "LocalInternalReferenceTrace binds the internal claim and physical lookup lineage separately from each public-origin anchor; public anchor lineage never proves a Technology definition or relationship state",
+    "public_identity": "one raw candidate per internal-reference/public-object group uses only the replayed public projection domain, canonical ID, and display name; Person and Technology candidates may fuse only on that public canonical key",
+    "constraint_compatibility": "the existing geography protected slot reads only exact replay/request-bound Person matched_filter_facts under internal_person_filter_match; no other auxiliary constraint inference was added",
+    "release_authority": "the optional index_projection_request plus release_institution_catalog pair is both-or-neither, all four PlanningReleaseBinding hashes are checked before delegate effects, and postvalidation rebuilds expected output from in-memory release authority without reopening physical storage"
+  },
+  "tdd": {
+    "legacy_baseline_before_production": "1 passed with exact S8V2 LaneRequest JSON and SHA identity",
+    "red_normal": "1 xfailed",
+    "red_forced": "1 failed only at _MissingIsolatedInternalReferenceLookupAdapter before fixture acquisition",
+    "green_focused": "1 passed with warnings treated as errors",
+    "review_red": "valid zero-match Person query raised IsolatedKnowledgeReadIntegrityError instead of preserving nonmatching/unresolved traces",
+    "review_green": "zero-match Person now emits no Person candidate while the same lane retains its valid Technology route candidate"
+  },
+  "verification": {
+    "focused_and_predecessor_matrix": "9 passed",
+    "shared_physical_release_owner": "54 passed, 2 skipped",
+    "knowledge_read_and_query_planning_owners": "17 passed",
+    "canonical_v2_no_external": "343 passed, 141 skipped, 3 intentional hostile-model serializer warnings",
+    "ruff_check": "passed for complete src/data_agents/canonical_v2 and tests/canonical_v2",
+    "ruff_format": "74 files already formatted",
+    "py_compile": "passed for both changed production files and the changed physical owner",
+    "pyright": "0 errors, 0 warnings, 0 informations for complete Canonical V2 source/tests",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "scope_secret_cache": "scope and secret checks passed; exact S8IR1-owned wheel and four generated cache files were removed after the candidate receipt"
+  },
+  "wheel": {
+    "path_before_owned_cleanup": "/var/tmp/canonical-v2-s8ir1-wheel-XTzuCq/miroflow_agent-0.1.0-py3-none-any.whl",
+    "sha256": "2820ae548f80ad179a99487c5c2f3a1756fb33b4f86d978db5c563b6c1b34c19",
+    "entry_count": 276,
+    "contains_knowledge_read": true,
+    "contains_knowledge_read_isolated": true,
+    "contains_tests_or_agents": false,
+    "packaged_production_hashes_match_source": true,
+    "owned_output_cleaned_after_receipt": true
+  },
+  "frozen_targets": {
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_paused": true,
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "recovery_lab_network": "none",
+    "recovery_lab_published_ports": false,
+    "recovery_lab_restart_policy": "no",
+    "latest_isolated_target_marker_sha256": "9e80f682794c8fb29fe4ceb7384534575f84b43aeadcbd12c4f085cc8ce6e498",
+    "latest_isolated_target_milvus_sha256": "4bc7919905a2625bb6a2b49f330df2b2a8ca88caf85eb1165f765468fccaa43b",
+    "latest_isolated_target_lookup_sha256": "98b0337d068db6965277c0ed555d85c176f81af7a38dd797504b71748d885941"
+  },
+  "review": {
+    "contract_review": {
+      "final_critical": 0,
+      "final_important": 0,
+      "final_minor": 0,
+      "final_yagni": 0,
+      "verdict": "ready"
+    },
+    "implementation_review": {
+      "critical": 0,
+      "important_found_and_closed": 1,
+      "closed_important": [
+        "valid zero-match Person queries preserve trace-only nonmatches/unresolved references and do not invalidate the internal lane"
+      ],
+      "final_critical": 0,
+      "final_important": 0,
+      "final_minor": 0,
+      "final_yagni": 0,
+      "verdict": "accept"
+    }
+  },
+  "nonblocking_minor_yagni": [],
+  "next_required_correction": "S7 relationship-publication authority before a real S8 relationship adapter",
+  "forbidden_actions_performed": []
+}

@@ -1,0 +1,109 @@
+{
+  "schema_version": "canonical-v2-s8c-aggregate-runtime-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s8c-aggregate-knowledge-read-runtime-closure",
+  "status": "accepted",
+  "ready_at": "2026-07-20T09:43:54Z",
+  "replanned_at": "2026-07-20T10:00:21Z",
+  "candidate_at": "2026-07-20T10:49:57Z",
+  "accepted_at": "2026-07-20T10:50:22Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "git_branch": "canonical-v2-s2-baseline",
+  "formal_task_ledger_before": "56/80",
+  "formal_task_ledger_after": "59/80",
+  "artifacts": {
+    "reviewed_specified_contract_sha256": "2b0fc7af1fdfe99131087095ee7eb999c6cb00cb345d9dde7d987242dcee44d5",
+    "reviewed_specified_plan_sha256": "cc9e8033747dfb674fa0022a015c697eb695183c2b3526abd8cef9296e67196c",
+    "reviewed_specified_audit_sha256": "1f5b5a629e1dc8af207e402a9cabc31c5a41c629259775d101c691d06b958e81",
+    "reviewed_replan_contract_sha256": "c67b1b92b4665f75f9a73c55e7fc147867581090b5feaafb66038ab2ff23aa74",
+    "reviewed_replan_plan_sha256": "c37f1563aaa6bb4c93e8c1c84b41a5cc34764f4501bf3df81a819cd01579e7a3",
+    "reviewed_replan_audit_sha256": "685685f2bac5e7931556d320b5ded1a204b4f947128c765653f64a5a2a6bbe9f",
+    "accepted_contract_sha256": "9f2e7c290eb043cda2d361c01055590b85f0480ba9336cd162e61acf3c7ed666",
+    "accepted_plan_sha256": "544dee1457d407bbd0e2bc030ff3d4f517e5452860e86e2bdc3a8c81d9c4de9e",
+    "dependency_audit_sha256": "685685f2bac5e7931556d320b5ded1a204b4f947128c765653f64a5a2a6bbe9f",
+    "knowledge_read_sha256": "466578bf0336c41f48dd271aeb5eb71fa2de36e3c46b96a4c39ecb412383169d",
+    "knowledge_read_isolated_sha256": "b13646feed27d80e2cd86b760b65c9e2ad317afc062d08f5c83eb05801e7ca4f",
+    "physical_owner_test_sha256": "eda9e247758a402d5b51c1e7752fceb763d90e5e58a5de3a60174716e76e2147",
+    "tasks_sha256_before": "5f61c097729e1107ff387a89c9f6f62b3783ef88debf1612b6156fb2056cdd7d",
+    "tasks_sha256_after": "f5cbe8f9f86c3d36e5e51b59b1d211f4c9ab3c6a8a639b1902b5daabbf6b4e41",
+    "acceptance_sha256_before": "742b29dc9805214b4b7059d5c801189209c26e35831f3f834ef01e4ac9f6df50",
+    "acceptance_sha256_after": "3771804d81276d4853567ce2bdcf3b00a8e9d2a58dfb75bc67ffa9584e554ccd"
+  },
+  "mapping": {
+    "task_8_3": "seven release-bound initial lane traces plus Accepted physical L/V/IR/R owners",
+    "task_8_5": "release-bound fusion/rerank ports plus public exact-release/exact-session handle replay and Accepted hostile lifecycle matrix",
+    "task_8_7": "release-bound sufficiency/supplemental ports plus Accepted enumeration and four-axis budget matrix",
+    "public_relationship_directions": [
+      "company_to_patent",
+      "patent_to_company_applicant",
+      "professor_to_paper_attribution",
+      "paper_to_professor_attribution"
+    ]
+  },
+  "review": {
+    "ready_contract": {
+      "critical": 0,
+      "important": 0,
+      "minor": 0,
+      "yagni": 0,
+      "verdict": "ready"
+    },
+    "replan": {
+      "critical": 0,
+      "important": 0,
+      "verdict": "continue_in_progress",
+      "closed_finding": "release-bound replay now requires exact release and exact non-empty session binding"
+    },
+    "initial_candidate": {
+      "critical": 0,
+      "important": 1,
+      "minor": 0,
+      "verdict": "repair",
+      "closed_finding": "the owner did not detect deletion of the web_handle_ttl delegate argument"
+    },
+    "final_candidate": {
+      "critical": 0,
+      "important": 0,
+      "minor": 0,
+      "verdict": "accept",
+      "note": "public negative-TTL validation is sensitive to the exact TTL pass-through and precedes callback effects"
+    }
+  },
+  "verification": {
+    "red_normal": "63 deselected, 1 xfailed in 2.57 seconds at the exact seven-port seam",
+    "red_forced": "1 failed, 63 deselected in 1.26 seconds only at _MissingS8CAggregateRuntimeClosure before fixture/effects",
+    "release_bound_replay_real_red": "1 failed, 63 deselected in 4.63 seconds at planner-owned unsupported interaction mode through the public release-bound service",
+    "focused_green_warnings_as_errors": "1 passed, 63 deselected in 9.69 seconds",
+    "detailed_mechanics": "8 passed in 0.49 seconds",
+    "physical_release_matrix": "13 passed, 51 deselected in 185.77 seconds",
+    "canonical_v2_no_external": "351 passed, 141 skipped, 3 intentional hostile-model serializer warnings in 204.12 seconds",
+    "ruff_check": "passed for complete src/data_agents/canonical_v2 and tests/canonical_v2",
+    "ruff_format": "74 files already formatted",
+    "py_compile": "passed for all three changed production/test files",
+    "pyright": "0 errors, 0 warnings, 0 informations for complete Canonical V2 source/tests",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "uv_lock_check_offline": "resolved 194 packages without lock drift",
+    "owned_file_hygiene": "zero trailing whitespace, conflict markers, high-confidence secret assignments, stale S8C xfails, or missing EOF newlines"
+  },
+  "wheel": {
+    "sha256": "052112cc9f983e17d46ddae9faf53a6285dd7f6cf93c9d01c16f85c12315d7f5",
+    "entry_count": 276,
+    "contains_tests_or_agents": false,
+    "knowledge_read_source_and_entry_sha256": "466578bf0336c41f48dd271aeb5eb71fa2de36e3c46b96a4c39ecb412383169d",
+    "knowledge_read_isolated_source_and_entry_sha256": "b13646feed27d80e2cd86b760b65c9e2ad317afc062d08f5c83eb05801e7ca4f",
+    "packaged_production_hashes_match_source": true,
+    "owned_output_cleanup_complete": true
+  },
+  "frozen_targets": {
+    "original_milvus_path": "/home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db",
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_state": "paused true true",
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "original_pgtest_host_port": "15432",
+    "git_branch": "canonical-v2-s2-baseline",
+    "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6"
+  },
+  "next_required_action": "repair the three reviewed S9I plan Important findings, mark S9I Ready, and implement Tasks 9.2/9.4/9.6",
+  "forbidden_actions_performed": []
+}

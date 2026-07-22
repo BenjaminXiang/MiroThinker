@@ -219,11 +219,12 @@ def _request(
     decision_run_id: str = RUN_ID,
     as_of: datetime = NOW,
     human_review_resolutions: tuple[Any, ...] = (),
+    identity_method_version: str = "canonical-identity-resolution-v1",
 ) -> Any:
     return module.IdentityResolutionRequest(
         release_id=release_id,
         decision_run_id=decision_run_id,
-        identity_method_version="canonical-identity-resolution-v1",
+        identity_method_version=identity_method_version,
         as_of=as_of,
         policy=_policy(module),
         source_identities=source_identities,
@@ -234,6 +235,1242 @@ def _request(
         prior_identity_decisions=prior_identity_decisions,
         prior_decision_contexts=prior_decision_contexts,
         human_review_resolutions=human_review_resolutions,
+    )
+
+
+def test_person_rule_version_recalls_name_only_candidates_without_changing_v1() -> None:
+    module = _module()
+    assert (
+        module.canonical_identity_rule_set_sha256("canonical-identity-resolution-v1")
+        == "0890690e3057b39a8c75d6203b92897e84b36b2ddc203a2ece020443d02ba0fd"
+    )
+    sources = tuple(
+        _source_identity(
+            module,
+            f"person-name-only-{suffix}",
+            source_system=f"landing-{suffix}",
+            source_key=f"person:name-only:{suffix}",
+            entity_type="person",
+            normalized_keys={"name_key": "Wei Zhang"},
+        )
+        for suffix in ("paper", "patent")
+    )
+    assertions = tuple(
+        _identity_assertion(
+            module,
+            f"assertion-{source.source_identity_id}",
+            source,
+            field_path="identity.name",
+            value="Wei Zhang",
+        )
+        for source in sources
+    )
+    with pytest.raises(ValueError, match="versioned Person rule set"):
+        _request(
+            module,
+            source_identities=sources,
+            identity_assertions=assertions,
+        )
+    request = _request(
+        module,
+        source_identities=sources,
+        identity_assertions=assertions,
+        identity_method_version="canonical-identity-resolution-person-v1",
+    )
+
+    result = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        request
+    )
+
+    assert len(result.candidate_verdicts) == 1
+    verdict = result.candidate_verdicts[0]
+    assert verdict.verdict.value == "unresolved"
+    assert verdict.source_identity_ids == tuple(
+        sorted(source.source_identity_id for source in sources)
+    )
+    assert verdict.supporting_assertion_ids == tuple(
+        sorted(assertion.assertion_id for assertion in assertions)
+    )
+    assert len(result.review_cases) == 1
+    assert result.review_cases[0].originating_record_id == verdict.verdict_id
+    assert result.identity_decisions == ()
+    assert result.current_canonical_identities == ()
+    assert result.source_identity_assignments == ()
+    assert (
+        module.validate_identity_resolution_result(request, result).content_sha256
+        == result.content_sha256
+    )
+    assert (
+        module.canonical_identity_rule_set_sha256("canonical-identity-resolution-v1")
+        == "0890690e3057b39a8c75d6203b92897e84b36b2ddc203a2ece020443d02ba0fd"
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "entity_type",
+        "method_version",
+        "normalized_keys",
+        "assertion_field",
+        "assertion_value",
+        "expects_identity",
+    ),
+    (
+        (
+            "person",
+            "canonical-identity-resolution-person-v1",
+            {"name_key": "Ada Chen"},
+            "identity.name",
+            "Ada Chen",
+            False,
+        ),
+        (
+            "person",
+            "canonical-identity-resolution-person-v1",
+            {"name_key": "Ada Chen", "orcid": "0000-0001-2345-6789"},
+            "identity.orcid",
+            "https://orcid.org/0000-0001-2345-6789",
+            True,
+        ),
+        (
+            "technology_route",
+            "canonical-identity-resolution-technology-v1",
+            {"name_key": "visual servoing"},
+            "technology.preferred_name",
+            "visual servoing",
+            False,
+        ),
+        (
+            "technology_route",
+            "canonical-identity-resolution-technology-v1",
+            {
+                "name_key": "visual servoing",
+                "technology_id": "route-visual-servo",
+            },
+            "identity.technology_id",
+            "route-visual-servo",
+            True,
+        ),
+        (
+            "professor",
+            "canonical-identity-resolution-v1",
+            {"name_key": "Ada Chen"},
+            "identity.name",
+            "Ada Chen",
+            True,
+        ),
+    ),
+)
+def test_internal_reference_singletons_require_evidence_bound_identity(
+    entity_type: str,
+    method_version: str,
+    normalized_keys: dict[str, str],
+    assertion_field: str,
+    assertion_value: str,
+    expects_identity: bool,
+) -> None:
+    module = _module()
+    source = _source_identity(
+        module,
+        f"singleton-{entity_type}",
+        source_system="singleton-fixture",
+        source_key=f"singleton:{entity_type}",
+        entity_type=entity_type,
+        normalized_keys=normalized_keys,
+    )
+    assertion = _identity_assertion(
+        module,
+        f"assertion-singleton-{entity_type}",
+        source,
+        field_path=assertion_field,
+        value=assertion_value,
+    )
+    request = _request(
+        module,
+        source_identities=(source,),
+        identity_assertions=(assertion,),
+        identity_method_version=method_version,
+    )
+
+    result = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        request
+    )
+
+    expected_count = int(expects_identity)
+    assert len(result.current_canonical_identities) == expected_count
+    assert len(result.source_identity_assignments) == expected_count
+    assert len(result.identity_decisions) == expected_count
+    assert len(result.decision_manifests) == expected_count
+    assert (
+        module.validate_identity_resolution_result(request, result).content_sha256
+        == result.content_sha256
+    )
+
+
+def test_internal_reference_result_rejects_rehashed_provisional_singleton() -> None:
+    module = _module()
+    source = _source_identity(
+        module,
+        "singleton-person-rehashed",
+        source_system="singleton-fixture",
+        source_key="singleton:person:rehashed",
+        entity_type="person",
+        normalized_keys={
+            "name_key": "Ada Chen",
+            "orcid": "0000-0001-2345-6789",
+        },
+    )
+    assertion = _identity_assertion(
+        module,
+        "assertion-singleton-person-rehashed",
+        source,
+        field_path="identity.orcid",
+        value="0000-0001-2345-6789",
+    )
+    request = _request(
+        module,
+        source_identities=(source,),
+        identity_assertions=(assertion,),
+        identity_method_version="canonical-identity-resolution-person-v1",
+    )
+    valid = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        request
+    )
+    name_only_source = source.model_copy(
+        update={"normalized_keys": {"name_key": "Ada Chen"}}
+    )
+    name_only_assertion = assertion.model_copy(
+        update={"field_path": "identity.name", "value": "Ada Chen"}
+    )
+    forged = valid.model_copy(
+        update={
+            "source_identities": (name_only_source,),
+            "identity_assertions": (name_only_assertion,),
+        }
+    )
+    forged = forged.model_copy(
+        update={
+            "content_sha256": module.canonical_identity_resolution_result_sha256(forged)
+        }
+    )
+
+    with pytest.raises(ValueError, match="evidence-bound stable identifier"):
+        module.IdentityResolutionResult.model_validate(forged.model_dump(mode="python"))
+
+
+def test_exact_pair_rejects_rehashed_internal_output_as_public_identity() -> None:
+    module = _module()
+    source = _source_identity(
+        module,
+        "person-output-payload",
+        source_system="person-output-payload",
+        source_key="person:output-payload",
+        entity_type="person",
+        normalized_keys={
+            "name_key": "Ada Chen",
+            "orcid": "0000-0001-2345-6789",
+        },
+    )
+    assertion = _identity_assertion(
+        module,
+        "assertion-person-output-payload-orcid",
+        source,
+        field_path="identity.orcid",
+        value="0000-0001-2345-6789",
+    )
+    request = _request(
+        module,
+        source_identities=(source,),
+        identity_assertions=(assertion,),
+        identity_method_version="canonical-identity-resolution-person-v1",
+    )
+    valid = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        request
+    )
+    output = valid.current_canonical_identities[0].model_copy(
+        update={
+            "entity_type": "company",
+            "release_id": "fabricated-release",
+            "display_name": "Fabricated Company",
+        }
+    )
+    context = valid.decision_contexts[0].model_copy(
+        update={"output_canonical_identities": (output,)}
+    )
+    context = context.model_copy(
+        update={"content_sha256": module.identity_decision_context_sha256(context)}
+    )
+    forged = valid.model_copy(
+        update={
+            "current_canonical_identities": (output,),
+            "decision_contexts": (context,),
+        }
+    )
+    forged = forged.model_copy(
+        update={
+            "content_sha256": module.canonical_identity_resolution_result_sha256(forged)
+        }
+    )
+    standalone = module.IdentityResolutionResult.model_validate(
+        forged.model_dump(mode="python")
+    )
+
+    with pytest.raises(
+        module.IdentityResolutionIntegrityError,
+        match="identity decision output payload does not match exact transition",
+    ):
+        module.validate_identity_resolution_result(request, standalone)
+
+
+def test_exact_pair_rejects_input_owner_outside_decision_sources() -> None:
+    module = _module()
+    source_a = _source_identity(
+        module,
+        "input-owner-company-a",
+        source_system="input-owner-company-a",
+        source_key="company:input-owner:a",
+        entity_type="company",
+        normalized_keys={"name_key": "shared input owner company"},
+    )
+    source_b = _source_identity(
+        module,
+        "input-owner-professor-b",
+        source_system="input-owner-professor-b",
+        source_key="professor:input-owner:b",
+        entity_type="professor",
+        normalized_keys={"name_key": "unrelated professor"},
+    )
+    source_c = _source_identity(
+        module,
+        "input-owner-company-c",
+        source_system="input-owner-company-c",
+        source_key="company:input-owner:c",
+        entity_type="company",
+        normalized_keys={"name_key": "shared input owner company"},
+    )
+    sources = (source_a, source_b, source_c)
+    assertions = tuple(
+        _identity_assertion(
+            module,
+            f"assertion-{source.source_identity_id}",
+            source,
+            field_path="identity.name",
+            value=source.normalized_keys["name_key"],
+        )
+        for source in sources
+    )
+    current = tuple(
+        _canonical_identity(
+            module,
+            f"canonical-{source.source_identity_id}",
+            entity_type=source.entity_type,
+            source_identity_ids=(source.source_identity_id,),
+            identity_decision_id=f"identity-decision:{source.source_identity_id}",
+        )
+        for source in sources
+    )
+    prior_decisions = tuple(
+        _prior_create_decision(module, identity, source_identities=(source,))
+        for source, identity in zip(sources, current, strict=True)
+    )
+    prior_contexts = tuple(
+        _prior_create_context(
+            module,
+            decision,
+            identity,
+            source_identities=(source,),
+            identity_assertions=assertions,
+        )
+        for source, identity, decision in zip(
+            sources, current, prior_decisions, strict=True
+        )
+    )
+    assignments = tuple(
+        _current_assignment(
+            module,
+            source_identity_id=source.source_identity_id,
+            canonical_identity_id=identity.canonical_identity_id,
+            identity_decision_id=decision.decision_id,
+        )
+        for source, identity, decision in zip(
+            sources, current, prior_decisions, strict=True
+        )
+    )
+    request = _request(
+        module,
+        source_identities=sources,
+        identity_assertions=assertions,
+        current_canonical_identities=current,
+        current_source_identity_assignments=assignments,
+        prior_identity_decisions=prior_decisions,
+        prior_decision_contexts=prior_contexts,
+    )
+    company_sources = (source_a, source_c)
+    company_assertions = tuple(
+        assertion
+        for assertion in assertions
+        if assertion.source_identity_id
+        in {source.source_identity_id for source in company_sources}
+    )
+    company_current = (current[0], current[2])
+    company_assignments = (assignments[0], assignments[2])
+    company_prior_decisions = (prior_decisions[0], prior_decisions[2])
+    company_prior_contexts = (prior_contexts[0], prior_contexts[2])
+    recorded, _ = _recorded_identity_adjudication(
+        module,
+        source_identities=company_sources,
+        identity_assertions=company_assertions,
+        verdict="same_entity",
+        source_identity_groups=(
+            tuple(source.source_identity_id for source in company_sources),
+        ),
+        confidence=0.98,
+        rationale="The two Company sources represent one Company.",
+        uncertainty="No material uncertainty remains.",
+        current_canonical_identities=company_current,
+        current_source_identity_assignments=company_assignments,
+        prior_identity_decisions=company_prior_decisions,
+        prior_decision_contexts=company_prior_contexts,
+    )
+    valid = module.create_ephemeral_canonical_identity_resolution_engine(
+        adjudicator=_recorded_identity_adjudicator(module, recorded)
+    ).resolve(request)
+    verdict = valid.candidate_verdicts[0]
+    original_merge = next(
+        decision
+        for decision in valid.identity_decisions
+        if decision.action.value == "merge"
+    )
+    malicious_input_ids = tuple(
+        sorted(identity.canonical_identity_id for identity in current)
+    )
+    merge_output_id = module._canonical_identity_id(
+        RELEASE_ID,
+        "company",
+        tuple(source.source_identity_id for source in company_sources),
+        generation_key=(
+            "merge:" + ",".join(malicious_input_ids) + f":{verdict.verdict_id}"
+        ),
+    )
+    malicious_merge = original_merge.model_copy(
+        update={
+            "decision_id": "pending-content-binding",
+            "input_canonical_identity_ids": malicious_input_ids,
+            "output_canonical_identity_ids": (merge_output_id,),
+        }
+    )
+    malicious_merge = module._bind_applied_decision_id(
+        malicious_merge, candidate_verdict_id=verdict.verdict_id
+    )
+    merge_output = module.CanonicalIdentity(
+        canonical_identity_id=merge_output_id,
+        entity_type="company",
+        state="active",
+        display_name=module._display_name(company_sources),
+        source_identity_ids=tuple(
+            sorted(source.source_identity_id for source in company_sources)
+        ),
+        identity_decision_id=malicious_merge.decision_id,
+        predecessor_identity_ids=malicious_input_ids,
+        release_id=RELEASE_ID,
+    )
+    terminal_history = tuple(
+        module.CanonicalIdentity(
+            **{
+                **identity.model_dump(mode="python"),
+                "state": "merged",
+                "identity_decision_id": malicious_merge.decision_id,
+                "successor_identity_ids": (merge_output_id,),
+            }
+        )
+        for identity in current
+    )
+
+    professor_request = _request(
+        module,
+        source_identities=(source_b,),
+        identity_assertions=(assertions[1],),
+    )
+    professor_create = (
+        module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+            professor_request
+        )
+    )
+    create_decision = professor_create.identity_decisions[0]
+    create_output = professor_create.current_canonical_identities[0]
+    create_assignment = professor_create.source_identity_assignments[0]
+    merge_assignments = tuple(
+        module.SourceIdentityAssignment(
+            release_id=RELEASE_ID,
+            source_identity_id=source.source_identity_id,
+            canonical_identity_id=merge_output_id,
+            identity_decision_id=malicious_merge.decision_id,
+        )
+        for source in company_sources
+    )
+    merge_assertion_ids = tuple(
+        assertion.assertion_id for assertion in company_assertions
+    )
+    merge_manifest = module.IdentityDecisionManifest(
+        release_id=RELEASE_ID,
+        decision_id=malicious_merge.decision_id,
+        candidate_verdict_id=verdict.verdict_id,
+        supporting_assertion_ids=merge_assertion_ids,
+        input_content_sha256=module.canonical_identity_decision_input_sha256(
+            request=request,
+            decision=malicious_merge,
+            supporting_assertion_ids=merge_assertion_ids,
+        ),
+    )
+    create_manifest = professor_create.decision_manifests[0].model_copy(
+        update={
+            "input_content_sha256": module.canonical_identity_decision_input_sha256(
+                request=request,
+                decision=create_decision,
+                supporting_assertion_ids=(assertions[1].assertion_id,),
+            )
+        }
+    )
+    content = module._IdentityResolutionContent(
+        release_id=RELEASE_ID,
+        decision_run_id=RUN_ID,
+        identity_method_version=request.identity_method_version,
+        as_of=NOW,
+        policy=request.policy,
+        source_identities=request.source_identities,
+        identity_assertions=request.identity_assertions,
+        candidate_verdicts=(verdict,),
+        identity_decisions=tuple(
+            sorted(
+                (malicious_merge, create_decision),
+                key=lambda decision: decision.decision_id,
+            )
+        ),
+        current_canonical_identities=tuple(
+            sorted(
+                (merge_output, create_output),
+                key=lambda identity: identity.canonical_identity_id,
+            )
+        ),
+        canonical_identity_history=tuple(
+            sorted(
+                terminal_history,
+                key=lambda identity: identity.canonical_identity_id,
+            )
+        ),
+        source_identity_assignments=tuple(
+            sorted(
+                (*merge_assignments, create_assignment),
+                key=lambda assignment: assignment.source_identity_id,
+            )
+        ),
+        decision_manifests=tuple(
+            sorted(
+                (merge_manifest, create_manifest),
+                key=lambda manifest: manifest.decision_id,
+            )
+        ),
+    )
+    forged = module._finalize_identity_result(request, content)
+
+    with pytest.raises(
+        module.IdentityResolutionIntegrityError,
+        match="identity decision inputs do not match owned decision sources",
+    ):
+        module.validate_identity_resolution_result(request, forged)
+
+
+def test_exact_pair_rejects_rehashed_owner_for_unresolved_person() -> None:
+    module = _module()
+    sources = tuple(
+        _source_identity(
+            module,
+            f"unresolved-rehashed-{suffix}",
+            source_system=f"unresolved-rehashed-{suffix}",
+            source_key=f"person:unresolved-rehashed:{suffix}",
+            entity_type="person",
+            normalized_keys={"name_key": "Wei Zhang"},
+        )
+        for suffix in ("paper", "patent")
+    )
+    assertions = tuple(
+        _identity_assertion(
+            module,
+            f"assertion-{source.source_identity_id}",
+            source,
+            field_path="identity.name",
+            value="Wei Zhang",
+        )
+        for source in sources
+    )
+    request = _request(
+        module,
+        source_identities=sources,
+        identity_assertions=assertions,
+        identity_method_version="canonical-identity-resolution-person-v1",
+    )
+    valid = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        request
+    )
+    fabricated_identity = module.CanonicalIdentity(
+        canonical_identity_id="person-c-fabricated-unresolved",
+        entity_type="person",
+        state="active",
+        display_name="Wei Zhang",
+        source_identity_ids=(sources[0].source_identity_id,),
+        identity_decision_id="identity-decision:fabricated-prior",
+        release_id=RELEASE_ID,
+    )
+    fabricated_assignment = module.SourceIdentityAssignment(
+        release_id=RELEASE_ID,
+        source_identity_id=sources[0].source_identity_id,
+        canonical_identity_id=fabricated_identity.canonical_identity_id,
+        identity_decision_id=fabricated_identity.identity_decision_id,
+    )
+    forged = valid.model_copy(
+        update={
+            "current_canonical_identities": (fabricated_identity,),
+            "source_identity_assignments": (fabricated_assignment,),
+        }
+    )
+    forged = forged.model_copy(
+        update={
+            "content_sha256": module.canonical_identity_resolution_result_sha256(forged)
+        }
+    )
+    standalone = module.IdentityResolutionResult.model_validate(
+        forged.model_dump(mode="python")
+    )
+
+    with pytest.raises(
+        module.IdentityResolutionIntegrityError,
+        match="neither an exact request owner nor a decision output",
+    ):
+        module.validate_identity_resolution_result(request, standalone)
+
+
+@pytest.mark.parametrize(
+    (
+        "entity_type",
+        "method_version",
+        "name",
+        "stable_key",
+        "stable_field",
+        "stable_value",
+        "name_field",
+    ),
+    (
+        (
+            "person",
+            "canonical-identity-resolution-person-v1",
+            "Ada Chen",
+            "orcid",
+            "identity.orcid",
+            "0000-0001-2345-6789",
+            "identity.name",
+        ),
+        (
+            "technology_route",
+            "canonical-identity-resolution-technology-v1",
+            "visual servoing",
+            "technology_id",
+            "identity.technology_id",
+            "route-visual-servo",
+            "technology.preferred_name",
+        ),
+    ),
+)
+def test_exact_pair_rejects_dropped_unconsumed_internal_singleton(
+    entity_type: str,
+    method_version: str,
+    name: str,
+    stable_key: str,
+    stable_field: str,
+    stable_value: str,
+    name_field: str,
+) -> None:
+    module = _module()
+    existing_source = _source_identity(
+        module,
+        f"carried-singleton-{entity_type}",
+        source_system="carried-singleton-existing",
+        source_key=f"carried-singleton:{entity_type}:existing",
+        entity_type=entity_type,
+        normalized_keys={"name_key": name, stable_key: stable_value},
+    )
+    stable_assertion = _identity_assertion(
+        module,
+        f"assertion-carried-singleton-{entity_type}-stable",
+        existing_source,
+        field_path=stable_field,
+        value=stable_value,
+    )
+    initial_request = _request(
+        module,
+        source_identities=(existing_source,),
+        identity_assertions=(stable_assertion,),
+        identity_method_version=method_version,
+    )
+    engine = module.create_ephemeral_canonical_identity_resolution_engine()
+    initial_result = engine.resolve(initial_request)
+    assert len(initial_result.current_canonical_identities) == 1
+    assert len(initial_result.source_identity_assignments) == 1
+
+    new_source = _source_identity(
+        module,
+        f"carried-singleton-{entity_type}-ambiguous",
+        source_system="carried-singleton-new",
+        source_key=f"carried-singleton:{entity_type}:ambiguous",
+        entity_type=entity_type,
+        normalized_keys={"name_key": name},
+    )
+    name_assertions = tuple(
+        _identity_assertion(
+            module,
+            f"assertion-{source.source_identity_id}-name",
+            source,
+            field_path=name_field,
+            value=name,
+        )
+        for source in (existing_source, new_source)
+    )
+    later_request = _request(
+        module,
+        source_identities=(existing_source, new_source),
+        identity_assertions=(stable_assertion, *name_assertions),
+        identity_method_version=method_version,
+        current_canonical_identities=initial_result.current_canonical_identities,
+        current_source_identity_assignments=(
+            initial_result.source_identity_assignments
+        ),
+        canonical_identity_history=initial_result.canonical_identity_history,
+        prior_identity_decisions=initial_result.identity_decisions,
+        prior_decision_contexts=initial_result.decision_contexts,
+    )
+    valid = engine.resolve(later_request)
+    assert len(valid.candidate_verdicts) == 1
+    assert valid.candidate_verdicts[0].verdict.value == "unresolved"
+    assert valid.identity_decisions == ()
+    assert valid.current_canonical_identities == (
+        initial_result.current_canonical_identities
+    )
+    assert valid.source_identity_assignments == (
+        initial_result.source_identity_assignments
+    )
+
+    forged = valid.model_copy(
+        update={
+            "current_canonical_identities": (),
+            "source_identity_assignments": (),
+        }
+    )
+    forged = forged.model_copy(
+        update={
+            "content_sha256": module.canonical_identity_resolution_result_sha256(forged)
+        }
+    )
+    standalone = module.IdentityResolutionResult.model_validate(
+        forged.model_dump(mode="python")
+    )
+
+    with pytest.raises(
+        module.IdentityResolutionIntegrityError,
+        match="dropped unconsumed request identity or assignment",
+    ):
+        module.validate_identity_resolution_result(later_request, standalone)
+
+
+def test_exact_pair_rejects_dropped_request_identity_history() -> None:
+    module = _module()
+    source = _source_identity(
+        module,
+        "history-preservation-source",
+        source_system="history-preservation",
+        source_key="company:history-preservation",
+        entity_type="company",
+        normalized_keys={"name_key": "History Preservation Company"},
+    )
+    assertion = _identity_assertion(
+        module,
+        "assertion-history-preservation",
+        source,
+        field_path="identity.company_name",
+        value="History Preservation Company",
+    )
+    terminal = _canonical_identity(
+        module,
+        "canonical-history-preservation",
+        entity_type="company",
+        source_identity_ids=(source.source_identity_id,),
+        identity_decision_id="identity-decision:history-preservation-create",
+        state="rejected",
+    )
+    prior_decision = _prior_create_decision(
+        module, terminal, source_identities=(source,)
+    )
+    prior_context = _prior_create_context(
+        module,
+        prior_decision,
+        terminal,
+        source_identities=(source,),
+        identity_assertions=(assertion,),
+    )
+    request = _request(
+        module,
+        source_identities=(source,),
+        identity_assertions=(assertion,),
+        canonical_identity_history=(terminal,),
+        prior_identity_decisions=(prior_decision,),
+        prior_decision_contexts=(prior_context,),
+    )
+    valid = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        request
+    )
+    assert valid.canonical_identity_history == (terminal,)
+    forged = valid.model_copy(update={"canonical_identity_history": ()})
+    forged = forged.model_copy(
+        update={
+            "content_sha256": module.canonical_identity_resolution_result_sha256(forged)
+        }
+    )
+    standalone = module.IdentityResolutionResult.model_validate(
+        forged.model_dump(mode="python")
+    )
+
+    with pytest.raises(
+        module.IdentityResolutionIntegrityError,
+        match="canonical identity history does not match exact request transitions",
+    ):
+        module.validate_identity_resolution_result(request, standalone)
+
+
+def test_exact_pair_rejects_fabricated_identity_history() -> None:
+    module = _module()
+    sources = tuple(
+        _source_identity(
+            module,
+            f"fabricated-history-{suffix}",
+            source_system=f"fabricated-history-{suffix}",
+            source_key=f"person:fabricated-history:{suffix}",
+            entity_type="person",
+            normalized_keys={"name_key": "Wei Zhang"},
+        )
+        for suffix in ("paper", "patent")
+    )
+    assertions = tuple(
+        _identity_assertion(
+            module,
+            f"assertion-{source.source_identity_id}",
+            source,
+            field_path="identity.name",
+            value="Wei Zhang",
+        )
+        for source in sources
+    )
+    request = _request(
+        module,
+        source_identities=sources,
+        identity_assertions=assertions,
+        identity_method_version="canonical-identity-resolution-person-v1",
+    )
+    valid = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        request
+    )
+    assert valid.current_canonical_identities == ()
+    assert valid.canonical_identity_history == ()
+    fabricated = _canonical_identity(
+        module,
+        "canonical-fabricated-history",
+        entity_type="person",
+        source_identity_ids=(sources[0].source_identity_id,),
+        identity_decision_id="identity-decision:fabricated-history",
+        state="rejected",
+    )
+    forged = valid.model_copy(update={"canonical_identity_history": (fabricated,)})
+    forged = forged.model_copy(
+        update={
+            "content_sha256": module.canonical_identity_resolution_result_sha256(forged)
+        }
+    )
+    standalone = module.IdentityResolutionResult.model_validate(
+        forged.model_dump(mode="python")
+    )
+
+    with pytest.raises(
+        module.IdentityResolutionIntegrityError,
+        match="canonical identity history does not match exact request transitions",
+    ):
+        module.validate_identity_resolution_result(request, standalone)
+
+
+def test_reject_action_materializes_terminal_unassigned_identity() -> None:
+    module = _module()
+    source = _source_identity(
+        module,
+        "identity-reject-source",
+        source_system="identity-reject-source",
+        source_key="paper:identity-reject",
+        entity_type="paper",
+        normalized_keys={"title_key": "unsupported duplicate paper"},
+    )
+    assertion = _identity_assertion(
+        module,
+        "assertion-identity-reject",
+        source,
+        field_path="identity.title",
+        value="unsupported duplicate paper",
+    )
+    current = _canonical_identity(
+        module,
+        "canonical-identity-reject",
+        entity_type="paper",
+        source_identity_ids=(source.source_identity_id,),
+        identity_decision_id="identity-decision:identity-reject-prior-create",
+    )
+    prior_decision = _prior_create_decision(
+        module, current, source_identities=(source,)
+    )
+    prior_context = _prior_create_context(
+        module,
+        prior_decision,
+        current,
+        source_identities=(source,),
+        identity_assertions=(assertion,),
+    )
+    assignment = _current_assignment(
+        module,
+        source_identity_id=source.source_identity_id,
+        canonical_identity_id=current.canonical_identity_id,
+        identity_decision_id=prior_decision.decision_id,
+    )
+    request = _request(
+        module,
+        source_identities=(source,),
+        identity_assertions=(assertion,),
+        current_canonical_identities=(current,),
+        current_source_identity_assignments=(assignment,),
+        prior_identity_decisions=(prior_decision,),
+        prior_decision_contexts=(prior_context,),
+    )
+    decision = module.IdentityDecision(
+        decision_id="pending-content-binding",
+        action="reject",
+        source_identity_ids=(source.source_identity_id,),
+        input_canonical_identity_ids=(current.canonical_identity_id,),
+        output_canonical_identity_ids=(),
+        supporting_record_ids=source.source_record_ids,
+        policy=request.policy,
+        method="deterministic",
+        method_version=request.identity_method_version,
+        decision_run_id=request.decision_run_id,
+        confidence=1.0,
+        rationale="Named identity evidence rejects this canonical identity.",
+        decided_at=request.as_of,
+    )
+    decision = module._bind_applied_decision_id(decision, candidate_verdict_id=None)
+    terminal = module.CanonicalIdentity(
+        **{
+            **current.model_dump(mode="python"),
+            "state": "rejected",
+            "identity_decision_id": decision.decision_id,
+            "successor_identity_ids": (),
+        }
+    )
+    manifest = module.IdentityDecisionManifest(
+        release_id=RELEASE_ID,
+        decision_id=decision.decision_id,
+        candidate_verdict_id=None,
+        supporting_assertion_ids=(assertion.assertion_id,),
+        input_content_sha256=module.canonical_identity_decision_input_sha256(
+            request=request,
+            decision=decision,
+            supporting_assertion_ids=(assertion.assertion_id,),
+        ),
+    )
+    content = module._IdentityResolutionContent(
+        release_id=RELEASE_ID,
+        decision_run_id=RUN_ID,
+        identity_method_version=request.identity_method_version,
+        as_of=NOW,
+        policy=request.policy,
+        source_identities=request.source_identities,
+        identity_assertions=request.identity_assertions,
+        candidate_verdicts=(),
+        identity_decisions=(decision,),
+        current_canonical_identities=(),
+        canonical_identity_history=(terminal,),
+        source_identity_assignments=(),
+        decision_manifests=(manifest,),
+    )
+
+    result = module._finalize_identity_result(request, content)
+
+    assert result.current_canonical_identities == ()
+    assert result.source_identity_assignments == ()
+    assert result.canonical_identity_history == (terminal,)
+    assert (
+        module.validate_identity_resolution_result(request, result).content_sha256
+        == result.content_sha256
+    )
+
+
+def test_standalone_split_materializes_exact_source_partition() -> None:
+    module = _module()
+    sources = tuple(
+        _source_identity(
+            module,
+            f"standalone-split-company-{suffix}",
+            source_system=f"standalone-split-{suffix}",
+            source_key=f"company:standalone-split:{suffix}",
+            entity_type="company",
+            normalized_keys={"name_key": "standalone split company"},
+        )
+        for suffix in ("a", "b")
+    )
+    assertions = tuple(
+        _identity_assertion(
+            module,
+            f"assertion-{source.source_identity_id}",
+            source,
+            field_path="identity.company_name",
+            value=source.source_key,
+        )
+        for source in sources
+    )
+    combined = _canonical_identity(
+        module,
+        "canonical-standalone-split-combined",
+        entity_type="company",
+        source_identity_ids=tuple(
+            sorted(source.source_identity_id for source in sources)
+        ),
+        identity_decision_id="identity-decision:standalone-combined-create",
+    )
+    prior_decision = _prior_create_decision(module, combined, source_identities=sources)
+    prior_context = _prior_create_context(
+        module,
+        prior_decision,
+        combined,
+        source_identities=sources,
+        identity_assertions=assertions,
+    )
+    assignments = tuple(
+        _current_assignment(
+            module,
+            source_identity_id=source.source_identity_id,
+            canonical_identity_id=combined.canonical_identity_id,
+            identity_decision_id=prior_decision.decision_id,
+        )
+        for source in sources
+    )
+    request = _request(
+        module,
+        source_identities=sources,
+        identity_assertions=assertions,
+        current_canonical_identities=(combined,),
+        current_source_identity_assignments=assignments,
+        prior_identity_decisions=(prior_decision,),
+        prior_decision_contexts=(prior_context,),
+    )
+    recorded, _ = _recorded_identity_adjudication(
+        module,
+        source_identities=sources,
+        identity_assertions=assertions,
+        verdict="different_entities",
+        source_identity_groups=tuple(
+            (source.source_identity_id,) for source in sources
+        ),
+        confidence=0.99,
+        rationale="Accepted evidence proves two independent Companies.",
+        uncertainty="No material uncertainty remains.",
+        current_canonical_identities=request.current_canonical_identities,
+        current_source_identity_assignments=(
+            request.current_source_identity_assignments
+        ),
+        prior_identity_decisions=request.prior_identity_decisions,
+        prior_decision_contexts=request.prior_decision_contexts,
+    )
+
+    result = module.create_ephemeral_canonical_identity_resolution_engine(
+        adjudicator=_recorded_identity_adjudicator(module, recorded)
+    ).resolve(request)
+
+    assert len(result.identity_decisions) == 1
+    assert result.identity_decisions[0].action.value == "split"
+    assert result.identity_decisions[0].reversal_of_decision_id is None
+    assert {
+        identity.source_identity_ids for identity in result.current_canonical_identities
+    } == {(sources[0].source_identity_id,), (sources[1].source_identity_id,)}
+    assert result.canonical_identity_history[0].state.value == "split"
+    assert (
+        module.validate_identity_resolution_result(request, result).content_sha256
+        == result.content_sha256
+    )
+
+
+@pytest.mark.parametrize(
+    ("entity_type", "method_version", "assertion_field"),
+    (
+        (
+            "person",
+            "canonical-identity-resolution-person-v1",
+            "identity.name",
+        ),
+        (
+            "technology_route",
+            "canonical-identity-resolution-technology-v1",
+            "technology.preferred_name",
+        ),
+    ),
+)
+def test_exact_pair_requires_one_verdict_per_recalled_internal_component(
+    entity_type: str,
+    method_version: str,
+    assertion_field: str,
+) -> None:
+    module = _module()
+    sources = tuple(
+        _source_identity(
+            module,
+            f"missing-verdict-{entity_type}-{suffix}",
+            source_system=f"missing-verdict-{suffix}",
+            source_key=f"missing-verdict:{entity_type}:{suffix}",
+            entity_type=entity_type,
+            normalized_keys={"name_key": "shared unresolved name"},
+        )
+        for suffix in ("a", "b")
+    )
+    assertions = tuple(
+        _identity_assertion(
+            module,
+            f"assertion-{source.source_identity_id}",
+            source,
+            field_path=assertion_field,
+            value="shared unresolved name",
+        )
+        for source in sources
+    )
+    request = _request(
+        module,
+        source_identities=sources,
+        identity_assertions=assertions,
+        identity_method_version=method_version,
+    )
+    valid = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        request
+    )
+    assert len(valid.candidate_verdicts) == 1
+    forged = valid.model_copy(update={"candidate_verdicts": (), "review_cases": ()})
+    forged = forged.model_copy(
+        update={
+            "content_sha256": module.canonical_identity_resolution_result_sha256(forged)
+        }
+    )
+    standalone = module.IdentityResolutionResult.model_validate(
+        forged.model_dump(mode="python")
+    )
+
+    with pytest.raises(
+        module.IdentityResolutionIntegrityError,
+        match="candidate verdicts must exactly cover recalled multi-source components",
+    ):
+        module.validate_identity_resolution_result(request, standalone)
+
+
+@pytest.mark.parametrize(
+    ("entity_type", "method_version"),
+    (
+        ("professor", "canonical-identity-resolution-person-v1"),
+        ("company", "canonical-identity-resolution-technology-v1"),
+    ),
+)
+def test_internal_reference_methods_reject_public_domain_sources(
+    entity_type: str,
+    method_version: str,
+) -> None:
+    module = _module()
+    source = _source_identity(
+        module,
+        f"wrong-method-{entity_type}",
+        source_system="wrong-method-fixture",
+        source_key=f"wrong-method:{entity_type}",
+        entity_type=entity_type,
+        normalized_keys={"name_key": "Ada Chen"},
+    )
+    assertion = _identity_assertion(
+        module,
+        f"assertion-wrong-method-{entity_type}",
+        source,
+        field_path="identity.name",
+        value="Ada Chen",
+    )
+
+    with pytest.raises(ValueError, match="only accepts"):
+        _request(
+            module,
+            source_identities=(source,),
+            identity_assertions=(assertion,),
+            identity_method_version=method_version,
+        )
+
+
+def test_technology_rule_version_merges_matching_stable_identifier() -> None:
+    module = _module()
+    sources = tuple(
+        _source_identity(
+            module,
+            f"technology-concept-{suffix}",
+            source_system=f"technology-taxonomy-{suffix}",
+            source_key=f"technology:concept:{suffix}",
+            entity_type="technology_concept",
+            normalized_keys={
+                "technology_id": "TECH-1",
+                "name_key": "visual control",
+            },
+        )
+        for suffix in ("local", "partner")
+    )
+    assertions = tuple(
+        _identity_assertion(
+            module,
+            f"assertion-{source.source_identity_id}-technology-id",
+            source,
+            field_path="identity.technology_id",
+            value="TECH-1",
+        )
+        for source in sources
+    )
+    with pytest.raises(ValueError, match="versioned Technology rule set"):
+        _request(
+            module,
+            source_identities=sources,
+            identity_assertions=assertions,
+        )
+    request = _request(
+        module,
+        source_identities=sources,
+        identity_assertions=assertions,
+        identity_method_version=("canonical-identity-resolution-technology-v1"),
+    )
+
+    result = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        request
+    )
+
+    assert len(result.candidate_verdicts) == 1
+    assert result.candidate_verdicts[0].verdict.value == "same_entity"
+    assert result.candidate_verdicts[0].reason_codes == ("matching_strong_identifier",)
+    assert len(result.current_canonical_identities) == 1
+    assert result.current_canonical_identities[0].source_identity_ids == tuple(
+        sorted(source.source_identity_id for source in sources)
+    )
+    assert (
+        module.validate_identity_resolution_result(request, result).content_sha256
+        == result.content_sha256
+    )
+    assert (
+        module.canonical_identity_rule_set_sha256("canonical-identity-resolution-v1")
+        == "0890690e3057b39a8c75d6203b92897e84b36b2ddc203a2ece020443d02ba0fd"
     )
 
 
@@ -3126,6 +4363,35 @@ def test_engine_generated_create_merge_reverse_uses_new_successor_ids() -> None:
         identity.source_identity_ids
         for identity in reversed_result.current_canonical_identities
     } == {(source_a.source_identity_id,), (source_b.source_identity_id,)}
+    unmaterialized = reversed_result.model_copy(
+        update={
+            "identity_decisions": (),
+            "current_canonical_identities": (
+                reverse_request.current_canonical_identities
+            ),
+            "canonical_identity_history": reverse_request.canonical_identity_history,
+            "source_identity_assignments": (
+                reverse_request.current_source_identity_assignments
+            ),
+            "decision_manifests": (),
+            "decision_contexts": (),
+        }
+    )
+    unmaterialized = unmaterialized.model_copy(
+        update={
+            "content_sha256": module.canonical_identity_resolution_result_sha256(
+                unmaterialized
+            )
+        }
+    )
+    standalone = module.IdentityResolutionResult.model_validate(
+        unmaterialized.model_dump(mode="python")
+    )
+    with pytest.raises(
+        module.IdentityResolutionIntegrityError,
+        match="accepted identity verdict does not match materialized groups",
+    ):
+        module.validate_identity_resolution_result(reverse_request, standalone)
 
 
 @pytest.mark.parametrize("resolved_state", ("separate", "combined"))
@@ -3581,6 +4847,33 @@ def test_same_entity_component_merges_more_than_two_current_owners() -> None:
     assert len(result.current_canonical_identities) == 1
     assert result.identity_decisions[0].action.value == "merge"
     assert len(result.identity_decisions[0].input_canonical_identity_ids) == 3
+    unmaterialized = result.model_copy(
+        update={
+            "identity_decisions": (),
+            "current_canonical_identities": merge_request.current_canonical_identities,
+            "canonical_identity_history": merge_request.canonical_identity_history,
+            "source_identity_assignments": (
+                merge_request.current_source_identity_assignments
+            ),
+            "decision_manifests": (),
+            "decision_contexts": (),
+        }
+    )
+    unmaterialized = unmaterialized.model_copy(
+        update={
+            "content_sha256": module.canonical_identity_resolution_result_sha256(
+                unmaterialized
+            )
+        }
+    )
+    standalone = module.IdentityResolutionResult.model_validate(
+        unmaterialized.model_dump(mode="python")
+    )
+    with pytest.raises(
+        module.IdentityResolutionIntegrityError,
+        match="accepted identity verdict does not match materialized groups",
+    ):
+        module.validate_identity_resolution_result(merge_request, standalone)
 
 
 def test_identity_request_and_result_canonicalize_equal_instants_before_hashing() -> (

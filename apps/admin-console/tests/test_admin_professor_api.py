@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import datetime, timezone
 from typing import Any
 
 from fastapi.testclient import TestClient
+import pytest
 
 from backend.deps import get_pg_conn
 from backend.main import app
@@ -11,6 +13,16 @@ from .conftest import _load_postgres_dependencies
 
 NOW = datetime(2026, 5, 23, 12, 0, tzinfo=timezone.utc)
 SCHEMA_PROFESSOR_ID = "PROF-ADMIN-SCHEMA"
+
+
+@pytest.fixture(autouse=True)
+def _restore_shared_app_dependency_overrides() -> Iterator[None]:
+    prior_overrides = dict(app.dependency_overrides)
+    try:
+        yield
+    finally:
+        app.dependency_overrides.clear()
+        app.dependency_overrides.update(prior_overrides)
 
 
 class _Result:

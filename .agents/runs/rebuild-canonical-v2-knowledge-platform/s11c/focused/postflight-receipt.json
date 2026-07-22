@@ -1,0 +1,35 @@
+{
+  "schema_version": "canonical-v2-s11c-focused-postflight-v1",
+  "generated_at": "2026-07-21T18:12:01Z",
+  "status": "passed",
+  "focused_owner": {
+    "nodeid": "tests/canonical_v2/test_consumer_acceptance_contract.py::test_s11c_reconciles_all_consumer_evidence_without_legacy_dependency",
+    "exit_code": 0,
+    "passed": 1,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "xfailed": 0,
+    "xpassed": 0,
+    "junit_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/focused/junit.xml",
+    "junit_sha256": "7183f3b8a41958ed0c4199649834d42f605dd679b35a07b2a036e65e75fc0cbb"
+  },
+  "file_set_union": {
+    "discovered_file_count": 48,
+    "discovered_files_sha256": "027bec8ecfe9d35715be13d3d52718d5fb9e2a40b75301ba66eff1b5fa0ca1f1",
+    "predecessor_file_count": 47,
+    "predecessor_files_sha256": "28ab9efe337feb6a7568df8db5f887bacfb23b123510bc7527a4674aaf3e673c",
+    "focused_file": "tests/canonical_v2/test_consumer_acceptance_contract.py",
+    "excluded_from_predecessor": [
+      "tests/canonical_v2/test_consumer_acceptance_contract.py"
+    ],
+    "predecessor_plus_focused_equals_discovered": true
+  },
+  "input_bindings": {
+    "guarded_partitions_receipt_sha256": "9b5e1c786bc62e6df5b7736e3fd9f1bf47ef6b5a26ea46c8f1338172b3245493",
+    "retired_failure_ledger_sha256": "271f4f9808a206e06cd616c95a778178f453fb67cf9284e9b93c33623fb75e7d",
+    "predecessor_reruns_sha256": "84507b7c3fd6a441547922cfc7012c58a74b6a11c82ec001ffe8e300ffc5eb11",
+    "disposable_postgres_target_receipt_sha256": "51278f966935dfa8f988f72905cfe72ffda13ccb7a520c2b5f8a7f59bd53e712"
+  },
+  "focused_artifacts_are_validator_inputs": false
+}

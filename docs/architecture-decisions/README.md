@@ -11,6 +11,16 @@ explain. Short, dated, and referenced back from the code it governs.
 | ADR-004 | Scheduler — APScheduler (Postgres jobstore) | deferred | 2 |
 | [ADR-005](./ADR-005-single-pipeline-run-table.md) | Single `pipeline_run` table | accepted | 0 |
 | [ADR-012](./ADR-012-canonical-v2-preserve-temporal-precision.md) | Canonical V2 preserves temporal precision | accepted | Canonical V2 S5G/S6 |
+| [ADR-013](./ADR-013-canonical-v2-hybrid-enumeration-coverage.md) | Canonical V2 uses hybrid enumeration coverage | accepted | Canonical V2 S8/S9 |
+| [ADR-014](./ADR-014-canonical-v2-internal-person-projection.md) | Canonical V2 keeps Person internal to the four public domains | accepted | Canonical V2 S6R/S7/S8 |
+| [ADR-015](./ADR-015-canonical-v2-internal-technology-model.md) | Canonical V2 uses an internal versioned Technology model | accepted | Canonical V2 S6R/S7/S8/S9 |
+| [ADR-016](./ADR-016-product-capability-remains-answer-scoped.md) | Product capability remains answer-scoped | accepted | Canonical V2 S8/S9/S10 |
+| [ADR-017](./ADR-017-web-only-entities-use-session-handles.md) | Web-only entities use evidence-bound session handles | accepted | Canonical V2 S8/S9 |
+| [ADR-018](./ADR-018-machine-readable-claim-level-case-contract.md) | Acceptance uses machine-readable claim-level case contracts | accepted | Canonical V2 S2C/S8/S9/S12 |
+| [ADR-019](./ADR-019-conditional-structured-continuation-offers.md) | Answers use conditional structured continuation offers | accepted | Canonical V2 S8/S9 |
+| [ADR-020](./ADR-020-local-safety-questions-use-safety-guidance.md) | Local safety questions use narrow safety guidance | accepted | Canonical V2 S2C/S8/S9 |
+| [ADR-021](./ADR-021-confidence-gated-entity-ambiguity.md) | Entity ambiguity uses confidence-gated answer or clarification | accepted | Canonical V2 S2C/S8/S9 |
+| [ADR-022](./ADR-022-llm-selected-assessment-dimensions.md) | Assessments use per-turn LLM-selected dimensions | accepted | Canonical V2 S2C/S8/S9 |
 
 ## Conventions
 

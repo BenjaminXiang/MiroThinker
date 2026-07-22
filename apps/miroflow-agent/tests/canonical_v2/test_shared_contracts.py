@@ -970,8 +970,10 @@ def test_build_manifest_accounts_for_every_versioned_projection_on_one_release()
     published = module.ProjectionManifest(
         projection_id="published-paper",
         release_id="release-r1",
+        projection_scope="public_domain",
         projection_kind="published_domain",
         domain="paper",
+        reference_type=None,
         path=None,
         projection_version="published-paper-v1",
         record_count=3,
@@ -980,7 +982,9 @@ def test_build_manifest_accounts_for_every_versioned_projection_on_one_release()
     expected_index = module.IndexProjectionManifest(
         projection_id="paper-semantic",
         release_id="release-r1",
+        projection_scope="public_domain",
         domain="paper",
+        reference_type=None,
         path="semantic_recall",
         projection_version="paper-semantic-v1",
         schema_version="vector-schema-v2",
@@ -992,7 +996,7 @@ def test_build_manifest_accounts_for_every_versioned_projection_on_one_release()
         full_rebuild=True,
     )
     manifest = module.BuildManifest(
-        manifest_version="canonical-v2-build-manifest-v1",
+        manifest_version="canonical-v2-build-manifest-v2",
         release_id="release-r1",
         build_run_id="build-run-1",
         source_batch_ids=("batch-1", "batch-2"),
@@ -1022,6 +1026,14 @@ def test_build_manifest_accounts_for_every_versioned_projection_on_one_release()
     assert manifest.release_id == "release-r1"
     assert len(manifest.object_sets) == 4
     assert manifest.expected_index_projections[0].full_rebuild is True
+    assert published.projection_scope is module.ProjectionScope.public_domain
+    assert published.reference_type is None
+    assert expected_index.projection_scope is module.ProjectionScope.public_domain
+    assert expected_index.reference_type is None
+    assert (
+        manifest.model_dump(mode="json")["published_projections"][0]["projection_scope"]
+        == "public_domain"
+    )
     assert "table_name" not in module.BuildManifest.model_fields
     assert "collection_name" not in module.IndexProjectionManifest.model_fields
     json.dumps(manifest.model_dump(mode="json"), ensure_ascii=False)

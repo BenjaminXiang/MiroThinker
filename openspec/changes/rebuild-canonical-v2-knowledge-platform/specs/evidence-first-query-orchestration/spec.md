@@ -13,6 +13,39 @@ retrieval handler.
 - **THEN** the validated plan may execute all required lanes
 - **AND** the response still satisfies the classified A-G interaction behavior
 
+### Requirement: Local safety questions use a narrow safety-guidance policy
+
+Recognized local safety/compliance reminder requests SHALL use a `safety_guidance` response policy
+distinct from ordinary F refusal and from information retrieval. The default policy SHALL NOT run
+Universal Web or identify/speculate about illegal venues, districts, businesses, or venue categories.
+It MAY provide brief lawful risk advice and official help/reporting direction. An explicit request for
+current official contact/policy information MAY use a bounded official-source-only lookup.
+
+#### Scenario: User asks which local illegal venues to avoid
+- **WHEN** the request has a legitimate local safety/compliance intent
+- **THEN** the plan selects safety guidance rather than general Web retrieval or a venue list
+- **AND** the answer does not provide allegations, discovery assistance, or enforcement-evasion detail
+
+### Requirement: Entity ambiguity uses an evidence and margin gate
+
+The system SHALL apply a versioned domain-aware evidence floor, confidence threshold, lead margin,
+and protected-constraint checks to ambiguous entity candidates. Model self-confidence alone SHALL NOT
+clear the gate. Exactly one dominant candidate MAY produce a non-blocking interpreted answer;
+that answer SHALL disclose the selected interpretation and provide a bounded way to switch when a
+viable alternative remains. Otherwise the turn SHALL be clarification-only.
+
+#### Scenario: Two Professors share a name
+- **WHEN** neither candidate clears the accepted evidence/lead-margin policy
+- **THEN** the plan returns blocking ambiguity with evidenced candidate discriminators
+- **AND** it does not produce a primary Professor answer before selection
+
+#### Scenario: One candidate is clearly dominant
+- **WHEN** exactly one candidate clears the accepted evidence, confidence, margin, and protected-
+  constraint policy
+- **THEN** the turn may answer for that candidate with an interpretation notice
+- **AND** any viable alternative is exposed only as a bounded switch option rather than silently
+  discarded
+
 ### Requirement: Explicit constraints are parsed and protected deterministically
 
 The system SHALL deterministically extract exact identifiers, quoted or explicit names/titles,
@@ -50,6 +83,18 @@ or excessive budgets before execution.
 - **THEN** the plan is rejected or repaired within the bounded planning retry
 - **AND** the unsupported traversal is not executed
 
+### Requirement: List plans declare an enumeration policy
+
+Every list plan SHALL declare `exhaustive_bounded`, `required_members`, or `representative`, plus the
+applicable scope, as-of, finite universe source or required members, and budgets/continuation state.
+Open-world lists without a finite universe or accepted required-member contract SHALL default to
+`representative`. Top-K or a non-empty candidate set SHALL NOT imply exhaustive coverage.
+
+#### Scenario: User asks for all patents of a Company
+- **WHEN** the accepted release and explicit query scope provide a finite applicant-to-Patent universe
+- **THEN** the plan may select `exhaustive_bounded` and account for every eligible member
+- **AND** otherwise it selects `representative` or clarifies scope rather than claiming all Patents
+
 ### Requirement: Recall combines exact, structured, lexical, vector, relationship, and Web lanes
 
 For an information-retrieval request, the system SHALL execute all validated independent lanes
@@ -60,6 +105,38 @@ query-view, lane, attempt, release, source, and score traceability.
 - **WHEN** a topic query contains a rare exact technical phrase and broader semantic intent
 - **THEN** the plan may combine lexical and vector candidates
 - **AND** exact lexical coverage is not discarded merely because its vector rank is lower
+
+### Requirement: Internal Person reference knowledge supports bounded person-oriented retrieval
+
+The system SHALL use accepted release-scoped internal Person projections for person-oriented
+retrieval across resolved Professor, Company-personnel, Paper-author, and Patent-inventor evidence.
+Plans MAY filter those projections by supported typed facts such as education, Company role, and
+geography, but SHALL retain the originating public-domain evidence and SHALL NOT treat Person as a
+fifth public inclusion domain. Unresolved Person references SHALL remain separately traceable and
+SHALL NOT satisfy identity-dependent filters or traversals.
+
+#### Scenario: Find entrepreneurs by education and Company role
+- **WHEN** a user asks for people with a named education background and a founder role in Shenzhen
+  Companies
+- **THEN** the plan may query the internal Person projection and its typed evidence-backed relations
+- **AND** returned people identify the originating Company/Professor/Paper/Patent evidence without
+  entering a public Person population
+
+### Requirement: Technology aliases and routes resolve through internal versioned knowledge
+
+The system SHALL resolve accepted Technology concept and route aliases against the current release
+before comparing routes or retrieving related Companies, Products, Papers, and Patents. Retrieval
+SHALL preserve the distinction between non-adoption discussion/mention, claimed adoption, and
+demonstrated use, plus scope, as-of, source evidence, and enumeration policy. Discussion and lexical
+mention share one non-adoption relationship state in this change; neither entails adoption or
+capability. An unresolved term MAY remain a search view or gap but SHALL NOT silently become an
+accepted Technology identity.
+
+#### Scenario: Compare two technical routes and representative adopters
+- **WHEN** a user names two route aliases and asks for their differences and representative Companies
+- **THEN** the plan binds accepted aliases, retrieves definition/relationship evidence for each
+  route, and uses `representative` enumeration unless a finite universe is available
+- **AND** a mere topic mention is not reported as demonstrated Company or Product use
 
 ### Requirement: Web augmentation runs for every information-retrieval request
 
@@ -98,6 +175,41 @@ evidence-aware selection.
 - **WHEN** local and current-Web lanes return the same real-world Company under different names
 - **THEN** fusion presents one candidate identity with both evidence lanes
 - **AND** it does not consume two result positions as unrelated Companies
+
+### Requirement: Displayed Web-only entities use evidence-bound session handles
+
+The system SHALL preserve any displayed Web-only candidate as a typed session-scoped handle and retain
+its evidence lineage in the query result contract. The handle SHALL bind claimed domain/display
+identity, bounded content-addressed evidence snapshots, retrieval/provider trace, originating query/
+lane/attempt, and resolution state. A URL SHALL remain evidence metadata and SHALL NOT be used as a
+Professor, Company, Paper, or Patent ID. An unresolved handle SHALL NOT execute canonical traversal or
+satisfy a canonical structured filter.
+
+#### Scenario: Web finds a Company absent from the accepted release
+- **WHEN** the Company is displayed as a relevant Web-only result
+- **THEN** session state stores an evidence-bound Web entity handle rather than the source URL as ID
+- **AND** a later canonical traversal first requires read-only resolution to an accepted identity
+
+#### Scenario: Retained snapshot is tampered with or the live provider changes
+- **WHEN** a later turn cannot reproduce the handle's recorded content hash, or a provider returns
+  different live content for the same URL
+- **THEN** the original handle remains bound only to its accepted snapshot and the mismatch is
+  reported
+- **AND** the changed content cannot replace the snapshot or establish canonical continuity
+
+#### Scenario: Handle expires or two entities share a URL
+- **WHEN** the session retention policy expires a handle, or one URL is evidence for two distinct
+  displayed entities
+- **THEN** an expired handle cannot be used as a live referent and each displayed entity retains a
+  distinct handle identity
+- **AND** URL equality does not merge the entities
+
+#### Scenario: Later read-only resolution succeeds
+- **WHEN** retained evidence and an accepted release later resolve a Web handle to one canonical
+  identity
+- **THEN** the session records the resolution while retaining the original handle and snapshot
+  lineage
+- **AND** no online identity or source-mapping mutation occurs
 
 ### Requirement: Evidence sufficiency is assessed against material question parts
 

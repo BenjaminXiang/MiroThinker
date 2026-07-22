@@ -1,30 +1,9 @@
 from __future__ import annotations
 
-import importlib.util
 from collections.abc import Callable
-from pathlib import Path
 from typing import Any
 
-
-def _load_build_openai_client() -> Callable[..., Any]:
-    try:
-        from openai_client_compat import build_openai_client
-
-        return build_openai_client
-    except ModuleNotFoundError:
-        helper_path = Path(__file__).resolve().parents[5] / "openai_client_compat.py"
-        spec = importlib.util.spec_from_file_location(
-            "openai_client_compat",
-            helper_path,
-        )
-        if spec is None or spec.loader is None:
-            raise ImportError(f"Unable to load compatibility client helper from {helper_path}")
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        return module.build_openai_client
-
-
-build_openai_client = _load_build_openai_client()
+from .openai_client_compat import build_openai_client
 
 
 class MiroThinkerProvider:

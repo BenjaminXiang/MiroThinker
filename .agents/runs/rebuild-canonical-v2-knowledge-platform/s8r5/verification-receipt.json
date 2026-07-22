@@ -1,0 +1,108 @@
+{
+  "schema_version": "canonical-v2-s8r5-patent-company-retrieval-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s8r5-release-scoped-displayed-patent-company-traversal",
+  "status": "accepted",
+  "ready_at": "2026-07-20T09:00:14Z",
+  "candidate_at": "2026-07-20T09:24:00Z",
+  "accepted_at": "2026-07-20T09:38:32Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "git_branch": "canonical-v2-s2-baseline",
+  "formal_task_ledger_before": "56/80",
+  "formal_task_ledger_after": "56/80",
+  "artifacts": {
+    "reviewed_specified_contract_sha256": "efee07e08d8b769d9f87b96ec41a8e641961e8271d5be771f4f3a37fa1d4ab00",
+    "reviewed_specified_plan_sha256": "47ffd65a944071320611b03053137e9573594c5c9edeee73378469817e0aa395",
+    "ready_contract_sha256": "48e396e054e61a809eaf5fe57141ad4d6e105aa7f1b541d845c2e7d6d6a31fc2",
+    "ready_plan_sha256": "592583a9c576b509c86c3674b21e8720bfbac6424d00d48e7e8b97e842582873",
+    "accepted_contract_sha256": "9e27692c679eff2445f442072423a0a6a70ed60108296eb301320bcb9ea8e8fa",
+    "accepted_plan_sha256": "8610267ff4414bd2e39c378625d5f2fc4b9f3ff8ff216f9b5f2f6f40899d0077",
+    "dependency_audit_sha256": "54c1eec24c72935af34ab14496d17c61919cb912309bd0edba6284fdfab11956",
+    "knowledge_read_sha256": "ed91153ed1ac5c422d1c23209ef50fb4d97d6f31fb51495453dca94f90cff52c",
+    "knowledge_read_isolated_sha256": "2d5c984870af17798104eebb5f86da40279e0af195e039977820d834dce328ae",
+    "physical_owner_test_sha256": "6819bce4ecd246db5f62837afac4bad7dc032ec947ecded53ff3631affa8f4cb",
+    "tasks_sha256_unchanged": "5f61c097729e1107ff387a89c9f6f62b3783ef88debf1612b6156fb2056cdd7d",
+    "acceptance_sha256_unchanged": "742b29dc9805214b4b7059d5c801189209c26e35831f3f834ef01e4ac9f6df50"
+  },
+  "mapping": {
+    "planner_path": "company_has_patent/patent_to_company/patent-to-company",
+    "canonical_relationship": "patent_has_applicant@canonical-v2-relationship-v1",
+    "canonical_orientation": "Patent-to-Company applicant",
+    "source_witness": "one protected displayed Patent",
+    "returned_domain": "company",
+    "enumeration": "representative open-world non-exhaustive with continuation"
+  },
+  "review": {
+    "ready_contract": {
+      "critical": 0,
+      "important": 0,
+      "minor": 1,
+      "yagni": 0,
+      "verdict": "ready",
+      "minor_resolution": "clarified inverse view relative to S8R2 without changing Canonical forward orientation"
+    },
+    "initial_candidate": {
+      "critical": 0,
+      "important": 2,
+      "minor": 0,
+      "yagni": 0,
+      "verdict": "repair",
+      "closed_findings": [
+        "the owner lacked the authoritative-count-before-caller-cap ordering regression",
+        "the owner lacked same-Company Web alias and Canonical-subject crosswire regressions"
+      ]
+    },
+    "final_candidate": {
+      "critical": 0,
+      "important": 0,
+      "minor": 0,
+      "yagni": 0,
+      "verdict": "accept",
+      "note": "targeted review confirmed both core regressions and stable production hashes"
+    }
+  },
+  "verification": {
+    "red_normal": "62 deselected, 1 xfailed in 2.68 seconds at the exact missing S8R5 trace seam",
+    "red_forced": "1 failed, 62 deselected in 1.27 seconds only at the exact sentinel before fixture or effect acquisition",
+    "real_red": "1 failed, 62 deselected in 3.31 seconds at the unsupported relationship request path after the trace seam existed",
+    "focused_green_warnings_as_errors": "1 passed, 62 deselected in 8.45 seconds",
+    "inverse_cap_regression": "authority current count 2 and caller cap 1 observes internal cap 2, filters exact displayed Patent, and returns Company",
+    "web_identity_regressions": "same-Company web-candidate alias fuses; direct Canonical object crosswire becomes invalid Web output with local retention; other Canonical Company subject fails release-bound postvalidation",
+    "s8r1_literal_s8r1_through_s8r5_matrix": "6 passed, 57 deselected in 163.98 seconds",
+    "canonical_v2_no_external": "350 passed, 141 skipped, 3 intentional hostile-model serializer warnings in 198.96 seconds",
+    "ruff_check": "passed for complete src/data_agents/canonical_v2 and tests/canonical_v2",
+    "ruff_format": "74 files already formatted",
+    "py_compile": "passed for both changed production files and the physical owner test",
+    "pyright": "0 errors, 0 warnings, 0 informations for complete Canonical V2 source/tests",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "untracked_whitespace_and_eof_check": "passed for S8R5-owned source, test, contract, plan, audit, and receipt",
+    "uv_lock_check_offline": "resolved 194 packages without lock drift",
+    "high_confidence_secret_assignment_scan": "no matches in the S8R5-owned file set",
+    "stale_s8r5_xfail_scan": "no S8R5 xfail decorator or RED reason remains"
+  },
+  "wheel": {
+    "path_before_owned_cleanup": "/var/tmp/canonical-v2-s8r5-wheel-2uUvJi/miroflow_agent-0.1.0-py3-none-any.whl",
+    "sha256": "81090deaaaf73506f50a94e47aae0b12cb5000640ae0c79860e074c270581ed3",
+    "entry_count": 276,
+    "contains_tests_or_agents": false,
+    "knowledge_read_source_and_entry_sha256": "ed91153ed1ac5c422d1c23209ef50fb4d97d6f31fb51495453dca94f90cff52c",
+    "knowledge_read_isolated_source_and_entry_sha256": "2d5c984870af17798104eebb5f86da40279e0af195e039977820d834dce328ae",
+    "packaged_production_hashes_match_source": true,
+    "owned_output_cleanup_complete": true
+  },
+  "frozen_targets": {
+    "original_milvus_path": "/home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db",
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_state": "paused true true",
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "original_pgtest_host_port": "15432",
+    "recovery_lab_network": "none",
+    "recovery_lab_published_ports": false,
+    "recovery_lab_restart_policy": "no",
+    "git_branch": "canonical-v2-s2-baseline",
+    "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6"
+  },
+  "next_required_action": "mark S8C Ready and implement the minimal release-bound port pass-through plus aggregate owner that closes Tasks 8.3, 8.5, and 8.7",
+  "forbidden_actions_performed": []
+}

@@ -12,6 +12,18 @@ requirement.
 - **THEN** the claim-evidence map identifies the supporting relationship evidence
 - **AND** the answer does not rely only on model memory or an unrelated profile summary
 
+### Requirement: Product capability claims require direct Product binding
+
+A Product capability claim SHALL remain answer-scoped and SHALL map to evidence that directly binds
+the named Product and capability. Company-level capability, another Product, a Technology route, or
+model feasibility SHALL NOT support the claim. Missing status evidence SHALL be disclosed rather than
+silently treating claimed, demonstrated, and commercially available behavior as equivalent.
+
+#### Scenario: Requested Product feature is not directly evidenced
+- **WHEN** only general Company capability evidence is available
+- **THEN** the answer marks the Product capability unsupported or qualified
+- **AND** it does not create or imply a canonical Product-capability relationship
+
 ### Requirement: LLM world knowledge guides judgment but is not provenance
 
 The system SHALL permit LLM world knowledge to guide query interpretation, ambiguity resolution,
@@ -40,15 +52,46 @@ conflicts and model-only inference SHALL be disclosed at the affected claim.
 ### Requirement: Evaluation questions use evidence-based assessment
 
 The system SHALL answer questions about strength, competitiveness, maturity, expert standing, or
-similar judgment by stating or making clear the evaluation dimensions, grounding material
-supporting points, and labeling the conclusion as a conditional synthesis with relevant uncertainty.
-Such conclusions SHALL NOT become objective canonical fields solely because the LLM generated them.
+similar judgment through a compact per-turn assessment frame. Explicit user criteria SHALL take
+precedence; otherwise the LLM MAY select a small relevant dimension set from the question and
+evidence. Each material dimension SHALL identify supporting evidence, a conclusion or
+`insufficient_evidence`, and uncertainty. No global dimension registry, fixed weighting, or numeric
+score is required. Such conclusions SHALL remain conditional synthesis and SHALL NOT become objective
+canonical fields solely because the LLM generated them.
 
 #### Scenario: User asks whether a Professor is a leading expert
 - **WHEN** the system answers using career, publication, award, and leadership evidence
 - **THEN** it explains the dimensions supporting its assessment
 - **AND** it presents the conclusion as an evidence-based judgment rather than an objective stored
   label
+
+### Requirement: Industry briefs are scoped derived answers
+
+The system SHALL generate an Industry Brief that compares Technology routes or maps representative
+Companies, Products, Papers, or Patents as a release-scoped answer over accepted internal Technology
+reference knowledge plus cited current-Web evidence where used. It SHALL expose scope, as-of,
+enumeration mode/coverage, route definitions, relationship semantics, material evidence, conflicts,
+and limitations. Brief prose and conclusions SHALL remain derived output and SHALL NOT be written as
+canonical Technology, Company, Product, Paper, or Patent facts.
+
+#### Scenario: Route landscape brief mixes local and current-Web evidence
+- **WHEN** a user asks for a current comparison of two routes and representative Shenzhen Companies
+- **THEN** the answer distinguishes accepted local route/adoption evidence from current-Web evidence,
+  states scope/as-of and representative coverage, and cites each material conclusion
+- **AND** the synthesized brief is not persisted as a canonical fact or used to infer unsupported
+  Product capability
+
+### Requirement: List answers expose enumeration coverage
+
+A list answer SHALL state its enumeration mode, scope, as-of, and evidence-backed accounting for
+checked/eligible/retrieved/displayed members, omissions, unknowns, and continuation where applicable.
+It SHALL NOT claim exhaustive coverage unless the plan used `exhaustive_bounded` and accounted for the
+named finite universe. Required-member omissions SHALL be explicit per member.
+
+#### Scenario: Open-world supplier landscape returns ten results
+- **WHEN** the plan used `representative`
+- **THEN** the answer labels the list representative and explains material omissions/unknown scope
+- **AND** it does not present ten displayed suppliers as every supplier in the market
 
 ### Requirement: Answers use progressive disclosure
 
@@ -72,6 +115,19 @@ session state. It SHALL execute another path only after the user requests or sel
 - **THEN** each turn uses the correct prior referent/result set and typed path
 - **AND** the system does not silently substitute a retrieved-but-undisplayed candidate
 
+### Requirement: Session state preserves typed Web entity handles
+
+The system SHALL preserve handle type, evidence snapshot identity, resolution state, and display order
+for displayed result sets containing accepted Canonical IDs or evidence-bound Web entity handles. It
+SHALL validate each follow-up operation against the bound handle type and resolution state. An
+unresolved Web handle MAY support coreference and evidence-based narrowing but SHALL NOT silently
+become a canonical anchor or execute canonical relationship traversal.
+
+#### Scenario: User refers to a displayed Web-only Company
+- **WHEN** the user asks a follow-up about “the above Company”
+- **THEN** the turn binds the Web entity handle and its retained evidence
+- **AND** unsupported canonical traversal returns a limitation or read-only resolution path
+
 ### Requirement: Suggested followups reflect available eligible relations
 
 Suggested next questions SHALL be generated from validated route/result metadata and relationship
@@ -81,6 +137,46 @@ that has not been retrieved or shown to be available.
 #### Scenario: Professor has no eligible Patent relation
 - **WHEN** the current release has no eligible Patent relation for the Professor
 - **THEN** the answer does not claim or imply that Patent results are available as a followup
+
+### Requirement: Continuation offers are conditional, structured, and executable
+
+The answer SHALL include an optional ending `ContinuationOffer` only for broad scope, ambiguity,
+partial coverage, evidence gaps, budget exhaustion, or an actually available eligible next hop. The
+offer SHALL contain at most three validated options bound to current handles/result sets/constraints
+and SHALL introduce no unsupported factual claim. A complete simple answer without a valid trigger
+SHALL omit it. Blocking ambiguity SHALL render the offer as clarification choices instead of first
+producing an unsupported primary answer.
+
+#### Scenario: Representative landscape has several useful next steps
+- **WHEN** the current answer is intentionally representative and has valid region and route filters
+- **THEN** the ending offer may present up to three executable narrowing/continuation options
+- **AND** selecting an option binds the next turn to the recorded result set and operation
+
+### Requirement: Non-blocking ambiguity remains explicit and switchable
+
+When one entity candidate clears the accepted ambiguity gate, the rendered answer SHALL identify the
+interpretation used. If another viable candidate remains, the answer SHALL expose it only through a
+validated bounded switch option. When no candidate clears the gate, the turn SHALL render
+clarification choices without an unsupported primary answer.
+
+#### Scenario: Dominant same-name candidate is answered
+- **WHEN** the query result identifies exactly one dominant candidate and one viable alternative
+- **THEN** the answer names the interpreted candidate and offers a validated switch to the viable
+  alternative
+- **AND** it does not present the interpretation as if no ambiguity existed
+
+### Requirement: Safety guidance is conservative and bounded
+
+A safety-guidance answer SHALL be brief, polite, and limited to lawful risk avoidance and official
+help/reporting direction. It SHALL NOT identify/speculate about illegal venues, repeat unsupported
+allegations, facilitate discovery/evasion, or expand into unrelated lifestyle assistance. Current
+official claims SHALL map to bounded official-source snapshots when such a lookup was explicitly
+requested.
+
+#### Scenario: Local safety reminder needs no current official lookup
+- **WHEN** conservative static guidance is sufficient
+- **THEN** the answer provides that guidance without general Web search
+- **AND** it does not name suspected venues or districts
 
 ### Requirement: Intermediate LLM decisions are structured and traceable
 
