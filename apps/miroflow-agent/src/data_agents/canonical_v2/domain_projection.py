@@ -8,6 +8,7 @@ deterministic operation over explicit retained inputs.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from collections.abc import Iterable
 from datetime import date as Date, datetime
 import hashlib
@@ -418,6 +419,15 @@ class _ProjectionContext:
         self.current_by_subject_path: dict[tuple[str, str], CurrentFieldSelection] = {}
         self._validate_catalog_identity()
         self._validate_graph()
+        selections_by_identity: dict[str, list[CurrentFieldSelection]] = defaultdict(
+            list
+        )
+        for (identity_id, _), selection in self.current_by_subject_path.items():
+            selections_by_identity[identity_id].append(selection)
+        self.current_by_identity = {
+            identity_id: tuple(sorted(values, key=lambda item: item.field_path))
+            for identity_id, values in selections_by_identity.items()
+        }
 
     def _validate_catalog_identity(self) -> None:
         identity = (
@@ -492,6 +502,7 @@ class _ProjectionContext:
                 raise DomainProjectionIntegrityError(
                     "projection cannot select a future source assertion"
                 )
+        assertion_ids = frozenset(self.assertions)
         for decision in self.decisions.values():
             identity = self.identities.get(decision.canonical_identity_id)
             if identity is None:
@@ -506,7 +517,7 @@ class _ProjectionContext:
                 raise DomainProjectionIntegrityError(
                     "projection cannot select a future canonical decision"
                 )
-            if not set(decision.candidate_assertion_ids) <= set(self.assertions):
+            if not set(decision.candidate_assertion_ids) <= assertion_ids:
                 raise DomainProjectionIntegrityError(
                     "canonical decision references a missing assertion"
                 )
@@ -581,7 +592,7 @@ class _ProjectionContext:
                 raise DomainProjectionIntegrityError(
                     "inclusion decision is not valid for this release/as-of"
                 )
-            if not set(inclusion.supporting_assertion_ids) <= set(self.assertions):
+            if not set(inclusion.supporting_assertion_ids) <= assertion_ids:
                 raise DomainProjectionIntegrityError(
                     "inclusion decision references a missing assertion"
                 )
@@ -603,19 +614,7 @@ class _ProjectionContext:
         inclusion: PolicyDecision,
     ) -> Projection:
         catalog = self.catalog_by_domain[identity.entity_type]
-        selections = tuple(
-            sorted(
-                (
-                    selection
-                    for (
-                        identity_id,
-                        _,
-                    ), selection in self.current_by_subject_path.items()
-                    if identity_id == identity.canonical_identity_id
-                ),
-                key=lambda item: item.field_path,
-            )
-        )
+        selections = self.current_by_identity.get(identity.canonical_identity_id, ())
         allowed_fields = {field.field_path for field in catalog.fields}
         subobject_inputs = _SUBOBJECT_INPUTS[identity.entity_type]
         unknown_fields = {
@@ -646,7 +645,7 @@ class _ProjectionContext:
                     f"sub-object selection must be a list: {selection.field_path}"
                 )
             typed_values: list[TypedSubobject] = []
-            for raw_value in selection.value:
+            for index, raw_value in enumerate(selection.value):
                 if not isinstance(raw_value, dict):
                     raise DomainProjectionIntegrityError(
                         f"{selection.field_path} members must be typed objects"
@@ -655,12 +654,64 @@ class _ProjectionContext:
                     raise DomainProjectionIntegrityError(
                         "callers cannot provide a precomputed sub-object projection hash"
                     )
+                required_lineage_fields = {
+                    "subobject_id",
+                    "parent_canonical_identity_id",
+                    "supporting_assertion_ids",
+                    "decision_ids",
+                    "observed_at",
+                }
+                optional_lineage_fields = {
+                    "valid_from",
+                    "valid_to",
+                }
+                lineage_fields = required_lineage_fields | optional_lineage_fields
+                supplied_lineage = lineage_fields & set(raw_value)
+                if supplied_lineage and not required_lineage_fields <= supplied_lineage:
+                    raise DomainProjectionIntegrityError(
+                        f"{selection.field_path} sub-object lineage is incomplete"
+                    )
+                normalized_value = raw_value
+                if not supplied_lineage:
+                    source_payload = cast(JsonValue, raw_value)
+                    source_sha256 = _canonical_sha256(source_payload)
+                    subobject_identity_sha256 = _canonical_sha256(
+                        cast(
+                            JsonValue,
+                            {
+                                "domain": identity.entity_type,
+                                "field_path": selection.field_path,
+                                "ordinal": index,
+                                "parent_canonical_identity_id": (
+                                    identity.canonical_identity_id
+                                ),
+                                "source_payload_sha256": source_sha256,
+                            },
+                        )
+                    )
+                    observed_at = max(
+                        self.assertions[assertion_id].observed_at
+                        for assertion_id in selection.supporting_assertion_ids
+                    )
+                    normalized_value = {
+                        **raw_value,
+                        "subobject_id": (
+                            f"subobject:{identity.entity_type}:{selection.field_path}:"
+                            f"{index:04d}:{subobject_identity_sha256}"
+                        ),
+                        "parent_canonical_identity_id": identity.canonical_identity_id,
+                        "supporting_assertion_ids": selection.supporting_assertion_ids,
+                        "decision_ids": (selection.decision_id,),
+                        "observed_at": observed_at,
+                        "valid_from": selection.valid_from,
+                        "valid_to": selection.valid_to,
+                    }
                 provisional_values = {
-                    **raw_value,
+                    **normalized_value,
                     "projection_content_sha256": "0" * 64,
                 }
                 for bound in ("valid_from", "valid_to"):
-                    raw_bound = raw_value.get(bound)
+                    raw_bound = normalized_value.get(bound)
                     expected_bound = getattr(selection, bound)
                     if (raw_bound is None) != (expected_bound is None):
                         raise DomainProjectionIntegrityError(

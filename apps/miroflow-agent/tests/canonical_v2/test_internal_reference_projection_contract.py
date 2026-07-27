@@ -7502,7 +7502,37 @@ def test_release_scoped_exact_lookup_binds_physical_bundle_and_public_trace(
             ).model_dump(mode="json"),
         ),
     )
-    assert len(exact_adapter(identifier_request).candidates) == 1
+    identifier_result = exact_adapter(identifier_request)
+    assert len(identifier_result.candidates) == 1
+    identifier_plan_payload = plan.model_dump(mode="json")
+    identifier_plan_payload.update(
+        {
+            "original_query": "Inspect company-robotics",
+            "protected_slots": [
+                slot.model_dump(mode="json")
+                for slot in identifier_request.protected_slots
+            ],
+            "lane_queries": [
+                {
+                    **exact_lane_query,
+                    "pure_topic_text": "company-robotics",
+                    "query_text": "company-robotics",
+                }
+            ],
+            "content_sha256": "0" * 64,
+        }
+    )
+    identifier_plan = read_module.RetrievalPlan.model_validate(identifier_plan_payload)
+    identifier_evidence = service.execute(identifier_plan)
+    assert len(identifier_evidence.items) == 1
+    assert identifier_evidence.items[0].claim_binding is not None
+    assert identifier_evidence.items[0].claim_binding.predicate == "exact_identifier"
+    assert identifier_evidence.items[0].claim_binding.value == "company-robotics"
+    identifier_trace = next(
+        trace for trace in identifier_evidence.traces if trace.lane == "exact"
+    )
+    assert identifier_trace.status == "succeeded"
+    assert identifier_trace.failure_kind is None
     assert (
         exact_adapter(
             lane_request_with(domains=("paper",), protected_slots=())
@@ -8991,6 +9021,148 @@ def test_s8v2_professor_typed_vector_view_selection_is_release_authoritative(
         == 1
     )
     assert len(one_bound_evidence.fused_candidates) == 1
+    unbound_web_plan = make_release_plan(
+        token="research-web-bound-one",
+        query="哪些教授研究机器人？",
+        professor_vector_view="research",
+        behavior_class="B",
+        max_candidates=1,
+    )
+    web_bound_plan = read_module.RetrievalPlan.model_validate(
+        {
+            **unbound_web_plan.model_dump(
+                mode="json",
+                exclude={"content_sha256"},
+            ),
+            "session_id": "session:s8v2-late-selection",
+        }
+    )
+
+    web_payload = b'{"title":"current professor result"}'
+    web_snapshot_sha256 = hashlib.sha256(web_payload).hexdigest()
+    web_snapshot_id = f"web-snapshot:sha256:{web_snapshot_sha256}"
+    web_item = read_module.EvidenceItem(
+        evidence_id="evidence:web:s8v2:late-selection",
+        object_id="web-object:s8v2:late-selection",
+        domain="professor",
+        lane="web",
+        source_nature="current_web",
+        source_locator="https://current.example/s8v2-professor",
+        snippet="陈艾达 current Professor result",
+        score=1.0,
+        source_authority="web_search",
+        observed_at=NOW,
+        claim_binding=read_module.EvidenceClaimBinding(
+            subject_id="web-object:s8v2:late-selection",
+            predicate="current_web_result",
+            value=web_snapshot_sha256,
+            status="observed",
+        ),
+        web_snapshot=read_module.WebEvidenceSnapshot(
+            snapshot_id=web_snapshot_id,
+            content_sha256=web_snapshot_sha256,
+            retrieved_at=NOW,
+            byte_length=len(web_payload),
+        ),
+    )
+    web_candidate = read_module.RecallCandidate(
+        raw_candidate_id="candidate:web:s8v2:late-selection",
+        display_name="陈艾达",
+        domain="professor",
+        identity_kind="web_only",
+        canonical_id=None,
+        resolution_state="unresolved",
+        query_view="view:original",
+        lane="web",
+        attempt=1,
+        release_id=RELEASE_ID,
+        adapter_version="recorded-web-s8v2",
+        provider_version="recorded-web-provider-s8v2",
+        raw_score=1.0,
+        evidence=(web_item,),
+    )
+
+    def web_first_reranker(value: Any) -> Any:
+        ordered = tuple(
+            candidate.result_id
+            for candidate in sorted(
+                value.eligible_candidates,
+                key=lambda candidate: (
+                    not any(
+                        item.source_nature == "current_web"
+                        for item in candidate.evidence
+                    )
+                ),
+            )
+        )
+        return read_module.RerankProposal(
+            decision_input_sha256=value.content_sha256,
+            schema_version="rerank-proposal-v1",
+            model_id="recorded-reranker-s8v2",
+            prompt_version="recorded-reranker-s8v2",
+            ordered_result_ids=ordered,
+            rationale="Prefer the explicit current-Web result.",
+        )
+
+    web_selected_service = release_read_factory(
+        release_bundle=bundle,
+        published_release=published,
+        universal_web_policy=read_module.WebSearchPolicy(
+            mode="universal",
+            max_provider_calls=1,
+            timeout_ms=1_000,
+            max_results=1,
+        ),
+        web_search=lambda _: read_module.RetrievalLaneResult(
+            candidates=(web_candidate,),
+            web_snapshot_payloads=(
+                read_module.WebSnapshotPayload(
+                    snapshot_id=web_snapshot_id,
+                    content=web_payload,
+                ),
+            ),
+        ),
+        web_snapshot_policy=read_module.WebSnapshotPolicy(
+            policy_id="web-snapshot-policy:s8v2-late-selection",
+            policy_version="web-snapshot-policy-v1",
+            max_bytes=8_192,
+        ),
+        embedding_adapter=embedding_adapter,
+        reranker=web_first_reranker,
+        clock=lambda: NOW,
+    )
+    web_selected = web_selected_service.execute(web_bound_plan)
+    assert len(web_selected.items) == 1, {
+        "traces": [
+            (trace.lane, trace.status, trace.failure_kind, trace.candidate_count)
+            for trace in web_selected.traces
+        ],
+        "limitations": [item.code for item in web_selected.limitations],
+        "candidate_traces": [
+            (
+                trace.lane,
+                trace.disposition,
+                trace.selected_result_id,
+            )
+            for trace in web_selected.candidate_traces
+        ],
+        "rerank": web_selected.rerank_receipt,
+        "fused": [
+            (
+                candidate.canonical_id,
+                candidate.origin_lane,
+                tuple(item.source_nature for item in candidate.evidence),
+            )
+            for candidate in web_selected.fused_candidates
+        ],
+    }
+    assert web_selected.items[0].source_nature == "current_web"
+    assert len(web_selected.entity_handles) == 1
+    assert web_selected.entity_handles[0].kind == "web"
+    assert any(
+        candidate.canonical_id == "professor-ada"
+        for candidate in web_selected.fused_candidates
+    )
 
     valid_proposal = proposals["research"]
 

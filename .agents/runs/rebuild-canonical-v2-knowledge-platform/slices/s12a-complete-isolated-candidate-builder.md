@@ -2,19 +2,49 @@
 
 ## Status
 
-Specified at `2026-07-20T11:17:04Z`; repaired into a reviewable Specified contract at
-`2026-07-21T19:24:16Z`. S10O and aggregate S11C are Accepted, S11C receipt SHA-256 is
-`281b28244a9fb5043a10df4e7eaa8f4e9e9385825babdae6204a461661a99717`, and the formal ledger is
-`70/80`. This slice is still not Ready: no production/test/source-manifest implementation may start
-until the remaining live migration/source/ownership gates pass and one independent lean Ready
-review reports zero open Critical/Important findings. The preceding audit's `C3/I4` findings are
-repaired in these three Specified artifacts; open Critical/Important is `0` pending that independent
-review. Minor/YAGNI is recorded and nonblocking.
+Accepted at `2026-07-23` after the fresh isolated r12 build, complete system checks, two independent
+source/safety reviews, and an independent envelope/PostgreSQL/physical-index evidence audit. The
+final implementation, test, runner, and runner-test SHA-256 values are
+`85b4ca8b89bb1e9c8870957933002e270e59916b8367f443d3ee267932298efa`,
+`d8c8174f31d226468c8b7fe85fd543c022ea74f7cb88a461d1b33dd98753dff4`,
+`0279b2428c11bd07fa7debbed81705712fc25b5938ec1f0c2aa35eaab82fa682`, and
+`a85ea8da306b665550f668a6aaeec83db5cff1f4701919f4492044ac62b59403`. The focused
+builder/runner matrix reports `104 passed`; the Task 12.1 owner matrix reports `169 passed, 2
+skipped`; complete no-external Canonical V2 reports `542 passed, 148 skipped, 3 warnings`; and the
+identity/domain prerequisite matrix reports `87 passed`. Task `12.1` is checked and the task ledger
+is `71/80`; acceptance remains `49/97` because no aggregate S12 acceptance item is satisfied by the
+build-only slice. Tasks `12.2`-`12.6`, active state, original sources, production resources, and
+local Git history remain unchanged. The required local checkpoint commit is not authorized by the
+current user instruction and therefore remains uncreated.
+
+## Current Candidate evidence
+
+- Release/run: `candidate-s12a-20260723-r12` / `s12a-build-20260723-r12`.
+- Envelope raw SHA-256: `a2684f9b9bd42c8727625fa7e057f654c6539a6e97924eccfdfb913fdfef9cbc`;
+  canonical envelope/receipt/handoff hashes:
+  `77cde16c037aec888e07a677b3f96effd27a75f3eeb68a4f38c5fdb2a6a88383`,
+  `5ae974b6af80980864bac751812b12fb7c468a4449331db4a85b47c4453437a8`, and
+  `f18af1854a92ef2d76816a8f3f3a9a724fb5ab233de6020f9c161c5100cf00bc`.
+- Source outcome: 5,561 landing records; 1,037 Company projections; zero Paper, Patent, Professor,
+  and relationship projections; 5,561 evidence-bound typed gaps. The 580 historical
+  `professor_paper_link` rows lacked accepted endpoint authority and therefore remain gaps rather
+  than fabricated relationships.
+- Independent physical readback on a byte-exact temporary copy: 1,037 Milvus points and 1,037
+  lookup documents, 8 vector and 7 lookup manifests, physical snapshot SHA-256
+  `20cc5fd309056f714e09038465d3cec805e239752f1b709e0e92ba269f46cabe`, and accepted release parity
+  with zero missing, extra, stale, or cross-release points. The durable registry SHA-256 is
+  `5092f40fb0759dd69a297fa505b8cb50ab09fbac39d7209e602c69cffea3732f`.
+- `publish.active_release` is absent before and after. Original PostgreSQL remains paused and
+  original Milvus was not opened or rehashed.
+- Evidence copy:
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete-candidate-build-envelope-r12.json`.
+  r10 and r11 are retained historical evidence and are not current authority; the unsuffixed r6
+  envelope was restored byte-for-byte.
 
 ## Parent
 
 - OpenSpec change: `openspec/changes/rebuild-canonical-v2-knowledge-platform/`.
-- OpenSpec task to close after acceptance: `12.1` only.
+- OpenSpec task closed by this acceptance: `12.1` only.
 - Requirements: immutable verified source copies and landing, offline identity/canonical authority,
   typed four-domain plus internal projections, one immutable candidate manifest, full isolated
   index, deterministic parity, frozen originals, and no active-release effect.
@@ -45,8 +75,8 @@ That single call must own verified accepted-copy staging, immutable landing, ret
 authority and typed unresolved gaps, canonical/identity/domain/internal-reference/relationship/
 eligibility projection, immutable candidate/manifest construction, durable registry, fresh full
 lookup/Milvus build, complete physical audit, exact `ReleasePublication.verify`, and one
-content-addressed receipt. The method returns only after all stages agree and does not change or
-discover an active release.
+content-addressed receipt/handoff envelope. The method returns only after all stages agree and does
+not change or discover an active release.
 
 ## Non-goals
 
@@ -56,6 +86,9 @@ discover an active release.
   alias/pointer movement, destructive cleanup, or source retirement.
 - No live Web/LLM/embedding/reranking provider gate, latency/cost benchmark, new targeted
   recollection request, automatic recollection, or online-to-canonical write.
+- No production serving bundle or live query/answer/Web gate. Those are Task `12.2`; production
+  `--serve` fails closed before builder construction until that bundle exists. The injected serving
+  test verifies only the composition interface and does not claim a production serving artifact.
 - No new migration/schema, workflow engine, distributed transaction coordinator, resumable generic
   DAG, plugin registry, scheduler, queue, automatic retry/cleanup/retirement framework, or generic
   release manager.
@@ -70,9 +103,12 @@ discover an active release.
   only after this slice becomes Ready.
 - Create `.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete_candidate_runner.py`
   and its adjacent `test_complete_candidate_runner.py` only after Ready.
-- Generate one S12A complete-candidate receipt only after a successful real isolated run.
-- Update this contract, S12A audit/plan/receipt, and existing status/verification artifacts allowed
+- Generate one S12A complete-candidate receipt/handoff envelope only after a successful real
+  isolated run.
+- Update this contract, S12A audit/plan/envelope, and existing status/verification artifacts allowed
   by AGENTS.md after Candidate evidence. Check exactly Task `12.1` only after acceptance.
+- After Task `12.1` is Accepted, create exactly one local task commit on the S12A branch. No Push or
+  PR is authorized.
 
 ## Forbidden changes
 
@@ -87,8 +123,8 @@ discover an active release.
   environment fallback.
 - Treating PRD/spec/test/corpus prose as factual source rows; inventing parent records, identities,
   facts, relationships, content, eligibility, points, evidence, or recovered bytes.
-- Calling/exposing `promote` or `rollback`, checking Tasks `12.2`-`12.6`, Commit, Push, PR, archive,
-  Cutover, or destructive cleanup.
+- Calling/exposing `promote` or `rollback`, checking Tasks `12.2`-`12.6`, Push, PR, archive, Cutover,
+  or destructive cleanup. A local commit is permitted only for the Accepted Task `12.1` checkpoint.
 
 ## External interface and internal seams
 
@@ -96,24 +132,27 @@ The only external interface remains
 `KnowledgeBuild.build(BuildCandidateRequest) -> CandidateRelease`. The isolated factory may accept
 explicit target/source configuration and adapters, but callers do not receive or sequence internal
 stages. Tests exercise the same build interface as the runner. `CompleteCandidateConsumerHandoff`
-is a success artifact, not a second build interface: the injected receipt sink emits and reads it
-back only after every private stage and the complete receipt succeed. It binds the exact
-`CandidateRelease`, `IsolatedReleaseBundle`, `IndexProjectionRequest`, `InstitutionCatalog`, and
-`ReleaseVerification` consumed by S11. The runner calls `build` exactly once, reads this sink-owned
-handoff, and must not reconstruct or call a private build stage.
+is a success artifact, not a second build interface. `CompleteCandidateBuildEnvelope` is the only
+durable success file: it contains the typed receipt and handoff, has one canonical content hash, and
+is published once without replacement and read back by the injected sink only after every private
+stage succeeds.
+The handoff binds the exact `CandidateRelease`, `IsolatedReleaseBundle`, `IndexProjectionRequest`,
+`InstitutionCatalog`, and `ReleaseVerification` consumed by S11. The runner calls `build` exactly
+once, reads this sink-owned handoff, and must not reconstruct or call a private build stage.
 
 Internal seams are limited to dependencies that genuinely vary:
 
 - fresh real local PostgreSQL, filesystem, and Milvus Lite adapters;
 - recorded versus production offline decision/embedding adapters;
-- deterministic versus real clock and receipt sinks.
+- deterministic versus real clock and single-envelope sinks.
 
-The runner parses explicit configuration, creates adapters, calls `build` once, validates receipt
-and handoff readback, and prints secret-free identities. In `--serve` mode it composes only the
-existing Accepted S11 query-planner, release-read, answer, aggregate-runtime, and candidate-app
-factories from the handoff. It uses recorded proposal, answer-selection, Web, sufficiency, and
-supplemental adapters. It must not import/call landing, SQL, identity, build projection, index,
-audit, verification, promotion, or rollback helpers directly.
+The runner parses explicit configuration, creates adapters, calls `build` once, validates the one
+envelope readback, and prints secret-free receipt/handoff identities. Its injected `--serve` seam
+proves that a later Task `12.2` serving bundle can consume the exact handoff without a second build.
+The production CLI rejects `--serve` during dependency preflight because Task `12.1` does not own
+the recorded proposal/answer/Web/sufficiency/supplemental bundle or live query/answer gates. It must
+not import/call landing, SQL, identity, build projection, index, audit, verification, promotion, or
+rollback helpers directly.
 
 ## Source-build manifest contract
 
@@ -200,11 +239,12 @@ gate/request/manifest/target validation
   -> public/internal/relationship/eligibility projections
   -> pure full-index expectation
   -> existing KnowledgeBuild manifest/candidate construction
-  -> existing-schema durable candidate registry, typed projection persistence, and unresolved gaps
+  -> existing-schema durable candidate registry, available typed-store persistence, and unresolved gaps
   -> fresh isolated full index materialization
   -> independent audit_isolated_index_snapshot complete physical inventory
   -> package-private ephemeral ReleasePublication.verify only
-  -> content-addressed receipt readback
+  -> exact five-artifact consumer handoff construction
+  -> one no-overwrite content-addressed receipt/handoff envelope publication/readback
   -> return CandidateRelease
 ```
 
@@ -215,12 +255,19 @@ auxiliary, unresolved Person references do not become identities, and Product ca
 answer-scoped.
 
 The existing database schema is used without migration. After the pure candidate graph and expected
-manifest are known, release/build-manifest/manifest-section identities are inserted atomically;
-typed stage results use their Accepted stores, and gap drafts are persisted only after the candidate
-registry exists. Equal replay is idempotent; same identity/different content fails. A failed later
-stage may leave an isolated inspectable/retryable candidate, but no success receipt is emitted,
-`build` raises, no active pointer changes, and retry uses a new fresh owned physical target instead
-of overwriting the failed one.
+manifest are known, release/build-manifest/manifest-section identities are inserted atomically.
+Identity, decision, domain, and relationship results use their Accepted PostgreSQL stores. No
+Accepted PostgreSQL store exists for `InternalReferenceProjectionResult` or
+`PathEligibilityResult`; S12A therefore persists their complete content hashes in manifest sections
+and retains their exact typed payloads only in the final envelope/handoff. It must not invent tables,
+serialize them into unrelated columns, or claim full PostgreSQL persistence. Gap drafts are
+persisted only after the candidate registry exists. Accepted store-level equal replay remains
+idempotent and conflicting content identity fails inside one build, but the top-level `build` call
+is single-use for one fresh physical target set. A second top-level call against the same database,
+staging root, or index root fails the freshness gate before input or write. A failed later stage may
+leave an isolated inspectable candidate, but no success envelope is emitted, `build` raises, no
+active pointer changes, and retry uses a new release/run identity and new fresh owned physical
+targets instead of overwriting the failed one.
 
 ## Failure and gap contract
 
@@ -242,22 +289,23 @@ of overwriting the failed one.
 
 ## Consumer handoff and run-local serving
 
-`CompleteCandidateConsumerHandoff` and `CompleteCandidateBuildReceipt` round-trip the exact typed
+`CompleteCandidateConsumerHandoff` and `CompleteCandidateBuildReceipt` are fields of one
+`CompleteCandidateBuildEnvelope`. Together they round-trip the exact typed
 `CandidateRelease`, `IsolatedReleaseBundle`, `IndexProjectionRequest`, `InstitutionCatalog`, and
 accepted `ReleaseVerification`; all five share one release/manifest/projection/evidence graph. The
-receipt binds each full canonical payload or its canonical content hash, and its candidate is
-exactly the object returned by `KnowledgeBuild.build`. The sink emits no handoff on any failed
-stage, failed receipt write, or failed receipt readback.
+exact internal-reference and path-eligibility results are nested in `IndexProjectionRequest`; the
+handoff therefore retains both typed payloads without a new store. The receipt binds the handoff
+content hash. The envelope carries both complete typed values and its own canonical hash. One sink
+operation writes and fsyncs one temporary envelope, then publishes it with a same-filesystem
+no-overwrite hard link, fsyncs the directory, reads that same file back, and rejects any collision
+or cross-wire before `build` returns the exact candidate. No success envelope exists after a failed
+stage, failed no-overwrite publication, or failed readback.
 
-`complete_candidate_runner.py` supports `--serve --host 0.0.0.0 --port 18188`. After its sole
-successful `build` call and sink readback, it creates a run-local, in-process `PublishedRelease`
-view solely to satisfy the Accepted S11 read/runtime factories. That view is not persisted and is
-not produced by `ReleasePublication.promote`; `publish.active_release`, aliases, and pointers remain
-unchanged. The runner composes the existing isolated release planner/read factories,
-`compose_canonical_v2_consumer_runtime`, and `create_canonical_v2_candidate_app` with recorded
-proposal/answer/Web/sufficiency/supplemental adapters. It passes the app object to Uvicorn with
-exactly one worker and reload disabled. It must not use an import string, child worker, startup
-hook, or request path that can rebuild the candidate.
+`complete_candidate_runner.py` accepts the `--serve --host 0.0.0.0 --port 18188` interface for
+dependency-injected wiring tests, but production dependency resolution intentionally fails closed
+before builder construction. Task `12.2` owns the content-addressed serving bundle and the real
+query/answer/Web gates. Neither path persists a `PublishedRelease`, calls promotion, changes
+`publish.active_release`, or permits a request/startup hook to rebuild the candidate.
 
 ## Target and receipt contract
 
@@ -278,10 +326,13 @@ hook, or request path that can rebuild the candidate.
 - Gate checks occur before any input read, before the first database write, and immediately before
   the first index write.
 - Receipt binds exact gate/source/landing/gap/authority/projection/registry/index/physical-audit/
-  verification/consumer-handoff/active-state/original-Milvus hashes and validates its own canonical
-  content hash. Receipt output and sink readback are atomic, exact-typed, and secret-free.
+  verification/consumer-handoff/active-state/frozen-original-Milvus identities. The receipt and
+  handoff are contained by one canonical envelope that validates its own content hash. The
+  original-Milvus identity is copied only from the Accepted S2/S2B content-addressed records; S12A
+  never reopens or rehashes the original bytes. Envelope output/readback is one-file,
+  no-overwrite, exact-typed, and secret-free.
 - A failed build cleans up only not-yet-registered, explicitly S12A-owned scratch copies. A durable
-  failed candidate, successful candidate, receipt, database, staging root, or index is retained for
+  failed candidate, successful candidate, envelope, database, staging root, or index is retained for
   inspection/user testing until a separately recorded exact-owner cleanup. Serving shutdown never
   promotes, rolls back, drops, overwrites, or implicitly cleans a candidate.
 
@@ -290,8 +341,9 @@ hook, or request path that can rebuild the candidate.
 - Accepted S1-S11 behavior and all existing deep module interfaces remain unchanged.
 - Candidate construction cannot mutate active canonical/published/index state. `publish.active_release`
   is identical before/after (including absent/absent on a fresh target).
-- Original PostgreSQL remains paused; original Milvus is never client-opened and retains its frozen
-  hash. Restore/backup/source bytes are immutable.
+- Original PostgreSQL remains paused; original Milvus is never opened or rehashed by S12A. Its
+  frozen hash identity comes only from Accepted S2/S2B evidence. Restore/backup/source bytes are
+  immutable.
 - S2C and Tasks `8.1`, `8.8`, `9.8`, and `12.2`-`12.6` remain open.
 
 ## Required checks
@@ -302,13 +354,12 @@ hook, or request path that can rebuild the candidate.
   xfail/XPASS.
 - One fresh real PostgreSQL plus one fresh real Milvus Lite/lookup run proves the complete interface
   path, exact 50-source disposition, full 5,561-row batch, landing/authority/projection/registry/
-  index/verification/receipt/handoff, and zero active/original effect.
-- Runner owners prove one build call in both non-serving and serving paths, exact handoff-to-runtime
-  wiring, the run-local-only PublishedRelease view, recorded Web-capable question answering, app
-  object serving at `0.0.0.0:18188`, one worker/no reload, and zero promotion/pointer/private-stage
-  calls.
+  index/verification/single-envelope receipt/handoff, and zero active/original effect.
+- Runner owners prove one build call in the normal path, fail-closed production serving preflight,
+  injected handoff-to-runtime wiring at `0.0.0.0:18188`, one worker/no reload, and zero promotion,
+  pointer, or private-stage calls. They do not claim the Task `12.2` serving bundle or live gates.
 - Hostile source, target, lineage, cross-release, replay/collision, stage-failure, physical-drift,
-  and receipt-tamper cases fail at the named stage with no later effect.
+  and envelope-tamper cases fail at the named stage with no later effect.
 - Unrecoverable/partial evidence remains explicit and creates typed gaps without fabricated rows or
   points.
 - Existing KnowledgeBuild, projection, physical-audit, ReleasePublication, durable-gap, and consumer
@@ -321,13 +372,13 @@ hook, or request path that can rebuild the candidate.
 
 ## Evidence to update
 
-- This Slice Contract, S12A audit/plan, source-build manifest, and complete-candidate receipt.
+- This Slice Contract, S12A audit/plan, source-build manifest, and complete-candidate envelope.
 - `.agents/runs/rebuild-canonical-v2-knowledge-platform/verification.md` with exact commands/results,
   live target identities, source/gap/projection/registry/index hashes, active-state snapshots,
   original-source checks, package hash, and reviewer conclusion.
 - After acceptance only: check exactly Task `12.1`; update matching OpenSpec/current status artifacts
   with a live `+1` ledger delta.
-- Task `12.3` remains S12B-owned even though the receipt is an input to its aggregate evidence.
+- Task `12.3` remains S12B-owned even though the envelope receipt is an input to its aggregate evidence.
   Task `12.4` may record pre-run checks but remains unchecked; Task `12.5` requires user acceptance;
   Task `12.6` requires separate explicit Cutover authorization.
 
@@ -343,27 +394,28 @@ hook, or request path that can rebuild the candidate.
   a historical row would become canonical truth without Accepted owners; an unresolved row cannot
   remain an explicit gap; or a placeholder is required to satisfy a typed projection.
 - Builder success can occur without durable registry readback, complete physical inventory, accepted
-  zero-deviation verification, content-valid receipt, unchanged active state, or frozen originals.
+  zero-deviation verification, content-valid envelope, unchanged active state, or frozen originals.
 - A runner/test must sequence private stages, hide RED behind skip/xfail, weaken an Accepted owner,
   delete/overwrite an owned failed target, or leave a Critical/Important finding open.
 
-## Done means
+## Candidate and acceptance gate
 
 - The exact Accepted 50-source authority is dispositioned, every admitted input is copied/landed
   with verified lineage, the complete released-objects batch is mapped under the frozen policy, and
   every malformed/unmapped input remains a typed unresolved gap.
 - One call to the real deep `KnowledgeBuild.build` returns a complete isolated candidate whose
   typed projections, durable registry, fresh physical indexes, exact verification, and content
-  receipt all agree.
+  receipt/handoff envelope all agree.
 - Original/active state is unchanged, failure/replay behavior is inspectable and safe, all Required
-  checks pass, the exact success handoff can serve the candidate on the run-local S11 app without a
-  second build or publication, and final review has zero open Critical/Important findings.
-- S12A and exactly Task `12.1` are Accepted. Tasks `12.2`-`12.6` remain open for S12B/user/Cutover.
+  Task `12.1` checks pass, and the exact success handoff is ready for Task `12.2` without a second
+  build or publication.
+- The r12 independent/system review supplied that separate decision on `2026-07-23`. S12A and
+  exactly Task `12.1` are Accepted; Tasks `12.2`-`12.6` remain open for S12B/user/Cutover.
 
 ## Rollback note
 
 Before acceptance, delete only the five S12A implementation/run files and the S12A-owned generated
-receipt; drop/remove only explicitly named S12A-owned disposable database, staging, and index
+envelope; drop/remove only explicitly named S12A-owned disposable database, staging, and index
 resources. After acceptance, also restore exactly Task `12.1` and its status/evidence entries. Never
 rewrite migrations, delete nonempty predecessor/source evidence, open original Milvus, start
 original PostgreSQL, move a release pointer, or perform production-like cleanup.

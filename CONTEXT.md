@@ -110,17 +110,25 @@ passes a versioned confidence floor and lead margin without protected-constraint
 the turn is blocking clarification; model self-confidence alone cannot clear the gate.
 _Avoid_: always pick rank one, always clarify, LLM confidence threshold
 
-**Acceptance case contract (验收案例契约)**:
-A versioned machine-readable per-turn oracle defining required and forbidden claims/entities, allowed
-variants, evidence snapshots, as-of, enumeration policy, and expected stage outcomes. Reference prose
-is explanatory and non-normative.
-_Avoid_: golden answer text, prompt-only judge rubric
+**Customer benchmark Ground Truth (客户基准真值)**:
+The versioned, case-specific expected semantic outcome in `docs/测试集答案.xlsx`. Each query, answer,
+and key-point row is interpreted as one unit; an explicit correction in key points overrides an
+inaccurate historical answer fragment. It constrains benchmark behavior but is never runtime data or
+a wording template.
+_Avoid_: reference-only prose, answer hardcoding, exact-string oracle
 
-**Stage oracle (阶段判定契约)**:
-The observable expected outcome for one acceptance stage such as query understanding, candidate
-recall, fusion/sufficiency, answer claims, or session transition. It localizes failure without using
-the final prose as a proxy for every stage.
-_Avoid_: one aggregate answer score, implementation-detail assertion
+**End-to-end acceptance (端到端验收)**:
+The user's direct evaluation of the real isolated chat path over the customer benchmark and natural
+follow-up questions. Automated comparison can identify likely mismatches but cannot accept the
+product on the user's behalf.
+_Avoid_: intermediate-stage acceptance, judge calibration, test-suite-only acceptance
+
+**Engineering gate (工程门禁)**:
+A minimal deterministic check that protects a concrete safety, integrity, or regression invariant.
+It supports product acceptance but does not replace it. The remaining milestone keeps only changed-
+module tests, a Candidate/parity/source-isolation smoke, representative real-chat smoke cases, and
+one complete customer-workbook replay.
+_Avoid_: proof-of-process artifact, duplicate aggregate gate, test count as product quality
 
 **Constraint re-query (换约束重查)**:
 Re-running the prior query frame with one constraint swapped (深圳的→那广东的呢).
@@ -215,9 +223,9 @@ and helps the user choose the next traversal. It is not an exhaustive one-query 
 _Avoid_: one-shot graph answer
 
 **Web augmentation (网络增强)**:
-Parallel Web evidence acquisition for every information-retrieval request, used for freshness,
-corroboration, and coverage. It excludes out-of-scope refusal, clarification-only, and interface
-control inputs; searching does not by itself make a Web claim accepted evidence.
+Bounded Web evidence acquisition when the user requests current information or local material
+evidence is missing, stale, or conflicting. Adequate and sufficiently fresh local evidence does not
+require a Web call. Searching does not by itself make a Web claim accepted evidence.
 _Avoid_: Web fallback, Web rescue
 
 **Inclusion policy (收录规则)**:

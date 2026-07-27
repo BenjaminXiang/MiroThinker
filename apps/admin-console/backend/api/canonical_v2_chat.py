@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+import logging
 import secrets
 from typing import Any
 
@@ -25,9 +26,11 @@ from backend.services.canonical_v2_chat import (
     CanonicalV2MappingError,
     CanonicalV2ReleaseMismatch,
 )
+from src.data_agents.canonical_v2.knowledge_read import KnowledgeReadIntegrityError
 
 
 router = APIRouter(prefix="/api")
+logger = logging.getLogger(__name__)
 
 _SESSION_COOKIE = "miroflow_chat_session"
 _SESSION_TTL_SECONDS = 30 * 60
@@ -96,6 +99,21 @@ def chat(
             detail=_RELEASE_MISMATCH_DETAIL,
         ) from exc
     except CanonicalV2ConsumerIntegrityError as exc:
+        logger.warning(
+            "Canonical V2 consumer integrity rejection: %s: %s",
+            type(exc).__name__,
+            exc,
+        )
+        raise HTTPException(
+            status_code=409,
+            detail="canonical_v2_consumer_integrity_error",
+        ) from exc
+    except KnowledgeReadIntegrityError as exc:
+        logger.warning(
+            "Canonical V2 knowledge-read integrity rejection: %s: %s",
+            type(exc).__name__,
+            exc,
+        )
         raise HTTPException(
             status_code=409,
             detail="canonical_v2_consumer_integrity_error",
@@ -103,6 +121,11 @@ def chat(
     except CanonicalV2MappingError as exc:
         if not hasattr(request.app.state, "canonical_v2_consumer_runtime"):
             raise
+        logger.warning(
+            "Canonical V2 response mapping rejection: %s: %s",
+            type(exc).__name__,
+            exc,
+        )
         raise HTTPException(
             status_code=409,
             detail="canonical_v2_consumer_integrity_error",

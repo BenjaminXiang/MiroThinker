@@ -49,6 +49,50 @@ conflicts and model-only inference SHALL be disclosed at the affected claim.
 - **THEN** the answer identifies the conflict and cites the relevant evidence lanes
 - **AND** it does not silently choose a value without the recorded fusion decision
 
+### Requirement: Normal information answers use evidence-bound LLM synthesis
+
+Every normal information answer SHALL be rendered by an LLM from the admitted current-turn local
+and current-Web evidence after deterministic claim validation. The LLM SHALL organize the answer
+around the user's question instead of copying projection fields or raw snippets. A provider timeout,
+connection failure, invalid output, or unsafe output MAY fall back to the deterministic grounded
+answer, with a typed limitation; deterministic template rendering SHALL NOT be the normal path.
+
+#### Scenario: Professor-to-Company founder follow-up
+- **WHEN** local relationship evidence binds a Professor to a Company with a founder role and Web
+  search returns relevant Company or role evidence
+- **THEN** the synthesized answer states the supported Professor-to-Company relationship first
+- **AND** it may summarize relevant Company information without duplicating raw profile fields
+
+### Requirement: Public chat exposes only official source affordances
+
+The public chat response and UI SHALL expose only validated public official-source links, such as an
+institutional Professor homepage, official Company website, publisher page, or patent-authority
+page. It SHALL NOT expose `/browse`, private-network URLs, internal evidence locators, release IDs,
+raw evidence payloads, retrieval traces, or selector traces. Complete trace data SHALL remain
+available only through server-side audit and internal tooling. The existing `/browse` tool remains
+governed by deployment network or reverse-proxy controls and is not linked from public chat.
+
+#### Scenario: Professor answer has an institutional homepage
+- **WHEN** the admitted Professor projection contains a validated institutional homepage
+- **THEN** the public citation links to that homepage
+- **AND** it does not link to the internal Professor record in `/browse`
+
+#### Scenario: No official public source is available
+- **WHEN** no admitted source qualifies as a public official link
+- **THEN** the public response emits no clickable citation for that source
+- **AND** it does not substitute an internal record or arbitrary Web result
+
+### Requirement: Public evidence uses progressive disclosure
+
+The public chat UI SHALL hide evidence affordances by default. When at least one public official
+source exists, it SHALL render one collapsed `查看依据` disclosure that expands to the official
+source list. Internal trace cards and implementation metadata SHALL not be rendered.
+
+#### Scenario: Answer has one official source
+- **WHEN** a chat answer has one validated official public citation
+- **THEN** the answer is visible while `查看依据` is collapsed by default
+- **AND** expanding it reveals the official source without exposing internal metadata
+
 ### Requirement: Evaluation questions use evidence-based assessment
 
 The system SHALL answer questions about strength, competitiveness, maturity, expert standing, or

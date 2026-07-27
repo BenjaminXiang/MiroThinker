@@ -10,7 +10,8 @@
 - `docs/architecture-decisions/ADR-015-canonical-v2-internal-technology-model.md`
 - `docs/architecture-decisions/ADR-016-product-capability-remains-answer-scoped.md`
 - `docs/architecture-decisions/ADR-017-web-only-entities-use-session-handles.md`
-- `docs/architecture-decisions/ADR-018-machine-readable-claim-level-case-contract.md`
+- `docs/architecture-decisions/ADR-018-machine-readable-claim-level-case-contract.md` — historical
+  decision superseded for final acceptance by the user-confirmed 2026-07-26 lean E2E rebaseline
 - `docs/architecture-decisions/ADR-019-conditional-structured-continuation-offers.md`
 - `docs/architecture-decisions/ADR-020-local-safety-questions-use-safety-guidance.md`
 - `docs/architecture-decisions/ADR-021-confidence-gated-entity-ambiguity.md`
@@ -29,9 +30,10 @@
   where they differ
 - `docs/Patent-Data-Agent-PRD.md`
 - `docs/Multi-turn-Context-Manager-Design.md`
-- `docs/测试集答案.xlsx` — its query/answer rows are high-value case-specific requirement evidence and
-  seed scenarios; prose/key points are not normative pass/fail truth, a generalized answer template,
-  or the sole acceptance source
+- `docs/测试集答案.xlsx` — customer-provided normative Ground Truth for its 17 conversation groups and
+  25 query turns. Query, answer, and key points are interpreted together; explicit key-point
+  corrections override inaccurate historical answer fragments. The workbook is not runtime data or
+  a generalized answer template.
 
 For Canonical V2 domain-catalog work, precedence is the active OpenSpec behavior contract, then the
 shared data-agent contract, then each domain's authoritative PRD/audit plus its explicit locked

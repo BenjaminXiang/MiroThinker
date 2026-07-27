@@ -75,6 +75,20 @@ def _require_unique(values: Iterable[str], label: str) -> tuple[str, ...]:
     return normalized
 
 
+def _supporting_record_ids(
+    sources: Iterable[SourceIdentity],
+) -> tuple[str, ...]:
+    return tuple(
+        sorted(
+            {
+                record_id
+                for source in sources
+                for record_id in source.source_record_ids
+            }
+        )
+    )
+
+
 def _canonical_json(value: JsonValue) -> bytes:
     return json.dumps(
         value,
@@ -1179,15 +1193,41 @@ def canonical_identity_decision_input_sha256(
     decision: IdentityDecision,
     supporting_assertion_ids: Iterable[str],
 ) -> str:
-    payload = cast(
-        JsonValue,
-        {
-            "request": request.model_dump(mode="json"),
-            "decision": decision.model_dump(mode="json"),
-            "supporting_assertion_ids": sorted(supporting_assertion_ids),
-        },
+    return _IdentityDecisionInputHasher(request).hexdigest(
+        decision=decision,
+        supporting_assertion_ids=supporting_assertion_ids,
     )
-    return _content_sha256(payload)
+
+
+class _IdentityDecisionInputHasher:
+    """Reuse exact canonical request bytes across a batch of decision hashes."""
+
+    def __init__(self, request: IdentityResolutionRequest) -> None:
+        self._request_json = _canonical_json(
+            cast(JsonValue, request.model_dump(mode="json"))
+        )
+
+    def hexdigest(
+        self,
+        *,
+        decision: IdentityDecision,
+        supporting_assertion_ids: Iterable[str],
+    ) -> str:
+        digest = hashlib.sha256()
+        # These fragments reproduce _canonical_json() exactly. sort_keys=True orders
+        # the three payload fields as decision, request, supporting_assertion_ids.
+        digest.update(b'{"decision":')
+        digest.update(
+            _canonical_json(cast(JsonValue, decision.model_dump(mode="json")))
+        )
+        digest.update(b',"request":')
+        digest.update(self._request_json)
+        digest.update(b',"supporting_assertion_ids":')
+        digest.update(
+            _canonical_json(cast(JsonValue, sorted(supporting_assertion_ids)))
+        )
+        digest.update(b"}")
+        return digest.hexdigest()
 
 
 def canonical_identity_applied_decision_id(
@@ -1728,9 +1768,11 @@ def validate_identity_resolution_result(
             "identity resolution result changed retained identity assertions"
         )
 
-    source_ids = {
-        source.source_identity_id for source in validated_request.source_identities
+    source_by_id = {
+        source.source_identity_id: source
+        for source in validated_request.source_identities
     }
+    source_ids = set(source_by_id)
     assertion_by_id = {
         assertion.assertion_id: assertion
         for assertion in validated_request.identity_assertions
@@ -1882,6 +1924,9 @@ def validate_identity_resolution_result(
         assignment.source_identity_id: assignment
         for assignment in validated_request.current_source_identity_assignments
     }
+    prior_decision_ids = {
+        decision.decision_id for decision in validated_request.prior_identity_decisions
+    }
     decision_source_ids = {
         source_id
         for decision in validated_result.identity_decisions
@@ -1909,9 +1954,13 @@ def validate_identity_resolution_result(
             raise IdentityResolutionIntegrityError(
                 "source assignment is neither exact request state nor decision output"
             )
+    decision_input_hasher = _IdentityDecisionInputHasher(validated_request)
+    rule_set_sha256_by_method_version: dict[str, str] = {}
     for decision in validated_result.identity_decisions:
         manifest = manifest_by_decision_id[decision.decision_id]
         context = context_by_decision_id[decision.decision_id]
+        decision_source_id_set = set(decision.source_identity_ids)
+        decision_input_id_set = set(decision.input_canonical_identity_ids)
         if decision.decision_id != canonical_identity_applied_decision_id(
             decision=decision,
             candidate_verdict_id=manifest.candidate_verdict_id,
@@ -1969,6 +2018,45 @@ def validate_identity_resolution_result(
             raise IdentityResolutionIntegrityError(
                 "canonical output decision provenance is cross-wired"
             )
+        expected_context_sources = {
+            source_id: source_by_id[source_id]
+            for source_id in decision.source_identity_ids
+            if source_id in source_by_id
+        }
+        expected_context_assertions = {
+            assertion_id: assertion_by_id[assertion_id]
+            for assertion_id in manifest.supporting_assertion_ids
+            if assertion_id in assertion_by_id
+        }
+        expected_input_identities = tuple(
+            sorted(
+                (
+                    request_current_by_id[canonical_identity_id]
+                    for canonical_identity_id in decision.input_canonical_identity_ids
+                    if canonical_identity_id in request_current_by_id
+                ),
+                key=lambda identity: identity.canonical_identity_id,
+            )
+        )
+        expected_input_assignments = tuple(
+            sorted(
+                (
+                    request_assignment_by_source[source_id]
+                    for source_id in decision.source_identity_ids
+                    if source_id in request_assignment_by_source
+                    and request_assignment_by_source[source_id].canonical_identity_id
+                    in decision_input_id_set
+                ),
+                key=lambda assignment: assignment.source_identity_id,
+            )
+        )
+        if decision.method_version not in rule_set_sha256_by_method_version:
+            rule_set_sha256_by_method_version[decision.method_version] = (
+                canonical_identity_rule_set_sha256(decision.method_version)
+            )
+        expected_rule_set_sha256 = rule_set_sha256_by_method_version[
+            decision.method_version
+        ]
         if (
             context.release_id != validated_request.release_id
             or context.decision != decision
@@ -1977,34 +2065,14 @@ def validate_identity_resolution_result(
                 source.source_identity_id: source
                 for source in context.source_identities
             }
-            != {
-                source.source_identity_id: source
-                for source in validated_request.source_identities
-                if source.source_identity_id in decision.source_identity_ids
-            }
+            != expected_context_sources
             or {
                 assertion.assertion_id: assertion
                 for assertion in context.identity_assertions
             }
-            != {
-                assertion.assertion_id: assertion
-                for assertion in validated_request.identity_assertions
-                if assertion.assertion_id in manifest.supporting_assertion_ids
-            }
-            or context.rule_set_content_sha256
-            != canonical_identity_rule_set_sha256(decision.method_version)
-            or context.input_canonical_identities
-            != tuple(
-                sorted(
-                    (
-                        identity
-                        for identity in validated_request.current_canonical_identities
-                        if identity.canonical_identity_id
-                        in decision.input_canonical_identity_ids
-                    ),
-                    key=lambda identity: identity.canonical_identity_id,
-                )
-            )
+            != expected_context_assertions
+            or context.rule_set_content_sha256 != expected_rule_set_sha256
+            or context.input_canonical_identities != expected_input_identities
             or context.output_canonical_identities
             != tuple(
                 sorted(
@@ -2015,24 +2083,8 @@ def validate_identity_resolution_result(
                     key=lambda identity: identity.canonical_identity_id,
                 )
             )
-            or context.input_source_assignments
-            != tuple(
-                sorted(
-                    (
-                        assignment
-                        for assignment in validated_request.current_source_identity_assignments
-                        if assignment.source_identity_id in decision.source_identity_ids
-                        and assignment.canonical_identity_id
-                        in decision.input_canonical_identity_ids
-                    ),
-                    key=lambda assignment: assignment.source_identity_id,
-                )
-            )
-            or not set(context.referenced_prior_decision_ids)
-            <= {
-                prior.decision_id
-                for prior in validated_request.prior_identity_decisions
-            }
+            or context.input_source_assignments != expected_input_assignments
+            or not set(context.referenced_prior_decision_ids) <= prior_decision_ids
         ):
             raise IdentityResolutionIntegrityError(
                 "identity decision-time context does not match the exact request"
@@ -2046,7 +2098,7 @@ def validate_identity_resolution_result(
             raise IdentityResolutionIntegrityError(
                 "identity decision context does not match its request"
             )
-        if not set(decision.input_canonical_identity_ids) <= request_current_ids:
+        if not decision_input_id_set <= request_current_ids:
             raise IdentityResolutionIntegrityError(
                 "identity decision input does not name an exact current request owner"
             )
@@ -2089,14 +2141,13 @@ def validate_identity_resolution_result(
             raise IdentityResolutionIntegrityError(
                 "identity decision manifest references unknown evidence"
             ) from exc
-        if {assertion.source_identity_id for assertion in supporting_assertions} - set(
-            decision.source_identity_ids
-        ):
+        if {
+            assertion.source_identity_id for assertion in supporting_assertions
+        } - decision_source_id_set:
             raise IdentityResolutionIntegrityError(
                 "identity decision manifest evidence is cross-wired"
             )
-        expected_manifest_sha256 = canonical_identity_decision_input_sha256(
-            request=validated_request,
+        expected_manifest_sha256 = decision_input_hasher.hexdigest(
             decision=decision,
             supporting_assertion_ids=manifest.supporting_assertion_ids,
         )
@@ -2235,6 +2286,16 @@ _HIGH_CONFIDENCE_COMPOSITES = {
     "patent": (("title_key", "applicant_key", "filing_date"),),
 }
 
+CANONICAL_IDENTITY_METHOD_VERSION_V2 = "canonical-identity-resolution-v2"
+_V2_HIGH_CONFIDENCE_COMPOSITES = {
+    **_HIGH_CONFIDENCE_COMPOSITES,
+    "professor": (
+        ("name_key", "institution_key", "email_key"),
+        ("name_key", "institution_key", "homepage_key"),
+        *_HIGH_CONFIDENCE_COMPOSITES["professor"],
+    ),
+}
+
 PERSON_IDENTITY_METHOD_VERSION = "canonical-identity-resolution-person-v1"
 _PERSON_STRONG_IDENTIFIER_KEYS = {
     **_STRONG_IDENTIFIER_KEYS,
@@ -2286,6 +2347,12 @@ def _identity_rule_maps(
             _TECHNOLOGY_CANDIDATE_RECALL_KEYS,
             _TECHNOLOGY_HIGH_CONFIDENCE_COMPOSITES,
         )
+    if method_version == CANONICAL_IDENTITY_METHOD_VERSION_V2:
+        return (
+            _STRONG_IDENTIFIER_KEYS,
+            _CANDIDATE_RECALL_KEYS,
+            _V2_HIGH_CONFIDENCE_COMPOSITES,
+        )
     return (
         _STRONG_IDENTIFIER_KEYS,
         _CANDIDATE_RECALL_KEYS,
@@ -2295,6 +2362,10 @@ def _identity_rule_maps(
 
 _LLM_AUTO_ACTION_THRESHOLDS = {
     "canonical-identity-resolution-v1": {
+        IdentityCandidateOutcome.same_entity: 0.90,
+        IdentityCandidateOutcome.different_entities: 0.85,
+    },
+    CANONICAL_IDENTITY_METHOD_VERSION_V2: {
         IdentityCandidateOutcome.same_entity: 0.90,
         IdentityCandidateOutcome.different_entities: 0.85,
     },
@@ -2442,14 +2513,26 @@ def _candidate_components(
         lower, higher = sorted((left_root, right_root))
         parent[higher] = lower
 
-    for index, left in enumerate(sources):
-        for right in sources[index + 1 :]:
-            if _sources_are_recall_candidates(
-                left,
-                right,
-                method_version=request.identity_method_version,
-            ):
-                union(left.source_identity_id, right.source_identity_id)
+    strong_keys, recall_keys, _ = _identity_rule_maps(
+        request.identity_method_version
+    )
+    first_source_id_by_recall_key: dict[tuple[str, str, str], str] = {}
+    for source in sources:
+        keys = dict.fromkeys(
+            (
+                *strong_keys.get(source.entity_type, ()),
+                *recall_keys.get(source.entity_type, ()),
+            )
+        )
+        for key in keys:
+            normalized_value = _normalized_source_key(source, key)
+            if normalized_value is None:
+                continue
+            recall_key = (source.entity_type, key, normalized_value)
+            first_source_id = first_source_id_by_recall_key.setdefault(
+                recall_key, source.source_identity_id
+            )
+            union(first_source_id, source.source_identity_id)
     for identity in (
         *request.current_canonical_identities,
         *request.canonical_identity_history,
@@ -2719,13 +2802,7 @@ def _different_new_entities_result(
             action=IdentityAction.create,
             source_identity_ids=source_ids,
             output_canonical_identity_ids=(output_id,),
-            supporting_record_ids=tuple(
-                sorted(
-                    record_id
-                    for source in group_sources
-                    for record_id in source.source_record_ids
-                )
-            ),
+            supporting_record_ids=_supporting_record_ids(group_sources),
             policy=request.policy,
             method=(
                 DecisionMethod.composite
@@ -2881,13 +2958,7 @@ def _different_existing_owner_result(
         source_identity_ids=source_ids,
         input_canonical_identity_ids=(predecessor.canonical_identity_id,),
         output_canonical_identity_ids=output_ids,
-        supporting_record_ids=tuple(
-            sorted(
-                record_id
-                for source in request.source_identities
-                for record_id in source.source_record_ids
-            )
-        ),
+        supporting_record_ids=_supporting_record_ids(request.source_identities),
         policy=request.policy,
         method=verdict.method,
         method_version=request.identity_method_version,
@@ -3312,6 +3383,7 @@ def _combine_component_results(
         for result in results
         for manifest in result.decision_manifests
     }
+    decision_input_hasher = _IdentityDecisionInputHasher(request)
     content = _IdentityResolutionContent(
         release_id=request.release_id,
         decision_run_id=request.decision_run_id,
@@ -3367,8 +3439,7 @@ def _combine_component_results(
                     **component_manifests[decision.decision_id].model_dump(
                         mode="python"
                     ),
-                    "input_content_sha256": canonical_identity_decision_input_sha256(
-                        request=request,
+                    "input_content_sha256": decision_input_hasher.hexdigest(
                         decision=decision,
                         supporting_assertion_ids=component_manifests[
                             decision.decision_id
@@ -3680,13 +3751,7 @@ class _EphemeralCanonicalIdentityResolutionEngine(CanonicalIdentityResolutionEng
             reversal_of_decision_id=None,
             verdict=verdict,
         )
-        record_ids = tuple(
-            sorted(
-                record_id
-                for source in sources
-                for record_id in source.source_record_ids
-            )
-        )
+        record_ids = _supporting_record_ids(sources)
         decision = IdentityDecision(
             decision_id=decision_id,
             action=action,
@@ -3808,6 +3873,7 @@ def create_ephemeral_canonical_identity_resolution_engine(
 
 
 __all__ = [
+    "CANONICAL_IDENTITY_METHOD_VERSION_V2",
     "CanonicalIdentity",
     "CanonicalIdentityResolutionEngine",
     "CanonicalIdentityResolutionError",

@@ -15,6 +15,9 @@ HERE = Path(__file__).resolve().parent
 TARGET_PATH = HERE / "claim_level_oracle_evaluation.py"
 CONTRACT_PATH = HERE / "claim_level_case_contract.py"
 MANIFEST_PATH = HERE / "claim-level-corpus-manifest-v1.json"
+REVIEW_DIR = HERE / "review"
+APPLICATION_PATH = REVIEW_DIR / "apply_review_export_v2.py"
+VALIDATOR_TEST_SUPPORT_PATH = REVIEW_DIR / "test_validate_review_export_v2.py"
 MANIFEST_CONTENT_SHA256 = (
     "df3a7b09a4f049ac6b34bfd1f128329dc9e7effb3ec61398317026778dc0c8ff"
 )
@@ -62,6 +65,28 @@ def _oracle_module() -> Any:
 def _contract_module() -> Any:
     spec = importlib.util.spec_from_file_location(
         "canonical_v2_s2c_contract_for_oracle_red", CONTRACT_PATH
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _application_module() -> Any:
+    spec = importlib.util.spec_from_file_location(
+        "canonical_v2_review_application_for_oracle_tests",
+        APPLICATION_PATH,
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _validator_test_support() -> Any:
+    spec = importlib.util.spec_from_file_location(
+        "canonical_v2_validator_support_for_oracle_tests",
+        VALIDATOR_TEST_SUPPORT_PATH,
     )
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -357,6 +382,319 @@ def _coherently_cross_wired_source_corpus_artifacts(
 
 def _write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
     path.write_bytes(b"".join(_canonical_bytes(row) + b"\n" for row in rows))
+
+
+def _review_binding(
+    *,
+    contract: dict[str, Any],
+    derived: dict[str, Any],
+    decision: str,
+    schema_version: str,
+    sequence: int,
+) -> dict[str, Any]:
+    binding = {
+        "schema_version": schema_version,
+        "case_id": contract["case_id"],
+        "source_case_id": contract["source_case_id"],
+        "decision": decision,
+        "rationale": "reviewed against the supplied contract and evidence",
+        "reviewer_id": "human:r-1042",
+        "staff_id": "r-1042",
+        "round_id": "round:accepted-test",
+        "export_id": "export:accepted-test",
+        "export_content_sha256": "e" * 64,
+        "policy_id": "single-human-global-stratified-v2",
+        "event_id": f"event:test-{sequence:03d}",
+        "event_revision": 1,
+        "event_payload_sha256": hashlib.sha256(
+            f"event-payload-{sequence}".encode()
+        ).hexdigest(),
+        "submitted_at": "2026-07-24T12:00:00Z",
+        "predecessor_contract_content_sha256": contract["content_sha256"],
+        "derived_contract_content_sha256": derived["content_sha256"],
+        "hard_requirement_ids": contract["outcome_policy"]["hard_requirement_ids"],
+        "snapshot_ids": [row["snapshot_id"] for row in contract["source_snapshots"]],
+    }
+    return _rehash(binding)
+
+
+def _reviewed_v2_artifacts(destination: Path) -> tuple[Path, list[dict[str, Any]]]:
+    destination.mkdir(parents=True)
+    predecessor = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    original_contracts = _jsonl(HERE / "claim-level-corpus-v1.jsonl")
+    original_accounts = _jsonl(HERE / "case-accounting-v1.jsonl")
+    original_snapshots = _jsonl(HERE / "source-snapshots-v1.jsonl")
+    corpus_id = "canonical-v2-s2c-reviewed-v2"
+
+    contracts: list[dict[str, Any]] = []
+    for original in original_contracts:
+        derived = deepcopy(original)
+        derived["corpus_id"] = corpus_id
+        if derived["review_state"] == "pending_user_review":
+            derived["review_state"] = "human_reviewed"
+            derived["acceptance_eligible"] = True
+        contracts.append(_rehash(derived))
+    _contract_module().validate_case_contracts(tuple(contracts))
+    contracts_by_case = {row["case_id"]: row for row in contracts}
+
+    accounts: list[dict[str, Any]] = []
+    for original in original_accounts:
+        derived = deepcopy(original)
+        contract = contracts_by_case[derived["contract_case_id"]]
+        derived["contract_content_sha256"] = contract["content_sha256"]
+        derived["review_state"] = contract["review_state"]
+        derived["acceptance_eligible"] = contract["acceptance_eligible"]
+        if contract["review_state"] == "human_reviewed":
+            derived["reason_code"] = "claim_contract_human_reviewed"
+        accounts.append(_rehash(derived))
+
+    snapshots: list[dict[str, Any]] = []
+    for original in original_snapshots:
+        derived = deepcopy(original)
+        if derived["snapshot_role"] == "claim_evidence":
+            derived["source_corpus_id"] = corpus_id
+        snapshots.append(_rehash(derived, field="record_sha256"))
+
+    original_by_case = {row["case_id"]: row for row in original_contracts}
+    human_bindings = [
+        _review_binding(
+            contract=original_by_case[derived["case_id"]],
+            derived=derived,
+            decision="approved",
+            schema_version="canonical-v2-human-review-binding-v2",
+            sequence=index,
+        )
+        for index, derived in enumerate(
+            (row for row in contracts if row["acceptance_eligible"]), start=1
+        )
+    ]
+    exclusion_bindings = [
+        _review_binding(
+            contract=original_by_case[derived["case_id"]],
+            derived=derived,
+            decision="accept_exclusion",
+            schema_version="canonical-v2-exclusion-review-binding-v2",
+            sequence=index + 29,
+        )
+        for index, derived in enumerate(
+            (
+                row
+                for row in contracts
+                if row["review_state"] == "blocked_missing_evidence"
+            ),
+            start=1,
+        )
+    ]
+    calibration = _rehash(
+        {
+            "schema_version": "canonical-v2-judge-calibration-v2",
+            "export_id": "export:accepted-test",
+            "export_content_sha256": "e" * 64,
+            "round_id": "round:accepted-test",
+            "reviewer_id": "human:r-1042",
+            "staff_id": "r-1042",
+            "policy_id": "single-human-global-stratified-v2",
+            "workload_counts": {
+                "calibration_probes": 60,
+                "contract_reviews": 29,
+                "exclusion_reviews": 23,
+                "human_actions": 112,
+            },
+            "calibration_labels": [
+                {
+                    "decision": "supported" if index < 30 else "unsupported",
+                    "event_id": f"event:cal-{index:03d}",
+                    "payload_sha256": hashlib.sha256(
+                        f"calibration-{index}".encode()
+                    ).hexdigest(),
+                    "revision": 1,
+                    "task_id": f"calibration:cal-v2-{index:03d}",
+                }
+                for index in range(60)
+            ],
+            "judge": {
+                "visibility": "sealed",
+                "summary": {
+                    "evidence_class": "real_human_round",
+                    "pair_count": 60,
+                    "stratum_counts": {
+                        "claim_evidence": 20,
+                        "context_relationship": 10,
+                        "identity_entity": 10,
+                        "insufficiency_assessment": 10,
+                        "safety_web": 10,
+                    },
+                    "human_supported": 30,
+                    "human_unsupported": 30,
+                    "agreement": 1.0,
+                    "confusion_matrix": {
+                        "human_supported_model_supported": 30,
+                        "human_supported_model_unsupported": 0,
+                        "human_unsupported_model_supported": 0,
+                        "human_unsupported_model_unsupported": 30,
+                    },
+                    "unsupported_critical_probes": 5,
+                    "critical_false_accepts": 0,
+                    "gates": {
+                        "exact_pair_count": True,
+                        "exact_stratum_quotas": True,
+                        "minimum_agreement": True,
+                        "minimum_supported_labels": True,
+                        "minimum_unsupported_labels": True,
+                        "minimum_unsupported_critical_probes": True,
+                        "maximum_critical_false_accepts": True,
+                    },
+                    "passed": True,
+                    "model_id": "approved-judge-v2",
+                    "calibration_policy_id": "single-human-global-stratified-v2",
+                    "judge_policy_id": "evidence-bounded-judge-v1",
+                    "authorization_sha256": "a" * 64,
+                    "human_snapshot_sha256": "b" * 64,
+                    "judgments": [
+                        {
+                            "task_id": f"calibration:cal-v2-{index:03d}",
+                            "human_decision": (
+                                "supported" if index < 30 else "unsupported"
+                            ),
+                        }
+                        for index in range(60)
+                    ],
+                },
+            },
+        }
+    )
+
+    paths = {
+        "claim-level-corpus-v2.jsonl": contracts,
+        "case-accounting-v2.jsonl": accounts,
+        "source-snapshots-v2.jsonl": snapshots,
+        "human-review-bindings-v2.jsonl": human_bindings,
+        "exclusion-review-bindings-v2.jsonl": exclusion_bindings,
+    }
+    for name, rows in paths.items():
+        _write_jsonl(destination / name, rows)
+    calibration_path = destination / "judge-calibration-v2.json"
+    calibration_path.write_text(
+        json.dumps(calibration, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    output_names = (*paths, calibration_path.name)
+    outputs = {
+        name: {"sha256": hashlib.sha256((destination / name).read_bytes()).hexdigest()}
+        for name in output_names
+    }
+    artifact_identity = {
+        "s2c_manifest_raw_sha256": hashlib.sha256(MANIFEST_PATH.read_bytes()).hexdigest(),
+        "s2c_manifest_content_sha256": predecessor["content_sha256"],
+        "s2c_corpus_raw_sha256": hashlib.sha256(
+            (HERE / "claim-level-corpus-v1.jsonl").read_bytes()
+        ).hexdigest(),
+        "s2c_accounting_raw_sha256": hashlib.sha256(
+            (HERE / "case-accounting-v1.jsonl").read_bytes()
+        ).hexdigest(),
+        "s2c_snapshots_raw_sha256": hashlib.sha256(
+            (HERE / "source-snapshots-v1.jsonl").read_bytes()
+        ).hexdigest(),
+    }
+    review_application = {
+        "schema_version": "canonical-v2-reviewed-application-binding-v2",
+        "export_id": "export:accepted-test",
+        "export_raw_sha256": "f" * 64,
+        "export_content_sha256": "e" * 64,
+        "round_id": "round:accepted-test",
+        "reviewer_id": "human:r-1042",
+        "staff_id": "r-1042",
+        "evidence_class": "real_human_round",
+        "policy_id": "single-human-global-stratified-v2",
+        "counts": {
+            "calibration_probes": 60,
+            "contract_reviews": 29,
+            "exclusion_reviews": 23,
+            "human_actions": 112,
+        },
+        "artifact_identity": artifact_identity,
+        "human_review_bindings_sha256": outputs[
+            "human-review-bindings-v2.jsonl"
+        ]["sha256"],
+        "exclusion_review_bindings_sha256": outputs[
+            "exclusion-review-bindings-v2.jsonl"
+        ]["sha256"],
+        "judge_calibration_sha256": calibration["content_sha256"],
+    }
+    manifest = _rehash(
+        {
+            "schema_version": "canonical-v2-s2c-corpus-manifest-v2",
+            "corpus_id": corpus_id,
+            "contract_version": predecessor["contract_version"],
+            "case_contract_schema_version": predecessor[
+                "case_contract_schema_version"
+            ],
+            "contract_as_of": predecessor["contract_as_of"],
+            "source_case_count": 52,
+            "contract_case_count": 52,
+            "snapshot_count": len(snapshots),
+            "acceptance_eligible_count": 29,
+            "approval_state": "human_reviewed",
+            "review_state_counts": {
+                "blocked_missing_evidence": 23,
+                "human_reviewed": 29,
+                "pending_user_review": 0,
+            },
+            "conversion_outcome_counts": predecessor[
+                "conversion_outcome_counts"
+            ],
+            "family_counts": predecessor["family_counts"],
+            "sources": predecessor["sources"],
+            "frozen_inputs": predecessor["frozen_inputs"],
+            "predecessor": {
+                "schema_version": predecessor["schema_version"],
+                "corpus_id": predecessor["corpus_id"],
+                "manifest_raw_sha256": hashlib.sha256(
+                    MANIFEST_PATH.read_bytes()
+                ).hexdigest(),
+                "manifest_content_sha256": predecessor["content_sha256"],
+                "output_sha256s": {
+                    name: identity["sha256"]
+                    for name, identity in predecessor["outputs"].items()
+                },
+            },
+            "review_application": review_application,
+            "outputs": outputs,
+        }
+    )
+    manifest_path = destination / "claim-level-corpus-manifest-v2.json"
+    manifest_path.write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return manifest_path, [row for row in contracts if row["acceptance_eligible"]]
+
+
+def _real_reviewed_v2_artifacts(
+    destination: Path,
+) -> tuple[Path, list[dict[str, Any]]]:
+    support = _validator_test_support()
+    fixture = support.ArtifactFixture(
+        destination.parent / f".{destination.name}-validator"
+    )
+    export = support._acceptance_export(fixture)
+    support._write_export(fixture.export_path, export)
+    predecessor = (
+        fixture.source_root
+        / ".agents/runs/rebuild-canonical-v2-knowledge-platform/s2c/claim-level-corpus-manifest-v1.json"
+    )
+    receipt = _application_module().apply_review_export_v2(
+        export_path=fixture.export_path,
+        packet_path=fixture.packet_path,
+        workload_path=fixture.workload_path,
+        source_root=fixture.source_root,
+        predecessor_manifest_path=predecessor,
+        output_dir=destination,
+    )
+    contracts = _jsonl(destination / "claim-level-corpus-v2.jsonl")
+    return receipt.manifest_path, [
+        row for row in contracts if row["acceptance_eligible"]
+    ]
 
 
 def _synthetic_reviewed_artifacts(destination: Path) -> tuple[Path, dict[str, Any]]:
@@ -1160,3 +1498,277 @@ def test_human_review_calibration_and_corpus_eligibility_fail_closed(
             judge_adapter=_RecordingJudge(),
         )
         assert refused.acceptance_ready is False
+
+
+def _v2_run_input(
+    manifest_path: Path, contracts: list[dict[str, Any]]
+) -> dict[str, Any]:
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    review = manifest["review_application"]
+    calibration = json.loads(
+        manifest_path.with_name("judge-calibration-v2.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    calibration_summary = calibration["judge"]["summary"]
+    selected_case_ids = [row["case_id"] for row in contracts]
+    return {
+        "expected_manifest_content_sha256": manifest["content_sha256"],
+        "judge_policy": {
+            "model_id": calibration_summary["model_id"],
+            "policy_id": calibration_summary["judge_policy_id"],
+        },
+        "observations": {
+            row["case_id"]: _matching_observation(row) for row in contracts
+        },
+        "review_binding": {
+            "export_id": review["export_id"],
+            "export_content_sha256": review["export_content_sha256"],
+            "policy_id": review["policy_id"],
+            "counts": review["counts"],
+            "human_review_bindings_sha256": review[
+                "human_review_bindings_sha256"
+            ],
+            "exclusion_review_bindings_sha256": review[
+                "exclusion_review_bindings_sha256"
+            ],
+            "judge_calibration_sha256": review["judge_calibration_sha256"],
+        },
+        "run_id": "oracle-run:s2c-reviewed-v2",
+        "schema_version": "canonical-v2-oracle-run-input-v2",
+        "selected_case_ids": selected_case_ids,
+        "soft_metrics": {
+            case_id: {"style_quality": 1.0} for case_id in selected_case_ids
+        },
+    }
+
+
+def test_reviewed_v2_branch_binds_global_review_and_accepts_all_eligible_cases(
+    tmp_path: Path,
+) -> None:
+    module = _oracle_module()
+    manifest_path, contracts = _real_reviewed_v2_artifacts(
+        tmp_path / "reviewed-v2"
+    )
+    run_input = _v2_run_input(manifest_path, contracts)
+
+    result = module.evaluate_oracle_run(
+        manifest_path,
+        run_input,
+        judge_adapter=_RecordingJudge(),
+    )
+
+    assert result.artifact_identity.manifest_schema_version == (
+        "canonical-v2-s2c-corpus-manifest-v2"
+    )
+    assert result.corpus_summary == {
+        "blocked_missing_evidence": 23,
+        "case_count": 52,
+        "human_reviewed": 29,
+        "pending_user_review": 0,
+        "acceptance_eligible": 29,
+    }
+    assert len(result.case_results) == 29
+    assert all(case.hard_passed for case in result.case_results)
+    assert result.acceptance_ready is True
+    record = result.acceptance_record
+    assert record is not None
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert record.review_export_id == manifest["review_application"]["export_id"]
+    assert record.review_export_content_sha256 == manifest["review_application"][
+        "export_content_sha256"
+    ]
+    assert record.review_policy_id == "single-human-global-stratified-v2"
+    assert record.case_count == 29
+    assert record.excluded_case_count == 23
+    assert len(record.accepted_case_ids) == 29
+    assert len(record.excluded_case_ids) == 23
+    assert record.human_review_count == 29
+    assert record.calibration_probe_count == 60
+    assert record.synthetic_fixture is False
+
+
+@pytest.mark.parametrize(
+    ("binding_path", "value"),
+    [
+        (("export_id",), "export:wrong"),
+        (("policy_id",), "obsolete-policy"),
+        (("counts", "calibration_probes"), 59),
+        (("human_review_bindings_sha256",), "0" * 64),
+    ],
+)
+def test_reviewed_v2_run_input_identity_mismatch_fails_before_judging(
+    tmp_path: Path, binding_path: tuple[str, ...], value: object
+) -> None:
+    module = _oracle_module()
+    manifest_path, contracts = _real_reviewed_v2_artifacts(
+        tmp_path / "reviewed-v2"
+    )
+    run_input = _v2_run_input(manifest_path, contracts)
+    target = run_input["review_binding"]
+    for key in binding_path[:-1]:
+        target = target[key]
+    target[binding_path[-1]] = value
+    judge = _RecordingJudge()
+
+    with pytest.raises(ValueError, match="review|binding|policy|count|identity"):
+        module.evaluate_oracle_run(
+            manifest_path,
+            run_input,
+            judge_adapter=judge,
+        )
+
+    assert judge.requests == []
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("model_id", "uncalibrated-judge"),
+        ("policy_id", "uncalibrated-policy"),
+    ],
+)
+def test_reviewed_v2_rejects_uncalibrated_runtime_judge_before_judging(
+    tmp_path: Path, field: str, value: str
+) -> None:
+    module = _oracle_module()
+    manifest_path, contracts = _real_reviewed_v2_artifacts(
+        tmp_path / "reviewed-v2"
+    )
+    run_input = _v2_run_input(manifest_path, contracts)
+    run_input["judge_policy"][field] = value
+    judge = _RecordingJudge()
+
+    with pytest.raises(ValueError, match="calibrated judge identity mismatch"):
+        module.evaluate_oracle_run(
+            manifest_path,
+            run_input,
+            judge_adapter=judge,
+        )
+
+    assert judge.requests == []
+
+
+def test_reviewed_v2_recomputes_coherently_rehashed_calibration_summary(
+    tmp_path: Path,
+) -> None:
+    module = _oracle_module()
+    manifest_path, contracts = _real_reviewed_v2_artifacts(
+        tmp_path / "reviewed-v2"
+    )
+    calibration_path = manifest_path.with_name("judge-calibration-v2.json")
+    calibration = json.loads(calibration_path.read_text(encoding="utf-8"))
+    calibration["judge"]["summary"]["confusion_matrix"] = {
+        "human_supported_model_supported": 29,
+        "human_supported_model_unsupported": 1,
+        "human_unsupported_model_supported": 0,
+        "human_unsupported_model_unsupported": 30,
+    }
+    calibration = _rehash(calibration)
+    calibration_path.write_text(
+        json.dumps(calibration, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["outputs"]["judge-calibration-v2.json"]["sha256"] = hashlib.sha256(
+        calibration_path.read_bytes()
+    ).hexdigest()
+    manifest["review_application"]["judge_calibration_sha256"] = calibration[
+        "content_sha256"
+    ]
+    manifest = _rehash(manifest)
+    manifest_path.write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    run_input = _v2_run_input(manifest_path, contracts)
+    judge = _RecordingJudge()
+
+    with pytest.raises(ValueError, match="global60 judge calibration"):
+        module.evaluate_oracle_run(
+            manifest_path,
+            run_input,
+            judge_adapter=judge,
+        )
+
+    assert judge.requests == []
+
+
+def test_reviewed_v2_rejects_coherently_rehashed_authorization_cross_wire(
+    tmp_path: Path,
+) -> None:
+    module = _oracle_module()
+    manifest_path, contracts = _real_reviewed_v2_artifacts(
+        tmp_path / "reviewed-v2"
+    )
+    calibration_path = manifest_path.with_name("judge-calibration-v2.json")
+    calibration = json.loads(calibration_path.read_text(encoding="utf-8"))
+    authorization = calibration["judge"]["authorizations"][0]
+    authorization["workload_content_sha256"] = "0" * 64
+    authorization = _rehash(authorization)
+    calibration["judge"]["authorizations"][0] = authorization
+    calibration["judge"]["summary"]["authorization_sha256"] = authorization[
+        "content_sha256"
+    ]
+    calibration = _rehash(calibration)
+    calibration_path.write_text(
+        json.dumps(calibration, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["outputs"]["judge-calibration-v2.json"]["sha256"] = hashlib.sha256(
+        calibration_path.read_bytes()
+    ).hexdigest()
+    manifest["review_application"]["judge_calibration_sha256"] = calibration[
+        "content_sha256"
+    ]
+    manifest = _rehash(manifest)
+    manifest_path.write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    run_input = _v2_run_input(manifest_path, contracts)
+    judge = _RecordingJudge()
+
+    with pytest.raises(ValueError, match="global60 judge calibration"):
+        module.evaluate_oracle_run(
+            manifest_path,
+            run_input,
+            judge_adapter=judge,
+        )
+
+    assert judge.requests == []
+
+
+def test_reviewed_v2_rejects_coherently_rehashed_missing_exclusion(
+    tmp_path: Path,
+) -> None:
+    module = _oracle_module()
+    manifest_path, contracts = _real_reviewed_v2_artifacts(
+        tmp_path / "reviewed-v2"
+    )
+    exclusions_path = manifest_path.with_name("exclusion-review-bindings-v2.jsonl")
+    exclusions = _jsonl(exclusions_path)
+    _write_jsonl(exclusions_path, exclusions[:-1])
+    exclusion_sha256 = hashlib.sha256(exclusions_path.read_bytes()).hexdigest()
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["outputs"][exclusions_path.name]["sha256"] = exclusion_sha256
+    manifest["review_application"]["exclusion_review_bindings_sha256"] = (
+        exclusion_sha256
+    )
+    manifest = _rehash(manifest)
+    manifest_path.write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    run_input = _v2_run_input(manifest_path, contracts)
+    judge = _RecordingJudge()
+
+    with pytest.raises(ValueError, match="exclusion|review|count|binding"):
+        module.evaluate_oracle_run(
+            manifest_path,
+            run_input,
+            judge_adapter=judge,
+        )
+
+    assert judge.requests == []

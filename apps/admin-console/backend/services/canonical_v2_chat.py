@@ -5,9 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime
 import hashlib
+import ipaddress
 import json
 from threading import RLock
 from typing import Any, Callable, Protocol, cast
+from urllib.parse import urlparse
 
 from pydantic import Field, model_validator
 
@@ -24,12 +26,15 @@ from src.data_agents.canonical_v2.knowledge_answer import (
     ContinuationSelection,
     ContextReceipt,
     KnowledgeAnswer,
+    SafetyGuidanceDirective,
     SessionDirective,
     TurnRequest,
     TurnResult,
 )
 from src.data_agents.canonical_v2.knowledge_read import (
     CanonicalEntityHandle,
+    EnumerationPlanningContext,
+    EvidenceItem,
     EvidenceSet,
     QueryPlanningRequest,
     RetrievalPlan,
@@ -39,6 +44,32 @@ from src.data_agents.canonical_v2.knowledge_read import (
 
 _ZERO_SHA256 = "0" * 64
 _PUBLIC_DOMAINS = frozenset({"professor", "company", "paper", "patent"})
+_ENUMERATION_MARKERS = ("哪些", "谁", "多少", "几个", "列出", "所有", "分别")
+_SINGULAR_REFERENT_MARKERS = (
+    "他是否",
+    "他的",
+    "她是否",
+    "她的",
+    "它的",
+    "该公司",
+    "这家公司",
+    "该企业",
+    "这家企业",
+    "该论文",
+    "这篇论文",
+    "这论文",
+    "该专利",
+    "这项专利",
+    "该教授",
+    "这位教授",
+)
+_SET_REFERENT_MARKERS = ("上述", "以上", "这些", "已展示", "上面", "其中")
+_OFFICIAL_URL_FIELDS = {
+    "professor": ("homepage",),
+    "company": ("website",),
+    "paper": ("url", "source_url", "publisher_url", "doi"),
+    "patent": ("official_url", "source_url", "url"),
+}
 _PUBLIC_CONTINUATION_REASON = {
     "broad_scope": "可进一步缩小当前结果范围",
     "ambiguity": "可切换到其他有证据支持的候选实体",
@@ -98,6 +129,109 @@ def _validated_model(value: Any, model_type: type[Any]) -> Any:
 
 def _handle_id(handle: CanonicalEntityHandle | WebEntityHandle) -> str:
     return handle.canonical_id if handle.kind == "canonical" else handle.handle_id
+
+
+def _enumeration_context(
+    *, query: str, displayed_ids: tuple[str, ...], as_of: datetime
+) -> EnumerationPlanningContext | None:
+    if not displayed_ids or not any(marker in query for marker in _ENUMERATION_MARKERS):
+        return None
+    return EnumerationPlanningContext(
+        requested=True,
+        scope=query,
+        as_of=as_of,
+        finite_universe=None,
+    )
+
+
+def _planning_displayed_ids(
+    *,
+    query: str,
+    displayed_ids: tuple[str, ...],
+    active_anchor_id: str | None,
+) -> tuple[str, ...]:
+    if not displayed_ids:
+        return ()
+    if any(marker in query for marker in _SINGULAR_REFERENT_MARKERS):
+        return (active_anchor_id,) if active_anchor_id is not None else ()
+    if any(marker in query for marker in _SET_REFERENT_MARKERS):
+        return displayed_ids
+    return ()
+
+
+def _planning_displayed_names(
+    *,
+    context: ContextReceipt | None,
+    displayed_ids: tuple[str, ...],
+) -> tuple[str, ...]:
+    if context is None or not displayed_ids:
+        return ()
+    handles = []
+    if context.active_anchor is not None:
+        handles.append(context.active_anchor)
+    if context.displayed_result_set is not None:
+        handles.extend(context.displayed_result_set.handles)
+    names_by_id = {_handle_id(handle): handle.display_name for handle in handles}
+    if any(entity_id not in names_by_id for entity_id in displayed_ids):
+        return ()
+    return tuple(names_by_id[entity_id] for entity_id in displayed_ids)
+
+
+def _session_bound_plan(*, plan: RetrievalPlan, session_id: str) -> RetrievalPlan:
+    return RetrievalPlan.model_validate(
+        {
+            **plan.model_dump(mode="json", exclude={"content_sha256"}),
+            "session_id": session_id,
+        }
+    )
+
+
+def _public_url(value: object) -> str | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    if text.casefold().startswith("doi:"):
+        text = f"https://doi.org/{text[4:].strip()}"
+    elif text.startswith("10.") and "/" in text:
+        text = f"https://doi.org/{text}"
+    try:
+        parsed = urlparse(text)
+        hostname = (parsed.hostname or "").strip().casefold()
+        if (
+            parsed.scheme not in {"http", "https"}
+            or not hostname
+            or parsed.username is not None
+            or parsed.password is not None
+            or hostname == "localhost"
+            or hostname.endswith((".localhost", ".local", ".internal"))
+        ):
+            return None
+        try:
+            if not ipaddress.ip_address(hostname).is_global:
+                return None
+        except ValueError:
+            pass
+        return parsed.geturl()
+    except ValueError:
+        return None
+
+
+def _official_evidence_url(item: EvidenceItem) -> str | None:
+    if item.source_nature == "current_web":
+        if item.source_authority != "official":
+            return None
+        return _public_url(item.source_locator)
+    try:
+        payload = json.loads(item.snippet)
+    except (TypeError, json.JSONDecodeError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    for field in _OFFICIAL_URL_FIELDS.get(item.domain, ()):
+        url = _public_url(payload.get(field))
+        if url is not None:
+            return url
+    return None
 
 
 class ChatFeedbackCheckpoint(ContractModel):
@@ -162,12 +296,18 @@ class CanonicalV2ChatAdapter:
         self._answer_factory = answer_factory
         self._answer_session_fork = answer_session_fork
         self._sessions: dict[str, _CommittedSession] = {}
+        self._session_locks: dict[str, RLock] = {}
         self._lock = RLock()
 
     def get_feedback_checkpoint(self, session_id: str) -> ChatFeedbackCheckpoint | None:
+        with self._session_lock(session_id):
+            with self._lock:
+                committed = self._sessions.get(session_id)
+                return None if committed is None else committed.checkpoint
+
+    def _session_lock(self, session_id: str) -> RLock:
         with self._lock:
-            committed = self._sessions.get(session_id)
-            return None if committed is None else committed.checkpoint
+            return self._session_locks.setdefault(session_id, RLock())
 
     def answer(
         self,
@@ -177,7 +317,7 @@ class CanonicalV2ChatAdapter:
         option_id: str | None,
         as_of: datetime,
     ) -> ChatResponse:
-        with self._lock:
+        with self._session_lock(session_id):
             return self._answer_locked(
                 query=query,
                 session_id=session_id,
@@ -202,7 +342,8 @@ class CanonicalV2ChatAdapter:
             raise ValueError("as_of must be timezone-aware")
         observed_as_of = as_of.astimezone(UTC)
 
-        committed = self._sessions.get(session_id)
+        with self._lock:
+            committed = self._sessions.get(session_id)
         selection = self._selection(committed, option_id=option_id)
         turn_count = 1 if committed is None else committed.turn_count + 1
         turn_id = self._turn_id(
@@ -211,19 +352,41 @@ class CanonicalV2ChatAdapter:
             query=normalized_query,
             option_id=option_id,
         )
-        displayed_ids = () if committed is None else committed.displayed_ids
+        prior_displayed_ids = () if committed is None else committed.displayed_ids
+        prior_context = None if committed is None else committed.context_receipt
+        active_anchor_id = (
+            None
+            if prior_context is None or prior_context.active_anchor is None
+            else _handle_id(prior_context.active_anchor)
+        )
+        displayed_ids = _planning_displayed_ids(
+            query=normalized_query,
+            displayed_ids=prior_displayed_ids,
+            active_anchor_id=active_anchor_id,
+        )
+        displayed_names = _planning_displayed_names(
+            context=prior_context,
+            displayed_ids=displayed_ids,
+        )
         planning_request = QueryPlanningRequest(
             request_id=f"query-request:chat:{turn_id}",
             release_id=self._release_id,
             original_query=normalized_query,
             as_of=observed_as_of,
             displayed_entity_ids=displayed_ids,
+            displayed_entity_names=displayed_names,
+            enumeration_context=_enumeration_context(
+                query=normalized_query,
+                displayed_ids=displayed_ids,
+                as_of=observed_as_of,
+            ),
         )
 
         raw_plan = self._planner.plan(planning_request)
         self._require_release(raw_plan, stage="plan")
         plan = _validated_model(raw_plan, RetrievalPlan)
         self._require_release(plan, stage="plan")
+        plan = _session_bound_plan(plan=plan, session_id=session_id)
 
         raw_evidence_set = self._knowledge_read.execute(plan)
         self._require_release(raw_evidence_set, stage="read")
@@ -235,6 +398,8 @@ class CanonicalV2ChatAdapter:
         directive = self._session_directive(
             committed=committed,
             evidence_set=evidence_set,
+            planning_displayed_ids=displayed_ids,
+            selection=selection,
         )
         turn_request = TurnRequest(
             session_id=session_id,
@@ -245,6 +410,11 @@ class CanonicalV2ChatAdapter:
             assessment_intent=plan.assessment_intent,
             continuation_selection=selection,
             session_directive=directive,
+            safety_guidance=(
+                SafetyGuidanceDirective(mode="static")
+                if plan.interaction_mode == "safety_guidance"
+                else None
+            ),
         )
         raw_turn_result = candidate_answer.answer(turn_request)
         self._require_release(raw_turn_result, stage="answer")
@@ -282,7 +452,8 @@ class CanonicalV2ChatAdapter:
             checkpoint=checkpoint,
         )
 
-        self._sessions[session_id] = next_session
+        with self._lock:
+            self._sessions[session_id] = next_session
         return response
 
     def _selection(
@@ -316,14 +487,20 @@ class CanonicalV2ChatAdapter:
         *,
         committed: _CommittedSession | None,
         evidence_set: EvidenceSet,
+        planning_displayed_ids: tuple[str, ...],
+        selection: ContinuationSelection | None,
     ) -> SessionDirective | None:
-        if committed is None or evidence_set.requested_traversal is None:
+        if committed is None:
             return None
-        context = committed.context_receipt
-        if context is not None and context.active_anchor is not None:
-            return SessionDirective(referent="active_anchor")
-        if context is not None and context.displayed_result_set is not None:
-            return SessionDirective(referent="displayed_result_set")
+        if evidence_set.requested_traversal is not None:
+            context = committed.context_receipt
+            if context is not None and context.active_anchor is not None:
+                return SessionDirective(referent="active_anchor")
+            if context is not None and context.displayed_result_set is not None:
+                return SessionDirective(referent="displayed_result_set")
+            return None
+        if selection is None and not planning_displayed_ids:
+            return SessionDirective(transition="topic_switch")
         return None
 
     @staticmethod
@@ -470,12 +647,12 @@ class CanonicalV2ChatAdapter:
         public_citations = self._public_citations(
             turn_result=turn_result,
             handles_by_id=handles_by_id,
+            evidence_by_id=evidence_by_id,
         )
         clarification = self._clarification(
             turn_result=turn_result,
             handles_by_id=handles_by_id,
         )
-        trace = self._trace(outcome)
         response_payload = {
             "query": outcome.query,
             "query_type": (
@@ -484,11 +661,11 @@ class CanonicalV2ChatAdapter:
             ),
             "answer_text": turn_result.answer_text,
             "citations": [item.model_dump(mode="json") for item in public_citations],
-            "evidence": [item.model_dump(mode="json") for item in evidence_set.items],
+            "evidence": [],
             "clarification": (
                 None if clarification is None else clarification.model_dump(mode="json")
             ),
-            "structured_payload": {"canonical_v2": trace},
+            "structured_payload": {},
             "answer_style": (
                 "llm_synthesized"
                 if turn_result.render_mode == "prose_renderer"
@@ -511,6 +688,7 @@ class CanonicalV2ChatAdapter:
         *,
         turn_result: TurnResult,
         handles_by_id: dict[str, CanonicalEntityHandle | WebEntityHandle],
+        evidence_by_id: dict[str, EvidenceItem],
     ) -> tuple[ChatCitation, ...]:
         handle_by_evidence_id: dict[str, tuple[str, Any]] = {}
         for handle_id, handle in handles_by_id.items():
@@ -522,18 +700,21 @@ class CanonicalV2ChatAdapter:
         seen: set[str] = set()
         for citation in turn_result.citations:
             bound = handle_by_evidence_id.get(citation.evidence_id)
-            if bound is None:
+            evidence = evidence_by_id.get(citation.evidence_id)
+            if bound is None or evidence is None:
                 continue
-            handle_id, handle = bound
-            if handle_id in seen:
+            _, handle = bound
+            official_url = _official_evidence_url(evidence)
+            if official_url is None or official_url in seen:
                 continue
-            seen.add(handle_id)
+            seen.add(official_url)
+            public_id = hashlib.sha256(official_url.encode("utf-8")).hexdigest()[:16]
             cards.append(
                 ChatCitation(
                     type=handle.domain,
-                    id=handle_id,
+                    id=f"official-source-{public_id}",
                     label=handle.display_name,
-                    url=f"/browse#{handle.domain}/{handle_id}",
+                    url=official_url,
                 )
             )
         return tuple(cards)

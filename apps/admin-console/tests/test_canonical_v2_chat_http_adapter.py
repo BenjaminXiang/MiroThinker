@@ -11,7 +11,8 @@ from pathlib import Path
 import re
 import subprocess
 import sys
-from typing import Any, Callable, TypedDict
+from types import SimpleNamespace
+from typing import Any, Callable, TypedDict, cast
 
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
@@ -30,7 +31,7 @@ RELEASE_MISMATCH = "canonical_v2_release_mismatch"
 RAW_SELECTOR_DRAFT = "RAW_SELECTOR_DRAFT_DO_NOT_EXPOSE"
 SECRET_SENTINEL = "sk-s11a-do-not-expose"
 ACCEPTED_PHYSICAL_OWNER_SHA256 = (
-    "61c9ec362e39d7e4eca9a3db7e02d9bf5ebde095e4acb0f02c989437baed147f"
+    "3852d87106f04f03c40fa002d004b984a3d1a257bac24c9ea69ced5720daf4fe"
 )
 CHAT_SCHEMA_SHA256 = "04584086d12ca5c56e5fd28f702d2fe5f71a20038be84f0dbdcc45524edcbd94"
 CHAT_MODEL_NAMES = (
@@ -156,6 +157,321 @@ def _canonical_sha256(value: Any) -> str:
             allow_nan=False,
         ).encode("utf-8")
     ).hexdigest()
+
+
+def test_public_citation_uses_official_homepage_without_internal_identity() -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    answer = import_module("src.data_agents.canonical_v2.knowledge_answer")
+    read = import_module("src.data_agents.canonical_v2.knowledge_read")
+    evidence = read.EvidenceItem(
+        evidence_id="evidence:s12d:ding-homepage",
+        object_id="professor-c-ding-wenbo",
+        domain="professor",
+        lane="exact",
+        source_nature="local",
+        source_locator="canonical-v2-isolated:internal",
+        snippet=json.dumps(
+            {
+                "name": "丁文伯",
+                "homepage": "http://www.sigs.tsinghua.edu.cn/dwb/main.htm",
+            },
+            ensure_ascii=False,
+        ),
+        score=1.0,
+        source_authority="canonical_release",
+        claim_binding=read.EvidenceClaimBinding(
+            subject_id="professor-c-ding-wenbo",
+            predicate="canonical_projection",
+            value="a" * 64,
+            status="admitted",
+        ),
+    )
+    handle = read.CanonicalEntityHandle(
+        canonical_id=evidence.object_id,
+        domain="professor",
+        display_name="丁文伯",
+        evidence_ids=(evidence.evidence_id,),
+    )
+    turn_result = answer.TurnResult(
+        session_id="session:s12d-public-source",
+        turn_id="turn:s12d-public-source",
+        release_id=RELEASE_ID,
+        answer_text="丁文伯简介",
+        citations=(
+            answer.Citation(
+                evidence_id=evidence.evidence_id,
+                source_nature="local",
+                source_locator=evidence.source_locator,
+            ),
+        ),
+    )
+
+    citations = service.CanonicalV2ChatAdapter._public_citations(
+        turn_result=turn_result,
+        handles_by_id={handle.canonical_id: handle},
+        evidence_by_id={evidence.evidence_id: evidence},
+    )
+
+    assert len(citations) == 1
+    assert citations[0].url == "http://www.sigs.tsinghua.edu.cn/dwb/main.htm"
+    assert "professor-c-ding-wenbo" not in citations[0].id
+    assert "/browse" not in citations[0].url
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "http://100.64.0.4:18188/browse",
+        "http://localhost:18188/browse",
+        "https://canonical-v2.internal/browse",
+    ],
+)
+def test_public_source_url_rejects_private_or_internal_hosts(url: str) -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+
+    assert service._public_url(url) is None
+
+
+def test_public_chat_response_omits_internal_evidence_and_trace() -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    answer = import_module("src.data_agents.canonical_v2.knowledge_answer")
+    read = import_module("src.data_agents.canonical_v2.knowledge_read")
+    evidence = read.EvidenceItem(
+        evidence_id="evidence:s12d:private",
+        object_id="professor-c-ding-wenbo",
+        domain="professor",
+        lane="exact",
+        source_nature="local",
+        source_locator="canonical-v2-isolated:private-locator",
+        snippet=json.dumps(
+            {
+                "name": "丁文伯",
+                "homepage": "http://www.sigs.tsinghua.edu.cn/dwb/main.htm",
+            },
+            ensure_ascii=False,
+        ),
+        score=1.0,
+        source_authority="canonical_release",
+        claim_binding=read.EvidenceClaimBinding(
+            subject_id="professor-c-ding-wenbo",
+            predicate="canonical_projection",
+            value="a" * 64,
+            status="admitted",
+        ),
+    )
+    handle = read.CanonicalEntityHandle(
+        canonical_id=evidence.object_id,
+        domain="professor",
+        display_name="丁文伯",
+        evidence_ids=(evidence.evidence_id,),
+    )
+    plan = read.RetrievalPlan(
+        plan_version="retrieval-plan-v1",
+        original_query="介绍清华的丁文伯",
+        behavior_class="A",
+        release_id=RELEASE_ID,
+        domains=("professor",),
+        protected_slots=(),
+        lanes=("exact", "web"),
+        max_candidates=5,
+        web_required=True,
+        web_policy=read.WebSearchPolicy(
+            mode="universal",
+            max_provider_calls=1,
+            timeout_ms=1000,
+            max_results=5,
+        ),
+    )
+    evidence_set = read.EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query=plan.original_query,
+        protected_slots=(),
+        items=(evidence,),
+        traces=(),
+        limitations=(),
+        entity_handles=(handle,),
+    )
+    turn_result = answer.TurnResult(
+        session_id="session:s12d-public-envelope",
+        turn_id="turn:s12d-public-envelope",
+        release_id=RELEASE_ID,
+        answer_text="丁文伯简介",
+        citations=(
+            answer.Citation(
+                evidence_id=evidence.evidence_id,
+                source_nature="local",
+                source_locator=evidence.source_locator,
+            ),
+        ),
+        render_mode="prose_renderer",
+    )
+    outcome = service._CanonicalV2ChatOutcome(
+        query=plan.original_query,
+        plan=plan,
+        evidence_set=evidence_set,
+        turn_result=turn_result,
+    )
+    adapter = object.__new__(service.CanonicalV2ChatAdapter)
+
+    response = adapter._map_response(outcome)
+
+    assert response.evidence == []
+    assert response.structured_payload == {}
+    serialized = json.dumps(response.model_dump(mode="json"), ensure_ascii=False)
+    assert "canonical-v2-isolated" not in serialized
+    assert RELEASE_ID not in serialized
+    assert "professor-c-ding-wenbo" not in serialized
+
+
+def test_isolated_read_integrity_error_is_a_stable_public_conflict() -> None:
+    seam = _load_s11a_seam()
+    getter = seam.deps_module.get_canonical_v2_chat_adapter
+    read_module = import_module("src.data_agents.canonical_v2.knowledge_read_isolated")
+
+    class _FailingAdapter:
+        def answer(self, **_: Any) -> Any:
+            raise read_module.IsolatedKnowledgeReadIntegrityError(
+                "private release-bound lookup detail"
+            )
+
+    prior = seam.app.dependency_overrides.get(getter)
+    seam.app.dependency_overrides[getter] = lambda: _FailingAdapter()
+    try:
+        response = TestClient(seam.app, raise_server_exceptions=False).post(
+            "/api/chat",
+            json={"query": "介绍一家机器人企业", "entity_id_hint": None},
+        )
+    finally:
+        if prior is None:
+            seam.app.dependency_overrides.pop(getter, None)
+        else:
+            seam.app.dependency_overrides[getter] = prior
+
+    assert response.status_code == 409
+    assert response.json() == {"detail": "canonical_v2_consumer_integrity_error"}
+    assert "private release-bound lookup detail" not in response.text
+
+
+def test_audit_only_candidate_evidence_does_not_break_retained_item_closure() -> None:
+    consumer = import_module("backend.services.canonical_v2_admin")
+    read = import_module("src.data_agents.canonical_v2.knowledge_read")
+    plan = read.RetrievalPlan(
+        plan_version="retrieval-plan-v1",
+        original_query="介绍目标公司",
+        behavior_class="A",
+        release_id=RELEASE_ID,
+        domains=("company",),
+        protected_slots=(),
+        lanes=("exact",),
+        max_candidates=1,
+        web_required=False,
+        supplemental_budget=read.SupplementalBudget(
+            max_wall_time_ms=0,
+            max_provider_calls=0,
+            max_retries=0,
+            max_cost_units=0.0,
+        ),
+    )
+    evidence = read.EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query=plan.original_query,
+        protected_slots=(),
+        items=(),
+        traces=(),
+        limitations=(),
+        candidate_traces=(
+            read.CandidateTrace(
+                raw_candidate_id="raw-candidate:dropped",
+                query_view="view:original",
+                lane="exact",
+                attempt=1,
+                release_id=RELEASE_ID,
+                adapter_version="recorded-exact-v1",
+                provider_version=None,
+                raw_score=0.5,
+                evidence_ids=("evidence:audit-only",),
+                disposition="result_limit_rejected",
+            ),
+        ),
+    )
+
+    assert consumer._validated_evidence_set(evidence, plan=plan) == evidence
+
+    live_reference = evidence.model_copy(
+        update={
+            "entity_handles": (
+                read.CanonicalEntityHandle(
+                    canonical_id="company:missing",
+                    domain="company",
+                    display_name="Missing Company",
+                    evidence_ids=("evidence:missing-live-reference",),
+                ),
+            )
+        }
+    )
+    with pytest.raises(
+        consumer.CanonicalV2ConsumerIntegrityError,
+        match="evidence metadata references an absent item",
+    ):
+        consumer._validated_evidence_set(live_reference, plan=plan)
+
+
+def test_multi_turn_planning_carries_only_the_explicit_referent_scope() -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    displayed = ("professor:active", "professor:other")
+
+    assert service._planning_displayed_ids(
+        query="他是否有参与哪些企业的创立",
+        displayed_ids=displayed,
+        active_anchor_id="professor:active",
+    ) == ("professor:active",)
+    assert (
+        service._planning_displayed_ids(
+            query="上述教授发表过哪些论文",
+            displayed_ids=displayed,
+            active_anchor_id="professor:active",
+        )
+        == displayed
+    )
+    assert (
+        service._planning_displayed_ids(
+            query="专利 CN117873146A 的详细信息是什么",
+            displayed_ids=displayed,
+            active_anchor_id="professor:active",
+        )
+        == ()
+    )
+
+
+def test_independent_turn_declares_topic_switch_but_referential_turn_does_not() -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    read = import_module("src.data_agents.canonical_v2.knowledge_read")
+    evidence_set = read.EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query="专利 CN117873146A 的详细信息是什么",
+        protected_slots=(),
+        items=(),
+        traces=(),
+        limitations=(),
+    )
+    committed = cast(Any, object())
+
+    independent = service.CanonicalV2ChatAdapter._session_directive(
+        committed=committed,
+        evidence_set=evidence_set,
+        planning_displayed_ids=(),
+        selection=None,
+    )
+    assert independent is not None
+    assert independent.transition == "topic_switch"
+
+    referential = service.CanonicalV2ChatAdapter._session_directive(
+        committed=committed,
+        evidence_set=evidence_set,
+        planning_displayed_ids=("paper:active",),
+        selection=None,
+    )
+    assert referential is None
 
 
 def _load_s11a_seam() -> _S11ASeam:
@@ -795,12 +1111,26 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
                 planner,
                 stage="plan",
                 effects=effects,
+                before=(
+                    lambda value: (
+                        (captured.__setitem__("plan_request", value) or value)
+                        if captured is not None
+                        else value
+                    )
+                ),
                 after=observed_after("plan", plan_after),
             ),
             knowledge_read=_StageProbe(
                 knowledge_read,
                 stage="read",
                 effects=effects,
+                before=(
+                    lambda value: (
+                        (captured.__setitem__("read_request", value) or value)
+                        if captured is not None
+                        else value
+                    )
+                ),
                 after=observed_after("read", read_after),
             ),
             answer_factory=answer_factory,
@@ -902,10 +1232,7 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
         citation.type in {"professor", "company", "paper", "patent"}
         for citation in first.citations
     )
-    assert all(
-        citation.url == f"/browse#{citation.type}/{citation.id}"
-        for citation in first.citations
-    )
+    assert all("/browse" not in citation.url for citation in first.citations)
     assert first.citation_map == {
         str(index): citation.id
         for index, citation in enumerate(first.citations, start=1)
@@ -913,10 +1240,15 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
     first_plan = captured["plan"]
     first_evidence_set = captured["read"]
     first_turn_result = captured["answer"]
-    assert first.evidence == [
-        item.model_dump(mode="json") for item in first_evidence_set.items
-    ]
-    trace = first.structured_payload["canonical_v2"]
+    assert first.evidence == []
+    assert first.structured_payload == {}
+    trace = adapter._trace(  # noqa: SLF001 - server-side trace stays private
+        SimpleNamespace(
+            plan=first_plan,
+            evidence_set=first_evidence_set,
+            turn_result=first_turn_result,
+        )
+    )
     assert trace["release_id"] == RELEASE_ID
     assert trace["plan_id"] == first_plan.plan_id
     assert trace["plan_version"] == first_plan.plan_version
@@ -1088,6 +1420,7 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
     )
     session_id = client.cookies.get("miroflow_chat_session")
     assert session_id
+    assert captured["read_request"].session_id == session_id
     checkpoint = adapter.get_feedback_checkpoint(session_id)
     assert checkpoint is not None
     assert type(checkpoint) is seam.checkpoint_type
@@ -1139,7 +1472,15 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
     )
     assert second_http.status_code == 200
     second = seam.contracts_module.ChatResponse.model_validate(second_http.json())
-    second_trace = second.structured_payload["canonical_v2"]
+    assert second.evidence == []
+    assert second.structured_payload == {}
+    second_trace = adapter._trace(  # noqa: SLF001
+        SimpleNamespace(
+            plan=captured["plan"],
+            evidence_set=captured["read"],
+            turn_result=captured["answer"],
+        )
+    )
     assert captured["answer"].context_receipt is not None
     assert second_trace["context_receipt"] == captured[
         "answer"
@@ -1164,9 +1505,23 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
     )
     assert third_http.status_code == 200
     third = seam.contracts_module.ChatResponse.model_validate(third_http.json())
-    third_trace = third.structured_payload["canonical_v2"]
     third_evidence_set = captured["read"]
     third_turn_result = captured["answer"]
+    assert third.evidence == []
+    assert third.structured_payload == {}
+    third_trace = adapter._trace(  # noqa: SLF001
+        SimpleNamespace(
+            plan=captured["plan"],
+            evidence_set=third_evidence_set,
+            turn_result=third_turn_result,
+        )
+    )
+    third_planning_request = captured["plan_request"]
+    assert third_planning_request.enumeration_context is not None
+    assert third_planning_request.enumeration_context.requested is True
+    assert third_planning_request.enumeration_context.scope == RELATIONSHIP_QUERY
+    assert third_planning_request.enumeration_context.as_of == NOW
+    assert third_planning_request.displayed_entity_names == ("Robotics Co",)
     assert third_trace["release_id"] == RELEASE_ID
     assert third_trace["lanes"] == ["relationship", "web"]
     assert third_trace["evidence_ids"] == [
@@ -1253,9 +1608,13 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
     reset_fresh = seam.contracts_module.ChatResponse.model_validate(
         reset_fresh_http.json()
     )
-    reset_context = reset_fresh.structured_payload["canonical_v2"]["context_receipt"]
-    assert reset_context["selected_option_id"] is None
-    assert reset_context["selected_operation"] is None
+    assert reset_fresh.evidence == []
+    assert reset_fresh.structured_payload == {}
+    reset_context = captured["answer"].context_receipt
+    assert reset_context is None or (
+        reset_context.selected_option_id is None
+        and reset_context.selected_operation is None
+    )
     reset_checkpoint = adapter.get_feedback_checkpoint(reset_session_id)
     assert reset_checkpoint is not None
     _assert_checkpoint_matches(
@@ -1292,7 +1651,8 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
     assert (stale_effects, provider_effects) == stale_before
 
     for wording_kind in ("option_label", "option_bearing_original_query"):
-        wording_adapter, _ = make_adapter()
+        wording_captured: dict[str, Any] = {}
+        wording_adapter, _ = make_adapter(captured=wording_captured)
         app.state.canonical_v2_chat_adapter = wording_adapter
         wording_client = TestClient(app, raise_server_exceptions=False)
         wording_first_http = wording_client.post(
@@ -1314,10 +1674,11 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
         )
         assert wording_http.status_code == 200
         wording = seam.contracts_module.ChatResponse.model_validate(wording_http.json())
-        wording_context = wording.structured_payload["canonical_v2"]["context_receipt"]
+        assert wording.structured_payload == {}
+        wording_context = wording_captured["answer"].context_receipt
         assert wording_context is None or (
-            wording_context["selected_option_id"] is None
-            and wording_context["selected_operation"] is None
+            wording_context.selected_option_id is None
+            and wording_context.selected_operation is None
         )
 
     simple_adapter, _ = make_adapter()
@@ -1330,7 +1691,8 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
     simple = seam.contracts_module.ChatResponse.model_validate(simple_http.json())
     assert simple.clarification is None
     assert simple.suggested_followups == []
-    assert simple.structured_payload["canonical_v2"].get("continuation_offer") is None
+    assert simple.evidence == []
+    assert simple.structured_payload == {}
 
     def timed_out_renderer(_: Any) -> Any:
         raise TimeoutError("recorded S11A prose renderer timeout")
@@ -1364,7 +1726,15 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
         and limitation.failure_kind == "timeout"
         for limitation in degraded_turn.limitations
     )
-    degraded_trace = degraded.structured_payload["canonical_v2"]
+    assert degraded.evidence == []
+    assert degraded.structured_payload == {}
+    degraded_trace = degraded_adapter._trace(  # noqa: SLF001
+        SimpleNamespace(
+            plan=degraded_captured["plan"],
+            evidence_set=degraded_captured["read"],
+            turn_result=degraded_turn,
+        )
+    )
     assert degraded_trace["claims"] == [
         claim.model_dump(mode="json") for claim in degraded_turn.claims
     ]
@@ -1491,10 +1861,8 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
     assert blocking.clarification is not None
     assert blocking.clarification.options == []
     assert blocking.clarification.default_id == ""
-    blocking_trace = blocking.structured_payload["canonical_v2"]
-    assert blocking_trace["claims"] == []
-    assert blocking_trace["response_mode"] == "clarification_only"
-    assert blocking_trace.get("continuation_offer") is None
+    assert blocking.evidence == []
+    assert blocking.structured_payload == {}
     assert blocking_effects == {"plan": 1, "read": 1, "answer": 1}
 
     def once_after_success(
@@ -1606,10 +1974,12 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
         )
 
     for case_id, failed_stage, kwargs, expected_status in failure_cases:
+        failing_captured: dict[str, Any] = {}
         failing_adapter, failing_effects = make_adapter(
             plan_after=kwargs.get("plan_after"),
             read_after=kwargs.get("read_after"),
             answer_after=kwargs.get("answer_after"),
+            captured=failing_captured,
         )
         (
             failing_client,
@@ -1645,11 +2015,14 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
         )
         assert retry_http.status_code == 200, case_id
         retry = seam.contracts_module.ChatResponse.model_validate(retry_http.json())
-        retry_context = retry.structured_payload["canonical_v2"]["context_receipt"]
-        assert retry_context["selected_option_id"] == failing_option.id
-        assert retry_context["selected_operation"] == "targeted_evidence_search"
+        assert retry.structured_payload == {}
+        retry_context = failing_captured["answer"].context_receipt
+        assert retry_context is not None
+        assert retry_context.selected_option_id == failing_option.id
+        assert retry_context.selected_operation == "targeted_evidence_search"
 
-    validation_adapter, _ = make_adapter()
+    validation_captured: dict[str, Any] = {}
+    validation_adapter, _ = make_adapter(captured=validation_captured)
     (
         validation_client,
         validation_session,
@@ -1691,11 +2064,11 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
     validation_retry = seam.contracts_module.ChatResponse.model_validate(
         validation_retry_http.json()
     )
-    validation_context = validation_retry.structured_payload["canonical_v2"][
-        "context_receipt"
-    ]
-    assert validation_context["selected_option_id"] == validation_option.id
-    assert validation_context["selected_operation"] == "targeted_evidence_search"
+    assert validation_retry.structured_payload == {}
+    validation_context = validation_captured["answer"].context_receipt
+    assert validation_context is not None
+    assert validation_context.selected_option_id == validation_option.id
+    assert validation_context.selected_operation == "targeted_evidence_search"
 
     public_adapter_names = {name for name in dir(adapter) if not name.startswith("_")}
     assert public_adapter_names >= {"answer", "get_feedback_checkpoint"}

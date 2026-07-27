@@ -444,27 +444,44 @@ class _ServerOwnedPlanner:
         )
 
 
-def _referenced_evidence_ids(evidence: EvidenceSet) -> set[str]:
-    payload = evidence.model_dump(mode="json")
+def _answer_evidence_references(evidence: EvidenceSet) -> set[str]:
+    """Return evidence IDs that are live inputs to the current answer."""
     references: set[str] = set()
+    replayed_handle_ids = {
+        receipt.handle_id for receipt in evidence.handle_replay_receipts
+    }
+    for handle in evidence.entity_handles:
+        handle_id = (
+            handle.canonical_id if handle.kind == "canonical" else handle.handle_id
+        )
+        if handle_id not in replayed_handle_ids:
+            references.update(handle.evidence_ids)
+    for trace in evidence.candidate_traces:
+        if trace.disposition == "selected":
+            references.update(trace.evidence_ids)
+    if evidence.sufficiency_report is not None:
+        for part in evidence.sufficiency_report.parts:
+            references.update(part.evidence_ids)
+    if evidence.enumeration_coverage is not None:
+        for outcome in evidence.enumeration_coverage.required_member_outcomes:
+            references.update(outcome.evidence_ids)
+    for conflict in evidence.material_conflicts:
+        references.update(conflict.evidence_ids)
+    for candidate in evidence.continuation_candidates:
+        references.update(candidate.evidence_ids)
+    return references
 
-    def visit(value: Any, *, inside_item: bool = False) -> None:
-        if isinstance(value, dict):
-            for key, child in value.items():
-                if key == "items":
-                    visit(child, inside_item=True)
-                elif key == "evidence_ids" and not inside_item:
-                    if isinstance(child, list):
-                        references.update(
-                            item for item in child if isinstance(item, str)
-                        )
-                else:
-                    visit(child, inside_item=inside_item)
-        elif isinstance(value, list):
-            for child in value:
-                visit(child, inside_item=inside_item)
 
-    visit(payload)
+def _retained_evidence_references(evidence: EvidenceSet) -> set[str]:
+    references = _answer_evidence_references(evidence)
+    item_ids = {item.evidence_id for item in evidence.items}
+    for receipt in evidence.constraint_receipts:
+        if receipt.outcome != "accepted" or not all(
+            raw_id.startswith("direct-object:")
+            for raw_id in receipt.raw_candidate_ids
+        ):
+            continue
+        references.update(item_ids.intersection(receipt.aggregated_evidence_ids))
     return references
 
 
@@ -502,12 +519,13 @@ def _validated_evidence_set(
         raise CanonicalV2ConsumerIntegrityError(
             "evidence set contains duplicate evidence IDs"
         )
-    references = _referenced_evidence_ids(evidence)
-    if item_ids and not item_ids <= references:
+    answer_references = _answer_evidence_references(evidence)
+    retained_references = _retained_evidence_references(evidence)
+    if item_ids and not item_ids <= retained_references:
         raise CanonicalV2ConsumerIntegrityError(
             "evidence items are not closed by retained traces/handles"
         )
-    if references and not references <= item_ids:
+    if answer_references and not answer_references <= item_ids:
         raise CanonicalV2ConsumerIntegrityError(
             "evidence metadata references an absent item"
         )

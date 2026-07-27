@@ -28,8 +28,8 @@ release/index publication before any production-code or recovery-candidate write
 - Introduce candidate releases that keep canonical data, published projections, and vector indexes
   on one accepted version with deterministic parity and rollback evidence.
 - Replace fixed-handler chat routing with validated LLM-assisted retrieval plans, protected-slot
-  multi-view query rewrites, recall-oriented multi-lane retrieval, universal Web augmentation for
-  all information-retrieval requests, late evidence-aware reranking, and bounded sufficiency retry.
+  multi-view query rewrites, recall-oriented multi-lane retrieval, bounded Universal Web for normal
+  information requests, late evidence-aware reranking, and bounded sufficiency retry.
 - Introduce claim-to-evidence grounded answers, evidence-based assessments, progressive multi-turn
   relationship exploration, and validated next-hop suggestions.
 - Add explicit enumeration modes and coverage reports so bounded exhaustive, required-member, and
@@ -39,8 +39,9 @@ release/index publication before any production-code or recovery-candidate write
 - Allow displayed Web-only entities to continue across turns only through evidence-bound session
   handles, and add confidence-gated ambiguity, narrow safety guidance, and conditional structured
   continuation offers.
-- Replace prose/key-point acceptance as the pass/fail oracle with versioned machine-readable
-  claim-level case contracts and stage outcomes; reference prose remains explanatory.
+- Treat the customer-provided `docs/测试集答案.xlsx` query, answer, and key-point rows as the
+  versioned case-specific semantic Ground Truth, exercised through the real chat runtime without
+  requiring wording imitation or a separate human-labeling corpus.
 - Introduce a query/acceptance feedback loop that turns no-result, insufficient-evidence,
   Web-dependent, relation, user-feedback, and benchmark failures into traceable knowledge gaps.
 - Rebuild Milvus from the accepted Canonical V2 release into versioned indexes; allow later
@@ -68,8 +69,8 @@ release/index publication before any production-code or recovery-candidate write
 - `knowledge-gap-feedback`: Structured query/acceptance gaps that drive reviewed recollection,
   enrichment, relationship repair, and retrieval improvement without online direct-to-canonical
   writes.
-- `claim-level-acceptance`: Versioned machine-readable case contracts, source snapshots, as-of,
-  enumeration policy, stage oracles, and hard per-case requirements; reference prose is explanatory.
+- `customer-benchmark-acceptance`: Versioned customer workbook Ground Truth, semantic alignment,
+  time-aware source updates, real-runtime replay, and direct user acceptance.
 
 ### Modified Capabilities
 
@@ -89,10 +90,9 @@ release/index publication before any production-code or recovery-candidate write
   admin data access, Milvus builders, migrations, and their implementation-coupled tests.
 - External adapters for LLM, Web search, embeddings, reranking, Postgres, Milvus, and source files;
   deterministic/local test adapters at each real seam.
-- New reviewed acceptance corpus and multidimensional gates. Existing PRD minima remain lower bounds;
-  missing numeric thresholds are frozen after the authorized read-only baseline. Before S8/S9 use
-  the corpus as an oracle, each accepted case is migrated to a claim-level machine-readable contract
-  with source snapshots, as-of, enumeration policy, and stage outcomes.
+- Lean final acceptance over the customer workbook and the real serving path. Historical corpora,
+  claim-level contracts, judge calibration, and review-workbench artifacts remain diagnostic history
+  but are not dependencies for the remaining implementation or user-acceptance tasks.
 - Original `pgtest` and original Milvus remain frozen. This change does not authorize production-like
   cutover or writes outside the isolated recovery candidate environment.
 - Canonical identity mutation is an offline data-build responsibility. Query-time identity handling

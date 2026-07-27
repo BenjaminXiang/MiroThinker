@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import builtins
+from collections.abc import Iterator, Mapping, ValuesView
 from datetime import date, datetime, timedelta, timezone
 import hashlib
 from importlib import import_module
@@ -181,6 +182,107 @@ def _company_inputs() -> dict[str, tuple[Any, ...]]:
         "current_fields": tuple(current_fields),
         "inclusion_decisions": (inclusion,),
     }
+
+
+def _replicated_company_inputs(count: int) -> dict[str, tuple[Any, ...]]:
+    base = _company_inputs()
+    replicated: dict[str, list[Any]] = {key: [] for key in base}
+    for index in range(count):
+        suffix = f":bulk-{index:03d}"
+
+        def suffixed(value: str) -> str:
+            return f"{value}{suffix}"
+
+        identity = base["canonical_identities"][0]
+        assignment = base["source_identity_assignments"][0]
+        assertions = base["source_assertions"]
+        decisions = base["canonical_decisions"]
+        current_fields = base["current_fields"]
+        inclusion = base["inclusion_decisions"][0]
+        assertion_ids = {
+            assertion.assertion_id: suffixed(assertion.assertion_id)
+            for assertion in assertions
+        }
+
+        replicated["canonical_identities"].append(
+            identity.model_copy(
+                update={
+                    "canonical_identity_id": suffixed(identity.canonical_identity_id),
+                    "source_identity_ids": tuple(
+                        suffixed(value) for value in identity.source_identity_ids
+                    ),
+                    "identity_decision_id": suffixed(identity.identity_decision_id),
+                }
+            )
+        )
+        replicated["source_identity_assignments"].append(
+            assignment.model_copy(
+                update={
+                    "source_identity_id": suffixed(assignment.source_identity_id),
+                    "canonical_identity_id": suffixed(assignment.canonical_identity_id),
+                    "identity_decision_id": suffixed(assignment.identity_decision_id),
+                }
+            )
+        )
+        replicated["source_assertions"].extend(
+            assertion.model_copy(
+                update={
+                    "assertion_id": assertion_ids[assertion.assertion_id],
+                    "source_record_id": suffixed(assertion.source_record_id),
+                    "source_identity_id": suffixed(assertion.source_identity_id),
+                    "assertion_run_id": suffixed(assertion.assertion_run_id),
+                }
+            )
+            for assertion in assertions
+        )
+        replicated["canonical_decisions"].extend(
+            decision.model_copy(
+                update={
+                    "decision_id": suffixed(decision.decision_id),
+                    "canonical_identity_id": suffixed(decision.canonical_identity_id),
+                    "candidate_assertion_ids": tuple(
+                        assertion_ids[value]
+                        for value in decision.candidate_assertion_ids
+                    ),
+                    "selected_assertion_ids": tuple(
+                        assertion_ids[value]
+                        for value in decision.selected_assertion_ids
+                    ),
+                    "conflicting_assertion_ids": tuple(
+                        assertion_ids[value]
+                        for value in decision.conflicting_assertion_ids
+                    ),
+                    "decision_run_id": suffixed(decision.decision_run_id),
+                }
+            )
+            for decision in decisions
+        )
+        replicated["current_fields"].extend(
+            current.model_copy(
+                update={
+                    "canonical_identity_id": suffixed(current.canonical_identity_id),
+                    "decision_id": suffixed(current.decision_id),
+                    "supporting_assertion_ids": tuple(
+                        assertion_ids[value]
+                        for value in current.supporting_assertion_ids
+                    ),
+                }
+            )
+            for current in current_fields
+        )
+        replicated["inclusion_decisions"].append(
+            inclusion.model_copy(
+                update={
+                    "decision_id": suffixed(inclusion.decision_id),
+                    "subject_identity_id": suffixed(inclusion.subject_identity_id),
+                    "supporting_assertion_ids": tuple(
+                        assertion_ids[value]
+                        for value in inclusion.supporting_assertion_ids
+                    ),
+                }
+            )
+        )
+    return {key: tuple(values) for key, values in replicated.items()}
 
 
 def _paper_inputs() -> dict[str, tuple[Any, ...]]:
@@ -504,7 +606,9 @@ def test_packaged_catalog_matches_task_6_1_and_types_all_frozen_shapes(
 
     monkeypatch.setattr(builtins, "open", guarded_builtin_open)
     monkeypatch.setattr(Path, "open", guarded_path_open)
-    sys.modules.pop(TARGET_MODULE, None)
+    package = import_module("src.data_agents.canonical_v2")
+    monkeypatch.setattr(package, "domain_projection", sys.modules[TARGET_MODULE])
+    monkeypatch.delitem(sys.modules, TARGET_MODULE, raising=False)
     module = _module()
 
     packaged = module.PACKAGED_CATALOG
@@ -586,6 +690,91 @@ def test_company_projection_binds_active_identity_current_selection_and_inclusio
         assert item.decision_id == current.decision_id
         assert item.supporting_assertion_ids == current.supporting_assertion_ids
     assert len(company.content_sha256) == 64
+
+
+def test_graph_validation_indexes_full_assertion_ids_once(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _module()
+    inputs = _replicated_company_inputs(128)
+    request = _request(module, inputs)
+    baseline = module.create_ephemeral_domain_projection_builder().project(request)
+    assert len(inputs["canonical_identities"]) == 128
+    assert len(inputs["source_assertions"]) == 512
+    full_assertion_key_traversals = 0
+    real_index_unique = module._index_unique
+
+    class TraversalCountingAssertionMapping(Mapping[str, Any]):
+        def __init__(self, values: dict[str, Any]) -> None:
+            self._values = values
+
+        def __getitem__(self, key: str) -> Any:
+            return self._values[key]
+
+        def __iter__(self) -> Iterator[str]:
+            nonlocal full_assertion_key_traversals
+            yield from self._values
+            full_assertion_key_traversals += 1
+
+        def __len__(self) -> int:
+            return len(self._values)
+
+        def __contains__(self, key: object) -> bool:
+            return key in self._values
+
+        def values(self) -> ValuesView[Any]:
+            return self._values.values()
+
+    def instrumented_index_unique(
+        values: Any,
+        attribute: str,
+        label: str,
+    ) -> Any:
+        indexed = real_index_unique(values, attribute, label)
+        if label == "source assertions":
+            return TraversalCountingAssertionMapping(indexed)
+        return indexed
+
+    monkeypatch.setattr(module, "_index_unique", instrumented_index_unique)
+    result = module.create_ephemeral_domain_projection_builder().project(request)
+
+    assert full_assertion_key_traversals == 1
+    assert result.content_sha256 == baseline.content_sha256
+    assert result.model_dump(mode="json") == baseline.model_dump(mode="json")
+
+
+def test_projection_indexes_current_fields_by_identity_once(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _module()
+    inputs = _replicated_company_inputs(128)
+    request = _request(module, inputs)
+    baseline = module.create_ephemeral_domain_projection_builder().project(request)
+    full_current_field_traversals = 0
+    real_validate_graph = module._ProjectionContext._validate_graph
+
+    class TraversalCountingCurrentFields(dict[tuple[str, str], Any]):
+        def items(self) -> Any:
+            nonlocal full_current_field_traversals
+            full_current_field_traversals += 1
+            return super().items()
+
+    def instrumented_validate_graph(context: Any) -> None:
+        real_validate_graph(context)
+        context.current_by_subject_path = TraversalCountingCurrentFields(
+            context.current_by_subject_path
+        )
+
+    monkeypatch.setattr(
+        module._ProjectionContext,
+        "_validate_graph",
+        instrumented_validate_graph,
+    )
+    result = module.create_ephemeral_domain_projection_builder().project(request)
+
+    assert full_current_field_traversals <= 1
+    assert result.content_sha256 == baseline.content_sha256
+    assert result.model_dump(mode="json") == baseline.model_dump(mode="json")
 
 
 def test_paper_projection_types_authors_without_placeholder_enrichment() -> None:

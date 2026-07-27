@@ -362,6 +362,23 @@ class HistoricalXlsxAdapter(_KindBoundAdapter):
                 )
             sheet = workbook[sheet_name]
             rows = sheet.iter_rows(values_only=True)
+            requested_header_row = value.parser.options.get("header_row", 1)
+            if (
+                isinstance(requested_header_row, bool)
+                or not isinstance(requested_header_row, int)
+                or requested_header_row < 1
+            ):
+                raise SourceAdapterError(
+                    "historical_xlsx header_row must be a positive integer"
+                )
+            for _ in range(requested_header_row - 1):
+                if next(rows, None) is None:
+                    return (
+                        _unsupported(
+                            f"sheet:{sheet_name}",
+                            "XLSX sheet ends before its configured header row.",
+                        ),
+                    )
             header_row = next(rows, None)
             if not header_row:
                 return (
@@ -373,19 +390,19 @@ class HistoricalXlsxAdapter(_KindBoundAdapter):
             if any(not header for header in headers):
                 return (
                     _schema_error(
-                        f"sheet:{sheet_name}:row:1",
+                        f"sheet:{sheet_name}:row:{requested_header_row}",
                         "XLSX header cells must be non-empty.",
                     ),
                 )
             if len(headers) != len(set(headers)):
                 return (
                     _schema_error(
-                        f"sheet:{sheet_name}:row:1",
+                        f"sheet:{sheet_name}:row:{requested_header_row}",
                         "XLSX header names must be unique.",
                     ),
                 )
             records: list[ParsedRecordDraft] = []
-            for row_number, row in enumerate(rows, start=2):
+            for row_number, row in enumerate(rows, start=requested_header_row + 1):
                 payload: dict[str, JsonValue] = {}
                 errors: list[SourceError] = []
                 for header, cell in zip(headers, row, strict=False):

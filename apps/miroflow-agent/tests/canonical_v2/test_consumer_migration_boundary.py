@@ -466,9 +466,9 @@ def _assert_inventory_canonical_contract(
     template = copy.deepcopy(payload[path_category][path_index])
 
     def synthetic_payload(path_value: str) -> dict[str, Any]:
-        value = {"schema_version": _INVENTORY_VERSION}
+        value: dict[str, Any] = {"schema_version": _INVENTORY_VERSION}
         value.update({category: [] for category in _INVENTORY_CATEGORIES})
-        entry = {**template, "path": path_value}
+        entry: dict[str, Any] = {**template, "path": path_value}
         entry.pop("module", None)
         value[path_category] = [entry]
         return value
@@ -1013,12 +1013,15 @@ def _assert_inventory_handoff_receipt(inventory: Any, inventory_path: Path) -> N
         for raw_entry in payload[category]:
             entry = _mapping(raw_entry, label=category)
             disposition = entry["disposition"]
+            assert isinstance(disposition, str)
             dispositions[disposition] = dispositions.get(disposition, 0) + 1
             if disposition == "s11c_disposition":
+                entry_path = entry.get("path", entry.get("module"))
+                assert isinstance(entry_path, str)
                 expected_s11c.append(
                     {
                         "inventory_category": category,
-                        "inventory_path": entry.get("path", entry.get("module")),
+                        "inventory_path": entry_path,
                     }
                 )
     expected_s11c.sort(

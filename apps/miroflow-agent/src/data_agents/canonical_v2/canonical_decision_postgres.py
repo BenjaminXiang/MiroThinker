@@ -1030,7 +1030,16 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                     human_review_resolution=row["human_review_resolution"],
                 )
             )
-        return tuple(decisions)
+        return tuple(
+            sorted(
+                decisions,
+                key=lambda decision: (
+                    decision.canonical_identity_id,
+                    decision.field_path,
+                    decision.decision_id,
+                ),
+            )
+        )
 
     @classmethod
     def _load_relationship_decisions(
@@ -1104,7 +1113,15 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                     human_review_resolution=row["human_review_resolution"],
                 )
             )
-        return tuple(decisions)
+        return tuple(
+            sorted(
+                decisions,
+                key=lambda decision: (
+                    decision.canonical_relationship_id,
+                    decision.decision_id,
+                ),
+            )
+        )
 
     @staticmethod
     def _load_outcome_rows(
@@ -1153,6 +1170,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
             "ORDER BY assertion_id",
             (list(assertion_ids),),
         ).fetchall()
+        rows = sorted(rows, key=lambda row: row["assertion_id"])
         assertions = tuple(
             SourceAssertion(
                 assertion_id=row["assertion_id"],
@@ -1203,6 +1221,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
             "WHERE assertion.assertion_id = ANY(%s) ORDER BY assertion.assertion_id",
             (list(assertion_ids),),
         ).fetchall()
+        rows = sorted(rows, key=lambda row: row["assertion_id"])
         assertions = tuple(
             RelationshipAssertion(
                 assertion_id=row["assertion_id"],
@@ -1228,10 +1247,23 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
             )
             for row in rows
         )
-        if tuple(assertion.assertion_id for assertion in assertions) != tuple(
-            sorted(assertion_ids)
-        ):
-            raise ValueError("durable relationship assertion set is incomplete")
+        observed_ids = tuple(assertion.assertion_id for assertion in assertions)
+        expected_ids = tuple(sorted(assertion_ids))
+        if observed_ids != expected_ids:
+            duplicate_requested_ids = sorted(
+                {
+                    assertion_id
+                    for assertion_id in expected_ids
+                    if expected_ids.count(assertion_id) > 1
+                }
+            )
+            raise ValueError(
+                "durable relationship assertion set is incomplete: "
+                f"requested={len(expected_ids)}, observed={len(observed_ids)}, "
+                f"missing={sorted(set(expected_ids) - set(observed_ids))}, "
+                f"extra={sorted(set(observed_ids) - set(expected_ids))}, "
+                f"duplicate_requested={duplicate_requested_ids}"
+            )
         for assertion, row in zip(assertions, rows, strict=True):
             if row["assertion_fingerprint_sha256"] != _assertion_fingerprint(assertion):
                 raise ValueError(

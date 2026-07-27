@@ -480,7 +480,7 @@ class ProfessorProjection(DomainProjectionEnvelope):
     canonical_name_en: NonEmptyStr | None = None
     canonical_name_zh: NonEmptyStr
     citation_count: NonNegativeInt | None = None
-    company_roles: tuple[RelationshipProjectionReference, ...]
+    company_roles: tuple[RelationshipProjectionReference, ...] = ()
     department: NamedReference
     email: NonEmptyStr
     evidence: tuple[ProjectionEvidenceReference, ...] = Field(min_length=1)

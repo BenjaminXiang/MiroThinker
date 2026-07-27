@@ -309,6 +309,46 @@ def _postgres_module():
     return import_module("src.data_agents.canonical_v2.canonical_identity_postgres")
 
 
+class _StatementRecorder:
+    def __init__(self) -> None:
+        self.statements: list[str] = []
+
+    def execute(self, statement: str) -> None:
+        self.statements.append(statement)
+
+
+def test_release_wide_identity_validator_queues_one_deferred_event() -> None:
+    module = _postgres_module()
+    connection = _StatementRecorder()
+
+    module._PostgresCanonicalIdentityStore._set_duplicate_release_triggers_enabled(
+        connection, enabled=False
+    )
+    module._PostgresCanonicalIdentityStore._validate_release_and_restore_triggers(
+        connection
+    )
+
+    duplicate_tables = tuple(
+        table
+        for table in module.IDENTITY_LOCK_ORDER
+        if table != "identity_resolution_run"
+    )
+    assert connection.statements == [
+        *(
+            f"ALTER TABLE knowledge.{table} DISABLE TRIGGER "
+            "trg_validate_identity_resolution_release"
+            for table in duplicate_tables
+        ),
+        "SET CONSTRAINTS ALL IMMEDIATE",
+        *(
+            f"ALTER TABLE knowledge.{table} ENABLE TRIGGER "
+            "trg_validate_identity_resolution_release"
+            for table in reversed(duplicate_tables)
+        ),
+    ]
+    assert all("identity_resolution_run" not in item for item in connection.statements)
+
+
 def _policy(module):
     return module.PolicyReference(
         policy_id="canonical-identity-policy",

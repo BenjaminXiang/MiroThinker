@@ -4,22 +4,41 @@
 
 - OpenSpec owns behavior, scope, acceptance, and verification intent.
 - Each slice has one active writer.
-- Independent review owns Candidate-to-Accepted promotion.
+- Direct user evaluation owns final Candidate-to-Accepted promotion for the remaining milestone.
 - The primary agent may delegate bounded work to subagents. Parallel writers use isolated
   branches/worktrees and separately named disposable resources; subagents do not approve an entire
   task, push, promote, or mutate shared active pointers.
-- From the S11 consolidated baseline forward, each final Accepted OpenSpec task is integrated,
-  verified, and committed separately by the primary agent.
+- Remaining tasks are integrated as one lean end-to-end milestone. No commit is created without
+  explicit user authorization.
 - Recovery exception: the final bytes accumulated between 2026-07-13 and 2026-07-21 were never
   committed and their intermediate blobs do not exist. By explicit user decision on 2026-07-22,
   those bytes are imported once as an aggregate S11 baseline after an exact recovery snapshot. The
   import is not represented as reconstructed task history; the original slice contracts and
   receipts remain the historical evidence.
 
+## 2026-07-26 lean E2E rebaseline
+
+This section supersedes conflicting open-task dependencies in the historical DAG below. It does not
+rewrite Accepted implementation history.
+
+- Task 2.8 and its contract/exclusion/blind-calibration review workflow are retired. Existing review
+  code, ledgers, packets, and receipts remain non-normative historical artifacts and are not run.
+- Tasks 8.1, 8.8, and 9.8 are retired as separate aggregate gates. Their useful implementation and
+  regression tests remain available, but no reviewed claim-level corpus or calibrated judge unlock
+  is required.
+- Task 12.2 owns the serviceable four-domain isolated Candidate and content-addressed read-only
+  serving bundle. Task 12.3 owns representative smoke coverage plus the real-runtime replay of all
+  17 workbook conversations/25 turns. Task 12.4 owns only the minimal checks named in
+  `acceptance.md`. Task 12.5 is direct user acceptance; Task 12.6 retains the separate cutover gate.
+- `docs/测试集答案.xlsx` is the customer benchmark Ground Truth. Missing support is a product gap,
+  never a reason to exclude a case. Workbook answers cannot be loaded or hardcoded into runtime.
+- Independent slice review, scaled human labeling, LLM-judge calibration, repeated broad suites, and
+  duplicate evidence envelopes are not required for the remaining milestone.
+
 ## Slice dependency DAG
 
-S1 through aggregate S6 are Accepted at their recorded historical contracts. New user-confirmed
-requirements add two pending reconciliation gates without rewriting that acceptance history:
+The following is retained as historical execution context. The lean E2E rebaseline above governs all
+remaining work. S1 through aggregate S6 are Accepted at their recorded historical contracts:
 
 - S2C/tasks 2.7-2.8 migrates the acceptance oracle to claim-level case contracts and must be Accepted
   before S8/S9 acceptance execution.
@@ -32,9 +51,10 @@ requirements add two pending reconciliation gates without rewriting that accepta
   and aggregate S7 are Accepted. S2C1 RED and S2C2/Task 2.7's strict validator plus complete 52-case
   draft migration are Accepted at 47/80. S2C3A's exact five-group oracle RED is also Accepted;
   S2C3B's mechanical evaluator/recorded-fake GREEN and S2C3C1's deterministic unapproved external-
-  review packet are Accepted. S2C3C2 is Ready but awaits attributable external human decisions,
-  judge authorization, and calibration; S2C3C3/Task 2.8 still owns reviewed-corpus application,
-  aggregate acceptance, and the S8/S9 oracle unlock.
+  review packet are Accepted. The historical two-human S2C3C2 contract is Rejected/Superseded; the
+  replacement single-human review workbench is In Progress and awaits attributable human 29+23+60
+  decisions, judge authorization, and sealed calibration. Task 2.8 remains open and owns
+  reviewed-corpus application, aggregate acceptance, and the S8/S9 oracle unlock.
 - KnowledgeBuild candidate construction and the pure four-public/three-internal projection bundle
   are implemented together with deterministic lookup/vector builders and the first isolated full
   rebuild. Task 7.4 freezes index and point-parity obligations; accepted Task 7.5 owns construction
@@ -109,8 +129,9 @@ requirements add two pending reconciliation gates without rewriting that accepta
   the same finite Web identity boundary. S8C is Accepted at `59/80`: one public release-bound
   `KnowledgeRead` executes all seven lanes, forwards the accepted fusion/rerank/sufficiency/
   supplemental/handle ports, and admits exact-release/exact-session read-only handle replay. Tasks
-  8.3/8.5/8.7 are closed. S2C3C2 still gates only Tasks 8.1/8.8 reviewed calibration and claim-level
-  aggregate acceptance, not independently executable S9 implementation work.
+  8.3/8.5/8.7 are closed. The replacement Task 2.8 single-human review workbench still gates only
+  Tasks 8.1/8.8 reviewed calibration and claim-level aggregate acceptance, not independently
+  executable S9 implementation work.
 - S9 answer/session RED contracts may start against typed evidence fixtures; production answer and
   session behavior consumes the Accepted S8 evidence/trace result. S9A/Task 9.3's three-group
   evidence-based AssessmentFrame RED and S9M/Task 9.5's four-group Canonical/Web session,

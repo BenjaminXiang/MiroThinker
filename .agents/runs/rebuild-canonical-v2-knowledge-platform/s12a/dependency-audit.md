@@ -2,20 +2,54 @@
 
 ## Outcome
 
-S12A remains Specified as one deep isolated `KnowledgeBuild` module that closes only OpenSpec Task
-`12.1`. This audit was repaired into a reviewable Specified artifact at
-`2026-07-21T19:24:16Z`. S10O and aggregate S11C are now Accepted; S11C final receipt SHA-256 is
-`281b28244a9fb5043a10df4e7eaa8f4e9e9385825babdae6204a461661a99717`, and the formal ledger is
-`70/80`. S12A is not Ready until the live migration/source/ownership gates pass and one independent
-lean Ready review reports zero open Critical/Important findings. The preceding audit found
-`Critical=3 / Important=4`; all seven findings are repaired in the three Specified S12A artifacts,
-so open Critical/Important is `0` pending independent review. Minor/YAGNI findings do not block.
+S12A and exactly Task `12.1` are Accepted after the fresh isolated r12 build, complete system checks,
+two final source/safety reviews, and an independent envelope/PostgreSQL/physical-index audit on
+`2026-07-23`. Streamed/indexed identity resolution and the immutable DomainProjection assertion-ID
+cache preserve output, errors, ordering, hashes, schema, and API; their combined owner matrix reports
+`87 passed`. The focused builder/runner matrix reports `104 passed`; the exact Task 12.1 owner matrix
+reports `169 passed, 2 skipped`; complete no-external Canonical V2 reports `542 passed, 148 skipped,
+3 warnings`. Ruff and Pyright pass on the complete Canonical V2 surface. S10O and aggregate S11C
+remain Accepted. The formal ledger is `71/80` (80 total, 71 complete, 9 open) and remains `49/97`
+acceptance checks because this build-only slice does not close an aggregate acceptance item.
+
+The current evidence is release `candidate-s12a-20260723-r12`, run
+`s12a-build-20260723-r12`, raw envelope SHA-256
+`a2684f9b9bd42c8727625fa7e057f654c6539a6e97924eccfdfb913fdfef9cbc`, and canonical
+envelope/receipt/handoff hashes
+`77cde16c037aec888e07a677b3f96effd27a75f3eeb68a4f38c5fdb2a6a88383`,
+`5ae974b6af80980864bac751812b12fb7c468a4449331db4a85b47c4453437a8`, and
+`f18af1854a92ef2d76816a8f3f3a9a724fb5ab233de6020f9c161c5100cf00bc`.
+Independent readers found 5,561 landing records, 1,037 Company projections, zero other public-domain
+or relationship projections, 5,561 one-to-one evidence-bound gaps, 1,037 index points/documents,
+zero physical parity deviations, and no active release before or after. The durable registry and
+physical snapshot hashes are `5092f40fb0759dd69a297fa505b8cb50ab09fbac39d7209e602c69cffea3732f`
+and `20cc5fd309056f714e09038465d3cec805e239752f1b709e0e92ba269f46cabe`.
 
 S2C/Task `2.8` is not a S12A dependency. It gates the claim-level query/answer acceptance runs and
 therefore S12B Tasks `12.2` and `12.3`, not deterministic construction of an isolated candidate.
 S12A may run the strict/static checks that contribute to Task `12.4`, but it must not check `12.4`.
-Task `12.5` requires explicit user acceptance, and Task `12.6` remains a separately authorized
-production-like Cutover/archive/destructive-cleanup boundary.
+Task `12.5` requires later explicit user acceptance of the complete multi-gate isolated candidate,
+and Task `12.6` remains a separately authorized production-like Cutover/archive/destructive-cleanup
+boundary. The broad instruction to finish open work authorizes local S12A acceptance; it does not
+fabricate the external human/provider evidence required by the remaining tasks.
+
+## Remaining-task hard gates at the S12A checkpoint
+
+- Open tasks are exactly `2.8`, `8.1`, `8.8`, `9.8`, and `12.2`-`12.6`.
+- Task `2.8` still has 29 `pending_user_review` contracts, 23 explicit exclusion decisions or missing-
+  evidence replacements, zero human-reviewed/acceptance-eligible cases, and 18 uncalibrated families.
+  Each relevant family requires at least 50 double-reviewed samples, agreement `>=0.80`, and two
+  distinct attributable human reviewers, plus authorization of a real recorded judge.
+- The accepted population contract still records `all_required_samples_materialized=false`: current
+  cases are Company 30, Professor 12, Patent 11, and Paper 7, below the per-domain/path, relationship,
+  multi-turn, and judge-calibration populations required for Tasks `8.1`, `8.8`, and `9.8`.
+- r12 honestly contains only Company projections. It therefore cannot pass the required Paper,
+  Patent, Professor, relationship, query/answer/Web, latency, or cost gates. Approved targeted
+  recollection is currently empty, and no named real-provider credentials are present.
+- Task `12.2` still lacks its content-addressed serving bundle and production `--serve` remains
+  fail-closed. Task `12.3` has valid S12A source/gap/release/index inputs but lacks the upstream
+  benchmark/latency/cost/rollback aggregate. Task `12.4` must be rerun after those final artifacts;
+  Task `12.5` and `12.6` retain their separate user-acceptance and Cutover-authority gates.
 
 ## Accepted foundations already available
 
@@ -46,7 +80,7 @@ production-like Cutover/archive/destructive-cleanup boundary.
 These dependencies may now be consumed by a later Ready S12A implementation. Their Accepted bytes
 must not be edited or reinterpreted by this repair.
 
-## Current implementation gap
+## Historical implementation gap, now resolved for the Candidate
 
 1. `knowledge_build.py` is intentionally pure and ephemeral. Its private materializer callback
    receives already-produced sections; it does not verify source coverage, copy bytes, ingest
@@ -60,11 +94,27 @@ must not be edited or reinterpreted by this repair.
    material into canonical evidence or open protected bytes.
 4. No explicit-target builder binds one fresh disposable PostgreSQL database, one fresh marked
    isolated index root, the accepted backup gate, the source-build manifest, recorded decision/
-   embedding adapters, and one content-addressed final receipt.
-5. No success handoff binds the built candidate to the five exact S11 consumer artifacts, and no
-   run-local command both proves the complete path and serves the candidate at `0.0.0.0:18188`
-   without a second build, private-stage reconstruction, active-pointer write, or promotion/cutover
-   capability.
+   embedding adapters, and one content-addressed final envelope.
+5. No success handoff originally bound the built candidate to the five exact S11 consumer artifacts.
+   The Candidate now has that handoff. Production serving and live query/answer/Web gates remain
+   deliberately deferred to Task `12.2`.
+
+### GREEN performance prerequisites found on 2026-07-22
+
+- Reproduction: the full 5,561-row build under `pytest --no-cov` consistently remained CPU-bound
+  in exact downstream owner replay; it was stopped after `9m52s` at about `1.7 GB`.
+- Root cause: `domain_projection.py:509` and `:584` allocate `set(self.assertions)` once per
+  decision/inclusion even though `self.assertions` is immutable for the validation call.
+- Proven progress before the first stop included exact landing, domain/internal/candidate
+  composition, path eligibility, pure index, candidate registry, typed stores, and embedding. The
+  early run incorrectly treated 580 relationship source rows as projectable; the hardened policy
+  now retains all 580 as evidence-bound `cross_domain` gaps because Accepted endpoint authority is
+  absent, producing zero relationship projections.
+- Resolution: the explicitly authorized identity-resolution and DomainProjection optimizations and
+  their parity/large-graph regressions are implemented. Current production SHA-256 values are
+  `51b5190ff0e7382b79c7a0a2e4c51d5e78680e8e5f5a42a4361b6acc37b53807` and
+  `9e32141307b24b0e5fa31b4cbb7363042f3a22f5fa3e355f18cbbb7a93867cc1`; their owner matrix reports
+  `87 passed`.
 
 ## Selected module and seam
 
@@ -78,7 +128,7 @@ class KnowledgeBuild:
 Callers and acceptance tests cross only this interface. A package-internal composition factory may
 accept explicit target configuration and real adapters, but it must return `KnowledgeBuild`. Source
 copy, landing, authority construction, gap recording, projection, durable registration, full index
-materialization, physical audit, release verification, and receipt emission remain implementation
+materialization, physical audit, release verification, and envelope emission remain implementation
 details. Deleting this module would force all of those invariants back into every runner/caller, so
 the module provides real depth rather than pass-through indirection.
 
@@ -86,23 +136,21 @@ The implementation may use internal seams only where two real adapters exist:
 
 - local-substitutable PostgreSQL/filesystem/Milvus Lite run against fresh real local targets;
 - recorded and production offline decision/embedding adapters use injected ports;
-- clock and receipt sinks have deterministic test adapters and file adapters.
+- clock and single-envelope sinks have deterministic test adapters and file adapters.
 
 The runner is deliberately shallow in capability, not in orchestration: it parses required explicit
 arguments, creates the approved production adapters, calls `build` exactly once, reads the
-sink-owned success receipt/handoff, and prints the returned candidate identities. The success
+sink-owned success envelope, and prints the returned candidate identities. The success
 handoff exact-types and cross-binds `CandidateRelease`, `IsolatedReleaseBundle`,
 `IndexProjectionRequest`, `InstitutionCatalog`, and `ReleaseVerification`; it is emitted only after
-receipt readback and is not a second public build API. The runner must not call landing, identity,
+single-envelope readback and is not a second public build API. The runner must not call landing, identity,
 build projection, index, verification, promotion, or SQL helpers directly.
 
-With `--serve --host 0.0.0.0 --port 18188`, the same process derives an unpersisted run-local
-`PublishedRelease` view from the exact handoff, then uses only the existing S11 isolated planner/
-read factories, recorded proposal/answer/Web/sufficiency/supplemental adapters,
-`compose_canonical_v2_consumer_runtime`, and `create_canonical_v2_candidate_app`. It passes the app
-object to Uvicorn with `workers=1` and `reload=False`; no import string, child-worker import, startup
-hook, or request can trigger a second build. The view is not an active pointer and is never created
-through `promote`.
+The injected `--serve --host 0.0.0.0 --port 18188` test seam proves the exact handoff can be wired
+to an app object without a second build, promotion, pointer change, import string, child worker, or
+startup rebuild. Production dependency resolution intentionally rejects `--serve` before builder
+construction. Task `12.2` owns the content-addressed recorded proposal/answer/Web/sufficiency/
+supplemental serving bundle and its real query/answer gates; Task `12.1` does not claim them.
 
 ## Source-build manifest contract
 
@@ -194,7 +242,10 @@ SHA-256 `4c91d1d7dce88e5c9d9924b2c21d6f3111292eb3e5c30a60e688fd40ccf8b594`.
 
 The S12A batch is a new full-table batch, not S4D's `limit=5` batch or the P1 five-row preview. It
 requires exactly 5,561 `released_objects` rows with exact type counts `company=1037`, `paper=574`,
-`patent=1931`, `professor=1439`, and `professor_paper_link=580`. An S12A-private reader uses the
+`patent=1931`, `professor=1439`, and `professor_paper_link=580`. These are source-row counts, not
+projection targets. The accepted mapper produced 1,037 Company projections; all other source rows,
+including the 580 relationship rows, produced typed evidence-bound gaps because the available
+payload did not satisfy the accepted field/endpoint authority. An S12A-private reader uses the
 Accepted schema-introspection rules on the candidate-owned verified copy, requires one stable
 single-column primary key, quotes the introspected identifiers, and executes deterministic
 primary-key `ORDER BY` with no `LIMIT`. It neither assumes an `id` column nor uses/modifies the
@@ -226,39 +277,41 @@ accepted S2B gate + exact request/manifest/target preflight
   -> retained assertions/decisions/identity + typed gap drafts
   -> four public domain + Person/Technology + relationship + eligibility projections
   -> pure full-index expectation + immutable BuildManifest/CandidateRelease
-  -> durable candidate/release/manifest/projection registry + unresolved gaps
+  -> durable candidate/release/manifest + available typed stores + unresolved gaps
   -> fresh marked isolated lookup/Milvus full build and complete physical audit
   -> exact ephemeral ReleasePublication.verify only (never promote)
-  -> one canonical-JSON content-addressed complete-candidate receipt + consumer handoff readback
+  -> one canonical-JSON content-addressed receipt/handoff envelope readback
 ```
 
 The implementation replays every caller-independent stage result through its Accepted owner before
 trusting it. All release IDs, build run IDs, source batches, as-of values, policy/parser/model
 versions, public/internal scope discriminators, relationship authority, eligibility decisions,
-projection hashes, point/document inventories, database registry rows, index metadata, and receipt
+projection hashes, point/document inventories, database registry rows, index metadata, and envelope
 hashes must agree.
 
 The durable registry uses the live existing schema; S12A adds no migration. After the pure graph and
 expected index manifest are known, it atomically inserts the release/build-manifest/manifest-section
-identity, persists typed stage rows through their Accepted stores, then records typed gap drafts
-against that durable candidate. A later failure may leave an isolated candidate marked
+identity, persists identity/decision/domain/relationship rows through their Accepted stores, then
+records typed gap drafts against that durable candidate. No Accepted store exists for internal-
+reference or path-eligibility results; their hashes remain in manifest sections and their exact typed
+payloads remain in the single success envelope/handoff. A later failure may leave an isolated candidate marked
 inspectable/retryable, but `build` does not return success, no active pointer changes, and no partial
-candidate becomes serviceable. Exact replay is idempotent; same identity with different content
-fails. A retry that needs a physical rebuild uses a new explicitly owned fresh index target rather
+candidate becomes serviceable. Store-level replay inside one build is idempotent; conflicting
+content identity fails. A retry uses a new run/release identity and complete fresh target set rather
 than deleting or overwriting an old target.
 
 ## Failure and gap behavior
 
 - Hash/lineage/target/gate/cross-release failures stop before the next effect and produce no
-  successful receipt.
+  successful envelope.
 - Parser partial/quarantine outcomes retain readable evidence and typed source errors. Missing data
   never creates placeholder identities, assertions, parents, relationships, or projection points.
 - An accepted `unrecoverable` disposition or downstream evidence insufficiency records a durable
   S10O gap bound to source/release/run/domain/path evidence. The gap does not close during S12A.
 - Recorded decision-adapter failure leaves the candidate unpublished and retryable. Model memory is
   never source evidence.
-- Physical index drift or a non-accepted `ReleaseVerification` prevents success even if a receipt
-  file or aggregate manifest appears plausible.
+- Physical index drift or a non-accepted `ReleaseVerification` prevents success even if an envelope
+  or aggregate manifest appears plausible.
 
 ## Target and publication safety
 
@@ -286,7 +339,8 @@ than deleting or overwriting an old target.
   `publish.active_release`, moves an alias/pointer, or discovers a latest release. An independent
   database read proves `publish.active_release` absent before and after.
 - Original `pgtest`, original Milvus, backup bytes, restore evidence, and forensic sources remain
-  unchanged. Original Milvus is hash-checked, never opened with a client.
+  unchanged. S12A checks only the Accepted original-Milvus identity record; it never opens or
+  rehashes the original bytes.
 
 ## Alternatives rejected
 
@@ -330,9 +384,9 @@ check exactly Task `12.1`. It must not check Tasks `12.2`-`12.6`, Task `2.8`, `8
   1. The exact `7/7/1/5/30/0` disposition and 50-source mapping are frozen above.
   2. Historical rows pass through explicit field/relationship allowlists and Accepted identity,
      decision, projection, and gap owners; no Product/placeholder shortcut exists.
-  3. The runner now has an exact single-build `0.0.0.0:18188` serving contract using an in-process
-     nonpersisted PublishedRelease view, existing S11 factories, one app-object Uvicorn worker, and
-     no promotion/pointer/reload capability.
+  3. The historical plan gave the runner an injected single-build `0.0.0.0:18188` wiring contract.
+     The implemented production path is narrower: it fails closed before builder construction until
+     Task `12.2` supplies the content-addressed serving bundle and live gates.
   4. RED has eight import-first groups, and target/source-copy/cleanup boundaries now freeze exact
      staging markers, stable no-follow reads, independent inodes, full physical audit followed by
      ephemeral verify, and the Tasks `12.2`-`12.6` boundary.
@@ -340,8 +394,79 @@ check exactly Task `12.1`. It must not check Tasks `12.2`-`12.6`, Task `2.8`, `8
 - Minor/YAGNI, nonblocking: do not add a workflow engine, resumable DAG framework, distributed
   transaction coordinator, generic source plugin registry, automatic cleanup/retirement policy, or
   real-provider run to S12A.
-- Status remains `Specified`; this repair records S10O/S11C acceptance but does not waive live-head/
-  source-ownership checks or the independent lean Ready review.
+- At the time of this first repair, status remained `Specified`; it did not waive live-head/source-
+  ownership checks or the independent lean Ready review. The later evidence below supersedes that
+  historical status only after every gate passed.
+
+### 2026-07-22 lean Ready review repair
+
+The next independent review reported `Critical=1 / Important=6 / Minor=1 / YAGNI=0`. This revision
+repairs the blocking findings without changing Task `12.1` or starting implementation:
+
+1. S12A never opens or rehashes original Milvus bytes. Ready/final gates consume only the Accepted
+   S2/S2B content-addressed identity record and the executable 50-source backup gate.
+2. `SourceDisposition` covers all six exact states, including the five `protection_only` and thirty
+   `registered_unprojected` entries.
+3. The typed receipt binds an exact five-artifact `CompleteCandidateConsumerHandoff`; this first
+   repair incorrectly described two-file atomic publication and is superseded below.
+4. Ready commands now prove the unique Alembic head, S2B hashes/formal gate, paused `pgtest` metadata
+   and source-volume identity, all-worktree ownership, and the Accepted original-Milvus record
+   without opening protected bytes.
+5. Fresh database/index/staging targets are represented by the Accepted database/index target
+   models plus one exact staging marker/target model and one private fail-before-read validator.
+6. Task 3 turns only the six build groups GREEN; Task 4 later turns the two runner groups GREEN.
+7. The user-required local commit occurs exactly once after Task `12.1` acceptance; Push/PR remain
+   forbidden.
+8. Top-level `build` is single-use per fresh physical target set. Store-level replay/collision and
+   envelope readback remain tested inside that build; retry requires new run/release
+  identities and new fresh targets.
+
+The mechanically checked 50-source mapping remains exact at `7/7/1/5/30/0`. The first Ready review
+bound Specified SHA-256 values contract
+`33252aa28fe7c765ec371e3824ad9f52295af14931b3d9b783b628d12ece666b`, audit
+`4d3fd293621e527b624609e11a0285461e192fceff77849fe4e9ac749f411e72`, and plan
+`39ebf4376d99a10e8f919e8ec14c6329f86a73a5051f4067aa6463d60705c24c`. Live Ready evidence:
+unique `C2_0011` head; S2B `state=accepted/source_count=50`; paused original PostgreSQL on volume
+`d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241`; no competing writer;
+owner matrix `71 passed, 2 skipped`; strict OpenSpec and `git diff --check` exit `0`. These live
+checks remain valid, but the status was revoked by the later storage-seam findings.
+
+### 2026-07-22 storage-seam repair
+
+The read-only storage audit found two Important contradictions after the first Ready review and
+before any RED/implementation file was created:
+
+1. Existing PostgreSQL adapters cover identity, decision, domain, relationship, release/manifest,
+   and gap rows, but there is no Accepted store/schema for `InternalReferenceProjectionResult` or
+   `PathEligibilityResult`. S12A now stores their exact hashes in manifest sections and their exact
+   typed payloads in the success envelope/handoff; it adds no migration, table, or unrelated-column
+   serialization.
+2. Two unrelated JSON files cannot be crash-atomically published by filesystem rename. The sink now
+   writes one `CompleteCandidateBuildEnvelope` containing the typed receipt and five-artifact
+   handoff, fsyncs one temporary file, publishes it through a same-filesystem no-overwrite hard
+   link, fsyncs the directory, and reads back the same canonical file before success.
+
+The exact 50-source mapping, deep `KnowledgeBuild.build` interface, failure isolation, no-promotion
+boundary, and earlier live gates are unchanged. The focused independent re-review accepted these
+repaired bytes with zero open Critical/Important findings, so Ready was restored at
+`2026-07-22T11:57:23Z`.
+
+## Candidate execution disposition — 2026-07-23
+
+- r1-r6 are retained historical build attempts against earlier code; r6 emitted the untracked
+  historical `complete-candidate-build-envelope.json` and is not current Candidate authority.
+- r7 failed before landing on SQLite WAL header handling. r8 and r9 were stopped after read-only
+  review found real target/source safety blockers. Their owned resources remain retained for audit.
+- r10 completed under an older implementation. r11 completed, but its review found four blocking
+  source/target audit findings. Both remain retained historical evidence and are not authority.
+- r12 used the final reviewed implementation, fresh isolated database
+  `miroflow_candidate_s12a_20260723_r12`, fresh staging/index roots under
+  `/var/tmp/mirothinker-canonical-v2-s12a/r12`, and no production resource. It completed and emitted
+  the current evidence copied as `complete-candidate-build-envelope-r12.json`.
+- Independent current-model envelope, read-only PostgreSQL, and byte-copy physical-index audits all
+  pass. `publish.active_release` is empty; original `pgtest` is still paused; original Milvus was
+  not opened or rehashed. Final source/safety/evidence reviews are GO with zero Critical/Important,
+  so S12A and exactly Task `12.1` are Accepted.
 
 ## Durable sources
 
@@ -355,5 +480,5 @@ check exactly Task `12.1`. It must not check Tasks `12.2`-`12.6`, Task `2.8`, `8
   `release_publication_isolated.py` as implementation evidence.
 - `.agents/runs/rebuild-canonical-v2-knowledge-platform/convergence-plan-remaining-24-2026-07-20.md`.
 
-No production code, test, source manifest, database, index, receipt, task checkbox, status ledger,
+No production code, test, source manifest, database, index, envelope, task checkbox, status ledger,
 Commit, Push, PR, promotion, archive, or Cutover changed during this audit.

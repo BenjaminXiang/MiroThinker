@@ -1,0 +1,9 @@
+{
+  "content_sha256": "6d7fa297838812bf6e3692bb32ff1133239be692d675ad8be749aeca9c7487b4",
+  "model": "recorded-decision-v1",
+  "output_schema_version": "canonical-v2-decision-output-v1",
+  "prompt_version": "canonical-v2-s12a-decision-v1",
+  "provider": "recorded-offline",
+  "responses": [],
+  "schema_version": "canonical-v2-recorded-decision-bundle-v1"
+}

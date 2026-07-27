@@ -554,17 +554,13 @@ def _guarded_signature_temp_roots(
             raise ValueError("guarded partitions receipt run content mismatch")
         guarded_cwd = guarded_run.get("cwd")
         ledger_cwd = ledger_run.get("cwd")
-        guarded_cwd_path = (
-            PurePosixPath(guarded_cwd) if isinstance(guarded_cwd, str) else None
-        )
-        ledger_cwd_path = (
-            PurePosixPath(ledger_cwd) if isinstance(ledger_cwd, str) else None
-        )
+        if not isinstance(guarded_cwd, str) or not isinstance(ledger_cwd, str):
+            raise ValueError("guarded partitions receipt run cwd mismatch")
+        guarded_cwd_path = PurePosixPath(guarded_cwd)
+        ledger_cwd_path = PurePosixPath(ledger_cwd)
         if (
-            guarded_cwd_path is None
-            or guarded_cwd_path.is_absolute()
+            guarded_cwd_path.is_absolute()
             or ".." in guarded_cwd_path.parts
-            or ledger_cwd_path is None
             or not ledger_cwd_path.is_absolute()
             or posixpath.normpath(ledger_cwd) != ledger_cwd
             or _lexical_posix_join(capture_repository_root, guarded_cwd)
@@ -1312,12 +1308,10 @@ def _validate_evidence_bundle(
         if repository_root != str(capture_repository_root):
             raise ValueError("ledger run repository_root must equal frozen repo root")
         cwd = run.get("cwd")
-        cwd_path = PurePosixPath(cwd) if isinstance(cwd, str) else None
-        if (
-            cwd_path is None
-            or not cwd_path.is_absolute()
-            or posixpath.normpath(cwd) != cwd
-        ):
+        if not isinstance(cwd, str):
+            raise ValueError("ledger run cwd must be an exact absolute path")
+        cwd_path = PurePosixPath(cwd)
+        if not cwd_path.is_absolute() or posixpath.normpath(cwd) != cwd:
             raise ValueError("ledger run cwd must be an exact absolute path")
         command_basetemp_value = basetemp_tokens[0].split("=", 1)[1]
         command_basetemp = PurePosixPath(command_basetemp_value)

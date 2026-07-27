@@ -37,6 +37,7 @@ from .knowledge_read import (
     LocalPaperProfessorRelationshipTrace,
     LocalPatentCompanyRelationshipTrace,
     LocalProfessorPaperRelationshipTrace,
+    LocalSourceRelationshipTrace,
     MaterialQuestionPart,
     ProtectedSlot,
     TypedTraversalRequest,
@@ -1239,7 +1240,24 @@ def _physical_traversal_authorized(
     traversal: TypedTraversalRequest,
 ) -> bool:
     trace = item.local_projection_trace
-    if type(trace) is LocalCanonicalRelationshipTrace:
+    if type(trace) is LocalSourceRelationshipTrace:
+        source_id = trace.displayed_entity_id
+        traced_target_id = trace.candidate_canonical_id
+        endpoint_target_id = trace.candidate_canonical_id
+        query_tuple = (
+            trace.query_relationship_type_id,
+            trace.query_direction,
+            trace.query_source_type,
+            trace.query_target_type,
+        )
+        traversal_tuple = (
+            trace.query_direction,
+            trace.query_source_type,
+            trace.query_target_type,
+            trace.relationship_type_id,
+            trace.physical_direction,
+        )
+    elif type(trace) is LocalCanonicalRelationshipTrace:
         source_id = trace.displayed_company_id
         traced_target_id = trace.candidate_canonical_id
         endpoint_target_id = trace.patent_id

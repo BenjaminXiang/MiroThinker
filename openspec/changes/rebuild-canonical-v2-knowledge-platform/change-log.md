@@ -1,5 +1,63 @@
 # Change Log
 
+## 2026-07-25 — Task 2.8 human-readable review presentation repair
+
+- Replaced raw JSON as the primary surface for contract, exclusion, and blind-calibration tasks with
+  a deterministic, testable Chinese presentation layer. The page now states what is being reviewed,
+  the relevant frozen requirements/evidence, all-or-nothing approval criteria, and how to choose a
+  decision. Raw structures remain expandable audit material and do not control human interpretation.
+- The translator covers all 29 frozen contracts, including safety prohibitions/qualified outcomes and
+  near-name Company constraints. Any future unsupported contract structure fails closed by disabling
+  contract approval instead of silently presenting a machine object. Renderer identity advances to
+  `canonical-v2-human-review-renderer-v2` and content-binds the new presentation asset.
+- Focused translation tests and the full Admin review matrix pass at `121 passed`. Browser verification
+  covers readable contract/exclusion/calibration screens and a 390 px layout without overlap or
+  console/page errors. The earlier zero-decision formal v2 ledger is retained because its v1 renderer
+  hash correctly rejects the changed assets; a separate empty v3 ledger now serves the same isolated
+  review endpoint.
+- This is a usability and evidence-presentation correction only. It creates no human decision, judge
+  result, export, reviewed-v2 corpus, Task 2.8 acceptance, downstream task acceptance, production
+  data/index mutation, commit, Push, PR, promotion, archive, cleanup, or Cutover.
+
+## 2026-07-24 — Task 2.8 single-human review workbench reached Candidate
+
+- Implemented the isolated single-human review workbench over the frozen 29 contract candidates,
+  23 exclusion candidates, and five-stratum 60-probe blind calibration workload. The dedicated
+  SQLite ledger, same-origin FastAPI/static page, append-only decisions, crash recovery, sealed
+  evidence-bounded judge path, canonical audit/acceptance exports, and explicit `0.0.0.0` launcher
+  do not connect to Canonical PostgreSQL, open Milvus, or alter an active release.
+- Added an Admin-independent export validator, the only reviewed-v2 application entry point, and an
+  explicit evaluator-v2 admission path. They independently bind frozen source identities, event and
+  judge chains, Global-60 metrics, the exact 29/23/60 accounting, and predecessor-v1 identities;
+  application creates seven new v2 artifacts atomically and never rewrites v1.
+- Focused Admin tests are `117 passed`; the complete S2C artifact/review suite is `105 passed`; the
+  existing Candidate boundary matrix is `12 passed`. Ruff, Pyright, strict OpenSpec, JavaScript
+  syntax, and diff checks pass. Browser verification covered attribution, all three task kinds,
+  blind pre-seal rendering, reload, stale-tab `409` recovery with explicit supersession, canonical
+  audit export, and 375 px layout without horizontal overflow. Independent reviews ended at
+  Critical `0`, Important `0`.
+- This is implementation Candidate evidence only. The observed browser export was explicitly
+  `implementation_test`, `review_evidence`, non-accepting, and Task-2.8-ineligible. No real human
+  decision, real judge result, reviewed-v2 corpus, Task 2.8 acceptance, downstream task acceptance,
+  commit, Push, PR, promotion, archive, cleanup, or Cutover was created.
+
+## 2026-07-24 — Task 2.8 single-human review policy replacement
+
+- By explicit owner decision, the historical two-human/per-family-50 S2C3C2 review slice is
+  Rejected/Superseded by `single-human-global-stratified-v2`: one attributable human reviews the
+  exact 29 contracts and 23 proposed exclusions, then blindly labels one pre-frozen five-stratum
+  60-probe workload with quotas `20/10/10/10/10`. The acceptance gates are agreement `>= 0.80`, at
+  least 10 human-supported and 10 human-unsupported labels, at least five human-unsupported critical
+  probes, and zero critical false accepts. Judge output remains hidden until all 60 labels are
+  sealed. `review_evidence` is available at any review state but audit-only; only an independently
+  validated, gate-passing
+  `acceptance_candidate` export may feed reviewed-v2 application. This records the approved policy
+  and starts the replacement workbench slice; it supplies no human decision or acceptance evidence.
+  The new unchecked gate changes the acceptance ledger from `49/97` to `49/98` without changing the
+  passing count.
+  Tasks 2.8, 8.1, 8.8, and 9.8 remain unchecked, and no Accepted v1 packet/corpus/snapshot, S12A
+  artifact, original PostgreSQL, or original Milvus state changed.
+
 ## 2026-07-22
 
 - The user designated the accumulated Canonical V2 S11 worktree as the sole implementation
@@ -1031,3 +1089,155 @@
   `pgtest` remains paused, and the original Milvus hash is unchanged. Zero open Critical/Important
   findings remain; Tasks 6.1-6.8 are Accepted at 36/75. S7, release/index publication, product/data
   cutover, push, PR, and OpenSpec archive remain unstarted/forbidden.
+
+## 2026-07-22 — S12A Task 12.1 reached isolated Candidate
+
+- Added the deep isolated `KnowledgeBuild.build` implementation, source-build manifest, recorded
+  offline adapters, one-call runner, no-overwrite content-addressed envelope sink, and focused
+  contract owners. The user authorized behavior-preserving identity-resolution and
+  DomainProjection performance prerequisites; their owner matrix reports `87 passed`.
+- The final focused builder/runner matrix reports `67 passed`. The successful r10 run produced
+  release `candidate-s12a-20260722-r10`, run `s12a-build-20260722-r10`, and evidence file
+  `complete-candidate-build-envelope-r10.json` with raw SHA-256
+  `2f797e0df058a9a3969a7d01b97df2492a156a64ff1436aa33588100bc6831e7`.
+- Independent model, PostgreSQL, and physical-index readback passed: 5,561 landing records, 1,037
+  Company projections, zero Paper/Patent/Professor/relationship projections, 5,561 one-to-one
+  evidence-bound gaps, and 1,037 points plus 1,037 lookup documents with zero parity deviation.
+  `publish.active_release` remains absent, original PostgreSQL remains paused, and original Milvus
+  was not opened.
+- Production serving remains fail-closed. Task `12.2` owns the content-addressed serving bundle and
+  live query/answer/Web gates. No promotion, Cutover, production access, destructive cleanup, Push,
+  PR, or `main` movement occurred.
+- Final named-only independent review returned GO for the isolated Candidate with zero open Critical
+  or Important findings and explicitly did not grant external acceptance.
+- This is Candidate evidence only. Task `12.1` remains unchecked pending system/independent
+  acceptance. Counts remain `70/80` tasks and `49/97` acceptance checks; no ledger delta or local
+  commit was created.
+
+## 2026-07-23 — S12A Task 12.1 accepted on fresh r12 evidence
+
+- Hardened the isolated builder after r11 review: SQLite parsing is bound to admitted bytes across
+  pathname replacement, duplicate/deep JSON fails closed, complete payload/evidence paths are
+  audited, PostgreSQL accepts only an explicit numeric-loopback pinned session, and pre-effect live
+  schema validation binds the complete semantic catalog rather than table names alone.
+- Final implementation/test/runner/runner-test SHA-256 values are `85b4ca8b...98efa`,
+  `d8c8174f...dff4`, `0279b242...682`, and `a85ea8da...403`. The focused builder/runner matrix is
+  `104 passed`; identity/domain is `87 passed`; the exact owner matrix is `169 passed, 2 skipped`;
+  complete no-external Canonical V2 is `542 passed, 148 skipped, 3 warnings`. Ruff, format, Pyright,
+  offline lock/wheel source parity, strict OpenSpec, and diff checks pass.
+- Fresh release `candidate-s12a-20260723-r12` / run `s12a-build-20260723-r12` emitted raw envelope
+  SHA-256 `a2684f9b...f9cbc`; canonical envelope/receipt/handoff hashes are `77cde16c...88383`,
+  `5ae974b6...437a8`, and `f18af185...f00bc`. Independent model/database/index readback confirms
+  5,561 landing records, 1,037 Company projections, zero other domains/relationships, 5,561
+  one-to-one evidence-bound gaps, 1,037 points/documents, exact durable registry/physical hashes,
+  zero parity deviation, and no active release.
+- Final source/safety/evidence reviews report GO with zero Critical/Important findings. Original
+  PostgreSQL remains paused and original Milvus was not opened or rehashed. r10/r11 remain stale
+  historical evidence; the unsuffixed r6 envelope was restored byte-for-byte.
+- S12A and exactly Task `12.1` are Accepted. The task ledger moves `70/80 -> 71/80`; acceptance stays
+  `49/97`. Tasks `2.8`, `8.1`, `8.8`, `9.8`, and `12.2`-`12.6` remain open behind documented human,
+  population, provider, final-user-acceptance, and Cutover gates. No commit, Push, PR, promotion,
+  archive, or destructive cleanup occurred.
+
+## 2026-07-26 — Lean customer-benchmark E2E rebaseline
+
+- The user confirmed that `docs/测试集答案.xlsx` is the customer-provided Ground Truth for its 17
+  conversation groups and 25 query turns. Query, answer, and key points are interpreted together;
+  key-point corrections override inaccurate historical answer fragments, while valid semantic
+  paraphrases remain acceptable.
+- The user canceled Task `2.8` and the contract/exclusion/blind-calibration review workflow after
+  direct use showed that it did not evaluate the intended product outcome. Tasks `8.1`, `8.8`, and
+  `9.8` are also retired as separate claim-level gates. Existing code, ledgers, packets, tests, and
+  receipts remain non-normative history and were not deleted or reinterpreted as passing evidence.
+- Final work is reduced to Tasks `12.2`-`12.6`: construct a serviceable four-domain isolated
+  Candidate and serving bundle, replay the workbook through the real chat runtime, run minimal
+  safety/changed-surface checks, obtain direct user acceptance, and keep Cutover separately
+  authorized. The ledger becomes `75/80` with exactly five open tasks.
+- Web augmentation is now evidence-driven rather than universal: it runs for requested-current,
+  missing, stale, or conflicting material evidence. Adequate fresh local evidence may answer without
+  a Web call.
+- This documentation-only rebaseline did not run or change the Candidate, original PostgreSQL,
+  original Milvus, active release pointers, production resources, or review state. No commit, Push,
+  PR, promotion, archive, cleanup, or Cutover occurred.
+
+## 2026-07-26 — S12B Task 12.2 serviceable four-domain Candidate
+
+- Fresh isolated r5 built 1,037 Company, 251 Paper, 1,931 Patent, and 557 Professor projections from
+  5,561 admitted landing records. It also built 328 evidence-backed relationships across the three
+  required customer paths and retained 5,874 typed gaps rather than inventing missing facts.
+- The exact Candidate produced 4,333 vector points and 3,776 lookup documents. Their expected
+  manifests equal physical contents; the intentional difference is the Professor identity/research
+  two-view vector contract. The serving-bundle content hash is `887689cc...58df1`, and the envelope
+  canonical content hash is `abe56cc3...b560`.
+- The content-addressed, secret-free bundle now binds the normal `/api/chat` and `/chat` runtime to
+  release `candidate-s12b-20260726-r5` without active-pointer discovery or writes. The service is
+  running on `0.0.0.0:18188`; health, UI, structured success, and fail-closed error paths executed.
+- The first exact-name chat smoke selected unrelated Patent evidence for 丁文伯. This is a real
+  Task 12.3 answer-quality badcase, not a Task 12.2 infrastructure failure, and no product-acceptance
+  claim is made. Task 12.2 closes at `76/80`; Tasks 12.3-12.6 remain open.
+- Original PostgreSQL remains paused, original Milvus and active pointers remain unchanged, and no
+  promotion, Cutover, archive, destructive cleanup, commit, Push, or PR occurred.
+
+## 2026-07-26 — S12C Tasks 12.3/12.4 customer replay Candidate
+
+- Rebuilt the isolated release as `candidate-s12c-20260726-r8`: 1,037 Company, 262 Paper, 1,931
+  Patent, and 554 Professor projections; 339 relationships; 4,338 vector points; and 3,784 lookup
+  documents. Candidate/index parity passes without changing an active pointer.
+- Repaired the replayed defect classes generically: strong-evidence Professor identity merge,
+  answer-eligible evidence closure, exact/lexical identifier ownership, exact-entity answer
+  selection, bounded near-name matching, focused missing-entity behavior, and independent-turn topic
+  switching so active session anchors follow explicit exact results.
+- Final `customer-workbook-replay-r6` ran 17 distinct sessions and all 25 ordered turns through the
+  real `/api/chat` path with `25 ok / 0 failure`. The readable report retains Ground Truth, actual
+  answers, citations/evidence, limitations, HTTP status, and timing; it does not grant semantic
+  acceptance.
+- Exact Ding Wenbo, Wujie Zhihang near-name exclusion, pFedGPA two-turn anchoring, targeted Company
+  answers, and `CN117873146A` pass focused real-chat checks. Missing headquarters fields, Waseda/Wang
+  Xueqian evidence, the pFedGPA URL, embodied-data-route modeling, and incomplete broad analyses are
+  recorded as product gaps. Two Web timeouts remain explicit while local answers stay grounded.
+- Changed-module tests report `27 passed`, `11 passed`, and `2 passed`; focused Ruff and Pyright are
+  clean; strict OpenSpec and `git diff --check` pass. Original `pgtest` remains paused, original
+  Milvus SHA-256 remains `43ef203e...867cc`, and active release row count remains zero.
+- Tasks 12.3 and 12.4 close at `78/80` tasks and `26/35` acceptance checks. The release remains a
+  Candidate until direct user acceptance (Task 12.5); Cutover (Task 12.6) requires separate explicit
+  authorization. No commit, Push, PR, promotion, archive, cleanup, or Cutover occurred.
+
+## 2026-07-27 — S12C runtime Web-gap repair
+
+- Repaired the real Candidate's Web augmentation path without rebuilding or promoting the release:
+  Web now receives the planned lane query, multi-turn searches include the displayed entity name,
+  explicit Web-gap evidence survives late reranking, and the provider's request/fallback timeouts fit
+  inside the server-owned lane budget.
+- Bound ephemeral Web handles to the chat session and corrected release-authority validation so an
+  unselected audit-only Professor vector candidate does not require a displayed answer handle. This
+  removes the observed timeout and false 409 classes while retaining release/index validation.
+- Focused tests report `29 passed`, `1 passed`, `5 passed`, and `11 passed`; changed-file Ruff,
+  formatting, and targeted Pyright are clean. Strict OpenSpec validation and `git diff --check` pass.
+- Real HTTP smoke returned 200 with successful current-Web retrieval for the Wang Xueqian assessment,
+  the pFedGPA URL follow-up, and the Shenzhen embodied-intelligence supplier query. The pFedGPA link
+  gap is now visibly supplemented. Same-name assessment disambiguation and a complete supplier-by-
+  supplier data-route comparison remain visible answer-quality gaps for direct user evaluation.
+- The ledger remains `78/80`. Task 12.5 is explicit direct-user acceptance; Task 12.6 is separate
+  authorization for any production-like Cutover, archive, or destructive cleanup. Original sources,
+  active pointers, HEAD, and `main` remain unchanged, and no canonical write or promotion occurred.
+
+## 2026-07-27 — S12D direct-user answer and public-evidence correction
+
+- Direct user evaluation rejected deterministic projection-copy answers and restored bounded Web
+  search for every normal information request. The accepted target is local plus current-Web
+  evidence followed by evidence-bound LLM synthesis, with deterministic text only on typed failure.
+- Public chat must default-collapse `查看依据`, show only validated official public links, and expose
+  no `/browse` link or internal evidence/trace metadata. `/browse` remains an internal tool governed
+  by existing deployment network or reverse-proxy controls; this slice adds no authentication work.
+- Tasks 12.5a-12.5c and the Ready S12D slice own the correction before direct user acceptance.
+- S12D is now Candidate: the shared `/gemma4/v1` route is configured for the currently served
+  `qwen3.6-35b-a3b-fp8` model, normal answers use the real LLM renderer, and founder-role prose
+  retains the evidence-backed `participated in founding` relation instead of copying a Company
+  projection or weakening the relationship.
+- Public chat now emits only validated official URLs, clears raw evidence and structured trace from
+  the browser envelope, removes the visible `/browse` navigation, and renders a closed `查看依据`.
+  The internal feedback checkpoint remains complete on the server.
+- Focused tests, Ruff, Pyright, strict OpenSpec, real Ding Wenbo two-turn HTTP, one non-case-specific
+  Patent request, and desktop/mobile browser checks pass. The Candidate remains read-only on
+  `0.0.0.0:18188`; Task 12.5 still requires direct user acceptance and Task 12.6 remains separately
+  authorized.

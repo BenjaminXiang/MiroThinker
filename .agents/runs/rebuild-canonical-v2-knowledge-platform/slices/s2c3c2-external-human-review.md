@@ -2,8 +2,17 @@
 
 ## Status
 
-Ready at `2026-07-14T18:48:51Z`; execution requires authorized external human input. No agent is an
-eligible reviewer. Task 2.8 and the 47/80 ledger remain unchanged.
+Rejected/Superseded at `2026-07-24` by explicit owner decision. The two-human/per-family-50 policy
+below is retained as historical evidence only and MUST NOT be executed or treated as the active Task
+2.8 review contract. It is replaced by `s2c3c2-single-human-review-workbench`. Task 2.8 remains
+unchecked.
+
+## Supersession reason
+
+The owner simplified the operational review to one attributable human plus one deterministic,
+globally five-stratum set of 60 blind calibration labels. Evidence-bounded judging, content identity,
+and external human calibration remain required; only the reviewer count and sampling policy changed.
+No Accepted v1 packet or corpus byte is changed by this supersession.
 
 ## Parent
 

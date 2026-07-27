@@ -9,8 +9,11 @@ from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 import math
-from typing import Any, Literal
+from threading import Lock
+from typing import Any, Literal, cast
 import unicodedata
+
+import numpy as np
 
 from .candidate_projection import (
     CandidateProjectionIntegrityError,
@@ -66,12 +69,14 @@ from .knowledge_read import (
     InternalReferenceFact,
     InternalReferenceQuery,
     KnowledgeRead,
+    KnowledgeReadIntegrityError,
     LaneRequest,
     LocalCanonicalRelationshipTrace,
     LocalPatentCompanyRelationshipTrace,
     LocalPaperProfessorRelationshipTrace,
     LocalProfessorPaperRelationshipTrace,
     LocalProjectionTrace,
+    LocalSourceRelationshipTrace,
     LocalInternalReferenceTrace,
     LocalRelationshipTrace,
     LocalVectorTrace,
@@ -93,9 +98,12 @@ from .knowledge_read import (
     WebSnapshotPolicy,
     _QueryPlanner,
     _COMPANY_TO_PATENT_QUERY_PATH,
+    _COMPANY_TO_PROFESSOR_QUERY_PATH,
     _PATENT_TO_COMPANY_QUERY_PATH,
     _PAPER_TO_PROFESSOR_QUERY_PATH,
     _PROFESSOR_TO_PAPER_QUERY_PATH,
+    _PROFESSOR_TO_COMPANY_QUERY_PATH,
+    _PUBLIC_RELATIONSHIP_QUERY_PATHS,
     _SUPPORTED_LANES,
     _apply_constraints,
     _build_enumeration_coverage,
@@ -136,6 +144,18 @@ _PROFESSOR_PAPER_TYPE = (
     "professor_attributed_to_paper",
     "canonical-v2-relationship-v1",
 )
+_PROFESSOR_COMPANY_TYPE = (
+    "professor_company_role",
+    "canonical-v2-relationship-v1",
+)
+_SOURCE_BOUND_RELATIONSHIP_PATHS = {
+    _COMPANY_TO_PATENT_QUERY_PATH: (_PATENT_APPLICANT_TYPE, "inverse"),
+    _PATENT_TO_COMPANY_QUERY_PATH: (_PATENT_APPLICANT_TYPE, "forward"),
+    _PROFESSOR_TO_PAPER_QUERY_PATH: (_PROFESSOR_PAPER_TYPE, "forward"),
+    _PAPER_TO_PROFESSOR_QUERY_PATH: (_PROFESSOR_PAPER_TYPE, "inverse"),
+    _PROFESSOR_TO_COMPANY_QUERY_PATH: (_PROFESSOR_COMPANY_TYPE, "forward"),
+    _COMPANY_TO_PROFESSOR_QUERY_PATH: (_PROFESSOR_COMPANY_TYPE, "inverse"),
+}
 _PROFESSOR_PAPER_RELATIONSHIP_PREDICATES = frozenset(
     {
         "professor_attributed_to_paper",
@@ -179,7 +199,7 @@ class IsolatedQueryPlanningIntegrityError(ValueError):
     """A release-bound planning input cannot reproduce one accepted S7 graph."""
 
 
-class IsolatedKnowledgeReadIntegrityError(ValueError):
+class IsolatedKnowledgeReadIntegrityError(KnowledgeReadIntegrityError):
     """A retrieval plan cannot execute against its bound isolated release."""
 
 
@@ -645,7 +665,55 @@ class _ReleaseBoundKnowledgeRead(KnowledgeRead):
                 path.source_type,
                 path.target_type,
             )
-            if path_key == _COMPANY_TO_PATENT_QUERY_PATH:
+            if path_key in {
+                _PROFESSOR_TO_COMPANY_QUERY_PATH,
+                _COMPANY_TO_PROFESSOR_QUERY_PATH,
+            }:
+                enumeration = relationship_request.relationship_enumeration_policy
+                displayed_ids = (
+                    relationship_request.structured_constraints.displayed_entity_ids
+                )
+                protected_sets = tuple(
+                    slot.entity_ids
+                    for slot in relationship_request.protected_slots
+                    if slot.kind == "displayed_entity_set"
+                )
+                if (
+                    validated_plan.as_of is None
+                    or validated_plan.enumeration_policy is None
+                    or enumeration is None
+                    or enumeration.as_of != validated_plan.as_of
+                    or enumeration != validated_plan.enumeration_policy
+                    or len(displayed_ids) != 1
+                    or not displayed_ids[0]
+                    or protected_sets != (displayed_ids,)
+                ):
+                    raise IsolatedKnowledgeReadIntegrityError(
+                        "public relationship source/policy differs from its plan"
+                    )
+                displayed_id = displayed_ids[0]
+                known_public = {
+                    projection.canonical_identity_id: projection.entity_type
+                    for projection in relationship_authority.candidate_result.public_domain_projections
+                }
+                internal_ids = {
+                    projection.canonical_person_identity_id
+                    for projection in relationship_authority.candidate_result.person_projections
+                } | {
+                    projection.canonical_technology_identity_id
+                    for projection in (
+                        *relationship_authority.candidate_result.technology_concept_projections,
+                        *relationship_authority.candidate_result.technology_route_projections,
+                    )
+                }
+                if displayed_id in internal_ids or (
+                    displayed_id in known_public
+                    and known_public[displayed_id] != path.source_type
+                ):
+                    raise IsolatedKnowledgeReadIntegrityError(
+                        "public relationship source has the wrong canonical domain"
+                    )
+            elif path_key == _COMPANY_TO_PATENT_QUERY_PATH:
                 enumeration = relationship_request.relationship_enumeration_policy
                 displayed_ids = (
                     relationship_request.structured_constraints.displayed_entity_ids
@@ -878,6 +946,8 @@ def create_isolated_release_knowledge_read(
     web_search: Callable[[LaneRequest], object],
     web_snapshot_policy: WebSnapshotPolicy,
     embedding_adapter: EmbeddingAdapter | None = None,
+    reuse_audited_vector_snapshot: bool = False,
+    vectorized_recall: bool = False,
     index_projection_request: IndexProjectionRequest | None = None,
     release_institution_catalog: InstitutionCatalog | None = None,
     identity_fuser: Callable[[IdentityFusionRequest], object] | None = None,
@@ -946,6 +1016,12 @@ def create_isolated_release_knowledge_read(
         raise TypeError("web_search must be callable")
     if not callable(clock):
         raise TypeError("clock must be callable")
+    if not isinstance(reuse_audited_vector_snapshot, bool):
+        raise TypeError("reuse_audited_vector_snapshot must be a Boolean")
+    if not isinstance(vectorized_recall, bool):
+        raise TypeError("vectorized_recall must be a Boolean")
+    if vectorized_recall and not reuse_audited_vector_snapshot:
+        raise ValueError("vectorized_recall requires an audited reusable snapshot")
     if (index_projection_request is None) != (release_institution_catalog is None):
         raise IsolatedKnowledgeReadIntegrityError(
             "index projection request and institution catalog must be provided as one pair"
@@ -998,6 +1074,8 @@ def create_isolated_release_knowledge_read(
             release_bundle=validated_bundle,
             published_release=validated_publication,
             embedding_adapter=embedding_adapter,
+            reuse_audited_snapshot=reuse_audited_vector_snapshot,
+            vectorized_scoring=vectorized_recall,
         )
         supported_lanes.add("vector")
     if internal_reference_authority is not None:
@@ -1786,6 +1864,57 @@ def _validate_relationship_request(
         path.source_type,
         path.target_type,
     )
+    if path_key in {
+        _PROFESSOR_TO_COMPANY_QUERY_PATH,
+        _COMPANY_TO_PROFESSOR_QUERY_PATH,
+    }:
+        if validated.relationship_reference_queries:
+            raise IsolatedKnowledgeReadIntegrityError(
+                "public relationship request cannot use an internal reference query"
+            )
+        enumeration = validated.relationship_enumeration_policy
+        if (
+            enumeration is None
+            or enumeration.as_of.tzinfo is None
+            or enumeration.as_of.utcoffset() is None
+            or enumeration.mode != "representative"
+            or not enumeration.scope
+            or enumeration.finite_universe_id is not None
+            or enumeration.eligible_member_ids
+            or enumeration.required_member_ids
+            or enumeration.exhaustive
+            or enumeration.continuation_state != "available"
+            or enumeration.finite_universe_source is not None
+            or enumeration.finite_universe_ids
+        ):
+            raise IsolatedKnowledgeReadIntegrityError(
+                "public relationship enumeration policy is invalid"
+            )
+        if enumeration.as_of < authority.relationship_result.as_of:
+            raise IsolatedKnowledgeReadIntegrityError(
+                "public relationship query as_of is earlier than the authoritative snapshot"
+            )
+        if validated.domains != (path.target_type,):
+            raise IsolatedKnowledgeReadIntegrityError(
+                "public relationship traversal returns only its target domain"
+            )
+        displayed_ids = validated.structured_constraints.displayed_entity_ids
+        if len(displayed_ids) > 1:
+            raise IsolatedKnowledgeReadIntegrityError(
+                "public relationship request accepts at most one displayed entity"
+            )
+        protected_sets = tuple(
+            slot.entity_ids
+            for slot in validated.protected_slots
+            if slot.kind == "displayed_entity_set"
+        )
+        if len(protected_sets) > 1 or (
+            protected_sets and protected_sets[0] != displayed_ids
+        ):
+            raise IsolatedKnowledgeReadIntegrityError(
+                "public relationship protected displayed set differs"
+            )
+        return validated
     if path_key == _COMPANY_TO_PATENT_QUERY_PATH:
         if validated.relationship_reference_queries:
             raise IsolatedKnowledgeReadIntegrityError(
@@ -4365,6 +4494,450 @@ def _patent_to_company_relationship_candidates(
     return tuple(candidates[: request.max_candidates])
 
 
+def _source_bound_relationship_candidates(
+    *,
+    request: LaneRequest,
+    authority: _RelationshipAuthority,
+) -> tuple[RecallCandidate, ...]:
+    """Traverse accepted source relationships without per-edge eligibility rows."""
+
+    path = request.relationship_paths[0]
+    path_key = (
+        path.relationship_type_id,
+        path.direction,
+        path.source_type,
+        path.target_type,
+    )
+    path_config = _SOURCE_BOUND_RELATIONSHIP_PATHS.get(path_key)
+    if path_config is None:
+        raise IsolatedKnowledgeReadIntegrityError(
+            "source-bound relationship path is unsupported"
+        )
+    physical_type, physical_direction = path_config
+    enumeration = request.relationship_enumeration_policy
+    if enumeration is None:
+        raise IsolatedKnowledgeReadIntegrityError(
+            "source-bound relationship traversal requires enumeration policy"
+        )
+    displayed_ids = request.structured_constraints.displayed_entity_ids
+    if not displayed_ids:
+        return ()
+    displayed_id = displayed_ids[0]
+    protected_slots = tuple(
+        slot for slot in request.protected_slots if slot.kind == "displayed_entity_set"
+    )
+    if len(protected_slots) != 1 or protected_slots[0].entity_ids != displayed_ids:
+        raise IsolatedKnowledgeReadIntegrityError(
+            "source-bound relationship requires one protected source entity"
+        )
+    protected_slot = protected_slots[0]
+
+    relationship_request = authority.relationship_request
+    relationship_result = authority.relationship_result
+    bundle = authority.internal_authority.bundle
+    publication = authority.internal_authority.publication
+    public_projections = {
+        (projection.entity_type, projection.canonical_identity_id): projection
+        for projection in authority.candidate_result.public_domain_projections
+    }
+    projection_candidates = {
+        candidate.candidate_id: candidate
+        for candidate in relationship_request.candidates
+    }
+    shared_assertions = {
+        assertion.assertion_id: assertion
+        for assertion in relationship_request.relationship_assertions
+    }
+    typed_assertions = {
+        assertion.assertion_id: assertion
+        for assertion in relationship_request.typed_relationship_assertions
+    }
+    decision_inputs = {
+        decision.decision_input_id: decision
+        for decision in relationship_request.decision_inputs
+    }
+    shared_decisions = {
+        decision.decision_id: decision
+        for decision in relationship_result.relationship_decisions
+    }
+    typed_decisions = {
+        decision.decision_id: decision
+        for decision in relationship_result.typed_relationship_decisions
+    }
+    retained_references = {
+        retained.reference_id: retained
+        for retained in relationship_request.retained_assertions
+    }
+    relationship_types = {
+        (item.relationship_type_id, item.version): item
+        for item in relationship_result.relationship_types
+    }
+    authority_pairs = (
+        (public_projections, authority.candidate_result.public_domain_projections),
+        (projection_candidates, relationship_request.candidates),
+        (shared_assertions, relationship_request.relationship_assertions),
+        (typed_assertions, relationship_request.typed_relationship_assertions),
+        (decision_inputs, relationship_request.decision_inputs),
+        (shared_decisions, relationship_result.relationship_decisions),
+        (typed_decisions, relationship_result.typed_relationship_decisions),
+        (retained_references, relationship_request.retained_assertions),
+        (relationship_types, relationship_result.relationship_types),
+    )
+    if any(len(index) != len(values) for index, values in authority_pairs):
+        raise IsolatedKnowledgeReadIntegrityError(
+            "source-bound relationship authority contains duplicate identities"
+        )
+    displayed_projection = public_projections.get((path.source_type, displayed_id))
+    if (
+        displayed_projection is None
+        or displayed_projection.release_id != bundle.release_id
+    ):
+        return ()
+    installed_type = relationship_types.get(physical_type)
+    if (
+        installed_type is None
+        or path.direction not in installed_type.eligible_paths
+        or physical_type[0] != installed_type.relationship_type_id
+    ):
+        raise IsolatedKnowledgeReadIntegrityError(
+            "source-bound relationship type/path is not installed"
+        )
+
+    outcomes_by_relationship: defaultdict[str, list[RelationshipCandidateOutcome]] = (
+        defaultdict(list)
+    )
+    for outcome in relationship_result.candidate_outcomes:
+        if outcome.projected_relationship_id is not None:
+            outcomes_by_relationship[outcome.projected_relationship_id].append(outcome)
+    required_roles = (
+        frozenset({"founder"})
+        if physical_type == _PROFESSOR_COMPANY_TYPE
+        and any(
+            marker in request.original_query
+            for marker in ("创始", "创办", "创立", "创业")
+        )
+        else frozenset()
+    )
+
+    candidates: list[RecallCandidate] = []
+    for current in relationship_result.current_relationships:
+        if not isinstance(current, CurrentRelationshipProjection):
+            raise IsolatedKnowledgeReadIntegrityError(
+                "source-bound current relationship has an invalid type"
+            )
+        if (
+            current.relationship_type_id,
+            current.relationship_type_version,
+        ) != physical_type:
+            continue
+        if required_roles and not required_roles <= set(current.role_bindings):
+            continue
+        displayed_endpoint = (
+            current.source_endpoint
+            if physical_direction == "forward"
+            else current.target_endpoint
+        )
+        candidate_endpoint = (
+            current.target_endpoint
+            if physical_direction == "forward"
+            else current.source_endpoint
+        )
+        if displayed_endpoint.canonical_identity_id != displayed_id:
+            continue
+        candidate_id = candidate_endpoint.canonical_identity_id
+        if candidate_id is None:
+            raise IsolatedKnowledgeReadIntegrityError(
+                "source-bound relationship target is not canonical"
+            )
+        if (
+            displayed_endpoint.endpoint_type != path.source_type
+            or candidate_endpoint.endpoint_type != path.target_type
+            or displayed_endpoint.stable_reference
+            != f"canonical:{path.source_type}:{displayed_id}"
+            or candidate_endpoint.stable_reference
+            != f"canonical:{path.target_type}:{candidate_id}"
+            or current.release_id != bundle.release_id
+            or current.projected_at != relationship_result.as_of
+        ):
+            raise IsolatedKnowledgeReadIntegrityError(
+                "source-bound relationship endpoints are cross-wired"
+            )
+        candidate_projection = public_projections.get((path.target_type, candidate_id))
+        if (
+            candidate_projection is None
+            or candidate_projection.release_id != bundle.release_id
+        ):
+            raise IsolatedKnowledgeReadIntegrityError(
+                "source-bound relationship target projection is absent"
+            )
+
+        outcome_matches = outcomes_by_relationship.get(
+            current.canonical_relationship_id, []
+        )
+        if len(outcome_matches) != 1:
+            raise IsolatedKnowledgeReadIntegrityError(
+                "source-bound relationship outcome is missing or ambiguous"
+            )
+        outcome = outcome_matches[0]
+        projection_candidate = projection_candidates.get(outcome.candidate_id)
+        if (
+            not isinstance(projection_candidate, RelationshipProjectionCandidate)
+            or projection_candidate.assertion_input_id is None
+            or projection_candidate.decision_input_id is None
+        ):
+            raise IsolatedKnowledgeReadIntegrityError(
+                "source-bound relationship candidate lineage is absent"
+            )
+        decision_input = decision_inputs.get(projection_candidate.decision_input_id)
+        assertion_kind = projection_candidate.assertion_input_kind
+        if assertion_kind == "typed_relationship_assertion":
+            assertion = typed_assertions.get(projection_candidate.assertion_input_id)
+            decision = typed_decisions.get(current.decision_id)
+            assertion_source_record_id = (
+                assertion.source_record_ref
+                if isinstance(assertion, TypedRelationshipAssertionInput)
+                else None
+            )
+            decision_endpoints_match = (
+                isinstance(decision, TypedRelationshipDecision)
+                and decision.source_endpoint == current.source_endpoint
+                and decision.target_endpoint == current.target_endpoint
+                and decision.selected_evidence_refs == current.selected_evidence_refs
+            )
+        elif assertion_kind == "shared_source_relationship_assertion":
+            assertion = shared_assertions.get(projection_candidate.assertion_input_id)
+            decision = shared_decisions.get(current.decision_id)
+            assertion_source_record_id = (
+                assertion.source_record_id
+                if isinstance(assertion, RelationshipAssertion)
+                else None
+            )
+            decision_endpoints_match = (
+                isinstance(decision, RelationshipDecision)
+                and decision.source_canonical_identity_id
+                == current.source_endpoint.canonical_identity_id
+                and decision.target_canonical_identity_id
+                == current.target_endpoint.canonical_identity_id
+            )
+        else:
+            raise IsolatedKnowledgeReadIntegrityError(
+                "source-bound relationship assertion kind is unsupported"
+            )
+        if assertion is None or decision is None or decision_input is None:
+            raise IsolatedKnowledgeReadIntegrityError(
+                "source-bound relationship assertion/decision is absent"
+            )
+        decision_state = getattr(decision.state, "value", decision.state)
+        if (
+            not outcome.admitted
+            or outcome.reason_codes
+            or outcome.decision_state != "accepted"
+            or outcome.current_projection_state != "current"
+            or outcome.current_projection_reason_codes
+            or outcome.retained_assertion_id != assertion.assertion_id
+            or outcome.decision_id != decision.decision_id
+            or outcome.projected_relationship_id != current.canonical_relationship_id
+            or outcome.selected_evidence_refs != current.selected_evidence_refs
+            or outcome.source_canonical_identity_id
+            != current.source_endpoint.canonical_identity_id
+            or outcome.target_canonical_identity_id
+            != current.target_endpoint.canonical_identity_id
+            or projection_candidate.relationship_type_id != current.relationship_type_id
+            or projection_candidate.relationship_type_version
+            != current.relationship_type_version
+            or projection_candidate.source_endpoint != current.source_endpoint
+            or projection_candidate.target_endpoint != current.target_endpoint
+            or projection_candidate.role_bindings != current.role_bindings
+            or decision_input.decision_id != current.decision_id
+            or decision_input.canonical_relationship_id
+            != current.canonical_relationship_id
+            or decision_state != "accepted"
+            or decision.canonical_relationship_id != current.canonical_relationship_id
+            or decision.relationship_type_id != current.relationship_type_id
+            or decision.relationship_type_version != current.relationship_type_version
+            or decision.role_bindings != current.role_bindings
+            or decision.release_id != current.release_id
+            or assertion.assertion_id not in decision.selected_assertion_ids
+            or not decision_endpoints_match
+        ):
+            raise IsolatedKnowledgeReadIntegrityError(
+                "source-bound relationship lineage differs from current authority"
+            )
+        if not current.selected_evidence_refs:
+            raise IsolatedKnowledgeReadIntegrityError(
+                "source-bound relationship retained evidence is absent"
+            )
+        retained = tuple(
+            retained_references.get(reference_id)
+            for reference_id in current.selected_evidence_refs
+        )
+        if any(reference is None for reference in retained) or any(
+            reference.source_record_ref != assertion_source_record_id
+            for reference in retained
+            if reference is not None
+        ):
+            raise IsolatedKnowledgeReadIntegrityError(
+                "source-bound relationship retained source differs"
+            )
+        retained_ids = tuple(sorted(current.selected_evidence_refs))
+        bound_reference_ids = tuple(
+            sorted(
+                {
+                    reference
+                    for binding in projection_candidate.evidence_bindings
+                    for reference in binding.assertion_refs
+                }
+            )
+        )
+        if bound_reference_ids != retained_ids:
+            raise IsolatedKnowledgeReadIntegrityError(
+                "source-bound relationship evidence binding differs"
+            )
+
+        quality_flags = ()
+        if enumeration.as_of > relationship_result.as_of:
+            canonical_snapshot = (
+                relationship_result.as_of.astimezone(timezone.utc)
+                .isoformat()
+                .replace("+00:00", "Z")
+            )
+            quality_flags = (f"relationship_snapshot_as_of:{canonical_snapshot}",)
+        relationship_payload = candidate_projection.model_dump(mode="json")
+        relationship_payload["_relationship"] = {
+            "relationship_type": current.relationship_type_id,
+            "roles": sorted(current.role_bindings),
+            "source_id": current.source_endpoint.canonical_identity_id,
+            "target_id": current.target_endpoint.canonical_identity_id,
+        }
+        snippet = json.dumps(
+            relationship_payload,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        )
+        display_name = _projection_terms(candidate_projection)[0]
+        trace = LocalSourceRelationshipTrace(
+            target_id=bundle.index_target.target_id,
+            target_marker_sha256=bundle.index_target.marker_sha256,
+            manifest_sha256=bundle.manifest.manifest_sha256,
+            index_result_content_sha256=bundle.index_result.content_sha256,
+            publication_verification_evidence_ids=tuple(
+                sorted(publication.verification_evidence_ids)
+            ),
+            release_id=bundle.release_id,
+            lane_request_content_sha256=request.content_sha256,
+            relationship_enumeration_policy_sha256=_canonical_sha256(
+                enumeration.model_dump(mode="json")
+            ),
+            displayed_entity_ids=displayed_ids,
+            displayed_entity_id=displayed_id,
+            protected_slot_id=protected_slot.slot_id,
+            protected_slot_content_sha256=_canonical_sha256(
+                protected_slot.model_dump(mode="json")
+            ),
+            query_as_of=enumeration.as_of,
+            query_relationship_type_id=path.relationship_type_id,
+            query_direction=path.direction,
+            query_source_type=cast(PublicDomain, path.source_type),
+            query_target_type=cast(PublicDomain, path.target_type),
+            relationship_request_sha256=_canonical_sha256(
+                relationship_request.model_dump(mode="json")
+            ),
+            relationship_result_sha256=relationship_result.content_sha256,
+            relationship_snapshot_as_of=relationship_result.as_of,
+            canonical_relationship_id=current.canonical_relationship_id,
+            current_relationship_content_sha256=_canonical_sha256(
+                current.model_dump(mode="json")
+            ),
+            relationship_type_id=current.relationship_type_id,
+            relationship_type_version="canonical-v2-relationship-v1",
+            physical_direction=physical_direction,
+            physical_source_id=current.source_endpoint.canonical_identity_id or "",
+            physical_source_type=cast(
+                PublicDomain, current.source_endpoint.endpoint_type
+            ),
+            physical_target_id=current.target_endpoint.canonical_identity_id or "",
+            physical_target_type=cast(
+                PublicDomain, current.target_endpoint.endpoint_type
+            ),
+            relationship_role_bindings=tuple(sorted(current.role_bindings.items())),
+            selected_evidence_refs=retained_ids,
+            projection_candidate_id=projection_candidate.candidate_id,
+            projection_candidate_content_sha256=_canonical_sha256(
+                projection_candidate.model_dump(mode="json")
+            ),
+            assertion_kind=assertion_kind,
+            assertion_id=assertion.assertion_id,
+            assertion_content_sha256=_canonical_sha256(
+                assertion.model_dump(mode="json")
+            ),
+            source_record_id=assertion_source_record_id or "",
+            relationship_decision_id=decision.decision_id,
+            relationship_decision_content_sha256=_canonical_sha256(
+                decision.model_dump(mode="json")
+            ),
+            candidate_outcome_content_sha256=_canonical_sha256(
+                outcome.model_dump(mode="json")
+            ),
+            candidate_canonical_id=candidate_id,
+            candidate_domain=cast(PublicDomain, path.target_type),
+            candidate_display_name=display_name,
+            candidate_projection_content_sha256=candidate_projection.content_sha256,
+            candidate_origin_public_evidence_ids=(assertion.assertion_id,),
+            candidate_quality_flags=quality_flags,
+            claim_subject_id=f"canonical:{path.source_type}:{displayed_id}",
+            claim_predicate=current.relationship_type_id,
+            claim_value=f"canonical:{path.target_type}:{candidate_id}",
+            snippet_sha256=hashlib.sha256(snippet.encode("utf-8")).hexdigest(),
+        )
+        evidence = EvidenceItem(
+            evidence_id=trace.evidence_id,
+            object_id=candidate_id,
+            domain=path.target_type,
+            lane="relationship",
+            source_nature="local",
+            source_locator=_local_projection_locator(trace),
+            snippet=snippet,
+            score=1.0,
+            source_authority="canonical_release",
+            observed_at=relationship_result.as_of,
+            claim_binding=EvidenceClaimBinding(
+                subject_id=trace.claim_subject_id,
+                predicate=trace.claim_predicate,
+                value=trace.claim_value,
+                status="accepted",
+            ),
+            local_projection_trace=trace,
+        )
+        candidates.append(
+            RecallCandidate(
+                raw_candidate_id=trace.raw_candidate_id,
+                display_name=display_name,
+                domain=path.target_type,
+                identity_kind="canonical",
+                canonical_id=candidate_id,
+                reference_type=None,
+                resolution_state="resolved",
+                relationship_state="accepted",
+                origin_public_evidence_ids=trace.candidate_origin_public_evidence_ids,
+                query_view=request.query_view,
+                lane="relationship",
+                attempt=1,
+                release_id=bundle.release_id,
+                adapter_version=_RELATIONSHIP_ADAPTER_VERSION,
+                raw_score=1.0,
+                quality_flags=quality_flags,
+                evidence=(evidence,),
+            )
+        )
+
+    candidates.sort(
+        key=lambda candidate: (candidate.domain, candidate.canonical_id or "")
+    )
+    return tuple(candidates[: request.max_candidates])
+
+
 def _relationship_result_candidates(
     *,
     request: LaneRequest,
@@ -4374,42 +4947,44 @@ def _relationship_result_candidates(
     if validated_request.max_candidates == 0:
         return ()
     path = validated_request.relationship_paths[0]
-    if (
+    path_key = (
         path.relationship_type_id,
         path.direction,
         path.source_type,
         path.target_type,
-    ) == _COMPANY_TO_PATENT_QUERY_PATH:
+    )
+    has_relationship_scoped_eligibility = any(
+        result.relationship_decision_ids
+        for result in authority.internal_authority.index_request.public_path_eligibility_results
+    )
+    if path_key in _SOURCE_BOUND_RELATIONSHIP_PATHS and (
+        path_key
+        in {
+            _PROFESSOR_TO_COMPANY_QUERY_PATH,
+            _COMPANY_TO_PROFESSOR_QUERY_PATH,
+        }
+        or not has_relationship_scoped_eligibility
+    ):
+        return _source_bound_relationship_candidates(
+            request=validated_request,
+            authority=authority,
+        )
+    if path_key == _COMPANY_TO_PATENT_QUERY_PATH:
         return _company_to_patent_relationship_candidates(
             request=validated_request,
             authority=authority,
         )
-    if (
-        path.relationship_type_id,
-        path.direction,
-        path.source_type,
-        path.target_type,
-    ) == _PATENT_TO_COMPANY_QUERY_PATH:
+    if path_key == _PATENT_TO_COMPANY_QUERY_PATH:
         return _patent_to_company_relationship_candidates(
             request=validated_request,
             authority=authority,
         )
-    if (
-        path.relationship_type_id,
-        path.direction,
-        path.source_type,
-        path.target_type,
-    ) == _PROFESSOR_TO_PAPER_QUERY_PATH:
+    if path_key == _PROFESSOR_TO_PAPER_QUERY_PATH:
         return _professor_to_paper_relationship_candidates(
             request=validated_request,
             authority=authority,
         )
-    if (
-        path.relationship_type_id,
-        path.direction,
-        path.source_type,
-        path.target_type,
-    ) == _PAPER_TO_PROFESSOR_QUERY_PATH:
+    if path_key == _PAPER_TO_PROFESSOR_QUERY_PATH:
         return _paper_to_professor_relationship_candidates(
             request=validated_request,
             authority=authority,
@@ -5028,13 +5603,64 @@ def _validate_release_bound_relationship_evidence(
         )
         == _PAPER_TO_PROFESSOR_QUERY_PATH
     )
+    is_professor_to_company = (
+        path is not None
+        and (
+            path.relationship_type_id,
+            path.direction,
+            path.source_type,
+            path.target_type,
+        )
+        == _PROFESSOR_TO_COMPANY_QUERY_PATH
+    )
+    is_company_to_professor = (
+        path is not None
+        and (
+            path.relationship_type_id,
+            path.direction,
+            path.source_type,
+            path.target_type,
+        )
+        == _COMPANY_TO_PROFESSOR_QUERY_PATH
+    )
     public_relationship_trace_types = (
         LocalRelationshipTrace,
         LocalCanonicalRelationshipTrace,
         LocalPatentCompanyRelationshipTrace,
         LocalProfessorPaperRelationshipTrace,
         LocalPaperProfessorRelationshipTrace,
+        LocalSourceRelationshipTrace,
     )
+    is_source_bound_public_path = any(
+        (
+            item.local_projection_trace is not None
+            and isinstance(
+                item.local_projection_trace,
+                LocalSourceRelationshipTrace,
+            )
+        )
+        for item in all_observed_items
+    )
+    if is_source_bound_public_path and path is not None:
+        displayed_ids = set(request.structured_constraints.displayed_entity_ids)
+        if (
+            any(
+                item.domain != path.target_type or item.object_id in displayed_ids
+                for item in all_observed_items
+            )
+            or any(
+                candidate.domain != path.target_type
+                or candidate.canonical_id in displayed_ids
+                for candidate in evidence_set.fused_candidates
+            )
+            or any(
+                handle.domain != path.target_type
+                for handle in evidence_set.entity_handles
+            )
+        ):
+            raise IsolatedKnowledgeReadIntegrityError(
+                "source-bound Web evidence cannot satisfy displayed relationship authority"
+            )
     if is_company_to_patent:
         displayed_company_ids = set(request.structured_constraints.displayed_entity_ids)
         if (
@@ -5077,7 +5703,10 @@ def _validate_release_bound_relationship_evidence(
                 and item.source_nature == "local"
                 and isinstance(
                     item.local_projection_trace,
-                    LocalPatentCompanyRelationshipTrace,
+                    (
+                        LocalPatentCompanyRelationshipTrace,
+                        LocalSourceRelationshipTrace,
+                    ),
                 )
             )
             for item in all_observed_items
@@ -5149,7 +5778,10 @@ def _validate_release_bound_relationship_evidence(
                 and item.source_nature == "local"
                 and isinstance(
                     item.local_projection_trace,
-                    LocalProfessorPaperRelationshipTrace,
+                    (
+                        LocalProfessorPaperRelationshipTrace,
+                        LocalSourceRelationshipTrace,
+                    ),
                 )
             )
             for item in all_observed_items
@@ -5184,7 +5816,10 @@ def _validate_release_bound_relationship_evidence(
                 and item.source_nature == "local"
                 and isinstance(
                     item.local_projection_trace,
-                    LocalPaperProfessorRelationshipTrace,
+                    (
+                        LocalPaperProfessorRelationshipTrace,
+                        LocalSourceRelationshipTrace,
+                    ),
                 )
             )
             for item in all_observed_items
@@ -5229,6 +5864,23 @@ def _validate_release_bound_relationship_evidence(
                     raise IsolatedKnowledgeReadIntegrityError(
                         "S8R4 Web Professor claim subject differs from canonical authority"
                     )
+    if is_professor_to_company or is_company_to_professor:
+        if any(
+            item.claim_binding is not None
+            and item.claim_binding.predicate == "professor_company_role"
+            and not (
+                item.lane == "relationship"
+                and item.source_nature == "local"
+                and isinstance(
+                    item.local_projection_trace,
+                    LocalSourceRelationshipTrace,
+                )
+            )
+            for item in all_observed_items
+        ):
+            raise IsolatedKnowledgeReadIntegrityError(
+                "non-local evidence cannot assert a Professor-Company relationship"
+            )
 
     top_level_relationship_items = tuple(
         item
@@ -5363,11 +6015,16 @@ def _validate_release_bound_relationship_evidence(
         if candidate.reference_type in {"person", "technology_route"}
     }
     if (
-        is_company_to_patent
-        or is_patent_to_company
-        or is_professor_to_paper
-        or is_paper_to_professor
-    ) and evidence_set.auxiliary_traces:
+        path is not None
+        and (
+            path.relationship_type_id,
+            path.direction,
+            path.source_type,
+            path.target_type,
+        )
+        in _PUBLIC_RELATIONSHIP_QUERY_PATHS
+        and evidence_set.auxiliary_traces
+    ):
         raise IsolatedKnowledgeReadIntegrityError(
             "canonical relationship output contains an auxiliary trace"
         )
@@ -5465,6 +6122,7 @@ def _validate_release_bound_relationship_evidence(
                                 LocalPatentCompanyRelationshipTrace,
                                 LocalProfessorPaperRelationshipTrace,
                                 LocalPaperProfessorRelationshipTrace,
+                                LocalSourceRelationshipTrace,
                             ),
                         )
                         and (
@@ -5505,6 +6163,14 @@ def _validate_release_bound_relationship_evidence(
                                     LocalPaperProfessorRelationshipTrace,
                                 )
                                 and item.local_projection_trace.professor_id
+                                == canonical_id
+                            )
+                            or (
+                                isinstance(
+                                    item.local_projection_trace,
+                                    LocalSourceRelationshipTrace,
+                                )
+                                and item.local_projection_trace.candidate_canonical_id
                                 == canonical_id
                             )
                         )
@@ -5640,8 +6306,16 @@ def _validate_release_bound_relationship_evidence(
         evidence_set.items,
     )
     if (
-        is_company_to_patent or is_professor_to_paper or is_paper_to_professor
-    ) and evidence_set.enumeration_coverage != expected_coverage:
+        path is not None
+        and (
+            path.relationship_type_id,
+            path.direction,
+            path.source_type,
+            path.target_type,
+        )
+        in _PUBLIC_RELATIONSHIP_QUERY_PATHS
+        and evidence_set.enumeration_coverage != expected_coverage
+    ):
         raise IsolatedKnowledgeReadIntegrityError(
             "public relationship enumeration coverage differs from the release-bound plan"
         )
@@ -5690,6 +6364,7 @@ def create_isolated_exact_lookup_adapter(
                     publication=validated_publication,
                     document=document,
                     display_name=display_name,
+                    identifier_terms=identifier_terms,
                     lane="exact",
                     adapter_version=_EXACT_ADAPTER_VERSION,
                 )
@@ -5746,7 +6421,9 @@ def create_isolated_structured_lookup_adapter(
             if document.projection_scope.value != "public_domain":
                 continue
             projection = _validated_public_projection(document)
-            display_name, _, _, content_terms = _projection_terms(projection)
+            display_name, _, identifier_terms, content_terms = _projection_terms(
+                projection
+            )
             if not _matches_structured_request(
                 request=validated_request,
                 document=document,
@@ -5760,6 +6437,7 @@ def create_isolated_structured_lookup_adapter(
                     publication=validated_publication,
                     document=document,
                     display_name=display_name,
+                    identifier_terms=identifier_terms,
                     lane="structured",
                     adapter_version=_STRUCTURED_ADAPTER_VERSION,
                 )
@@ -5806,11 +6484,14 @@ def create_isolated_lexical_lookup_adapter(
             if document.projection_scope.value != "public_domain":
                 continue
             projection = _validated_public_projection(document)
-            display_name, _, _, content_terms = _projection_terms(projection)
+            display_name, display_terms, identifier_terms, content_terms = (
+                _projection_terms(projection)
+            )
             if not _matches_lexical_request(
                 request=validated_request,
                 document=document,
                 query_phrase=query_phrase,
+                display_terms=display_terms,
                 content_terms=content_terms,
             ):
                 continue
@@ -5821,6 +6502,7 @@ def create_isolated_lexical_lookup_adapter(
                     publication=validated_publication,
                     document=document,
                     display_name=display_name,
+                    identifier_terms=identifier_terms,
                     lane="lexical",
                     adapter_version=_LEXICAL_ADAPTER_VERSION,
                 )
@@ -5845,6 +6527,8 @@ def create_isolated_vector_recall_adapter(
     release_bundle: IsolatedReleaseBundle,
     published_release: PublishedRelease,
     embedding_adapter: EmbeddingAdapter,
+    reuse_audited_snapshot: bool = False,
+    vectorized_scoring: bool = False,
 ) -> Callable[[LaneRequest], RetrievalLaneResult]:
     """Bind deterministic semantic recall to one fully audited isolated release."""
 
@@ -5865,6 +6549,80 @@ def create_isolated_vector_recall_adapter(
         embedding_adapter,
         expected_model_id=expected_model_id,
     )
+    if not isinstance(reuse_audited_snapshot, bool):
+        raise TypeError("reuse_audited_snapshot must be a Boolean")
+    if not isinstance(vectorized_scoring, bool):
+        raise TypeError("vectorized_scoring must be a Boolean")
+    if vectorized_scoring and not reuse_audited_snapshot:
+        raise ValueError("vectorized_scoring requires an audited reusable snapshot")
+    cached_snapshot: IsolatedIndexSnapshot | None = None
+    snapshot_lock = Lock()
+    vectorized_index: tuple[dict[str, int], Any, Any] | None = None
+    vectorized_index_lock = Lock()
+
+    def validated_snapshot() -> IsolatedIndexSnapshot:
+        nonlocal cached_snapshot
+        if not reuse_audited_snapshot:
+            snapshot = _validated_vector_snapshot(
+                audit_isolated_index_snapshot(
+                    validated_bundle.index_target,
+                    embedding_adapter=validating_adapter,
+                )
+            )
+            _require_snapshot_matches_bundle(snapshot, validated_bundle)
+            return snapshot
+        if cached_snapshot is not None:
+            return cached_snapshot
+        with snapshot_lock:
+            if cached_snapshot is None:
+                snapshot = _validated_vector_snapshot(
+                    audit_isolated_index_snapshot(
+                        validated_bundle.index_target,
+                        embedding_adapter=validating_adapter,
+                    )
+                )
+                _require_snapshot_matches_bundle(snapshot, validated_bundle)
+                cached_snapshot = snapshot
+        return cached_snapshot
+
+    def vectorized_scores(
+        snapshot: IsolatedIndexSnapshot,
+        query_vector: tuple[float, ...],
+    ) -> tuple[dict[str, int], Any]:
+        nonlocal vectorized_index
+        if vectorized_index is None:
+            with vectorized_index_lock:
+                if vectorized_index is None:
+                    point_vectors = validating_adapter.embed_batch(
+                        tuple(point.embedded_content for point in snapshot.points)
+                    )
+                    matrix = np.asarray(point_vectors, dtype=np.float64)
+                    norms = np.linalg.norm(matrix, axis=1)
+                    if not np.all(np.isfinite(norms)) or np.any(norms == 0.0):
+                        raise IsolatedKnowledgeReadIntegrityError(
+                            "vectorized point matrix has an invalid norm"
+                        )
+                    vectorized_index = (
+                        {
+                            point.point_id: index
+                            for index, point in enumerate(snapshot.points)
+                        },
+                        matrix,
+                        norms,
+                    )
+        positions, matrix, norms = vectorized_index
+        query = np.asarray(query_vector, dtype=np.float64)
+        query_norm = float(np.linalg.norm(query))
+        if not math.isfinite(query_norm) or query_norm == 0.0:
+            raise IsolatedKnowledgeReadIntegrityError(
+                "vectorized query has an invalid norm"
+            )
+        scores = np.clip((matrix @ query) / (norms * query_norm), -1.0, 1.0)
+        if not np.all(np.isfinite(scores)):
+            raise IsolatedKnowledgeReadIntegrityError(
+                "vectorized recall produced a non-finite score"
+            )
+        return positions, scores
 
     def vector_recall(request: LaneRequest) -> RetrievalLaneResult:
         validated_request = _validated_lane_request(
@@ -5883,13 +6641,7 @@ def create_isolated_vector_recall_adapter(
         if not query_topic or validated_request.max_candidates == 0:
             return RetrievalLaneResult()
 
-        snapshot = _validated_vector_snapshot(
-            audit_isolated_index_snapshot(
-                validated_bundle.index_target,
-                embedding_adapter=validating_adapter,
-            )
-        )
-        _require_snapshot_matches_bundle(snapshot, validated_bundle)
+        snapshot = validated_snapshot()
         points = tuple(
             point
             for point in snapshot.points
@@ -5906,10 +6658,21 @@ def create_isolated_vector_recall_adapter(
             bundle=validated_bundle,
         )
 
-        vectors = validating_adapter.embed_batch(
-            (query_topic, *(point.embedded_content for point in points))
-        )
-        query_vector = vectors[0]
+        if vectorized_scoring:
+            query_vector = validating_adapter.embed_batch((query_topic,))[0]
+            positions, scores = vectorized_scores(snapshot, query_vector)
+            similarity_scores = tuple(
+                float(scores[positions[point.point_id]]) for point in points
+            )
+        else:
+            vectors = validating_adapter.embed_batch(
+                (query_topic, *(point.embedded_content for point in points))
+            )
+            query_vector = vectors[0]
+            similarity_scores = tuple(
+                _cosine_similarity(query_vector, point_vector)
+                for point_vector in vectors[1:]
+            )
         query_embedding_sha256 = _canonical_sha256(query_vector)
         candidates = [
             _candidate_from_point(
@@ -5922,9 +6685,9 @@ def create_isolated_vector_recall_adapter(
                     professor_display_names=professor_display_names,
                 ),
                 query_embedding_sha256=query_embedding_sha256,
-                similarity_score=_cosine_similarity(query_vector, point_vector),
+                similarity_score=score,
             )
-            for point, point_vector in zip(points, vectors[1:], strict=True)
+            for point, score in zip(points, similarity_scores, strict=True)
         ]
         candidates.sort(
             key=lambda candidate: (
@@ -6372,6 +7135,7 @@ def _validate_release_bound_vector_evidence(
     for point, item, _ in point_items:
         if point.domain == "professor":
             professor_evidence_ids[point.canonical_object_id].add(item.evidence_id)
+    selected_evidence_ids = {item.evidence_id for item in evidence_set.items}
     for canonical_id, evidence_ids in professor_evidence_ids.items():
         expected_name = professor_display_names[canonical_id]
         fused = tuple(
@@ -6394,11 +7158,14 @@ def _validate_release_bound_vector_evidence(
             if isinstance(handle, CanonicalEntityHandle)
             and evidence_ids.intersection(handle.evidence_ids)
         )
-        if (
-            len(handles) != 1
-            or handles[0].canonical_id != canonical_id
-            or handles[0].domain != "professor"
-            or handles[0].display_name != expected_name
+        selected = bool(evidence_ids.intersection(selected_evidence_ids))
+        if len(handles) != int(selected) or (
+            selected
+            and (
+                handles[0].canonical_id != canonical_id
+                or handles[0].domain != "professor"
+                or handles[0].display_name != expected_name
+            )
         ):
             raise IsolatedKnowledgeReadIntegrityError(
                 "release-bound Professor handle display differs from lookup authority"
@@ -6422,8 +7189,13 @@ def _validate_release_bound_vector_evidence(
         expected_score = _cosine_similarity(query_vector, point_vector)
         if (
             trace.query_embedding_sha256 != query_embedding_sha256
-            or trace.similarity_score != expected_score
-            or item.score != expected_score
+            or not math.isclose(
+                trace.similarity_score,
+                expected_score,
+                rel_tol=1e-12,
+                abs_tol=1e-12,
+            )
+            or item.score != trace.similarity_score
         ):
             raise IsolatedKnowledgeReadIntegrityError(
                 "release-bound vector trace differs from recomputed query evidence"
@@ -6663,6 +7435,7 @@ def _matches_lexical_request(
     request: LaneRequest,
     document: LookupProjectionDocument,
     query_phrase: str,
+    display_terms: frozenset[str],
     content_terms: frozenset[str],
 ) -> bool:
     domain = document.domain
@@ -6675,8 +7448,56 @@ def _matches_lexical_request(
             or document.canonical_object_id in constraints.displayed_entity_ids
         )
         and not _has_excluded_term(constraints.excluded_terms, content_terms)
-        and any(query_phrase in term for term in content_terms)
+        and (
+            any(query_phrase in term for term in content_terms)
+            or (
+                domain == "company"
+                and _matches_transposed_company_name(query_phrase, display_terms)
+            )
+        )
     )
+
+
+_COMPANY_LEGAL_SUFFIXES = (
+    "有限责任公司",
+    "股份有限公司",
+    "有限公司",
+    "公司",
+)
+
+
+def _without_company_legal_suffix(value: str) -> str:
+    normalized = _normalize(value).replace(" ", "")
+    for suffix in _COMPANY_LEGAL_SUFFIXES:
+        if normalized.endswith(suffix):
+            return normalized[: -len(suffix)]
+    return normalized
+
+
+def _matches_transposed_company_name(
+    query_name: str,
+    display_terms: frozenset[str],
+) -> bool:
+    query = _without_company_legal_suffix(query_name)
+    for display_term in display_terms:
+        display = _without_company_legal_suffix(display_term)
+        if (
+            len(query) < 8
+            or len(query) != len(display)
+            or query[:2] != display[:2]
+            or query[-2:] != display[-2:]
+        ):
+            continue
+        query_middle = query[2:-2]
+        display_middle = display[2:-2]
+        if query_middle == display_middle or len(query_middle) < 4:
+            continue
+        if any(
+            query_middle == display_middle[split:] + display_middle[:split]
+            for split in range(2, len(display_middle) - 1)
+        ):
+            return True
+    return False
 
 
 def _has_excluded_term(
@@ -6691,6 +7512,39 @@ def _has_excluded_term(
     )
 
 
+def _projection_claim_binding(
+    *,
+    request: LaneRequest,
+    subject_id: str,
+    lookup_content_sha256: str,
+    identifier_terms: frozenset[str],
+    status: str,
+) -> EvidenceClaimBinding:
+    matched_identifier = next(
+        (
+            slot.value
+            for slot in request.protected_slots
+            if slot.kind == "exact_identifier"
+            and slot.value is not None
+            and _normalize(slot.value) in identifier_terms
+        ),
+        None,
+    )
+    if matched_identifier is not None:
+        return EvidenceClaimBinding(
+            subject_id=subject_id,
+            predicate="exact_identifier",
+            value=matched_identifier,
+            status=status,
+        )
+    return EvidenceClaimBinding(
+        subject_id=subject_id,
+        predicate="canonical_projection",
+        value=lookup_content_sha256,
+        status=status,
+    )
+
+
 def _candidate_from_document(
     *,
     request: LaneRequest,
@@ -6698,6 +7552,7 @@ def _candidate_from_document(
     publication: PublishedRelease,
     document: LookupProjectionDocument,
     display_name: str,
+    identifier_terms: frozenset[str],
     lane: Literal["exact", "structured", "lexical"],
     adapter_version: str,
 ) -> RecallCandidate:
@@ -6744,10 +7599,11 @@ def _candidate_from_document(
         snippet=document.lookup_content,
         score=1.0,
         source_authority="canonical_release",
-        claim_binding=EvidenceClaimBinding(
+        claim_binding=_projection_claim_binding(
+            request=request,
             subject_id=document.canonical_object_id,
-            predicate="canonical_projection",
-            value=document.lookup_content_sha256,
+            lookup_content_sha256=document.lookup_content_sha256,
+            identifier_terms=identifier_terms,
             status=document.eligibility_outcome,
         ),
         local_projection_trace=trace,

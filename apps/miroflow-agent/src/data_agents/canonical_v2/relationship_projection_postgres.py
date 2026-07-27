@@ -94,6 +94,14 @@ def _request_uses_internal_reference(
     request: RelationshipProjectionRequest,
 ) -> bool:
     internal_types = {"person", "technology_concept", "technology_route"}
+    internal_result = request.internal_reference_projection_result
+    has_internal_projections = internal_result is not None and any(
+        (
+            internal_result.person_projections,
+            internal_result.technology_concept_projections,
+            internal_result.technology_route_projections,
+        )
+    )
     relationship_endpoints = (
         endpoint
         for candidate in request.candidates
@@ -110,9 +118,7 @@ def _request_uses_internal_reference(
         for endpoint in (probe.source_endpoint, probe.target_endpoint)
     )
     return (
-        request.relationship_registry_version != LEGACY_RELATIONSHIP_REGISTRY_VERSION
-        or request.internal_reference_projection_request is not None
-        or request.internal_reference_projection_result is not None
+        has_internal_projections
         or any(
             endpoint.endpoint_type in internal_types
             for endpoint in (
@@ -188,6 +194,13 @@ class RelationshipProjectionPersistenceError(RuntimeError):
 
 class RelationshipProjectionStore(ABC):
     """Persist and reconstruct one immutable relationship projection batch."""
+
+    @abstractmethod
+    def install_types(
+        self,
+        relationship_types: tuple[RelationshipType, ...],
+    ) -> tuple[RelationshipType, ...]:
+        """Install and read back the exact immutable relationship type catalog."""
 
     @abstractmethod
     def persist(
@@ -466,6 +479,42 @@ class _PostgresRelationshipProjectionStore(RelationshipProjectionStore):
             raise RelationshipProjectionPersistenceError(
                 "installed relationship catalog conflicts with durable rows"
             )
+
+    def install_types(
+        self,
+        relationship_types: tuple[RelationshipType, ...],
+    ) -> tuple[RelationshipType, ...]:
+        try:
+            validated = tuple(
+                RelationshipType.model_validate(item.model_dump(mode="python"))
+                for item in relationship_types
+            )
+            ordered = tuple(
+                sorted(
+                    validated,
+                    key=lambda item: (item.relationship_type_id, item.version),
+                )
+            )
+            if not ordered:
+                raise RelationshipProjectionPersistenceError(
+                    "relationship type catalog must not be empty"
+                )
+            with self._connection(write=True) as connection:
+                connection.execute(
+                    "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
+                    ("canonical-v2-relationship-type-catalog",),
+                )
+                require_accepted_backup_gate(self._backup_gate_root)
+                self._verify_connected_target(connection)
+                self._insert_relationship_types(connection, ordered)
+                connection.commit()
+            return ordered
+        except RelationshipProjectionPersistenceError:
+            raise
+        except (TypeError, UnicodeError, ValueError, ValidationError) as exc:
+            raise RelationshipProjectionPersistenceError(
+                "relationship type catalog could not be installed exactly"
+            ) from exc
 
     @staticmethod
     def _insert_policy(

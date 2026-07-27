@@ -12,7 +12,54 @@
 
 ## Superpowers Mode
 
-- `contract_first`
+- `lean_vertical`
+
+## Current final-milestone contract (2026-07-26)
+
+This section supersedes conflicting verification requirements below for open Tasks 2.8, 8.1, 8.8,
+9.8, and 12.2-12.6. The detailed historical sections remain evidence for already Accepted work; they
+do not add gates to the remaining milestone.
+
+### Goal
+
+Serve a source-grounded isolated Candidate over the real chat API/UI with non-zero Professor,
+Company, Paper, and Patent populations, the customer-required relationship paths, and semantic
+alignment with all 17 conversations/25 turns in `docs/测试集答案.xlsx`.
+
+### Normative oracle
+
+- Each workbook query, answer, and key-point row is interpreted together as case-specific Ground
+  Truth. Explicit key-point corrections override inaccurate historical answer fragments.
+- Alignment is semantic, not lexical. Newer official evidence is allowed only with source/as-of
+  disclosure. Missing evidence is a product gap, not an exclusion decision.
+- Automated or LLM comparison is advisory. The user owns final acceptance through the running chat
+  system.
+
+### Required checks
+
+1. Changed-module tests for the code actually modified.
+2. One Candidate smoke proving four non-zero public-domain populations, required relationship reach,
+   serving-bundle identity, lookup/vector parity, original-source isolation, and unchanged active
+   pointers.
+3. Approximately eight representative real-chat cases during development.
+4. One final real-runtime replay of all 17 workbook conversations/25 turns, producing a readable
+   Ground Truth/actual-answer/source/limitation report.
+5. Focused Ruff and Pyright for changed Python files, strict OpenSpec validation, and
+   `git diff --check`.
+
+### Explicitly retired checks
+
+- Task 2.8 contract review, exclusion review, blind calibration, human-label quotas, LLM-judge
+  agreement, and review-workbench acceptance.
+- Separate Tasks 8.1, 8.8, and 9.8 aggregate claim-level gates.
+- Independent review for each remaining task, repeated complete test-suite runs, and duplicate
+  evidence-envelope production without a concrete regression or safety reason.
+
+### Unchanged safety boundary
+
+The original PostgreSQL remains paused, original Milvus remains unopened, original sources remain
+read-only, Candidate targets remain explicit and isolated, active release pointers remain unchanged,
+and production-like cutover or cleanup requires separate user authorization.
 
 ## RED Artifact
 
@@ -178,7 +225,19 @@
   source-drift/scope checks, and generated-cache cleanup must pass before acceptance. No database,
   Milvus, provider, runtime, or candidate write is permitted or required.
 
+## Historical Task 2.8 review-workbench contract (retired)
+
+The `single-human-global-stratified-v2` contract and its 29 contract decisions, 23 exclusions, 60
+blind calibration labels, judge authorization, exports, validators, and review-workbench state were
+never completed as product acceptance. The user retired this workflow on 2026-07-26 after direct
+evaluation showed that it did not express the intended product question. Its immutable artifacts are
+retained for history only and SHALL NOT gate or feed Tasks 8.1, 8.8, 9.8, or 12.2-12.6.
+
 ## Status
+
+As of the user-confirmed 2026-07-26 rebaseline, Tasks 2.8, 8.1, 8.8, and 9.8 are retired and the
+ledger is `75/80`. Exactly Tasks 12.2-12.6 remain. Any older status text below is historical evidence
+and does not restore retired dependencies.
 
 S1 database-target safety, S2 tasks 2.1–2.5 and corpus/ground-truth/threshold policy, and S2B/task
 2.6 backup/independent-restore gate are Accepted. Tasks 3.1–3.5 and the complete S3
@@ -241,11 +300,10 @@ migration was weakened. The aggregate review has zero open Critical/Important fi
 databases were removed, and the durable candidate remains C2_0004.
 
 ADR-013 through ADR-022 later clarified requirements that were not part of the historical S2/S6
-acceptance contracts. S2C2/Task 2.7 and S6R/Tasks 6.9-6.11 are Accepted. S2C3/Task 2.8 remains open
-and must be Accepted before Task 8.1 calibration or Tasks 8.8/9.8 use the claim-level corpus as an
-acceptance oracle. The accepted deterministic S7-S11 implementation slices do not close those
-aggregate gates. This specification update does not reopen or relabel the historical S2/S6 slices;
-it records the added predecessor obligations and their current state explicitly.
+acceptance contracts. S2C2/Task 2.7 and S6R/Tasks 6.9-6.11 are Accepted. At that historical point,
+S2C3/Task 2.8 gated Task 8.1 calibration and Tasks 8.8/9.8. The 2026-07-26 rebaseline above later
+retired all four gates without relabeling their historical implementation evidence as accepted
+product behavior.
 
 Git `main` promotion is separately gated after aggregate S6 acceptance. The execution session must
 re-prove a clean V2 integration worktree, complete side-branch accounting, preservation of root dirty
@@ -372,14 +430,16 @@ Last identity/hash check recorded in `verification.md`: `2026-07-12T08:40:35Z`.
   memory into truth. Dynamic cases bind immutable snapshots; unsupported evidence produces an
   explicit unavailable-evidence outcome rather than an invented expectation.
 - Task 2.8 validates per-case hard failures independently of aggregate metrics, snapshot/version
-  tamper detection, evidence-bounded LLM judging, and reviewed human agreement by family.
+  tamper detection, evidence-bounded LLM judging, and one attributable human under the versioned
+  five-stratum global calibration policy.
 - Focused commands are the S2C schema/fixture validator and its tests under
   `.agents/runs/rebuild-canonical-v2-knowledge-platform/s2c/`, followed by strict OpenSpec,
   deterministic manifest rebuild/check, and diff/source-hash checks. No runtime provider, database,
   Milvus, or canonical write belongs to S2C.
-- Done evidence records schema/corpus versions and SHA-256, migrated/pending/excluded case counts,
-  each hard-case outcome, reviewer state, and zero unresolved Critical/Important findings. S2C is not
-  Accepted while any case used by S8/S9 remains `pending_user_review`.
+- Done evidence records schema/corpus/policy/workload/export versions and SHA-256, the exact
+  29/23/60 accounting, every hard-case outcome, reviewer and judge authorization state, reproduced
+  calibration gates, and zero unresolved Critical/Important findings. S2C is not Accepted while any
+  case used by S8/S9 remains `pending_user_review` or before a real attributable round passes.
 
 ### S3–S7 — Data platform and release
 

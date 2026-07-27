@@ -1,0 +1,18 @@
+{
+  "maximum_critical_false_accepts": 0,
+  "minimum_agreement": 0.8,
+  "minimum_supported_labels": 10,
+  "minimum_unsupported_critical_probes": 5,
+  "minimum_unsupported_labels": 10,
+  "policy_id": "single-human-global-stratified-v2",
+  "reviewer_count": 1,
+  "sample_count": 60,
+  "schema_version": "canonical-v2-human-calibration-policy-v2",
+  "strata": {
+    "claim_evidence": 20,
+    "context_relationship": 10,
+    "identity_entity": 10,
+    "insufficiency_assessment": 10,
+    "safety_web": 10
+  }
+}

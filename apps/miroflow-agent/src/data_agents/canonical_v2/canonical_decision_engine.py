@@ -1445,6 +1445,7 @@ def _validate_review_cases(
 def _validate_identity_contexts_and_determinism(
     *,
     as_of: datetime,
+    temporal_comparison_context: TemporalComparisonContext | None,
     canonical_contexts: tuple[CanonicalIdentityConstraintContext, ...],
     source_contexts: tuple[SourceIdentity, ...],
     field_assertions: Mapping[str, SourceAssertion],
@@ -1525,6 +1526,7 @@ def _validate_identity_contexts_and_determinism(
                         canonical_identity=canonical_context,
                         source_identities=source_by_id,
                         as_of=as_of,
+                        temporal_comparison_context=temporal_comparison_context,
                     )
                 )
                 is None,
@@ -1719,6 +1721,7 @@ class DecisionBatchResult(_DecisionBatchContent):
         )
         _validate_identity_contexts_and_determinism(
             as_of=self.as_of,
+            temporal_comparison_context=self.temporal_comparison_context,
             canonical_contexts=self.canonical_identity_contexts,
             source_contexts=self.source_identity_contexts,
             field_assertions=field_assertions,
@@ -2668,7 +2671,7 @@ def _source_state_reason(identity: SourceIdentity) -> str | None:
     return "source_identity_superseded"
 
 
-def _field_rejection_reason(
+def _field_base_rejection_reason(
     *,
     assertion: SourceAssertion,
     group: FieldAssertionGroup,
@@ -2698,6 +2701,52 @@ def _field_rejection_reason(
         return "source_record_mismatch"
     if assertion.observed_at > as_of:
         return "observed_after_build"
+    return None
+
+
+def _field_rejection_reason(
+    *,
+    assertion: SourceAssertion,
+    group: FieldAssertionGroup,
+    canonical_identity: CanonicalIdentityConstraintContext,
+    source_identities: dict[str, SourceIdentity],
+    as_of: datetime,
+    temporal_comparison_context: TemporalComparisonContext | None,
+) -> str | None:
+    base_reason = _field_base_rejection_reason(
+        assertion=assertion,
+        group=group,
+        canonical_identity=canonical_identity,
+        source_identities=source_identities,
+        as_of=as_of,
+    )
+    if base_reason is not None:
+        return base_reason
+    assertion_is_current = _interval_contains(
+        as_of=as_of,
+        valid_from=assertion.valid_from,
+        valid_to=assertion.valid_to,
+        context=temporal_comparison_context,
+    )
+    has_current_candidate = any(
+        _field_base_rejection_reason(
+            assertion=candidate,
+            group=group,
+            canonical_identity=canonical_identity,
+            source_identities=source_identities,
+            as_of=as_of,
+        )
+        is None
+        and _interval_contains(
+            as_of=as_of,
+            valid_from=candidate.valid_from,
+            valid_to=candidate.valid_to,
+            context=temporal_comparison_context,
+        )
+        for candidate in group.assertions
+    )
+    if not assertion_is_current and has_current_candidate:
+        return "outside_validity_interval"
     return None
 
 
@@ -3035,6 +3084,7 @@ def _field_group_result(
                     canonical_identity=canonical_context,
                     source_identities=source_identities,
                     as_of=request.as_of,
+                    temporal_comparison_context=request.temporal_comparison_context,
                 )
             )
             is None,

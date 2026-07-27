@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from fastapi import HTTPException, Request
+from backend.services.canonical_v2_review import ReviewWorkspace
 from backend.services.canonical_v2_chat import CanonicalV2ChatAdapter
 from src.data_agents.canonical_v2.knowledge_gap_postgres import (
     KnowledgeGapConfigurationError,
@@ -123,11 +124,21 @@ def get_canonical_v2_candidate_chat_adapter(
     return _candidate_runtime(request).chat_adapter
 
 
+def get_canonical_v2_review_workspace(request: Request) -> ReviewWorkspace:
+    """Return only the explicitly installed SQLite review workspace."""
+
+    workspace = getattr(request.app.state, "canonical_v2_review_workspace", None)
+    if not isinstance(workspace, ReviewWorkspace):
+        raise HTTPException(status_code=503, detail="review_workspace_unavailable")
+    return workspace
+
+
 __all__ = [
     "CanonicalV2OperationsConfigurationError",
     "get_canonical_v2_admin_runtime",
     "get_canonical_v2_candidate_chat_adapter",
     "get_canonical_v2_chat_adapter",
     "get_canonical_v2_gap_operations",
+    "get_canonical_v2_review_workspace",
     "get_knowledge_gap_operations",
 ]

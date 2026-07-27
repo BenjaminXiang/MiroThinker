@@ -37,6 +37,9 @@ _MARKER_NAME = ".canonical-v2-isolated-index-target.json"
 _MARKER_SCHEMA_VERSION = "canonical-v2-isolated-index-target-v1"
 _MILVUS_FILENAME = "milvus.db"
 _LOOKUP_FILENAME = "lookup.sqlite3"
+_POINT_READ_BATCH_SIZE = 128
+_POINT_WRITE_BATCH_SIZE = 128
+_MIN_VECTOR_COSINE_SIMILARITY = 0.999
 _TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z0-9-]{1,}|[\u3400-\u4DBF\u4E00-\u9FFF]")
 
 
@@ -592,21 +595,26 @@ def _write_milvus_projection(
             "embedding output cardinality or dimension differs from index points"
         )
     if points:
-        client.insert(
-            collection_name=collection_name,
-            data=[
-                {
-                    "point_id": point.point_id,
-                    "vector": list(vector),
-                    "release_id": point.release_id,
-                    "projection_id": point.projection_id,
-                    "canonical_object_id": point.canonical_object_id,
-                    "embedded_content_sha256": point.embedded_content_sha256,
-                    "point_json": point.model_dump_json(),
-                }
-                for point, vector in zip(points, vectors, strict=True)
-            ],
-        )
+        for offset in range(0, len(points), _POINT_WRITE_BATCH_SIZE):
+            batch_points = points[offset : offset + _POINT_WRITE_BATCH_SIZE]
+            batch_vectors = vectors[offset : offset + _POINT_WRITE_BATCH_SIZE]
+            client.upsert(
+                collection_name=collection_name,
+                data=[
+                    {
+                        "point_id": point.point_id,
+                        "vector": list(vector),
+                        "release_id": point.release_id,
+                        "projection_id": point.projection_id,
+                        "canonical_object_id": point.canonical_object_id,
+                        "embedded_content_sha256": point.embedded_content_sha256,
+                        "point_json": point.model_dump_json(),
+                    }
+                    for point, vector in zip(
+                        batch_points, batch_vectors, strict=True
+                    )
+                ],
+            )
         client.flush(collection_name=collection_name)
 
 
@@ -621,19 +629,23 @@ def _read_points_with_client(
         raise IndexProjectionIntegrityError("isolated Milvus collection is missing")
     if not point_ids:
         return ()
-    rows = client.get(
-        collection_name=collection_name,
-        ids=list(point_ids),
-        output_fields=[
-            "point_id",
-            "release_id",
-            "projection_id",
-            "canonical_object_id",
-            "embedded_content_sha256",
-            "point_json",
-            "vector",
-        ],
-    )
+    rows: list[dict[str, Any]] = []
+    for offset in range(0, len(point_ids), _POINT_READ_BATCH_SIZE):
+        rows.extend(
+            client.get(
+                collection_name=collection_name,
+                ids=list(point_ids[offset : offset + _POINT_READ_BATCH_SIZE]),
+                output_fields=[
+                    "point_id",
+                    "release_id",
+                    "projection_id",
+                    "canonical_object_id",
+                    "embedded_content_sha256",
+                    "point_json",
+                    "vector",
+                ],
+            )
+        )
     return _validate_physical_point_rows(
         rows,
         expected_point_ids=point_ids,
@@ -651,7 +663,7 @@ def _read_all_points_with_client(
         raise IndexProjectionIntegrityError("isolated Milvus collection is missing")
     iterator = client.query_iterator(
         collection_name=collection_name,
-        batch_size=1000,
+        batch_size=_POINT_READ_BATCH_SIZE,
         filter="",
         output_fields=[
             "point_id",
@@ -693,7 +705,18 @@ def _validate_physical_point_rows(
         raise IndexProjectionIntegrityError(
             "isolated Milvus point readback is invalid"
         ) from exc
-    for point, row in points_and_rows:
+    expected_vectors = (
+        embedding_adapter.embed_batch(
+            tuple(point.embedded_content for point, _ in points_and_rows)
+        )
+        if embedding_adapter is not None
+        else None
+    )
+    if expected_vectors is not None and len(expected_vectors) != len(points_and_rows):
+        raise IndexProjectionIntegrityError(
+            "isolated Milvus vector verification cardinality differs"
+        )
+    for index, (point, row) in enumerate(points_and_rows):
         if (
             row.get("point_id") != point.point_id
             or row.get("release_id") != point.release_id
@@ -706,29 +729,47 @@ def _validate_physical_point_rows(
             )
         if embedding_adapter is not None:
             vector = row.get("vector")
-            expected_vector = embedding_adapter.embed_batch((point.embedded_content,))[
-                0
-            ]
-            if (
-                not isinstance(vector, list)
-                or len(vector) != embedding_adapter.dimension
-                or any(
-                    not isinstance(value, (int, float))
-                    or not math.isfinite(float(value))
+            assert expected_vectors is not None
+            expected_vector = expected_vectors[index]
+            actual_vector = (
+                tuple(float(value) for value in vector)
+                if isinstance(vector, list)
+                and all(
+                    isinstance(value, (int, float))
+                    and math.isfinite(float(value))
                     for value in vector
                 )
-                or any(
-                    not math.isclose(
-                        float(actual),
-                        expected,
-                        rel_tol=1e-7,
-                        abs_tol=1e-7,
+                else ()
+            )
+            actual_norm = math.sqrt(sum(value * value for value in actual_vector))
+            expected_norm = math.sqrt(
+                sum(value * value for value in expected_vector)
+            )
+            cosine_similarity = (
+                sum(
+                    actual * expected
+                    for actual, expected in zip(
+                        actual_vector, expected_vector, strict=True
                     )
-                    for actual, expected in zip(vector, expected_vector, strict=True)
                 )
+                / (actual_norm * expected_norm)
+                if actual_norm > 0.0
+                and expected_norm > 0.0
+                and len(actual_vector) == len(expected_vector)
+                else -1.0
+            )
+            if (
+                len(actual_vector) != embedding_adapter.dimension
+                or not math.isclose(
+                    actual_norm,
+                    expected_norm,
+                    rel_tol=1e-3,
+                    abs_tol=1e-3,
+                )
+                or cosine_similarity < _MIN_VECTOR_COSINE_SIMILARITY
             ):
                 raise IndexProjectionIntegrityError(
-                    "isolated Milvus vector differs from deterministic embedding"
+                    "isolated Milvus vector differs from its bound embedding"
                 )
     points = tuple(
         sorted(

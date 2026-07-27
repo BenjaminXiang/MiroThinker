@@ -3,7 +3,7 @@
 > Per CLAUDE.md §7. Tracks Active / Candidate / Blocked / Frozen / Abandoned / Accepted / Archived
 > work for the retrieval-augmented refactor.
 
-## Canonical V2 implementation mainline (updated 2026-07-22)
+## Canonical V2 implementation mainline (updated 2026-07-26)
 
 - **Development baseline consolidation:** the user designated the accumulated S11 worktree as the
   sole implementation authority, paused S12, and required preservation before further development.
@@ -18,8 +18,15 @@
   Git `main` remains at the historical Aggregate-S6 checkpoint `f0e6224`; no push, cutover, or S12
   implementation is authorized by this consolidation.
 
+- **Lean E2E rebaseline:** the user confirmed `docs/测试集答案.xlsx` as customer Ground Truth and
+  retired Task 2.8 plus the separate Tasks 8.1/8.8/9.8 claim-level gates. Historical review artifacts
+  remain intact but non-normative. S12B/Task 12.2 is now a verified functional Candidate and the
+  current ledger is `76/80`; exactly Tasks 12.3-12.6 remain. The next milestone is the 17-conversation/
+  25-turn workbook replay, badcase repair, and direct user acceptance. This paragraph
+  supersedes conflicting open-task status in the historical detail below.
+
 - **`rebuild-canonical-v2-knowledge-platform`** (OpenSpec, breaking Epic) is the sole implementation
-  mainline by user decision. Current task ledger: 70/80. Tasks 5.1-5.7 retain their Accepted
+  mainline by user decision. Current task ledger: 76/80. Tasks 5.1-5.7 retain their Accepted
   evidence; S5G/Task 5.7 closed the temporal-precision contract; Task 6.3 typed domain projection is
   Accepted; Tasks 6.1-6.8 and Aggregate S6 are Accepted, including the 6.2/6.4/6.6 RED-to-GREEN
   dependency chain and the full real-PostgreSQL sibling review. ADR-013-ADR-022 add S2C and S6R
@@ -37,10 +44,10 @@
   release-bundle-bound exact and displayed-set structured consumers. S2C1 RED and S2C2/Task 2.7's
   strict validator plus complete 52-case draft
   migration, S2C3A's exact five-group oracle RED, and S2C3B's mechanical evaluator/recorded-fake
-  GREEN and S2C3C1's deterministic unapproved external-review packet are Accepted at 47/80. S2C3C2
-  is Ready but awaits attributable external human decisions, a second calibration reviewer, judge
-  authorization, measured calibration, and explicit exclusions; S2C3C3/Task 2.8 still owns reviewed-
-  corpus application and aggregate S2C acceptance before S8/S9 acceptance-oracle execution. The
+  GREEN and S2C3C1's deterministic unapproved external-review packet are Accepted at 47/80. The
+  historical two-human S2C3C2 contract and its replacement single-human review workbench are now
+  retired as acceptance paths. Their code and evidence remain historical; Task 2.8 is closed as a
+  cancellation and no longer gates S8/S9 or final Candidate work. The
   independent S10A/Task 10.1 fixture-only knowledge-gap trigger RED and S10B/Task 10.2 pure typed
   gap/classifier GREEN are Accepted. S10C's fixture-only offline-remediation/accepted-release-plus-
   effect RED predecessor and S10D's pure content-bound lineage/transition/replay mechanics GREEN are
@@ -103,7 +110,7 @@
   the same finite Web identity boundary. S8C is Accepted at `59/80`: one public release-bound read
   service executes all seven lanes, forwards the accepted fusion/rerank/sufficiency/supplemental/
   handle ports, and enforces exact-release/exact-session read-only replay. Tasks 8.3/8.5/8.7 are
-  closed; Tasks 8.1/8.8 remain open for S2C-calibrated aggregate acceptance.
+  closed; Tasks 8.1/8.8 were later retired by the lean E2E rebaseline.
   S9G/Task 9.1's exact grounded-claim/citation, direct Product-
   capability, Industry-Brief/representative-coverage, and deterministic-fallback RED is Accepted at
   54/80 against synthetic typed evidence/adapters without claiming S8/S2C oracle or real-provider
@@ -132,9 +139,11 @@
   11.1-11.5 are Accepted atomically at `70/80`: exact reruns, interface/trace/real-PostgreSQL/index
   owners, immutable legacy disposition, broad failure reconciliation, and final `C0/I0` evidence/
   protected-scope reviews are bound by receipt
-  `281b28244a9fb5043a10df4e7eaa8f4e9e9385825babdae6204a461661a99717`. S12A/Task 12.1 is next.
-  Tasks 8.1, 8.8, 9.8, and aggregate S8-S9 remain open; S2C3C2 blocks only
-  reviewed calibration/claim-level oracle execution, not independent Ready fixture slices.
+  `281b28244a9fb5043a10df4e7eaa8f4e9e9385825babdae6204a461661a99717`. S12A/Task 12.1 is
+  Accepted at `71/80` on fresh r12 evidence, with final source/safety/evidence reviews at `C0/I0`.
+  The lean E2E rebaseline closes Tasks 2.8/8.1/8.8/9.8 as retired work, moving the ledger to `75/80`.
+  S12B/Task 12.2 adds the serviceable four-domain Candidate and serving bundle at `76/80`. Tasks
+  12.3-12.6 remain; Cutover is separately gated and unauthorized.
 - Overlapping V1/V042 retrieval/Web changes are Frozen as implementation authorities. Their valid
   contracts, evaluators, corpora, manifests, and RED evidence remain mapping inputs before S7-S11;
   no in-flight legacy change becomes an Accepted V2 dependency.

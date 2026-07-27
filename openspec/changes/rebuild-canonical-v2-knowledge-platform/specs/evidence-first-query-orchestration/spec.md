@@ -17,9 +17,10 @@ retrieval handler.
 
 Recognized local safety/compliance reminder requests SHALL use a `safety_guidance` response policy
 distinct from ordinary F refusal and from information retrieval. The default policy SHALL NOT run
-Universal Web or identify/speculate about illegal venues, districts, businesses, or venue categories.
-It MAY provide brief lawful risk advice and official help/reporting direction. An explicit request for
-current official contact/policy information MAY use a bounded official-source-only lookup.
+general Web search or identify/speculate about illegal venues, districts, businesses, or venue
+categories. It MAY provide brief lawful risk advice and official help/reporting direction. An
+explicit request for current official contact/policy information MAY use a bounded official-source-
+only lookup.
 
 #### Scenario: User asks which local illegal venues to avoid
 - **WHEN** the request has a legitimate local safety/compliance intent
@@ -138,15 +139,24 @@ accepted Technology identity.
   route, and uses `representative` enumeration unless a finite universe is available
 - **AND** a mere topic mention is not reported as demonstrated Company or Product use
 
-### Requirement: Web augmentation runs for every information-retrieval request
+### Requirement: Normal information retrieval always uses bounded current Web search
 
-All A/B/C/D/E/G information-retrieval requests SHALL invoke current Web search as an augmentation
-lane regardless of local result count. Out-of-scope refusal, clarification-only input, and interface
-control input SHALL NOT invoke Web search.
+Every normal information-retrieval request SHALL invoke bounded current Web search alongside the
+applicable local exact, structured, lexical, vector, relationship, or internal-reference lanes.
+Local and current-Web evidence SHALL remain distinguishable and SHALL both be available to final
+evidence selection and answer synthesis. Out-of-scope refusal, clarification-only input, safety
+guidance, and interface control input SHALL NOT invoke general Web search.
 
-#### Scenario: Exact local object is found
-- **WHEN** an information-retrieval request exactly resolves a high-confidence local object
-- **THEN** current Web search still runs within the route budget for freshness and corroboration
+#### Scenario: Exact local object has adequate evidence
+- **WHEN** an information-retrieval request exactly resolves a high-confidence local object and its
+  local evidence adequately supports the requested material parts
+- **THEN** the plan still invokes bounded current Web search for corroboration, freshness, or useful
+  supplementation
+- **AND** final synthesis may prefer the stronger local fact while retaining relevant Web evidence
+
+#### Scenario: Local evidence is incomplete or stale
+- **WHEN** a material requested fact is missing, stale, or conflicting in the local Candidate
+- **THEN** the plan invokes bounded current Web search for that fact
 - **AND** local and Web evidence remain distinguishable during fusion and answer generation
 
 #### Scenario: Refusal request is out of scope

@@ -1,0 +1,497 @@
+{
+  "content_sha256": "6603f3bda6917599ed7fed87b80af20a61aca68e93dad0a327b1f8f76662f2ad",
+  "schema_version": "canonical-v2-source-build-manifest-v1",
+  "source_inventory_sha256": "83a9e2c82aee4cbe5c02f088ba0fdbf8d15359d87a85bf4ee901b0f58f70fa09",
+  "backup_manifest_sha256": "a14c1eab673f8fca2bdbf4d50dfe8e9b33cf077b9314855298d29a16a82e59c8",
+  "restore_verification_sha256": "98826e8da7ee66af20199c4998f4cdccc9276179119f30cd318f7ce8c0e7d231",
+  "acceptance_record_sha256": "3155d8908ab560d8d97ed08881f067564f38e23c097e46fe111a056ef739fc5b",
+  "released_objects_mapper_policy_version": "canonical-v2-released-objects-mapper-v2",
+  "released_objects_mapper_policy_sha256": "5c281568f49981300b01fb228a89044294fc77b69481a79dd1b6ab6702e3db6f",
+  "released_objects_expected_row_counts": {
+    "company": 1037,
+    "paper": 574,
+    "patent": 1931,
+    "professor": 1439,
+    "professor_paper_link": 580
+  },
+  "restore_root": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z",
+  "approved_recollection_root": null,
+  "inventory_entries": [
+    {
+      "source_id": "forensic_recovery_tree",
+      "disposition": "protection_only",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact protection_only disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:03cdece09485247f5a036871021e770a9b3b35c25a515fb0314655589f5d9c44",
+      "disposition": "acceptance_only",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact acceptance_only disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:11c9847d8bb362984a35e54c25d6f3f01f74b6209245d359e40f7dbd98738829",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:1a873f91cf59065877e3b21a5b5a046c3c7705b128d9ae8c9db31c23588e439f",
+      "disposition": "protection_only",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact protection_only disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:1a987406c94c0f1e7b69e0272d8f06582f7f1fe2668f3cfbdd0e48780eed3026",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:20be9e411f58e2d8a13f82ff094c5424074ba95bf6668177f64edc2396463d07",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:27e2129243e993646d1e976814f26fd42590dd6c02639577c1ce6cdf36329ce7",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:2d237edecb0f22c141c270f0c9147e3c5a18824025d155f607bb58ef79acc1bb",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:306888219094fdee6713d1d21bf2716d8fd1326efaf5a7a4875c08ce3cbc58f5",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:3371136d61fe041eb7e7ba087d9ddc37843330b4d39187b355310ba50599d1d2",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:3bf673d8c10db3fc95558037794443a0b8f4a3994d5ae36ac7c85191440f1cd6",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:4384044cb138f62be89edc0f9457065d00f08ce44d8dd9d06e0caefc555c3eef",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:43c44a4cb584803b79fcd4760461af7dcd68304ac163d961a83643067e5227d8",
+      "disposition": "acceptance_only",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact acceptance_only disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:531d3cb88f7c5605d5c3fe2d8c4e6564106c71cf3d278f23b3eea6daad08d145",
+      "disposition": "requirements_only",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact requirements_only disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:55c969432f588015934396a66874ea6b533d431aa3b521a61f5681c4f2f886a2",
+      "disposition": "acceptance_only",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact acceptance_only disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:573305265d755bf3d85fb60e5e3d33e588838f7d71075d663f5f1b6836bf3ff7",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:5880891dd3b3c04f1f8e9b29c308dd9be12b233a3165338bf992c17f3aa848a8",
+      "disposition": "protection_only",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact protection_only disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:5b0c06ada31be18bfb8ce8704c3e1a7cf04346f243756b451e5d37b414328d2f",
+      "disposition": "requirements_only",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact requirements_only disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:5b17380f2b046730ccda68910ee8dec2af10319093d7b86734780f6a19f4c847",
+      "disposition": "requirements_only",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact requirements_only disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:5e1ba9daab456914060f8df8b826a57006cb6ae8486ac816f7b1721186c17c73",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:5eed796459843f74ecaebf4f0f8b20fd4570d2a343a442f9ddcbe0f26362d6ab",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:603b9b33d7e8f3581d670659002768778ec06914a1f1586a0742619024038083",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:619924e69182f9fffe9bef24455d50ebee787fabe9fb92b74e413a5e7a46544c",
+      "disposition": "requirements_only",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact requirements_only disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:6533126e9f7b14a478e8fc098541258d9b075ce70de16288b43dcf9abed59cc1",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:65c4a289550957659155a00799158dd615be14005eb8f35afc778cfa3943accd",
+      "disposition": "protection_only",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact protection_only disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:6cf786f09478810a09cffe194d96e046a4d3e28a465c4418d8be2a13a126e5f7",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:7a323115d06360192111c84e2a4da324146948d18c3189751885f6b95ac6d255",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:7bbd1e8e41e98162add1fbb385443061ac91b8a8fd7e0da3fa9a2a6a5dac47ee",
+      "disposition": "requirements_only",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact requirements_only disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:82e601426705c3ab7ea24b9b9736975fc8f22128e077aa279075e19558309ee3",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:8c3084c6d7364e43089903d8bd60c182534aa199eb7c04e6721291ad0b358e99",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:909ada3e637a0220acc7d7a6335d3743045762e5c720e6120141c79ae5b0d8f8",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:98a87f5fea987e586f33ead0914b848d4acd9e03a3312eaa5a8eb01f7c8765f5",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:9d70d6f276e39cd177079766739fbce58723ef79435cf502eedd798207f5c720",
+      "disposition": "acceptance_only",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact acceptance_only disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:aa84883ccf6e8034b9ebe6d03fa91d6b265f4abd1f096ceb13d219d38a1a6435",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:b2fd4e9bcf4238424785571f65e94161f07f9631a5b589ace749397527ac35ad",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:b84a6eac6bc59c9b9431b94ae8735bcda813b3186c28455719ac3bd6718d41ae",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:b9a8975b2d147348ef47cbd08ad12c6e550c6012ecc29e2979a4db76e3b3c4a0",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:bdb272f5232f7d7bdb9df3e6341f8be4235c57bcc7f11917cb628b216a7367b5",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:bfd2f9771e12452101507f8e0d10b2243f7f1807e96905ed35c327c430f349b6",
+      "disposition": "requirements_only",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact requirements_only disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:c037008730833b28b5e9fb200a4ed9078d8571382b1250d36795d6ca18456e6b",
+      "disposition": "requirements_only",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact requirements_only disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:c2199ac16504af74d0e8a0a00c7e9fea5cf79c65c9de9631ceaa81a3ad0347d2",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:c72421b11813abe836836545eb8925076e5e3c09b975a9a11387b7fef6e8bde4",
+      "disposition": "acceptance_only",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact acceptance_only disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:d0306b9ab385b64379e437978a971e1d4a8abecee0de0863e0cdb53163b1028d",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:d26dd2f6d1e9a24699d642b68760c03df65b13e07edc5335868d5923eab43189",
+      "disposition": "acceptance_only",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact acceptance_only disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:dc465266f3a71f9c820cba8cf83f860feb053f6da5bfef79ec02283e9f5ee673",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:e425f399185195b5e1c187db87869032e000e9c7e17b29353b61bce1b6ce025f",
+      "disposition": "acceptance_only",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact acceptance_only disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:eb4faa13a8f4c00f703b2fb014ecc5eb671cb29b3dd20e0836afb9b1024bf8a0",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:f8fea06321bd45af4c88c9654497a8c504defbf56c5eaee1d758e26248ea2bae",
+      "disposition": "registered_unprojected",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:ffe87de3fe5cefe929194235d43fe7bcf09be406976a81cea23efb464d4d34a0",
+      "disposition": "evidence_input",
+      "source_family": "accepted-s2b-source",
+      "members": [
+        {
+          "member_id": "accepted-restore:workspace/logs/data_agents/released_objects.db",
+          "source_batch_id": "s12a-released-objects-full-v1",
+          "source_kind": "released_objects_sqlite",
+          "content_path": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z/workspace/logs/data_agents/released_objects.db",
+          "restore_member_path": "workspace/logs/data_agents/released_objects.db",
+          "backup_member_manifest_path": "manifests/inventory/027-ffe87de3fe5cefe929194235d43fe7bcf09be406976a81cea23efb464d4d34a0.jsonl",
+          "backup_member_manifest_sha256": "6820786a2e055def2828c82de60f3b90cad9ac5dcc8f1477943a9f46a02777ae",
+          "source_member_manifest_sha256": "4c91d1d7dce88e5c9d9924b2c21d6f3111292eb3e5c30a60e688fd40ccf8b594",
+          "byte_size": 20267008,
+          "content_sha256": "7637d808559685f1bcf0316cd22cfeac4e50bd0850c53652ec95b3dbb5e43bce",
+          "parser": {
+            "parser_name": "released_objects_sqlite",
+            "parser_version": "canonical-v2-s12a-full-table-v1",
+            "schema_version": "released-objects-v1",
+            "options": {
+              "table": "released_objects",
+              "order": "primary_key",
+              "limit": null
+            }
+          },
+          "observed_at": "2026-07-22T12:00:00Z",
+          "parent_source_id": "inventory:ffe87de3fe5cefe929194235d43fe7bcf09be406976a81cea23efb464d4d34a0"
+        }
+      ],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact evidence_input disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "original_postgresql_volume",
+      "disposition": "protection_only",
+      "source_family": "accepted-s2b-source",
+      "members": [],
+      "approval_reference": null,
+      "gap_id": null,
+      "rationale": "S12A exact protection_only disposition from Accepted S2B authority."
+    }
+  ],
+  "targeted_recollection_entries": []
+}

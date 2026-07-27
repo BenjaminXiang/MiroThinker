@@ -14,8 +14,8 @@
 - [x] 2.4 Run the isolated read-only baseline for coverage/reach, Recall@K, Precision@K, ranking, relation paths, answer support, Web provenance, latency, and provider cost.
 - [x] 2.5 Freeze numeric thresholds not already fixed by PRD in `acceptance.md` without lowering existing PRD minima or hard invariants.
 - [x] 2.6 Create and independently restore-verify content-addressed backups for original PostgreSQL, Milvus, WAL/FPI, salvage, and all inventoried historical SQLite/JSONL/XLSX/PDF/cache/raw-source families; review/accept this gate before task 3.2 or any Canonical V2/landing write.
-- [x] 2.7 Add the versioned claim-level case-contract schema and migrate applicable workbook/PRD/challenge turns to required/forbidden claims/entities, allowed variants, source snapshots, as-of, enumeration policy, and observable stage oracles; retain reference prose as non-normative review context.
-- [ ] 2.8 Validate hard per-case outcomes, snapshot/version integrity, evidence-bounded LLM judging, and human review; independently review/accept S2C before S8 or S9 uses the corpus as an acceptance oracle.
+- [x] 2.7 Preserve the historical claim-level case-contract implementation and migration artifacts as diagnostic evidence; they are superseded as the final acceptance path by the customer workbook policy in task 2.8.
+- [x] 2.8 Retire the contract/exclusion/blind-calibration human-review gate, preserve its artifacts as non-normative history, and remove it as a dependency of query, answer, and final Candidate work.
 
 ## 3. Canonical V2 Interfaces and Database Baseline
 
@@ -69,14 +69,14 @@
 
 ## 8. Evidence-first Query Orchestration
 
-- [ ] 8.1 After S2C/S6R are Accepted, add fixture-only RED trace-replay scenarios for A-G behavior, safety guidance, confidence-gated ambiguity, enumeration policy, Person typed-filter retrieval, Technology alias/route comparison, deterministic protected slots, contextual/alias/domain/Web rewrites, invalid-plan rejection, and the parameterized institution-slot matrix; calibrate and freeze the versioned ambiguity evidence/confidence/margin policy against reviewed claim-level cases before GREEN.
+- [x] 8.1 Retire the separate claim-level calibration/fixture gate; preserve its historical tests and use only focused regressions discovered through the real Candidate path.
 - [x] 8.2 After S7 is Accepted, implement typed query understanding, protected-slot/institution and internal Person/Technology resolution, enumeration policy, confidence-gated ambiguity, safety response policy, assessment intent/user-criteria capture, multi-view rewriting, and schema-validated LLM retrieval planning; do not build the evidence-dependent AssessmentFrame here and do not use institution topic-stopword enumeration.
 - [x] 8.3 After S7 is Accepted, implement `KnowledgeRead.execute` with concurrent exact/structured, lexical, vector, relationship, internal Person/Technology auxiliary, and current-Web adapters, content-addressed bounded Web evidence snapshots, typed Web entity handles, and full candidate traceability.
-- [x] 8.4 Add RED scenarios proving Universal Web runs for all information-retrieval requests, skips refusal/blocking-clarification/control/safety-guidance input by default, permits only explicit bounded official-source safety lookup, and degrades safely on provider failure.
+- [x] 8.4 Preserve the accepted Web failure/safety-skip coverage. Direct user acceptance on 2026-07-27 restored bounded Universal Web for every normal information request; S12D owns the serving correction while refusal, clarification, safety, and interface-control inputs remain skipped.
 - [x] 8.5 Implement identity-aware fusion, Web-handle snapshot/tamper/expiry/resolution lineage, evidence aggregation, deterministic constraints, confidence/margin ambiguity decisions, and structured LLM late reranking without blanket early quality exclusion.
 - [x] 8.6 Add RED sufficiency/retry scenarios for supported, conflicting, and missing material question parts, answer-scoped Product capability, all three enumeration modes, false exhaustiveness, and time/call/cost exhaustion.
 - [x] 8.7 Implement structured evidence-sufficiency decisions, enumeration accounting, typed continuation metadata, and targeted bounded supplemental retrieval.
-- [ ] 8.8 Verify route/domain/internal-reference recall, precision, rank, Person filter and Technology route semantics, institution-slot/pure-topic invariants, calibrated ambiguity/safety/enumeration/Web-handle lifecycle trace replay, Web provenance/snapshots, latency, and cost against frozen claim-level gates; review/accept the query slice.
+- [x] 8.8 Retire the separate aggregate query gate; task 12.3 now verifies query behavior through representative smoke cases and the real 25-turn customer benchmark replay.
 
 ## 9. Grounded Progressive Answers and Sessions
 
@@ -87,7 +87,7 @@
 - [x] 9.5 Add RED multi-turn scenarios for canonical IDs and Web entity handles, anchors, displayed result sets, protected constraints, typed traversals, enumeration coverage, ambiguity/clarification selection, conditional ContinuationOffer, and topic switches.
 - [x] 9.6 Implement release-aware typed-handle session state, user-directed progressive relationship exploration, confidence-gated interpretation/clarification rendering, and bounded safety-guidance rendering.
 - [x] 9.7 Implement conditional structured ContinuationOffer with at most three validated executable options for the accepted trigger reasons; validate zero unsupported factual claims and correct next-turn binding.
-- [ ] 9.8 Verify claim support/completeness, coverage honesty, Person-oriented and Technology/Industry-Brief user effects, Product-capability non-propagation, context/handle correctness, safety/ambiguity/continuation behavior, LLM degradation, TTFT/progress, and response contracts against claim-level gates; review/accept the answer slice.
+- [x] 9.8 Retire the separate aggregate answer gate; task 12.3 now verifies grounded answers and multi-turn behavior through the real customer-facing runtime.
 
 ## 10. Knowledge-gap Feedback and Operations
 
@@ -107,9 +107,12 @@
 
 ## 12. Final Candidate Acceptance and Handoff
 
-- [ ] 12.1 Build the complete isolated Canonical V2 candidate from inventoried recovery/historical sources plus approved targeted recollection.
-- [ ] 12.2 Run all hard per-case invariants and multidimensional domain/path/query/answer/Web/parity/latency/cost gates against the accepted claim-level regression and challenge versions.
-- [ ] 12.3 Produce recovery coverage, unresolved gap, source lineage, decision, release, index, rollback, and benchmark evidence in `.agents/runs/rebuild-canonical-v2-knowledge-platform/verification.md`.
-- [ ] 12.4 Run `openspec validate rebuild-canonical-v2-knowledge-platform --strict` and repository contract/lint/type/test checks required by the verification contract.
-- [ ] 12.5 Obtain independent review and user acceptance of the isolated candidate.
+- [x] 12.1 Build the complete isolated Canonical V2 candidate from inventoried recovery/historical sources plus approved targeted recollection.
+- [x] 12.2 Build a serviceable isolated Candidate with non-zero Professor, Company, Paper, and Patent populations, customer-required relationship paths, matching lookup/vector projections, and a content-addressed read-only serving bundle bound to the real chat API/UI without changing active pointers.
+- [x] 12.3 Run approximately eight representative smoke cases during development, then replay all 17 conversations/25 turns from `docs/测试集答案.xlsx` through the real chat runtime and produce a human-readable Ground Truth/actual-answer/source/limitation report.
+- [x] 12.4 Run only the minimal final checks: changed-module tests, Candidate build/parity/source-isolation smoke, changed-file Ruff/Pyright, strict OpenSpec validation, and `git diff --check`; broaden only for a concrete regression risk.
+- [ ] 12.5 Obtain direct user acceptance by using the isolated chat system; independent slice review, human-label calibration, and a second acceptance reviewer are not required.
+- [x] 12.5a Implement S12D so every normal information request combines local and current-Web evidence through the real LLM answer path, with deterministic grounded fallback only on explicit provider/output failure.
+- [x] 12.5b Sanitize the public chat envelope and render a default-collapsed `查看依据` containing only validated official public sources; expose no `/browse` link or internal trace data.
+- [x] 12.5c Run the focused cross-domain/provider-failure checks, replay the Ding Wenbo founder follow-up, and restart the isolated `:18188` candidate for direct user iteration.
 - [ ] 12.6 Keep original sources frozen and request separate explicit authorization for any production-like cutover, archive, or destructive cleanup.

@@ -57,6 +57,11 @@ def test_chat_preview_contains_no_fixture_names_or_questions(
     assert fixture_copy not in chat_html
 
 
+def test_public_chat_has_no_internal_browse_navigation(chat_html: str) -> None:
+    assert 'href="/browse"' not in chat_html
+    assert "返回数据目录" not in chat_html
+
+
 def test_chat_preview_builds_questions_only_after_current_candidates_and_relations_load(
     chat_html: str,
     chat_script: str,
@@ -138,7 +143,28 @@ def test_chat_preview_renders_only_safe_current_web_evidence(
     )
     assert 'item.source_nature !== "current_web"' in evidence_rows
     assert "safeCurrentWebUrl(item.source_locator)" in evidence_rows
-    assert "renderCurrentWebEvidence(view.bubble, data.evidence || [])" in chat_script
+    assert "renderCurrentWebEvidence(view.bubble, data.evidence || [])" not in chat_script
+    assert 'create("details", "evidence-disclosure")' in chat_script
+    assert 'create("summary", "evidence-summary", "查看依据")' in chat_script
+    assert "evidenceDetails.open = false" in chat_script
+
+
+def test_chat_evidence_is_collapsed_and_internal_trace_is_not_rendered(
+    chat_script: str,
+) -> None:
+    assistant_renderer = _section(
+        chat_script,
+        "function renderAssistant(data, originalQuery)",
+        "async function sendQuery",
+    )
+
+    assert 'create("details", "evidence-disclosure")' in chat_script
+    assert 'create("summary", "evidence-summary", "查看依据")' in chat_script
+    assert ".open = false" in chat_script
+    assert "renderCitations(evidenceDetails, data.citations || [])" in assistant_renderer
+    assert "renderTrace(" not in assistant_renderer
+    assert "renderCurrentWebEvidence(" not in assistant_renderer
+    assert "response-meta" not in assistant_renderer
 
     assert "element.textContent = String(text)" in chat_script
     assert re.search(r"(?:inner|outer)\s*HTML", chat_script, re.IGNORECASE) is None

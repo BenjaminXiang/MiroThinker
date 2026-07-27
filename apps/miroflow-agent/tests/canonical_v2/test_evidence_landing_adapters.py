@@ -219,6 +219,36 @@ def test_duplicate_structured_headers_are_quarantined_instead_of_overwritten() -
         assert records[0].errors[0].error_kind.value == "schema_mismatch"
 
 
+def test_xlsx_adapter_uses_an_explicit_header_row_after_a_title_row() -> None:
+    module = _module()
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "sheet1"
+    sheet.append(["Export title", None])
+    sheet.append(["id", "name"])
+    sheet.append(["1", "Accepted company"])
+    buffer = BytesIO()
+    workbook.save(buffer)
+    workbook.close()
+
+    landing = module.create_ephemeral_evidence_landing()
+    receipt = landing.ingest(
+        _request(
+            module,
+            batch="xlsx-second-header-row",
+            source_kind="historical_xlsx",
+            parser_name="historical_xlsx",
+            content=buffer.getvalue(),
+            options={"sheet": "sheet1", "header_row": 2},
+        )
+    )
+
+    records = tuple(landing.stream(receipt.source_batch_id))
+    assert len(records) == 1
+    assert records[0].record_locator == "sheet:sheet1:row:3"
+    assert records[0].payload == {"id": "1", "name": "Accepted company"}
+
+
 def test_csv_rows_with_unheaded_values_keep_readable_fields_and_a_typed_error() -> None:
     module = _module()
     landing = module.create_ephemeral_evidence_landing()

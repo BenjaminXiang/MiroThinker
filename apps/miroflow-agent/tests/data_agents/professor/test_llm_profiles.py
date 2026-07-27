@@ -217,3 +217,10 @@ def test_resolve_professor_llm_settings_uses_https_for_star_profiles(
     settings = resolve_professor_llm_settings(profile_name, strict=True, include_profile=True)
 
     assert settings["local_llm_base_url"] == expected_prefix
+
+
+@pytest.mark.parametrize("profile_name", ["gemma4", "ark"])
+def test_gemma4_route_uses_current_qwen36_model(profile_name: str):
+    settings = resolve_professor_llm_settings(profile_name, strict=True)
+
+    assert settings["local_llm_model"] == "qwen3.6-35b-a3b-fp8"

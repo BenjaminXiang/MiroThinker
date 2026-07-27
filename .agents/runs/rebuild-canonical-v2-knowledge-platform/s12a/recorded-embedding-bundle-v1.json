@@ -1,0 +1,7 @@
+{
+  "algorithm": "canonical-v2-token-hash-l2-v1",
+  "content_sha256": "a5b57005eb48a0692ae946d83c02ce54df0280a8274527f94c29d79d81266200",
+  "dimension": 32,
+  "model_id": "recorded-embedding-v1",
+  "schema_version": "canonical-v2-recorded-embedding-bundle-v1"
+}

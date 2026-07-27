@@ -414,6 +414,37 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
         # never hold release while this writer holds an identity-table lock.
         connection.execute("LOCK TABLE knowledge.release IN ROW SHARE MODE")
 
+    @staticmethod
+    def _set_duplicate_release_triggers_enabled(
+        connection: psycopg.Connection[dict[str, Any]],
+        *,
+        enabled: bool,
+    ) -> None:
+        duplicate_tables = tuple(
+            table
+            for table in IDENTITY_LOCK_ORDER
+            if table != "identity_resolution_run"
+        )
+        tables = reversed(duplicate_tables) if enabled else duplicate_tables
+        action = "ENABLE" if enabled else "DISABLE"
+        for table in tables:
+            statement = (
+                f"ALTER TABLE knowledge.{table} {action} TRIGGER "
+                "trg_validate_identity_resolution_release"
+            )
+            connection.execute(cast(Any, statement))
+
+    @classmethod
+    def _validate_release_and_restore_triggers(
+        cls,
+        connection: psycopg.Connection[dict[str, Any]],
+    ) -> None:
+        # PostgreSQL rejects ALTER TABLE while deferred trigger events are
+        # pending on that table. The one enabled run trigger validates the
+        # complete release graph before the duplicate triggers are restored.
+        connection.execute("SET CONSTRAINTS ALL IMMEDIATE")
+        cls._set_duplicate_release_triggers_enabled(connection, enabled=True)
+
     @contextmanager
     def _connection(
         self,
@@ -1366,6 +1397,12 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
                 # immediately before the transaction's first durable mutation.
                 require_accepted_backup_gate(self._backup_gate_root)
                 self._verify_connected_target(connection)
+                # One deferred event on identity_resolution_run validates the
+                # completed release graph. Queuing that same release-wide scan
+                # for every inserted topology row is redundant and quadratic.
+                self._set_duplicate_release_triggers_enabled(
+                    connection, enabled=False
+                )
                 self._insert_sources_and_assertions(
                     connection, validated_request, validated_result
                 )
@@ -1385,7 +1422,9 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
                 self._insert_result_projection(
                     connection, validated_request, validated_result
                 )
-                connection.execute("SET CONSTRAINTS ALL IMMEDIATE")
+                self._validate_release_and_restore_triggers(
+                    connection
+                )
                 durable_request, durable_result = self._load_snapshot(
                     connection,
                     release_id=validated_request.release_id,

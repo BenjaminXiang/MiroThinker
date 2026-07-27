@@ -2630,3 +2630,55 @@ def test_engine_derives_relationship_replacement_and_withdrawal_from_history() -
         ).current_relationships
         == ()
     )
+
+
+def test_field_selection_ignores_assertions_outside_the_as_of_interval() -> None:
+    module = _module()
+    sources = (
+        _source_identity(module, "snapshot-old", source_system="official-old"),
+        _source_identity(module, "snapshot-current", source_system="official-current"),
+    )
+    canonical = _canonical_identity(
+        module,
+        "professor-current-snapshot",
+        tuple(source.source_identity_id for source in sources),
+    )
+    transition = NOW - timedelta(days=1)
+    old = _field_assertion(
+        module,
+        "assertion-snapshot-old",
+        sources[0].source_identity_id,
+        "数据与信息研究院",
+        valid_from=NOW - timedelta(days=30),
+        valid_to=transition,
+    )
+    current = _field_assertion(
+        module,
+        "assertion-snapshot-current",
+        sources[1].source_identity_id,
+        "数据与信息学院",
+        valid_from=transition,
+    )
+
+    result = module.create_ephemeral_canonical_decision_engine().decide(
+        _batch(
+            module,
+            source_identities=sources,
+            canonical_identities=(canonical,),
+            field_groups=(
+                _field_group(
+                    module,
+                    (old, current),
+                    canonical_identity_id=canonical.canonical_identity_id,
+                ),
+            ),
+        )
+    )
+
+    assert len(result.current_fields) == 1
+    assert result.current_fields[0].value == "数据与信息学院"
+    outcomes = {item.assertion_id: item for item in result.constraint_outcomes}
+    assert outcomes[old.assertion_id].reason_codes == (
+        "outside_validity_interval",
+    )
+    assert outcomes[current.assertion_id].admitted is True

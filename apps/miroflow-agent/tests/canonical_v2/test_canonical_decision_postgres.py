@@ -246,6 +246,233 @@ def _postgres_module() -> Any:
     return import_module("src.data_agents.canonical_v2.canonical_decision_postgres")
 
 
+class _StaticRowsResult:
+    def __init__(self, rows: tuple[dict[str, Any], ...]) -> None:
+        self._rows = rows
+
+    def fetchall(self) -> tuple[dict[str, Any], ...]:
+        return self._rows
+
+
+class _StaticRowsConnection:
+    def __init__(self, rows: tuple[dict[str, Any], ...]) -> None:
+        self._rows = rows
+
+    def execute(self, *_args: Any, **_kwargs: Any) -> _StaticRowsResult:
+        return _StaticRowsResult(self._rows)
+
+
+class _SequenceRowsConnection:
+    def __init__(self, row_groups: tuple[tuple[dict[str, Any], ...], ...]) -> None:
+        self._row_groups = iter(row_groups)
+
+    def execute(self, *_args: Any, **_kwargs: Any) -> _StaticRowsResult:
+        return _StaticRowsResult(next(self._row_groups))
+
+
+def test_assertion_readback_canonicalizes_database_collation_order() -> None:
+    engine = _engine_module()
+    postgres = _postgres_module()
+    assertion_ids = ("assertion:Z", "assertion:a")
+    field_assertions = tuple(
+        engine.SourceAssertion(
+            assertion_id=assertion_id,
+            source_record_id=f"record:{assertion_id}",
+            source_identity_id=f"source:{assertion_id}",
+            subject_entity_type="professor",
+            field_path="name",
+            value=assertion_id,
+            observed_at=NOW,
+            assertion_run_id="field-run",
+        )
+        for assertion_id in assertion_ids
+    )
+    field_rows = tuple(
+        {
+            "assertion_id": assertion.assertion_id,
+            "source_record_id": assertion.source_record_id,
+            "source_identity_id": assertion.source_identity_id,
+            "subject_entity_type": assertion.subject_entity_type,
+            "field_path": assertion.field_path,
+            "value": assertion.value,
+            "assertion_fingerprint_sha256": postgres._assertion_fingerprint(assertion),
+            "observed_at": assertion.observed_at,
+            "source_event_time": assertion.source_event_time,
+            "valid_from_temporal": assertion.valid_from,
+            "valid_to_temporal": assertion.valid_to,
+            "assertion_run_id": assertion.assertion_run_id,
+        }
+        for assertion in reversed(field_assertions)
+    )
+
+    relationship_assertions = tuple(
+        engine.RelationshipAssertion(
+            assertion_id=assertion_id,
+            relationship_type_id="professor_company_role",
+            relationship_type_version="v1",
+            source_record_id=f"record:{assertion_id}",
+            source_endpoint=engine.IdentityReference(
+                identity_id=f"professor:{assertion_id}",
+                identity_space="source",
+                entity_type="professor",
+            ),
+            target_endpoint=engine.IdentityReference(
+                identity_id=f"company:{assertion_id}",
+                identity_space="source",
+                entity_type="company",
+            ),
+            attributes={"role": "founder"},
+            observed_at=NOW,
+            assertion_run_id="relationship-run",
+        )
+        for assertion_id in assertion_ids
+    )
+    relationship_rows = tuple(
+        {
+            "assertion_id": assertion.assertion_id,
+            "relationship_type_id": assertion.relationship_type_id,
+            "relationship_type_version": assertion.relationship_type_version,
+            "source_record_id": assertion.source_record_id,
+            "source_identity_id": assertion.source_endpoint.identity_id,
+            "source_entity_type": assertion.source_endpoint.entity_type,
+            "target_identity_id": assertion.target_endpoint.identity_id,
+            "target_entity_type": assertion.target_endpoint.entity_type,
+            "attributes": assertion.attributes,
+            "assertion_fingerprint_sha256": postgres._assertion_fingerprint(assertion),
+            "observed_at": assertion.observed_at,
+            "source_event_time": assertion.source_event_time,
+            "valid_from_temporal": assertion.valid_from,
+            "valid_to_temporal": assertion.valid_to,
+            "assertion_run_id": assertion.assertion_run_id,
+        }
+        for assertion in reversed(relationship_assertions)
+    )
+
+    store_type = postgres._PostgresCanonicalDecisionStore
+    assert store_type._load_field_assertions(
+        _StaticRowsConnection(field_rows), assertion_ids
+    ) == field_assertions
+    assert store_type._load_relationship_assertions(
+        _StaticRowsConnection(relationship_rows), assertion_ids
+    ) == relationship_assertions
+
+
+def test_decision_readback_canonicalizes_database_collation_order() -> None:
+    postgres = _postgres_module()
+    result = _decision_result()
+    field_template = result.canonical_decisions[0]
+    field_decisions = tuple(
+        field_template.model_copy(
+            update={
+                "decision_id": f"field-decision:{suffix}",
+                "canonical_identity_id": f"canonical:{suffix}",
+            }
+        )
+        for suffix in ("Z", "a")
+    )
+    field_rows = tuple(
+        {
+            "release_id": decision.release_id,
+            "decision_id": decision.decision_id,
+            "canonical_identity_id": decision.canonical_identity_id,
+            "field_path": decision.field_path,
+            "state": decision.state,
+            "policy_id": decision.policy.policy_id,
+            "policy_version": decision.policy.policy_version,
+            "policy_kind": decision.policy.policy_kind,
+            "policy_content_sha256": decision.policy.content_sha256,
+            "policy_effective_at": decision.policy.effective_at,
+            "method": decision.method,
+            "method_version": decision.method_version,
+            "decision_run_id": decision.decision_run_id,
+            "confidence": decision.confidence,
+            "rationale": decision.rationale,
+            "decided_at": decision.decided_at,
+            "supersedes_decision_id": decision.supersedes_decision_id,
+            "llm_trace": decision.llm_trace,
+            "human_review_resolution": decision.human_review_resolution,
+        }
+        for decision in reversed(field_decisions)
+    )
+
+    relationship_template = result.relationship_decisions[0]
+    relationship_decisions = tuple(
+        relationship_template.model_copy(
+            update={
+                "decision_id": f"relationship-decision:{suffix}",
+                "canonical_relationship_id": f"canonical-relationship:{suffix}",
+            }
+        )
+        for suffix in ("Z", "a")
+    )
+    relationship_rows = tuple(
+        {
+            "release_id": decision.release_id,
+            "decision_id": decision.decision_id,
+            "canonical_relationship_id": decision.canonical_relationship_id,
+            "relationship_type_id": decision.relationship_type_id,
+            "relationship_type_version": decision.relationship_type_version,
+            "source_canonical_identity_id": (
+                decision.source_canonical_identity_id
+            ),
+            "target_canonical_identity_id": (
+                decision.target_canonical_identity_id
+            ),
+            "state": decision.state,
+            "role_bindings": decision.role_bindings,
+            "policy_id": decision.policy.policy_id,
+            "policy_version": decision.policy.policy_version,
+            "policy_kind": decision.policy.policy_kind,
+            "policy_content_sha256": decision.policy.content_sha256,
+            "policy_effective_at": decision.policy.effective_at,
+            "method": decision.method,
+            "method_version": decision.method_version,
+            "decision_run_id": decision.decision_run_id,
+            "confidence": decision.confidence,
+            "rationale": decision.rationale,
+            "valid_from": None,
+            "valid_to": None,
+            "valid_from_temporal": decision.valid_from,
+            "valid_to_temporal": decision.valid_to,
+            "decided_at": decision.decided_at,
+            "supersedes_decision_id": decision.supersedes_decision_id,
+            "llm_trace": decision.llm_trace,
+            "human_review_resolution": decision.human_review_resolution,
+        }
+        for decision in reversed(relationship_decisions)
+    )
+
+    def role_rows(decisions: tuple[Any, ...]) -> tuple[dict[str, Any], ...]:
+        return tuple(
+            {
+                "decision_id": decision.decision_id,
+                "assertion_id": assertion_id,
+                "assertion_role": role,
+            }
+            for decision in decisions
+            for role, assertion_ids in (
+                ("candidate", decision.candidate_assertion_ids),
+                ("selected", decision.selected_assertion_ids),
+                ("conflicting", decision.conflicting_assertion_ids),
+            )
+            for assertion_id in assertion_ids
+        )
+
+    store_type = postgres._PostgresCanonicalDecisionStore
+    assert store_type._load_field_decisions(
+        _SequenceRowsConnection((field_rows, role_rows(field_decisions))),
+        release_id=result.release_id,
+        decision_run_id=result.decision_run_id,
+    ) == field_decisions
+    assert store_type._load_relationship_decisions(
+        _SequenceRowsConnection(
+            (relationship_rows, role_rows(relationship_decisions))
+        ),
+        release_id=result.release_id,
+        decision_run_id=result.decision_run_id,
+    ) == relationship_decisions
+
+
 def _store(target: _Target) -> Any:
     return _postgres_module().create_postgres_canonical_decision_store(
         database_url=target.database_url,

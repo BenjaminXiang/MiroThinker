@@ -192,6 +192,19 @@
       .message.error .bubble { color: var(--danger); background: #fff1f3; border-color: #efc9cf; }
 
       .answer { margin: 0; font-size: 14px; }
+      .evidence-disclosure {
+        margin-top: 12px;
+        padding-top: 10px;
+        border-top: 1px solid var(--line);
+      }
+      .evidence-summary {
+        width: fit-content;
+        color: var(--teal);
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .evidence-disclosure .subsection { margin-top: 8px; padding-top: 0; border-top: 0; }
       .response-meta { margin-top: 13px; color: var(--muted); font-size: 10px; }
       .trace-grid {
         display: grid;
@@ -312,7 +325,6 @@
             <p>证据优先 · 发布版本绑定 · 支持连续追问的多轮检索</p>
           </div>
         </div>
-        <a class="browse-link" href="/browse">返回数据目录</a>
       </header>
 
       <section class="demo-strip" aria-labelledby="demo-title">
@@ -733,13 +745,13 @@
         const view = messageShell("assistant");
         const answer = safePublicText(data.answer_text) || "当前版本未生成可安全展示的回答。";
         view.bubble.append(create("p", "answer", answer));
-        const trace = data.structured_payload?.canonical_v2;
-        renderTrace(view.bubble, trace);
-        renderCurrentWebEvidence(view.bubble, data.evidence || []);
-        renderCitations(view.bubble, data.citations || []);
-        renderContinuation(view.bubble, trace, originalQuery);
-        const answerStyle = data.answer_style === "llm_synthesized" ? "综合回答" : "模板回答";
-        view.bubble.append(create("div", "response-meta", `Canonical V2 · ${answerStyle}`));
+        if (Array.isArray(data.citations) && data.citations.length) {
+          const evidenceDetails = create("details", "evidence-disclosure");
+          evidenceDetails.open = false;
+          evidenceDetails.append(create("summary", "evidence-summary", "查看依据"));
+          renderCitations(evidenceDetails, data.citations || []);
+          view.bubble.append(evidenceDetails);
+        }
         messages.append(view.row);
         scrollToLatest();
       }

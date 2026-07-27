@@ -20,13 +20,21 @@ __all__ = ("evaluate_oracle_run",)
 
 _HERE = Path(__file__).resolve().parent
 _CONTRACT_PATH = _HERE / "claim_level_case_contract.py"
-_OUTPUT_NAMES = (
+_OUTPUT_NAMES_V1 = (
     "case-accounting-v1.jsonl",
     "claim-level-corpus-v1.jsonl",
     "source-snapshots-v1.jsonl",
 )
+_OUTPUT_NAMES_V2 = (
+    "case-accounting-v2.jsonl",
+    "claim-level-corpus-v2.jsonl",
+    "source-snapshots-v2.jsonl",
+    "human-review-bindings-v2.jsonl",
+    "exclusion-review-bindings-v2.jsonl",
+    "judge-calibration-v2.json",
+)
 _SHA256_PATTERN = r"^[0-9a-f]{64}$"
-_RUN_INPUT_KEYS = {
+_RUN_INPUT_V1_KEYS = {
     "exclusions",
     "expected_manifest_content_sha256",
     "human_reviews",
@@ -37,6 +45,39 @@ _RUN_INPUT_KEYS = {
     "schema_version",
     "selected_case_ids",
     "soft_metrics",
+}
+_RUN_INPUT_V2_KEYS = {
+    "expected_manifest_content_sha256",
+    "judge_policy",
+    "observations",
+    "review_binding",
+    "run_id",
+    "schema_version",
+    "selected_case_ids",
+    "soft_metrics",
+}
+_REVIEW_BINDING_KEYS = {
+    "counts",
+    "exclusion_review_bindings_sha256",
+    "export_content_sha256",
+    "export_id",
+    "human_review_bindings_sha256",
+    "judge_calibration_sha256",
+    "policy_id",
+}
+_GLOBAL_REVIEW_COUNTS = {
+    "calibration_probes": 60,
+    "contract_reviews": 29,
+    "exclusion_reviews": 23,
+    "human_actions": 112,
+}
+_GLOBAL_REVIEW_POLICY_ID = "single-human-global-stratified-v2"
+_GLOBAL_REVIEW_STRATA = {
+    "claim_evidence": 20,
+    "context_relationship": 10,
+    "identity_entity": 10,
+    "insufficiency_assessment": 10,
+    "safety_web": 10,
 }
 _OBSERVATION_KEYS = {
     "enumeration_report",
@@ -167,12 +208,32 @@ class _AcceptanceRecord(_StrictModel):
     content_sha256: str = Field(pattern=_SHA256_PATTERN)
 
 
+class _ReviewedAcceptanceRecord(_StrictModel):
+    artifact_identity: _ArtifactIdentity
+    accepted_case_ids: tuple[str, ...]
+    excluded_case_ids: tuple[str, ...]
+    case_count: int
+    human_review_count: int
+    excluded_case_count: int
+    calibration_probe_count: int
+    human_review_bindings_sha256: str = Field(pattern=_SHA256_PATTERN)
+    exclusion_review_bindings_sha256: str = Field(pattern=_SHA256_PATTERN)
+    judge_calibration_sha256: str = Field(pattern=_SHA256_PATTERN)
+    hard_outcome_sha256s: dict[str, str]
+    reviewer_states: dict[str, str]
+    review_export_id: str
+    review_export_content_sha256: str = Field(pattern=_SHA256_PATTERN)
+    review_policy_id: str
+    synthetic_fixture: Literal[False] = False
+    content_sha256: str = Field(pattern=_SHA256_PATTERN)
+
+
 class _EvaluationResult(_StrictModel):
     artifact_identity: _ArtifactIdentity
     corpus_summary: dict[str, int]
     case_results: tuple[_CaseResult, ...]
     acceptance_ready: bool
-    acceptance_record: _AcceptanceRecord | None = None
+    acceptance_record: _AcceptanceRecord | _ReviewedAcceptanceRecord | None = None
 
 
 for _model in (
@@ -182,6 +243,7 @@ for _model in (
     _JudgeOutcome,
     _CaseResult,
     _AcceptanceRecord,
+    _ReviewedAcceptanceRecord,
     _EvaluationResult,
 ):
     _model.model_rebuild(_types_namespace=globals())
@@ -284,7 +346,11 @@ def _load_manifest(manifest_path: Path) -> dict[str, Any]:
         raise ValueError("manifest file identity is not deterministic")
     _verify_self_hash(manifest, field="content_sha256", label="manifest")
     if (
-        manifest.get("schema_version") != "canonical-v2-s2c-corpus-manifest-v1"
+        manifest.get("schema_version")
+        not in {
+            "canonical-v2-s2c-corpus-manifest-v1",
+            "canonical-v2-s2c-corpus-manifest-v2",
+        }
         or manifest.get("case_contract_schema_version")
         != "canonical-v2-claim-level-case-contract-v1"
         or manifest.get("contract_version") != "claim-level-contract-v1"
@@ -315,6 +381,18 @@ def _load_manifest(manifest_path: Path) -> dict[str, Any]:
             raise ValueError(f"manifest {field} is invalid")
     if "synthetic_fixture" in manifest and manifest["synthetic_fixture"] is not True:
         raise ValueError("manifest synthetic fixture flag is invalid")
+    if manifest.get("schema_version") == "canonical-v2-s2c-corpus-manifest-v2" and (
+        manifest.get("approval_state") != "human_reviewed"
+        or manifest.get("acceptance_eligible_count") != 29
+        or manifest.get("review_state_counts")
+        != {
+            "blocked_missing_evidence": 23,
+            "human_reviewed": 29,
+            "pending_user_review": 0,
+        }
+        or "synthetic_fixture" in manifest
+    ):
+        raise ValueError("reviewed-v2 manifest review accounting mismatch")
     return manifest
 
 
@@ -332,6 +410,632 @@ def _validate_snapshot_record(snapshot: Mapping[str, Any]) -> None:
         raise ValueError("snapshot payload content hash mismatch")
 
 
+def _load_pretty_json(path: Path, *, label: str) -> dict[str, Any]:
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"{label} artifact is invalid JSON") from exc
+    if not isinstance(value, dict):
+        raise ValueError(f"{label} artifact must be an object")
+    expected = (
+        json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    ).encode("utf-8")
+    if path.read_bytes() != expected:
+        raise ValueError(f"{label} artifact is not deterministic")
+    return value
+
+
+def _validate_recomputed_calibration(
+    calibration: Mapping[str, Any], review: Mapping[str, Any]
+) -> None:
+    labels = calibration.get("calibration_labels")
+    judge = calibration.get("judge")
+    if (
+        calibration.get("schema_version") != "canonical-v2-judge-calibration-v2"
+        or calibration.get("export_id") != review["export_id"]
+        or calibration.get("export_content_sha256")
+        != review["export_content_sha256"]
+        or calibration.get("round_id") != review["round_id"]
+        or calibration.get("reviewer_id") != review["reviewer_id"]
+        or calibration.get("staff_id") != review["staff_id"]
+        or calibration.get("policy_id") != review["policy_id"]
+        or calibration.get("workload_counts") != _GLOBAL_REVIEW_COUNTS
+        or not isinstance(labels, list)
+        or len(labels) != 60
+        or not isinstance(judge, dict)
+    ):
+        raise ValueError("reviewed-v2 global60 judge calibration is invalid")
+
+    label_keys = {"decision", "event_id", "payload_sha256", "revision", "task_id"}
+    labels_by_task: dict[str, dict[str, Any]] = {}
+    for label in labels:
+        if not isinstance(label, dict):
+            raise ValueError("reviewed-v2 global60 judge calibration is invalid")
+        _require_exact_keys(label, label_keys, label="calibration label")
+        task_id = label.get("task_id")
+        revision = label.get("revision")
+        if (
+            not isinstance(task_id, str)
+            or not task_id.startswith("calibration:")
+            or task_id in labels_by_task
+            or label.get("decision") not in {"supported", "unsupported"}
+            or not isinstance(label.get("event_id"), str)
+            or not label["event_id"]
+            or not isinstance(label.get("payload_sha256"), str)
+            or len(label["payload_sha256"]) != 64
+            or isinstance(revision, bool)
+            or not isinstance(revision, int)
+            or revision < 1
+        ):
+            raise ValueError("reviewed-v2 global60 judge calibration is invalid")
+        labels_by_task[task_id] = label
+    _require_exact_keys(
+        judge,
+        {
+            "authorizations",
+            "attempts",
+            "completed_run",
+            "recoveries",
+            "responses",
+            "summary",
+            "visibility",
+        },
+        label="sealed calibration judge",
+    )
+    authorizations = judge.get("authorizations")
+    attempts = judge.get("attempts")
+    recoveries = judge.get("recoveries")
+    responses = judge.get("responses")
+    summary = judge.get("summary")
+    if (
+        judge.get("visibility") != "sealed"
+        or not isinstance(authorizations, list)
+        or len(authorizations) != 1
+        or not isinstance(authorizations[0], dict)
+        or not isinstance(attempts, list)
+        or not attempts
+        or not isinstance(recoveries, list)
+        or not isinstance(responses, list)
+        or len(responses) != 60
+        or not isinstance(summary, dict)
+    ):
+        raise ValueError("reviewed-v2 global60 judge calibration is invalid")
+    judgment_order = summary.get("judgments")
+    if not isinstance(judgment_order, list) or len(judgment_order) != 60:
+        raise ValueError("reviewed-v2 global60 judge calibration is invalid")
+    ordered_label_tasks = [
+        judgment.get("task_id") if isinstance(judgment, dict) else None
+        for judgment in judgment_order
+    ]
+    if (
+        any(not isinstance(task_id, str) for task_id in ordered_label_tasks)
+        or len(set(ordered_label_tasks)) != 60
+        or set(ordered_label_tasks) != set(labels_by_task)
+    ):
+        raise ValueError("reviewed-v2 global60 judge calibration is invalid")
+    human_snapshot_sha256 = _canonical_sha256(
+        [labels_by_task[str(task_id)] for task_id in ordered_label_tasks]
+    )
+
+    authorization = authorizations[0]
+    _require_exact_keys(
+        authorization,
+        {
+            "authorized_at",
+            "authorizer_id",
+            "calibration_policy_id",
+            "content_sha256",
+            "evidence_class",
+            "evidence_scope",
+            "judge_policy_id",
+            "model_id",
+            "provider_profile",
+            "round_id",
+            "schema_version",
+            "workload_content_sha256",
+        },
+        label="calibration authorization",
+    )
+    _verify_self_hash(
+        authorization,
+        field="content_sha256",
+        label="calibration authorization",
+    )
+    model_id = authorization.get("model_id")
+    artifact_identity = review.get("artifact_identity")
+    if (
+        authorization.get("schema_version") != "judge-authorization-v2"
+        or authorization.get("evidence_class") != "real_human_round"
+        or authorization.get("round_id") != review["round_id"]
+        or authorization.get("calibration_policy_id") != _GLOBAL_REVIEW_POLICY_ID
+        or authorization.get("judge_policy_id") != "evidence-bounded-judge-v1"
+        or authorization.get("evidence_scope") != "supplied_request_only"
+        or not isinstance(artifact_identity, dict)
+        or authorization.get("workload_content_sha256")
+        != artifact_identity.get("workload_content_sha256")
+        or not isinstance(model_id, str)
+        or not model_id
+    ):
+        raise ValueError("reviewed-v2 global60 judge calibration is invalid")
+
+    expected_command_sha256 = _canonical_sha256(
+        {
+            "action": "seal_calibration",
+            "expected_revision": 60,
+            "round_id": review["round_id"],
+        }
+    )
+    attempt_keys = {
+        "authorization_sha256",
+        "command_sha256",
+        "failure_code",
+        "finished_at",
+        "human_snapshot_sha256",
+        "idempotency_sha256",
+        "round_id",
+        "run_id",
+        "started_at",
+        "state",
+    }
+    attempts_by_run: dict[str, dict[str, Any]] = {}
+    completed_attempts: list[dict[str, Any]] = []
+    for attempt in attempts:
+        if not isinstance(attempt, dict):
+            raise ValueError("reviewed-v2 global60 judge calibration is invalid")
+        _require_exact_keys(attempt, attempt_keys, label="calibration judge attempt")
+        run_id = attempt.get("run_id")
+        state = attempt.get("state")
+        if (
+            not isinstance(run_id, str)
+            or not run_id
+            or run_id in attempts_by_run
+            or attempt.get("round_id") != review["round_id"]
+            or not isinstance(attempt.get("idempotency_sha256"), str)
+            or len(attempt["idempotency_sha256"]) != 64
+            or attempt.get("command_sha256") != expected_command_sha256
+            or attempt.get("human_snapshot_sha256") != human_snapshot_sha256
+            or attempt.get("authorization_sha256")
+            != authorization["content_sha256"]
+            or state not in {"completed", "failed"}
+            or (state == "completed" and attempt.get("failure_code") is not None)
+            or (state == "failed" and not isinstance(attempt.get("failure_code"), str))
+        ):
+            raise ValueError("reviewed-v2 global60 judge calibration is invalid")
+        attempts_by_run[run_id] = attempt
+        if state == "completed":
+            completed_attempts.append(attempt)
+    if len(completed_attempts) != 1 or judge.get("completed_run") != completed_attempts[0]:
+        raise ValueError("reviewed-v2 global60 judge calibration is invalid")
+
+    recovery_keys = {
+        "authorization_sha256",
+        "command_sha256",
+        "human_snapshot_sha256",
+        "operator_staff_id",
+        "reason",
+        "recovered_at",
+        "recovery_id",
+        "round_id",
+        "run_id",
+    }
+    recovered_runs: set[str] = set()
+    for recovery in recoveries:
+        if not isinstance(recovery, dict):
+            raise ValueError("reviewed-v2 global60 judge calibration is invalid")
+        _require_exact_keys(recovery, recovery_keys, label="calibration recovery")
+        run_id = recovery.get("run_id")
+        attempt = attempts_by_run.get(str(run_id))
+        operator = recovery.get("operator_staff_id")
+        if (
+            attempt is None
+            or not isinstance(run_id, str)
+            or run_id in recovered_runs
+            or attempt.get("state") != "failed"
+            or attempt.get("failure_code") != "operator_abandoned_after_crash"
+            or recovery.get("round_id") != review["round_id"]
+            or recovery.get("command_sha256") != expected_command_sha256
+            or recovery.get("human_snapshot_sha256") != human_snapshot_sha256
+            or recovery.get("authorization_sha256")
+            != authorization["content_sha256"]
+            or not isinstance(operator, str)
+            or not operator
+            or recovery.get("reason") != "process_crash_confirmed"
+        ):
+            raise ValueError("reviewed-v2 global60 judge calibration is invalid")
+        recovered_runs.add(run_id)
+
+    response_keys = {
+        "judged_at",
+        "request_sha256",
+        "response",
+        "response_sha256",
+        "task_id",
+    }
+    response_body_keys = {
+        "decision",
+        "evidence_scope",
+        "model_id",
+        "policy_id",
+        "request_sha256",
+        "schema_version",
+        "used_external_memory",
+    }
+    responses_by_task: dict[str, dict[str, Any]] = {}
+    for row in responses:
+        if not isinstance(row, dict):
+            raise ValueError("reviewed-v2 global60 judge calibration is invalid")
+        _require_exact_keys(row, response_keys, label="calibration response")
+        task_id = row.get("task_id")
+        response = row.get("response")
+        if not isinstance(response, dict):
+            raise ValueError("reviewed-v2 global60 judge calibration is invalid")
+        _require_exact_keys(
+            response,
+            response_body_keys,
+            label="calibration response body",
+        )
+        if (
+            not isinstance(task_id, str)
+            or task_id in responses_by_task
+            or task_id not in labels_by_task
+            or response.get("schema_version")
+            != "canonical-v2-human-calibration-judge-decision-v2"
+            or response.get("model_id") != model_id
+            or response.get("policy_id") != "evidence-bounded-judge-v1"
+            or response.get("request_sha256") != row.get("request_sha256")
+            or response.get("decision") not in {"supported", "unsupported"}
+            or response.get("evidence_scope") != "supplied_request_only"
+            or response.get("used_external_memory") is not False
+            or row.get("response_sha256") != _canonical_sha256(response)
+        ):
+            raise ValueError("reviewed-v2 global60 judge calibration is invalid")
+        responses_by_task[task_id] = row
+
+    summary_keys = {
+        "agreement",
+        "authorization_sha256",
+        "calibration_policy_id",
+        "confusion_matrix",
+        "critical_false_accepts",
+        "evidence_class",
+        "gates",
+        "human_snapshot_sha256",
+        "human_supported",
+        "human_unsupported",
+        "judge_policy_id",
+        "judgments",
+        "model_id",
+        "pair_count",
+        "passed",
+        "stratum_counts",
+        "unsupported_critical_probes",
+    }
+    _require_exact_keys(summary, summary_keys, label="calibration summary")
+    judgments = summary.get("judgments")
+    if (
+        summary.get("evidence_class") != "real_human_round"
+        or summary.get("model_id") != model_id
+        or summary.get("calibration_policy_id") != _GLOBAL_REVIEW_POLICY_ID
+        or summary.get("judge_policy_id") != "evidence-bounded-judge-v1"
+        or summary.get("authorization_sha256")
+        != authorization["content_sha256"]
+        or summary.get("human_snapshot_sha256") != human_snapshot_sha256
+        or not isinstance(judgments, list)
+        or len(judgments) != 60
+    ):
+        raise ValueError("reviewed-v2 global60 judge calibration is invalid")
+
+    judgment_keys = {
+        "critical_probe",
+        "human_decision",
+        "model_decision",
+        "request_sha256",
+        "response_sha256",
+        "sample_id",
+        "stratum",
+        "task_id",
+    }
+    judgments_by_task: dict[str, dict[str, Any]] = {}
+    strata: Counter[str] = Counter()
+    confusion: Counter[str] = Counter()
+    human_supported = 0
+    matches = 0
+    unsupported_critical = 0
+    critical_false_accepts = 0
+    for judgment in judgments:
+        if not isinstance(judgment, dict):
+            raise ValueError("reviewed-v2 global60 judge calibration is invalid")
+        _require_exact_keys(judgment, judgment_keys, label="calibration judgment")
+        task_id = judgment.get("task_id")
+        response_row = responses_by_task.get(str(task_id))
+        label = labels_by_task.get(str(task_id))
+        human_decision = judgment.get("human_decision")
+        model_decision = judgment.get("model_decision")
+        stratum = judgment.get("stratum")
+        critical_probe = judgment.get("critical_probe")
+        if (
+            not isinstance(task_id, str)
+            or task_id in judgments_by_task
+            or label is None
+            or response_row is None
+            or judgment.get("sample_id") != task_id.removeprefix("calibration:")
+            or stratum not in _GLOBAL_REVIEW_STRATA
+            or not isinstance(critical_probe, bool)
+            or human_decision != label["decision"]
+            or model_decision != response_row["response"]["decision"]
+            or judgment.get("request_sha256") != response_row["request_sha256"]
+            or judgment.get("response_sha256") != response_row["response_sha256"]
+        ):
+            raise ValueError("reviewed-v2 global60 judge calibration is invalid")
+        judgments_by_task[task_id] = judgment
+        strata[str(stratum)] += 1
+        human_supported += human_decision == "supported"
+        matches += human_decision == model_decision
+        confusion[f"human_{human_decision}_model_{model_decision}"] += 1
+        is_unsupported_critical = (
+            human_decision == "unsupported" and critical_probe is True
+        )
+        unsupported_critical += is_unsupported_critical
+        critical_false_accepts += (
+            is_unsupported_critical and model_decision == "supported"
+        )
+    if set(judgments_by_task) != set(labels_by_task):
+        raise ValueError("reviewed-v2 global60 judge calibration is invalid")
+
+    human_unsupported = 60 - human_supported
+    agreement = matches / 60
+    gates = {
+        "exact_pair_count": True,
+        "exact_stratum_quotas": dict(strata) == _GLOBAL_REVIEW_STRATA,
+        "minimum_agreement": agreement >= 0.80,
+        "minimum_supported_labels": human_supported >= 10,
+        "minimum_unsupported_labels": human_unsupported >= 10,
+        "minimum_unsupported_critical_probes": unsupported_critical >= 5,
+        "maximum_critical_false_accepts": critical_false_accepts <= 0,
+    }
+    expected_aggregate = {
+        "agreement": agreement,
+        "confusion_matrix": {
+            "human_supported_model_supported": confusion[
+                "human_supported_model_supported"
+            ],
+            "human_supported_model_unsupported": confusion[
+                "human_supported_model_unsupported"
+            ],
+            "human_unsupported_model_supported": confusion[
+                "human_unsupported_model_supported"
+            ],
+            "human_unsupported_model_unsupported": confusion[
+                "human_unsupported_model_unsupported"
+            ],
+        },
+        "critical_false_accepts": critical_false_accepts,
+        "gates": gates,
+        "human_supported": human_supported,
+        "human_unsupported": human_unsupported,
+        "pair_count": 60,
+        "passed": all(gates.values()),
+        "stratum_counts": dict(sorted(strata.items())),
+        "unsupported_critical_probes": unsupported_critical,
+    }
+    if any(summary.get(field) != value for field, value in expected_aggregate.items()):
+        raise ValueError("reviewed-v2 global60 judge calibration is invalid")
+
+
+def _admit_reviewed_v2(
+    *,
+    manifest_path: Path,
+    manifest: Mapping[str, Any],
+    contracts_by_case: Mapping[str, Mapping[str, Any]],
+) -> dict[str, Any]:
+    predecessor = manifest.get("predecessor")
+    review = manifest.get("review_application")
+    if not isinstance(predecessor, dict) or set(predecessor) != {
+        "corpus_id",
+        "manifest_content_sha256",
+        "manifest_raw_sha256",
+        "output_sha256s",
+        "schema_version",
+    }:
+        raise ValueError("reviewed-v2 predecessor binding is invalid")
+    if (
+        predecessor.get("schema_version") != "canonical-v2-s2c-corpus-manifest-v1"
+        or predecessor.get("corpus_id") != "canonical-v2-s2c-v1"
+        or not all(
+            isinstance(predecessor.get(field), str)
+            and len(predecessor[field]) == 64
+            for field in ("manifest_content_sha256", "manifest_raw_sha256")
+        )
+        or not isinstance(predecessor.get("output_sha256s"), dict)
+        or set(predecessor["output_sha256s"]) != set(_OUTPUT_NAMES_V1)
+    ):
+        raise ValueError("reviewed-v2 predecessor identity is invalid")
+    review_keys = {
+        "artifact_identity",
+        "counts",
+        "evidence_class",
+        "exclusion_review_bindings_sha256",
+        "export_content_sha256",
+        "export_id",
+        "export_raw_sha256",
+        "human_review_bindings_sha256",
+        "judge_calibration_sha256",
+        "policy_id",
+        "reviewer_id",
+        "round_id",
+        "schema_version",
+        "staff_id",
+    }
+    if not isinstance(review, dict) or set(review) != review_keys:
+        raise ValueError("reviewed-v2 review application binding is invalid")
+    if (
+        review.get("schema_version")
+        != "canonical-v2-reviewed-application-binding-v2"
+        or review.get("evidence_class") != "real_human_round"
+        or review.get("policy_id") != _GLOBAL_REVIEW_POLICY_ID
+        or review.get("counts") != _GLOBAL_REVIEW_COUNTS
+        or not isinstance(review.get("export_id"), str)
+        or not review["export_id"]
+        or not isinstance(review.get("round_id"), str)
+        or not review["round_id"]
+        or not isinstance(review.get("reviewer_id"), str)
+        or not review["reviewer_id"].startswith("human:")
+        or not isinstance(review.get("staff_id"), str)
+        or not review["staff_id"]
+        or any(
+            not isinstance(review.get(field), str) or len(review[field]) != 64
+            for field in (
+                "export_content_sha256",
+                "export_raw_sha256",
+                "human_review_bindings_sha256",
+                "exclusion_review_bindings_sha256",
+                "judge_calibration_sha256",
+            )
+        )
+    ):
+        raise ValueError("reviewed-v2 export/policy/count identity is invalid")
+    artifact_identity = review.get("artifact_identity")
+    predecessor_outputs = predecessor["output_sha256s"]
+    if not isinstance(artifact_identity, dict) or any(
+        artifact_identity.get(field) != expected
+        for field, expected in {
+            "s2c_manifest_raw_sha256": predecessor["manifest_raw_sha256"],
+            "s2c_manifest_content_sha256": predecessor[
+                "manifest_content_sha256"
+            ],
+            "s2c_corpus_raw_sha256": predecessor_outputs[
+                "claim-level-corpus-v1.jsonl"
+            ],
+            "s2c_accounting_raw_sha256": predecessor_outputs[
+                "case-accounting-v1.jsonl"
+            ],
+            "s2c_snapshots_raw_sha256": predecessor_outputs[
+                "source-snapshots-v1.jsonl"
+            ],
+        }.items()
+    ):
+        raise ValueError("reviewed-v2 predecessor/export identity is cross-wired")
+
+    human_path = manifest_path.with_name("human-review-bindings-v2.jsonl")
+    exclusion_path = manifest_path.with_name("exclusion-review-bindings-v2.jsonl")
+    calibration_path = manifest_path.with_name("judge-calibration-v2.json")
+    human = _load_jsonl(human_path, label="human review bindings")
+    exclusions = _load_jsonl(exclusion_path, label="exclusion review bindings")
+    calibration = _load_pretty_json(calibration_path, label="judge calibration")
+    if (
+        hashlib.sha256(human_path.read_bytes()).hexdigest()
+        != review["human_review_bindings_sha256"]
+        or hashlib.sha256(exclusion_path.read_bytes()).hexdigest()
+        != review["exclusion_review_bindings_sha256"]
+    ):
+        raise ValueError("reviewed-v2 review binding hash mismatch")
+    _verify_self_hash(calibration, field="content_sha256", label="judge calibration")
+    if calibration["content_sha256"] != review["judge_calibration_sha256"]:
+        raise ValueError("reviewed-v2 judge calibration binding mismatch")
+
+    binding_keys = {
+        "case_id",
+        "content_sha256",
+        "decision",
+        "derived_contract_content_sha256",
+        "event_id",
+        "event_payload_sha256",
+        "event_revision",
+        "export_content_sha256",
+        "export_id",
+        "hard_requirement_ids",
+        "policy_id",
+        "predecessor_contract_content_sha256",
+        "rationale",
+        "reviewer_id",
+        "round_id",
+        "schema_version",
+        "snapshot_ids",
+        "source_case_id",
+        "staff_id",
+        "submitted_at",
+    }
+
+    def validate_bindings(
+        rows: list[dict[str, Any]],
+        *,
+        schema_version: str,
+        decision: str,
+        accepting: bool,
+    ) -> None:
+        for row in rows:
+            _require_exact_keys(row, binding_keys, label="review binding")
+            _verify_self_hash(row, field="content_sha256", label="review binding")
+            contract = contracts_by_case.get(row.get("case_id"))
+            if (
+                row.get("schema_version") != schema_version
+                or row.get("decision") != decision
+                or contract is None
+                or bool(contract["acceptance_eligible"]) is not accepting
+                or (
+                    not accepting
+                    and contract["review_state"] != "blocked_missing_evidence"
+                )
+                or row.get("source_case_id") != contract["source_case_id"]
+                or row.get("derived_contract_content_sha256")
+                != contract["content_sha256"]
+                or row.get("hard_requirement_ids")
+                != contract["outcome_policy"]["hard_requirement_ids"]
+                or row.get("snapshot_ids")
+                != [item["snapshot_id"] for item in contract["source_snapshots"]]
+                or row.get("export_id") != review["export_id"]
+                or row.get("export_content_sha256")
+                != review["export_content_sha256"]
+                or row.get("policy_id") != review["policy_id"]
+                or row.get("round_id") != review["round_id"]
+                or row.get("reviewer_id") != review["reviewer_id"]
+                or row.get("staff_id") != review["staff_id"]
+            ):
+                raise ValueError("reviewed-v2 review binding identity mismatch")
+
+    if len(human) != 29 or len(exclusions) != 23:
+        raise ValueError("reviewed-v2 contract/exclusion review count mismatch")
+    validate_bindings(
+        human,
+        schema_version="canonical-v2-human-review-binding-v2",
+        decision="approved",
+        accepting=True,
+    )
+    validate_bindings(
+        exclusions,
+        schema_version="canonical-v2-exclusion-review-binding-v2",
+        decision="accept_exclusion",
+        accepting=False,
+    )
+    human_ids = [row["case_id"] for row in human]
+    exclusion_ids = [row["case_id"] for row in exclusions]
+    _require_unique(human_ids, label="human-reviewed case IDs")
+    _require_unique(exclusion_ids, label="excluded case IDs")
+    if (
+        set(human_ids)
+        != {
+            case_id
+            for case_id, contract in contracts_by_case.items()
+            if contract["acceptance_eligible"]
+        }
+        or set(exclusion_ids)
+        != {
+            case_id
+            for case_id, contract in contracts_by_case.items()
+            if contract["review_state"] == "blocked_missing_evidence"
+        }
+    ):
+        raise ValueError("reviewed-v2 case disposition binding is incomplete")
+
+    _validate_recomputed_calibration(calibration, review)
+    return {
+        "human": tuple(human),
+        "exclusions": tuple(exclusions),
+        "calibration": calibration,
+        "review": dict(review),
+    }
+
+
 def _admit_artifacts(
     manifest_path: Path, expected_manifest_content_sha256: str
 ) -> tuple[
@@ -341,14 +1045,17 @@ def _admit_artifacts(
     dict[str, dict[str, Any]],
     _ArtifactIdentity,
     dict[str, int],
+    dict[str, Any] | None,
 ]:
     manifest = _load_manifest(manifest_path)
     if manifest.get("content_sha256") != expected_manifest_content_sha256:
         raise ValueError("manifest identity mismatch")
+    v2 = manifest["schema_version"] == "canonical-v2-s2c-corpus-manifest-v2"
+    output_names = _OUTPUT_NAMES_V2 if v2 else _OUTPUT_NAMES_V1
     outputs = manifest.get("outputs")
-    if not isinstance(outputs, dict) or set(outputs) != set(_OUTPUT_NAMES):
+    if not isinstance(outputs, dict) or set(outputs) != set(output_names):
         raise ValueError("manifest output artifact identity is incomplete")
-    for name in _OUTPUT_NAMES:
+    for name in output_names:
         path = manifest_path.with_name(name)
         identity = outputs[name]
         if not isinstance(identity, dict) or set(identity) != {"sha256"}:
@@ -356,16 +1063,17 @@ def _admit_artifacts(
         if identity["sha256"] != _file_sha256(path):
             raise ValueError(f"artifact hash mismatch: {name}")
 
+    suffix = "v2" if v2 else "v1"
     contract_rows = _load_jsonl(
-        manifest_path.with_name("claim-level-corpus-v1.jsonl"),
+        manifest_path.with_name(f"claim-level-corpus-{suffix}.jsonl"),
         label="contract corpus",
     )
     account_rows = _load_jsonl(
-        manifest_path.with_name("case-accounting-v1.jsonl"),
+        manifest_path.with_name(f"case-accounting-{suffix}.jsonl"),
         label="case accounting",
     )
     snapshot_rows = _load_jsonl(
-        manifest_path.with_name("source-snapshots-v1.jsonl"),
+        manifest_path.with_name(f"source-snapshots-{suffix}.jsonl"),
         label="source snapshots",
     )
     validated_contracts = _contract_module().validate_case_contracts(
@@ -566,6 +1274,15 @@ def _admit_artifacts(
         "pending_user_review": review_counts["pending_user_review"],
         "acceptance_eligible": eligible_count,
     }
+    review_evidence = (
+        _admit_reviewed_v2(
+            manifest_path=manifest_path,
+            manifest=manifest,
+            contracts_by_case=contracts_by_case,
+        )
+        if v2
+        else None
+    )
     return (
         manifest,
         contracts_by_case,
@@ -573,25 +1290,29 @@ def _admit_artifacts(
         snapshots_by_id,
         artifact_identity,
         corpus_summary,
+        review_evidence,
     )
 
 
 def _validate_run_input(run_input: Mapping[str, Any]) -> None:
-    _require_exact_keys(run_input, _RUN_INPUT_KEYS, label="oracle run input")
-    _canonical_bytes(run_input)
-    if run_input.get("schema_version") != "canonical-v2-oracle-run-input-v1":
+    schema_version = run_input.get("schema_version")
+    if schema_version == "canonical-v2-oracle-run-input-v1":
+        expected_keys = _RUN_INPUT_V1_KEYS
+    elif schema_version == "canonical-v2-oracle-run-input-v2":
+        expected_keys = _RUN_INPUT_V2_KEYS
+    else:
         raise ValueError("oracle run input schema version mismatch")
+    _require_exact_keys(run_input, expected_keys, label="oracle run input")
+    _canonical_bytes(run_input)
     if not isinstance(run_input.get("run_id"), str) or not run_input["run_id"]:
         raise ValueError("oracle run ID is required")
     expected_sha = run_input.get("expected_manifest_content_sha256")
     if not isinstance(expected_sha, str) or len(expected_sha) != 64:
         raise ValueError("expected manifest identity is invalid")
-    for field in (
-        "exclusions",
-        "human_reviews",
-        "judge_calibrations",
-        "selected_case_ids",
-    ):
+    list_fields = ["selected_case_ids"]
+    if schema_version == "canonical-v2-oracle-run-input-v1":
+        list_fields.extend(("exclusions", "human_reviews", "judge_calibrations"))
+    for field in list_fields:
         if not isinstance(run_input.get(field), list):
             raise ValueError(f"oracle run input {field} must be a list")
     for field in ("judge_policy", "observations", "soft_metrics"):
@@ -602,6 +1323,28 @@ def _validate_run_input(run_input: Mapping[str, Any]) -> None:
     ):
         raise ValueError("judge policy identity is invalid")
     _require_unique(run_input["selected_case_ids"], label="selected case IDs")
+    if schema_version == "canonical-v2-oracle-run-input-v2":
+        binding = run_input.get("review_binding")
+        if not isinstance(binding, dict):
+            raise ValueError("review binding must be an object")
+        _require_exact_keys(binding, _REVIEW_BINDING_KEYS, label="review binding")
+        if (
+            binding.get("policy_id") != _GLOBAL_REVIEW_POLICY_ID
+            or binding.get("counts") != _GLOBAL_REVIEW_COUNTS
+            or not isinstance(binding.get("export_id"), str)
+            or not binding["export_id"]
+            or any(
+                not isinstance(binding.get(field), str)
+                or len(binding[field]) != 64
+                for field in (
+                    "export_content_sha256",
+                    "human_review_bindings_sha256",
+                    "exclusion_review_bindings_sha256",
+                    "judge_calibration_sha256",
+                )
+            )
+        ):
+            raise ValueError("review binding policy/count/identity is invalid")
 
 
 def _validate_observation(observation: Mapping[str, Any]) -> None:
@@ -1257,6 +2000,122 @@ def _try_accept(
     )
 
 
+def _bind_reviewed_v2_run(
+    *,
+    manifest: Mapping[str, Any],
+    contracts_by_case: Mapping[str, Mapping[str, Any]],
+    run_input: Mapping[str, Any],
+    review_evidence: Mapping[str, Any] | None,
+) -> None:
+    manifest_is_v2 = (
+        manifest.get("schema_version") == "canonical-v2-s2c-corpus-manifest-v2"
+    )
+    input_is_v2 = run_input.get("schema_version") == "canonical-v2-oracle-run-input-v2"
+    if manifest_is_v2 != input_is_v2:
+        raise ValueError("manifest/run-input version binding mismatch")
+    if not manifest_is_v2:
+        return
+    if review_evidence is None:
+        raise ValueError("reviewed-v2 evidence binding is unavailable")
+    review = review_evidence["review"]
+    expected_binding = {
+        "export_id": review["export_id"],
+        "export_content_sha256": review["export_content_sha256"],
+        "policy_id": review["policy_id"],
+        "counts": review["counts"],
+        "human_review_bindings_sha256": review[
+            "human_review_bindings_sha256"
+        ],
+        "exclusion_review_bindings_sha256": review[
+            "exclusion_review_bindings_sha256"
+        ],
+        "judge_calibration_sha256": review["judge_calibration_sha256"],
+    }
+    if run_input.get("review_binding") != expected_binding:
+        raise ValueError("reviewed-v2 run-input review binding identity mismatch")
+    calibration = review_evidence["calibration"]
+    calibration_summary = calibration["judge"]["summary"]
+    calibrated_judge = {
+        "model_id": calibration_summary["model_id"],
+        "policy_id": calibration_summary["judge_policy_id"],
+    }
+    if run_input.get("judge_policy") != calibrated_judge:
+        raise ValueError("reviewed-v2 calibrated judge identity mismatch")
+    eligible_ids = tuple(
+        case_id
+        for case_id, contract in contracts_by_case.items()
+        if contract["acceptance_eligible"]
+    )
+    if tuple(run_input["selected_case_ids"]) != eligible_ids:
+        raise ValueError("reviewed-v2 run must select exactly all reviewed contracts")
+
+
+def _try_accept_reviewed_v2(
+    *,
+    contracts_by_case: Mapping[str, Mapping[str, Any]],
+    artifact_identity: _ArtifactIdentity,
+    case_results: tuple[_CaseResult, ...],
+    review_evidence: Mapping[str, Any],
+) -> _ReviewedAcceptanceRecord | None:
+    eligible_ids = tuple(
+        case_id
+        for case_id, contract in contracts_by_case.items()
+        if contract["acceptance_eligible"]
+    )
+    results_by_case = {result.case_id: result for result in case_results}
+    if (
+        tuple(result.case_id for result in case_results) != eligible_ids
+        or any(not results_by_case[case_id].hard_passed for case_id in eligible_ids)
+        or any(
+            not outcome.acceptance_usable
+            for result in case_results
+            for outcome in result.judge_outcomes
+        )
+    ):
+        return None
+    human = review_evidence["human"]
+    exclusions = review_evidence["exclusions"]
+    calibration = review_evidence["calibration"]
+    review = review_evidence["review"]
+    excluded_ids = tuple(row["case_id"] for row in exclusions)
+    hard_outcome_sha256s = {
+        result.case_id: _canonical_sha256(
+            [outcome.model_dump(mode="json") for outcome in result.hard_outcomes]
+        )
+        for result in case_results
+    }
+    draft = _ReviewedAcceptanceRecord(
+        artifact_identity=artifact_identity,
+        accepted_case_ids=eligible_ids,
+        excluded_case_ids=excluded_ids,
+        case_count=len(eligible_ids),
+        human_review_count=len(human),
+        excluded_case_count=len(exclusions),
+        calibration_probe_count=len(calibration["calibration_labels"]),
+        human_review_bindings_sha256=review[
+            "human_review_bindings_sha256"
+        ],
+        exclusion_review_bindings_sha256=review[
+            "exclusion_review_bindings_sha256"
+        ],
+        judge_calibration_sha256=review["judge_calibration_sha256"],
+        hard_outcome_sha256s=hard_outcome_sha256s,
+        reviewer_states={review["reviewer_id"]: "approved"},
+        review_export_id=review["export_id"],
+        review_export_content_sha256=review["export_content_sha256"],
+        review_policy_id=review["policy_id"],
+        synthetic_fixture=False,
+        content_sha256="0" * 64,
+    )
+    return draft.model_copy(
+        update={
+            "content_sha256": _canonical_sha256(
+                draft.model_dump(mode="json", exclude={"content_sha256"})
+            )
+        }
+    )
+
+
 def evaluate_oracle_run(
     manifest_path: str | Path,
     run_input: Mapping[str, Any],
@@ -1276,7 +2135,15 @@ def evaluate_oracle_run(
         snapshots_by_id,
         artifact_identity,
         corpus_summary,
+        review_evidence,
     ) = _admit_artifacts(path, run_input["expected_manifest_content_sha256"])
+
+    _bind_reviewed_v2_run(
+        manifest=manifest,
+        contracts_by_case=contracts_by_case,
+        run_input=run_input,
+        review_evidence=review_evidence,
+    )
 
     selected_ids = tuple(run_input["selected_case_ids"])
     if any(case_id not in contracts_by_case for case_id in selected_ids):
@@ -1296,14 +2163,22 @@ def evaluate_oracle_run(
         )
         for case_id in selected_ids
     )
-    record = _try_accept(
-        manifest=manifest,
-        contracts_by_case=contracts_by_case,
-        accounts_by_source=accounts_by_source,
-        artifact_identity=artifact_identity,
-        case_results=case_results,
-        run_input=run_input,
-    )
+    if review_evidence is None:
+        record = _try_accept(
+            manifest=manifest,
+            contracts_by_case=contracts_by_case,
+            accounts_by_source=accounts_by_source,
+            artifact_identity=artifact_identity,
+            case_results=case_results,
+            run_input=run_input,
+        )
+    else:
+        record = _try_accept_reviewed_v2(
+            contracts_by_case=contracts_by_case,
+            artifact_identity=artifact_identity,
+            case_results=case_results,
+            review_evidence=review_evidence,
+        )
     return _EvaluationResult(
         artifact_identity=artifact_identity,
         corpus_summary=corpus_summary,

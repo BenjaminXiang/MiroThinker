@@ -48,6 +48,8 @@ _RELATIONSHIP_ENDPOINTS = {
     ("company_has_patent", "patent_to_company"): ("patent", "company"),
     ("professor_authored_paper", "professor_to_paper"): ("professor", "paper"),
     ("professor_authored_paper", "paper_to_professor"): ("paper", "professor"),
+    ("professor_company_role", "professor_to_company"): ("professor", "company"),
+    ("professor_company_role", "company_to_professor"): ("company", "professor"),
     ("person_company_role", "person_to_company"): ("person", "company"),
     ("technology_company_relationship", "technology_to_company"): (
         "technology_route",
@@ -77,6 +79,28 @@ _PAPER_TO_PROFESSOR_QUERY_PATH = (
     "paper_to_professor",
     "paper",
     "professor",
+)
+_PROFESSOR_TO_COMPANY_QUERY_PATH = (
+    "professor_company_role",
+    "professor_to_company",
+    "professor",
+    "company",
+)
+_COMPANY_TO_PROFESSOR_QUERY_PATH = (
+    "professor_company_role",
+    "company_to_professor",
+    "company",
+    "professor",
+)
+_PUBLIC_RELATIONSHIP_QUERY_PATHS = frozenset(
+    {
+        _COMPANY_TO_PATENT_QUERY_PATH,
+        _PATENT_TO_COMPANY_QUERY_PATH,
+        _PROFESSOR_TO_PAPER_QUERY_PATH,
+        _PAPER_TO_PROFESSOR_QUERY_PATH,
+        _PROFESSOR_TO_COMPANY_QUERY_PATH,
+        _COMPANY_TO_PROFESSOR_QUERY_PATH,
+    }
 )
 _TECHNOLOGY_RELATIONSHIP_STATES = {
     "entity_discusses_or_mentions_technology": "discussion_or_mention",
@@ -124,6 +148,10 @@ class InvalidRetrievalPlanError(ValueError):
 
 class MissingAmbiguityPolicyError(ValueError):
     """Ambiguity candidates require an explicitly injected policy."""
+
+
+class KnowledgeReadIntegrityError(ValueError):
+    """A read implementation rejected its bound release or physical evidence."""
 
 
 class QueryPlanningPolicy(_ContentModel):
@@ -276,6 +304,7 @@ class QueryPlanningRequest(ContractModel):
     original_query: str
     as_of: datetime
     displayed_entity_ids: tuple[str, ...] = ()
+    displayed_entity_names: tuple[str, ...] = ()
     enumeration_context: EnumerationPlanningContext | None = None
     ambiguity_candidates: tuple[AmbiguityCandidate, ...] = ()
     original_query_sha256: str = Field(default=_ZERO_SHA256, pattern=r"^[0-9a-f]{64}$")
@@ -287,6 +316,17 @@ class QueryPlanningRequest(ContractModel):
 
     @model_validator(mode="after")
     def bind_request(self) -> QueryPlanningRequest:
+        if self.displayed_entity_names and len(self.displayed_entity_names) != len(
+            self.displayed_entity_ids
+        ):
+            raise ValueError(
+                "displayed entity names must align with displayed entity IDs"
+            )
+        if any(
+            not name.strip() or name != name.strip()
+            for name in self.displayed_entity_names
+        ):
+            raise ValueError("displayed entity names must be normalized and non-empty")
         query_hash = hashlib.sha256(self.original_query.encode("utf-8")).hexdigest()
         manifest_hash = _canonical_sha256(
             [
@@ -322,6 +362,19 @@ class QueryViewProposal(_ContentModel):
     producer_version: str
     protected_slot_ids: tuple[str, ...] = ()
     bound_entity_ids: tuple[str, ...] = ()
+    bound_entity_names: tuple[str, ...] = ()
+
+    @model_validator(mode="after")
+    def validate_bound_entities(self) -> QueryViewProposal:
+        if self.bound_entity_names and len(self.bound_entity_names) != len(
+            self.bound_entity_ids
+        ):
+            raise ValueError("bound entity names must align with bound entity IDs")
+        if any(
+            not name.strip() or name != name.strip() for name in self.bound_entity_names
+        ):
+            raise ValueError("bound entity names must be normalized and non-empty")
+        return self
 
 
 class RelationshipPathProposal(ContractModel):
@@ -2877,6 +2930,183 @@ class LocalPaperProfessorRelationshipTrace(ContractModel):
         return self
 
 
+class LocalSourceRelationshipTrace(ContractModel):
+    """Compact proof for a source-bound canonical relationship traversal."""
+
+    target_id: str = Field(min_length=1)
+    target_marker_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    manifest_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    index_result_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    publication_verification_evidence_ids: tuple[str, ...] = Field(min_length=1)
+    release_id: str = Field(min_length=1)
+    lane_request_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    relationship_enumeration_policy_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    displayed_entity_ids: tuple[str, ...] = Field(min_length=1, max_length=1)
+    displayed_entity_id: str = Field(min_length=1)
+    protected_slot_id: str = Field(min_length=1)
+    protected_slot_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    query_as_of: datetime
+    query_relationship_type_id: str = Field(min_length=1)
+    query_direction: str = Field(min_length=1)
+    query_source_type: Literal["company", "paper", "patent", "professor"]
+    query_target_type: Literal["company", "paper", "patent", "professor"]
+    relationship_request_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    relationship_result_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    relationship_snapshot_as_of: datetime
+    canonical_relationship_id: str = Field(min_length=1)
+    current_relationship_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    relationship_type_id: str = Field(min_length=1)
+    relationship_type_version: Literal["canonical-v2-relationship-v1"]
+    physical_direction: Literal["forward", "inverse"]
+    physical_source_id: str = Field(min_length=1)
+    physical_source_type: Literal["company", "paper", "patent", "professor"]
+    physical_target_id: str = Field(min_length=1)
+    physical_target_type: Literal["company", "paper", "patent", "professor"]
+    relationship_role_bindings: tuple[tuple[str, str], ...] = ()
+    selected_evidence_refs: tuple[str, ...] = Field(min_length=1)
+    projection_candidate_id: str = Field(min_length=1)
+    projection_candidate_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    assertion_kind: Literal[
+        "shared_source_relationship_assertion", "typed_relationship_assertion"
+    ]
+    assertion_id: str = Field(min_length=1)
+    assertion_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    source_record_id: str = Field(min_length=1)
+    relationship_decision_id: str = Field(min_length=1)
+    relationship_decision_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    candidate_outcome_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    candidate_canonical_id: str = Field(min_length=1)
+    candidate_domain: Literal["company", "paper", "patent", "professor"]
+    candidate_display_name: str = Field(min_length=1)
+    candidate_projection_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    candidate_origin_public_evidence_ids: tuple[str, ...] = Field(min_length=1)
+    candidate_quality_flags: tuple[str, ...] = ()
+    claim_subject_id: str = Field(min_length=1)
+    claim_predicate: str = Field(min_length=1)
+    claim_value: str = Field(min_length=1)
+    claim_status: Literal["accepted"] = "accepted"
+    snippet_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    path: Literal["source_relationship_traversal"] = "source_relationship_traversal"
+    execution_lane: Literal["relationship"] = "relationship"
+    raw_candidate_id: str = ""
+    evidence_id: str = ""
+    content_sha256: str = Field(default=_ZERO_SHA256, pattern=r"^[0-9a-f]{64}$")
+
+    @field_validator(
+        "publication_verification_evidence_ids",
+        "selected_evidence_refs",
+        "candidate_origin_public_evidence_ids",
+        "candidate_quality_flags",
+    )
+    @classmethod
+    def validate_sorted_unique_source_lineage(
+        cls, values: tuple[str, ...]
+    ) -> tuple[str, ...]:
+        if any(not value for value in values) or values != tuple(sorted(set(values))):
+            raise ValueError("source relationship lineage must be sorted and unique")
+        return values
+
+    @field_validator("relationship_role_bindings")
+    @classmethod
+    def validate_source_role_bindings(
+        cls, values: tuple[tuple[str, str], ...]
+    ) -> tuple[tuple[str, str], ...]:
+        if any(not role or not value for role, value in values):
+            raise ValueError("source relationship role bindings must be non-empty")
+        if values != tuple(sorted(set(values))):
+            raise ValueError(
+                "source relationship role bindings must be sorted and unique"
+            )
+        return values
+
+    @model_validator(mode="after")
+    def bind_source_relationship_trace(self) -> LocalSourceRelationshipTrace:
+        physical_paths = {
+            _COMPANY_TO_PATENT_QUERY_PATH: ("patent_has_applicant", "inverse"),
+            _PATENT_TO_COMPANY_QUERY_PATH: ("patent_has_applicant", "forward"),
+            _PROFESSOR_TO_PAPER_QUERY_PATH: (
+                "professor_attributed_to_paper",
+                "forward",
+            ),
+            _PAPER_TO_PROFESSOR_QUERY_PATH: (
+                "professor_attributed_to_paper",
+                "inverse",
+            ),
+            _PROFESSOR_TO_COMPANY_QUERY_PATH: ("professor_company_role", "forward"),
+            _COMPANY_TO_PROFESSOR_QUERY_PATH: ("professor_company_role", "inverse"),
+        }
+        query_path = (
+            self.query_relationship_type_id,
+            self.query_direction,
+            self.query_source_type,
+            self.query_target_type,
+        )
+        expected = physical_paths.get(query_path)
+        displayed_ref = f"canonical:{self.query_source_type}:{self.displayed_entity_id}"
+        candidate_ref = (
+            f"canonical:{self.query_target_type}:{self.candidate_canonical_id}"
+        )
+        physical_ids = (
+            (self.physical_source_id, self.physical_target_id)
+            if self.physical_direction == "forward"
+            else (self.physical_target_id, self.physical_source_id)
+        )
+        physical_types = (
+            (self.physical_source_type, self.physical_target_type)
+            if self.physical_direction == "forward"
+            else (self.physical_target_type, self.physical_source_type)
+        )
+        if (
+            expected != (self.relationship_type_id, self.physical_direction)
+            or self.displayed_entity_ids != (self.displayed_entity_id,)
+            or physical_ids != (self.displayed_entity_id, self.candidate_canonical_id)
+            or physical_types != (self.query_source_type, self.query_target_type)
+            or self.candidate_domain != self.query_target_type
+            or self.claim_subject_id != displayed_ref
+            or self.claim_predicate != self.relationship_type_id
+            or self.claim_value != candidate_ref
+        ):
+            raise ValueError("source relationship path/endpoints/claim differ")
+        if self.query_as_of < self.relationship_snapshot_as_of:
+            raise ValueError("source relationship query predates its snapshot")
+        freshness_flags = ()
+        if self.query_as_of > self.relationship_snapshot_as_of:
+            canonical = (
+                self.relationship_snapshot_as_of.astimezone(timezone.utc)
+                .isoformat()
+                .replace("+00:00", "Z")
+            )
+            freshness_flags = (f"relationship_snapshot_as_of:{canonical}",)
+        if self.candidate_quality_flags != freshness_flags:
+            raise ValueError("source relationship candidate quality flags differ")
+
+        lineage = self.model_dump(
+            mode="json", exclude={"raw_candidate_id", "evidence_id", "content_sha256"}
+        )
+        candidate_id = (
+            f"local-source-relationship-candidate:sha256:{_canonical_sha256(lineage)}"
+        )
+        if self.raw_candidate_id not in {"", candidate_id}:
+            raise ValueError(
+                "raw_candidate_id does not bind source relationship lineage"
+            )
+        object.__setattr__(self, "raw_candidate_id", candidate_id)
+        evidence_id = (
+            "local-source-relationship-evidence:sha256:"
+            f"{_canonical_sha256((lineage, candidate_id))}"
+        )
+        if self.evidence_id not in {"", evidence_id}:
+            raise ValueError("evidence_id does not bind source relationship lineage")
+        object.__setattr__(self, "evidence_id", evidence_id)
+        content_sha256 = _canonical_sha256(
+            self.model_dump(mode="json", exclude={"content_sha256"})
+        )
+        if self.content_sha256 not in {_ZERO_SHA256, content_sha256}:
+            raise ValueError("content_sha256 does not bind source relationship trace")
+        object.__setattr__(self, "content_sha256", content_sha256)
+        return self
+
+
 LocalEvidenceTrace = Annotated[
     LocalProjectionTrace
     | LocalVectorTrace
@@ -2885,7 +3115,8 @@ LocalEvidenceTrace = Annotated[
     | LocalCanonicalRelationshipTrace
     | LocalPatentCompanyRelationshipTrace
     | LocalProfessorPaperRelationshipTrace
-    | LocalPaperProfessorRelationshipTrace,
+    | LocalPaperProfessorRelationshipTrace
+    | LocalSourceRelationshipTrace,
     Field(discriminator="path"),
 ]
 
@@ -3382,6 +3613,8 @@ def _materialize_requested_traversal(
             "professor_attributed_to_paper",
             "inverse",
         ),
+        _PROFESSOR_TO_COMPANY_QUERY_PATH: ("professor_company_role", "forward"),
+        _COMPANY_TO_PROFESSOR_QUERY_PATH: ("professor_company_role", "inverse"),
     }.get(path_tuple)
     if typed_relationship is None:
         return None
@@ -3568,17 +3801,67 @@ def _validate_recorded(value: Any, model_type: type[Any]) -> Any:
     return model_type.model_validate(value)
 
 
+_EXPLICIT_ORGANIZATION_PREFIXES = (
+    "请介绍一下",
+    "请介绍",
+    "我关注的是",
+    "我说的是",
+    "我指的是",
+    "这里指的是",
+    "介绍一下",
+    "介绍",
+    "我想了解",
+    "帮我查一下",
+    "帮我查",
+)
+_ORGANIZATION_NAME_SUFFIXES = (
+    "有限责任公司",
+    "股份有限公司",
+    "有限公司",
+    "公司",
+    "科技",
+)
+
+
+def _explicit_organization_name(query: str) -> str | None:
+    value = query.strip().rstrip("？?。！!").strip()
+    for prefix in _EXPLICIT_ORGANIZATION_PREFIXES:
+        if not value.startswith(prefix):
+            continue
+        name = value[len(prefix) :].strip()
+        name = re.sub(
+            r"(?:的)?(?:相关)?(?:信息|资料|情况|介绍)\s*$",
+            "",
+            name,
+        ).strip()
+        if (
+            2 <= len(name) <= 80
+            and "的" not in name
+            and not any(marker in name for marker in ("哪些", "什么", "如何", "是否"))
+            and (
+                name.endswith(_ORGANIZATION_NAME_SUFFIXES)
+                or (name.endswith("机器人") and len(name) > len("机器人"))
+            )
+        ):
+            return name
+    return None
+
+
 def _extract_protected_slots(
     request: QueryPlanningRequest,
 ) -> tuple[ProtectedSlot, ...]:
     query = request.original_query
+    explicit_organization_name = _explicit_organization_name(query)
     slots: list[ProtectedSlot] = []
     for match in re.finditer(r"(?<!\d)(20\d{2})(?!\d)", query):
         slots.append(
             ProtectedSlot(kind="year", value=match.group(1), raw_text=match.group(1))
         )
     for geography in ("深圳", "广州", "上海", "北京"):
-        if geography in query:
+        if geography in query and not (
+            explicit_organization_name is not None
+            and geography in explicit_organization_name
+        ):
             slots.append(
                 ProtectedSlot(kind="geography", value=geography, raw_text=geography)
             )
@@ -4198,7 +4481,15 @@ class _EphemeralQueryPlanner(_QueryPlanner):
             )
             for view in proposal.query_views
         )
-        pure_topic = _pure_topic(request.original_query, institution_spans)
+        serving_view = next(
+            (view for view in proposal.query_views if view.kind == "serving_search"),
+            None,
+        )
+        pure_topic = (
+            serving_view.text
+            if serving_view is not None
+            else _pure_topic(request.original_query, institution_spans)
+        )
         resolved_institutions = tuple(
             slot.canonical_id
             for slot in institution_slots
@@ -4367,6 +4658,8 @@ class LaneRequest(_ContentModel):
     relationship_paths: tuple[RelationshipPathProposal, ...] = ()
     relationship_reference_queries: tuple[InternalReferenceQuery, ...] = ()
     relationship_enumeration_policy: EnumerationPolicy | None = None
+    bound_entity_ids: tuple[str, ...] = ()
+    bound_entity_names: tuple[str, ...] = ()
 
     @model_serializer(mode="wrap")
     def serialize_optional_lane_fields(self, handler: Any) -> Any:
@@ -4437,18 +4730,21 @@ class LaneRequest(_ContentModel):
         )
         if self.relationship_enumeration_policy is not None and not (
             self.lane == "relationship"
-            and path_keys
-            in {
-                (_COMPANY_TO_PATENT_QUERY_PATH,),
-                (_PATENT_TO_COMPANY_QUERY_PATH,),
-                (_PROFESSOR_TO_PAPER_QUERY_PATH,),
-                (_PAPER_TO_PROFESSOR_QUERY_PATH,),
-            }
+            and len(path_keys) == 1
+            and path_keys[0] in _PUBLIC_RELATIONSHIP_QUERY_PATHS
         ):
             raise ValueError(
                 "relationship enumeration policy belongs only to the exact "
                 "public relationship path"
             )
+        if self.bound_entity_names and len(self.bound_entity_names) != len(
+            self.bound_entity_ids
+        ):
+            raise ValueError("bound entity names must align with bound entity IDs")
+        if any(
+            not name.strip() or name != name.strip() for name in self.bound_entity_names
+        ):
+            raise ValueError("bound entity names must be normalized and non-empty")
         return self
 
 
@@ -4499,6 +4795,10 @@ def _lane_request(
         (query for query in plan.lane_queries if query.lane == lane),
         None,
     )
+    serving_view = next(
+        (view for view in plan.query_views if view.kind == "serving_search"),
+        None,
+    )
     return LaneRequest(
         lane=lane,
         release_id=plan.release_id,
@@ -4533,22 +4833,21 @@ def _lane_request(
         relationship_enumeration_policy=(
             plan.enumeration_policy
             if lane == "relationship"
-            and tuple(
-                (
-                    path.relationship_type_id,
-                    path.direction,
-                    path.source_type,
-                    path.target_type,
-                )
-                for path in plan.relationship_paths
+            and len(plan.relationship_paths) == 1
+            and (
+                plan.relationship_paths[0].relationship_type_id,
+                plan.relationship_paths[0].direction,
+                plan.relationship_paths[0].source_type,
+                plan.relationship_paths[0].target_type,
             )
-            in {
-                (_COMPANY_TO_PATENT_QUERY_PATH,),
-                (_PATENT_TO_COMPANY_QUERY_PATH,),
-                (_PROFESSOR_TO_PAPER_QUERY_PATH,),
-                (_PAPER_TO_PROFESSOR_QUERY_PATH,),
-            }
+            in _PUBLIC_RELATIONSHIP_QUERY_PATHS
             else None
+        ),
+        bound_entity_ids=(
+            serving_view.bound_entity_ids if serving_view is not None else ()
+        ),
+        bound_entity_names=(
+            serving_view.bound_entity_names if serving_view is not None else ()
         ),
     )
 
@@ -4562,6 +4861,7 @@ def _local_projection_locator(trace: LocalEvidenceTrace) -> str:
             LocalPatentCompanyRelationshipTrace,
             LocalProfessorPaperRelationshipTrace,
             LocalPaperProfessorRelationshipTrace,
+            LocalSourceRelationshipTrace,
         ),
     ):
         local_id = trace.canonical_relationship_id
@@ -4577,6 +4877,59 @@ def _relationship_snapshot_quality_flag(value: datetime) -> str:
     return f"relationship_snapshot_as_of:{canonical}"
 
 
+def _projection_identifier_values(snippet: str, domain: str) -> frozenset[str]:
+    try:
+        payload = json.loads(snippet)
+    except (json.JSONDecodeError, TypeError):
+        return frozenset()
+    if not isinstance(payload, dict):
+        return frozenset()
+
+    values: list[object] = [payload.get("id")]
+    if domain == "company":
+        values.append(payload.get("credit_code"))
+    elif domain == "paper":
+        values.extend((payload.get("doi"), payload.get("arxiv_id")))
+        identifiers = payload.get("identifiers")
+        if isinstance(identifiers, list):
+            values.extend(
+                identifier.get("value")
+                for identifier in identifiers
+                if isinstance(identifier, dict)
+            )
+    elif domain == "patent":
+        values.append(payload.get("patent_number"))
+
+    return frozenset(
+        " ".join(value.casefold().split())
+        for value in values
+        if isinstance(value, str) and value.strip()
+    )
+
+
+def _valid_exact_identifier_projection_claim(
+    *,
+    claim: EvidenceClaimBinding,
+    request: LaneRequest,
+    snippet: str,
+    domain: str,
+) -> bool:
+    if claim.predicate != "exact_identifier" or not isinstance(claim.value, str):
+        return False
+    normalized_claim = " ".join(claim.value.casefold().split())
+    requested_identifiers = {
+        " ".join(slot.value.casefold().split())
+        for slot in request.protected_slots
+        if slot.kind == "exact_identifier"
+        and isinstance(slot.value, str)
+        and slot.value.strip()
+    }
+    return (
+        normalized_claim in requested_identifiers
+        and normalized_claim in _projection_identifier_values(snippet, domain)
+    )
+
+
 def _valid_local_projection_item(
     item: EvidenceItem,
     request: LaneRequest,
@@ -4585,6 +4938,64 @@ def _valid_local_projection_item(
     if trace is None:
         return True
     claim = item.claim_binding
+    if isinstance(trace, LocalSourceRelationshipTrace):
+        policy = request.relationship_enumeration_policy
+        path_keys = tuple(
+            (
+                path.relationship_type_id,
+                path.direction,
+                path.source_type,
+                path.target_type,
+            )
+            for path in request.relationship_paths
+        )
+        protected_slots = tuple(
+            slot
+            for slot in request.protected_slots
+            if slot.kind == "displayed_entity_set"
+        )
+        return (
+            path_keys
+            == (
+                (
+                    trace.query_relationship_type_id,
+                    trace.query_direction,
+                    trace.query_source_type,
+                    trace.query_target_type,
+                ),
+            )
+            and policy is not None
+            and trace.relationship_enumeration_policy_sha256
+            == _canonical_sha256(policy.model_dump(mode="json"))
+            and trace.displayed_entity_ids
+            == request.structured_constraints.displayed_entity_ids
+            and len(protected_slots) == 1
+            and protected_slots[0].slot_id == trace.protected_slot_id
+            and _canonical_sha256(protected_slots[0].model_dump(mode="json"))
+            == trace.protected_slot_content_sha256
+            and protected_slots[0].entity_ids == trace.displayed_entity_ids
+            and request.lane == item.lane == "relationship"
+            and item.source_nature == "local"
+            and item.source_authority == "canonical_release"
+            and item.evidence_id == trace.evidence_id
+            and item.object_id == trace.candidate_canonical_id
+            and item.domain == trace.candidate_domain
+            and request.domains == (trace.candidate_domain,)
+            and trace.release_id == request.release_id
+            and trace.lane_request_content_sha256 == request.content_sha256
+            and item.source_locator == _local_projection_locator(trace)
+            and item.score == 1.0
+            and item.observed_at == trace.relationship_snapshot_as_of
+            and hashlib.sha256(item.snippet.encode("utf-8")).hexdigest()
+            == trace.snippet_sha256
+            and claim
+            == EvidenceClaimBinding(
+                subject_id=trace.claim_subject_id,
+                predicate=trace.claim_predicate,
+                value=trace.claim_value,
+                status=trace.claim_status,
+            )
+        )
     if isinstance(trace, LocalPaperProfessorRelationshipTrace):
         policy = request.relationship_enumeration_policy
         paths = tuple(
@@ -4919,8 +5330,18 @@ def _valid_local_projection_item(
     return (
         snippet_sha256 == trace.lookup_content_sha256
         and item.score == 1.0
-        and claim.predicate == "canonical_projection"
-        and claim.value == trace.lookup_content_sha256
+        and (
+            (
+                claim.predicate == "canonical_projection"
+                and claim.value == trace.lookup_content_sha256
+            )
+            or _valid_exact_identifier_projection_claim(
+                claim=claim,
+                request=request,
+                snippet=item.snippet,
+                domain=item.domain,
+            )
+        )
     )
 
 
@@ -4937,6 +5358,68 @@ def _valid_local_projection_candidate(
         return True
     if len(traces) != len(candidate.evidence):
         return False
+    source_relationship_traces = tuple(
+        trace for trace in traces if isinstance(trace, LocalSourceRelationshipTrace)
+    )
+    if source_relationship_traces:
+        if len(source_relationship_traces) != len(traces):
+            return False
+        canonical_ids = {
+            trace.candidate_canonical_id for trace in source_relationship_traces
+        }
+        domains = {trace.candidate_domain for trace in source_relationship_traces}
+        display_names = {
+            trace.candidate_display_name for trace in source_relationship_traces
+        }
+        candidate_ids = {trace.raw_candidate_id for trace in source_relationship_traces}
+        displayed_ids = {
+            trace.displayed_entity_id for trace in source_relationship_traces
+        }
+        protected_slots = {
+            (trace.protected_slot_id, trace.protected_slot_content_sha256)
+            for trace in source_relationship_traces
+        }
+        origin_ids = tuple(
+            sorted(
+                {
+                    evidence_id
+                    for trace in source_relationship_traces
+                    for evidence_id in trace.candidate_origin_public_evidence_ids
+                }
+            )
+        )
+        quality_flags = tuple(
+            dict.fromkeys(
+                flag
+                for trace in source_relationship_traces
+                for flag in trace.candidate_quality_flags
+            )
+        )
+        return (
+            request.lane == candidate.lane == "relationship"
+            and len(canonical_ids) == 1
+            and candidate.canonical_id == next(iter(canonical_ids))
+            and len(domains) == 1
+            and candidate.domain == next(iter(domains))
+            and request.domains == (candidate.domain,)
+            and len(display_names) == 1
+            and candidate.display_name == next(iter(display_names))
+            and len(candidate_ids) == 1
+            and candidate.raw_candidate_id == next(iter(candidate_ids))
+            and len(displayed_ids) == 1
+            and len(protected_slots) == 1
+            and candidate.reference_type is None
+            and candidate.identity_kind == "canonical"
+            and candidate.resolution_state == "resolved"
+            and candidate.relationship_state == "accepted"
+            and candidate.release_id == request.release_id
+            and candidate.query_view == request.query_view
+            and candidate.attempt == 1
+            and candidate.origin_public_evidence_ids == origin_ids
+            and candidate.quality_flags == quality_flags
+            and candidate.raw_score == 1.0
+            and all(item.score == candidate.raw_score for item in candidate.evidence)
+        )
     paper_professor_traces = tuple(
         trace
         for trace in traces
@@ -5491,6 +5974,57 @@ def _apply_constraints(
             dict.fromkeys((*primary_identity_ids, *evidence_subject_ids))
         )
         constraint_items = tuple(candidate.evidence)
+        source_relationship_traces = tuple(
+            item.local_projection_trace
+            for item in candidate.evidence
+            if isinstance(
+                item.local_projection_trace,
+                LocalSourceRelationshipTrace,
+            )
+        )
+        if source_relationship_traces:
+            witness_ids = {
+                trace.displayed_entity_id for trace in source_relationship_traces
+            }
+            protected_identities = {
+                (trace.protected_slot_id, trace.protected_slot_content_sha256)
+                for trace in source_relationship_traces
+            }
+            candidate_ids = {
+                trace.candidate_canonical_id for trace in source_relationship_traces
+            }
+            candidate_domains = {
+                trace.candidate_domain for trace in source_relationship_traces
+            }
+            if (
+                len(witness_ids) == 1
+                and len(protected_identities) == 1
+                and len(candidate_ids) == 1
+                and len(candidate_domains) == 1
+                and candidate.canonical_id == next(iter(candidate_ids))
+            ):
+                displayed_entity_witness_ids = (next(iter(witness_ids)),)
+                canonical_id = next(iter(candidate_ids))
+                domain = next(iter(candidate_domains))
+                candidate_subject_ids = (
+                    canonical_id,
+                    f"canonical:{domain}:{canonical_id}",
+                )
+                constraint_subject_ids = candidate_subject_ids
+                constraint_items = tuple(
+                    item
+                    for item in candidate.evidence
+                    if not isinstance(
+                        item.local_projection_trace,
+                        LocalSourceRelationshipTrace,
+                    )
+                    and item.object_id == canonical_id
+                    and item.domain == domain
+                    and (
+                        item.claim_binding is None
+                        or item.claim_binding.subject_id in candidate_subject_ids
+                    )
+                )
         if patent_company_traces:
             witness_ids = {trace.displayed_patent_id for trace in patent_company_traces}
             protected_identities = {

@@ -1594,6 +1594,188 @@ def test_identity_resolution_deep_module_exports_decision_context_contract() -> 
     } <= set(module.__all__)
 
 
+def test_identity_resolution_does_not_rebuild_full_payload_per_decision_hash(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _module()
+    source_count = 16
+    sources = tuple(
+        _source_identity(
+            module,
+            f"hash-scale-company-{index:02d}",
+            source_system="released-objects",
+            source_key=f"company:hash-scale:{index:02d}",
+            entity_type="company",
+            normalized_keys={"name_key": f"hash scale company {index:02d}"},
+        )
+        for index in range(source_count)
+    )
+    assertions = tuple(
+        _identity_assertion(
+            module,
+            f"assertion-{source.source_identity_id}",
+            source,
+            field_path="identity.company_name",
+            value=source.source_key,
+        )
+        for source in sources
+    )
+    request = _request(
+        module,
+        source_identities=sources,
+        identity_assertions=assertions,
+    )
+    original_canonical_json = module._canonical_json
+    full_request_hash_payload_count = 0
+
+    def traced_canonical_json(value: Any) -> bytes:
+        nonlocal full_request_hash_payload_count
+        if (
+            isinstance(value, dict)
+            and set(value)
+            == {"request", "decision", "supporting_assertion_ids"}
+            and isinstance(value["request"], dict)
+            and len(value["request"].get("source_identities", ())) == source_count
+        ):
+            full_request_hash_payload_count += 1
+        return original_canonical_json(value)
+
+    monkeypatch.setattr(module, "_canonical_json", traced_canonical_json)
+
+    result = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        request
+    )
+
+    assert len(result.identity_decisions) == source_count
+    assert full_request_hash_payload_count <= 1
+    first_decision = result.identity_decisions[0]
+    first_manifest = next(
+        manifest
+        for manifest in result.decision_manifests
+        if manifest.decision_id == first_decision.decision_id
+    )
+    legacy_payload = {
+        "request": request.model_dump(mode="json"),
+        "decision": first_decision.model_dump(mode="json"),
+        "supporting_assertion_ids": sorted(first_manifest.supporting_assertion_ids),
+    }
+    assert first_manifest.input_content_sha256 == hashlib.sha256(
+        original_canonical_json(legacy_payload)
+    ).hexdigest()
+
+
+def test_identity_validation_indexes_request_assertions_for_all_decisions(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _module()
+    source_count = 16
+    sources = tuple(
+        _source_identity(
+            module,
+            f"validation-scale-company-{index:02d}",
+            source_system="released-objects",
+            source_key=f"company:validation-scale:{index:02d}",
+            entity_type="company",
+            normalized_keys={"name_key": f"validation scale company {index:02d}"},
+        )
+        for index in range(source_count)
+    )
+    assertions = tuple(
+        _identity_assertion(
+            module,
+            f"assertion-{source.source_identity_id}",
+            source,
+            field_path="identity.company_name",
+            value=source.source_key,
+        )
+        for source in sources
+    )
+    request = _request(
+        module,
+        source_identities=sources,
+        identity_assertions=assertions,
+    )
+    result = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        request
+    )
+    iteration_count = 0
+    original_model_validate = module.IdentityResolutionRequest.model_validate
+
+    class CountingAssertions(tuple[Any, ...]):
+        def __iter__(self) -> Any:
+            nonlocal iteration_count
+            iteration_count += 1
+            return super().__iter__()
+
+    def instrumented_model_validate(value: Any, *args: Any, **kwargs: Any) -> Any:
+        validated = original_model_validate(value, *args, **kwargs)
+        return validated.model_copy(
+            update={
+                "identity_assertions": CountingAssertions(
+                    validated.identity_assertions
+                )
+            }
+        )
+
+    monkeypatch.setattr(
+        module.IdentityResolutionRequest,
+        "model_validate",
+        instrumented_model_validate,
+    )
+
+    assert module.validate_identity_resolution_result(request, result) == result
+    assert iteration_count <= 10
+
+
+def test_identity_resolution_indexes_recall_keys_instead_of_comparing_every_pair(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _module()
+    source_count = 16
+    sources = tuple(
+        _source_identity(
+            module,
+            f"recall-scale-company-{index:02d}",
+            source_system="released-objects",
+            source_key=f"company:recall-scale:{index:02d}",
+            entity_type="company",
+            normalized_keys={"name_key": f"recall scale company {index:02d}"},
+        )
+        for index in range(source_count)
+    )
+    assertions = tuple(
+        _identity_assertion(
+            module,
+            f"assertion-{source.source_identity_id}",
+            source,
+            field_path="identity.company_name",
+            value=source.source_key,
+        )
+        for source in sources
+    )
+    request = _request(
+        module,
+        source_identities=sources,
+        identity_assertions=assertions,
+    )
+    original_pair_check = module._sources_are_recall_candidates
+    pair_check_count = 0
+
+    def counted_pair_check(*args: Any, **kwargs: Any) -> bool:
+        nonlocal pair_check_count
+        pair_check_count += 1
+        return original_pair_check(*args, **kwargs)
+
+    monkeypatch.setattr(module, "_sources_are_recall_candidates", counted_pair_check)
+
+    result = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        request
+    )
+
+    assert len(result.identity_decisions) == source_count
+    assert pair_check_count <= source_count * 2
+
+
 def _assert_decision_and_result_binding(
     module: Any,
     request: Any,
@@ -4930,3 +5112,112 @@ def test_identity_request_and_result_canonicalize_equal_instants_before_hashing(
     ) == module.canonical_identity_resolution_request_sha256(utc_request)
     assert offset_result == utc_result
     assert offset_result.content_sha256 == utc_result.content_sha256
+
+
+def test_professor_identity_merges_on_name_institution_and_exact_email() -> None:
+    module = _module()
+    sources = (
+        _source_identity(
+            module,
+            "professor-ding-old",
+            source_system="official-profile-old",
+            source_key="faculty/ding-old",
+            entity_type="professor",
+            normalized_keys={
+                "name_key": "丁文伯",
+                "institution_key": "清华大学深圳国际研究生院",
+                "department_key": "数据与信息研究院",
+                "email_key": "ding.wenbo@sz.tsinghua.edu.cn",
+            },
+        ),
+        _source_identity(
+            module,
+            "professor-ding-current",
+            source_system="official-profile-current",
+            source_key="faculty/ding-current",
+            entity_type="professor",
+            normalized_keys={
+                "name_key": "丁文伯",
+                "institution_key": "清华大学深圳国际研究生院",
+                "department_key": "数据与信息学院",
+                "email_key": "ding.wenbo@sz.tsinghua.edu.cn",
+            },
+        ),
+    )
+    assertions = tuple(
+        _identity_assertion(
+            module,
+            f"assertion-{source.source_identity_id}",
+            source,
+            field_path="identity.email",
+            value=source.normalized_keys["email_key"],
+        )
+        for source in sources
+    )
+
+    v1_request = _request(
+        module,
+        source_identities=sources,
+        identity_assertions=assertions,
+    )
+    v1_result = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        v1_request
+    )
+    result = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        v1_request.model_copy(
+            update={
+                "identity_method_version": (
+                    module.CANONICAL_IDENTITY_METHOD_VERSION_V2
+                )
+            }
+        )
+    )
+
+    assert len(v1_result.current_canonical_identities) == 2
+    assert len(result.current_canonical_identities) == 1
+    assert result.current_canonical_identities[0].source_identity_ids == tuple(
+        sorted(source.source_identity_id for source in sources)
+    )
+    assert result.review_cases == ()
+
+
+def test_identity_decision_deduplicates_shared_supporting_records() -> None:
+    module = _module()
+    shared_record_id = "source-record:shared-professor-profile"
+    sources = tuple(
+        _source_identity(
+            module,
+            f"professor-shared-evidence-{suffix}",
+            source_system=f"official-profile-{suffix}",
+            source_key=f"faculty/shared-evidence-{suffix}",
+            entity_type="professor",
+            normalized_keys={
+                "name_key": "丁文伯",
+                "institution_key": "清华大学深圳国际研究生院",
+                "email_key": "ding.wenbo@sz.tsinghua.edu.cn",
+            },
+        ).model_copy(update={"source_record_ids": (shared_record_id,)})
+        for suffix in ("old", "current")
+    )
+    assertions = tuple(
+        _identity_assertion(
+            module,
+            f"assertion-{source.source_identity_id}",
+            source,
+            field_path="identity.email",
+            value=source.normalized_keys["email_key"],
+        )
+        for source in sources
+    )
+
+    result = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        _request(
+            module,
+            source_identities=sources,
+            identity_assertions=assertions,
+            identity_method_version=module.CANONICAL_IDENTITY_METHOD_VERSION_V2,
+        )
+    )
+
+    assert len(result.current_canonical_identities) == 1
+    assert result.identity_decisions[0].supporting_record_ids == (shared_record_id,)

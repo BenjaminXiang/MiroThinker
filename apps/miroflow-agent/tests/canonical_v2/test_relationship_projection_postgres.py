@@ -1089,7 +1089,7 @@ def test_postgres_store_requires_complete_explicit_target_identity() -> None:
     )
 
 
-def test_postgres_store_defers_internal_reference_relationship_batches() -> None:
+def test_postgres_store_allows_extended_registry_without_internal_endpoints() -> None:
     module = _module()
     relationship_module = import_module(
         "src.data_agents.canonical_v2.relationship_projection"
@@ -1106,11 +1106,9 @@ def test_postgres_store_defers_internal_reference_relationship_batches() -> None
     )
     result = create_ephemeral_relationship_projection().project(request)
 
-    with pytest.raises(
-        module.RelationshipProjectionPersistenceError,
-        match="internal-reference relationship persistence is deferred",
-    ):
-        module._PostgresRelationshipProjectionStore._validated_pair(request, result)
+    assert module._PostgresRelationshipProjectionStore._validated_pair(
+        request, result
+    ) == (request, result)
 
 
 def test_postgres_store_rejects_orphan_internal_typed_assertion() -> None:

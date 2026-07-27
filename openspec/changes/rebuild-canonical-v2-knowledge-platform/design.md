@@ -5,7 +5,7 @@ and chat route are implementation evidence, not compatibility constraints. The c
 combines query classification, direct SQL, vector retrieval, Web search, relationship traversal,
 session behavior, LLM calls, and response rendering. Provenance, identity, relationship, and quality
 semantics are split between domain tables, JSON fields, scripts, and caller-specific rules. This
-shape makes the confirmed outcomes—broad but precise retrieval, universal Web augmentation,
+shape makes the confirmed outcomes—broad but precise retrieval, evidence-driven Web augmentation,
 reversible identity, typed relationships, path eligibility, grounded generation, and release/index
 parity—costly to implement and difficult to verify through a stable interface.
 
@@ -41,8 +41,8 @@ Dependencies fall into three design categories:
   treating model memory or confidence as evidence.
 - Publish canonical projections and Milvus indexes as one accepted release with deterministic parity
   and rollback evidence.
-- Validate the rebuilt platform against PRD scenario families and multidimensional gates, not a
-  fixed-answer workbook alone.
+- Align the real chat experience with the 17 conversations and 25 query turns in the customer-
+  provided `docs/测试集答案.xlsx`, while retaining broader PRD behavior and avoiding answer hardcoding.
 
 **Non-Goals:**
 
@@ -56,6 +56,9 @@ Dependencies fall into three design categories:
 - Generate exhaustive graph dumps or long-form research reports in one query.
 - Write to or cut over the original `pgtest` database or original Milvus file in this change without
   a separate explicit promotion authorization.
+- Require contract-review, exclusion-review, blind-calibration, or scaled human-labeling work before
+  the customer can use and evaluate the real system.
+- Treat workbook answer text as product data, a prompt template, or a wording-matching oracle.
 
 ## Decisions
 
@@ -226,10 +229,11 @@ After fusion, a structured LLM sufficiency decision evaluates the material parts
 Only a material gap can trigger a targeted supplemental attempt, and wall-time/provider/cost budgets
 bound it. Budget exhaustion returns the best supported partial answer plus explicit limitations.
 
-Web runs for every information-retrieval request (A/B/C/D/E/G). Refusal, clarification-only, and UI
-control turns do not search. Web failure degrades to available local evidence. Search results remain
-live-Web evidence unless a later offline gap/recollection run promotes supported assertions through
-the full build process.
+Every normal information request runs bounded Web search alongside its applicable local lanes so
+current-Web evidence can corroborate, refresh, or supplement local evidence before final LLM
+synthesis. Refusal, clarification-only, safety, and UI-control turns do not run general Web search.
+Web failure degrades to available local evidence. Search results remain live-Web evidence unless a
+later offline gap/recollection run promotes supported assertions through the full build process.
 
 ### 9. Ground every material answer claim and keep assessment explicit
 
@@ -337,16 +341,31 @@ evidence, with explicit user criteria taking precedence. A compact structured fr
 dimension to evidence, conclusion/insufficiency, and uncertainty; no global policy registry, fixed
 weighting, or canonical score is required.
 
-Acceptance uses versioned machine-readable per-turn contracts for required/forbidden claims and
-entities, allowed variants, source snapshots, as-of, enumeration policy, and observable stage
-outcomes. Reference prose is explanatory only, hard case requirements cannot be averaged away, and
-an LLM judge cannot establish external truth from model memory.
+Acceptance uses the versioned customer workbook as case-specific semantic Ground Truth. Each row's
+query, answer, and key points are interpreted together; an explicit correction in key points
+overrides the incorrect part of historical answer prose. Valid paraphrases are allowed. Newer
+official evidence may supplement or supersede a time-sensitive fact only when the answer discloses
+the newer as-of/source context. An LLM comparison may assist triage but cannot replace direct user
+acceptance or establish truth from model memory.
+
+### 17. Finish through one lean vertical milestone
+
+The remaining work is one product path rather than separate query, answer, review, and evidence
+programs. It first builds a serviceable isolated Candidate containing all four public domains and
+the relationship paths needed by the customer workbook. It then binds that Candidate to the real
+read-only chat runtime and runs the workbook conversations through the same API the user will use.
+
+During development, verification is limited to changed-module tests, one Candidate build smoke, and
+approximately eight representative chat cases spanning single-turn, multi-turn, cross-domain,
+same-name identity, conditional Web, and insufficient-evidence behavior. The complete 25-turn
+workbook replay runs once at the final Candidate milestone. Original-source isolation and release/
+index consistency remain mandatory safety checks. Independent slice reviews, blind calibration,
+scaled human labels, duplicate aggregate gates, and repeated full-suite runs are not required.
 
 ## Risks / Trade-offs
 
-- **[Risk] The clean-slate scope is large and may stay half-finished.** → Deliver independently
-  accepted vertical slices. No later slice may depend on an unaccepted predecessor. Keep the old
-  implementation available only as a comparison oracle until the replacement reaches acceptance.
+- **[Risk] The clean-slate scope is large and may stay half-finished.** → Finish one end-to-end
+  serving milestone before adding more framework or evaluation machinery.
 - **[Risk] A generic assertion layer can become EAV-heavy.** → Keep user/query-facing domain facts
   typed; use generic assertion metadata for provenance and decisions, not as the only query model.
 - **[Risk] LLM-assisted fusion may be non-reproducible or wrong.** → Version prompts/models/schemas,
@@ -355,9 +374,10 @@ an LLM judge cannot establish external truth from model memory.
 - **[Risk] Soft quality policies may reduce precision.** → Use bounded wide recall, late evidence-
   aware ranking, visible limitations, and independent precision gates rather than early blanket
   exclusion.
-- **[Risk] Universal Web increases false positives, latency, and cost.** → Execute concurrently,
-  apply source/identity/fusion rules, use bounded budgets/cache, record lane provenance, and measure
-  Web-specific precision and cost.
+- **[Risk] Web augmentation increases false positives, latency, and cost.** → Invoke it only for
+  current, missing, stale, or conflicting material evidence; retain bounded budgets and provenance.
+- **[Risk] A benchmark-first implementation can overfit or hardcode answers.** → Ingest eligible
+  source families and execute normal retrieval/answer paths; workbook prose is never runtime data.
 - **[Risk] New IDs may break hidden assumptions in callers.** → Migrate all repository consumers in
   the same accepted slices, retain historical IDs as lineage, and test cross-domain integrity through
   the new interfaces rather than preserve old IDs by default.
@@ -374,39 +394,27 @@ an LLM judge cannot establish external truth from model memory.
 
 ## Migration Plan
 
-1. Keep original `pgtest` paused and original Milvus unopened; verify forensic hashes before and
-   after read-only inventory work.
-2. Complete the source inventory and reviewed baseline in the isolated recovery lab. Freeze numeric
-   acceptance thresholds without writing the original sources.
-3. Migrate applicable regression/challenge turns to reviewed claim-level case contracts and accept
-   S2C before using the corpus as the S8/S9 acceptance oracle.
-4. Create content-addressed backups for every required original/recovery/historical source family,
-   restore them into independent isolated targets, and accept the backup/restore gate. No Canonical
-   V2 or landing write may occur before this checkpoint.
-5. Create the new Canonical V2 database baseline and module interface contract tests.
-6. Ingest forensic/historical sources into immutable landing through source adapters; checkpoint and
-   verify chain-of-custody manifests.
-7. Build typed domain identity/assertion/relationship projections into a candidate release; add
-   targeted recollection/enrichment for measured PRD gaps.
-8. Reconcile and accept S6R internal Person/Technology reference contracts without adding a fifth
-   public inclusion domain or canonical Product-capability relation.
-9. Build versioned public plus internal auxiliary projections and full Milvus indexes from the same
-   candidate manifest.
-10. Run domain/path retrieval, relation, grounded-answer, Web, parity, latency/cost, and rollback
-   acceptance. Iterate only inside isolated candidate releases.
-11. Migrate admin/chat/data consumers to the new module interfaces and run old/new scenario comparison
-   as evidence, not as a compatibility promise.
-12. Obtain explicit acceptance and separate cutover authorization. Promotion to any production-like
-   target is outside this plan until then.
+1. Preserve the Accepted S1-S12A implementation history and immutable review artifacts. Retire the
+   Task 2.8 human-review gate and its downstream dependencies without reinterpreting it as passed.
+2. Extend the isolated build from its Company-only r12 population to serviceable Professor,
+   Company, Paper, Patent, and customer-required relationship projections using inventoried copies
+   or approved recollection, never original-source paths.
+3. Build matching lookup/vector projections and a content-addressed read-only serving bundle, then
+   bind it to the real chat API/UI without changing an active release pointer.
+4. Run focused changed-module checks, one build/parity/source-isolation smoke, and approximately
+   eight representative chat cases during implementation.
+5. Run all 17 workbook conversations/25 turns through the real runtime and produce a human-readable
+   query, Ground Truth, actual answer, sources, and limitation comparison report.
+6. Let the user evaluate the running system and record the final acceptance decision. Any material
+   mismatch becomes a concrete product gap and focused regression case.
+7. Request separate explicit authorization before any production-like promotion or cleanup.
 
 Rollback during development discards or deactivates the rejected candidate and restores the prior
 accepted release pointers. It never rewrites forensic landing evidence.
 
 ## Open Questions
 
-- Exact numeric thresholds not already fixed by PRD will be frozen after the authorized read-only
-  candidate/source baseline and reviewed labels.
 - Exact model/provider choices and per-route call budgets remain configuration decisions subject to
-  the accepted quality, latency, and cost gates.
+  usable answer latency and bounded cost in the real runtime.
 - Physical table names and internal ID format remain implementation choices as long as the typed
   domain, lineage, reversibility, and interface contracts are met.
