@@ -4094,3 +4094,32 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   restarted Candidate is listening on `0.0.0.0:18188` and the public page returns HTTP 200. Startup
   still takes about 16 minutes and peaks near 9.5 GB, which is outside per-query TTFT and remains a
   separate optimization opportunity.
+
+## S12D dual-Web and adaptive idle keep-warm Candidate — 2026-07-28
+
+- Status is Candidate, not user Accepted. Tasks 12.5d-12.5f are complete; Task 12.5 still requires
+  direct user acceptance and Task 12.6 still requires separate Cutover authorization.
+- Focused dual-Web tests cover concurrent success, normalized-URL deduplication, richer-Bocha
+  preference, primary/corroborating provenance, one-provider degradation, both-provider failure,
+  reusable request transports, and isolated keep-warm transports. The provider keep-warm test proves
+  all four external lanes start concurrently.
+- Deterministic lifecycle tests cover complete-idle timing, activity reset, dynamic remaining wait,
+  non-overlap, exception containment, startup registration, shutdown, and request activity marking.
+  The keep-warm callback invokes providers directly and does not call the chat adapter or any
+  session/evidence/canonical/index write interface.
+- TDD reproduced the real post-restart 500 as `TypeError: cannot pickle '_thread.RLock' object` while
+  `deepcopy` forked an answer holding the persistent prose renderer. The process-scoped renderer now
+  explicitly remains outside answer-session copies. The new regression plus the complete serving
+  module report `42 passed`; focused Admin chat/keep-warm/public UI tests report `58 passed`; Ruff is
+  clean and Pyright reports zero errors.
+- Runtime release `candidate-s12c-20260726-r8` restarted on `0.0.0.0:18188`. A cold-process Ding
+  Wenbo profile returned HTTP 200 in 8.361 seconds. An immediate same-query request returned 200 in
+  2.342 seconds. After more than six minutes without chat activity, a fresh request returned 200 in
+  2.720 seconds, compared with the pre-repair long-idle observation of about 7.30 seconds. Its answer
+  stayed `llm_synthesized`, public `evidence` stayed empty, and its only citation was
+  `http://www.sigs.tsinghua.edu.cn/dwb/main.htm`.
+- A real same-session founder follow-up returned HTTP 200 in 11.247 seconds with exact answer
+  `丁文伯参与创立了深圳无界智航科技有限公司，角色为创始人。` The long tail remains provider-dependent,
+  but it does not regress the long-idle first-query result or expose internal evidence.
+- No source/canonical/index content, active pointer, production resource, promotion, archive,
+  destructive cleanup, or Cutover changed.

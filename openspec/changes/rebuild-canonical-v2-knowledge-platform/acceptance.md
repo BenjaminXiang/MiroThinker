@@ -72,10 +72,10 @@ acceptance.
 - [x] Every normal information request invokes bounded Web search alongside applicable local lanes,
       and relevant local plus current-Web evidence is available to final LLM synthesis. Refusal,
       clarification, safety, and interface-control inputs remain exempt.
-- [ ] Every normal information request invokes Bocha and Serper concurrently within the existing
+- [x] Every normal information request invokes Bocha and Serper concurrently within the existing
       outer Web budget, deduplicates normalized URLs after merge, retains actual provider provenance,
       and degrades to one provider or local evidence without losing usable results.
-- [ ] After a complete idle interval, one bounded background cycle keeps Bocha, Serper, embedding,
+- [x] After a complete idle interval, one bounded background cycle keeps Bocha, Serper, embedding,
       and prose-LLM paths warm; real requests never wait for it, activity suppresses unnecessary
       cycles, shutdown stops it, and it creates no chat/session/evidence/canonical/index writes.
 - [x] Normal information answers use the configured LLM renderer; deterministic grounded text is
@@ -103,7 +103,7 @@ acceptance.
       serving-bundle identity, lookup/vector parity, original-source isolation, and unchanged active
       pointers.
 - [x] Changed-module tests pass. Changed Python files pass focused Ruff and Pyright checks.
-- [ ] Focused tests prove dual-provider merge/provenance/failure behavior and deterministic idle,
+- [x] Focused tests prove dual-provider merge/provenance/failure behavior and deterministic idle,
       activity, non-overlap, and shutdown semantics; real timing evidence covers warm and post-idle
       requests without weakening answer or public-evidence behavior.
 - [x] `openspec validate rebuild-canonical-v2-knowledge-platform --strict` and `git diff --check`

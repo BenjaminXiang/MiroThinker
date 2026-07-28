@@ -1254,3 +1254,27 @@
   request, stops with the app, and creates no business-data writes.
 - S12D returns from Candidate to In Progress for Tasks 12.5d-12.5f. Task 12.5 remains direct user
   acceptance and Task 12.6 remains separately authorized Cutover.
+
+## 2026-07-28 — S12D dual-Web and adaptive idle keep-warm Candidate
+
+- Replaced the single-provider Web lane with bounded concurrent Bocha plus Serper calls. The merge
+  normalizes URLs, keeps one result position per normalized URL, prefers richer Bocha content for a
+  duplicate, retains primary and corroborating provider versions, and preserves usable results when
+  either provider fails.
+- Added one app-lifecycle-owned 300-second adaptive idle keep-warm cycle for Bocha, Serper,
+  embedding, and prose LLM paths. Chat activity resets the deadline, cycles cannot overlap, provider
+  failures cannot stop the worker, shutdown joins it, and the cycle bypasses chat/session/evidence
+  and business-data write paths.
+- The first persistent prose-client implementation exposed a real HTTP 500 because answer-session
+  `deepcopy` traversed the client's lock. The corrected boundary keeps the process-scoped renderer
+  and client outside copied session state; a regression now forks the real answer object and proves
+  the renderer remains shared.
+- On the restarted `0.0.0.0:18188` Candidate, the first post-start Ding Wenbo profile returned 200
+  in 8.361 seconds, an immediate same-query turn returned 200 in 2.342 seconds, and a fresh request
+  after more than six idle minutes returned 200 in 2.720 seconds. The post-idle result remains
+  `llm_synthesized`, exposes `evidence=[]`, and cites only the official Tsinghua homepage. The
+  same-session founder follow-up returned 200 and states that Ding Wenbo participated in founding
+  Shenzhen Wujie Zhihang Technology Co., Ltd.
+- Tasks 12.5d-12.5f and their objective acceptance checks are complete, so S12D returns to
+  Candidate. Task 12.5 remains open for direct user acceptance; Task 12.6 remains a separate,
+  unauthorized Cutover decision.

@@ -115,7 +115,7 @@
 - [x] 12.5a Implement S12D so every normal information request combines local and current-Web evidence through the real LLM answer path, with deterministic grounded fallback only on explicit provider/output failure.
 - [x] 12.5b Sanitize the public chat envelope and render a default-collapsed `查看依据` containing only validated official public sources; expose no `/browse` link or internal trace data.
 - [x] 12.5c Run the focused cross-domain/provider-failure checks, replay the Ding Wenbo founder follow-up, and restart the isolated `:18188` candidate for direct user iteration.
-- [ ] 12.5d Replace the single-provider Canonical Web lane with bounded concurrent Bocha plus Serper retrieval, normalized-URL deduplication, and retained provider provenance.
-- [ ] 12.5e Add one lifecycle-owned adaptive idle keep-warm loop for Bocha, Serper, embedding, and prose LLM paths without chat/session/evidence/data writes or request-path waiting.
-- [ ] 12.5f Verify dual-provider success/degradation, idle/activity/shutdown behavior, warm and post-idle latency, unchanged public evidence sanitization, and restart the isolated `0.0.0.0:18188` Candidate.
+- [x] 12.5d Replace the single-provider Canonical Web lane with bounded concurrent Bocha plus Serper retrieval, normalized-URL deduplication, and retained provider provenance.
+- [x] 12.5e Add one lifecycle-owned adaptive idle keep-warm loop for Bocha, Serper, embedding, and prose LLM paths without chat/session/evidence/data writes or request-path waiting.
+- [x] 12.5f Verify dual-provider success/degradation, idle/activity/shutdown behavior, warm and post-idle latency, unchanged public evidence sanitization, and restart the isolated `0.0.0.0:18188` Candidate.
 - [ ] 12.6 Keep original sources frozen and request separate explicit authorization for any production-like cutover, archive, or destructive cleanup.
