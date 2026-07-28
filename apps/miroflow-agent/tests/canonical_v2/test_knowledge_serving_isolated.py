@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 
 import pytest
 
@@ -211,10 +212,12 @@ def test_normal_answer_uses_injected_llm_renderer_and_preserves_founder_role(
 ) -> None:
     path, bundle = _write_bundle(tmp_path)
     rendered_claims: list[tuple[str, ...]] = []
+    rendered_queries: list[str | None] = []
 
     def render(result: object) -> str:
         claims = tuple(claim.text for claim in result.claims)  # type: ignore[attr-defined]
         rendered_claims.append(claims)
+        rendered_queries.append(getattr(result, "original_query", None))
         return "丁文伯参与创立了深圳无界智航科技有限公司。"
 
     inputs = load_recorded_serving_inputs(
@@ -286,6 +289,8 @@ def test_normal_answer_uses_injected_llm_renderer_and_preserves_founder_role(
     assert result.render_mode == "prose_renderer"
     assert result.answer_text == "丁文伯参与创立了深圳无界智航科技有限公司。"
     assert rendered_claims
+    assert rendered_queries == ["他是否有参与哪些企业的创立"]
+    assert "original_query" not in result.model_dump(mode="json")
     assert "参与创立" in rendered_claims[0][0]
 
 
@@ -314,6 +319,7 @@ def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
         extra_body={"thinking": {"type": "disabled"}},
     )
     result = SimpleNamespace(
+        original_query="他是否有参与哪些企业的创立？",
         claims=(
             SimpleNamespace(
                 text="该教授参与创立了深圳无界智航科技有限公司，角色为创始人。",
@@ -347,8 +353,117 @@ def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
     assert "该教授参与创立" in serialized
     assert "丁文伯" in serialized
     assert "professor_to_company" in serialized
+    assert "他是否有参与哪些企业的创立" in serialized
+    assert "围绕用户问题" in serialized
+    assert "不要逐字段复述" in serialized
     assert "evidence:" not in serialized
     assert "canonical-v2-isolated" not in serialized
+
+
+@pytest.mark.parametrize(
+    "query",
+    (
+        "介绍清华的丁文伯",
+        "介绍深圳无界智航科技有限公司",
+        "pFedGPA 这篇论文讲了什么",
+        "专利 CN117873146A 的详细信息",
+    ),
+)
+def test_llm_prose_renderer_keeps_each_public_domain_question(query: str) -> None:
+    calls: list[dict[str, object]] = []
+
+    class _Completions:
+        def create(self, **kwargs: object) -> object:
+            calls.append(kwargs)
+            return SimpleNamespace(
+                choices=(
+                    SimpleNamespace(message=SimpleNamespace(content="已整理回答")),
+                )
+            )
+
+    renderer = serving_module._OpenAIProseRenderer(
+        client=SimpleNamespace(
+            chat=SimpleNamespace(completions=_Completions()),
+        ),
+        model="recorded-chat-model",
+        extra_body={"thinking": {"type": "disabled"}},
+    )
+
+    assert (
+        renderer(
+            SimpleNamespace(
+                original_query=query,
+                claims=(),
+                context_receipt=None,
+            )
+        )
+        == "已整理回答"
+    )
+    assert query in json.dumps(calls[0], ensure_ascii=False)
+
+
+def test_environment_prose_renderer_bounds_the_default_provider_wait(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client_calls: list[dict[str, object]] = []
+    result_timeouts: list[float] = []
+
+    class _Completions:
+        def create(self, **_: object) -> object:
+            return SimpleNamespace(
+                choices=(
+                    SimpleNamespace(message=SimpleNamespace(content="已整理回答")),
+                )
+            )
+
+    def openai_client(**kwargs: object) -> object:
+        client_calls.append(kwargs)
+        return SimpleNamespace(chat=SimpleNamespace(completions=_Completions()))
+
+    class _ImmediateFuture:
+        def __init__(self, function: Any, value: Any) -> None:
+            self._function = function
+            self._value = value
+
+        def result(self, *, timeout: float) -> str:
+            result_timeouts.append(timeout)
+            return self._function(self._value)
+
+    class _ImmediateExecutor:
+        def submit(self, function: Any, value: Any) -> _ImmediateFuture:
+            return _ImmediateFuture(function, value)
+
+    monkeypatch.delenv("CHAT_LLM_TIMEOUT_SECONDS", raising=False)
+    monkeypatch.setattr(
+        serving_module,
+        "resolve_professor_llm_settings",
+        lambda _profile: {
+            "local_llm_api_key": "test-key",
+            "local_llm_model": "qwen3.6-35b-a3b-fp8",
+            "local_llm_base_url": "https://llm.example/v1",
+        },
+    )
+    monkeypatch.setattr(serving_module, "OpenAI", openai_client)
+    monkeypatch.setattr(
+        serving_module,
+        "_PROSE_RENDER_EXECUTOR",
+        _ImmediateExecutor(),
+    )
+
+    rendered = serving_module._EnvironmentProseRenderer()(
+        SimpleNamespace(claims=(), context_receipt=None)
+    )
+
+    assert rendered == "已整理回答"
+    assert result_timeouts == [12.0]
+    assert client_calls == [
+        {
+            "base_url": "https://llm.example/v1",
+            "api_key": "test-key",
+            "timeout": 12.0,
+            "max_retries": 0,
+        }
+    ]
 
 
 def test_focused_missing_entity_prefers_current_web_over_vector_neighbors(
@@ -965,7 +1080,7 @@ def test_serving_planner_routes_lawful_avoidance_request_to_static_safety(
     assert proposal.web_mode == "disabled"
 
 
-def test_serper_lane_allows_provider_key_file_fallback(
+def test_serper_lane_allows_provider_key_file_fallback_and_reuses_transport(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -974,6 +1089,9 @@ def test_serper_lane_allows_provider_key_file_fallback(
 
     class _Provider:
         def __init__(self, **kwargs: object) -> None:
+            observed["provider_constructions"] = (
+                int(observed.get("provider_constructions", 0)) + 1
+            )
             observed["kwargs"] = kwargs
 
         def search(self, query: str) -> dict[str, object]:
@@ -1019,8 +1137,11 @@ def test_serper_lane_allows_provider_key_file_fallback(
     lane_request = _lane_request(plan, "web", inputs.universal_web_policy)
 
     result = inputs.web_search(lane_request)
+    repeated_result = inputs.web_search(lane_request)
 
     assert len(result.candidates) == 1
+    assert len(repeated_result.candidates) == 1
+    assert observed["provider_constructions"] == 1
     assert observed["query"] == "王学谦"
     kwargs = observed["kwargs"]
     assert isinstance(kwargs, dict)

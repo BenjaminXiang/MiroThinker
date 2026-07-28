@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -57,6 +58,10 @@ from .knowledge_read import (
 
 _ZERO_SHA256 = "0" * 64
 _PUBLIC_DOMAINS = ("professor", "company", "paper", "patent")
+_PROSE_RENDER_EXECUTOR = ThreadPoolExecutor(
+    max_workers=4,
+    thread_name_prefix="canonical-v2-prose",
+)
 
 
 def _institution_person_name(query: str) -> str | None:
@@ -464,21 +469,21 @@ class _SerperLaneAdapter:
         self._timeout_ms = timeout_ms
         self._max_snapshot_bytes = max_snapshot_bytes
         self._clock = clock
-
-    def __call__(self, request: LaneRequest) -> RetrievalLaneResult:
         # The provider may retry via curl, so both transport attempts must fit
         # inside the outer Web-lane timeout.
         provider_attempt_timeout = max(0.1, self._timeout_ms * 0.00045)
-        provider = WebSearchProvider(
+        self._provider = WebSearchProvider(
             timeout=provider_attempt_timeout,
         )
+
+    def __call__(self, request: LaneRequest) -> RetrievalLaneResult:
         query_text = re.sub(
             r"\s*\[lane=web\]\s*$",
             "",
             request.query_text,
         ).strip()
         try:
-            payload = provider.search(query_text)
+            payload = self._provider.search(query_text)
         except RuntimeError as exc:
             raise ConnectionError("Serper Web search is unavailable") from exc
         organic = payload.get("organic", ()) if isinstance(payload, dict) else ()
@@ -803,6 +808,8 @@ class _OpenAIProseRenderer:
         active_anchor = getattr(context, "active_anchor", None)
         displayed_set = getattr(context, "displayed_result_set", None)
         payload = {
+            "prompt_version": "canonical-v2-prose-v2",
+            "user_question": getattr(result, "original_query", None),
             "active_entity": (
                 None
                 if active_anchor is None
@@ -836,9 +843,11 @@ class _OpenAIProseRenderer:
                 {
                     "role": "system",
                     "content": (
-                        "你是深圳科创信息助手。只根据给出的已验证主张回答，先直接回答用户问题，"
-                        "再用简洁自然的中文组织必要补充。关系问题必须明确写出人物、关系角色和"
-                        "目标实体。不要复制重复字段，不要输出内部ID、检索流程或未提供的事实。"
+                        "你是深圳科创信息助手。只使用输入中的已验证主张，围绕用户问题生成最终答案。"
+                        "先直接给出结论，再按主体或关系组织必要补充；合并同义和重复信息，使用简洁、"
+                        "自然、易读的中文，不要逐字段复述，不要输出“简介”“技术路线”等数据字段标签。"
+                        "关系问题必须明确写出人物、关系角色和目标实体。不要输出内部ID、检索流程、"
+                        "证据元数据或输入中未提供的事实。输入不足时明确说明，不要猜测。"
                     ),
                 },
                 {
@@ -858,14 +867,12 @@ class _OpenAIProseRenderer:
             raise ValueError("LLM prose response is empty")
         rendered = content.strip()
         founder_supported = any(
-            claim.predicate == "professor_company_role"
-            and "参与创立" in claim.text
+            claim.predicate == "professor_company_role" and "参与创立" in claim.text
             for claim in result.claims
         )
         if founder_supported and "参与创立" not in rendered:
-            handles = (
-                (() if active_anchor is None else (active_anchor,))
-                + (() if displayed_set is None else displayed_set.handles)
+            handles = (() if active_anchor is None else (active_anchor,)) + (
+                () if displayed_set is None else displayed_set.handles
             )
             professor_name = next(
                 (
@@ -884,9 +891,7 @@ class _OpenAIProseRenderer:
                 None,
             )
             if professor_name is not None and company_name is not None:
-                rendered = (
-                    f"{professor_name}参与创立了{company_name}。\n\n{rendered}"
-                )
+                rendered = f"{professor_name}参与创立了{company_name}。\n\n{rendered}"
         return rendered
 
 
@@ -899,19 +904,22 @@ class _EnvironmentProseRenderer:
             if not api_key:
                 raise ValueError("configured chat LLM API key is unavailable")
             model = str(settings["local_llm_model"])
-            timeout = max(5.0, float(os.getenv("CHAT_LLM_TIMEOUT_SECONDS", "60")))
+            timeout = max(5.0, float(os.getenv("CHAT_LLM_TIMEOUT_SECONDS", "12")))
             renderer = _OpenAIProseRenderer(
                 client=OpenAI(
                     base_url=settings["local_llm_base_url"],
                     api_key=api_key,
                     timeout=timeout,
+                    max_retries=0,
                 ),
                 model=model,
                 extra_body=build_non_thinking_extra_body(model),
             )
-            return renderer(result)
+            future = _PROSE_RENDER_EXECUTOR.submit(renderer, result)
+            return future.result(timeout=timeout)
         except (
             ConnectionError,
+            FutureTimeoutError,
             OpenAIError,
             OSError,
             RuntimeError,

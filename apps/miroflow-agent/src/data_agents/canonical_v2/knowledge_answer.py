@@ -446,6 +446,7 @@ class TurnResult(ContractModel):
     session_id: str
     turn_id: str
     release_id: str
+    original_query: str | None = Field(default=None, exclude=True)
     answer_text: str
     claims: tuple[MaterialClaim, ...] = ()
     limitations: tuple[AnswerLimitation, ...] = ()
@@ -1623,6 +1624,7 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             session_id=request.session_id,
             turn_id=request.turn_id,
             release_id=request.release_id,
+            original_query=request.query,
             answer_text=answer_text,
             claims=claims,
             limitations=answer_limitations,

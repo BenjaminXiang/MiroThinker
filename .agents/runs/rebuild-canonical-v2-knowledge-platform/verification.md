@@ -4022,3 +4022,75 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   index, active pointer, production resource, commit, Push, PR, promotion, archive, or cleanup changed.
   Tasks 12.5a-12.5c are complete; Task 12.5 remains open for direct user acceptance and Task 12.6
   remains open for separate Cutover authorization.
+
+## S12D answer-quality and interactive-latency repair — 2026-07-28
+
+- Direct feedback clarified that retrieval evidence is an input to final LLM presentation, not the
+  user-facing answer format. The shared prose prompt previously omitted the user's question, so it
+  could only restate selected claims. The `canonical-v2-prose-v2` prompt now receives the current
+  question, answers it first, merges repeated facts, avoids projection field labels, and retains the
+  same evidence-only factual boundary across Professor, Company, Paper, and Patent.
+- The current question is transient process-only input on `TurnResult`; it is excluded from model
+  serialization. Public responses still contain no raw evidence or trace payload. The public UI
+  continues to default-collapse `查看依据` and exposes only validated official URLs.
+- The latency regression was systemic rather than Ding-Wenbo-specific: each turn rehashed immutable
+  release authority, reread/reparsed 3,784 lookup documents across sibling lanes, lazily audited the
+  4,338-point vector snapshot on the first request, and allowed the provider client to wait beyond a
+  useful interaction budget. Release composition now caches immutable addresses and one audited
+  lookup view, invalidates physical-document reuse on file fingerprint changes, warms the reusable
+  vector snapshot during startup, and enforces a 12-second application wall-clock prose budget with
+  a fixed four-worker executor and no SDK retries.
+- Real HTTP on the final `0.0.0.0:18188` process returned 200 and `llm_synthesized` for the Ding Wenbo
+  profile in 8.26 seconds, its founder follow-up in 7.05 seconds, and the Wujie Zhihang Company
+  profile in 2.91 seconds. The founder answer states that Ding Wenbo participated in founding Shenzhen
+  Wujie Zhihang Technology Co., Ltd.; the Company answer uses two organized paragraphs with no
+  `简介` or `技术路线` field labels. The Professor citation is only the official Tsinghua homepage;
+  public `evidence` remains empty.
+- Focused verification reports serving `36 passed`, answer grounding/closure `28 passed`, vector and
+  internal-reference regressions `2 passed`, Admin HTTP `16 passed`, and public UI `11 passed`.
+  Changed-file Ruff/format and targeted Pyright are clean. Strict OpenSpec validation and
+  `git diff --check` pass.
+- Browser checks at desktop and 390px mobile widths found no horizontal overflow or message overlap.
+  The evidence disclosure begins closed, expands successfully, links only to
+  `http://www.sigs.tsinghua.edu.cn/dwb/main.htm`, and renders no `/browse` text.
+- Remaining risk: final Candidate process startup still takes about 16 minutes and peaks near 9.5 GB
+  because it replays and audits the complete serving envelope before listening. This cost is outside
+  individual request latency and remains a separate startup-path optimization opportunity. A timed-
+  out provider job may occupy one of the four fixed prose workers until the provider returns, but it
+  cannot hold the HTTP request beyond the configured wall-clock budget.
+- No source/canonical/index bytes, active pointer, production resource, commit, Push, PR, promotion,
+  archive, cleanup, or Cutover changed. Task 12.5 remains open for direct user acceptance and Task
+  12.6 remains separately authorized only for a future Cutover decision.
+
+## S12D end-to-end TTFT diagnosis and transport reuse — 2026-07-28
+
+- Here TTFT is measured from browser query submission until answer text is visible, not provider
+  token TTFT. The current page awaits the complete `/api/chat` JSON before rendering, so HTTP
+  `time_starttransfer` equals total backend completion time. A syscall trace of a representative
+  3.599-second request attributed about 2.70 seconds to Serper, 0.67 seconds to final LLM prose, and
+  about 0.23 seconds to local planning, retrieval, validation, mapping, and checkpoint work.
+- The shared Web adapter previously constructed a new `WebSearchProvider` and HTTP session on every
+  turn. Direct real-provider calibration measured repeated new transports at 1.64-2.08 seconds and
+  a reused keep-alive transport at 1.15-1.24 seconds for the same query. The adapter now constructs
+  the provider once per loaded serving runtime; query text, request bounds, provider parameters,
+  result filtering, evidence admission, reranking, and LLM synthesis are unchanged.
+- Before the repair, the second four-domain HTTP round took 3.685, 3.883, 3.169, and 3.402 seconds
+  (mean 3.535 seconds). After restart, the same warm round took 2.134, 1.502, 2.184, and 1.567 seconds
+  (mean 1.847 seconds, 47.8% lower). All eight post-restart answers remained `llm_synthesized`, had
+  non-empty answer text, exposed `evidence=[]`, and retained the existing official-citation policy.
+- Browser DOM timing showed the Wujie Zhihang Company answer at 1.674 seconds. A separate Ding Wenbo
+  browser turn took 11.214 seconds while still returning the same 298-character synthesized profile,
+  a closed `查看依据` disclosure, and only the official Tsinghua homepage. A following traced Ding
+  request completed in 2.794 seconds, with about 1.74 seconds in Web and 0.86 seconds in LLM prose.
+  This confirms material upstream Web tail variance remains even after connection reuse.
+- The 10-second universal-Web outer budget was not shortened: doing so can discard slow but valid Web
+  augmentation and would violate the output-preservation constraint. Raw LLM token streaming was
+  also not introduced because the current complete-answer validation rejects structured/internal
+  values before public rendering; streaming before that gate would change the safety contract for a
+  maximum normal-path gain of only the roughly 0.6-0.9-second prose stage.
+- Regression verification: serving reports `36 passed`, answer grounding/closure `28 passed`,
+  lookup/vector cache regressions `2 passed`, and Admin HTTP/UI `27 passed`. Focused Ruff passes,
+  targeted Pyright reports zero errors, strict OpenSpec validation and `git diff --check` pass. The
+  restarted Candidate is listening on `0.0.0.0:18188` and the public page returns HTTP 200. Startup
+  still takes about 16 minutes and peaks near 9.5 GB, which is outside per-query TTFT and remains a
+  separate optimization opportunity.

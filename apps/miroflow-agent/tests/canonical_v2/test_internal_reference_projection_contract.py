@@ -8291,6 +8291,32 @@ def test_s8v1_release_scoped_vector_recall_uses_audited_physical_points_and_trac
             return tuple(drifted)
 
     original_audit = isolated_read_module.audit_isolated_index_snapshot
+    composition_audits: list[Any] = []
+
+    def counted_composition_audit(*args: Any, **kwargs: Any) -> Any:
+        composition_audits.append((args, kwargs))
+        return original_audit(*args, **kwargs)
+
+    monkeypatch.setattr(
+        isolated_read_module,
+        "audit_isolated_index_snapshot",
+        counted_composition_audit,
+    )
+    warmed_vector = vector_factory(
+        release_bundle=bundle,
+        published_release=published,
+        embedding_adapter=embedding_adapter,
+        reuse_audited_snapshot=True,
+    )
+    assert len(composition_audits) == 1
+    assert warmed_vector(vector_request).candidates
+    assert len(composition_audits) == 1
+    monkeypatch.setattr(
+        isolated_read_module,
+        "audit_isolated_index_snapshot",
+        original_audit,
+    )
+
     audit_attempts: list[Path] = []
 
     def unexpected_audit(*args: Any, **kwargs: Any) -> Any:
@@ -13397,7 +13423,45 @@ def test_s8ir1_release_scoped_internal_reference_filter_and_definition_lookup(
         ),
         "clock": lambda: NOW,
     }
-    evidence_set = release_read_factory(**service_kwargs).execute(plan)
+    service = release_read_factory(**service_kwargs)
+    original_canonical_sha256 = isolated_read_module._canonical_sha256
+    original_physical_reader = isolated_read_module.read_isolated_lookup_documents
+    runtime_index_request_hashes: list[Any] = []
+    runtime_physical_reads: list[Any] = []
+
+    def track_runtime_release_hashes(value: Any) -> str:
+        if isinstance(value, dict) and "candidate_projection_request" in value:
+            runtime_index_request_hashes.append(value)
+        return original_canonical_sha256(value)
+
+    monkeypatch.setattr(
+        isolated_read_module,
+        "_canonical_sha256",
+        track_runtime_release_hashes,
+    )
+
+    def track_runtime_physical_reads(value: Any) -> Any:
+        runtime_physical_reads.append(value)
+        return original_physical_reader(value)
+
+    monkeypatch.setattr(
+        isolated_read_module,
+        "read_isolated_lookup_documents",
+        track_runtime_physical_reads,
+    )
+    evidence_set = service.execute(plan)
+    assert runtime_index_request_hashes == []
+    assert runtime_physical_reads == []
+    monkeypatch.setattr(
+        isolated_read_module,
+        "_canonical_sha256",
+        original_canonical_sha256,
+    )
+    monkeypatch.setattr(
+        isolated_read_module,
+        "read_isolated_lookup_documents",
+        original_physical_reader,
+    )
 
     assert len(captured_internal_requests) == 1
     internal_request = captured_internal_requests[0]
@@ -13983,10 +14047,11 @@ def test_s8ir1_release_scoped_internal_reference_filter_and_definition_lookup(
         blocked_reads.append(value)
         raise AssertionError("invalid release binding must fail before lookup")
 
-    monkeypatch.setattr(isolated_read_module, "_read_bound_documents", blocked_read)
     service_without_pair = release_read_factory(**factory_without_pair)
+    monkeypatch.setattr(isolated_read_module, "_read_bound_documents", blocked_read)
     with pytest.raises(integrity_error, match="unsupported lane"):
         service_without_pair.execute(plan)
+    monkeypatch.setattr(isolated_read_module, "_read_bound_documents", original_reader)
 
     binding = plan.release_binding
     assert binding is not None
@@ -14022,10 +14087,19 @@ def test_s8ir1_release_scoped_internal_reference_filter_and_definition_lookup(
         "internal_reference_projection_result_sha256",
         "institution_catalog_sha256",
     ):
+        bound_service = release_read_factory(**service_kwargs)
+        monkeypatch.setattr(
+            isolated_read_module,
+            "_read_bound_documents",
+            blocked_read,
+        )
         with pytest.raises(integrity_error, match="release binding"):
-            release_read_factory(**service_kwargs).execute(
-                plan_with_binding_field(binding_field)
-            )
+            bound_service.execute(plan_with_binding_field(binding_field))
+        monkeypatch.setattr(
+            isolated_read_module,
+            "_read_bound_documents",
+            original_reader,
+        )
     assert blocked_reads == []
     monkeypatch.setattr(isolated_read_module, "_read_bound_documents", original_reader)
 
@@ -14179,15 +14253,17 @@ def test_s8ir1_release_scoped_internal_reference_filter_and_definition_lookup(
         filter_forging_factory(without_geography),
         filter_forging_factory(changed_geography),
     )
-    for expected_read_count, hostile_factory in enumerate(hostile_factories, start=1):
+    for hostile_factory in hostile_factories:
         monkeypatch.setattr(
             isolated_read_module,
             "create_isolated_internal_reference_lookup_adapter",
             hostile_factory,
         )
+        hostile_service = release_read_factory(**service_kwargs)
+        reads_after_composition = len(physical_reads)
         with pytest.raises(integrity_error, match="display|internal reference"):
-            release_read_factory(**service_kwargs).execute(plan)
-        assert len(physical_reads) == expected_read_count
+            hostile_service.execute(plan)
+        assert len(physical_reads) == reads_after_composition + 1
     monkeypatch.setattr(isolated_read_module, "_read_bound_documents", original_reader)
 
     assert {

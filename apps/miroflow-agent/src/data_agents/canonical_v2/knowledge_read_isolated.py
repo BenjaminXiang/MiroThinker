@@ -558,6 +558,19 @@ class _ReleaseBoundKnowledgeRead(KnowledgeRead):
         self._embedding_adapter = embedding_adapter
         self._internal_reference_authority = internal_reference_authority
         self._relationship_authority = relationship_authority
+        self._published_release_sha256 = _canonical_sha256(
+            published_release.model_dump(mode="json")
+        )
+        self._publication_verification_evidence_ids = tuple(
+            sorted(published_release.verification_evidence_ids)
+        )
+        self._index_projection_request_sha256 = (
+            _canonical_sha256(
+                internal_reference_authority.index_request.model_dump(mode="json")
+            )
+            if internal_reference_authority is not None
+            else None
+        )
 
     def execute(self, plan: RetrievalPlan) -> EvidenceSet:
         if type(plan) is not RetrievalPlan:
@@ -609,10 +622,9 @@ class _ReleaseBoundKnowledgeRead(KnowledgeRead):
             validated_plan.release_id != bundle.release_id
             or binding.release_id != bundle.release_id
             or binding.publication_state != expected_publication_state
-            or binding.published_release_sha256
-            != _canonical_sha256(publication.model_dump(mode="json"))
+            or binding.published_release_sha256 != self._published_release_sha256
             or binding.publication_verification_evidence_ids
-            != tuple(sorted(publication.verification_evidence_ids))
+            != self._publication_verification_evidence_ids
             or binding.manifest_sha256 != bundle.manifest.manifest_sha256
             or binding.index_projection_result_sha256
             != bundle.index_result.content_sha256
@@ -625,7 +637,7 @@ class _ReleaseBoundKnowledgeRead(KnowledgeRead):
             candidate_result = authority.index_request.candidate_projection_result
             if (
                 binding.index_projection_request_sha256
-                != _canonical_sha256(authority.index_request.model_dump(mode="json"))
+                != self._index_projection_request_sha256
                 or binding.candidate_projection_result_sha256
                 != candidate_result.content_sha256
                 or binding.internal_reference_projection_result_sha256
@@ -1054,18 +1066,22 @@ def create_isolated_release_knowledge_read(
         else None
     )
 
+    lookup_view = _create_audited_lookup_view(validated_bundle)
     lane_adapters: dict[str, Callable[[LaneRequest], RetrievalLaneResult]] = {
         "exact": create_isolated_exact_lookup_adapter(
             release_bundle=validated_bundle,
             published_release=validated_publication,
+            _lookup_view=lookup_view,
         ),
         "structured": create_isolated_structured_lookup_adapter(
             release_bundle=validated_bundle,
             published_release=validated_publication,
+            _lookup_view=lookup_view,
         ),
         "lexical": create_isolated_lexical_lookup_adapter(
             release_bundle=validated_bundle,
             published_release=validated_publication,
+            _lookup_view=lookup_view,
         ),
     }
     supported_lanes = {"exact", "structured", "lexical", "web"}
@@ -1087,6 +1103,7 @@ def create_isolated_release_knowledge_read(
                 release_institution_catalog=(
                     internal_reference_authority.institution_catalog
                 ),
+                _lookup_view=lookup_view,
             )
         )
         supported_lanes.add("internal_reference")
@@ -2630,6 +2647,7 @@ def create_isolated_internal_reference_lookup_adapter(
     published_release: PublishedRelease,
     index_projection_request: IndexProjectionRequest,
     release_institution_catalog: InstitutionCatalog,
+    _lookup_view: _AuditedLookupView | None = None,
 ) -> Callable[[LaneRequest], RetrievalLaneResult]:
     """Execute recorded internal Person/Technology queries on one S7 release."""
 
@@ -2639,11 +2657,16 @@ def create_isolated_internal_reference_lookup_adapter(
         index_projection_request=index_projection_request,
         release_institution_catalog=release_institution_catalog,
     )
+    lookup_view = _lookup_view_provider(
+        bundle=authority.bundle,
+        supplied=_lookup_view,
+    )
 
     def internal_reference_lookup(request: LaneRequest) -> RetrievalLaneResult:
         validated_request = _validate_internal_reference_request(request, authority)
         if validated_request.max_candidates == 0:
             return RetrievalLaneResult()
+        lookup_view()
         documents = _read_bound_documents(authority.bundle)
         return _build_internal_reference_result(
             request=validated_request,
@@ -6321,16 +6344,97 @@ def _validate_release_bound_relationship_evidence(
         )
 
 
+@dataclass(frozen=True)
+class _PublicLookupEntry:
+    document: LookupProjectionDocument
+    display_name: str
+    display_terms: frozenset[str]
+    identifier_terms: frozenset[str]
+    content_terms: frozenset[str]
+
+
+@dataclass(frozen=True)
+class _AuditedLookupView:
+    documents: tuple[LookupProjectionDocument, ...]
+    public_entries: tuple[_PublicLookupEntry, ...]
+
+
+def _create_audited_lookup_view(bundle: IsolatedReleaseBundle) -> _AuditedLookupView:
+    documents = _read_bound_documents(bundle)
+    return _AuditedLookupView(
+        documents=documents,
+        public_entries=_public_lookup_entries(documents),
+    )
+
+
+def _public_lookup_entries(
+    documents: tuple[LookupProjectionDocument, ...],
+) -> tuple[_PublicLookupEntry, ...]:
+    entries: list[_PublicLookupEntry] = []
+    for document in documents:
+        if document.projection_scope.value != "public_domain":
+            continue
+        projection = _validated_public_projection(document)
+        display_name, display_terms, identifier_terms, content_terms = (
+            _projection_terms(projection)
+        )
+        entries.append(
+            _PublicLookupEntry(
+                document=document,
+                display_name=display_name,
+                display_terms=display_terms,
+                identifier_terms=identifier_terms,
+                content_terms=content_terms,
+            )
+        )
+    return tuple(entries)
+
+
+def _lookup_entries_for_documents(
+    *,
+    documents: tuple[LookupProjectionDocument, ...],
+    lookup_view: _AuditedLookupView,
+) -> tuple[_PublicLookupEntry, ...]:
+    if documents is lookup_view.documents:
+        return lookup_view.public_entries
+    return _public_lookup_entries(documents)
+
+
+def _lookup_view_provider(
+    *,
+    bundle: IsolatedReleaseBundle,
+    supplied: _AuditedLookupView | None,
+) -> Callable[[], _AuditedLookupView]:
+    lookup_view = supplied
+    lock = Lock()
+
+    def provide() -> _AuditedLookupView:
+        nonlocal lookup_view
+        if lookup_view is not None:
+            return lookup_view
+        with lock:
+            if lookup_view is None:
+                lookup_view = _create_audited_lookup_view(bundle)
+        return lookup_view
+
+    return provide
+
+
 def create_isolated_exact_lookup_adapter(
     *,
     release_bundle: IsolatedReleaseBundle,
     published_release: PublishedRelease,
+    _lookup_view: _AuditedLookupView | None = None,
 ) -> Callable[[LaneRequest], RetrievalLaneResult]:
     """Bind one serviceable publication to its accepted physical lookup bundle."""
 
     validated_bundle, validated_publication = _validated_release_binding(
         release_bundle=release_bundle,
         published_release=published_release,
+    )
+    lookup_view = _lookup_view_provider(
+        bundle=validated_bundle,
+        supplied=_lookup_view,
     )
 
     def exact_lookup(request: LaneRequest) -> RetrievalLaneResult:
@@ -6340,21 +6444,20 @@ def create_isolated_exact_lookup_adapter(
             bundle=validated_bundle,
         )
         documents = _read_bound_documents(validated_bundle)
+        entries = _lookup_entries_for_documents(
+            documents=documents,
+            lookup_view=lookup_view(),
+        )
 
         candidates: list[RecallCandidate] = []
-        for document in documents:
-            if document.projection_scope.value != "public_domain":
-                continue
-            projection = _validated_public_projection(document)
-            display_name, display_terms, identifier_terms, content_terms = (
-                _projection_terms(projection)
-            )
+        for entry in entries:
+            document = entry.document
             if not _matches_exact_request(
                 request=validated_request,
                 document=document,
-                display_terms=display_terms,
-                identifier_terms=identifier_terms,
-                content_terms=content_terms,
+                display_terms=entry.display_terms,
+                identifier_terms=entry.identifier_terms,
+                content_terms=entry.content_terms,
             ):
                 continue
             candidates.append(
@@ -6363,8 +6466,8 @@ def create_isolated_exact_lookup_adapter(
                     bundle=validated_bundle,
                     publication=validated_publication,
                     document=document,
-                    display_name=display_name,
-                    identifier_terms=identifier_terms,
+                    display_name=entry.display_name,
+                    identifier_terms=entry.identifier_terms,
                     lane="exact",
                     adapter_version=_EXACT_ADAPTER_VERSION,
                 )
@@ -6388,12 +6491,17 @@ def create_isolated_structured_lookup_adapter(
     *,
     release_bundle: IsolatedReleaseBundle,
     published_release: PublishedRelease,
+    _lookup_view: _AuditedLookupView | None = None,
 ) -> Callable[[LaneRequest], RetrievalLaneResult]:
     """Bind displayed-set structured dereference to one accepted lookup bundle."""
 
     validated_bundle, validated_publication = _validated_release_binding(
         release_bundle=release_bundle,
         published_release=published_release,
+    )
+    lookup_view = _lookup_view_provider(
+        bundle=validated_bundle,
+        supplied=_lookup_view,
     )
 
     def structured_lookup(request: LaneRequest) -> RetrievalLaneResult:
@@ -6416,18 +6524,17 @@ def create_isolated_structured_lookup_adapter(
             return RetrievalLaneResult()
 
         documents = _read_bound_documents(validated_bundle)
+        entries = _lookup_entries_for_documents(
+            documents=documents,
+            lookup_view=lookup_view(),
+        )
         candidates: list[RecallCandidate] = []
-        for document in documents:
-            if document.projection_scope.value != "public_domain":
-                continue
-            projection = _validated_public_projection(document)
-            display_name, _, identifier_terms, content_terms = _projection_terms(
-                projection
-            )
+        for entry in entries:
+            document = entry.document
             if not _matches_structured_request(
                 request=validated_request,
                 document=document,
-                content_terms=content_terms,
+                content_terms=entry.content_terms,
             ):
                 continue
             candidates.append(
@@ -6436,8 +6543,8 @@ def create_isolated_structured_lookup_adapter(
                     bundle=validated_bundle,
                     publication=validated_publication,
                     document=document,
-                    display_name=display_name,
-                    identifier_terms=identifier_terms,
+                    display_name=entry.display_name,
+                    identifier_terms=entry.identifier_terms,
                     lane="structured",
                     adapter_version=_STRUCTURED_ADAPTER_VERSION,
                 )
@@ -6460,12 +6567,17 @@ def create_isolated_lexical_lookup_adapter(
     *,
     release_bundle: IsolatedReleaseBundle,
     published_release: PublishedRelease,
+    _lookup_view: _AuditedLookupView | None = None,
 ) -> Callable[[LaneRequest], RetrievalLaneResult]:
     """Bind bounded lexical phrase recall to one accepted lookup bundle."""
 
     validated_bundle, validated_publication = _validated_release_binding(
         release_bundle=release_bundle,
         published_release=published_release,
+    )
+    lookup_view = _lookup_view_provider(
+        bundle=validated_bundle,
+        supplied=_lookup_view,
     )
 
     def lexical_lookup(request: LaneRequest) -> RetrievalLaneResult:
@@ -6479,20 +6591,19 @@ def create_isolated_lexical_lookup_adapter(
             return RetrievalLaneResult()
 
         documents = _read_bound_documents(validated_bundle)
+        entries = _lookup_entries_for_documents(
+            documents=documents,
+            lookup_view=lookup_view(),
+        )
         candidates: list[RecallCandidate] = []
-        for document in documents:
-            if document.projection_scope.value != "public_domain":
-                continue
-            projection = _validated_public_projection(document)
-            display_name, display_terms, identifier_terms, content_terms = (
-                _projection_terms(projection)
-            )
+        for entry in entries:
+            document = entry.document
             if not _matches_lexical_request(
                 request=validated_request,
                 document=document,
                 query_phrase=query_phrase,
-                display_terms=display_terms,
-                content_terms=content_terms,
+                display_terms=entry.display_terms,
+                content_terms=entry.content_terms,
             ):
                 continue
             candidates.append(
@@ -6501,8 +6612,8 @@ def create_isolated_lexical_lookup_adapter(
                     bundle=validated_bundle,
                     publication=validated_publication,
                     document=document,
-                    display_name=display_name,
-                    identifier_terms=identifier_terms,
+                    display_name=entry.display_name,
+                    identifier_terms=entry.identifier_terms,
                     lane="lexical",
                     adapter_version=_LEXICAL_ADAPTER_VERSION,
                 )
@@ -6707,6 +6818,8 @@ def create_isolated_vector_recall_adapter(
             candidates=tuple(candidates[: validated_request.max_candidates])
         )
 
+    if reuse_audited_snapshot:
+        validated_snapshot()
     return vector_recall
 
 
@@ -7253,13 +7366,71 @@ def _validated_lane_request(
     return validated
 
 
+@dataclass(frozen=True)
+class _BoundDocumentCacheEntry:
+    physical_fingerprint: tuple[tuple[int, int, int, int, int], ...]
+    documents: tuple[LookupProjectionDocument, ...]
+
+
+_BOUND_DOCUMENT_CACHE: dict[
+    tuple[str, str, str, str, str], _BoundDocumentCacheEntry
+] = {}
+_BOUND_DOCUMENT_CACHE_LOCK = Lock()
+
+
+def _lookup_physical_fingerprint(
+    bundle: IsolatedReleaseBundle,
+) -> tuple[tuple[int, int, int, int, int], ...]:
+    paths = (
+        bundle.index_target.root / ".canonical-v2-isolated-index-target.json",
+        bundle.index_target.root / "lookup.sqlite3",
+    )
+    fingerprints: list[tuple[int, int, int, int, int]] = []
+    for path in paths:
+        if not path.is_file() or path.is_symlink():
+            raise IndexProjectionIntegrityError(
+                "isolated lookup physical authority is missing or unsafe"
+            )
+        stat = path.stat()
+        fingerprints.append(
+            (stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns)
+        )
+    return tuple(fingerprints)
+
+
 def _read_bound_documents(
     bundle: IsolatedReleaseBundle,
 ) -> tuple[LookupProjectionDocument, ...]:
+    cache_key = (
+        str(bundle.index_target.root),
+        bundle.index_target.target_id,
+        bundle.release_id,
+        bundle.index_target.marker_sha256,
+        bundle.index_result.content_sha256,
+    )
+    try:
+        physical_fingerprint = _lookup_physical_fingerprint(bundle)
+    except IndexProjectionIntegrityError:
+        read_isolated_lookup_documents(bundle.index_target)
+        raise
+    with _BOUND_DOCUMENT_CACHE_LOCK:
+        cached = _BOUND_DOCUMENT_CACHE.get(cache_key)
+        if cached is not None and cached.physical_fingerprint == physical_fingerprint:
+            return cached.documents
+
     documents = read_isolated_lookup_documents(bundle.index_target)
     if documents != bundle.index_result.lookup_documents:
         raise IndexProjectionIntegrityError(
             "physical lookup readback differs from the accepted release bundle"
+        )
+    if _lookup_physical_fingerprint(bundle) != physical_fingerprint:
+        raise IndexProjectionIntegrityError(
+            "isolated lookup physical authority changed during validation"
+        )
+    with _BOUND_DOCUMENT_CACHE_LOCK:
+        _BOUND_DOCUMENT_CACHE[cache_key] = _BoundDocumentCacheEntry(
+            physical_fingerprint=physical_fingerprint,
+            documents=documents,
         )
     return documents
 

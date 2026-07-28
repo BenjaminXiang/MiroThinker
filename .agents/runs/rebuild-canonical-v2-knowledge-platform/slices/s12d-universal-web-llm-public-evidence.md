@@ -24,9 +24,13 @@ official public-source links to the public browser.
 ## Allowed scope
 
 - `apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_serving_isolated.py`
+- `apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_answer.py` for the non-serialized
+  current-query input passed to prose synthesis only.
 - `apps/miroflow-agent/tests/canonical_v2/test_knowledge_serving_isolated.py`
 - `apps/admin-console/backend/services/canonical_v2_chat.py`
 - `apps/admin-console/backend/static/chat.html`
+- `apps/admin-console/tests/test_canonical_v2_chat_http_adapter.py` for synchronized fixture-owner
+  content addressing after focused runtime regression coverage changes.
 - Focused Canonical V2 chat/UI tests and this change's task/acceptance/verification artifacts.
 
 ## Forbidden changes
@@ -52,6 +56,8 @@ official public-source links to the public browser.
    render a closed `查看依据` disclosure.
 4. Verify focused provider failure, four-domain citation policy, Ding Wenbo two-turn HTTP, and browser
    disclosure behavior; restart the isolated candidate.
+5. Preserve answer and evidence semantics while reusing the Serper transport across turns; verify
+   warm end-to-end and browser-visible latency separately from cold/upstream-tail behavior.
 
 ## Required checks
 
@@ -60,6 +66,8 @@ official public-source links to the public browser.
 - `uv run pytest -q -n0 ../../apps/admin-console/tests/test_canonical_v2_real_preview_ui.py`
 - Focused Ruff/Pyright for changed Python, strict OpenSpec validation, and `git diff --check`.
 - Real two-turn Ding Wenbo HTTP replay plus browser check at desktop and mobile widths.
+- Repeated four-domain HTTP timing and a browser DOM-visible-answer timing check against the same
+  restarted Candidate process.
 
 ## Evidence to update
 
