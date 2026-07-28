@@ -101,6 +101,32 @@ def test_start_is_idempotent_and_stop_interrupts_the_wait() -> None:
     assert not first_worker.is_alive()
 
 
+def test_worker_recomputes_remaining_idle_time_after_activity() -> None:
+    clock = _Clock()
+    waits: list[float] = []
+    coordinator: AdaptiveIdleKeepwarm
+
+    def wait(timeout: float) -> bool:
+        waits.append(timeout)
+        if len(waits) == 1:
+            clock.advance(100.0)
+            coordinator.mark_activity()
+            clock.advance(200.0)
+            return False
+        return True
+
+    coordinator = AdaptiveIdleKeepwarm(
+        cycle=lambda: None,
+        idle_seconds=300.0,
+        monotonic=clock,
+        wait=wait,
+    )
+
+    coordinator._run()
+
+    assert waits == [300.0, 100.0]
+
+
 def test_chat_marks_real_activity_before_answer_execution() -> None:
     events: list[str] = []
 

@@ -20,6 +20,7 @@ class AdaptiveIdleKeepwarm:
         cycle: Callable[[], None],
         idle_seconds: float,
         monotonic: Callable[[], float] = monotonic,
+        wait: Callable[[float], bool] | None = None,
     ) -> None:
         if idle_seconds <= 0:
             raise ValueError("idle_seconds must be positive")
@@ -28,6 +29,7 @@ class AdaptiveIdleKeepwarm:
         self._monotonic = monotonic
         self._lock = Lock()
         self._stop_event = Event()
+        self._wait = wait or self._stop_event.wait
         self._last_activity = monotonic()
         self._cycle_running = False
         self._worker: Thread | None = None
@@ -80,8 +82,13 @@ class AdaptiveIdleKeepwarm:
             worker.join(timeout=30.0)
 
     def _run(self) -> None:
-        while not self._stop_event.wait(self._idle_seconds):
+        while not self._wait(self._remaining_idle_seconds()):
             self.run_scheduled_cycle()
+
+    def _remaining_idle_seconds(self) -> float:
+        with self._lock:
+            elapsed = self._monotonic() - self._last_activity
+        return max(0.0, self._idle_seconds - elapsed)
 
 
 __all__ = ["AdaptiveIdleKeepwarm"]
