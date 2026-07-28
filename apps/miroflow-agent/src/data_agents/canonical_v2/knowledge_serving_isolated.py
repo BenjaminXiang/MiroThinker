@@ -12,6 +12,7 @@ import json
 import os
 from pathlib import Path
 import re
+from threading import Lock
 from typing import Any, Literal, cast
 from urllib.parse import urlparse, urlsplit, urlunsplit
 
@@ -999,18 +1000,36 @@ class _OpenAIProseRenderer:
                 rendered = f"{professor_name}参与创立了{company_name}。\n\n{rendered}"
         return rendered
 
+    def warm(self) -> None:
+        self._client.chat.completions.create(
+            model=self._model,
+            temperature=0,
+            max_tokens=1,
+            messages=[{"role": "user", "content": "ping"}],
+            extra_body=self._extra_body,
+        )
+
 
 class _EnvironmentProseRenderer:
-    def __call__(self, result: Any) -> str:
-        try:
+    def __init__(self) -> None:
+        self._renderer: _OpenAIProseRenderer | None = None
+        self._renderer_lock = Lock()
+
+    def _configured_renderer(self) -> _OpenAIProseRenderer:
+        with self._renderer_lock:
+            if self._renderer is not None:
+                return self._renderer
             profile = os.getenv("CHAT_LLM_PROFILE", "gemma4")
             settings = resolve_professor_llm_settings(profile)
             api_key = settings.get("local_llm_api_key")
             if not api_key:
                 raise ValueError("configured chat LLM API key is unavailable")
             model = str(settings["local_llm_model"])
-            timeout = max(5.0, float(os.getenv("CHAT_LLM_TIMEOUT_SECONDS", "12")))
-            renderer = _OpenAIProseRenderer(
+            timeout = max(
+                5.0,
+                float(os.getenv("CHAT_LLM_TIMEOUT_SECONDS", "12")),
+            )
+            self._renderer = _OpenAIProseRenderer(
                 client=OpenAI(
                     base_url=settings["local_llm_base_url"],
                     api_key=api_key,
@@ -1020,6 +1039,15 @@ class _EnvironmentProseRenderer:
                 model=model,
                 extra_body=build_non_thinking_extra_body(model),
             )
+            return self._renderer
+
+    def __call__(self, result: Any) -> str:
+        try:
+            timeout = max(
+                5.0,
+                float(os.getenv("CHAT_LLM_TIMEOUT_SECONDS", "12")),
+            )
+            renderer = self._configured_renderer()
             future = _PROSE_RENDER_EXECUTOR.submit(renderer, result)
             return future.result(timeout=timeout)
         except (
@@ -1032,6 +1060,9 @@ class _EnvironmentProseRenderer:
             ValueError,
         ) as exc:
             raise TimeoutError("LLM prose synthesis is unavailable") from exc
+
+    def warm(self) -> None:
+        self._configured_renderer().warm()
 
 
 def _warm_environment_llm() -> None:
@@ -1240,7 +1271,7 @@ def load_recorded_serving_inputs(
     embedding_adapter: Any,
     prose_renderer: Callable[[Any], Any] | None = None,
     clock: Callable[[], datetime] = lambda: datetime.now(timezone.utc),
-    llm_keepwarm: Callable[[], None] = _warm_environment_llm,
+    llm_keepwarm: Callable[[], None] | None = None,
 ) -> RecordedServingInputs:
     """Load one secret-free serving authority and bind it to runner-owned paths."""
 
@@ -1298,6 +1329,13 @@ def load_recorded_serving_inputs(
     )
     keepwarm_bocha = BochaSearchProvider(timeout=provider_attempt_timeout)
     keepwarm_serper = WebSearchProvider(timeout=provider_attempt_timeout)
+    environment_renderer = _EnvironmentProseRenderer()
+    selected_prose_renderer = prose_renderer or environment_renderer
+    selected_llm_keepwarm = llm_keepwarm or (
+        environment_renderer.warm
+        if prose_renderer is None
+        else _warm_environment_llm
+    )
 
     def warm_bocha() -> None:
         keepwarm_bocha.search("深圳科技创新")
@@ -1318,7 +1356,7 @@ def load_recorded_serving_inputs(
             warm_bocha,
             warm_serper,
             warm_embedding,
-            llm_keepwarm,
+            selected_llm_keepwarm,
         )
     )
     return RecordedServingInputs(
@@ -1346,7 +1384,7 @@ def load_recorded_serving_inputs(
         accepted_identity_lookup=None,
         answer_factory=lambda: create_ephemeral_knowledge_answer(
             answer_selector=_answer_selector(bundle=bundle),
-            prose_renderer=prose_renderer or _EnvironmentProseRenderer(),
+            prose_renderer=selected_prose_renderer,
         ),
         answer_session_fork=deepcopy,
         gap_operations=create_ephemeral_knowledge_gap_feedback(clock=clock),

@@ -471,6 +471,63 @@ def test_environment_prose_renderer_bounds_the_default_provider_wait(
     ]
 
 
+def test_environment_prose_renderer_reuses_client_for_warm_and_answers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client_calls: list[dict[str, object]] = []
+    completion_calls: list[dict[str, object]] = []
+
+    class _Completions:
+        def create(self, **kwargs: object) -> object:
+            completion_calls.append(kwargs)
+            return SimpleNamespace(
+                choices=(
+                    SimpleNamespace(message=SimpleNamespace(content="已整理回答")),
+                )
+            )
+
+    def openai_client(**kwargs: object) -> object:
+        client_calls.append(kwargs)
+        return SimpleNamespace(chat=SimpleNamespace(completions=_Completions()))
+
+    class _ImmediateFuture:
+        def __init__(self, function: Any, value: Any) -> None:
+            self._function = function
+            self._value = value
+
+        def result(self, *, timeout: float) -> str:
+            return self._function(self._value)
+
+    class _ImmediateExecutor:
+        def submit(self, function: Any, value: Any) -> _ImmediateFuture:
+            return _ImmediateFuture(function, value)
+
+    monkeypatch.setattr(
+        serving_module,
+        "resolve_professor_llm_settings",
+        lambda _profile: {
+            "local_llm_api_key": "test-key",
+            "local_llm_model": "qwen3.6-35b-a3b-fp8",
+            "local_llm_base_url": "https://llm.example/v1",
+        },
+    )
+    monkeypatch.setattr(serving_module, "OpenAI", openai_client)
+    monkeypatch.setattr(
+        serving_module,
+        "_PROSE_RENDER_EXECUTOR",
+        _ImmediateExecutor(),
+    )
+    renderer = serving_module._EnvironmentProseRenderer()
+    result = SimpleNamespace(claims=(), context_receipt=None)
+
+    assert renderer(result) == "已整理回答"
+    renderer.warm()
+    assert renderer(result) == "已整理回答"
+
+    assert len(client_calls) == 1
+    assert [call["max_tokens"] for call in completion_calls] == [1200, 1, 1200]
+
+
 def test_focused_missing_entity_prefers_current_web_over_vector_neighbors(
     tmp_path: Path,
 ) -> None:
