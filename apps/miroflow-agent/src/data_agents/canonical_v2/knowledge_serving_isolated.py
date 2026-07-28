@@ -591,6 +591,8 @@ class _DualWebLaneAdapter:
             request.query_text,
         ).strip()
         organic = self._merged_results(query_text)
+        if not organic:
+            raise ConnectionError("Bocha and Serper Web search are unavailable")
         candidates: list[RecallCandidate] = []
         snapshots: list[WebSnapshotPayload] = []
         domain = _web_domain(request)

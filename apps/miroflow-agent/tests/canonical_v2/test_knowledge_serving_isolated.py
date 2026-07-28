@@ -1295,6 +1295,42 @@ def test_dual_web_lane_preserves_one_provider_when_the_other_fails() -> None:
     assert result.candidates[0].provider_version == "serper-v1"
 
 
+def test_dual_web_lane_reports_unavailable_when_both_providers_fail() -> None:
+    class _FailingProvider:
+        def search(self, query: str) -> dict[str, object]:
+            raise RuntimeError(f"unavailable for {query}")
+
+    adapter = serving_module._DualWebLaneAdapter(
+        bocha=_FailingProvider(),
+        serper=_FailingProvider(),
+        timeout_ms=1500,
+        max_snapshot_bytes=16384,
+        clock=lambda: NOW,
+    )
+    request = LaneRequest(
+        lane="web",
+        release_id=RELEASE_ID,
+        query_view="view:dual-web-unavailable",
+        original_query="深圳机器人企业",
+        behavior_class="A",
+        interaction_mode="information_retrieval",
+        web_policy=WebSearchPolicy(
+            mode="universal",
+            max_provider_calls=2,
+            timeout_ms=1500,
+            max_results=5,
+        ),
+        query_text="深圳机器人企业",
+        domains=("company",),
+        protected_slots=(),
+        structured_constraints=StructuredConstraints(),
+        max_candidates=5,
+    )
+
+    with pytest.raises(ConnectionError, match="Bocha and Serper"):
+        adapter(request)
+
+
 def test_provider_keepwarm_cycle_runs_all_external_paths_concurrently() -> None:
     barrier = Barrier(4, timeout=1.0)
     calls: list[str] = []
