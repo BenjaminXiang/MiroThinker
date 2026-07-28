@@ -174,6 +174,47 @@ coverage limitation when material.
 - **THEN** the system proceeds with the supported local evidence
 - **AND** it does not present the result as current-Web-verified
 
+### Requirement: Current Web retrieval combines bounded independent providers
+
+Each normal information request SHALL run Bocha and Serper concurrently within the existing Web
+lane wall-time budget, merge their normalized results, and deduplicate by normalized HTTP(S) URL
+before applying the configured result cap. A retained Web snapshot SHALL record the provider that
+supplied the selected content and any second provider that returned the same URL. Failure or empty
+output from one provider SHALL preserve usable output from the other provider; failure of both
+providers SHALL preserve the existing local-evidence degradation behavior. The route budget SHALL
+permit at most one call to each configured provider per normal retrieval attempt.
+
+#### Scenario: Both providers return the same official page
+- **WHEN** Bocha and Serper return the same normalized official URL with different snippets
+- **THEN** fusion retains one result position and prefers the richer Bocha content
+- **AND** the content-addressed snapshot records both provider versions
+
+#### Scenario: One provider is unavailable
+- **WHEN** either Bocha or Serper fails or returns no usable results within the Web lane budget
+- **THEN** the request continues with the other provider's usable results
+- **AND** it does not wait beyond the existing outer Web lane budget
+
+### Requirement: Long-idle provider paths are adaptively kept warm
+
+The isolated Candidate SHALL run at most one background keep-warm cycle after each configured idle
+interval when no real chat request has arrived during that interval. A cycle SHALL concurrently
+touch the configured Bocha, Serper, embedding, and prose-LLM provider paths with bounded minimal
+requests. A real request SHALL mark activity before answer execution, SHALL never wait for a
+keep-warm cycle, and SHALL suppress the next idle cycle. Keep-warm work SHALL stop with application
+shutdown and SHALL NOT call the chat adapter, create sessions or citations, write Canonical/index/
+gap data, or expose its synthetic inputs to users.
+
+#### Scenario: Candidate has been idle for one interval
+- **WHEN** no real request arrives for the configured idle interval
+- **THEN** one bounded keep-warm cycle concurrently touches all four external provider paths
+- **AND** no business record, feedback checkpoint, session, evidence snapshot, or index mutation is
+  created
+
+#### Scenario: Real request arrives near a scheduled cycle
+- **WHEN** a real chat request marks activity before its answer begins
+- **THEN** the request proceeds without waiting for background keep-warm work
+- **AND** the next scheduled cycle is skipped until another complete idle interval elapses
+
 ### Requirement: Candidate fusion is identity-aware and selection happens late
 
 The system SHALL resolve/deduplicate candidate identities and aggregate their evidence before final

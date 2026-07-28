@@ -595,6 +595,21 @@ Last identity/hash check recorded in `verification.md`: `2026-07-12T08:40:35Z`.
 - API/admin/state integration, reviewed regression/challenge eval, and complete isolated rebuild.
 - Broad checks run only after S1 Accepted and with explicit disposable/candidate targets.
 
+#### S12D dual-Web and long-idle keep-warm extension
+
+- RED provider scenarios cover Bocha plus Serper concurrent success, normalized-URL duplicates,
+  Bocha-rich-content preference, exact retained provider provenance, one-provider failure, and both-
+  provider failure without losing local evidence or exceeding the existing outer Web budget.
+- RED lifecycle scenarios use injected monotonic time and wake control to prove one cycle per idle
+  interval, activity-before-answer suppression, cycle non-overlap, bounded stop, and no invocation of
+  chat/session/evidence/gap/database/index paths.
+- GREEN runtime evidence records separate Bocha, Serper, embedding, and prose-LLM call timings plus
+  warm and post-idle real request timing. Provider tail latency remains a typed external limitation;
+  acceptance does not reduce evidence, synthesis, or official-source requirements to meet a target.
+- The Candidate remains read-only and public output remains limited to default-collapsed validated
+  official links. Keep-warm inputs and traces are operational only and never enter user-visible or
+  business-data artifacts.
+
 ## Required evidence shape
 
 Every verification run SHALL record:

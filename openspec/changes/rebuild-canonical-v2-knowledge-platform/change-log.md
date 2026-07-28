@@ -1241,3 +1241,16 @@
   Patent request, and desktop/mobile browser checks pass. The Candidate remains read-only on
   `0.0.0.0:18188`; Task 12.5 still requires direct user acceptance and Task 12.6 remains separately
   authorized.
+
+## 2026-07-28 — S12D dual-Web and long-idle latency design approved
+
+- Direct user evaluation identified long-idle first-request latency as the critical remaining
+  experience defect and selected full-path adaptive keep-warm.
+- The approved Web policy runs Bocha and Serper concurrently inside the existing outer Web budget,
+  deduplicates normalized URLs, prefers richer Bocha content for duplicates, and retains both actual
+  provider versions in the content-bound snapshot.
+- The approved keep-warm policy runs at most one bounded background cycle after each complete idle
+  interval, touches Bocha, Serper, embedding, and prose-LLM paths concurrently, never blocks a real
+  request, stops with the app, and creates no business-data writes.
+- S12D returns from Candidate to In Progress for Tasks 12.5d-12.5f. Task 12.5 remains direct user
+  acceptance and Task 12.6 remains separately authorized Cutover.
