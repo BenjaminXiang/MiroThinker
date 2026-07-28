@@ -13,7 +13,7 @@ import os
 from pathlib import Path
 import re
 from typing import Any, Literal, cast
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlsplit, urlunsplit
 
 from openai import OpenAI, OpenAIError
 from pydantic import Field, ValidationInfo, field_validator, model_validator
@@ -22,6 +22,7 @@ from src.data_agents.professor.llm_profiles import (
     build_non_thinking_extra_body,
     resolve_professor_llm_settings,
 )
+from src.data_agents.providers.bocha_search import BochaSearchProvider
 from src.data_agents.providers.web_search import WebSearchProvider
 
 from .contracts import ContractModel
@@ -118,8 +119,9 @@ class RecordedServingBundle(ContractModel):
     embedding_model_id: str = Field(min_length=1)
     planner_model_id: Literal["canonical-v2-deterministic-planner-v1"]
     answer_model_id: Literal["canonical-v2-deterministic-answer-v1"]
-    web_provider: Literal["serper-v1"]
-    web_api_key_env: Literal["SERPER_API_KEY"]
+    web_provider: Literal["bocha-serper-v1"]
+    bocha_api_key_env: Literal["BOCHA_API_KEY"]
+    serper_api_key_env: Literal["SERPER_API_KEY"]
     max_candidates: int = Field(gt=0, le=100)
     max_web_results: int = Field(gt=0, le=20)
     web_timeout_ms: int = Field(gt=0, le=30_000)
@@ -456,25 +458,130 @@ def _web_domain(request: LaneRequest) -> str:
     return request.domains[0] if request.domains else "company"
 
 
-class _SerperLaneAdapter:
+@dataclass(frozen=True, slots=True)
+class _NormalizedWebResult:
+    title: str
+    url: str
+    snippet: str
+    summary: str
+    primary_provider_version: str
+    corroborating_provider_versions: tuple[str, ...]
+
+
+def _normalized_web_url(value: str) -> str:
+    parsed = urlsplit(value.strip())
+    path = parsed.path.rstrip("/") or "/"
+    return urlunsplit(
+        (parsed.scheme.lower(), parsed.netloc.lower(), path, parsed.query, "")
+    )
+
+
+class _DualWebLaneAdapter:
     def __init__(
         self,
         *,
-        api_key_env: str,
         timeout_ms: int,
         max_snapshot_bytes: int,
         clock: Callable[[], datetime],
+        bocha: Any | None = None,
+        serper: Any | None = None,
     ) -> None:
-        self._api_key_env = api_key_env
         self._timeout_ms = timeout_ms
         self._max_snapshot_bytes = max_snapshot_bytes
         self._clock = clock
-        # The provider may retry via curl, so both transport attempts must fit
-        # inside the outer Web-lane timeout.
         provider_attempt_timeout = max(0.1, self._timeout_ms * 0.00045)
-        self._provider = WebSearchProvider(
-            timeout=provider_attempt_timeout,
+        self._bocha = bocha or BochaSearchProvider(timeout=provider_attempt_timeout)
+        self._serper = serper or WebSearchProvider(timeout=provider_attempt_timeout)
+        self._executor = ThreadPoolExecutor(
+            max_workers=2,
+            thread_name_prefix="canonical-v2-web",
         )
+
+    @staticmethod
+    def _search_provider(provider: Any, query: str) -> list[dict[str, Any]]:
+        try:
+            payload = provider.search(query)
+        except Exception:  # noqa: BLE001 - each provider degrades independently
+            return []
+        organic = payload.get("organic", ()) if isinstance(payload, dict) else ()
+        if not isinstance(organic, list):
+            return []
+        return [item for item in organic if isinstance(item, dict)]
+
+    @staticmethod
+    def _normalize_results(
+        *,
+        provider_version: str,
+        results: list[dict[str, Any]],
+    ) -> list[_NormalizedWebResult]:
+        normalized: list[_NormalizedWebResult] = []
+        for raw in results:
+            title = str(raw.get("title") or "").strip()
+            locator = str(raw.get("link") or raw.get("url") or "").strip()
+            parsed = urlparse(locator)
+            if not title or parsed.scheme not in {"http", "https"} or not parsed.netloc:
+                continue
+            normalized.append(
+                _NormalizedWebResult(
+                    title=title,
+                    url=locator,
+                    snippet=str(raw.get("snippet") or "").strip(),
+                    summary=str(raw.get("summary") or "").strip(),
+                    primary_provider_version=provider_version,
+                    corroborating_provider_versions=(provider_version,),
+                )
+            )
+        return normalized
+
+    def _merged_results(self, query: str) -> tuple[_NormalizedWebResult, ...]:
+        futures = {
+            "bocha-v1": self._executor.submit(
+                self._search_provider,
+                self._bocha,
+                query,
+            ),
+            "serper-v1": self._executor.submit(
+                self._search_provider,
+                self._serper,
+                query,
+            ),
+        }
+        timeout_seconds = self._timeout_ms / 1000
+        provider_results: dict[str, list[dict[str, Any]]] = {}
+        for provider_version, future in futures.items():
+            try:
+                provider_results[provider_version] = future.result(timeout=timeout_seconds)
+            except FutureTimeoutError:
+                provider_results[provider_version] = []
+
+        merged: list[_NormalizedWebResult] = []
+        positions: dict[str, int] = {}
+        for provider_version in ("bocha-v1", "serper-v1"):
+            for item in self._normalize_results(
+                provider_version=provider_version,
+                results=provider_results[provider_version],
+            ):
+                normalized_url = _normalized_web_url(item.url)
+                position = positions.get(normalized_url)
+                if position is None:
+                    positions[normalized_url] = len(merged)
+                    merged.append(item)
+                    continue
+                previous = merged[position]
+                merged[position] = _NormalizedWebResult(
+                    title=previous.title,
+                    url=previous.url,
+                    snippet=previous.snippet,
+                    summary=previous.summary,
+                    primary_provider_version=previous.primary_provider_version,
+                    corroborating_provider_versions=tuple(
+                        dict.fromkeys(
+                            previous.corroborating_provider_versions
+                            + item.corroborating_provider_versions
+                        )
+                    ),
+                )
+        return tuple(merged)
 
     def __call__(self, request: LaneRequest) -> RetrievalLaneResult:
         query_text = re.sub(
@@ -482,30 +589,25 @@ class _SerperLaneAdapter:
             "",
             request.query_text,
         ).strip()
-        try:
-            payload = self._provider.search(query_text)
-        except RuntimeError as exc:
-            raise ConnectionError("Serper Web search is unavailable") from exc
-        organic = payload.get("organic", ()) if isinstance(payload, dict) else ()
-        if not isinstance(organic, list):
-            return RetrievalLaneResult()
+        organic = self._merged_results(query_text)
         candidates: list[RecallCandidate] = []
         snapshots: list[WebSnapshotPayload] = []
         domain = _web_domain(request)
         for rank, raw in enumerate(organic[: request.max_candidates], start=1):
-            if not isinstance(raw, dict):
-                continue
-            title = str(raw.get("title") or "").strip()
-            locator = str(raw.get("link") or "").strip()
-            snippet = str(raw.get("snippet") or "").strip()
-            if (
-                not title
-                or not locator
-                or urlparse(locator).scheme not in {"http", "https"}
-            ):
-                continue
+            title = raw.title
+            locator = raw.url
+            snippet = raw.snippet
             snapshot_content = json.dumps(
-                {"title": title, "link": locator, "snippet": snippet},
+                {
+                    "title": title,
+                    "link": locator,
+                    "snippet": snippet,
+                    "summary": raw.summary,
+                    "primary_provider_version": raw.primary_provider_version,
+                    "corroborating_provider_versions": list(
+                        raw.corroborating_provider_versions
+                    ),
+                },
                 ensure_ascii=False,
                 sort_keys=True,
                 separators=(",", ":"),
@@ -587,8 +689,8 @@ class _SerperLaneAdapter:
                     lane="web",
                     attempt=1,
                     release_id=request.release_id,
-                    adapter_version="canonical-v2-serper-lane-v1",
-                    provider_version="serper-v1",
+                    adapter_version="canonical-v2-dual-web-lane-v1",
+                    provider_version=raw.primary_provider_version,
                     raw_score=evidence.score,
                     evidence=(evidence,),
                 )
@@ -1139,7 +1241,7 @@ def load_recorded_serving_inputs(
         ),
         supported_relationship_paths=supported_relationship_paths,
         max_candidates=bundle.max_candidates,
-        max_provider_calls=1,
+        max_provider_calls=2,
         max_planning_attempts=1,
     )
     return RecordedServingInputs(
@@ -1148,12 +1250,11 @@ def load_recorded_serving_inputs(
         ambiguity_policy=None,
         universal_web_policy=WebSearchPolicy(
             mode="universal",
-            max_provider_calls=1,
+            max_provider_calls=2,
             timeout_ms=bundle.web_timeout_ms,
             max_results=bundle.max_web_results,
         ),
-        web_search=_SerperLaneAdapter(
-            api_key_env=bundle.web_api_key_env,
+        web_search=_DualWebLaneAdapter(
             timeout_ms=bundle.web_timeout_ms,
             max_snapshot_bytes=bundle.web_snapshot_max_bytes,
             clock=clock,
@@ -1178,9 +1279,9 @@ def load_recorded_serving_inputs(
         gap_operations=create_ephemeral_knowledge_gap_feedback(clock=clock),
         supplemental_budget=SupplementalBudget(
             max_wall_time_ms=bundle.web_timeout_ms,
-            max_provider_calls=1,
+            max_provider_calls=2,
             max_retries=0,
-            max_cost_units=1.0,
+            max_cost_units=2.0,
         ),
         authority_sha256=cast(str, bundle.content_sha256),
     )

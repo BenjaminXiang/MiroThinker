@@ -58,8 +58,9 @@ def _bundle(tmp_path: Path) -> RecordedServingBundle:
         embedding_model_id="recorded-embedding-v1",
         planner_model_id="canonical-v2-deterministic-planner-v1",
         answer_model_id="canonical-v2-deterministic-answer-v1",
-        web_provider="serper-v1",
-        web_api_key_env="SERPER_API_KEY",
+        web_provider="bocha-serper-v1",
+        bocha_api_key_env="BOCHA_API_KEY",
+        serper_api_key_env="SERPER_API_KEY",
         max_candidates=12,
         max_web_results=5,
         web_timeout_ms=1500,
@@ -82,6 +83,7 @@ def test_content_addressed_serving_bundle_is_secret_free_and_executable(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     path, bundle = _write_bundle(tmp_path)
+    monkeypatch.setenv("BOCHA_API_KEY", "bocha-secret-must-stay-outside-bundle")
     monkeypatch.setenv("SERPER_API_KEY", "secret-must-stay-outside-bundle")
 
     inputs = load_recorded_serving_inputs(
@@ -96,6 +98,8 @@ def test_content_addressed_serving_bundle_is_secret_free_and_executable(
     )
 
     assert "secret-must-stay-outside-bundle" not in path.read_text(encoding="utf-8")
+    assert inputs.planning_policy.max_provider_calls == 2
+    assert inputs.universal_web_policy.max_provider_calls == 2
     request = QueryPlanningRequest(
         request_id="query-request:s12b-test",
         release_id=RELEASE_ID,
@@ -1106,7 +1110,15 @@ def test_serper_lane_allows_provider_key_file_fallback_and_reuses_transport(
                 ]
             }
 
+    class _EmptyBochaProvider:
+        def __init__(self, **_: object) -> None:
+            pass
+
+        def search(self, query: str) -> dict[str, object]:
+            return {"organic": []}
+
     monkeypatch.delenv("SERPER_API_KEY", raising=False)
+    monkeypatch.setattr(serving_module, "BochaSearchProvider", _EmptyBochaProvider)
     monkeypatch.setattr(serving_module, "WebSearchProvider", _Provider)
     inputs = load_recorded_serving_inputs(
         path=path,
@@ -1148,6 +1160,140 @@ def test_serper_lane_allows_provider_key_file_fallback_and_reuses_transport(
     assert kwargs == {"timeout": pytest.approx(0.675)}
 
 
+def test_dual_web_lane_deduplicates_url_and_retains_provider_provenance() -> None:
+    calls: list[tuple[str, str]] = []
+
+    class _Provider:
+        def __init__(self, name: str, payload: dict[str, object]) -> None:
+            self.name = name
+            self.payload = payload
+
+        def search(self, query: str) -> dict[str, object]:
+            calls.append((self.name, query))
+            return self.payload
+
+    bocha = _Provider(
+        "bocha",
+        {
+            "organic": [
+                {
+                    "title": "清华大学丁文伯主页",
+                    "link": "https://www.sigs.tsinghua.edu.cn/dwb/",
+                    "snippet": "教师主页",
+                    "summary": "丁文伯，副教授、博士生导师。",
+                }
+            ]
+        },
+    )
+    serper = _Provider(
+        "serper",
+        {
+            "organic": [
+                {
+                    "title": "清华大学丁文伯主页",
+                    "link": "https://www.sigs.tsinghua.edu.cn/dwb",
+                    "snippet": "清华大学深圳国际研究生院教师信息。",
+                },
+                {
+                    "title": "无界智航官网",
+                    "link": "https://www.wujiezhihang.example/",
+                    "snippet": "企业官方网站。",
+                },
+            ]
+        },
+    )
+    adapter = serving_module._DualWebLaneAdapter(
+        bocha=bocha,
+        serper=serper,
+        timeout_ms=1500,
+        max_snapshot_bytes=16384,
+        clock=lambda: NOW,
+    )
+    request = LaneRequest(
+        lane="web",
+        release_id=RELEASE_ID,
+        query_view="view:dual-web",
+        original_query="介绍丁文伯",
+        behavior_class="A",
+        interaction_mode="information_retrieval",
+        web_policy=WebSearchPolicy(
+            mode="universal",
+            max_provider_calls=2,
+            timeout_ms=1500,
+            max_results=5,
+        ),
+        query_text="丁文伯 [lane=web]",
+        domains=("professor",),
+        protected_slots=(),
+        structured_constraints=StructuredConstraints(),
+        max_candidates=5,
+    )
+
+    result = adapter(request)
+
+    assert sorted(calls) == [("bocha", "丁文伯"), ("serper", "丁文伯")]
+    assert len(result.candidates) == 2
+    assert result.candidates[0].provider_version == "bocha-v1"
+    assert result.candidates[1].provider_version == "serper-v1"
+    snapshot = json.loads(result.web_snapshot_payloads[0].content)
+    assert snapshot["summary"] == "丁文伯，副教授、博士生导师。"
+    assert snapshot["primary_provider_version"] == "bocha-v1"
+    assert snapshot["corroborating_provider_versions"] == [
+        "bocha-v1",
+        "serper-v1",
+    ]
+
+
+def test_dual_web_lane_preserves_one_provider_when_the_other_fails() -> None:
+    class _FailingProvider:
+        def search(self, query: str) -> dict[str, object]:
+            raise RuntimeError(f"unavailable for {query}")
+
+    class _WorkingProvider:
+        def search(self, query: str) -> dict[str, object]:
+            return {
+                "organic": [
+                    {
+                        "title": "官方资料",
+                        "link": "https://example.test/official",
+                        "snippet": query,
+                    }
+                ]
+            }
+
+    adapter = serving_module._DualWebLaneAdapter(
+        bocha=_FailingProvider(),
+        serper=_WorkingProvider(),
+        timeout_ms=1500,
+        max_snapshot_bytes=16384,
+        clock=lambda: NOW,
+    )
+    request = LaneRequest(
+        lane="web",
+        release_id=RELEASE_ID,
+        query_view="view:dual-web-degraded",
+        original_query="深圳机器人企业",
+        behavior_class="A",
+        interaction_mode="information_retrieval",
+        web_policy=WebSearchPolicy(
+            mode="universal",
+            max_provider_calls=2,
+            timeout_ms=1500,
+            max_results=5,
+        ),
+        query_text="深圳机器人企业",
+        domains=("company",),
+        protected_slots=(),
+        structured_constraints=StructuredConstraints(),
+        max_candidates=5,
+    )
+
+    result = adapter(request)
+
+    assert len(result.candidates) == 1
+    assert result.candidates[0].provider_version == "serper-v1"
+
+
 def test_contextual_web_query_binds_display_name_and_geography(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1171,6 +1317,14 @@ def test_contextual_web_query_binds_display_name_and_geography(
                 ]
             }
 
+    class _EmptyBochaProvider:
+        def __init__(self, **_: object) -> None:
+            pass
+
+        def search(self, query: str) -> dict[str, object]:
+            return {"organic": []}
+
+    monkeypatch.setattr(serving_module, "BochaSearchProvider", _EmptyBochaProvider)
     monkeypatch.setattr(serving_module, "WebSearchProvider", _Provider)
     inputs = load_recorded_serving_inputs(
         path=path,
