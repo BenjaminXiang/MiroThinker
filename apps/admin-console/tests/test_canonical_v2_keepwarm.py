@@ -3,10 +3,11 @@ from __future__ import annotations
 from threading import Event, Thread
 
 from fastapi import FastAPI, Request, Response
-from pytest import raises
+from pytest import MonkeyPatch, raises
 
 from backend.api.chat_contracts import ChatRequest
 from backend.api.canonical_v2_chat import chat
+from backend import main as main_module
 from backend.services.canonical_v2_keepwarm import AdaptiveIdleKeepwarm
 
 
@@ -134,3 +135,26 @@ def test_chat_marks_real_activity_before_answer_execution() -> None:
         )
 
     assert events == ["activity", "answer"]
+
+
+def test_candidate_app_owns_keepwarm_startup_and_shutdown(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    from fastapi.testclient import TestClient
+
+    monkeypatch.setattr(
+        main_module,
+        "require_canonical_v2_consumer_runtime",
+        lambda runtime: runtime,
+    )
+    app = main_module.create_canonical_v2_candidate_app(
+        runtime=object(),  # type: ignore[arg-type]
+        idle_keepwarm_cycle=lambda: None,
+    )
+    coordinator = app.state.canonical_v2_idle_keepwarm
+
+    with TestClient(app):
+        worker = coordinator.worker
+        assert worker is not None and worker.is_alive()
+
+    assert not worker.is_alive()

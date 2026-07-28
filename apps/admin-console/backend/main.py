@@ -177,8 +177,8 @@ def create_canonical_v2_candidate_app(
             idle_seconds=300.0,
         )
         candidate.state.canonical_v2_idle_keepwarm = idle_keepwarm
-        candidate.add_event_handler("startup", idle_keepwarm.start)
-        candidate.add_event_handler("shutdown", idle_keepwarm.stop)
+        candidate.router.add_event_handler("startup", idle_keepwarm.start)
+        candidate.router.add_event_handler("shutdown", idle_keepwarm.stop)
     candidate.dependency_overrides[get_canonical_v2_chat_adapter] = (
         get_canonical_v2_candidate_chat_adapter
     )
