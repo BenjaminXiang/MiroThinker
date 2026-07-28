@@ -78,6 +78,10 @@ def chat(
     query = payload.query.strip()
     if not query:
         raise HTTPException(status_code=422, detail="query must be non-empty")
+    idle_keepwarm = getattr(request.app.state, "canonical_v2_idle_keepwarm", None)
+    mark_activity = getattr(idle_keepwarm, "mark_activity", None)
+    if callable(mark_activity):
+        mark_activity()
     session_id = miroflow_chat_session or _new_session_id()
     if miroflow_chat_session is None:
         _set_session_cookie(response, session_id)

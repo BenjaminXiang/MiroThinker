@@ -441,6 +441,7 @@ def test_runner_serves_app_object_on_fixed_host_port_without_promotion_pointer_r
         answer_session_fork=object(),
         gap_operations=object(),
         supplemental_budget=object(),
+        idle_keepwarm_cycle=object(),
     )
     published = object()
     planner = object()
@@ -507,6 +508,7 @@ def test_runner_serves_app_object_on_fixed_host_port_without_promotion_pointer_r
     ]
     assert event_names.count("build") == 1
     handoff = envelope.consumer_handoff
+    assert events[9][1]["idle_keepwarm_cycle"] is recorded.idle_keepwarm_cycle
     publication_kwargs = events[5][1]
     assert publication_kwargs == {
         "release_id": RELEASE_ID,
@@ -545,7 +547,10 @@ def test_runner_serves_app_object_on_fixed_host_port_without_promotion_pointer_r
     )
     assert runtime_kwargs["planner"] is planner
     assert runtime_kwargs["knowledge_read"] is knowledge_read
-    assert events[9][1] == {"runtime": runtime}
+    assert events[9][1] == {
+        "runtime": runtime,
+        "idle_keepwarm_cycle": recorded.idle_keepwarm_cycle,
+    }
     assert events[10] == (
         "uvicorn_run",
         app,

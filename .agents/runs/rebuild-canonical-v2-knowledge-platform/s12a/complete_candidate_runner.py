@@ -507,7 +507,10 @@ def _serve(
         gap_operations=recorded.gap_operations,
         supplemental_budget=recorded.supplemental_budget,
     )
-    app = create_app(runtime=runtime)
+    app = create_app(
+        runtime=runtime,
+        idle_keepwarm_cycle=recorded.idle_keepwarm_cycle,
+    )
     run_uvicorn(
         app,
         host=config.host,

@@ -2,6 +2,11 @@ from __future__ import annotations
 
 from threading import Event, Thread
 
+from fastapi import FastAPI, Request, Response
+from pytest import raises
+
+from backend.api.chat_contracts import ChatRequest
+from backend.api.canonical_v2_chat import chat
 from backend.services.canonical_v2_keepwarm import AdaptiveIdleKeepwarm
 
 
@@ -93,3 +98,39 @@ def test_start_is_idempotent_and_stop_interrupts_the_wait() -> None:
     coordinator.stop()
 
     assert not first_worker.is_alive()
+
+
+def test_chat_marks_real_activity_before_answer_execution() -> None:
+    events: list[str] = []
+
+    class _Keepwarm:
+        def mark_activity(self) -> None:
+            events.append("activity")
+
+    class _Adapter:
+        def answer(self, **_: object) -> None:
+            events.append("answer")
+            raise RuntimeError("stop after observing call order")
+
+    app = FastAPI()
+    app.state.canonical_v2_idle_keepwarm = _Keepwarm()
+    request = Request(
+        {
+            "type": "http",
+            "method": "POST",
+            "path": "/api/chat",
+            "headers": [],
+            "app": app,
+        }
+    )
+
+    with raises(RuntimeError, match="call order"):
+        chat(
+            payload=ChatRequest(query="介绍丁文伯", entity_id_hint=None),
+            response=Response(),
+            request=request,
+            miroflow_chat_session=None,
+            adapter=_Adapter(),  # type: ignore[arg-type]
+        )
+
+    assert events == ["activity", "answer"]

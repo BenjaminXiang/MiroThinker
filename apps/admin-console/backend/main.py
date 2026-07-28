@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import ipaddress
 import os
 from pathlib import Path
@@ -161,12 +162,23 @@ def _normalized_public_origin(value: str) -> tuple[str, bool]:
 def create_canonical_v2_candidate_app(
     *,
     runtime: CanonicalV2ConsumerRuntime,
+    idle_keepwarm_cycle: Callable[[], None] | None = None,
 ) -> FastAPI:
     """Install one exact aggregate and its two predecessor dependency overrides."""
 
     exact_runtime = require_canonical_v2_consumer_runtime(runtime)
     candidate = _create_canonical_v2_route_shell()
     candidate.state.canonical_v2_consumer_runtime = exact_runtime
+    if idle_keepwarm_cycle is not None:
+        from backend.services.canonical_v2_keepwarm import AdaptiveIdleKeepwarm
+
+        idle_keepwarm = AdaptiveIdleKeepwarm(
+            cycle=idle_keepwarm_cycle,
+            idle_seconds=300.0,
+        )
+        candidate.state.canonical_v2_idle_keepwarm = idle_keepwarm
+        candidate.add_event_handler("startup", idle_keepwarm.start)
+        candidate.add_event_handler("shutdown", idle_keepwarm.stop)
     candidate.dependency_overrides[get_canonical_v2_chat_adapter] = (
         get_canonical_v2_candidate_chat_adapter
     )

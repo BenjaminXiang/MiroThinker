@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+from threading import Barrier
 from types import SimpleNamespace
 from typing import Any
 
@@ -1084,12 +1085,12 @@ def test_serving_planner_routes_lawful_avoidance_request_to_static_safety(
     assert proposal.web_mode == "disabled"
 
 
-def test_serper_lane_allows_provider_key_file_fallback_and_reuses_transport(
+def test_dual_web_lane_reuses_request_transport_and_isolates_keepwarm_transport(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     path, bundle = _write_bundle(tmp_path)
-    observed: dict[str, object] = {}
+    observed: dict[str, Any] = {}
 
     class _Provider:
         def __init__(self, **kwargs: object) -> None:
@@ -1153,7 +1154,7 @@ def test_serper_lane_allows_provider_key_file_fallback_and_reuses_transport(
 
     assert len(result.candidates) == 1
     assert len(repeated_result.candidates) == 1
-    assert observed["provider_constructions"] == 1
+    assert observed["provider_constructions"] == 2
     assert observed["query"] == "王学谦"
     kwargs = observed["kwargs"]
     assert isinstance(kwargs, dict)
@@ -1292,6 +1293,26 @@ def test_dual_web_lane_preserves_one_provider_when_the_other_fails() -> None:
 
     assert len(result.candidates) == 1
     assert result.candidates[0].provider_version == "serper-v1"
+
+
+def test_provider_keepwarm_cycle_runs_all_external_paths_concurrently() -> None:
+    barrier = Barrier(4, timeout=1.0)
+    calls: list[str] = []
+
+    def operation(name: str) -> None:
+        calls.append(name)
+        barrier.wait()
+
+    cycle = serving_module._provider_keepwarm_cycle(
+        operations=tuple(
+            lambda name=name: operation(name)
+            for name in ("bocha", "serper", "embedding", "llm")
+        )
+    )
+
+    cycle()
+
+    assert sorted(calls) == ["bocha", "embedding", "llm", "serper"]
 
 
 def test_contextual_web_query_binds_display_name_and_geography(

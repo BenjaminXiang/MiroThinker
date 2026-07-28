@@ -103,6 +103,7 @@ def test_review_factory_is_separate_and_routes_precede_reject_all(
     assert tuple(inspect.signature(_create_canonical_v2_route_shell).parameters) == ()
     assert tuple(inspect.signature(create_canonical_v2_candidate_app).parameters) == (
         "runtime",
+        "idle_keepwarm_cycle",
     )
     runtime_parameter = inspect.signature(create_canonical_v2_candidate_app).parameters[
         "runtime"

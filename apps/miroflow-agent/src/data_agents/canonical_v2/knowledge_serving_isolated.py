@@ -173,6 +173,7 @@ class RecordedServingInputs:
     gap_operations: Any
     supplemental_budget: SupplementalBudget
     authority_sha256: str
+    idle_keepwarm_cycle: Callable[[], None]
 
 
 def _infer_domains(query: str) -> tuple[str, ...]:
@@ -1031,6 +1032,48 @@ class _EnvironmentProseRenderer:
             raise TimeoutError("LLM prose synthesis is unavailable") from exc
 
 
+def _warm_environment_llm() -> None:
+    profile = os.getenv("CHAT_LLM_PROFILE", "gemma4")
+    settings = resolve_professor_llm_settings(profile)
+    api_key = settings.get("local_llm_api_key")
+    if not api_key:
+        raise ValueError("configured chat LLM API key is unavailable")
+    model = str(settings["local_llm_model"])
+    timeout = max(5.0, float(os.getenv("CHAT_LLM_TIMEOUT_SECONDS", "12")))
+    OpenAI(
+        base_url=settings["local_llm_base_url"],
+        api_key=api_key,
+        timeout=timeout,
+        max_retries=0,
+    ).chat.completions.create(
+        model=model,
+        temperature=0,
+        max_tokens=1,
+        messages=[{"role": "user", "content": "ping"}],
+        extra_body=build_non_thinking_extra_body(model),
+    )
+
+
+def _provider_keepwarm_cycle(
+    *,
+    operations: tuple[Callable[[], None], ...],
+) -> Callable[[], None]:
+    executor = ThreadPoolExecutor(
+        max_workers=len(operations),
+        thread_name_prefix="canonical-v2-provider-keepwarm",
+    )
+
+    def cycle() -> None:
+        futures = tuple(executor.submit(operation) for operation in operations)
+        for future in futures:
+            try:
+                future.result()
+            except Exception:  # noqa: BLE001 - each warm path is best-effort
+                continue
+
+    return cycle
+
+
 def _answer_selector(
     *,
     bundle: RecordedServingBundle,
@@ -1195,6 +1238,7 @@ def load_recorded_serving_inputs(
     embedding_adapter: Any,
     prose_renderer: Callable[[Any], Any] | None = None,
     clock: Callable[[], datetime] = lambda: datetime.now(timezone.utc),
+    llm_keepwarm: Callable[[], None] = _warm_environment_llm,
 ) -> RecordedServingInputs:
     """Load one secret-free serving authority and bind it to runner-owned paths."""
 
@@ -1244,6 +1288,37 @@ def load_recorded_serving_inputs(
         max_provider_calls=2,
         max_planning_attempts=1,
     )
+    provider_attempt_timeout = max(0.1, bundle.web_timeout_ms * 0.00045)
+    web_search = _DualWebLaneAdapter(
+        timeout_ms=bundle.web_timeout_ms,
+        max_snapshot_bytes=bundle.web_snapshot_max_bytes,
+        clock=clock,
+    )
+    keepwarm_bocha = BochaSearchProvider(timeout=provider_attempt_timeout)
+    keepwarm_serper = WebSearchProvider(timeout=provider_attempt_timeout)
+
+    def warm_bocha() -> None:
+        keepwarm_bocha.search("深圳科技创新")
+
+    def warm_serper() -> None:
+        keepwarm_serper.search("深圳科技创新")
+
+    def warm_embedding() -> None:
+        embedding_adapter.embed_batch(
+            (
+                "canonical-v2-provider-keepwarm:"
+                f"{int(clock().timestamp() // 300)}",
+            )
+        )
+
+    idle_keepwarm_cycle = _provider_keepwarm_cycle(
+        operations=(
+            warm_bocha,
+            warm_serper,
+            warm_embedding,
+            llm_keepwarm,
+        )
+    )
     return RecordedServingInputs(
         planning_policy=planning_policy,
         proposal_provider=_proposal_provider(bundle=bundle),
@@ -1254,11 +1329,7 @@ def load_recorded_serving_inputs(
             timeout_ms=bundle.web_timeout_ms,
             max_results=bundle.max_web_results,
         ),
-        web_search=_DualWebLaneAdapter(
-            timeout_ms=bundle.web_timeout_ms,
-            max_snapshot_bytes=bundle.web_snapshot_max_bytes,
-            clock=clock,
-        ),
+        web_search=web_search,
         web_snapshot_policy=WebSnapshotPolicy(
             policy_id=f"web-snapshot-policy:{bundle.release_id}",
             policy_version="canonical-v2-serving-web-snapshot-v1",
@@ -1284,6 +1355,7 @@ def load_recorded_serving_inputs(
             max_cost_units=2.0,
         ),
         authority_sha256=cast(str, bundle.content_sha256),
+        idle_keepwarm_cycle=idle_keepwarm_cycle,
     )
 
 
