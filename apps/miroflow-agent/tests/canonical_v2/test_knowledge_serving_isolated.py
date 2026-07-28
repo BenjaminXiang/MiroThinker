@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -526,6 +527,18 @@ def test_environment_prose_renderer_reuses_client_for_warm_and_answers(
 
     assert len(client_calls) == 1
     assert [call["max_tokens"] for call in completion_calls] == [1200, 1, 1200]
+
+
+def test_environment_prose_renderer_stays_out_of_answer_session_copy() -> None:
+    renderer = serving_module._EnvironmentProseRenderer()
+    answer = serving_module.create_ephemeral_knowledge_answer(
+        prose_renderer=renderer,
+    )
+
+    forked = deepcopy(answer)
+
+    assert forked is not answer
+    assert forked._prose_renderer is renderer
 
 
 def test_focused_missing_entity_prefers_current_web_over_vector_neighbors(

@@ -1061,6 +1061,11 @@ class _EnvironmentProseRenderer:
         ) as exc:
             raise TimeoutError("LLM prose synthesis is unavailable") from exc
 
+    def __deepcopy__(self, memo: dict[int, Any]) -> _EnvironmentProseRenderer:
+        # The provider client is process-scoped; only answer session state is forked.
+        memo[id(self)] = self
+        return self
+
     def warm(self) -> None:
         self._configured_renderer().warm()
 
