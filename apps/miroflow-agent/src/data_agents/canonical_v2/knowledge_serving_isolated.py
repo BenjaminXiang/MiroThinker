@@ -747,33 +747,15 @@ def _matched_bound_entity(
     return matches[0] if len(matches) == 1 else None
 
 
-_WEB_GAP_MARKERS = (
-    "目前",
-    "当前",
-    "最新",
-    "链接",
-    "网址",
-    "官网",
-    "总部",
-    "评价",
-    "竞争力",
-    "市场",
-    "毕业于",
-    "数据层面",
-)
-
-
-def _requires_web_evidence(query: str) -> bool:
-    return any(marker in query for marker in _WEB_GAP_MARKERS) or (
-        "上述" in query
-        and any(geography in query for geography in ("深圳", "广州", "上海", "北京"))
-    )
-
-
 def _serving_reranker(request: RerankRequest) -> RerankProposal:
-    web_gap = _requires_web_evidence(request.original_query)
+    def candidate_key(candidate: Any) -> tuple[float, str]:
+        return (-candidate.raw_score, candidate.result_id)
 
-    def candidate_key(candidate: Any) -> tuple[int, float, str]:
+    mixed: list[Any] = []
+    local: list[Any] = []
+    web: list[Any] = []
+    other: list[Any] = []
+    for candidate in request.eligible_candidates:
         has_web = any(
             item.source_nature == "current_web" for item in candidate.evidence
         )
@@ -783,23 +765,29 @@ def _serving_reranker(request: RerankRequest) -> RerankProposal:
             in {"exact", "structured", "lexical", "relationship", "internal_reference"}
             for item in candidate.evidence
         )
-        if web_gap:
-            group = (
-                0
-                if has_web and has_strong_local
-                else 1
-                if has_web
-                else 2
-                if has_strong_local
-                else 3
-            )
+        if has_web and has_strong_local:
+            mixed.append(candidate)
+        elif has_strong_local:
+            local.append(candidate)
+        elif has_web:
+            web.append(candidate)
         else:
-            group = 0 if has_strong_local else 1 if not has_web else 2
-        return (group, -candidate.raw_score, candidate.result_id)
+            other.append(candidate)
+
+    mixed.sort(key=candidate_key)
+    local.sort(key=candidate_key)
+    web.sort(key=candidate_key)
+    other.sort(key=candidate_key)
+    balanced: list[Any] = []
+    for index in range(max(len(local), len(web))):
+        if index < len(local):
+            balanced.append(local[index])
+        if index < len(web):
+            balanced.append(web[index])
 
     ordered = tuple(
         candidate.result_id
-        for candidate in sorted(request.eligible_candidates, key=candidate_key)
+        for candidate in (*mixed, *balanced, *other)
     )
     return RerankProposal(
         decision_input_sha256=request.content_sha256,
@@ -807,7 +795,9 @@ def _serving_reranker(request: RerankRequest) -> RerankProposal:
         model_id="canonical-v2-deterministic-reranker-v1",
         prompt_version="canonical-v2-serving-rerank-v1",
         ordered_result_ids=ordered,
-        rationale="Deterministic evidence-lane ranking preserves explicit Web gaps.",
+        rationale=(
+            "Deterministic late selection preserves bounded local and current-Web recall."
+        ),
     )
 
 
@@ -913,8 +903,12 @@ class _OpenAIProseRenderer:
         context = getattr(result, "context_receipt", None)
         active_anchor = getattr(context, "active_anchor", None)
         displayed_set = getattr(context, "displayed_result_set", None)
+        citation_by_evidence_id = {
+            citation.evidence_id: citation
+            for citation in getattr(result, "citations", ())
+        }
         payload = {
-            "prompt_version": "canonical-v2-prose-v2",
+            "prompt_version": "canonical-v2-prose-v3",
             "user_question": getattr(result, "original_query", None),
             "active_entity": (
                 None
@@ -937,8 +931,17 @@ class _OpenAIProseRenderer:
                     "predicate": claim.predicate,
                     "status": claim.status,
                     "source_types": list(claim.source_natures),
+                    "source_urls": [
+                        citation.source_locator
+                        for evidence_id in claim.evidence_ids
+                        if (
+                            (citation := citation_by_evidence_id.get(evidence_id))
+                            is not None
+                            and citation.source_nature == "current_web"
+                        )
+                    ],
                 }
-                for claim in result.claims[:12]
+                for claim in result.claims
             ],
         }
         response = self._client.chat.completions.create(
@@ -949,11 +952,16 @@ class _OpenAIProseRenderer:
                 {
                     "role": "system",
                     "content": (
-                        "你是深圳科创信息助手。只使用输入中的已验证主张，围绕用户问题生成最终答案。"
-                        "先直接给出结论，再按主体或关系组织必要补充；合并同义和重复信息，使用简洁、"
-                        "自然、易读的中文，不要逐字段复述，不要输出“简介”“技术路线”等数据字段标签。"
-                        "关系问题必须明确写出人物、关系角色和目标实体。不要输出内部ID、检索流程、"
-                        "证据元数据或输入中未提供的事实。输入不足时明确说明，不要猜测。"
+                        "你是深圳科创信息助手。输入中的主张是有证据约束的候选材料，不代表每条都与"
+                        "问题相关；先判断相关性，再只使用相关材料围绕用户问题回答。先直接给出结论，"
+                        "再按主体或关系组织必要补充；综合本地与网页材料，合并同义和重复信息，不要"
+                        "复制原始字段或搜索摘要，不要逐字段复述，不要输出“简介”“技术路线”等数据"
+                        "字段标签。关系问题必须明确写出"
+                        "人物、关系角色和目标实体。产品能力只有在同一材料明确绑定具体产品与具体能力"
+                        "时才能确认；公司通用能力、其他产品或外围系统集成不能替代，并应区分机器人"
+                        "直接操作物理控件与通过楼宇或物联网接口集成。对“上述/这些”集合问题，说明"
+                        "哪些主体有直接支持，并对其余主体作简短限定。不要输出内部ID、检索流程、证据"
+                        "元数据或输入中未提供的事实。评估全部相关材料后仍不足时再明确说明，不要猜测。"
                     ),
                 },
                 {
@@ -1164,19 +1172,7 @@ def _answer_selector(
         }
         preferred_objects.update(exact_named_objects)
         focused_entity = search_view != request.query.strip().rstrip("？?。！!")
-        web_items = tuple(
-            item
-            for item in request.evidence_set.items
-            if item.source_nature == "current_web"
-        )
-        if _requires_web_evidence(request.query) and web_items:
-            eligible_items = tuple(
-                item
-                for item in request.evidence_set.items
-                if item.source_nature == "current_web"
-                or (preferred_objects and item.object_id in preferred_objects)
-            )
-        elif focused_entity and not preferred_objects:
+        if focused_entity and not preferred_objects:
             eligible_items = tuple(
                 item
                 for item in request.evidence_set.items
@@ -1186,26 +1182,52 @@ def _answer_selector(
             eligible_items = tuple(
                 item
                 for item in request.evidence_set.items
-                if enumeration
+                if item.source_nature == "current_web"
+                or enumeration
                 or not preferred_objects
                 or item.object_id in preferred_objects
             )
-        claim_limit = (
-            bundle.max_candidates
-            if enumeration
-            else min(
-                bundle.max_candidates,
-                3,
-            )
+        local_items = tuple(
+            item for item in eligible_items if item.source_nature != "current_web"
         )
+        web_items = tuple(
+            item for item in eligible_items if item.source_nature == "current_web"
+        )
+        balanced_items: list[EvidenceItem] = []
+        for index in range(max(len(local_items), len(web_items))):
+            if index < len(local_items):
+                balanced_items.append(local_items[index])
+            if index < len(web_items):
+                balanced_items.append(web_items[index])
+        local_claim_limit = (
+            bundle.max_candidates if enumeration else min(bundle.max_candidates, 3)
+        )
+        web_claim_limit = bundle.max_web_results
+        claim_limit = local_claim_limit + web_claim_limit
         claims: list[MaterialClaimProposal] = []
-        seen_objects: set[str] = set()
+        seen_objects: set[tuple[str, str]] = set()
+        local_claim_count = 0
+        web_claim_count = 0
         displayed_handle_ids: list[str] = []
-        for item in eligible_items:
+        for item in balanced_items:
             binding = item.claim_binding
-            if binding is None or item.object_id in seen_objects:
+            source_group = (
+                "current_web"
+                if item.source_nature == "current_web"
+                else "local"
+            )
+            seen_key = (item.object_id, source_group)
+            if binding is None or seen_key in seen_objects:
                 continue
-            seen_objects.add(item.object_id)
+            if source_group == "current_web":
+                if web_claim_count >= web_claim_limit:
+                    continue
+                web_claim_count += 1
+            else:
+                if local_claim_count >= local_claim_limit:
+                    continue
+                local_claim_count += 1
+            seen_objects.add(seen_key)
             handle = handle_by_evidence.get(item.evidence_id)
             display_name = handle.display_name if handle is not None else item.object_id
             if handle is not None:

@@ -219,6 +219,93 @@ def test_public_citation_uses_official_homepage_without_internal_identity() -> N
 
 
 @pytest.mark.parametrize(
+    ("web_url", "expected"),
+    (
+        ("https://www.pudurobotics.com/en/products/flashbot-arm", True),
+        ("https://products.pudurobotics.com/flashbot-arm", True),
+        ("https://robot-news.example/pudu-flashbot-arm", False),
+    ),
+)
+def test_public_web_citation_requires_same_entity_official_host(
+    web_url: str,
+    expected: bool,
+) -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    answer = import_module("src.data_agents.canonical_v2.knowledge_answer")
+    read = import_module("src.data_agents.canonical_v2.knowledge_read")
+    company_id = "company-c-pudu"
+    local = read.EvidenceItem(
+        evidence_id="evidence:s12d:pudu-local",
+        object_id=company_id,
+        domain="company",
+        lane="exact",
+        source_nature="local",
+        source_locator="canonical-v2-isolated:pudu",
+        snippet=json.dumps(
+            {
+                "name": "深圳市普渡科技有限公司",
+                "website": "https://www.pudurobotics.com/",
+            },
+            ensure_ascii=False,
+        ),
+        score=1.0,
+        source_authority="canonical_release",
+        claim_binding=read.EvidenceClaimBinding(
+            subject_id=company_id,
+            predicate="canonical_projection",
+            value="a" * 64,
+            status="admitted",
+        ),
+    )
+    web = read.EvidenceItem(
+        evidence_id="evidence:s12d:pudu-web-product",
+        object_id="web-object:s12d:pudu-flashbot-arm",
+        domain="company",
+        lane="web",
+        source_nature="current_web",
+        source_locator=web_url,
+        snippet="FlashBot Arm 配备机械手，可直接按下电梯按钮。",
+        score=1.0,
+        source_authority="web_search",
+        claim_binding=read.EvidenceClaimBinding(
+            subject_id=company_id,
+            predicate="current_web_result",
+            value="b" * 64,
+            status="observed",
+        ),
+    )
+    handle = read.CanonicalEntityHandle(
+        canonical_id=company_id,
+        domain="company",
+        display_name="深圳市普渡科技有限公司",
+        evidence_ids=(local.evidence_id, web.evidence_id),
+    )
+    turn_result = answer.TurnResult(
+        session_id="session:s12d-pudu-official-web",
+        turn_id="turn:s12d-pudu-official-web",
+        release_id=RELEASE_ID,
+        answer_text="FlashBot Arm 可通过机械手直接按下电梯按钮。",
+        citations=(
+            answer.Citation(
+                evidence_id=web.evidence_id,
+                source_nature="current_web",
+                source_locator=web.source_locator,
+            ),
+        ),
+    )
+
+    citations = service.CanonicalV2ChatAdapter._public_citations(
+        turn_result=turn_result,
+        handles_by_id={handle.canonical_id: handle},
+        evidence_by_id={local.evidence_id: local, web.evidence_id: web},
+    )
+
+    assert bool(citations) is expected
+    if expected:
+        assert citations[0].url == web_url
+
+
+@pytest.mark.parametrize(
     "url",
     [
         "http://100.64.0.4:18188/browse",

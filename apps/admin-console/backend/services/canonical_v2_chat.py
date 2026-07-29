@@ -234,6 +234,33 @@ def _official_evidence_url(item: EvidenceItem) -> str | None:
     return None
 
 
+def _official_host_scope(value: str) -> str | None:
+    public_url = _public_url(value)
+    if public_url is None:
+        return None
+    hostname = (urlparse(public_url).hostname or "").casefold()
+    return hostname[4:] if hostname.startswith("www.") else hostname
+
+
+def _current_web_url_for_official_hosts(
+    item: EvidenceItem,
+    *,
+    official_hosts: frozenset[str],
+) -> str | None:
+    if item.source_nature != "current_web":
+        return None
+    public_url = _public_url(item.source_locator)
+    if public_url is None:
+        return None
+    hostname = _official_host_scope(public_url)
+    if hostname is None or not any(
+        hostname == official_host or hostname.endswith(f".{official_host}")
+        for official_host in official_hosts
+    ):
+        return None
+    return public_url
+
+
 class ChatFeedbackCheckpoint(ContractModel):
     session_id: str
     turn_id: str
@@ -698,13 +725,34 @@ class CanonicalV2ChatAdapter:
                 handle_by_evidence_id.setdefault(evidence_id, (handle_id, handle))
         cards: list[ChatCitation] = []
         seen: set[str] = set()
+        official_hosts_by_handle_id: dict[str, frozenset[str]] = {}
         for citation in turn_result.citations:
             bound = handle_by_evidence_id.get(citation.evidence_id)
             evidence = evidence_by_id.get(citation.evidence_id)
             if bound is None or evidence is None:
                 continue
-            _, handle = bound
+            handle_id, handle = bound
             official_url = _official_evidence_url(evidence)
+            if official_url is None and evidence.source_nature == "current_web":
+                official_hosts = official_hosts_by_handle_id.get(handle_id)
+                if official_hosts is None:
+                    official_hosts = frozenset(
+                        host
+                        for evidence_id in handle.evidence_ids
+                        if (bound_evidence := evidence_by_id.get(evidence_id)) is not None
+                        and bound_evidence.source_nature != "current_web"
+                        and (
+                            local_official_url := _official_evidence_url(bound_evidence)
+                        )
+                        is not None
+                        and (host := _official_host_scope(local_official_url))
+                        is not None
+                    )
+                    official_hosts_by_handle_id[handle_id] = official_hosts
+                official_url = _current_web_url_for_official_hosts(
+                    evidence,
+                    official_hosts=official_hosts,
+                )
             if official_url is None or official_url in seen:
                 continue
             seen.add(official_url)

@@ -332,6 +332,21 @@ def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
                 predicate="professor_company_role",
                 status="accepted",
                 source_natures=("local",),
+                evidence_ids=("evidence:renderer:founder",),
+            ),
+            SimpleNamespace(
+                text="Service Robot Arm 配备双机械手，可自主按下电梯按钮。",
+                predicate="current_web_result",
+                status="observed",
+                source_natures=("current_web",),
+                evidence_ids=("evidence:renderer:product-capability",),
+            ),
+        ),
+        citations=(
+            SimpleNamespace(
+                evidence_id="evidence:renderer:product-capability",
+                source_nature="current_web",
+                source_locator="https://official.example/products/service-robot-arm",
             ),
         ),
         context_receipt=SimpleNamespace(
@@ -362,6 +377,9 @@ def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
     assert "他是否有参与哪些企业的创立" in serialized
     assert "围绕用户问题" in serialized
     assert "不要逐字段复述" in serialized
+    assert "canonical-v2-prose-v3" in serialized
+    assert "具体产品与具体能力" in serialized
+    assert "https://official.example/products/service-robot-arm" in serialized
     assert "evidence:" not in serialized
     assert "canonical-v2-isolated" not in serialized
 
@@ -710,6 +728,124 @@ def test_explicit_link_gap_keeps_current_web_url_with_exact_local_evidence(
         "local",
         "current_web",
     )
+
+
+@pytest.mark.parametrize(
+    "query",
+    (
+        "上述企业的产品哪些可以使用机械手操作楼宇设备",
+        "上述企业具备什么独特的末端执行能力",
+        "上述企业当前公开了哪些新产品能力",
+        "上述企业的创始人分别是谁",
+        "上述企业的官方网站链接是什么",
+    ),
+)
+def test_recall_first_answer_keeps_web_evidence_for_followup_families(
+    tmp_path: Path,
+    query: str,
+) -> None:
+    path, bundle = _write_bundle(tmp_path)
+    rendered_claims: list[tuple[object, ...]] = []
+
+    def render(result: object) -> str:
+        rendered_claims.append(tuple(result.claims))  # type: ignore[attr-defined]
+        return "已根据本地与公开信息综合回答。"
+
+    inputs = load_recorded_serving_inputs(
+        path=path,
+        expected_content_sha256=bundle.content_sha256,
+        expected_release_id=RELEASE_ID,
+        expected_database="miroflow_candidate_s12b_test",
+        expected_index_root=(tmp_path / "index").resolve(),
+        expected_envelope_path=(tmp_path / "envelope.json").resolve(),
+        embedding_adapter=_Embedding(),
+        prose_renderer=render,
+        clock=lambda: NOW,
+    )
+    local_items = tuple(
+        EvidenceItem(
+            evidence_id=f"evidence:recall-first:local:{index}",
+            object_id=f"company:recall-first:{index}",
+            domain="company",
+            lane="lexical",
+            source_nature="local",
+            source_locator=f"canonical-v2-isolated:company:{index}",
+            snippet=json.dumps(
+                {
+                    "name": f"候选企业{index}",
+                    "profile_summary": "提供商用服务机器人。",
+                },
+                ensure_ascii=False,
+            ),
+            score=1.0 - (index * 0.01),
+            source_authority="canonical_release",
+            claim_binding=EvidenceClaimBinding(
+                subject_id=f"company:recall-first:{index}",
+                predicate="canonical_projection",
+                value=f"{index:064x}",
+                status="admitted",
+            ),
+        )
+        for index in range(bundle.max_candidates)
+    )
+    web_item = EvidenceItem(
+        evidence_id="evidence:recall-first:web:direct-product-capability",
+        object_id="web-object:recall-first:product-capability",
+        domain="company",
+        lane="web",
+        source_nature="current_web",
+        source_locator="https://official.example/products/service-robot-arm",
+        snippet=(
+            "Service Robot Arm：该产品配备双机械手，可自主识别并按下电梯按钮。"
+        ),
+        score=1.0,
+        source_authority="official",
+        claim_binding=EvidenceClaimBinding(
+            subject_id="company:recall-first:0",
+            predicate="current_web_result",
+            value="f" * 64,
+            status="observed",
+        ),
+    )
+    handles = tuple(
+        CanonicalEntityHandle(
+            canonical_id=item.object_id,
+            domain="company",
+            display_name=f"候选企业{index}",
+            evidence_ids=(item.evidence_id,),
+        )
+        for index, item in enumerate(local_items)
+    )
+    evidence_set = EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query=query,
+        protected_slots=(),
+        items=(*local_items, web_item),
+        traces=(),
+        limitations=(),
+        entity_handles=handles,
+    )
+
+    result = inputs.answer_factory().answer(
+        TurnRequest(
+            session_id="session:recall-first",
+            turn_id="turn:recall-first",
+            query=query,
+            release_id=RELEASE_ID,
+            evidence_set=evidence_set,
+        )
+    )
+
+    assert result.render_mode == "prose_renderer"
+    assert rendered_claims
+    assert any(
+        "双机械手" in claim.text and "按下电梯按钮" in claim.text
+        for claim in rendered_claims[0]
+    )
+    assert {nature for claim in rendered_claims[0] for nature in claim.source_natures} == {
+        "local",
+        "current_web",
+    }
 
 
 def test_focused_title_accepts_only_the_exact_named_vector_handle(
@@ -1576,3 +1712,74 @@ def test_serving_reranker_keeps_web_gap_ahead_of_vector_neighbors(
     result = inputs.reranker(request)
 
     assert result.ordered_result_ids[0] == "fused-result:web"
+
+
+def test_serving_reranker_reserves_web_capacity_without_query_markers(
+    tmp_path: Path,
+) -> None:
+    path, bundle = _write_bundle(tmp_path)
+    inputs = load_recorded_serving_inputs(
+        path=path,
+        expected_content_sha256=bundle.content_sha256,
+        expected_release_id=RELEASE_ID,
+        expected_database="miroflow_candidate_s12b_test",
+        expected_index_root=(tmp_path / "index").resolve(),
+        expected_envelope_path=(tmp_path / "envelope.json").resolve(),
+        embedding_adapter=_Embedding(),
+        clock=lambda: NOW,
+    )
+
+    def fused(*, token: str, source_nature: str, score: float) -> FusedCandidate:
+        local = source_nature == "local"
+        evidence = EvidenceItem(
+            evidence_id=f"evidence:lane-balanced:{token}",
+            object_id=f"object:lane-balanced:{token}",
+            domain="company",
+            lane=("lexical" if local else "web"),
+            source_nature=source_nature,
+            source_locator=(
+                f"canonical-v2-isolated:{token}"
+                if local
+                else f"https://example.test/{token}"
+            ),
+            snippet=token,
+            score=score,
+        )
+        return FusedCandidate(
+            result_id=f"fused-result:{token}",
+            canonical_id=(f"company:{token}" if local else None),
+            display_name=token,
+            domain="company",
+            raw_candidate_ids=(f"raw-candidate:{token}",),
+            evidence_ids=(evidence.evidence_id,),
+            evidence=(evidence,),
+            quality_flags=(),
+            raw_score=score,
+            identity_kind=("canonical" if local else "web_only"),
+            resolution_state=("resolved" if local else "unresolved"),
+            origin_lane=evidence.lane,
+            origin_attempt=1,
+            adapter_versions=("test",),
+            provider_versions=(() if local else ("serper-v1",)),
+        )
+
+    local_candidates = tuple(
+        fused(token=f"local-{index}", source_nature="local", score=1.0)
+        for index in range(bundle.max_candidates)
+    )
+    web_candidates = tuple(
+        fused(token=f"web-{index}", source_nature="current_web", score=0.9)
+        for index in range(bundle.max_web_results)
+    )
+    assert inputs.reranker is not None
+    result = inputs.reranker(
+        RerankRequest(
+            release_id=RELEASE_ID,
+            original_query="上述企业的产品哪些可以使用机械手操作楼宇设备",
+            eligible_candidates=(*local_candidates, *web_candidates),
+        )
+    )
+
+    retained = result.ordered_result_ids[: bundle.max_candidates]
+    assert any(result_id.startswith("fused-result:local-") for result_id in retained)
+    assert any(result_id.startswith("fused-result:web-") for result_id in retained)
