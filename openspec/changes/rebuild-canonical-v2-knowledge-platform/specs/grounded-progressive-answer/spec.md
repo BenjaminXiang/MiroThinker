@@ -63,6 +63,14 @@ answer, with a typed limitation; deterministic template rendering SHALL NOT be t
 - **THEN** the synthesized answer states the supported Professor-to-Company relationship first
 - **AND** it may summarize relevant Company information without duplicating raw profile fields
 
+#### Scenario: Final synthesis receives complementary local and Web evidence
+- **WHEN** local evidence identifies the candidate entities and current-Web evidence directly
+  addresses the requested capability or current fact
+- **THEN** one bounded final LLM call evaluates both evidence lanes together and answers the user
+  question before adding qualifications
+- **AND** deterministic preselection does not discard the Web evidence solely because a local entity
+  already occupies the result set
+
 ### Requirement: Public chat exposes only official source affordances
 
 The public chat response and UI SHALL expose only validated public official-source links, such as an

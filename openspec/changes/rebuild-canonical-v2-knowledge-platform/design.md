@@ -362,6 +362,28 @@ workbook replay runs once at the final Candidate milestone. Original-source isol
 index consistency remain mandatory safety checks. Independent slice reviews, blind calibration,
 scaled human labels, duplicate aggregate gates, and repeated full-suite runs are not required.
 
+### 18. Preserve recall by lane and let one final LLM judge bounded evidence
+
+The serving path SHALL treat retrieval as candidate generation rather than answer adjudication.
+Local and current-Web lanes each receive a bounded share of the final candidate window so one lane
+cannot consume the complete global Top-K before semantic answer selection. Identity fusion still
+deduplicates entities, but it retains complementary local and current-Web evidence on the fused
+candidate.
+
+The existing final prose LLM is the only additional semantic judgment on the request critical path.
+It receives a bounded set containing relevant local claims and current-Web snippets, including
+source nature, authority, and locator, and decides relevance, comparison, qualification, and answer
+organization in one call. Deterministic code continues to own protected constraints, budgets,
+evidence-to-claim binding, public-source validation, internal-data redaction, and typed fallback.
+This avoids both keyword-specific routing patches and a planner/reranker/sufficiency LLM chain that
+would add latency before the user sees an answer.
+
+Current-Web material may support an answer even when it is not eligible for public display. Public
+`查看依据` remains fail-closed: a Web URL is displayed only when it is explicitly official or its
+hostname is validated against an official URL already retained on the same canonical entity. Search
+results, snippets, internal locators, and arbitrary third-party pages never become public citation
+links merely because the final LLM used them for relevance judgment.
+
 ## Risks / Trade-offs
 
 - **[Risk] The clean-slate scope is large and may stay half-finished.** → Finish one end-to-end

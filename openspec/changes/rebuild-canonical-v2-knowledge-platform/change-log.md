@@ -1278,3 +1278,15 @@
 - Tasks 12.5d-12.5f and their objective acceptance checks are complete, so S12D returns to
   Candidate. Task 12.5 remains open for direct user acceptance; Task 12.6 remains a separate,
   unauthorized Cutover decision.
+
+## 2026-07-29 — S12D recall-first mixed-evidence repair opened
+
+- Direct user evaluation found a systemic late-selection failure: both Web providers returned
+  relevant Product-capability evidence for a displayed Company set, but local-first ranking and the
+  shared candidate/claim cap removed it before final LLM synthesis.
+- The approved repair is recall-first and bounded. Local and current-Web lanes retain independent
+  capacity, complementary evidence reaches the existing final LLM in one call, and deterministic
+  code continues to enforce evidence binding, budgets, fallback, privacy, and official-source
+  validation.
+- Keyword expansion and a multi-stage LLM agent chain are explicitly rejected. Tasks 12.5g-12.5i
+  return S12D to In Progress for a systemic regression repair and real three-turn verification.

@@ -2,12 +2,12 @@
 
 ## Status
 
-Candidate
+In Progress
 
 ## Parent
 
 - OpenSpec change: `openspec/changes/rebuild-canonical-v2-knowledge-platform/`
-- Tasks: `12.5a`-`12.5f`
+- Tasks: `12.5a`-`12.5i`
 
 ## Goal
 
@@ -77,6 +77,14 @@ provider paths responsive after long idle periods without adding work to the rea
    execution and prove skip, non-overlap, shutdown, and zero business-write behavior.
 8. Restart the isolated Candidate and record warm plus post-idle timings without changing answer,
    citation sanitization, or source-isolation behavior.
+9. RED/GREEN: reserve bounded late-selection capacity for both local and current-Web candidates,
+   independent of query keywords, and retain complementary evidence for fused canonical entities.
+10. RED/GREEN: send the bounded mixed claim set to the existing final prose LLM in one call; make
+    direct Product-capability binding explicit in the prompt and preserve typed deterministic
+    fallback only for provider/output failure.
+11. RED/GREEN: allow a current-Web citation only when it is explicitly official or its hostname
+    matches the official hostname retained on the same canonical entity; replay the hotel robot
+    three-turn case and sibling capability follow-ups before restarting the Candidate.
 
 ## Required checks
 
@@ -91,6 +99,10 @@ provider paths responsive after long idle periods without adding work to the rea
   failure tests.
 - Deterministic keep-warm activity, idle, non-overlap, and shutdown tests with an injected clock and
   wake event; no real external sleeps in tests.
+- Focused regressions proving a local-heavy Top-K cannot starve current-Web evidence, the final LLM
+  receives both lanes for an unlisted capability phrase, and arbitrary Web URLs remain non-public.
+- Real three-turn hotel-delivery-robot replay proving direct Product-capability evidence can support
+  the answer without a query-string or Company-specific production branch.
 
 ## Evidence to update
 
@@ -115,3 +127,5 @@ provider paths responsive after long idle periods without adding work to the rea
   graceful one-provider/local degradation.
 - Long-idle provider paths are warmed in the background with no request-path wait or business write.
 - Focused checks pass and `:18188` is ready for direct user iteration.
+- The hotel-delivery-robot follow-up is synthesized from retained current-Web evidence, confirms
+  only directly supported Products, and exposes only validated official public links.

@@ -118,4 +118,7 @@
 - [x] 12.5d Replace the single-provider Canonical Web lane with bounded concurrent Bocha plus Serper retrieval, normalized-URL deduplication, and retained provider provenance.
 - [x] 12.5e Add one lifecycle-owned adaptive idle keep-warm loop for Bocha, Serper, embedding, and prose LLM paths without chat/session/evidence/data writes or request-path waiting.
 - [x] 12.5f Verify dual-provider success/degradation, idle/activity/shutdown behavior, warm and post-idle latency, unchanged public evidence sanitization, and restart the isolated `0.0.0.0:18188` Candidate.
+- [ ] 12.5g Reproduce and repair the systemic evidence-starvation class so bounded local and current-Web candidates both survive late selection for every normal information request, including displayed-set capability follow-ups.
+- [ ] 12.5h Pass the bounded mixed evidence set to one final LLM synthesis call, preserve direct Product-capability binding and typed fallback, and validate current-Web official links against the bound canonical entity before public display.
+- [ ] 12.5i Verify the hotel-delivery-robot three-turn regression, sibling follow-up families, focused module tests, public evidence privacy, and end-to-end latency; restart the read-only Candidate on `0.0.0.0:18188` for user iteration.
 - [ ] 12.6 Keep original sources frozen and request separate explicit authorization for any production-like cutover, archive, or destructive cleanup.

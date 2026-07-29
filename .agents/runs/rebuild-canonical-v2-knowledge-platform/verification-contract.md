@@ -610,6 +610,20 @@ Last identity/hash check recorded in `verification.md`: `2026-07-12T08:40:35Z`.
   official links. Keep-warm inputs and traces are operational only and never enter user-visible or
   business-data artifacts.
 
+#### S12D recall-first mixed-evidence correction
+
+- RED evidence proves the reported hotel-robot capability follow-up invokes Web with the displayed
+  Company names but loses relevant Web evidence before final synthesis when local candidates fill
+  the global candidate/claim budget.
+- GREEN evidence proves lane-balanced late selection for unlisted capability wording, one bounded
+  final LLM call over local plus current-Web claims, and unchanged direct Product-capability binding.
+- A sibling matrix covers displayed-set geography, role, current fact, link, and Product-capability
+  follow-ups without production query literals or marker-specific admission rules.
+- Public citation tests prove arbitrary Web hosts remain hidden and a Web URL is exposed only when
+  explicitly official or validated against the same canonical entity's retained official hostname.
+- Real runtime evidence records the three-turn answer, sources, render mode, Web trace, complete HTTP
+  timing, public payload privacy, and unchanged original-source/active-pointer identities.
+
 ## Required evidence shape
 
 Every verification run SHALL record:

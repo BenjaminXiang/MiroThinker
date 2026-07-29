@@ -80,6 +80,15 @@ acceptance.
       cycles, shutdown stops it, and it creates no chat/session/evidence/canonical/index writes.
 - [x] Normal information answers use the configured LLM renderer; deterministic grounded text is
       used only for a typed provider/output failure and does not silently become the normal path.
+- [ ] A local-heavy result set cannot consume the complete final candidate or claim budget: bounded
+      current-Web evidence remains available to the same final LLM call without a keyword-specific
+      query gate or an additional LLM stage.
+- [ ] A displayed-set Product-capability follow-up can confirm a Product only from direct retrieved
+      Product-capability evidence, distinguish indirect Company or elevator-integration evidence,
+      and identify unsupported candidates without converting the online claim into canonical data.
+- [ ] Public current-Web citations are emitted only when their official hostname is explicitly
+      trusted or validated against the same canonical entity's retained official URL; arbitrary
+      search-result and internal URLs remain hidden.
 - [x] The Ding Wenbo founder follow-up states that Ding Wenbo participated in founding Shenzhen
       Wujie Zhihang Technology Co., Ltd. from the retained relationship evidence before summarizing
       relevant Company information.

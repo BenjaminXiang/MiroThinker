@@ -227,6 +227,19 @@ evidence-aware selection.
 - **THEN** fusion presents one candidate identity with both evidence lanes
 - **AND** it does not consume two result positions as unrelated Companies
 
+#### Scenario: Local candidates fill the nominal result window
+- **WHEN** a normal information request produces more eligible local candidates than the configured
+  global candidate limit and also produces current-Web candidates
+- **THEN** late selection retains a bounded share from both local and current-Web lanes
+- **AND** local rank alone cannot remove all current-Web evidence before final synthesis
+
+#### Scenario: Follow-up adds a new capability constraint
+- **WHEN** a user asks which members of a displayed set support a newly introduced Product
+  capability and local projections do not contain that capability
+- **THEN** the current query, displayed entity names, and capability constraint reach bounded Web
+  retrieval
+- **AND** relevant direct Product-capability evidence remains available to final LLM synthesis
+
 ### Requirement: Displayed Web-only entities use evidence-bound session handles
 
 The system SHALL preserve any displayed Web-only candidate as a typed session-scoped handle and retain
