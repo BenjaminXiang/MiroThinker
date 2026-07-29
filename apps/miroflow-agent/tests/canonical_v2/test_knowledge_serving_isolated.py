@@ -101,6 +101,9 @@ def test_content_addressed_serving_bundle_is_secret_free_and_executable(
 
     assert "secret-must-stay-outside-bundle" not in path.read_text(encoding="utf-8")
     assert inputs.planning_policy.max_provider_calls == 2
+    assert inputs.planning_policy.max_candidates == (
+        bundle.max_candidates + bundle.max_web_results
+    )
     assert inputs.universal_web_policy.max_provider_calls == 2
     request = QueryPlanningRequest(
         request_id="query-request:s12b-test",
@@ -114,6 +117,7 @@ def test_content_addressed_serving_bundle_is_secret_free_and_executable(
     assert "vector" in proposal.lanes
     assert proposal.professor_vector_view == "both"
     assert proposal.query_views[0].text == "丁文伯"
+    assert proposal.max_candidates == bundle.max_candidates + bundle.max_web_results
     plan = create_ephemeral_query_planner(
         planning_policy=inputs.planning_policy,
         institution_catalog=InstitutionCatalog(
@@ -1449,6 +1453,61 @@ def test_dual_web_lane_deduplicates_url_and_retains_provider_provenance() -> Non
         "bocha-v1",
         "serper-v1",
     ]
+
+
+def test_dual_web_lane_reserves_capacity_for_each_provider() -> None:
+    class _Provider:
+        def __init__(self, prefix: str, count: int) -> None:
+            self.prefix = prefix
+            self.count = count
+
+        def search(self, query: str) -> dict[str, object]:
+            return {
+                "organic": [
+                    {
+                        "title": f"{self.prefix} result {index}",
+                        "link": f"https://{self.prefix}.example/{query}/{index}",
+                        "snippet": f"{self.prefix} snippet {index}",
+                    }
+                    for index in range(self.count)
+                ]
+            }
+
+    adapter = serving_module._DualWebLaneAdapter(
+        bocha=_Provider("bocha", 8),
+        serper=_Provider("serper", 3),
+        timeout_ms=1500,
+        max_snapshot_bytes=16384,
+        clock=lambda: NOW,
+    )
+    result = adapter(
+        LaneRequest(
+            lane="web",
+            release_id=RELEASE_ID,
+            query_view="view:provider-balanced-web",
+            original_query="酒店服务机器人供应商",
+            behavior_class="A",
+            interaction_mode="information_retrieval",
+            web_policy=WebSearchPolicy(
+                mode="universal",
+                max_provider_calls=2,
+                timeout_ms=1500,
+                max_results=5,
+            ),
+            query_text="酒店服务机器人供应商 [lane=web]",
+            domains=("company",),
+            protected_slots=(),
+            structured_constraints=StructuredConstraints(),
+            max_candidates=5,
+        )
+    )
+
+    provider_versions = tuple(
+        candidate.provider_version for candidate in result.candidates
+    )
+    assert len(provider_versions) == 5
+    assert "bocha-v1" in provider_versions
+    assert "serper-v1" in provider_versions
 
 
 def test_dual_web_lane_preserves_one_provider_when_the_other_fails() -> None:

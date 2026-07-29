@@ -443,7 +443,7 @@ def _proposal_provider(
                 ),
             ),
             relationship_paths=relationship_paths,
-            max_candidates=bundle.max_candidates,
+            max_candidates=bundle.max_candidates + bundle.max_web_results,
             max_provider_calls=1,
             enumeration_mode=("representative" if relationship_paths else None),
             web_mode="universal",
@@ -556,21 +556,22 @@ class _DualWebLaneAdapter:
             except FutureTimeoutError:
                 provider_results[provider_version] = []
 
-        merged: list[_NormalizedWebResult] = []
-        positions: dict[str, int] = {}
-        for provider_version in ("bocha-v1", "serper-v1"):
-            for item in self._normalize_results(
+        normalized_by_provider = {
+            provider_version: self._normalize_results(
                 provider_version=provider_version,
                 results=provider_results[provider_version],
-            ):
+            )
+            for provider_version in ("bocha-v1", "serper-v1")
+        }
+        merged_by_url: dict[str, _NormalizedWebResult] = {}
+        for provider_version in ("bocha-v1", "serper-v1"):
+            for item in normalized_by_provider[provider_version]:
                 normalized_url = _normalized_web_url(item.url)
-                position = positions.get(normalized_url)
-                if position is None:
-                    positions[normalized_url] = len(merged)
-                    merged.append(item)
+                previous = merged_by_url.get(normalized_url)
+                if previous is None:
+                    merged_by_url[normalized_url] = item
                     continue
-                previous = merged[position]
-                merged[position] = _NormalizedWebResult(
+                merged_by_url[normalized_url] = _NormalizedWebResult(
                     title=previous.title,
                     url=previous.url,
                     snippet=previous.snippet,
@@ -583,7 +584,24 @@ class _DualWebLaneAdapter:
                         )
                     ),
                 )
-        return tuple(merged)
+        ordered: list[_NormalizedWebResult] = []
+        retained_urls: set[str] = set()
+        provider_order = ("bocha-v1", "serper-v1")
+        max_provider_results = max(
+            (len(normalized_by_provider[provider]) for provider in provider_order),
+            default=0,
+        )
+        for rank in range(max_provider_results):
+            for provider_version in provider_order:
+                results = normalized_by_provider[provider_version]
+                if rank >= len(results):
+                    continue
+                normalized_url = _normalized_web_url(results[rank].url)
+                if normalized_url in retained_urls:
+                    continue
+                retained_urls.add(normalized_url)
+                ordered.append(merged_by_url[normalized_url])
+        return tuple(ordered)
 
     def __call__(self, request: LaneRequest) -> RetrievalLaneResult:
         query_text = re.sub(
@@ -1344,7 +1362,7 @@ def load_recorded_serving_inputs(
             "web",
         ),
         supported_relationship_paths=supported_relationship_paths,
-        max_candidates=bundle.max_candidates,
+        max_candidates=bundle.max_candidates + bundle.max_web_results,
         max_provider_calls=2,
         max_planning_attempts=1,
     )
