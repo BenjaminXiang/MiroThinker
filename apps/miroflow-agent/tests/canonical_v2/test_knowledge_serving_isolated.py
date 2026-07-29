@@ -383,6 +383,7 @@ def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
     assert "不要逐字段复述" in serialized
     assert "canonical-v2-prose-v3" in serialized
     assert "具体产品与具体能力" in serialized
+    assert "专利或公司技术不是产品名称" in serialized
     assert "https://official.example/products/service-robot-arm" in serialized
     assert "evidence:" not in serialized
     assert "canonical-v2-isolated" not in serialized
@@ -1728,9 +1729,10 @@ def test_contextual_web_query_removes_referent_question_scaffolding(
     )
 
     search_text = proposal.query_views[0].text
-    assert search_text == f'"{company_name}" 自主刷卡和开门'
+    assert search_text == f"{company_name} 产品 自主刷卡 刷门禁和开门"
     assert "上述" not in search_text
     assert "哪些支持" not in search_text
+    assert '"' not in search_text
 
 
 def test_serving_reranker_keeps_web_gap_ahead_of_vector_neighbors(

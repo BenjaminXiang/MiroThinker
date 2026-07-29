@@ -282,6 +282,7 @@ def _search_view(query: str) -> str:
 
 def _contextual_web_search_view(query: str) -> str:
     value = _search_view(query)
+    product_scoped = "产品" in value
     value = re.sub(
         r"(?:上述|以上|这些|上面|其中)(?:的)?(?:企业|公司|主体)?"
         r"(?:里|中|内)?(?:的)?",
@@ -295,7 +296,11 @@ def _contextual_web_search_view(query: str) -> str:
     )
     value = re.sub(r"(?:分别)?(?:是)?谁$", " ", value)
     value = re.sub(r"(?:是|有)?什么$", " ", value)
+    if "刷卡" in value and "刷门禁" not in value:
+        value = value.replace("刷卡", "刷卡 刷门禁")
     normalized = re.sub(r"[\s，,。！？?]+", " ", value).strip()
+    if product_scoped and normalized:
+        normalized = f"产品 {normalized}"
     return normalized or _search_view(query)
 
 
@@ -423,7 +428,7 @@ def _proposal_provider(
         )
         if request.displayed_entity_names:
             if len(request.displayed_entity_names) == 1:
-                entity_context = f'"{request.displayed_entity_names[0]}"'
+                entity_context = request.displayed_entity_names[0]
             else:
                 entity_context = (
                     "("
@@ -1000,7 +1005,9 @@ class _OpenAIProseRenderer:
                         "字段标签。关系问题必须明确写出"
                         "人物、关系角色和目标实体。产品能力只有在同一材料明确绑定具体产品与具体能力"
                         "时才能确认；公司通用能力、其他产品或外围系统集成不能替代，并应区分机器人"
-                        "直接操作物理控件与通过楼宇或物联网接口集成。对“上述/这些”集合问题，说明"
+                        "直接操作物理控件与通过楼宇或物联网接口集成。专利或公司技术不是产品名称；"
+                        "用户问‘哪些产品’时必须给出材料中与该能力直接绑定的具体产品名，否则明确"
+                        "说明只确认到公司或技术层。对“上述/这些”集合问题，说明"
                         "哪些主体有直接支持，并对其余主体作简短限定。不要输出内部ID、检索流程、证据"
                         "元数据或输入中未提供的事实。评估全部相关材料后仍不足时再明确说明，不要猜测。"
                     ),
