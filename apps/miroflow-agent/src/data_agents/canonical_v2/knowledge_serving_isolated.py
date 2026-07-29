@@ -791,6 +791,14 @@ def _web_identity_forms(value: str) -> tuple[str, ...]:
             shortened = normalized[: -len(normalized_suffix)]
             if len(shortened) >= 4:
                 forms.append(shortened)
+                without_city = re.sub(
+                    r"^[\u3400-\u9fff]{2,4}市",
+                    "",
+                    shortened,
+                    count=1,
+                )
+                if len(without_city) >= 4:
+                    forms.append(without_city)
             break
     return tuple(dict.fromkeys(form for form in forms if form))
 

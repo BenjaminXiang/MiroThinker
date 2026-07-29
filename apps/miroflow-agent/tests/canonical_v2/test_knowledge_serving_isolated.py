@@ -1776,6 +1776,24 @@ def test_contextual_web_query_removes_referent_question_scaffolding(
     assert capability_search == "产品 酒店电梯 配送机器人 机械臂自主按电梯"
 
 
+def test_web_identity_matches_city_prefixed_legal_name_to_brand_snippet() -> None:
+    request = SimpleNamespace(
+        bound_entity_ids=("company-c-yunji", "company-c-pudu"),
+        bound_entity_names=("云迹科技股份有限公司", "深圳市普渡科技有限公司"),
+    )
+
+    matched = serving_module._matched_bound_entity(
+        request=request,
+        title="自主按电梯送物，机器人开始干真活",
+        snippet=(
+            "普渡科技推出类人形具身智能服务机器人闪电匣Arm，"
+            "通过机械臂和灵巧手自主按电梯。"
+        ),
+    )
+
+    assert matched == ("company-c-pudu", "深圳市普渡科技有限公司")
+
+
 def test_serving_reranker_keeps_web_gap_ahead_of_vector_neighbors(
     tmp_path: Path,
 ) -> None:
