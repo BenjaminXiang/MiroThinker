@@ -4123,3 +4123,29 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   but it does not regress the long-idle first-query result or expose internal evidence.
 - No source/canonical/index content, active pointer, production resource, promotion, archive,
   destructive cleanup, or Cutover changed.
+
+## S12D recall-first mixed-evidence repair — 2026-07-29
+
+- Status remains In Progress, not user Accepted. Tasks 12.5g and 12.5h are complete; Task 12.5i
+  remains open because two real sibling defects are recorded below.
+- RED/GREEN reproduced five shared failures: keyword-gated Web admission, a shared local/Web candidate
+  cap, Bocha-first provider starvation, conversational query scaffolding, and legal-name/brand-name
+  Web identity mismatch. The repair uses independent bounded lane budgets, provider-rank
+  interleaving, one final mixed-evidence LLM call, exact/relaxed provider query diversification, and
+  unique alias binding. No Company, Product, workbook row, or exact user query is hard-coded.
+- Fresh verification: isolated serving `52 passed`; Admin public HTTP `19 passed`; adaptive
+  keep-warm `7 passed`; public UI `11 passed`. Changed-file Ruff passes, targeted Pyright reports zero
+  errors, and `git diff --check` passes.
+- On the final `0.0.0.0:18188` process (PID `3916354`), the real four-turn sequence completed in
+  11.023, 7.961, 8.545, and 8.725 seconds. All four responses were `llm_synthesized`, with
+  `evidence=[]` and `structured_payload={}`. The third answer states that only Shenzhen Pudu
+  Technology is directly supported, names `闪电匣Arm`, and binds its mechanical arm/dexterous hand to
+  autonomous elevator-button operation while qualifying every other displayed Company.
+- Residual defects: the second turn still incorrectly lists Yunji Technology as Shenzhen-
+  headquartered, despite its official site identifying Beijing headquarters; the fourth
+  swipe-card/door Product follow-up remains a false negative even though Pudu's official FlashBot
+  Arm page states that capability. These keep Task 12.5i open and prevent a completion claim.
+- The original Milvus SHA-256 remains
+  `43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc`; the disposable Candidate
+  `publish.active_release` count remains zero. No source/canonical/index content, pointer, production
+  resource, promotion, archive, cleanup, or Cutover changed.

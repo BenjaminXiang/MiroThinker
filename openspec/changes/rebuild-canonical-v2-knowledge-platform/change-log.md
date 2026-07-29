@@ -1290,3 +1290,21 @@
   validation.
 - Keyword expansion and a multi-stage LLM agent chain are explicitly rejected. Tasks 12.5g-12.5i
   return S12D to In Progress for a systemic regression repair and real three-turn verification.
+
+## 2026-07-29 — S12D recall-first core repair verified with residuals
+
+- Repaired the shared evidence-starvation class by reserving local and current-Web capacity through
+  reranking and claim selection, increasing the final bounded plan from 8 shared candidates to 8
+  local plus 5 Web candidates, and interleaving Bocha/Serper results so one provider cannot consume
+  the complete Web budget.
+- Kept one final LLM call and strengthened generic Product-capability, headquarters, and evidence
+  selection instructions. Contextual Web queries now remove conversational scaffolding, retain
+  product scope, diversify exact and relaxed provider queries, and uniquely bind city-prefixed legal
+  Company names to sufficiently long brand mentions in Web results.
+- The final real hotel-robot sequence identifies only Shenzhen Pudu Technology and names FlashBot Arm
+  with direct mechanical-arm elevator-button evidence. Public evidence and structured trace payloads
+  remain empty; unvalidated Web and internal URLs remain hidden.
+- Tasks 12.5g and 12.5h are complete. Task 12.5i and S12D remain In Progress because a real
+  swipe-card/door sibling follow-up still returns an evidence-insufficient false negative, and the
+  headquarters turn still incorrectly includes Yunji Technology among Shenzhen-headquartered
+  companies. Task 12.5 and Cutover remain open.

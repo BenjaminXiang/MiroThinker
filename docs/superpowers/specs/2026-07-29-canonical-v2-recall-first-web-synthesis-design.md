@@ -109,7 +109,7 @@ Prompt version `canonical-v2-prose-v3` receives:
 
 - the current user question;
 - active and displayed entities;
-- bounded claims with text, predicate, status, source nature, source authority, and public locator;
+- bounded claims with text, predicate, status, source nature, and current-Web locator;
 - relationship paths.
 
 The prompt instructs the model to:
