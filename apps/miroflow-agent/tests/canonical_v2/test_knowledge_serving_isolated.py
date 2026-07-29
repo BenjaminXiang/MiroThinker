@@ -384,6 +384,7 @@ def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
     assert "canonical-v2-prose-v3" in serialized
     assert "具体产品与具体能力" in serialized
     assert "专利或公司技术不是产品名称" in serialized
+    assert "不能从公司名称、分支机构或服务地点推断总部" in serialized
     assert "https://official.example/products/service-robot-arm" in serialized
     assert "evidence:" not in serialized
     assert "canonical-v2-isolated" not in serialized
@@ -1768,6 +1769,11 @@ def test_contextual_web_query_removes_referent_question_scaffolding(
     assert "上述" not in search_text
     assert "哪些支持" not in search_text
     assert '"' not in search_text
+
+    capability_search = serving_module._contextual_web_search_view(
+        "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+    )
+    assert capability_search == "产品 酒店电梯 配送机器人 机械臂自主按电梯"
 
 
 def test_serving_reranker_keeps_web_gap_ahead_of_vector_neighbors(
