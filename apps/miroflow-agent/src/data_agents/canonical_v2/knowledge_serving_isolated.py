@@ -507,6 +507,10 @@ def _normalized_web_url(value: str) -> str:
 
 
 def _relaxed_serper_query(query: str) -> str:
+    if query.startswith("("):
+        _, separator, capability_query = query.partition(") ")
+        if separator and capability_query:
+            return capability_query
     entity_name, separator, remainder = query.partition(" ")
     if not separator:
         return query

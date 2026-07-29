@@ -1536,6 +1536,15 @@ def test_dual_web_lane_diversifies_legal_company_name_query() -> None:
     assert observed["bocha"] == query
     assert observed["serper"] == "普渡 产品 酒店机器人 机械臂 自主按电梯"
 
+    displayed_set_query = (
+        '("云迹科技股份有限公司" OR "深圳市普渡科技有限公司") '
+        "产品 酒店机器人 机械臂 自主按电梯"
+    )
+    adapter._merged_results(displayed_set_query)
+
+    assert observed["bocha"] == displayed_set_query
+    assert observed["serper"] == "产品 酒店机器人 机械臂 自主按电梯"
+
 
 def test_dual_web_lane_preserves_one_provider_when_the_other_fails() -> None:
     class _FailingProvider:
