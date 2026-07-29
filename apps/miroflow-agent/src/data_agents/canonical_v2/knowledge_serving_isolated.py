@@ -298,7 +298,11 @@ def _contextual_web_search_view(query: str) -> str:
     value = re.sub(r"(?:是|有)?什么$", " ", value)
     value = value.replace("送餐机器人", " 配送机器人 ")
     value = re.sub(r"(?:需要|能够|可以|使用)", " ", value)
-    if "刷卡" in value and "刷门禁" not in value:
+    if "刷卡" in value and ("开门" in value or "门禁" in value):
+        value = value.replace("自主刷卡", "刷门禁")
+        value = value.replace("刷卡", "刷门禁")
+        value = value.replace("和开门", " 开门")
+    elif "刷卡" in value and "刷门禁" not in value:
         value = value.replace("刷卡", "刷卡 刷门禁")
     normalized = re.sub(r"[\s，,。！？?]+", " ", value).strip()
     if product_scoped and normalized:

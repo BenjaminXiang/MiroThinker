@@ -1765,7 +1765,7 @@ def test_contextual_web_query_removes_referent_question_scaffolding(
     )
 
     search_text = proposal.query_views[0].text
-    assert search_text == f"{company_name} 产品 自主刷卡 刷门禁和开门"
+    assert search_text == f"{company_name} 产品 刷门禁 开门"
     assert "上述" not in search_text
     assert "哪些支持" not in search_text
     assert '"' not in search_text
