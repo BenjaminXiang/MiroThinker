@@ -1511,6 +1511,32 @@ def test_dual_web_lane_reserves_capacity_for_each_provider() -> None:
     assert "serper-v1" in provider_versions
 
 
+def test_dual_web_lane_diversifies_legal_company_name_query() -> None:
+    observed: dict[str, str] = {}
+
+    class _Provider:
+        def __init__(self, name: str) -> None:
+            self._name = name
+
+        def search(self, query: str) -> dict[str, object]:
+            observed[self._name] = query
+            return {"organic": []}
+
+    adapter = serving_module._DualWebLaneAdapter(
+        bocha=_Provider("bocha"),
+        serper=_Provider("serper"),
+        timeout_ms=1500,
+        max_snapshot_bytes=16384,
+        clock=lambda: NOW,
+    )
+    query = "深圳市普渡科技有限公司 产品 酒店机器人 机械臂 自主按电梯"
+
+    adapter._merged_results(query)
+
+    assert observed["bocha"] == query
+    assert observed["serper"] == "普渡 产品 酒店机器人 机械臂 自主按电梯"
+
+
 def test_dual_web_lane_preserves_one_provider_when_the_other_fails() -> None:
     class _FailingProvider:
         def search(self, query: str) -> dict[str, object]:
@@ -1690,7 +1716,7 @@ def test_contextual_web_query_binds_display_name_and_geography(
 
     result = inputs.web_search(lane_request)
 
-    assert company_name in observed["query"]
+    assert observed["query"] == "普渡 总部在深圳的企业"
     assert "[lane=web]" not in observed["query"]
     assert len(result.candidates) == 1
     candidate = result.candidates[0]

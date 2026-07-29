@@ -506,6 +506,24 @@ def _normalized_web_url(value: str) -> str:
     )
 
 
+def _relaxed_serper_query(query: str) -> str:
+    entity_name, separator, remainder = query.partition(" ")
+    if not separator:
+        return query
+    search_name = re.sub(r"(?:股份)?有限公司$", "", entity_name)
+    if search_name == entity_name:
+        return query
+    search_name = re.sub(r"^[\u4e00-\u9fff]{2,4}市", "", search_name, count=1)
+    search_name = re.sub(
+        r"(?:(?:智能)?科技|(?:科学)?技术|自动化|机器人)$",
+        "",
+        search_name,
+    )
+    if len(search_name) < 2:
+        return query
+    return f"{search_name} {remainder}"
+
+
 class _DualWebLaneAdapter:
     def __init__(
         self,
@@ -573,7 +591,7 @@ class _DualWebLaneAdapter:
             "serper-v1": self._executor.submit(
                 self._search_provider,
                 self._serper,
-                query,
+                _relaxed_serper_query(query),
             ),
         }
         timeout_seconds = self._timeout_ms / 1000
