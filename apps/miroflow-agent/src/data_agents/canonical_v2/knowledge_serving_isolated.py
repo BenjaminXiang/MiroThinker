@@ -280,6 +280,25 @@ def _search_view(query: str) -> str:
     return search_value.rstrip("？?。！!")
 
 
+def _contextual_web_search_view(query: str) -> str:
+    value = _search_view(query)
+    value = re.sub(
+        r"(?:上述|以上|这些|上面|其中)(?:的)?(?:企业|公司|主体)?"
+        r"(?:里|中|内)?(?:的)?",
+        " ",
+        value,
+    )
+    value = re.sub(
+        r"(?:产品)?(?:有)?哪些(?:可以|能够)?(?:实现|支持)?",
+        " ",
+        value,
+    )
+    value = re.sub(r"(?:分别)?(?:是)?谁$", " ", value)
+    value = re.sub(r"(?:是|有)?什么$", " ", value)
+    normalized = re.sub(r"[\s，,。！？?]+", " ", value).strip()
+    return normalized or _search_view(query)
+
+
 def _is_lawful_safety_guidance(query: str) -> bool:
     risk_markers = ("黄赌毒", "赌博", "毒品", "涉黄", "违法场所", "危险场所")
     avoidance_markers = (
@@ -397,7 +416,11 @@ def _proposal_provider(
         else:
             domains = _infer_domains(request.original_query)
             lanes = ("exact", "structured", "lexical", "vector", "web")
-        search_text = _search_view(request.original_query)
+        search_text = (
+            _contextual_web_search_view(request.original_query)
+            if request.displayed_entity_names
+            else _search_view(request.original_query)
+        )
         if request.displayed_entity_names:
             if len(request.displayed_entity_names) == 1:
                 entity_context = f'"{request.displayed_entity_names[0]}"'

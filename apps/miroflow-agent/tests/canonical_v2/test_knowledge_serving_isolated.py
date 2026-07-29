@@ -1701,6 +1701,38 @@ def test_contextual_web_query_binds_display_name_and_geography(
     assert candidate.evidence[0].claim_binding.value == "深圳"
 
 
+def test_contextual_web_query_removes_referent_question_scaffolding(
+    tmp_path: Path,
+) -> None:
+    path, bundle = _write_bundle(tmp_path)
+    inputs = load_recorded_serving_inputs(
+        path=path,
+        expected_content_sha256=bundle.content_sha256,
+        expected_release_id=RELEASE_ID,
+        expected_database="miroflow_candidate_s12b_test",
+        expected_index_root=(tmp_path / "index").resolve(),
+        expected_envelope_path=(tmp_path / "envelope.json").resolve(),
+        embedding_adapter=_Embedding(),
+        clock=lambda: NOW,
+    )
+    company_name = "深圳市普渡科技有限公司"
+    proposal = inputs.proposal_provider(
+        QueryPlanningRequest(
+            request_id="query-request:contextual-capability-search-view",
+            release_id=RELEASE_ID,
+            original_query="上述企业的产品哪些支持自主刷卡和开门",
+            as_of=NOW,
+            displayed_entity_ids=("company-c-pudu",),
+            displayed_entity_names=(company_name,),
+        )
+    )
+
+    search_text = proposal.query_views[0].text
+    assert search_text == f'"{company_name}" 自主刷卡和开门'
+    assert "上述" not in search_text
+    assert "哪些支持" not in search_text
+
+
 def test_serving_reranker_keeps_web_gap_ahead_of_vector_neighbors(
     tmp_path: Path,
 ) -> None:
