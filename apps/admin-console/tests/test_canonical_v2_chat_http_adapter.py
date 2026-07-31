@@ -530,6 +530,91 @@ def test_multi_turn_planning_carries_only_the_explicit_referent_scope() -> None:
     )
 
 
+def test_pronoun_follow_up_binds_the_active_anchor() -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    displayed = ("professor:active", "professor:other")
+
+    for query in (
+        "他有哪些代表性研究成果",
+        "他的代表性论文有哪些",
+        "那他还主持过哪些项目",
+        "她有哪些专利",
+        "那它支持哪些产品能力",
+        "该学者的工作有哪些",
+        "这位老师的研究方向是什么",
+        "这个人创办过哪些公司",
+    ):
+        assert service._planning_displayed_ids(
+            query=query,
+            displayed_ids=displayed,
+            active_anchor_id="professor:active",
+        ) == ("professor:active",), query
+
+    # Pronoun-like compounds and pronoun-less turns must not hijack the anchor.
+    for query in (
+        "其他公司有哪些",
+        "其它专利有哪些",
+        "吉他品牌有哪些",
+        "专利 CN117873146A 的详细信息是什么",
+    ):
+        assert (
+            service._planning_displayed_ids(
+                query=query,
+                displayed_ids=displayed,
+                active_anchor_id="professor:active",
+            )
+            == ()
+        ), query
+
+    # A pronoun without an anchor binds nothing instead of crashing.
+    assert (
+        service._planning_displayed_ids(
+            query="他有哪些代表性研究成果",
+            displayed_ids=displayed,
+            active_anchor_id=None,
+        )
+        == ()
+    )
+
+
+def test_set_follow_up_binds_the_displayed_result_set() -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    displayed = ("professor:active", "professor:other")
+
+    for query in (
+        "上述企业里总部在深圳的有哪些",
+        "它们分别是什么",
+        "他们有哪些专利",
+        "这几家企业哪家更强",
+        "这两篇论文的区别是什么",
+        "这两位教授谁更适合",
+        "已展示的专利有哪些",
+    ):
+        assert (
+            service._planning_displayed_ids(
+                query=query,
+                displayed_ids=displayed,
+                active_anchor_id="professor:active",
+            )
+            == displayed
+        ), query
+
+    # Expansion requests ask beyond the displayed set; they bind neither the
+    # anchor nor the set until a real expansion operation exists.
+    for query in (
+        "还有哪些企业",
+        "其他的呢",
+    ):
+        assert (
+            service._planning_displayed_ids(
+                query=query,
+                displayed_ids=displayed,
+                active_anchor_id="professor:active",
+            )
+            == ()
+        ), query
+
+
 def test_independent_turn_declares_topic_switch_but_referential_turn_does_not() -> None:
     service = import_module("backend.services.canonical_v2_chat")
     read = import_module("src.data_agents.canonical_v2.knowledge_read")
@@ -559,6 +644,83 @@ def test_independent_turn_declares_topic_switch_but_referential_turn_does_not() 
         selection=None,
     )
     assert referential is None
+
+
+@pytest.mark.parametrize(
+    ("query", "has_anchor", "has_set", "expected"),
+    (
+        ("他有哪些代表性研究成果", False, False, True),
+        ("这论文的链接是什么", False, False, True),
+        ("该公司的专利有哪些", False, False, True),
+        ("上述企业有哪些是深圳的", False, False, True),
+        ("他们有哪些专利", False, False, True),
+        ("他有哪些代表性研究成果", True, True, False),
+        ("这论文的链接是什么", True, True, False),
+        ("上述企业有哪些是深圳的", False, True, False),
+        ("他有哪些代表性研究成果", False, True, True),
+        ("介绍清华的丁文伯，他的论文有哪些", False, False, False),
+        ("华力创这家公司相关信息，他的产量特点是什么", False, False, False),
+        ("专利 CN117873146A 的详细信息是什么，它的申请公司", False, False, False),
+        (
+            "pFedGPA: Diffusion-based Generative Parameter Aggregation for "
+            "Personalized Federated Learning 这篇论文的详细信息",
+            False,
+            False,
+            False,
+        ),
+        ("他的论文有哪些", False, False, True),
+    ),
+)
+def test_referent_clarification_matrix(
+    query: str,
+    has_anchor: bool,
+    has_set: bool,
+    expected: bool,
+) -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    context = SimpleNamespace(
+        active_anchor=object() if has_anchor else None,
+        displayed_result_set=object() if has_set else None,
+    )
+    committed = None if not (has_anchor or has_set) else SimpleNamespace(
+        context_receipt=context
+    )
+
+    assert (
+        service._referent_clarification_needed(query=query, committed=committed)
+        is expected
+    )
+
+
+def test_unbound_pronoun_turn_clarifies_without_retrieval_or_session_write() -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+
+    def forbidden_planner(value: Any) -> Any:
+        raise AssertionError("unbound referent must not reach planning")
+
+    def forbidden_read(value: Any) -> Any:
+        raise AssertionError("unbound referent must not reach retrieval")
+
+    adapter = service.CanonicalV2ChatAdapter(
+        release_id=RELEASE_ID,
+        planner=forbidden_planner,
+        knowledge_read=forbidden_read,
+        answer_factory=lambda: None,
+        answer_session_fork=lambda value: value,
+    )
+
+    response = adapter.answer(
+        query="他有哪些代表性研究成果",
+        session_id="session:unbound-pronoun",
+        option_id=None,
+        as_of=NOW,
+    )
+
+    assert response.query_type == "canonical_v2:G:clarification_only"
+    assert response.clarification is not None
+    assert "指代" in response.answer_text
+    assert response.citations == []
+    assert adapter._sessions == {}
 
 
 def _load_s11a_seam() -> _S11ASeam:
@@ -1946,7 +2108,12 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
     blocking = seam.contracts_module.ChatResponse.model_validate(blocking_http.json())
     assert blocking.answer_text
     assert blocking.clarification is not None
-    assert blocking.clarification.options == []
+    assert len(blocking.clarification.options) == 2
+    assert {option.domain for option in blocking.clarification.options} == {"company"}
+    assert {option.label for option in blocking.clarification.options} == {
+        "南山",
+        "宝安",
+    }
     assert blocking.clarification.default_id == ""
     assert blocking.evidence == []
     assert blocking.structured_payload == {}

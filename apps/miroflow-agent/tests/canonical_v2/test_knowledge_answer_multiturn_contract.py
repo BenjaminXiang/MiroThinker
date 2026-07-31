@@ -1752,3 +1752,263 @@ def test_continuation_candidates_require_server_owned_executable_contract() -> N
         )
     ).answer(invalid_request)
     assert invalid_answer.continuation_offer is None
+
+
+def test_person_criteria_aggregate_claim_survives_displayed_set_scope() -> None:
+    """Question-scoped person-criteria claims stay inside the turn scope.
+
+    Serving mints one aggregate evidence item for person-criteria probes
+    (founder/graduated-from over the displayed companies) whose subject is a
+    synthetic question-scoped id, not a displayed handle. Handle binding must
+    keep such claims within the displayed-set scope instead of dropping them,
+    or founder findings gathered by the supplemental probes never reach the
+    answer even though the evidence was retained and grounded.
+    """
+    module = _answer_module()
+    read_module = _read_module()
+    session_id = "session:s9m:person-criteria"
+    company_ids = ("company:c-alpha", "company:c-beta")
+    company_names = ("阿尔法机器人", "贝塔智能")
+    company_items = tuple(
+        _item(
+            read_module,
+            evidence_id=f"evidence:{company_id}",
+            object_id=company_id,
+            domain="company",
+            subject_id=company_id,
+            predicate="preferred_name",
+            value=name,
+            snippet=f"{name} 是一家深圳机器人企业。",
+        )
+        for company_id, name in zip(company_ids, company_names, strict=True)
+    )
+    company_handles = tuple(
+        _canonical_handle(
+            read_module,
+            canonical_id=company_id,
+            domain="company",
+            display_name=name,
+            evidence_ids=(f"evidence:{company_id}",),
+        )
+        for company_id, name in zip(company_ids, company_names, strict=True)
+    )
+
+    part_subject = "serving-person-criteria:founder"
+    snapshot_bytes = b"Recorded founder findings for the displayed companies."
+    snapshot_sha256 = hashlib.sha256(snapshot_bytes).hexdigest()
+    aggregate_item = _item(
+        read_module,
+        evidence_id="web-evidence:sha256:person-aggregate",
+        object_id=part_subject,
+        domain="company",
+        subject_id=part_subject,
+        predicate="person_criteria",
+        value="创始人",
+        snippet=(
+            '{"name": "阿尔法机器人、贝塔智能",'
+            ' "profile_summary": "阿尔法机器人：创始人王甲；贝塔智能：创始人李乙"}'
+        ),
+        lane="supplemental",
+        source_nature="supplemental_web",
+        source_locator="https://example.test/founders",
+        web_snapshot=read_module.WebEvidenceSnapshot(
+            snapshot_id=f"web-snapshot:sha256:{snapshot_sha256}",
+            content_sha256=snapshot_sha256,
+            retrieved_at=NOW,
+            byte_length=len(snapshot_bytes),
+        ),
+    )
+
+    first_request = _request(
+        module,
+        session_id=session_id,
+        turn_id="turn:person-criteria:1",
+        query="列出两家机器人公司",
+        evidence_set=_evidence_set(
+            read_module,
+            query="列出两家机器人公司",
+            items=company_items,
+            handles=company_handles,
+        ),
+    )
+    second_request = _request(
+        module,
+        session_id=session_id,
+        turn_id="turn:person-criteria:2",
+        query="这些公司的创始人都有谁",
+        evidence_set=_evidence_set(
+            read_module,
+            query="这些公司的创始人都有谁",
+            items=(aggregate_item,),
+            handles=(),
+        ),
+        session_directive=module.SessionDirective(referent="displayed_result_set"),
+    )
+
+    def selector(request: Any) -> Any:
+        if request.turn_id == "turn:person-criteria:1":
+            return _proposal(
+                module,
+                request,
+                displayed_handle_ids=company_ids,
+                claims=tuple(
+                    (
+                        f"claim:{company_id}",
+                        f"展示公司 {company_id}",
+                        (company_id,),
+                        (f"evidence:{company_id}",),
+                    )
+                    for company_id in company_ids
+                ),
+            )
+        return _proposal(
+            module,
+            request,
+            claims=(
+                (
+                    "claim:founders",
+                    "阿尔法机器人的创始人是王甲，贝塔智能的创始人是李乙。",
+                    (),
+                    (aggregate_item.evidence_id,),
+                ),
+            ),
+        )
+
+    answer = module.create_ephemeral_knowledge_answer(answer_selector=selector)
+    first, second = (
+        answer.answer(request) for request in (first_request, second_request)
+    )
+
+    assert (
+        tuple(
+            _handle_id(handle)
+            for handle in first.context_receipt.displayed_result_set.handles
+        )
+        == company_ids
+    )
+    founder_claims = [
+        claim for claim in second.claims if claim.subject_id == part_subject
+    ]
+    assert len(founder_claims) == 1
+    assert set(founder_claims[0].subject_handle_ids) == set(company_ids)
+    assert second.response_mode == "answer"
+
+
+def test_question_scoped_subject_prefix_matches_serving_mint() -> None:
+    """The answer layer's question-scoped prefix pin tracks the serving mint."""
+    module = _answer_module()
+    serving = import_module("src.data_agents.canonical_v2.knowledge_serving_isolated")
+    assert module._QUESTION_SCOPED_SUBJECT_PREFIXES == (
+        serving._PERSON_CRITERIA_PART_PREFIX,
+    )
+
+
+def test_prose_path_suppresses_deterministic_gap_jargon() -> None:
+    """Prose owns insufficiency wording; the gap sentence stays in fallback.
+
+    Live-derived: a prose answer that fully covered the question still ended
+    with "保留证据不足以支持问题中的 关键部分。" whenever a sufficiency part
+    stayed missing, contradicting the answer itself. The prose path now keeps
+    the renderer's wording only; deterministic fallback keeps the honest gap
+    sentence.
+    """
+    module = _answer_module()
+    read_module = _read_module()
+    session_id = "session:s9m:prose-gap"
+    company_id = "company:gap-target"
+    company_item = _item(
+        read_module,
+        evidence_id="evidence:gap-target",
+        object_id=company_id,
+        domain="company",
+        subject_id=company_id,
+        predicate="preferred_name",
+        value="间隙科技",
+        snippet="间隙科技是一家机器人企业。",
+    )
+    company_handle = _canonical_handle(
+        read_module,
+        canonical_id=company_id,
+        domain="company",
+        display_name="间隙科技",
+        evidence_ids=(company_item.evidence_id,),
+    )
+    missing_part = read_module.MaterialQuestionPart(
+        part_id="part:s9m:missing-revenue",
+        text="2026 年营收",
+        subject_id=company_id,
+        predicate="current_revenue",
+        requested_value="2026",
+    )
+    missing_report = read_module.SufficiencyReport(
+        decision_input_sha256="d" * 64,
+        parts=(
+            read_module.SufficiencyPartDecision(
+                part_id=missing_part.part_id,
+                outcome="missing",
+                evidence_ids=(),
+                rationale="No retained evidence supports current revenue.",
+                uncertainty="high",
+                confidence=0.0,
+                answer_scoped=False,
+                canonical=True,
+            ),
+        ),
+        complete=False,
+    )
+    evidence_set = _evidence_set(
+        read_module,
+        query="间隙科技怎么样，2026 年营收多少",
+        items=(company_item,),
+        handles=(company_handle,),
+        material_parts=(missing_part,),
+    ).model_copy(update={"sufficiency_report": missing_report})
+    request = _request(
+        module,
+        session_id=session_id,
+        turn_id="turn:prose-gap:1",
+        query="间隙科技怎么样，2026 年营收多少",
+        evidence_set=evidence_set,
+    )
+
+    def selector(inner: Any) -> Any:
+        return _proposal(
+            module,
+            inner,
+            displayed_handle_ids=(company_id,),
+            claims=(
+                (
+                    "claim:gap-target",
+                    "间隙科技是一家机器人企业。",
+                    (company_id,),
+                    (company_item.evidence_id,),
+                ),
+            ),
+        )
+
+    prose_text = "间隙科技是一家机器人企业，其2026年营收信息暂无法确认。"
+    prose_answer = module.create_ephemeral_knowledge_answer(
+        answer_selector=selector,
+        prose_renderer=lambda result: prose_text,
+    )
+    prose_result = prose_answer.answer(request)
+    assert prose_result.render_mode == "prose_renderer"
+    assert prose_result.answer_text == prose_text
+    assert "保留证据不足以支持" not in prose_result.answer_text
+    assert any(
+        limitation.code == "material_evidence_missing"
+        for limitation in prose_result.limitations
+    )
+
+    def timeout_renderer(result: Any) -> str:
+        raise TimeoutError("renderer unavailable")
+
+    fallback_answer = module.create_ephemeral_knowledge_answer(
+        answer_selector=selector,
+        prose_renderer=timeout_renderer,
+    )
+    fallback_result = fallback_answer.answer(request)
+    assert fallback_result.render_mode == "deterministic_fallback"
+    assert "保留证据不足以支持问题中的 2026 年当前营收。" in (
+        fallback_result.answer_text
+    )

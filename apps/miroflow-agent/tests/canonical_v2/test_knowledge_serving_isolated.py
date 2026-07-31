@@ -14,7 +14,10 @@ from src.data_agents.canonical_v2 import (
     knowledge_read_isolated as isolated_read_module,
 )
 from src.data_agents.canonical_v2 import knowledge_serving_isolated as serving_module
-from src.data_agents.canonical_v2.knowledge_answer import TurnRequest
+from src.data_agents.canonical_v2.knowledge_answer import (
+    ProseSynthesisResult,
+    TurnRequest,
+)
 from src.data_agents.canonical_v2.knowledge_read import (
     CanonicalEntityHandle,
     EnumerationPlanningContext,
@@ -45,6 +48,34 @@ RELEASE_ID = "candidate-s12b-test"
 class _Embedding:
     model_id = "recorded-embedding-v1"
     dimension = 32
+
+
+def _timeout_prose_renderer(_: Any) -> str:
+    """Keep serving tests hermetic: the deterministic grounded path is the
+    contract under test; the live environment renderer must stay out of unit
+    tests even when an API key is resolvable."""
+    raise TimeoutError("test-owned prose renderer is unavailable")
+
+
+class _DisabledQueryRewriter:
+    """Keep serving tests hermetic: like the environment prose renderer, the
+    environment LLM query rewriter must stay out of unit tests even when an
+    API key is resolvable; disabled rewriting keeps the deterministic
+    single-view plans these contracts assert."""
+
+    producer_version = "test-disabled-query-rewriter-v1"
+
+    def __call__(self, _query: str) -> tuple[str, ...]:
+        return ()
+
+
+@pytest.fixture(autouse=True)
+def _disable_environment_query_rewriter(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        serving_module,
+        "_ServingQueryRewriter",
+        _DisabledQueryRewriter,
+    )
 
 
 def _bundle(tmp_path: Path) -> RecordedServingBundle:
@@ -89,6 +120,7 @@ def test_content_addressed_serving_bundle_is_secret_free_and_executable(
     monkeypatch.setenv("SERPER_API_KEY", "secret-must-stay-outside-bundle")
 
     inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
         path=path,
         expected_content_sha256=bundle.content_sha256,
         expected_release_id=RELEASE_ID,
@@ -101,8 +133,9 @@ def test_content_addressed_serving_bundle_is_secret_free_and_executable(
 
     assert "secret-must-stay-outside-bundle" not in path.read_text(encoding="utf-8")
     assert inputs.planning_policy.max_provider_calls == 2
-    assert inputs.planning_policy.max_candidates == (
-        bundle.max_candidates + bundle.max_web_results
+    assert inputs.planning_policy.max_candidates == max(
+        bundle.max_candidates + bundle.max_web_results,
+        serving_module._ENUMERATION_CANDIDATE_WINDOW,
     )
     assert inputs.universal_web_policy.max_provider_calls == 2
     request = QueryPlanningRequest(
@@ -379,15 +412,83 @@ def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
     assert "丁文伯" in serialized
     assert "professor_to_company" in serialized
     assert "他是否有参与哪些企业的创立" in serialized
-    assert "围绕用户问题" in serialized
+    assert "回答用户" in serialized
     assert "不要逐字段复述" in serialized
-    assert "canonical-v2-prose-v3" in serialized
-    assert "具体产品与具体能力" in serialized
+    assert "canonical-v2-prose-v8" in serialized
+    assert "逐字一致" in serialized
+    assert "语义覆盖而非逐字匹配" in serialized
+    assert "不要逐一列名" in serialized
+    assert "宁多勿漏" in serialized
+    assert "另有X、Y暂未能确认" not in serialized
+    assert "材料显示" in serialized
+    assert "直接绑定具体产品与具体功能" in serialized
     assert "专利或公司技术不是产品名称" in serialized
     assert "不能从公司名称、分支机构或服务地点推断总部" in serialized
     assert "https://official.example/products/service-robot-arm" in serialized
     assert "evidence:" not in serialized
     assert "canonical-v2-isolated" not in serialized
+
+
+def test_llm_prose_renderer_rejects_out_of_range_selection_indexes() -> None:
+    class _Completions:
+        def create(self, **_: object) -> object:
+            return SimpleNamespace(
+                choices=(
+                    SimpleNamespace(
+                        message=SimpleNamespace(
+                            content=json.dumps(
+                                {
+                                    "answer_text": "无效选择",
+                                    "selected_claim_indexes": [2],
+                                    "selected_entity_indexes": [1],
+                                },
+                                ensure_ascii=False,
+                            )
+                        )
+                    ),
+                )
+            )
+
+    renderer = serving_module._OpenAIProseRenderer(
+        client=SimpleNamespace(
+            chat=SimpleNamespace(completions=_Completions()),
+        ),
+        model="recorded-chat-model",
+        extra_body={"thinking": {"type": "disabled"}},
+    )
+    result = SimpleNamespace(
+        original_query="上述企业里总部在深圳的有哪些",
+        claims=(
+            SimpleNamespace(
+                claim_id="claim:one",
+                text="普渡机器人总部位于深圳。",
+                subject_id="company-c-pudu",
+                subject_handle_ids=("company-c-pudu",),
+                predicate="headquarters_city",
+                status="observed",
+                source_natures=("current_web",),
+                evidence_ids=("evidence:pudu",),
+            ),
+        ),
+        citations=(),
+        context_receipt=SimpleNamespace(
+            active_anchor=None,
+            displayed_result_set=SimpleNamespace(
+                handles=(
+                    SimpleNamespace(
+                        canonical_id="company-c-pudu",
+                        display_name="深圳市普渡科技有限公司",
+                        domain="company",
+                        evidence_ids=("evidence:pudu",),
+                    ),
+                )
+            ),
+            traversed_path_ids=(),
+        ),
+    )
+
+    with pytest.raises(ValueError, match="selected_claim_indexes"):
+        renderer(result)
 
 
 @pytest.mark.parametrize(
@@ -436,6 +537,7 @@ def test_environment_prose_renderer_bounds_the_default_provider_wait(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     client_calls: list[dict[str, object]] = []
+    resolver_calls: list[tuple[str, dict[str, object]]] = []
     result_timeouts: list[float] = []
 
     class _Completions:
@@ -464,14 +566,18 @@ def test_environment_prose_renderer_bounds_the_default_provider_wait(
             return _ImmediateFuture(function, value)
 
     monkeypatch.delenv("CHAT_LLM_TIMEOUT_SECONDS", raising=False)
-    monkeypatch.setattr(
-        serving_module,
-        "resolve_professor_llm_settings",
-        lambda _profile: {
+    def resolve_settings(profile: str, **kwargs: object) -> dict[str, str]:
+        resolver_calls.append((profile, kwargs))
+        return {
             "local_llm_api_key": "test-key",
             "local_llm_model": "qwen3.6-35b-a3b-fp8",
             "local_llm_base_url": "https://llm.example/v1",
-        },
+        }
+
+    monkeypatch.setattr(
+        serving_module,
+        "resolve_professor_llm_settings",
+        resolve_settings,
     )
     monkeypatch.setattr(serving_module, "OpenAI", openai_client)
     monkeypatch.setattr(
@@ -485,6 +591,9 @@ def test_environment_prose_renderer_bounds_the_default_provider_wait(
     )
 
     assert rendered == "已整理回答"
+    assert resolver_calls == [
+        ("gemma4", {"apply_endpoint_env_overrides": False})
+    ]
     assert result_timeouts == [12.0]
     assert client_calls == [
         {
@@ -530,7 +639,7 @@ def test_environment_prose_renderer_reuses_client_for_warm_and_answers(
     monkeypatch.setattr(
         serving_module,
         "resolve_professor_llm_settings",
-        lambda _profile: {
+        lambda _profile, **_: {
             "local_llm_api_key": "test-key",
             "local_llm_model": "qwen3.6-35b-a3b-fp8",
             "local_llm_base_url": "https://llm.example/v1",
@@ -570,6 +679,7 @@ def test_focused_missing_entity_prefers_current_web_over_vector_neighbors(
 ) -> None:
     path, bundle = _write_bundle(tmp_path)
     inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
         path=path,
         expected_content_sha256=bundle.content_sha256,
         expected_release_id=RELEASE_ID,
@@ -653,6 +763,7 @@ def test_explicit_link_gap_keeps_current_web_url_with_exact_local_evidence(
 ) -> None:
     path, bundle = _write_bundle(tmp_path)
     inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
         path=path,
         expected_content_sha256=bundle.content_sha256,
         expected_release_id=RELEASE_ID,
@@ -859,6 +970,7 @@ def test_focused_title_accepts_only_the_exact_named_vector_handle(
 ) -> None:
     path, bundle = _write_bundle(tmp_path)
     inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
         path=path,
         expected_content_sha256=bundle.content_sha256,
         expected_release_id=RELEASE_ID,
@@ -989,6 +1101,7 @@ def test_serving_planner_uses_the_built_professor_company_relationship(
 ) -> None:
     path, bundle = _write_bundle(tmp_path)
     inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
         path=path,
         expected_content_sha256=bundle.content_sha256,
         expected_release_id=RELEASE_ID,
@@ -1064,11 +1177,175 @@ def test_serving_planner_uses_the_built_professor_company_relationship(
     )
 
 
+@pytest.mark.parametrize(
+    "query",
+    (
+        "他有哪些代表性研究成果",
+        "他的论文有哪些",
+        "她还有哪些科研成果",
+        "他的代表作是什么",
+    ),
+)
+def test_serving_planner_traverses_professor_papers_for_research_followups(
+    tmp_path: Path,
+    query: str,
+) -> None:
+    path, bundle = _write_bundle(tmp_path)
+    inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
+        path=path,
+        expected_content_sha256=bundle.content_sha256,
+        expected_release_id=RELEASE_ID,
+        expected_database="miroflow_candidate_s12b_test",
+        expected_index_root=(tmp_path / "index").resolve(),
+        expected_envelope_path=(tmp_path / "envelope.json").resolve(),
+        embedding_adapter=_Embedding(),
+        clock=lambda: NOW,
+    )
+    request = QueryPlanningRequest(
+        request_id="query-request:professor-research-output-follow-up",
+        release_id=RELEASE_ID,
+        original_query=query,
+        as_of=NOW,
+        displayed_entity_ids=("professor-c-ding-wenbo",),
+        displayed_entity_names=("丁文伯",),
+    )
+
+    proposal = inputs.proposal_provider(request)
+
+    assert proposal.lanes == ("relationship", "web")
+    assert len(proposal.relationship_paths) == 1
+    relationship_path = proposal.relationship_paths[0]
+    assert (
+        relationship_path.relationship_type_id,
+        relationship_path.direction,
+        relationship_path.source_type,
+        relationship_path.target_type,
+    ) == (
+        "professor_authored_paper",
+        "professor_to_paper",
+        "professor",
+        "paper",
+    )
+
+
+def test_serving_planner_does_not_traverse_for_plain_profile_followups(
+    tmp_path: Path,
+) -> None:
+    path, bundle = _write_bundle(tmp_path)
+    inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
+        path=path,
+        expected_content_sha256=bundle.content_sha256,
+        expected_release_id=RELEASE_ID,
+        expected_database="miroflow_candidate_s12b_test",
+        expected_index_root=(tmp_path / "index").resolve(),
+        expected_envelope_path=(tmp_path / "envelope.json").resolve(),
+        embedding_adapter=_Embedding(),
+        clock=lambda: NOW,
+    )
+    request = QueryPlanningRequest(
+        request_id="query-request:professor-profile-follow-up",
+        release_id=RELEASE_ID,
+        original_query="他的研究方向是什么",
+        as_of=NOW,
+        displayed_entity_ids=("professor-c-ding-wenbo",),
+        displayed_entity_names=("丁文伯",),
+    )
+
+    proposal = inputs.proposal_provider(request)
+
+    assert proposal.relationship_paths == ()
+    assert "relationship" not in proposal.lanes
+
+
+@pytest.mark.parametrize(
+    ("query", "displayed_entity_id", "expected_path"),
+    (
+        ("这论文的链接是什么", "paper-c-pfedgpa", None),
+        (
+            "这论文的作者是谁",
+            "paper-c-pfedgpa",
+            (
+                "professor_authored_paper",
+                "paper_to_professor",
+                "paper",
+                "professor",
+            ),
+        ),
+        (
+            "它的申请公司是哪个",
+            "patent-p-cn117873146a",
+            (
+                "company_has_patent",
+                "patent_to_company",
+                "patent",
+                "company",
+            ),
+        ),
+        (
+            "它的专利有哪些",
+            "company-c-ubtech",
+            (
+                "company_has_patent",
+                "company_to_patent",
+                "company",
+                "patent",
+            ),
+        ),
+        ("他有哪些专利", "professor-c-ding-wenbo", None),
+        ("这篇论文有哪些专利引用", "paper-c-pfedgpa", None),
+    ),
+)
+def test_serving_planner_binds_traversal_to_the_anchor_domain(
+    tmp_path: Path,
+    query: str,
+    displayed_entity_id: str,
+    expected_path: tuple[str, str, str, str] | None,
+) -> None:
+    path, bundle = _write_bundle(tmp_path)
+    inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
+        path=path,
+        expected_content_sha256=bundle.content_sha256,
+        expected_release_id=RELEASE_ID,
+        expected_database="miroflow_candidate_s12b_test",
+        expected_index_root=(tmp_path / "index").resolve(),
+        expected_envelope_path=(tmp_path / "envelope.json").resolve(),
+        embedding_adapter=_Embedding(),
+        clock=lambda: NOW,
+    )
+    request = QueryPlanningRequest(
+        request_id=f"query-request:domain-bound:{displayed_entity_id}",
+        release_id=RELEASE_ID,
+        original_query=query,
+        as_of=NOW,
+        displayed_entity_ids=(displayed_entity_id,),
+    )
+
+    proposal = inputs.proposal_provider(request)
+
+    if expected_path is None:
+        assert proposal.relationship_paths == ()
+        assert "relationship" not in proposal.lanes
+        return
+    assert proposal.lanes == ("relationship", "web")
+    assert len(proposal.relationship_paths) == 1
+    relationship_path = proposal.relationship_paths[0]
+    assert (
+        relationship_path.relationship_type_id,
+        relationship_path.direction,
+        relationship_path.source_type,
+        relationship_path.target_type,
+    ) == expected_path
+
+
 def test_serving_bundle_rejects_hash_or_candidate_crosswire(tmp_path: Path) -> None:
     path, bundle = _write_bundle(tmp_path)
 
     with pytest.raises(ValueError, match="hash"):
         load_recorded_serving_inputs(
+            prose_renderer=_timeout_prose_renderer,
             path=path,
             expected_content_sha256="f" * 64,
             expected_release_id=RELEASE_ID,
@@ -1080,6 +1357,7 @@ def test_serving_bundle_rejects_hash_or_candidate_crosswire(tmp_path: Path) -> N
 
     with pytest.raises(ValueError, match="release"):
         load_recorded_serving_inputs(
+            prose_renderer=_timeout_prose_renderer,
             path=path,
             expected_content_sha256=bundle.content_sha256,
             expected_release_id="candidate:cross-wired",
@@ -1140,6 +1418,7 @@ def test_serving_planner_extracts_generic_customer_query_axes(
 ) -> None:
     path, bundle = _write_bundle(tmp_path)
     inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
         path=path,
         expected_content_sha256=bundle.content_sha256,
         expected_release_id=RELEASE_ID,
@@ -1168,6 +1447,7 @@ def test_explicit_company_name_does_not_become_a_geography_filter(
 ) -> None:
     path, bundle = _write_bundle(tmp_path)
     inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
         path=path,
         expected_content_sha256=bundle.content_sha256,
         expected_release_id=RELEASE_ID,
@@ -1272,6 +1552,7 @@ def test_serving_planner_routes_lawful_avoidance_request_to_static_safety(
 ) -> None:
     path, bundle = _write_bundle(tmp_path)
     inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
         path=path,
         expected_content_sha256=bundle.content_sha256,
         expected_release_id=RELEASE_ID,
@@ -1334,6 +1615,7 @@ def test_dual_web_lane_reuses_request_transport_and_isolates_keepwarm_transport(
     monkeypatch.setattr(serving_module, "BochaSearchProvider", _EmptyBochaProvider)
     monkeypatch.setattr(serving_module, "WebSearchProvider", _Provider)
     inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
         path=path,
         expected_content_sha256=bundle.content_sha256,
         expected_release_id=RELEASE_ID,
@@ -1512,6 +1794,96 @@ def test_dual_web_lane_reserves_capacity_for_each_provider() -> None:
     assert "serper-v1" in provider_versions
 
 
+@pytest.mark.parametrize(
+    ("original_query", "official_snippet", "expected_predicate"),
+    (
+        (
+            "上述企业里总部在深圳的企业有哪些",
+            "普渡机器人的全球總部位于深圳。",
+            "headquarters_city",
+        ),
+        (
+            "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+            "FlashBot Arm通过机械臂和灵巧手自主按电梯。",
+            "product_capability_evidence",
+        ),
+    ),
+)
+def test_dual_web_lane_prioritizes_relation_evidence_before_candidate_cap(
+    original_query: str,
+    official_snippet: str,
+    expected_predicate: str,
+) -> None:
+    class _Provider:
+        def __init__(self, prefix: str, count: int, *, official_at: int | None) -> None:
+            self._prefix = prefix
+            self._count = count
+            self._official_at = official_at
+
+        def search(self, query: str) -> dict[str, object]:
+            return {
+                "organic": [
+                    {
+                        "title": (
+                            "普渡官方资料"
+                            if index == self._official_at
+                            else f"普渡行业资讯 {self._prefix}-{index}"
+                        ),
+                        "link": (
+                            "https://www.pudurobotics.com/official-evidence"
+                            if index == self._official_at
+                            else f"https://{self._prefix}.example/{index}"
+                        ),
+                        "snippet": (
+                            official_snippet
+                            if index == self._official_at
+                            else "普渡科技提供酒店服务机器人。"
+                        ),
+                    }
+                    for index in range(self._count)
+                ]
+            }
+
+    adapter = serving_module._DualWebLaneAdapter(
+        bocha=_Provider("bocha", 3, official_at=None),
+        serper=_Provider("serper", 4, official_at=3),
+        timeout_ms=1500,
+        max_snapshot_bytes=16384,
+        clock=lambda: NOW,
+    )
+    result = adapter(
+        LaneRequest(
+            lane="web",
+            release_id=RELEASE_ID,
+            query_view="view:relation-evidence-priority",
+            original_query=original_query,
+            behavior_class="A",
+            interaction_mode="information_retrieval",
+            web_policy=WebSearchPolicy(
+                mode="universal",
+                max_provider_calls=2,
+                timeout_ms=1500,
+                max_results=5,
+            ),
+            query_text="深圳市普渡科技有限公司 机器人 [lane=web]",
+            domains=("company",),
+            protected_slots=(),
+            structured_constraints=StructuredConstraints(),
+            max_candidates=5,
+            bound_entity_ids=("company-c-pudu",),
+            bound_entity_names=("深圳市普渡科技有限公司",),
+        )
+    )
+
+    first_evidence = result.candidates[0].evidence[0]
+    assert len(result.candidates) == 5
+    assert first_evidence.source_locator == (
+        "https://www.pudurobotics.com/official-evidence"
+    )
+    assert first_evidence.claim_binding is not None
+    assert first_evidence.claim_binding.predicate == expected_predicate
+
+
 def test_dual_web_lane_diversifies_legal_company_name_query() -> None:
     observed: dict[str, str] = {}
 
@@ -1544,7 +1916,7 @@ def test_dual_web_lane_diversifies_legal_company_name_query() -> None:
     adapter._merged_results(displayed_set_query)
 
     assert observed["bocha"] == displayed_set_query
-    assert observed["serper"] == "产品 酒店机器人 机械臂 自主按电梯"
+    assert observed["serper"] == "(云迹 OR 普渡) 产品 酒店机器人 机械臂 自主按电梯"
 
 
 def test_dual_web_lane_preserves_one_provider_when_the_other_fails() -> None:
@@ -1653,7 +2025,7 @@ def test_provider_keepwarm_cycle_runs_all_external_paths_concurrently() -> None:
     assert sorted(calls) == ["bocha", "embedding", "llm", "serper"]
 
 
-def test_contextual_web_query_binds_display_name_and_geography(
+def test_contextual_web_query_binds_display_name_and_headquarters_relation(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -1686,6 +2058,7 @@ def test_contextual_web_query_binds_display_name_and_geography(
     monkeypatch.setattr(serving_module, "BochaSearchProvider", _EmptyBochaProvider)
     monkeypatch.setattr(serving_module, "WebSearchProvider", _Provider)
     inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
         path=path,
         expected_content_sha256=bundle.content_sha256,
         expected_release_id=RELEASE_ID,
@@ -1726,7 +2099,7 @@ def test_contextual_web_query_binds_display_name_and_geography(
 
     result = inputs.web_search(lane_request)
 
-    assert observed["query"] == "普渡 总部在深圳的企业"
+    assert observed["query"] == "普渡 总部 深圳"
     assert "[lane=web]" not in observed["query"]
     assert len(result.candidates) == 1
     candidate = result.candidates[0]
@@ -1734,8 +2107,406 @@ def test_contextual_web_query_binds_display_name_and_geography(
     assert candidate.identity_kind == "web_candidate"
     assert candidate.resolution_state == "resolved"
     assert candidate.evidence[0].claim_binding is not None
-    assert candidate.evidence[0].claim_binding.predicate == "geography"
+    assert candidate.evidence[0].claim_binding.predicate == "headquarters_city"
     assert candidate.evidence[0].claim_binding.value == "深圳"
+
+
+@pytest.mark.parametrize(
+    ("query", "expected_predicate", "expected_values", "expected_logic"),
+    (
+        ("上述企业里总部在深圳的有哪些", "headquarters_city", ("深圳",), "all"),
+        ("上述企业注册地址在深圳的有哪些", "registered_address", ("深圳",), "all"),
+        ("上述企业在深圳设有办公室的有哪些", "office_city", ("深圳",), "all"),
+        (
+            "上述企业的产品哪些支持自主刷卡和开门",
+            "product_capability",
+            ("刷门禁", "开门"),
+            "all",
+        ),
+        (
+            "上述企业的产品哪些支持刷卡或开门",
+            "product_capability",
+            ("刷门禁", "开门"),
+            "any",
+        ),
+    ),
+)
+def test_question_frame_preserves_relation_and_constraint_logic(
+    query: str,
+    expected_predicate: str,
+    expected_values: tuple[str, ...],
+    expected_logic: str,
+) -> None:
+    frame = serving_module._question_frame(query)
+
+    assert frame.predicate == expected_predicate
+    assert frame.requested_values == expected_values
+    assert frame.logic == expected_logic
+
+
+@pytest.mark.parametrize(
+    ("query", "expected"),
+    (
+        ("上述企业里总部在深圳的有哪些", "总部 深圳"),
+        ("上述企业注册地址在深圳的有哪些", "注册地址 深圳"),
+        ("上述企业在深圳设有办公室的有哪些", "办公室 深圳"),
+        ("上述企业在深圳有分公司的有哪些", "分公司 深圳"),
+        (
+            "上述企业的产品哪些支持自主刷卡和开门",
+            "机器人 自主刷门禁 开门",
+        ),
+        (
+            "酒店电梯需要送餐机器人使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+            "机器人 机械臂 自主按电梯",
+        ),
+        ("他有哪些代表性研究成果", "代表性研究成果"),
+        ("他的公司简介", "公司简介"),
+    ),
+)
+def test_contextual_web_search_view_uses_relation_terms_not_conversation_scaffolding(
+    query: str,
+    expected: str,
+) -> None:
+    assert serving_module._contextual_web_search_view(query) == expected
+
+
+@pytest.mark.parametrize(
+    ("snippet", "expected_predicate", "expected_value"),
+    (
+        ("普渡机器人的全球总部位于广东深圳。", "headquarters_city", "深圳"),
+        (
+            "1. 全球總部. 深圳. 3. 研發中心. 深圳、成都、香港.",
+            "headquarters_city",
+            "深圳",
+        ),
+        (
+            "云迹科技总部位于北京，并在深圳设有分公司。",
+            "headquarters_city",
+            "北京",
+        ),
+        (
+            "云迹科技在深圳为酒店提供机器人服务。",
+            "current_web_result",
+            None,
+        ),
+        (
+            "深圳市普渡科技有限公司发布了新一代配送机器人。",
+            "current_web_result",
+            None,
+        ),
+    ),
+)
+def test_headquarters_evidence_requires_an_explicit_headquarters_statement(
+    snippet: str,
+    expected_predicate: str,
+    expected_value: str | None,
+) -> None:
+    frame = serving_module._question_frame("上述企业里总部在深圳的有哪些")
+
+    predicate, value = serving_module._web_claim_semantics(
+        frame=frame,
+        title="企业官方信息",
+        snippet=snippet,
+        fallback_value="snapshot-hash",
+    )
+
+    assert predicate == expected_predicate
+    assert value == (expected_value or "snapshot-hash")
+
+
+def test_product_capability_evidence_normalizes_official_traditional_chinese() -> None:
+    frame = serving_module._question_frame(
+        "上述企业的产品哪些支持自主刷卡和开门"
+    )
+
+    predicate, value = serving_module._web_claim_semantics(
+        frame=frame,
+        title="產品 - 普渡",
+        snippet="輕鬆按電梯按鈕、刷門禁卡並用雙手開門，無需改造場地。",
+        fallback_value="snapshot-hash",
+    )
+
+    assert predicate == "product_capability_evidence"
+    assert value == "刷门禁 + 开门"
+
+
+def test_final_llm_selection_commits_only_answer_entities(tmp_path: Path) -> None:
+    calls: list[dict[str, object]] = []
+
+    class _Completions:
+        def create(self, **kwargs: object) -> object:
+            calls.append(kwargs)
+            return SimpleNamespace(
+                choices=(
+                    SimpleNamespace(
+                        message=SimpleNamespace(
+                            content=json.dumps(
+                                {
+                                    "answer_text": "总部在深圳的只有深圳市普渡科技有限公司。",
+                                    "selected_claim_indexes": [1, 2],
+                                    "selected_entity_indexes": [1],
+                                },
+                                ensure_ascii=False,
+                            )
+                        )
+                    ),
+                )
+            )
+
+    path, bundle = _write_bundle(tmp_path)
+    renderer = serving_module._OpenAIProseRenderer(
+        client=SimpleNamespace(chat=SimpleNamespace(completions=_Completions())),
+        model="recorded-chat-model",
+        extra_body={"thinking": {"type": "disabled"}},
+    )
+    inputs = load_recorded_serving_inputs(
+        path=path,
+        expected_content_sha256=bundle.content_sha256,
+        expected_release_id=RELEASE_ID,
+        expected_database="miroflow_candidate_s12b_test",
+        expected_index_root=(tmp_path / "index").resolve(),
+        expected_envelope_path=(tmp_path / "envelope.json").resolve(),
+        embedding_adapter=_Embedding(),
+        prose_renderer=renderer,
+        clock=lambda: NOW,
+    )
+    pudu = EvidenceItem(
+        evidence_id="evidence:headquarters:pudu",
+        object_id="company-c-pudu",
+        domain="company",
+        lane="web",
+        source_nature="current_web",
+        source_locator="https://www.pudurobotics.com/about",
+        snippet="普渡机器人总部位于深圳。",
+        score=1.0,
+        source_authority="official",
+        observed_at=NOW,
+        claim_binding=EvidenceClaimBinding(
+            subject_id="company-c-pudu",
+            predicate="headquarters_city",
+            value="深圳",
+            status="observed",
+        ),
+    )
+    yunji = EvidenceItem(
+        evidence_id="evidence:headquarters:yunji",
+        object_id="company-c-yunji",
+        domain="company",
+        lane="web",
+        source_nature="current_web",
+        source_locator="https://www.yunjichina.com.cn/about.html",
+        snippet="云迹科技总部位于北京。",
+        score=0.9,
+        source_authority="official",
+        observed_at=NOW,
+        claim_binding=EvidenceClaimBinding(
+            subject_id="company-c-yunji",
+            predicate="headquarters_city",
+            value="北京",
+            status="observed",
+        ),
+    )
+    evidence_set = EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query="上述企业里总部在深圳的企业有哪些",
+        protected_slots=(ProtectedSlot(kind="geography", value="深圳"),),
+        items=(pudu, yunji),
+        traces=(),
+        limitations=(),
+        entity_handles=(
+            CanonicalEntityHandle(
+                canonical_id=pudu.object_id,
+                domain="company",
+                display_name="深圳市普渡科技有限公司",
+                evidence_ids=(pudu.evidence_id,),
+            ),
+            CanonicalEntityHandle(
+                canonical_id=yunji.object_id,
+                domain="company",
+                display_name="云迹科技股份有限公司",
+                evidence_ids=(yunji.evidence_id,),
+            ),
+        ),
+    )
+
+    result = inputs.answer_factory().answer(
+        TurnRequest(
+            session_id="session:headquarters-selection",
+            turn_id="turn:headquarters-selection",
+            query=evidence_set.original_query,
+            release_id=RELEASE_ID,
+            evidence_set=evidence_set,
+        )
+    )
+
+    assert len(calls) == 1
+    assert result.answer_text == "总部在深圳的只有深圳市普渡科技有限公司。"
+    assert result.context_receipt is not None
+    assert result.context_receipt.displayed_result_set is not None
+    assert result.context_receipt.displayed_result_set.handle_ids == (pudu.object_id,)
+    messages = calls[0]["messages"]
+    assert isinstance(messages, list)
+    user_payload = json.loads(messages[1]["content"])
+    assert user_payload["displayed_entities"][0]["entity_index"] == 1
+    assert user_payload["supported_claims"][0]["claim_index"] == 1
+    serialized_payload = json.dumps(user_payload, ensure_ascii=False)
+    assert "company-c-pudu" not in serialized_payload
+    assert "evidence:headquarters" not in serialized_payload
+
+
+def test_multi_entity_prose_commit_narrows_the_set_but_keeps_the_anchor(
+    tmp_path: Path,
+) -> None:
+    responses = iter(
+        (
+            {
+                "answer_text": "丁文伯是清华大学深圳国际研究生院副教授。",
+                "selected_claim_indexes": [1],
+                "selected_entity_indexes": [1],
+            },
+            {
+                "answer_text": "他的代表性成果包括 pFedGPA 与摩擦电智能手套两篇论文。",
+                "selected_claim_indexes": [1, 2],
+                "selected_entity_indexes": [1, 2],
+            },
+        )
+    )
+
+    class _Completions:
+        def create(self, **_: object) -> object:
+            return SimpleNamespace(
+                choices=(
+                    SimpleNamespace(
+                        message=SimpleNamespace(
+                            content=json.dumps(next(responses), ensure_ascii=False)
+                        )
+                    ),
+                )
+            )
+
+    path, bundle = _write_bundle(tmp_path)
+    renderer = serving_module._OpenAIProseRenderer(
+        client=SimpleNamespace(chat=SimpleNamespace(completions=_Completions())),
+        model="recorded-chat-model",
+        extra_body={"thinking": {"type": "disabled"}},
+    )
+    inputs = load_recorded_serving_inputs(
+        path=path,
+        expected_content_sha256=bundle.content_sha256,
+        expected_release_id=RELEASE_ID,
+        expected_database="miroflow_candidate_s12b_test",
+        expected_index_root=(tmp_path / "index").resolve(),
+        expected_envelope_path=(tmp_path / "envelope.json").resolve(),
+        embedding_adapter=_Embedding(),
+        prose_renderer=renderer,
+        clock=lambda: NOW,
+    )
+
+    def item(evidence_id: str, object_id: str, domain: str, snippet: str) -> EvidenceItem:
+        return EvidenceItem(
+            evidence_id=evidence_id,
+            object_id=object_id,
+            domain=domain,
+            lane="exact",
+            source_nature="local",
+            source_locator=f"canonical-v2-isolated:{object_id}",
+            snippet=snippet,
+            score=1.0,
+            source_authority="canonical_release",
+            observed_at=NOW,
+            claim_binding=EvidenceClaimBinding(
+                subject_id=object_id,
+                predicate="canonical_projection",
+                value=snippet,
+                status="supported",
+            ),
+        )
+
+    def handle(object_id: str, domain: str, name: str, evidence_id: str) -> Any:
+        return CanonicalEntityHandle(
+            canonical_id=object_id,
+            domain=domain,
+            display_name=name,
+            evidence_ids=(evidence_id,),
+        )
+
+    professor_item = item(
+        "evidence:professor:ding",
+        "professor-c-ding",
+        "professor",
+        "丁文伯是清华大学深圳国际研究生院副教授。",
+    )
+    paper_one = item(
+        "evidence:paper:pfedgpa",
+        "paper-c-pfedgpa",
+        "paper",
+        "pFedGPA: Diffusion-based Generative Parameter Aggregation.",
+    )
+    paper_two = item(
+        "evidence:paper:glove",
+        "paper-c-glove",
+        "paper",
+        "Triboelectric bending sensor based smart glove.",
+    )
+
+    answer = inputs.answer_factory()
+    first = answer.answer(
+        TurnRequest(
+            session_id="session:multi-entity-anchor",
+            turn_id="turn:multi-entity-anchor:1",
+            query="介绍清华的丁文伯",
+            release_id=RELEASE_ID,
+            evidence_set=EvidenceSet(
+                release_id=RELEASE_ID,
+                original_query="介绍清华的丁文伯",
+                protected_slots=(),
+                items=(professor_item,),
+                traces=(),
+                limitations=(),
+                entity_handles=(
+                    handle(
+                        professor_item.object_id,
+                        "professor",
+                        "丁文伯",
+                        professor_item.evidence_id,
+                    ),
+                ),
+            ),
+        )
+    )
+    assert first.context_receipt is not None
+    assert first.context_receipt.active_anchor is not None
+    assert first.context_receipt.active_anchor.canonical_id == "professor-c-ding"
+
+    second = answer.answer(
+        TurnRequest(
+            session_id="session:multi-entity-anchor",
+            turn_id="turn:multi-entity-anchor:2",
+            query="他有哪些代表性研究成果",
+            release_id=RELEASE_ID,
+            evidence_set=EvidenceSet(
+                release_id=RELEASE_ID,
+                original_query="他有哪些代表性研究成果",
+                protected_slots=(),
+                items=(paper_one, paper_two),
+                traces=(),
+                limitations=(),
+                entity_handles=(
+                    handle(paper_one.object_id, "paper", "pFedGPA", paper_one.evidence_id),
+                    handle(paper_two.object_id, "paper", "Smart glove", paper_two.evidence_id),
+                ),
+            ),
+        )
+    )
+
+    assert second.context_receipt is not None
+    assert second.context_receipt.displayed_result_set is not None
+    assert second.context_receipt.displayed_result_set.handle_ids == (
+        paper_one.object_id,
+        paper_two.object_id,
+    )
+    assert second.context_receipt.active_anchor is not None
+    assert second.context_receipt.active_anchor.canonical_id == "professor-c-ding"
 
 
 def test_contextual_web_query_removes_referent_question_scaffolding(
@@ -1743,6 +2514,7 @@ def test_contextual_web_query_removes_referent_question_scaffolding(
 ) -> None:
     path, bundle = _write_bundle(tmp_path)
     inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
         path=path,
         expected_content_sha256=bundle.content_sha256,
         expected_release_id=RELEASE_ID,
@@ -1765,7 +2537,7 @@ def test_contextual_web_query_removes_referent_question_scaffolding(
     )
 
     search_text = proposal.query_views[0].text
-    assert search_text == f"{company_name} 产品 刷门禁 开门"
+    assert search_text == f"{company_name} 机器人 自主刷门禁 开门"
     assert "上述" not in search_text
     assert "哪些支持" not in search_text
     assert '"' not in search_text
@@ -1773,7 +2545,40 @@ def test_contextual_web_query_removes_referent_question_scaffolding(
     capability_search = serving_module._contextual_web_search_view(
         "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
     )
-    assert capability_search == "产品 酒店电梯 配送机器人 机械臂自主按电梯"
+    assert capability_search == "机器人 机械臂 自主按电梯"
+
+
+def test_anchor_bound_pronoun_follow_up_keeps_the_professor_in_search_views(
+    tmp_path: Path,
+) -> None:
+    path, bundle = _write_bundle(tmp_path)
+    inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
+        path=path,
+        expected_content_sha256=bundle.content_sha256,
+        expected_release_id=RELEASE_ID,
+        expected_database="miroflow_candidate_s12b_test",
+        expected_index_root=(tmp_path / "index").resolve(),
+        expected_envelope_path=(tmp_path / "envelope.json").resolve(),
+        embedding_adapter=_Embedding(),
+        clock=lambda: NOW,
+    )
+    proposal = inputs.proposal_provider(
+        QueryPlanningRequest(
+            request_id="query-request:anchor-bound-professor-follow-up",
+            release_id=RELEASE_ID,
+            original_query="他有哪些代表性研究成果",
+            as_of=NOW,
+            displayed_entity_ids=("professor-p-dingwenbo",),
+            displayed_entity_names=("丁文伯",),
+        )
+    )
+
+    search_text = proposal.query_views[0].text
+    assert search_text.startswith("丁文伯 ")
+    assert "他" not in search_text
+    assert "代表性研究成果" in search_text
+    assert proposal.query_views[0].bound_entity_ids == ("professor-p-dingwenbo",)
 
 
 def test_web_identity_matches_city_prefixed_legal_name_to_brand_snippet() -> None:
@@ -1794,11 +2599,62 @@ def test_web_identity_matches_city_prefixed_legal_name_to_brand_snippet() -> Non
     assert matched == ("company-c-pudu", "深圳市普渡科技有限公司")
 
 
+@pytest.mark.parametrize(
+    ("title", "snippet", "locator", "expected"),
+    (
+        (
+            "全形态具身智能产品矩阵震撼首秀",
+            "闪电匣Arm通过机械臂和灵巧手自主按电梯。",
+            "https://www.pudutech.com/news/pudu-wrc-2025-embodied",
+            ("company-c-pudu", "深圳市普渡科技有限公司"),
+        ),
+        (
+            "產品 - 普渡",
+            "刷門禁卡並用雙手開門。",
+            "https://www.pudurobotics.com/zh-HK/products/flashbot-arm",
+            ("company-c-pudu", "深圳市普渡科技有限公司"),
+        ),
+        (
+            "全形态具身智能产品矩阵",
+            "机械臂自主按电梯。",
+            "https://www.pudufake.com/product",
+            None,
+        ),
+        (
+            "ROBOTIS GAEMI 酒店配送机器人",
+            "使用机械臂按电梯。",
+            "https://www.robotis.com/product",
+            None,
+        ),
+    ),
+)
+def test_web_identity_uses_distinct_brand_text_or_official_style_domain(
+    title: str,
+    snippet: str,
+    locator: str,
+    expected: tuple[str, str] | None,
+) -> None:
+    request = SimpleNamespace(
+        bound_entity_ids=("company-c-pudu",),
+        bound_entity_names=("深圳市普渡科技有限公司",),
+    )
+
+    matched = serving_module._matched_bound_entity(
+        request=request,
+        title=title,
+        snippet=snippet,
+        locator=locator,
+    )
+
+    assert matched == expected
+
+
 def test_serving_reranker_keeps_web_gap_ahead_of_vector_neighbors(
     tmp_path: Path,
 ) -> None:
     path, bundle = _write_bundle(tmp_path)
     inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
         path=path,
         expected_content_sha256=bundle.content_sha256,
         expected_release_id=RELEASE_ID,
@@ -1871,6 +2727,7 @@ def test_serving_reranker_reserves_web_capacity_without_query_markers(
 ) -> None:
     path, bundle = _write_bundle(tmp_path)
     inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
         path=path,
         expected_content_sha256=bundle.content_sha256,
         expected_release_id=RELEASE_ID,
@@ -1935,3 +2792,286 @@ def test_serving_reranker_reserves_web_capacity_without_query_markers(
     retained = result.ordered_result_ids[: bundle.max_candidates]
     assert any(result_id.startswith("fused-result:local-") for result_id in retained)
     assert any(result_id.startswith("fused-result:web-") for result_id in retained)
+
+
+def _stub_professor(identity_id: str, display_name: str) -> Any:
+    return SimpleNamespace(
+        canonical_identity_id=identity_id,
+        name=display_name,
+        canonical_name_zh=display_name,
+        aliases=(),
+    )
+
+
+def _release_bound_planner_with_named_resolution(
+    tmp_path: Path,
+    professors: tuple[Any, ...],
+) -> Any:
+    path, bundle = _write_bundle(tmp_path)
+    inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
+        path=path,
+        expected_content_sha256=bundle.content_sha256,
+        expected_release_id=RELEASE_ID,
+        expected_database="miroflow_candidate_s12b_test",
+        expected_index_root=(tmp_path / "index").resolve(),
+        expected_envelope_path=(tmp_path / "envelope.json").resolve(),
+        embedding_adapter=_Embedding(),
+        clock=lambda: NOW,
+    )
+    catalog = InstitutionCatalog(
+        catalog_id="institution-catalog:s12b-test",
+        catalog_version="institution-catalog-v1",
+        release_id=RELEASE_ID,
+        entries=(),
+    )
+    delegate = create_ephemeral_query_planner(
+        planning_policy=inputs.planning_policy,
+        institution_catalog=catalog,
+        proposal_provider=inputs.proposal_provider,
+    )
+    binding = isolated_read_module.PlanningReleaseBinding(
+        release_id=RELEASE_ID,
+        publication_state="active",
+        published_release_sha256="0" * 64,
+        publication_verification_evidence_ids=("evidence:release-binding",),
+        manifest_sha256="0" * 64,
+        index_projection_request_sha256="0" * 64,
+        index_projection_result_sha256="0" * 64,
+        candidate_projection_result_sha256="0" * 64,
+        internal_reference_projection_result_sha256="0" * 64,
+        institution_catalog_sha256=catalog.content_sha256,
+        planning_policy_sha256="0" * 64,
+    )
+    return isolated_read_module._ReleaseBoundQueryPlanner(
+        release_id=RELEASE_ID,
+        release_binding=binding,
+        delegate=delegate,
+        named_professor_projections=professors,
+    )
+
+
+def test_named_professor_research_query_reaches_the_traversal_lane(
+    tmp_path: Path,
+) -> None:
+    planner = _release_bound_planner_with_named_resolution(
+        tmp_path,
+        (
+            _stub_professor("professor-c-ding-wenbo", "丁文伯"),
+            _stub_professor("professor-c-zeng-long", "曾龙"),
+        ),
+    )
+
+    plan = planner.plan(
+        QueryPlanningRequest(
+            request_id="query-request:named-research-source",
+            release_id=RELEASE_ID,
+            original_query="丁文伯的代表性论文有哪些",
+            as_of=NOW,
+        )
+    )
+
+    assert plan.structured_constraints.displayed_entity_ids == (
+        "professor-c-ding-wenbo",
+    )
+    assert plan.lanes == ("relationship", "web")
+    assert len(plan.relationship_paths) == 1
+    relationship_path = plan.relationship_paths[0]
+    assert (
+        relationship_path.relationship_type_id,
+        relationship_path.direction,
+        relationship_path.source_type,
+        relationship_path.target_type,
+    ) == (
+        "professor_authored_paper",
+        "professor_to_paper",
+        "professor",
+        "paper",
+    )
+    assert any(
+        slot.kind == "displayed_entity_set"
+        and slot.entity_ids == ("professor-c-ding-wenbo",)
+        for slot in plan.protected_slots
+    )
+
+
+def test_named_resolution_falls_back_when_ambiguous_or_absent(
+    tmp_path: Path,
+) -> None:
+    planner = _release_bound_planner_with_named_resolution(
+        tmp_path,
+        (
+            _stub_professor("professor-c-wang-a", "王学谦"),
+            _stub_professor("professor-c-wang-b", "王学谦"),
+            _stub_professor("professor-c-ding-wenbo", "丁文伯"),
+        ),
+    )
+
+    ambiguous = planner.plan(
+        QueryPlanningRequest(
+            request_id="query-request:named-ambiguous",
+            release_id=RELEASE_ID,
+            original_query="王学谦的代表性论文有哪些",
+            as_of=NOW,
+        )
+    )
+    assert ambiguous.structured_constraints.displayed_entity_ids == ()
+    assert ambiguous.relationship_paths == ()
+
+    absent = planner.plan(
+        QueryPlanningRequest(
+            request_id="query-request:named-absent",
+            release_id=RELEASE_ID,
+            original_query="李雷的代表性论文有哪些",
+            as_of=NOW,
+        )
+    )
+    assert absent.structured_constraints.displayed_entity_ids == ()
+    assert absent.relationship_paths == ()
+
+    unrelated = planner.plan(
+        QueryPlanningRequest(
+            request_id="query-request:not-research",
+            release_id=RELEASE_ID,
+            original_query="丁文伯是清华大学深圳国际研究生院的副教授吗",
+            as_of=NOW,
+        )
+    )
+    assert unrelated.structured_constraints.displayed_entity_ids == ()
+
+
+def test_displayed_set_follow_up_binds_claims_after_prose_scope_narrowing(
+    tmp_path: Path,
+) -> None:
+    """Hotel-robot regression: after the prose commit narrows the displayed set,
+    a set-scope follow-up whose current turn selects no new handles must still
+    bind claims to the session's displayed universe, never degrade."""
+    path, bundle = _write_bundle(tmp_path)
+
+    def _select_all_prose(result: Any) -> Any:
+        return ProseSynthesisResult(
+            answer_text="总部在深圳的是深圳市普渡科技有限公司。",
+            selected_claim_ids=tuple(claim.claim_id for claim in result.claims),
+            selected_handle_ids=(),
+        )
+
+    renderer = _select_all_prose
+    inputs = load_recorded_serving_inputs(
+        prose_renderer=renderer,
+        path=path,
+        expected_content_sha256=bundle.content_sha256,
+        expected_release_id=RELEASE_ID,
+        expected_database="miroflow_candidate_s12b_test",
+        expected_index_root=(tmp_path / "index").resolve(),
+        expected_envelope_path=(tmp_path / "envelope.json").resolve(),
+        embedding_adapter=_Embedding(),
+        clock=lambda: NOW,
+    )
+
+    def local_item(eid: str, oid: str, name: str) -> EvidenceItem:
+        return EvidenceItem(
+            evidence_id=eid,
+            object_id=oid,
+            domain="company",
+            lane="exact",
+            source_nature="local",
+            source_locator=f"canonical-v2-isolated:{oid}",
+            snippet=json.dumps({"name": name}, ensure_ascii=False),
+            score=1.0,
+            source_authority="canonical_release",
+            observed_at=NOW,
+            claim_binding=EvidenceClaimBinding(
+                subject_id=oid,
+                predicate="canonical_projection",
+                value="a" * 64,
+                status="admitted",
+            ),
+        )
+
+    def web_hq(eid: str, oid: str, city: str, locator: str) -> EvidenceItem:
+        return EvidenceItem(
+            evidence_id=eid,
+            object_id=oid,
+            domain="company",
+            lane="web",
+            source_nature="current_web",
+            source_locator=locator,
+            snippet=f"总部{city}",
+            score=1.0,
+            source_authority="official",
+            observed_at=NOW,
+            claim_binding=EvidenceClaimBinding(
+                subject_id=oid,
+                predicate="headquarters_city",
+                value=city,
+                status="observed",
+            ),
+        )
+
+    yunji = local_item("ev:yunji", "company-c-yunji", "云迹科技股份有限公司")
+    pudu = local_item("ev:pudu", "company-c-pudu", "深圳市普渡科技有限公司")
+    answer = inputs.answer_factory()
+    first = answer.answer(
+        TurnRequest(
+            session_id="session:hotel-regression",
+            turn_id="turn:hotel-regression:1",
+            query="中国有哪些成熟的酒店送餐机器人供应商",
+            release_id=RELEASE_ID,
+            evidence_set=EvidenceSet(
+                release_id=RELEASE_ID,
+                original_query="中国有哪些成熟的酒店送餐机器人供应商",
+                protected_slots=(),
+                items=(yunji, pudu),
+                traces=(),
+                limitations=(),
+                entity_handles=(
+                    CanonicalEntityHandle(
+                        canonical_id=yunji.object_id,
+                        domain="company",
+                        display_name="云迹科技股份有限公司",
+                        evidence_ids=(yunji.evidence_id,),
+                    ),
+                    CanonicalEntityHandle(
+                        canonical_id=pudu.object_id,
+                        domain="company",
+                        display_name="深圳市普渡科技有限公司",
+                        evidence_ids=(pudu.evidence_id,),
+                    ),
+                ),
+            ),
+        )
+    )
+    assert first.context_receipt is not None
+    assert first.context_receipt.displayed_result_set is not None
+
+    hq_pudu = web_hq(
+        "ev:hq:pudu", pudu.object_id, "深圳", "https://www.pudurobotics.com/about"
+    )
+    hq_yunji = web_hq(
+        "ev:hq:yunji", yunji.object_id, "北京", "https://www.yunjichina.com.cn/a"
+    )
+    second = answer.answer(
+        TurnRequest(
+            session_id="session:hotel-regression",
+            turn_id="turn:hotel-regression:2",
+            query="上述企业里总部在深圳的企业有哪些",
+            release_id=RELEASE_ID,
+            evidence_set=EvidenceSet(
+                release_id=RELEASE_ID,
+                original_query="上述企业里总部在深圳的企业有哪些",
+                protected_slots=(),
+                items=(hq_pudu, hq_yunji),
+                traces=(),
+                limitations=(),
+                entity_handles=(),
+            ),
+        )
+    )
+
+    assert second.answer_text != "No supported material claims are available."
+    assert any(
+        claim.predicate == "headquarters_city"
+        and claim.subject_id == pudu.object_id
+        and claim.value == "深圳"
+        for claim in second.claims
+    )

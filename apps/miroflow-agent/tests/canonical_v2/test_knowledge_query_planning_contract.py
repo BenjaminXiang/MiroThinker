@@ -919,6 +919,63 @@ def test_query_planning_preserves_a_g_safety_and_enumeration_policy() -> None:
             assert policy.continuation_state == "available"
 
 
+def test_representative_plan_without_context_defaults_a_valid_policy() -> None:
+    module = _module()
+    request = _request(
+        module,
+        token="representative-without-context",
+        query="他的代表作是什么",
+        displayed_entity_ids=("professor:anchor",),
+    )
+
+    def representative_provider(value: Any) -> Any:
+        return _proposal(
+            module,
+            value,
+            token="representative-without-context",
+            behavior_class="C",
+            interaction_mode="information_retrieval",
+            domains=("paper",),
+            lanes=("relationship", "web"),
+            paths=(
+                _path(
+                    module,
+                    relationship_type_id="professor_authored_paper",
+                    direction="professor_to_paper",
+                    source_type="professor",
+                    target_type="paper",
+                ),
+            ),
+            enumeration_mode="representative",
+        )
+
+    plan = _planner(module, representative_provider).plan(request)
+    policy = plan.enumeration_policy
+    assert policy is not None
+    assert policy.mode == "representative"
+    assert policy.scope == request.original_query
+    assert policy.as_of == NOW
+    assert policy.exhaustive is False
+    assert policy.continuation_state == "available"
+    assert policy.finite_universe_id is None
+    assert not policy.required_member_ids
+
+    def plain_provider(value: Any) -> Any:
+        return _proposal(
+            module,
+            value,
+            token="plain-without-context",
+            behavior_class="A",
+            interaction_mode="information_retrieval",
+            domains=("professor",),
+            lanes=("exact", "web"),
+            enumeration_mode=None,
+        )
+
+    plain_plan = _planner(module, plain_provider).plan(request)
+    assert plain_plan.enumeration_policy is None
+
+
 def _institution_catalog(module: Any) -> Any:
     return module.InstitutionCatalog(
         catalog_id="institution-catalog:fixture",

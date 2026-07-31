@@ -467,6 +467,22 @@ class TurnResult(ContractModel):
     fallback_sha256: str | None = None
 
 
+class ProseSynthesisResult(ContractModel):
+    """Internal result from the single final prose call; never serialized publicly."""
+
+    answer_text: str = Field(min_length=1)
+    selected_claim_ids: tuple[str, ...] = ()
+    selected_handle_ids: tuple[str, ...] = ()
+
+    @model_validator(mode="after")
+    def require_unique_selections(self) -> ProseSynthesisResult:
+        if len(self.selected_claim_ids) != len(set(self.selected_claim_ids)):
+            raise ValueError("selected claim IDs must be unique")
+        if len(self.selected_handle_ids) != len(set(self.selected_handle_ids)):
+            raise ValueError("selected handle IDs must be unique")
+        return self
+
+
 class KnowledgeAnswer(ABC):
     """Small external seam for Canonical V2 answer orchestration."""
 
@@ -1168,6 +1184,27 @@ def _material_gap_outputs(
     return tuple(limitations), tuple(sentences)
 
 
+def _enumeration_coverage_sentences(
+    coverage: EnumerationCoverage | None,
+) -> tuple[str, ...]:
+    """Deterministic disclosure for open-world list answers.
+
+    The prose path receives the same accounting through its payload; this
+    sentence keeps the deterministic and fallback render modes honest about
+    representative (non-exhaustive) enumeration.
+    """
+    if coverage is None or coverage.mode != "representative":
+        return ()
+    if coverage.displayed_count < coverage.retrieved_count:
+        accounting = (
+            f"共检索到 {coverage.retrieved_count} 个相关结果，"
+            f"本次展示其中 {coverage.displayed_count} 个"
+        )
+    else:
+        accounting = f"共检索到 {coverage.retrieved_count} 个相关结果并全部展示"
+    return (f"{accounting}，为代表性结果而非穷尽列表。",)
+
+
 def _append_required_sentences(text: str, sentences: tuple[str, ...]) -> str:
     rendered = text
     for sentence in sentences:
@@ -1389,6 +1426,15 @@ class _SessionAdvance:
     suppress_claims: bool = False
 
 
+# Subject prefix minted by the serving layer for question-scoped person-criteria
+# aggregates (mirrors ``_PERSON_CRITERIA_PART_PREFIX`` in
+# ``knowledge_serving_isolated``; kept local to avoid a serving->answer import
+# cycle, and pinned equal by the multiturn contract test). Such claims aggregate
+# per-candidate findings under a synthetic subject, so they can never equal a
+# displayed handle id.
+_QUESTION_SCOPED_SUBJECT_PREFIXES = ("serving-person-criteria:",)
+
+
 def _bind_claim_handles(
     claim: MaterialClaim,
     *,
@@ -1405,6 +1451,20 @@ def _bind_claim_handles(
             or bool(evidence_ids.intersection(handle.evidence_ids))
         )
     )
+    if (
+        not bound_handle_ids
+        and claim.subject_id is not None
+        and claim.subject_id.startswith(_QUESTION_SCOPED_SUBJECT_PREFIXES)
+    ):
+        # A question-scoped aggregate describes findings about the entities in
+        # the turn's scope in self-describing text; bind it to that scope so
+        # the retained, grounded evidence reaches the answer instead of being
+        # dropped for lacking a handle-shaped subject.
+        bound_handle_ids = tuple(
+            handle_id
+            for handle_id in state.handles
+            if not allowed_handle_ids or handle_id in allowed_handle_ids
+        )
     if allowed_handle_ids and not bound_handle_ids:
         return None
     return claim.model_copy(update={"subject_handle_ids": bound_handle_ids})
@@ -1619,7 +1679,10 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             base_answer_text = (
                 "The requested operation requires a resolved canonical handle."
             )
-        answer_text = _append_required_sentences(base_answer_text, gap_sentences)
+        answer_text = _append_required_sentences(
+            base_answer_text,
+            (*gap_sentences, *_enumeration_coverage_sentences(coverage)),
+        )
         result = TurnResult(
             session_id=request.session_id,
             turn_id=request.turn_id,
@@ -1667,8 +1730,34 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
                     ),
                 }
             )
-        if isinstance(rendered, str) and _prose_contains_structured_only_value(
-            rendered,
+        except (TypeError, ValueError, ValidationError):
+            prose_limitation = AnswerLimitation(
+                code="prose_synthesis_failed",
+                material=True,
+                stage="prose",
+                failure_kind="invalid_output",
+            )
+            return result.model_copy(
+                update={
+                    "limitations": (*result.limitations, prose_limitation),
+                    "render_mode": "deterministic_fallback",
+                    "fallback_sha256": _canonical_sha256(
+                        {
+                            "answer_text": answer_text,
+                            "claim_ids": [claim.claim_id for claim in claims],
+                        }
+                    ),
+                }
+            )
+        rendered_text = (
+            rendered.answer_text
+            if isinstance(rendered, ProseSynthesisResult)
+            else rendered
+            if isinstance(rendered, str)
+            else None
+        )
+        if isinstance(rendered_text, str) and _prose_contains_structured_only_value(
+            rendered_text,
             result=result,
             evidence_set=request.evidence_set,
         ):
@@ -1692,14 +1781,211 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
                     ),
                 }
             )
+        if isinstance(rendered, ProseSynthesisResult):
+            try:
+                return self._apply_prose_synthesis(
+                    request=request,
+                    result=result,
+                    synthesis=rendered,
+                    # The prose renderer already owns insufficiency disclosure
+                    # (coverage sentence, unnamed unconfirmed); the
+                    # deterministic gap sentence is evidence jargon and stays
+                    # only in deterministic/fallback text.
+                    gap_sentences=(),
+                )
+            except (TypeError, ValueError, ValidationError):
+                prose_limitation = AnswerLimitation(
+                    code="prose_synthesis_failed",
+                    material=True,
+                    stage="prose",
+                    failure_kind="invalid_selection",
+                )
+                return result.model_copy(
+                    update={
+                        "limitations": (*result.limitations, prose_limitation),
+                        "render_mode": "deterministic_fallback",
+                        "fallback_sha256": _canonical_sha256(
+                            {
+                                "answer_text": answer_text,
+                                "claim_ids": [claim.claim_id for claim in claims],
+                            }
+                        ),
+                    }
+                )
         if isinstance(rendered, str):
             return result.model_copy(
                 update={
-                    "answer_text": _append_required_sentences(rendered, gap_sentences),
+                    # Same split as the structured prose path: prose owns
+                    # insufficiency wording; deterministic gap sentences stay
+                    # out of prose-rendered answers.
+                    "answer_text": rendered,
                     "render_mode": "prose_renderer",
                 }
             )
         return result
+
+    def _apply_prose_synthesis(
+        self,
+        *,
+        request: TurnRequest,
+        result: TurnResult,
+        synthesis: ProseSynthesisResult,
+        gap_sentences: tuple[str, ...],
+    ) -> TurnResult:
+        synthesis = _revalidate(synthesis, ProseSynthesisResult)
+        claims_by_id = {claim.claim_id: claim for claim in result.claims}
+        if not set(synthesis.selected_claim_ids) <= set(claims_by_id):
+            raise ValueError("prose selected a claim outside the current turn")
+        context = result.context_receipt
+        if context is None:
+            if synthesis.selected_handle_ids:
+                raise ValueError("prose selected an entity without session context")
+            available_handle_ids: frozenset[str] = frozenset()
+        else:
+            available_handle_ids = frozenset(
+                (
+                    *(
+                        ()
+                        if context.displayed_result_set is None
+                        else context.displayed_result_set.handle_ids
+                    ),
+                    *(
+                        ()
+                        if context.active_anchor is None
+                        else (_handle_id(context.active_anchor),)
+                    ),
+                )
+            )
+        if not set(synthesis.selected_handle_ids) <= available_handle_ids:
+            raise ValueError("prose selected an entity outside the current turn")
+
+        selected_claim_id_set = set(synthesis.selected_claim_ids)
+        selected_claims = tuple(
+            claim for claim in result.claims if claim.claim_id in selected_claim_id_set
+        )
+        selected_evidence_ids = frozenset(
+            evidence_id
+            for claim in selected_claims
+            for evidence_id in claim.evidence_ids
+        )
+        selected_mappings = tuple(
+            mapping
+            for mapping in result.claim_evidence_map
+            if mapping.claim_id in selected_claim_id_set
+        )
+        selected_citations = tuple(
+            citation
+            for citation in result.citations
+            if citation.evidence_id in selected_evidence_ids
+        )
+        selected_conflicts = tuple(
+            conflict
+            for conflict in result.conflicts
+            if set(conflict.evidence_ids) <= selected_evidence_ids
+        )
+        narrowed_context, narrowed_traversal = self._commit_prose_scope(
+            request=request,
+            context=context,
+            selected_handle_ids=synthesis.selected_handle_ids,
+            traversal=result.traversal_receipt,
+        )
+        return result.model_copy(
+            update={
+                "answer_text": _append_required_sentences(
+                    synthesis.answer_text,
+                    gap_sentences,
+                ),
+                "claims": selected_claims,
+                "claim_evidence_map": selected_mappings,
+                "citations": selected_citations,
+                "conflicts": selected_conflicts,
+                "context_receipt": narrowed_context,
+                "traversal_receipt": narrowed_traversal,
+                # Ambiguity offers ARE the current turn's output (clarification
+                # choices or a bounded switch); only candidate-generated offers
+                # are retired once prose commits the answer scope.
+                "continuation_offer": (
+                    result.continuation_offer
+                    if result.continuation_offer is not None
+                    and "ambiguity" in result.continuation_offer.reasons
+                    else None
+                ),
+                "render_mode": "prose_renderer",
+            }
+        )
+
+    def _commit_prose_scope(
+        self,
+        *,
+        request: TurnRequest,
+        context: ContextReceipt | None,
+        selected_handle_ids: tuple[str, ...],
+        traversal: TraversalReceipt | None,
+    ) -> tuple[ContextReceipt | None, TraversalReceipt | None]:
+        if context is None:
+            return None, traversal
+        if not selected_handle_ids:
+            # An empty prose selection is an index-mapping failure, never a
+            # deliberate "reject everything": keep the turn's retrieved set
+            # instead of narrowing the session's displayed universe to nothing.
+            return context, traversal
+        state = self._sessions[request.session_id]
+        selected_handles = tuple(state.handles[value] for value in selected_handle_ids)
+        prior_set = context.displayed_result_set
+        result_set_id = "result-set:sha256:" + _canonical_sha256(
+            {
+                "session_id": request.session_id,
+                "turn_id": request.turn_id,
+                "release_id": request.release_id,
+                "handle_ids": list(selected_handle_ids),
+                "selection": "final_prose",
+            }
+        )
+        displayed = DisplayedResultSet(
+            result_set_id=result_set_id,
+            handles=selected_handles,
+            handle_ids=selected_handle_ids,
+            enumeration_mode=None if prior_set is None else prior_set.enumeration_mode,
+            continuation_state=None
+            if prior_set is None
+            else prior_set.continuation_state,
+        )
+        state.displayed_result_set = displayed
+        state.result_sets[result_set_id] = displayed
+        if len(selected_handles) == 1 or state.active_anchor is None:
+            # A single confirmed entity takes over the anchor; a multi-entity
+            # answer only narrows the displayed set, so a list turn (papers,
+            # suppliers) cannot silently re-anchor later person follow-ups to
+            # its first member.
+            state.active_anchor = selected_handles[0] if selected_handles else None
+        resolved = ResolvedReferent(
+            kind="current_turn",
+            handle_ids=selected_handle_ids,
+            result_set_id=result_set_id,
+            enumeration_mode=displayed.enumeration_mode,
+            continuation_state=displayed.continuation_state,
+        )
+        narrowed_context = context.model_copy(
+            update={
+                "active_anchor": state.active_anchor,
+                "displayed_result_set": displayed,
+                "resolved_referent": resolved,
+            }
+        )
+        narrowed_traversal = (
+            None
+            if traversal is None
+            else traversal.model_copy(
+                update={
+                    "target_handle_ids": tuple(
+                        value
+                        for value in traversal.target_handle_ids
+                        if value in selected_handle_ids
+                    )
+                }
+            )
+        )
+        return narrowed_context, narrowed_traversal
 
     def _advance_session(
         self,
@@ -2000,8 +2286,26 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
         )
         state.last_offer = continuation_offer
         allowed_subject_ids = frozenset((*source_ids, *selected_ids))
-        if not allowed_subject_ids and state.active_anchor is not None:
-            allowed_subject_ids = frozenset({_handle_id(state.active_anchor)})
+        if not allowed_subject_ids:
+            if (
+                directive.referent == "displayed_member"
+                and state.active_anchor is not None
+            ):
+                # A member-scoped turn stays scoped to the selected member.
+                allowed_subject_ids = frozenset({_handle_id(state.active_anchor)})
+            else:
+                # A follow-up whose current turn selected nothing still belongs
+                # to the conversation's displayed universe: claims may bind any
+                # member of the prior displayed set plus the anchor, never a
+                # lone anchor.
+                fallback_ids: list[str] = []
+                if state.displayed_result_set is not None:
+                    fallback_ids.extend(state.displayed_result_set.handle_ids)
+                if state.active_anchor is not None:
+                    anchor_id = _handle_id(state.active_anchor)
+                    if anchor_id not in fallback_ids:
+                        fallback_ids.append(anchor_id)
+                allowed_subject_ids = frozenset(fallback_ids)
         context = self._context_receipt(
             state,
             resolved_referent=resolved_referent,
@@ -2044,7 +2348,36 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             if selected_result_set is None:
                 raise ValueError("continuation result set is no longer available")
             target_ids = selected_result_set.handle_ids
-        if target_ids and target_ids[0] in state.handles:
+        if target_ids and target_ids[0] not in state.handles:
+            # The selection cannot execute: retrieval produced no evidenced
+            # handle for the target (e.g., the entity is gone). Surface an
+            # honest limitation instead of silently keeping the prior anchor
+            # while recording the selection as if it had happened.
+            state.last_offer = None
+            limitation = AnswerLimitation(
+                code="continuation_target_unavailable",
+                material=True,
+                handle_id=target_ids[0],
+                reason="selected continuation target has no evidenced handle",
+            )
+            context = self._context_receipt(
+                state,
+                resolved_referent=None,
+                resolved_evidence_ids=(),
+                transition_kind=offer.selection_kind,
+                performed_operation="continuation_target_unavailable",
+            )
+            return _SessionAdvance(
+                context_receipt=context,
+                traversal_receipt=None,
+                continuation_offer=None,
+                interpretation_notice=None,
+                response_mode="answer",
+                allowed_subject_ids=frozenset(),
+                limitations=(limitation,),
+                suppress_claims=True,
+            )
+        if target_ids:
             state.active_anchor = state.handles[target_ids[0]]
         state.active_constraints = _merge_slots(
             state.active_constraints,
@@ -2307,8 +2640,9 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
         directive = request.safety_guidance
         assert directive is not None
         static_text = (
-            "Avoid suspected unlawful activity, prioritize personal safety, and use "
-            "official help or reporting channels when needed."
+            "请远离涉嫌黄赌毒等违法活动的场所，注意人身与财产安全；"
+            "如遇可疑情况，请通过官方求助或举报渠道（如 110、辖区派出所、"
+            "政务服务热线）获取帮助。"
         )
         if directive.mode == "static":
             return TurnResult(

@@ -1142,8 +1142,11 @@ def test_prose_renderer_cannot_reintroduce_audit_values_or_omit_material_gap() -
         answer_selector=selector,
         prose_renderer=lambda _: safe_prose,
     ).answer(request)
-    assert safe.answer_text == f"{safe_prose}\n{gap_sentence}"
-    assert safe.answer_text.count(gap_sentence) == 1
+    # The prose path owns insufficiency wording: the renderer's text is
+    # returned verbatim and the deterministic gap sentence stays in the
+    # deterministic/fallback modes only.
+    assert safe.answer_text == safe_prose
+    assert gap_sentence not in safe.answer_text
     assert safe.render_mode == "prose_renderer"
 
 
@@ -1985,7 +1988,7 @@ def test_safety_guidance_is_server_owned_bounded_and_official_snapshot_grounded(
     assert static_result.citations == ()
     assert static_result.continuation_offer is None
     assert len(static_result.answer_text) <= 300
-    assert "official" in static_result.answer_text.lower()
+    assert "官方" in static_result.answer_text
     assert "venue" not in static_result.answer_text.lower()
     assert "district" not in static_result.answer_text.lower()
     assert "evasion" not in static_result.answer_text.lower()

@@ -24,7 +24,11 @@ def _candidate_key_roots() -> tuple[Path, ...]:
     here = Path(__file__).resolve()
     app_root = here.parents[3]
     repo_root = here.parents[5]
-    return (repo_root, app_root)
+    # Keep the repo/app precedence, then walk remaining ancestors so a key file
+    # placed above the checkout root (e.g. the main checkout when serving from a
+    # git worktree) still resolves, matching the provider key-file pattern.
+    ancestors = tuple(parent for parent in here.parents[6:] if parent != repo_root)
+    return (repo_root, app_root, *ancestors)
 
 
 def _read_key_file(filename: str) -> str:

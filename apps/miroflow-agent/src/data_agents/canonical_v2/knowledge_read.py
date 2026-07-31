@@ -3628,6 +3628,17 @@ def _materialize_requested_traversal(
     )
 
 
+def _ambiguity_trace_discriminator(trace: AmbiguityCandidateTrace) -> str:
+    values = tuple(
+        value
+        for discriminator in trace.discriminators
+        if (value := discriminator.value)
+    )
+    if values:
+        return " · ".join(values)
+    return trace.display_name or trace.canonical_id or ""
+
+
 def _materialize_successor_handoff(
     plan: RetrievalPlan,
     result: EvidenceSet,
@@ -3647,13 +3658,52 @@ def _materialize_successor_handoff(
             "outcome": "blocked",
         }
         decision_id = "ambiguity-decision:sha256:" + _canonical_sha256(decision_input)
+        traces_by_id = {
+            trace.candidate_id: trace
+            for trace in decision.candidate_traces
+            if trace.canonical_id is not None
+        }
+        viable_trace_ids = tuple(
+            candidate_id
+            for candidate_id in decision.viable_alternative_ids
+            if candidate_id in traces_by_id
+        ) or tuple(
+            trace.candidate_id
+            for trace in decision.candidate_traces
+            if trace.eligible and trace.canonical_id is not None
+        )
+        chosen: list[tuple[str, str, str, tuple[str, ...]]] = []
+        for candidate_id in viable_trace_ids[:3]:
+            trace = traces_by_id[candidate_id]
+            canonical_id = trace.canonical_id
+            if canonical_id is None:
+                continue
+            chosen.append(
+                (
+                    canonical_id,
+                    trace.display_name or canonical_id,
+                    _ambiguity_trace_discriminator(trace),
+                    trace.evidence_ids,
+                )
+            )
         successor_decision = AmbiguityDecision(
             policy_version=decision.policy_version,
             decision_id=decision_id,
             outcome="blocked",
-            candidates=(),
+            candidates=tuple(
+                AmbiguityCandidate(
+                    handle_id=canonical_id,
+                    discriminator=discriminator,
+                    viable=True,
+                    protected_constraint_conflict=False,
+                    evidence_ids=evidence_ids,
+                )
+                for canonical_id, _name, discriminator, evidence_ids in chosen
+            ),
             selected_handle_id=None,
-            viable_alternative_handle_ids=(),
+            viable_alternative_handle_ids=tuple(
+                canonical_id for canonical_id, _name, _disc, _evidence in chosen
+            ),
             decision_trace_id=(
                 "ambiguity-trace:sha256:"
                 + _canonical_sha256(
@@ -3668,6 +3718,82 @@ def _materialize_successor_handoff(
             update={
                 "ambiguity_decision": successor_decision,
                 "continuation_candidates": (),
+                # Register the blocked candidates as handles so the public
+                # clarification can offer evidenced discriminators and a later
+                # selection turn can resolve its target.
+                "entity_handles": (
+                    *result.entity_handles,
+                    *(
+                        CanonicalEntityHandle(
+                            canonical_id=canonical_id,
+                            domain=canonical_id.split("-", 1)[0],
+                            display_name=display_name,
+                            evidence_ids=(),
+                        )
+                        for canonical_id, display_name, _disc, evidence_ids in chosen
+                    ),
+                ),
+            }
+        )
+
+    if (
+        decision is not None
+        and decision.mode == "non_blocking"
+        and decision.selected_canonical_id is not None
+        and plan.planning_trace is not None
+    ):
+        # One dominant candidate cleared the gate: bind the interpreted
+        # selection and the viable switch alternatives into the S9 handoff
+        # shape so the answer module can disclose the interpretation.
+        viable_candidate_ids = frozenset(decision.viable_alternative_ids)
+        selected_input = {
+            "release_id": result.release_id,
+            "original_query": result.original_query,
+            "planning_decision_sha256": decision.content_sha256,
+            "outcome": "selected",
+        }
+        selected_decision_id = "ambiguity-decision:sha256:" + _canonical_sha256(
+            selected_input
+        )
+        result = result.model_copy(
+            update={
+                "ambiguity_decision": AmbiguityDecision(
+                    policy_version=decision.policy_version,
+                    decision_id=selected_decision_id,
+                    outcome="selected",
+                    candidates=tuple(
+                        AmbiguityCandidate(
+                            handle_id=trace.canonical_id,
+                            evidence_ids=trace.evidence_ids,
+                            discriminator=_ambiguity_trace_discriminator(trace),
+                            viable=(
+                                trace.canonical_id == decision.selected_canonical_id
+                                or trace.candidate_id in viable_candidate_ids
+                            ),
+                            protected_constraint_conflict=bool(
+                                trace.protected_constraint_conflicts
+                            ),
+                        )
+                        for trace in decision.candidate_traces
+                        if trace.canonical_id is not None
+                    ),
+                    selected_handle_id=decision.selected_canonical_id,
+                    viable_alternative_handle_ids=tuple(
+                        trace.canonical_id
+                        for trace in decision.candidate_traces
+                        if trace.candidate_id in viable_candidate_ids
+                        and trace.canonical_id is not None
+                    ),
+                    decision_trace_id=(
+                        "ambiguity-trace:sha256:"
+                        + _canonical_sha256(
+                            {
+                                "decision_id": selected_decision_id,
+                                "planning_decision_sha256": decision.content_sha256,
+                            }
+                        )
+                    ),
+                )
             }
         )
 
@@ -4023,6 +4149,17 @@ def _build_enumeration_policy(
 ) -> EnumerationPolicy | None:
     context = request.enumeration_context
     if context is None or not context.requested:
+        if proposal.enumeration_mode == "representative":
+            # A traversal plan always needs a valid enumeration authority; the
+            # proposal already declared representative mode, so the absence of
+            # an explicit request context must not sink the plan.
+            return EnumerationPolicy(
+                mode="representative",
+                scope=request.original_query,
+                as_of=request.as_of,
+                exhaustive=False,
+                continuation_state="available",
+            )
         return None
     if context.finite_universe is not None:
         if context.finite_universe.release_id != request.release_id:
@@ -7864,6 +8001,11 @@ class _EphemeralKnowledgeRead(KnowledgeRead):
             for handle in entity_handles
             if isinstance(handle, CanonicalEntityHandle)
         )
+        # Question-scoped part subjects are evidence ABOUT the question, not
+        # new candidates: they stay admissible even when the candidate window
+        # is full (a full window must not drop the aggregate that supports a
+        # material part).
+        part_subject_ids = {part.subject_id for part in plan.material_parts}
         remaining_result_slots = max(
             0,
             plan.max_candidates - direct_result_count - len(entity_handles),
@@ -7872,6 +8014,8 @@ class _EphemeralKnowledgeRead(KnowledgeRead):
         bounded_supplemental_items: list[EvidenceItem] = []
         for item in supplemental_items:
             if item.object_id in existing_result_ids:
+                bounded_supplemental_items.append(item)
+            elif item.object_id in part_subject_ids:
                 bounded_supplemental_items.append(item)
             elif item.object_id in admitted_new_ids:
                 bounded_supplemental_items.append(item)

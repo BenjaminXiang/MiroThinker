@@ -5,7 +5,10 @@ import json
 import re
 import subprocess
 
+from fastapi.testclient import TestClient
 import pytest
+
+from backend.main import _create_route_shell
 
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -60,6 +63,15 @@ def test_chat_preview_contains_no_fixture_names_or_questions(
 def test_public_chat_has_no_internal_browse_navigation(chat_html: str) -> None:
     assert 'href="/browse"' not in chat_html
     assert "返回数据目录" not in chat_html
+
+
+def test_public_root_enters_chat_without_advertising_internal_browse() -> None:
+    client = TestClient(_create_route_shell(include_review=False))
+
+    response = client.get("/", follow_redirects=False)
+
+    assert response.status_code == 302
+    assert response.headers["location"] == "/chat"
 
 
 def test_chat_preview_builds_questions_only_after_current_candidates_and_relations_load(

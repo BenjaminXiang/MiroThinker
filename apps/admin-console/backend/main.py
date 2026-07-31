@@ -104,8 +104,8 @@ def _create_route_shell(*, include_review: bool) -> FastAPI:
             )
 
     @shell.get("/", include_in_schema=False)
-    def redirect_root_to_browse() -> RedirectResponse:
-        return RedirectResponse(url="/browse", status_code=302)
+    def redirect_root_to_chat() -> RedirectResponse:
+        return RedirectResponse(url="/chat", status_code=302)
 
     @shell.get("/browse")
     def serve_browse() -> FileResponse:

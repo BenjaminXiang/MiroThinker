@@ -8,8 +8,8 @@ import hashlib
 import ipaddress
 import json
 from threading import RLock
-from typing import Any, Callable, Protocol, cast
-from urllib.parse import urlparse
+from typing import Any, Callable, Literal, Protocol, cast
+from urllib.parse import urlparse, urlsplit, urlunsplit
 
 from pydantic import Field, model_validator
 
@@ -21,6 +21,14 @@ from backend.api.chat_contracts import (
     TargetDomain,
 )
 from src.data_agents.canonical_v2.contracts import ContractModel
+from src.data_agents.canonical_v2.followup_referents import (
+    has_continuation_intent,
+    has_explicit_named_subject,
+    has_internal_set_antecedent,
+    has_set_referent,
+    has_singular_referent,
+    referent_subject_domain,
+)
 from src.data_agents.canonical_v2.knowledge_answer import (
     ContinuationOffer,
     ContinuationSelection,
@@ -45,25 +53,6 @@ from src.data_agents.canonical_v2.knowledge_read import (
 _ZERO_SHA256 = "0" * 64
 _PUBLIC_DOMAINS = frozenset({"professor", "company", "paper", "patent"})
 _ENUMERATION_MARKERS = ("哪些", "谁", "多少", "几个", "列出", "所有", "分别")
-_SINGULAR_REFERENT_MARKERS = (
-    "他是否",
-    "他的",
-    "她是否",
-    "她的",
-    "它的",
-    "该公司",
-    "这家公司",
-    "该企业",
-    "这家企业",
-    "该论文",
-    "这篇论文",
-    "这论文",
-    "该专利",
-    "这项专利",
-    "该教授",
-    "这位教授",
-)
-_SET_REFERENT_MARKERS = ("上述", "以上", "这些", "已展示", "上面", "其中")
 _OFFICIAL_URL_FIELDS = {
     "professor": ("homepage",),
     "company": ("website",),
@@ -149,29 +138,228 @@ def _planning_displayed_ids(
     query: str,
     displayed_ids: tuple[str, ...],
     active_anchor_id: str | None,
+    active_anchor_name: str | None = None,
+    active_anchor_domain: str | None = None,
 ) -> tuple[str, ...]:
     if not displayed_ids:
         return ()
-    if any(marker in query for marker in _SINGULAR_REFERENT_MARKERS):
-        return (active_anchor_id,) if active_anchor_id is not None else ()
-    if any(marker in query for marker in _SET_REFERENT_MARKERS):
+    # An explicitly named subject that is NOT the anchor always wins over
+    # referent binding: "华力创科学这家公司…" asks about 华力创科学, not
+    # about whatever the session happens to be anchored on.
+    if has_explicit_named_subject(query) and not (
+        active_anchor_name is not None and active_anchor_name in query
+    ):
+        return ()
+    if has_singular_referent(query):
+        if active_anchor_id is None:
+            return ()
+        # A typed referent (他/她 → person, 该公司 → company) must not bind an
+        # anchor of another kind just because it is current; the miss falls
+        # through to the referent history instead.
+        subject_domain = referent_subject_domain(query)
+        if (
+            subject_domain is not None
+            and active_anchor_domain is not None
+            and subject_domain != active_anchor_domain
+        ):
+            return ()
+        return (active_anchor_id,)
+    if has_set_referent(query):
         return displayed_ids
+    if has_continuation_intent(query):
+        return (active_anchor_id,) if active_anchor_id is not None else ()
+    if (
+        active_anchor_id is not None
+        and active_anchor_name is not None
+        and active_anchor_name in query
+    ):
+        return (active_anchor_id,)
     return ()
+
+
+@dataclass(frozen=True, slots=True)
+class _ReferentHistoryEntry:
+    """A referent archived when a topic switch replaced the session that held it."""
+
+    kind: Literal["anchor", "result_set"]
+    domain: str | None
+    canonical_ids: tuple[str, ...]
+    display_names: tuple[str, ...]
+    turn_count: int
+
+
+_REFERENT_HISTORY_LIMIT = 4
+
+
+def _history_displayed_ids(
+    *,
+    query: str,
+    history: tuple[_ReferentHistoryEntry, ...],
+) -> tuple[str, ...]:
+    """Bind an explicit anaphora to the first compatible history entry.
+
+    A clean new-topic query carries no anaphoric marker and binds nothing, so
+    it stays a pure topic switch. With a marker, the walk is most-recent-first
+    over kind-compatible entries; a typed referent (他/她 → person, 这些公司 →
+    company) only binds an entry whose domain matches (a domain-less entry
+    carries no type evidence and stays compatible), never a different domain.
+    """
+    if has_singular_referent(query):
+        kind = "anchor"
+    elif has_set_referent(query):
+        kind = "result_set"
+    elif has_continuation_intent(query):
+        kind = "anchor"
+    else:
+        return ()
+    subject_domain = referent_subject_domain(query)
+    for entry in history:
+        if entry.kind != kind:
+            continue
+        if (
+            subject_domain is not None
+            and entry.domain is not None
+            and entry.domain != subject_domain
+        ):
+            continue
+        return entry.canonical_ids
+    return ()
+
+
+def _next_referent_history(
+    *,
+    committed: _CommittedSession | None,
+    directive: SessionDirective | None,
+) -> tuple[_ReferentHistoryEntry, ...]:
+    """Referent history for the next committed session.
+
+    Non-switch commits carry the history through unchanged; a topic-switch
+    commit archives the outgoing session's live referents ahead of it, bounded
+    to the most recent entries.
+    """
+    if committed is None:
+        return ()
+    history = committed.referent_history
+    if directive is None or directive.transition != "topic_switch":
+        return history
+    context = committed.context_receipt
+    if context is None:
+        return history
+    archived: list[_ReferentHistoryEntry] = []
+    if context.active_anchor is not None:
+        archived.append(
+            _ReferentHistoryEntry(
+                kind="anchor",
+                domain=context.active_anchor.domain,
+                canonical_ids=(_handle_id(context.active_anchor),),
+                display_names=(context.active_anchor.display_name,),
+                turn_count=committed.turn_count,
+            )
+        )
+    if context.displayed_result_set is not None:
+        handles = tuple(
+            handle
+            for handle in context.displayed_result_set.handles
+            if handle.kind == "canonical"
+        )
+        if handles:
+            domains = {handle.domain for handle in handles}
+            archived.append(
+                _ReferentHistoryEntry(
+                    kind="result_set",
+                    domain=next(iter(domains)) if len(domains) == 1 else None,
+                    canonical_ids=tuple(handle.canonical_id for handle in handles),
+                    display_names=tuple(handle.display_name for handle in handles),
+                    turn_count=committed.turn_count,
+                )
+            )
+    return tuple(archived + list(history))[:_REFERENT_HISTORY_LIMIT]
+
+
+def _referent_clarification_needed(
+    *,
+    query: str,
+    committed: _CommittedSession | None,
+) -> bool:
+    """A referent with no resolvable target must clarify, never free-retrieve.
+
+    Fires when the query carries a singular or set referent but neither the
+    session nor its archived referent history has an anchor/displayed set to
+    bind it to and the query itself names no explicit subject. Free retrieval
+    in that state answers about an arbitrary entity.
+    """
+    context = None if committed is None else committed.context_receipt
+    history: tuple[_ReferentHistoryEntry, ...] = (
+        () if committed is None else getattr(committed, "referent_history", ())
+    )
+    if (has_singular_referent(query) or has_continuation_intent(query)) and (
+        context is None or context.active_anchor is None
+    ):
+        return not has_explicit_named_subject(query) and not _history_displayed_ids(
+            query=query, history=history
+        )
+    if has_set_referent(query) and (
+        context is None or context.displayed_result_set is None
+    ):
+        # A set referent with an intra-query antecedent ("…厂商，他们…") is
+        # self-resolving; it never needs the session or the history.
+        return (
+            not has_explicit_named_subject(query)
+            and not has_internal_set_antecedent(query)
+            and not _history_displayed_ids(query=query, history=history)
+        )
+    return False
+
+
+_REFERENT_CLARIFICATION_PROMPT = (
+    "您的问题里使用了指代词，但当前对话还没有可对应的主体。"
+    "请先告诉我您想了解的对象（如教授姓名、公司名、论文标题或专利号），"
+    "我再继续回答。"
+)
+
+
+def _referent_clarification_response(query: str) -> ChatResponse:
+    return ChatResponse.model_validate(
+        {
+            "query": query,
+            "query_type": "canonical_v2:G:clarification_only",
+            "answer_text": _REFERENT_CLARIFICATION_PROMPT,
+            "citations": [],
+            "evidence": [],
+            "clarification": ClarificationPayload(
+                prompt=_REFERENT_CLARIFICATION_PROMPT,
+                options=[],
+                default_id="",
+                omitted=0,
+            ).model_dump(mode="json"),
+            "structured_payload": {},
+            "answer_style": "template",
+            "citation_map": {},
+            "suggested_followups": [],
+        }
+    )
 
 
 def _planning_displayed_names(
     *,
     context: ContextReceipt | None,
     displayed_ids: tuple[str, ...],
+    history: tuple[_ReferentHistoryEntry, ...] = (),
 ) -> tuple[str, ...]:
-    if context is None or not displayed_ids:
+    if not displayed_ids:
         return ()
-    handles = []
-    if context.active_anchor is not None:
-        handles.append(context.active_anchor)
-    if context.displayed_result_set is not None:
-        handles.extend(context.displayed_result_set.handles)
-    names_by_id = {_handle_id(handle): handle.display_name for handle in handles}
+    names_by_id: dict[str, str] = {}
+    for entry in history:
+        names_by_id.update(zip(entry.canonical_ids, entry.display_names))
+    if context is not None:
+        handles = []
+        if context.active_anchor is not None:
+            handles.append(context.active_anchor)
+        if context.displayed_result_set is not None:
+            handles.extend(context.displayed_result_set.handles)
+        names_by_id.update(
+            {_handle_id(handle): handle.display_name for handle in handles}
+        )
     if any(entity_id not in names_by_id for entity_id in displayed_ids):
         return ()
     return tuple(names_by_id[entity_id] for entity_id in displayed_ids)
@@ -301,6 +489,80 @@ class _CommittedSession:
     active_offer: ContinuationOffer | None
     displayed_ids: tuple[str, ...]
     checkpoint: ChatFeedbackCheckpoint
+    prior_web_items: tuple[EvidenceItem, ...] = ()
+    referent_history: tuple[_ReferentHistoryEntry, ...] = ()
+
+
+_SESSION_WEB_CARRYOVER_LIMIT = 8
+
+
+def _normalized_web_url(value: str) -> str:
+    """URL identity used for session carry-over dedup.
+
+    Mirrors ``knowledge_serving_isolated._normalized_web_url`` so carried items
+    dedup exactly the way the web lane dedups its own results.
+    """
+    parsed = urlsplit(value.strip())
+    path = parsed.path.rstrip("/") or "/"
+    return urlunsplit(
+        (parsed.scheme.lower(), parsed.netloc.lower(), path, parsed.query, "")
+    )
+
+
+def _session_web_items(evidence_set: EvidenceSet) -> tuple[EvidenceItem, ...]:
+    """Newest-first web lane items retained for bounded session carry-over."""
+    seen: set[str] = set()
+    retained: list[EvidenceItem] = []
+    for item in evidence_set.items:
+        if item.lane != "web":
+            continue
+        key = _normalized_web_url(item.source_locator)
+        if key in seen:
+            continue
+        seen.add(key)
+        retained.append(item)
+        if len(retained) >= _SESSION_WEB_CARRYOVER_LIMIT:
+            break
+    return tuple(retained)
+
+
+def _merge_prior_web_evidence(
+    *,
+    committed: _CommittedSession | None,
+    evidence_set: EvidenceSet,
+    directive: SessionDirective | None,
+) -> EvidenceSet:
+    """Carry prior session web evidence into a continuing follow-up turn.
+
+    The fresh read keeps precedence: carried items whose normalized URL already
+    appears in the current items are dropped, so fresh content always wins a
+    URL conflict. Carry-over is skipped on topic switches (a new topic must not
+    inherit stale web evidence) and bounded by the retention cap, so the merged
+    set exceeds the read's own candidate window by at most the carried items.
+    All carried items keep their original provenance (locator, authority,
+    snapshot), and the TurnRequest content hash is rebound by its own model
+    validator when the adapter builds the request.
+    """
+    if (
+        committed is None
+        or not committed.prior_web_items
+        or (directive is not None and directive.transition == "topic_switch")
+    ):
+        return evidence_set
+    current_urls = {
+        _normalized_web_url(item.source_locator) for item in evidence_set.items
+    }
+    carried = tuple(
+        item
+        for item in committed.prior_web_items
+        if _normalized_web_url(item.source_locator) not in current_urls
+    )
+    if not carried:
+        return evidence_set
+    merged = evidence_set.model_copy(
+        update={"items": evidence_set.items + carried}
+    )
+    return _validated_model(merged, EvidenceSet)
 
 
 class CanonicalV2ChatAdapter:
@@ -372,6 +634,11 @@ class CanonicalV2ChatAdapter:
         with self._lock:
             committed = self._sessions.get(session_id)
         selection = self._selection(committed, option_id=option_id)
+        if selection is None and _referent_clarification_needed(
+            query=normalized_query,
+            committed=committed,
+        ):
+            return _referent_clarification_response(normalized_query)
         turn_count = 1 if committed is None else committed.turn_count + 1
         turn_id = self._turn_id(
             session_id=session_id,
@@ -386,14 +653,55 @@ class CanonicalV2ChatAdapter:
             if prior_context is None or prior_context.active_anchor is None
             else _handle_id(prior_context.active_anchor)
         )
-        displayed_ids = _planning_displayed_ids(
-            query=normalized_query,
-            displayed_ids=prior_displayed_ids,
-            active_anchor_id=active_anchor_id,
-        )
+        selection_target_ids = self._selection_target_ids(committed, selection)
+        ids_from_history = False
+        if selection_target_ids:
+            # A continuation selection replaces (never narrows) the anchor: bind
+            # the option's canonical targets into planning so retrieval fetches
+            # their evidence and the answer session registers their handles
+            # before the selection executes. This is what lets a same-name
+            # switch_candidate target that was never displayed actually re-anchor.
+            displayed_ids = selection_target_ids
+        else:
+            displayed_ids = _planning_displayed_ids(
+                query=normalized_query,
+                displayed_ids=prior_displayed_ids,
+                active_anchor_id=active_anchor_id,
+                active_anchor_name=(
+                    None
+                    if prior_context is None or prior_context.active_anchor is None
+                    else prior_context.active_anchor.display_name
+                ),
+                active_anchor_domain=(
+                    None
+                    if prior_context is None or prior_context.active_anchor is None
+                    else prior_context.active_anchor.domain
+                ),
+            )
+            if not displayed_ids and committed is not None:
+                # A topic switch replaced the session the anaphora refers to:
+                # bind the archived referent history instead of free-retrieving.
+                # Never when the query names its own subject — its referent
+                # words are cataphoric, not session references.
+                explicit_new_subject = has_explicit_named_subject(
+                    normalized_query
+                ) and not (
+                    prior_context is not None
+                    and prior_context.active_anchor is not None
+                    and prior_context.active_anchor.display_name in normalized_query
+                )
+                if not explicit_new_subject:
+                    history_ids = _history_displayed_ids(
+                        query=normalized_query,
+                        history=committed.referent_history,
+                    )
+                    if history_ids:
+                        displayed_ids = history_ids
+                        ids_from_history = True
         displayed_names = _planning_displayed_names(
             context=prior_context,
             displayed_ids=displayed_ids,
+            history=() if committed is None else committed.referent_history,
         )
         planning_request = QueryPlanningRequest(
             request_id=f"query-request:chat:{turn_id}",
@@ -427,6 +735,12 @@ class CanonicalV2ChatAdapter:
             evidence_set=evidence_set,
             planning_displayed_ids=displayed_ids,
             selection=selection,
+            from_history=ids_from_history,
+        )
+        evidence_set = _merge_prior_web_evidence(
+            committed=committed,
+            evidence_set=evidence_set,
+            directive=directive,
         )
         turn_request = TurnRequest(
             session_id=session_id,
@@ -477,6 +791,11 @@ class CanonicalV2ChatAdapter:
             active_offer=turn_result.continuation_offer,
             displayed_ids=next_displayed_ids,
             checkpoint=checkpoint,
+            prior_web_items=_session_web_items(evidence_set),
+            referent_history=_next_referent_history(
+                committed=committed,
+                directive=directive,
+            ),
         )
 
         with self._lock:
@@ -503,6 +822,38 @@ class CanonicalV2ChatAdapter:
             option_id=option_id,
         )
 
+    @staticmethod
+    def _selection_target_ids(
+        committed: _CommittedSession | None,
+        selection: ContinuationSelection | None,
+    ) -> tuple[str, ...]:
+        """Canonical target ids the selected option must bind into planning.
+
+        Only explicit canonical targets qualify: result-set options resolve
+        handles the session already registered, and session-scoped web handles
+        are not retrievable recall targets.
+        """
+        if committed is None or selection is None:
+            return ()
+        offer = committed.active_offer
+        if offer is None or offer.offer_id != selection.offer_id:
+            return ()
+        option = next(
+            (
+                value
+                for value in offer.options
+                if value.option_id == selection.option_id
+            ),
+            None,
+        )
+        if option is None or option.result_set_id is not None:
+            return ()
+        return tuple(
+            handle_id
+            for handle_id in option.target_handle_ids
+            if handle_id and not handle_id.startswith("web-handle:")
+        )
+
     def _require_release(self, value: Any, *, stage: str) -> None:
         if getattr(value, "release_id", None) != self._release_id:
             raise CanonicalV2ReleaseMismatch(
@@ -516,9 +867,15 @@ class CanonicalV2ChatAdapter:
         evidence_set: EvidenceSet,
         planning_displayed_ids: tuple[str, ...],
         selection: ContinuationSelection | None,
+        from_history: bool = False,
     ) -> SessionDirective | None:
         if committed is None:
             return None
+        if from_history:
+            # A history-bound referent leaves the current topic for an earlier
+            # one: the answer session must wipe and rebuild around the fresh
+            # evidence, exactly like a fresh named-entity turn.
+            return SessionDirective(transition="topic_switch")
         if evidence_set.requested_traversal is not None:
             context = committed.context_receipt
             if context is not None and context.active_anchor is not None:
@@ -798,11 +1155,17 @@ class CanonicalV2ChatAdapter:
                     CandidateOption(
                         id=option.option_id,
                         domain=cast(TargetDomain, next(iter(domains))),
-                        label=_PUBLIC_CONTINUATION_OPERATION.get(
-                            option.operation, "继续当前问题"
+                        label=(
+                            option.discriminator
+                            or _PUBLIC_CONTINUATION_OPERATION.get(
+                                option.operation, "继续当前问题"
+                            )
                         ),
-                        hint=_PUBLIC_CONTINUATION_OPERATION.get(
-                            option.operation, "继续当前问题"
+                        hint=(
+                            option.discriminator
+                            or _PUBLIC_CONTINUATION_OPERATION.get(
+                                option.operation, "继续当前问题"
+                            )
                         ),
                     )
                 )

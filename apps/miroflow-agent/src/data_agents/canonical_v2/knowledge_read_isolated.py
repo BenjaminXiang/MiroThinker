@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 import math
+import re
 from threading import Lock
 from typing import Any, Literal, cast
 import unicodedata
@@ -37,6 +38,7 @@ from .domain_projection_models import (
     PatentProjection,
     ProfessorProjection,
 )
+from .followup_referents import extract_institution_person_name
 from .index_projection import (
     IndexProjectionIntegrityError,
     IndexProjectionPoint,
@@ -48,6 +50,7 @@ from .index_projection_isolated import (
     EmbeddingAdapter,
     IsolatedIndexSnapshot,
     audit_isolated_index_snapshot,
+    open_manifest_verified_index_snapshot,
     read_isolated_lookup_documents,
 )
 from .internal_reference_projection import (
@@ -59,7 +62,9 @@ from .internal_reference_projection import (
 )
 from .knowledge_read import (
     AcceptedIdentityLookupRequest,
+    AmbiguityCandidate,
     AmbiguityPolicy,
+    CandidateDiscriminator,
     CanonicalEntityHandle,
     EvidenceClaimBinding,
     EvidenceItem,
@@ -110,6 +115,7 @@ from .knowledge_read import (
     _canonical_sha256,
     _lane_request,
     _local_projection_locator,
+    _resolve_institutions,
     create_ephemeral_knowledge_read,
     create_ephemeral_query_planner,
 )
@@ -361,6 +367,156 @@ class _ValidatingEmbeddingAdapter:
             )
 
 
+_NAMED_PROFESSOR_RESEARCH_PATTERN = re.compile(
+    r"(?P<name>[一-鿿·]{2,4})的(?:代表性)?(?:论文|研究成果|科研成果|学术成果|代表作)"
+)
+
+
+def _resolve_named_professor_research_source(
+    query: str,
+    professor_projections: tuple[ProfessorProjection, ...],
+) -> ProfessorProjection | None:
+    """Resolve a "X的论文/研究成果…" query to one unique Professor projection.
+
+    A same-turn named-source traversal is only proposed when the possessive
+    pattern matches and the name binds exactly one accepted Professor by display
+    name, canonical name, or alias; any ambiguity falls back to the normal lanes.
+    """
+    match = _NAMED_PROFESSOR_RESEARCH_PATTERN.search(query)
+    if match is None:
+        return None
+    name = match.group("name")
+    matches = tuple(
+        projection
+        for projection in professor_projections
+        if (
+            projection.name == name
+            or projection.canonical_name_zh == name
+            or name in projection.aliases
+        )
+    )
+    if len(matches) != 1:
+        return None
+    return matches[0]
+
+
+_SAME_NAME_PERSON_QUERY_PATTERN = re.compile(
+    r"^(?:请问|请介绍一下|请介绍|介绍一下|介绍|我想了解|帮我查(?:一下)?)?\s*"
+    r"(?P<name>[一-鿿·]{2,4})(?:教授|老师)?"
+    r"(?:的)?(?:是谁|是什么人|简介|信息|情况|资料|评价如何|怎么样)?"
+    r"[？?。！!]?$"
+)
+
+
+def _same_name_person_name(query: str) -> str | None:
+    institution_person_name = extract_institution_person_name(query)
+    if institution_person_name is not None:
+        return institution_person_name
+    match = _SAME_NAME_PERSON_QUERY_PATTERN.match(query.strip())
+    if match is None:
+        return None
+    return match.group("name")
+
+
+def _resolved_institution_names(
+    query: str,
+    institution_catalog: InstitutionCatalog,
+) -> tuple[str, ...]:
+    slots, _ = _resolve_institutions(query, institution_catalog)
+    entries = {entry.canonical_id: entry for entry in institution_catalog.entries}
+    return tuple(
+        dict.fromkeys(
+            entries[slot.canonical_id].canonical_name
+            for slot in slots
+            if slot.resolution_state == "resolved"
+            and slot.canonical_id is not None
+            and slot.canonical_id in entries
+        )
+    )
+
+
+def _resolve_same_name_professor_candidates(
+    query: str,
+    professor_projections: tuple[ProfessorProjection, ...],
+    institution_catalog: InstitutionCatalog | None = None,
+) -> tuple[AmbiguityCandidate, ...]:
+    """Resolve an explicit person name to same-name Professor candidates.
+
+    When the name binds two or more distinct accepted Professors, each match
+    becomes one evidence-bound ambiguity candidate so the injected policy can
+    gate the turn. Evidence confidence is the candidate's deterministic share
+    of the strongest accepted-assertion count in the same-name set; a model
+    self-score can never clear the gate.
+
+    An explicit resolved institution constraint protects the gate: only
+    candidates whose projection institution exactly equals a resolved catalog
+    canonical name stay in the gated set. One remaining match proceeds
+    un-gated toward that Professor; zero remaining matches falls back to the
+    normal lanes instead of selecting a constraint-violating candidate.
+    """
+    name = _same_name_person_name(query)
+    if name is None:
+        return ()
+    matched = {
+        projection.canonical_identity_id: projection
+        for projection in professor_projections
+        if (
+            projection.name == name
+            or projection.canonical_name_zh == name
+            or name in projection.aliases
+        )
+    }
+    if len(matched) < 2:
+        return ()
+    if institution_catalog is not None:
+        institution_names = _resolved_institution_names(query, institution_catalog)
+        if institution_names:
+            matched = {
+                canonical_id: projection
+                for canonical_id, projection in matched.items()
+                if projection.institution in institution_names
+            }
+            if len(matched) < 2:
+                return ()
+    ordered = tuple(matched[canonical_id] for canonical_id in sorted(matched))
+    evidence_by_id = {
+        projection.canonical_identity_id: tuple(
+            dict.fromkeys(reference.assertion_id for reference in projection.evidence)
+        )
+        for projection in ordered
+    }
+    strongest = max(len(evidence_ids) for evidence_ids in evidence_by_id.values())
+    candidates: list[AmbiguityCandidate] = []
+    for projection in ordered:
+        canonical_id = projection.canonical_identity_id
+        evidence_ids = evidence_by_id[canonical_id]
+        confidence = len(evidence_ids) / strongest
+        candidates.append(
+            AmbiguityCandidate(
+                candidate_id=f"ambiguity-candidate:{canonical_id}",
+                entity_type="professor",
+                canonical_id=canonical_id,
+                display_name=projection.name,
+                evidence_ids=evidence_ids,
+                evidence_confidence=confidence,
+                model_confidence=confidence,
+                discriminators=tuple(
+                    CandidateDiscriminator(
+                        kind=kind,
+                        value=value,
+                        evidence_ids=evidence_ids[:1],
+                    )
+                    for kind, value in (
+                        ("institution", projection.institution),
+                        ("title", projection.title),
+                    )
+                    if value
+                ),
+            )
+        )
+    return tuple(candidates)
+
+
 class _ReleaseBoundQueryPlanner(_QueryPlanner):
     def __init__(
         self,
@@ -368,10 +524,16 @@ class _ReleaseBoundQueryPlanner(_QueryPlanner):
         release_id: str,
         release_binding: PlanningReleaseBinding,
         delegate: _QueryPlanner,
+        ambiguity_delegate: _QueryPlanner | None = None,
+        named_professor_projections: tuple[ProfessorProjection, ...] = (),
+        institution_catalog: InstitutionCatalog | None = None,
     ) -> None:
         self._release_id = release_id
         self._release_binding = release_binding
         self._delegate = delegate
+        self._ambiguity_delegate = ambiguity_delegate
+        self._named_professor_projections = named_professor_projections
+        self._institution_catalog = institution_catalog
 
     def plan(self, request: QueryPlanningRequest) -> RetrievalPlan:
         validated_request = _validated_exact_model(
@@ -383,13 +545,73 @@ class _ReleaseBoundQueryPlanner(_QueryPlanner):
             raise IsolatedQueryPlanningIntegrityError(
                 "planning request release differs from the isolated bundle"
             )
-        plan = self._delegate.plan(validated_request)
+        request_rebuilt = False
+        if not validated_request.displayed_entity_ids:
+            named_source = _resolve_named_professor_research_source(
+                validated_request.original_query,
+                self._named_professor_projections,
+            )
+            if named_source is not None:
+                request_rebuilt = True
+                payload = validated_request.model_dump(
+                    mode="json",
+                    exclude={"content_sha256"},
+                )
+                payload["displayed_entity_ids"] = [
+                    named_source.canonical_identity_id
+                ]
+                payload["displayed_entity_names"] = [named_source.name]
+                validated_request = _validated_exact_model(
+                    QueryPlanningRequest.model_validate(payload),
+                    QueryPlanningRequest,
+                    "planning request",
+                )
+        if (
+            self._ambiguity_delegate is not None
+            and not validated_request.displayed_entity_ids
+            and not validated_request.ambiguity_candidates
+        ):
+            same_name_candidates = _resolve_same_name_professor_candidates(
+                validated_request.original_query,
+                self._named_professor_projections,
+                self._institution_catalog,
+            )
+            if same_name_candidates:
+                request_rebuilt = True
+                payload = validated_request.model_dump(
+                    mode="json",
+                    exclude={
+                        "content_sha256",
+                        "original_query_sha256",
+                        "ambiguity_candidate_manifest_sha256",
+                    },
+                )
+                payload["ambiguity_candidates"] = [
+                    candidate.model_dump(mode="json")
+                    for candidate in same_name_candidates
+                ]
+                validated_request = _validated_exact_model(
+                    QueryPlanningRequest.model_validate(payload),
+                    QueryPlanningRequest,
+                    "planning request",
+                )
+        delegate = (
+            self._ambiguity_delegate
+            if self._ambiguity_delegate is not None
+            and validated_request.ambiguity_candidates
+            else self._delegate
+        )
+        plan = delegate.plan(validated_request)
         if plan.release_id != self._release_id or plan.release_binding is not None:
             raise IsolatedQueryPlanningIntegrityError(
                 "delegated plan differs from its release binding"
             )
         payload = plan.model_dump(mode="json", exclude={"content_sha256"})
         payload["release_binding"] = self._release_binding.model_dump(mode="json")
+        if request_rebuilt:
+            # The plan must still bind the caller's original request; the
+            # named-source/ambiguity injections only enrich its constraints.
+            payload["request_sha256"] = request.content_sha256
         return RetrievalPlan.model_validate(payload)
 
 
@@ -528,14 +750,35 @@ def create_isolated_release_query_planner(
         planning_policy=validated_policy,
         institution_catalog=validated_catalog,
         proposal_provider=proposal_provider,
-        ambiguity_policy=validated_ambiguity_policy,
         person_references=person_references,
         technology_routes=technology_routes,
+    )
+    # The injected ambiguity policy gates only requests that actually carry
+    # ambiguity candidates; every other request plans on the policy-free
+    # delegate so an absent candidate set can never block ordinary queries.
+    ambiguity_delegate = (
+        create_ephemeral_query_planner(
+            planning_policy=validated_policy,
+            institution_catalog=validated_catalog,
+            proposal_provider=proposal_provider,
+            ambiguity_policy=validated_ambiguity_policy,
+            person_references=person_references,
+            technology_routes=technology_routes,
+        )
+        if validated_ambiguity_policy is not None
+        else None
     )
     return _ReleaseBoundQueryPlanner(
         release_id=validated_bundle.release_id,
         release_binding=release_binding,
         delegate=delegate,
+        ambiguity_delegate=ambiguity_delegate,
+        named_professor_projections=tuple(
+            projection
+            for projection in candidate_result.public_domain_projections
+            if isinstance(projection, ProfessorProjection)
+        ),
+        institution_catalog=validated_catalog,
     )
 
 
@@ -960,6 +1203,7 @@ def create_isolated_release_knowledge_read(
     embedding_adapter: EmbeddingAdapter | None = None,
     reuse_audited_vector_snapshot: bool = False,
     vectorized_recall: bool = False,
+    fast_boot: bool = False,
     index_projection_request: IndexProjectionRequest | None = None,
     release_institution_catalog: InstitutionCatalog | None = None,
     identity_fuser: Callable[[IdentityFusionRequest], object] | None = None,
@@ -1034,6 +1278,8 @@ def create_isolated_release_knowledge_read(
         raise TypeError("vectorized_recall must be a Boolean")
     if vectorized_recall and not reuse_audited_vector_snapshot:
         raise ValueError("vectorized_recall requires an audited reusable snapshot")
+    if not isinstance(fast_boot, bool):
+        raise TypeError("fast_boot must be a Boolean")
     if (index_projection_request is None) != (release_institution_catalog is None):
         raise IsolatedKnowledgeReadIntegrityError(
             "index projection request and institution catalog must be provided as one pair"
@@ -1092,6 +1338,7 @@ def create_isolated_release_knowledge_read(
             embedding_adapter=embedding_adapter,
             reuse_audited_snapshot=reuse_audited_vector_snapshot,
             vectorized_scoring=vectorized_recall,
+            fast_boot=fast_boot,
         )
         supported_lanes.add("vector")
     if internal_reference_authority is not None:
@@ -6640,6 +6887,7 @@ def create_isolated_vector_recall_adapter(
     embedding_adapter: EmbeddingAdapter,
     reuse_audited_snapshot: bool = False,
     vectorized_scoring: bool = False,
+    fast_boot: bool = False,
 ) -> Callable[[LaneRequest], RetrievalLaneResult]:
     """Bind deterministic semantic recall to one fully audited isolated release."""
 
@@ -6666,6 +6914,10 @@ def create_isolated_vector_recall_adapter(
         raise TypeError("vectorized_scoring must be a Boolean")
     if vectorized_scoring and not reuse_audited_snapshot:
         raise ValueError("vectorized_scoring requires an audited reusable snapshot")
+    if not isinstance(fast_boot, bool):
+        raise TypeError("fast_boot must be a Boolean")
+    if fast_boot and not reuse_audited_snapshot:
+        raise ValueError("fast_boot requires an audited reusable snapshot")
     cached_snapshot: IsolatedIndexSnapshot | None = None
     snapshot_lock = Lock()
     vectorized_index: tuple[dict[str, int], Any, Any] | None = None
@@ -6687,7 +6939,12 @@ def create_isolated_vector_recall_adapter(
         with snapshot_lock:
             if cached_snapshot is None:
                 snapshot = _validated_vector_snapshot(
-                    audit_isolated_index_snapshot(
+                    open_manifest_verified_index_snapshot(
+                        validated_bundle.index_target,
+                        expected_embedding_model_id=expected_model_id,
+                    )
+                    if fast_boot
+                    else audit_isolated_index_snapshot(
                         validated_bundle.index_target,
                         embedding_adapter=validating_adapter,
                     )
