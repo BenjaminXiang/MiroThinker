@@ -698,6 +698,41 @@ def _unsupported_product_claim(part: MaterialQuestionPart) -> MaterialClaim:
     )
 
 
+def _attributed_claim(
+    *,
+    request: TurnRequest,
+    item: EvidenceItem,
+    selector_claim_ids: frozenset[str],
+    index: int,
+) -> MaterialClaim | None:
+    """Build a grounding-checked claim directly from an attributed web item.
+
+    Used when the selector's own claims did not bind the conversation scope:
+    the item's claim binding supplies the claim skeleton and ``_ground_claim``
+    re-verifies evidence presence, binding consistency, and text hygiene, so
+    the fallback stays behind the same guardrails as selector claims.
+    """
+    binding = item.claim_binding
+    if binding is None:
+        return None
+    return _ground_claim(
+        MaterialClaimProposal(
+            claim_id=f"claim:attributed:{request.turn_id}:{index}",
+            text=item.snippet[:240],
+            subject_id=binding.subject_id,
+            predicate=binding.predicate,
+            value=binding.value,
+            status=binding.status,
+            subject_handle_ids=(),
+            evidence_ids=(item.evidence_id,),
+            source_natures=(item.source_nature,),
+            synthesis=False,
+        ),
+        evidence_set=request.evidence_set,
+        selector_claim_ids=selector_claim_ids,
+    )
+
+
 def _mapping(claim: MaterialClaim) -> ClaimEvidenceMapping:
     return ClaimEvidenceMapping(
         claim_id=claim.claim_id,
@@ -1612,11 +1647,44 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
                 self._sessions[session_key] = session_snapshot
             else:
                 self._sessions.pop(session_key, None)
-            return self._degraded(
-                request,
-                reason="unsupported_material_claim",
-                additional_limitations=tuple(limitations),
+            attributed = tuple(
+                item
+                for item in request.evidence_set.items
+                if item.claim_binding is not None
+                and item.source_nature in {"current_web", "supplemental_web"}
             )
+            if attributed:
+                fallback_claims = tuple(
+                    claim
+                    for index, item in enumerate(attributed[:5])
+                    if (
+                        claim := _attributed_claim(
+                            request=request,
+                            item=item,
+                            selector_claim_ids=selector_claim_ids,
+                            index=index,
+                        )
+                    )
+                    is not None
+                )
+                if fallback_claims:
+                    limitations.append(
+                        AnswerLimitation(
+                            code="attributed_evidence_fallback",
+                            material=False,
+                            reason=(
+                                "Selector claims did not bind the conversation scope; "
+                                "answering from attributed web evidence instead."
+                            ),
+                        )
+                    )
+                    claims = fallback_claims
+            if not claims:
+                return self._degraded(
+                    request,
+                    reason="unsupported_material_claim",
+                    additional_limitations=tuple(limitations),
+                )
         gap_limitations, gap_sentences = _material_gap_outputs(
             request.evidence_set,
             existing_limitations=tuple(limitations),

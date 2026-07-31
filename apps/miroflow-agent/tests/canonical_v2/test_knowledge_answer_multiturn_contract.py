@@ -2012,3 +2012,110 @@ def test_prose_path_suppresses_deterministic_gap_jargon() -> None:
     assert "保留证据不足以支持问题中的 2026 年当前营收。" in (
         fallback_result.answer_text
     )
+
+
+def test_zero_bound_claims_fails_open_with_attributed_web_evidence() -> None:
+    """All proposal claims dropped by scope must not hard-degrade when
+    bindable web evidence exists: answer from attributed evidence instead."""
+    module = _answer_module()
+    read_module = _read_module()
+    snapshot_bytes = b"Recorded hotel delivery page for Ninebot."
+    snapshot_sha256 = hashlib.sha256(snapshot_bytes).hexdigest()
+    web_item = _item(
+        read_module,
+        evidence_id="web-evidence:ninebot-hotel",
+        object_id="web-object:sha256:ninebot",
+        domain="company",
+        subject_id="web-object:sha256:ninebot",
+        predicate="display_identity",
+        value="九号机器人酒店配送",
+        snippet="九号机器人酒店配送方案：面向酒店客房送餐与楼宇配送场景。",
+        lane="web",
+        source_nature="current_web",
+        source_locator="https://example.test/ninebot-hotel",
+        web_snapshot=read_module.WebEvidenceSnapshot(
+            snapshot_id=f"web-snapshot:sha256:{snapshot_sha256}",
+            content_sha256=snapshot_sha256,
+            retrieved_at=NOW,
+            byte_length=len(snapshot_bytes),
+        ),
+    )
+    company_ids = ("company:fail-open-alpha", "company:fail-open-beta")
+    company_names = ("阿尔法机器人", "贝塔智能")
+    company_items = tuple(
+        _item(
+            read_module,
+            evidence_id=f"evidence:{company_id}",
+            object_id=company_id,
+            domain="company",
+            subject_id=company_id,
+            predicate="preferred_name",
+            value=name,
+            snippet=f"{name} 是一家深圳机器人企业。",
+        )
+        for company_id, name in zip(company_ids, company_names, strict=True)
+    )
+    company_handles = tuple(
+        _canonical_handle(
+            read_module,
+            canonical_id=company_id,
+            domain="company",
+            display_name=name,
+            evidence_ids=(f"evidence:{company_id}",),
+        )
+        for company_id, name in zip(company_ids, company_names, strict=True)
+    )
+    first_request = _request(
+        module,
+        session_id="session:s9m:fail-open",
+        turn_id="turn:fail-open:1",
+        query="列出两家机器人公司",
+        evidence_set=_evidence_set(
+            read_module,
+            query="列出两家机器人公司",
+            items=company_items,
+            handles=company_handles,
+        ),
+    )
+    second_request = _request(
+        module,
+        session_id="session:s9m:fail-open",
+        turn_id="turn:fail-open:2",
+        query="这些公司的酒店配送能力如何",
+        evidence_set=_evidence_set(
+            read_module,
+            query="这些公司的酒店配送能力如何",
+            items=(web_item,),
+        ),
+    )
+
+    def selector(request: Any) -> Any:
+        if request.turn_id == "turn:fail-open:1":
+            return _proposal(
+                module,
+                request,
+                displayed_handle_ids=company_ids,
+            )
+        return _proposal(
+            module,
+            request,
+            displayed_handle_ids=(),
+            claims=(
+                (
+                    "claim:out-of-scope",
+                    "一家不在展示集内的公司。",
+                    ("company:elsewhere",),
+                    (web_item.evidence_id,),
+                ),
+            ),
+        )
+
+    answer = module.create_ephemeral_knowledge_answer(answer_selector=selector)
+    answer.answer(first_request)
+    result = answer.answer(second_request)
+    assert result.response_mode == "answer"
+    assert "九号机器人酒店配送" in result.answer_text
+    assert any(
+        limitation.code == "attributed_evidence_fallback"
+        for limitation in result.limitations
+    )
