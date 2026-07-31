@@ -400,12 +400,15 @@ class _ConversationClient:
             answer_text = payload.get("answer_text")
             if not isinstance(answer_text, str) or not answer_text.strip():
                 contract_errors.append("response lacks a readable answer")
-            structured = payload.get("structured_payload")
-            trace = structured.get("canonical_v2") if isinstance(structured, dict) else None
-            if not isinstance(trace, dict):
-                contract_errors.append("response lacks a Canonical V2 trace")
-            elif trace.get("release_id") != expected_release_id:
-                contract_errors.append("response crossed the expected Candidate release")
+            # The sanitized public envelope intentionally exposes no release ID
+            # or internal trace (12.5b public-evidence contract). The Candidate
+            # release binding is established by the operator-controlled launch;
+            # per turn we only require the public Canonical V2 answer type.
+            query_type = payload.get("query_type")
+            if not isinstance(query_type, str) or not query_type.startswith(
+                "canonical_v2:"
+            ):
+                contract_errors.append("response lacks a Canonical V2 answer type")
         return self._turn_result(
             turn,
             status="contract_error" if contract_errors else "ok",
@@ -497,6 +500,45 @@ def _replay_conversation(
     )
 
 
+def _replay_single_session(
+    benchmark: WorkbookBenchmark,
+    *,
+    origin: str,
+    expected_release_id: str,
+    timeout_seconds: float,
+) -> tuple[ReplayConversation, ...]:
+    """Replay every conversation through ONE shared session, in workbook order.
+
+    Cross-topic stress mode: turns from later conversations arrive after
+    unrelated earlier topics, so referent binding and topic-switch handling
+    are exercised exactly the way a real user mixes topics in one chat.
+    """
+
+    client = _ConversationClient(origin=origin, timeout_seconds=timeout_seconds)
+    session_id, reset_error = client.reset()
+    if reset_error is not None or session_id is None:
+        return tuple(
+            _failed_conversation(
+                conversation,
+                error=reset_error or "session reset failed",
+            )
+            for conversation in benchmark.conversations
+        )
+    return tuple(
+        ReplayConversation(
+            conversation_id=conversation.conversation_id,
+            question_number=conversation.question_number,
+            workbook_label=conversation.workbook_label,
+            session_id=session_id,
+            turns=tuple(
+                client.chat(turn, expected_release_id=expected_release_id)
+                for turn in conversation.turns
+            ),
+        )
+        for conversation in benchmark.conversations
+    )
+
+
 def replay_benchmark(
     benchmark: WorkbookBenchmark,
     *,
@@ -504,6 +546,7 @@ def replay_benchmark(
     expected_release_id: str,
     workers: int,
     timeout_seconds: float,
+    single_session: bool = False,
 ) -> BenchmarkReplay:
     """Run conversations concurrently while preserving strict turn order per session."""
 
@@ -515,19 +558,27 @@ def replay_benchmark(
     if not 0 < timeout_seconds <= 3600:
         raise WorkbookReplayError("timeout must be within (0, 3600] seconds")
 
-    def execute(conversation: WorkbookConversation) -> ReplayConversation:
-        return _replay_conversation(
-            conversation,
+    if single_session:
+        conversations = _replay_single_session(
+            benchmark,
             origin=origin,
             expected_release_id=expected_release_id,
             timeout_seconds=timeout_seconds,
         )
+    else:
+        def execute(conversation: WorkbookConversation) -> ReplayConversation:
+            return _replay_conversation(
+                conversation,
+                origin=origin,
+                expected_release_id=expected_release_id,
+                timeout_seconds=timeout_seconds,
+            )
 
-    with ThreadPoolExecutor(
-        max_workers=min(workers, len(benchmark.conversations)),
-        thread_name_prefix="customer-workbook",
-    ) as executor:
-        conversations = tuple(executor.map(execute, benchmark.conversations))
+        with ThreadPoolExecutor(
+            max_workers=min(workers, len(benchmark.conversations)),
+            thread_name_prefix="customer-workbook",
+        ) as executor:
+            conversations = tuple(executor.map(execute, benchmark.conversations))
     turns = tuple(turn for item in conversations for turn in item.turns)
     ok_count = sum(turn.status == "ok" for turn in turns)
     summary = {
@@ -756,6 +807,15 @@ def _parser() -> argparse.ArgumentParser:
         default=min(17, os.cpu_count() or 1),
     )
     parser.add_argument("--timeout-seconds", type=float, default=900.0)
+    parser.add_argument(
+        "--single-session",
+        action="store_true",
+        help=(
+            "replay every conversation through one shared session in workbook "
+            "order (cross-topic stress mode) instead of one session per "
+            "conversation"
+        ),
+    )
     return parser
 
 
@@ -769,6 +829,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             expected_release_id=args.expected_release_id,
             workers=args.workers,
             timeout_seconds=args.timeout_seconds,
+            single_session=args.single_session,
         )
         write_replay_outputs(
             replay,

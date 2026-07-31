@@ -4149,3 +4149,64 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   `43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc`; the disposable Candidate
   `publish.active_release` count remains zero. No source/canonical/index content, pointer, production
   resource, promotion, archive, cleanup, or Cutover changed.
+
+## S12D relation-aware Web and LLM repair Candidate — 2026-07-29
+
+- Status is Candidate, not user Accepted. Tasks 12.5h1, 12.5h2, and 12.5i are complete. Task 12.5
+  remains direct user acceptance and Task 12.6 remains separately authorized Cutover.
+- RED/GREEN covers typed headquarters versus registered/office/branch/service geography,
+  conjunctive versus disjunctive Product capability, relation evidence beyond the Web cap, final-LLM
+  claim/entity selection, short-brand text, bounded pinyin-domain identity, deceptive domains, and
+  unrelated robot brands. No Product, Company, URL, or exact user question is hard-coded.
+- Fresh checks: isolated serving `77 passed`; KnowledgeAnswer contracts `44 passed`; Admin chat,
+  keep-warm, and real-preview UI `38 passed`. Changed-file Ruff passed; targeted Pyright reported
+  zero errors and warnings; strict OpenSpec and `git diff --check` passed.
+- On final PID `948136`, the same-session supplier, Shenzhen-headquarters, mechanical-arm elevator,
+  and access-card/door turns returned HTTP 200 in 7.961, 3.757, 1.565, and 1.274 seconds. The second
+  answer retains only Shenzhen Pudu; the third identifies FlashBot Arm and direct mechanical-arm
+  elevator operation; the fourth confirms FlashBot Arm access-card and door operation. All four are
+  `llm_synthesized` with `citations=[]` and `evidence=[]`.
+- Browser verification found `查看依据` closed by default and, after expansion, only the official
+  Tsinghua Ding Wenbo homepage. The final public root returns `302 /chat`; no chat navigation or
+  public response exposes `/browse`, the private-network URL, internal evidence, or selector trace.
+- The original Milvus SHA-256 remains
+  `43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc`; the disposable Candidate
+  `publish.active_release` count remains zero. No source/canonical/index content, active pointer,
+  promotion, archive, cleanup, or Cutover changed.
+
+## S12D referent, recall, and serving-pack repair — 2026-07-31
+
+- Status remains In Progress, not user Accepted. This entry covers the systemic repair round driven
+  by direct user evaluation of the customer workbook (17 conversations / 25 turns), spanning
+  referent resolution, ambiguity, Web fallback, recall engineering, presentation discipline, and
+  startup engineering.
+- Defect classes repaired with RED/GREEN evidence: type-blind referent binding and no cross-topic
+  referent memory (bounded referent history, type-aware binding, explicit-new-subject precedence);
+  intra-query set antecedents misread as unbound referents; Web-only and question-scoped evidence
+  dropped before the answer (question-scoped claims bind to the turn scope; part subjects stay
+  admissible when the candidate window is full); supplemental probes failing systematically
+  (1 s Serper deadline, 3-company cap, founder-wording family, over-long brand aliases, missing
+  page-fetch enrichment); recall gaps (enumeration candidate window 13 to 24, local claims 8 to 16,
+  Web results 5 to 8, LLM query rewriting with a deterministic fallback view and a 2 s hard bound,
+  theme-verification probes binding `theme_relevance` evidence per uncovered enumeration
+  candidate); presentation defects (named-unconfirmed lists, deterministic gap jargon contradicting
+  prose answers, proper-noun fidelity, meta-narration) through prose prompt v5 to v8 and prose-path
+  gap-sentence suppression; boot-time full vector re-audit and the 426 MB envelope as a serving
+  input (manifest-verified fast boot plus a Serving Pack/Loader that rebuilds byte-identical
+  in-memory authority).
+- Fresh checks: miroflow `672 passed` (`uv run pytest -q -n 4 tests/canonical_v2/` excluding 12
+  pre-existing HEAD failures), admin canonical-v2 `71 passed`, changed-file Ruff and targeted
+  Pyright report zero errors.
+- Final workbook replay (PID `3419271`, serving-pack boot in about 95 seconds) completed 25/25
+  turns with zero transport or contract failures and zero degenerate-presentation turns in both
+  independent-session (workers=4) and single-session cross-topic modes. Mechanical KEY screening
+  reports one residual hard failure: hotel-supplier turn 1 still omits 开普勒 (stale profile, below
+  the real vector window) and 九号机器人 (theme-probe binding succeeds but remains provider-variance
+  bound). Concept questions 11-16, cross-topic referent follow-ups, and all Web-fallback questions
+  now answer with on-topic, reference-comparable content.
+- Boot measurements on identical index bytes: envelope path 811.3 s / 8.49 GB peak versus
+  serving-pack path 27.5 s / 1.85 GB peak, with plan and evidence-set byte equality proven.
+- The original Milvus SHA-256 remains
+  `43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc`; the disposable Candidate
+  `publish.active_release` count remains zero. No source/canonical/index content, active pointer,
+  production resource, promotion, archive, cleanup, or Cutover changed.

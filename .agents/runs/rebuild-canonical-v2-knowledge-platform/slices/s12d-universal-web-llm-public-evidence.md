@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress
+Candidate
 
 ## Parent
 
@@ -28,8 +28,8 @@ provider paths responsive after long idle periods without adding work to the rea
 
 - `apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_serving_isolated.py`
 - `apps/admin-console/backend/services/canonical_v2_keepwarm.py`
-- `apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_answer.py` for the non-serialized
-  current-query input passed to prose synthesis only.
+- `apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_answer.py` for the internal,
+  non-serialized prose-selection result and atomic answer-scope session commit only.
 - `apps/miroflow-agent/tests/canonical_v2/test_knowledge_serving_isolated.py`
 - `apps/admin-console/backend/services/canonical_v2_chat.py`
 - `apps/admin-console/backend/main.py`
@@ -85,6 +85,17 @@ provider paths responsive after long idle periods without adding work to the rea
 11. RED/GREEN: allow a current-Web citation only when it is explicitly official or its hostname
     matches the official hostname retained on the same canonical entity; replay the hotel robot
     three-turn case and sibling capability follow-ups before restarting the Candidate.
+12. RED/GREEN: derive one deterministic per-turn question frame for subject scope, headquarters
+    versus other location relations, requested values, and conjunctive Product-capability semantics;
+    preserve compact entity anchors in both provider queries and add no remote planning call.
+13. RED/GREEN: require the existing final prose LLM to return answer text plus candidate claim/entity
+    indexes, validate them against the current bounded input, and atomically narrow the next-turn
+    displayed set to the answer-selected entities. Plain-text output remains a typed compatibility
+    degradation and cannot forge a selection.
+14. RED/GREEN: rank direct relation evidence before the unchanged Web candidate cap and bind bounded
+    short-brand or pinyin-domain Web identities without Company-specific aliases.
+15. RED/GREEN: make the public root enter `/chat`, retain `/browse` only as an unadvertised internal
+    route, and replay the complete hotel-robot follow-up sequence on the restarted Candidate.
 
 ## Required checks
 
@@ -103,6 +114,11 @@ provider paths responsive after long idle periods without adding work to the rea
   receives both lanes for an unlisted capability phrase, and arbitrary Web URLs remain non-public.
 - Real three-turn hotel-delivery-robot replay proving direct Product-capability evidence can support
   the answer without a query-string or Company-specific production branch.
+- Parameterized relation-semantic tests distinguishing headquarters from registered address, office,
+  branch, service geography, and a city-prefixed legal name; conjunctive capability wording remains
+  one material requirement.
+- A single-call structured-prose test proving only validated claim/entity indexes affect citations
+  and next-turn displayed scope, with invalid or plain-text output retaining conservative behavior.
 
 ## Evidence to update
 

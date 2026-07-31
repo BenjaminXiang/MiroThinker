@@ -401,6 +401,44 @@ def audit_isolated_index_snapshot(
         raise IsolatedIndexTargetSafetyError(
             "embedding adapter dimension must be positive"
         )
+    return _open_verified_index_snapshot(
+        target,
+        expected_embedding_model_id=embedding_adapter.model_id,
+        embedding_adapter=embedding_adapter,
+    )
+
+
+def open_manifest_verified_index_snapshot(
+    target: IsolatedIndexTarget,
+    *,
+    expected_embedding_model_id: str,
+) -> IsolatedIndexSnapshot:
+    """Open the marked snapshot after manifest/hash binding, without re-embedding.
+
+    This is the fast-boot alternative to :func:`audit_isolated_index_snapshot`:
+    it performs the same marker, self-hashed receipt, projection-manifest,
+    lookup inventory, and Milvus collection checks and still reads every point
+    row with full per-row metadata binding, but it does not re-derive the stored
+    vectors from the embedding model. Stored vectors are write-time artifacts;
+    serving re-embeds ``embedded_content`` at query time, so skipping their
+    readback verification does not change query behavior. The caller must still
+    bind the returned snapshot to the accepted release bundle.
+    """
+
+    return _open_verified_index_snapshot(
+        target,
+        expected_embedding_model_id=expected_embedding_model_id,
+        embedding_adapter=None,
+    )
+
+
+def _open_verified_index_snapshot(
+    target: IsolatedIndexTarget,
+    *,
+    expected_embedding_model_id: str,
+    embedding_adapter: EmbeddingAdapter | None,
+) -> IsolatedIndexSnapshot:
+    _validate_target_marker(target)
     lookup_path = target.root / _LOOKUP_FILENAME
     receipt = _read_receipt(lookup_path)
     if receipt.release_id != target.release_id or receipt.target_id != target.target_id:
@@ -409,7 +447,7 @@ def audit_isolated_index_snapshot(
         )
     if any(
         manifest.release_id != target.release_id
-        or manifest.embedding_model != embedding_adapter.model_id
+        or manifest.embedding_model != expected_embedding_model_id
         for manifest in receipt.index_projections
     ) or any(
         manifest.release_id != target.release_id
@@ -657,7 +695,7 @@ def _read_all_points_with_client(
     client: Any,
     *,
     collection_name: str,
-    embedding_adapter: EmbeddingAdapter,
+    embedding_adapter: EmbeddingAdapter | None,
 ) -> tuple[IndexProjectionPoint, ...]:
     if not client.has_collection(collection_name):
         raise IndexProjectionIntegrityError("isolated Milvus collection is missing")
@@ -1057,6 +1095,7 @@ __all__ = [
     "RecordedEmbeddingAdapter",
     "audit_isolated_index_snapshot",
     "create_isolated_index_projection_builder",
+    "open_manifest_verified_index_snapshot",
     "prepare_isolated_index_target",
     "read_isolated_index_points",
     "read_isolated_lookup_documents",

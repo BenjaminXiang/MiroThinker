@@ -1308,3 +1308,53 @@
   swipe-card/door sibling follow-up still returns an evidence-insufficient false negative, and the
   headquarters turn still incorrectly includes Yunji Technology among Shenzhen-headquartered
   companies. Task 12.5 and Cutover remain open.
+
+## 2026-07-29 — S12D relation-aware Web and LLM repair Candidate
+
+- Added one deterministic question frame for relation semantics and retained displayed Company
+  anchors in both Web-provider queries. Direct headquarters and conjunctive Product-capability
+  evidence is prioritized before the unchanged five-result Web cap.
+- The existing final Qwen call now synthesizes local plus Web material and returns validated
+  claim/entity indexes. Only the selected answer scope is committed to the next turn; no additional
+  model or provider call was introduced.
+- Web identity now recognizes bounded short-brand context and a Chinese brand's pinyin plus a small
+  set of organization-domain suffixes. This binds official Product pages such as `pudutech.com`
+  while rejecting deceptive suffixes and unrelated robot brands; source authority remains governed
+  by the existing public-citation policy.
+- A real same-session four-turn replay completed in 7.961, 3.757, 1.565, and 1.274 seconds. It
+  excludes Yunji from Shenzhen headquarters, identifies FlashBot Arm for mechanical-arm elevator
+  operation, and confirms access-card/door operation. Public citations and evidence remain empty.
+- The public root now redirects to `/chat`; `/browse` remains an unadvertised internal tool. The
+  running read-only Candidate is bound to `0.0.0.0:18188`. Task 12.5i is complete, while Task 12.5
+  still requires direct user acceptance and Task 12.6 remains an unauthorized Cutover decision.
+
+## 2026-07-31 — S12D referent, recall, and serving-pack repair round
+
+- Referent resolution is now type-aware across the whole chat path: singular pronouns no longer
+  bind mismatched anchors, a bounded per-session referent history (cap 4) keeps pre-switch anchors
+  and displayed sets bindable across topic switches, explicitly named new subjects always win over
+  session context, and intra-query set antecedents ("…厂商，他们…") no longer trigger the
+  no-referent clarification.
+- Web fallback is now structurally reliable: every Web result carries a claim binding,
+  question-scoped aggregate evidence binds to the turn scope instead of being dropped, and
+  part-subject evidence stays admissible when the candidate window is full. Supplemental probes
+  cover person-criteria (founder/education with constraint-seeded discovery), displayed-set
+  relations, and theme verification for enumeration candidates, with a 3 s provider deadline,
+  page-fetch enrichment, and a 6.0-cost budget.
+- Recall engineering: enumeration queries widen the candidate window to 24 and the local claim
+  limit to 16, Web results rise to 8, list-style turns fetch the top 5 pages, and an environment-LLM
+  query rewriter decomposes multi-intent/thematic questions into up to three keyword views executed
+  concurrently with a deterministic fallback view (2 s hard bound, zero behavior change on
+  failure). Presentation discipline (prose v8) requires proper-noun fidelity, semantic
+  capability coverage, no named-unconfirmed lists, and completeness-first list answers; the
+  deterministic gap sentence no longer contradicts prose answers.
+- Startup engineering: a manifest-verified fast boot skips only the vector re-embedding audit, and
+  an opt-in Serving Pack (`--serving-pack` / `CANONICAL_V2_SERVING_PACK`) replaces the 426 MB
+  envelope and Postgres at serve time. Measured on identical index bytes: 811.3 s / 8.49 GB to
+  27.5 s / 1.85 GB with plan and evidence-set byte equality.
+- Verification: miroflow 672 passed, admin canonical-v2 71 passed, zero lint/type errors. The final
+  workbook replay passes 25/25 turns with zero degenerate turns in both independent-session and
+  single-session cross-topic modes; one residual KEY failure remains (开普勒/九号 in the
+  hotel-supplier list) and is tracked as a data-enrichment backlog item together with provider
+  variance hardening, pack generation at build/promote time, and the pre-existing internal-reference
+  and review-workspace failures.

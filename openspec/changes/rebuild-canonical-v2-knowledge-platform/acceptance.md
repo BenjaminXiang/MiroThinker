@@ -115,6 +115,9 @@ acceptance.
 - [x] Focused tests prove dual-provider merge/provenance/failure behavior and deterministic idle,
       activity, non-overlap, and shutdown semantics; real timing evidence covers warm and post-idle
       requests without weakening answer or public-evidence behavior.
+- [x] One real same-session hotel-robot replay narrows the displayed supplier set to Shenzhen Pudu,
+      excludes Beijing-headquartered Yunji, confirms FlashBot Arm mechanical-arm elevator operation,
+      and confirms access-card/door operation from direct retrieved Product evidence.
 - [x] `openspec validate rebuild-canonical-v2-knowledge-platform --strict` and `git diff --check`
       exit successfully.
 - [x] Repeated full-suite runs, independent slice reviews, blind calibration, scaled human labels,

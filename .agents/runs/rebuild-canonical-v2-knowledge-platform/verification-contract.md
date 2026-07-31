@@ -624,6 +624,25 @@ Last identity/hash check recorded in `verification.md`: `2026-07-12T08:40:35Z`.
 - Real runtime evidence records the three-turn answer, sources, render mode, Web trace, complete HTTP
   timing, public payload privacy, and unchanged original-source/active-pointer identities.
 
+#### S12D relation-aware answer-scope correction
+
+- RED question-frame tests distinguish `headquarters_city`, `registered_address`, `office_city`, and
+  generic geography; a city in a legal name, branch, office, or service-area sentence never proves a
+  headquarters relation. Product capability retains explicit conjunction semantics without a
+  planner/reranker/sufficiency LLM call.
+- RED dual-Web tests prove a displayed entity set remains represented in both provider queries. One
+  provider may use exact legal names and the other compact aliases, but neither may drop the entire
+  subject scope for a headquarters or Product-capability follow-up.
+- RED/GREEN prose tests prove the one existing final LLM call receives numbered entity/claim
+  candidates and may return only an answer plus selected numeric indexes. The server validates every
+  index, filters answer claims/citations to selected claims, and commits only selected answer
+  entities as the next displayed set.
+- Invalid structured indexes, malformed JSON, or legacy plain text cannot forge answer scope. The
+  existing grounded deterministic state remains available as a conservative degradation.
+- The critical path remains deterministic parsing, concurrent local plus dual-Web retrieval, and one
+  final prose LLM call. No per-entity LLM, agent loop, second synthesis call, online canonical write,
+  or original-source read/write is introduced.
+
 ## Required evidence shape
 
 Every verification run SHALL record:
