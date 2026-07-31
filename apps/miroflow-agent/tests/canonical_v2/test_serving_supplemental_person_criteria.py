@@ -79,6 +79,17 @@ def _disable_environment_query_rewriter(monkeypatch: pytest.MonkeyPatch) -> None
     )
 
 
+@pytest.fixture(autouse=True)
+def _disable_environment_llm_judge(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep probe acceptance deterministic: the production wiring builds a
+    real LLM judge inside ``load_recorded_serving_inputs``, and an API key is
+    resolvable in dev environments, so unpatched tests would make live LLM
+    calls. Disabling the judge keeps every test here on the deterministic
+    rule path; the LLM rescue itself is covered by the dedicated
+    ``test_probe_acceptance_*`` tests with test-owned judges."""
+    monkeypatch.setattr(serving_module, "create_llm_judge", lambda: None)
+
+
 def _bundle(tmp_path: Path) -> RecordedServingBundle:
     return RecordedServingBundle(
         schema_version="canonical-v2-serving-bundle-v1",
@@ -1415,3 +1426,107 @@ def test_theme_probes_verify_uncovered_enumeration_candidates(
     assert report is not None
     assert report.complete is True
     assert report.parts[0].outcome == "supported"
+
+
+def test_probe_acceptance_falls_back_to_llm_when_rules_reject() -> None:
+    """A paraphrase hit the rules miss gets rescued by the LLM judge.
+
+    Identity (迈步机器人) and the founding marker (创立) both rule-match, but
+    the literal constraint 早稻田 never appears in the text (the page uses the
+    paraphrase 早大), so the deterministic matcher rejects; only the LLM judge
+    can bind the paraphrased education back to the constraint.
+    """
+    from src.data_agents.canonical_v2 import llm_judgments as lj
+
+    class _Judge:
+        def __init__(self) -> None:
+            self.calls: list[dict[str, Any]] = []
+
+        def judge_batch(
+            self, kind: str, question: str, items: Any, context: str = ""
+        ) -> Any:
+            self.calls.append({"kind": kind, "items": items})
+            return (
+                lj.ProbeAcceptJudgment(
+                    item_id="hit-1",
+                    accept=True,
+                    entity_id="company-c-maibu",
+                    predicate="person_criteria",
+                    value="早稻田",
+                ),
+            )
+
+    judge = _Judge()
+    accepted = serving_module._accept_probe_hit(
+        judge=judge,
+        kind="person",
+        question=PERSON_QUERY,
+        entity_name=MAIBU_ROBOT_NAME,
+        semantics={"constraint": "早稻田"},
+        result=serving_module._NormalizedWebResult(
+            title="迈步团队- 迈步机器人",
+            url="https://example.test/maibu-team",
+            snippet="公司由海归博士技术团队创立，核心成员毕业于日本早大。",
+            summary="",
+            primary_provider_version="bocha-v1",
+            corroborating_provider_versions=("bocha-v1",),
+        ),
+    )
+    assert accepted is True
+    assert judge.calls and judge.calls[0]["kind"] == "probe_accept"
+    rendered = judge.calls[0]["items"]["hit-1"]
+    assert MAIBU_ROBOT_NAME in rendered
+    assert "早稻田" in rendered
+    assert "迈步团队" in rendered
+
+
+def test_probe_acceptance_rule_hit_skips_llm() -> None:
+    class _ExplodingJudge:
+        def judge_batch(self, **kwargs: Any) -> Any:
+            raise AssertionError("LLM must not be called on rule hits")
+
+    assert (
+        serving_module._accept_probe_hit(
+            judge=_ExplodingJudge(),
+            kind="person",
+            question="q",
+            entity_name=PASINI,
+            semantics={"constraint": "早稻田"},
+            result=serving_module._NormalizedWebResult(
+                title="帕西尼创始人许晋诚",
+                url="https://example.test/xu",
+                snippet="帕西尼感知科技（深圳）有限公司创始人许晋诚，毕业于早稻田大学。",
+                summary="",
+                primary_provider_version="bocha-v1",
+                corroborating_provider_versions=("bocha-v1",),
+            ),
+        )
+        is True
+    )
+
+
+def test_probe_acceptance_llm_failure_falls_back_to_rule_result() -> None:
+    class _TimeoutJudge:
+        last_outcome = "timeout_fail_open"
+
+        def judge_batch(self, **kwargs: Any) -> Any:
+            return ()
+
+    assert (
+        serving_module._accept_probe_hit(
+            judge=_TimeoutJudge(),
+            kind="person",
+            question="q",
+            entity_name=PASINI,
+            semantics={"constraint": "早稻田"},
+            result=serving_module._NormalizedWebResult(
+                title="电梯配件黄页",
+                url="https://example.test/junk",
+                snippet="电梯按钮箱与配件。",
+                summary="",
+                primary_provider_version="bocha-v1",
+                corroborating_provider_versions=("bocha-v1",),
+            ),
+        )
+        is False
+    )

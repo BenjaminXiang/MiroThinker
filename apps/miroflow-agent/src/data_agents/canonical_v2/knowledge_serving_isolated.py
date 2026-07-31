@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from copy import deepcopy
 from dataclasses import dataclass
@@ -79,6 +79,7 @@ from .knowledge_read import (
     _explicit_organization_name,
     _retention_values,
 )
+from .llm_judgments import create_llm_judge
 
 
 _ZERO_SHA256 = "0" * 64
@@ -1902,6 +1903,7 @@ class _ThemeProbeSpec:
 
 @dataclass(frozen=True, slots=True)
 class _ServingSupplementalContext:
+    question: str
     coverage_items: tuple[EvidenceItem, ...]
     person_part: MaterialQuestionPart | None
     person_constraint: str | None
@@ -2394,6 +2396,7 @@ def _serving_sufficiency_decider(
         context_store.record(
             request.plan_id,
             _ServingSupplementalContext(
+                question=request.original_query,
                 coverage_items=coverage_items,
                 person_part=person_parts[0] if person_parts else None,
                 person_constraint=person_constraint,
@@ -2600,6 +2603,58 @@ def _theme_evidence_match(
     return _theme_evidence_covers(core, text)
 
 
+def _accept_probe_hit(
+    *,
+    judge: Any | None,
+    kind: Literal["person", "relation", "theme"],
+    question: str,
+    entity_name: str,
+    semantics: Mapping[str, Any],
+    result: _NormalizedWebResult,
+) -> bool:
+    """Rule-first probe acceptance with an LLM rescue for rule misses.
+
+    The deterministic matchers stay the zero-cost pre-filter: a rule hit is
+    accepted without any LLM call, and without a judge the rule result
+    stands. Only a rule miss with a judge available asks the LLM, whose
+    fail-open default accepts (宁多勿漏 — the generation side filters).
+    ``default=str`` keeps the relation spec dataclass renderable.
+    """
+    if kind == "person":
+        rule_hit = _person_evidence_match(
+            result,
+            company=entity_name,
+            constraint=cast("str | None", semantics.get("constraint")),
+        )
+    elif kind == "relation":
+        rule_hit = _relation_evidence_match(
+            result,
+            spec=cast(_RelationProbeSpec, semantics["spec"]),
+        )
+    else:
+        rule_hit = _theme_evidence_match(
+            result,
+            company=entity_name,
+            core=cast(str, semantics["core"]),
+        )
+    if rule_hit or judge is None:
+        return rule_hit
+    rendered = (
+        f"实体：{entity_name}\n"
+        f"语义：{json.dumps(semantics, ensure_ascii=False, default=str)}\n"
+        f"标题：{result.title}\n"
+        f"摘要：{result.snippet}"
+    )
+    judgments = judge.judge_batch(
+        kind="probe_accept",
+        question=question,
+        items={"hit-1": rendered},
+    )
+    if not judgments:
+        return False
+    return bool(getattr(judgments[0], "accept", False))
+
+
 def _theme_probe_entity_form(entity_name: str) -> str:
     """The probe-query form of a candidate name.
 
@@ -2753,6 +2808,7 @@ def _serving_supplemental_search(
     budget: SupplementalBudget,
     clock: Callable[[], datetime],
     max_snapshot_bytes: int,
+    judge: Any | None = None,
 ) -> Callable[[SupplementalRequest], SupplementalLaneResult]:
     def search(request: SupplementalRequest) -> SupplementalLaneResult:
         started_at = monotonic()
@@ -2871,10 +2927,13 @@ def _serving_supplemental_search(
                         (
                             result
                             for result in results
-                            if _person_evidence_match(
-                                result,
-                                company=company,
-                                constraint=context.person_constraint,
+                            if _accept_probe_hit(
+                                judge=judge,
+                                kind="person",
+                                question=context.question,
+                                entity_name=company,
+                                semantics={"constraint": context.person_constraint},
+                                result=result,
                             )
                         ),
                         None,
@@ -2887,10 +2946,13 @@ def _serving_supplemental_search(
                         (
                             result
                             for result in results
-                            if _theme_evidence_match(
-                                result,
-                                company=spec.entity_name,
-                                core=spec.theme_core,
+                            if _accept_probe_hit(
+                                judge=judge,
+                                kind="theme",
+                                question=context.question,
+                                entity_name=spec.entity_name,
+                                semantics={"core": spec.theme_core},
+                                result=result,
                             )
                         ),
                         None,
@@ -2903,7 +2965,14 @@ def _serving_supplemental_search(
                         (
                             result
                             for result in results
-                            if _relation_evidence_match(result, spec=spec)
+                            if _accept_probe_hit(
+                                judge=judge,
+                                kind="relation",
+                                question=context.question,
+                                entity_name=spec.entity_name,
+                                semantics={"spec": spec},
+                                result=result,
+                            )
                         ),
                         None,
                     )
@@ -2967,6 +3036,7 @@ def _create_serving_person_criteria_sufficiency_supplemental(
     budget: SupplementalBudget,
     clock: Callable[[], datetime],
     max_snapshot_bytes: int,
+    judge: Any | None = None,
 ) -> tuple[
     Callable[[SufficiencyDecisionRequest], SufficiencyProposal | None],
     Callable[[SupplementalRequest], SupplementalLaneResult],
@@ -2995,6 +3065,7 @@ def _create_serving_person_criteria_sufficiency_supplemental(
             budget=budget,
             clock=clock,
             max_snapshot_bytes=max_snapshot_bytes,
+            judge=judge,
         ),
     )
 
@@ -3788,6 +3859,7 @@ def load_recorded_serving_inputs(
             budget=supplemental_budget,
             clock=clock,
             max_snapshot_bytes=bundle.web_snapshot_max_bytes,
+            judge=create_llm_judge(),
         )
     )
     return RecordedServingInputs(
