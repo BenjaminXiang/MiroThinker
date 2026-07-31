@@ -816,6 +816,7 @@ class _DualWebLaneAdapter:
         serper: Any | None = None,
         page_fetcher: Callable[[str], str | None] | None = None,
         extra_view_queries: Callable[[str], tuple[str, ...]] | None = None,
+        gap_judge: Any | None = None,
     ) -> None:
         self._timeout_ms = timeout_ms
         self._max_snapshot_bytes = max_snapshot_bytes
@@ -826,6 +827,7 @@ class _DualWebLaneAdapter:
         self._page_fetcher = page_fetcher
         self._page_fetch_timeout = max(2.0, provider_attempt_timeout)
         self._extra_view_queries = extra_view_queries
+        self._gap_judge = gap_judge
         self._executor = ThreadPoolExecutor(
             # 4 plan query views x 2 providers run concurrently per Web lane;
             # a smaller pool would serialize later views past their deadline.
@@ -1062,6 +1064,29 @@ class _DualWebLaneAdapter:
             else 2
         )
         organic = self._enrich_with_page_text(organic, depth=fetch_depth)
+        if self._gap_judge is not None and _should_rewrite_serving_query(
+            request.original_query
+        ):
+            digest = "\n".join(
+                f"- {item.title}：{item.snippet[:120]}" for item in organic[:8]
+            )
+            try:
+                gap_results = self._gap_judge.judge_batch(
+                    "gap_check",
+                    request.original_query,
+                    {"gap": digest},
+                )
+                gap = gap_results[0] if gap_results else None
+            except Exception:  # noqa: BLE001 - gap loop never breaks the lane
+                gap = None
+            if gap is not None and not gap.covered and gap.followup_queries:
+                followup_results = self._merged_results_for_views(
+                    tuple(gap.followup_queries[:2])
+                )
+                if followup_results:
+                    organic = _merge_web_results_across_views(
+                        [organic, followup_results]
+                    )
         if not organic:
             raise ConnectionError("Bocha and Serper Web search are unavailable")
         candidates: list[RecallCandidate] = []
@@ -3884,6 +3909,7 @@ def load_recorded_serving_inputs(
         clock=clock,
         page_fetcher=page_fetcher,
         extra_view_queries=query_view_store.views_for,
+        gap_judge=create_llm_judge(),
     )
     keepwarm_bocha = BochaSearchProvider(timeout=provider_attempt_timeout)
     keepwarm_serper = WebSearchProvider(timeout=provider_attempt_timeout)

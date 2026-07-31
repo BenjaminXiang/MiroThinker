@@ -233,6 +233,28 @@ def _web_items(evidence_set: Any) -> list[Any]:
     return [item for item in evidence_set.items if item.lane == "web"]
 
 
+def _lane_request(query: str) -> LaneRequest:
+    return LaneRequest(
+        lane="web",
+        release_id=RELEASE_ID,
+        query_view="view:test",
+        original_query=query,
+        behavior_class="A",
+        interaction_mode="information_retrieval",
+        web_policy=WebSearchPolicy(
+            mode="universal",
+            max_provider_calls=2,
+            timeout_ms=10_000,
+            max_results=5,
+        ),
+        query_text=query,
+        domains=("company",),
+        protected_slots=(),
+        structured_constraints=StructuredConstraints(),
+        max_candidates=12,
+    )
+
+
 def test_multi_intent_query_fans_out_all_views_concurrently(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -811,3 +833,70 @@ def test_bocha_garbage_keeps_good_serper_hits() -> None:
         "https://example.test/brand-one",
         "https://example.test/brand-two",
     ]
+
+
+def test_gap_check_triggers_one_bounded_followup_round() -> None:
+    """A covered=False gap check fires at most two follow-up queries and merges
+    their results by URL; a covered check stays a pure single pass."""
+    from src.data_agents.canonical_v2 import llm_judgments as lj
+
+    queries: list[str] = []
+
+    def fake_search_provider(query: str) -> dict[str, Any]:
+        queries.append(query)
+        if query == "具身智能 遥操作 动捕 具体方式":
+            return {
+                "organic": [
+                    _organic(
+                        "具身智能遥操作与动捕数据采集综述",
+                        "https://example.test/teleop",
+                        "遥操作与动作捕捉是真实数据采集的两条主路。",
+                    )
+                ]
+            }
+        return {
+            "organic": [
+                _organic(
+                    "行业新闻",
+                    "https://example.test/news",
+                    "机器人行业动态。",
+                )
+            ]
+        }
+
+    class _Judge:
+        def judge_batch(
+            self,
+            kind: str,
+            question: str,
+            items: Any,
+            context: str = "",
+        ) -> Any:
+            return (
+                lj.GapCheckResult(
+                    covered=False,
+                    missing_aspects=("真实数据采集具体方式",),
+                    followup_queries=(
+                        "具身智能 遥操作 动捕 具体方式",
+                        "具身智能 真机数据 采集",
+                        "第三条不该发",
+                    ),
+                ),
+            )
+
+    adapter = serving_module._DualWebLaneAdapter(
+        timeout_ms=10_000,
+        max_snapshot_bytes=8_192,
+        clock=lambda: NOW,
+        bocha=SimpleNamespace(search=fake_search_provider),
+        serper=SimpleNamespace(search=lambda query: {"organic": []}),
+        page_fetcher=None,
+        gap_judge=_Judge(),
+    )
+    result = adapter(_lane_request("在真实数据采集路线中，有哪些具体方式"))
+    assert queries.count("具身智能 遥操作 动捕 具体方式") == 1
+    assert queries.count("具身智能 真机数据 采集") == 1
+    assert "第三条不该发" not in queries
+    assert any(
+        "遥操作" in candidate.evidence[0].snippet for candidate in result.candidates
+    )
