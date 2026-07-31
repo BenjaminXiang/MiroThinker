@@ -79,17 +79,6 @@ def _disable_environment_query_rewriter(monkeypatch: pytest.MonkeyPatch) -> None
     )
 
 
-@pytest.fixture(autouse=True)
-def _disable_environment_llm_judge(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Keep probe acceptance deterministic: the production wiring builds a
-    real LLM judge inside ``load_recorded_serving_inputs``, and an API key is
-    resolvable in dev environments, so unpatched tests would make live LLM
-    calls. Disabling the judge keeps every test here on the deterministic
-    rule path; the LLM rescue itself is covered by the dedicated
-    ``test_probe_acceptance_*`` tests with test-owned judges."""
-    monkeypatch.setattr(serving_module, "create_llm_judge", lambda: None)
-
-
 def _bundle(tmp_path: Path) -> RecordedServingBundle:
     return RecordedServingBundle(
         schema_version="canonical-v2-serving-bundle-v1",
@@ -1506,11 +1495,20 @@ def test_probe_acceptance_rule_hit_skips_llm() -> None:
 
 
 def test_probe_acceptance_llm_failure_falls_back_to_rule_result() -> None:
+    """A failed judge keeps the rule result instead of admitting the miss.
+
+    The real harness degrades to per-item fail-open defaults (accept=True)
+    with ``last_outcome`` marked ``*_fail_open``; honoring those defaults
+    would admit exactly the noise the rules rejected, so the rule result
+    stands and only a successful ("ok") judgment can recover a rule miss.
+    """
+    from src.data_agents.canonical_v2 import llm_judgments as lj
+
     class _TimeoutJudge:
         last_outcome = "timeout_fail_open"
 
         def judge_batch(self, **kwargs: Any) -> Any:
-            return ()
+            return (lj.ProbeAcceptJudgment(item_id="hit-1", accept=True),)
 
     assert (
         serving_module._accept_probe_hit(
@@ -1530,3 +1528,56 @@ def test_probe_acceptance_llm_failure_falls_back_to_rule_result() -> None:
         )
         is False
     )
+
+
+def test_probe_acceptance_batches_rule_misses_into_one_judge_call() -> None:
+    """Per probe job, every rule-miss result rides ONE batched judge call.
+
+    Both results rule-miss (the first lacks any founder marker, the second
+    paraphrases the constraint as 早大), so neither short-circuits; the LLM
+    rejects hit-1 but accepts hit-2, so the second result wins, and exactly
+    one judge_batch call carries both entries in result order.
+    """
+    from src.data_agents.canonical_v2 import llm_judgments as lj
+
+    class _BatchJudge:
+        def __init__(self) -> None:
+            self.calls: list[dict[str, Any]] = []
+            self.last_outcome = "ok"
+
+        def judge_batch(self, **kwargs: Any) -> Any:
+            self.calls.append(kwargs)
+            return tuple(
+                lj.ProbeAcceptJudgment(item_id=item_id, accept=item_id == "hit-2")
+                for item_id in kwargs["items"]
+            )
+
+    judge = _BatchJudge()
+    first = serving_module._NormalizedWebResult(
+        title="迈步团队- 迈步机器人",
+        url="https://example.test/maibu-news",
+        snippet="公司发布新一代康复外骨骼机器人。",
+        summary="",
+        primary_provider_version="bocha-v1",
+        corroborating_provider_versions=("bocha-v1",),
+    )
+    second = serving_module._NormalizedWebResult(
+        title="迈步团队- 迈步机器人",
+        url="https://example.test/maibu-team",
+        snippet="公司由海归博士技术团队创立，核心成员毕业于日本早大。",
+        summary="",
+        primary_provider_version="bocha-v1",
+        corroborating_provider_versions=("bocha-v1",),
+    )
+    accepted = serving_module._select_probe_hit(
+        judge=judge,
+        kind="person",
+        question=PERSON_QUERY,
+        entity_name=MAIBU_ROBOT_NAME,
+        semantics={"constraint": "早稻田"},
+        results=(first, second),
+    )
+    assert accepted is second
+    assert len(judge.calls) == 1
+    assert judge.calls[0]["kind"] == "probe_accept"
+    assert list(judge.calls[0]["items"]) == ["hit-1", "hit-2"]

@@ -2603,6 +2603,53 @@ def _theme_evidence_match(
     return _theme_evidence_covers(core, text)
 
 
+def _probe_rule_hit(
+    *,
+    kind: Literal["person", "relation", "theme"],
+    entity_name: str,
+    semantics: Mapping[str, Any],
+    result: _NormalizedWebResult,
+) -> bool:
+    """The deterministic zero-cost pre-filter for one probe result."""
+    if kind == "person":
+        return _person_evidence_match(
+            result,
+            company=entity_name,
+            constraint=cast("str | None", semantics.get("constraint")),
+        )
+    if kind == "relation":
+        return _relation_evidence_match(
+            result,
+            spec=cast(_RelationProbeSpec, semantics["spec"]),
+        )
+    return _theme_evidence_match(
+        result,
+        company=entity_name,
+        core=cast(str, semantics["core"]),
+    )
+
+
+def _render_probe_hit(
+    *,
+    entity_name: str,
+    semantics: Mapping[str, Any],
+    result: _NormalizedWebResult,
+) -> str:
+    # ``default=str`` keeps the relation spec dataclass renderable.
+    return (
+        f"实体：{entity_name}\n"
+        f"语义：{json.dumps(semantics, ensure_ascii=False, default=str)}\n"
+        f"标题：{result.title}\n"
+        f"摘要：{result.snippet}"
+    )
+
+
+def _judge_failed(judge: Any) -> bool:
+    """True when the judge's latest batch degraded to fail-open defaults."""
+    outcome = getattr(judge, "last_outcome", "ok")
+    return isinstance(outcome, str) and "fail_open" in outcome
+
+
 def _accept_probe_hit(
     *,
     judge: Any | None,
@@ -2614,45 +2661,92 @@ def _accept_probe_hit(
 ) -> bool:
     """Rule-first probe acceptance with an LLM rescue for rule misses.
 
-    The deterministic matchers stay the zero-cost pre-filter: a rule hit is
-    accepted without any LLM call, and without a judge the rule result
-    stands. Only a rule miss with a judge available asks the LLM, whose
-    fail-open default accepts (宁多勿漏 — the generation side filters).
-    ``default=str`` keeps the relation spec dataclass renderable.
+    A rule hit short-circuits without any LLM call, and without a judge the
+    rule result stands. A rule miss is judged by the LLM, but only a
+    successful ("ok") judgment can recover it: when the judge degraded to
+    fail-open defaults (``last_outcome`` marked ``*_fail_open``), the rule
+    result is kept, because the harness's fail-open defaults accept
+    everything and would admit exactly the noise the rules rejected.
     """
-    if kind == "person":
-        rule_hit = _person_evidence_match(
-            result,
-            company=entity_name,
-            constraint=cast("str | None", semantics.get("constraint")),
-        )
-    elif kind == "relation":
-        rule_hit = _relation_evidence_match(
-            result,
-            spec=cast(_RelationProbeSpec, semantics["spec"]),
-        )
-    else:
-        rule_hit = _theme_evidence_match(
-            result,
-            company=entity_name,
-            core=cast(str, semantics["core"]),
-        )
+    rule_hit = _probe_rule_hit(
+        kind=kind,
+        entity_name=entity_name,
+        semantics=semantics,
+        result=result,
+    )
     if rule_hit or judge is None:
         return rule_hit
-    rendered = (
-        f"实体：{entity_name}\n"
-        f"语义：{json.dumps(semantics, ensure_ascii=False, default=str)}\n"
-        f"标题：{result.title}\n"
-        f"摘要：{result.snippet}"
-    )
     judgments = judge.judge_batch(
         kind="probe_accept",
         question=question,
-        items={"hit-1": rendered},
+        items={
+            "hit-1": _render_probe_hit(
+                entity_name=entity_name,
+                semantics=semantics,
+                result=result,
+            )
+        },
     )
+    if _judge_failed(judge):
+        return rule_hit
     if not judgments:
         return False
     return bool(getattr(judgments[0], "accept", False))
+
+
+def _select_probe_hit(
+    *,
+    judge: Any | None,
+    kind: Literal["person", "relation", "theme"],
+    question: str,
+    entity_name: str,
+    semantics: Mapping[str, Any],
+    results: tuple[_NormalizedWebResult, ...],
+) -> _NormalizedWebResult | None:
+    """Pick one job's accepted probe result: batch-then-pick.
+
+    The first rule hit in result order wins outright and never spends an
+    LLM call. Only when no result rule-matches are the misses rendered and
+    judged in ONE batched ``judge_batch`` call; the first accepted entry in
+    original result order wins. A failed batch (``*_fail_open``) accepts
+    nothing, keeping the deterministic rule outcome.
+    """
+    misses: list[_NormalizedWebResult] = []
+    for result in results:
+        if _probe_rule_hit(
+            kind=kind,
+            entity_name=entity_name,
+            semantics=semantics,
+            result=result,
+        ):
+            return result
+        misses.append(result)
+    if judge is None or not misses:
+        return None
+    item_ids = tuple(f"hit-{index}" for index in range(1, len(misses) + 1))
+    judgments = judge.judge_batch(
+        kind="probe_accept",
+        question=question,
+        items={
+            item_id: _render_probe_hit(
+                entity_name=entity_name,
+                semantics=semantics,
+                result=result,
+            )
+            for item_id, result in zip(item_ids, misses, strict=True)
+        },
+    )
+    if _judge_failed(judge):
+        return None
+    accepted_ids = {
+        str(getattr(judgment, "item_id", ""))
+        for judgment in judgments
+        if bool(getattr(judgment, "accept", False))
+    }
+    for item_id, result in zip(item_ids, misses, strict=True):
+        if item_id in accepted_ids:
+            return result
+    return None
 
 
 def _theme_probe_entity_form(entity_name: str) -> str:
@@ -2923,58 +3017,37 @@ def _serving_supplemental_search(
                     continue
                 if job[0] == "person":
                     company = person_jobs[job[1]]
-                    hit = next(
-                        (
-                            result
-                            for result in results
-                            if _accept_probe_hit(
-                                judge=judge,
-                                kind="person",
-                                question=context.question,
-                                entity_name=company,
-                                semantics={"constraint": context.person_constraint},
-                                result=result,
-                            )
-                        ),
-                        None,
+                    hit = _select_probe_hit(
+                        judge=judge,
+                        kind="person",
+                        question=context.question,
+                        entity_name=company,
+                        semantics={"constraint": context.person_constraint},
+                        results=results,
                     )
                     if hit is not None:
                         person_findings.append((company, hit))
                 elif job[0] == "theme":
                     spec = theme_jobs[job[1]]
-                    hit = next(
-                        (
-                            result
-                            for result in results
-                            if _accept_probe_hit(
-                                judge=judge,
-                                kind="theme",
-                                question=context.question,
-                                entity_name=spec.entity_name,
-                                semantics={"core": spec.theme_core},
-                                result=result,
-                            )
-                        ),
-                        None,
+                    hit = _select_probe_hit(
+                        judge=judge,
+                        kind="theme",
+                        question=context.question,
+                        entity_name=spec.entity_name,
+                        semantics={"core": spec.theme_core},
+                        results=results,
                     )
                     if hit is not None:
                         theme_findings.append((spec, hit))
                 else:
                     spec = relation_jobs[job[1]]
-                    hit = next(
-                        (
-                            result
-                            for result in results
-                            if _accept_probe_hit(
-                                judge=judge,
-                                kind="relation",
-                                question=context.question,
-                                entity_name=spec.entity_name,
-                                semantics={"spec": spec},
-                                result=result,
-                            )
-                        ),
-                        None,
+                    hit = _select_probe_hit(
+                        judge=judge,
+                        kind="relation",
+                        question=context.question,
+                        entity_name=spec.entity_name,
+                        semantics={"spec": spec},
+                        results=results,
                     )
                     if hit is not None:
                         relation_findings.append((spec, hit))
