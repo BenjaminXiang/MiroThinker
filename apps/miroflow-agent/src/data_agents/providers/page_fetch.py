@@ -4,12 +4,18 @@ The serving Web lane uses this to deepen high-quality search results: fetch the
 page itself and ground the answer in its actual content instead of a thin
 snippet. No external reader service is required (the deployment network cannot
 reach r.jina.ai); everything degrades to the original snippet on any failure.
+
+Fetching is tiered: `create_tiered_page_fetcher` keeps the direct httpx+BS4
+fetch as tier 0 and only escalates thin or blocked results (JS shells, access
+gates) to a lazily-started headless Chromium tier 1. Headless failures fall
+back to the tier-0 result, preserving the snippet semantics.
 """
 
 from __future__ import annotations
 
 import re
-from typing import Any
+from threading import BoundedSemaphore, Lock
+from typing import Any, Callable
 
 from bs4 import BeautifulSoup
 import httpx
@@ -96,4 +102,107 @@ def fetch_page_text(
         return None
 
 
-__all__ = ["extract_main_text", "fetch_page_text"]
+_MIN_RICH_TEXT_CHARS = 400
+_SCRIPT_RATIO_LIMIT = 0.6
+_BROWSER_TEXT_LIMIT = 4000
+_BLOCK_MARKERS = (
+    "访问验证",
+    "安全验证",
+    "请开启JavaScript",
+    "请开启 JavaScript",
+    "403 Forbidden",
+    "Too Many Requests",
+)
+_SCRIPT_RE = re.compile(r"(?s)<script[^>]*>.*?</script>")
+
+
+def _is_thin_or_blocked(html_or_text: str | None) -> bool:
+    """Decide whether a tier-0 result is too thin or blocked to keep.
+
+    The input is whatever the direct fetcher returned: either extracted main
+    text (the real `fetch_page_text`) or a raw shell page (JS app shells and
+    access gates that slipped past extraction). None, near-empty text, known
+    block markers, or a page dominated by <script> markup all count as thin.
+    """
+    if html_or_text is None:
+        return True
+    if any(marker in html_or_text for marker in _BLOCK_MARKERS):
+        return True
+    if len(html_or_text.strip()) < _MIN_RICH_TEXT_CHARS:
+        return True
+    script_chars = sum(len(match.group(0)) for match in _SCRIPT_RE.finditer(html_or_text))
+    return script_chars / len(html_or_text) > _SCRIPT_RATIO_LIMIT
+
+
+class _PlaywrightPagePool:
+    """Lazily-started headless Chromium with bounded page concurrency."""
+
+    def __init__(self, browser_factory: Callable[[], Any] | None = None) -> None:
+        self._browser_factory = browser_factory
+        self._playwright: Any | None = None
+        self._browser: Any | None = None
+        self._lock = Lock()
+        self._semaphore = BoundedSemaphore(2)
+
+    def _browser_instance(self) -> Any:
+        with self._lock:
+            if self._browser is None:
+                if self._browser_factory is not None:
+                    self._browser = self._browser_factory()
+                else:
+                    from playwright.sync_api import sync_playwright
+
+                    self._playwright = sync_playwright().start()
+                    self._browser = self._playwright.chromium.launch(
+                        headless=True,
+                        args=["--disable-blink-features=AutomationControlled"],
+                    )
+        return self._browser
+
+    def fetch(self, url: str, *, timeout_ms: int = 5000) -> str | None:
+        with self._semaphore:
+            page = self._browser_instance().new_page()
+            try:
+                page.goto(url, timeout=timeout_ms, wait_until="domcontentloaded")
+                text = page.eval_on_selector("body", "el => el.innerText")
+            finally:
+                close = getattr(page, "close", None)
+                if callable(close):
+                    close()
+        if not isinstance(text, str) or not text.strip():
+            return None
+        return text.strip()[:_BROWSER_TEXT_LIMIT]
+
+
+def create_tiered_page_fetcher(
+    *,
+    browser_factory: Callable[[], Any] | None = None,
+    direct_fetcher: Callable[[str], str | None] | None = None,
+) -> Callable[[str], str | None]:
+    """T0 direct fetch with a T1 headless-Chromium fallback on thin results.
+
+    Tier 0 is `direct_fetcher or fetch_page_text`. When its result is thin or
+    blocked, tier 1 renders the page in headless Chromium (started lazily, at
+    most two pages at a time). Any tier failure keeps the tier-0 result, so
+    the caller still degrades to the original snippet.
+    """
+    direct = direct_fetcher or fetch_page_text
+    pool: _PlaywrightPagePool | None = None
+
+    def fetch(url: str) -> str | None:
+        nonlocal pool
+        direct_text = direct(url)
+        if not _is_thin_or_blocked(direct_text):
+            return direct_text
+        if pool is None:
+            pool = _PlaywrightPagePool(browser_factory)
+        try:
+            rendered = pool.fetch(url)
+        except Exception:  # noqa: BLE001 - headless failure keeps the snippet
+            return direct_text
+        return rendered if rendered is not None else direct_text
+
+    return fetch
+
+
+__all__ = ["create_tiered_page_fetcher", "extract_main_text", "fetch_page_text"]

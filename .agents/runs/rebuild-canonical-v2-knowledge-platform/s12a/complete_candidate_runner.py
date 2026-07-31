@@ -895,7 +895,7 @@ def _production_dependencies(config: RunnerConfig) -> RunnerDependencies:
             expected_index_root=value.index_root,
             expected_envelope_path=value.envelope_output,
             embedding_adapter=load_embeddings(value.recorded_embedding_bundle),
-            page_fetcher=page_fetch_module.fetch_page_text,
+            page_fetcher=page_fetch_module.create_tiered_page_fetcher(),
         )
 
     pack_loader_module = None

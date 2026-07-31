@@ -14,7 +14,11 @@ from src.data_agents.canonical_v2.knowledge_read import (
     StructuredConstraints,
     WebSearchPolicy,
 )
-from src.data_agents.providers.page_fetch import extract_main_text, fetch_page_text
+from src.data_agents.providers.page_fetch import (
+    create_tiered_page_fetcher,
+    extract_main_text,
+    fetch_page_text,
+)
 
 NOW = datetime(2026, 7, 29, 8, 0, tzinfo=timezone.utc)
 
@@ -110,6 +114,55 @@ def test_fetch_page_text_success_and_failures() -> None:
         is None
     )
     assert fetch_page_text("ftp://example.com") is None
+
+
+def test_thin_direct_result_escalates_to_headless() -> None:
+    """JS-shell/thin direct pages escalate to the headless tier; rich direct
+    pages never start the browser."""
+    calls: list[str] = []
+
+    class _FakePage:
+        def __init__(self, text: str) -> None:
+            self._text = text
+
+        def goto(self, url: str, timeout: int, wait_until: str) -> None:
+            calls.append(url)
+
+        def eval_on_selector(self, selector: str, script: str) -> str:
+            return self._text
+
+    class _FakeBrowser:
+        def new_page(self) -> Any:
+            return _FakePage("开普勒探索者D1酒店配送机器人正式发布。" * 30)
+
+    fetcher = create_tiered_page_fetcher(
+        browser_factory=lambda: _FakeBrowser(),
+        direct_fetcher=lambda url: "<html><body><script>var x=1;</script></body></html>",
+    )
+    text = fetcher("https://example.test/js-shell")
+    assert calls == ["https://example.test/js-shell"]
+    assert "开普勒探索者D1酒店配送机器人" in (text or "")
+
+    calls.clear()
+    rich = "<html><body><p>" + "酒店送餐机器人主流品牌评测。" * 60 + "</p></body></html>"
+    rich_fetcher = create_tiered_page_fetcher(
+        browser_factory=lambda: (_ for _ in ()).throw(AssertionError("browser must not start")),
+        direct_fetcher=lambda url: rich,
+    )
+    assert rich_fetcher("https://example.test/static") is not None
+    assert calls == []
+
+
+def test_headless_failure_keeps_the_snippet() -> None:
+    class _HangBrowser:
+        def new_page(self) -> Any:
+            raise ConnectionError("browser crashed")
+
+    fetcher = create_tiered_page_fetcher(
+        browser_factory=lambda: _HangBrowser(),
+        direct_fetcher=lambda url: None,
+    )
+    assert fetcher("https://example.test/dead") is None
 
 
 def _lane_request(query: str) -> LaneRequest:
