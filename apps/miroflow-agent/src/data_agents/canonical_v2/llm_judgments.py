@@ -249,8 +249,7 @@ def _parse_results(
         if isinstance(entry, dict) and isinstance(entry.get("item_id"), str)
     }
     return tuple(
-        _parse_item_judgment(kind, item_id, entries.get(item_id))
-        for item_id in items
+        _parse_item_judgment(kind, item_id, entries.get(item_id)) for item_id in items
     )
 
 
