@@ -14,7 +14,8 @@ back to the tier-0 result, preserving the snippet semantics.
 from __future__ import annotations
 
 import re
-from threading import BoundedSemaphore, Lock
+from concurrent.futures import ThreadPoolExecutor
+from threading import Lock
 from typing import Any, Callable
 
 from bs4 import BeautifulSoup
@@ -135,43 +136,73 @@ def _is_thin_or_blocked(html_or_text: str | None) -> bool:
 
 
 class _PlaywrightPagePool:
-    """Lazily-started headless Chromium with bounded page concurrency."""
+    """Lazily-started headless Chromium pinned to one dedicated thread.
+
+    Playwright's sync dispatcher is bound to the thread that started it, while
+    the serving Web lane calls the fetcher from a shared thread pool. Every
+    browser operation is therefore submitted to a single dedicated worker, so
+    T1 throughput is one page at a time by design (bounded by the 5s page
+    timeout). A browser that fails to launch is never retried; tier 0 keeps
+    serving alone thereafter.
+    """
 
     def __init__(self, browser_factory: Callable[[], Any] | None = None) -> None:
         self._browser_factory = browser_factory
         self._playwright: Any | None = None
         self._browser: Any | None = None
+        self._launch_failed = False
         self._lock = Lock()
-        self._semaphore = BoundedSemaphore(2)
+        self._t1 = ThreadPoolExecutor(
+            max_workers=1,
+            thread_name_prefix="canonical-v2-tiered-fetch",
+        )
+
+    def _start_browser(self) -> Any:
+        if self._browser_factory is not None:
+            return self._browser_factory()
+        from playwright.sync_api import sync_playwright
+
+        playwright = sync_playwright().start()
+        try:
+            browser = playwright.chromium.launch(
+                headless=True,
+                args=["--disable-blink-features=AutomationControlled"],
+            )
+        except Exception:
+            playwright.stop()  # do not leak the driver when launch fails
+            raise
+        self._playwright = playwright
+        return browser
 
     def _browser_instance(self) -> Any:
         with self._lock:
             if self._browser is None:
-                if self._browser_factory is not None:
-                    self._browser = self._browser_factory()
-                else:
-                    from playwright.sync_api import sync_playwright
-
-                    self._playwright = sync_playwright().start()
-                    self._browser = self._playwright.chromium.launch(
-                        headless=True,
-                        args=["--disable-blink-features=AutomationControlled"],
-                    )
+                if self._launch_failed:
+                    raise RuntimeError("headless Chromium launch previously failed")
+                try:
+                    self._browser = self._start_browser()
+                except Exception:
+                    self._launch_failed = True
+                    raise
         return self._browser
 
-    def fetch(self, url: str, *, timeout_ms: int = 5000) -> str | None:
-        with self._semaphore:
-            page = self._browser_instance().new_page()
-            try:
-                page.goto(url, timeout=timeout_ms, wait_until="domcontentloaded")
-                text = page.eval_on_selector("body", "el => el.innerText")
-            finally:
-                close = getattr(page, "close", None)
-                if callable(close):
-                    close()
+    def _fetch_on_t1(self, url: str, *, timeout_ms: int) -> str | None:
+        page = self._browser_instance().new_page()
+        try:
+            page.set_default_timeout(timeout_ms)
+            page.goto(url, timeout=timeout_ms, wait_until="domcontentloaded")
+            text = page.eval_on_selector("body", "el => el.innerText")
+        finally:
+            close = getattr(page, "close", None)
+            if callable(close):
+                close()
         if not isinstance(text, str) or not text.strip():
             return None
         return text.strip()[:_BROWSER_TEXT_LIMIT]
+
+    def fetch(self, url: str, *, timeout_ms: int = 5000) -> str | None:
+        future = self._t1.submit(self._fetch_on_t1, url, timeout_ms=timeout_ms)
+        return future.result()
 
 
 def create_tiered_page_fetcher(
@@ -182,20 +213,17 @@ def create_tiered_page_fetcher(
     """T0 direct fetch with a T1 headless-Chromium fallback on thin results.
 
     Tier 0 is `direct_fetcher or fetch_page_text`. When its result is thin or
-    blocked, tier 1 renders the page in headless Chromium (started lazily, at
-    most two pages at a time). Any tier failure keeps the tier-0 result, so
-    the caller still degrades to the original snippet.
+    blocked, tier 1 renders the page in headless Chromium (browser started
+    lazily, one page at a time on a dedicated thread). Any tier failure keeps
+    the tier-0 result, so the caller still degrades to the original snippet.
     """
     direct = direct_fetcher or fetch_page_text
-    pool: _PlaywrightPagePool | None = None
+    pool = _PlaywrightPagePool(browser_factory)
 
     def fetch(url: str) -> str | None:
-        nonlocal pool
         direct_text = direct(url)
         if not _is_thin_or_blocked(direct_text):
             return direct_text
-        if pool is None:
-            pool = _PlaywrightPagePool(browser_factory)
         try:
             rendered = pool.fetch(url)
         except Exception:  # noqa: BLE001 - headless failure keeps the snippet

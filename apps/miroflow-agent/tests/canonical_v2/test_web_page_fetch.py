@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
+from threading import get_ident
 from types import SimpleNamespace
 from typing import Any
 
@@ -15,6 +17,7 @@ from src.data_agents.canonical_v2.knowledge_read import (
     WebSearchPolicy,
 )
 from src.data_agents.providers.page_fetch import (
+    _PlaywrightPagePool,
     create_tiered_page_fetcher,
     extract_main_text,
     fetch_page_text,
@@ -125,6 +128,9 @@ def test_thin_direct_result_escalates_to_headless() -> None:
         def __init__(self, text: str) -> None:
             self._text = text
 
+        def set_default_timeout(self, timeout: int) -> None:
+            pass
+
         def goto(self, url: str, timeout: int, wait_until: str) -> None:
             calls.append(url)
 
@@ -163,6 +169,47 @@ def test_headless_failure_keeps_the_snippet() -> None:
         direct_fetcher=lambda url: None,
     )
     assert fetcher("https://example.test/dead") is None
+
+
+def test_headless_browser_ops_run_on_one_dedicated_thread() -> None:
+    """Playwright's sync dispatcher is bound to the thread that started it,
+    so every browser operation must run on the pool's single dedicated thread
+    even when fetch() is called concurrently from the serving thread pool."""
+    op_threads: list[int] = []
+
+    class _RecordingPage:
+        def set_default_timeout(self, timeout: int) -> None:
+            op_threads.append(get_ident())
+
+        def goto(self, url: str, timeout: int, wait_until: str) -> None:
+            op_threads.append(get_ident())
+
+        def eval_on_selector(self, selector: str, script: str) -> str:
+            op_threads.append(get_ident())
+            return "九号机器人酒店配送机型评测。" * 30
+
+        def close(self) -> None:
+            op_threads.append(get_ident())
+
+    class _RecordingBrowser:
+        def new_page(self) -> Any:
+            op_threads.append(get_ident())
+            return _RecordingPage()
+
+    pool = _PlaywrightPagePool(browser_factory=_RecordingBrowser)
+    assert pool._t1._max_workers == 1
+
+    with ThreadPoolExecutor(max_workers=2) as callers:
+        texts = list(
+            callers.map(
+                pool.fetch,
+                ["https://example.test/thin-a", "https://example.test/thin-b"],
+            )
+        )
+
+    assert all(text is not None for text in texts)
+    assert len(op_threads) > 1
+    assert len(set(op_threads)) == 1
 
 
 def _lane_request(query: str) -> LaneRequest:
