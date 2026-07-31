@@ -1642,11 +1642,6 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             and not advance.suppress_claims
             and (resolved_referent is None or resolved_referent.kind == "current_turn")
         ):
-            if session_existed:
-                assert session_snapshot is not None
-                self._sessions[session_key] = session_snapshot
-            else:
-                self._sessions.pop(session_key, None)
             attributed = tuple(
                 item
                 for item in request.evidence_set.items
@@ -1680,6 +1675,15 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
                     )
                     claims = fallback_claims
             if not claims:
+                # Only a real degrade rolls the session back: a successful
+                # attributed fallback answers through the normal pipeline and
+                # keeps the turn's session state (prose scope commits and
+                # follow-up turns depend on it).
+                if session_existed:
+                    assert session_snapshot is not None
+                    self._sessions[session_key] = session_snapshot
+                else:
+                    self._sessions.pop(session_key, None)
                 return self._degraded(
                     request,
                     reason="unsupported_material_claim",

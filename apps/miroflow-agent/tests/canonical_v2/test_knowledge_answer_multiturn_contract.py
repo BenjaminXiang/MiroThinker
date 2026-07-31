@@ -2119,3 +2119,233 @@ def test_zero_bound_claims_fails_open_with_attributed_web_evidence() -> None:
         limitation.code == "attributed_evidence_fallback"
         for limitation in result.limitations
     )
+    assert result.claims[0].evidence_ids == (web_item.evidence_id,)
+    assert tuple(mapping.claim_id for mapping in result.claim_evidence_map) == tuple(
+        claim.claim_id for claim in result.claims
+    )
+    assert result.citations
+
+
+def test_first_turn_attributed_fallback_keeps_session_for_prose_scope() -> None:
+    """First-turn fail-open must keep the session state the turn created.
+
+    The fallback branch restores the session snapshot before knowing whether
+    attributed evidence can answer; on a first turn that pops the session
+    ``_advance_session`` just created, and a prose renderer selecting a
+    displayed entity then dies with a KeyError in ``_commit_prose_scope``.
+    The restore belongs to the degrade path only: a successful fallback keeps
+    the turn's session state and the prose scope commit works.
+    """
+    module = _answer_module()
+    read_module = _read_module()
+    snapshot_bytes = b"Recorded hotel delivery page for Ninebot."
+    snapshot_sha256 = hashlib.sha256(snapshot_bytes).hexdigest()
+    web_item = _item(
+        read_module,
+        evidence_id="web-evidence:ninebot-hotel",
+        object_id="web-object:sha256:ninebot",
+        domain="company",
+        subject_id="web-object:sha256:ninebot",
+        predicate="display_identity",
+        value="九号机器人酒店配送",
+        snippet="九号机器人酒店配送方案：面向酒店客房送餐与楼宇配送场景。",
+        lane="web",
+        source_nature="current_web",
+        source_locator="https://example.test/ninebot-hotel",
+        web_snapshot=read_module.WebEvidenceSnapshot(
+            snapshot_id=f"web-snapshot:sha256:{snapshot_sha256}",
+            content_sha256=snapshot_sha256,
+            retrieved_at=NOW,
+            byte_length=len(snapshot_bytes),
+        ),
+    )
+    company_ids = ("company:prose-scope-alpha", "company:prose-scope-beta")
+    company_names = ("阿尔法机器人", "贝塔智能")
+    company_items = tuple(
+        _item(
+            read_module,
+            evidence_id=f"evidence:{company_id}",
+            object_id=company_id,
+            domain="company",
+            subject_id=company_id,
+            predicate="preferred_name",
+            value=name,
+            snippet=f"{name} 是一家深圳机器人企业。",
+        )
+        for company_id, name in zip(company_ids, company_names, strict=True)
+    )
+    company_handles = tuple(
+        _canonical_handle(
+            read_module,
+            canonical_id=company_id,
+            domain="company",
+            display_name=name,
+            evidence_ids=(f"evidence:{company_id}",),
+        )
+        for company_id, name in zip(company_ids, company_names, strict=True)
+    )
+    request = _request(
+        module,
+        session_id="session:s9m:fail-open-prose",
+        turn_id="turn:fail-open-prose:1",
+        query="列出两家机器人公司并说明酒店配送能力",
+        evidence_set=_evidence_set(
+            read_module,
+            query="列出两家机器人公司并说明酒店配送能力",
+            items=(*company_items, web_item),
+            handles=company_handles,
+        ),
+    )
+
+    def selector(value: Any) -> Any:
+        return _proposal(
+            module,
+            value,
+            displayed_handle_ids=company_ids,
+            claims=(
+                (
+                    "claim:out-of-scope",
+                    "一家不在展示集内的公司。",
+                    ("company:elsewhere",),
+                    (web_item.evidence_id,),
+                ),
+            ),
+        )
+
+    def prose(result: Any) -> Any:
+        return module.ProseSynthesisResult(
+            answer_text=f"根据留存快照：{result.claims[0].text}",
+            selected_claim_ids=tuple(claim.claim_id for claim in result.claims),
+            selected_handle_ids=(company_ids[0],),
+        )
+
+    answer = module.create_ephemeral_knowledge_answer(
+        answer_selector=selector,
+        prose_renderer=prose,
+    )
+    result = answer.answer(request)
+    assert result.render_mode == "prose_renderer"
+    assert "九号机器人酒店配送" in result.answer_text
+    assert any(
+        limitation.code == "attributed_evidence_fallback"
+        for limitation in result.limitations
+    )
+
+
+def test_attributed_items_failing_grounding_keep_the_degrade() -> None:
+    """Attributed fallback candidates must clear the same grounding guardrails
+    as selector claims. Here the web item's snippet leaks its own evidence id
+    (a structured-only value), so ``_ground_claim`` rejects the fallback claim
+    and the turn keeps the original ``unsupported_material_claim`` degrade
+    instead of answering from unsafe text."""
+    module = _answer_module()
+    read_module = _read_module()
+    snapshot_bytes = b"Recorded hotel delivery page for Ninebot."
+    snapshot_sha256 = hashlib.sha256(snapshot_bytes).hexdigest()
+    leaky_web_item = _item(
+        read_module,
+        evidence_id="web-evidence:ninebot-hotel-leaky",
+        object_id="web-object:sha256:ninebot",
+        domain="company",
+        subject_id="web-object:sha256:ninebot",
+        predicate="display_identity",
+        value="九号机器人酒店配送",
+        snippet=(
+            "九号机器人酒店配送方案详情见 "
+            "web-evidence:ninebot-hotel-leaky 快照页。"
+        ),
+        lane="web",
+        source_nature="current_web",
+        source_locator="https://example.test/ninebot-hotel",
+        web_snapshot=read_module.WebEvidenceSnapshot(
+            snapshot_id=f"web-snapshot:sha256:{snapshot_sha256}",
+            content_sha256=snapshot_sha256,
+            retrieved_at=NOW,
+            byte_length=len(snapshot_bytes),
+        ),
+    )
+    company_ids = ("company:degrade-alpha", "company:degrade-beta")
+    company_names = ("阿尔法机器人", "贝塔智能")
+    company_items = tuple(
+        _item(
+            read_module,
+            evidence_id=f"evidence:{company_id}",
+            object_id=company_id,
+            domain="company",
+            subject_id=company_id,
+            predicate="preferred_name",
+            value=name,
+            snippet=f"{name} 是一家深圳机器人企业。",
+        )
+        for company_id, name in zip(company_ids, company_names, strict=True)
+    )
+    company_handles = tuple(
+        _canonical_handle(
+            read_module,
+            canonical_id=company_id,
+            domain="company",
+            display_name=name,
+            evidence_ids=(f"evidence:{company_id}",),
+        )
+        for company_id, name in zip(company_ids, company_names, strict=True)
+    )
+    first_request = _request(
+        module,
+        session_id="session:s9m:fail-open-degrade",
+        turn_id="turn:fail-open-degrade:1",
+        query="列出两家机器人公司",
+        evidence_set=_evidence_set(
+            read_module,
+            query="列出两家机器人公司",
+            items=company_items,
+            handles=company_handles,
+        ),
+    )
+    second_request = _request(
+        module,
+        session_id="session:s9m:fail-open-degrade",
+        turn_id="turn:fail-open-degrade:2",
+        query="这些公司的酒店配送能力如何",
+        evidence_set=_evidence_set(
+            read_module,
+            query="这些公司的酒店配送能力如何",
+            items=(leaky_web_item,),
+        ),
+    )
+
+    def selector(request: Any) -> Any:
+        if request.turn_id == "turn:fail-open-degrade:1":
+            return _proposal(
+                module,
+                request,
+                displayed_handle_ids=company_ids,
+            )
+        return _proposal(
+            module,
+            request,
+            displayed_handle_ids=(),
+            claims=(
+                (
+                    "claim:out-of-scope",
+                    "一家不在展示集内的公司。",
+                    ("company:elsewhere",),
+                    (leaky_web_item.evidence_id,),
+                ),
+            ),
+        )
+
+    answer = module.create_ephemeral_knowledge_answer(answer_selector=selector)
+    answer.answer(first_request)
+    result = answer.answer(second_request)
+    assert result.claims == ()
+    assert result.render_mode == "deterministic_fallback"
+    assert result.answer_text == "No supported material claims are available."
+    assert any(
+        limitation.code == "answer_selection_rejected"
+        and limitation.reason == "unsupported_material_claim"
+        for limitation in result.limitations
+    )
+    assert all(
+        limitation.code != "attributed_evidence_fallback"
+        for limitation in result.limitations
+    )
