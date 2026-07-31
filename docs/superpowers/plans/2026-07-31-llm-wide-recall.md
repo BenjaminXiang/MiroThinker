@@ -496,6 +496,8 @@ git commit -m "feat(canonical_v2): add batched fail-open LLM judgment harness"
 - Modify: `apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_serving_isolated.py`（探针验收三处：`_person_evidence_match`、`_relation_evidence_match`、`_theme_evidence_match` 的调用点，统一走 `_accept_probe_hit`）
 - Test: `apps/miroflow-agent/tests/canonical_v2/test_serving_supplemental_person_criteria.py`（扩）
 
+**接口校准（Task 1 实现后）：** 已交付的判定接口为 `judge.judge_batch(kind, question, items: Mapping[str, str], context: str = "")`——items 是 `item_id → 正文文本` 的映射（rich 内容由调用方渲染进字符串），gap_check 以 `judge_batch("gap_check", question, {"gap": digest})` 调用并取结果首条；无独立 `gap_check` 方法。以下任务的 judge 调用均以此为准。
+
 **设计要点：** 新增 `_accept_probe_hit(*, judge, kind, question, entity_name, semantics, result) -> bool`：先试规则函数（现有族，作为快速预筛），**规则拒绝时再问 LLM**（`probe_accept` kind，单条 prompt 含 question/entity/semantics/title/snippet）；LLM 超时/失败 → 采用规则结果（fail-open 到规则，而非到 accept）。这样规则命中的零成本、规则漏掉的由 LLM 捞回，既有测试全部不动（规则路径保留），新增测试只覆盖"规则拒绝但 LLM 接受/规则拒绝 LLM 也拒绝/LLM 失败回规则"。
 
 - [ ] **Step 1: 写失败测试（追加到 `test_serving_supplemental_person_criteria.py`）**
@@ -513,8 +515,8 @@ def test_probe_acceptance_falls_back_to_llm_when_rules_reject(
         def __init__(self) -> None:
             self.calls: list[dict[str, Any]] = []
 
-        def judge_batch(self, *, kind: str, question: str, items: Any, context: Any = None) -> Any:
-            self.calls.append({"kind": kind, "items": tuple(items)})
+        def judge_batch(self, kind: str, question: str, items: Any, context: str = "") -> Any:
+            self.calls.append({"kind": kind, "items": items})
             return (
                 lj.ProbeAcceptJudgment(
                     item_id="hit-1",
@@ -637,18 +639,15 @@ def _accept_probe_hit(
     }[kind]()
     if rule_hit or judge is None:
         return rule_hit
+    rendered = (
+        f"实体：{entity_name}\n"
+        f"语义：{json.dumps(semantics, ensure_ascii=False)}\n"
+        f"标题：{result.title}\n摘要：{result.snippet}"
+    )
     judgments = judge.judge_batch(
-        kind="probe_accept",
-        question=question,
-        items=(
-            {
-                "item_id": "hit-1",
-                "entity": entity_name,
-                "semantics": semantics,
-                "title": result.title,
-                "snippet": result.snippet,
-            },
-        ),
+        "probe_accept",
+        question,
+        {"hit-1": rendered},
     )
     if not judgments:
         return False
@@ -853,11 +852,13 @@ def test_gap_check_triggers_one_bounded_followup_round() -> None:
         return [{"title": "行业新闻", "link": "https://example.test/news", "snippet": "机器人行业动态。"}]
 
     class _Judge:
-        def gap_check(self, *, question: str, evidence_digest: str) -> Any:
-            return lj.GapCheckResult(
-                covered=False,
-                missing_aspects=("真实数据采集具体方式",),
-                followup_queries=("具身智能 遥操作 动捕 具体方式", "具身智能 真机数据 采集", "第三条不该发"),
+        def judge_batch(self, kind: str, question: str, items: Any, context: str = "") -> Any:
+            return (
+                lj.GapCheckResult(
+                    covered=False,
+                    missing_aspects=("真实数据采集具体方式",),
+                    followup_queries=("具身智能 遥操作 动捕 具体方式", "具身智能 真机数据 采集", "第三条不该发"),
+                ),
             )
 
     adapter = serving_module._DualWebLaneAdapter(
@@ -893,10 +894,12 @@ Expected: FAIL `TypeError: unexpected keyword argument 'gap_judge'`
                 f"- {item.title}：{item.snippet[:120]}" for item in organic[:8]
             )
             try:
-                gap = self._gap_judge.gap_check(
-                    question=request.original_query,
-                    evidence_digest=digest,
+                gap_results = self._gap_judge.judge_batch(
+                    "gap_check",
+                    request.original_query,
+                    {"gap": digest},
                 )
+                gap = gap_results[0] if gap_results else None
             except Exception:  # noqa: BLE001 - gap loop never breaks the lane
                 gap = None
             if gap is not None and not gap.covered and gap.followup_queries:
