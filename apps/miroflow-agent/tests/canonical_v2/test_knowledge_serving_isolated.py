@@ -18,6 +18,9 @@ from src.data_agents.canonical_v2.knowledge_answer import (
     ProseSynthesisResult,
     TurnRequest,
 )
+from src.data_agents.canonical_v2.knowledge_build_isolated import (
+    _PROFESSOR_MISSING_FIELD_FALLBACK,
+)
 from src.data_agents.canonical_v2.knowledge_read import (
     CanonicalEntityHandle,
     EnumerationPlanningContext,
@@ -3075,3 +3078,54 @@ def test_displayed_set_follow_up_binds_claims_after_prose_scope_narrowing(
         and claim.value == "深圳"
         for claim in second.claims
     )
+
+
+def test_serving_semantic_text_omits_missing_field_placeholder() -> None:
+    def item(payload: dict[str, Any]) -> EvidenceItem:
+        return EvidenceItem(
+            evidence_id="evidence:s12b:placeholder",
+            object_id="professor:s12b:placeholder",
+            domain="professor",
+            lane="lexical",
+            source_nature="local",
+            source_locator="canonical-v2-isolated:placeholder",
+            snippet=json.dumps(payload, ensure_ascii=False),
+            score=1.0,
+            source_authority="canonical_release",
+            claim_binding=EvidenceClaimBinding(
+                subject_id="professor:s12b:placeholder",
+                predicate="canonical_projection",
+                value="a" * 64,
+                status="admitted",
+            ),
+        )
+
+    degraded = serving_module._semantic_text(
+        item(
+            {
+                "name": "张三",
+                "institution": "清华大学深圳国际研究生院",
+                "department": _PROFESSOR_MISSING_FIELD_FALLBACK,
+                "title": _PROFESSOR_MISSING_FIELD_FALLBACK,
+                "email": _PROFESSOR_MISSING_FIELD_FALLBACK,
+                "profile_summary": "研究机器人技术",
+            }
+        ),
+        "张三",
+    )
+    assert "Not supplied" not in degraded
+    assert "职称" not in degraded
+    assert degraded == "张三；机构：清华大学深圳国际研究生院；简介：研究机器人技术。"
+
+    complete = serving_module._semantic_text(
+        item(
+            {
+                "name": "张三",
+                "institution": "清华大学深圳国际研究生院",
+                "title": "副教授",
+                "profile_summary": "研究机器人技术",
+            }
+        ),
+        "张三",
+    )
+    assert complete == "张三；机构：清华大学深圳国际研究生院；职称：副教授；简介：研究机器人技术。"

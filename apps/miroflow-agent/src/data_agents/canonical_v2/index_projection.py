@@ -56,6 +56,12 @@ LOOKUP_PROJECTION_VERSION = "canonical-v2-lookup-projection-v1"
 LOOKUP_SCHEMA_VERSION = "canonical-v2-lookup-schema-v1"
 _VECTOR_PATH = "semantic_recall"
 _LOOKUP_PATH = "exact_lookup"
+# Pinned to knowledge_build_isolated._PROFESSOR_MISSING_FIELD_FALLBACK.  The
+# build module imports this one, so importing the constant back would close
+# an import cycle; a contract test asserts the two values stay equal.
+# Degraded professor fields carrying this placeholder must embed as absent,
+# not as literal source text.
+_PROFESSOR_MISSING_FIELD_FALLBACK = "Not supplied by the historical source."
 
 
 class IndexProjectionIntegrityError(ValueError):
@@ -725,15 +731,19 @@ def _public_embedded_content(
 ) -> str:
     if isinstance(projection, ProfessorProjection):
         if view is ProjectionView.identity:
-            content: JsonValue = {
+            content: dict[str, JsonValue] = {
                 "name": projection.name,
                 "canonical_name_zh": projection.canonical_name_zh,
                 "canonical_name_en": projection.canonical_name_en,
                 "aliases": list(projection.aliases),
                 "institution": projection.institution,
-                "department": projection.department.name,
-                "title": projection.title,
             }
+            # Defaulted placeholders carry no evidence; embed the degraded
+            # fragments as absent rather than as literal source text.
+            if projection.department.name != _PROFESSOR_MISSING_FIELD_FALLBACK:
+                content["department"] = projection.department.name
+            if projection.title != _PROFESSOR_MISSING_FIELD_FALLBACK:
+                content["title"] = projection.title
         elif view is ProjectionView.research:
             content = {
                 "profile_summary": projection.profile_summary,

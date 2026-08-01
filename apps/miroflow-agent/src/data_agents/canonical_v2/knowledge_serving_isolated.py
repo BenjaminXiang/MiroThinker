@@ -82,6 +82,12 @@ from .knowledge_read import (
 from .llm_judgments import create_llm_judge
 
 
+# Pinned to knowledge_build_isolated._PROFESSOR_MISSING_FIELD_FALLBACK.  The
+# build module imports this one (load_recorded_serving_inputs), so importing
+# the constant back would close an import cycle; a contract test asserts the
+# two values stay equal.  Degraded professor fields carrying this placeholder
+# must render as absent, not as literal source text.
+_PROFESSOR_MISSING_FIELD_FALLBACK = "Not supplied by the historical source."
 _ZERO_SHA256 = "0" * 64
 _PUBLIC_DOMAINS = ("professor", "company", "paper", "patent")
 _SERVING_AMBIGUITY_ENTITY_TYPE = "professor"
@@ -3219,7 +3225,12 @@ def _semantic_text(item: EvidenceItem, display_name: str) -> str:
             ("简介", "profile_summary"),
         ):
             value = payload.get(field)
-            if isinstance(value, str) and value.strip() and value.strip() != name:
+            if (
+                isinstance(value, str)
+                and value.strip()
+                and value.strip() != name
+                and value.strip() != _PROFESSOR_MISSING_FIELD_FALLBACK
+            ):
                 parts.append(f"{label}：{value.strip()}")
         directions = _list_names(payload.get("research_directions"))
         if directions:
