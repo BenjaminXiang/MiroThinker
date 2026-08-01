@@ -787,7 +787,10 @@ _ALLOWED_FIELD_PATHS_BY_OBJECT_TYPE = {
         "summary_fields.technology_route_summary",
     ),
     "paper": (
+        "core_facts.arxiv_id",
         "core_facts.authors",
+        "core_facts.doi",
+        "core_facts.pdf_path",
         "core_facts.title",
         "core_facts.venue",
         "core_facts.year",
@@ -2418,13 +2421,19 @@ def _selected_fields(payload: dict[str, Any]) -> _SelectedFieldAudit:
         )
         values = {
             "authors": authors,
+            "arxiv_id": core.get("arxiv_id"),
+            "doi": core.get("doi"),
+            "pdf_path": core.get("pdf_path"),
             "summary_text": summary.get("summary_text"),
             "title": core.get("title"),
             "venue": core.get("venue"),
             "year": core.get("year"),
         }
-        if values["summary_text"] is None:
-            values.pop("summary_text")
+        # Optional identifiers/summary project only when the source carries
+        # them (s12e paper audit); explicit nulls stay gap-free.
+        for optional_field in ("arxiv_id", "doi", "pdf_path", "summary_text"):
+            if values[optional_field] is None:
+                values.pop(optional_field)
         source_path_by_field = {
             field: (
                 "summary_fields.summary_text"

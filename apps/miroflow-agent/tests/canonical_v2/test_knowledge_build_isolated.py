@@ -166,7 +166,10 @@ RELEASED_OBJECTS_MAPPER_POLICY = {
             "summary_fields.technology_route_summary",
         ],
         "paper": [
+            "core_facts.arxiv_id",
             "core_facts.authors",
+            "core_facts.doi",
+            "core_facts.pdf_path",
             "core_facts.title",
             "core_facts.venue",
             "core_facts.year",
@@ -2668,6 +2671,78 @@ def test_public_authority_keeps_company_projection_when_optional_fields_absent()
     assert result[6] == ()
 
 
+def test_public_authority_projects_paper_doi_and_arxiv_identifiers() -> None:
+    """landing 已有的 doi/arxiv_id/pdf_path 应进入论文投影（s12e 论文审计实证）。"""
+    module = _module()
+    professor = _released_object_payload("professor", 50)
+    paper = _released_object_payload("paper", 50)
+    paper["core_facts"].update(
+        {
+            "title": "pFedGPA",
+            "authors": ["Wenbo Ding", "Example Author"],
+            "doi": "10.1609/aaai.v39i17.33980",
+            "arxiv_id": "2409.05701",
+            "pdf_path": "papers/pfedgpa.pdf",
+        }
+    )
+    paper["summary_fields"] = {"summary_text": "Source-grounded paper summary."}
+    link = _professor_paper_link_payload(professor, paper, "paper-identifiers")
+    parsed_rows = _parsed_released_objects(module, (professor, paper, link))
+
+    result = module._map_public_authority(
+        request=_request(module),
+        rows=parsed_rows,
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    assert result[4].counts_by_domain["paper"] == 1
+    projection = next(
+        item for item in result[4].projections if item.entity_type == "paper"
+    )
+    assert projection.doi == "10.1609/aaai.v39i17.33980"
+    assert projection.arxiv_id == "2409.05701"
+    assert projection.pdf_path == "papers/pfedgpa.pdf"
+
+
+def test_public_authority_keeps_paper_projection_when_identifiers_null() -> None:
+    module = _module()
+    professor = _released_object_payload("professor", 51)
+    paper = _released_object_payload("paper", 51)
+    paper["core_facts"].update(
+        {"doi": None, "arxiv_id": None, "pdf_path": None}
+    )
+    paper["summary_fields"] = {"summary_text": "Source-grounded paper summary."}
+    link = _professor_paper_link_payload(professor, paper, "paper-null-identifiers")
+    parsed_rows = _parsed_released_objects(module, (professor, paper, link))
+
+    result = module._map_public_authority(
+        request=_request(module),
+        rows=parsed_rows,
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    assert result[4].counts_by_domain["paper"] == 1
+    projection = next(
+        item for item in result[4].projections if item.entity_type == "paper"
+    )
+    assert projection.doi is None
+    assert projection.arxiv_id is None
+    assert projection.pdf_path is None
+    # The only residual gap is the historical core_facts.name drop; explicit
+    # null identifiers must not add disallowed or invalid paths.
+    gaps_by_record = {gap.signal.evidence_ids[0]: gap for gap in result[6]}
+    paper_gap = gaps_by_record[parsed_rows[1].record.record_id]
+    assert not {
+        "core_facts.doi",
+        "core_facts.arxiv_id",
+        "core_facts.pdf_path",
+    } & set(paper_gap.signal.affected_paths)
+
+
 def test_four_domain_mapper_normalizes_restored_source_shapes() -> None:
     module = _module()
     company, professor, paper, patent, link = _restored_shape_payloads()
@@ -4264,6 +4339,30 @@ def _restored_shape_payloads(
         "quality_status": "ready",
     }
     return company, professor, paper, patent, link
+
+
+def _professor_paper_link_payload(
+    professor: dict[str, Any], paper: dict[str, Any], slug: str
+) -> dict[str, Any]:
+    return {
+        "id": f"professor-paper-link:{slug}",
+        "object_type": "professor_paper_link",
+        "display_name": f"Professor-paper link {slug}",
+        "core_facts": {
+            "professor_id": professor["id"],
+            "paper_id": paper["id"],
+        },
+        "summary_fields": {},
+        "evidence": [
+            {
+                "source_type": "xlsx_import",
+                "source_url": f"https://evidence.invalid/link/{slug}",
+                "fetched_at": "2026-07-21T00:00:00Z",
+            }
+        ],
+        "last_updated": "2026-07-21T00:00:00Z",
+        "quality_status": "ready",
+    }
 
 
 def _parsed_released_objects(
