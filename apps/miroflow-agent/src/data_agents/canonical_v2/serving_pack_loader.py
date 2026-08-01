@@ -1496,6 +1496,9 @@ def create_serving_pack_knowledge_read(
         relationship_request=relationship_request,
         relationship_result=relationship_result,
         candidate_result=candidate_result,
+        relationship_request_content_sha256=iso._canonical_sha256(
+            relationship_request.model_dump(mode="json")
+        ),
     )
 
     lookup_view = iso._create_audited_lookup_view(bundle)

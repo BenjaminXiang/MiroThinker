@@ -3488,6 +3488,9 @@ def test_customer_professor_company_relationship_is_source_bound_and_queryable(
     authority = SimpleNamespace(
         relationship_request=relationship_request,
         relationship_result=relationship_result,
+        relationship_request_content_sha256=read_module._canonical_sha256(
+            relationship_request.model_dump(mode="json")
+        ),
         candidate_result=internal[3],
         internal_authority=SimpleNamespace(
             bundle=SimpleNamespace(
@@ -3524,6 +3527,143 @@ def test_customer_professor_company_relationship_is_source_bound_and_queryable(
     assert trace.relationship_type_id == "professor_company_role"
     assert trace.relationship_role_bindings[0][0] == "founder"
     assert read_module._valid_local_projection_candidate(candidate, lane_request)
+
+
+def test_source_bound_relationship_request_is_hashed_once_per_authority(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The giant relationship request must not be re-serialized per candidate.
+
+    Each source-bound trace binds the same authority-level request hash; the
+    hash is computed once when the authority is assembled instead of once per
+    enumerated candidate (minutes of CPU on release-sized graphs).
+    """
+    module = _module()
+    read_module = import_module("src.data_agents.canonical_v2.knowledge_read")
+    isolated_read_module = import_module(
+        "src.data_agents.canonical_v2.knowledge_read_isolated"
+    )
+    relationship_projection_module = import_module(
+        "src.data_agents.canonical_v2.relationship_projection"
+    )
+    payloads = _restored_shape_payloads(professor_company_role=True)
+    rows = _parsed_released_objects(module, payloads)
+    public = module._map_public_authority(
+        request=_request(module),
+        rows=rows,
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+    internal = module._internal_candidate_authority(
+        request=_request(module),
+        domain_request=public[3],
+        domain_result=public[4],
+        now=NOW,
+    )
+    relationship_request, relationship_result = module._relationship_authority(
+        request=_request(module),
+        identity_result=public[1],
+        decision_result=public[2],
+        domain_result=public[4],
+        internal_request=internal[0],
+        internal_result=internal[1],
+        links=public[5],
+        source_rows=rows,
+        now=NOW,
+    )
+    identities = {
+        projection.entity_type: projection.canonical_identity_id
+        for projection in internal[3].public_domain_projections
+    }
+    displayed_id = identities["professor"]
+    protected_slot = read_module.ProtectedSlot(
+        kind="displayed_entity_set",
+        value="displayed_entity_set",
+        entity_ids=(displayed_id,),
+    )
+    lane_request = read_module.LaneRequest(
+        lane="relationship",
+        release_id=RELEASE_ID,
+        query_view="view:original",
+        original_query="关系查询",
+        behavior_class="D",
+        interaction_mode="information_retrieval",
+        web_policy=read_module.WebSearchPolicy(
+            mode="universal",
+            max_provider_calls=1,
+            timeout_ms=1_000,
+            max_results=5,
+        ),
+        query_text="关系查询",
+        domains=("company",),
+        protected_slots=(protected_slot,),
+        structured_constraints=read_module.StructuredConstraints(
+            displayed_entity_ids=(displayed_id,)
+        ),
+        max_candidates=10,
+        relationship_paths=(
+            read_module.RelationshipPathProposal(
+                relationship_type_id="professor_company_role",
+                direction="professor_to_company",
+                source_type="professor",
+                target_type="company",
+            ),
+        ),
+        relationship_enumeration_policy=read_module.EnumerationPolicy(
+            mode="representative",
+            scope="关系查询",
+            as_of=NOW,
+        ),
+    )
+    expected_request_sha256 = read_module._canonical_sha256(
+        relationship_request.model_dump(mode="json")
+    )
+    authority = SimpleNamespace(
+        relationship_request=relationship_request,
+        relationship_result=relationship_result,
+        relationship_request_content_sha256=expected_request_sha256,
+        candidate_result=internal[3],
+        internal_authority=SimpleNamespace(
+            bundle=SimpleNamespace(
+                release_id=RELEASE_ID,
+                index_target=SimpleNamespace(
+                    target_id="index:s12b-test",
+                    marker_sha256="a" * 64,
+                ),
+                manifest=SimpleNamespace(manifest_sha256="b" * 64),
+                index_result=SimpleNamespace(content_sha256="c" * 64),
+            ),
+            publication=SimpleNamespace(
+                verification_evidence_ids=("verification:s12b-test",)
+            ),
+        ),
+    )
+
+    dump_calls: list[Any] = []
+    real_model_dump = (
+        relationship_projection_module.RelationshipProjectionRequest.model_dump
+    )
+
+    def counting_model_dump(self: Any, *args: Any, **kwargs: Any) -> Any:
+        dump_calls.append(self)
+        return real_model_dump(self, *args, **kwargs)
+
+    monkeypatch.setattr(
+        relationship_projection_module.RelationshipProjectionRequest,
+        "model_dump",
+        counting_model_dump,
+    )
+    candidates = isolated_read_module._source_bound_relationship_candidates(
+        request=lane_request,
+        authority=authority,
+    )
+
+    assert len(candidates) == 1
+    assert dump_calls == []
+    trace = candidates[0].evidence[0].local_projection_trace
+    assert isinstance(trace, read_module.LocalSourceRelationshipTrace)
+    assert trace.relationship_request_sha256 == expected_request_sha256
 
 
 def test_public_authority_records_every_unknown_payload_path_without_suppressing_allowed_projection() -> (

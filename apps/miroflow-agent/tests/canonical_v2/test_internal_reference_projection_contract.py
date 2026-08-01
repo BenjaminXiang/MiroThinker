@@ -16909,6 +16909,9 @@ def test_s8r4_executes_release_scoped_paper_to_professor_attribution_traversal(
         relationship_request=direct_authority.relationship_request,
         relationship_result=expanded_relationship_result,
         candidate_result=direct_authority.candidate_result,
+        relationship_request_content_sha256=(
+            direct_authority.relationship_request_content_sha256
+        ),
     )
     real_forward_candidates = (
         isolated_read_module._professor_to_paper_relationship_candidates
@@ -18736,6 +18739,9 @@ def test_s8r5_executes_release_scoped_patent_to_company_applicant_traversal(
         relationship_request=direct_authority.relationship_request,
         relationship_result=expanded_relationship_result,
         candidate_result=direct_authority.candidate_result,
+        relationship_request_content_sha256=(
+            direct_authority.relationship_request_content_sha256
+        ),
     )
     real_forward_candidates = (
         isolated_read_module._company_to_patent_relationship_candidates
@@ -20047,6 +20053,9 @@ def test_s8r3_executes_release_scoped_professor_to_paper_attribution_traversal(
             relationship_request=changed_request,
             relationship_result=changed_result,
             candidate_result=replayed_authority.candidate_result,
+            relationship_request_content_sha256=isolated_read_module._canonical_sha256(
+                changed_request.model_dump(mode="json")
+            ),
         )
 
     def crosswire_shared_source_type(payload: dict[str, Any]) -> None:

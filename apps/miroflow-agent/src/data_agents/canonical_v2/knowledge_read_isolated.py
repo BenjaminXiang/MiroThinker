@@ -230,6 +230,11 @@ class _RelationshipAuthority:
     relationship_request: RelationshipProjectionRequest
     relationship_result: RelationshipProjectionResult
     candidate_result: CandidateProjectionResult
+    # Canonical hash of the full relationship request, computed once when the
+    # authority is assembled. Per-candidate trace builders bind this value;
+    # re-serializing the release-sized request per candidate costs minutes of
+    # CPU on production graphs.
+    relationship_request_content_sha256: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -1977,6 +1982,9 @@ def _replay_relationship_authority(
         relationship_request=relationship_request,
         relationship_result=relationship_result,
         candidate_result=candidate_result,
+        relationship_request_content_sha256=_canonical_sha256(
+            relationship_request.model_dump(mode="json")
+        ),
     )
 
 
@@ -3325,6 +3333,12 @@ def _company_to_patent_relationship_candidates(
             )
         return result, decision
 
+    relationship_enumeration_policy_sha256 = _canonical_sha256(
+        enumeration.model_dump(mode="json")
+    )
+    protected_slot_content_sha256 = _canonical_sha256(
+        protected_slot.model_dump(mode="json")
+    )
     candidates: list[RecallCandidate] = []
     for current in relationship_result.current_relationships:
         if not isinstance(current, CurrentRelationshipProjection):
@@ -3559,19 +3573,13 @@ def _company_to_patent_relationship_candidates(
             ),
             release_id=bundle.release_id,
             lane_request_content_sha256=request.content_sha256,
-            relationship_enumeration_policy_sha256=_canonical_sha256(
-                enumeration.model_dump(mode="json")
-            ),
+            relationship_enumeration_policy_sha256=relationship_enumeration_policy_sha256,
             displayed_entity_ids=displayed_ids,
             displayed_company_id=displayed_company_id,
             protected_slot_id=protected_slot.slot_id,
-            protected_slot_content_sha256=_canonical_sha256(
-                protected_slot.model_dump(mode="json")
-            ),
+            protected_slot_content_sha256=protected_slot_content_sha256,
             query_as_of=enumeration.as_of,
-            relationship_request_sha256=_canonical_sha256(
-                relationship_request.model_dump(mode="json")
-            ),
+            relationship_request_sha256=authority.relationship_request_content_sha256,
             relationship_result_sha256=relationship_result.content_sha256,
             relationship_projection_run_id=relationship_result.projection_run_id,
             relationship_projection_schema_version=(
@@ -3962,6 +3970,12 @@ def _professor_to_paper_relationship_candidates(
             )
         return path_request, path_result, decision
 
+    relationship_enumeration_policy_sha256 = _canonical_sha256(
+        enumeration.model_dump(mode="json")
+    )
+    protected_slot_content_sha256 = _canonical_sha256(
+        protected_slot.model_dump(mode="json")
+    )
     candidates: list[RecallCandidate] = []
     for current in relationship_result.current_relationships:
         if not isinstance(current, CurrentRelationshipProjection):
@@ -4247,19 +4261,13 @@ def _professor_to_paper_relationship_candidates(
             ),
             release_id=bundle.release_id,
             lane_request_content_sha256=request.content_sha256,
-            relationship_enumeration_policy_sha256=_canonical_sha256(
-                enumeration.model_dump(mode="json")
-            ),
+            relationship_enumeration_policy_sha256=relationship_enumeration_policy_sha256,
             displayed_entity_ids=displayed_ids,
             displayed_professor_id=displayed_professor_id,
             protected_slot_id=protected_slot.slot_id,
-            protected_slot_content_sha256=_canonical_sha256(
-                protected_slot.model_dump(mode="json")
-            ),
+            protected_slot_content_sha256=protected_slot_content_sha256,
             query_as_of=enumeration.as_of,
-            relationship_request_sha256=_canonical_sha256(
-                relationship_request.model_dump(mode="json")
-            ),
+            relationship_request_sha256=authority.relationship_request_content_sha256,
             relationship_result_sha256=relationship_result.content_sha256,
             relationship_projection_run_id=relationship_result.projection_run_id,
             relationship_projection_schema_version=(
@@ -4990,6 +4998,12 @@ def _source_bound_relationship_candidates(
         else frozenset()
     )
 
+    relationship_enumeration_policy_sha256 = _canonical_sha256(
+        enumeration.model_dump(mode="json")
+    )
+    protected_slot_content_sha256 = _canonical_sha256(
+        protected_slot.model_dump(mode="json")
+    )
     candidates: list[RecallCandidate] = []
     for current in relationship_result.current_relationships:
         if not isinstance(current, CurrentRelationshipProjection):
@@ -5198,23 +5212,17 @@ def _source_bound_relationship_candidates(
             ),
             release_id=bundle.release_id,
             lane_request_content_sha256=request.content_sha256,
-            relationship_enumeration_policy_sha256=_canonical_sha256(
-                enumeration.model_dump(mode="json")
-            ),
+            relationship_enumeration_policy_sha256=relationship_enumeration_policy_sha256,
             displayed_entity_ids=displayed_ids,
             displayed_entity_id=displayed_id,
             protected_slot_id=protected_slot.slot_id,
-            protected_slot_content_sha256=_canonical_sha256(
-                protected_slot.model_dump(mode="json")
-            ),
+            protected_slot_content_sha256=protected_slot_content_sha256,
             query_as_of=enumeration.as_of,
             query_relationship_type_id=path.relationship_type_id,
             query_direction=path.direction,
             query_source_type=cast(PublicDomain, path.source_type),
             query_target_type=cast(PublicDomain, path.target_type),
-            relationship_request_sha256=_canonical_sha256(
-                relationship_request.model_dump(mode="json")
-            ),
+            relationship_request_sha256=authority.relationship_request_content_sha256,
             relationship_result_sha256=relationship_result.content_sha256,
             relationship_snapshot_as_of=relationship_result.as_of,
             canonical_relationship_id=current.canonical_relationship_id,
@@ -5685,9 +5693,7 @@ def _relationship_result_candidates(
             ),
             release_id=bundle.release_id,
             lane_request_content_sha256=validated_request.content_sha256,
-            relationship_request_sha256=_canonical_sha256(
-                relationship_request.model_dump(mode="json")
-            ),
+            relationship_request_sha256=authority.relationship_request_content_sha256,
             relationship_result_sha256=relationship_result.content_sha256,
             relationship_projection_run_id=relationship_result.projection_run_id,
             relationship_projection_schema_version=(
