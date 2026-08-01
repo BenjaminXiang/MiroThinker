@@ -2506,6 +2506,90 @@ def test_public_authority_aggregates_unsupported_schema_and_metadata_paths() -> 
     } <= set(result[6][0].signal.affected_paths)
 
 
+def test_public_authority_admits_professor_on_name_and_institution_with_quality_signals() -> (
+    None
+):
+    """name+institution 即可入投影；缺 department/email/title 降级为质量信号。"""
+    module = _module()
+    professor = _released_object_payload("professor", 30)
+    professor["display_name"] = "王学谦"
+    professor["core_facts"].update(
+        {
+            "name": "王学谦",
+            "canonical_name_zh": "王学谦",
+            "institution": "清华大学深圳国际研究生院",
+        }
+    )
+    for field_name in ("department", "email", "title"):
+        professor["core_facts"].pop(field_name)
+    parsed_rows = _parsed_released_objects(module, (professor,))
+
+    result = module._map_public_authority(
+        request=_request(module),
+        rows=parsed_rows,
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    assert result[4].counts_by_domain["professor"] == 1
+    projection = next(
+        item for item in result[4].projections if item.entity_type == "professor"
+    )
+    assert projection.name == "王学谦"
+    assert projection.institution == "清华大学深圳国际研究生院"
+    gaps_by_record = {gap.signal.evidence_ids[0]: gap for gap in result[6]}
+    gap = gaps_by_record[parsed_rows[0].record.record_id]
+    for signal in ("missing_department", "missing_email", "missing_title"):
+        assert signal in gap.signal.observed_symptom
+    assert {
+        "core_facts.department",
+        "core_facts.email",
+        "core_facts.title",
+    } <= set(gap.signal.affected_paths)
+    # Defaulted fields must not feed identity keys; otherwise unrelated
+    # same-name professors would auto-merge on the shared fallback value.
+    source_identity = next(
+        item for item in result[0].source_identities if item.entity_type == "professor"
+    )
+    assert "name_key" in source_identity.normalized_keys
+    assert "institution_key" in source_identity.normalized_keys
+    assert "department_key" not in source_identity.normalized_keys
+    assert "email_key" not in source_identity.normalized_keys
+
+
+def test_public_authority_still_rejects_professor_missing_name_or_institution() -> (
+    None
+):
+    module = _module()
+    missing_institution = _released_object_payload("professor", 31)
+    missing_institution["core_facts"].pop("institution")
+    missing_name = _released_object_payload("professor", 32)
+    missing_name["core_facts"].pop("name")
+    missing_name["core_facts"].pop("canonical_name_zh")
+    parsed_rows = _parsed_released_objects(
+        module, (missing_institution, missing_name)
+    )
+
+    result = module._map_public_authority(
+        request=_request(module),
+        rows=parsed_rows,
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    assert result[4].counts_by_domain["professor"] == 0
+    assert not [
+        item for item in result[4].projections if item.entity_type == "professor"
+    ]
+    gaps_by_record = {gap.signal.evidence_ids[0]: gap for gap in result[6]}
+    institution_gap = gaps_by_record[parsed_rows[0].record.record_id]
+    assert "core_facts.institution" in institution_gap.signal.affected_paths
+    name_gap = gaps_by_record[parsed_rows[1].record.record_id]
+    assert "core_facts.name" in name_gap.signal.affected_paths
+
+
 def test_four_domain_mapper_normalizes_restored_source_shapes() -> None:
     module = _module()
     company, professor, paper, patent, link = _restored_shape_payloads()

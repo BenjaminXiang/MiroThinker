@@ -274,6 +274,19 @@ _EXPECTED_OBJECT_COUNTS = {
     "professor_paper_link": 580,
 }
 _PUBLIC_DOMAINS = ("company", "paper", "patent", "professor")
+# Only name+institution stay hard professor requirements.  The other
+# historically required fields degrade to quality signals carrying this
+# explicit placeholder so the typed projection contract still validates.
+# The placeholder is excluded from identity keys and author-attribution
+# signatures because it is not identity evidence.
+_PROFESSOR_MISSING_FIELD_FALLBACK = "Not supplied by the historical source."
+_PROFESSOR_DEGRADABLE_FIELDS = (
+    "department",
+    "email",
+    "homepage",
+    "profile_summary",
+    "title",
+)
 _EXPECTED_ALEMBIC_REVISION = "C2_0011"
 _OWNER_SCHEMAS = (
     "company",
@@ -1811,6 +1824,8 @@ class _SelectedFieldAudit:
     selected: dict[str, JsonValue]
     disallowed_paths: tuple[str, ...]
     invalid_allowed_paths: tuple[str, ...]
+    quality_signals: tuple[str, ...] = ()
+    defaulted_fields: frozenset[str] = frozenset()
 
     @property
     def affected_paths(self) -> tuple[str, ...]:
@@ -2302,6 +2317,8 @@ def _selected_fields(payload: dict[str, Any]) -> _SelectedFieldAudit:
     values: dict[str, Any]
     source_path_by_field: dict[str, str]
     invalid_allowed_paths: set[str] = set()
+    quality_signals: list[str] = []
+    defaulted_fields: set[str] = set()
     if domain == "company":
         values = {
             "name": core.get("name"),
@@ -2384,7 +2401,7 @@ def _selected_fields(payload: dict[str, Any]) -> _SelectedFieldAudit:
             "No dedicated summary was supplied by the historical source."
         )
         values = {
-            "name": core.get("name"),
+            "name": core.get("name") or core.get("canonical_name_zh"),
             "canonical_name_zh": core.get("canonical_name_zh") or core.get("name"),
             "department": core.get("department"),
             "email": core.get("email"),
@@ -2405,6 +2422,23 @@ def _selected_fields(payload: dict[str, Any]) -> _SelectedFieldAudit:
             )
             for field in values
         }
+        # Only name+institution stay hard requirements; the other historically
+        # required fields degrade to quality signals with explicit fallbacks.
+        for field in _PROFESSOR_DEGRADABLE_FIELDS:
+            value = values[field]
+            if isinstance(value, str) and value.strip():
+                continue
+            if value is not None and not isinstance(value, str):
+                # Malformed values (bad container/reference shapes) stay hard
+                # rejections via the audits below.
+                continue
+            values[field] = (
+                fallback_summary
+                if field == "profile_summary"
+                else _PROFESSOR_MISSING_FIELD_FALLBACK
+            )
+            quality_signals.append(f"missing_{field}")
+            defaulted_fields.add(field)
         company_roles = core.get("company_roles")
         if not isinstance(company_roles, list) or any(
             not isinstance(role, dict)
@@ -2467,7 +2501,15 @@ def _selected_fields(payload: dict[str, Any]) -> _SelectedFieldAudit:
         selected=cast(dict[str, JsonValue], values),
         disallowed_paths=tuple(sorted(disallowed_paths)),
         invalid_allowed_paths=tuple(sorted(invalid_allowed_paths)),
+        quality_signals=tuple(sorted(quality_signals)),
+        defaulted_fields=frozenset(defaulted_fields),
     )
+
+
+def _quality_signal_source_path(field: str) -> str:
+    if field == "profile_summary":
+        return "summary_fields.profile_summary"
+    return f"core_facts.{field}"
 
 
 def _structural_payload_affected_paths(payload: dict[str, Any]) -> tuple[str, ...]:
@@ -2647,6 +2689,14 @@ def _identity_lookup_key(value: Any) -> str | None:
     return normalized or None
 
 
+def _professor_email_lookup_key(selected: Mapping[str, JsonValue]) -> str | None:
+    email = selected.get("email")
+    if email == _PROFESSOR_MISSING_FIELD_FALLBACK:
+        # A defaulted placeholder email carries no attribution evidence.
+        return None
+    return _identity_lookup_key(email)
+
+
 def _released_object_identity_keys(
     *,
     object_id: str,
@@ -2672,7 +2722,12 @@ def _released_object_identity_keys(
             ("email_key", "email"),
             ("homepage_key", "homepage"),
         ):
-            retain(key, selected.get(field_name))
+            value = selected.get(field_name)
+            if value == _PROFESSOR_MISSING_FIELD_FALLBACK:
+                # Defaulted placeholders are not identity evidence; emitting
+                # them would auto-merge unrelated same-name professors.
+                continue
+            retain(key, value)
     elif domain == "company":
         retain("name_key", selected.get("normalized_name") or selected.get("name"))
     elif domain == "paper":
@@ -2848,7 +2903,7 @@ def _derived_professor_paper_links(
             continue
         identity_signatures = {
             (
-                _identity_lookup_key(selected_by_object[professor_id].get("email")),
+                _professor_email_lookup_key(selected_by_object[professor_id]),
                 _identity_lookup_key(
                     selected_by_object[professor_id].get("institution")
                 ),
@@ -3200,9 +3255,18 @@ def _map_public_authority(
             continue
         field_audit = _selected_fields(payload)
         affected_paths = tuple(
-            sorted({*field_audit.affected_paths, *payload_audit.affected_paths})
+            sorted(
+                {
+                    *field_audit.affected_paths,
+                    *payload_audit.affected_paths,
+                    *(
+                        _quality_signal_source_path(field)
+                        for field in field_audit.defaulted_fields
+                    ),
+                }
+            )
         )
-        if affected_paths:
+        if affected_paths or field_audit.quality_signals:
             audit_payload = {
                 "disallowed_paths": sorted(
                     {
@@ -3212,6 +3276,7 @@ def _map_public_authority(
                 ),
                 "invalid_allowed_paths": list(field_audit.invalid_allowed_paths),
                 "invalid_metadata_paths": list(payload_audit.invalid_allowed_paths),
+                "quality_signals": list(field_audit.quality_signals),
             }
             gaps.append(
                 _gap(
