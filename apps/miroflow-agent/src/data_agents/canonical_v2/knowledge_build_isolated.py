@@ -12,6 +12,7 @@ from collections import Counter, OrderedDict, defaultdict
 from collections.abc import Callable, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
+from datetime import date as Date
 from datetime import datetime, timedelta
 from enum import Enum
 import hashlib
@@ -799,8 +800,10 @@ _ALLOWED_FIELD_PATHS_BY_OBJECT_TYPE = {
     "patent": (
         "core_facts.applicants",
         "core_facts.company_ids",
+        "core_facts.filing_date",
         "core_facts.inventors",
         "core_facts.patent_number",
+        "core_facts.publication_date",
         "core_facts.title",
         "summary_fields.summary_text",
     ),
@@ -2350,6 +2353,19 @@ def _source_string_list(value: Any, *, path: str) -> tuple[list[str], tuple[str,
     return [cast(str, member).strip() for member in value], ()
 
 
+def _source_iso_date_string(
+    value: Any, *, path: str
+) -> tuple[str | None, tuple[str, ...]]:
+    if not isinstance(value, str) or not value.strip():
+        return None, (path,)
+    candidate = value.strip()
+    try:
+        Date.fromisoformat(candidate)
+    except ValueError:
+        return None, (path,)
+    return candidate, ()
+
+
 def _selected_fields(payload: dict[str, Any]) -> _SelectedFieldAudit:
     domain = payload.get("object_type")
     core = payload.get("core_facts")
@@ -2464,6 +2480,19 @@ def _selected_fields(payload: dict[str, Any]) -> _SelectedFieldAudit:
             "summary_text": summary.get("summary_text"),
             "title": core.get("title"),
         }
+        # Optional lifecycle dates project only when the source carries a
+        # valid ISO calendar date (s12e patent audit); malformed dates stay
+        # hard rejections so typed Date projections never fail at build time.
+        for date_field in ("filing_date", "publication_date"):
+            raw_date = core.get(date_field)
+            if raw_date is None:
+                continue
+            parsed_date, invalid_date = _source_iso_date_string(
+                raw_date, path=f"core_facts.{date_field}"
+            )
+            if parsed_date is not None:
+                values[date_field] = parsed_date
+            invalid_allowed_paths.update(invalid_date)
         source_path_by_field = {
             field: (
                 "summary_fields.summary_text"

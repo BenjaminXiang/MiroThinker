@@ -178,8 +178,10 @@ RELEASED_OBJECTS_MAPPER_POLICY = {
         "patent": [
             "core_facts.applicants",
             "core_facts.company_ids",
+            "core_facts.filing_date",
             "core_facts.inventors",
             "core_facts.patent_number",
+            "core_facts.publication_date",
             "core_facts.title",
             "summary_fields.summary_text",
         ],
@@ -2741,6 +2743,89 @@ def test_public_authority_keeps_paper_projection_when_identifiers_null() -> None
         "core_facts.arxiv_id",
         "core_facts.pdf_path",
     } & set(paper_gap.signal.affected_paths)
+
+
+def test_public_authority_projects_patent_filing_and_publication_dates() -> None:
+    """landing 已有的 filing_date/publication_date 应进入专利投影（s12e 专利审计）。"""
+    module = _module()
+    patent = _released_object_payload("patent", 60)
+    patent["core_facts"].pop("summary_text")
+    patent["core_facts"].update(
+        {"filing_date": "2023-07-26", "publication_date": "2024-01-09"}
+    )
+    patent["summary_fields"] = {"summary_text": "Source-grounded patent summary."}
+    parsed_rows = _parsed_released_objects(module, (patent,))
+
+    result = module._map_public_authority(
+        request=_request(module),
+        rows=parsed_rows,
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    assert result[4].counts_by_domain["patent"] == 1
+    projection = next(
+        item for item in result[4].projections if item.entity_type == "patent"
+    )
+    assert projection.filing_date is not None
+    assert projection.filing_date.isoformat() == "2023-07-26"
+    assert projection.publication_date is not None
+    assert projection.publication_date.isoformat() == "2024-01-09"
+
+
+def test_public_authority_rejects_patent_with_malformed_filing_date() -> None:
+    module = _module()
+    patent = _released_object_payload("patent", 61)
+    patent["core_facts"].pop("summary_text")
+    patent["core_facts"].update({"filing_date": "26/07/2023"})
+    patent["summary_fields"] = {"summary_text": "Source-grounded patent summary."}
+    parsed_rows = _parsed_released_objects(module, (patent,))
+
+    result = module._map_public_authority(
+        request=_request(module),
+        rows=parsed_rows,
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    assert result[4].counts_by_domain["patent"] == 0
+    gaps_by_record = {gap.signal.evidence_ids[0]: gap for gap in result[6]}
+    patent_gap = gaps_by_record[parsed_rows[0].record.record_id]
+    assert "core_facts.filing_date" in patent_gap.signal.affected_paths
+
+
+def test_public_authority_keeps_patent_projection_when_dates_null() -> None:
+    module = _module()
+    patent = _released_object_payload("patent", 62)
+    patent["core_facts"].pop("summary_text")
+    patent["core_facts"].update({"filing_date": None, "publication_date": None})
+    patent["summary_fields"] = {"summary_text": "Source-grounded patent summary."}
+    parsed_rows = _parsed_released_objects(module, (patent,))
+
+    result = module._map_public_authority(
+        request=_request(module),
+        rows=parsed_rows,
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    assert result[4].counts_by_domain["patent"] == 1
+    projection = next(
+        item for item in result[4].projections if item.entity_type == "patent"
+    )
+    assert projection.filing_date is None
+    assert projection.publication_date is None
+    # The only residual gap is the historical core_facts.name drop; explicit
+    # null dates must not add disallowed or invalid paths.
+    gaps_by_record = {gap.signal.evidence_ids[0]: gap for gap in result[6]}
+    patent_gap = gaps_by_record[parsed_rows[0].record.record_id]
+    assert not {
+        "core_facts.filing_date",
+        "core_facts.publication_date",
+    } & set(patent_gap.signal.affected_paths)
 
 
 def test_four_domain_mapper_normalizes_restored_source_shapes() -> None:
