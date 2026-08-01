@@ -302,6 +302,17 @@ _PROFESSOR_POLLUTION_NAME_LABELS = frozenset(
         "科研成果",
     }
 )
+# Anti-scrape reversed emails (s12e professor audit: 41 records).  Historical
+# faculty pages obfuscate addresses by reversing the whole string, e.g.
+# "moc.liamg@abc" for "abc@gmail.com"; the reversed-TLD label then leads the
+# local part.  Decode only when the reversed text verifies as a well-formed
+# address on a known public TLD and the raw value does not; otherwise keep
+# the raw value and flag it instead of guessing.
+_REVERSED_EMAIL_LOCAL_PREFIXES = ("gro.", "moc.", "nc.", "ten.", "ude.", "vog.")
+_DECODABLE_EMAIL_PATTERN = re.compile(
+    r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\."
+    r"(?:biz|cn|com|edu|gov|info|io|me|net|org)$"
+)
 _EXPECTED_ALEMBIC_REVISION = "C2_0011"
 _OWNER_SCHEMAS = (
     "company",
@@ -1850,6 +1861,7 @@ class _SelectedFieldAudit:
     invalid_allowed_paths: tuple[str, ...]
     quality_signals: tuple[str, ...] = ()
     defaulted_fields: frozenset[str] = frozenset()
+    signaled_fields: frozenset[str] = frozenset()
 
     @property
     def affected_paths(self) -> tuple[str, ...]:
@@ -2380,6 +2392,21 @@ def _source_iso_date_string(
     return candidate, ()
 
 
+def _decode_reversed_professor_email(email: str) -> tuple[str, str | None]:
+    local_part, separator, _domain = email.partition("@")
+    if not separator or not local_part.casefold().startswith(
+        _REVERSED_EMAIL_LOCAL_PREFIXES
+    ):
+        return email, None
+    if _DECODABLE_EMAIL_PATTERN.match(email):
+        # Already a plausible normal address; never reverse real mailboxes.
+        return email, None
+    candidate = email[::-1]
+    if _DECODABLE_EMAIL_PATTERN.match(candidate):
+        return candidate, "decoded_reversed_email"
+    return email, "reversed_email_undecodable"
+
+
 def _selected_fields(payload: dict[str, Any]) -> _SelectedFieldAudit:
     domain = payload.get("object_type")
     core = payload.get("core_facts")
@@ -2398,6 +2425,7 @@ def _selected_fields(payload: dict[str, Any]) -> _SelectedFieldAudit:
     invalid_allowed_paths: set[str] = set()
     quality_signals: list[str] = []
     defaulted_fields: set[str] = set()
+    signaled_fields: set[str] = set()
     if domain == "company":
         values = {
             "name": core.get("name"),
@@ -2561,6 +2589,17 @@ def _selected_fields(payload: dict[str, Any]) -> _SelectedFieldAudit:
             and resolved_name.strip() in _PROFESSOR_POLLUTION_NAME_LABELS
         ):
             invalid_allowed_paths.add("core_facts.name")
+        # Reversed anti-scrape emails decode deterministically at selection
+        # time so projections and identity keys carry the real address.
+        email_value = values["email"]
+        if isinstance(email_value, str) and email_value.strip():
+            decoded_email, email_signal = _decode_reversed_professor_email(
+                email_value
+            )
+            values["email"] = decoded_email
+            if email_signal is not None:
+                quality_signals.append(email_signal)
+                signaled_fields.add("email")
         # Only name+institution stay hard requirements; the other historically
         # required fields degrade to quality signals with explicit fallbacks.
         for field in _PROFESSOR_DEGRADABLE_FIELDS:
@@ -2653,6 +2692,7 @@ def _selected_fields(payload: dict[str, Any]) -> _SelectedFieldAudit:
         invalid_allowed_paths=tuple(sorted(invalid_allowed_paths)),
         quality_signals=tuple(sorted(quality_signals)),
         defaulted_fields=frozenset(defaulted_fields),
+        signaled_fields=frozenset(signaled_fields),
     )
 
 
@@ -3411,7 +3451,10 @@ def _map_public_authority(
                     *payload_audit.affected_paths,
                     *(
                         _quality_signal_source_path(field)
-                        for field in field_audit.defaulted_fields
+                        for field in (
+                            *field_audit.defaulted_fields,
+                            *field_audit.signaled_fields,
+                        )
                     ),
                 }
             )

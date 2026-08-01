@@ -2869,6 +2869,86 @@ def test_public_authority_rejects_professor_named_as_generic_section_label(
     assert "core_facts.name" in name_gap.signal.affected_paths
 
 
+def test_public_authority_decodes_reversed_professor_email() -> None:
+    """反爬倒置邮箱在选拔期确定性反转解码并带质量信号（s12e 教授审计 41 条）。"""
+    module = _module()
+    professor = _released_object_payload("professor", 95)
+    professor["core_facts"]["email"] = "moc.liamxof@6102gnahz.ieloaix"
+    parsed_rows = _parsed_released_objects(module, (professor,))
+
+    result = module._map_public_authority(
+        request=_request(module),
+        rows=parsed_rows,
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    assert result[4].counts_by_domain["professor"] == 1
+    projection = next(
+        item for item in result[4].projections if item.entity_type == "professor"
+    )
+    assert projection.email == "xiaolei.zhang2016@foxmail.com"
+    gaps_by_record = {gap.signal.evidence_ids[0]: gap for gap in result[6]}
+    gap = gaps_by_record[parsed_rows[0].record.record_id]
+    assert "decoded_reversed_email" in gap.signal.observed_symptom
+    # The decoded address is the identity evidence, not the reversed string.
+    source_identity = next(
+        item for item in result[0].source_identities if item.entity_type == "professor"
+    )
+    assert source_identity.normalized_keys["email_key"] == (
+        "xiaolei.zhang2016@foxmail.com"
+    )
+
+
+def test_public_authority_flags_undecodable_reversed_professor_email() -> None:
+    module = _module()
+    professor = _released_object_payload("professor", 96)
+    professor["core_facts"]["email"] = "moc.foo@bar!"
+    parsed_rows = _parsed_released_objects(module, (professor,))
+
+    result = module._map_public_authority(
+        request=_request(module),
+        rows=parsed_rows,
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    assert result[4].counts_by_domain["professor"] == 1
+    projection = next(
+        item for item in result[4].projections if item.entity_type == "professor"
+    )
+    # Unverifiable reversals stay as sourced instead of being guessed.
+    assert projection.email == "moc.foo@bar!"
+    gaps_by_record = {gap.signal.evidence_ids[0]: gap for gap in result[6]}
+    gap = gaps_by_record[parsed_rows[0].record.record_id]
+    assert "reversed_email_undecodable" in gap.signal.observed_symptom
+    assert "decoded_reversed_email" not in gap.signal.observed_symptom
+
+
+def test_public_authority_keeps_normal_professor_email_without_signal() -> None:
+    module = _module()
+    professor = _released_object_payload("professor", 97)
+    professor["core_facts"]["email"] = "ding.wenbo@sz.tsinghua.edu.cn"
+    parsed_rows = _parsed_released_objects(module, (professor,))
+
+    result = module._map_public_authority(
+        request=_request(module),
+        rows=parsed_rows,
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    assert result[4].counts_by_domain["professor"] == 1
+    projection = next(
+        item for item in result[4].projections if item.entity_type == "professor"
+    )
+    assert projection.email == "ding.wenbo@sz.tsinghua.edu.cn"
+    assert result[6] == ()
+
+
 def test_four_domain_mapper_normalizes_restored_source_shapes() -> None:
     module = _module()
     company, professor, paper, patent, link = _restored_shape_payloads()
