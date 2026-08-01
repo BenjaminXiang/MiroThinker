@@ -3955,7 +3955,13 @@ def load_recorded_serving_inputs(
         )
     )
     supplemental_budget = SupplementalBudget(
-        max_wall_time_ms=bundle.web_timeout_ms,
+        # Wide enumerations run the full probe+fetch+judgment pipeline
+        # (gap check ~2s + up to 12 concurrent probes ~3s + per-job judgment
+        # batches + serial headless fetches ~5-10s), which needs ~25s worst
+        # case; 10s produced receipt-exhausted integrity failures (409-class)
+        # on exactly those turns. 30s is the serving-policy ceiling for that
+        # pipeline, not a per-turn target.
+        max_wall_time_ms=max(bundle.web_timeout_ms, 30_000),
         max_provider_calls=2,
         max_retries=0,
         # Room for the widest probe family: theme-verification probes across
