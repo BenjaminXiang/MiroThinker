@@ -66,7 +66,7 @@ from .contracts import (
     SourceAssertion,
 )
 from .domain_projection import DomainProjectionRequest
-from .domain_projection_models import ProfessorProjection
+from .domain_projection_models import CompanyProjection, ProfessorProjection
 from .index_projection import (
     IndexProjectionPolicySnapshot,
     IndexProjectionRebuildDecision,
@@ -1389,6 +1389,11 @@ def create_serving_pack_query_planner(
             projection
             for projection in candidate_result.public_domain_projections
             if isinstance(projection, ProfessorProjection)
+        ),
+        named_company_projections=tuple(
+            projection
+            for projection in candidate_result.public_domain_projections
+            if isinstance(projection, CompanyProjection)
         ),
         institution_catalog=institution_catalog,
     )

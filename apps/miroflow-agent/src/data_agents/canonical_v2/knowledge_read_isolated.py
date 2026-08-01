@@ -38,7 +38,11 @@ from .domain_projection_models import (
     PatentProjection,
     ProfessorProjection,
 )
-from .followup_referents import extract_institution_person_name
+from .followup_referents import (
+    COMPANY_NAME_PATTERN,
+    _EXPLICIT_COMPANY_REJECT_MARKERS,
+    extract_institution_person_name,
+)
 from .index_projection import (
     IndexProjectionIntegrityError,
     IndexProjectionPoint,
@@ -400,6 +404,81 @@ def _resolve_named_professor_research_source(
     return matches[0]
 
 
+_NAMED_COMPANY_PATENT_PATTERN = re.compile(
+    r"(?P<name>[一-鿿A-Za-z0-9（）()·-]{2,40}?)的(?:相关)?专利"
+)
+
+
+def _named_company_patent_names(query: str) -> tuple[str, ...]:
+    """Extract explicit company-name candidates from a patent-intent query.
+
+    Two shapes are recognized: a full company-suffixed name anywhere in the
+    query ("深圳市普渡科技有限公司有哪些专利"), and a possessive short form
+    ("普渡科技的专利有哪些"). Referent/quantifier lookalikes ("这些公司",
+    "哪些公司", "该公司") are rejected the same way as in
+    :func:`followup_referents._has_explicit_company_name`.
+    """
+    names = [
+        match.group(1)
+        for match in COMPANY_NAME_PATTERN.finditer(query)
+        if not any(
+            marker in match.group(1) for marker in _EXPLICIT_COMPANY_REJECT_MARKERS
+        )
+    ]
+    possessive = _NAMED_COMPANY_PATENT_PATTERN.search(query)
+    if possessive is not None:
+        name = possessive.group("name")
+        if not any(marker in name for marker in _EXPLICIT_COMPANY_REJECT_MARKERS):
+            names.append(name)
+    return tuple(dict.fromkeys(names))
+
+
+def _resolve_named_company_patent_source(
+    query: str,
+    company_projections: tuple[CompanyProjection, ...],
+) -> tuple[CompanyProjection, str] | None:
+    """Resolve a patent-intent query naming a company to one unique projection.
+
+    Company mirror of :func:`_resolve_named_professor_research_source`: the
+    same-turn named-source traversal is only proposed when the query carries
+    patent intent ("专利") and names exactly one accepted Company — by full
+    legal name, normalized short name, or alias. A bare short name with no
+    company suffix ("普渡科技有哪些专利") still binds when the projection's own
+    normalized name or alias appears verbatim in the query; any ambiguity
+    (zero or several distinct matches) falls back to the normal lanes instead
+    of guessing.
+
+    Returns the projection together with the surface form the user actually
+    typed, so the rebuilt request's displayed entity name is guaranteed to
+    appear in the query text.
+    """
+    if "专利" not in query:
+        return None
+    names = _named_company_patent_names(query)
+    matched: dict[str, tuple[CompanyProjection, str]] = {}
+    for projection in company_projections:
+        for name in names:
+            if (
+                name == projection.name
+                or name == projection.normalized_name
+                or name in projection.aliases
+            ):
+                matched[projection.canonical_identity_id] = (projection, name)
+                break
+    if not matched:
+        for projection in company_projections:
+            for candidate in (projection.normalized_name, *projection.aliases):
+                if len(candidate) >= 2 and candidate in query:
+                    matched[projection.canonical_identity_id] = (
+                        projection,
+                        candidate,
+                    )
+                    break
+    if len(matched) != 1:
+        return None
+    return next(iter(matched.values()))
+
+
 _SAME_NAME_PERSON_QUERY_PATTERN = re.compile(
     r"^(?:请问|请介绍一下|请介绍|介绍一下|介绍|我想了解|帮我查(?:一下)?)?\s*"
     r"(?P<name>[一-鿿·]{2,4})(?:教授|老师)?"
@@ -526,6 +605,7 @@ class _ReleaseBoundQueryPlanner(_QueryPlanner):
         delegate: _QueryPlanner,
         ambiguity_delegate: _QueryPlanner | None = None,
         named_professor_projections: tuple[ProfessorProjection, ...] = (),
+        named_company_projections: tuple[CompanyProjection, ...] = (),
         institution_catalog: InstitutionCatalog | None = None,
     ) -> None:
         self._release_id = release_id
@@ -533,6 +613,7 @@ class _ReleaseBoundQueryPlanner(_QueryPlanner):
         self._delegate = delegate
         self._ambiguity_delegate = ambiguity_delegate
         self._named_professor_projections = named_professor_projections
+        self._named_company_projections = named_company_projections
         self._institution_catalog = institution_catalog
 
     def plan(self, request: QueryPlanningRequest) -> RetrievalPlan:
@@ -547,20 +628,35 @@ class _ReleaseBoundQueryPlanner(_QueryPlanner):
             )
         request_rebuilt = False
         if not validated_request.displayed_entity_ids:
-            named_source = _resolve_named_professor_research_source(
+            named_entity_id: str | None = None
+            named_entity_name: str | None = None
+            named_professor = _resolve_named_professor_research_source(
                 validated_request.original_query,
                 self._named_professor_projections,
             )
-            if named_source is not None:
+            if named_professor is not None:
+                named_entity_id = named_professor.canonical_identity_id
+                named_entity_name = named_professor.name
+            else:
+                named_company = _resolve_named_company_patent_source(
+                    validated_request.original_query,
+                    self._named_company_projections,
+                )
+                if named_company is not None:
+                    named_entity_id = named_company[0].canonical_identity_id
+                    # Bind the surface form the user actually typed so the
+                    # serving proposal's name-in-query checks recognize the
+                    # same-turn anchor even for short-form names
+                    # ("普渡科技的专利有哪些").
+                    named_entity_name = named_company[1]
+            if named_entity_id is not None:
                 request_rebuilt = True
                 payload = validated_request.model_dump(
                     mode="json",
                     exclude={"content_sha256"},
                 )
-                payload["displayed_entity_ids"] = [
-                    named_source.canonical_identity_id
-                ]
-                payload["displayed_entity_names"] = [named_source.name]
+                payload["displayed_entity_ids"] = [named_entity_id]
+                payload["displayed_entity_names"] = [named_entity_name]
                 validated_request = _validated_exact_model(
                     QueryPlanningRequest.model_validate(payload),
                     QueryPlanningRequest,
@@ -777,6 +873,11 @@ def create_isolated_release_query_planner(
             projection
             for projection in candidate_result.public_domain_projections
             if isinstance(projection, ProfessorProjection)
+        ),
+        named_company_projections=tuple(
+            projection
+            for projection in candidate_result.public_domain_projections
+            if isinstance(projection, CompanyProjection)
         ),
         institution_catalog=validated_catalog,
     )

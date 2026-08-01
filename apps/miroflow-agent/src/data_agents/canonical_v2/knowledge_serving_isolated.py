@@ -33,6 +33,7 @@ from .followup_referents import (
     COMPANY_NAME_PATTERN,
     IDENTIFIER_PATTERN,
     PROFESSOR_NAME_PATTERN,
+    _has_explicit_company_name,
     extract_institution_person_name,
     extract_leading_company_name,
     has_continuation_intent,
@@ -552,8 +553,20 @@ def _relationship_path(
                 target_type="professor",
             ),
         )
-    if displayed_id.startswith(("company-", "company:")) and "专利" in query and any(
-        marker in query for marker in ("它", "该公司", "这家")
+    if (
+        displayed_id.startswith(("company-", "company:"))
+        and len(request.displayed_entity_ids) == 1
+        and "专利" in query
+        and (
+            has_singular_referent(query)
+            or has_set_referent(query)
+            or has_continuation_intent(query)
+            or any(marker in query for marker in ("它", "该公司", "这家"))
+            or any(
+                name and name in query for name in request.displayed_entity_names
+            )
+            or _has_explicit_company_name(query)
+        )
     ):
         return (
             RelationshipPathProposal(

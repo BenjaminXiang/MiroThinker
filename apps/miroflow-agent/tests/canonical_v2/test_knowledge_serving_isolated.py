@@ -1296,6 +1296,27 @@ def test_serving_planner_does_not_traverse_for_plain_profile_followups(
                 "patent",
             ),
         ),
+        (
+            "上述公司的专利有哪些",
+            "company-c-ubtech",
+            (
+                "company_has_patent",
+                "company_to_patent",
+                "company",
+                "patent",
+            ),
+        ),
+        (
+            "深圳市普渡科技有限公司有哪些专利",
+            "company-c-pudu",
+            (
+                "company_has_patent",
+                "company_to_patent",
+                "company",
+                "patent",
+            ),
+        ),
+        ("其他公司的专利有哪些", "company-c-ubtech", None),
         ("他有哪些专利", "professor-c-ding-wenbo", None),
         ("这篇论文有哪些专利引用", "paper-c-pfedgpa", None),
     ),
@@ -2806,9 +2827,24 @@ def _stub_professor(identity_id: str, display_name: str) -> Any:
     )
 
 
+def _stub_company(
+    identity_id: str,
+    name: str,
+    normalized_name: str,
+    aliases: tuple[str, ...] = (),
+) -> Any:
+    return SimpleNamespace(
+        canonical_identity_id=identity_id,
+        name=name,
+        normalized_name=normalized_name,
+        aliases=aliases,
+    )
+
+
 def _release_bound_planner_with_named_resolution(
     tmp_path: Path,
     professors: tuple[Any, ...],
+    companies: tuple[Any, ...] = (),
 ) -> Any:
     path, bundle = _write_bundle(tmp_path)
     inputs = load_recorded_serving_inputs(
@@ -2851,6 +2887,7 @@ def _release_bound_planner_with_named_resolution(
         release_binding=binding,
         delegate=delegate,
         named_professor_projections=professors,
+        named_company_projections=companies,
     )
 
 
@@ -2941,6 +2978,142 @@ def test_named_resolution_falls_back_when_ambiguous_or_absent(
         )
     )
     assert unrelated.structured_constraints.displayed_entity_ids == ()
+
+
+def test_named_company_patent_query_reaches_the_traversal_lane(
+    tmp_path: Path,
+) -> None:
+    planner = _release_bound_planner_with_named_resolution(
+        tmp_path,
+        (),
+        companies=(
+            _stub_company(
+                "company-c-pudu",
+                "深圳市普渡科技有限公司",
+                "普渡科技",
+            ),
+            _stub_company(
+                "company-c-ubtech",
+                "深圳市优必选科技股份有限公司",
+                "优必选",
+            ),
+        ),
+    )
+
+    plan = planner.plan(
+        QueryPlanningRequest(
+            request_id="query-request:named-company-patent",
+            release_id=RELEASE_ID,
+            original_query="深圳市普渡科技有限公司有哪些专利",
+            as_of=NOW,
+        )
+    )
+
+    assert plan.structured_constraints.displayed_entity_ids == ("company-c-pudu",)
+    assert plan.lanes == ("relationship", "web")
+    assert len(plan.relationship_paths) == 1
+    relationship_path = plan.relationship_paths[0]
+    assert (
+        relationship_path.relationship_type_id,
+        relationship_path.direction,
+        relationship_path.source_type,
+        relationship_path.target_type,
+    ) == (
+        "company_has_patent",
+        "company_to_patent",
+        "company",
+        "patent",
+    )
+    assert any(
+        slot.kind == "displayed_entity_set"
+        and slot.entity_ids == ("company-c-pudu",)
+        for slot in plan.protected_slots
+    )
+
+
+@pytest.mark.parametrize(
+    "query",
+    (
+        "普渡科技的专利有哪些",
+        "普渡科技有哪些专利",
+    ),
+)
+def test_named_company_patent_query_binds_short_names(
+    tmp_path: Path,
+    query: str,
+) -> None:
+    planner = _release_bound_planner_with_named_resolution(
+        tmp_path,
+        (),
+        companies=(
+            _stub_company(
+                "company-c-pudu",
+                "深圳市普渡科技有限公司",
+                "普渡科技",
+            ),
+            _stub_company(
+                "company-c-ubtech",
+                "深圳市优必选科技股份有限公司",
+                "优必选",
+            ),
+        ),
+    )
+
+    plan = planner.plan(
+        QueryPlanningRequest(
+            request_id="query-request:named-company-short",
+            release_id=RELEASE_ID,
+            original_query=query,
+            as_of=NOW,
+        )
+    )
+
+    assert plan.structured_constraints.displayed_entity_ids == ("company-c-pudu",)
+    assert len(plan.relationship_paths) == 1
+    assert plan.relationship_paths[0].direction == "company_to_patent"
+
+
+def test_named_company_patent_query_stays_unbound_when_ambiguous_or_irrelevant(
+    tmp_path: Path,
+) -> None:
+    planner = _release_bound_planner_with_named_resolution(
+        tmp_path,
+        (),
+        companies=(
+            _stub_company(
+                "company-c-pudu-a",
+                "深圳市普渡科技有限公司",
+                "普渡科技",
+            ),
+            _stub_company(
+                "company-c-pudu-b",
+                "普渡科技（北京）有限公司",
+                "普渡科技",
+            ),
+        ),
+    )
+
+    ambiguous = planner.plan(
+        QueryPlanningRequest(
+            request_id="query-request:named-company-ambiguous",
+            release_id=RELEASE_ID,
+            original_query="普渡科技有哪些专利",
+            as_of=NOW,
+        )
+    )
+    assert ambiguous.structured_constraints.displayed_entity_ids == ()
+    assert ambiguous.relationship_paths == ()
+
+    profile = planner.plan(
+        QueryPlanningRequest(
+            request_id="query-request:named-company-profile",
+            release_id=RELEASE_ID,
+            original_query="深圳市普渡科技有限公司怎么样",
+            as_of=NOW,
+        )
+    )
+    assert profile.structured_constraints.displayed_entity_ids == ()
+    assert profile.relationship_paths == ()
 
 
 def test_displayed_set_follow_up_binds_claims_after_prose_scope_narrowing(
