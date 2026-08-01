@@ -2149,3 +2149,40 @@ def test_initial_web_snapshot_policy_recomputes_bytes_and_rejects_missing_oversi
             two_candidate_plan,
             ambiguity_decision=_ambiguity_decision(module, mode="blocking"),
         )
+
+
+def test_geography_constraint_binds_the_traversal_anchor_not_its_targets() -> (
+    None
+):
+    """A verified traversal witness inherits its displayed anchor's geography
+    satisfaction: "深圳市普渡科技有限公司有哪些专利" must not hard-reject
+    every patent for lacking its own 深圳 geography claim."""
+    module = _module()
+    witness_failures = module._constraint_failures(
+        slots=(
+            module.ProtectedSlot(kind="geography", value="深圳", raw_text="深圳"),
+        ),
+        identity_ids=("patent-c-rollerbrush",),
+        claim_subject_ids=(
+            "patent-c-rollerbrush",
+            "canonical:patent:patent-c-rollerbrush",
+        ),
+        domain="patent",
+        display_name="清洁装置及其滚刷驱动机构",
+        items=(),
+        displayed_entity_witness_ids=("company-c-pudu",),
+    )
+    assert witness_failures == []
+
+    # Without a verified traversal witness the geography slot still binds.
+    standalone_failures = module._constraint_failures(
+        slots=(
+            module.ProtectedSlot(kind="geography", value="深圳", raw_text="深圳"),
+        ),
+        identity_ids=("company:outside",),
+        claim_subject_ids=("company:outside",),
+        domain="company",
+        display_name="Outside Robotics",
+        items=(),
+    )
+    assert [failure.slot_kind for failure in standalone_failures] == ["geography"]

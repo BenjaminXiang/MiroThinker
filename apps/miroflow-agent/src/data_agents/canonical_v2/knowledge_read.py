@@ -6357,7 +6357,16 @@ def _constraint_failures(
         dict.fromkeys(displayed_entity_witness_ids)
     )
     for slot in slots:
-        if slot.kind == "geography" and slot.value:
+        # A verified traversal witness inherits its displayed anchor's
+        # geography satisfaction: the slot binds the anchor (resolved from the
+        # query text itself), never the traversed targets, so patents/papers
+        # reached from a named entity are not rejected for lacking their own
+        # geography claim.
+        if (
+            slot.kind == "geography"
+            and slot.value
+            and not normalized_displayed_witness_ids
+        ):
             observed = tuple(
                 dict.fromkeys(
                     (
