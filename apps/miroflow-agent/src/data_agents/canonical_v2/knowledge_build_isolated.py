@@ -286,6 +286,9 @@ _PUBLIC_DOMAINS = ("company", "paper", "patent", "professor")
 # The placeholder is excluded from identity keys and author-attribution
 # signatures because it is not identity evidence.
 _PROFESSOR_MISSING_FIELD_FALLBACK = "Not supplied by the historical source."
+_PROFESSOR_PROFILE_SUMMARY_FALLBACK = (
+    "No dedicated summary was supplied by the historical source."
+)
 _PROFESSOR_DEGRADABLE_FIELDS = (
     "department",
     "email",
@@ -950,9 +953,12 @@ class _SupplementalSourceAuthority:
     filename: str
     byte_size: int
     content_sha256: str
-    backup_manifest_filename: str
-    backup_manifest_sha256: str
-    source_member_manifest_sha256: str
+    # S12B backup lineage is null only for authorities admitted after the
+    # Accepted S2B checkpoint (the s12f professor backfill); the r7 fixed
+    # sources all carry their exact historical backup identity.
+    backup_manifest_filename: str | None
+    backup_manifest_sha256: str | None
+    source_member_manifest_sha256: str | None
     source_kind: str
     source_batch_id: str
     parser_name: str
@@ -967,9 +973,22 @@ class _SupplementalSourceAuthority:
         return f"accepted-restore:{self.restore_member_path}"
 
     @property
-    def backup_member_manifest_path(self) -> Path:
+    def backup_member_manifest_path(self) -> Path | None:
+        if self.backup_manifest_filename is None:
+            return None
         return Path("manifests/inventory") / self.backup_manifest_filename
 
+
+# S12F professor backfill authority.  The s12e professor audit demoted 882
+# professors to explicit placeholder fields; the 16-record priority batch
+# backfills the worst gaps (department/email/title) from official institution
+# pages.  The payload was produced after the Accepted S2B checkpoint, so it
+# reuses the still-registered-but-unprojected professor-metrics inventory slot
+# and carries no historical backup lineage.
+_PROFESSOR_BACKFILL_SOURCE_ID = (
+    "inventory:8c3084c6d7364e43089903d8bd60c182534aa199eb7c04e6721291ad0b358e99"
+)
+_PROFESSOR_BACKFILL_BATCH_ID = "s12e-professor-backfill-v1"
 
 _SUPPLEMENTAL_SOURCE_AUTHORITIES = {
     "inventory:f8fea06321bd45af4c88c9654497a8c504defbf56c5eaee1d758e26248ea2bae": (
@@ -1082,6 +1101,25 @@ _SUPPLEMENTAL_SOURCE_AUTHORITIES = {
             parser_options={"sheet": "Sheet1"},
         )
     ),
+    _PROFESSOR_BACKFILL_SOURCE_ID: (
+        _SupplementalSourceAuthority(
+            filename="professor_backfill_batch.jsonl",
+            byte_size=33352,
+            content_sha256=(
+                "06b44c047a618ba9e9e90404bf4ecf57ce4e007b9164f9e226ed8085ad9832ab"
+            ),
+            # Admitted at s12f, after the Accepted S2B checkpoint: the payload
+            # has no historical backup lineage, so the backup-member identity
+            # stays explicitly null instead of borrowing another source's.
+            backup_manifest_filename=None,
+            backup_manifest_sha256=None,
+            source_member_manifest_sha256=None,
+            source_kind="historical_jsonl",
+            source_batch_id=_PROFESSOR_BACKFILL_BATCH_ID,
+            parser_name="historical_jsonl",
+            parser_options={},
+        )
+    ),
 }
 _SUPPLEMENTAL_SOURCE_IDS = frozenset(_SUPPLEMENTAL_SOURCE_AUTHORITIES)
 _SUPPLEMENTAL_SOURCE_PURPOSES = {
@@ -1090,6 +1128,7 @@ _SUPPLEMENTAL_SOURCE_PURPOSES = {
     "inventory:1a987406c94c0f1e7b69e0272d8f06582f7f1fe2668f3cfbdd0e48780eed3026": "professor_company_role",
     "inventory:b84a6eac6bc59c9b9431b94ae8735bcda813b3186c28455719ac3bd6718d41ae": "company_workbook",
     "inventory:b9a8975b2d147348ef47cbd08ad12c6e550c6012ecc29e2979a4db76e3b3c4a0": "patent_identifier",
+    _PROFESSOR_BACKFILL_SOURCE_ID: "professor_backfill",
 }
 
 
@@ -2560,9 +2599,7 @@ def _selected_fields(payload: dict[str, Any]) -> _SelectedFieldAudit:
             core.get("patent_ids"), path="core_facts.patent_ids"
         )
         profile_summary = summary.get("profile_summary")
-        fallback_summary = (
-            "No dedicated summary was supplied by the historical source."
-        )
+        fallback_summary = _PROFESSOR_PROFILE_SUMMARY_FALLBACK
         values = {
             "name": core.get("name") or core.get("canonical_name_zh"),
             "canonical_name_zh": core.get("canonical_name_zh") or core.get("name"),
@@ -2950,6 +2987,7 @@ def _released_object_identity_keys(
 class _SupplementalMatchIndexes:
     company_ids_by_name: Mapping[str, frozenset[str]]
     professor_ids_by_name: Mapping[str, frozenset[str]]
+    professor_object_ids: frozenset[str]
     paper_ids_by_doi: Mapping[str, frozenset[str]]
     paper_ids_by_title: Mapping[str, frozenset[str]]
     patent_ids_by_number: Mapping[str, frozenset[str]]
@@ -2970,6 +3008,7 @@ def _supplemental_match_indexes(
             "patent_number",
         )
     }
+    professor_object_ids: set[str] = set()
     for object_id, selected in selected_by_object.items():
         row = row_by_object[object_id]
         domain = row.payload.get("object_type")
@@ -2978,6 +3017,7 @@ def _supplemental_match_indexes(
                 if (key := _identity_lookup_key(value)) is not None:
                     mutable["company"][key].add(object_id)
         elif domain == "professor":
+            professor_object_ids.add(object_id)
             if (key := _identity_lookup_key(selected.get("name"))) is not None:
                 mutable["professor"][key].add(object_id)
         elif domain == "paper":
@@ -2999,6 +3039,7 @@ def _supplemental_match_indexes(
     return _SupplementalMatchIndexes(
         company_ids_by_name=freeze("company"),
         professor_ids_by_name=freeze("professor"),
+        professor_object_ids=frozenset(professor_object_ids),
         paper_ids_by_doi=freeze("paper_doi"),
         paper_ids_by_title=freeze("paper_title"),
         patent_ids_by_number=freeze("patent_number"),
@@ -3027,6 +3068,14 @@ def _supplemental_record_object_ids(
     elif purpose == "patent_identifier":
         number_key = _identity_lookup_key(payload.get("公开（公告）号"))
         matches = indexes.patent_ids_by_number.get(number_key or "", frozenset())
+    elif purpose == "professor_backfill":
+        professor_id = payload.get("professor_id")
+        matches = (
+            frozenset({professor_id})
+            if isinstance(professor_id, str)
+            and professor_id in indexes.professor_object_ids
+            else frozenset()
+        )
     else:
         professor_key = _identity_lookup_key(payload.get("professor_name"))
         company_key = _identity_lookup_key(payload.get("company_name"))
@@ -3042,6 +3091,232 @@ def _supplemental_record_object_ids(
             else frozenset()
         )
     return tuple(sorted(matches))
+
+
+# Professor backfill merges only the fields the historical-source gate can
+# demote to explicit placeholders.  Every other researched value (English
+# name variants, aliases) is outside the professor projection contract and is
+# counted as unsupported instead of widening the projection by stealth.
+_PROFESSOR_BACKFILL_MERGE_FIELDS = frozenset(_PROFESSOR_DEGRADABLE_FIELDS)
+
+
+@dataclass(frozen=True, slots=True)
+class _ProfessorBackfillMergeStats:
+    records_seen: int = 0
+    records_merged: int = 0
+    records_unmatched: int = 0
+    fields_merged: int = 0
+    fields_kept_existing: int = 0
+    fields_unsupported: int = 0
+    fields_invalid: int = 0
+
+
+def _professor_projection_field_missing(
+    selected: Mapping[str, JsonValue], field: str
+) -> bool:
+    """A field is mergeable only while the projection carries no real value.
+
+    The gate's synthetic placeholders are not evidence, so they count as
+    missing; any other value is historical truth the backfill must keep.
+    """
+    value = selected.get(field)
+    if value is None:
+        return True
+    if field == "department" and isinstance(value, dict):
+        name = value.get("name")
+        return (
+            not isinstance(name, str)
+            or not name.strip()
+            or name == _PROFESSOR_MISSING_FIELD_FALLBACK
+        )
+    if isinstance(value, str):
+        if not value.strip():
+            return True
+        if value == _PROFESSOR_MISSING_FIELD_FALLBACK:
+            return True
+        return field == "profile_summary" and value == (
+            _PROFESSOR_PROFILE_SUMMARY_FALLBACK
+        )
+    return False
+
+
+def _professor_backfill_projection_value(field: str, value: Any) -> JsonValue | None:
+    """Convert a researched value into the exact projection shape, or None."""
+    if field == "department":
+        if not isinstance(value, str) or not value.strip():
+            return None
+        reference, _, invalid = _named_reference_audit(
+            value, path=f"fields.{field}.value"
+        )
+        if invalid or not isinstance(reference, dict):
+            return None
+        return reference
+    if not isinstance(value, str) or not value.strip():
+        return None
+    cleaned = value.strip()
+    if field == "email":
+        # Consistent with selection-time handling: decode only verifiably
+        # reversed anti-scrape addresses, never rewrite real mailboxes.
+        cleaned, _ = _decode_reversed_professor_email(cleaned)
+    return cleaned
+
+
+def _professor_backfill_field_provenance(
+    spec: Any, *, now: datetime
+) -> datetime | None:
+    """The merged assertion is admissible only with complete provenance."""
+    if not isinstance(spec, dict):
+        return None
+    for key in ("source_url", "evidence_quote", "method"):
+        value = spec.get(key)
+        if not isinstance(value, str) or not value.strip():
+            return None
+    return _parse_aware_not_future(spec.get("observed_at"), as_of=now)
+
+
+def _merge_professor_backfill_rows(
+    *,
+    request: BuildCandidateRequest,
+    rows: tuple[_ParsedReleasedObject, ...],
+    selected_by_object: dict[str, dict[str, JsonValue]],
+    domain_by_object: Mapping[str, str],
+    field_assertions: list[SourceAssertion],
+    gaps: list[_RecordedGap],
+    now: datetime,
+) -> tuple[list[SourceAssertion], _ProfessorBackfillMergeStats]:
+    """Merge professor backfill records into the retained projections.
+
+    Conservative semantics: a backfilled value replaces the gate's synthetic
+    placeholder assertion for the same field (same assertion id, single
+    evidence per group), carries the backfill record as its source and the
+    researched observed_at as its evidence time, and never touches a field
+    that already carries a real historical value.  Records that do not
+    resolve to exactly one retained professor are skipped and counted.
+    """
+    stats = {"records_seen": 0, "records_merged": 0, "records_unmatched": 0,
+             "fields_merged": 0, "fields_kept_existing": 0,
+             "fields_unsupported": 0, "fields_invalid": 0}
+    assertion_index = {
+        assertion.assertion_id: index
+        for index, assertion in enumerate(field_assertions)
+    }
+    merged = list(field_assertions)
+    for item in rows:
+        if _SUPPLEMENTAL_SOURCE_PURPOSES.get(item.source_id) != "professor_backfill":
+            continue
+        stats["records_seen"] += 1
+        payload = item.payload
+        professor_id = payload.get("professor_id")
+        selected = (
+            selected_by_object.get(professor_id)
+            if isinstance(professor_id, str)
+            else None
+        )
+        if selected is None or domain_by_object.get(professor_id or "") != "professor":
+            # The supplemental lineage loop already records the unmatched gap.
+            stats["records_unmatched"] += 1
+            continue
+        raw_name = payload.get("professor_name")
+        if (
+            isinstance(raw_name, str)
+            and raw_name.strip()
+            and _identity_lookup_key(raw_name)
+            != _identity_lookup_key(selected.get("name"))
+        ):
+            stats["records_unmatched"] += 1
+            gaps.append(
+                _gap(
+                    release_id=request.candidate_release_id,
+                    run_id=request.run_id,
+                    record=item.record,
+                    domain="professor",
+                    reason=(
+                        f"professor backfill record {professor_id!r} name does "
+                        "not match the retained professor"
+                    ),
+                    affected_paths=("professor_name",),
+                    now=now,
+                )
+            )
+            continue
+        fields = payload.get("fields")
+        if not isinstance(fields, dict):
+            stats["records_unmatched"] += 1
+            gaps.append(
+                _gap(
+                    release_id=request.candidate_release_id,
+                    run_id=request.run_id,
+                    record=item.record,
+                    domain="professor",
+                    reason=(
+                        f"professor backfill record {professor_id!r} lacks "
+                        "typed field payloads"
+                    ),
+                    affected_paths=("fields",),
+                    now=now,
+                )
+            )
+            continue
+        merged_here = 0
+        skipped_paths: list[str] = []
+        for field_name in sorted(fields):
+            field_path = f"fields.{field_name}"
+            if field_name not in _PROFESSOR_BACKFILL_MERGE_FIELDS:
+                stats["fields_unsupported"] += 1
+                skipped_paths.append(field_path)
+                continue
+            spec = fields[field_name]
+            observed_at = _professor_backfill_field_provenance(spec, now=now)
+            value = (
+                _professor_backfill_projection_value(field_name, spec.get("value"))
+                if observed_at is not None and isinstance(spec, dict)
+                else None
+            )
+            if observed_at is None or value is None:
+                stats["fields_invalid"] += 1
+                skipped_paths.append(field_path)
+                continue
+            if not _professor_projection_field_missing(selected, field_name):
+                stats["fields_kept_existing"] += 1
+                continue
+            selected[field_name] = value
+            assertion_id = f"assertion:{professor_id}:{field_name}"
+            backfilled = SourceAssertion(
+                assertion_id=assertion_id,
+                source_record_id=item.record.record_id,
+                source_identity_id=f"source-released-object:{professor_id}",
+                subject_entity_type="professor",
+                field_path=field_name,
+                value=value,
+                observed_at=observed_at,
+                assertion_run_id=f"assertions:{request.run_id}",
+            )
+            prior = assertion_index.get(assertion_id)
+            if prior is None:
+                assertion_index[assertion_id] = len(merged)
+                merged.append(backfilled)
+            else:
+                merged[prior] = backfilled
+            stats["fields_merged"] += 1
+            merged_here += 1
+        if merged_here:
+            stats["records_merged"] += 1
+        if skipped_paths:
+            gaps.append(
+                _gap(
+                    release_id=request.candidate_release_id,
+                    run_id=request.run_id,
+                    record=item.record,
+                    domain="professor",
+                    reason=(
+                        f"professor backfill record {professor_id!r} carries "
+                        "fields the professor projection cannot admit"
+                    ),
+                    affected_paths=tuple(sorted(skipped_paths)),
+                    now=now,
+                )
+            )
+    return merged, _ProfessorBackfillMergeStats(**stats)
 
 
 def _professor_author_aliases(selected: Mapping[str, JsonValue]) -> frozenset[str]:
@@ -3804,6 +4079,19 @@ def _map_public_authority(
             for assertion in field_assertions
             if assertion.source_identity_id not in removed_source_ids
         ]
+
+    # Professor backfill merges after derived attribution so backfilled emails
+    # never create new author-attribution aliases; it only fills projection
+    # fields the gate demoted to placeholders.
+    field_assertions, _backfill_merge_stats = _merge_professor_backfill_rows(
+        request=request,
+        rows=supplemental_rows,
+        selected_by_object=selected_by_object,
+        domain_by_object=domain_by_object,
+        field_assertions=field_assertions,
+        gaps=gaps,
+        now=now,
+    )
 
     source_identity_values = tuple(
         sorted(source_identities.values(), key=lambda item: item.source_identity_id)
