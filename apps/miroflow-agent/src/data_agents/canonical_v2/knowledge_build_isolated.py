@@ -777,8 +777,12 @@ def _live_schema_catalog_sha256(connection: Any) -> str:
 
 _ALLOWED_FIELD_PATHS_BY_OBJECT_TYPE = {
     "company": (
+        "core_facts.aliases",
+        "core_facts.industry",
+        "core_facts.key_personnel",
         "core_facts.name",
         "core_facts.normalized_name",
+        "core_facts.website",
         "summary_fields.profile_summary",
         "summary_fields.technology_route_summary",
     ),
@@ -2264,6 +2268,48 @@ def _source_named_members(
     return normalized, tuple(sorted(invalid))
 
 
+def _source_company_key_personnel(
+    value: Any,
+    *,
+    path: str,
+) -> tuple[list[dict[str, JsonValue]], tuple[str, ...], tuple[str, ...]]:
+    if not isinstance(value, list):
+        return [], (), (path,)
+    normalized: list[dict[str, JsonValue]] = []
+    disallowed: set[str] = set()
+    invalid: set[str] = set()
+    allowed_member_keys = {"description", "name", "role"}
+    for index, member in enumerate(value):
+        member_path = f"{path}[{index}]"
+        if not isinstance(member, dict):
+            invalid.add(member_path)
+            continue
+        disallowed.update(
+            f"{member_path}.{key}"
+            for key in member
+            if key not in allowed_member_keys
+        )
+        name = member.get("name")
+        role = member.get("role")
+        if (
+            not isinstance(name, str)
+            or not name.strip()
+            or not isinstance(role, str)
+            or not role.strip()
+        ):
+            invalid.add(member_path)
+            continue
+        entry: dict[str, JsonValue] = {"name": name.strip(), "role": role.strip()}
+        description = member.get("description")
+        if description is not None:
+            if not isinstance(description, str) or not description.strip():
+                invalid.add(f"{member_path}.description")
+                continue
+            entry["description"] = description.strip()
+        normalized.append(entry)
+    return normalized, tuple(sorted(disallowed)), tuple(sorted(invalid))
+
+
 def _source_named_references(
     value: Any,
     *,
@@ -2332,6 +2378,38 @@ def _selected_fields(payload: dict[str, Any]) -> _SelectedFieldAudit:
             "profile_summary": "summary_fields.profile_summary",
             "technology_route_summary": ("summary_fields.technology_route_summary"),
         }
+        # Optional source-present fields that the historical whitelist
+        # silently dropped (s12e company audit): project them only when the
+        # payload actually carries them, so absence stays gap-free.
+        aliases_value = core.get("aliases")
+        if aliases_value is not None:
+            aliases, invalid_aliases = _source_string_list(
+                aliases_value, path="core_facts.aliases"
+            )
+            if aliases:
+                values["aliases"] = aliases
+                source_path_by_field["aliases"] = "core_facts.aliases"
+            invalid_allowed_paths.update(invalid_aliases)
+        if core.get("industry") is not None:
+            values["industry"] = core.get("industry")
+            source_path_by_field["industry"] = "core_facts.industry"
+        if core.get("website") is not None:
+            values["website"] = core.get("website")
+            source_path_by_field["website"] = "core_facts.website"
+        key_personnel_value = core.get("key_personnel")
+        if key_personnel_value is not None:
+            (
+                key_personnel,
+                key_personnel_disallowed,
+                key_personnel_invalid,
+            ) = _source_company_key_personnel(
+                key_personnel_value, path="core_facts.key_personnel"
+            )
+            if key_personnel:
+                values["key_personnel"] = key_personnel
+                source_path_by_field["key_personnel"] = "core_facts.key_personnel"
+            disallowed_paths.update(key_personnel_disallowed)
+            invalid_allowed_paths.update(key_personnel_invalid)
     elif domain == "paper":
         authors, invalid_authors = _source_named_members(
             core.get("authors"),
@@ -2467,6 +2545,9 @@ def _selected_fields(payload: dict[str, Any]) -> _SelectedFieldAudit:
             "venue",
             "department",
             "year",
+            "aliases",
+            "industry",
+            "key_personnel",
         }
     }
     invalid_allowed_paths.update(
@@ -2474,6 +2555,14 @@ def _selected_fields(payload: dict[str, Any]) -> _SelectedFieldAudit:
         for field, value in scalar_values.items()
         if not isinstance(value, str) or not value.strip()
     )
+    if domain == "company" and "industry" in values:
+        industry, nested_disallowed, nested_invalid = _named_reference_audit(
+            values["industry"],
+            path="core_facts.industry",
+        )
+        values["industry"] = industry
+        disallowed_paths.update(nested_disallowed)
+        invalid_allowed_paths.update(nested_invalid)
     if domain == "paper":
         venue, nested_disallowed, nested_invalid = _named_reference_audit(
             values["venue"],

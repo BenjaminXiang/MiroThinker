@@ -156,8 +156,12 @@ RELEASED_OBJECTS_MAPPER_POLICY = {
     "policy_version": "canonical-v2-released-objects-mapper-v2",
     "allowed_fields_by_object_type": {
         "company": [
+            "core_facts.aliases",
+            "core_facts.industry",
+            "core_facts.key_personnel",
             "core_facts.name",
             "core_facts.normalized_name",
+            "core_facts.website",
             "summary_fields.profile_summary",
             "summary_fields.technology_route_summary",
         ],
@@ -2357,6 +2361,7 @@ def test_public_authority_audits_all_disallowed_and_invalid_field_paths_without_
     company["core_facts"].update(
         {"industry": "robotics", "website": "https://company.invalid"}
     )
+    company["summary_fields"]["evaluation_summary"] = "Historical evaluation."
     paper = _released_object_payload("paper", 0)
     paper["core_facts"].update(
         {
@@ -2389,11 +2394,19 @@ def test_public_authority_audits_all_disallowed_and_invalid_field_paths_without_
         parsed_rows[1].record.record_id,
     }
     company_gap = gaps_by_record[parsed_rows[0].record.record_id]
-    assert {
-        "core_facts.industry",
-        "core_facts.key_personnel",
-        "core_facts.website",
-    } <= set(company_gap.signal.affected_paths)
+    assert {"summary_fields.evaluation_summary"} <= set(
+        company_gap.signal.affected_paths
+    )
+    # industry/website/key_personnel moved from disallowed drops to projected
+    # fields when the s12e company whitelist widened.
+    assert "core_facts.industry" not in company_gap.signal.affected_paths
+    assert "core_facts.website" not in company_gap.signal.affected_paths
+    company_projection = next(
+        item for item in result[4].projections if item.entity_type == "company"
+    )
+    assert company_projection.industry is not None
+    assert company_projection.industry.name == "robotics"
+    assert company_projection.website == "https://company.invalid"
     paper_gap = gaps_by_record[parsed_rows[1].record.record_id]
     assert {
         "core_facts.abstract",
@@ -2588,6 +2601,71 @@ def test_public_authority_still_rejects_professor_missing_name_or_institution() 
     assert "core_facts.institution" in institution_gap.signal.affected_paths
     name_gap = gaps_by_record[parsed_rows[1].record.record_id]
     assert "core_facts.name" in name_gap.signal.affected_paths
+
+
+def test_public_authority_projects_company_industry_website_and_key_personnel() -> (
+    None
+):
+    """source 已有的 industry/website/key_personnel 应进入公司投影而非被白名单丢弃。"""
+    module = _module()
+    company = _released_object_payload("company", 40)
+    company["core_facts"].update(
+        {
+            "industry": "智能机器人",
+            "key_personnel": [
+                {"name": "刘先勇", "role": "执行董事&总经理"},
+                {"name": "王五", "role": "首席技术官", "unused": "dropped"},
+            ],
+            "website": "https://company.invalid/",
+        }
+    )
+    parsed_rows = _parsed_released_objects(module, (company,))
+
+    result = module._map_public_authority(
+        request=_request(module),
+        rows=parsed_rows,
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    assert result[4].counts_by_domain["company"] == 1
+    projection = next(
+        item for item in result[4].projections if item.entity_type == "company"
+    )
+    assert projection.industry is not None
+    assert projection.industry.name == "智能机器人"
+    assert projection.website == "https://company.invalid/"
+    assert [(item.name, item.role) for item in projection.key_personnel] == [
+        ("刘先勇", "执行董事&总经理"),
+        ("王五", "首席技术官"),
+    ]
+
+
+def test_public_authority_keeps_company_projection_when_optional_fields_absent() -> (
+    None
+):
+    module = _module()
+    company = _released_object_payload("company", 41)
+    company["core_facts"].pop("key_personnel")
+    parsed_rows = _parsed_released_objects(module, (company,))
+
+    result = module._map_public_authority(
+        request=_request(module),
+        rows=parsed_rows,
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    assert result[4].counts_by_domain["company"] == 1
+    projection = next(
+        item for item in result[4].projections if item.entity_type == "company"
+    )
+    assert projection.industry is None
+    assert projection.website is None
+    assert projection.key_personnel == ()
+    assert result[6] == ()
 
 
 def test_four_domain_mapper_normalizes_restored_source_shapes() -> None:
@@ -5346,8 +5424,11 @@ def test_complete_build_uses_verified_copies_landing_authority_projections_regis
         assert envelope is not None
         assert isinstance(envelope, module.CompleteCandidateBuildEnvelope)
         handoff = envelope.consumer_handoff
-        assert len(envelope.receipt.gap_hashes) == 4122
-        assert len(set(envelope.receipt.gap_hashes)) == 4122
+        # 1037 company payloads lost their only gap when core_facts.key_personnel
+        # became an allowed (projected) field path; paper/patent/link gaps are
+        # unchanged because the fixture lacks the newly allowed fields.
+        assert len(envelope.receipt.gap_hashes) == 3085
+        assert len(set(envelope.receipt.gap_hashes)) == 3085
         assert (
             envelope.receipt.recorded_decision_bundle_sha256
             == RECORDED_DECISION_BUNDLE_SHA256
