@@ -6245,3 +6245,77 @@ def test_store_replay_and_single_envelope_readback_are_exact_and_conflicts_fail(
         assert conflict_boundary.read_active_release() is None
         assert "physical-index" not in conflict_boundary.external_effects
         assert conflict_sink.writes == []
+
+
+def test_patent_applicant_links_seed_from_exact_company_names() -> None:
+    module = _module()
+    company = _released_object_payload("company", 70)
+    patent = _released_object_payload("patent", 71)
+    patent["core_facts"].update(
+        {
+            "applicants": [company["core_facts"]["name"]],
+            "company_ids": [],
+            "inventors": [],
+        }
+    )
+    rows = _parsed_released_objects(module, (company, patent))
+
+    seeds = module._typed_relationship_seeds(
+        source_rows=rows,
+        canonical_by_source={
+            f"source-released-object:{company['id']}": "company-c-pudu",
+            f"source-released-object:{patent['id']}": "patent-c-alpha",
+        },
+        canonical_domains={
+            "company-c-pudu": "company",
+            "patent-c-alpha": "patent",
+        },
+    )
+
+    applicant_seeds = [
+        seed for seed in seeds if seed.relationship_type_id == "patent_has_applicant"
+    ]
+    assert len(applicant_seeds) == 1
+    seed = applicant_seeds[0]
+    assert seed.target_object_id == company["id"]
+    assert seed.target_domain == "company"
+    assert seed.role_id == "applicant"
+    assert seed.evidence_metadata["source_field"] == "core_facts.applicants[0]"
+    assert seed.evidence_metadata["match_kind"] == "exact"
+
+
+def test_patent_applicant_links_abstain_on_ambiguous_names() -> None:
+    module = _module()
+    company_a = _released_object_payload("company", 70)
+    company_b = _released_object_payload("company", 71)
+    company_b["core_facts"]["name"] = company_a["core_facts"]["name"]
+    company_b["core_facts"]["normalized_name"] = company_a["core_facts"][
+        "normalized_name"
+    ]
+    patent = _released_object_payload("patent", 72)
+    patent["core_facts"].update(
+        {
+            "applicants": [company_a["core_facts"]["name"]],
+            "company_ids": [],
+            "inventors": [],
+        }
+    )
+    rows = _parsed_released_objects(module, (company_a, company_b, patent))
+
+    seeds = module._typed_relationship_seeds(
+        source_rows=rows,
+        canonical_by_source={
+            f"source-released-object:{company_a['id']}": "company-c-a",
+            f"source-released-object:{company_b['id']}": "company-c-b",
+            f"source-released-object:{patent['id']}": "patent-c-beta",
+        },
+        canonical_domains={
+            "company-c-a": "company",
+            "company-c-b": "company",
+            "patent-c-beta": "patent",
+        },
+    )
+
+    assert not any(
+        seed.relationship_type_id == "patent_has_applicant" for seed in seeds
+    )

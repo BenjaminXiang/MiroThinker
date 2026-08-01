@@ -183,6 +183,11 @@ from .path_eligibility import (
     PathEligibilityResult,
     TypedProjectionInput,
 )
+from .patent_applicant_linking import (
+    CompanyNameEntry,
+    build_company_name_index,
+    resolve_patent_applicant_links,
+)
 from .relationship_projection import (
     INTERNAL_REFERENCE_RELATIONSHIP_REGISTRY_CONTENT_SHA256,
     INTERNAL_REFERENCE_RELATIONSHIP_REGISTRY_VERSION,
@@ -4239,6 +4244,7 @@ def _typed_relationship_seeds(
     }
     company_ids_by_name: dict[str, set[str]] = defaultdict(set)
     professor_ids_by_name: dict[str, set[str]] = defaultdict(set)
+    company_name_entries: list[CompanyNameEntry] = []
     for object_id, row in rows_by_object.items():
         canonical_id = canonical_by_source.get(f"source-released-object:{object_id}")
         domain = canonical_domains.get(canonical_id or "")
@@ -4251,8 +4257,22 @@ def _typed_relationship_seeds(
             for value in (core.get("name"), core.get("normalized_name")):
                 if (key := _source_name_key(value)) is not None:
                     company_ids_by_name[key].add(object_id)
+            entry_names = tuple(
+                value.strip()
+                for value in (core.get("name"), core.get("normalized_name"))
+                if isinstance(value, str) and value.strip()
+            )
+            if entry_names:
+                company_name_entries.append(
+                    CompanyNameEntry(
+                        object_id=object_id,
+                        canonical_identity_id=canonical_id,
+                        names=entry_names,
+                    )
+                )
         elif (key := _source_name_key(core.get("name"))) is not None:
             professor_ids_by_name[key].add(object_id)
+    applicant_link_index = build_company_name_index(company_name_entries)
 
     seeds: list[_TypedRelationshipSeed] = []
     seen: set[tuple[str, str, str, str]] = set()
@@ -4393,7 +4413,7 @@ def _typed_relationship_seeds(
         if source_domain == "patent" and isinstance(core, dict):
             target_object_ids = core.get("company_ids")
             if not isinstance(target_object_ids, list):
-                continue
+                target_object_ids = []
             for index, target_object_id in enumerate(target_object_ids):
                 if not isinstance(target_object_id, str):
                     continue
@@ -4418,6 +4438,40 @@ def _typed_relationship_seeds(
                     },
                     source_row=row,
                 )
+            if not target_object_ids:
+                # No upstream company ids: resolve applicant names against
+                # released companies (unique-match only; ambiguous abstains).
+                applicant_names = core.get("applicants")
+                if isinstance(applicant_names, list):
+                    for applicant_index, resolution in enumerate(
+                        resolve_patent_applicant_links(
+                            applicant_names=applicant_names,
+                            index=applicant_link_index,
+                        )
+                    ):
+                        if (
+                            resolution.status != "accepted"
+                            or resolution.company_object_id is None
+                        ):
+                            continue
+                        add_seed(
+                            relationship_type_id="patent_has_applicant",
+                            source_object_id=object_id,
+                            source_domain="patent",
+                            target_object_id=resolution.company_object_id,
+                            target_domain="company",
+                            role_id="applicant",
+                            role_owner="target",
+                            evidence_kind="patent_applicant_assertion",
+                            requested_paths=("company_to_patent", "patent_to_company"),
+                            catalog_scenario_id="catalog_scenario.patent_has_applicant",
+                            evidence_metadata={
+                                "source_field": f"core_facts.applicants[{applicant_index}]",
+                                "match_kind": resolution.match_kind,
+                                "matched_company_name": resolution.matched_company_name,
+                            },
+                            source_row=row,
+                        )
     return tuple(sorted(seeds, key=lambda item: item.seed_id))
 
 
