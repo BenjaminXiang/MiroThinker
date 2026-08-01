@@ -3116,6 +3116,105 @@ def test_named_company_patent_query_stays_unbound_when_ambiguous_or_irrelevant(
     assert profile.relationship_paths == ()
 
 
+def test_focused_named_traversal_keeps_relationship_claims_eligible() -> None:
+    """A named-entity traversal turn has a focused search view and no
+    exact-lane hits; the selector must still admit release-bound relationship
+    claims instead of degrading to web-only eligibility."""
+    query = "深圳市普渡科技有限公司有哪些专利"
+    company_id = "company-c-pudu"
+    patent_items = tuple(
+        EvidenceItem(
+            evidence_id=f"evidence:patent:{index}",
+            object_id=f"patent-c-{index}",
+            domain="patent",
+            lane="relationship",
+            source_nature="local",
+            source_locator=f"canonical-v2-isolated:patent:{index}",
+            snippet=json.dumps(
+                {
+                    "title": f"专利标题{index}",
+                    "patent_number": f"CN10000000{index}U",
+                    "applicants": [{"name": "深圳市普渡科技有限公司"}],
+                    "_relationship": {
+                        "relationship_type": "patent_has_applicant",
+                        "roles": ["applicant"],
+                        "source_id": f"patent-c-{index}",
+                        "target_id": company_id,
+                    },
+                },
+                ensure_ascii=False,
+            ),
+            score=1.0,
+            source_authority="canonical_release",
+            claim_binding=EvidenceClaimBinding(
+                subject_id=f"canonical:company:{company_id}",
+                predicate="patent_has_applicant",
+                value=f"canonical:patent:patent-c-{index}",
+                status="accepted",
+            ),
+        )
+        for index in range(2)
+    )
+    web_item = EvidenceItem(
+        evidence_id="evidence:web:1",
+        object_id="web:1",
+        domain="patent",
+        lane="web",
+        source_nature="current_web",
+        source_locator="https://example.com/news",
+        snippet="深圳市普渡科技取得一项名为示例方法的专利：金融界消息……",
+        score=0.9,
+        source_authority="public_web",
+        claim_binding=EvidenceClaimBinding(
+            subject_id=f"canonical:company:{company_id}",
+            predicate="patent_has_applicant",
+            value="web:patent:example",
+            status="accepted",
+        ),
+    )
+    evidence_set = EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query=query,
+        protected_slots=(),
+        items=(*patent_items, web_item),
+        traces=(),
+        limitations=(),
+        entity_handles=tuple(
+            CanonicalEntityHandle(
+                canonical_id=item.object_id,
+                domain="patent",
+                display_name=f"专利标题{index}",
+                evidence_ids=(item.evidence_id,),
+            )
+            for index, item in enumerate(patent_items)
+        ),
+    )
+    selector = serving_module._answer_selector(
+        bundle=SimpleNamespace(
+            max_candidates=12,
+            max_web_results=8,
+            answer_model_id="canonical-v2-deterministic-answer-v1",
+        )
+    )
+
+    proposal = selector(
+        TurnRequest(
+            session_id="session:focused-traversal",
+            turn_id="turn:focused-traversal",
+            query=query,
+            release_id=RELEASE_ID,
+            evidence_set=evidence_set,
+        )
+    )
+
+    patent_claims = [
+        claim for claim in proposal.claims if claim.predicate == "patent_has_applicant"
+    ]
+    assert len(patent_claims) == 3
+    assert any("专利标题0" in claim.text for claim in patent_claims)
+    assert any("专利标题1" in claim.text for claim in patent_claims)
+
+
 def test_displayed_set_follow_up_binds_claims_after_prose_scope_narrowing(
     tmp_path: Path,
 ) -> None:

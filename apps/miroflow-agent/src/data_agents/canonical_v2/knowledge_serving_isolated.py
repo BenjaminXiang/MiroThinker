@@ -3739,6 +3739,10 @@ def _answer_selector(
                 item
                 for item in request.evidence_set.items
                 if item.source_nature == "current_web"
+                # A named-entity traversal turn also has a focused search view
+                # and no exact-lane hits; its release-bound relationship
+                # claims are the answer itself, never focus noise.
+                or item.lane == "relationship"
             )
         else:
             eligible_items = tuple(
