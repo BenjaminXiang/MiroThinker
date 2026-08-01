@@ -2828,6 +2828,47 @@ def test_public_authority_keeps_patent_projection_when_dates_null() -> None:
     } & set(patent_gap.signal.affected_paths)
 
 
+@pytest.mark.parametrize(
+    "polluted_name",
+    ("师资列表", "教育经历", "师资介绍", "相关教师", "教师名录", "科研成果"),
+    ids=(
+        "faculty_list",
+        "education_history",
+        "faculty_intro",
+        "related_teachers",
+        "teacher_directory",
+        "research_outputs",
+    ),
+)
+def test_public_authority_rejects_professor_named_as_generic_section_label(
+    polluted_name: str,
+) -> None:
+    """栏目名抽取污染（s12e 教授审计 6 条记录及同类标签）必须硬拒绝而非放行。"""
+    module = _module()
+    professor = _released_object_payload("professor", 90)
+    professor["display_name"] = polluted_name
+    professor["core_facts"].update(
+        {"name": polluted_name, "canonical_name_zh": polluted_name}
+    )
+    parsed_rows = _parsed_released_objects(module, (professor,))
+
+    result = module._map_public_authority(
+        request=_request(module),
+        rows=parsed_rows,
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    assert result[4].counts_by_domain["professor"] == 0
+    assert not [
+        item for item in result[4].projections if item.entity_type == "professor"
+    ]
+    gaps_by_record = {gap.signal.evidence_ids[0]: gap for gap in result[6]}
+    name_gap = gaps_by_record[parsed_rows[0].record.record_id]
+    assert "core_facts.name" in name_gap.signal.affected_paths
+
+
 def test_four_domain_mapper_normalizes_restored_source_shapes() -> None:
     module = _module()
     company, professor, paper, patent, link = _restored_shape_payloads()

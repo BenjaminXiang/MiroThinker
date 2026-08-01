@@ -288,6 +288,20 @@ _PROFESSOR_DEGRADABLE_FIELDS = (
     "profile_summary",
     "title",
 )
+# Generic faculty-page section labels observed as extracted professor
+# "names" (s12e professor audit: 师资列表×2, 教育经历×2, 师资介绍, 相关教师
+# plus conservative equivalents).  They are extraction pollution, not
+# people, so they stay hard rejections next to the name+institution check.
+_PROFESSOR_POLLUTION_NAME_LABELS = frozenset(
+    {
+        "师资列表",
+        "师资介绍",
+        "教育经历",
+        "相关教师",
+        "教师名录",
+        "科研成果",
+    }
+)
 _EXPECTED_ALEMBIC_REVISION = "C2_0011"
 _OWNER_SCHEMAS = (
     "company",
@@ -2538,6 +2552,15 @@ def _selected_fields(payload: dict[str, Any]) -> _SelectedFieldAudit:
             )
             for field in values
         }
+        # Section-label pollution (see _PROFESSOR_POLLUTION_NAME_LABELS) is a
+        # hard rejection, not a quality signal: admitting it would surface
+        # generic page columns as people in answers.
+        resolved_name = values["name"]
+        if (
+            isinstance(resolved_name, str)
+            and resolved_name.strip() in _PROFESSOR_POLLUTION_NAME_LABELS
+        ):
+            invalid_allowed_paths.add("core_facts.name")
         # Only name+institution stay hard requirements; the other historically
         # required fields degrade to quality signals with explicit fallbacks.
         for field in _PROFESSOR_DEGRADABLE_FIELDS:
