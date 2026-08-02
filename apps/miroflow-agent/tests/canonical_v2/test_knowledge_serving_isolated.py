@@ -30,6 +30,7 @@ from src.data_agents.canonical_v2.knowledge_read import (
     FusedCandidate,
     InstitutionCatalog,
     LaneRequest,
+    LocalSourceRelationshipTrace,
     ProtectedSlot,
     QueryPlanningRequest,
     RerankRequest,
@@ -112,6 +113,67 @@ def _write_bundle(tmp_path: Path) -> tuple[Path, RecordedServingBundle]:
         encoding="utf-8",
     )
     return path, bundle
+
+
+def _source_relationship_trace(
+    *,
+    displayed_entity_id: str,
+    candidate_canonical_id: str,
+    candidate_display_name: str,
+) -> LocalSourceRelationshipTrace:
+    """Minimal legal source-bound relationship trace bound to one displayed anchor."""
+    sha = "a" * 64
+    return LocalSourceRelationshipTrace(
+        target_id="index-target:s12b-test",
+        target_marker_sha256=sha,
+        manifest_sha256=sha,
+        index_result_content_sha256=sha,
+        publication_verification_evidence_ids=("evidence:publication:1",),
+        release_id=RELEASE_ID,
+        lane_request_content_sha256=sha,
+        relationship_enumeration_policy_sha256=sha,
+        displayed_entity_ids=(displayed_entity_id,),
+        displayed_entity_id=displayed_entity_id,
+        protected_slot_id="slot:displayed-entity-set",
+        protected_slot_content_sha256=sha,
+        query_as_of=NOW,
+        query_relationship_type_id="company_has_patent",
+        query_direction="company_to_patent",
+        query_source_type="company",
+        query_target_type="patent",
+        relationship_request_sha256=sha,
+        relationship_result_sha256=sha,
+        relationship_snapshot_as_of=NOW,
+        canonical_relationship_id="canonical-relationship:1",
+        current_relationship_content_sha256=sha,
+        relationship_type_id="patent_has_applicant",
+        relationship_type_version="canonical-v2-relationship-v1",
+        physical_direction="inverse",
+        physical_source_id=candidate_canonical_id,
+        physical_source_type="patent",
+        physical_target_id=displayed_entity_id,
+        physical_target_type="company",
+        relationship_role_bindings=(("applicant", f"canonical:company:{displayed_entity_id}"),),
+        selected_evidence_refs=("evidence:relationship:1",),
+        projection_candidate_id="projection-candidate:1",
+        projection_candidate_content_sha256=sha,
+        assertion_kind="typed_relationship_assertion",
+        assertion_id="assertion:1",
+        assertion_content_sha256=sha,
+        source_record_id="source-record:1",
+        relationship_decision_id="relationship-decision:1",
+        relationship_decision_content_sha256=sha,
+        candidate_outcome_content_sha256=sha,
+        candidate_canonical_id=candidate_canonical_id,
+        candidate_domain="patent",
+        candidate_display_name=candidate_display_name,
+        candidate_projection_content_sha256=sha,
+        candidate_origin_public_evidence_ids=("evidence:publication:1",),
+        claim_subject_id=f"canonical:company:{displayed_entity_id}",
+        claim_predicate="patent_has_applicant",
+        claim_value=f"canonical:patent:{candidate_canonical_id}",
+        snippet_sha256=sha,
+    )
 
 
 def test_content_addressed_serving_bundle_is_secret_free_and_executable(
@@ -3146,6 +3208,11 @@ def test_focused_named_traversal_keeps_relationship_claims_eligible() -> None:
             ),
             score=1.0,
             source_authority="canonical_release",
+            local_projection_trace=_source_relationship_trace(
+                displayed_entity_id=company_id,
+                candidate_canonical_id=f"patent-c-{index}",
+                candidate_display_name=f"专利标题{index}",
+            ),
             claim_binding=EvidenceClaimBinding(
                 subject_id=f"canonical:company:{company_id}",
                 predicate="patent_has_applicant",
@@ -3175,7 +3242,14 @@ def test_focused_named_traversal_keeps_relationship_claims_eligible() -> None:
     evidence_set = EvidenceSet(
         release_id=RELEASE_ID,
         original_query=query,
-        protected_slots=(),
+        protected_slots=(
+            ProtectedSlot(
+                kind="displayed_entity_set",
+                value="displayed_entity_set",
+                raw_text="",
+                entity_ids=(company_id,),
+            ),
+        ),
         items=(*patent_items, web_item),
         traces=(),
         limitations=(),
@@ -3213,6 +3287,146 @@ def test_focused_named_traversal_keeps_relationship_claims_eligible() -> None:
     assert len(patent_claims) == 3
     assert any("专利标题0" in claim.text for claim in patent_claims)
     assert any("专利标题1" in claim.text for claim in patent_claims)
+
+
+def test_focused_named_traversal_drops_relationship_items_unbound_to_displayed_anchor() -> None:
+    """A focused named-entity traversal turn must admit only relationship claims
+    whose local_projection_trace proves the item is bound to the turn's
+    displayed anchor; untraceable and cross-anchor relationship candidates must
+    never answer (cross-pool bleed), while current-web items stay eligible."""
+    query = "深圳市普渡科技有限公司有哪些专利"
+    company_id = "company-c-pudu"
+    other_company_id = "company-c-ubtech"
+
+    def patent_item(
+        evidence_id: str,
+        object_id: str,
+        *,
+        trace: LocalSourceRelationshipTrace | None,
+    ) -> EvidenceItem:
+        return EvidenceItem(
+            evidence_id=evidence_id,
+            object_id=object_id,
+            domain="patent",
+            lane="relationship",
+            source_nature="local",
+            source_locator=f"canonical-v2-isolated:{object_id}",
+            snippet=json.dumps(
+                {
+                    "title": f"专利{evidence_id}",
+                    "patent_number": f"CN10000000{object_id}U",
+                    "applicants": [{"name": "深圳市普渡科技有限公司"}],
+                    "_relationship": {
+                        "relationship_type": "patent_has_applicant",
+                        "roles": ["applicant"],
+                        "source_id": object_id,
+                        "target_id": company_id,
+                    },
+                },
+                ensure_ascii=False,
+            ),
+            score=1.0,
+            source_authority="canonical_release",
+            local_projection_trace=trace,
+            claim_binding=EvidenceClaimBinding(
+                subject_id=f"canonical:company:{company_id}",
+                predicate="patent_has_applicant",
+                value=f"canonical:patent:{object_id}",
+                status="accepted",
+            ),
+        )
+
+    bound_item = patent_item(
+        "evidence:patent:bound",
+        "patent-c-bound",
+        trace=_source_relationship_trace(
+            displayed_entity_id=company_id,
+            candidate_canonical_id="patent-c-bound",
+            candidate_display_name="专利bound",
+        ),
+    )
+    untraceable_item = patent_item(
+        "evidence:patent:untraceable",
+        "patent-c-untraceable",
+        trace=None,
+    )
+    wrong_anchor_item = patent_item(
+        "evidence:patent:wrong-anchor",
+        "patent-c-wrong-anchor",
+        trace=_source_relationship_trace(
+            displayed_entity_id=other_company_id,
+            candidate_canonical_id="patent-c-wrong-anchor",
+            candidate_display_name="专利wrong-anchor",
+        ),
+    )
+    web_item = EvidenceItem(
+        evidence_id="evidence:web:1",
+        object_id="web:1",
+        domain="patent",
+        lane="web",
+        source_nature="current_web",
+        source_locator="https://example.com/news",
+        snippet="深圳市普渡科技取得一项名为示例方法的专利：金融界消息……",
+        score=0.9,
+        source_authority="public_web",
+        claim_binding=EvidenceClaimBinding(
+            subject_id=f"canonical:company:{company_id}",
+            predicate="patent_has_applicant",
+            value="web:patent:example",
+            status="accepted",
+        ),
+    )
+    evidence_set = EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query=query,
+        protected_slots=(
+            ProtectedSlot(
+                kind="displayed_entity_set",
+                value="displayed_entity_set",
+                raw_text="",
+                entity_ids=(company_id,),
+            ),
+        ),
+        items=(bound_item, untraceable_item, wrong_anchor_item, web_item),
+        traces=(),
+        limitations=(),
+        entity_handles=tuple(
+            CanonicalEntityHandle(
+                canonical_id=item.object_id,
+                domain="patent",
+                display_name=item.object_id,
+                evidence_ids=(item.evidence_id,),
+            )
+            for item in (bound_item, untraceable_item, wrong_anchor_item, web_item)
+        ),
+    )
+    selector = serving_module._answer_selector(
+        bundle=SimpleNamespace(
+            max_candidates=12,
+            max_web_results=8,
+            answer_model_id="canonical-v2-deterministic-answer-v1",
+        )
+    )
+
+    proposal = selector(
+        TurnRequest(
+            session_id="session:focused-traversal",
+            turn_id="turn:focused-traversal",
+            query=query,
+            release_id=RELEASE_ID,
+            evidence_set=evidence_set,
+        )
+    )
+
+    claim_evidence_ids = {
+        evidence_id
+        for claim in proposal.claims
+        for evidence_id in claim.evidence_ids
+    }
+    assert "evidence:patent:bound" in claim_evidence_ids
+    assert "evidence:web:1" in claim_evidence_ids
+    assert "evidence:patent:untraceable" not in claim_evidence_ids
+    assert "evidence:patent:wrong-anchor" not in claim_evidence_ids
 
 
 def test_displayed_set_follow_up_binds_claims_after_prose_scope_narrowing(

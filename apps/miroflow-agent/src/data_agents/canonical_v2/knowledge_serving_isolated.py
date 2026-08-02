@@ -3682,6 +3682,32 @@ def _provider_keepwarm_cycle(
     return cycle
 
 
+def _relationship_trace_anchor_id(trace: Any) -> str | None:
+    """Displayed-anchor id proven by a relationship projection trace.
+
+    The isolated read runtime writes exactly one displayed anchor onto each
+    relationship trace (``displayed_entity_id`` /
+    ``displayed_company_id`` / per-domain variants); ``displayed_entity_ids``
+    is the common fallback for trace shapes without a single-name anchor.
+    """
+    for field_name in (
+        "displayed_entity_id",
+        "displayed_company_id",
+        "displayed_patent_id",
+        "displayed_professor_id",
+        "displayed_paper_id",
+    ):
+        anchor_id = getattr(trace, field_name, None)
+        if isinstance(anchor_id, str) and anchor_id:
+            return anchor_id
+    entity_ids = getattr(trace, "displayed_entity_ids", ())
+    if isinstance(entity_ids, tuple):
+        for entity_id in entity_ids:
+            if isinstance(entity_id, str) and entity_id:
+                return entity_id
+    return None
+
+
 def _answer_selector(
     *,
     bundle: RecordedServingBundle,
@@ -3735,14 +3761,28 @@ def _answer_selector(
         preferred_objects.update(exact_named_objects)
         focused_entity = search_view != request.query.strip().rstrip("？?。！!")
         if focused_entity and not preferred_objects:
+            displayed_anchor_ids = frozenset(
+                entity_id
+                for slot in request.evidence_set.protected_slots
+                if slot.kind == "displayed_entity_set"
+                for entity_id in slot.entity_ids
+            )
             eligible_items = tuple(
                 item
                 for item in request.evidence_set.items
                 if item.source_nature == "current_web"
                 # A named-entity traversal turn also has a focused search view
                 # and no exact-lane hits; its release-bound relationship
-                # claims are the answer itself, never focus noise.
-                or item.lane == "relationship"
+                # claims are the answer itself, never focus noise — but only
+                # when the item's trace proves it is bound to the turn's
+                # displayed anchor, so cross-pool or untraceable relationship
+                # candidates cannot answer.
+                or (
+                    item.lane == "relationship"
+                    and displayed_anchor_ids
+                    and _relationship_trace_anchor_id(item.local_projection_trace)
+                    in displayed_anchor_ids
+                )
             )
         else:
             eligible_items = tuple(
