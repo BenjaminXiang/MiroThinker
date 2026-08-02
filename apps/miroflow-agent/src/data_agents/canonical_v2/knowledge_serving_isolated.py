@@ -2521,8 +2521,9 @@ def _serving_sufficiency_decider(
                 )
             else:
                 core = part.requested_value
-                company_candidates: list[tuple[str, str]] = []
+                company_candidates: list[tuple[str, str, str]] = []
                 seen_candidate_ids: set[str] = set()
+                seen_web_names: set[str] = set()
                 covered_ids: set[str] = set()
                 for item in request.evidence:
                     if item.domain != "company":
@@ -2536,20 +2537,58 @@ def _serving_sufficiency_decider(
                     seen_candidate_ids.add(object_id)
                     names = _payload_display_names(item)
                     entity_name = names[0] if names else object_id
-                    company_candidates.append((object_id, entity_name))
+                    seen_web_names.add(entity_name)
+                    company_candidates.append((object_id, entity_name, item.snippet))
                     if _theme_evidence_covers(
                         core, f"{entity_name} {item.snippet}"
                     ):
                         covered_ids.add(object_id)
+                # Web-only suppliers (九号 in brand listicles, 深南 in a
+                # top-100 ranking) never reach the probes through local
+                # object ids; extract company names from current-web
+                # evidence so they can be verified individually too.
+                for item in request.evidence:
+                    if (
+                        item.domain != "company"
+                        or item.source_nature != "current_web"
+                    ):
+                        continue
+                    for name in _company_names_from_web_text(item.snippet):
+                        if name in seen_web_names:
+                            continue
+                        seen_web_names.add(name)
+                        candidate_id = f"web-name:{name}"
+                        company_candidates.append(
+                            (candidate_id, name, item.snippet)
+                        )
+                        if _theme_evidence_covers(
+                            core, f"{name} {item.snippet}"
+                        ):
+                            covered_ids.add(candidate_id)
                 uncovered_candidates = [
-                    (object_id, entity_name)
-                    for object_id, entity_name in company_candidates
-                    if object_id not in covered_ids
+                    (object_id, entity_name, snippet)
+                    for object_id, entity_name, snippet in company_candidates
+                    if not (
+                        object_id.startswith(("company:", "company-"))
+                        and object_id in covered_ids
+                    )
                 ]
+                # Theme-partial candidates verify first so unrelated names
+                # cannot consume the probe ceiling (stable within a tier);
+                # web-extracted names always probe (their snippet can only
+                # mention, not bind, the company to the theme).
+                uncovered_candidates.sort(
+                    key=lambda candidate: -_theme_bigram_coverage(
+                        core, f"{candidate[1]} {candidate[2]}"
+                    )
+                )
                 if not uncovered_candidates:
                     covering_id = next(
-                        (object_id for object_id, _ in company_candidates
-                         if object_id in covered_ids),
+                        (
+                            object_id
+                            for object_id, _, _ in company_candidates
+                            if object_id in covered_ids
+                        ),
                         None,
                     )
                     coverage_items = tuple(
@@ -2570,7 +2609,7 @@ def _serving_sufficiency_decider(
                             entity_name=entity_name,
                             theme_core=core,
                         )
-                        for object_id, entity_name in uncovered_candidates[
+                        for object_id, entity_name, _ in uncovered_candidates[
                             :_THEME_PROBE_MAX_CANDIDATES
                         ]
                     )

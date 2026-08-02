@@ -31,10 +31,12 @@ from src.data_agents.canonical_v2.knowledge_read import (
     InstitutionCatalog,
     LaneRequest,
     LocalSourceRelationshipTrace,
+    MaterialQuestionPart,
     ProtectedSlot,
     QueryPlanningRequest,
     RerankRequest,
     StructuredConstraints,
+    SufficiencyDecisionRequest,
     WebSearchPolicy,
     _lane_request,
     _materialize_requested_traversal,
@@ -3456,6 +3458,99 @@ def test_focused_named_traversal_keeps_relationship_claims_eligible() -> None:
     assert len(patent_claims) == 3
     assert any("专利标题0" in claim.text for claim in patent_claims)
     assert any("专利标题1" in claim.text for claim in patent_claims)
+
+
+def test_theme_probes_include_web_extracted_company_names_ordered_by_partial_match() -> None:
+    """Theme probes must include web-extracted company names (深南 in a PCB
+    top-100 ranking), ordered by theme partial-match so unrelated names
+    cannot consume the probe ceiling; locally covered candidates stay out."""
+    theme_part = MaterialQuestionPart(
+        part_id="serving-theme:test",
+        text="我想找PCB打板， 有哪些推荐",
+        subject_id="serving-theme:test",
+        predicate="theme_relevance",
+        requested_value="PCB打板",
+        material=True,
+        answer_scoped=False,
+    )
+    local_uncovered = EvidenceItem(
+        evidence_id="evidence:local:jiali",
+        object_id="company-c-jiali",
+        domain="company",
+        lane="vector",
+        source_nature="local",
+        source_locator="canonical-v2-isolated:jiali",
+        snippet=json.dumps(
+            {"name": "深圳嘉立创科技集团股份有限公司"},
+            ensure_ascii=False,
+        ),
+        score=0.8,
+        source_authority="canonical_release",
+        claim_binding=EvidenceClaimBinding(
+            subject_id="company-c-jiali",
+            predicate="semantic_recall",
+            value="v" * 64,
+            status="admitted",
+        ),
+    )
+    local_covered = EvidenceItem(
+        evidence_id="evidence:local:huqiu",
+        object_id="company-c-huqiu",
+        domain="company",
+        lane="vector",
+        source_nature="local",
+        source_locator="canonical-v2-isolated:huqiu",
+        snippet=json.dumps(
+            {"name": "华秋电子", "profile_summary": "PCB打板一站式服务"},
+            ensure_ascii=False,
+        ),
+        score=0.8,
+        source_authority="canonical_release",
+        claim_binding=EvidenceClaimBinding(
+            subject_id="company-c-huqiu",
+            predicate="semantic_recall",
+            value="v" * 64,
+            status="admitted",
+        ),
+    )
+    web_ranking = EvidenceItem(
+        evidence_id="evidence:web:ranking",
+        object_id="web-object:ranking",
+        domain="company",
+        lane="web",
+        source_nature="current_web",
+        source_locator="https://example.test/pcb-top100",
+        snippet="2023中国PCB百强企业名单：深南电路股份有限公司排名前列",
+        score=0.9,
+        source_authority="web_search",
+        claim_binding=EvidenceClaimBinding(
+            subject_id="web-object:ranking",
+            predicate="current_web_result",
+            value="v" * 64,
+            status="observed",
+        ),
+    )
+    store = serving_module._SupplementalContextStore()
+    decider = serving_module._serving_sufficiency_decider(context_store=store)
+    decider(
+        SufficiencyDecisionRequest(
+            plan_id="plan:theme-probe-test",
+            release_id=RELEASE_ID,
+            original_query="我想找PCB打板， 有哪些推荐",
+            material_parts=(theme_part,),
+            evidence=(local_uncovered, local_covered, web_ranking),
+        )
+    )
+    context = store.pop("plan:theme-probe-test")
+    assert context is not None
+    probes = context.theme_probes
+    names = tuple(probe.entity_name for probe in probes)
+    assert "深南电路股份有限公司" in names
+    assert "深圳嘉立创科技集团股份有限公司" in names
+    assert "华秋电子" not in names  # locally covered: no probe needed
+    assert names.index("深南电路股份有限公司") < names.index(
+        "深圳嘉立创科技集团股份有限公司"
+    )
 
 
 def test_enumeration_selector_web_claim_limit_follows_widened_window() -> None:
