@@ -165,6 +165,12 @@ def _planning_displayed_ids(
             return ()
         return (active_anchor_id,)
     if has_set_referent(query):
+        # A set referent with an intra-query antecedent ("…厂商，他们…") is
+        # self-resolving: the query itself names the set it points at, so it
+        # must not bind (and thereby narrow) the previous topic's displayed
+        # set.  Same rule as the clarification gate below.
+        if has_internal_set_antecedent(query):
+            return ()
         return displayed_ids
     if has_continuation_intent(query):
         return (active_anchor_id,) if active_anchor_id is not None else ()
@@ -207,6 +213,8 @@ def _history_displayed_ids(
     if has_singular_referent(query):
         kind = "anchor"
     elif has_set_referent(query):
+        if has_internal_set_antecedent(query):
+            return ()
         kind = "result_set"
     elif has_continuation_intent(query):
         kind = "anchor"
@@ -711,9 +719,12 @@ class CanonicalV2ChatAdapter:
                 # A topic switch replaced the session the anaphora refers to:
                 # bind the archived referent history instead of free-retrieving.
                 # Never when the query names its own subject — its referent
-                # words are cataphoric, not session references.
-                explicit_new_subject = has_explicit_named_subject(
-                    normalized_query
+                # words are cataphoric, not session references.  An intra-query
+                # set antecedent ("…厂商，他们…") is likewise self-resolving
+                # and must not bind the archived result set.
+                explicit_new_subject = (
+                    has_explicit_named_subject(normalized_query)
+                    or has_internal_set_antecedent(normalized_query)
                 ) and not (
                     prior_context is not None
                     and prior_context.active_anchor is not None

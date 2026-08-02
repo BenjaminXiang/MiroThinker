@@ -4250,3 +4250,42 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   `43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc`; the disposable Candidate
   `publish.active_release` count remains zero. No source/canonical/index content, active pointer,
   promotion, archive, cleanup, or Cutover changed.
+
+---
+
+## 2026-08-02 23:10 · Round 3 verification (collection-reference regression round)
+
+Scope: the hotel-delivery-robot T1→T2→T3 regression and the full-workbook single-session
+replay surfaced three defects, all fixed with regression tests:
+
+1. **Reranker dropped vector canonicals on enumeration turns.** `_serving_reranker` filed
+   every vector-lane candidate under `other`; on list questions the Web lane filled the
+   `candidate_limit` window, zero canonical handles survived, `_displayed_ids` stayed empty,
+   and the next turn could not resolve "上述企业". Fixed by treating vector canonicals as
+   strong local on enumeration queries (balanced with Web), preserving the entity-question
+   Web-gap-ahead order (王学谦 test unchanged).
+
+2. **Geography slot predicate mismatch.** f99f062 required a literal `geography` claim, but
+   the serving Web lane emits `headquarters_city`/`registered_address`/`office_city`/
+   `branch_city` and local candidates carry no geography claim — every city-filtered follow-up
+   collapsed to the supplemental lane (T2 answered only 普渡/隆博). The slot now accepts the
+   full geography predicate family plus the city embedded in a company's registered name.
+
+3. **Intra-query set antecedent bound the previous topic's displayed set.** Q14
+   ("…厂商，他们…") was treated as a set referent against the archived hotel/PCB set; the
+   vector lane filtered to zero and the answer was "无法回答". `has_internal_set_antecedent`
+   now gates planning, history, and the archived-history fallback consistently.
+
+Fresh checks: serving isolated `121 passed` (116 + 3 new + atomic contract); referent history
+`19 passed`; admin chat adapter `62 passed / 1 pre-existing S11A seam fail` (unchanged from
+baseline, verified by stash).
+
+Workbook replay on v39 (port 18199), single session, all 25 turns: substantive answer on every
+turn, zero transport/contract failures; hotel T2 (深圳 subset) lists 11 companies and excludes
+博歌 (总部香港) correctly; Q7 now answers 许晋诚 (帕西尼感知科技, matches the reference answer);
+Q14 answers 13+ 深圳具身智能/灵巧手厂商 with per-firm data routes.
+
+Residual backlog (unchanged): patent-applicant display names remain English for UBTECH
+(CN117873146A → "Shenzhen Ubtech Technology Co ltd") until the s12f candidate is rebuilt with
+the applicant-binding batch; 上海开普勒/九号 hotel-delivery semantics depend on the
+data-enrichment backlog; Q4T1/Q17T1/Q8T2 precision adjudication remains open.

@@ -2247,3 +2247,84 @@ def test_extract_protected_slots_skips_geography_inside_named_entities() -> None
     # Descriptive "深圳申请公司" is not a named entity: the constraint must
     # survive planning so the patent-anchor traversal stays filtered.
     assert geography_slots("该专利有哪些深圳申请公司") == ("深圳",)
+
+
+def test_geography_slot_accepts_relation_and_registered_name_evidence() -> None:
+    """A geography slot must be satisfiable by the Web lane's relation
+    predicates and by a company's own registered-name city, not only by a
+    literal ``geography`` claim.
+
+    Regression for the hotel-delivery-robot follow-up: after f99f062 the slot
+    required predicate == "geography", but the serving Web lane emits
+    headquarters_city for "总部" queries and local company candidates carry no
+    geography claim at all, so every candidate was rejected and the answer
+    collapsed to the supplemental lane ("普渡/隆博" instead of the full
+    深圳 subset).
+    """
+    module = _module()
+
+    # Web lane relation predicate satisfies the slot.
+    web_failures = module._constraint_failures(
+        slots=(module.ProtectedSlot(kind="geography", value="深圳", raw_text="深圳"),),
+        identity_ids=("company:web-candidate",),
+        claim_subject_ids=("company:web-candidate",),
+        domain="company",
+        display_name="Pudu Robotics",
+        items=(
+            _item(
+                module,
+                evidence_id="evidence:headquarters-shenzhen",
+                object_id="company:web-candidate",
+                lane="web",
+                domain="company",
+                predicate="headquarters_city",
+                value="深圳",
+                source_nature="current_web",
+                source_authority="web_search",
+            ),
+        ),
+    )
+    assert web_failures == []
+
+    # A local company whose registered name carries the city satisfies the
+    # slot even though its evidence has no explicit geography claim.
+    local_failures = module._constraint_failures(
+        slots=(module.ProtectedSlot(kind="geography", value="深圳", raw_text="深圳"),),
+        identity_ids=("company:c-pudu",),
+        claim_subject_ids=("company:c-pudu",),
+        domain="company",
+        display_name="深圳市普渡科技有限公司",
+        items=(
+            _item(
+                module,
+                evidence_id="evidence:canonical-projection",
+                object_id="company:c-pudu",
+                lane="structured",
+                domain="company",
+                predicate="canonical_projection",
+                value="lookup:sha256",
+            ),
+        ),
+    )
+    assert local_failures == []
+
+    # A company whose registered name carries a different city still fails.
+    other_city_failures = module._constraint_failures(
+        slots=(module.ProtectedSlot(kind="geography", value="深圳", raw_text="深圳"),),
+        identity_ids=("company:c-keenon",),
+        claim_subject_ids=("company:c-keenon",),
+        domain="company",
+        display_name="上海擎朗智能科技有限公司",
+        items=(
+            _item(
+                module,
+                evidence_id="evidence:canonical-projection-sh",
+                object_id="company:c-keenon",
+                lane="structured",
+                domain="company",
+                predicate="canonical_projection",
+                value="lookup:sha256",
+            ),
+        ),
+    )
+    assert [failure.slot_kind for failure in other_city_failures] == ["geography"]

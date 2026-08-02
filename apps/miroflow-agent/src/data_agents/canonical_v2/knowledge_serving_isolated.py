@@ -1826,6 +1826,17 @@ def _serving_reranker(request: RerankRequest) -> RerankProposal:
     def candidate_key(candidate: Any) -> tuple[float, str]:
         return (-candidate.raw_score, candidate.result_id)
 
+    # List-style questions are recall-driven: the vector lane is the primary
+    # local witness (exact/lexical lanes rarely fire for theme questions), so
+    # its canonical candidates must stay in the same balanced lane as the Web
+    # gap candidates instead of being pushed to the tail as mere neighbors.
+    # Entity questions keep the conservative order: a Web gap that names the
+    # target explicitly outranks a vector neighbor that merely resembles it.
+    enumeration = any(
+        marker in request.original_query
+        for marker in _ENUMERATION_QUERY_MARKERS
+    )
+
     mixed: list[Any] = []
     local: list[Any] = []
     web: list[Any] = []
@@ -1837,8 +1848,20 @@ def _serving_reranker(request: RerankRequest) -> RerankProposal:
         has_strong_local = any(
             item.source_nature == "local"
             and item.lane
-            in {"exact", "structured", "lexical", "relationship", "internal_reference"}
+            in {
+                "exact",
+                "structured",
+                "lexical",
+                "relationship",
+                "internal_reference",
+            }
             for item in candidate.evidence
+        ) or (
+            enumeration
+            and any(
+                item.source_nature == "local" and item.lane == "vector"
+                for item in candidate.evidence
+            )
         )
         if has_web and has_strong_local:
             mixed.append(candidate)

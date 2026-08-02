@@ -3978,6 +3978,21 @@ def _explicit_organization_name(query: str) -> str | None:
 
 
 _GEOGRAPHY_WORDS = ("深圳", "广州", "上海", "北京")
+# Geography slots must be satisfiable by any claim predicate that witnesses a
+# city bound to the candidate itself.  The serving Web lane emits the
+# relation-specific predicates (headquarters/registered/office/branch city)
+# plus the generic "geography" predicate; local lanes may bind city words in
+# the candidate's own registered name ("深圳市普渡科技有限公司").  Requiring
+# the literal "geography" predicate alone silently rejects every Web
+# candidate, which makes any city-filtered follow-up ("上述企业里总部在深圳的
+# 企业有哪些") collapse to the supplemental lane.
+_GEOGRAPHY_CLAIM_PREDICATES = (
+    "geography",
+    "headquarters_city",
+    "registered_address",
+    "office_city",
+    "branch_city",
+)
 _COMPANY_LEGAL_SUFFIXES = ("有限责任公司", "股份有限公司", "有限公司")
 _INSTITUTION_NAME_PATTERN = re.compile(
     r"[\u4e00-\u9fff]{2,12}(?:大学|学院|研究院|研究生院)"
@@ -6418,7 +6433,8 @@ def _constraint_failures(
                             item.claim_binding.value
                             for item in items
                             if item.claim_binding is not None
-                            and item.claim_binding.predicate == "geography"
+                            and item.claim_binding.predicate
+                            in _GEOGRAPHY_CLAIM_PREDICATES
                             and item.claim_binding.subject_id
                             in normalized_claim_subject_ids
                         ),
@@ -6437,6 +6453,18 @@ def _constraint_failures(
                             == item.local_projection_trace.internal_reference_id
                             for fact in item.local_projection_trace.matched_filter_facts
                             if fact.field == "geography" and fact.evidence_ids
+                        ),
+                        *(
+                            geography
+                            for geography in _GEOGRAPHY_WORDS
+                            if domain == "company"
+                            and (
+                                geography in display_name
+                                or any(
+                                    geography in identity_id
+                                    for identity_id in normalized_identity_ids
+                                )
+                            )
                         ),
                     )
                 )

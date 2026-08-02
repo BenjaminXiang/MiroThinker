@@ -791,3 +791,49 @@ def test_explicit_new_subject_wins_over_session_anchor() -> None:
     assert directive is not None
     assert directive.transition == "topic_switch"
     assert response.clarification is None
+
+
+def test_intra_query_set_antecedent_never_binds_archived_result_set() -> None:
+    """A set referent with an intra-query antecedent must not bind the
+    previous topic's archived result set either.
+
+    Live-derived (single-session 问题14 after 问题2's hotel-robot set):
+    "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线"
+    carries its own antecedent 厂商, so the "他们" referent is cataphoric and
+    the plan must run as a fresh standalone question — binding the archived
+    PCB/hotel displayed set here would narrow the vector lane to those ids
+    and return nothing (observed: vector candidates 0, answer "无法回答").
+    """
+    planning_requests: list[Any] = []
+    answer_requests: list[Any] = []
+    session_id = "session:history:intra-query-set-switch"
+    adapter = _make_adapter(
+        read_script=[
+            # First turn: hotel set displayed (archived on the next topic switch).
+            ((_local_item(PUDU), _local_item(ORION)), (PUDU, ORION)),
+            # Second turn: intra-query antecedent — fresh standalone plan.
+            ((_local_item(UBTECH),), (UBTECH,)),
+        ],
+        answer_receipts=[
+            _receipt(session_id=session_id, displayed=(PUDU, ORION)),
+            _receipt(session_id=session_id, anchor=UBTECH, displayed=(UBTECH,)),
+        ],
+        planning_requests=planning_requests,
+        answer_requests=answer_requests,
+    )
+
+    _answer_turn(
+        adapter,
+        query="中国有哪些成熟的酒店送餐机器人供应商",
+        session_id=session_id,
+    )
+    response = _answer_turn(
+        adapter,
+        query="目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线",
+        session_id=session_id,
+    )
+
+    assert response.clarification is None
+    assert len(planning_requests) == 2
+    # The intra-query antecedent wins: no archived displayed set binding.
+    assert planning_requests[1].displayed_entity_ids == ()

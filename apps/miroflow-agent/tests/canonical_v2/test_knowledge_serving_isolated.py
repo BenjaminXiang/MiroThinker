@@ -3145,6 +3145,92 @@ def test_serving_reranker_reserves_web_capacity_without_query_markers(
     assert any(result_id.startswith("fused-result:web-") for result_id in retained)
 
 
+def test_serving_reranker_keeps_enumeration_vector_canonical_in_window(
+    tmp_path: Path,
+) -> None:
+    """List questions must not let Web gap candidates crowd out vector canonicals.
+
+    Regression for the hotel-delivery-robot follow-up bug: the reranker filed
+    every vector-lane candidate under ``other`` (they are neither strong local
+    nor current-Web), so when the Web lane filled the whole window the vector
+    canonicals never became handles, the displayed set stayed empty, and the
+    next turn ("上述企业里总部在深圳的企业有哪些") could not resolve the
+    collection reference.
+    """
+    path, bundle = _write_bundle(tmp_path)
+    inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
+        path=path,
+        expected_content_sha256=bundle.content_sha256,
+        expected_release_id=RELEASE_ID,
+        expected_database="miroflow_candidate_s12b_test",
+        expected_index_root=(tmp_path / "index").resolve(),
+        expected_envelope_path=(tmp_path / "envelope.json").resolve(),
+        embedding_adapter=_Embedding(),
+        clock=lambda: NOW,
+    )
+
+    def fused(*, token: str, lane: str, score: float) -> FusedCandidate:
+        local = lane == "vector"
+        evidence = EvidenceItem(
+            evidence_id=f"evidence:enumeration:{token}",
+            object_id=f"object:enumeration:{token}",
+            domain="company",
+            lane=lane,
+            source_nature=("local" if local else "current_web"),
+            source_locator=(
+                f"canonical-v2-isolated:{token}"
+                if local
+                else f"https://example.test/{token}"
+            ),
+            snippet=token,
+            score=score,
+        )
+        return FusedCandidate(
+            result_id=f"fused-result:{token}",
+            canonical_id=(f"company:{token}" if local else None),
+            display_name=token,
+            domain="company",
+            raw_candidate_ids=(f"raw-candidate:{token}",),
+            evidence_ids=(evidence.evidence_id,),
+            evidence=(evidence,),
+            quality_flags=(),
+            raw_score=score,
+            identity_kind=("canonical" if local else "web_only"),
+            resolution_state=("resolved" if local else "unresolved"),
+            origin_lane=evidence.lane,
+            origin_attempt=1,
+            adapter_versions=("test",),
+            provider_versions=(() if local else ("serper-v1",)),
+        )
+
+    vector_candidates = tuple(
+        fused(token=f"vector-{index}", lane="vector", score=1.0)
+        for index in range(bundle.max_candidates)
+    )
+    web_candidates = tuple(
+        fused(token=f"web-{index}", lane="web", score=0.9)
+        for index in range(bundle.max_web_results)
+    )
+    assert inputs.reranker is not None
+    result = inputs.reranker(
+        RerankRequest(
+            release_id=RELEASE_ID,
+            original_query="中国有哪些成熟的酒店送餐机器人供应商",
+            eligible_candidates=(*vector_candidates, *web_candidates),
+        )
+    )
+
+    retained = result.ordered_result_ids[: bundle.max_candidates]
+    # The vector canonicals must survive inside the window so they become
+    # handles and anchor the next turn's collection reference.
+    assert any(
+        result_id.startswith("fused-result:vector-") for result_id in retained
+    )
+    # The Web lane keeps a bounded presence for recall as well.
+    assert any(result_id.startswith("fused-result:web-") for result_id in retained)
+
+
 def _stub_professor(identity_id: str, display_name: str) -> Any:
     return SimpleNamespace(
         canonical_identity_id=identity_id,
