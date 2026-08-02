@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
 import {
   Input,
   Button,
@@ -332,7 +333,11 @@ function AssistantBubble({
     <Bubble align="left" icon={<RobotOutlined />}>
       <Space direction="vertical" size={8} style={{ width: "100%" }}>
         <div>
-          {response.answer_text || (
+          {response.answer_text ? (
+            <div className="chat-answer-markdown">
+              <ReactMarkdown>{response.answer_text}</ReactMarkdown>
+            </div>
+          ) : (
             <Text type="secondary">（未生成回答）</Text>
           )}
         </div>
@@ -430,6 +435,81 @@ function AssistantBubble({
           </Tooltip>
         </Space>
       </Space>
+      <style>{`
+        .chat-answer-markdown {
+          font-size: 14px;
+          line-height: 1.75;
+          word-break: break-word;
+        }
+        .chat-answer-markdown > :first-child {
+          margin-top: 0;
+        }
+        .chat-answer-markdown > :last-child {
+          margin-bottom: 0;
+        }
+        .chat-answer-markdown p {
+          margin: 0.5em 0;
+        }
+        .chat-answer-markdown h1,
+        .chat-answer-markdown h2,
+        .chat-answer-markdown h3,
+        .chat-answer-markdown h4 {
+          margin: 0.9em 0 0.45em;
+          font-weight: 600;
+          line-height: 1.4;
+        }
+        .chat-answer-markdown h1 { font-size: 1.25em; }
+        .chat-answer-markdown h2 { font-size: 1.15em; }
+        .chat-answer-markdown h3 { font-size: 1.05em; }
+        .chat-answer-markdown h4 { font-size: 1em; }
+        .chat-answer-markdown ul,
+        .chat-answer-markdown ol {
+          margin: 0.5em 0;
+          padding-left: 1.6em;
+        }
+        .chat-answer-markdown li {
+          margin: 0.25em 0;
+        }
+        .chat-answer-markdown strong {
+          font-weight: 600;
+        }
+        .chat-answer-markdown code {
+          padding: 0.1em 0.35em;
+          border-radius: 4px;
+          font-size: 0.92em;
+          background: rgba(128, 128, 128, 0.15);
+        }
+        .chat-answer-markdown pre {
+          margin: 0.5em 0;
+          padding: 0.6em 0.9em;
+          border-radius: 6px;
+          overflow-x: auto;
+          background: rgba(128, 128, 128, 0.12);
+        }
+        .chat-answer-markdown pre code {
+          padding: 0;
+          background: transparent;
+        }
+        .chat-answer-markdown blockquote {
+          margin: 0.5em 0;
+          padding-left: 0.8em;
+          border-left: 3px solid rgba(128, 128, 128, 0.35);
+          color: inherit;
+          opacity: 0.9;
+        }
+        .chat-answer-markdown a {
+          text-decoration: underline;
+        }
+        .chat-answer-markdown table {
+          border-collapse: collapse;
+          margin: 0.5em 0;
+        }
+        .chat-answer-markdown th,
+        .chat-answer-markdown td {
+          border: 1px solid rgba(128, 128, 128, 0.35);
+          padding: 0.3em 0.6em;
+        }
+      `}</style>
     </Bubble>
   );
 }
