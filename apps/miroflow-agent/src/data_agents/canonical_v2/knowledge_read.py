@@ -7321,7 +7321,19 @@ class _EphemeralKnowledgeRead(KnowledgeRead):
             and plan.behavior_class in _INFORMATION_CLASSES
         ):
             lanes = plan.lanes if "web" in plan.lanes else (*plan.lanes, "web")
-            return lanes, self._universal_web_policy
+            policy = self._universal_web_policy
+            # Enumeration plans widen their web window (proposal
+            # max_web_results follows the candidate window); the universal
+            # policy's fixed cap must not re-truncate those plans at the
+            # ordinary ceiling.
+            if (
+                plan.web_policy.mode == "universal"
+                and plan.web_policy.max_results > policy.max_results
+            ):
+                policy = policy.model_copy(
+                    update={"max_results": plan.web_policy.max_results}
+                )
+            return lanes, policy
         if plan.web_policy.mode == "official_only" and "web" in plan.lanes:
             return plan.lanes, plan.web_policy
         return plan.lanes, WebSearchPolicy(mode="disabled")

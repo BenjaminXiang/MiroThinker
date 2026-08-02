@@ -763,9 +763,11 @@ def _proposal_provider(
             # List-style questions widen the web window as well as the
             # candidate window: supplier mentions in merged brand-list views
             # routinely rank 9-16, and the read side truncates web candidates
-            # at this cap before theme probes ever see them.
+            # at this cap before theme probes ever see them.  The cap must
+            # follow the enumeration candidate window so discovery-view tails
+            # (九号 at merged rank 36-43) survive the read-side truncation.
             max_web_results=(
-                max(bundle.max_web_results, 16)
+                max(bundle.max_web_results, _ENUMERATION_CANDIDATE_WINDOW)
                 if (
                     (
                         request.enumeration_context is not None
