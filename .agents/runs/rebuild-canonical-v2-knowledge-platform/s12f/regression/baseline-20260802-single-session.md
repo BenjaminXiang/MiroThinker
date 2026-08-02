@@ -32,3 +32,22 @@
 | 23 | 问题16 | fail | 11.7 | 在具身智能的运动和操作层面，数据需求有什么不同，在实际落地层 | 环境感知数据vs多模态交互数据，仿真环境合成，全模态真机采集，动捕数据，仿真+真机强化学习 |
 | 24 | 问题17 | pass | 9.2 | 优必选有哪些专利 | - |
 | 25 | 问题17 | pass | 5.2 | 专利 CN117873146A 的详细信息是什么 | - |
+
+## Latency baseline (v39, 2026-08-02)
+
+- Total 286.3s / 25 turns, mean 11.5s/turn, median ~10s.
+- Slowest: T18 33.6s, T22 29.6s, T21 21.4s — concept questions dominated by
+  web-lane retrieval + LLM synthesis. T5/T3/T4 (hotel chain) 18-21s —
+  enumeration with wide web window.
+- Speed regression rule: after any change, re-run this script and compare
+  total/mean latency; a material increase (>15% mean) with equal quality is a
+  regression unless the change explicitly buys quality.
+
+## Quality baseline
+
+- 20/25 KEY-pass. Known gaps (tracked):
+  - T3 上海开普勒/九号机器人 — data-end backlog (profile semantics; Phase 1b
+    company backfill rebuild in progress).
+  - T19/T20/T22/T23 — concept questions: answers cover most semantics but miss
+    exact KEY terms (web-lane variance + recall coverage). Re-check after the
+    Phase 1b rebuild.

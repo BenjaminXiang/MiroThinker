@@ -1,5 +1,5 @@
 {
-  "content_sha256": "7908db3925c8450bc93aa9543b9c94b7cf37a4bae8f796cf0cdd007ac77c0f97",
+  "content_sha256": "81ed1f9f7da7b61f2b10192e311cdee73bff2d19ac9290cdb2468f1288e48b7a",
   "schema_version": "canonical-v2-source-build-manifest-v2",
   "source_inventory_sha256": "83a9e2c82aee4cbe5c02f088ba0fdbf8d15359d87a85bf4ee901b0f58f70fa09",
   "backup_manifest_sha256": "a14c1eab673f8fca2bdbf4d50dfe8e9b33cf077b9314855298d29a16a82e59c8",
@@ -34,6 +34,36 @@
       "approval_reference": null,
       "gap_id": null,
       "rationale": "S12A exact acceptance_only disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:1107b1df6dfa2f0faab5b04640a0317f53513781e63f4977078df4b6f5427a89",
+      "disposition": "evidence_input",
+      "source_family": "accepted-s2b-source",
+      "members": [
+        {
+          "member_id": "accepted-restore:workspace/docs/source_backfills/applicant_name_resolution.jsonl",
+          "source_batch_id": "s12f-applicant-binding-v1",
+          "source_kind": "historical_jsonl",
+          "content_path": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z/workspace/docs/source_backfills/applicant_name_resolution.jsonl",
+          "restore_member_path": "workspace/docs/source_backfills/applicant_name_resolution.jsonl",
+          "backup_member_manifest_path": null,
+          "backup_member_manifest_sha256": null,
+          "source_member_manifest_sha256": null,
+          "byte_size": 442650,
+          "content_sha256": "2ddd712d5cf518ec84fb0445282abde193b2c4c304f0439caaa67168c71fc9e2",
+          "parser": {
+            "parser_name": "historical_jsonl",
+            "parser_version": "v1",
+            "schema_version": "historical-jsonl-record-v1",
+            "options": {}
+          },
+          "observed_at": "2026-08-01T13:35:30Z",
+          "parent_source_id": "inventory:1107b1df6dfa2f0faab5b04640a0317f53513781e63f4977078df4b6f5427a89"
+        }
+      ],
+      "approval_reference": "approved-s12f-applicant-resolution-backfill",
+      "gap_id": null,
+      "rationale": "S12F admits the company backfill and applicant-binding batches produced by the s12f applicant-resolution pipeline (700 audited companies; every released patent applicant mapped to a canonical company).  Both payloads postdate the Accepted S2B checkpoint, so they carry no historical backup lineage and are verified by pinned content hash at staging."
     },
     {
       "source_id": "inventory:11c9847d8bb362984a35e54c25d6f3f01f74b6209245d359e40f7dbd98738829",
@@ -184,6 +214,36 @@
       "approval_reference": null,
       "gap_id": null,
       "rationale": "S12A exact requirements_only disposition from Accepted S2B authority."
+    },
+    {
+      "source_id": "inventory:53bb8f4ab16868619fdfa2380bf091c45bd9999e9008a1fdea884d30050adf67",
+      "disposition": "evidence_input",
+      "source_family": "accepted-s2b-source",
+      "members": [
+        {
+          "member_id": "accepted-restore:workspace/docs/source_backfills/company_backfill.jsonl",
+          "source_batch_id": "s12f-company-backfill-v1",
+          "source_kind": "historical_jsonl",
+          "content_path": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z/workspace/docs/source_backfills/company_backfill.jsonl",
+          "restore_member_path": "workspace/docs/source_backfills/company_backfill.jsonl",
+          "backup_member_manifest_path": null,
+          "backup_member_manifest_sha256": null,
+          "source_member_manifest_sha256": null,
+          "byte_size": 632688,
+          "content_sha256": "97b2e1ad4c60bc8e944a701d1d7b956df420ed6a20b565e038733307f7621eae",
+          "parser": {
+            "parser_name": "historical_jsonl",
+            "parser_version": "v1",
+            "schema_version": "historical-jsonl-record-v1",
+            "options": {}
+          },
+          "observed_at": "2026-08-01T13:35:30Z",
+          "parent_source_id": "inventory:53bb8f4ab16868619fdfa2380bf091c45bd9999e9008a1fdea884d30050adf67"
+        }
+      ],
+      "approval_reference": "approved-s12f-applicant-resolution-backfill",
+      "gap_id": null,
+      "rationale": "S12F admits the company backfill and applicant-binding batches produced by the s12f applicant-resolution pipeline (700 audited companies; every released patent applicant mapped to a canonical company).  Both payloads postdate the Accepted S2B checkpoint, so they carry no historical backup lineage and are verified by pinned content hash at staging."
     },
     {
       "source_id": "inventory:55c969432f588015934396a66874ea6b533d431aa3b521a61f5681c4f2f886a2",
@@ -348,7 +408,7 @@
       ],
       "approval_reference": "approved-s12f-professor-backfill-promotion",
       "gap_id": null,
-      "rationale": "S12F admits the s12e-professor-backfill-v1 field backfill (16 audited professors; department/email/title from official institution pages) through the registered-but-unprojected professor-metrics inventory slot.  The payload postdates the Accepted S2B checkpoint, so it carries no historical backup lineage and is verified by pinned content hash at staging."
+      "rationale": "S12F admits the s12e-professor-backfill-v1 field backfill (16 audited professors; department/email/title from official institution pages) through the registered-but-unprojected professor-metrics inventory slot."
     },
     {
       "source_id": "inventory:909ada3e637a0220acc7d7a6335d3743045762e5c720e6120141c79ae5b0d8f8",

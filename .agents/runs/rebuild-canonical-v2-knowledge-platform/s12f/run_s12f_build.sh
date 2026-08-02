@@ -67,7 +67,7 @@ PYTHONUNBUFFERED=1 uv run python "$RUNNER" \
   --database-target-kind disposable \
   --accepted-backup-gate-root "$RUN_ROOT" \
   --source-manifest "$S12F_ROOT/source-build-manifest-s12f.json" \
-  --source-manifest-sha256 7908db3925c8450bc93aa9543b9c94b7cf37a4bae8f796cf0cdd007ac77c0f97 \
+  --source-manifest-sha256 81ed1f9f7da7b61f2b10192e311cdee73bff2d19ac9290cdb2468f1288e48b7a \
   --candidate-staging-root /var/tmp/mirothinker-canonical-v2-s12f/staging-v1 \
   --index-root /var/tmp/mirothinker-canonical-v2-s12f/index-v1 \
   --index-marker-sha256 e4314c15518980aaa75a0069dce14c3857df43b74705ce600c6741af74d49f51 \
@@ -80,6 +80,8 @@ PYTHONUNBUFFERED=1 uv run python "$RUNNER" \
   --source-batch-id s12c-r7-patent-identifiers-v1 \
   --source-batch-id s12c-r7-professor-company-roles-v1 \
   --source-batch-id s12e-professor-backfill-v1 \
+  --source-batch-id s12f-company-backfill-v1 \
+  --source-batch-id s12f-applicant-binding-v1 \
   --parser-version historical_jsonl=v1 \
   --parser-version historical_xlsx=v1 \
   --parser-version released_objects_sqlite=canonical-v2-s12a-full-table-v1 \

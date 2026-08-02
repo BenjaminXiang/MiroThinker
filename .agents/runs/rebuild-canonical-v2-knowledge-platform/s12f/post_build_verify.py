@@ -64,7 +64,7 @@ EXPECTED_DATABASE_MARKER = (
     "miroflow:destructive-target:v1:disposable:miroflow_candidate_s12f_20260801_v1"
 )
 EXPECTED_SOURCE_MANIFEST_SHA256 = (
-    "7908db3925c8450bc93aa9543b9c94b7cf37a4bae8f796cf0cdd007ac77c0f97"
+    "81ed1f9f7da7b61f2b10192e311cdee73bff2d19ac9290cdb2468f1288e48b7a"
 )
 EXPECTED_INDEX_MARKER_SHA256 = (
     "e4314c15518980aaa75a0069dce14c3857df43b74705ce600c6741af74d49f51"
@@ -80,11 +80,13 @@ EXPECTED_SOURCE_BATCH_IDS = tuple(
             "s12c-r7-patent-identifiers-v1",
             "s12c-r7-professor-company-roles-v1",
             "s12e-professor-backfill-v1",
+            "s12f-company-backfill-v1",
+            "s12f-applicant-binding-v1",
         )
     )
 )
 EXPECTED_OBJECT_COUNTS = {
-    "company": 1037,
+    "company": 1737,
     "paper": 563,
     "patent": 1931,
     "professor": 1428,
