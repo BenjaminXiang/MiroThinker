@@ -4210,3 +4210,43 @@ Post-run read-only checks at `2026-07-11T05:37:16Z`:
   `43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc`; the disposable Candidate
   `publish.active_release` count remains zero. No source/canonical/index content, active pointer,
   production resource, promotion, archive, cleanup, or Cutover changed.
+
+## S12F rebuild, professor backfill, and enumeration recall repair — 2026-08-02
+
+- Status remains In Progress, not user Accepted. Covers the s12f seven-batch candidate
+  rebuild (candidate-s12f-20260801-v1, pack/bundle + audit 50/50), the 882-record professor
+  inclusion-gate backfill with merge-adoption lineage, and the enumeration recall round driven
+  by workbook turns 1-5.
+- Defect classes repaired with RED/GREEN evidence: professor backfill lineage admitted only
+  after merge adoption (rejected records never enter source lineage); v1 source-build manifests
+  rejected at the build entry; geography slots enforced per candidate; patent traversal requires
+  a single ownership-bound company; focused-turn relationship claims bound to the displayed
+  anchor; enumeration recall (brand-discovery web views merged first; discovery-view results
+  promoted into the candidate window; enumeration window 24 to 48 with the selector web-claim
+  limit, the theme-probe ceiling (12 to 16), the probe budget (6.0 to 16.0 cost units), and the
+  read-side web cap following the window; theme probes extended to web-extracted company names
+  ordered by partial theme match; "推荐" activates the theme part; probe concurrency capped at 8
+  to dodge provider rate limits; claim text capped (web 240 / local 160 chars) so the prose
+  model stops copying raw listings).
+- Fresh checks: serving isolated `112 passed`; read web/fusion contracts `6 passed`; build
+  isolated full-file regression `132 passed` (38m24s, v2 fixture migration); changed-file Ruff
+  clean.
+- Workbook replay on the final serving pack (v16 code, port 18199): 25/25 turns with zero
+  transport/contract failures in both independent-session and single-session cross-topic modes.
+  Mechanical KEY screening now reports a single residual hard failure (hotel-supplier turn 1,
+  上海开普勒 + 九号机器人) in both modes — both records exist locally but their profiles lack
+  hotel-delivery semantics, so vector recall (48-window) and web views cannot reliably surface
+  them; tracked as a data-enrichment backlog item (profile enhancement + mapper support for
+  capability-facet merging). PCB turn now passes KEY (嘉立创/一博/深南 all present) and its
+  answer shrank from an 11.6k-char raw dump to a ~500-char structured list.
+- Semantic review of the 25 turns (2026-08-02 07:27 replay) classifies remaining differences:
+  precision conflicts where web fallback overrides the knowledge base without adjudication
+  (Q4T1 CEO, Q17T1 patent counts, Q8T2 光基 vs 光纤), concept-domain routing failures (Q12 GIS
+  vs embodied-AI data collection, Q13 route ambiguity — the latter improved after the claim
+  truncation), and recall gaps in knowledge-base-anchored turns (Q7 早稻田 entrepreneurs, Q8T1
+  yield features, Q14 manufacturer routes, Q10 founder 郭书祥, Q1T1 honors). These are the
+  next-round backlog together with the data-end backlog.
+- The original Milvus SHA-256 remains
+  `43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc`; the disposable Candidate
+  `publish.active_release` count remains zero. No source/canonical/index content, active pointer,
+  promotion, archive, cleanup, or Cutover changed.

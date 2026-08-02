@@ -542,6 +542,21 @@ def _validated_evidence_set(
         or receipt.cost_units > budget.max_cost_units
         or receipt.attempt_count > budget.max_retries + 1
     ):
+        import logging as _logging
+
+        _logging.getLogger("canonical-v2-admin").error(
+            "budget receipt exceeded: elapsed_ms=%s wall=%s cost=%s cap=%s "
+            "provider_calls=%s/%s retries=%s/%s attempts=%s",
+            receipt.elapsed_ms,
+            budget.max_wall_time_ms,
+            receipt.cost_units,
+            budget.max_cost_units,
+            receipt.provider_calls,
+            budget.max_provider_calls,
+            receipt.retry_count,
+            budget.max_retries,
+            receipt.attempt_count,
+        )
         raise CanonicalV2ConsumerIntegrityError(
             "supplemental budget receipt exceeds the server-owned plan"
         )

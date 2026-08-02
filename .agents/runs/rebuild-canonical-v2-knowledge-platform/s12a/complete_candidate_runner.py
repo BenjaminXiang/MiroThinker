@@ -1120,6 +1120,9 @@ def main(
         )
         return 2
     except Exception as exc:
+        import traceback as _traceback
+
+        _traceback.print_exc()
         print(
             f"complete candidate runner failed: {type(exc).__name__}", file=sys.stderr
         )

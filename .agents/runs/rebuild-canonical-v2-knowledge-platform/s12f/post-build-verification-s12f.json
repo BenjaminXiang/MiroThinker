@@ -1,0 +1,619 @@
+{
+  "checks": [
+    {
+      "actual": "miroflow_candidate_s12f_20260801_v1",
+      "check_id": "database.identity",
+      "detail": "",
+      "expected": "miroflow_candidate_s12f_20260801_v1",
+      "ok": true
+    },
+    {
+      "actual": "miroflow:destructive-target:v1:disposable:miroflow_candidate_s12f_20260801_v1",
+      "check_id": "database.disposable_marker",
+      "detail": "",
+      "expected": "miroflow:destructive-target:v1:disposable:miroflow_candidate_s12f_20260801_v1",
+      "ok": true
+    },
+    {
+      "actual": true,
+      "check_id": "database.read_only",
+      "detail": "",
+      "expected": true,
+      "ok": true
+    },
+    {
+      "actual": "candidate-s12f-20260801-v1",
+      "check_id": "database.release.release_id",
+      "detail": "",
+      "expected": "candidate-s12f-20260801-v1",
+      "ok": true
+    },
+    {
+      "actual": "s12f-build-20260801-v1",
+      "check_id": "database.release.build_run_id",
+      "detail": "",
+      "expected": "s12f-build-20260801-v1",
+      "ok": true
+    },
+    {
+      "actual": "candidate",
+      "check_id": "database.release.state",
+      "detail": "",
+      "expected": "candidate",
+      "ok": true
+    },
+    {
+      "actual": "a0832923eb464f878a23e27e52cae65cae832e5120defa6a82011e9776dcb327",
+      "check_id": "database.release.manifest_sha256",
+      "detail": "",
+      "expected": "a0832923eb464f878a23e27e52cae65cae832e5120defa6a82011e9776dcb327",
+      "ok": true
+    },
+    {
+      "actual": "candidate-s12f-20260801-v1",
+      "check_id": "envelope.release_id",
+      "detail": "",
+      "expected": "candidate-s12f-20260801-v1",
+      "ok": true
+    },
+    {
+      "actual": "s12f-build-20260801-v1",
+      "check_id": "envelope.run_id",
+      "detail": "",
+      "expected": "s12f-build-20260801-v1",
+      "ok": true
+    },
+    {
+      "actual": "7908db3925c8450bc93aa9543b9c94b7cf37a4bae8f796cf0cdd007ac77c0f97",
+      "check_id": "envelope.source_manifest_sha256",
+      "detail": "",
+      "expected": "7908db3925c8450bc93aa9543b9c94b7cf37a4bae8f796cf0cdd007ac77c0f97",
+      "ok": true
+    },
+    {
+      "actual": [
+        "s12a-released-objects-full-v1",
+        "s12c-r7-company-knowledge-v1",
+        "s12c-r7-company-workbook-supplement-v1",
+        "s12c-r7-paper-identifiers-v1",
+        "s12c-r7-patent-identifiers-v1",
+        "s12c-r7-professor-company-roles-v1",
+        "s12e-professor-backfill-v1"
+      ],
+      "check_id": "envelope.source_batch_ids",
+      "detail": "",
+      "expected": [
+        "s12a-released-objects-full-v1",
+        "s12c-r7-company-knowledge-v1",
+        "s12c-r7-company-workbook-supplement-v1",
+        "s12c-r7-paper-identifiers-v1",
+        "s12c-r7-patent-identifiers-v1",
+        "s12c-r7-professor-company-roles-v1",
+        "s12e-professor-backfill-v1"
+      ],
+      "ok": true
+    },
+    {
+      "actual": {
+        "company": 1037,
+        "paper": 563,
+        "patent": 1931,
+        "professor": 1428
+      },
+      "check_id": "envelope.object_counts",
+      "detail": "",
+      "expected": {
+        "company": 1037,
+        "paper": 563,
+        "patent": 1931,
+        "professor": 1428
+      },
+      "ok": true
+    },
+    {
+      "actual": {
+        "company": 1037,
+        "paper": 563,
+        "patent": 1931,
+        "professor": 1428
+      },
+      "check_id": "database.object_counts",
+      "detail": "",
+      "expected": {
+        "company": 1037,
+        "paper": 563,
+        "patent": 1931,
+        "professor": 1428
+      },
+      "ok": true
+    },
+    {
+      "actual": 692,
+      "check_id": "envelope.relationship_count",
+      "detail": "",
+      "expected": 692,
+      "ok": true
+    },
+    {
+      "actual": 692,
+      "check_id": "database.relationship_count",
+      "detail": "",
+      "expected": 692,
+      "ok": true
+    },
+    {
+      "actual": {
+        "accepted": true,
+        "canonical_index_parity": true,
+        "cross_release_points": 0,
+        "extra_points": 0,
+        "missing_points": 0,
+        "stale_points": 0
+      },
+      "check_id": "envelope.release_verification",
+      "detail": "",
+      "expected": {
+        "accepted": true,
+        "canonical_index_parity": true,
+        "cross_release_points": 0,
+        "extra_points": 0,
+        "missing_points": 0,
+        "stale_points": 0
+      },
+      "ok": true
+    },
+    {
+      "actual": "/var/tmp/mirothinker-canonical-v2-s12f/index-v1",
+      "check_id": "envelope.index_root",
+      "detail": "",
+      "expected": "/var/tmp/mirothinker-canonical-v2-s12f/index-v1",
+      "ok": true
+    },
+    {
+      "actual": "index:candidate-s12f-20260801-v1",
+      "check_id": "envelope.index_target_id",
+      "detail": "",
+      "expected": "index:candidate-s12f-20260801-v1",
+      "ok": true
+    },
+    {
+      "actual": "candidate-s12f-20260801-v1",
+      "check_id": "envelope.index_release_id",
+      "detail": "",
+      "expected": "candidate-s12f-20260801-v1",
+      "ok": true
+    },
+    {
+      "actual": "e4314c15518980aaa75a0069dce14c3857df43b74705ce600c6741af74d49f51",
+      "check_id": "envelope.index_marker_sha256",
+      "detail": "",
+      "expected": "e4314c15518980aaa75a0069dce14c3857df43b74705ce600c6741af74d49f51",
+      "ok": true
+    },
+    {
+      "actual": "/var/tmp/mirothinker-canonical-v2-s12f/index-v1",
+      "check_id": "index.root",
+      "detail": "",
+      "expected": "/var/tmp/mirothinker-canonical-v2-s12f/index-v1",
+      "ok": true
+    },
+    {
+      "actual": "e4314c15518980aaa75a0069dce14c3857df43b74705ce600c6741af74d49f51",
+      "check_id": "index.marker_sha256",
+      "detail": "",
+      "expected": "e4314c15518980aaa75a0069dce14c3857df43b74705ce600c6741af74d49f51",
+      "ok": true
+    },
+    {
+      "actual": true,
+      "check_id": "index.snapshot_matches_envelope",
+      "detail": "",
+      "expected": true,
+      "ok": true
+    },
+    {
+      "actual": 1,
+      "check_id": "wang_xueqian.match_count",
+      "detail": "",
+      "expected": 1,
+      "ok": true
+    },
+    {
+      "actual": "professor-c-1abd5324f66e68d06d4aa0e7",
+      "check_id": "wang_xueqian.canonical_identity_id",
+      "detail": "",
+      "expected": "professor-c-1abd5324f66e68d06d4aa0e7",
+      "ok": true
+    },
+    {
+      "actual": "清华大学深圳国际研究生院",
+      "check_id": "wang_xueqian.institution",
+      "detail": "",
+      "expected": "清华大学深圳国际研究生院",
+      "ok": true
+    },
+    {
+      "actual": "数据与信息研究院",
+      "check_id": "wang_xueqian.department",
+      "detail": "",
+      "expected": "数据与信息研究院",
+      "ok": true
+    },
+    {
+      "actual": "教授、博士生导师",
+      "check_id": "wang_xueqian.title",
+      "detail": "",
+      "expected": "教授、博士生导师",
+      "ok": true
+    },
+    {
+      "actual": 7,
+      "check_id": "wang_xueqian.research_direction_count",
+      "detail": "",
+      "expected": 7,
+      "ok": true
+    },
+    {
+      "actual": 1037,
+      "check_id": "company.total",
+      "detail": "",
+      "expected": 1037,
+      "ok": true
+    },
+    {
+      "actual": 1037,
+      "check_id": "company.industry_nonempty",
+      "detail": "must not regress below the accepted s12e count",
+      "expected": {
+        "minimum": 1037
+      },
+      "ok": true
+    },
+    {
+      "actual": 625,
+      "check_id": "company.website_nonempty",
+      "detail": "must not regress below the accepted s12e count",
+      "expected": {
+        "minimum": 625
+      },
+      "ok": true
+    },
+    {
+      "actual": 851,
+      "check_id": "company.key_personnel_nonempty",
+      "detail": "must not regress below the accepted s12e count",
+      "expected": {
+        "minimum": 851
+      },
+      "ok": true
+    },
+    {
+      "actual": 1,
+      "check_id": "pfedgpa.match_count",
+      "detail": "",
+      "expected": 1,
+      "ok": true
+    },
+    {
+      "actual": "10.1609/aaai.v39i17.33980",
+      "check_id": "pfedgpa.doi",
+      "detail": "",
+      "expected": "10.1609/aaai.v39i17.33980",
+      "ok": true
+    },
+    {
+      "actual": "2409.05701",
+      "check_id": "pfedgpa.arxiv_id",
+      "detail": "",
+      "expected": "2409.05701",
+      "ok": true
+    },
+    {
+      "actual": 1931,
+      "check_id": "patent_dates.total",
+      "detail": "",
+      "expected": 1931,
+      "ok": true
+    },
+    {
+      "actual": 1931,
+      "check_id": "patent_dates.filing_date_coverage",
+      "detail": "",
+      "expected": 1931,
+      "ok": true
+    },
+    {
+      "actual": 1931,
+      "check_id": "patent_dates.publication_date_coverage",
+      "detail": "",
+      "expected": 1931,
+      "ok": true
+    },
+    {
+      "actual": 121,
+      "check_id": "database.patent_has_applicant",
+      "detail": "",
+      "expected": 121,
+      "ok": true
+    },
+    {
+      "actual": [
+        "typed"
+      ],
+      "check_id": "database.patent_has_applicant_decision_kind",
+      "detail": "",
+      "expected": [
+        "typed"
+      ],
+      "ok": true
+    },
+    {
+      "actual": [
+        "canonical-v2-relationship-v1"
+      ],
+      "check_id": "database.patent_has_applicant_version",
+      "detail": "",
+      "expected": [
+        "canonical-v2-relationship-v1"
+      ],
+      "ok": true
+    },
+    {
+      "actual": 121,
+      "check_id": "envelope.patent_has_applicant",
+      "detail": "",
+      "expected": 121,
+      "ok": true
+    },
+    {
+      "actual": 0,
+      "check_id": "professor.pollution",
+      "detail": "",
+      "expected": 0,
+      "ok": true
+    },
+    {
+      "actual": 0,
+      "check_id": "professor.reversed_emails",
+      "detail": "",
+      "expected": 0,
+      "ok": true
+    },
+    {
+      "actual": {
+        "fields_invalid": 0,
+        "fields_kept_existing": 0,
+        "fields_merged": 21,
+        "fields_unsupported": 31,
+        "records_merged": 16,
+        "records_seen": 16,
+        "records_unmatched": 0
+      },
+      "check_id": "professor_backfill.stats",
+      "detail": "",
+      "expected": {
+        "fields_invalid": 0,
+        "fields_kept_existing": 0,
+        "fields_merged": 21,
+        "fields_unsupported": 31,
+        "records_merged": 16,
+        "records_seen": 16,
+        "records_unmatched": 0
+      },
+      "ok": true
+    },
+    {
+      "actual": {
+        "department": 6,
+        "email": 9,
+        "title": 6
+      },
+      "check_id": "professor_backfill.field_counts",
+      "detail": "",
+      "expected": {
+        "department": 6,
+        "email": 9,
+        "title": 6
+      },
+      "ok": true
+    },
+    {
+      "actual": 21,
+      "check_id": "professor_backfill.selected_lineage_count",
+      "detail": "",
+      "expected": 21,
+      "ok": true
+    },
+    {
+      "actual": [],
+      "check_id": "professor_backfill.unselected_assertions",
+      "detail": "",
+      "expected": [],
+      "ok": true
+    },
+    {
+      "actual": [],
+      "check_id": "professor_backfill.value_mismatches",
+      "detail": "",
+      "expected": [],
+      "ok": true
+    }
+  ],
+  "generated_at": "2026-08-02T04:06:00.949579+00:00",
+  "inputs": {
+    "database": "127.0.0.1:55458/miroflow_candidate_s12f_20260801_v1",
+    "envelope": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12f/complete-candidate-build-envelope.json",
+    "expected_index_marker_sha256": "e4314c15518980aaa75a0069dce14c3857df43b74705ce600c6741af74d49f51",
+    "expected_source_manifest_sha256": "7908db3925c8450bc93aa9543b9c94b7cf37a4bae8f796cf0cdd007ac77c0f97",
+    "index_root": "/var/tmp/mirothinker-canonical-v2-s12f/index-v1"
+  },
+  "metrics": {
+    "backfill_merge": {
+      "field_counts": {
+        "department": 6,
+        "email": 9,
+        "title": 6
+      },
+      "parse_status_counts": {
+        "parsed": 16
+      },
+      "selected_lineage_count": 21,
+      "source_batch_id": "s12e-professor-backfill-v1",
+      "stats": {
+        "fields_invalid": 0,
+        "fields_kept_existing": 0,
+        "fields_merged": 21,
+        "fields_unsupported": 31,
+        "records_merged": 16,
+        "records_seen": 16,
+        "records_unmatched": 0
+      },
+      "unselected_assertion_ids": [],
+      "value_mismatches": []
+    },
+    "company": {
+      "industry_nonempty": 1037,
+      "key_personnel_nonempty": 851,
+      "total": 1037,
+      "website_nonempty": 625
+    },
+    "database": {
+      "database_marker": "miroflow:destructive-target:v1:disposable:miroflow_candidate_s12f_20260801_v1",
+      "database_name": "miroflow_candidate_s12f_20260801_v1",
+      "object_counts": {
+        "company": 1037,
+        "paper": 563,
+        "patent": 1931,
+        "professor": 1428
+      },
+      "relationship_count": 692,
+      "release": {
+        "build_run_id": "s12f-build-20260801-v1",
+        "manifest_sha256": "a0832923eb464f878a23e27e52cae65cae832e5120defa6a82011e9776dcb327",
+        "release_id": "candidate-s12f-20260801-v1",
+        "state": "candidate"
+      },
+      "transaction_read_only": true
+    },
+    "envelope": {
+      "byte_size": 716701892,
+      "content_sha256": "c7ef42a0c5cef2f03c5414953dbe11ea71604628248c2414a0f88cab42d6d9fc",
+      "file_sha256": "6e7e9355416137d887b0fdd7bdd0c65fec64c0c42340c6160bdd32c4eeb8bcb7",
+      "index_target": {
+        "marker_sha256": "e4314c15518980aaa75a0069dce14c3857df43b74705ce600c6741af74d49f51",
+        "release_id": "candidate-s12f-20260801-v1",
+        "root": "/var/tmp/mirothinker-canonical-v2-s12f/index-v1",
+        "target_id": "index:candidate-s12f-20260801-v1"
+      },
+      "manifest_sha256": "a0832923eb464f878a23e27e52cae65cae832e5120defa6a82011e9776dcb327",
+      "object_counts": {
+        "company": 1037,
+        "paper": 563,
+        "patent": 1931,
+        "professor": 1428
+      },
+      "patent_has_applicant": 121,
+      "path": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12f/complete-candidate-build-envelope.json",
+      "relationship_count": 692,
+      "release_id": "candidate-s12f-20260801-v1",
+      "release_verification": {
+        "accepted": true,
+        "canonical_index_parity": true,
+        "cross_release_points": 0,
+        "extra_points": 0,
+        "missing_points": 0,
+        "stale_points": 0
+      },
+      "run_id": "s12f-build-20260801-v1",
+      "source_batch_ids": [
+        "s12a-released-objects-full-v1",
+        "s12c-r7-company-knowledge-v1",
+        "s12c-r7-company-workbook-supplement-v1",
+        "s12c-r7-paper-identifiers-v1",
+        "s12c-r7-patent-identifiers-v1",
+        "s12c-r7-professor-company-roles-v1",
+        "s12e-professor-backfill-v1"
+      ],
+      "source_manifest_sha256": "7908db3925c8450bc93aa9543b9c94b7cf37a4bae8f796cf0cdd007ac77c0f97"
+    },
+    "index": {
+      "lookup_document_count": 4959,
+      "marker_path": "/var/tmp/mirothinker-canonical-v2-s12f/index-v1/.canonical-v2-isolated-index-target.json",
+      "marker_sha256": "e4314c15518980aaa75a0069dce14c3857df43b74705ce600c6741af74d49f51",
+      "point_count": 6387,
+      "root": "/var/tmp/mirothinker-canonical-v2-s12f/index-v1",
+      "snapshot_matches_envelope": true
+    },
+    "patent_dates": {
+      "filing_date_nonempty": 1931,
+      "publication_date_nonempty": 1931,
+      "total": 1931
+    },
+    "patent_has_applicant": {
+      "count": 121,
+      "decision_kinds": [
+        "typed"
+      ],
+      "relationship_type_versions": [
+        "canonical-v2-relationship-v1"
+      ]
+    },
+    "pfedgpa": {
+      "arxiv_id": "2409.05701",
+      "canonical_identity_id": "paper-c-d8100c85889646022989f6a8",
+      "doi": "10.1609/aaai.v39i17.33980",
+      "match_count": 1,
+      "matches": [
+        {
+          "arxiv_id": "2409.05701",
+          "canonical_identity_id": "paper-c-d8100c85889646022989f6a8",
+          "doi": "10.1609/aaai.v39i17.33980",
+          "title": "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning"
+        }
+      ],
+      "title": "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning"
+    },
+    "pollution": {
+      "count": 0,
+      "rows": []
+    },
+    "reversed_emails": {
+      "count": 0,
+      "rows": []
+    },
+    "wang_xueqian": {
+      "canonical_identity_id": "professor-c-1abd5324f66e68d06d4aa0e7",
+      "canonical_name_zh": "王学谦",
+      "department": "数据与信息研究院",
+      "email": "wang.xq@sz.tsinghua.edu.cn",
+      "homepage": "http://www.sigs.tsinghua.edu.cn/wxq/main.htm",
+      "institution": "清华大学深圳国际研究生院",
+      "match_count": 1,
+      "matches": [
+        {
+          "canonical_identity_id": "professor-c-1abd5324f66e68d06d4aa0e7",
+          "canonical_name_zh": "王学谦",
+          "department": "数据与信息研究院",
+          "email": "wang.xq@sz.tsinghua.edu.cn",
+          "homepage": "http://www.sigs.tsinghua.edu.cn/wxq/main.htm",
+          "institution": "清华大学深圳国际研究生院",
+          "name": "王学谦",
+          "research_direction_count": 7,
+          "title": "教授、博士生导师"
+        }
+      ],
+      "name": "王学谦",
+      "research_direction_count": 7,
+      "title": "教授、博士生导师"
+    }
+  },
+  "release_id": "candidate-s12f-20260801-v1",
+  "run_id": "s12f-build-20260801-v1",
+  "schema_version": "canonical-v2-s12f-post-build-audit-v1",
+  "status": "pass",
+  "summary": {
+    "failed": 0,
+    "passed": 50,
+    "total": 50
+  }
+}

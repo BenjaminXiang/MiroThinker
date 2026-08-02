@@ -1358,3 +1358,23 @@
   hotel-supplier list) and is tracked as a data-enrichment backlog item together with provider
   variance hardening, pack generation at build/promote time, and the pre-existing internal-reference
   and review-workspace failures.
+
+## 2026-08-02 — S12F rebuild, backfill lineage, and enumeration recall repair round
+
+- s12f seven-batch candidate rebuild (candidate-s12f-20260801-v1): professor backfill
+  (882 records past the inclusion gate, admitted only after merge adoption), re-embedded
+  company/patent/paper identifiers, professor-company roles, and serving pack/bundle generation
+  with the 50/50 audit and manifest-verified fast boot.
+- Enumeration recall: brand-discovery web views merge first; discovery results are promoted into
+  the candidate window; the enumeration window widens to 48 end to end (proposal max_candidates,
+  selector web claims, read-side web cap), theme probes extend to web-extracted company names
+  ordered by partial theme match, "推荐" activates the theme part, probe concurrency caps at 8,
+  and claim text is capped so prose answers stay clean (Q5T1 dropped from an 11.6k-char dump to
+  a ~500-char list with 深南/一博/嘉立创).
+- Workbook KEY screening: 25/25 turns pass in both modes with a single residual hard failure
+  (开普勒/九号 in the hotel-supplier turn; local profiles lack hotel-delivery semantics — data
+  enrichment backlog). Semantic review backlog: web-vs-knowledge-base fact adjudication
+  (Q4T1/Q17T1/Q8T2), concept-domain routing (Q12/Q13), knowledge-base recall depth
+  (Q7/Q8T1/Q14/Q10/Q1T1).
+- Verification: serving isolated 112 passed, build isolated 132 passed, read contracts 6 passed,
+  Ruff clean. No active release pointer or production resource changed.
