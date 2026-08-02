@@ -3464,6 +3464,9 @@ def test_theme_probes_include_web_extracted_company_names_ordered_by_partial_mat
     """Theme probes must include web-extracted company names (深南 in a PCB
     top-100 ranking), ordered by theme partial-match so unrelated names
     cannot consume the probe ceiling; locally covered candidates stay out."""
+    pcb_part = serving_module._theme_material_part("我想找PCB打板， 有哪些推荐")
+    assert pcb_part is not None
+    assert pcb_part.requested_value == "PCB打板"
     theme_part = MaterialQuestionPart(
         part_id="serving-theme:test",
         text="我想找PCB打板， 有哪些推荐",

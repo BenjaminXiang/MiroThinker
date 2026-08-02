@@ -1910,7 +1910,7 @@ _THEME_PART_PREFIX = "serving-theme:"
 # candidates often lack direct theme evidence in their profiles
 # (开普勒/安赛步 rank fine but say 人形机器人). One bounded per-candidate
 # probe fetches the missing theme binding deterministically.
-_THEME_COMPANY_ASK_MARKERS = ("供应商", "厂商", "企业", "公司", "厂家", "品牌")
+_THEME_COMPANY_ASK_MARKERS = ("供应商", "厂商", "企业", "公司", "厂家", "品牌", "推荐")
 _THEME_SCAFFOLD_TOKENS = (
     "供应商",
     "厂商",
