@@ -7050,6 +7050,8 @@ def test_applicant_binding_binds_english_applicant_to_chinese_company() -> None:
     )
     # 中文名显示由绑定公司提供：绑定目标公司的规范名为中文全称。
     assert company_projection.name == BACKFILL_COMPANY_NAME
+    # Serving 用 company_name 展示申请人中文名（回归：CN117873146A 显示英文名）。
+    assert applicant.company_name == BACKFILL_COMPANY_NAME
 
     assertion = next(
         item

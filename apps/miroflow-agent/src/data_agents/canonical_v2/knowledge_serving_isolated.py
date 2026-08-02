@@ -3417,9 +3417,16 @@ def _list_names(value: object) -> str:
     if not isinstance(value, list):
         return ""
     names = [
-        str(item.get("name") or "").strip()
+        str(
+            item.get("company_name")
+            or item.get("name")
+            or ""
+        ).strip()
         for item in value
-        if isinstance(item, dict) and str(item.get("name") or "").strip()
+        if isinstance(item, dict)
+        and str(
+            item.get("company_name") or item.get("name") or ""
+        ).strip()
     ]
     return "、".join(names[:6])
 

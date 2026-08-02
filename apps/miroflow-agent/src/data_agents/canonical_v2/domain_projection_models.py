@@ -242,6 +242,7 @@ class PatentApplicant(TypedSubobject):
     name: NonEmptyStr
     applicant_order: NonNegativeInt
     canonical_company_id: NonEmptyStr | None = None
+    company_name: NonEmptyStr | None = None
 
 
 class PatentInventor(TypedSubobject):

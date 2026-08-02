@@ -321,7 +321,7 @@ def _catalog_reference(module: Any) -> Any:
     return module.RelationshipCatalogIdentity(
         schema_version=CATALOG_SCHEMA_VERSION,
         catalog_version=CATALOG_VERSION,
-        content_sha256=CATALOG_CONTENT_SHA256,
+        content_sha256=INSTALLED_CATALOG_CONTENT_SHA256,
     )
 
 

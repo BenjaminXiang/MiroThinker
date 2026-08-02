@@ -35,9 +35,9 @@ CATALOG_RESOURCE = "catalogs/domain-catalog-v1.json"
 CATALOG_SCHEMA_VERSION = "canonical-v2-domain-catalog-v1"
 CATALOG_VERSION = "canonical-v2-prd-catalog-2026-07-12"
 CATALOG_CONTENT_SHA256 = (
-    "8ad9e719579b834f51128788f49d091913c0c90e3b047aac9b2f83cc794441d7"
+    "26ec3ad046207665051ab7886fcef8fda748f331bddff69de486e90930b3398d"
 )
-CATALOG_FILE_SHA256 = "b227285fef5d49ad0b30871e5ccb0c1932443206fac99f5fa708ae586c5383c0"
+CATALOG_FILE_SHA256 = "7c7d52009b2e963e191189f33d260e44dbd6ddc5c0c722e28127b929cc583809"
 
 
 def _reject_duplicate_keys(pairs: list[tuple[str, JsonValue]]) -> dict[str, JsonValue]:

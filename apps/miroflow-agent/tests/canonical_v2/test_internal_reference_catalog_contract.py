@@ -50,11 +50,11 @@ def test_catalog_keeps_four_public_domains_and_declares_internal_reference_types
     assert tuple(item.domain for item in historical_catalog.domains) == PUBLIC_DOMAINS
     assert (
         domain_catalog.CATALOG_CONTENT_SHA256
-        == "8ad9e719579b834f51128788f49d091913c0c90e3b047aac9b2f83cc794441d7"
+        == "26ec3ad046207665051ab7886fcef8fda748f331bddff69de486e90930b3398d"
     )
     assert (
         domain_catalog.CATALOG_FILE_SHA256
-        == "b227285fef5d49ad0b30871e5ccb0c1932443206fac99f5fa708ae586c5383c0"
+        == "7c7d52009b2e963e191189f33d260e44dbd6ddc5c0c722e28127b929cc583809"
     )
     catalog: Any = catalog_module.PACKAGED_REFERENCE_CATALOG
     assert catalog.public_domain_types == PUBLIC_DOMAINS

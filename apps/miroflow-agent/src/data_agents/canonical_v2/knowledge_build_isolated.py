@@ -3734,11 +3734,14 @@ def _merge_applicant_binding_rows(
         "records_invalid": 0,
     }
     company_ids_by_name: dict[str, set[str]] = defaultdict(set)
+    company_name_by_object: dict[str, str] = {}
     for object_id, domain in domain_by_object.items():
         if domain != "company":
             continue
         selected = selected_by_object.get(object_id, {})
         for value in (selected.get("name"), selected.get("normalized_name")):
+            if isinstance(value, str) and value.strip():
+                company_name_by_object.setdefault(object_id, value.strip())
             if (key := _identity_lookup_key(value)) is not None:
                 company_ids_by_name[key].add(object_id)
         aliases = selected.get("aliases")
@@ -3829,6 +3832,9 @@ def _merge_applicant_binding_rows(
                 bound_applicants[index] = {
                     **applicant,
                     "canonical_company_id": company_object_id,
+                    "company_name": company_name_by_object.get(
+                        company_object_id, resolved_company
+                    ),
                 }
                 bound_here += 1
             if not bound_here:

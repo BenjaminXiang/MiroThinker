@@ -1,6 +1,6 @@
 {
   "catalog_version": "canonical-v2-prd-catalog-2026-07-12",
-  "content_sha256": "8ad9e719579b834f51128788f49d091913c0c90e3b047aac9b2f83cc794441d7",
+  "content_sha256": "26ec3ad046207665051ab7886fcef8fda748f331bddff69de486e90930b3398d",
   "deferred_owners": [
     {
       "citation_ids": [
@@ -1668,6 +1668,11 @@
               "member_name": "canonical_company_id",
               "required": false,
               "value_shape": "canonical_identity_id"
+            },
+            {
+              "member_name": "company_name",
+              "required": false,
+              "value_shape": "text"
             }
           ],
           "parent_domain": "patent",

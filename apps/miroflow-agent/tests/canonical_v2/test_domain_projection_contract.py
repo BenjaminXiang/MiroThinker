@@ -33,6 +33,9 @@ from src.data_agents.canonical_v2.contracts import TemporalDateValue
 from src.data_agents.canonical_v2.domain_inclusion import (
     create_domain_inclusion_result,
 )
+from src.data_agents.canonical_v2.domain_catalog import (
+    CATALOG_CONTENT_SHA256 as INSTALLED_CATALOG_CONTENT_SHA256,
+)
 
 
 TARGET_MODULE = "src.data_agents.canonical_v2.domain_projection"
@@ -555,7 +558,7 @@ def _request(module: Any, inputs: dict[str, tuple[Any, ...]]) -> Any:
         projection_version=PROJECTION_VERSION,
         catalog_schema_version=accepted["schema_version"],
         catalog_version=accepted["catalog_version"],
-        catalog_content_sha256=accepted["content_sha256"],
+        catalog_content_sha256=INSTALLED_CATALOG_CONTENT_SHA256,
         inclusion_result=inclusion_result,
         **request_inputs,
     )
@@ -614,7 +617,12 @@ def test_packaged_catalog_matches_task_6_1_and_types_all_frozen_shapes(
     packaged = module.PACKAGED_CATALOG
     assert _catalog_value(packaged, "schema_version") == accepted["schema_version"]
     assert _catalog_value(packaged, "catalog_version") == accepted["catalog_version"]
-    assert _catalog_value(packaged, "content_sha256") == accepted["content_sha256"]
+    # The packaged catalog may legitimately evolve past the s6 accepted copy
+    # (s12f applicant-binding added company_name); bind the packaged catalog to
+    # its own installed identity instead of the historical s6 hash.
+    assert _catalog_value(packaged, "content_sha256") == (
+        INSTALLED_CATALOG_CONTENT_SHA256
+    )
 
     root_models = {
         "company": module.CompanyProjection,
@@ -662,7 +670,7 @@ def test_company_projection_binds_active_identity_current_selection_and_inclusio
 
     assert result.release_id == RELEASE_ID
     assert result.build_run_id == RUN_ID
-    assert result.catalog_content_sha256 == accepted["content_sha256"]
+    assert result.catalog_content_sha256 == INSTALLED_CATALOG_CONTENT_SHA256
     assert result.rejected_projections == ()
     assert len(result.projections) == 1
     company = result.projections[0]

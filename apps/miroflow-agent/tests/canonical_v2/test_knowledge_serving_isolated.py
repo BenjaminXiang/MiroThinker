@@ -4214,3 +4214,46 @@ def test_serving_semantic_text_omits_missing_field_placeholder() -> None:
         "张三",
     )
     assert complete == "张三；机构：清华大学深圳国际研究生院；职称：副教授；简介：研究机器人技术。"
+
+
+def test_serving_semantic_text_uses_bound_company_name_for_applicant() -> None:
+    """A bound patent applicant renders its company's Chinese name.
+
+    Regression for CN117873146A: the applicant carried only the English
+    name ("Shenzhen Ubtech Technology Co ltd") even though applicant-binding
+    resolved it to 深圳市优必选科技股份有限公司.  The bound applicant
+    sub-object now carries company_name, and _list_names prefers it.
+    """
+    item = EvidenceItem(
+        evidence_id="evidence:s12f:patent-applicant",
+        object_id="patent:s12f:cn117873146",
+        domain="patent",
+        lane="lexical",
+        source_nature="local",
+        source_locator="canonical-v2-isolated:patent",
+        snippet=json.dumps(
+            {
+                "name": "一种机器人的落地控制方法、机器人及终端设备",
+                "patent_number": "CN117873146A",
+                "applicants": [
+                    {
+                        "name": "Shenzhen Ubtech Technology Co ltd",
+                        "company_name": "深圳市优必选科技股份有限公司",
+                        "canonical_company_id": "company-c-ubtech",
+                    }
+                ],
+            },
+            ensure_ascii=False,
+        ),
+        score=1.0,
+        source_authority="canonical_release",
+        claim_binding=EvidenceClaimBinding(
+            subject_id="patent:s12f:cn117873146",
+            predicate="canonical_projection",
+            value="a" * 64,
+            status="admitted",
+        ),
+    )
+    text = serving_module._semantic_text(item, "一种机器人的落地控制方法")
+    assert "深圳市优必选科技股份有限公司" in text
+    assert "Shenzhen Ubtech" not in text
