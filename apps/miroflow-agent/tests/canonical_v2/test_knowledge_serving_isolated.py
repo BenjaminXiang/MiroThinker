@@ -381,6 +381,47 @@ def test_enumeration_discovery_views_merge_before_other_rewrite_views() -> None:
     assert ordinary == extras
 
 
+def test_discovery_front_merge_promotes_brand_listicle_mentions() -> None:
+    """Brand-listicle views must have their head promoted above the
+    literal-view tail: supplier mentions like 九号 at ranks 9-16 of a brand
+    view stay inside the enumeration candidate window instead of being
+    buried below it (plain view first, then discovery head, then the tails).
+    """
+    resolved = serving_module._discovery_front_merge
+
+    def item(rank: int, name: str) -> serving_module._NormalizedWebResult:
+        return serving_module._NormalizedWebResult(
+            title=f"{name}",
+            url=f"https://example.test/{name}-{rank}",
+            snippet=f"{name} 相关信息",
+            summary="",
+            primary_provider_version="bocha-v1",
+            corroborating_provider_versions=(),
+        )
+
+    literal = tuple(item(rank, f"企业{rank}") for rank in range(1, 23))
+    brand = tuple(item(rank + 30, f"品牌{rank}") for rank in range(1, 17))
+    merged = resolved([literal, brand], discovery_view_indexes=(1,))
+    urls = tuple(entry.url for entry in merged)
+    # Literal-view head keeps the top slot.
+    assert urls[0] == "https://example.test/企业1-1"
+    # Brand mentions at ranks 9-14 land inside the 24-wide enumeration
+    # window (head 10 + discovery front 14).
+    assert urls.index("https://example.test/品牌10-40") < 24
+    assert urls.index("https://example.test/品牌14-44") < 24
+    assert len(urls) == 38  # no dedupe loss in this fixture
+
+    untouched = resolved([literal, brand], discovery_view_indexes=())
+    assert tuple(entry.url for entry in untouched)[0] == "https://example.test/企业1-1"
+    assert tuple(entry.url for entry in untouched)[1] == "https://example.test/企业2-2"
+
+
+def test_is_brand_discovery_view_classifies_listicle_queries() -> None:
+    assert serving_module._is_brand_discovery_view("国内成熟酒店配送机器人品牌")
+    assert serving_module._is_brand_discovery_view("酒店服务机器人头部企业名单")
+    assert not serving_module._is_brand_discovery_view("中国酒店送餐机器人供应商")
+
+
 def test_normal_answer_uses_injected_llm_renderer_and_preserves_founder_role(
     tmp_path: Path,
 ) -> None:

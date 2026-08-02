@@ -1082,7 +1082,12 @@ class _DualWebLaneAdapter:
             per_view.append(
                 self._normalize_and_order_results(provider_results=provider_results)
             )
-        return _merge_web_results_across_views(per_view)
+        discovery_indexes = tuple(
+            index
+            for index, query in enumerate(queries[1:], start=1)
+            if _is_brand_discovery_view(query)
+        )
+        return _discovery_front_merge(per_view, discovery_indexes)
 
     def _enrich_with_page_text(
         self,
@@ -1590,6 +1595,51 @@ def _merge_web_results_across_views(
                 ),
             )
     return tuple(merged_by_url[url] for url in ordered_urls)
+
+
+def _is_brand_discovery_view(text: str) -> bool:
+    """True for rewrite views aimed at supplier/brand listicles."""
+    return any(marker in text for marker in _BRAND_DISCOVERY_VIEW_MARKERS)
+
+
+def _discovery_front_merge(
+    per_view: list[tuple[_NormalizedWebResult, ...]],
+    discovery_view_indexes: tuple[int, ...],
+    *,
+    plain_head_limit: int = 10,
+    front_limit: int = 14,
+) -> tuple[_NormalizedWebResult, ...]:
+    """Merge views with brand-discovery results promoted ahead of the rest.
+
+    Brand-list views carry supplier mentions (九号/开普勒 in brand listicles)
+    at ranks 9-16 of their own view; the literal-query view's 20+ results
+    otherwise bury them below the candidate cut.  The literal view keeps its
+    head (``plain_head_limit``), then the first ``front_limit`` discovery
+    results follow, then the tail of every view.  When no discovery view is
+    present the merge degenerates to the plain earliest-view-wins merge.
+    """
+    if not discovery_view_indexes:
+        return _merge_web_results_across_views(per_view)
+    discovery = tuple(
+        item
+        for index in discovery_view_indexes
+        for item in per_view[index]
+    )
+    other = tuple(
+        item
+        for index, view in enumerate(per_view)
+        if index != 0 and index not in discovery_view_indexes
+        for item in view
+    )
+    return _merge_web_results_across_views(
+        [
+            per_view[0][:plain_head_limit],
+            discovery[:front_limit],
+            per_view[0][plain_head_limit:],
+            other,
+            discovery[front_limit:],
+        ]
+    )
 
 
 def _serving_query_views(
