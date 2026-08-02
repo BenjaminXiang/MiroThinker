@@ -40,6 +40,15 @@ RUN_ID = "s12a-test-build-run"
 RELEASE_ID = "candidate-s12a-test"
 SOURCE_BATCH_ID = "s12a-released-objects-full-v1"
 RECOLLECTION_BATCH_ID = "s12a-approved-recollection-v1"
+SUPPLEMENTAL_BATCH_IDS = (
+    "s12c-r7-company-knowledge-v1",
+    "s12c-r7-company-workbook-supplement-v1",
+    "s12c-r7-paper-identifiers-v1",
+    "s12c-r7-patent-identifiers-v1",
+    "s12c-r7-professor-company-roles-v1",
+    "s12e-professor-backfill-v1",
+)
+EVIDENCE_BATCH_IDS = tuple(sorted((SOURCE_BATCH_ID, *SUPPLEMENTAL_BATCH_IDS)))
 
 SOURCE_INVENTORY_SHA256 = (
     "83a9e2c82aee4cbe5c02f088ba0fdbf8d15359d87a85bf4ee901b0f58f70fa09"
@@ -4462,27 +4471,72 @@ def _evidence_member(
     }
 
 
+def _supplemental_member(source_id: str, authority: Any) -> dict[str, Any]:
+    return {
+        "member_id": authority.member_id,
+        "source_batch_id": authority.source_batch_id,
+        "source_kind": authority.source_kind,
+        "content_path": str(Path("/accepted/restore") / authority.restore_member_path),
+        "restore_member_path": str(authority.restore_member_path),
+        "backup_member_manifest_path": (
+            str(authority.backup_member_manifest_path)
+            if authority.backup_member_manifest_path is not None
+            else None
+        ),
+        "backup_member_manifest_sha256": authority.backup_manifest_sha256,
+        "source_member_manifest_sha256": authority.source_member_manifest_sha256,
+        "byte_size": authority.byte_size,
+        "content_sha256": authority.content_sha256,
+        "parser": {
+            "parser_name": authority.parser_name,
+            "parser_version": "v1",
+            "schema_version": (
+                "historical-jsonl-record-v1"
+                if authority.parser_name == "historical_jsonl"
+                else "historical-xlsx-record-v1"
+            ),
+            "options": authority.parser_options,
+        },
+        "observed_at": "2026-07-11T15:44:30Z",
+        "parent_source_id": source_id,
+    }
+
+
 def _manifest_payload(*, recollection: bool = False) -> dict[str, Any]:
+    module = _module()
+    supplemental_ids = set(module._SUPPLEMENTAL_SOURCE_IDS)
     entries: list[dict[str, Any]] = []
     for disposition, source_ids in _SOURCE_IDS_BY_DISPOSITION.items():
         for source_id in source_ids:
+            members: list[dict[str, Any]] = []
+            selected_disposition = disposition
+            if source_id == RELEASED_OBJECTS_SOURCE_ID:
+                members = [_evidence_member()]
+            elif source_id in supplemental_ids:
+                # The v2 manifest authority admits the fixed supplemental
+                # sources as evidence input with their exact members; a v1
+                # manifest would drop them silently and is rejected by the
+                # build entry.
+                selected_disposition = "evidence_input"
+                members = [
+                    _supplemental_member(
+                        source_id,
+                        module._SUPPLEMENTAL_SOURCE_AUTHORITIES[source_id],
+                    )
+                ]
             entries.append(
                 {
                     "source_id": source_id,
-                    "disposition": disposition,
+                    "disposition": selected_disposition,
                     "source_family": "accepted-s2b-source",
-                    "members": (
-                        [_evidence_member()]
-                        if source_id == RELEASED_OBJECTS_SOURCE_ID
-                        else []
-                    ),
+                    "members": members,
                     "approval_reference": None,
                     "gap_id": None,
-                    "rationale": f"S12A exact {disposition} disposition.",
+                    "rationale": f"S12A exact {selected_disposition} disposition.",
                 }
             )
     payload: dict[str, Any] = {
-        "schema_version": "canonical-v2-source-build-manifest-v1",
+        "schema_version": "canonical-v2-source-build-manifest-v2",
         "source_inventory_sha256": SOURCE_INVENTORY_SHA256,
         "backup_manifest_sha256": BACKUP_MANIFEST_SHA256,
         "restore_verification_sha256": RESTORE_VERIFICATION_SHA256,
@@ -5513,13 +5567,17 @@ def _request(
     *,
     release_id: str = RELEASE_ID,
     run_id: str = RUN_ID,
-    source_batch_ids: tuple[str, ...] = (SOURCE_BATCH_ID,),
+    source_batch_ids: tuple[str, ...] = EVIDENCE_BATCH_IDS,
 ) -> Any:
     return module.BuildCandidateRequest(
         run_id=run_id,
         candidate_release_id=release_id,
         source_batch_ids=source_batch_ids,
-        parser_versions={"released_objects_sqlite": "canonical-v2-s12a-full-table-v1"},
+        parser_versions={
+            "released_objects_sqlite": "canonical-v2-s12a-full-table-v1",
+            "historical_jsonl": "v1",
+            "historical_xlsx": "v1",
+        },
         policy_versions={
             "released_objects_mapper": "canonical-v2-released-objects-mapper-v2",
             "path_eligibility": "path-eligibility-v1",
@@ -5582,6 +5640,39 @@ def _build_fixture(
     return builder, decision, embedding
 
 
+def _supplemental_row(*, index: int, payload: dict[str, Any]) -> dict[str, Any]:
+    """One landing record per supplemental source for the v2-manifest fixtures.
+
+    The records deliberately match no retained object: the e2e fixtures pin
+    landing/registry/index/verification behavior, while supplemental match
+    and merge semantics are pinned by the professor-backfill test module.
+    """
+    return {
+        "id": f"supplemental:{index}",
+        "object_type": "cross_domain",
+        "display_name": f"Supplemental row {index}",
+        "payload_json": json.dumps(payload, ensure_ascii=False, sort_keys=True),
+    }
+
+
+_SUPPLEMENTAL_ROW_PAYLOADS: dict[str, dict[str, Any]] = {
+    "s12c-r7-company-knowledge-v1": {"company_name": "No Such Company Ltd"},
+    "s12c-r7-company-workbook-supplement-v1": {"公司名称": "No Such Company Ltd"},
+    "s12c-r7-paper-identifiers-v1": {"doi": "10.9999/no-such-paper"},
+    "s12c-r7-patent-identifiers-v1": {"公开（公告）号": "CN999999999A"},
+    "s12c-r7-professor-company-roles-v1": {
+        "professor_name": "No Such Professor",
+        "company_name": "No Such Company Ltd",
+    },
+    "s12e-professor-backfill-v1": {
+        "professor_id": "professor:99999",
+        "professor_name": "不存在的教授",
+        "institution": "不存在的机构",
+        "fields": {},
+    },
+}
+
+
 def _success_fixture(
     module: Any,
     *,
@@ -5595,12 +5686,21 @@ def _success_fixture(
     drift_registry_readback: bool = False,
 ) -> tuple[Any, _RecordingBoundary, _AtomicEnvelopeSink, tuple[str, ...]]:
     payload = _manifest_payload()
-    rows_by_source = {
+    rows_by_source: dict[str, tuple[dict[str, Any], ...]] = {
         RELEASED_OBJECTS_SOURCE_ID: _released_rows(
             malformed_recollection=malformed_recollection
         )
     }
-    batches = (SOURCE_BATCH_ID,)
+    for index, (source_id, authority) in enumerate(
+        sorted(module._SUPPLEMENTAL_SOURCE_AUTHORITIES.items())
+    ):
+        rows_by_source[source_id] = (
+            _supplemental_row(
+                index=index,
+                payload=_SUPPLEMENTAL_ROW_PAYLOADS[authority.source_batch_id],
+            ),
+        )
+    batches = EVIDENCE_BATCH_IDS
     boundary = _RecordingBoundary(
         module=module,
         rows_by_source=rows_by_source,
@@ -5747,9 +5847,9 @@ def test_source_manifest_accounts_for_every_accepted_source_without_using_requir
     assert counts == {
         "requirements_only": 7,
         "acceptance_only": 7,
-        "evidence_input": 1,
+        "evidence_input": 7,
         "protection_only": 5,
-        "registered_unprojected": 30,
+        "registered_unprojected": 24,
     }
 
     missing = json.loads(json.dumps(valid))
@@ -5839,7 +5939,9 @@ def test_complete_build_uses_verified_copies_landing_authority_projections_regis
         assert candidate.release_id == RELEASE_ID
         assert candidate.run_id == RUN_ID
         assert candidate.active_release_changed is False
-        assert boundary.staged_source_ids == [RELEASED_OBJECTS_SOURCE_ID]
+        assert boundary.staged_source_ids == sorted(
+            [RELEASED_OBJECTS_SOURCE_ID, *module._SUPPLEMENTAL_SOURCE_IDS]
+        )
         assert len(boundary.landing_records[SOURCE_BATCH_ID]) == 5561
         assert candidate.object_counts == {
             "company": 1037,
@@ -5871,9 +5973,10 @@ def test_complete_build_uses_verified_copies_landing_authority_projections_regis
         handoff = envelope.consumer_handoff
         # 1037 company payloads lost their only gap when core_facts.key_personnel
         # became an allowed (projected) field path; paper/patent/link gaps are
-        # unchanged because the fixture lacks the newly allowed fields.
-        assert len(envelope.receipt.gap_hashes) == 3085
-        assert len(set(envelope.receipt.gap_hashes)) == 3085
+        # unchanged because the fixture lacks the newly allowed fields; the six
+        # v2 supplemental members each contribute one unmatched-record gap.
+        assert len(envelope.receipt.gap_hashes) == 3091
+        assert len(set(envelope.receipt.gap_hashes)) == 3091
         assert (
             envelope.receipt.recorded_decision_bundle_sha256
             == RECORDED_DECISION_BUNDLE_SHA256

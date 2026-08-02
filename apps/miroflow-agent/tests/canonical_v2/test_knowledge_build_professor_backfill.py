@@ -210,6 +210,52 @@ def _v2_manifest_payload(module: Any, *, with_backfill: bool) -> dict[str, Any]:
     return payload
 
 
+def _v1_manifest_payload(module: Any) -> dict[str, Any]:
+    """A valid v1-era manifest: no supplemental sources are admitted.
+
+    Mirrors ``_v2_manifest_payload`` but keeps every source in the module's
+    baseline disposition map, so a v1 manifest is a downgrade that would
+    silently drop the supplemental (backfill) authority.
+    """
+    entries: list[dict[str, Any]] = []
+    for disposition, source_ids in module._SOURCE_IDS_BY_DISPOSITION.items():
+        for source_id in source_ids:
+            members: list[dict[str, Any]] = []
+            if source_id == RELEASED_OBJECTS_SOURCE_ID:
+                members = [_released_member()]
+            entries.append(
+                {
+                    "source_id": source_id,
+                    "disposition": disposition.value,
+                    "source_family": "accepted-s2b-source",
+                    "members": members,
+                    "approval_reference": None,
+                    "gap_id": None,
+                    "rationale": f"S12A exact {disposition.value} disposition.",
+                }
+            )
+    payload: dict[str, Any] = {
+        "schema_version": "canonical-v2-source-build-manifest-v1",
+        "source_inventory_sha256": SOURCE_INVENTORY_SHA256,
+        "backup_manifest_sha256": BACKUP_MANIFEST_SHA256,
+        "restore_verification_sha256": RESTORE_VERIFICATION_SHA256,
+        "acceptance_record_sha256": ACCEPTANCE_RECORD_SHA256,
+        "released_objects_mapper_policy_version": (
+            "canonical-v2-released-objects-mapper-v2"
+        ),
+        "released_objects_mapper_policy_sha256": (
+            module._RELEASED_OBJECTS_MAPPER_POLICY_SHA256
+        ),
+        "released_objects_expected_row_counts": dict(module._EXPECTED_OBJECT_COUNTS),
+        "restore_root": "/accepted/restore",
+        "approved_recollection_root": None,
+        "inventory_entries": sorted(entries, key=lambda item: item["source_id"]),
+        "targeted_recollection_entries": [],
+    }
+    payload["content_sha256"] = _canonical_hash(payload)
+    return payload
+
+
 def _request(
     module: Any,
     *,
@@ -651,6 +697,31 @@ def test_legacy_manifest_without_backfill_authority_is_rejected(
     )
 
     with pytest.raises(module.SourceBuildManifestError):
+        builder._preflight(_request(module, source_batch_ids=batches))
+
+
+def test_v1_manifest_is_rejected_at_build_entry(tmp_path: Path) -> None:
+    """The build entry must refuse a v1 downgrade of the source manifest.
+
+    A v1 manifest validates as a legal accepted-gate build without the
+    supplemental (professor backfill) authority, so a caller could otherwise
+    downgrade the manifest and silently drop every supplemental source.
+    """
+    module = _module()
+    payload = _v1_manifest_payload(module)
+    builder = _preflight_builder(module, tmp_path=tmp_path, manifest_payload=payload)
+    batches = tuple(
+        sorted(
+            member["source_batch_id"]
+            for entry in payload["inventory_entries"]
+            for member in entry["members"]
+        )
+    )
+
+    with pytest.raises(
+        module.SourceBuildManifestError,
+        match="canonical-v2-source-build-manifest-v2",
+    ):
         builder._preflight(_request(module, source_batch_ids=batches))
 
 

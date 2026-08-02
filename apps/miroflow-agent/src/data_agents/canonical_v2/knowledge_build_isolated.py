@@ -7009,7 +7009,7 @@ class _IsolatedKnowledgeBuild(KnowledgeBuild):
     def _load_manifest(self) -> SourceBuildManifest:
         try:
             raw = _read_stable_unlinked_regular_file(self._source_manifest_path)
-            return SourceBuildManifest.model_validate_json(
+            manifest = SourceBuildManifest.model_validate_json(
                 raw,
                 context={"external_content_addressed": True},
             )
@@ -7017,6 +7017,17 @@ class _IsolatedKnowledgeBuild(KnowledgeBuild):
             raise SourceBuildManifestError(
                 "source-build manifest failed exact accepted-authority validation"
             ) from exc
+        if manifest.schema_version != "canonical-v2-source-build-manifest-v2":
+            # A v1 manifest validates as a legal accepted-gate build without
+            # the supplemental source authority, so a caller could downgrade
+            # the manifest and silently drop every supplemental source
+            # (professor backfill included).  The build entry accepts only v2.
+            raise SourceBuildManifestError(
+                "source-build manifest must be canonical-v2 "
+                "(canonical-v2-source-build-manifest-v2); v1 manifests are "
+                "not accepted"
+            )
+        return manifest
 
     def _preflight(
         self, request: BuildCandidateRequest
