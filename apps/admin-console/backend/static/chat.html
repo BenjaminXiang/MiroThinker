@@ -510,9 +510,14 @@
 
       function safePublicText(value) {
         if (typeof value !== "string") return null;
-        const text = value.trim();
-        if (!text || text.length > 8000 || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text)) return null;
-        return unsafePublicTextPatterns.some((pattern) => pattern.test(text)) ? null : text;
+        let text = value.trim();
+        if (!text || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text)) return null;
+        if (unsafePublicTextPatterns.some((pattern) => pattern.test(text))) return null;
+        // 超长答案降级为截断展示（fallback 拼接可能很长），而不是整段拒绝。
+        if (text.length > 8000) {
+          text = text.slice(0, 8000) + "\n……（答案过长，已截断）";
+        }
+        return text;
       }
 
       async function fetchJson(path) {

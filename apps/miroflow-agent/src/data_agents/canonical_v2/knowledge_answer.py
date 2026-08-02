@@ -1248,6 +1248,10 @@ def _append_required_sentences(text: str, sentences: tuple[str, ...]) -> str:
     return rendered
 
 
+_DETERMINISTIC_ANSWER_MAX_CLAIMS = 10
+_DETERMINISTIC_ANSWER_MAX_CHARS = 2000
+
+
 def _deterministic_answer_text(
     claims: tuple[MaterialClaim, ...],
     *,
@@ -1256,7 +1260,16 @@ def _deterministic_answer_text(
     if not claims:
         answer = "No supported material claims are available."
     else:
-        answer = "\n".join(f"- {claim.text}" for claim in claims)
+        lines = [f"- {claim.text}" for claim in claims]
+        truncated = len(lines) > _DETERMINISTIC_ANSWER_MAX_CLAIMS
+        answer = "\n".join(lines[:_DETERMINISTIC_ANSWER_MAX_CLAIMS])
+        if truncated:
+            answer += (
+                f"\n……（其余 {len(lines) - _DETERMINISTIC_ANSWER_MAX_CLAIMS} 条"
+                "候选省略）"
+            )
+        if len(answer) > _DETERMINISTIC_ANSWER_MAX_CHARS:
+            answer = answer[:_DETERMINISTIC_ANSWER_MAX_CHARS] + "……"
     return _append_required_sentences(answer, required_sentences)
 
 
