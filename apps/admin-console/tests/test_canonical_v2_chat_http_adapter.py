@@ -2493,6 +2493,87 @@ def test_s11a_post_chat_stream_emits_stage_and_answer_events() -> None:
     }
 
 
+def test_s11a_chat_stream_emits_answer_chunk_events() -> None:
+    """The SSE stream route passes token-level answer_chunk events through
+    between synthesis stage and the final answer event, in emission order."""
+    seam = _load_s11a_seam()
+    getter = seam.deps_module.get_canonical_v2_chat_adapter
+
+    chunks = ["深圳", "科创", "助手", "开始回答"]
+
+    class _ChunkStreamingAdapter:
+        def answer_stream(
+            self,
+            *,
+            query: str,
+            session_id: str,
+            option_id: str | None,
+            as_of: datetime,
+            progress: Callable[[str, dict[str, Any]], None] | None = None,
+        ) -> Any:
+            if progress is not None:
+                progress("stage", {"name": "planning"})
+                progress("plan_done", {"lanes": ["exact"], "domains": [], "views": []})
+                progress("stage", {"name": "retrieval"})
+                progress("retrieval_done", {"lanes": []})
+                progress("stage", {"name": "synthesis"})
+                for text in chunks:
+                    progress("answer_chunk", {"text": text})
+            return seam.contracts_module.ChatResponse(
+                query=query,
+                query_type="canonical_v2:A:answer",
+                answer_text="".join(chunks),
+                citations=[],
+                evidence=[],
+                clarification=None,
+                structured_payload={},
+                answer_style="template",
+                citation_map={},
+                suggested_followups=[],
+            )
+
+    prior = seam.app.dependency_overrides.get(getter)
+    seam.app.dependency_overrides[getter] = lambda: _ChunkStreamingAdapter()
+    try:
+        response = TestClient(seam.app, raise_server_exceptions=False).post(
+            "/api/chat/stream",
+            json={"query": SIMPLE_QUERY, "entity_id_hint": None},
+        )
+    finally:
+        if prior is None:
+            seam.app.dependency_overrides.pop(getter, None)
+        else:
+            seam.app.dependency_overrides[getter] = prior
+
+    assert response.status_code == 200
+    events: list[tuple[str, dict[str, Any]]] = []
+    for block in response.text.split("\n\n"):
+        event_name = "message"
+        data_lines: list[str] = []
+        for line in block.split("\n"):
+            if line.startswith("event:"):
+                event_name = line[6:].strip()
+            elif line.startswith("data:"):
+                data_lines.append(line[5:].strip())
+        if data_lines:
+            events.append((event_name, json.loads("\n".join(data_lines))))
+    names = [name for name, _ in events]
+    assert names == [
+        "stage",
+        "plan_done",
+        "stage",
+        "retrieval_done",
+        "stage",
+        *["answer_chunk"] * len(chunks),
+        "answer",
+        "done",
+    ]
+    chunk_events = [data for name, data in events if name == "answer_chunk"]
+    assert [chunk["text"] for chunk in chunk_events] == chunks
+    answer_payload = next(data for name, data in events if name == "answer")
+    assert answer_payload["answer_text"] == "".join(chunks)
+
+
 def test_s11a_chat_stream_integrity_error_emits_error_event() -> None:
     """A knowledge-read integrity failure surfaces as an SSE error event with
     the stable public detail (never the private message)."""

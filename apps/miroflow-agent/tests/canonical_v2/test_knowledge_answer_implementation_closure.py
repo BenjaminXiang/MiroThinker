@@ -1126,8 +1126,9 @@ def test_prose_renderer_cannot_reintroduce_audit_values_or_omit_material_gap() -
     gap_sentence = "保留证据不足以支持问题中的 2026 年当前营收。"
     assert digest not in hostile.answer_text
     assert profile.evidence_id not in hostile.answer_text
-    assert semantic_claim.text in hostile.answer_text
-    assert gap_sentence in hostile.answer_text
+    # The degraded fallback is an honest notice, never a raw claim listing:
+    # the hostile renderer's text is fully replaced, not partially echoed.
+    assert hostile.answer_text.startswith("回答生成暂时不可用，请稍后重试。")
     assert hostile.render_mode == "deterministic_fallback"
     assert any(
         limitation.code == "prose_synthesis_failed"
@@ -1204,7 +1205,9 @@ def test_prose_audit_value_matching_uses_token_boundaries_for_short_ids() -> Non
         prose_renderer=lambda _: f"{safe_prose} Audit token: {profile.evidence_id}.",
     ).answer(request)
     assert exposed.render_mode == "deterministic_fallback"
-    assert exposed.answer_text == f"- {semantic_claim.text}"
+    # The degraded fallback never echoes the renderer's text (which carried
+    # the audit token); it is an honest notice instead.
+    assert exposed.answer_text.startswith("回答生成暂时不可用，请稍后重试。")
     assert any(
         limitation.code == "prose_synthesis_failed"
         and limitation.failure_kind == "unsafe_output"
@@ -2245,3 +2248,109 @@ def test_real_knowledge_read_result_flows_to_grounded_answer_and_assessment() ->
     assert result.assessment_frame.dimensions[0].evidence_ids == (web_item.evidence_id,)
     assert result.citations[0].web_snapshot_id == web_item.web_snapshot.snapshot_id
     assert _file_sha256(original_milvus) == original_milvus_before
+
+
+def test_prose_renderer_stream_is_duck_typed_only_when_progress_is_set() -> None:
+    """A renderer exposing ``stream`` is used only when ``prose_progress`` is
+    set; plain callable renderers keep the synchronous path, and the stream
+    path preserves the timeout-retry/fallback failure semantics."""
+    answer_module = _answer_module()
+    read_module = _read_module()
+    company_id = "company:s9j:stream"
+    profile = _item(
+        read_module,
+        evidence_id="evidence:s9j:stream",
+        object_id=company_id,
+        subject_id=company_id,
+        predicate="preferred_name",
+        value="Robotics Co",
+        status="accepted",
+        snippet="The accepted Company name is Robotics Co.",
+    )
+    request = _turn(
+        answer_module,
+        session_id="session:s9j:stream",
+        turn_id="turn:s9j:stream",
+        evidence_set=_evidence_set(
+            read_module,
+            query="介绍 Robotics Co",
+            items=(profile,),
+        ),
+    )
+    semantic_claim = _claim(
+        answer_module,
+        claim_id="claim:s9j:stream",
+        text="Evidence supports Robotics Co.",
+        subject_id=company_id,
+        predicate="preferred_name",
+        value="Robotics Co",
+        evidence_ids=(profile.evidence_id,),
+        status="accepted",
+    )
+
+    def selector(value: Any) -> Any:
+        return _answer_proposal(answer_module, value, claim=semantic_claim)
+
+    class _StreamingRenderer:
+        def __init__(self) -> None:
+            self.stream_calls: list[str] = []
+
+        def __call__(self, value: Any) -> str:
+            return "SYNC_RENDERED"
+
+        def stream(self, value: Any, *, on_chunk: Any) -> str:
+            self.stream_calls.append("stream")
+            for chunk in ("深圳", "科创", "助手"):
+                on_chunk(chunk)
+            return "深圳科创助手"
+
+    # Without a progress sink the duck-typed stream method is ignored and the
+    # synchronous callable path runs (existing injected renderers stay valid).
+    sync_renderer = _StreamingRenderer()
+    plain = answer_module.create_ephemeral_knowledge_answer(
+        answer_selector=selector,
+        prose_renderer=sync_renderer,
+    ).answer(request)
+    assert plain.render_mode == "prose_renderer"
+    assert plain.answer_text == "SYNC_RENDERED"
+    assert sync_renderer.stream_calls == []
+
+    # With a progress sink the stream method runs: deltas are forwarded in
+    # order and the accumulated full text becomes the answer.
+    stream_renderer = _StreamingRenderer()
+    forwarded: list[str] = []
+    stream_module = answer_module.create_ephemeral_knowledge_answer(
+        answer_selector=selector,
+        prose_renderer=stream_renderer,
+    )
+    stream_module.prose_progress = forwarded.append
+    streamed = stream_module.answer(request)
+    assert stream_renderer.stream_calls == ["stream"]
+    assert forwarded == ["深圳", "科创", "助手"]
+    assert streamed.render_mode == "prose_renderer"
+    assert streamed.answer_text == "深圳科创助手"
+
+    # The stream path keeps the retry-once semantics: two timeouts degrade to
+    # the honest fallback notice, never a raw claim listing.
+    class _TimingOutStreamRenderer:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def __call__(self, value: Any) -> str:
+            return "SYNC_RENDERED"
+
+        def stream(self, value: Any, *, on_chunk: Any) -> str:
+            self.calls += 1
+            raise TimeoutError("test-owned stream timeout")
+
+    failing_renderer = _TimingOutStreamRenderer()
+    failed_module = answer_module.create_ephemeral_knowledge_answer(
+        answer_selector=selector,
+        prose_renderer=failing_renderer,
+    )
+    failed_module.prose_progress = lambda _text: None
+    degraded = failed_module.answer(request)
+    assert failing_renderer.calls == 2
+    assert degraded.render_mode == "deterministic_fallback"
+    assert degraded.answer_text.startswith("回答生成暂时不可用，请稍后重试。")
+    assert "Evidence supports Robotics Co." not in degraded.answer_text

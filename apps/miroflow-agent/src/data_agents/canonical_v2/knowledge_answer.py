@@ -486,6 +486,13 @@ class ProseSynthesisResult(ContractModel):
 class KnowledgeAnswer(ABC):
     """Small external seam for Canonical V2 answer orchestration."""
 
+    # Optional token-level prose progress sink. The chat adapter assigns this
+    # on the session instance around a streaming turn; it is never a
+    # constructor argument. Renderers exposing ``stream(result, *, on_chunk)``
+    # are duck-typed into the streaming path when this is set; plain callable
+    # renderers keep the synchronous path untouched.
+    prose_progress: Callable[[str], None] | None = None
+
     @abstractmethod
     def answer(self, turn: TurnRequest) -> TurnResult:
         """Validate one turn and return only server-grounded answer state."""
@@ -1252,6 +1259,21 @@ _DETERMINISTIC_ANSWER_MAX_CLAIMS = 10
 _DETERMINISTIC_ANSWER_MAX_CHARS = 2000
 
 
+def _prose_fallback_message(claims: tuple[MaterialClaim, ...]) -> str:
+    """Honest degraded copy when prose synthesis exhausts its retries.
+
+    The answer must stay an LLM-synthesized whole; a raw claim listing is
+    never presented as an answer.  The user is told synthesis is temporarily
+    unavailable and how much was retrieved, nothing more.
+    """
+    if not claims:
+        return "回答生成暂时不可用，请稍后重试。"
+    return (
+        "回答生成暂时不可用，请稍后重试。"
+        f"（已检索到 {len(claims)} 条相关信息）"
+    )
+
+
 def _deterministic_answer_text(
     claims: tuple[MaterialClaim, ...],
     *,
@@ -1792,29 +1814,43 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
         )
         if self._prose_renderer is None:
             return result
+        # The answer must be an LLM-synthesized whole, never a raw claim
+        # listing: a transient synthesis timeout is retried once before the
+        # deterministic fallback is ever considered.
+        rendered = None
+        synthesis_error: BaseException | None = None
         try:
-            rendered = self._prose_renderer(result)
-        except TimeoutError:
-            fallback_text = answer_text
-            prose_limitation = AnswerLimitation(
-                code="prose_synthesis_failed",
-                material=True,
-                stage="prose",
-                failure_kind="timeout",
-            )
-            return result.model_copy(
-                update={
-                    "answer_text": fallback_text,
-                    "limitations": (*result.limitations, prose_limitation),
-                    "render_mode": "deterministic_fallback",
-                    "fallback_sha256": _canonical_sha256(
-                        {
-                            "answer_text": fallback_text,
-                            "claim_ids": [claim.claim_id for claim in claims],
-                        }
-                    ),
-                }
-            )
+            for _attempt in range(2):
+                try:
+                    stream_fn = getattr(self._prose_renderer, "stream", None)
+                    if stream_fn is not None and self.prose_progress is not None:
+                        rendered = stream_fn(result, on_chunk=self.prose_progress)
+                    else:
+                        rendered = self._prose_renderer(result)
+                    break
+                except TimeoutError as exc:
+                    synthesis_error = exc
+            if rendered is None and isinstance(synthesis_error, TimeoutError):
+                fallback_text = _prose_fallback_message(claims)
+                prose_limitation = AnswerLimitation(
+                    code="prose_synthesis_failed",
+                    material=True,
+                    stage="prose",
+                    failure_kind="timeout",
+                )
+                return result.model_copy(
+                    update={
+                        "answer_text": fallback_text,
+                        "limitations": (*result.limitations, prose_limitation),
+                        "render_mode": "deterministic_fallback",
+                        "fallback_sha256": _canonical_sha256(
+                            {
+                                "answer_text": fallback_text,
+                                "claim_ids": [claim.claim_id for claim in claims],
+                            }
+                        ),
+                    }
+                )
         except (TypeError, ValueError, ValidationError):
             prose_limitation = AnswerLimitation(
                 code="prose_synthesis_failed",
@@ -1846,7 +1882,7 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             result=result,
             evidence_set=request.evidence_set,
         ):
-            fallback_text = answer_text
+            fallback_text = _prose_fallback_message(claims)
             prose_limitation = AnswerLimitation(
                 code="prose_synthesis_failed",
                 material=True,

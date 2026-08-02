@@ -3502,13 +3502,46 @@ def _semantic_text(item: EvidenceItem, display_name: str) -> str:
     return "；".join(parts) + "。"
 
 
+# The prose model answers as one JSON object with an ``answer_text`` string
+# value.  The streaming renderer strips this shell incrementally; the key
+# must be matched exactly as emitted by the model (no whitespace around the
+# colon), mirroring the request prompt contract.
+_ANSWER_TEXT_KEY = '"answer_text"'
+_JSON_SINGLE_CHAR_ESCAPES = {
+    "n": "\n",
+    '"': '"',
+    "\\": "\\",
+    "t": "\t",
+    "r": "\r",
+    "b": "\b",
+    "f": "\f",
+    "/": "/",
+}
+_HEX_DIGITS = frozenset("0123456789abcdefABCDEF")
+
+
 class _OpenAIProseRenderer:
     def __init__(self, *, client: Any, model: str, extra_body: dict[str, Any]) -> None:
         self._client = client
         self._model = model
         self._extra_body = extra_body
 
-    def __call__(self, result: Any) -> str | ProseSynthesisResult:
+    def _chat_request(
+        self, result: Any
+    ) -> tuple[
+        tuple[dict[str, Any], ...],
+        tuple[Any, ...],
+        list[Any],
+        list[str | None],
+        Any,
+        Any,
+    ]:
+        """Build the shared prose request: chat messages plus analysis locals.
+
+        ``__call__`` and ``stream`` share one payload construction so the
+        token-level streaming path keeps the exact prompt version, system
+        instructions, and request shape of the synchronous path.
+        """
         context = getattr(result, "context_receipt", None)
         active_anchor = getattr(context, "active_anchor", None)
         displayed_set = getattr(context, "displayed_result_set", None)
@@ -3636,14 +3669,10 @@ class _OpenAIProseRenderer:
             ],
             "enumeration_coverage": coverage_payload,
         }
-        response = self._client.chat.completions.create(
-            model=self._model,
-            temperature=0,
-            max_tokens=1200,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
+        messages = [
+            {
+                "role": "system",
+                "content": (
                         "你是深圳科创信息助手。输入是带证据约束的候选信息，不代表每条都与问题相关；"
                         "先判断相关性，再只采用相关内容回答用户。"
                         "行文风格：像熟悉领域的专业助手一样直接作答——先给结论，再按主体或关系组织"
@@ -3688,7 +3717,32 @@ class _OpenAIProseRenderer:
                     "role": "user",
                     "content": json.dumps(payload, ensure_ascii=False),
                 },
-            ],
+            ]
+        return (
+            messages,
+            claims,
+            candidate_handles,
+            handle_ids,
+            active_anchor,
+            displayed_set,
+        )
+
+    def __call__(self, result: Any) -> str | ProseSynthesisResult:
+        (
+            messages,
+            claims,
+            candidate_handles,
+            handle_ids,
+            active_anchor,
+            displayed_set,
+        ) = self._chat_request(result)
+        response = self._client.chat.completions.create(
+            model=self._model,
+            temperature=0,
+            # 3000 tokens lifts the old 1200 ceiling that silently truncated
+            # long answers; streaming and sync synthesis share the same bound.
+            max_tokens=3000,
+            messages=messages,
             extra_body=self._extra_body,
         )
         choices = getattr(response, "choices", ())
@@ -3776,6 +3830,114 @@ class _OpenAIProseRenderer:
             return structured.model_copy(update={"answer_text": rendered})
         return rendered
 
+    def stream(
+        self, result: Any, *, on_chunk: Callable[[str], None]
+    ) -> str:
+        """Token-level variant of ``__call__`` for SSE answer streaming.
+
+        The prose model answers as a JSON shell
+        (``{"answer_text": "<content>", ...}``); this strips the shell
+        incrementally as deltas arrive so ``on_chunk`` only ever receives the
+        plain answer text (JSON escapes decoded: ``\\n`` → newline,
+        ``\\"`` → quote, ``\\\\`` → backslash, ``\\t`` → tab, plus the
+        remaining JSON escapes). The state machine survives arbitrary delta
+        boundaries: the ``"answer_text":"`` prefix may be split anywhere, an
+        escape backslash may be the last character of a delta, and ``\\uXXXX``
+        hex digits may span deltas. A malformed shell raises ``ValueError`` so
+        the caller's retry/degrade path handles it like a synchronous parse
+        failure; the returned text equals ``json.loads``-style ``answer_text``
+        that ``__call__`` would produce.
+        """
+        messages, *_ = self._chat_request(result)
+        completion = self._client.chat.completions.create(
+            model=self._model,
+            temperature=0,
+            max_tokens=3000,
+            messages=messages,
+            extra_body=self._extra_body,
+            stream=True,
+        )
+        parts: list[str] = []
+        prefix_window = ""
+        pending_escape = False
+        hex_digits: str | None = None
+        gap_seen_key = False
+        in_content = False
+        closed = False
+        for chunk in completion:
+            choices = getattr(chunk, "choices", ())
+            if not choices:
+                continue
+            delta = getattr(choices[0], "delta", None)
+            text = None if delta is None else getattr(delta, "content", None)
+            if not isinstance(text, str) or not text:
+                continue
+            for char in text:
+                if closed:
+                    break
+                if not in_content:
+                    if not gap_seen_key:
+                        # Search for the key anywhere (skips a fenced ```json
+                        # preamble); keep only a sliding window the key's length.
+                        prefix_window = (prefix_window + char)[-len(_ANSWER_TEXT_KEY):]
+                        if prefix_window == _ANSWER_TEXT_KEY:
+                            gap_seen_key = True
+                        continue
+                    # Gap between the key and the value: tolerate any whitespace
+                    # and the colon (the model emits "answer_text": " with
+                    # spacing), then expect the opening quote.
+                    if char in " \t\r\n":
+                        continue
+                    if char == ":":
+                        continue
+                    if char == '"':
+                        in_content = True
+                        continue
+                    raise ValueError(
+                        "LLM prose stream has a malformed answer_text key"
+                    )
+                if hex_digits is not None:
+                    if char not in _HEX_DIGITS:
+                        raise ValueError(
+                            "LLM prose stream has a malformed \\u escape"
+                        )
+                    hex_digits += char
+                    if len(hex_digits) == 4:
+                        decoded = chr(int(hex_digits, 16))
+                        hex_digits = None
+                        on_chunk(decoded)
+                        parts.append(decoded)
+                    continue
+                if pending_escape:
+                    pending_escape = False
+                    if char == "u":
+                        hex_digits = ""
+                        continue
+                    decoded = _JSON_SINGLE_CHAR_ESCAPES.get(char)
+                    if decoded is None:
+                        raise ValueError(
+                            "LLM prose stream has an unsupported JSON escape"
+                        )
+                    on_chunk(decoded)
+                    parts.append(decoded)
+                    continue
+                if char == "\\":
+                    pending_escape = True
+                    continue
+                if char == '"':
+                    closed = True
+                    continue
+                on_chunk(char)
+                parts.append(char)
+        if not gap_seen_key:
+            raise ValueError("LLM prose response has no answer_text field")
+        if not closed:
+            raise ValueError("LLM prose response has an unterminated answer_text")
+        rendered = "".join(parts).strip()
+        if not rendered:
+            raise ValueError("LLM prose response is empty")
+        return rendered
+
     def warm(self) -> None:
         self._client.chat.completions.create(
             model=self._model,
@@ -3806,7 +3968,7 @@ class _EnvironmentProseRenderer:
             model = str(settings["local_llm_model"])
             timeout = max(
                 5.0,
-                float(os.getenv("CHAT_LLM_TIMEOUT_SECONDS", "12")),
+                float(os.getenv("CHAT_LLM_TIMEOUT_SECONDS", "30")),
             )
             self._renderer = _OpenAIProseRenderer(
                 client=OpenAI(
@@ -3824,11 +3986,31 @@ class _EnvironmentProseRenderer:
         try:
             timeout = max(
                 5.0,
-                float(os.getenv("CHAT_LLM_TIMEOUT_SECONDS", "12")),
+                float(os.getenv("CHAT_LLM_TIMEOUT_SECONDS", "30")),
             )
             renderer = self._configured_renderer()
             future = _PROSE_RENDER_EXECUTOR.submit(renderer, result)
             return future.result(timeout=timeout)
+        except (
+            ConnectionError,
+            FutureTimeoutError,
+            OpenAIError,
+            OSError,
+            RuntimeError,
+            TypeError,
+            ValueError,
+        ) as exc:
+            raise TimeoutError("LLM prose synthesis is unavailable") from exc
+
+    def stream(self, result: Any, *, on_chunk: Callable[[str], None]) -> str:
+        try:
+            renderer = self._configured_renderer()
+            # The stream runs on the caller thread instead of the executor:
+            # only the provider client's per-read timeout applies, so a stream
+            # with continuous output is never cut by a whole-answer deadline.
+            # A stalled first token still surfaces as TimeoutError (via the
+            # client timeout), which the answer retry loop handles once.
+            return renderer.stream(result, on_chunk=on_chunk)
         except (
             ConnectionError,
             FutureTimeoutError,
@@ -3859,7 +4041,7 @@ def _warm_environment_llm() -> None:
     if not api_key:
         raise ValueError("configured chat LLM API key is unavailable")
     model = str(settings["local_llm_model"])
-    timeout = max(5.0, float(os.getenv("CHAT_LLM_TIMEOUT_SECONDS", "12")))
+    timeout = max(5.0, float(os.getenv("CHAT_LLM_TIMEOUT_SECONDS", "30")))
     OpenAI(
         base_url=settings["local_llm_base_url"],
         api_key=api_key,

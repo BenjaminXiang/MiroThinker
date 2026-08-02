@@ -306,8 +306,10 @@ def test_content_addressed_serving_bundle_is_secret_free_and_executable(
             evidence_set=evidence_set,
         )
     )
-    assert "丁文伯" in result.answer_text
-    assert "机器人技术" in result.answer_text
+    # Prose synthesis is timeout-degraded here: the fallback is an honest
+    # notice, never a raw claim listing, so retrieval selection is asserted
+    # via citations and context below instead of answer text.
+    assert result.answer_text.startswith("回答生成暂时不可用，请稍后重试。")
     assert "无关教授" not in result.answer_text
     assert result.context_receipt is not None
     assert result.context_receipt.displayed_result_set is not None
@@ -512,6 +514,151 @@ def test_normal_answer_uses_injected_llm_renderer_and_preserves_founder_role(
     assert rendered_queries == ["他是否有参与哪些企业的创立"]
     assert "original_query" not in result.model_dump(mode="json")
     assert "参与创立" in rendered_claims[0][0]
+
+
+def test_openai_prose_renderer_stream_emits_deltas_and_returns_full_text() -> None:
+    """The streaming renderer strips the JSON shell incrementally: deltas that
+    split the ``"answer_text":"`` prefix, escapes that cross delta boundaries
+    (``\\`` at a delta end, ``\\uXXXX`` hex spanning deltas), and the closing
+    quote with trailing JSON fields are all handled; ``on_chunk`` receives
+    only the decoded plain answer text, and the returned text equals what
+    ``json.loads`` would extract from the full shell."""
+    calls: list[dict[str, object]] = []
+    deltas = (
+        '{"an',
+        'swer_text":"你',
+        '好\\n世',
+        '界，他说\\"',
+        '你好\\"。\\t缩',
+        '进\\\\路径\\u4',
+        'e16"',
+        ',"selected_claim_indexes":[]}',
+    )
+    expected = '你好\n世界，他说"你好"。\t缩进\\路径世'
+
+    class _Completions:
+        def create(self, **kwargs: object) -> object:
+            calls.append(kwargs)
+            return (
+                SimpleNamespace(
+                    choices=(
+                        SimpleNamespace(delta=SimpleNamespace(content=delta)),
+                    )
+                )
+                for delta in deltas
+            )
+
+    client = SimpleNamespace(
+        chat=SimpleNamespace(completions=_Completions()),
+    )
+    renderer = serving_module._OpenAIProseRenderer(
+        client=client,
+        model="recorded-chat-model",
+        extra_body={"thinking": {"type": "disabled"}},
+    )
+    result = SimpleNamespace(
+        original_query="介绍深圳科创",
+        claims=(),
+        citations=(),
+        context_receipt=None,
+    )
+    received: list[str] = []
+
+    rendered = renderer.stream(result, on_chunk=received.append)
+
+    # on_chunk only ever sees decoded plain text, never shell fragments.
+    assert "".join(received) == expected
+    assert all("\n" not in part or part == "\n" for part in received)
+    assert rendered == expected
+    # Consistent with the synchronous __call__ extraction.
+    full_shell = "".join(deltas)
+    assert rendered == json.loads(full_shell)["answer_text"]
+
+
+def test_openai_prose_renderer_stream_tolerates_spaced_key() -> None:
+    """The real model emits ``\"answer_text\": \"`` with spacing and
+    indentation; the incremental stripper must tolerate the gap."""
+    deltas = (
+        '{\\n  "an',
+        'swer_text": "你',
+        '好\\n世界",\\n  "selected_claim_indexes": []\\n}',
+    )
+
+    class _Completions:
+        def create(self, **kwargs: object) -> object:
+            return (
+                SimpleNamespace(
+                    choices=(
+                        SimpleNamespace(delta=SimpleNamespace(content=delta)),
+                    )
+                )
+                for delta in deltas
+            )
+
+    class _Chat:
+        def __init__(self) -> None:
+            self.completions = _Completions()
+
+    renderer = serving_module._OpenAIProseRenderer(
+        client=SimpleNamespace(chat=_Chat()),
+        model="recorded-chat-model",
+        extra_body={"thinking": {"type": "disabled"}},
+    )
+    result = SimpleNamespace(
+        original_query="介绍深圳科创",
+        claims=(),
+        citations=(),
+        context_receipt=None,
+    )
+    received: list[str] = []
+    rendered = renderer.stream(result, on_chunk=received.append)
+    assert rendered == "你好\n世界"
+    assert "".join(received) == "你好\n世界"
+
+
+def test_openai_prose_renderer_stream_rejects_malformed_json_shell() -> None:
+    """Malformed shells (no answer_text field, unterminated value, bad
+    escape) raise ValueError so the caller retries/degrades exactly like a
+    synchronous parse failure."""
+
+    def stream_rendered(content: str) -> str:
+        class _Completions:
+            def create(self, **kwargs: object) -> object:
+                return (
+                    SimpleNamespace(
+                        choices=(
+                            SimpleNamespace(delta=SimpleNamespace(content=part)),
+                        )
+                    )
+                    for part in (content[i : i + 3] for i in range(0, len(content), 3))
+                )
+
+        client = SimpleNamespace(
+            chat=SimpleNamespace(completions=_Completions()),
+        )
+        renderer = serving_module._OpenAIProseRenderer(
+            client=client,
+            model="recorded-chat-model",
+            extra_body={},
+        )
+        return renderer.stream(
+            SimpleNamespace(
+                original_query="q",
+                claims=(),
+                citations=(),
+                context_receipt=None,
+            ),
+            on_chunk=lambda _text: None,
+        )
+
+    with pytest.raises(ValueError, match="no answer_text"):
+        stream_rendered("纯文本不是 JSON 外壳")
+    with pytest.raises(ValueError, match="unterminated answer_text"):
+        stream_rendered('{"answer_text":"你好')
+    with pytest.raises(ValueError, match="unsupported JSON escape"):
+        stream_rendered('{"answer_text":"你好\\q世界"}')
+    with pytest.raises(ValueError, match="malformed \\\\u escape"):
+        stream_rendered('{"answer_text":"你好\\u12"}')
 
 
 def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
@@ -771,12 +918,12 @@ def test_environment_prose_renderer_bounds_the_default_provider_wait(
     assert resolver_calls == [
         ("gemma4", {"apply_endpoint_env_overrides": False})
     ]
-    assert result_timeouts == [12.0]
+    assert result_timeouts == [30.0]
     assert client_calls == [
         {
             "base_url": "https://llm.example/v1",
             "api_key": "test-key",
-            "timeout": 12.0,
+            "timeout": 30.0,
             "max_retries": 0,
         }
     ]
@@ -836,7 +983,7 @@ def test_environment_prose_renderer_reuses_client_for_warm_and_answers(
     assert renderer(result) == "已整理回答"
 
     assert len(client_calls) == 1
-    assert [call["max_tokens"] for call in completion_calls] == [1200, 1, 1200]
+    assert [call["max_tokens"] for call in completion_calls] == [3000, 1, 3000]
 
 
 def test_environment_prose_renderer_stays_out_of_answer_session_copy() -> None:
@@ -928,7 +1075,9 @@ def test_focused_missing_entity_prefers_current_web_over_vector_neighbors(
         )
     )
 
-    assert "王学谦" in result.answer_text
+    # Prose synthesis is timeout-degraded (never a raw claim listing); the
+    # web-over-vector retrieval contract is asserted via citations below.
+    assert result.answer_text.startswith("回答生成暂时不可用，请稍后重试。")
     assert "王学锋" not in result.answer_text
     assert tuple(citation.source_nature for citation in result.citations) == (
         "current_web",
@@ -1017,7 +1166,9 @@ def test_explicit_link_gap_keeps_current_web_url_with_exact_local_evidence(
         )
     )
 
-    assert url in result.answer_text
+    # Prose synthesis is timeout-degraded (never a raw claim listing); the
+    # link-gap retrieval contract is asserted via citations below.
+    assert result.answer_text.startswith("回答生成暂时不可用，请稍后重试。")
     assert tuple(citation.source_nature for citation in result.citations) == (
         "local",
         "current_web",
@@ -1235,7 +1386,9 @@ def test_focused_title_accepts_only_the_exact_named_vector_handle(
         )
     )
 
-    assert title in result.answer_text
+    # Prose synthesis is timeout-degraded (never a raw claim listing); the
+    # exact-title retrieval contract is asserted via citations and context.
+    assert result.answer_text.startswith("回答生成暂时不可用，请稍后重试。")
     assert "Generative Adversarial Networks" not in result.answer_text
     assert tuple(citation.source_locator for citation in result.citations) == (
         "canonical-v2-isolated:pfedgpa",

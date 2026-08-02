@@ -788,6 +788,15 @@ class CanonicalV2ChatAdapter:
 
         base_answer = self._answer_factory() if committed is None else committed.answer
         candidate_answer = self._answer_session_fork(base_answer)
+        if progress is not None:
+            # Token-level stream sink: the answer module duck-types renderers
+            # exposing ``stream(result, *, on_chunk)`` and forwards each delta
+            # as an ``answer_chunk`` event. Set on the forked instance that
+            # actually answers and cleared before the session commit, so a
+            # later synchronous turn can never stream into a stale callback.
+            candidate_answer.prose_progress = lambda text: progress(
+                "answer_chunk", {"text": text}
+            )
         directive = self._session_directive(
             committed=committed,
             evidence_set=evidence_set,
@@ -842,6 +851,10 @@ class CanonicalV2ChatAdapter:
             context_receipt,
             fallback=displayed_ids,
         )
+        # Per-turn stream sink must not outlive this turn on the committed
+        # session instance (the commit is the terminal statement, and any
+        # earlier failure discards the fork, so no try/finally is needed).
+        candidate_answer.prose_progress = None
         next_session = _CommittedSession(
             answer=candidate_answer,
             turn_count=turn_count,
