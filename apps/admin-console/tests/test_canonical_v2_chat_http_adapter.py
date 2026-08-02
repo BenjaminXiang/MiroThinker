@@ -2399,3 +2399,127 @@ if forbidden:
             hashlib.sha256(scenario["original_milvus"].read_bytes()).hexdigest()
             == (scenario["original_milvus_sha256"])
         )
+
+
+def test_s11a_post_chat_stream_emits_stage_and_answer_events() -> None:
+    """The SSE stream route emits stage/plan_done/retrieval_done then a full
+    answer event and a terminal done event."""
+    seam = _load_s11a_seam()
+    getter = seam.deps_module.get_canonical_v2_chat_adapter
+
+    class _StreamingAdapter:
+        def answer_stream(
+            self,
+            *,
+            query: str,
+            session_id: str,
+            option_id: str | None,
+            as_of: datetime,
+            progress: Callable[[str, dict[str, Any]], None] | None = None,
+        ) -> Any:
+            if progress is not None:
+                progress("stage", {"name": "planning"})
+                progress(
+                    "plan_done",
+                    {"lanes": ["exact"], "domains": ["company"], "views": ["Robotics Co"]},
+                )
+                progress("stage", {"name": "retrieval"})
+                progress(
+                    "retrieval_done",
+                    {"lanes": [{"lane": "exact", "status": "succeeded", "candidates": 1}]},
+                )
+                progress("stage", {"name": "synthesis"})
+            return seam.contracts_module.ChatResponse(
+                query=query,
+                query_type="canonical_v2:A:answer",
+                answer_text="示例回答",
+                citations=[],
+                evidence=[],
+                clarification=None,
+                structured_payload={},
+                answer_style="template",
+                citation_map={},
+                suggested_followups=[],
+            )
+
+    prior = seam.app.dependency_overrides.get(getter)
+    seam.app.dependency_overrides[getter] = lambda: _StreamingAdapter()
+    try:
+        response = TestClient(seam.app, raise_server_exceptions=False).post(
+            "/api/chat/stream",
+            json={"query": SIMPLE_QUERY, "entity_id_hint": None},
+        )
+    finally:
+        if prior is None:
+            seam.app.dependency_overrides.pop(getter, None)
+        else:
+            seam.app.dependency_overrides[getter] = prior
+
+    assert response.status_code == 200
+    assert "text/event-stream" in response.headers["content-type"]
+    events: list[tuple[str, dict[str, Any]]] = []
+    for block in response.text.split("\n\n"):
+        event_name = "message"
+        data_lines: list[str] = []
+        for line in block.split("\n"):
+            if line.startswith("event:"):
+                event_name = line[6:].strip()
+            elif line.startswith("data:"):
+                data_lines.append(line[5:].strip())
+        if data_lines:
+            events.append((event_name, json.loads("\n".join(data_lines))))
+    names = [name for name, _ in events]
+    assert names == ["stage", "plan_done", "stage", "retrieval_done", "stage", "answer", "done"]
+    stages = [data["name"] for name, data in events if name == "stage"]
+    assert stages == ["planning", "retrieval", "synthesis"]
+    plan_done = next(data for name, data in events if name == "plan_done")
+    assert plan_done["lanes"] == ["exact"]
+    retrieval_done = next(data for name, data in events if name == "retrieval_done")
+    assert retrieval_done["lanes"][0]["candidates"] == 1
+    answer_payload = next(data for name, data in events if name == "answer")
+    assert answer_payload["query"] == SIMPLE_QUERY
+    assert answer_payload["answer_text"] == "示例回答"
+    assert set(answer_payload) >= {
+        "query",
+        "query_type",
+        "answer_text",
+        "citations",
+        "evidence",
+        "clarification",
+        "structured_payload",
+        "answer_style",
+        "citation_map",
+        "suggested_followups",
+    }
+
+
+def test_s11a_chat_stream_integrity_error_emits_error_event() -> None:
+    """A knowledge-read integrity failure surfaces as an SSE error event with
+    the stable public detail (never the private message)."""
+    seam = _load_s11a_seam()
+    getter = seam.deps_module.get_canonical_v2_chat_adapter
+    read_module = import_module("src.data_agents.canonical_v2.knowledge_read_isolated")
+
+    class _FailingStreamAdapter:
+        def answer_stream(self, **_: Any) -> Any:
+            raise read_module.IsolatedKnowledgeReadIntegrityError(
+                "private release-bound lookup detail"
+            )
+
+    prior = seam.app.dependency_overrides.get(getter)
+    seam.app.dependency_overrides[getter] = lambda: _FailingStreamAdapter()
+    try:
+        response = TestClient(seam.app, raise_server_exceptions=False).post(
+            "/api/chat/stream",
+            json={"query": SIMPLE_QUERY, "entity_id_hint": None},
+        )
+    finally:
+        if prior is None:
+            seam.app.dependency_overrides.pop(getter, None)
+        else:
+            seam.app.dependency_overrides[getter] = prior
+    assert response.status_code == 200
+    assert "text/event-stream" in response.headers["content-type"]
+    assert "event: error" in response.text
+    assert RELEASE_MISMATCH in response.text
+    assert "private release-bound lookup detail" not in response.text

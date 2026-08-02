@@ -222,6 +222,13 @@
         background: rgba(128, 128, 128, 0.12);
       }
       .answer pre code { padding: 0; background: transparent; }
+      .process { margin: 0 0 8px; padding: 8px 10px; border-radius: 8px; background: rgba(128, 128, 128, 0.08); }
+      .process-row { display: flex; align-items: baseline; gap: 6px; font-size: 13px; line-height: 1.7; color: var(--muted); }
+      .process-marker { font-size: 11px; }
+      .process-done .process-marker { color: var(--teal); }
+      .process-done .process-text { color: inherit; }
+      .process-summary summary { font-size: 12px; color: var(--muted); cursor: pointer; }
+      .process-finished { margin-bottom: 10px; }
       .evidence-disclosure {
         margin-top: 12px;
         padding-top: 10px;
@@ -861,21 +868,97 @@
         container.append(section);
       }
 
-      function renderAssistant(data, originalQuery) {
-        const view = messageShell("assistant");
+      function renderAssistant(data, originalQuery, view = null) {
+        const bubble = view ? view.bubble : messageShell("assistant").bubble;
         const answer = safePublicText(data.answer_text) || "当前版本未生成可安全展示的回答。";
         const answerBox = create("div", "answer");
         renderMarkdown(answerBox, answer);
-        view.bubble.append(answerBox);
+        bubble.append(answerBox);
         if (Array.isArray(data.citations) && data.citations.length) {
           const evidenceDetails = create("details", "evidence-disclosure");
           evidenceDetails.open = false;
           evidenceDetails.append(create("summary", "evidence-summary", "查看依据"));
           renderCitations(evidenceDetails, data.citations || []);
-          view.bubble.append(evidenceDetails);
+          bubble.append(evidenceDetails);
         }
-        messages.append(view.row);
+        if (!view) {
+          const row = bubble.closest(".message") || messageShell("assistant").row;
+          messages.append(row);
+        }
         scrollToLatest();
+      }
+
+      function renderProcess(bubble) {
+        const box = create("div", "process");
+        const rows = new Map();
+        function row(name) {
+          if (!rows.has(name)) {
+            const line = create("div", "process-row");
+            line.append(create("span", "process-marker", "●"));
+            line.append(create("span", "process-text", ""));
+            box.append(line);
+            rows.set(name, line);
+          }
+          return rows.get(name);
+        }
+        function set(name, text, done = false) {
+          const line = row(name);
+          line.querySelector(".process-marker").textContent = done ? "✓" : "●";
+          line.classList.toggle("process-done", done);
+          line.querySelector(".process-text").textContent = text;
+          scrollToLatest();
+        }
+        function finish(summary) {
+          box.classList.add("process-finished");
+          box.replaceChildren(create("details", "process-summary", ""));
+          const details = box.querySelector("details");
+          details.append(create("summary", "", summary));
+        }
+        bubble.append(box);
+        return { set, finish };
+      }
+
+      async function readSseEvents(stream, onEvent) {
+        const reader = stream.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          let sep;
+          while ((sep = buffer.indexOf("\n\n")) >= 0) {
+            const block = buffer.slice(0, sep);
+            buffer = buffer.slice(sep + 2);
+            let eventName = "message";
+            let data = "";
+            for (const line of block.split("\n")) {
+              if (line.startsWith("event:")) eventName = line.slice(6).trim();
+              else if (line.startsWith("data:")) data += line.slice(5).trim();
+            }
+            if (data) {
+              try {
+                onEvent(eventName, JSON.parse(data));
+              } catch {
+                // A malformed event must not break the whole turn.
+              }
+            }
+          }
+        }
+      }
+
+      function laneSummary(lanes) {
+        const parts = [];
+        const labels = { exact: "精确", lexical: "词法", vector: "本地", web: "网络", relationship: "关系", supplemental: "验证" };
+        for (const lane of lanes || []) {
+          const name = labels[lane.lane] || lane.lane;
+          if (lane.status === "succeeded") {
+            parts.push(`${name} ${lane.candidates} 条`);
+          } else {
+            parts.push(`${name} ${lane.status || "失败"}`);
+          }
+        }
+        return parts.length ? parts.join(" · ") : "检索完成";
       }
 
       async function sendQuery(query, optionId = null, displayQuery = null) {
@@ -889,19 +972,57 @@
         submit.textContent = "检索中";
         const body = { query: normalized };
         if (optionId) body.entity_id_hint = optionId;
+        const view = messageShell("assistant");
+        const process = renderProcess(view.bubble);
+        messages.append(view.row);
+        scrollToLatest();
         try {
-          const response = await fetch("/api/chat", {
+          const response = await fetch("/api/chat/stream", {
             method: "POST",
             credentials: "same-origin",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
           });
-          if (!response.ok) {
-            renderError(`请求失败：HTTP ${response.status}`);
+          if (!response.ok || !response.body) {
+            let detail = `请求失败：HTTP ${response.status}`;
+            try {
+              const payload = await response.json();
+              if (payload && typeof payload.detail === "string") detail = payload.detail;
+            } catch {
+              // keep the status fallback
+            }
+            process.finish("查询失败");
+            renderError(detail);
             return;
           }
-          renderAssistant(await response.json(), normalized);
+          let sawAnswer = false;
+          await readSseEvents(response.body, (eventName, data) => {
+            if (eventName === "stage") {
+              if (data.name === "planning") process.set("planning", "正在理解问题…");
+              else if (data.name === "retrieval") process.set("retrieval", "正在检索本地与网络数据…");
+              else if (data.name === "synthesis") process.set("synthesis", "正在生成回答…");
+            } else if (eventName === "plan_done") {
+              const viewCount = Array.isArray(data.views) ? data.views.length : 0;
+              process.set("planning", `✓ 已识别意图（${viewCount} 个检索视角）`, true);
+            } else if (eventName === "retrieval_done") {
+              process.set("retrieval", `✓ ${laneSummary(data.lanes)}`, true);
+            } else if (eventName === "answer") {
+              sawAnswer = true;
+              process.set("synthesis", "✓ 回答已生成", true);
+              process.finish("查看检索过程");
+              renderAssistant(data, normalized, view);
+            } else if (eventName === "error") {
+              process.finish("查询失败");
+              renderError(data.detail || "查询失败");
+            }
+          });
+          if (!sawAnswer) {
+            // stream ended without an answer event: treat as a failure
+            process.finish("查询失败");
+            renderError("未收到回答（连接中断或超时）");
+          }
         } catch (error) {
+          process.finish("查询失败");
           renderError(`连接失败：${error.message || error}`);
         } finally {
           requestPending = false;

@@ -612,6 +612,30 @@ class CanonicalV2ChatAdapter:
                 session_id=session_id,
                 option_id=option_id,
                 as_of=as_of,
+                progress=None,
+            )
+
+    def answer_stream(
+        self,
+        *,
+        query: str,
+        session_id: str,
+        option_id: str | None,
+        as_of: datetime,
+        progress: Callable[[str, dict[str, Any]], None] | None = None,
+    ) -> ChatResponse:
+        """One turn with an optional per-call progress callback.
+
+        Kept separate from ``answer`` so the frozen S11A input boundary stays
+        exact; the callback is per-call state, never shared instance state.
+        """
+        with self._session_lock(session_id):
+            return self._answer_locked(
+                query=query,
+                session_id=session_id,
+                option_id=option_id,
+                as_of=as_of,
+                progress=progress,
             )
 
     def _answer_locked(
@@ -621,7 +645,12 @@ class CanonicalV2ChatAdapter:
         session_id: str,
         option_id: str | None,
         as_of: datetime,
+        progress: Callable[[str, dict[str, Any]], None] | None = None,
     ) -> ChatResponse:
+        def emit(name: str, payload: dict[str, Any]) -> None:
+            if progress is not None:
+                progress(name, payload)
+
         normalized_query = query.strip()
         if not normalized_query:
             raise ValueError("query must be non-empty")
@@ -717,16 +746,45 @@ class CanonicalV2ChatAdapter:
             ),
         )
 
+        emit("stage", {"name": "planning"})
         raw_plan = self._planner.plan(planning_request)
         self._require_release(raw_plan, stage="plan")
         plan = _validated_model(raw_plan, RetrievalPlan)
         self._require_release(plan, stage="plan")
         plan = _session_bound_plan(plan=plan, session_id=session_id)
+        emit(
+            "plan_done",
+            {
+                "lanes": list(plan.lanes),
+                "domains": list(plan.domains),
+                "views": [
+                    view.text
+                    for view in plan.query_views
+                    if isinstance(getattr(view, "text", None), str)
+                ],
+            },
+        )
+        emit("stage", {"name": "retrieval"})
 
         raw_evidence_set = self._knowledge_read.execute(plan)
         self._require_release(raw_evidence_set, stage="read")
         evidence_set = _validated_model(raw_evidence_set, EvidenceSet)
         self._require_release(evidence_set, stage="read")
+        emit(
+            "retrieval_done",
+            {
+                "lanes": [
+                    {
+                        "lane": trace.lane,
+                        "status": trace.status,
+                        "candidates": trace.candidate_count,
+                    }
+                    for trace in evidence_set.traces
+                    if isinstance(getattr(trace, "lane", None), str)
+                ]
+            },
+        )
+        emit("stage", {"name": "synthesis"})
 
         base_answer = self._answer_factory() if committed is None else committed.answer
         candidate_answer = self._answer_session_fork(base_answer)

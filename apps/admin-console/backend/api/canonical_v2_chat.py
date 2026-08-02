@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+import json
 import logging
+import queue
 import secrets
+import threading
 from typing import Any
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
+from fastapi.responses import StreamingResponse
 
 from backend.api.chat_contracts import (
     ChatFeedbackRequest,
@@ -134,6 +138,94 @@ def chat(
             status_code=409,
             detail="canonical_v2_consumer_integrity_error",
         ) from exc
+
+
+@router.post("/chat/stream", response_class=StreamingResponse)
+def chat_stream(
+    payload: ChatRequest,
+    response: Response,
+    request: Request,
+    miroflow_chat_session: str | None = Cookie(default=None),
+    adapter: CanonicalV2ChatAdapter = Depends(get_canonical_v2_chat_adapter),
+) -> StreamingResponse:
+    """Server-sent events for one chat turn.
+
+    Events (``event:`` / ``data:`` JSON): ``stage`` (planning / retrieval /
+    synthesis), ``plan_done`` (lanes, domains, web views), ``retrieval_done``
+    (per-lane status and candidate counts), ``answer`` (the full ChatResponse
+    JSON), ``done``, or ``error``.  Only stage summaries and counts are
+    streamed — never raw evidence, internal ids, or snapshots.
+    """
+    from backend.services.canonical_v2_admin import (
+        CanonicalV2ConsumerIntegrityError,
+    )
+
+    query = payload.query.strip()
+    if not query:
+        raise HTTPException(status_code=422, detail="query must be non-empty")
+    idle_keepwarm = getattr(request.app.state, "canonical_v2_idle_keepwarm", None)
+    mark_activity = getattr(idle_keepwarm, "mark_activity", None)
+    if callable(mark_activity):
+        mark_activity()
+    session_id = miroflow_chat_session or _new_session_id()
+    if miroflow_chat_session is None:
+        _set_session_cookie(response, session_id)
+
+    events: queue.Queue[tuple[str, dict[str, Any]]] = queue.Queue()
+
+    def emit(name: str, data: dict[str, Any]) -> None:
+        events.put((name, data))
+
+    def run_turn() -> None:
+        try:
+            chat_response = adapter.answer_stream(
+                query=query,
+                session_id=session_id,
+                option_id=payload.entity_id_hint,
+                as_of=_utc_now(),
+                progress=emit,
+            )
+            events.put(
+                (
+                    "answer",
+                    chat_response.model_dump(mode="json"),
+                )
+            )
+            events.put(("done", {}))
+        except CanonicalV2InvalidOption as exc:
+            events.put(("error", {"detail": _INVALID_OPTION_DETAIL}))
+        except (CanonicalV2ReleaseMismatch, CanonicalV2ConsumerIntegrityError):
+            events.put(("error", {"detail": _RELEASE_MISMATCH_DETAIL}))
+        except KnowledgeReadIntegrityError:
+            events.put(("error", {"detail": _RELEASE_MISMATCH_DETAIL}))
+        except CanonicalV2MappingError:
+            events.put(("error", {"detail": "canonical_v2_consumer_integrity_error"}))
+        except Exception as exc:  # noqa: BLE001 - the stream must not hang
+            logger.warning("canonical v2 stream turn failed: %s", exc)
+            events.put(("error", {"detail": "internal_error"}))
+
+    def render(name: str, data: dict[str, Any]) -> str:
+        body = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+        return f"event: {name}\ndata: {body}\n\n"
+
+    def generate() -> Any:
+        worker = threading.Thread(target=run_turn, daemon=True)
+        worker.start()
+        while True:
+            name, data = events.get()
+            yield render(name, data)
+            if name in ("done", "error"):
+                break
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @router.post("/chat/feedback", response_model=ChatFeedbackResponse)
