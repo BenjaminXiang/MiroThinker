@@ -229,6 +229,18 @@
       .process-done .process-text { color: inherit; }
       .process-summary summary { font-size: 12px; color: var(--muted); cursor: pointer; }
       .process-finished { margin-bottom: 10px; }
+      .process-actions { margin-top: 4px; }
+      .process-stop {
+        padding: 3px 10px;
+        color: var(--danger);
+        background: #fff;
+        border: 1px solid #dfb8be;
+        border-radius: 7px;
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .process-stop:hover { color: #fff; background: var(--danger); }
       .evidence-disclosure {
         margin-top: 12px;
         padding-top: 10px;
@@ -435,88 +447,171 @@
         }
       }
 
-      function renderMarkdown(container, text) {
-        const lines = String(text).split("\n");
-        let listTag = null;
-        let list = null;
-        const flushList = () => {
-          if (list) {
-            container.append(list);
-            list = null;
-            listTag = null;
-          }
-        };
-        let codeLines = null;
-        for (const rawLine of lines) {
-          const line = rawLine.trimEnd();
-          if (codeLines !== null) {
-            if (/^\s*```/.test(line)) {
-              const pre = document.createElement("pre");
-              const code = document.createElement("code");
-              code.textContent = codeLines.join("\n");
-              pre.append(code);
-              container.append(pre);
-              codeLines = null;
-            } else {
-              codeLines.push(line);
-            }
-            continue;
-          }
-          if (/^\s*```/.test(line)) {
-            flushList();
-            codeLines = [];
-            continue;
-          }
-          const heading = line.match(/^(#{1,4})\s+(.*)$/);
-          if (heading) {
-            flushList();
-            const h = document.createElement("h" + heading[1].length);
-            renderInline(h, heading[2]);
-            container.append(h);
-            continue;
-          }
-          const unordered = line.match(/^\s*[-*]\s+(.*)$/);
-          const ordered = line.match(/^\s*\d+[.、]\s+(.*)$/);
-          if (unordered || ordered) {
-            const tag = ordered ? "ol" : "ul";
-            if (listTag !== tag) {
-              flushList();
-              listTag = tag;
-              list = document.createElement(tag);
-            }
-            const li = document.createElement("li");
-            renderInline(li, (unordered || ordered)[1]);
-            list.append(li);
-            continue;
-          }
-          if (!line.trim()) {
-            flushList();
-            continue;
-          }
-          flushList();
-          const p = document.createElement("p");
-          renderInline(p, line);
-          container.append(p);
+      // 行渲染共享状态：列表与代码块是跨行的，全量渲染与流式增量渲染共用同一状态机。
+      function createMarkdownState() {
+        return { listTag: null, list: null, codeLines: null };
+      }
+
+      function flushMarkdownList(container, state) {
+        if (state.list) {
+          container.append(state.list);
+          state.list = null;
+          state.listTag = null;
         }
-        flushList();
-        if (codeLines !== null && codeLines.length) {
+      }
+
+      // 渲染一行 Markdown（行级状态机），供 renderMarkdown 全量渲染与流式增量渲染共用。
+      function renderMarkdownLine(container, rawLine, state) {
+        const line = rawLine.trimEnd();
+        if (state.codeLines !== null) {
+          if (/^\s*```/.test(line)) {
+            const pre = document.createElement("pre");
+            const code = document.createElement("code");
+            code.textContent = state.codeLines.join("\n");
+            pre.append(code);
+            container.append(pre);
+            state.codeLines = null;
+          } else {
+            state.codeLines.push(line);
+          }
+          return;
+        }
+        if (/^\s*```/.test(line)) {
+          flushMarkdownList(container, state);
+          state.codeLines = [];
+          return;
+        }
+        const heading = line.match(/^(#{1,4})\s+(.*)$/);
+        if (heading) {
+          flushMarkdownList(container, state);
+          const h = document.createElement("h" + heading[1].length);
+          renderInline(h, heading[2]);
+          container.append(h);
+          return;
+        }
+        const unordered = line.match(/^\s*[-*]\s+(.*)$/);
+        const ordered = line.match(/^\s*\d+[.、]\s+(.*)$/);
+        if (unordered || ordered) {
+          const tag = ordered ? "ol" : "ul";
+          if (state.listTag !== tag) {
+            flushMarkdownList(container, state);
+            state.listTag = tag;
+            state.list = document.createElement(tag);
+          }
+          const li = document.createElement("li");
+          renderInline(li, (unordered || ordered)[1]);
+          state.list.append(li);
+          return;
+        }
+        if (!line.trim()) {
+          flushMarkdownList(container, state);
+          return;
+        }
+        flushMarkdownList(container, state);
+        const p = document.createElement("p");
+        renderInline(p, line);
+        container.append(p);
+      }
+
+      function finalizeMarkdown(container, state) {
+        flushMarkdownList(container, state);
+        if (state.codeLines !== null && state.codeLines.length) {
           const pre = document.createElement("pre");
           const code = document.createElement("code");
-          code.textContent = codeLines.join("\n");
+          code.textContent = state.codeLines.join("\n");
           pre.append(code);
           container.append(pre);
         }
       }
 
+      function renderMarkdown(container, text) {
+        const state = createMarkdownState();
+        for (const rawLine of String(text).split("\n")) {
+          renderMarkdownLine(container, rawLine, state);
+        }
+        finalizeMarkdown(container, state);
+      }
+
+      // 行级缓冲的流式 Markdown 渲染器：完整行（以 \n 结尾且行内语法闭合）立即增量渲染，
+      // 只追加新 DOM 元素、不清空容器（无闪烁）。未闭合的代码块（``` 奇数个）整体留在
+      // buffer；行内 ** 未配对（奇数个）的末尾连续行整体留 buffer（跨行加粗可能在后续行闭合）。
+      // 流结束或整体重渲染前调用 flush() 把残留 buffer 按全量渲染语义收尾。
+      function countFences(text) {
+        let count = 0;
+        for (const line of text.split("\n")) {
+          if (/^\s*```/.test(line)) count++;
+        }
+        return count;
+      }
+
+      function hasUnpairedBold(line) {
+        let count = 0;
+        let index = line.indexOf("**");
+        while (index >= 0) {
+          count++;
+          index = line.indexOf("**", index + 2);
+        }
+        return count % 2 === 1;
+      }
+
+      // 计算可以安全释放的字节数（complete 必须以 \n 结尾）：从末尾向前扫描，
+      // 连续的“** 未配对”行整体保留，其余完整行可立即渲染。
+      function streamingReleaseEnd(complete) {
+        let releaseEnd = complete.length;
+        let lineEnd = complete.length - 1; // 不含结尾 \n
+        let lineStart = complete.lastIndexOf("\n", lineEnd - 1) + 1;
+        while (hasUnpairedBold(complete.slice(lineStart, lineEnd))) {
+          releaseEnd = lineStart;
+          if (lineStart === 0) break;
+          lineEnd = lineStart - 1; // 上一行末尾（去掉行间 \n）
+          lineStart = complete.lastIndexOf("\n", lineEnd - 1) + 1;
+        }
+        return releaseEnd;
+      }
+
+      function renderStreamingMarkdown(container) {
+        const state = createMarkdownState();
+        let buffer = "";
+        function releaseReady() {
+          for (;;) {
+            if (countFences(buffer) % 2 === 1) return; // 未闭合 ``` → 整体留 buffer
+            const lastNewline = buffer.lastIndexOf("\n");
+            if (lastNewline < 0) return;
+            const complete = buffer.slice(0, lastNewline + 1);
+            const releaseEnd = streamingReleaseEnd(complete);
+            if (releaseEnd <= 0) return;
+            const lines = complete.slice(0, releaseEnd).split("\n");
+            lines.pop(); // released 以 \n 结尾，去掉末尾空串
+            for (const line of lines) renderMarkdownLine(container, line, state);
+            buffer = complete.slice(releaseEnd) + buffer.slice(complete.length);
+          }
+        }
+        return {
+          append(text) {
+            if (typeof text !== "string") return;
+            if (unsafePublicText(text)) return; // 逐块安全过滤（不 trim，避免破坏 chunk 边界）
+            buffer += text;
+            releaseReady();
+          },
+          flush() {
+            if (!buffer) return;
+            for (const line of buffer.split("\n")) renderMarkdownLine(container, line, state);
+            buffer = "";
+            finalizeMarkdown(container, state);
+          },
+        };
+      }
+
+      function unsafePublicText(text) {
+        if (typeof text !== "string") return true;
+        if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text)) return true;
+        return unsafePublicTextPatterns.some((pattern) => pattern.test(text));
+      }
+
       function safePublicText(value) {
         if (typeof value !== "string") return null;
-        let text = value.trim();
-        if (!text || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text)) return null;
-        if (unsafePublicTextPatterns.some((pattern) => pattern.test(text))) return null;
-        // 超长答案降级为截断展示（fallback 拼接可能很长），而不是整段拒绝。
-        if (text.length > 8000) {
-          text = text.slice(0, 8000) + "\n……（答案过长，已截断）";
-        }
+        const text = value.trim();
+        if (!text || unsafePublicText(text)) return null;
         return text;
       }
 
@@ -873,12 +968,13 @@
         container.append(section);
       }
 
-      function renderAssistant(data, originalQuery, view = null) {
+      function renderAssistant(data, originalQuery, view = null, answerBox = null) {
         const bubble = view ? view.bubble : messageShell("assistant").bubble;
         const answer = safePublicText(data.answer_text) || "当前版本未生成可安全展示的回答。";
-        const answerBox = create("div", "answer");
-        renderMarkdown(answerBox, answer);
-        bubble.append(answerBox);
+        const box = answerBox || create("div", "answer");
+        if (answerBox) box.replaceChildren(); // 流式容器：整体重渲染，消除缓冲差异
+        renderMarkdown(box, answer);
+        if (!box.parentNode) bubble.append(box);
         if (Array.isArray(data.citations) && data.citations.length) {
           const evidenceDetails = create("details", "evidence-disclosure");
           evidenceDetails.open = false;
@@ -913,14 +1009,30 @@
           line.querySelector(".process-text").textContent = text;
           scrollToLatest();
         }
+        let actionLine = null;
         function finish(summary) {
+          if (actionLine) {
+            actionLine.remove();
+            actionLine = null;
+          }
           box.classList.add("process-finished");
           box.replaceChildren(create("details", "process-summary", ""));
           const details = box.querySelector("details");
           details.append(create("summary", "", summary));
         }
+        function addAction(label, onClick) {
+          if (!actionLine) {
+            actionLine = create("div", "process-actions");
+            box.append(actionLine);
+          }
+          const button = create("button", "process-stop", label);
+          button.type = "button";
+          button.addEventListener("click", onClick);
+          actionLine.append(button);
+          return button;
+        }
         bubble.append(box);
-        return { set, finish };
+        return { set, finish, addAction };
       }
 
       async function readSseEvents(stream, onEvent) {
@@ -981,6 +1093,23 @@
         const process = renderProcess(view.bubble);
         messages.append(view.row);
         scrollToLatest();
+        let responseBody = null;
+        let sawAnswer = false;
+        let userStopped = false;
+        let stopButtonAdded = false;
+        let streaming = null;
+        let answerBox = null;
+        const stopGeneration = () => {
+          if (userStopped || sawAnswer) return;
+          userStopped = true;
+          if (streaming) streaming.flush(); // 把已收到但缓冲未渲染的部分也渲染出来
+          process.finish("已停止生成");
+          view.bubble.append(create("div", "response-meta", "已停止生成（已保留当前内容）"));
+          // 等价于 reader.cancel()：中断 fetch 流，后续 reader.read() 会抛错/结束
+          if (responseBody && typeof responseBody.cancel === "function") {
+            responseBody.cancel().catch(() => {});
+          }
+        };
         try {
           const response = await fetch("/api/chat/stream", {
             method: "POST",
@@ -1000,35 +1129,55 @@
             renderError(detail);
             return;
           }
-          let sawAnswer = false;
-          await readSseEvents(response.body, (eventName, data) => {
+          responseBody = response.body;
+          await readSseEvents(responseBody, (eventName, data) => {
             if (eventName === "stage") {
               if (data.name === "planning") process.set("planning", "正在理解问题…");
               else if (data.name === "retrieval") process.set("retrieval", "正在检索本地与网络数据…");
-              else if (data.name === "synthesis") process.set("synthesis", "正在生成回答…");
+              else if (data.name === "synthesis") {
+                process.set("synthesis", "正在生成回答…");
+                if (!stopButtonAdded) {
+                  stopButtonAdded = true;
+                  process.addAction("停止生成", stopGeneration);
+                }
+              }
             } else if (eventName === "plan_done") {
               const viewCount = Array.isArray(data.views) ? data.views.length : 0;
               process.set("planning", `✓ 已识别意图（${viewCount} 个检索视角）`, true);
             } else if (eventName === "retrieval_done") {
               process.set("retrieval", `✓ ${laneSummary(data.lanes)}`, true);
+            } else if (eventName === "answer_chunk") {
+              if (!streaming) {
+                answerBox = create("div", "answer");
+                view.bubble.append(answerBox);
+                streaming = renderStreamingMarkdown(answerBox);
+              }
+              streaming.append(data.text);
+              scrollToLatest();
             } else if (eventName === "answer") {
               sawAnswer = true;
               process.set("synthesis", "✓ 回答已生成", true);
               process.finish("查看检索过程");
-              renderAssistant(data, normalized, view);
+              // 整体重渲染（清空流式容器 + 全量 renderMarkdown），消除缓冲差异并对齐 citations
+              renderAssistant(data, normalized, view, answerBox);
             } else if (eventName === "error") {
+              if (streaming) streaming.flush();
               process.finish("查询失败");
               renderError(data.detail || "查询失败");
             }
           });
-          if (!sawAnswer) {
-            // stream ended without an answer event: treat as a failure
-            process.finish("查询失败");
-            renderError("未收到回答（连接中断或超时）");
+          if (!sawAnswer && !userStopped) {
+            // 流意外中断（正常结束但无 answer 事件，且非用户停止）：保留已渲染部分
+            if (streaming) streaming.flush();
+            process.finish("生成中断");
+            view.bubble.append(create("div", "response-meta", "生成中断，可重新提问"));
           }
         } catch (error) {
-          process.finish("查询失败");
-          renderError(`连接失败：${error.message || error}`);
+          if (!userStopped) {
+            // 用户停止时 reader.read() 抛错属预期，不算错误
+            process.finish("查询失败");
+            renderError(`连接失败：${error.message || error}`);
+          }
         } finally {
           requestPending = false;
           submit.disabled = false;
