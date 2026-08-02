@@ -191,7 +191,37 @@
       }
       .message.error .bubble { color: var(--danger); background: #fff1f3; border-color: #efc9cf; }
 
-      .answer { margin: 0; font-size: 14px; }
+      .answer { margin: 0; font-size: 14px; line-height: 1.75; word-break: break-word; }
+      .answer > :first-child { margin-top: 0; }
+      .answer > :last-child { margin-bottom: 0; }
+      .answer p { margin: 0.5em 0; }
+      .answer h1, .answer h2, .answer h3, .answer h4 {
+        margin: 0.9em 0 0.45em;
+        font-weight: 600;
+        line-height: 1.4;
+        color: inherit;
+      }
+      .answer h1 { font-size: 1.2em; }
+      .answer h2 { font-size: 1.12em; }
+      .answer h3 { font-size: 1.05em; }
+      .answer h4 { font-size: 1em; }
+      .answer ul, .answer ol { margin: 0.5em 0; padding-left: 1.6em; }
+      .answer li { margin: 0.25em 0; }
+      .answer strong { font-weight: 600; }
+      .answer code {
+        padding: 0.1em 0.35em;
+        border-radius: 4px;
+        font-size: 0.92em;
+        background: rgba(128, 128, 128, 0.14);
+      }
+      .answer pre {
+        margin: 0.5em 0;
+        padding: 0.6em 0.9em;
+        border-radius: 6px;
+        overflow-x: auto;
+        background: rgba(128, 128, 128, 0.12);
+      }
+      .answer pre code { padding: 0; background: transparent; }
       .evidence-disclosure {
         margin-top: 12px;
         padding-top: 10px;
@@ -379,6 +409,96 @@
         if (className) element.className = className;
         if (text !== undefined && text !== null) element.textContent = String(text);
         return element;
+      }
+
+      // 轻量 Markdown 渲染（纯 DOM 构建，不引入 innerHTML，无 XSS 面）。
+      // 支持：标题（#~####）、加粗（**x**）、有序/无序列表、代码块（```）、段落。
+      function renderInline(parent, text) {
+        const parts = String(text).split(/\*\*(.+?)\*\*/g);
+        for (let i = 0; i < parts.length; i++) {
+          const part = parts[i];
+          if (!part) continue;
+          if (i % 2 === 1) {
+            const strong = document.createElement("strong");
+            strong.textContent = part;
+            parent.append(strong);
+          } else {
+            parent.append(document.createTextNode(part));
+          }
+        }
+      }
+
+      function renderMarkdown(container, text) {
+        const lines = String(text).split("\n");
+        let listTag = null;
+        let list = null;
+        const flushList = () => {
+          if (list) {
+            container.append(list);
+            list = null;
+            listTag = null;
+          }
+        };
+        let codeLines = null;
+        for (const rawLine of lines) {
+          const line = rawLine.trimEnd();
+          if (codeLines !== null) {
+            if (/^\s*```/.test(line)) {
+              const pre = document.createElement("pre");
+              const code = document.createElement("code");
+              code.textContent = codeLines.join("\n");
+              pre.append(code);
+              container.append(pre);
+              codeLines = null;
+            } else {
+              codeLines.push(line);
+            }
+            continue;
+          }
+          if (/^\s*```/.test(line)) {
+            flushList();
+            codeLines = [];
+            continue;
+          }
+          const heading = line.match(/^(#{1,4})\s+(.*)$/);
+          if (heading) {
+            flushList();
+            const h = document.createElement("h" + heading[1].length);
+            renderInline(h, heading[2]);
+            container.append(h);
+            continue;
+          }
+          const unordered = line.match(/^\s*[-*]\s+(.*)$/);
+          const ordered = line.match(/^\s*\d+[.、]\s+(.*)$/);
+          if (unordered || ordered) {
+            const tag = ordered ? "ol" : "ul";
+            if (listTag !== tag) {
+              flushList();
+              listTag = tag;
+              list = document.createElement(tag);
+            }
+            const li = document.createElement("li");
+            renderInline(li, (unordered || ordered)[1]);
+            list.append(li);
+            continue;
+          }
+          if (!line.trim()) {
+            flushList();
+            continue;
+          }
+          flushList();
+          const p = document.createElement("p");
+          renderInline(p, line);
+          container.append(p);
+        }
+        flushList();
+        if (codeLines !== null && codeLines.length) {
+          const pre = document.createElement("pre");
+          const code = document.createElement("code");
+          code.textContent = codeLines.join("\n");
+          pre.append(code);
+          container.append(pre);
+        }
       }
 
       function safePublicText(value) {
@@ -744,7 +864,9 @@
       function renderAssistant(data, originalQuery) {
         const view = messageShell("assistant");
         const answer = safePublicText(data.answer_text) || "当前版本未生成可安全展示的回答。";
-        view.bubble.append(create("p", "answer", answer));
+        const answerBox = create("div", "answer");
+        renderMarkdown(answerBox, answer);
+        view.bubble.append(answerBox);
         if (Array.isArray(data.citations) && data.citations.length) {
           const evidenceDetails = create("details", "evidence-disclosure");
           evidenceDetails.open = false;
