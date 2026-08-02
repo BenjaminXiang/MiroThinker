@@ -2154,25 +2154,54 @@ def test_initial_web_snapshot_policy_recomputes_bytes_and_rejects_missing_oversi
 def test_geography_constraint_binds_the_traversal_anchor_not_its_targets() -> (
     None
 ):
-    """A verified traversal witness inherits its displayed anchor's geography
-    satisfaction: "深圳市普渡科技有限公司有哪些专利" must not hard-reject
-    every patent for lacking its own 深圳 geography claim."""
+    """A geography slot always binds the candidate's own evidence, never the
+    traversal anchor: "该专利有哪些深圳申请公司" must reject an applicant
+    that lacks a 深圳 geography claim even though the displayed patent is a
+    verified traversal witness. Anchor-name geography words ("深圳市普渡科技
+    有限公司", "上海交通大学") are removed at planning time by
+    _extract_protected_slots, so every remaining geography slot is a genuine
+    target constraint."""
     module = _module()
+
+    # Witness present, geography slot is a genuine target constraint: the
+    # candidate still needs its own geography evidence.
     witness_failures = module._constraint_failures(
         slots=(
             module.ProtectedSlot(kind="geography", value="深圳", raw_text="深圳"),
         ),
-        identity_ids=("patent-c-rollerbrush",),
-        claim_subject_ids=(
-            "patent-c-rollerbrush",
-            "canonical:patent:patent-c-rollerbrush",
-        ),
-        domain="patent",
-        display_name="清洁装置及其滚刷驱动机构",
+        identity_ids=("company:outside",),
+        claim_subject_ids=("company:outside",),
+        domain="company",
+        display_name="Outside Robotics",
         items=(),
-        displayed_entity_witness_ids=("company-c-pudu",),
+        displayed_entity_witness_ids=("patent-c-rollerbrush",),
     )
-    assert witness_failures == []
+    assert [failure.slot_kind for failure in witness_failures] == ["geography"]
+
+    # The same witness candidate passes once it carries its own geography
+    # evidence.
+    evidence_failures = module._constraint_failures(
+        slots=(
+            module.ProtectedSlot(kind="geography", value="深圳", raw_text="深圳"),
+        ),
+        identity_ids=("company:outside",),
+        claim_subject_ids=("company:outside",),
+        domain="company",
+        display_name="Outside Robotics",
+        items=(
+            _item(
+                module,
+                evidence_id="evidence:geography-shenzhen",
+                object_id="company:outside",
+                lane="structured",
+                domain="company",
+                predicate="geography",
+                value="深圳",
+            ),
+        ),
+        displayed_entity_witness_ids=("patent-c-rollerbrush",),
+    )
+    assert evidence_failures == []
 
     # Without a verified traversal witness the geography slot still binds.
     standalone_failures = module._constraint_failures(
@@ -2186,3 +2215,35 @@ def test_geography_constraint_binds_the_traversal_anchor_not_its_targets() -> (
         items=(),
     )
     assert [failure.slot_kind for failure in standalone_failures] == ["geography"]
+
+
+def test_extract_protected_slots_skips_geography_inside_named_entities() -> None:
+    """A geography word that is part of a named entity in the query binds the
+    resolved anchor name, never the traversed targets, so it must not become a
+    geography slot; standalone city words (and descriptive "深圳申请公司"
+    phrases) still create slots."""
+    module = _module()
+
+    def geography_slots(query: str) -> tuple[str, ...]:
+        return tuple(
+            slot.value or ""
+            for slot in module._extract_protected_slots(
+                module.QueryPlanningRequest(
+                    request_id="query-request:planning-geography",
+                    release_id=RELEASE_ID,
+                    original_query=query,
+                    as_of=NOW,
+                )
+            )
+            if slot.kind == "geography"
+        )
+
+    # Geography word inside a legal company name: binds the anchor name.
+    assert geography_slots("深圳市普渡科技有限公司有哪些专利") == ()
+    # Geography word inside an institution name: binds the anchor name.
+    assert geography_slots("上海交通大学的李雷的论文") == ()
+    # Standalone city word: a genuine target constraint.
+    assert geography_slots("总部在深圳的企业有哪些") == ("深圳",)
+    # Descriptive "深圳申请公司" is not a named entity: the constraint must
+    # survive planning so the patent-anchor traversal stays filtered.
+    assert geography_slots("该专利有哪些深圳申请公司") == ("深圳",)

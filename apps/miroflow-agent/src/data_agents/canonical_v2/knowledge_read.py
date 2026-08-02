@@ -27,6 +27,10 @@ from pydantic import (
 )
 
 from .contracts import ContractModel
+from .followup_referents import (
+    COMPANY_NAME_PATTERN,
+    _EXPLICIT_COMPANY_REJECT_MARKERS,
+)
 
 
 _ZERO_SHA256 = "0" * 64
@@ -3973,6 +3977,37 @@ def _explicit_organization_name(query: str) -> str | None:
     return None
 
 
+_GEOGRAPHY_WORDS = ("深圳", "广州", "上海", "北京")
+_COMPANY_LEGAL_SUFFIXES = ("有限责任公司", "股份有限公司", "有限公司")
+_INSTITUTION_NAME_PATTERN = re.compile(
+    r"[\u4e00-\u9fff]{2,12}(?:大学|学院|研究院|研究生院)"
+)
+
+
+def _named_entity_geography_spans(query: str) -> tuple[tuple[int, int], ...]:
+    """Spans of query named entities (company or institution names) whose
+    names may embed a geography word ("深圳市普渡科技有限公司",
+    "上海交通大学"). A geography word inside such a span binds the resolved
+    anchor name rather than the traversed targets, so the planner must not
+    create a geography slot for it; standalone city words keep creating
+    slots."""
+    spans: list[tuple[int, int]] = []
+    for match in COMPANY_NAME_PATTERN.finditer(query):
+        text = match.group(0)
+        if any(marker in text for marker in _EXPLICIT_COMPANY_REJECT_MARKERS):
+            continue
+        if "的" in text:
+            continue
+        if text.endswith(_COMPANY_LEGAL_SUFFIXES) or any(
+            f"{geography}市" in text for geography in _GEOGRAPHY_WORDS
+        ):
+            spans.append(match.span())
+    for match in _INSTITUTION_NAME_PATTERN.finditer(query):
+        if "的" not in match.group(0):
+            spans.append(match.span())
+    return tuple(spans)
+
+
 def _extract_protected_slots(
     request: QueryPlanningRequest,
 ) -> tuple[ProtectedSlot, ...]:
@@ -3983,11 +4018,22 @@ def _extract_protected_slots(
         slots.append(
             ProtectedSlot(kind="year", value=match.group(1), raw_text=match.group(1))
         )
-    for geography in ("深圳", "广州", "上海", "北京"):
-        if geography in query and not (
+    named_entity_spans = _named_entity_geography_spans(query)
+    for geography in _GEOGRAPHY_WORDS:
+        if geography not in query:
+            continue
+        if not (
             explicit_organization_name is not None
             and geography in explicit_organization_name
         ):
+            positions = tuple(
+                m.start() for m in re.finditer(re.escape(geography), query)
+            )
+            if positions and all(
+                any(start <= position < end for start, end in named_entity_spans)
+                for position in positions
+            ):
+                continue
             slots.append(
                 ProtectedSlot(kind="geography", value=geography, raw_text=geography)
             )
@@ -6357,16 +6403,14 @@ def _constraint_failures(
         dict.fromkeys(displayed_entity_witness_ids)
     )
     for slot in slots:
-        # A verified traversal witness inherits its displayed anchor's
-        # geography satisfaction: the slot binds the anchor (resolved from the
-        # query text itself), never the traversed targets, so patents/papers
-        # reached from a named entity are not rejected for lacking their own
-        # geography claim.
-        if (
-            slot.kind == "geography"
-            and slot.value
-            and not normalized_displayed_witness_ids
-        ):
+        # Geography slots bind the candidate's own evidence: a verified
+        # traversal witness (the displayed anchor) never satisfies a slot for
+        # the traversed targets, so "该专利有哪些深圳申请公司" must reject an
+        # applicant without its own 深圳 claim. Anchor-name geography words
+        # ("深圳市普渡科技有限公司", "上海交通大学") are removed at planning
+        # time by _extract_protected_slots, so every remaining geography slot
+        # is a genuine target constraint.
+        if slot.kind == "geography" and slot.value:
             observed = tuple(
                 dict.fromkeys(
                     (
