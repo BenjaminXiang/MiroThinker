@@ -447,11 +447,14 @@ def _resolve_named_company_patent_source(
     Company mirror of :func:`_resolve_named_professor_research_source`: the
     same-turn named-source traversal is only proposed when the query carries
     patent intent ("专利") and names exactly one accepted Company — by full
-    legal name, normalized short name, or alias. A bare short name with no
-    company suffix ("普渡科技有哪些专利") still binds when the projection's own
-    normalized name or alias appears verbatim in the query; any ambiguity
-    (zero or several distinct matches) falls back to the normal lanes instead
-    of guessing.
+    legal name, normalized short name, or alias. Both matching channels run
+    for every query: explicit extraction (company-suffixed or possessive
+    names) and verbatim short-name/alias hits; matches from either channel
+    are deduplicated by ``canonical_identity_id``. A bare short name with no
+    company suffix ("普渡科技有哪些专利") still binds when the projection's
+    own normalized name or alias appears verbatim in the query; any ambiguity
+    (zero or several distinct projections, e.g. "深圳市普渡科技有限公司和
+    优必选有哪些专利") falls back to the normal lanes instead of guessing.
 
     Returns the projection together with the surface form the user actually
     typed, so the rebuilt request's displayed entity name is guaranteed to
@@ -470,15 +473,16 @@ def _resolve_named_company_patent_source(
             ):
                 matched[projection.canonical_identity_id] = (projection, name)
                 break
-    if not matched:
-        for projection in company_projections:
-            for candidate in (projection.normalized_name, *projection.aliases):
-                if len(candidate) >= 2 and candidate in query:
-                    matched[projection.canonical_identity_id] = (
-                        projection,
-                        candidate,
-                    )
-                    break
+    for projection in company_projections:
+        for candidate in (projection.normalized_name, *projection.aliases):
+            if len(candidate) >= 2 and candidate in query:
+                # setdefault keeps the explicit extraction's surface form
+                # when the same projection also hits verbatim in the query.
+                matched.setdefault(
+                    projection.canonical_identity_id,
+                    (projection, candidate),
+                )
+                break
     if len(matched) != 1:
         return None
     return next(iter(matched.values()))

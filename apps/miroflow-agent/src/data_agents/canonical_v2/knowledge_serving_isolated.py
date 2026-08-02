@@ -33,7 +33,7 @@ from .followup_referents import (
     COMPANY_NAME_PATTERN,
     IDENTIFIER_PATTERN,
     PROFESSOR_NAME_PATTERN,
-    _has_explicit_company_name,
+    _EXPLICIT_COMPANY_REJECT_MARKERS,
     extract_institution_person_name,
     extract_leading_company_name,
     has_continuation_intent,
@@ -80,6 +80,7 @@ from .knowledge_read import (
     _explicit_organization_name,
     _retention_values,
 )
+from .knowledge_read_isolated import _NAMED_COMPANY_PATENT_PATTERN
 from .llm_judgments import create_llm_judge
 
 
@@ -491,6 +492,56 @@ def _is_lawful_safety_guidance(query: str) -> bool:
     )
 
 
+# Patent intent must follow the named company directly ("X的专利",
+# "X有哪些专利") for a company→patent traversal; a company that merely names
+# something else's possessor ("X的竞争对手有哪些专利") never anchors the path.
+_NAMED_COMPANY_PATENT_OWNERSHIP_FOLLOW = re.compile(
+    r"(?:的(?:相关)?专利|有(?:哪些|什么|多少)?(?:相关)?专利)"
+)
+
+
+def _has_named_company_patent_ownership_intent(
+    query: str,
+    displayed_entity_names: tuple[str, ...],
+) -> bool:
+    """Whether a company-name hit in the query owns the asked-about patents.
+
+    Mirrors the possessive branch of
+    :func:`knowledge_read_isolated._named_company_patent_names`: either the
+    possessive pattern captures a real name ("普渡科技的专利有哪些"), or a
+    company-suffixed extraction / displayed name is immediately followed by
+    patent intent ("深圳市普渡科技有限公司有哪些专利", "普渡科技有哪些专利").
+    Referent/quantifier lookalikes ("这些公司", "其他公司的专利有哪些") are
+    rejected the same way as in :func:`followup_referents._has_explicit_company_name`.
+    """
+    for match in _NAMED_COMPANY_PATENT_PATTERN.finditer(query):
+        name = match.group("name")
+        if not any(marker in name for marker in _EXPLICIT_COMPANY_REJECT_MARKERS):
+            return True
+    extracted = [
+        match.group(1)
+        for match in COMPANY_NAME_PATTERN.finditer(query)
+        if not any(
+            marker in match.group(1)
+            for marker in _EXPLICIT_COMPANY_REJECT_MARKERS
+        )
+    ]
+    for name in dict.fromkeys((*extracted, *displayed_entity_names)):
+        if not name:
+            continue
+        start = 0
+        while True:
+            index = query.find(name, start)
+            if index < 0:
+                break
+            if _NAMED_COMPANY_PATENT_OWNERSHIP_FOLLOW.match(
+                query[index + len(name) :]
+            ):
+                return True
+            start = index + 1
+    return False
+
+
 def _relationship_path(
     request: QueryPlanningRequest,
 ) -> tuple[RelationshipPathProposal, ...]:
@@ -562,10 +613,9 @@ def _relationship_path(
             or has_set_referent(query)
             or has_continuation_intent(query)
             or any(marker in query for marker in ("它", "该公司", "这家"))
-            or any(
-                name and name in query for name in request.displayed_entity_names
+            or _has_named_company_patent_ownership_intent(
+                query, request.displayed_entity_names
             )
-            or _has_explicit_company_name(query)
         )
     ):
         return (

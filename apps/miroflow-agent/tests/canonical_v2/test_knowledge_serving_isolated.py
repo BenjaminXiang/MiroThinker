@@ -3178,6 +3178,65 @@ def test_named_company_patent_query_stays_unbound_when_ambiguous_or_irrelevant(
     assert profile.relationship_paths == ()
 
 
+def test_named_company_patent_query_requires_single_ownership_source(
+    tmp_path: Path,
+) -> None:
+    """A named-company patent query only binds the traversal when it names
+    exactly one company and the hit carries possessive/listing intent."""
+    planner = _release_bound_planner_with_named_resolution(
+        tmp_path,
+        (),
+        companies=(
+            _stub_company(
+                "company-c-pudu",
+                "深圳市普渡科技有限公司",
+                "普渡科技",
+            ),
+            _stub_company(
+                "company-c-ubtech",
+                "深圳市优必选科技股份有限公司",
+                "优必选",
+            ),
+        ),
+    )
+
+    double = planner.plan(
+        QueryPlanningRequest(
+            request_id="query-request:named-company-double",
+            release_id=RELEASE_ID,
+            original_query="深圳市普渡科技有限公司和优必选有哪些专利",
+            as_of=NOW,
+        )
+    )
+    assert double.structured_constraints.displayed_entity_ids == ()
+    assert double.relationship_paths == ()
+
+    competitor = planner.plan(
+        QueryPlanningRequest(
+            request_id="query-request:named-company-competitor",
+            release_id=RELEASE_ID,
+            original_query="深圳市普渡科技有限公司的竞争对手有哪些专利",
+            as_of=NOW,
+        )
+    )
+    assert competitor.structured_constraints.displayed_entity_ids == (
+        "company-c-pudu",
+    )
+    assert competitor.relationship_paths == ()
+
+    owned = planner.plan(
+        QueryPlanningRequest(
+            request_id="query-request:named-company-owned",
+            release_id=RELEASE_ID,
+            original_query="深圳市普渡科技有限公司有哪些专利",
+            as_of=NOW,
+        )
+    )
+    assert owned.structured_constraints.displayed_entity_ids == ("company-c-pudu",)
+    assert len(owned.relationship_paths) == 1
+    assert owned.relationship_paths[0].direction == "company_to_patent"
+
+
 def test_focused_named_traversal_keeps_relationship_claims_eligible() -> None:
     """A named-entity traversal turn has a focused search view and no
     exact-lane hits; the selector must still admit release-bound relationship
