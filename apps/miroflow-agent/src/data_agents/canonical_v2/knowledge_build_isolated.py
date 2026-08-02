@@ -990,6 +990,41 @@ _PROFESSOR_BACKFILL_SOURCE_ID = (
 )
 _PROFESSOR_BACKFILL_BATCH_ID = "s12e-professor-backfill-v1"
 
+# S12F company backfill authority.  The s12f applicant-resolution audit found
+# the released company library badly detached from the patent applicant pool
+# (Ubtech/Tencent/BYD and other major applicants are absent); this batch adds
+# the missing companies as first-class released company objects.  The payload
+# is produced by a parallel s12f agent after the Accepted S2B checkpoint, so
+# it carries no historical backup lineage, exactly like the professor
+# backfill.  The batch id and the byte_size/content_sha256 below pin the
+# committed company_backfill.jsonl (700 records) exactly like the other
+# supplemental authorities.
+_COMPANY_BACKFILL_SOURCE_ID = "inventory:" + _canonical_sha256(
+    cast(JsonValue, {"authority": "s12f-company-backfill-v1"})
+)
+_COMPANY_BACKFILL_BATCH_ID = "s12f-company-backfill-v1"
+# Backfilled companies carry explicit placeholder text for catalog-required
+# company fields the backfill payload does not research, mirroring the
+# professor gate's explicit-placeholder precedent.
+_COMPANY_BACKFILL_PROFILE_SUMMARY_FALLBACK = (
+    "No dedicated summary was supplied by the backfill source."
+)
+_COMPANY_BACKFILL_ROUTE_SUMMARY_FALLBACK = (
+    "Not supplied by the backfill source."
+)
+
+# S12F applicant-binding authority.  The s12f applicant-resolution pipeline
+# mapped every released patent applicant name to a canonical company
+# (applicant_name_resolution.jsonl: applicant_name -> resolved_company /
+# aliases / evidence_urls / confidence).  This batch binds those resolved
+# applicants to companies inside the build so patents' applicants carry
+# canonical_company_id.  Same no-backup-lineage admission as the professor
+# and company backfills.
+_APPLICANT_BINDING_SOURCE_ID = "inventory:" + _canonical_sha256(
+    cast(JsonValue, {"authority": "s12f-applicant-binding-v1"})
+)
+_APPLICANT_BINDING_BATCH_ID = "s12f-applicant-binding-v1"
+
 _SUPPLEMENTAL_SOURCE_AUTHORITIES = {
     "inventory:f8fea06321bd45af4c88c9654497a8c504defbf56c5eaee1d758e26248ea2bae": (
         _SupplementalSourceAuthority(
@@ -1120,6 +1155,42 @@ _SUPPLEMENTAL_SOURCE_AUTHORITIES = {
             parser_options={},
         )
     ),
+    _COMPANY_BACKFILL_SOURCE_ID: (
+        _SupplementalSourceAuthority(
+            filename="company_backfill.jsonl",
+            byte_size=632688,
+            content_sha256=(
+                "97b2e1ad4c60bc8e944a701d1d7b956df420ed6a20b565e038733307f7621eae"
+            ),
+            # Admitted at s12f after the Accepted S2B checkpoint; no backup
+            # lineage, same as the professor backfill.
+            backup_manifest_filename=None,
+            backup_manifest_sha256=None,
+            source_member_manifest_sha256=None,
+            source_kind="historical_jsonl",
+            source_batch_id=_COMPANY_BACKFILL_BATCH_ID,
+            parser_name="historical_jsonl",
+            parser_options={},
+        )
+    ),
+    _APPLICANT_BINDING_SOURCE_ID: (
+        _SupplementalSourceAuthority(
+            filename="applicant_name_resolution.jsonl",
+            byte_size=442650,
+            content_sha256=(
+                "2ddd712d5cf518ec84fb0445282abde193b2c4c304f0439caaa67168c71fc9e2"
+            ),
+            # Admitted at s12f after the Accepted S2B checkpoint; no backup
+            # lineage, same as the professor backfill.
+            backup_manifest_filename=None,
+            backup_manifest_sha256=None,
+            source_member_manifest_sha256=None,
+            source_kind="historical_jsonl",
+            source_batch_id=_APPLICANT_BINDING_BATCH_ID,
+            parser_name="historical_jsonl",
+            parser_options={},
+        )
+    ),
 }
 _SUPPLEMENTAL_SOURCE_IDS = frozenset(_SUPPLEMENTAL_SOURCE_AUTHORITIES)
 _SUPPLEMENTAL_SOURCE_PURPOSES = {
@@ -1129,6 +1200,8 @@ _SUPPLEMENTAL_SOURCE_PURPOSES = {
     "inventory:b84a6eac6bc59c9b9431b94ae8735bcda813b3186c28455719ac3bd6718d41ae": "company_workbook",
     "inventory:b9a8975b2d147348ef47cbd08ad12c6e550c6012ecc29e2979a4db76e3b3c4a0": "patent_identifier",
     _PROFESSOR_BACKFILL_SOURCE_ID: "professor_backfill",
+    _COMPANY_BACKFILL_SOURCE_ID: "company_backfill",
+    _APPLICANT_BINDING_SOURCE_ID: "applicant_binding",
 }
 
 
@@ -1197,6 +1270,8 @@ _SOURCE_IDS_BY_DISPOSITION: dict[SourceDisposition, frozenset[str]] = {
             "inventory:dc465266f3a71f9c820cba8cf83f860feb053f6da5bfef79ec02283e9f5ee673",
             "inventory:eb4faa13a8f4c00f703b2fb014ecc5eb671cb29b3dd20e0836afb9b1024bf8a0",
             "inventory:f8fea06321bd45af4c88c9654497a8c504defbf56c5eaee1d758e26248ea2bae",
+            _COMPANY_BACKFILL_SOURCE_ID,
+            _APPLICANT_BINDING_SOURCE_ID,
         }
     ),
     SourceDisposition.unrecoverable: frozenset(),
@@ -1261,8 +1336,11 @@ class SourceBuildManifest(_ContentAddressedModel):
         if inventory_keys != tuple(sorted(set(inventory_keys))):
             raise ValueError("inventory source IDs must be sorted and unique")
         expected_ids = frozenset().union(*_SOURCE_IDS_BY_DISPOSITION.values())
-        if len(self.inventory_entries) != 50 or set(inventory_keys) != expected_ids:
-            raise ValueError("inventory must exactly cover the 50 accepted sources")
+        if len(self.inventory_entries) != len(expected_ids) or set(inventory_keys) != expected_ids:
+            raise ValueError(
+                "inventory must exactly cover the accepted sources: "
+                f"expected {len(expected_ids)}, got {len(self.inventory_entries)}"
+            )
         expected_by_disposition = dict(_SOURCE_IDS_BY_DISPOSITION)
         if self.schema_version == "canonical-v2-source-build-manifest-v2":
             expected_by_disposition[SourceDisposition.evidence_input] = frozenset(
@@ -3076,6 +3154,13 @@ def _supplemental_record_object_ids(
             and professor_id in indexes.professor_object_ids
             else frozenset()
         )
+    elif purpose in {"company_backfill", "applicant_binding"}:
+        # S12F backfill/binding batches are never matched against retained
+        # objects here: company_backfill creates new companies and
+        # applicant_binding binds patents by applicant name.  Both are
+        # handled entirely by their dedicated merge stages, which attach
+        # lineage only for adopted records.
+        matches = frozenset()
     else:
         professor_key = _identity_lookup_key(payload.get("professor_name"))
         company_key = _identity_lookup_key(payload.get("company_name"))
@@ -3326,6 +3411,535 @@ def _merge_professor_backfill_rows(
                 )
             )
     return merged, _ProfessorBackfillMergeStats(**stats), tuple(adopted_backfills)
+
+
+@dataclass(frozen=True, slots=True)
+class _CompanyBackfillMergeStats:
+    records_seen: int = 0
+    companies_created: int = 0
+    records_skipped_existing: int = 0
+    records_duplicate: int = 0
+    records_invalid: int = 0
+
+
+def _company_backfill_object_id(company_name: str) -> str:
+    digest = _canonical_sha256(cast(JsonValue, {"company_name": company_name}))
+    return f"company-backfill:{digest}"
+
+
+def _company_backfill_aliases(value: Any, *, path: str) -> tuple[list[str], tuple[str, ...]]:
+    if value is None:
+        return [], ()
+    if not isinstance(value, list):
+        return [], (path,)
+    aliases: list[str] = []
+    invalid: set[str] = set()
+    for index, alias in enumerate(value):
+        if not isinstance(alias, str) or not alias.strip():
+            invalid.add(f"{path}[{index}]")
+            continue
+        aliases.append(alias.strip())
+    return aliases, tuple(sorted(invalid))
+
+
+def _company_backfill_evidence_urls(value: Any, *, path: str) -> tuple[list[str], tuple[str, ...]]:
+    if value is None:
+        return [], ()
+    if not isinstance(value, list):
+        return [], (path,)
+    urls: list[str] = []
+    invalid: set[str] = set()
+    for index, url in enumerate(value):
+        if not isinstance(url, str) or not url.strip():
+            invalid.add(f"{path}[{index}]")
+            continue
+        urls.append(url.strip())
+    return urls, tuple(sorted(invalid))
+
+
+def _merge_company_backfill_rows(
+    *,
+    request: BuildCandidateRequest,
+    rows: tuple[_ParsedReleasedObject, ...],
+    selected_by_object: dict[str, dict[str, JsonValue]],
+    domain_by_object: dict[str, str],
+    row_by_object: dict[str, _ParsedReleasedObject],
+    source_identities: dict[str, SourceIdentity],
+    identity_assertions: list[SourceAssertion],
+    field_assertions: list[SourceAssertion],
+    gaps: list[_RecordedGap],
+    supplemental_domains_by_batch: defaultdict[str, set[str]],
+    now: datetime,
+) -> tuple[
+    list[SourceAssertion],
+    list[SourceAssertion],
+    _CompanyBackfillMergeStats,
+    tuple[tuple[str, str], ...],
+]:
+    """Admit s12f backfilled companies as first-class released company objects.
+
+    Conservative semantics: a company whose name or alias already matches a
+    retained company is skipped (never overwrite existing data); duplicates
+    within the batch are skipped; only genuinely new companies are synthesized
+    into released-object shape (id/object_type/display_name/core_facts/
+    summary_fields/evidence) and enter identity, decision, inclusion, and
+    projection exactly like released rows.  Every adopted record contributes
+    the company's source identity and field assertions (name, normalized_name,
+    aliases, profile_summary, technology_route_summary) and admits the batch
+    into the approved company scope.
+    """
+    stats = {
+        "records_seen": 0,
+        "companies_created": 0,
+        "records_skipped_existing": 0,
+        "records_duplicate": 0,
+        "records_invalid": 0,
+    }
+    existing_name_keys: set[str] = set()
+    for object_id, domain in domain_by_object.items():
+        if domain != "company":
+            continue
+        selected = selected_by_object.get(object_id, {})
+        for value in (selected.get("name"), selected.get("normalized_name")):
+            if (key := _identity_lookup_key(value)) is not None:
+                existing_name_keys.add(key)
+        aliases = selected.get("aliases")
+        if isinstance(aliases, list):
+            for alias in aliases:
+                if (key := _identity_lookup_key(alias)) is not None:
+                    existing_name_keys.add(key)
+    created_name_keys: set[str] = set()
+    adopted: list[tuple[str, str]] = []
+    merged_assertions = list(field_assertions)
+    merged_identity_assertions = list(identity_assertions)
+    for item in rows:
+        if _SUPPLEMENTAL_SOURCE_PURPOSES.get(item.source_id) != "company_backfill":
+            continue
+        stats["records_seen"] += 1
+        payload = item.payload
+        company_name = payload.get("company_name")
+        invalid_paths: set[str] = set()
+        if not isinstance(company_name, str) or not company_name.strip():
+            invalid_paths.add("company_name")
+        else:
+            company_name = company_name.strip()
+        aliases, invalid_aliases = _company_backfill_aliases(
+            payload.get("aliases"), path="aliases"
+        )
+        invalid_paths.update(invalid_aliases)
+        profile_summary = payload.get("profile_summary")
+        if profile_summary is not None and (
+            not isinstance(profile_summary, str) or not profile_summary.strip()
+        ):
+            invalid_paths.add("profile_summary")
+        evidence_urls, invalid_evidence_urls = _company_backfill_evidence_urls(
+            payload.get("evidence_urls"), path="evidence_urls"
+        )
+        invalid_paths.update(invalid_evidence_urls)
+        if invalid_paths:
+            stats["records_invalid"] += 1
+            gaps.append(
+                _gap(
+                    release_id=request.candidate_release_id,
+                    run_id=request.run_id,
+                    record=item.record,
+                    domain="company",
+                    reason=(
+                        f"company backfill record for {company_name!r} carries "
+                        "malformed typed fields"
+                    ),
+                    affected_paths=tuple(sorted(invalid_paths)),
+                    now=now,
+                )
+            )
+            continue
+        name_key = _identity_lookup_key(company_name)
+        alias_keys = {
+            key for key in (_identity_lookup_key(alias) for alias in aliases) if key
+        }
+        if name_key in existing_name_keys or alias_keys & existing_name_keys:
+            # The company is already covered by the released library; the
+            # backfill never overwrites existing data (no alias merge either).
+            stats["records_skipped_existing"] += 1
+            continue
+        if name_key in created_name_keys:
+            stats["records_duplicate"] += 1
+            continue
+        created_name_keys.add(name_key)
+        object_id = _company_backfill_object_id(company_name)
+        if object_id in selected_by_object:
+            stats["records_duplicate"] += 1
+            continue
+        evidence = [
+            {
+                "source_type": "public_web",
+                "source_url": url,
+                "fetched_at": now.isoformat(),
+            }
+            for url in evidence_urls
+        ]
+        if not evidence:
+            evidence = [
+                {
+                    "source_type": "manual_review",
+                    "source_file": "company_backfill.jsonl",
+                    "fetched_at": now.isoformat(),
+                }
+            ]
+        released_payload: dict[str, Any] = {
+            "id": object_id,
+            "object_type": "company",
+            "display_name": company_name,
+            "core_facts": {
+                "name": company_name,
+                "normalized_name": company_name,
+                "aliases": aliases,
+            },
+            "summary_fields": {
+                "profile_summary": (
+                    profile_summary
+                    if isinstance(profile_summary, str) and profile_summary.strip()
+                    else _COMPANY_BACKFILL_PROFILE_SUMMARY_FALLBACK
+                ),
+                "technology_route_summary": _COMPANY_BACKFILL_ROUTE_SUMMARY_FALLBACK,
+            },
+            "evidence": evidence,
+            "last_updated": now.isoformat(),
+            "quality_status": "ready",
+        }
+        synthesized = _ParsedReleasedObject(
+            source_id=item.source_id,
+            source_batch_id=item.source_batch_id,
+            record=item.record,
+            artifact=item.artifact,
+            payload=released_payload,
+        )
+        selected: dict[str, JsonValue] = {
+            "name": company_name,
+            "normalized_name": company_name,
+            "profile_summary": cast(JsonValue, released_payload["summary_fields"]["profile_summary"]),
+            "technology_route_summary": _COMPANY_BACKFILL_ROUTE_SUMMARY_FALLBACK,
+        }
+        if aliases:
+            selected["aliases"] = cast(JsonValue, aliases)
+        observed_at = _observed_at(released_payload, now)
+        source_identity_id = f"source-released-object:{object_id}"
+        normalized_keys = _released_object_identity_keys(
+            object_id=object_id,
+            domain="company",
+            selected=selected,
+            payload=released_payload,
+        )
+        source_identities[object_id] = SourceIdentity(
+            source_identity_id=source_identity_id,
+            source_system="accepted-restored-released-objects",
+            source_key=object_id,
+            entity_type="company",
+            source_record_ids=(item.record.record_id,),
+            normalized_keys=normalized_keys,
+            first_observed_at=observed_at,
+            last_observed_at=observed_at,
+            state=SourceIdentityState.active,
+        )
+        merged_identity_assertions.extend(
+            SourceAssertion(
+                assertion_id=f"identity-assertion:{object_id}:{key}",
+                source_record_id=item.record.record_id,
+                source_identity_id=source_identity_id,
+                subject_entity_type="company",
+                field_path=f"identity.{key}",
+                value=value,
+                observed_at=observed_at,
+                assertion_run_id=f"identity-assertions:{request.run_id}",
+            )
+            for key, value in sorted(normalized_keys.items())
+        )
+        selected_by_object[object_id] = selected
+        domain_by_object[object_id] = "company"
+        row_by_object[object_id] = synthesized
+        merged_assertions.extend(
+            SourceAssertion(
+                assertion_id=f"assertion:{object_id}:{field_path}",
+                source_record_id=item.record.record_id,
+                source_identity_id=source_identity_id,
+                subject_entity_type="company",
+                field_path=field_path,
+                value=value,
+                observed_at=observed_at,
+                assertion_run_id=f"assertions:{request.run_id}",
+            )
+            for field_path, value in sorted(selected.items())
+        )
+        stats["companies_created"] += 1
+        adopted.append((object_id, item.record.record_id))
+        supplemental_domains_by_batch[item.source_batch_id].add("company")
+    return (
+        merged_assertions,
+        merged_identity_assertions,
+        _CompanyBackfillMergeStats(**stats),
+        tuple(adopted),
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class _ApplicantBindingMergeStats:
+    records_seen: int = 0
+    records_resolved: int = 0
+    applicants_bound: int = 0
+    patents_bound: int = 0
+    records_unresolved_status: int = 0
+    records_unmatched_company: int = 0
+    records_unmatched_applicant: int = 0
+    records_invalid: int = 0
+
+
+def _merge_applicant_binding_rows(
+    *,
+    request: BuildCandidateRequest,
+    rows: tuple[_ParsedReleasedObject, ...],
+    selected_by_object: dict[str, dict[str, JsonValue]],
+    domain_by_object: Mapping[str, str],
+    source_identities: dict[str, SourceIdentity],
+    field_assertions: list[SourceAssertion],
+    gaps: list[_RecordedGap],
+    supplemental_domains_by_batch: defaultdict[str, set[str]],
+    now: datetime,
+) -> tuple[
+    list[SourceAssertion],
+    _ApplicantBindingMergeStats,
+    tuple[tuple[str, str], ...],
+]:
+    """Bind resolved patent applicants to their companies (pre-resolution).
+
+    Every applicant_binding record maps one released applicant name to a
+    company.  Only status=resolved records bind; institution/individual/
+    unresolved (and already_matched) records are counted and skipped.  The
+    company is resolved by exact name/alias lookup over both released and
+    backfilled companies; a record whose company is absent is skipped and
+    counted with a typed gap.  For each matched applicant entry the
+    applicants field assertion is rewritten with the company object id (the
+    caller remaps it to the canonical identity id once identity resolution
+    has run), and the adopted binding record enters the patent's source
+    identity lineage *before* resolution so the binding stays traceable in
+    the identity result and the inclusion candidate records.
+    """
+    stats = {
+        "records_seen": 0,
+        "records_resolved": 0,
+        "applicants_bound": 0,
+        "patents_bound": 0,
+        "records_unresolved_status": 0,
+        "records_unmatched_company": 0,
+        "records_unmatched_applicant": 0,
+        "records_invalid": 0,
+    }
+    company_ids_by_name: dict[str, set[str]] = defaultdict(set)
+    for object_id, domain in domain_by_object.items():
+        if domain != "company":
+            continue
+        selected = selected_by_object.get(object_id, {})
+        for value in (selected.get("name"), selected.get("normalized_name")):
+            if (key := _identity_lookup_key(value)) is not None:
+                company_ids_by_name[key].add(object_id)
+        aliases = selected.get("aliases")
+        if isinstance(aliases, list):
+            for alias in aliases:
+                if (key := _identity_lookup_key(alias)) is not None:
+                    company_ids_by_name[key].add(object_id)
+    merged = list(field_assertions)
+    assertion_index = {
+        assertion.assertion_id: index for index, assertion in enumerate(merged)
+    }
+    adopted_patents: list[tuple[str, str]] = []
+    for item in rows:
+        if _SUPPLEMENTAL_SOURCE_PURPOSES.get(item.source_id) != "applicant_binding":
+            continue
+        stats["records_seen"] += 1
+        payload = item.payload
+        status = payload.get("status")
+        if status != "resolved":
+            stats["records_unresolved_status"] += 1
+            continue
+        stats["records_resolved"] += 1
+        applicant_name = payload.get("applicant_name")
+        resolved_company = payload.get("resolved_company")
+        if (
+            not isinstance(applicant_name, str)
+            or not applicant_name.strip()
+            or not isinstance(resolved_company, str)
+            or not resolved_company.strip()
+        ):
+            stats["records_invalid"] += 1
+            gaps.append(
+                _gap(
+                    release_id=request.candidate_release_id,
+                    run_id=request.run_id,
+                    record=item.record,
+                    domain="cross_domain",
+                    reason=(
+                        f"applicant binding record {applicant_name!r} lacks "
+                        "typed applicant/company payload"
+                    ),
+                    affected_paths=("applicant_name", "resolved_company"),
+                    now=now,
+                )
+            )
+            continue
+        applicant_name = applicant_name.strip()
+        resolved_company = resolved_company.strip()
+        company_object_ids = company_ids_by_name.get(
+            _identity_lookup_key(resolved_company) or "", frozenset()
+        )
+        if len(company_object_ids) != 1:
+            stats["records_unmatched_company"] += 1
+            gaps.append(
+                _gap(
+                    release_id=request.candidate_release_id,
+                    run_id=request.run_id,
+                    record=item.record,
+                    domain="cross_domain",
+                    reason=(
+                        f"applicant binding record {applicant_name!r} resolves "
+                        f"to no single released/backfilled company: {resolved_company!r}"
+                    ),
+                    affected_paths=("resolved_company",),
+                    now=now,
+                )
+            )
+            continue
+        company_object_id = next(iter(company_object_ids))
+        applicant_key = _identity_lookup_key(applicant_name)
+        bound_patents: list[str] = []
+        applicants_bound_here = 0
+        for patent_id, domain in sorted(domain_by_object.items()):
+            if domain != "patent":
+                continue
+            applicants = selected_by_object.get(patent_id, {}).get("applicants")
+            if not isinstance(applicants, list):
+                continue
+            bound_applicants = list(applicants)
+            bound_here = 0
+            for index, applicant in enumerate(bound_applicants):
+                if not isinstance(applicant, dict):
+                    continue
+                if _identity_lookup_key(applicant.get("name")) != applicant_key:
+                    continue
+                if applicant.get("canonical_company_id") == company_object_id:
+                    continue
+                bound_applicants[index] = {
+                    **applicant,
+                    "canonical_company_id": company_object_id,
+                }
+                bound_here += 1
+            if not bound_here:
+                continue
+            assertion_id = f"assertion:{patent_id}:applicants"
+            prior = assertion_index.get(assertion_id)
+            if prior is None:
+                raise IsolatedKnowledgeBuildError(
+                    f"patent {patent_id} lacks its applicants field assertion"
+                )
+            merged[prior] = merged[prior].model_copy(
+                update={"value": cast(JsonValue, bound_applicants)}
+            )
+            selected_by_object[patent_id]["applicants"] = cast(
+                JsonValue, bound_applicants
+            )
+            bound_patents.append(patent_id)
+            applicants_bound_here += bound_here
+        if not bound_patents:
+            stats["records_unmatched_applicant"] += 1
+            gaps.append(
+                _gap(
+                    release_id=request.candidate_release_id,
+                    run_id=request.run_id,
+                    record=item.record,
+                    domain="cross_domain",
+                    reason=(
+                        f"applicant binding record {applicant_name!r} matches no "
+                        "released patent applicant"
+                    ),
+                    affected_paths=("applicant_name",),
+                    now=now,
+                )
+            )
+            continue
+        for patent_id in bound_patents:
+            source = source_identities[patent_id]
+            source_identities[patent_id] = source.model_copy(
+                update={
+                    "source_record_ids": tuple(
+                        sorted({*source.source_record_ids, item.record.record_id})
+                    )
+                },
+                deep=True,
+            )
+            adopted_patents.append((patent_id, item.record.record_id))
+        supplemental_domains_by_batch[item.source_batch_id].add("patent")
+        stats["applicants_bound"] += applicants_bound_here
+        stats["patents_bound"] += len(bound_patents)
+    return merged, _ApplicantBindingMergeStats(**stats), tuple(adopted_patents)
+
+
+def _remap_applicant_binding_canonical_ids(
+    *,
+    selected_by_object: dict[str, dict[str, JsonValue]],
+    domain_by_object: Mapping[str, str],
+    field_assertions: list[SourceAssertion],
+    canonical_by_source: Mapping[str, str],
+    bound_patent_ids: frozenset[str],
+) -> list[SourceAssertion]:
+    """Rewrite bound applicant entries from company object ids to canonical ids.
+
+    The binding merge runs before identity resolution (so its lineage is part
+    of the resolved identities); once resolution assigned canonical ids, every
+    bound ``canonical_company_id`` value is remapped in place so the field
+    assertions, current fields, and patent projections carry the canonical
+    company identity that the serving path matches against.
+    """
+    object_to_canonical = {
+        object_id: canonical_by_source[f"source-released-object:{object_id}"]
+        for object_id in domain_by_object
+        if f"source-released-object:{object_id}" in canonical_by_source
+    }
+    if not object_to_canonical:
+        return list(field_assertions)
+    merged = list(field_assertions)
+    for index, assertion in enumerate(merged):
+        patent_id = assertion.source_identity_id.removeprefix(
+            "source-released-object:"
+        )
+        if (
+            patent_id not in bound_patent_ids
+            or assertion.field_path != "applicants"
+        ):
+            continue
+        value = assertion.value
+        if not isinstance(value, list):
+            continue
+        remapped = [
+            (
+                {
+                    **applicant,
+                    "canonical_company_id": object_to_canonical[
+                        applicant["canonical_company_id"]
+                    ],
+                }
+                if isinstance(applicant, dict)
+                and isinstance(applicant.get("canonical_company_id"), str)
+                and applicant["canonical_company_id"] in object_to_canonical
+                else applicant
+            )
+            for applicant in value
+        ]
+        if remapped != value:
+            merged[index] = assertion.model_copy(
+                update={"value": cast(JsonValue, remapped)}
+            )
+            selected = selected_by_object.get(patent_id)
+            if selected is not None and selected.get("applicants") is value:
+                selected["applicants"] = cast(JsonValue, remapped)
+    return merged
 
 
 def _professor_author_aliases(selected: Mapping[str, JsonValue]) -> frozenset[str]:
@@ -3844,6 +4458,17 @@ def _map_public_authority(
         row_by_object=row_by_object,
     )
     for item in supplemental_rows:
+        if _SUPPLEMENTAL_SOURCE_PURPOSES.get(item.source_id) in {
+            "company_backfill",
+            "applicant_binding",
+        }:
+            # S12F company backfill and applicant binding never match retained
+            # objects here: company_backfill creates new companies and
+            # applicant_binding binds patents by applicant name.  Both are
+            # handled entirely by their dedicated merge stages, which attach
+            # lineage only for adopted records, so no object-match gap is
+            # recorded for them either.
+            continue
         matched_object_ids = _supplemental_record_object_ids(
             item=item,
             indexes=supplemental_indexes,
@@ -4131,6 +4756,51 @@ def _map_public_authority(
             domain_by_object[professor_id]
         )
 
+    # S12F company backfill runs before identity resolution so the admitted
+    # companies enter identity/decision/inclusion/projection exactly like
+    # released rows; companies already covered by the released library are
+    # skipped, never overwritten.
+    (
+        field_assertions,
+        identity_assertions,
+        _company_backfill_stats,
+        _adopted_company_backfills,
+    ) = _merge_company_backfill_rows(
+        request=request,
+        rows=supplemental_rows,
+        selected_by_object=selected_by_object,
+        domain_by_object=domain_by_object,
+        row_by_object=row_by_object,
+        source_identities=source_identities,
+        identity_assertions=identity_assertions,
+        field_assertions=field_assertions,
+        gaps=gaps,
+        supplemental_domains_by_batch=supplemental_domains_by_batch,
+        now=now,
+    )
+
+    # S12F applicant binding runs before identity resolution so the adopted
+    # binding record enters the patent's identity lineage inside the resolved
+    # identities and the inclusion candidate records.  The bound
+    # canonical_company_id carries the company object id at this stage; the
+    # remap below rewrites it to the canonical identity once resolution has
+    # assigned one.  Only status=resolved records bind.
+    (
+        field_assertions,
+        _applicant_binding_stats,
+        _adopted_applicant_bindings,
+    ) = _merge_applicant_binding_rows(
+        request=request,
+        rows=supplemental_rows,
+        selected_by_object=selected_by_object,
+        domain_by_object=domain_by_object,
+        source_identities=source_identities,
+        field_assertions=field_assertions,
+        gaps=gaps,
+        supplemental_domains_by_batch=supplemental_domains_by_batch,
+        now=now,
+    )
+
     source_identity_values = tuple(
         sorted(source_identities.values(), key=lambda item: item.source_identity_id)
     )
@@ -4156,6 +4826,20 @@ def _map_public_authority(
         assignment.source_identity_id: assignment.canonical_identity_id
         for assignment in identity_result.source_identity_assignments
     }
+
+    # S12F applicant-binding canonical remap: the bound company object ids are
+    # rewritten to canonical identity ids in the applicants field assertions
+    # (and the selected values) before the decision batch, so current fields
+    # and patent projections carry the canonical company identity.
+    field_assertions = _remap_applicant_binding_canonical_ids(
+        selected_by_object=selected_by_object,
+        domain_by_object=domain_by_object,
+        field_assertions=field_assertions,
+        canonical_by_source=canonical_by_source,
+        bound_patent_ids=frozenset(
+            patent_id for patent_id, _ in _adopted_applicant_bindings
+        ),
+    )
 
     patent_ids_by_reference: defaultdict[str, set[str]] = defaultdict(set)
     for object_id, domain in domain_by_object.items():

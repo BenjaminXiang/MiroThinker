@@ -12,7 +12,7 @@ handoff, receipt, or envelope.  Those remain owned by the deep builder.
 
 from __future__ import annotations
 
-from collections import Counter
+from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 import hashlib
@@ -47,6 +47,8 @@ SUPPLEMENTAL_BATCH_IDS = (
     "s12c-r7-patent-identifiers-v1",
     "s12c-r7-professor-company-roles-v1",
     "s12e-professor-backfill-v1",
+    "s12f-company-backfill-v1",
+    "s12f-applicant-binding-v1",
 )
 EVIDENCE_BATCH_IDS = tuple(sorted((SOURCE_BATCH_ID, *SUPPLEMENTAL_BATCH_IDS)))
 
@@ -4433,6 +4435,11 @@ _SOURCE_IDS_BY_DISPOSITION: dict[str, tuple[str, ...]] = {
         "inventory:dc465266f3a71f9c820cba8cf83f860feb053f6da5bfef79ec02283e9f5ee673",
         "inventory:eb4faa13a8f4c00f703b2fb014ecc5eb671cb29b3dd20e0836afb9b1024bf8a0",
         "inventory:f8fea06321bd45af4c88c9654497a8c504defbf56c5eaee1d758e26248ea2bae",
+        # S12F supplemental authorities admitted after the Accepted S2B
+        # checkpoint (no historical backup lineage); they move to
+        # evidence_input under the v2 manifest like the professor backfill.
+        "inventory:53bb8f4ab16868619fdfa2380bf091c45bd9999e9008a1fdea884d30050adf67",
+        "inventory:1107b1df6dfa2f0faab5b04640a0317f53513781e63f4977078df4b6f5427a89",
     ),
     "unrecoverable": (),
 }
@@ -5137,7 +5144,6 @@ class _RecordingBoundary:
         run_id: str,
         observed_at: datetime,
     ) -> Any:
-        del entry
         records = tuple(
             self.module._source_record(
                 row=row,
@@ -5147,6 +5153,27 @@ class _RecordingBoundary:
             )
             for row in staged_member.records
         )
+        if entry.source_id != RELEASED_OBJECTS_SOURCE_ID:
+            # The real landing parses jsonl/xlsx content into the record
+            # payload; the recording boundary mimics that for supplemental
+            # sources so the merge stages (professor/company backfill,
+            # applicant binding) observe the actual source row instead of the
+            # raw landing envelope.  Quarantined records (malformed source
+            # rows) keep their envelope and are never re-parsed.
+            parsed_records: list[Any] = []
+            for record in records:
+                if record.parse_status is not self.module.ParseStatus.parsed:
+                    parsed_records.append(record)
+                    continue
+                raw_payload_json = record.payload.get("payload_json")
+                if isinstance(raw_payload_json, str):
+                    parsed = self.module._load_unique_json_object(raw_payload_json)
+                else:
+                    parsed = dict(record.payload)
+                parsed_records.append(
+                    record.model_copy(update={"payload": parsed})
+                )
+            records = tuple(parsed_records)
         source_batch_id = member.source_batch_id
         for table_name in ("ingest_run", "evidence_artifact", "source_record"):
             self._observe_store_table(store_name="landing", table_name=table_name)
@@ -5670,6 +5697,29 @@ _SUPPLEMENTAL_ROW_PAYLOADS: dict[str, dict[str, Any]] = {
         "institution": "不存在的机构",
         "fields": {},
     },
+    # The s12f supplemental rows stay side-effect free in the full-build
+    # fixture: the company backfill row targets a released company name
+    # (skipped, never overwritten) and the applicant-binding row is an
+    # institution record (never bound), so neither produces gaps or new
+    # identities/counts.
+    "s12f-company-backfill-v1": {
+        "company_name": "Company 00000",
+        "aliases": ["Company 00000 Alias"],
+        "profile_summary": "Already released company.",
+        "evidence_urls": ["https://evidence.invalid/s12f/company"],
+        "confidence": "high",
+        "source_applicants": ["Company 00000"],
+    },
+    "s12f-applicant-binding-v1": {
+        "applicant_name": "Some Institution Applicant",
+        "patent_count": 1,
+        "status": "institution",
+        "resolved_company": "",
+        "aliases": [],
+        "evidence_urls": [],
+        "confidence": "",
+        "note": "机构（大学/研究院/医院等，不做公司解析）",
+    },
 }
 
 
@@ -5843,11 +5893,11 @@ def test_source_manifest_accounts_for_every_accepted_source_without_using_requir
         RELEASED_OBJECTS_SOURCE_MEMBER_MANIFEST_SHA256
     )
     counts = Counter(entry["disposition"] for entry in valid["inventory_entries"])
-    assert len(valid["inventory_entries"]) == 50
+    assert len(valid["inventory_entries"]) == 52
     assert counts == {
         "requirements_only": 7,
         "acceptance_only": 7,
-        "evidence_input": 7,
+        "evidence_input": 9,
         "protection_only": 5,
         "registered_unprojected": 24,
     }
@@ -6562,3 +6612,636 @@ def test_patent_applicant_links_abstain_on_ambiguous_names() -> None:
     assert not any(
         seed.relationship_type_id == "patent_has_applicant" for seed in seeds
     )
+
+
+# --- S12F company backfill + applicant binding (below) ---
+#
+# The s12f applicant-resolution pipeline mapped released patent applicants to
+# canonical companies; the company_backfill batch adds the companies the
+# released library is missing and the applicant-binding batch binds resolved
+# applicants to companies (canonical_company_id on patent applicants).  These
+# tests pin the two supplemental authorities, the company-object admission,
+# and the conservative binding semantics (resolved-only, existing companies
+# never overwritten, unknown companies skipped and counted).
+
+S12F_RUN_ROOT = (
+    Path(__file__).resolve().parents[4]
+    / ".agents/runs/rebuild-canonical-v2-knowledge-platform"
+)
+APPLICANT_RESOLUTION_PAYLOAD_PATH = (
+    S12F_RUN_ROOT / "s12f/applicant_resolution/applicant_name_resolution.jsonl"
+)
+COMPANY_BACKFILL_PAYLOAD_PATH = (
+    S12F_RUN_ROOT / "s12f/applicant_resolution/company_backfill.jsonl"
+)
+COMPANY_BACKFILL_BATCH_ID = "s12f-company-backfill-v1"
+APPLICANT_BINDING_BATCH_ID = "s12f-applicant-binding-v1"
+BACKFILL_COMPANY_NAME = "深圳市优必选科技股份有限公司"
+BACKFILL_COMPANY_ALIASES = ["优必选", "UBTECH"]
+BACKFILL_COMPANY_SUMMARY = "深圳市优必选科技股份有限公司是一家专注于人形机器人的科技公司。"
+ENGLISH_APPLICANT_NAME = "Shenzhen Ubtech Technology Co ltd"
+
+
+def _s12f_supplemental_row(
+    module: Any,
+    basis: Any,
+    payload: dict[str, Any],
+    *,
+    source_id: str,
+    source_batch_id: str,
+    index: int,
+    record_prefix: str,
+) -> Any:
+    """One supplemental jsonl row sharing the released basis record shape."""
+    artifact_id = f"artifact:{record_prefix}:{index}"
+    record = basis.record.model_copy(
+        update={
+            "record_id": f"{record_prefix}-record:{index}",
+            "artifact_id": artifact_id,
+            "source_batch_id": source_batch_id,
+            "record_locator": f"{record_prefix}:{index}",
+            "payload": payload,
+        },
+        deep=True,
+    )
+    artifact = basis.artifact.model_copy(
+        update={
+            "artifact_id": artifact_id,
+            "source_kind": "historical_jsonl",
+            "source_locator": f"{record_prefix}:{index}",
+            "content_sha256": f"{index + 1:064x}",
+            "run_id": f"{record_prefix}-run:{index}",
+        }
+    )
+    return module._ParsedReleasedObject(
+        source_id=source_id,
+        source_batch_id=source_batch_id,
+        record=record,
+        artifact=artifact,
+        payload=payload,
+    )
+
+
+def _company_backfill_payload(
+    *,
+    company_name: str = BACKFILL_COMPANY_NAME,
+    aliases: list[str] | None = None,
+    profile_summary: str | None = BACKFILL_COMPANY_SUMMARY,
+    evidence_urls: list[str] | None = None,
+    confidence: str = "high",
+    source_applicants: list[str] | None = None,
+) -> dict[str, Any]:
+    return {
+        "company_name": company_name,
+        "aliases": list(aliases) if aliases is not None else [],
+        "profile_summary": profile_summary,
+        "evidence_urls": (
+            list(evidence_urls) if evidence_urls is not None else []
+        ),
+        "confidence": confidence,
+        "source_applicants": (
+            list(source_applicants) if source_applicants is not None else []
+        ),
+    }
+
+
+def _applicant_binding_payload(
+    *,
+    applicant_name: str = ENGLISH_APPLICANT_NAME,
+    resolved_company: str = BACKFILL_COMPANY_NAME,
+    status: str = "resolved",
+    confidence: str = "high",
+    aliases: list[str] | None = None,
+    evidence_urls: list[str] | None = None,
+) -> dict[str, Any]:
+    return {
+        "applicant_name": applicant_name,
+        "patent_count": 1,
+        "status": status,
+        "resolved_company": resolved_company,
+        "aliases": list(aliases) if aliases is not None else [],
+        "evidence_urls": (
+            list(evidence_urls) if evidence_urls is not None else []
+        ),
+        "confidence": confidence,
+        "note": "",
+    }
+
+
+def _company_backfill_row(
+    module: Any,
+    basis: Any,
+    payload: dict[str, Any] | None = None,
+    *,
+    index: int = 0,
+) -> Any:
+    return _s12f_supplemental_row(
+        module,
+        basis,
+        payload if payload is not None else _company_backfill_payload(),
+        source_id=module._COMPANY_BACKFILL_SOURCE_ID,
+        source_batch_id=COMPANY_BACKFILL_BATCH_ID,
+        index=index,
+        record_prefix="company-backfill",
+    )
+
+
+def _applicant_binding_row(
+    module: Any,
+    basis: Any,
+    payload: dict[str, Any] | None = None,
+    *,
+    index: int = 0,
+) -> Any:
+    return _s12f_supplemental_row(
+        module,
+        basis,
+        payload if payload is not None else _applicant_binding_payload(),
+        source_id=module._APPLICANT_BINDING_SOURCE_ID,
+        source_batch_id=APPLICANT_BINDING_BATCH_ID,
+        index=index,
+        record_prefix="applicant-binding",
+    )
+
+
+def _patent_with_applicant(
+    module: Any,
+    *,
+    index: int = 71,
+    applicant_name: str = ENGLISH_APPLICANT_NAME,
+    company_ids: list[str] | None = None,
+) -> dict[str, Any]:
+    patent = _released_object_payload("patent", index)
+    patent["core_facts"].pop("summary_text")
+    patent["core_facts"].update(
+        {
+            "applicants": [{"name": applicant_name}],
+            "company_ids": list(company_ids) if company_ids is not None else [],
+            "inventors": [],
+        }
+    )
+    patent["summary_fields"] = {"summary_text": "Source-grounded patent summary."}
+    return patent
+
+
+def test_s12f_company_backfill_authority_pins_batch_contract() -> None:
+    module = _module()
+    source_id = module._COMPANY_BACKFILL_SOURCE_ID
+    authority = module._SUPPLEMENTAL_SOURCE_AUTHORITIES[source_id]
+
+    content = COMPANY_BACKFILL_PAYLOAD_PATH.read_bytes()
+    assert authority.source_batch_id == COMPANY_BACKFILL_BATCH_ID
+    assert authority.byte_size == len(content)
+    assert authority.content_sha256 == hashlib.sha256(content).hexdigest()
+    assert authority.source_kind == "historical_jsonl"
+    assert authority.parser_name == "historical_jsonl"
+    assert (
+        authority.restore_member_path
+        == Path("workspace/docs/source_backfills/company_backfill.jsonl")
+    )
+    assert source_id in module._SUPPLEMENTAL_SOURCE_IDS
+    assert module._SUPPLEMENTAL_SOURCE_PURPOSES[source_id] == "company_backfill"
+    assert (
+        source_id
+        in module._SOURCE_IDS_BY_DISPOSITION[
+            module.SourceDisposition.registered_unprojected
+        ]
+    )
+
+
+def test_s12f_applicant_binding_authority_pins_batch_contract() -> None:
+    module = _module()
+    source_id = module._APPLICANT_BINDING_SOURCE_ID
+    authority = module._SUPPLEMENTAL_SOURCE_AUTHORITIES[source_id]
+
+    content = APPLICANT_RESOLUTION_PAYLOAD_PATH.read_bytes()
+    assert authority.source_batch_id == APPLICANT_BINDING_BATCH_ID
+    assert authority.byte_size == len(content)
+    assert authority.content_sha256 == hashlib.sha256(content).hexdigest()
+    assert authority.source_kind == "historical_jsonl"
+    assert authority.parser_name == "historical_jsonl"
+    assert (
+        authority.restore_member_path
+        == Path("workspace/docs/source_backfills/applicant_name_resolution.jsonl")
+    )
+    assert source_id in module._SUPPLEMENTAL_SOURCE_IDS
+    assert module._SUPPLEMENTAL_SOURCE_PURPOSES[source_id] == "applicant_binding"
+    assert (
+        source_id
+        in module._SOURCE_IDS_BY_DISPOSITION[
+            module.SourceDisposition.registered_unprojected
+        ]
+    )
+
+
+def test_company_backfill_admits_new_company_into_projection() -> None:
+    module = _module()
+    company = _released_object_payload("company", 70)
+    released_rows = _parsed_released_objects(module, (company,))
+    backfill = _company_backfill_row(
+        module,
+        released_rows[0],
+        _company_backfill_payload(aliases=BACKFILL_COMPANY_ALIASES),
+    )
+
+    public = module._map_public_authority(
+        request=_request(module, source_batch_ids=(SOURCE_BATCH_ID,)),
+        rows=(*released_rows, backfill),
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    company_projections = [
+        item for item in public[4].projections if item.entity_type == "company"
+    ]
+    assert len(company_projections) == 2
+    backfilled = next(
+        item for item in company_projections if item.name == BACKFILL_COMPANY_NAME
+    )
+    assert backfilled.normalized_name == BACKFILL_COMPANY_NAME
+    assert backfilled.profile_summary == BACKFILL_COMPANY_SUMMARY
+    assert backfilled.aliases == tuple(BACKFILL_COMPANY_ALIASES)
+    assert backfilled.technology_route_summary == (
+        module._COMPANY_BACKFILL_ROUTE_SUMMARY_FALLBACK
+    )
+    # Optional catalog fields are absent, exactly like released companies that
+    # do not carry every optional field; the required company fields
+    # (name/normalized_name/profile_summary/technology_route_summary) are all
+    # present, so the projection is admissible and typed.
+    assert backfilled.quality_status == "partial"
+
+    backfill_object_id = module._company_backfill_object_id(BACKFILL_COMPANY_NAME)
+    source = next(
+        item
+        for item in public[1].source_identities
+        if item.source_key == backfill_object_id
+    )
+    assert source.entity_type == "company"
+    assert backfill.record.record_id in source.source_record_ids
+    assert source.source_identity_id == f"source-released-object:{backfill_object_id}"
+    # The backfilled company is retrievable at projection level (lookup layer):
+    # projections contain only admitted identities and the company counts it.
+    assert public[4].counts_by_domain["company"] == 2
+
+
+def test_company_backfill_skips_existing_company_never_overwrites() -> None:
+    module = _module()
+    company = _released_object_payload("company", 70)
+    company["summary_fields"] = {
+        "profile_summary": "Existing historical summary.",
+        "technology_route_summary": "Existing historical route summary.",
+    }
+    released_rows = _parsed_released_objects(module, (company,))
+    backfill = _company_backfill_row(
+        module,
+        released_rows[0],
+        _company_backfill_payload(
+            company_name=company["core_facts"]["name"],
+            aliases=["Different Alias"],
+            profile_summary="Backfill summary that must not overwrite.",
+        ),
+    )
+
+    public = module._map_public_authority(
+        request=_request(module, source_batch_ids=(SOURCE_BATCH_ID,)),
+        rows=(*released_rows, backfill),
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    company_projections = [
+        item for item in public[4].projections if item.entity_type == "company"
+    ]
+    assert len(company_projections) == 1
+    projection = company_projections[0]
+    assert projection.name == company["core_facts"]["name"]
+    assert projection.profile_summary == "Existing historical summary."
+    assert projection.aliases == ()
+    # The skipped record must not leak into the company's lineage or produce
+    # assertions.
+    assert backfill.record.record_id not in {
+        record_id
+        for source in public[1].source_identities
+        if source.entity_type == "company"
+        for record_id in source.source_record_ids
+    }
+    assert not [
+        assertion
+        for assertion in public[2].field_assertions
+        if assertion.source_record_id == backfill.record.record_id
+    ]
+
+
+def test_company_backfill_merge_helper_reports_exact_counts() -> None:
+    module = _module()
+    company = _released_object_payload("company", 70)
+    released_rows = _parsed_released_objects(module, (company,))
+    basis = released_rows[0]
+    adopted = _company_backfill_row(
+        module,
+        basis,
+        _company_backfill_payload(aliases=BACKFILL_COMPANY_ALIASES),
+        index=0,
+    )
+    skipped = _company_backfill_row(
+        module,
+        basis,
+        _company_backfill_payload(company_name=company["core_facts"]["name"]),
+        index=1,
+    )
+    duplicate = _company_backfill_row(
+        module,
+        basis,
+        _company_backfill_payload(
+            company_name="深圳赛动智造科技有限公司", aliases=["赛动智造"]
+        ),
+        index=2,
+    )
+    duplicate_again = _company_backfill_row(
+        module,
+        basis,
+        _company_backfill_payload(company_name="深圳赛动智造科技有限公司"),
+        index=3,
+    )
+    invalid = _company_backfill_row(
+        module,
+        basis,
+        {"company_name": "", "aliases": [1], "profile_summary": 3},
+        index=4,
+    )
+    selected_by_object: dict[str, Any] = {
+        company["id"]: {
+            "name": company["core_facts"]["name"],
+            "normalized_name": company["core_facts"]["normalized_name"],
+            "profile_summary": "Existing historical summary.",
+            "technology_route_summary": "Existing historical route summary.",
+        }
+    }
+    gaps: list[Any] = []
+
+    merged, merged_identity, stats, adopted_pairs = module._merge_company_backfill_rows(
+        request=_request(module, source_batch_ids=(SOURCE_BATCH_ID,)),
+        rows=(adopted, skipped, duplicate, duplicate_again, invalid),
+        selected_by_object=selected_by_object,
+        domain_by_object={company["id"]: "company"},
+        row_by_object={company["id"]: released_rows[0]},
+        source_identities={},
+        identity_assertions=[],
+        field_assertions=[],
+        gaps=gaps,
+        supplemental_domains_by_batch=defaultdict(set),
+        now=NOW,
+    )
+
+    assert stats.records_seen == 5
+    assert stats.companies_created == 2
+    assert stats.records_skipped_existing == 1
+    assert stats.records_duplicate == 1
+    assert stats.records_invalid == 1
+    ubtech_id = module._company_backfill_object_id(BACKFILL_COMPANY_NAME)
+    shanchuang_id = module._company_backfill_object_id("深圳赛动智造科技有限公司")
+    assert adopted_pairs == (
+        (ubtech_id, adopted.record.record_id),
+        (shanchuang_id, duplicate.record.record_id),
+    )
+    # Each created company contributes five field assertions (name,
+    # normalized_name, profile_summary, technology_route_summary, aliases)
+    # and two identity assertions (historical_source_id, name_key).
+    assert len(merged) == 10
+    assert len(merged_identity) == 4
+    assert len(gaps) == 1
+
+
+def test_applicant_binding_binds_english_applicant_to_chinese_company() -> None:
+    module = _module()
+    company = _released_object_payload("company", 70)
+    company["core_facts"].update(
+        {
+            "name": BACKFILL_COMPANY_NAME,
+            "normalized_name": BACKFILL_COMPANY_NAME,
+        }
+    )
+    company["display_name"] = BACKFILL_COMPANY_NAME
+    patent = _patent_with_applicant(module)
+    released_rows = _parsed_released_objects(module, (company, patent))
+    binding = _applicant_binding_row(module, released_rows[0])
+
+    public = module._map_public_authority(
+        request=_request(module, source_batch_ids=(SOURCE_BATCH_ID,)),
+        rows=(*released_rows, binding),
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    company_projection = next(
+        item for item in public[4].projections if item.entity_type == "company"
+    )
+    patent_projection = next(
+        item for item in public[4].projections if item.entity_type == "patent"
+    )
+    assert len(patent_projection.applicants) == 1
+    applicant = patent_projection.applicants[0]
+    assert applicant.name == ENGLISH_APPLICANT_NAME
+    assert applicant.canonical_company_id == (
+        company_projection.canonical_identity_id
+    )
+    # 中文名显示由绑定公司提供：绑定目标公司的规范名为中文全称。
+    assert company_projection.name == BACKFILL_COMPANY_NAME
+
+    assertion = next(
+        item
+        for item in public[2].field_assertions
+        if item.source_identity_id == f"source-released-object:{patent['id']}"
+        and item.field_path == "applicants"
+    )
+    assert assertion.value[0]["canonical_company_id"] == (
+        company_projection.canonical_identity_id
+    )
+    source = next(
+        item
+        for item in public[1].source_identities
+        if item.source_key == patent["id"]
+    )
+    assert binding.record.record_id in source.source_record_ids
+
+
+def test_applicant_binding_binds_to_backfilled_company() -> None:
+    module = _module()
+    patent = _patent_with_applicant(module)
+    released_rows = _parsed_released_objects(module, (patent,))
+    backfill = _company_backfill_row(module, released_rows[0])
+    binding = _applicant_binding_row(module, released_rows[0])
+
+    public = module._map_public_authority(
+        request=_request(module, source_batch_ids=(SOURCE_BATCH_ID,)),
+        rows=(*released_rows, backfill, binding),
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    company_projections = [
+        item for item in public[4].projections if item.entity_type == "company"
+    ]
+    assert len(company_projections) == 1
+    backfilled = company_projections[0]
+    patent_projection = next(
+        item for item in public[4].projections if item.entity_type == "patent"
+    )
+    assert patent_projection.applicants[0].canonical_company_id == (
+        backfilled.canonical_identity_id
+    )
+    # The adopted binding and the backfill share the applicant resolution
+    # chain: the patent lineage carries the binding record, and the backfilled
+    # company lineage carries the backfill record.
+    assert binding.record.record_id in {
+        record_id
+        for source in public[1].source_identities
+        if source.source_key == patent["id"]
+        for record_id in source.source_record_ids
+    }
+    backfill_object_id = module._company_backfill_object_id(BACKFILL_COMPANY_NAME)
+    assert backfill.record.record_id in {
+        record_id
+        for source in public[1].source_identities
+        if source.source_key == backfill_object_id
+        for record_id in source.source_record_ids
+    }
+
+
+def test_applicant_binding_skips_non_resolved_statuses() -> None:
+    module = _module()
+    company = _released_object_payload("company", 70)
+    company["core_facts"].update(
+        {
+            "name": BACKFILL_COMPANY_NAME,
+            "normalized_name": BACKFILL_COMPANY_NAME,
+        }
+    )
+    company["display_name"] = BACKFILL_COMPANY_NAME
+    patent = _patent_with_applicant(module)
+    released_rows = _parsed_released_objects(module, (company, patent))
+    institution = _applicant_binding_row(
+        module,
+        released_rows[0],
+        _applicant_binding_payload(
+            applicant_name=ENGLISH_APPLICANT_NAME,
+            resolved_company=BACKFILL_COMPANY_NAME,
+            status="institution",
+        ),
+        index=0,
+    )
+    unresolved = _applicant_binding_row(
+        module,
+        released_rows[0],
+        _applicant_binding_payload(
+            applicant_name=ENGLISH_APPLICANT_NAME,
+            resolved_company=BACKFILL_COMPANY_NAME,
+            status="unresolved",
+        ),
+        index=1,
+    )
+    individual = _applicant_binding_row(
+        module,
+        released_rows[0],
+        _applicant_binding_payload(
+            applicant_name=ENGLISH_APPLICANT_NAME,
+            resolved_company=BACKFILL_COMPANY_NAME,
+            status="individual",
+        ),
+        index=2,
+    )
+    already_matched = _applicant_binding_row(
+        module,
+        released_rows[0],
+        _applicant_binding_payload(
+            applicant_name=ENGLISH_APPLICANT_NAME,
+            resolved_company=BACKFILL_COMPANY_NAME,
+            status="already_matched",
+        ),
+        index=3,
+    )
+
+    public = module._map_public_authority(
+        request=_request(module, source_batch_ids=(SOURCE_BATCH_ID,)),
+        rows=(*released_rows, institution, unresolved, individual, already_matched),
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    patent_projection = next(
+        item for item in public[4].projections if item.entity_type == "patent"
+    )
+    assert patent_projection.applicants[0].canonical_company_id is None
+    assert not [
+        item
+        for item in public[2].field_assertions
+        if item.source_identity_id == f"source-released-object:{patent['id']}"
+        and item.field_path == "applicants"
+        and "canonical_company_id" in item.value[0]
+    ]
+    source = next(
+        item
+        for item in public[1].source_identities
+        if item.source_key == patent["id"]
+    )
+    for row in (institution, unresolved, individual, already_matched):
+        assert row.record.record_id not in source.source_record_ids
+
+
+def test_applicant_binding_skips_unknown_company_and_counts() -> None:
+    module = _module()
+    patent = _patent_with_applicant(module)
+    released_rows = _parsed_released_objects(module, (patent,))
+    binding = _applicant_binding_row(
+        module,
+        released_rows[0],
+        _applicant_binding_payload(
+            applicant_name=ENGLISH_APPLICANT_NAME,
+            resolved_company="不存在的公司",
+        ),
+    )
+
+    public = module._map_public_authority(
+        request=_request(module, source_batch_ids=(SOURCE_BATCH_ID,)),
+        rows=(*released_rows, binding),
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    patent_projection = next(
+        item for item in public[4].projections if item.entity_type == "patent"
+    )
+    assert patent_projection.applicants[0].canonical_company_id is None
+    unmatched = [
+        gap
+        for gap in public[6]
+        if gap.result.evidence_ids == (binding.record.record_id,)
+        and "resolves to no single released/backfilled company"
+        in gap.signal.observed_symptom
+    ]
+    assert len(unmatched) == 1
+
+    _, stats, adopted = module._merge_applicant_binding_rows(
+        request=_request(module, source_batch_ids=(SOURCE_BATCH_ID,)),
+        rows=(binding,),
+        selected_by_object={
+            patent["id"]: {"applicants": [{"name": ENGLISH_APPLICANT_NAME}]}
+        },
+        domain_by_object={patent["id"]: "patent"},
+        source_identities={},
+        field_assertions=[],
+        gaps=[],
+        supplemental_domains_by_batch=defaultdict(set),
+        now=NOW,
+    )
+    assert stats.records_seen == 1
+    assert stats.records_resolved == 1
+    assert stats.records_unmatched_company == 1
+    assert stats.applicants_bound == 0
+    assert adopted == ()

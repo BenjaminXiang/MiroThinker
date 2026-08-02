@@ -632,6 +632,8 @@ def test_preflight_admits_manifest_with_backfill_authority(tmp_path: Path) -> No
                 "s12c-r7-patent-identifiers-v1",
                 "s12c-r7-professor-company-roles-v1",
                 BACKFILL_BATCH_ID,
+                "s12f-company-backfill-v1",
+                "s12f-applicant-binding-v1",
             )
         )
     )
@@ -665,6 +667,8 @@ def test_preflight_rejects_request_missing_the_backfill_batch(
                 "s12c-r7-paper-identifiers-v1",
                 "s12c-r7-patent-identifiers-v1",
                 "s12c-r7-professor-company-roles-v1",
+                "s12f-company-backfill-v1",
+                "s12f-applicant-binding-v1",
             )
         )
     )
@@ -692,6 +696,8 @@ def test_legacy_manifest_without_backfill_authority_is_rejected(
                 "s12c-r7-patent-identifiers-v1",
                 "s12c-r7-professor-company-roles-v1",
                 BACKFILL_BATCH_ID,
+                "s12f-company-backfill-v1",
+                "s12f-applicant-binding-v1",
             )
         )
     )
