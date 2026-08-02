@@ -1045,7 +1045,10 @@ class _DualWebLaneAdapter:
         )
         if not extras:
             return (query_text,)
-        return (query_text, *extras)[:_SERVING_WEB_MAX_QUERY_VIEWS]
+        return (query_text, *_enumeration_ordered_view_queries(
+            original_query=request.original_query,
+            extras=extras,
+        ))[:_SERVING_WEB_MAX_QUERY_VIEWS]
 
     def _merged_results_for_views(
         self,
@@ -1321,6 +1324,44 @@ _ARXIV_IDENTIFIER_PATTERN = re.compile(
     r"(?:arxiv:)?\b\d{4}\.\d{4,5}(?:v\d+)?(?!\d)",
     re.IGNORECASE,
 )
+
+# Rewrite views that explicitly ask for a brand/name list ("国内成熟酒店配送
+# 机器人品牌", "酒店服务机器人头部企业名单") are discovery queries: their
+# results routinely carry supplier mentions (九号/开普勒 in brand listicles)
+# that the plain-view results bury below the candidate cut.  On enumeration
+# turns those views are merged before the other rewrite views so their
+# mentions reach the theme probes.
+_BRAND_DISCOVERY_VIEW_MARKERS = (
+    "品牌",
+    "名单",
+    "排名",
+    "排行",
+    "头部",
+    "汇总",
+    "厂商",
+    "厂家",
+)
+
+
+def _enumeration_ordered_view_queries(
+    *,
+    original_query: str,
+    extras: tuple[str, ...],
+) -> tuple[str, ...]:
+    """Order rewrite views for an enumeration turn: discovery views first."""
+    if not any(marker in original_query for marker in _ENUMERATION_QUERY_MARKERS):
+        return extras
+    discovery = tuple(
+        text
+        for text in extras
+        if any(marker in text for marker in _BRAND_DISCOVERY_VIEW_MARKERS)
+    )
+    if not discovery:
+        return extras
+    return (
+        *discovery,
+        *(text for text in extras if text not in discovery),
+    )
 
 
 def _intent_connector_count(query: str) -> int:

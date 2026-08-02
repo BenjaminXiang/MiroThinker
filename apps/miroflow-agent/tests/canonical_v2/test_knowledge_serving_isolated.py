@@ -355,6 +355,32 @@ def test_enumeration_proposal_widens_the_web_result_window(
     assert ordinary.max_web_results == bundle.max_web_results
 
 
+def test_enumeration_discovery_views_merge_before_other_rewrite_views() -> None:
+    """Enumeration turns must surface brand-list views first: supplier
+    mentions like 九号 sit at ranks 9-16 of those views and are buried below
+    the candidate cut when the plain view merges first."""
+    extras = (
+        "国内成熟酒店配送机器人品牌",
+        "酒店服务机器人头部企业名单",
+        "中国酒店送餐机器人供应商",
+    )
+    ordered = serving_module._enumeration_ordered_view_queries(
+        original_query="中国有哪些成熟的酒店送餐机器人供应商",
+        extras=extras,
+    )
+    assert ordered == (
+        "国内成熟酒店配送机器人品牌",
+        "酒店服务机器人头部企业名单",
+        "中国酒店送餐机器人供应商",
+    )
+
+    ordinary = serving_module._enumeration_ordered_view_queries(
+        original_query="丁文伯教授的研究方向是什么？",
+        extras=extras,
+    )
+    assert ordinary == extras
+
+
 def test_normal_answer_uses_injected_llm_renderer_and_preserves_founder_role(
     tmp_path: Path,
 ) -> None:
