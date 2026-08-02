@@ -3458,6 +3458,99 @@ def test_focused_named_traversal_keeps_relationship_claims_eligible() -> None:
     assert any("专利标题1" in claim.text for claim in patent_claims)
 
 
+def test_enumeration_selector_web_claim_limit_follows_widened_window() -> None:
+    """Enumeration turns widen the selector web-claim limit to the candidate
+    window: discovery-view tails (九号 at merged rank 36-43) must reach the
+    prose model, while non-enumeration stays at the bundle web cap."""
+    query = "中国有哪些成熟的酒店送餐机器人供应商"
+
+    def web_item(index: int, name: str) -> EvidenceItem:
+        evidence_id = f"evidence:web:{index}"
+        return EvidenceItem(
+            evidence_id=evidence_id,
+            object_id=f"web-object:{index}",
+            domain="company",
+            lane="web",
+            source_nature="current_web",
+            source_locator=f"https://example.test/{index}",
+            snippet=f"{name}：酒店送餐机器人相关公开信息",
+            score=1.0 - index * 0.01,
+            source_authority="web_search",
+            claim_binding=EvidenceClaimBinding(
+                subject_id=f"web-object:{index}",
+                predicate="current_web_result",
+                value="v" * 64,
+                status="observed",
+            ),
+        )
+
+    items = tuple(
+        web_item(index, f"企业{index}" if index != 18 else "九号机器人")
+        for index in range(1, 21)
+    )
+    evidence_set = EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query=query,
+        protected_slots=(),
+        items=items,
+        traces=(),
+        limitations=(),
+        entity_handles=tuple(
+            CanonicalEntityHandle(
+                canonical_id=f"web-object:{index}",
+                domain="company",
+                display_name=f"企业{index}" if index != 18 else "九号机器人",
+                evidence_ids=(f"evidence:web:{index}",),
+            )
+            for index in range(1, 21)
+        ),
+    )
+    selector = serving_module._answer_selector(
+        bundle=SimpleNamespace(
+            max_candidates=8,
+            max_web_results=8,
+            answer_model_id="canonical-v2-deterministic-answer-v1",
+        )
+    )
+    proposal = selector(
+        TurnRequest(
+            session_id="session:enum-claims",
+            turn_id="turn:enum-claims",
+            query=query,
+            release_id=RELEASE_ID,
+            evidence_set=evidence_set,
+        )
+    )
+    assert any("九号机器人" in claim.text for claim in proposal.claims)
+
+    ordinary = selector(
+        TurnRequest(
+            session_id="session:ordinary-claims",
+            turn_id="turn:ordinary-claims",
+            query="丁文伯教授的研究方向是什么？",
+            release_id=RELEASE_ID,
+            evidence_set=EvidenceSet(
+                release_id=RELEASE_ID,
+                original_query="丁文伯教授的研究方向是什么？",
+                protected_slots=(),
+                items=items,
+                traces=(),
+                limitations=(),
+                entity_handles=tuple(
+                    CanonicalEntityHandle(
+                        canonical_id=f"web-object:{index}",
+                        domain="company",
+                        display_name=f"企业{index}" if index != 18 else "九号机器人",
+                        evidence_ids=(f"evidence:web:{index}",),
+                    )
+                    for index in range(1, 21)
+                ),
+            ),
+        )
+    )
+    assert not any("九号机器人" in claim.text for claim in ordinary.claims)
+
+
 def test_focused_named_traversal_drops_relationship_items_unbound_to_displayed_anchor() -> None:
     """A focused named-entity traversal turn must admit only relationship claims
     whose local_projection_trace proves the item is bound to the turn's

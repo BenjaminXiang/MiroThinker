@@ -1934,7 +1934,7 @@ _THEME_SCAFFOLD_TOKENS = (
     "上海",
     "北京",
 )
-_THEME_PROBE_MAX_CANDIDATES = 24
+_THEME_PROBE_MAX_CANDIDATES = 16
 _THEME_COVERAGE_THRESHOLD = 0.5
 
 
@@ -3971,7 +3971,15 @@ def _answer_selector(
             if enumeration
             else min(bundle.max_candidates, 3)
         )
-        web_claim_limit = bundle.max_web_results
+        web_claim_limit = (
+            # Enumeration turns widen the web candidate window to cover the
+            # discovery-view tails (九号 sits at merged rank 36-43); the
+            # claim limit must follow the window or those web-only suppliers
+            # never reach the prose model.
+            _ENUMERATION_CANDIDATE_WINDOW
+            if enumeration
+            else bundle.max_web_results
+        )
         claim_limit = local_claim_limit + web_claim_limit
         claims: list[MaterialClaimProposal] = []
         seen_objects: set[tuple[str, str]] = set()
@@ -4180,9 +4188,11 @@ def load_recorded_serving_inputs(
         max_provider_calls=2,
         max_retries=0,
         # Room for the widest probe family: theme-verification probes across
-        # the enumeration candidate window (24 x 0.5 cost units); person
-        # (discovery + 6) and relation (6) families stay well below.
-        max_cost_units=12.0,
+        # the enumeration candidate window (16 x 0.5 cost units) plus the
+        # person (discovery + 6) and relation (6) families at once (28 total
+        # x 0.5 = 14.0); the receipt is checked against this ceiling by the
+        # server-owned plan control, so it must bound the real worst case.
+        max_cost_units=16.0,
     )
     sufficiency_decider, supplemental_search = (
         _create_serving_person_criteria_sufficiency_supplemental(
