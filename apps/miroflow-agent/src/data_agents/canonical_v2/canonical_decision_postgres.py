@@ -1443,15 +1443,31 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                 }
             )
         )
+        # The loaded contexts are re-sorted in Python with the same keys the
+        # decision engine's result normalization uses: the database en_US.utf8
+        # collation does not order text the way Python's codepoint sort does
+        # (released "COMP-..." vs backfilled "company-backfill:..." source ids
+        # interleave differently), so the durable-context comparison must be
+        # collation-independent.
         return (
-            cls._load_canonical_identity_contexts(
-                connection,
-                release_id=release_id,
-                canonical_identity_ids=canonical_identity_ids,
+            tuple(
+                sorted(
+                    cls._load_canonical_identity_contexts(
+                        connection,
+                        release_id=release_id,
+                        canonical_identity_ids=canonical_identity_ids,
+                    ),
+                    key=lambda context: context.canonical_identity_id,
+                )
             ),
-            cls._load_source_identity_contexts(
-                connection,
-                source_identity_ids=source_identity_ids,
+            tuple(
+                sorted(
+                    cls._load_source_identity_contexts(
+                        connection,
+                        source_identity_ids=source_identity_ids,
+                    ),
+                    key=lambda context: context.source_identity_id,
+                )
             ),
         )
 

@@ -954,6 +954,70 @@ def test_identity_result_round_trips_restarts_and_replays_exactly(
         )
 
 
+def test_identity_result_with_mixed_case_source_ids_round_trips_exactly(
+    target: _Target,
+) -> None:
+    # Regression: released source ids ("COMP-..." uppercase prefix) and
+    # backfilled source ids ("company-backfill:..." lowercase prefix) sort in
+    # different relative order under the database en_US.utf8 collation than
+    # under Python codepoint order (en_US.utf8 orders letters before digits,
+    # Python orders digits before letters).  The durable readback is
+    # re-sorted in Python before the exact-match comparison so the persisted
+    # assignments round-trip regardless of the database collation.
+    module = _identity_module()
+    source_ids = (
+        "source-released-object:COMP-B00D8B36D3E9",
+        "source-released-object:company-backfill:"
+        "fedbe99db8f746aff9e9c90f2709100107678324f6858a5f2acd0f05b0d7e9c2",
+    )
+    sources = tuple(
+        module.SourceIdentity(
+            source_identity_id=source_id,
+            source_system="landing-synthetic",
+            source_key=f"paper:{source_id}",
+            entity_type="paper",
+            source_record_ids=(f"record:paper:{source_id}",),
+            normalized_keys={"doi": f"10.5555/mixed-case-{index}"},
+            first_observed_at=NOW - timedelta(days=30),
+            last_observed_at=NOW,
+            state="active",
+        )
+        for index, source_id in enumerate(source_ids)
+    )
+    assertions = tuple(
+        module.SourceAssertion(
+            assertion_id=f"assertion-mixed-case-{index}",
+            source_record_id=source.source_record_ids[0],
+            source_identity_id=source.source_identity_id,
+            subject_entity_type="paper",
+            field_path="identity.doi",
+            value=f"10.5555/mixed-case-{index}",
+            observed_at=NOW,
+            assertion_run_id="identity-mixed-case-assertion-run",
+        )
+        for index, source in enumerate(sources)
+    )
+    request = module.IdentityResolutionRequest(
+        release_id=RELEASE_ID,
+        decision_run_id=RUN_ID,
+        identity_method_version="canonical-identity-resolution-v1",
+        as_of=NOW,
+        policy=_policy(module),
+        source_identities=sources,
+        identity_assertions=assertions,
+    )
+    result = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        request
+    )
+    assert len(result.source_identity_assignments) == len(source_ids)
+    _insert_identity_prerequisites(target, request)
+    store = _store(target)
+
+    assert store.persist(request, result) == result
+    assert store.load(request.release_id, request.decision_run_id) == result
+    assert store.persist(request, result) == result
+
+
 def test_identity_assertion_date_precision_round_trips_without_coercion(
     target: _Target,
 ) -> None:

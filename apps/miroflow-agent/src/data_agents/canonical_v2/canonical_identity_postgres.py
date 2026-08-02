@@ -1238,11 +1238,27 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
             "WHERE release_id = %s ORDER BY source_identity_id",
             (result.release_id,),
         ).fetchall()
+        # The durable rows are re-sorted in Python with the exact same key the
+        # resolution engine uses, because the database collation (e.g.
+        # en_US.utf8) does not order text the way Python's codepoint sort does
+        # for mixed-case source identity ids (released "COMP-..." vs backfilled
+        # "company-backfill:..." prefixes interleave differently).  The table
+        # comparison must be collation-independent.
         durable_assignments = tuple(
-            _identity.SourceIdentityAssignment.model_validate(row)
-            for row in assignment_rows
+            sorted(
+                (
+                    _identity.SourceIdentityAssignment.model_validate(row)
+                    for row in assignment_rows
+                ),
+                key=lambda assignment: assignment.source_identity_id,
+            )
         )
-        if durable_assignments != result.source_identity_assignments:
+        if durable_assignments != tuple(
+            sorted(
+                result.source_identity_assignments,
+                key=lambda assignment: assignment.source_identity_id,
+            )
+        ):
             raise CanonicalIdentityPersistenceError(
                 "durable current source assignments are incomplete or corrupt"
             )
