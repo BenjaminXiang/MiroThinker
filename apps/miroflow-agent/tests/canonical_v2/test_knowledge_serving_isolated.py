@@ -409,6 +409,9 @@ def test_discovery_front_merge_promotes_brand_listicle_mentions() -> None:
     # window (head 10 + discovery front 14).
     assert urls.index("https://example.test/品牌10-40") < 24
     assert urls.index("https://example.test/品牌14-44") < 24
+    # The widened enumeration window (48) still covers the brand-view tail.
+    assert urls.index("https://example.test/品牌15-45") < 48
+    assert urls.index("https://example.test/品牌16-46") < 48
     assert len(urls) == 38  # no dedupe loss in this fixture
 
     untouched = resolved([literal, brand], discovery_view_indexes=())

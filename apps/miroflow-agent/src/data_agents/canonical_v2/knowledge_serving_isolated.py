@@ -1934,7 +1934,7 @@ _THEME_SCAFFOLD_TOKENS = (
     "上海",
     "北京",
 )
-_THEME_PROBE_MAX_CANDIDATES = 12
+_THEME_PROBE_MAX_CANDIDATES = 24
 _THEME_COVERAGE_THRESHOLD = 0.5
 
 
@@ -2040,7 +2040,7 @@ _SUPPLEMENTAL_GEOGRAPHY_CITIES = ("深圳", "广州", "上海", "北京")
 _SUPPLEMENTAL_WEB_SOURCE_NATURE = "supplemental_web"
 # Candidate window for enumeration (list-style) queries; wide enough to keep
 # vector ranks 10-25 inside the fused retention.
-_ENUMERATION_CANDIDATE_WINDOW = 24
+_ENUMERATION_CANDIDATE_WINDOW = 48
 # List-style markers mirroring the answer selector's enumeration family; a
 # fresh list query carries no enumeration_context, so the planner keys on the
 # query text itself.
@@ -4171,8 +4171,8 @@ def load_recorded_serving_inputs(
     )
     supplemental_budget = SupplementalBudget(
         # Wide enumerations run the full probe+fetch+judgment pipeline
-        # (gap check ~2s + up to 12 concurrent probes ~3s + per-job judgment
-        # batches + serial headless fetches ~5-10s), which needs ~25s worst
+        # (gap check ~2s + up to 24 concurrent probes ~3s + per-job judgment
+        # batches + serial headless fetches ~5-10s), which needs ~30s worst
         # case; 10s produced receipt-exhausted integrity failures (409-class)
         # on exactly those turns. 30s is the serving-policy ceiling for that
         # pipeline, not a per-turn target.
@@ -4180,9 +4180,9 @@ def load_recorded_serving_inputs(
         max_provider_calls=2,
         max_retries=0,
         # Room for the widest probe family: theme-verification probes across
-        # the enumeration candidate window (12 x 0.5 cost units); person
+        # the enumeration candidate window (24 x 0.5 cost units); person
         # (discovery + 6) and relation (6) families stay well below.
-        max_cost_units=6.0,
+        max_cost_units=12.0,
     )
     sufficiency_decider, supplemental_search = (
         _create_serving_person_criteria_sufficiency_supplemental(
