@@ -321,7 +321,7 @@ _DECODABLE_EMAIL_PATTERN = re.compile(
     r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\."
     r"(?:biz|cn|com|edu|gov|info|io|me|net|org)$"
 )
-_EXPECTED_ALEMBIC_REVISION = "C2_0011"
+_EXPECTED_ALEMBIC_REVISION = "C2_0012"
 _OWNER_SCHEMAS = (
     "company",
     "knowledge",
@@ -371,7 +371,7 @@ _EXPECTED_OWNER_TABLES: frozenset[str] = frozenset(
     """.split()
 )
 _EXPECTED_LIVE_SCHEMA_CATALOG_COUNTS = {
-    "column": 1362,
+    "column": 1363,
     "constraint": 1110,
     "index": 166,
     "internal_trigger_summary": 1,
@@ -383,7 +383,7 @@ _EXPECTED_LIVE_SCHEMA_CATALOG_COUNTS = {
     "view": 1,
 }
 _EXPECTED_LIVE_SCHEMA_CATALOG_SHA256 = (
-    "7605fd00290741478b0cda727b9a6869e731d3a94d0b7bd6ab5ad9b8a59fcdfc"
+    "a3fc6a1f534e7b81e13223cb18f2be2c246fb7ad82ca4a2bc518e1adfadc69e4"
 )
 _LIBPQ_CONNECTION_ENVIRONMENT_KEYS = frozenset(
     {

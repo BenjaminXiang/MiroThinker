@@ -1725,7 +1725,7 @@ def test_real_boundary_rejects_nonfresh_database_before_source_read(
             del parameters
             text = str(query)
             if "canonical_v2_alembic_version" in text:
-                return Cursor(({"version_num": "C2_0011"},))
+                return Cursor(({"version_num": "C2_0012"},))
             if "information_schema.tables" in text:
                 return Cursor(
                     tuple(
@@ -1798,7 +1798,7 @@ def test_real_boundary_requires_exact_live_migration_schema_before_source_read(
             del parameters
             text = str(query)
             if "canonical_v2_alembic_version" in text:
-                revision = "C2_0010" if drift == "revision" else "C2_0011"
+                revision = "C2_0010" if drift == "revision" else "C2_0012"
                 return Cursor(({"version_num": revision},))
             if "information_schema.tables" in text:
                 schemas = (
@@ -1914,7 +1914,7 @@ def test_real_boundary_rejects_live_schema_fingerprint_drift_before_row_probe(
             del parameters
             text = str(query)
             if "canonical_v2_alembic_version" in text:
-                return Cursor(({"version_num": "C2_0011"},))
+                return Cursor(({"version_num": "C2_0012"},))
             if "information_schema.tables" in text:
                 return Cursor(
                     tuple(
