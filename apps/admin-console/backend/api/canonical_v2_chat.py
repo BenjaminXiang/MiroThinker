@@ -168,8 +168,7 @@ def chat_stream(
     if callable(mark_activity):
         mark_activity()
     session_id = miroflow_chat_session or _new_session_id()
-    if miroflow_chat_session is None:
-        _set_session_cookie(response, session_id)
+    set_session_cookie = miroflow_chat_session is None
 
     events: queue.Queue[tuple[str, dict[str, Any]]] = queue.Queue()
 
@@ -217,7 +216,7 @@ def chat_stream(
             if name in ("done", "error"):
                 break
 
-    return StreamingResponse(
+    stream = StreamingResponse(
         generate(),
         media_type="text/event-stream",
         headers={
@@ -226,6 +225,18 @@ def chat_stream(
             "X-Accel-Buffering": "no",
         },
     )
+    if set_session_cookie:
+        # The injected Response parameter's cookies are dropped when the
+        # route returns a fresh StreamingResponse; set the session cookie on
+        # the stream itself so multi-turn referents survive across events.
+        stream.set_cookie(
+            _SESSION_COOKIE,
+            session_id,
+            max_age=_SESSION_TTL_SECONDS,
+            httponly=True,
+            samesite="lax",
+        )
+    return stream
 
 
 @router.post("/chat/feedback", response_model=ChatFeedbackResponse)

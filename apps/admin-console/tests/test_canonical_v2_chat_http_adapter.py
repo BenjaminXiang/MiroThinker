@@ -2457,6 +2457,9 @@ def test_s11a_post_chat_stream_emits_stage_and_answer_events() -> None:
 
     assert response.status_code == 200
     assert "text/event-stream" in response.headers["content-type"]
+    # A fresh stream turn must carry the session cookie on the stream itself
+    # (the injected Response's cookies are dropped for StreamingResponse).
+    assert "miroflow_chat_session=" in response.headers.get("set-cookie", "")
     events: list[tuple[str, dict[str, Any]]] = []
     for block in response.text.split("\n\n"):
         event_name = "message"
