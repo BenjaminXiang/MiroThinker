@@ -886,6 +886,139 @@ def test_backfill_skips_crosswired_professor_name() -> None:
     assert len(crosswired) == 1
 
 
+def test_backfill_rejected_record_stays_out_of_identity_lineage() -> None:
+    """A professor_id hit alone must not admit lineage for the professor.
+
+    The record is rejected by the merge-stage name check, so it must not
+    enter the professor's ``source_record_ids``, must produce no field
+    assertion, and must be counted as unmatched.
+    """
+    module = _module()
+    professor = _demoted_professor_payload()
+    released_rows = _parsed_rows(module, (professor,))
+    fields = {"department": _backfill_field("数据与信息研究院")}
+    backfill = _backfill_row(
+        module,
+        released_rows[0],
+        _backfill_payload(
+            professor_name="完全不同姓名",
+            fields=fields,
+        ),
+    )
+
+    public = module._map_public_authority(
+        request=_request(module, source_batch_ids=(SOURCE_BATCH_ID,)),
+        rows=(*released_rows, backfill),
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    source = next(
+        item
+        for item in public[1].source_identities
+        if item.source_key == professor["id"]
+    )
+    assert backfill.record.record_id not in source.source_record_ids
+    assert not [
+        assertion
+        for assertion in public[2].field_assertions
+        if assertion.source_record_id == backfill.record.record_id
+    ]
+    crosswired = [
+        gap
+        for gap in public[6]
+        if gap.result.evidence_ids == (backfill.record.record_id,)
+        and "does not match" in gap.signal.observed_symptom
+    ]
+    assert len(crosswired) == 1
+
+    _, stats, adopted = module._merge_professor_backfill_rows(
+        request=_request(module, source_batch_ids=(SOURCE_BATCH_ID,)),
+        rows=(backfill,),
+        selected_by_object={
+            professor["id"]: {"name": professor["core_facts"]["name"]}
+        },
+        domain_by_object={professor["id"]: "professor"},
+        field_assertions=[],
+        gaps=[],
+        now=NOW,
+    )
+    assert stats.records_seen == 1
+    assert stats.records_unmatched == 1
+    assert stats.records_merged == 0
+    assert adopted == ()
+
+
+def test_backfill_all_invalid_fields_record_stays_out_of_identity_lineage() -> None:
+    """A matched record with no admissible field must not admit lineage either.
+
+    The name matches, but every field fails provenance/admissibility, so the
+    record contributes nothing; it must not enter the professor's
+    ``source_record_ids`` and must produce no field assertion.
+    """
+    module = _module()
+    professor = _demoted_professor_payload()
+    released_rows = _parsed_rows(module, (professor,))
+    fields = {
+        "department": _backfill_field("数据与信息研究院", source_url=None),
+        "title": _backfill_field("副教授", observed_at=None),
+    }
+    backfill = _backfill_row(
+        module,
+        released_rows[0],
+        _backfill_payload(fields=fields),
+    )
+
+    public = module._map_public_authority(
+        request=_request(module, source_batch_ids=(SOURCE_BATCH_ID,)),
+        rows=(*released_rows, backfill),
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+
+    source = next(
+        item
+        for item in public[1].source_identities
+        if item.source_key == professor["id"]
+    )
+    assert backfill.record.record_id not in source.source_record_ids
+    assert not [
+        assertion
+        for assertion in public[2].field_assertions
+        if assertion.source_record_id == backfill.record.record_id
+    ]
+    skipped = [
+        gap
+        for gap in public[6]
+        if gap.result.evidence_ids == (backfill.record.record_id,)
+        and "cannot admit" in gap.signal.observed_symptom
+    ]
+    assert len(skipped) == 1
+
+    _, stats, adopted = module._merge_professor_backfill_rows(
+        request=_request(module, source_batch_ids=(SOURCE_BATCH_ID,)),
+        rows=(backfill,),
+        selected_by_object={
+            professor["id"]: {
+                "name": professor["core_facts"]["name"],
+                "department": module._PROFESSOR_MISSING_FIELD_FALLBACK,
+                "title": module._PROFESSOR_MISSING_FIELD_FALLBACK,
+            }
+        },
+        domain_by_object={professor["id"]: "professor"},
+        field_assertions=[],
+        gaps=[],
+        now=NOW,
+    )
+    assert stats.records_seen == 1
+    assert stats.records_merged == 0
+    assert stats.records_unmatched == 0
+    assert stats.fields_invalid == 2
+    assert adopted == ()
+
+
 def test_backfill_skips_unsupported_and_unprovenanced_fields() -> None:
     module = _module()
     professor = _demoted_professor_payload()
@@ -966,7 +1099,7 @@ def test_backfill_merge_helper_reports_exact_counts() -> None:
     assertions: list[Any] = []
     gaps: list[Any] = []
 
-    merged_assertions, stats = module._merge_professor_backfill_rows(
+    merged_assertions, stats, adopted = module._merge_professor_backfill_rows(
         request=_request(module, source_batch_ids=(SOURCE_BATCH_ID,)),
         rows=(backfill, unknown),
         selected_by_object=selected,
@@ -983,6 +1116,7 @@ def test_backfill_merge_helper_reports_exact_counts() -> None:
     assert stats.fields_kept_existing == 0
     assert stats.fields_unsupported == 1
     assert stats.fields_invalid == 1
+    assert adopted == ((professor["id"], backfill.record.record_id),)
     assert len(merged_assertions) == 3
     assert selected[professor["id"]]["department"]["name"] == "数据与信息研究院"
     assert selected[professor["id"]]["email"] == (

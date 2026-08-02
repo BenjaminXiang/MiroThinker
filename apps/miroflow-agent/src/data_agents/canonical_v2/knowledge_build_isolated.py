@@ -3183,7 +3183,11 @@ def _merge_professor_backfill_rows(
     field_assertions: list[SourceAssertion],
     gaps: list[_RecordedGap],
     now: datetime,
-) -> tuple[list[SourceAssertion], _ProfessorBackfillMergeStats]:
+) -> tuple[
+    list[SourceAssertion],
+    _ProfessorBackfillMergeStats,
+    tuple[tuple[str, str], ...],
+]:
     """Merge professor backfill records into the retained projections.
 
     Conservative semantics: a backfilled value replaces the gate's synthetic
@@ -3192,10 +3196,14 @@ def _merge_professor_backfill_rows(
     researched observed_at as its evidence time, and never touches a field
     that already carries a real historical value.  Records that do not
     resolve to exactly one retained professor are skipped and counted.
+    Only records with at least one actually merged field are reported as
+    adopted backfills; the caller attaches source lineage (identity
+    source_record_ids and approved-batch scope) exclusively from that set.
     """
     stats = {"records_seen": 0, "records_merged": 0, "records_unmatched": 0,
              "fields_merged": 0, "fields_kept_existing": 0,
              "fields_unsupported": 0, "fields_invalid": 0}
+    adopted_backfills: list[tuple[str, str]] = []
     assertion_index = {
         assertion.assertion_id: index
         for index, assertion in enumerate(field_assertions)
@@ -3301,6 +3309,7 @@ def _merge_professor_backfill_rows(
             merged_here += 1
         if merged_here:
             stats["records_merged"] += 1
+            adopted_backfills.append((professor_id, item.record.record_id))
         if skipped_paths:
             gaps.append(
                 _gap(
@@ -3316,7 +3325,7 @@ def _merge_professor_backfill_rows(
                     now=now,
                 )
             )
-    return merged, _ProfessorBackfillMergeStats(**stats)
+    return merged, _ProfessorBackfillMergeStats(**stats), tuple(adopted_backfills)
 
 
 def _professor_author_aliases(selected: Mapping[str, JsonValue]) -> frozenset[str]:
@@ -3852,6 +3861,14 @@ def _map_public_authority(
                 )
             )
             continue
+        if _SUPPLEMENTAL_SOURCE_PURPOSES.get(item.source_id) == "professor_backfill":
+            # Professor backfill lineage is attached only after the
+            # merge-stage match and adoptability validation below: a
+            # professor_id hit alone can still be cross-wired (name
+            # mismatch) or inadmissible (no mergeable field), and a
+            # rejected record must never enter the professor's
+            # source_record_ids or the approved batch scope.
+            continue
         for matched_object_id in matched_object_ids:
             source = source_identities[matched_object_id]
             source_identities[matched_object_id] = source.model_copy(
@@ -4083,15 +4100,36 @@ def _map_public_authority(
     # Professor backfill merges after derived attribution so backfilled emails
     # never create new author-attribution aliases; it only fills projection
     # fields the gate demoted to placeholders.
-    field_assertions, _backfill_merge_stats = _merge_professor_backfill_rows(
-        request=request,
-        rows=supplemental_rows,
-        selected_by_object=selected_by_object,
-        domain_by_object=domain_by_object,
-        field_assertions=field_assertions,
-        gaps=gaps,
-        now=now,
+    field_assertions, _backfill_merge_stats, adopted_backfills = (
+        _merge_professor_backfill_rows(
+            request=request,
+            rows=supplemental_rows,
+            selected_by_object=selected_by_object,
+            domain_by_object=domain_by_object,
+            field_assertions=field_assertions,
+            gaps=gaps,
+            now=now,
+        )
     )
+    # Source lineage attaches only to backfill records the merge actually
+    # adopted (matched and merged at least one field); records rejected by
+    # the name/provenance checks stay out of the professor's identity.
+    backfill_batch_by_record_id = {
+        item.record.record_id: item.source_batch_id for item in supplemental_rows
+    }
+    for professor_id, record_id in adopted_backfills:
+        source = source_identities[professor_id]
+        source_identities[professor_id] = source.model_copy(
+            update={
+                "source_record_ids": tuple(
+                    sorted({*source.source_record_ids, record_id})
+                )
+            },
+            deep=True,
+        )
+        supplemental_domains_by_batch[backfill_batch_by_record_id[record_id]].add(
+            domain_by_object[professor_id]
+        )
 
     source_identity_values = tuple(
         sorted(source_identities.values(), key=lambda item: item.source_identity_id)
