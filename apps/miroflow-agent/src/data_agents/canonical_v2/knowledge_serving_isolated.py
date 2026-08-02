@@ -3401,9 +3401,18 @@ def _list_names(value: object) -> str:
     return "、".join(names[:6])
 
 
+_WEB_CLAIM_SNIPPET_LIMIT = 240
+_LOCAL_CLAIM_FIELD_LIMIT = 160
+
+
 def _semantic_text(item: EvidenceItem, display_name: str) -> str:
     if item.source_nature == "current_web":
-        return f"{item.snippet}；来源：{item.source_locator}"
+        # Cap the claim text: fetched page bodies (up to 1200 chars per
+        # item) times the 48-claim enumeration window made the prose prompt
+        # enormous and the model started copying raw listings instead of
+        # answering.  The first 240 chars keep the title and the binding
+        # sentence.
+        return f"{item.snippet[:_WEB_CLAIM_SNIPPET_LIMIT]}；来源：{item.source_locator}"
     try:
         payload = json.loads(item.snippet)
     except (TypeError, json.JSONDecodeError):
@@ -3431,7 +3440,7 @@ def _semantic_text(item: EvidenceItem, display_name: str) -> str:
                 relation_text = f"{name}参与创立了该公司，角色为创始人。"
             profile = payload.get("profile_summary")
             if isinstance(profile, str) and profile.strip():
-                return f"{relation_text} 公司简介：{profile.strip()}"
+                return f"{relation_text} 公司简介：{profile.strip()[:_LOCAL_CLAIM_FIELD_LIMIT]}"
             return relation_text
     parts: list[str] = [name]
     if item.domain == "professor":
@@ -3447,7 +3456,7 @@ def _semantic_text(item: EvidenceItem, display_name: str) -> str:
                 and value.strip() != name
                 and value.strip() != _PROFESSOR_MISSING_FIELD_FALLBACK
             ):
-                parts.append(f"{label}：{value.strip()}")
+                parts.append(f"{label}：{value.strip()[:_LOCAL_CLAIM_FIELD_LIMIT]}")
         directions = _list_names(payload.get("research_directions"))
         if directions:
             parts.append(f"研究方向：{directions}")
@@ -3458,7 +3467,7 @@ def _semantic_text(item: EvidenceItem, display_name: str) -> str:
         ):
             value = payload.get(field)
             if isinstance(value, str) and value.strip():
-                text = value.strip()
+                text = value.strip()[:_LOCAL_CLAIM_FIELD_LIMIT]
                 # Aggregated probe summaries already open with the company
                 # name ("帕西尼公司：从创始团队…"); don't print it twice.
                 if text.startswith(f"{name}："):
