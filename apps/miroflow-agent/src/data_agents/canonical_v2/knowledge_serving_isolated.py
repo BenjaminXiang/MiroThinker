@@ -3245,8 +3245,12 @@ def _serving_supplemental_search(
                 items=(), elapsed_ms=0, cost_units=0.0, retryable=False
             )
         max_wall_seconds = max(0.2, (budget.max_wall_time_ms / 1_000) * 0.9)
+        # 16 concurrent web probes (two providers each) routinely trip the
+        # providers' rate limits and randomly drop jobs (深南's probe was
+        # among the dropped); 8 workers keep the batch within the limits
+        # while adding at most one extra probe round.
         with ThreadPoolExecutor(
-            max_workers=len(query_by_job),
+            max_workers=min(8, len(query_by_job)),
             thread_name_prefix="canonical-v2-serving-probe",
         ) as pool:
             future_by_job = {
