@@ -760,7 +760,24 @@ def _proposal_provider(
             max_provider_calls=1,
             enumeration_mode=("representative" if relationship_paths else None),
             web_mode="universal",
-            max_web_results=bundle.max_web_results,
+            # List-style questions widen the web window as well as the
+            # candidate window: supplier mentions in merged brand-list views
+            # routinely rank 9-16, and the read side truncates web candidates
+            # at this cap before theme probes ever see them.
+            max_web_results=(
+                max(bundle.max_web_results, 16)
+                if (
+                    (
+                        request.enumeration_context is not None
+                        and request.enumeration_context.requested
+                    )
+                    or any(
+                        marker in request.original_query
+                        for marker in _ENUMERATION_QUERY_MARKERS
+                    )
+                )
+                else bundle.max_web_results
+            ),
             professor_vector_view=(
                 "both" if "professor" in domains and "vector" in lanes else None
             ),

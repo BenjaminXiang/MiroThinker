@@ -315,6 +315,46 @@ def test_content_addressed_serving_bundle_is_secret_free_and_executable(
     assert result.citations[0].source_locator == "canonical-v2-isolated:test"
 
 
+def test_enumeration_proposal_widens_the_web_result_window(
+    tmp_path: Path,
+) -> None:
+    """List-style questions must not truncate web candidates at the ordinary
+    window: supplier mentions like 九号 sit at ranks 9-16 of the merged
+    brand-list views, so the enumeration web window has to be wider than the
+    default result cap."""
+    path, bundle = _write_bundle(tmp_path)
+    inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
+        path=path,
+        expected_content_sha256=bundle.content_sha256,
+        expected_release_id=RELEASE_ID,
+        expected_database="miroflow_candidate_s12b_test",
+        expected_index_root=(tmp_path / "index").resolve(),
+        expected_envelope_path=(tmp_path / "envelope.json").resolve(),
+        embedding_adapter=_Embedding(),
+        clock=lambda: NOW,
+    )
+    request = QueryPlanningRequest(
+        request_id="query-request:enumeration-window",
+        release_id=RELEASE_ID,
+        original_query="中国有哪些成熟的酒店送餐机器人供应商",
+        as_of=NOW,
+    )
+    proposal = inputs.proposal_provider(request)
+    assert proposal.max_candidates >= serving_module._ENUMERATION_CANDIDATE_WINDOW
+    assert proposal.max_web_results >= 16
+
+    ordinary = inputs.proposal_provider(
+        QueryPlanningRequest(
+            request_id="query-request:ordinary-window",
+            release_id=RELEASE_ID,
+            original_query="丁文伯教授的研究方向是什么？",
+            as_of=NOW,
+        )
+    )
+    assert ordinary.max_web_results == bundle.max_web_results
+
+
 def test_normal_answer_uses_injected_llm_renderer_and_preserves_founder_role(
     tmp_path: Path,
 ) -> None:
