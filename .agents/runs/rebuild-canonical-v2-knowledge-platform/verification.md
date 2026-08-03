@@ -4358,3 +4358,35 @@ re-embed path remains the npz-absent fallback.
   环境感知数据vs多模态交互数据/全模态真机采集) come from the reference's own
   taxonomy; semantics are covered. Options: semantic KEY matching for
   concept questions, or curated concept-content ingestion (data-side).
+
+---
+
+## 2026-08-03 — Never-refuse: degraded answers + attribute-aware web recall
+
+### Commit
+- `0998f05` feat: attribute-aware rewrite gate; prose v12 degrade ladder;
+  referent clarification softened to guidance.
+
+### What was verified
+- Attribute follow-ups: "银星智能创始人的教育背景" previously searched only
+  the entity name (no rewrite) and answered "未包含…无法回答"; now the
+  attribute dimension triggers LLM rewriting (views: 实体名/创始人/创始人教育
+  背景) and the answer gives the company overview (2005, 家庭服务机器人,
+  叶力荣经营) + "教育背景未披露".
+- Degrade ladder probes on v54: 龙华区 2024 智能制造规模 -> adjacent official
+  figures (工业总产值 6500 亿, 第二产业 1531.63 亿) + "该口径未单独披露";
+  underwater-robot startup -> representative companies (潜行创新); 黄赌毒 ->
+  safety guidance preserved (type F); fresh-session referent question ->
+  guidance-style clarification (type G, no refusal tone).
+- Unit suites: serving isolated + fast boot 133 passed; referent history
+  19 passed; S11A seam hash-lock failure is the known pre-existing baseline.
+- Workbook regression: round10 22/25 (308.5s); round8 22/25; round9 21/25 —
+  the 1-turn delta is word-level KEY drift on concept questions (动捕数据/
+  物理仿真引擎生成/基于规则生成), semantics covered; user accepts
+  quality-over-word-coverage for these.
+
+### Remaining
+- T3 上海开普勒: needs human ground-truth verification (no web evidence of
+  hotel delivery robots).
+- Concept-question KEY word matching may be relaxed to semantic matching on
+  user confirmation (evaluation-side only).
