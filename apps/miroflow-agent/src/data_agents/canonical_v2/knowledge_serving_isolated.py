@@ -1333,6 +1333,15 @@ _QUERY_REWRITE_CONJUNCTION_PATTERN = re.compile(
     r"(?<!以)及|和[^，,。；;？?！!]*(?:情况|信息|评价|特点|竞争力)"
 )
 _QUERY_REWRITE_PROFILE_PATTERN = re.compile(r"介绍|是谁|的详细信息")
+# "X 的 Y" attribute follow-ups (创始人/教育背景/产量/竞争力/评价/总部...):
+# the deterministic web view carries only the entity name, so the attribute
+# dimension must reach the rewrite views or the web lane never searches it.
+_QUERY_REWRITE_ATTRIBUTE_PATTERN = re.compile(
+    r"的(创始人|创始团队|联合创始人|CEO|董事长|总经理|教育背景|学历|背景|"
+    r"产量|产能|竞争力|评价|总部|核心团队|团队|融资|股东|产品|业务|布局|"
+    r"营收|利润|专利|历史|发展|现状|规模|排名|荣誉|奖项|技术|研究方向|论文|"
+    r"代表作|代表作品|市场|客户|合作|联系方式|地址)"
+)
 _ARXIV_IDENTIFIER_PATTERN = re.compile(
     r"(?:arxiv:)?\b\d{4}\.\d{4,5}(?:v\d+)?(?!\d)",
     re.IGNORECASE,
@@ -1427,11 +1436,17 @@ def _should_rewrite_serving_query(query: str) -> bool:
         return False
     enumeration = any(marker in text for marker in _QUERY_REWRITE_ENUMERATION_MARKERS)
     multi_intent = _intent_connector_count(text) >= 2
+    attribute_question = _QUERY_REWRITE_ATTRIBUTE_PATTERN.search(text) is not None
     if _QUERY_REWRITE_PROFILE_PATTERN.search(text) is not None and not (
-        enumeration or multi_intent
+        enumeration or multi_intent or attribute_question
     ):
         return False
-    return enumeration or multi_intent or not has_explicit_named_subject(text)
+    return (
+        enumeration
+        or multi_intent
+        or attribute_question
+        or not has_explicit_named_subject(text)
+    )
 
 
 def _parse_rewritten_queries(content: str) -> tuple[str, ...]:
@@ -3698,7 +3713,7 @@ class _OpenAIProseRenderer:
                 ],
             }
         payload = {
-            "prompt_version": "canonical-v2-prose-v9",
+            "prompt_version": "canonical-v2-prose-v12",
             "user_question": getattr(result, "original_query", None),
             "question_frame": {
                 "subject_scope": frame.subject_scope,
@@ -3769,14 +3784,21 @@ class _OpenAIProseRenderer:
                         "直接绑定该能力的具体产品名，否则说明只能确认到公司或技术层。"
                         "总部地点必须有信息明确写出总部关系，不能从公司名称、分支机构或服务地点"
                         "推断总部。"
-                        "不要输出内部ID、检索流程或输入中未提供的事实，不要编造。"
+                        "不要输出内部ID、检索流程；不得编造具体公司、人名、数字、日期等事实；"
+                        "但问题直接问及的普遍背景（如行业规模、常见做法、一般性分类）"
+                        "允许基于公开常识作概括性说明，明确区别于输入中可直接确认的信息。"
                         "人名、公司名、论文标题、专利号等专有名称必须与输入中的写法逐字一致"
                         "（例如“丁文伯”不可写成“丁文波”），不得自行改写、简写或音译。"
-                        "信息不足的处理：先回答有充分依据的部分；对依据不足或未入选的主体不要"
-                        "逐条解释、不要逐一列名；覆盖度只按 enumeration_coverage 用自然语言交代"
-                        "（如“共找到 N 个相关结果，以上为其中有代表性的 M 个”）；仅当用户点名"
-                        "追问某个主体而依据不足时，才单独说明该主体无法确认。"
-                        "完全无法回答时，直接说明哪一部分无法回答。"
+                        "回答降级策略（按优先级执行，任何情况下不得只回答“未找到/无法回答”）："
+                        "① 有直接依据时，直接回答并给出关键细节；"
+                        "② 所问的具体属性（如教育背景、产量、融资、总部、竞争力等）"
+                        "无直接依据时，先介绍该主体的概况（如成立时间、所在地、主营或定位、"
+                        "公开背景），再说明该具体方面公开信息未披露；"
+                        "③ 主体本身无任何公开信息时，先说明公开信息中未找到该主体，"
+                        "再给出问题主题相关的概括性背景（行业常见情况、同类典型做法），"
+                        "并邀请用户提供更多线索（如完整名称、所属领域）以便进一步核实；"
+                        "④ 概括性内容基于公开常识，不得编造具体公司、人名、数字、日期等事实。"
+                        "对依据不足或未入选的主体不要逐条解释、不要逐一列名。"
                         "列表与集合类问题必须求全：凡是有直接依据确认的主体都要列出，按相关度"
                         "从高到低排序，宁多勿漏——不得因为篇幅或知名度只挑少数几家；每个主体"
                         "用一两句给出其关键事实即可，确需取舍时按 enumeration_coverage 如实交代。"

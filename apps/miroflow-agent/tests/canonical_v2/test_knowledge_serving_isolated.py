@@ -738,7 +738,7 @@ def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
     assert "他是否有参与哪些企业的创立" in serialized
     assert "回答用户" in serialized
     assert "不要逐字段复述" in serialized
-    assert "canonical-v2-prose-v9" in serialized
+    assert "canonical-v2-prose-v12" in serialized
     assert "逐字一致" in serialized
     assert "语义覆盖而非逐字匹配" in serialized
     assert "不要逐一列名" in serialized
@@ -4315,3 +4315,16 @@ def test_no_concept_term_view_for_entity_questions() -> None:
     texts = tuple(view.text for view in views)
     assert len(texts) == 3
     assert all("数据采集" not in view.text for view in views)
+
+
+def test_rewrite_gate_fires_for_attribute_followups() -> None:
+    assert serving_module._should_rewrite_serving_query(
+        "深圳银星智能科技股份有限公司的创始人的教育背景是什么"
+    )
+    assert serving_module._should_rewrite_serving_query(
+        "华力创科学这家公司的产量特点是什么，市场竞争力怎么样"
+    )
+    assert not serving_module._should_rewrite_serving_query(
+        "深圳银星智能科技股份有限公司"
+    )
+    assert not serving_module._should_rewrite_serving_query("介绍清华的丁文伯")
