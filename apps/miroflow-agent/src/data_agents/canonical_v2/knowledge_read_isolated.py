@@ -7696,14 +7696,31 @@ def _validate_release_bound_vector_evidence(
         embedding_adapter,
         expected_model_id=expected_model_id,
     )
-    vectors = validating_adapter.embed_batch(
-        (query_topic, *(point.embedded_content for point, _, _ in point_items))
+    # Prefer the persisted build-time matrix when present: the serving path
+    # scores from that exact matrix, so the recompute must use the same point
+    # vectors (the model may drift slightly between build and request time,
+    # which the strict 1e-12 tolerance would otherwise reject).  Without the
+    # npz the recompute re-embeds the point texts as before.
+    persisted = load_persisted_vector_matrix(
+        bundle.index_target.root / "vector_matrix.npz",
+        points=bundle.index_result.points,
+        expected_embedding_model_id=expected_model_id,
+        dimension=validating_adapter.dimension,
     )
-    query_vector = vectors[0]
+    query_vector = validating_adapter.embed_batch((query_topic,))[0]
     query_embedding_sha256 = _canonical_sha256(query_vector)
+    if persisted is not None:
+        point_vectors = (
+            tuple(persisted[1][persisted[0][point.point_id]])
+            for point, _, _ in point_items
+        )
+    else:
+        point_vectors = validating_adapter.embed_batch(
+            tuple(point.embedded_content for point, _, _ in point_items)
+        )
     for (point, item, trace), point_vector in zip(
         point_items,
-        vectors[1:],
+        point_vectors,
         strict=True,
     ):
         expected_score = _cosine_similarity(query_vector, point_vector)

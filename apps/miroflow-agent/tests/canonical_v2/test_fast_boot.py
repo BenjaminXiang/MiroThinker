@@ -66,8 +66,12 @@ from src.data_agents.canonical_v2.index_projection_isolated import (
     RecordedEmbeddingAdapter,
 )
 from src.data_agents.canonical_v2.knowledge_read import (
+    EvidenceSet,
+    FusedCandidate,
+    LaneQuery,
     LaneRequest,
     RetrievalLaneResult,
+    RetrievalPlan,
     StructuredConstraints,
     WebSearchPolicy,
     WebSnapshotPolicy,
@@ -1061,3 +1065,106 @@ def test_persisted_vector_matrix_fails_closed_on_model_mismatch(
             vectorized_scoring=True,
             fast_boot=True,
         )
+
+
+def test_persisted_matrix_evidence_check_uses_each_point_own_vector(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regression: the npz branch of the release-bound vector evidence check
+    must pair each point with its OWN persisted vector.  The first attempt
+    passed a plain parenthesized tuple to ``zip``, which iterated the tuple
+    element-wise and turned ``point_vector`` into a numpy scalar, crashing
+    with ``TypeError: object of type 'numpy.float64' has no len()``."""
+    fixture = _build_fixture(tmp_path, monkeypatch)
+    snapshot = isolated_index.open_manifest_verified_index_snapshot(
+        fixture.target,
+        expected_embedding_model_id=EMBEDDING_MODEL,
+    )
+    recorded = RecordedEmbeddingAdapter(model_id=EMBEDDING_MODEL, dimension=32)
+    vectors = tuple(
+        recorded.embed_batch((point.embedded_content,))[0]
+        for point in snapshot.points
+    )
+    isolated_index.write_persisted_vector_matrix(
+        fixture.target.root,
+        points=snapshot.points,
+        vectors=vectors,
+        embedding_model_id=EMBEDDING_MODEL,
+    )
+
+    spy = _SpyEmbeddingAdapter()
+    vector_adapter = isolated_read.create_isolated_vector_recall_adapter(
+        release_bundle=fixture.bundle,
+        published_release=fixture.published,
+        embedding_adapter=spy,
+        reuse_audited_snapshot=True,
+        vectorized_scoring=True,
+        fast_boot=True,
+    )
+    recall = vector_adapter(
+        _lane_request(lane="vector", query_text="Robotics Co [lane=vector]")
+    )
+    assert len(recall.candidates) == 3
+
+    items = tuple(candidate.evidence[0] for candidate in recall.candidates)
+    fused_candidates = tuple(
+        FusedCandidate(
+            result_id=f"fused:test:{candidate.canonical_id}",
+            canonical_id=candidate.canonical_id,
+            display_name=candidate.display_name,
+            domain=candidate.domain,
+            raw_candidate_ids=(candidate.raw_candidate_id,),
+            evidence_ids=(candidate.evidence[0].evidence_id,),
+            evidence=(candidate.evidence[0],),
+            quality_flags=(),
+            raw_score=candidate.raw_score,
+            identity_kind=candidate.identity_kind,
+            resolution_state=candidate.resolution_state,
+            origin_lane=candidate.lane,
+            origin_attempt=candidate.attempt,
+            adapter_versions=(candidate.adapter_version,),
+            provider_versions=(
+                (candidate.provider_version,)
+                if candidate.provider_version is not None
+                else ()
+            ),
+        )
+        for candidate in recall.candidates
+    )
+    evidence_set = EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query="Robotics Co",
+        protected_slots=(),
+        items=items,
+        traces=(),
+        limitations=(),
+        fused_candidates=fused_candidates,
+    )
+    plan = RetrievalPlan(
+        plan_version="fastboot-test-v1",
+        original_query="Robotics Co",
+        behavior_class="A",
+        release_id=RELEASE_ID,
+        domains=("company",),
+        protected_slots=(),
+        lanes=("vector",),
+        max_candidates=8,
+        web_required=False,
+        lane_queries=(
+            LaneQuery(
+                lane="vector",
+                release_id=RELEASE_ID,
+                catalog_sha256=CATALOG_CONTENT_SHA256,
+                pure_topic_text="Robotics Co",
+                query_text="Robotics Co [lane=vector]",
+            ),
+        ),
+    )
+    isolated_read._validate_release_bound_vector_evidence(
+        plan=plan,
+        evidence_set=evidence_set,
+        bundle=fixture.bundle,
+        publication=fixture.published,
+        embedding_adapter=spy,
+    )

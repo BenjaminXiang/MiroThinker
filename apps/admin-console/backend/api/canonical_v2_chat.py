@@ -191,16 +191,33 @@ def chat_stream(
                 )
             )
             events.put(("done", {}))
-        except CanonicalV2InvalidOption as exc:
+        except CanonicalV2InvalidOption:
             events.put(("error", {"detail": _INVALID_OPTION_DETAIL}))
-        except (CanonicalV2ReleaseMismatch, CanonicalV2ConsumerIntegrityError):
+        except (CanonicalV2ReleaseMismatch, CanonicalV2ConsumerIntegrityError) as exc:
+            import traceback as _tb
+            logger.warning(
+                "canonical v2 release/integrity failure: %s\n%s",
+                exc,
+                "".join(_tb.format_exception(type(exc), exc, exc.__traceback__)),
+            )
             events.put(("error", {"detail": _RELEASE_MISMATCH_DETAIL}))
-        except KnowledgeReadIntegrityError:
+        except KnowledgeReadIntegrityError as exc:
+            import traceback as _tb
+            logger.warning(
+                "canonical v2 knowledge-read integrity failure: %s\n%s",
+                exc,
+                "".join(_tb.format_exception(type(exc), exc, exc.__traceback__)),
+            )
             events.put(("error", {"detail": _RELEASE_MISMATCH_DETAIL}))
         except CanonicalV2MappingError:
             events.put(("error", {"detail": "canonical_v2_consumer_integrity_error"}))
         except Exception as exc:  # noqa: BLE001 - the stream must not hang
-            logger.warning("canonical v2 stream turn failed: %s", exc)
+            import traceback as _tb
+            logger.warning(
+                "canonical v2 stream turn failed: %s\n%s",
+                exc,
+                "".join(_tb.format_exception(type(exc), exc, exc.__traceback__)),
+            )
             events.put(("error", {"detail": "internal_error"}))
 
     def render(name: str, data: dict[str, Any]) -> str:
