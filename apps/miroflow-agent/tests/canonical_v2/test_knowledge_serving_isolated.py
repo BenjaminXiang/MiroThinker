@@ -738,7 +738,7 @@ def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
     assert "他是否有参与哪些企业的创立" in serialized
     assert "回答用户" in serialized
     assert "不要逐字段复述" in serialized
-    assert "canonical-v2-prose-v8" in serialized
+    assert "canonical-v2-prose-v9" in serialized
     assert "逐字一致" in serialized
     assert "语义覆盖而非逐字匹配" in serialized
     assert "不要逐一列名" in serialized
@@ -4257,3 +4257,61 @@ def test_serving_semantic_text_uses_bound_company_name_for_applicant() -> None:
     text = serving_module._semantic_text(item, "一种机器人的落地控制方法")
     assert "深圳市优必选科技股份有限公司" in text
     assert "Shenzhen Ubtech" not in text
+
+
+def _term_view_request(query: str) -> QueryPlanningRequest:
+    return QueryPlanningRequest(
+        request_id=f"query-request:term:{abs(hash(query))}",
+        release_id=RELEASE_ID,
+        original_query=query,
+        as_of=NOW,
+    )
+
+
+def test_concept_term_view_is_appended_for_data_theme_queries() -> None:
+    request = _term_view_request("在真实数据采集路线中，有哪些具体方式")
+    views = serving_module._serving_query_views(
+        request=request,
+        search_text=request.original_query,
+        retained_values=(),
+        protected_slots=(),
+        planner_model_id="planner-v1",
+        query_rewriter=lambda _q: ("真实数据采集方式", "数据采集路线规划方法"),
+    )
+    texts = tuple(view.text for view in views)
+    assert texts[0] == request.original_query
+    assert "具身智能 机器人 数据采集 遥操作 动作捕捉 真机 仿真 方法" in texts
+    assert len(texts) == 4
+
+
+def test_concept_term_view_replaces_last_rewrite_when_budget_full() -> None:
+    request = _term_view_request(
+        "在具身智能的合成数据发展方向上，具体有几种实现方法，分别有哪些代表厂商"
+    )
+    views = serving_module._serving_query_views(
+        request=request,
+        search_text=request.original_query,
+        retained_values=(),
+        protected_slots=(),
+        planner_model_id="planner-v1",
+        query_rewriter=lambda _q: ("合成方法一", "合成方法二", "合成方法三"),
+    )
+    texts = tuple(view.text for view in views)
+    assert "具身智能 合成数据 物理仿真引擎 生成式模型 规则 方法 厂商" in texts
+    assert len(texts) == 4
+    assert "合成方法三" not in texts  # the last rewrite was replaced
+
+
+def test_no_concept_term_view_for_entity_questions() -> None:
+    request = _term_view_request("中国有哪些成熟的酒店送餐机器人供应商")
+    views = serving_module._serving_query_views(
+        request=request,
+        search_text=request.original_query,
+        retained_values=(),
+        protected_slots=(),
+        planner_model_id="planner-v1",
+        query_rewriter=lambda _q: ("酒店送餐机器人品牌", "酒店服务机器人头部企业名单"),
+    )
+    texts = tuple(view.text for view in views)
+    assert len(texts) == 3
+    assert all("数据采集" not in view.text for view in views)

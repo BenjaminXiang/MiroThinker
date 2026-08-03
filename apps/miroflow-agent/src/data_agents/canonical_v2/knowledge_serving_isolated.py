@@ -1310,8 +1310,13 @@ _QUERY_REWRITE_SYSTEM_PROMPT = (
     "你是搜索查询改写助手，帮助检索系统查全相关公开信息。"
     "理解用户问题的真实意图，只输出一个JSON对象："
     '{"queries": ["...", "..."]}，包含1到3条简短的中文关键词式搜索查询。'
-    "规则：多意图问题按意图逐条拆分；主题类问题用同义说法扩展；"
-    "严格限于用户问题中的实体与意图，不得编造事实或发明实体；"
+    "规则：多意图问题按意图逐条拆分；"
+    "主题类/概念类问题（问方法、路线、方式、差异、原理、厂商等）："
+    "围绕主题补充该领域常见子方向与行业术语作为搜索词"
+    "（例如“具身智能数据采集”可补充“遥操作、动作捕捉、真机采集、仿真合成”），"
+    "以便检索到相关行业内容；"
+    "严格限于用户问题涉及的主题范围，不得编造具体公司、论文、专利、人名等"
+    "实体名称，不得编造事实与数字；"
     "每条不超过30个字；不要输出JSON之外的任何内容。"
 )
 _QUERY_REWRITE_ENUMERATION_MARKERS = (
@@ -1349,6 +1354,30 @@ _BRAND_DISCOVERY_VIEW_MARKERS = (
     "厂商",
     "厂家",
 )
+
+# Deterministic term-expansion views for data-theme concept questions.  The
+# LLM rewrite sometimes drifts (e.g. "数据采集路线规划方法" pulls traffic/GIS
+# content) or omits the domain vocabulary that the thematic articles actually
+# use (动作捕捉/物理仿真引擎...).  When the query names a data theme, append
+# one term view so recall covers the industry terminology; it replaces the
+# last LLM rewrite when the view budget is already full.
+_CONCEPT_TERM_VIEW_RULES: tuple[tuple[tuple[str, ...], str], ...] = (
+    (
+        ("数据采集", "数据路线", "数据需求"),
+        "具身智能 机器人 数据采集 遥操作 动作捕捉 真机 仿真 方法",
+    ),
+    (
+        ("合成数据",),
+        "具身智能 合成数据 物理仿真引擎 生成式模型 规则 方法 厂商",
+    ),
+)
+
+
+def _concept_term_view_text(query: str) -> str | None:
+    for markers, text in _CONCEPT_TERM_VIEW_RULES:
+        if any(marker in query for marker in markers):
+            return text
+    return None
 
 
 def _enumeration_ordered_view_queries(
@@ -1713,6 +1742,24 @@ def _serving_query_views(
         )
         if len(views) >= _SERVING_WEB_MAX_QUERY_VIEWS:
             break
+    term_view_text = _concept_term_view_text(request.original_query)
+    existing_texts = {view.text for view in views}
+    if term_view_text is not None and term_view_text not in existing_texts:
+        if len(views) >= _SERVING_WEB_MAX_QUERY_VIEWS:
+            views = views[:-1]
+        views.append(
+            QueryViewProposal(
+                view_id=f"view:serving:{request.request_id}:term:0",
+                kind="serving_search",
+                text=term_view_text,
+                original_query_sha256=request.original_query_sha256,
+                retained_protected_values=retained_values,
+                producer_kind="term_expansion",
+                producer_version=_SERVING_QUERY_REWRITER_VERSION,
+                bound_entity_ids=request.displayed_entity_ids,
+                bound_entity_names=request.displayed_entity_names,
+            )
+        )
     return tuple(views)
 
 
@@ -3651,7 +3698,7 @@ class _OpenAIProseRenderer:
                 ],
             }
         payload = {
-            "prompt_version": "canonical-v2-prose-v8",
+            "prompt_version": "canonical-v2-prose-v9",
             "user_question": getattr(result, "original_query", None),
             "question_frame": {
                 "subject_scope": frame.subject_scope,
@@ -3735,6 +3782,11 @@ class _OpenAIProseRenderer:
                         "用一两句给出其关键事实即可，确需取舍时按 enumeration_coverage 如实交代。"
                         "对“上述/这些”集合问题，只回答有直接依据的主体，其余主体不列名、不解释，"
                         "用覆盖度一句带过。"
+                        "对“方法/路线/方式/差异/原理”类概念问题：按行业常见分类分条组织答案，"
+                        "覆盖输入信息中出现的各主要方向——例如数据采集类（遥操作、动作捕捉/动捕、"
+                        "真机/全模态采集、仿真合成、视频学习等）、生成类（物理仿真引擎、生成式模型、"
+                        "规则/程序化生成等）——确保不遗漏有依据的方向；只组织输入中有依据的内容，"
+                        "不得为凑分类而编造。"
                         "输入中的 enumeration_coverage 是列表类问题的枚举核算；当其 mode 为 "
                         "representative 时，用自然语言交代覆盖度（如“共找到 N 个相关结果，"
                         "以上为其中有代表性的 M 个”），严禁暗示已穷尽全部结果。"
