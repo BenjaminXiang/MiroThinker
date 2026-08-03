@@ -738,7 +738,7 @@ def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
     assert "他是否有参与哪些企业的创立" in serialized
     assert "回答用户" in serialized
     assert "不要逐字段复述" in serialized
-    assert "canonical-v2-prose-v12" in serialized
+    assert "canonical-v2-prose-v13" in serialized
     assert "逐字一致" in serialized
     assert "语义覆盖而非逐字匹配" in serialized
     assert "不要逐一列名" in serialized
