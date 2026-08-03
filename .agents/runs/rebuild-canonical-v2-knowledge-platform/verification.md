@@ -4289,3 +4289,41 @@ Residual backlog (unchanged): patent-applicant display names remain English for 
 (CN117873146A → "Shenzhen Ubtech Technology Co ltd") until the s12f candidate is rebuilt with
 the applicant-binding batch; 上海开普勒/九号 hotel-delivery semantics depend on the
 data-enrichment backlog; Q4T1/Q17T1/Q8T2 precision adjudication remains open.
+
+---
+
+## 2026-08-03 — Latency optimization A/B + round7 rebuild + crash fix (v42→v48)
+
+### Commits
+- `3336aab` perf: persist the vector scoring matrix (`vector_matrix.npz`, 7087×4096
+  float64) at build time and load it at boot; warm the fetch browser in a background
+  thread at startup and on keepwarm cycles.
+- `00788e4` fix: per-point npz vector pairing in the release-bound vector evidence
+  check + regression test + stream error traceback logging.
+
+### What was verified
+- round7 rebuild: `BUILD_EXIT=0`; npz written to `/var/tmp/mirothinker-canonical-v2-s12f/
+  index-v1/vector_matrix.npz` (7087 points × 4096 dims, meta model
+  `Qwen/Qwen3-Embedding-8B`); serving pack built, dogfood open OK.
+- Unit suites: `test_fast_boot.py` 12 passed (incl. new
+  `test_persisted_matrix_evidence_check_uses_each_point_own_vector`, RED against the
+  buggy code with the exact production `TypeError: 'numpy.float64' has no len()`);
+  `test_serving_pack_loader.py` + `test_web_page_fetch.py` 32 passed; ruff clean.
+- Service v48 cold start on port 18199: first chat request answered in ~22s
+  (previously the first vector request re-embedded ~7k points ≈ 77s and the npz
+  branch crashed with the numpy scalar error).
+- Workbook regression (single session, 25 turns): **21/25 PASS, total 281.72s**
+  vs round-6 baseline **21/25 PASS, 291.67s** — same 4 known backlog failures
+  (T3 上海开普勒 hotel semantics data-side; T19/T22/T23 concept KEY coverage,
+  web fluctuation), no quality regression and slightly faster.
+
+### Root cause of the v42–v47 failures
+`_validate_release_bound_vector_evidence` fed `zip(..., (tuple(...) if npz else ...),
+strict=True)` a plain parenthesized tuple — evaluated once, using the last iterated
+`point` binding — instead of a generator. `zip` then iterated that single 4096-dim
+row element-wise, turning `point_vector` into a `numpy.float64` scalar; every vector
+request crashed in `_cosine_similarity` (`len()` on a scalar). Fixed by generating
+the persisted row per point. Note: with the npz present this check is a
+same-source consistency check (the scores and the verified vectors come from the
+same matrix), not an independent recompute — accepted trade-off; the old independent
+re-embed path remains the npz-absent fallback.
