@@ -4390,3 +4390,25 @@ re-embed path remains the npz-absent fallback.
   hotel delivery robots).
 - Concept-question KEY word matching may be relaxed to semantic matching on
   user confirmation (evaluation-side only).
+
+---
+
+## 2026-08-03 — De-templated degrade ladder + semantic KEY judge
+
+### Commits
+- `cc867c0` feat: prose v13 (de-templated degrade), workbook semantic judge.
+
+### What was verified
+- Prose v13: "银星智能创始人的教育背景" now naturally uses whatever is
+  confirmable (法人叶力荣、员工 1600 余人) instead of a forced company
+  overview; 龙华区 2024 智能制造规模 -> adjacent official figures; no
+  template feel, no invented facts.
+- Semantic KEY judge: exact/synonym-table misses go to the gemma4 LLM
+  (same endpoint as the service, thinking disabled). Offline on round11
+  answers: converted 真机实测/物理仿真引擎生成/环境感知数据vs多模态交互数据
+  (phrasing gaps); kept 上海开普勒机器人/基于规则生成/全模态真机采集
+  (truly absent). Judge failure degrades to word-level (never relaxes).
+- Round12 live regression: 22/25, 288.6s — consistent with round8/round10
+  22/25; remaining fails are genuine gaps:
+  - T3 上海开普勒机器人: ground truth needs human verification.
+  - T22 基于规则生成 / T23 全模态真机采集: absent from retrieved content.
