@@ -54,6 +54,7 @@ from .index_projection_isolated import (
     EmbeddingAdapter,
     IsolatedIndexSnapshot,
     audit_isolated_index_snapshot,
+    load_persisted_vector_matrix,
     open_manifest_verified_index_snapshot,
     read_isolated_lookup_documents,
 )
@@ -7072,23 +7073,42 @@ def create_isolated_vector_recall_adapter(
         if vectorized_index is None:
             with vectorized_index_lock:
                 if vectorized_index is None:
-                    point_vectors = validating_adapter.embed_batch(
-                        tuple(point.embedded_content for point in snapshot.points)
-                    )
-                    matrix = np.asarray(point_vectors, dtype=np.float64)
-                    norms = np.linalg.norm(matrix, axis=1)
-                    if not np.all(np.isfinite(norms)) or np.any(norms == 0.0):
-                        raise IsolatedKnowledgeReadIntegrityError(
-                            "vectorized point matrix has an invalid norm"
+                    persisted: tuple[dict[str, int], Any, Any] | None = None
+                    try:
+                        persisted = load_persisted_vector_matrix(
+                            validated_bundle.index_target.root
+                            / "vector_matrix.npz",
+                            points=snapshot.points,
+                            expected_embedding_model_id=expected_model_id,
+                            dimension=validating_adapter.dimension,
                         )
-                    vectorized_index = (
-                        {
-                            point.point_id: index
-                            for index, point in enumerate(snapshot.points)
-                        },
-                        matrix,
-                        norms,
-                    )
+                    except IndexProjectionIntegrityError as exc:
+                        raise IsolatedKnowledgeReadIntegrityError(
+                            "persisted vector matrix failed integrity validation"
+                        ) from exc
+                    if persisted is not None:
+                        vectorized_index = persisted
+                    else:
+                        point_vectors = validating_adapter.embed_batch(
+                            tuple(
+                                point.embedded_content
+                                for point in snapshot.points
+                            )
+                        )
+                        matrix = np.asarray(point_vectors, dtype=np.float64)
+                        norms = np.linalg.norm(matrix, axis=1)
+                        if not np.all(np.isfinite(norms)) or np.any(norms == 0.0):
+                            raise IsolatedKnowledgeReadIntegrityError(
+                                "vectorized point matrix has an invalid norm"
+                            )
+                        vectorized_index = (
+                            {
+                                point.point_id: index
+                                for index, point in enumerate(snapshot.points)
+                            },
+                            matrix,
+                            norms,
+                        )
         positions, matrix, norms = vectorized_index
         query = np.asarray(query_vector, dtype=np.float64)
         query_norm = float(np.linalg.norm(query))
@@ -7188,6 +7208,25 @@ def create_isolated_vector_recall_adapter(
 
     if reuse_audited_snapshot:
         validated_snapshot()
+    # Fast boot: load the persisted scoring matrix now so the first vector
+    # request skips the full re-embed.  Missing file falls back to the lazy
+    # in-request build; a corrupt file fails closed at boot.
+    if vectorized_scoring:
+        with vectorized_index_lock:
+            if vectorized_index is None:
+                snapshot = validated_snapshot()
+                try:
+                    vectorized_index = load_persisted_vector_matrix(
+                        validated_bundle.index_target.root
+                        / "vector_matrix.npz",
+                        points=snapshot.points,
+                        expected_embedding_model_id=expected_model_id,
+                        dimension=validating_adapter.dimension,
+                    )
+                except IndexProjectionIntegrityError as exc:
+                    raise IsolatedKnowledgeReadIntegrityError(
+                        "persisted vector matrix failed integrity validation"
+                    ) from exc
     return vector_recall
 
 

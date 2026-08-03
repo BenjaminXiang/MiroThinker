@@ -13,13 +13,16 @@ back to the tier-0 result, preserving the snippet semantics.
 
 from __future__ import annotations
 
+import logging
 import re
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
-from typing import Any, Callable
+from typing import Any, Callable, Protocol, cast
 
 from bs4 import BeautifulSoup
 import httpx
+
+logger = logging.getLogger(__name__)
 
 _USER_AGENT = (
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -204,18 +207,50 @@ class _PlaywrightPagePool:
         future = self._t1.submit(self._fetch_on_t1, url, timeout_ms=timeout_ms)
         return future.result()
 
+    def warm(self, timeout: float = 10.0) -> bool:
+        """Start the browser on the dedicated thread without poisoning retries.
+
+        A warm-up failure must not set ``_launch_failed``: the real fetch path
+        stays able to retry the launch on demand.  Idempotent once running.
+        """
+
+        def start_once() -> Any:
+            with self._lock:
+                if self._browser is not None:
+                    return self._browser
+                if self._launch_failed:
+                    raise RuntimeError("headless Chromium launch previously failed")
+                try:
+                    self._browser = self._start_browser()
+                except Exception:
+                    # Warm-up must not poison the real fetch path: only the
+                    # fetch-side _browser_instance marks the launch failed.
+                    raise
+            return self._browser
+
+        future = self._t1.submit(start_once)
+        try:
+            future.result(timeout=timeout)
+            return True
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("headless Chromium warm-up failed: %s", exc)
+            return False
+
 
 def create_tiered_page_fetcher(
     *,
     browser_factory: Callable[[], Any] | None = None,
     direct_fetcher: Callable[[str], str | None] | None = None,
-) -> Callable[[str], str | None]:
+) -> "TieredPageFetcher":
     """T0 direct fetch with a T1 headless-Chromium fallback on thin results.
 
     Tier 0 is `direct_fetcher or fetch_page_text`. When its result is thin or
     blocked, tier 1 renders the page in headless Chromium (browser started
     lazily, one page at a time on a dedicated thread). Any tier failure keeps
     the tier-0 result, so the caller still degrades to the original snippet.
+
+    The returned object is callable (``fetcher(url)``) and additionally
+    exposes ``warm()`` for boot/keepwarm browser pre-start.
     """
     direct = direct_fetcher or fetch_page_text
     pool = _PlaywrightPagePool(browser_factory)
@@ -230,7 +265,25 @@ def create_tiered_page_fetcher(
             return direct_text
         return rendered if rendered is not None else direct_text
 
-    return fetch
+    fetcher: TieredPageFetcher = cast(
+        TieredPageFetcher,
+        fetch,
+    )
+    fetcher.warm = pool.warm  # type: ignore[attr-defined]
+    return fetcher
 
 
-__all__ = ["create_tiered_page_fetcher", "extract_main_text", "fetch_page_text"]
+class TieredPageFetcher(Protocol):
+    """Callable page fetcher with an optional browser warm-up hook."""
+
+    def __call__(self, url: str) -> str | None: ...
+
+    def warm(self, timeout: float = 10.0) -> bool: ...
+
+
+__all__ = [
+    "TieredPageFetcher",
+    "create_tiered_page_fetcher",
+    "extract_main_text",
+    "fetch_page_text",
+]

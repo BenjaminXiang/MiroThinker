@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import re
 from threading import Lock
+import threading
 from time import monotonic
 from typing import Any, Literal, cast
 from urllib.parse import urlparse, urlsplit, urlunsplit
@@ -4435,11 +4436,18 @@ def load_recorded_serving_inputs(
             )
         )
 
+    warm_fetcher = getattr(page_fetcher, "warm", None)
+
+    def warm_fetch() -> None:
+        if warm_fetcher is not None:
+            warm_fetcher()
+
     idle_keepwarm_cycle = _provider_keepwarm_cycle(
         operations=(
             warm_bocha,
             warm_serper,
             warm_embedding,
+            warm_fetch,
             selected_llm_keepwarm,
         )
     )
@@ -4469,6 +4477,13 @@ def load_recorded_serving_inputs(
             judge=create_llm_judge(),
         )
     )
+    warm_fetcher = getattr(page_fetcher, "warm", None)
+    if warm_fetcher is not None:
+        threading.Thread(
+            target=warm_fetcher,
+            name="canonical-v2-fetch-warm",
+            daemon=True,
+        ).start()
     return RecordedServingInputs(
         planning_policy=planning_policy,
         proposal_provider=_proposal_provider(

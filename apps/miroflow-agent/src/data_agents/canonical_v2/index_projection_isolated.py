@@ -14,6 +14,8 @@ import sqlite3
 from typing import Any, Literal, Protocol, cast
 import warnings
 
+import numpy as np
+
 from pydantic import Field, JsonValue, field_validator, model_validator
 
 from .contracts import ContractModel, NonEmptyStr, Sha256
@@ -37,6 +39,8 @@ _MARKER_NAME = ".canonical-v2-isolated-index-target.json"
 _MARKER_SCHEMA_VERSION = "canonical-v2-isolated-index-target-v1"
 _MILVUS_FILENAME = "milvus.db"
 _LOOKUP_FILENAME = "lookup.sqlite3"
+_VECTOR_MATRIX_FILENAME = "vector_matrix.npz"
+_VECTOR_MATRIX_SCHEMA_VERSION = "canonical-v2-vector-matrix-v1"
 _POINT_READ_BATCH_SIZE = 128
 _POINT_WRITE_BATCH_SIZE = 128
 _MIN_VECTOR_COSINE_SIMILARITY = 0.999
@@ -269,11 +273,17 @@ class _IsolatedIndexMaterializer:
                 manifests=expected_lookup_projections,
             )
             collection_name = _collection_name(self._target, request)
-            _write_milvus_projection(
+            vectors = _write_milvus_projection(
                 client,
                 collection_name=collection_name,
                 points=points,
                 embedding_adapter=self._embedding_adapter,
+            )
+            write_persisted_vector_matrix(
+                self._target.root,
+                points=points,
+                vectors=vectors,
+                embedding_model_id=request.embedding_model,
             )
             read_points = _read_points_with_client(
                 client,
@@ -602,13 +612,134 @@ def _collection_name(
     return f"canonical_v2_{identity[:32]}"
 
 
+def write_persisted_vector_matrix(
+    root: Path,
+    *,
+    points: tuple[IndexProjectionPoint, ...],
+    vectors: tuple[tuple[float, ...], ...],
+    embedding_model_id: str,
+) -> None:
+    """Persist the released point vectors as a numpy matrix for fast boot.
+
+    The build already embeds every point exactly once (the same ``vectors``
+    upserted into Milvus); writing them here as ``vector_matrix.npz`` lets the
+    serving process load the scoring matrix at boot instead of re-embedding
+    all ~6k points on the first vector request (~77s cold spike).
+    """
+    if len(vectors) != len(points):
+        raise IndexProjectionIntegrityError(
+            "persisted vector matrix cardinality differs from index points"
+        )
+    if not points:
+        return
+    dimension = len(vectors[0])
+    if any(len(vector) != dimension for vector in vectors):
+        raise IndexProjectionIntegrityError(
+            "persisted vector matrix dimension differs within the batch"
+        )
+    matrix = np.asarray(tuple(vectors), dtype=np.float64)
+    if matrix.shape != (len(points), dimension):
+        raise IndexProjectionIntegrityError(
+            "persisted vector matrix shape differs from index points"
+        )
+    norms = np.linalg.norm(matrix, axis=1)
+    if not np.all(np.isfinite(norms)) or np.any(norms == 0.0):
+        raise IndexProjectionIntegrityError(
+            "persisted vector matrix has an invalid norm"
+        )
+    meta = json.dumps(
+        {
+            "schema_version": _VECTOR_MATRIX_SCHEMA_VERSION,
+            "embedding_model_id": embedding_model_id,
+            "dimension": dimension,
+            "point_count": len(points),
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+    np.savez(
+        root / _VECTOR_MATRIX_FILENAME,
+        point_ids=np.asarray(
+            tuple(point.point_id for point in points), dtype=object
+        ),
+        matrix=matrix,
+        norms=norms,
+        meta=np.asarray(meta, dtype=object),
+    )
+
+
+def load_persisted_vector_matrix(
+    path: Path,
+    *,
+    points: tuple[IndexProjectionPoint, ...],
+    expected_embedding_model_id: str,
+    dimension: int,
+) -> tuple[dict[str, int], Any, Any] | None:
+    """Load the persisted vector matrix, or return None when absent.
+
+    Validates schema/model/dimension/point-set/norm consistency; any mismatch
+    raises ``IndexProjectionIntegrityError`` (fail closed).  Row order is taken
+    from the file's ``point_ids`` (not assumed to match the snapshot order).
+    """
+    if not path.exists() or path.is_symlink():
+        return None
+    try:
+        data = np.load(path, allow_pickle=True)
+        meta = json.loads(str(data["meta"].item()))
+        point_ids = tuple(str(value) for value in data["point_ids"].tolist())
+        matrix = np.asarray(data["matrix"], dtype=np.float64)
+        norms = np.asarray(data["norms"], dtype=np.float64)
+    except Exception as exc:  # noqa: BLE001
+        raise IndexProjectionIntegrityError(
+            "persisted vector matrix could not be loaded"
+        ) from exc
+    if meta.get("schema_version") != _VECTOR_MATRIX_SCHEMA_VERSION:
+        raise IndexProjectionIntegrityError(
+            "persisted vector matrix schema version differs"
+        )
+    if meta.get("embedding_model_id") != expected_embedding_model_id:
+        raise IndexProjectionIntegrityError(
+            "persisted vector matrix embedding model differs"
+        )
+    expected_count = len(points)
+    if (
+        meta.get("point_count") != expected_count
+        or matrix.shape != (expected_count, dimension)
+        or len(point_ids) != expected_count
+        or len(norms) != expected_count
+    ):
+        raise IndexProjectionIntegrityError(
+            "persisted vector matrix shape or count differs from the snapshot"
+        )
+    point_id_set = set(point_ids)
+    if len(point_id_set) != expected_count or point_id_set != {
+        point.point_id for point in points
+    }:
+        raise IndexProjectionIntegrityError(
+            "persisted vector matrix point set differs from the snapshot"
+        )
+    if not np.all(np.isfinite(norms)) or np.any(norms == 0.0):
+        raise IndexProjectionIntegrityError(
+            "persisted vector matrix has an invalid norm"
+        )
+    positions = {
+        point_id: index for index, point_id in enumerate(point_ids)
+    }
+    return positions, matrix, norms
+
+
 def _write_milvus_projection(
     client: Any,
     *,
     collection_name: str,
     points: tuple[IndexProjectionPoint, ...],
     embedding_adapter: EmbeddingAdapter,
-) -> None:
+) -> tuple[tuple[tuple[float, ...], ...], ...]:
+    """Write points into Milvus and return the embedded vectors.
+
+    The returned vectors are the exact build-time embeddings (also persisted
+    by the caller as ``vector_matrix.npz`` for fast serving boot).
+    """
     if client.has_collection(collection_name):
         raise IsolatedIndexTargetSafetyError(
             "generated isolated collection unexpectedly already exists"
@@ -654,6 +785,7 @@ def _write_milvus_projection(
                 ],
             )
         client.flush(collection_name=collection_name)
+    return tuple(tuple(vector) for vector in vectors)
 
 
 def _read_points_with_client(

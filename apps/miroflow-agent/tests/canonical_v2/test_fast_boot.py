@@ -988,3 +988,76 @@ def test_runner_serve_wires_fast_boot_env_flag(
     assert call["reuse_audited_vector_snapshot"] is True
     assert call["vectorized_recall"] is True
     assert call["fast_boot"] is (env_value == "1")
+
+
+def test_persisted_vector_matrix_boots_without_reembedding(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The persisted npz matrix must load at adapter creation: the first
+    vector request then scores from the file with zero re-embeds."""
+    fixture = _build_fixture(tmp_path, monkeypatch)
+    snapshot = isolated_index.open_manifest_verified_index_snapshot(
+        fixture.target,
+        expected_embedding_model_id=EMBEDDING_MODEL,
+    )
+    adapter = RecordedEmbeddingAdapter(model_id=EMBEDDING_MODEL, dimension=32)
+    vectors = tuple(
+        adapter.embed_batch((point.embedded_content,))[0]
+        for point in snapshot.points
+    )
+    isolated_index.write_persisted_vector_matrix(
+        fixture.target.root,
+        points=snapshot.points,
+        vectors=vectors,
+        embedding_model_id=EMBEDDING_MODEL,
+    )
+
+    spy = _SpyEmbeddingAdapter()
+    vector_adapter = isolated_read.create_isolated_vector_recall_adapter(
+        release_bundle=fixture.bundle,
+        published_release=fixture.published,
+        embedding_adapter=spy,
+        reuse_audited_snapshot=True,
+        vectorized_scoring=True,
+        fast_boot=True,
+    )
+    assert spy.batch_calls == 0  # matrix loaded from file, not embedded
+
+    result = vector_adapter(
+        _lane_request(lane="vector", query_text="Robotics Co [lane=vector]")
+    )
+    assert len(result.candidates) == 3
+    assert spy.batch_calls == 1  # only the query vector is embedded
+
+
+def test_persisted_vector_matrix_fails_closed_on_model_mismatch(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = _build_fixture(tmp_path, monkeypatch)
+    snapshot = isolated_index.open_manifest_verified_index_snapshot(
+        fixture.target,
+        expected_embedding_model_id=EMBEDDING_MODEL,
+    )
+    adapter = RecordedEmbeddingAdapter(model_id=EMBEDDING_MODEL, dimension=32)
+    vectors = tuple(
+        adapter.embed_batch((point.embedded_content,))[0]
+        for point in snapshot.points
+    )
+    isolated_index.write_persisted_vector_matrix(
+        fixture.target.root,
+        points=snapshot.points,
+        vectors=vectors,
+        embedding_model_id="different-model",
+    )
+
+    with pytest.raises(isolated_read.IsolatedKnowledgeReadIntegrityError):
+        isolated_read.create_isolated_vector_recall_adapter(
+            release_bundle=fixture.bundle,
+            published_release=fixture.published,
+            embedding_adapter=_SpyEmbeddingAdapter(),
+            reuse_audited_snapshot=True,
+            vectorized_scoring=True,
+            fast_boot=True,
+        )

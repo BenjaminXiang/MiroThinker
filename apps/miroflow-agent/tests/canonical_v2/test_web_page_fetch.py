@@ -352,3 +352,74 @@ def test_enumeration_lane_fetches_deeper_pages_for_recall() -> None:
     fetched_urls.clear()
     adapter(_lane_request("介绍清华的丁文伯"))
     assert len(fetched_urls) == 2
+
+
+def test_fetcher_warm_starts_browser_once_and_keeps_fetch_working() -> None:
+    """warm() must start the browser on the dedicated thread, be idempotent,
+    and leave the real fetch path able to retry after a warm failure."""
+    starts: list[str] = []
+
+    class _FakePage:
+        def set_default_timeout(self, timeout: int) -> None:
+            pass
+
+        def goto(self, url: str, timeout: int, wait_until: str) -> None:
+            pass
+
+        def eval_on_selector(self, selector: str, script: str) -> str:
+            return "云迹科技润系列送物机器人。" * 30
+
+    class _FakeBrowser:
+        def __init__(self, tag: str) -> None:
+            self._tag = tag
+
+        def new_page(self) -> Any:
+            return _FakePage()
+
+    def factory() -> Any:
+        starts.append("started")
+        return _FakeBrowser(tag="warm")
+
+    fetcher = create_tiered_page_fetcher(
+        browser_factory=factory,
+        direct_fetcher=lambda url: None,
+    )
+    assert fetcher.warm() is True
+    assert fetcher.warm() is True
+    assert len(starts) == 1
+    text = fetcher("https://example.test/warm")
+    assert "云迹科技" in (text or "")
+
+
+def test_fetcher_warm_failure_does_not_poison_real_fetch() -> None:
+    attempts: list[str] = []
+
+    class _FakePage:
+        def set_default_timeout(self, timeout: int) -> None:
+            pass
+
+        def goto(self, url: str, timeout: int, wait_until: str) -> None:
+            pass
+
+        def eval_on_selector(self, selector: str, script: str) -> str:
+            return "擎朗智能W3酒店配送。" * 30
+
+    class _FakeBrowser:
+        def new_page(self) -> Any:
+            return _FakePage()
+
+    def factory() -> Any:
+        attempts.append("attempt")
+        if len(attempts) == 1:
+            raise ConnectionError("launch failed")
+        return _FakeBrowser()
+
+    fetcher = create_tiered_page_fetcher(
+        browser_factory=factory,
+        direct_fetcher=lambda url: None,
+    )
+    # Warm-up failure must not mark the launch failed forever.
+    assert fetcher.warm() is False
+    text = fetcher("https://example.test/retry")
+    assert "擎朗智能" in (text or "")
+    assert len(attempts) == 2

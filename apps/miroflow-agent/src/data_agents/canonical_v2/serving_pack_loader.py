@@ -1092,6 +1092,23 @@ def _create_pack_vector_recall_adapter(
                 cached_snapshot = snapshot
         return cached_snapshot
 
+    def _load_persisted_index() -> tuple[dict[str, int], Any, Any] | None:
+        if not vectorized_scoring:
+            return None
+        snapshot = validated_snapshot()
+        path = bundle.index_target.root / "vector_matrix.npz"
+        try:
+            return iso.load_persisted_vector_matrix(
+                path,
+                points=snapshot.points,
+                expected_embedding_model_id=expected_model_id,
+                dimension=validating_adapter.dimension,
+            )
+        except iso.IndexProjectionIntegrityError as exc:
+            raise iso.IsolatedKnowledgeReadIntegrityError(
+                "persisted vector matrix failed integrity validation"
+            ) from exc
+
     def vectorized_scores(
         snapshot: Any,
         query_vector: tuple[float, ...],
@@ -1100,23 +1117,30 @@ def _create_pack_vector_recall_adapter(
         if vectorized_index is None:
             with vectorized_index_lock:
                 if vectorized_index is None:
-                    point_vectors = validating_adapter.embed_batch(
-                        tuple(point.embedded_content for point in snapshot.points)
-                    )
-                    matrix = np.asarray(point_vectors, dtype=np.float64)
-                    norms = np.linalg.norm(matrix, axis=1)
-                    if not np.all(np.isfinite(norms)) or np.any(norms == 0.0):
-                        raise iso.IsolatedKnowledgeReadIntegrityError(
-                            "vectorized point matrix has an invalid norm"
+                    persisted = _load_persisted_index()
+                    if persisted is not None:
+                        vectorized_index = persisted
+                    else:
+                        point_vectors = validating_adapter.embed_batch(
+                            tuple(
+                                point.embedded_content
+                                for point in snapshot.points
+                            )
                         )
-                    vectorized_index = (
-                        {
-                            point.point_id: index
-                            for index, point in enumerate(snapshot.points)
-                        },
-                        matrix,
-                        norms,
-                    )
+                        matrix = np.asarray(point_vectors, dtype=np.float64)
+                        norms = np.linalg.norm(matrix, axis=1)
+                        if not np.all(np.isfinite(norms)) or np.any(norms == 0.0):
+                            raise iso.IsolatedKnowledgeReadIntegrityError(
+                                "vectorized point matrix has an invalid norm"
+                            )
+                        vectorized_index = (
+                            {
+                                point.point_id: index
+                                for index, point in enumerate(snapshot.points)
+                            },
+                            matrix,
+                            norms,
+                        )
         positions, matrix, norms = vectorized_index
         query = np.asarray(query_vector, dtype=np.float64)
         query_norm = float(np.linalg.norm(query))
@@ -1215,6 +1239,13 @@ def _create_pack_vector_recall_adapter(
         )
 
     validated_snapshot()
+    # Fast boot: load the persisted scoring matrix now so the first vector
+    # request skips the ~77s full re-embed.  Missing file falls back to the
+    # lazy in-request build; a corrupt file fails closed at boot.
+    if vectorized_scoring:
+        with vectorized_index_lock:
+            if vectorized_index is None:
+                vectorized_index = _load_persisted_index()
     return vector_recall
 
 
