@@ -4327,3 +4327,34 @@ the persisted row per point. Note: with the npz present this check is a
 same-source consistency check (the scores and the verified vectors come from the
 same matrix), not an independent recompute — accepted trade-off; the old independent
 re-embed path remains the npz-absent fallback.
+
+---
+
+## 2026-08-03 — Web-fill for concept questions (21/25 → 22/25)
+
+### Commits
+- `8dead58` feat: rewrite prompt v2 (thematic term expansion), prose prompt v9
+  (concept-question taxonomy completeness), deterministic term-expansion view
+  for data-theme queries.
+
+### What was verified
+- Probe (`s12f/probe_web_fill.py`): serper + fetch across the 4 known gaps.
+  T19/T22/T23 content exists on the web; T3 (上海开普勒 hotel delivery) does
+  NOT — the company's profile in the DB is thin and web confirms only 通用
+  人形机器人 (先行者 K1/K2/S1/D1) for 智能制造/仓储物流/特种作业/科研教育.
+- v50/v51 service checks: T19 rewrite views no longer drift to traffic/GIS
+  data collection; answers cover 遥操作/UMI/ALOHA/仿真合成; T23 answers cover
+  动作捕捉 (Motion Capture)/物理仿真引擎.
+- Unit suites: serving isolated + fast boot 132 passed (incl. 3 new
+  term-view tests; prose version assertion bumped v8→v9).
+- Workbook regression (single session): **22/25 PASS, total 297.6s**
+  (baseline 21/25, 291.7s) — T19 now passes; no quality regression.
+
+### Remaining fails and dispositions
+- T3 问题2 上海开普勒机器人: no web evidence of hotel delivery robots; the
+  workbook KEY likely needs human ground-truth verification (or a specific
+  source needs to be identified for data-side enrichment).
+- T22 问题15 / T23 问题16: word-level KEY terms (物理仿真引擎生成/基于规则生成/
+  环境感知数据vs多模态交互数据/全模态真机采集) come from the reference's own
+  taxonomy; semantics are covered. Options: semantic KEY matching for
+  concept questions, or curated concept-content ingestion (data-side).
