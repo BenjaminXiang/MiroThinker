@@ -124,6 +124,37 @@ acceptance.
       duplicate evidence envelopes, and a second final reviewer are not required unless a concrete
       regression or safety risk makes one necessary.
 
+### S12G mobile streaming UX
+
+- [x] The approved 13 viewports have no document overflow; the composer remains usable through safe-area,
+      software-keyboard, resize, and rotation changes while the message region scrolls independently.
+- [x] IME composition never submits; desktop Enter/Shift+Enter and the touch send action keep their
+      documented behavior.
+- [x] Streaming follows near the bottom, preserves a detached reading position, and provides an
+      accessible return-to-latest control with an at-least-`44×44 CSS px` touch target.
+- [x] The browser title and assistant identity are `国先检索助手`; the approved logo has a readable
+      `国先` fallback without local paths or internal branding.
+- [x] When safe streamable content exists and provider output proceeds normally, at least one safe
+      answer chunk is public before the complete synthesis final result and `done`; delivery does not
+      wait for the complete answer and then simulate progress, and the successful final result remains
+      the same synthesis without truncation or accepted-scope change.
+- [x] Raw SSE and rendered DOM omit internal identifiers and structural fields across representative
+      beginning, middle, and end cross-chunk cases while normal Chinese and Markdown remain visible.
+- [x] A pre-output failure may use existing bounded retry behavior; after output begins, another attempt
+      is never appended to the visible answer.
+- [x] When the server observes stop, disconnect, or cancellation before commit, the unfinished turn is
+      absent from successful session and next-turn context while previously committed context remains
+      unchanged; no guarantee is made for a client disconnection the server does not observe.
+- [x] S12G adds no LLM call and changes no public SSE event name or payload schema.
+- [x] Focused automated checks and the single Candidate browser runner provide current evidence for the
+      applicable outcomes above.
+
+#### Rollout-conditional native-device gate (not required for Candidate)
+
+- [ ] Before production-like rollout, one recent physical iPhone and Android each complete a short
+      keyboard, long-stream, detached-scroll, return, stop, rotation, and safe-area smoke. Candidate
+      evidence discloses whether this ran and never reports desktop emulation as native validation.
+
 ## 5. Final acceptance and cutover
 
 - [x] The isolated chat system is started on `0.0.0.0` and its reachable URL is provided to the user.

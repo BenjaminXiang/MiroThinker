@@ -240,6 +240,20 @@ evidence-aware selection.
   retrieval
 - **AND** relevant direct Product-capability evidence remains available to final LLM synthesis
 
+#### Scenario: Data-theme concept questions reject drifted off-theme claims
+- **WHEN** the query names an embodied-AI data theme (数据采集/数据路线/数据需求/合成数据) and a
+  retrieved claim carries adjacent-domain content (traffic surveys, web crawlers, crowdsourcing)
+- **THEN** the off-theme claim is excluded from the prose prompt and the deterministic fallback
+- **AND** a query that names an alternate data domain itself (网页/交通/网络/地图 data collection)
+  keeps its own claims
+
+#### Scenario: Content-farm claims never reach the answer
+- **WHEN** a retrieved claim is a content-farm, login-wall, or download-bait page dump
+  (document-mill sites, 登录后查看更多, 立即下载, 开通VIP, 上传人, 文档编号, 搜题)
+- **THEN** the claim is excluded before the prose prompt and the deterministic fallback
+- **AND** the exclusion never removes a local or current-Web claim that carries the requested
+  capability or fact
+
 ### Requirement: Displayed Web-only entities use evidence-bound session handles
 
 The system SHALL preserve any displayed Web-only candidate as a typed session-scoped handle and retain
@@ -308,3 +322,17 @@ release IDs needed to reproduce or diagnose the answer.
 - **WHEN** a previously accepted query fails after a planner or reranker model update
 - **THEN** its trace identifies the changed model/version and affected decisions
 - **AND** the failure can be classified without guessing which query path ran
+
+### Requirement: Server-observed unfinished streamed turns are not committed
+
+The system SHALL NOT record a streamed turn as successful or use it as next-turn context when the server
+observes stop, disconnect, or cancellation before that turn commits. Previously committed session context
+SHALL remain unchanged, and public SSE event names and payload schemas SHALL remain unchanged.
+This requirement makes no guarantee for a client disconnection the server does not observe before
+commit.
+
+#### Scenario: The server observes interruption before commit
+- **GIVEN** the session already contains committed context
+- **WHEN** the server observes stop, disconnect, or cancellation before the current turn commits
+- **THEN** the unfinished turn is absent from successful session and next-turn context
+- **AND** the previously committed context remains available

@@ -57,6 +57,14 @@ around the user's question instead of copying projection fields or raw snippets.
 connection failure, invalid output, or unsafe output MAY fall back to the deterministic grounded
 answer, with a typed limitation; deterministic template rendering SHALL NOT be the normal path.
 
+#### Scenario: Renderer failure falls back to a readable grounded answer
+- **WHEN** prose synthesis fails before any answer text is published
+- **THEN** the deterministic grounded fallback presents the validated claims as readable points
+  with source-locator tails and content-farm/login-wall page text removed
+- **AND** a question that explicitly seeks a link or website keeps the verified source locator
+- **AND** the fallback never publishes raw claim listings, search dumps, or content-farm text as
+  the answer
+
 #### Scenario: Professor-to-Company founder follow-up
 - **WHEN** local relationship evidence binds a Professor to a Company with a founder role and Web
   search returns relevant Company or role evidence
@@ -264,3 +272,64 @@ SHALL return the best supported partial answer and limitation instead of an unbo
 - **WHEN** some material parts are supported and another supplemental lane remains incomplete at
   budget exhaustion
 - **THEN** the answer returns the supported parts, names the limitation, and stops further calls
+
+### Requirement: S12G progressively renders the same complete answer
+
+When safe streamable answer content exists and provider output proceeds normally, the chat SHALL make
+at least one safe `answer_chunk` public before the complete synthesis final result is available and
+before `done` is emitted. It SHALL NOT wait for the complete answer and then simulate progressive
+delivery by splitting it. The successful final DOM SHALL match the existing validated final result.
+Claims, citations, displayed entities, and next-turn scope SHALL remain governed by the existing final
+parser. S12G SHALL NOT truncate the answer, add an LLM call, or change public SSE event names or payload
+schemas.
+
+#### Scenario: A provider normally streams a complete answer
+- **GIVEN** safe streamable answer content exists and provider output proceeds normally
+- **WHEN** synthesis begins before the turn completes
+- **THEN** at least one safe `answer_chunk` is public before the complete final result and `done`
+- **AND** progressive copy and the successful final DOM represent the same complete validated answer
+- **AND** committed answer scope is unchanged from the existing final-result path
+
+### Requirement: S12G streamed public copy remains safe
+
+Neither raw SSE nor rendered DOM SHALL expose internal identifiers or structural fields. Focused
+coverage SHALL include representative beginning, middle, and end cross-chunk boundaries while normal
+Chinese prose and Markdown remain visible.
+
+#### Scenario: Sensitive and ordinary text cross chunk boundaries
+- **WHEN** representative sensitive tokens and ordinary answer text span transport chunks
+- **THEN** sensitive structure is absent from raw SSE and the DOM
+- **AND** ordinary Chinese and Markdown continue to render progressively
+
+### Requirement: S12G retries never mix public attempts
+
+The system SHALL allow the existing bounded retry behavior only before answer text becomes public.
+Once answer text is public, a later failure SHALL preserve that text without appending another attempt,
+and an unfinished turn SHALL NOT be committed as successful.
+
+#### Scenario: A visible attempt fails
+- **WHEN** a prose attempt fails after some answer text is public
+- **THEN** the visible text is not followed by prose from a second attempt
+- **AND** the unfinished turn is not committed as a successful result
+
+### Requirement: S12G responsive chat preserves input and reading intent
+
+The chat SHALL remain usable across `320×568`, `360×640`, `360×800`, `412×915`, `375×667`,
+`390×844`, `430×932`, `667×375`, `844×390`, `768×1024`, `1024×768`, `1280×720`, and
+`1440×900` CSS pixels, including safe areas, software-keyboard changes, and rotation. IME composition
+SHALL NOT submit. Streaming SHALL follow near the bottom, preserve a detached reading position, and
+offer an accessible, at-least-`44×44 CSS px` return-to-latest control.
+
+#### Scenario: A mobile user composes and reads during streaming
+- **WHEN** the keyboard or orientation changes, IME composition is active, or the user scrolls upward
+- **THEN** the composer remains usable, composition does not submit, and reading position is preserved
+- **AND** return-to-latest restores following without document overflow
+
+### Requirement: S12G public branding remains readable
+
+The browser title and assistant identity SHALL use `国先检索助手`. Assistant messages SHALL use the
+approved logo, with a readable `国先` fallback that preserves layout if the image cannot load.
+
+#### Scenario: Assistant logo fails to load
+- **WHEN** the approved assistant logo is unavailable
+- **THEN** `国先` remains visible without exposing a local path or internal branding

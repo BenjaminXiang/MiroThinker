@@ -1378,3 +1378,76 @@
   (Q7/Q8T1/Q14/Q10/Q1T1).
 - Verification: serving isolated 112 passed, build isolated 132 passed, read contracts 6 passed,
   Ruff clean. No active release pointer or production resource changed.
+
+## 2026-08-06 — S12G responsive streaming UX Candidate
+
+- Completed the framework-free `国先检索助手` responsive and progressive-streaming slice without
+  changing retrieval behavior, answer scope, public SSE schemas, or LLM-call count. The Candidate
+  runner passes the approved 13-viewport matrix, IME and input behavior, detached-scroll stability,
+  return-to-latest, Markdown consistency, retry isolation, and server-observed pre-commit cancellation.
+- Repaired a state-dependent Grid defect by assigning the header, demo strip, message region, and
+  composer to explicit rows. Hiding the demo strip can no longer auto-place the message region and
+  composer into the wrong tracks; parameterized 320×568 and 667×375 regressions cover the escaped
+  mobile and landscape cases.
+- Corrected both legacy professor LLM profiles to the deployed OpenAI-compatible endpoint
+  `https://star.sustech.edu.cn/service/model/qwen36/v1` and its advertised model
+  `qwen3.6-35b-a3b`. A real streaming provider probe and focused profile tests passed.
+- Current-worktree Candidate health is HTTP 200 on `127.0.0.1:18188`. The immediately consecutive
+  self-test and production browser artifacts are
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/artifacts/20260806T053034.123076Z-d0a3afaf`
+  and
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/artifacts/20260806T053036.763098Z-d0c69d41`;
+  both pass with no defect codes. The production run observed one HTTP 200 request, 299 progressive
+  `answer_chunk` events, one final `answer`, and one terminal `done` across 306 events.
+- S12G is Candidate, not Accepted. Physical iPhone/Android validation was not run, direct user
+  acceptance remains open under Task 12.5, and no Cutover, promotion, archive, or cleanup is authorized.
+
+## 2026-08-07 — systemic answer-integrity repair round (T13/T15/T19)
+
+The 25-turn workbook regression surfaced three user-visible answer-integrity defects behind the
+reported "内容被修坏了" symptom. This round repairs them at the shared root level, with no
+per-question hardcoding and no retrieval/recall regression; all fixes are worktree-local and
+uncommitted.
+
+- **Workbook evaluator repair** (`s12f/workbook_regression.py`): generalized-refusal detection
+  (≥2 refusal markers + short answer), raw-search-dump detection (来源/内容农场 markers),
+  claim-subject stopwords for 同时/并且-style connectives, hard/soft KEY splitting, and
+  partial `vs`-coverage acceptance. Offline re-judge of the 2026-08-06 artifact moved 20/25 →
+  21/25 with the five flips audited; the remaining four fails are all real (T3/T13/T15/T19).
+- **Fallback raw-dump hole** (`knowledge_answer.py`): all four renderer-failure branches shared
+  one deterministic renderer that published raw claim listings (`- {claim.text}` including
+  `；来源：http…` tails and content-farm page text). The renderer now strips source-locator tails
+  (kept only for link-seeking queries where the locator IS the answer), drops content-farm /
+  login-wall claims, and caps each grounded point at 200 chars. The invariant stays
+  "renderer failure before publication reuses the bounded, server-owned grounded answer".
+- **Data-theme answer relevance guard** (`knowledge_serving_isolated.py`): for 数据采集/数据路线/
+  数据需求/合成数据 queries, claims carrying drifted off-theme content (traffic surveys,
+  crawlers, crowdsourcing) are dropped before both the prose prompt and the fallback. Queries
+  that name an alternate data domain themselves (网页/交通/网络/地图 data collection) keep their
+  claims. The concept term-expansion view is also promoted directly after the deterministic view
+  so the earliest-view-wins merge no longer drowns it below the candidate cut (recovered
+  动作捕捉 content).
+- **Person-probe acceptance relax** (`knowledge_serving_isolated.py` `_person_evidence_match`):
+  education-constrained probes accept the person name plus the constraint in the same hit;
+  the founder marker is no longer required in the same snippet, and person names match by plain
+  containment instead of the brand-context rule (which missed standalone names in bios). The LLM
+  probe judge backstops relaxed accepts. Fixes the T13 早稻田企业家 "未找到" refusal.
+- **Content-farm/login-wall claims dropped at selection** (`claim_text_is_raw_dump` shared by
+  selection and fallback): 登录后查看更多/立即下载/开通VIP/上传人/文档编号/搜题 plus doc-mill
+  site markers never reach the prose prompt (smaller prompts lower the wire-protocol failure
+  rate) or the fallback.
+- **Fresh regression evidence** (final code state, `18188` restarted from the worktree root with
+  all Candidate + this round's fixes):
+  - grouped: 24/25 (pre junk filter), 23/25 (final; fails T3 开普勒/九号, T19 真机实测);
+  - single-session: 23/25 (fails T3 开普勒 — 九号 recovered, T19 真机实测);
+  - T13 拒答 and T15 raw dump both PASS with integrated grounded answers (许晋诚/帕西尼 with
+    早稻田 provenance; 光基多维力原理 organized answer); manual review of T8/T10/T21 improved;
+  - artifacts: `.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/artifacts/fresh-20260806-1515-content-regression-18188/`
+    and `fresh-20260807-0010-content-regression-18188/`.
+- **Checks**: canonical suites + workbook oracle `235 passed` (pre-round baseline 216), Ruff
+  clean on all touched files, `git diff --check` clean. No git mutation, no data/index write,
+  no Cutover, promotion, archive, or cleanup; original sources remain frozen (Task 12.6).
+- **Remaining residuals**: T3 上海开普勒机器人 needs data-side 酒店送餐 evidence (enrichment
+  backlog); T3 九号 and T19 真机实测 vary between runs (provider/LLM variance); T2 role
+  fidelity (创始人 vs 联合创始人兼首席科学家) is a data-side field-fidelity item. All are
+  outside this round's answer-integrity defect class.

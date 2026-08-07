@@ -17,8 +17,10 @@
 ## Current final-milestone contract (2026-07-26)
 
 This section supersedes conflicting verification requirements below for open Tasks 2.8, 8.1, 8.8,
-9.8, and 12.2-12.6. The detailed historical sections remain evidence for already Accepted work; they
-do not add gates to the remaining milestone.
+9.8, and 12.2-12.6. Detailed historical sections remain evidence for already Accepted work and do not
+add gates to the remaining milestone unless a later subsection is explicitly labeled as a current
+incremental contract. The `s12g-chat-mobile-streaming-ux` subsection dated 2026-08-03 is that current
+incremental contract for Task 12.5j and supersedes the rebaseline only for its stated S12G scope.
 
 ### Goal
 
@@ -642,6 +644,93 @@ Last identity/hash check recorded in `verification.md`: `2026-07-12T08:40:35Z`.
 - The critical path remains deterministic parsing, concurrent local plus dual-Web retrieval, and one
   final prose LLM call. No per-entity LLM, agent loop, second synthesis call, online canonical write,
   or original-source read/write is introduced.
+
+#### s12g-chat-mobile-streaming-ux
+
+This subsection is the Candidate verification contract for Task 12.5j. It requires current evidence for
+five observable results without prescribing private classes, parsing algorithms, locks, or scheduling:
+
+- responsive `国先检索助手` behavior across the approved 13 viewports, keyboards, safe areas, and rotation;
+- reliable IME/input behavior and scroll detachment with return-to-latest;
+- when safe streamable content is produced normally, at least one safe answer chunk is public before the
+  complete synthesis final result and `done`, and progressive output reconciles to that same result;
+- raw-SSE and rendered-DOM safety at representative beginning, middle, and end cross-chunk boundaries;
+- no visible retry mixing and no successful session/next-turn commit when the server observes stop,
+  disconnect, or cancellation before commit; no guarantee is made for an unobserved client disconnect.
+
+**Focused implementation checks:**
+
+```bash
+set -euo pipefail
+(
+  cd apps/miroflow-agent
+  uv run pytest -q -n0 \
+    tests/canonical_v2/test_knowledge_serving_isolated.py \
+    tests/canonical_v2/test_knowledge_answer_implementation_closure.py
+)
+(
+  cd apps/admin-console
+  uv run pytest -q -n0 \
+    tests/test_canonical_v2_chat_http_adapter.py \
+    tests/test_canonical_v2_real_preview_ui.py
+  node tests/chat_ui_behavior_test.mjs
+)
+openspec validate rebuild-canonical-v2-knowledge-platform --strict
+git diff --check
+```
+
+The focused stream-safety cases cover representative cross-chunk boundaries, normal Chinese and
+Markdown, unchanged SSE schemas, an early safe chunk before complete final result/`done` without
+post-completion simulated streaming, complete final answers, pre-output retry versus post-output
+non-mixing, and server-observed pre-commit interruption non-commit.
+
+UI evidence covers `320×568`, `360×640`, `360×800`, `412×915`, `375×667`, `390×844`,
+`430×932`, `667×375`, `844×390`, `768×1024`, `1024×768`, `1280×720`, and `1440×900`.
+Every browser-runner invocation uses `uv run --project apps/miroflow-agent python` from the repository
+root because that uv-managed project declares Playwright.
+
+Before the production-like Candidate pass, evidence records lightweight provenance that the service on
+`127.0.0.1:18188` was launched from the current worktree and is serving its current Candidate code. A
+successful response from an already-running process is insufficient. If establishing provenance requires
+a start or restart, execution stops until the user explicitly authorizes that one action. After such
+authorization, reuse the existing Candidate serving command from the current worktree and wait for
+`GET /api/health` to return HTTP 200. This contract does not itself authorize a start or restart. If
+provenance cannot be confirmed or authorization is unavailable, record the production browser gate as
+blocked/skipped and do not count old-process results as Candidate evidence.
+
+On the confirmed current Candidate, preflight candidate real queries through the existing public chat
+SSE path. The selected query must return HTTP 200 and expose at least one progressive `answer_chunk`
+before the final result and `done`; record that observed result and export the exact passing query as
+`S12G_REAL_SSE_QUERY`. `请介绍丁文伯教授的研究方向` and `深圳无界智航科技有限公司是做什么的` are
+non-binding examples only. The observed preflight decides the query; a known business badcase is not a
+fixed S12G query or an S12G UI blocker. If no candidate passes, record blocked/skipped rather than using
+an old service or reporting a UI-runner failure.
+
+The final Candidate sequence reruns the same runner's bounded `--self-test` immediately before the single
+production-like pass and does not bind the contract to a worker-count parameter:
+
+```bash
+: "${S12G_REAL_SSE_QUERY:?export the query recorded by the current-Candidate preflight}"
+uv run --project apps/miroflow-agent python .agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/browser_acceptance.py \
+  --browser chromium --self-test \
+  --output-dir .agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/artifacts
+uv run --project apps/miroflow-agent python .agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/browser_acceptance.py \
+  --url http://127.0.0.1:18188/chat \
+  --browser chromium \
+  --real-sse-query "$S12G_REAL_SSE_QUERY" \
+  --output-dir .agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/artifacts
+```
+
+##### Rollout-conditional native-device gate (not required for Candidate)
+
+Before production-like rollout, run a short smoke on one recent physical iPhone and Android covering
+keyboard, long streaming, detached scrolling, return-to-latest, stop, rotation, and safe areas. Candidate
+evidence discloses whether this ran and never reports desktop emulation as native validation.
+
+Candidate fails if any executed focused check fails, any of the five outcomes is missing, the final
+answer is truncated, an additional LLM call is introduced, or public SSE event names or payload schemas
+change. Candidate remains blocked if current-worktree serving provenance, any required one-time user
+authorization, health readiness, or a passing real-query preflight is unavailable.
 
 ## Required evidence shape
 

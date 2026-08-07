@@ -384,6 +384,31 @@ hostname is validated against an official URL already retained on the same canon
 results, snippets, internal locators, and arbitrary third-party pages never become public citation
 links merely because the final LLM used them for relevance judgment.
 
+### S12G — Responsive streamed chat UX
+
+When safe streamable content exists and provider output proceeds normally, S12G publishes at least one
+safe answer chunk before the complete synthesis final result and `done`; it does not wait for completion
+and then simulate progress. The successful final DOM remains consistent with that same complete result,
+including its selected scope and citations. S12G adds no answer truncation, LLM call, query/retrieval
+change, or public SSE/schema change.
+
+The server reuses or extends deterministic public-output sanitization so internal identifiers and
+structural fields are absent from raw SSE; the browser retains defense-in-depth handling. Focused tests
+cover representative beginning, middle, and end cross-chunk boundaries together with ordinary Chinese
+and Markdown, without prescribing a private buffering or parsing algorithm.
+
+Existing bounded retry behavior remains available before text becomes public. After publication, a
+failure preserves visible text without mixing in another attempt. When the server observes stop,
+disconnect, or cancellation before commit, the unfinished turn stays out of successful session and
+next-turn context while prior committed context remains unchanged. The contract makes no guarantee for
+a client disconnection the server does not observe.
+
+The framework-free page remains usable across the approved 13 viewports, safe areas, software-keyboard
+and rotation changes. The message region owns scrolling, detached readers are not forced to the bottom,
+IME composition does not submit, and `国先检索助手` retains the approved logo with a readable fallback.
+Implementation details such as classes, method names, locks, and chunk-release algorithms remain local
+to the implementation and are not part of this design contract.
+
 ## Risks / Trade-offs
 
 - **[Risk] The clean-slate scope is large and may stay half-finished.** → Finish one end-to-end

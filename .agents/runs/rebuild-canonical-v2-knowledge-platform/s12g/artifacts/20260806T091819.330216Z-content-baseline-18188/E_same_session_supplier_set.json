@@ -1,0 +1,2003 @@
+{
+  "label": "E_same_session_supplier_set",
+  "query": "上述企业里总部在深圳的企业有哪些",
+  "url": "http://127.0.0.1:18188/api/chat/stream",
+  "started_at": "2026-08-06T09:19:05.346113+00:00",
+  "status": 200,
+  "headers": {
+    "date": "Thu, 06 Aug 2026 09:19:05 GMT",
+    "server": "uvicorn",
+    "cache-control": "no-cache",
+    "connection": "close",
+    "x-accel-buffering": "no",
+    "content-type": "text/event-stream; charset=utf-8",
+    "transfer-encoding": "chunked"
+  },
+  "cookies_after": [
+    {
+      "name": "miroflow_chat_session",
+      "value": "session:chat:ew5Kbiy_k--UHWfMNTQjO276zMlST2js",
+      "domain": "127.0.0.1",
+      "path": "/"
+    }
+  ],
+  "elapsed_s": 9.900445,
+  "first_event_s": 0.003954,
+  "first_answer_chunk_s": 9.370752,
+  "error": null,
+  "event_count": 229,
+  "event_names": [
+    "stage",
+    "plan_done",
+    "stage",
+    "retrieval_done",
+    "stage",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer",
+    "done"
+  ],
+  "plan_done": [
+    {
+      "lanes": [
+        "exact",
+        "structured",
+        "lexical",
+        "vector",
+        "web"
+      ],
+      "domains": [
+        "company"
+      ],
+      "views": [
+        "(\"云迹科技股份有限公司\" OR \"上海擎朗智能科技有限公司\" OR \"深圳市普渡科技有限公司\" OR \"成都市普渡机器人有限公司\" OR \"深圳优地智能有限公司\") 总部 深圳",
+        "总部在深圳的企业名单",
+        "深圳总部上市公司列表"
+      ]
+    }
+  ],
+  "retrieval_done": [
+    {
+      "lanes": [
+        {
+          "lane": "exact",
+          "status": "succeeded",
+          "candidates": 0
+        },
+        {
+          "lane": "structured",
+          "status": "succeeded",
+          "candidates": 5
+        },
+        {
+          "lane": "lexical",
+          "status": "succeeded",
+          "candidates": 0
+        },
+        {
+          "lane": "vector",
+          "status": "succeeded",
+          "candidates": 5
+        },
+        {
+          "lane": "web",
+          "status": "succeeded",
+          "candidates": 48
+        },
+        {
+          "lane": "supplemental",
+          "status": "succeeded",
+          "candidates": 3
+        }
+      ]
+    }
+  ],
+  "streamed_text": "上述企业中，总部在深圳的企业包括：\n\n1. **深圳优地智能有限公司**：公司名称明确包含“深圳”，定位为专注于商用服务机器人研发与应用的科技公司。\n2. **深圳市普渡科技有限公司**：公司名称明确包含“深圳市”，定位为商用配送机器人与服务机器人解决方案提供商。\n\n关于**云迹科技股份有限公司**，公开信息显示其注册名称为“北京云迹科技股份有限公司”，且主要办公地址位于北京市海淀区，因此其总部不在深圳。虽然该公司在深圳设有分支机构（如云迹机器人(深圳)有限公司）并在深圳开展业务合作，但这不改变其总部所在地的属性。",
+  "answer": {
+    "query": "上述企业里总部在深圳的企业有哪些",
+    "query_type": "canonical_v2:A:answer",
+    "answer_text": "上述企业中，总部在深圳的企业包括：\n\n1. **深圳优地智能有限公司**：公司名称明确包含“深圳”，定位为专注于商用服务机器人研发与应用的科技公司。\n2. **深圳市普渡科技有限公司**：公司名称明确包含“深圳市”，定位为商用配送机器人与服务机器人解决方案提供商。\n\n关于**云迹科技股份有限公司**，公开信息显示其注册名称为“北京云迹科技股份有限公司”，且主要办公地址位于北京市海淀区，因此其总部不在深圳。虽然该公司在深圳设有分支机构（如云迹机器人(深圳)有限公司）并在深圳开展业务合作，但这不改变其总部所在地的属性。",
+    "citations": [
+      {
+        "type": "company",
+        "id": "official-source-b8a638ec5e5eefe7",
+        "label": "深圳市普渡科技有限公司",
+        "url": "https://www.pudurobotics.com"
+      }
+    ],
+    "evidence": [],
+    "clarification": null,
+    "structured_payload": {},
+    "answer_style": "llm_synthesized",
+    "citation_map": {
+      "1": "official-source-b8a638ec5e5eefe7"
+    },
+    "suggested_followups": []
+  },
+  "events": [
+    {
+      "event": "stage",
+      "at_s": 0.003954,
+      "data": {
+        "name": "planning"
+      }
+    },
+    {
+      "event": "plan_done",
+      "at_s": 0.233891,
+      "data": {
+        "lanes": [
+          "exact",
+          "structured",
+          "lexical",
+          "vector",
+          "web"
+        ],
+        "domains": [
+          "company"
+        ],
+        "views": [
+          "(\"云迹科技股份有限公司\" OR \"上海擎朗智能科技有限公司\" OR \"深圳市普渡科技有限公司\" OR \"成都市普渡机器人有限公司\" OR \"深圳优地智能有限公司\") 总部 深圳",
+          "总部在深圳的企业名单",
+          "深圳总部上市公司列表"
+        ]
+      }
+    },
+    {
+      "event": "stage",
+      "at_s": 0.234038,
+      "data": {
+        "name": "retrieval"
+      }
+    },
+    {
+      "event": "retrieval_done",
+      "at_s": 8.852565,
+      "data": {
+        "lanes": [
+          {
+            "lane": "exact",
+            "status": "succeeded",
+            "candidates": 0
+          },
+          {
+            "lane": "structured",
+            "status": "succeeded",
+            "candidates": 5
+          },
+          {
+            "lane": "lexical",
+            "status": "succeeded",
+            "candidates": 0
+          },
+          {
+            "lane": "vector",
+            "status": "succeeded",
+            "candidates": 5
+          },
+          {
+            "lane": "web",
+            "status": "succeeded",
+            "candidates": 48
+          },
+          {
+            "lane": "supplemental",
+            "status": "succeeded",
+            "candidates": 3
+          }
+        ]
+      }
+    },
+    {
+      "event": "stage",
+      "at_s": 8.852808,
+      "data": {
+        "name": "synthesis"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.370752,
+      "data": {
+        "text": "上"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.370917,
+      "data": {
+        "text": "述"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.371183,
+      "data": {
+        "text": "企"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.371397,
+      "data": {
+        "text": "业"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.381875,
+      "data": {
+        "text": "中"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.382084,
+      "data": {
+        "text": "，"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.38229,
+      "data": {
+        "text": "总"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.382494,
+      "data": {
+        "text": "部"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.382695,
+      "data": {
+        "text": "在"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.393164,
+      "data": {
+        "text": "深"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.393418,
+      "data": {
+        "text": "圳"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.39364,
+      "data": {
+        "text": "的"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.393854,
+      "data": {
+        "text": "企"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.404331,
+      "data": {
+        "text": "业"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.404532,
+      "data": {
+        "text": "包"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.404736,
+      "data": {
+        "text": "括"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.415274,
+      "data": {
+        "text": "："
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.415421,
+      "data": {
+        "text": "\n"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.415597,
+      "data": {
+        "text": "\n"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.415778,
+      "data": {
+        "text": "1"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.415959,
+      "data": {
+        "text": "."
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.41614,
+      "data": {
+        "text": " "
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.41632,
+      "data": {
+        "text": "*"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.426753,
+      "data": {
+        "text": "*"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.426947,
+      "data": {
+        "text": "深"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.42715,
+      "data": {
+        "text": "圳"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.427368,
+      "data": {
+        "text": "优"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.427559,
+      "data": {
+        "text": "地"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.438021,
+      "data": {
+        "text": "智"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.438184,
+      "data": {
+        "text": "能"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.438377,
+      "data": {
+        "text": "有"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.438566,
+      "data": {
+        "text": "限"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.438746,
+      "data": {
+        "text": "公"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.438928,
+      "data": {
+        "text": "司"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.439109,
+      "data": {
+        "text": "*"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.439312,
+      "data": {
+        "text": "*"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.449767,
+      "data": {
+        "text": "："
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.460202,
+      "data": {
+        "text": "公"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.460354,
+      "data": {
+        "text": "司名"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.470773,
+      "data": {
+        "text": "称"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.470951,
+      "data": {
+        "text": "明"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.471135,
+      "data": {
+        "text": "确"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.471343,
+      "data": {
+        "text": "包"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.471529,
+      "data": {
+        "text": "含"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.471755,
+      "data": {
+        "text": "“"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.482194,
+      "data": {
+        "text": "深"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.482379,
+      "data": {
+        "text": "圳"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.482562,
+      "data": {
+        "text": "”"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.482745,
+      "data": {
+        "text": "，"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.482927,
+      "data": {
+        "text": "定"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.483108,
+      "data": {
+        "text": "位"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.483314,
+      "data": {
+        "text": "为"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.483495,
+      "data": {
+        "text": "专"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.494128,
+      "data": {
+        "text": "注"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.494318,
+      "data": {
+        "text": "于"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.494503,
+      "data": {
+        "text": "商"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.504921,
+      "data": {
+        "text": "用"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.505107,
+      "data": {
+        "text": "服"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.505281,
+      "data": {
+        "text": "务"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.505457,
+      "data": {
+        "text": "机"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.505645,
+      "data": {
+        "text": "器"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.506562,
+      "data": {
+        "text": "人"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.506754,
+      "data": {
+        "text": "研"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.506943,
+      "data": {
+        "text": "发"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.517767,
+      "data": {
+        "text": "与"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.517949,
+      "data": {
+        "text": "应"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.518132,
+      "data": {
+        "text": "用"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.518312,
+      "data": {
+        "text": "的"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.528735,
+      "data": {
+        "text": "科"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.528909,
+      "data": {
+        "text": "技"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.529088,
+      "data": {
+        "text": "公"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.529267,
+      "data": {
+        "text": "司"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.529445,
+      "data": {
+        "text": "。"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.539858,
+      "data": {
+        "text": "\n"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.540034,
+      "data": {
+        "text": "2"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.550459,
+      "data": {
+        "text": "."
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.550626,
+      "data": {
+        "text": " "
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.550801,
+      "data": {
+        "text": "*"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.550977,
+      "data": {
+        "text": "*"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.561425,
+      "data": {
+        "text": "深"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.561587,
+      "data": {
+        "text": "圳"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.561761,
+      "data": {
+        "text": "市"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.561946,
+      "data": {
+        "text": "普"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.562132,
+      "data": {
+        "text": "渡"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.562319,
+      "data": {
+        "text": "科"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.563452,
+      "data": {
+        "text": "技"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.563645,
+      "data": {
+        "text": "有"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.563824,
+      "data": {
+        "text": "限"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.564,
+      "data": {
+        "text": "公"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.564178,
+      "data": {
+        "text": "司"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.574604,
+      "data": {
+        "text": "*"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.574779,
+      "data": {
+        "text": "*"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.574958,
+      "data": {
+        "text": "："
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.575138,
+      "data": {
+        "text": "公"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.585561,
+      "data": {
+        "text": "司名"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.585742,
+      "data": {
+        "text": "称"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.58592,
+      "data": {
+        "text": "明"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.595691,
+      "data": {
+        "text": "确"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.595874,
+      "data": {
+        "text": "包"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.59606,
+      "data": {
+        "text": "含"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.606485,
+      "data": {
+        "text": "“"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.606673,
+      "data": {
+        "text": "深"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.60686,
+      "data": {
+        "text": "圳"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.607046,
+      "data": {
+        "text": "市"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.607239,
+      "data": {
+        "text": "”"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.607462,
+      "data": {
+        "text": "，"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.607651,
+      "data": {
+        "text": "定"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.607833,
+      "data": {
+        "text": "位"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.608016,
+      "data": {
+        "text": "为"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.618442,
+      "data": {
+        "text": "商"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.618619,
+      "data": {
+        "text": "用"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.618796,
+      "data": {
+        "text": "配"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.618974,
+      "data": {
+        "text": "送"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.619146,
+      "data": {
+        "text": "机"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.62957,
+      "data": {
+        "text": "器"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.62975,
+      "data": {
+        "text": "人"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.62993,
+      "data": {
+        "text": "与"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.630108,
+      "data": {
+        "text": "服"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.630284,
+      "data": {
+        "text": "务"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.640751,
+      "data": {
+        "text": "机"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.640924,
+      "data": {
+        "text": "器"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.641103,
+      "data": {
+        "text": "人"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.641284,
+      "data": {
+        "text": "解"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.651811,
+      "data": {
+        "text": "决"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.651992,
+      "data": {
+        "text": "方"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.65217,
+      "data": {
+        "text": "案"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.652353,
+      "data": {
+        "text": "提"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.662825,
+      "data": {
+        "text": "供"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.663012,
+      "data": {
+        "text": "商"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.673522,
+      "data": {
+        "text": "。"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.673677,
+      "data": {
+        "text": "\n"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.67385,
+      "data": {
+        "text": "\n"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.674023,
+      "data": {
+        "text": "关"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.6742,
+      "data": {
+        "text": "于"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.674375,
+      "data": {
+        "text": "*"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.674549,
+      "data": {
+        "text": "*"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.674727,
+      "data": {
+        "text": "云"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.674904,
+      "data": {
+        "text": "迹"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.675078,
+      "data": {
+        "text": "科"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.685502,
+      "data": {
+        "text": "技"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.696102,
+      "data": {
+        "text": "股"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.696282,
+      "data": {
+        "text": "份"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.696463,
+      "data": {
+        "text": "有"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.696644,
+      "data": {
+        "text": "限"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.69683,
+      "data": {
+        "text": "公"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.69701,
+      "data": {
+        "text": "司"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.69719,
+      "data": {
+        "text": "*"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.697363,
+      "data": {
+        "text": "*"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.707842,
+      "data": {
+        "text": "，"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.70809,
+      "data": {
+        "text": "公"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.70819,
+      "data": {
+        "text": "开"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.708369,
+      "data": {
+        "text": "信"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.708542,
+      "data": {
+        "text": "息"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.708721,
+      "data": {
+        "text": "显"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.708901,
+      "data": {
+        "text": "示"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.71934,
+      "data": {
+        "text": "其"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.719532,
+      "data": {
+        "text": "注"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.730238,
+      "data": {
+        "text": "册"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.730426,
+      "data": {
+        "text": "名"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.730605,
+      "data": {
+        "text": "称"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.730785,
+      "data": {
+        "text": "为"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.730962,
+      "data": {
+        "text": "“"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.741381,
+      "data": {
+        "text": "北"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.741568,
+      "data": {
+        "text": "京"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.741759,
+      "data": {
+        "text": "云"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.752187,
+      "data": {
+        "text": "迹"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.752369,
+      "data": {
+        "text": "科"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.75255,
+      "data": {
+        "text": "技"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.752727,
+      "data": {
+        "text": "股"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.752902,
+      "data": {
+        "text": "份"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.774807,
+      "data": {
+        "text": "有"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.775007,
+      "data": {
+        "text": "限"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.775217,
+      "data": {
+        "text": "公"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.775409,
+      "data": {
+        "text": "司"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.775592,
+      "data": {
+        "text": "”"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.775776,
+      "data": {
+        "text": "，"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.775968,
+      "data": {
+        "text": "且"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.776158,
+      "data": {
+        "text": "主"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.776337,
+      "data": {
+        "text": "要"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.776514,
+      "data": {
+        "text": "办"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.786971,
+      "data": {
+        "text": "公"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.787142,
+      "data": {
+        "text": "地"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.787346,
+      "data": {
+        "text": "址"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.797817,
+      "data": {
+        "text": "位"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.797995,
+      "data": {
+        "text": "于"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.798173,
+      "data": {
+        "text": "北"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.79835,
+      "data": {
+        "text": "京"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.808797,
+      "data": {
+        "text": "市"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.808978,
+      "data": {
+        "text": "海"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.809151,
+      "data": {
+        "text": "淀"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.809327,
+      "data": {
+        "text": "区"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.809511,
+      "data": {
+        "text": "，"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.809693,
+      "data": {
+        "text": "因"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.809876,
+      "data": {
+        "text": "此"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.820309,
+      "data": {
+        "text": "其"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.82049,
+      "data": {
+        "text": "总"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.820681,
+      "data": {
+        "text": "部"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.831102,
+      "data": {
+        "text": "不"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.831294,
+      "data": {
+        "text": "在"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.831479,
+      "data": {
+        "text": "深"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.831659,
+      "data": {
+        "text": "圳"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.83184,
+      "data": {
+        "text": "。"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.832016,
+      "data": {
+        "text": "虽"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.842439,
+      "data": {
+        "text": "然"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.842616,
+      "data": {
+        "text": "该"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.84279,
+      "data": {
+        "text": "公"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.8533,
+      "data": {
+        "text": "司"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.85348,
+      "data": {
+        "text": "在"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.853663,
+      "data": {
+        "text": "深"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.864166,
+      "data": {
+        "text": "圳"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.864356,
+      "data": {
+        "text": "设"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.864535,
+      "data": {
+        "text": "有"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.87498,
+      "data": {
+        "text": "分"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.875181,
+      "data": {
+        "text": "支"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.875361,
+      "data": {
+        "text": "机"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.875547,
+      "data": {
+        "text": "构"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.885983,
+      "data": {
+        "text": "（"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.886156,
+      "data": {
+        "text": "如"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.886331,
+      "data": {
+        "text": "云"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.88651,
+      "data": {
+        "text": "迹"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.886686,
+      "data": {
+        "text": "机"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.899095,
+      "data": {
+        "text": "器人(深圳)有限公司）并在深圳开展业务合作，但这不改变其总部所在地的属性。"
+      }
+    },
+    {
+      "event": "answer",
+      "at_s": 9.899524,
+      "data": {
+        "query": "上述企业里总部在深圳的企业有哪些",
+        "query_type": "canonical_v2:A:answer",
+        "answer_text": "上述企业中，总部在深圳的企业包括：\n\n1. **深圳优地智能有限公司**：公司名称明确包含“深圳”，定位为专注于商用服务机器人研发与应用的科技公司。\n2. **深圳市普渡科技有限公司**：公司名称明确包含“深圳市”，定位为商用配送机器人与服务机器人解决方案提供商。\n\n关于**云迹科技股份有限公司**，公开信息显示其注册名称为“北京云迹科技股份有限公司”，且主要办公地址位于北京市海淀区，因此其总部不在深圳。虽然该公司在深圳设有分支机构（如云迹机器人(深圳)有限公司）并在深圳开展业务合作，但这不改变其总部所在地的属性。",
+        "citations": [
+          {
+            "type": "company",
+            "id": "official-source-b8a638ec5e5eefe7",
+            "label": "深圳市普渡科技有限公司",
+            "url": "https://www.pudurobotics.com"
+          }
+        ],
+        "evidence": [],
+        "clarification": null,
+        "structured_payload": {},
+        "answer_style": "llm_synthesized",
+        "citation_map": {
+          "1": "official-source-b8a638ec5e5eefe7"
+        },
+        "suggested_followups": []
+      }
+    },
+    {
+      "event": "done",
+      "at_s": 9.89971,
+      "data": {}
+    }
+  ]
+}

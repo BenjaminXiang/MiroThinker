@@ -20,13 +20,24 @@
 
 - **Lean E2E rebaseline:** the user confirmed `docs/测试集答案.xlsx` as customer Ground Truth and
   retired Task 2.8 plus the separate Tasks 8.1/8.8/9.8 claim-level gates. Historical review artifacts
-  remain intact but non-normative. S12B/Task 12.2 is now a verified functional Candidate and the
-  current ledger is `76/80`; exactly Tasks 12.3-12.6 remain. The next milestone is the 17-conversation/
-  25-turn workbook replay, badcase repair, and direct user acceptance. This paragraph
-  supersedes conflicting open-task status in the historical detail below.
+  remain intact but non-normative. S12B/Task 12.2 is a verified functional Candidate and the
+  current ledger is `90/92` (updated 2026-08-07); Tasks 12.3 (17-conversation/25-turn workbook replay)
+  and 12.4 (minimal final checks) are complete, and exactly Tasks 12.5 (direct user acceptance) and
+  12.6 (frozen sources / cutover authorization) remain. The next milestone is direct user acceptance.
+  This paragraph supersedes conflicting open-task status in the historical detail below.
+
+- **S12G and answer-integrity round (2026-08-06/07):** S12G (responsive streaming UX, Task 12.5j)
+  is Candidate, not Accepted. The systemic answer-integrity repair round (workbook evaluator,
+  fallback raw-dump cleanup, data-theme claim relevance guard, person-probe relax, content-farm
+  claim filtering) fixed the T13 refusal, T15 raw dump, and T19 off-topic defects; fresh 25-turn
+  regressions on `18188` score grouped 23/25 and single-session 23/25 with the residual fails
+  being the known data-side gap (T3 开普勒 酒店送餐 evidence) and hard-token run variance
+  (T3 九号, T19 真机实测). Evidence:
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/artifacts/fresh-20260806-1515-content-regression-18188/`
+  and `fresh-20260807-0010-content-regression-18188/`; change-log entry 2026-08-07.
 
 - **`rebuild-canonical-v2-knowledge-platform`** (OpenSpec, breaking Epic) is the sole implementation
-  mainline by user decision. Current task ledger: 76/80. Tasks 5.1-5.7 retain their Accepted
+  mainline by user decision. Current task ledger: 90/92 (2026-08-07). Tasks 5.1-5.7 retain their Accepted
   evidence; S5G/Task 5.7 closed the temporal-precision contract; Task 6.3 typed domain projection is
   Accepted; Tasks 6.1-6.8 and Aggregate S6 are Accepted, including the 6.2/6.4/6.6 RED-to-GREEN
   dependency chain and the full real-PostgreSQL sibling review. ADR-013-ADR-022 add S2C and S6R

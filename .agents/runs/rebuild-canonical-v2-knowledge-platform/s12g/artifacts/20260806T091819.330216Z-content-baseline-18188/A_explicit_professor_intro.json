@@ -1,0 +1,3622 @@
+{
+  "label": "A_explicit_professor_intro",
+  "query": "介绍清华的丁文伯",
+  "url": "http://127.0.0.1:18188/api/chat/stream",
+  "started_at": "2026-08-06T09:18:19.330927+00:00",
+  "status": 200,
+  "headers": {
+    "date": "Thu, 06 Aug 2026 09:18:18 GMT",
+    "server": "uvicorn",
+    "cache-control": "no-cache",
+    "connection": "close",
+    "x-accel-buffering": "no",
+    "content-type": "text/event-stream; charset=utf-8",
+    "set-cookie": "miroflow_chat_session=session:chat:bNMVzEcXRgpS5qnhqrqujTnlCOrkeTyx; HttpOnly; Max-Age=1800; Path=/; SameSite=lax",
+    "transfer-encoding": "chunked"
+  },
+  "cookies_after": [
+    {
+      "name": "miroflow_chat_session",
+      "value": "session:chat:bNMVzEcXRgpS5qnhqrqujTnlCOrkeTyx",
+      "domain": "127.0.0.1",
+      "path": "/"
+    }
+  ],
+  "elapsed_s": 9.730545,
+  "first_event_s": 0.024146,
+  "first_answer_chunk_s": 8.455314,
+  "error": null,
+  "event_count": 433,
+  "event_names": [
+    "stage",
+    "plan_done",
+    "stage",
+    "retrieval_done",
+    "stage",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer",
+    "done"
+  ],
+  "plan_done": [
+    {
+      "lanes": [
+        "exact",
+        "structured",
+        "lexical",
+        "vector",
+        "web"
+      ],
+      "domains": [
+        "professor"
+      ],
+      "views": [
+        "丁文伯"
+      ]
+    }
+  ],
+  "retrieval_done": [
+    {
+      "lanes": [
+        {
+          "lane": "exact",
+          "status": "succeeded",
+          "candidates": 0
+        },
+        {
+          "lane": "structured",
+          "status": "succeeded",
+          "candidates": 0
+        },
+        {
+          "lane": "lexical",
+          "status": "succeeded",
+          "candidates": 1
+        },
+        {
+          "lane": "vector",
+          "status": "succeeded",
+          "candidates": 16
+        },
+        {
+          "lane": "web",
+          "status": "succeeded",
+          "candidates": 16
+        }
+      ]
+    }
+  ],
+  "streamed_text": "丁文伯是清华大学深圳国际研究生院数据与信息学院的副教授、博士生导师，同时担任该院科研处处长，是国家青年特聘专家及国家重点研发计划青年项目首席科学家。\n\n他于1990年3月出生，2007年考入清华大学电子工程系，分别于2011年和2016年获得学士和博士学位。2016年至2019年期间，他在美国佐治亚理工学院材料科学与工程系从事博士后研究。\n\n丁文伯的研究领域主要涵盖摩擦电纳米发电机与智能感知系统，重点关注摩擦电自供电传感器设计、基于摩擦电效应的触觉感知、柔性可穿戴智能手套以及多模态人机交互界面。在算法层面，他致力于研究通信高效的联邦学习算法及基于自适应量化的分布式学习。近期研究趋势涉及利用多功能信号实现可穿戴应用。其团队曾成功研发出受鸽眼启发的多模态高分辨率触觉传感器（SuperTac），并应用于机器人领域。\n\n此外，公开信息显示，丁文伯在宽带无线通信物理层算法研究方面也有深厚积累，曾师从宋健教授，成功解决了超长信道估计问题，相关研究成果被国际电联接受成为国际标准。他已发表国际顶级SCI期刊和EI会议论文32篇，授权或公开发明专利15项。",
+  "answer": {
+    "query": "介绍清华的丁文伯",
+    "query_type": "canonical_v2:A:answer",
+    "answer_text": "丁文伯是清华大学深圳国际研究生院数据与信息学院的副教授、博士生导师，同时担任该院科研处处长，是国家青年特聘专家及国家重点研发计划青年项目首席科学家。\n\n他于1990年3月出生，2007年考入清华大学电子工程系，分别于2011年和2016年获得学士和博士学位。2016年至2019年期间，他在美国佐治亚理工学院材料科学与工程系从事博士后研究。\n\n丁文伯的研究领域主要涵盖摩擦电纳米发电机与智能感知系统，重点关注摩擦电自供电传感器设计、基于摩擦电效应的触觉感知、柔性可穿戴智能手套以及多模态人机交互界面。在算法层面，他致力于研究通信高效的联邦学习算法及基于自适应量化的分布式学习。近期研究趋势涉及利用多功能信号实现可穿戴应用。其团队曾成功研发出受鸽眼启发的多模态高分辨率触觉传感器（SuperTac），并应用于机器人领域。\n\n此外，公开信息显示，丁文伯在宽带无线通信物理层算法研究方面也有深厚积累，曾师从宋健教授，成功解决了超长信道估计问题，相关研究成果被国际电联接受成为国际标准。他已发表国际顶级SCI期刊和EI会议论文32篇，授权或公开发明专利15项。",
+    "citations": [
+      {
+        "type": "professor",
+        "id": "official-source-372658271812c93c",
+        "label": "丁文伯",
+        "url": "http://www.sigs.tsinghua.edu.cn/dwb/main.htm"
+      }
+    ],
+    "evidence": [],
+    "clarification": null,
+    "structured_payload": {},
+    "answer_style": "llm_synthesized",
+    "citation_map": {
+      "1": "official-source-372658271812c93c"
+    },
+    "suggested_followups": []
+  },
+  "events": [
+    {
+      "event": "stage",
+      "at_s": 0.024146,
+      "data": {
+        "name": "planning"
+      }
+    },
+    {
+      "event": "plan_done",
+      "at_s": 0.026741,
+      "data": {
+        "lanes": [
+          "exact",
+          "structured",
+          "lexical",
+          "vector",
+          "web"
+        ],
+        "domains": [
+          "professor"
+        ],
+        "views": [
+          "丁文伯"
+        ]
+      }
+    },
+    {
+      "event": "stage",
+      "at_s": 0.026989,
+      "data": {
+        "name": "retrieval"
+      }
+    },
+    {
+      "event": "retrieval_done",
+      "at_s": 7.92039,
+      "data": {
+        "lanes": [
+          {
+            "lane": "exact",
+            "status": "succeeded",
+            "candidates": 0
+          },
+          {
+            "lane": "structured",
+            "status": "succeeded",
+            "candidates": 0
+          },
+          {
+            "lane": "lexical",
+            "status": "succeeded",
+            "candidates": 1
+          },
+          {
+            "lane": "vector",
+            "status": "succeeded",
+            "candidates": 16
+          },
+          {
+            "lane": "web",
+            "status": "succeeded",
+            "candidates": 16
+          }
+        ]
+      }
+    },
+    {
+      "event": "stage",
+      "at_s": 7.920579,
+      "data": {
+        "name": "synthesis"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.455314,
+      "data": {
+        "text": "丁"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.455427,
+      "data": {
+        "text": "文"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.455671,
+      "data": {
+        "text": "伯"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.455912,
+      "data": {
+        "text": "是"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.456145,
+      "data": {
+        "text": "清"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.476969,
+      "data": {
+        "text": "华"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.477158,
+      "data": {
+        "text": "大"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.477395,
+      "data": {
+        "text": "学"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.477624,
+      "data": {
+        "text": "深"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.477872,
+      "data": {
+        "text": "圳"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.478112,
+      "data": {
+        "text": "国"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.478344,
+      "data": {
+        "text": "际"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.478609,
+      "data": {
+        "text": "研"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.478841,
+      "data": {
+        "text": "究"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.479069,
+      "data": {
+        "text": "生"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.47931,
+      "data": {
+        "text": "院"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.489901,
+      "data": {
+        "text": "数"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.490074,
+      "data": {
+        "text": "据"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.490288,
+      "data": {
+        "text": "与"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.490522,
+      "data": {
+        "text": "信"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.490738,
+      "data": {
+        "text": "息"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.490961,
+      "data": {
+        "text": "学"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.491175,
+      "data": {
+        "text": "院"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.501761,
+      "data": {
+        "text": "的"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.501987,
+      "data": {
+        "text": "副"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.502209,
+      "data": {
+        "text": "教"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.502447,
+      "data": {
+        "text": "授"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.502661,
+      "data": {
+        "text": "、"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.502884,
+      "data": {
+        "text": "博"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.513386,
+      "data": {
+        "text": "士"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.513502,
+      "data": {
+        "text": "生"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.513602,
+      "data": {
+        "text": "导"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.513681,
+      "data": {
+        "text": "师"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.523943,
+      "data": {
+        "text": "，"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.524034,
+      "data": {
+        "text": "同"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.524122,
+      "data": {
+        "text": "时"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.524203,
+      "data": {
+        "text": "担"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.534496,
+      "data": {
+        "text": "任该"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.534577,
+      "data": {
+        "text": "院"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.544792,
+      "data": {
+        "text": "科"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.555011,
+      "data": {
+        "text": "研处"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.56523,
+      "data": {
+        "text": "处"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.565309,
+      "data": {
+        "text": "长"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.565385,
+      "data": {
+        "text": "，"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.575772,
+      "data": {
+        "text": "是国"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.575958,
+      "data": {
+        "text": "家"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.576147,
+      "data": {
+        "text": "青"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.586616,
+      "data": {
+        "text": "年"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.586782,
+      "data": {
+        "text": "特"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.586969,
+      "data": {
+        "text": "聘"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.597398,
+      "data": {
+        "text": "专"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.597578,
+      "data": {
+        "text": "家"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.60799,
+      "data": {
+        "text": "及"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.608175,
+      "data": {
+        "text": "国"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.608362,
+      "data": {
+        "text": "家"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.618837,
+      "data": {
+        "text": "重"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.619027,
+      "data": {
+        "text": "点"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.619214,
+      "data": {
+        "text": "研"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.619396,
+      "data": {
+        "text": "发"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.619586,
+      "data": {
+        "text": "计"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.619782,
+      "data": {
+        "text": "划"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.630322,
+      "data": {
+        "text": "青"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.630529,
+      "data": {
+        "text": "年"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.630716,
+      "data": {
+        "text": "项"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.630898,
+      "data": {
+        "text": "目"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.641349,
+      "data": {
+        "text": "首"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.641542,
+      "data": {
+        "text": "席"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.641724,
+      "data": {
+        "text": "科"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.641905,
+      "data": {
+        "text": "学"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.65255,
+      "data": {
+        "text": "家"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.663,
+      "data": {
+        "text": "。"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.663172,
+      "data": {
+        "text": "\n\n"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.66335,
+      "data": {
+        "text": "他"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.673793,
+      "data": {
+        "text": "于"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.673979,
+      "data": {
+        "text": "1"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.684535,
+      "data": {
+        "text": "99"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.694878,
+      "data": {
+        "text": "0"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.695052,
+      "data": {
+        "text": "年"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.695228,
+      "data": {
+        "text": "3"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.695413,
+      "data": {
+        "text": "月"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.695594,
+      "data": {
+        "text": "出"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.706046,
+      "data": {
+        "text": "生"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.706215,
+      "data": {
+        "text": "，"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.706416,
+      "data": {
+        "text": "2"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.706612,
+      "data": {
+        "text": "0"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.706789,
+      "data": {
+        "text": "0"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.706974,
+      "data": {
+        "text": "7"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.717405,
+      "data": {
+        "text": "年"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.717584,
+      "data": {
+        "text": "考"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.738326,
+      "data": {
+        "text": "入清"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.73853,
+      "data": {
+        "text": "华"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.738715,
+      "data": {
+        "text": "大"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.749162,
+      "data": {
+        "text": "学"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.749344,
+      "data": {
+        "text": "电"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.75979,
+      "data": {
+        "text": "子工"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.760143,
+      "data": {
+        "text": "程"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.770424,
+      "data": {
+        "text": "系"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.770622,
+      "data": {
+        "text": "，"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.781035,
+      "data": {
+        "text": "分"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.781207,
+      "data": {
+        "text": "别"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.781381,
+      "data": {
+        "text": "于"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.781556,
+      "data": {
+        "text": "2"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.781731,
+      "data": {
+        "text": "0"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.792159,
+      "data": {
+        "text": "1"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.79234,
+      "data": {
+        "text": "1"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.792522,
+      "data": {
+        "text": "年"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.802938,
+      "data": {
+        "text": "和"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.803104,
+      "data": {
+        "text": "2"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.803276,
+      "data": {
+        "text": "0"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.803449,
+      "data": {
+        "text": "1"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.803619,
+      "data": {
+        "text": "6"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.803843,
+      "data": {
+        "text": "年"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.814313,
+      "data": {
+        "text": "获"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.814541,
+      "data": {
+        "text": "得"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.814715,
+      "data": {
+        "text": "学"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.814892,
+      "data": {
+        "text": "士"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.815073,
+      "data": {
+        "text": "和"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.815253,
+      "data": {
+        "text": "博"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.825712,
+      "data": {
+        "text": "士"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.825882,
+      "data": {
+        "text": "学"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.826061,
+      "data": {
+        "text": "位"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.826241,
+      "data": {
+        "text": "。"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.826451,
+      "data": {
+        "text": "2"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.826619,
+      "data": {
+        "text": "0"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.826833,
+      "data": {
+        "text": "1"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.837278,
+      "data": {
+        "text": "6"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.847747,
+      "data": {
+        "text": "年至"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.847927,
+      "data": {
+        "text": "2"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.858418,
+      "data": {
+        "text": "0"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.858619,
+      "data": {
+        "text": "1"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.85879,
+      "data": {
+        "text": "9"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.858969,
+      "data": {
+        "text": "年"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.859144,
+      "data": {
+        "text": "期"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.869573,
+      "data": {
+        "text": "间"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.869756,
+      "data": {
+        "text": "，"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.869934,
+      "data": {
+        "text": "他"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.870115,
+      "data": {
+        "text": "在"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.880544,
+      "data": {
+        "text": "美"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.880718,
+      "data": {
+        "text": "国"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.880907,
+      "data": {
+        "text": "佐"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.88107,
+      "data": {
+        "text": "治"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.891505,
+      "data": {
+        "text": "亚"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.891692,
+      "data": {
+        "text": "理"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.89187,
+      "data": {
+        "text": "工"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.892044,
+      "data": {
+        "text": "学"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.892227,
+      "data": {
+        "text": "院"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.892398,
+      "data": {
+        "text": "材"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.902824,
+      "data": {
+        "text": "料"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.903003,
+      "data": {
+        "text": "科"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.903187,
+      "data": {
+        "text": "学"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.913613,
+      "data": {
+        "text": "与"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.913789,
+      "data": {
+        "text": "工"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.913967,
+      "data": {
+        "text": "程"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.914144,
+      "data": {
+        "text": "系"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.924595,
+      "data": {
+        "text": "从"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.935128,
+      "data": {
+        "text": "事"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.935301,
+      "data": {
+        "text": "博"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.935481,
+      "data": {
+        "text": "士"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.935663,
+      "data": {
+        "text": "后"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.935838,
+      "data": {
+        "text": "研"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.936014,
+      "data": {
+        "text": "究"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.936205,
+      "data": {
+        "text": "。"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.946652,
+      "data": {
+        "text": "\n"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.957069,
+      "data": {
+        "text": "\n"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.957248,
+      "data": {
+        "text": "丁"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.957433,
+      "data": {
+        "text": "文"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.957608,
+      "data": {
+        "text": "伯"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.957781,
+      "data": {
+        "text": "的"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.957956,
+      "data": {
+        "text": "研"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.958134,
+      "data": {
+        "text": "究"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.958313,
+      "data": {
+        "text": "领"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.968842,
+      "data": {
+        "text": "域"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.969033,
+      "data": {
+        "text": "主"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.969214,
+      "data": {
+        "text": "要"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.969391,
+      "data": {
+        "text": "涵"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.979877,
+      "data": {
+        "text": "盖"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.980074,
+      "data": {
+        "text": "摩"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.980248,
+      "data": {
+        "text": "擦"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.980425,
+      "data": {
+        "text": "电"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.992129,
+      "data": {
+        "text": "纳"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.992445,
+      "data": {
+        "text": "米"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.992786,
+      "data": {
+        "text": "发"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 8.993031,
+      "data": {
+        "text": "电"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.003691,
+      "data": {
+        "text": "机"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.003891,
+      "data": {
+        "text": "与"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.004085,
+      "data": {
+        "text": "智"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.014446,
+      "data": {
+        "text": "能"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.014528,
+      "data": {
+        "text": "感"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.014624,
+      "data": {
+        "text": "知"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.014708,
+      "data": {
+        "text": "系"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.014759,
+      "data": {
+        "text": "统"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.014846,
+      "data": {
+        "text": "，"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.014901,
+      "data": {
+        "text": "重"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.025041,
+      "data": {
+        "text": "点"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.025132,
+      "data": {
+        "text": "关"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.025181,
+      "data": {
+        "text": "注"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.035475,
+      "data": {
+        "text": "摩"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.035569,
+      "data": {
+        "text": "擦"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.0457,
+      "data": {
+        "text": "电"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.045785,
+      "data": {
+        "text": "自"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.045863,
+      "data": {
+        "text": "供"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.045912,
+      "data": {
+        "text": "电"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.056046,
+      "data": {
+        "text": "传"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.056129,
+      "data": {
+        "text": "感"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.056206,
+      "data": {
+        "text": "器"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.067354,
+      "data": {
+        "text": "设"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.067457,
+      "data": {
+        "text": "计"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.067508,
+      "data": {
+        "text": "、"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.077616,
+      "data": {
+        "text": "基"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.077698,
+      "data": {
+        "text": "于"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.087842,
+      "data": {
+        "text": "摩"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.08792,
+      "data": {
+        "text": "擦"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.088002,
+      "data": {
+        "text": "电"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.088087,
+      "data": {
+        "text": "效"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.088135,
+      "data": {
+        "text": "应"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.098669,
+      "data": {
+        "text": "的"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.098756,
+      "data": {
+        "text": "触"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.098847,
+      "data": {
+        "text": "觉"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.098895,
+      "data": {
+        "text": "感"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.098977,
+      "data": {
+        "text": "知"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.099026,
+      "data": {
+        "text": "、"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.099103,
+      "data": {
+        "text": "柔"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.109195,
+      "data": {
+        "text": "性"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.109235,
+      "data": {
+        "text": "可"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.109296,
+      "data": {
+        "text": "穿"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.109349,
+      "data": {
+        "text": "戴"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.119554,
+      "data": {
+        "text": "智"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.119606,
+      "data": {
+        "text": "能"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.119663,
+      "data": {
+        "text": "手"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.140107,
+      "data": {
+        "text": "套"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.140165,
+      "data": {
+        "text": "以"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.140201,
+      "data": {
+        "text": "及"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.140235,
+      "data": {
+        "text": "多"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.140284,
+      "data": {
+        "text": "模"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.140339,
+      "data": {
+        "text": "态"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.150758,
+      "data": {
+        "text": "人"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.150926,
+      "data": {
+        "text": "机"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.151107,
+      "data": {
+        "text": "交"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.151286,
+      "data": {
+        "text": "互"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.15147,
+      "data": {
+        "text": "界"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.151651,
+      "data": {
+        "text": "面"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.15183,
+      "data": {
+        "text": "。"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.162349,
+      "data": {
+        "text": "在"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.162523,
+      "data": {
+        "text": "算"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.162704,
+      "data": {
+        "text": "法"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.173162,
+      "data": {
+        "text": "层"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.173347,
+      "data": {
+        "text": "面"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.173531,
+      "data": {
+        "text": "，"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.173714,
+      "data": {
+        "text": "他"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.173896,
+      "data": {
+        "text": "致"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.174074,
+      "data": {
+        "text": "力"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.184506,
+      "data": {
+        "text": "于"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.184687,
+      "data": {
+        "text": "研"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.184865,
+      "data": {
+        "text": "究"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.185047,
+      "data": {
+        "text": "通"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.185222,
+      "data": {
+        "text": "信"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.195793,
+      "data": {
+        "text": "高"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.195975,
+      "data": {
+        "text": "效"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.206442,
+      "data": {
+        "text": "的"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.206631,
+      "data": {
+        "text": "联"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.206811,
+      "data": {
+        "text": "邦"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.206995,
+      "data": {
+        "text": "学"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.207176,
+      "data": {
+        "text": "习"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.217616,
+      "data": {
+        "text": "算"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.217803,
+      "data": {
+        "text": "法"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.217983,
+      "data": {
+        "text": "及"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.228554,
+      "data": {
+        "text": "基"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.22873,
+      "data": {
+        "text": "于"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.228911,
+      "data": {
+        "text": "自"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.229131,
+      "data": {
+        "text": "适"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.239592,
+      "data": {
+        "text": "应"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.239797,
+      "data": {
+        "text": "量"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.239984,
+      "data": {
+        "text": "化"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.240154,
+      "data": {
+        "text": "的"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.240332,
+      "data": {
+        "text": "分"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.25076,
+      "data": {
+        "text": "布"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.25094,
+      "data": {
+        "text": "式"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.261362,
+      "data": {
+        "text": "学"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.261541,
+      "data": {
+        "text": "习"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.27199,
+      "data": {
+        "text": "。"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.272174,
+      "data": {
+        "text": "近"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.272357,
+      "data": {
+        "text": "期"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.282789,
+      "data": {
+        "text": "研"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.282977,
+      "data": {
+        "text": "究"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.293405,
+      "data": {
+        "text": "趋"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.293587,
+      "data": {
+        "text": "势"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.293766,
+      "data": {
+        "text": "涉"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.304188,
+      "data": {
+        "text": "及"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.304378,
+      "data": {
+        "text": "利"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.304559,
+      "data": {
+        "text": "用"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.305529,
+      "data": {
+        "text": "多"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.305719,
+      "data": {
+        "text": "功"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.3059,
+      "data": {
+        "text": "能"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.316334,
+      "data": {
+        "text": "信"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.326734,
+      "data": {
+        "text": "号"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.326824,
+      "data": {
+        "text": "实"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.326907,
+      "data": {
+        "text": "现"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.326995,
+      "data": {
+        "text": "可"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.327043,
+      "data": {
+        "text": "穿"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.32712,
+      "data": {
+        "text": "戴"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.32717,
+      "data": {
+        "text": "应用。"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.327247,
+      "data": {
+        "text": "其"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.337352,
+      "data": {
+        "text": "团"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.337429,
+      "data": {
+        "text": "队"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.337515,
+      "data": {
+        "text": "曾"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.337594,
+      "data": {
+        "text": "成"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.347702,
+      "data": {
+        "text": "功"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.347778,
+      "data": {
+        "text": "研"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.347854,
+      "data": {
+        "text": "发"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.347908,
+      "data": {
+        "text": "出"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.347984,
+      "data": {
+        "text": "受"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.348032,
+      "data": {
+        "text": "鸽"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.35816,
+      "data": {
+        "text": "眼启"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.358238,
+      "data": {
+        "text": "发"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.358314,
+      "data": {
+        "text": "的"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.36845,
+      "data": {
+        "text": "多"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.379504,
+      "data": {
+        "text": "模"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.379581,
+      "data": {
+        "text": "态"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.379664,
+      "data": {
+        "text": "高"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.379712,
+      "data": {
+        "text": "分"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.379801,
+      "data": {
+        "text": "辨"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.379848,
+      "data": {
+        "text": "率"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.379923,
+      "data": {
+        "text": "触"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.390028,
+      "data": {
+        "text": "觉"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.400197,
+      "data": {
+        "text": "传"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.400272,
+      "data": {
+        "text": "感"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.400347,
+      "data": {
+        "text": "器"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.410495,
+      "data": {
+        "text": "（"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.410576,
+      "data": {
+        "text": "S"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.420832,
+      "data": {
+        "text": "u"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.420909,
+      "data": {
+        "text": "p"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.420993,
+      "data": {
+        "text": "e"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.42104,
+      "data": {
+        "text": "r"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.421114,
+      "data": {
+        "text": "T"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.42116,
+      "data": {
+        "text": "a"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.431394,
+      "data": {
+        "text": "c"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.431518,
+      "data": {
+        "text": "）"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.431574,
+      "data": {
+        "text": "，"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.441674,
+      "data": {
+        "text": "并"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.441769,
+      "data": {
+        "text": "应"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.441826,
+      "data": {
+        "text": "用"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.441903,
+      "data": {
+        "text": "于"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.451991,
+      "data": {
+        "text": "机"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.452082,
+      "data": {
+        "text": "器"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.452159,
+      "data": {
+        "text": "人"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.452205,
+      "data": {
+        "text": "领"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.462672,
+      "data": {
+        "text": "域"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.462748,
+      "data": {
+        "text": "。"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.462827,
+      "data": {
+        "text": "\n"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.462878,
+      "data": {
+        "text": "\n"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.473014,
+      "data": {
+        "text": "此"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.473089,
+      "data": {
+        "text": "外"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.483266,
+      "data": {
+        "text": "，"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.483349,
+      "data": {
+        "text": "公"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.493509,
+      "data": {
+        "text": "开"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.493607,
+      "data": {
+        "text": "信"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.493655,
+      "data": {
+        "text": "息"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.504184,
+      "data": {
+        "text": "显"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.50439,
+      "data": {
+        "text": "示"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.504583,
+      "data": {
+        "text": "，"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.504767,
+      "data": {
+        "text": "丁"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.504948,
+      "data": {
+        "text": "文"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.51551,
+      "data": {
+        "text": "伯"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.515703,
+      "data": {
+        "text": "在"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.515892,
+      "data": {
+        "text": "宽"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.516081,
+      "data": {
+        "text": "带"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.526588,
+      "data": {
+        "text": "无"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.526795,
+      "data": {
+        "text": "线"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.52699,
+      "data": {
+        "text": "通"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.527947,
+      "data": {
+        "text": "信"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.52816,
+      "data": {
+        "text": "物"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.538605,
+      "data": {
+        "text": "理"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.538794,
+      "data": {
+        "text": "层"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.549381,
+      "data": {
+        "text": "算"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.549566,
+      "data": {
+        "text": "法"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.549748,
+      "data": {
+        "text": "研"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.549936,
+      "data": {
+        "text": "究"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.550124,
+      "data": {
+        "text": "方"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.550312,
+      "data": {
+        "text": "面"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.550517,
+      "data": {
+        "text": "也"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.561022,
+      "data": {
+        "text": "有"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.561166,
+      "data": {
+        "text": "深"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.571576,
+      "data": {
+        "text": "厚"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.57176,
+      "data": {
+        "text": "积"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.571933,
+      "data": {
+        "text": "累"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.572108,
+      "data": {
+        "text": "，"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.572288,
+      "data": {
+        "text": "曾"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.572463,
+      "data": {
+        "text": "师"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.572641,
+      "data": {
+        "text": "从"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.57282,
+      "data": {
+        "text": "宋"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.583235,
+      "data": {
+        "text": "健"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.583414,
+      "data": {
+        "text": "教"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.593832,
+      "data": {
+        "text": "授"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.593999,
+      "data": {
+        "text": "，"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.594177,
+      "data": {
+        "text": "成"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.604594,
+      "data": {
+        "text": "功"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.604796,
+      "data": {
+        "text": "解"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.604974,
+      "data": {
+        "text": "决"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.605154,
+      "data": {
+        "text": "了"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.615632,
+      "data": {
+        "text": "超"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.615785,
+      "data": {
+        "text": "长"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.615968,
+      "data": {
+        "text": "信"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.61615,
+      "data": {
+        "text": "道"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.616339,
+      "data": {
+        "text": "估"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.626839,
+      "data": {
+        "text": "计"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.626998,
+      "data": {
+        "text": "问"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.627178,
+      "data": {
+        "text": "题"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.637621,
+      "data": {
+        "text": "，"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.637794,
+      "data": {
+        "text": "相"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.637974,
+      "data": {
+        "text": "关"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.638157,
+      "data": {
+        "text": "研"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.648592,
+      "data": {
+        "text": "究成"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.648775,
+      "data": {
+        "text": "果"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.659199,
+      "data": {
+        "text": "被"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.659371,
+      "data": {
+        "text": "国"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.659558,
+      "data": {
+        "text": "际"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.669974,
+      "data": {
+        "text": "电"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.670157,
+      "data": {
+        "text": "联"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.670329,
+      "data": {
+        "text": "接"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.670524,
+      "data": {
+        "text": "受"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.680944,
+      "data": {
+        "text": "成"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.681118,
+      "data": {
+        "text": "为"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.681295,
+      "data": {
+        "text": "国"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.702074,
+      "data": {
+        "text": "际标准"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.718536,
+      "data": {
+        "text": "。"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 9.728939,
+      "data": {
+        "text": "他已发表国际顶级SCI期刊和EI会议论文32篇，授权或公开发明专利15项。"
+      }
+    },
+    {
+      "event": "answer",
+      "at_s": 9.729397,
+      "data": {
+        "query": "介绍清华的丁文伯",
+        "query_type": "canonical_v2:A:answer",
+        "answer_text": "丁文伯是清华大学深圳国际研究生院数据与信息学院的副教授、博士生导师，同时担任该院科研处处长，是国家青年特聘专家及国家重点研发计划青年项目首席科学家。\n\n他于1990年3月出生，2007年考入清华大学电子工程系，分别于2011年和2016年获得学士和博士学位。2016年至2019年期间，他在美国佐治亚理工学院材料科学与工程系从事博士后研究。\n\n丁文伯的研究领域主要涵盖摩擦电纳米发电机与智能感知系统，重点关注摩擦电自供电传感器设计、基于摩擦电效应的触觉感知、柔性可穿戴智能手套以及多模态人机交互界面。在算法层面，他致力于研究通信高效的联邦学习算法及基于自适应量化的分布式学习。近期研究趋势涉及利用多功能信号实现可穿戴应用。其团队曾成功研发出受鸽眼启发的多模态高分辨率触觉传感器（SuperTac），并应用于机器人领域。\n\n此外，公开信息显示，丁文伯在宽带无线通信物理层算法研究方面也有深厚积累，曾师从宋健教授，成功解决了超长信道估计问题，相关研究成果被国际电联接受成为国际标准。他已发表国际顶级SCI期刊和EI会议论文32篇，授权或公开发明专利15项。",
+        "citations": [
+          {
+            "type": "professor",
+            "id": "official-source-372658271812c93c",
+            "label": "丁文伯",
+            "url": "http://www.sigs.tsinghua.edu.cn/dwb/main.htm"
+          }
+        ],
+        "evidence": [],
+        "clarification": null,
+        "structured_payload": {},
+        "answer_style": "llm_synthesized",
+        "citation_map": {
+          "1": "official-source-372658271812c93c"
+        },
+        "suggested_followups": []
+      }
+    },
+    {
+      "event": "done",
+      "at_s": 9.729612,
+      "data": {}
+    }
+  ]
+}

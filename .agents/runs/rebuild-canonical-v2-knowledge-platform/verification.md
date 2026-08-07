@@ -4412,3 +4412,166 @@ re-embed path remains the npz-absent fallback.
   22/25; remaining fails are genuine gaps:
   - T3 上海开普勒机器人: ground truth needs human verification.
   - T22 基于规则生成 / T23 全模态真机采集: absent from retrieved content.
+
+---
+
+## 2026-08-06 — S12G responsive streaming UX Candidate verification
+
+### Runtime provenance
+
+- Worktree: `/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation`
+- Branch: `codex/canonical-v2-s12a-ready`
+- User authorization: the user instructed continued implementation and requested a running Candidate
+  for direct testing before this final sequence.
+- Launch command (background wrapper PID `3484842`, Uvicorn PID `3484845`):
+
+  ```bash
+  CHAT_LLM_PROFILE=gemma4 uv run python \
+    .agents/runs/rebuild-canonical-v2-knowledge-platform/s12e/serve_s12e_port.py 18188 \
+    --database-url postgresql://miroflow@127.0.0.1:55458/miroflow_candidate_s12f_20260801_v1 \
+    --expected-database miroflow_candidate_s12f_20260801_v1 \
+    --database-target-kind disposable \
+    --accepted-backup-gate-root .agents/runs/rebuild-canonical-v2-knowledge-platform \
+    --source-manifest .agents/runs/rebuild-canonical-v2-knowledge-platform/s12f/source-build-manifest-s12f.json \
+    --source-manifest-sha256 7908db3925c8450bc93aa9543b9c94b7cf37a4bae8f796cf0cdd007ac77c0f97 \
+    --candidate-staging-root /var/tmp/mirothinker-canonical-v2-s12f/staging-v1 \
+    --index-root /var/tmp/mirothinker-canonical-v2-s12f/index-v1 \
+    --index-marker-sha256 e4314c15518980aaa75a0069dce14c3857df43b74705ce600c6741af74d49f51 \
+    --candidate-release-id candidate-s12f-20260801-v1 \
+    --run-id s12f-build-20260801-v1 \
+    --source-batch-id s12a-released-objects-full-v1 \
+    --source-batch-id s12c-r7-company-knowledge-v1 \
+    --source-batch-id s12c-r7-company-workbook-supplement-v1 \
+    --source-batch-id s12c-r7-paper-identifiers-v1 \
+    --source-batch-id s12c-r7-patent-identifiers-v1 \
+    --source-batch-id s12c-r7-professor-company-roles-v1 \
+    --source-batch-id s12e-professor-backfill-v1 \
+    --parser-version historical_jsonl=v1 \
+    --parser-version historical_xlsx=v1 \
+    --parser-version released_objects_sqlite=canonical-v2-s12a-full-table-v1 \
+    --policy-version path_eligibility=path-eligibility-v1 \
+    --policy-version released_objects_mapper=canonical-v2-released-objects-mapper-v2 \
+    --model-version embedding=Qwen/Qwen3-Embedding-8B \
+    --recorded-decision-bundle .agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/recorded-decision-bundle-v1.json \
+    --recorded-embedding-bundle .agents/runs/rebuild-canonical-v2-knowledge-platform/s12c/qwen-embedding-bundle-v1.json \
+    --recorded-serving-bundle .agents/runs/rebuild-canonical-v2-knowledge-platform/s12f/serving-bundle-s12f.json \
+    --recorded-serving-bundle-sha256 93fb456012f5e9799414cd90fa2ea27bb7d58acd5d41c13ac3b9dea601aed9c0 \
+    --envelope-output .agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete-candidate-build-envelope.json \
+    --accepted-original-milvus-path /home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db \
+    --accepted-original-milvus-sha256 43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc \
+    --accepted-original-milvus-record-sha256 df3715a0be8560d523ce2abb589bdaf690e0fe07babcad26c03a4da0ad8cbe6b \
+    --serve --serve-existing \
+    --serving-pack /var/tmp/mirothinker-canonical-v2-s12f/serving-pack
+  ```
+
+- Readiness check:
+
+  ```bash
+  curl --silent --show-error --fail --max-time 10 http://127.0.0.1:18188/api/health
+  ```
+
+  Result: HTTP 200 body `{"status":"ok"}`.
+- `gemma4.local` and `ark.local` are retained as compatibility profile names, but both resolve to
+  `https://star.sustech.edu.cn/service/model/qwen36/v1` with model `qwen3.6-35b-a3b`.
+  The endpoint advertised that model, rejected the obsolete `qwen3.6-35b-a3b-fp8`, and a real
+  streaming probe completed with three chunks, one content delta, and `finish_reason=stop`.
+
+### Focused automated checks
+
+```bash
+cd apps/miroflow-agent
+uv run pytest -q -n0 tests/data_agents/professor/test_llm_profiles.py
+# 19 passed in 12.16s
+
+uv run ruff check \
+  src/data_agents/professor/llm_profiles.py \
+  tests/data_agents/professor/test_llm_profiles.py
+# All checks passed!
+
+uv run pytest -q -n0 \
+  tests/canonical_v2/test_knowledge_serving_isolated.py \
+  tests/canonical_v2/test_knowledge_answer_implementation_closure.py
+# 205 passed in 20.69s
+
+cd ../admin-console
+uv run pytest -q \
+  tests/test_canonical_v2_chat_http_adapter.py \
+  tests/test_canonical_v2_real_preview_ui.py
+# 309 passed in 142.67s
+
+node --test tests/chat_ui_behavior_test.mjs
+# 80 passed, 0 failed
+```
+
+The Grid regression was RED before the CSS fix at both 320×568 and 667×375 with
+`core_within_shell=false`, `core_within_visual_viewport=false`, and
+`ROTATION_STALE_GEOMETRY`; it passed at both sizes after explicit row assignment.
+
+### Consecutive Candidate browser acceptance
+
+```bash
+export S12G_REAL_SSE_QUERY='请介绍丁文伯教授的研究方向'
+
+uv run --project apps/miroflow-agent python \
+  .agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/browser_acceptance.py \
+  --browser chromium \
+  --self-test \
+  --output-dir .agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/artifacts
+
+uv run --project apps/miroflow-agent python \
+  .agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/browser_acceptance.py \
+  --url http://127.0.0.1:18188/chat \
+  --browser chromium \
+  --real-sse-query "$S12G_REAL_SSE_QUERY" \
+  --output-dir .agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/artifacts
+```
+
+- Self-test artifact:
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/artifacts/20260806T053034.123076Z-d0a3afaf`
+  — top-level and result status `passed`; defect codes `[]`.
+- Production artifact:
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/artifacts/20260806T053036.763098Z-d0c69d41`
+  — top-level, result, and real-SSE status `passed`; defect codes `[]`; HTTP 200; one matching
+  request; 306 events comprising 299 `answer_chunk`, one `answer`, one `done`, one `plan_done`,
+  one `retrieval_done`, and three `stage` events. Chunks reconstruct the final answer exactly,
+  `answer` precedes terminal `done`, no error/internal/DOM markers were observed, Markdown matches,
+  detached scroll is stable, return-to-latest works, controls remain actionable, and all 13
+  viewports pass.
+- `task9_provenance_certified=false` and `evidence_eligible_without_task9_receipt=false` remain the
+  runner's explicit non-Task-9 Candidate state; they are not promoted or rewritten by S12G.
+
+### Candidate boundary
+
+S12G is Candidate only. Physical iPhone/Android validation was not run. Task 12.5 still requires
+explicit direct user acceptance, and Task 12.6 remains unauthorized; no release promotion, Cutover,
+archive, or cleanup was performed.
+
+## 2026-08-07 — fresh Candidate content regression (answer-integrity repair round)
+
+The 25-turn workbook regression on the old online instance (artifact
+`20260806T120404Z-content-regression-18188/`) formally scored 20/25 but manual review found
+T13 (generalized refusal on 早稻田 entrepreneurs) and T15 (raw search dump on 光基多维力传感原理)
+as false passes — the user-visible "内容被修坏" symptom. This round repaired the shared roots
+(workbook evaluator; deterministic fallback raw-dump renderer; data-theme claim relevance guard;
+term-view promotion; person-probe acceptance relax; content-farm/login-wall claim filtering) —
+see `openspec/changes/rebuild-canonical-v2-knowledge-platform/change-log.md` 2026-08-07 entry.
+
+Final-code-state verification on a fresh `18188` restart (all Candidate fixes + this round):
+
+- Grouped regression (fresh 2026-08-06 run, fixes before junk filter): **24/25** — only T3
+  (上海开普勒/九号 hotel-supplier recall gap) failed.
+- Grouped regression (final code): **23/25** — T3 (开普勒/九号) and T19 (真机实测 hard token);
+  T13 and T15 PASS with integrated grounded answers; T19 integrated (7/8 reference methods).
+- Single-session regression (final code): **23/25** — T3 (开普勒 only; 九号 recovered) and
+  T19 (真机实测 hard token only; was 3 missing before the junk filter).
+- Manual review: T8/T10/T21 improved vs the old artifact; no raw-dump, refusal, or off-topic
+  answers remain in the failing class.
+- Artifacts: `.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/artifacts/fresh-20260806-1515-content-regression-18188/`
+  and `fresh-20260807-0010-content-regression-18188/` (per-group.json / single-session.json /
+  per-group.md / single-session.md / README.md).
+- Checks: canonical suites + workbook oracle `235 passed` (pre-round baseline 216); Ruff clean;
+  `git diff --check` clean; offline re-judge of the old artifact 20/25 → 21/25 with the five
+  flips audited (remaining four fails all real).
+- Boundary: `18188` serves the final code state for user iteration; Task 12.5 (direct user
+  acceptance) and Task 12.6 (cutover/archive authorization) remain open; no git mutation, data
+  or index write, promotion, archive, or cleanup was performed.
