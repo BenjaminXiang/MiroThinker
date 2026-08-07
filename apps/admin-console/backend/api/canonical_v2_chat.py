@@ -26,6 +26,11 @@ from backend.canonical_v2_deps import (
     get_canonical_v2_admin_runtime,
     get_canonical_v2_chat_adapter,
 )
+from backend.services.canonical_v2_access_log import (
+    AccessLogStore,
+    AccessLogTurnRecord,
+    AccessLogTurnStatus,
+)
 from backend.services.canonical_v2_chat import (
     CanonicalV2ChatAdapter,
     CanonicalV2InvalidOption,
@@ -45,6 +50,61 @@ _SESSION_COOKIE = "miroflow_chat_session"
 _SESSION_TTL_SECONDS = 30 * 60
 _INVALID_OPTION_DETAIL = "canonical_v2_invalid_option"
 _RELEASE_MISMATCH_DETAIL = "canonical_v2_release_mismatch"
+_ACCESS_LOG_STATE_NAME = "canonical_v2_access_log_store"
+
+
+def _access_log_store(request: Request) -> AccessLogStore | None:
+    store = getattr(request.app.state, _ACCESS_LOG_STATE_NAME, None)
+    return store if isinstance(store, AccessLogStore) else None
+
+
+def _record_access_turn(
+    request: Request,
+    *,
+    session_id: str,
+    query: str,
+    chat_response: ChatResponse | None,
+    status: AccessLogTurnStatus,
+    error_detail: str | None,
+    started_at: datetime,
+) -> None:
+    """Best-effort access logging; absent store or store failures are silent."""
+
+    store = _access_log_store(request)
+    if store is None:
+        return
+    finished_at = _utc_now()
+    store.record_turn(
+        AccessLogTurnRecord(
+            turn_id="turn:log:" + secrets.token_urlsafe(12),
+            session_id=session_id,
+            turn_count=0,  # auto-assign the next ordinal for the session
+            query=query,
+            query_type=chat_response.query_type if chat_response else "",
+            answer_text=chat_response.answer_text if chat_response else "",
+            answer_style=(
+                chat_response.answer_style if chat_response else "template"
+            ),
+            citations=(
+                tuple(
+                    citation.model_dump(mode="json")
+                    for citation in chat_response.citations
+                )
+                if chat_response
+                else ()
+            ),
+            suggested_followups=(
+                tuple(chat_response.suggested_followups) if chat_response else ()
+            ),
+            status=status,
+            error_detail=error_detail,
+            started_at=started_at,
+            finished_at=finished_at,
+            latency_ms=max(
+                0, round((finished_at - started_at).total_seconds() * 1000)
+            ),
+        )
+    )
 
 
 class _TurnGateStreamingResponse(StreamingResponse):
@@ -137,19 +197,38 @@ def chat(
     session_id = miroflow_chat_session or _new_session_id()
     if miroflow_chat_session is None:
         _set_session_cookie(response, session_id)
+    started_at = _utc_now()
     try:
-        return adapter.answer(
+        chat_response = adapter.answer(
             query=query,
             session_id=session_id,
             option_id=payload.entity_id_hint,
-            as_of=_utc_now(),
+            as_of=started_at,
         )
     except CanonicalV2InvalidOption as exc:
+        _record_access_turn(
+            request,
+            session_id=session_id,
+            query=query,
+            chat_response=None,
+            status="error",
+            error_detail=_INVALID_OPTION_DETAIL,
+            started_at=started_at,
+        )
         raise HTTPException(
             status_code=400,
             detail=_INVALID_OPTION_DETAIL,
         ) from exc
     except CanonicalV2ReleaseMismatch as exc:
+        _record_access_turn(
+            request,
+            session_id=session_id,
+            query=query,
+            chat_response=None,
+            status="error",
+            error_detail=_RELEASE_MISMATCH_DETAIL,
+            started_at=started_at,
+        )
         raise HTTPException(
             status_code=409,
             detail=_RELEASE_MISMATCH_DETAIL,
@@ -160,6 +239,15 @@ def chat(
             type(exc).__name__,
             exc,
         )
+        _record_access_turn(
+            request,
+            session_id=session_id,
+            query=query,
+            chat_response=None,
+            status="error",
+            error_detail="canonical_v2_consumer_integrity_error",
+            started_at=started_at,
+        )
         raise HTTPException(
             status_code=409,
             detail="canonical_v2_consumer_integrity_error",
@@ -169,6 +257,15 @@ def chat(
             "Canonical V2 knowledge-read integrity rejection: %s: %s",
             type(exc).__name__,
             exc,
+        )
+        _record_access_turn(
+            request,
+            session_id=session_id,
+            query=query,
+            chat_response=None,
+            status="error",
+            error_detail="canonical_v2_consumer_integrity_error",
+            started_at=started_at,
         )
         raise HTTPException(
             status_code=409,
@@ -182,10 +279,29 @@ def chat(
             type(exc).__name__,
             exc,
         )
+        _record_access_turn(
+            request,
+            session_id=session_id,
+            query=query,
+            chat_response=None,
+            status="error",
+            error_detail="canonical_v2_consumer_integrity_error",
+            started_at=started_at,
+        )
         raise HTTPException(
             status_code=409,
             detail="canonical_v2_consumer_integrity_error",
         ) from exc
+    _record_access_turn(
+        request,
+        session_id=session_id,
+        query=query,
+        chat_response=chat_response,
+        status="completed",
+        error_detail=None,
+        started_at=started_at,
+    )
+    return chat_response
 
 
 @router.post("/chat/stream", response_class=StreamingResponse)
@@ -217,6 +333,7 @@ def chat_stream(
         mark_activity()
     session_id = miroflow_chat_session or _new_session_id()
     set_session_cookie = miroflow_chat_session is None
+    started_at = _utc_now()
 
     stream_end = object()
     events: queue.Queue[Any] = queue.Queue()
@@ -250,7 +367,7 @@ def chat_stream(
                     query=query,
                     session_id=session_id,
                     option_id=payload.entity_id_hint,
-                    as_of=_utc_now(),
+                    as_of=started_at,
                     progress=emit,
                     turn_gate=turn_gate,
                 )
@@ -262,9 +379,36 @@ def chat_stream(
                     chat_response.model_dump(mode="json"),
                 )
                 enqueue("done", {})
+                _record_access_turn(
+                    request,
+                    session_id=session_id,
+                    query=query,
+                    chat_response=chat_response,
+                    status="completed",
+                    error_detail=None,
+                    started_at=started_at,
+                )
             except _CanonicalV2ChatInterrupted:
+                _record_access_turn(
+                    request,
+                    session_id=session_id,
+                    query=query,
+                    chat_response=None,
+                    status="interrupted",
+                    error_detail="turn interrupted before completion",
+                    started_at=started_at,
+                )
                 raise
             except CanonicalV2InvalidOption:
+                _record_access_turn(
+                    request,
+                    session_id=session_id,
+                    query=query,
+                    chat_response=None,
+                    status="error",
+                    error_detail=_INVALID_OPTION_DETAIL,
+                    started_at=started_at,
+                )
                 enqueue("error", {"detail": _INVALID_OPTION_DETAIL})
             except (
                 CanonicalV2ReleaseMismatch,
@@ -277,6 +421,15 @@ def chat_stream(
                     exc,
                     "".join(_tb.format_exception(type(exc), exc, exc.__traceback__)),
                 )
+                _record_access_turn(
+                    request,
+                    session_id=session_id,
+                    query=query,
+                    chat_response=None,
+                    status="error",
+                    error_detail=_RELEASE_MISMATCH_DETAIL,
+                    started_at=started_at,
+                )
                 enqueue("error", {"detail": _RELEASE_MISMATCH_DETAIL})
             except KnowledgeReadIntegrityError as exc:
                 import traceback as _tb
@@ -286,8 +439,26 @@ def chat_stream(
                     exc,
                     "".join(_tb.format_exception(type(exc), exc, exc.__traceback__)),
                 )
+                _record_access_turn(
+                    request,
+                    session_id=session_id,
+                    query=query,
+                    chat_response=None,
+                    status="error",
+                    error_detail=_RELEASE_MISMATCH_DETAIL,
+                    started_at=started_at,
+                )
                 enqueue("error", {"detail": _RELEASE_MISMATCH_DETAIL})
             except CanonicalV2MappingError:
+                _record_access_turn(
+                    request,
+                    session_id=session_id,
+                    query=query,
+                    chat_response=None,
+                    status="error",
+                    error_detail="canonical_v2_consumer_integrity_error",
+                    started_at=started_at,
+                )
                 enqueue("error", {"detail": "canonical_v2_consumer_integrity_error"})
             except Exception as exc:  # noqa: BLE001 - the stream must not hang
                 import traceback as _tb
@@ -296,6 +467,15 @@ def chat_stream(
                     "canonical v2 stream turn failed: %s\n%s",
                     exc,
                     "".join(_tb.format_exception(type(exc), exc, exc.__traceback__)),
+                )
+                _record_access_turn(
+                    request,
+                    session_id=session_id,
+                    query=query,
+                    chat_response=None,
+                    status="error",
+                    error_detail="internal_error",
+                    started_at=started_at,
                 )
                 enqueue("error", {"detail": "internal_error"})
         except _CanonicalV2ChatInterrupted:

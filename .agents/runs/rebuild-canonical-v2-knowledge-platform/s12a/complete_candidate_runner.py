@@ -468,6 +468,31 @@ def _required_serving_dependency(
     return value
 
 
+def _compose_access_log_store() -> Any:
+    """Compose the optional SQLite access log store from the environment.
+
+    ``CANONICAL_V2_ACCESS_LOG_DB`` names the SQLite database file. Absent env
+    or any open failure degrades to ``None`` so the candidate server keeps its
+    exact pre-existing behavior (no logging, API answers 503).
+    """
+
+    database_path = os.environ.get("CANONICAL_V2_ACCESS_LOG_DB", "").strip()
+    if not database_path:
+        return None
+    try:
+        module = import_module("backend.services.canonical_v2_access_log")
+        store = module.AccessLogStore(Path(database_path))
+    except Exception as exc:  # noqa: BLE001 - access logging stays fail-open
+        print(
+            "access_log_store=disabled "
+            f"({type(exc).__name__}: {exc})",
+            flush=True,
+        )
+        return None
+    print(f"access_log_store={store.database_path}", flush=True)
+    return store
+
+
 def _serve(
     *,
     config: RunnerConfig,
@@ -567,6 +592,9 @@ def _serve(
         runtime=runtime,
         idle_keepwarm_cycle=recorded.idle_keepwarm_cycle,
     )
+    access_log_store = _compose_access_log_store()
+    if access_log_store is not None:
+        app.state.canonical_v2_access_log_store = access_log_store
     run_uvicorn(
         app,
         host=config.host,

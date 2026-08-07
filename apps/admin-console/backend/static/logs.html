@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>访问日志 · Canonical V2</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23143d59'/%3E%3Cpath d='M17 19h8v11l12-11h10L33 32l15 13H37L25 34v11h-8z' fill='white'/%3E%3C/svg%3E" />
+    <style>
+      :root {
+        --ink: #17252f;
+        --muted: #62727d;
+        --navy: #143d59;
+        --navy-strong: #0d2c41;
+        --teal: #168b82;
+        --teal-soft: #e7f5f2;
+        --blue-soft: #edf4f8;
+        --amber: #b66916;
+        --amber-soft: #fff4df;
+        --danger: #a83f4c;
+        --danger-soft: #fff0f2;
+        --surface: #ffffff;
+        --canvas: #f3f6f7;
+        --line: #dce4e7;
+        --line-strong: #c5d2d7;
+        --shadow: 0 18px 42px rgba(24, 55, 70, 0.08);
+        --radius: 18px;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 8% 0%, rgba(22, 139, 130, 0.09), transparent 28rem),
+          var(--canvas);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        line-height: 1.55;
+      }
+
+      button, a, input, select { font: inherit; }
+
+      button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+        outline: 3px solid rgba(22, 139, 130, 0.28);
+        outline-offset: 2px;
+      }
+
+      .topbar {
+        color: #fff;
+        background:
+          linear-gradient(112deg, rgba(255, 255, 255, 0.05), transparent 50%),
+          var(--navy-strong);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .topbar-inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 18px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .brand { display: flex; flex-direction: column; gap: 2px; }
+      .brand strong { font-size: 1.05rem; letter-spacing: 0.02em; }
+      .brand span { font-size: 0.8rem; color: rgba(255, 255, 255, 0.72); }
+
+      .nav { display: flex; gap: 8px; flex-wrap: wrap; }
+      .nav a {
+        color: rgba(255, 255, 255, 0.82);
+        text-decoration: none;
+        font-size: 0.86rem;
+        padding: 7px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+      }
+      .nav a.active { background: rgba(255, 255, 255, 0.14); color: #fff; }
+      .nav a:hover { background: rgba(255, 255, 255, 0.2); }
+
+      main {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 14px 16px;
+        box-shadow: var(--shadow);
+      }
+
+      .toolbar input[type="search"] {
+        flex: 1 1 260px;
+        min-width: 180px;
+        padding: 9px 12px;
+        border: 1px solid var(--line-strong);
+        border-radius: 10px;
+      }
+
+      .toolbar select {
+        padding: 9px 12px;
+        border: 1px solid var(--line-strong);
+        border-radius: 10px;
+        background: var(--surface);
+      }
+
+      .toolbar button {
+        padding: 9px 16px;
+        border: none;
+        border-radius: 10px;
+        background: var(--navy);
+        color: #fff;
+        cursor: pointer;
+      }
+      .toolbar button:hover { background: var(--navy-strong); }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(300px, 400px) 1fr;
+        gap: 18px;
+        align-items: start;
+      }
+
+      @media (max-width: 900px) {
+        .layout { grid-template-columns: 1fr; }
+      }
+
+      .pane {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .pane-head {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+      }
+      .pane-head strong { font-size: 0.95rem; }
+      .pane-head span { font-size: 0.8rem; color: var(--muted); }
+
+      .session-list { display: flex; flex-direction: column; }
+
+      .session-item {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--line);
+        cursor: pointer;
+        text-align: left;
+        background: none;
+        border-left: 3px solid transparent;
+        border-top: none;
+        border-right: none;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        width: 100%;
+      }
+      .session-item:hover { background: var(--blue-soft); }
+      .session-item.selected {
+        background: var(--teal-soft);
+        border-left-color: var(--teal);
+      }
+      .session-item .query {
+        font-size: 0.9rem;
+        font-weight: 500;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+      .session-item .meta {
+        display: flex;
+        gap: 10px;
+        font-size: 0.76rem;
+        color: var(--muted);
+        flex-wrap: wrap;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 1px 8px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 600;
+      }
+      .badge.completed { background: var(--teal-soft); color: var(--teal); }
+      .badge.error { background: var(--danger-soft); color: var(--danger); }
+      .badge.interrupted { background: var(--amber-soft); color: var(--amber); }
+
+      .pager {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 16px;
+        border-top: 1px solid var(--line);
+      }
+      .pager button {
+        padding: 6px 12px;
+        border: 1px solid var(--line-strong);
+        border-radius: 8px;
+        background: var(--surface);
+        cursor: pointer;
+      }
+      .pager button:disabled { opacity: 0.45; cursor: not-allowed; }
+      .pager span { font-size: 0.8rem; color: var(--muted); }
+
+      .turn-list { display: flex; flex-direction: column; }
+
+      .turn {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .turn-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+
+      .bubble {
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 0.9rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .bubble.question {
+        background: var(--blue-soft);
+        border: 1px solid var(--line);
+      }
+      .bubble.answer {
+        background: var(--surface);
+        border: 1px solid var(--line-strong);
+      }
+
+      .turn-citations {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 0.8rem;
+      }
+      .turn-citations a {
+        color: var(--teal);
+        text-decoration: none;
+        word-break: break-all;
+      }
+      .turn-citations a:hover { text-decoration: underline; }
+
+      .error-box {
+        background: var(--danger-soft);
+        border: 1px solid rgba(168, 63, 76, 0.3);
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-size: 0.82rem;
+        color: var(--danger);
+      }
+
+      .loading, .empty, .error-state {
+        padding: 28px 16px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+      .error-state { color: var(--danger); }
+
+      details.answer-toggle summary {
+        cursor: pointer;
+        font-size: 0.8rem;
+        color: var(--teal);
+        user-select: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <strong>访问日志</strong>
+          <span>Canonical V2 用户访问记录 · 按会话组织</span>
+        </div>
+        <nav class="nav">
+          <a href="/chat">对话</a>
+          <a href="/browse">数据浏览</a>
+          <a href="/logs" class="active">访问日志</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="toolbar" aria-label="过滤工具">
+        <input id="search" type="search" placeholder="按提问内容搜索…" maxlength="200" />
+        <select id="statusFilter">
+          <option value="">全部状态</option>
+          <option value="completed">已完成</option>
+          <option value="error">错误</option>
+          <option value="interrupted">中断</option>
+        </select>
+        <button id="applyFilter" type="button">查询</button>
+      </section>
+
+      <section class="layout">
+        <aside class="pane" aria-label="会话列表">
+          <div class="pane-head">
+            <strong>会话</strong>
+            <span id="sessionCount">—</span>
+          </div>
+          <div id="sessionList" class="session-list"></div>
+          <div class="pager">
+            <button id="prevPage" type="button">上一页</button>
+            <span id="pageInfo"></span>
+            <button id="nextPage" type="button">下一页</button>
+          </div>
+        </aside>
+
+        <section class="pane" aria-label="会话详情">
+          <div class="pane-head">
+            <strong>轮次详情</strong>
+            <span id="detailCaption">选择一个会话查看问答记录</span>
+          </div>
+          <div id="turnList" class="turn-list">
+            <div class="empty">未选择会话</div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      // 纯 DOM 构建，不引入 innerHTML，无 XSS 面（与 chat.html / browse.html 同一约定）。
+      const sessionsPath = "/api/canonical-v2/admin/access-logs/sessions";
+      const PAGE_SIZE = 20;
+
+      const searchInput = document.getElementById("search");
+      const statusFilter = document.getElementById("statusFilter");
+      const applyButton = document.getElementById("applyFilter");
+      const sessionList = document.getElementById("sessionList");
+      const sessionCount = document.getElementById("sessionCount");
+      const turnList = document.getElementById("turnList");
+      const detailCaption = document.getElementById("detailCaption");
+      const prevPage = document.getElementById("prevPage");
+      const nextPage = document.getElementById("nextPage");
+      const pageInfo = document.getElementById("pageInfo");
+
+      const state = {
+        q: "",
+        status: "",
+        offset: 0,
+        total: 0,
+        selected: null,
+      };
+
+      const STATUS_LABELS = {
+        completed: "已完成",
+        error: "错误",
+        interrupted: "中断",
+      };
+
+      function create(tag, className, text) {
+        const element = document.createElement(tag);
+        if (className) element.className = className;
+        if (text !== undefined && text !== null) element.textContent = String(text);
+        return element;
+      }
+
+      function formatTime(value) {
+        if (!value) return "—";
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime())
+          ? String(value)
+          : parsed.toLocaleString("zh-CN", { hour12: false });
+      }
+
+      function shortId(sessionId) {
+        if (!sessionId) return "—";
+        const tail = sessionId.split(":").pop() || sessionId;
+        return tail.length > 10 ? tail.slice(0, 10) + "…" : tail;
+      }
+
+      async function fetchJson(path) {
+        const response = await fetch(path, { headers: { Accept: "application/json" } });
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        return response.json();
+      }
+
+      function errorText(error) {
+        return error instanceof Error ? error.message : String(error);
+      }
+
+      function statusBadges(statuses) {
+        return (statuses || []).map((status) =>
+          create("span", "badge " + status, STATUS_LABELS[status] || status)
+        );
+      }
+
+      function renderSessions(page) {
+        state.total = page.total;
+        sessionCount.textContent = "共 " + page.total + " 个会话";
+        pageInfo.textContent =
+          page.total === 0
+            ? ""
+            : (page.offset + 1) + "–" + Math.min(page.offset + page.limit, page.total);
+        prevPage.disabled = state.offset <= 0;
+        nextPage.disabled = state.offset + PAGE_SIZE >= page.total;
+
+        if (!page.sessions.length) {
+          sessionList.replaceChildren(
+            create("div", "empty", "没有符合条件的会话记录")
+          );
+          return;
+        }
+        const items = page.sessions.map((item) => {
+          const button = create("button", "session-item");
+          button.type = "button";
+          if (item.session_id === state.selected) button.classList.add("selected");
+          button.append(
+            create("span", "query", item.first_query || "（无提问内容）"),
+            (() => {
+              const meta = create("span", "meta");
+              meta.append(
+                create("span", "", shortId(item.session_id)),
+                create("span", "", item.turn_count + " 轮"),
+                create("span", "", formatTime(item.last_active_at)),
+                ...statusBadges(item.statuses)
+              );
+              return meta;
+            })()
+          );
+          button.addEventListener("click", () => {
+            state.selected = item.session_id;
+            loadSessions(false);
+            loadDetail(item.session_id);
+          });
+          return button;
+        });
+        sessionList.replaceChildren(...items);
+      }
+
+      async function loadSessions(resetOffset) {
+        if (resetOffset) state.offset = 0;
+        sessionList.replaceChildren(create("div", "loading", "正在加载会话…"));
+        const params = new URLSearchParams();
+        params.set("limit", String(PAGE_SIZE));
+        params.set("offset", String(state.offset));
+        if (state.q) params.set("q", state.q);
+        if (state.status) params.set("status", state.status);
+        try {
+          const page = await fetchJson(sessionsPath + "?" + params.toString());
+          renderSessions(page);
+        } catch (error) {
+          sessionList.replaceChildren(
+            create("div", "error-state", "会话列表加载失败 · " + errorText(error))
+          );
+        }
+      }
+
+      function renderTurn(turn) {
+        const block = create("article", "turn");
+        const head = create("div", "turn-head");
+        head.append(
+          create("span", "", "第 " + turn.turn_count + " 轮 · " + formatTime(turn.started_at)),
+          (() => {
+            const right = create("span", "meta");
+            right.append(
+              create("span", "", turn.latency_ms + " ms"),
+              create("span", "", turn.answer_style || "—")
+            );
+            right.append(...statusBadges([turn.status]));
+            return right;
+          })()
+        );
+        block.append(head);
+        block.append(create("div", "bubble question", turn.query));
+        if (turn.status === "error" && turn.error_detail) {
+          block.append(create("div", "error-box", "错误：" + turn.error_detail));
+        }
+        if (turn.answer_text) {
+          const detail = create("details", "answer-toggle");
+          detail.open = true;
+          const summary = create("summary", "", "系统回答");
+          detail.append(summary, create("div", "bubble answer", turn.answer_text));
+          block.append(detail);
+        }
+        if (turn.citations && turn.citations.length) {
+          const box = create("div", "turn-citations");
+          box.append(create("span", "", "引用来源："));
+          turn.citations.forEach((citation) => {
+            const label = citation.label || citation.title || citation.url || "来源";
+            if (citation.url && /^https:\/\//.test(citation.url)) {
+              const link = create("a", "", "[" + (citation.index ?? "·") + "] " + label);
+              link.href = citation.url;
+              link.target = "_blank";
+              link.rel = "noopener noreferrer";
+              box.append(link);
+            } else {
+              box.append(create("span", "", "[" + (citation.index ?? "·") + "] " + label));
+            }
+          });
+          block.append(box);
+        }
+        if (turn.suggested_followups && turn.suggested_followups.length) {
+          block.append(
+            create(
+              "div",
+              "turn-citations",
+              "建议追问：" + turn.suggested_followups.join("；")
+            )
+          );
+        }
+        return block;
+      }
+
+      async function loadDetail(sessionId) {
+        turnList.replaceChildren(create("div", "loading", "正在加载轮次…"));
+        detailCaption.textContent = shortId(sessionId);
+        try {
+          const detail = await fetchJson(
+            sessionsPath + "/" + encodeURIComponent(sessionId)
+          );
+          detailCaption.textContent =
+            shortId(sessionId) +
+            " · " +
+            detail.session.turn_count +
+            " 轮 · 开始于 " +
+            formatTime(detail.session.started_at);
+          if (!detail.turns.length) {
+            turnList.replaceChildren(create("div", "empty", "该会话没有轮次记录"));
+            return;
+          }
+          turnList.replaceChildren(...detail.turns.map(renderTurn));
+        } catch (error) {
+          turnList.replaceChildren(
+            create("div", "error-state", "轮次加载失败 · " + errorText(error))
+          );
+        }
+      }
+
+      applyButton.addEventListener("click", () => {
+        state.q = searchInput.value.trim();
+        state.status = statusFilter.value;
+        loadSessions(true);
+      });
+      searchInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          state.q = searchInput.value.trim();
+          state.status = statusFilter.value;
+          loadSessions(true);
+        }
+      });
+      prevPage.addEventListener("click", () => {
+        state.offset = Math.max(0, state.offset - PAGE_SIZE);
+        loadSessions(false);
+      });
+      nextPage.addEventListener("click", () => {
+        state.offset = state.offset + PAGE_SIZE;
+        loadSessions(false);
+      });
+
+      loadSessions(true);
+    </script>
+  </body>
+</html>
