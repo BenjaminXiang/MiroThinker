@@ -76,8 +76,8 @@ class _LLMProfile:
 _LLM_PROFILES: dict[str, _LLMProfile] = {
     "gemma4": _LLMProfile(
         local=_LLMEndpoint(
-            base_url="https://star.sustech.edu.cn/service/model/gemma4/v1",
-            model="qwen3.6-35b-a3b-fp8",
+            base_url="https://star.sustech.edu.cn/service/model/qwen36/v1",
+            model="qwen3.6-35b-a3b",
             api_key_env="API_KEY",
         ),
         online=_LLMEndpoint(
@@ -112,8 +112,8 @@ _LLM_PROFILES: dict[str, _LLMProfile] = {
     ),
     "ark": _LLMProfile(
         local=_LLMEndpoint(
-            base_url="https://star.sustech.edu.cn/service/model/gemma4/v1",
-            model="qwen3.6-35b-a3b-fp8",
+            base_url="https://star.sustech.edu.cn/service/model/qwen36/v1",
+            model="qwen3.6-35b-a3b",
             api_key_env="API_KEY",
         ),
         online=_LLMEndpoint(

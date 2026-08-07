@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 import json
 import logging
@@ -12,6 +13,7 @@ from typing import Any
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
 from fastapi.responses import StreamingResponse
+from starlette.types import Message, Receive, Scope, Send
 
 from backend.api.chat_contracts import (
     ChatFeedbackRequest,
@@ -29,6 +31,9 @@ from backend.services.canonical_v2_chat import (
     CanonicalV2InvalidOption,
     CanonicalV2MappingError,
     CanonicalV2ReleaseMismatch,
+    _CanonicalV2ChatInterrupted,
+    _PublicTextStreamSanitizer,
+    _TurnCommitGate,
 )
 from src.data_agents.canonical_v2.knowledge_read import KnowledgeReadIntegrityError
 
@@ -40,6 +45,49 @@ _SESSION_COOKIE = "miroflow_chat_session"
 _SESSION_TTL_SECONDS = 30 * 60
 _INVALID_OPTION_DETAIL = "canonical_v2_invalid_option"
 _RELEASE_MISMATCH_DETAIL = "canonical_v2_release_mismatch"
+
+
+class _TurnGateStreamingResponse(StreamingResponse):
+    def __init__(
+        self,
+        content: Any,
+        *,
+        turn_gate: _TurnCommitGate,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(content, **kwargs)
+        self._turn_gate = turn_gate
+
+    async def __call__(
+        self,
+        scope: Scope,
+        receive: Receive,
+        send: Send,
+    ) -> None:
+        async def receive_with_disconnect() -> Message:
+            message = await receive()
+            if message["type"] == "http.disconnect":
+                self._turn_gate.cancel()
+            return message
+
+        async def send_with_disconnect(message: Message) -> None:
+            try:
+                await send(message)
+            except OSError:
+                self._turn_gate.cancel()
+                raise
+
+        try:
+            await super().__call__(
+                scope,
+                receive_with_disconnect,
+                send_with_disconnect,
+            )
+        finally:
+            self._turn_gate.cancel()
+            aclose = getattr(self.body_iterator, "aclose", None)
+            if callable(aclose):
+                await aclose()
 
 
 def _new_session_id() -> str:
@@ -170,71 +218,131 @@ def chat_stream(
     session_id = miroflow_chat_session or _new_session_id()
     set_session_cookie = miroflow_chat_session is None
 
-    events: queue.Queue[tuple[str, dict[str, Any]]] = queue.Queue()
+    stream_end = object()
+    events: queue.Queue[Any] = queue.Queue()
+    public_text = _PublicTextStreamSanitizer()
+    turn_gate = _TurnCommitGate()
+    worker_finished = threading.Event()
 
-    def emit(name: str, data: dict[str, Any]) -> None:
-        events.put((name, data))
+    def enqueue(name: str, data: dict[str, Any]) -> None:
+        with turn_gate.active():
+            events.put((name, data))
+
+    class _PublicProgress:
+        def __call__(self, name: str, data: dict[str, Any]) -> bool:
+            if name == "answer_chunk" and isinstance(data.get("text"), str):
+                public_chunk = public_text.feed(data["text"])
+                if not public_chunk:
+                    return False
+                data = {**data, "text": public_chunk}
+            events.put((name, data))
+            return True
+
+        def abort(self) -> None:
+            public_text.abort()
+
+    emit = _PublicProgress()
 
     def run_turn() -> None:
         try:
-            chat_response = adapter.answer_stream(
-                query=query,
-                session_id=session_id,
-                option_id=payload.entity_id_hint,
-                as_of=_utc_now(),
-                progress=emit,
-            )
-            events.put(
-                (
+            try:
+                chat_response = adapter.answer_stream(
+                    query=query,
+                    session_id=session_id,
+                    option_id=payload.entity_id_hint,
+                    as_of=_utc_now(),
+                    progress=emit,
+                    turn_gate=turn_gate,
+                )
+                final_chunk = public_text.flush()
+                if final_chunk:
+                    enqueue("answer_chunk", {"text": final_chunk})
+                enqueue(
                     "answer",
                     chat_response.model_dump(mode="json"),
                 )
-            )
-            events.put(("done", {}))
-        except CanonicalV2InvalidOption:
-            events.put(("error", {"detail": _INVALID_OPTION_DETAIL}))
-        except (CanonicalV2ReleaseMismatch, CanonicalV2ConsumerIntegrityError) as exc:
-            import traceback as _tb
-            logger.warning(
-                "canonical v2 release/integrity failure: %s\n%s",
-                exc,
-                "".join(_tb.format_exception(type(exc), exc, exc.__traceback__)),
-            )
-            events.put(("error", {"detail": _RELEASE_MISMATCH_DETAIL}))
-        except KnowledgeReadIntegrityError as exc:
-            import traceback as _tb
-            logger.warning(
-                "canonical v2 knowledge-read integrity failure: %s\n%s",
-                exc,
-                "".join(_tb.format_exception(type(exc), exc, exc.__traceback__)),
-            )
-            events.put(("error", {"detail": _RELEASE_MISMATCH_DETAIL}))
-        except CanonicalV2MappingError:
-            events.put(("error", {"detail": "canonical_v2_consumer_integrity_error"}))
-        except Exception as exc:  # noqa: BLE001 - the stream must not hang
-            import traceback as _tb
-            logger.warning(
-                "canonical v2 stream turn failed: %s\n%s",
-                exc,
-                "".join(_tb.format_exception(type(exc), exc, exc.__traceback__)),
-            )
-            events.put(("error", {"detail": "internal_error"}))
+                enqueue("done", {})
+            except _CanonicalV2ChatInterrupted:
+                raise
+            except CanonicalV2InvalidOption:
+                enqueue("error", {"detail": _INVALID_OPTION_DETAIL})
+            except (
+                CanonicalV2ReleaseMismatch,
+                CanonicalV2ConsumerIntegrityError,
+            ) as exc:
+                import traceback as _tb
+
+                logger.warning(
+                    "canonical v2 release/integrity failure: %s\n%s",
+                    exc,
+                    "".join(_tb.format_exception(type(exc), exc, exc.__traceback__)),
+                )
+                enqueue("error", {"detail": _RELEASE_MISMATCH_DETAIL})
+            except KnowledgeReadIntegrityError as exc:
+                import traceback as _tb
+
+                logger.warning(
+                    "canonical v2 knowledge-read integrity failure: %s\n%s",
+                    exc,
+                    "".join(_tb.format_exception(type(exc), exc, exc.__traceback__)),
+                )
+                enqueue("error", {"detail": _RELEASE_MISMATCH_DETAIL})
+            except CanonicalV2MappingError:
+                enqueue("error", {"detail": "canonical_v2_consumer_integrity_error"})
+            except Exception as exc:  # noqa: BLE001 - the stream must not hang
+                import traceback as _tb
+
+                logger.warning(
+                    "canonical v2 stream turn failed: %s\n%s",
+                    exc,
+                    "".join(_tb.format_exception(type(exc), exc, exc.__traceback__)),
+                )
+                enqueue("error", {"detail": "internal_error"})
+        except _CanonicalV2ChatInterrupted:
+            pass
+        finally:
+            events.put(stream_end)
+            worker_finished.set()
 
     def render(name: str, data: dict[str, Any]) -> str:
         body = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
         return f"event: {name}\ndata: {body}\n\n"
 
-    def generate() -> Any:
+    async def generate() -> Any:
         worker = threading.Thread(target=run_turn, daemon=True)
         worker.start()
-        while True:
-            name, data = events.get()
-            yield render(name, data)
-            if name in ("done", "error"):
-                break
+        try:
+            while True:
+                turn_gate.begin_transport_observation()
+                disconnected = True
+                try:
+                    disconnected = await request.is_disconnected()
+                finally:
+                    turn_gate.finish_transport_observation(
+                        disconnected=disconnected,
+                    )
+                if disconnected:
+                    turn_gate.cancel()
+                    break
+                try:
+                    event = events.get_nowait()
+                except queue.Empty:
+                    await asyncio.sleep(0.01)
+                    continue
+                if event is stream_end:
+                    break
+                name, data = event
+                yield render(name, data)
+        except asyncio.CancelledError:
+            turn_gate.cancel()
+            raise
+        finally:
+            turn_gate.cancel()
+            await asyncio.to_thread(worker_finished.wait, 0.05)
 
-    stream = StreamingResponse(
+    stream = _TurnGateStreamingResponse(
         generate(),
+        turn_gate=turn_gate,
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

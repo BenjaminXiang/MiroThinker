@@ -204,10 +204,10 @@ def test_resolve_professor_llm_settings_falls_back_to_key_file(
 @pytest.mark.parametrize(
     ("profile_name", "expected_prefix"),
     [
-        ("gemma4", "https://star.sustech.edu.cn/service/model/gemma4/v1"),
+        ("gemma4", "https://star.sustech.edu.cn/service/model/qwen36/v1"),
         ("qwen35", "https://star.sustech.edu.cn/service/model/qwen35/v1"),
         ("mirothinker", "https://star.sustech.edu.cn/service/model/mirothinker/v1"),
-        ("ark", "https://star.sustech.edu.cn/service/model/gemma4/v1"),
+        ("ark", "https://star.sustech.edu.cn/service/model/qwen36/v1"),
     ],
 )
 def test_resolve_professor_llm_settings_uses_https_for_star_profiles(
@@ -220,7 +220,7 @@ def test_resolve_professor_llm_settings_uses_https_for_star_profiles(
 
 
 @pytest.mark.parametrize("profile_name", ["gemma4", "ark"])
-def test_gemma4_route_uses_current_qwen36_model(profile_name: str):
+def test_legacy_gemma4_routes_use_current_qwen36_model(profile_name: str):
     settings = resolve_professor_llm_settings(profile_name, strict=True)
 
-    assert settings["local_llm_model"] == "qwen3.6-35b-a3b-fp8"
+    assert settings["local_llm_model"] == "qwen3.6-35b-a3b"

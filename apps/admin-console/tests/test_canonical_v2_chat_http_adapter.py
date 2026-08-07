@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import copy
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -11,9 +12,11 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import threading
 from types import SimpleNamespace
 from typing import Any, Callable, TypedDict, cast
 
+from fastapi import Request, Response
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 import pytest
@@ -31,7 +34,7 @@ RELEASE_MISMATCH = "canonical_v2_release_mismatch"
 RAW_SELECTOR_DRAFT = "RAW_SELECTOR_DRAFT_DO_NOT_EXPOSE"
 SECRET_SENTINEL = "sk-s11a-do-not-expose"
 ACCEPTED_PHYSICAL_OWNER_SHA256 = (
-    "708d2926670b739a5b388f489755c5ec43444a0ed6591c9a9c335857e22b91fa"
+    "f3d74053dd52ab0a34514729c61785a12af94012ddc6a601e0866d507995b2bb"
 )
 CHAT_SCHEMA_SHA256 = "04584086d12ca5c56e5fd28f702d2fe5f71a20038be84f0dbdcc45524edcbd94"
 CHAT_MODEL_NAMES = (
@@ -323,9 +326,11 @@ def test_public_chat_response_omits_internal_evidence_and_trace() -> None:
     service = import_module("backend.services.canonical_v2_chat")
     answer = import_module("src.data_agents.canonical_v2.knowledge_answer")
     read = import_module("src.data_agents.canonical_v2.knowledge_read")
+    canonical_id = "professor-c-0123456789abcdef01234567"
+    internal_id = "PROF-8000C9F994C3"
     evidence = read.EvidenceItem(
         evidence_id="evidence:s12d:private",
-        object_id="professor-c-ding-wenbo",
+        object_id=canonical_id,
         domain="professor",
         lane="exact",
         source_nature="local",
@@ -340,7 +345,7 @@ def test_public_chat_response_omits_internal_evidence_and_trace() -> None:
         score=1.0,
         source_authority="canonical_release",
         claim_binding=read.EvidenceClaimBinding(
-            subject_id="professor-c-ding-wenbo",
+            subject_id=canonical_id,
             predicate="canonical_projection",
             value="a" * 64,
             status="admitted",
@@ -382,7 +387,7 @@ def test_public_chat_response_omits_internal_evidence_and_trace() -> None:
         session_id="session:s12d-public-envelope",
         turn_id="turn:s12d-public-envelope",
         release_id=RELEASE_ID,
-        answer_text="丁文伯简介",
+        answer_text=f"丁文伯公开简介。{internal_id}；后续公开结论保留。",
         citations=(
             answer.Citation(
                 evidence_id=evidence.evidence_id,
@@ -390,6 +395,7 @@ def test_public_chat_response_omits_internal_evidence_and_trace() -> None:
                 source_locator=evidence.source_locator,
             ),
         ),
+        response_mode="clarification_only",
         render_mode="prose_renderer",
     )
     outcome = service._CanonicalV2ChatOutcome(
@@ -404,10 +410,14 @@ def test_public_chat_response_omits_internal_evidence_and_trace() -> None:
 
     assert response.evidence == []
     assert response.structured_payload == {}
+    assert response.answer_text == "丁文伯公开简介。；后续公开结论保留。"
+    assert response.clarification is not None
+    assert response.clarification.prompt == response.answer_text
     serialized = json.dumps(response.model_dump(mode="json"), ensure_ascii=False)
     assert "canonical-v2-isolated" not in serialized
     assert RELEASE_ID not in serialized
-    assert "professor-c-ding-wenbo" not in serialized
+    assert canonical_id not in serialized
+    assert internal_id not in serialized
 
 
 def test_isolated_read_integrity_error_is_a_stable_public_conflict() -> None:
@@ -682,8 +692,10 @@ def test_referent_clarification_matrix(
         active_anchor=object() if has_anchor else None,
         displayed_result_set=object() if has_set else None,
     )
-    committed = None if not (has_anchor or has_set) else SimpleNamespace(
-        context_receipt=context
+    committed = (
+        None
+        if not (has_anchor or has_set)
+        else SimpleNamespace(context_receipt=context)
     )
 
     assert (
@@ -2416,17 +2428,26 @@ def test_s11a_post_chat_stream_emits_stage_and_answer_events() -> None:
             option_id: str | None,
             as_of: datetime,
             progress: Callable[[str, dict[str, Any]], None] | None = None,
+            **_: Any,
         ) -> Any:
             if progress is not None:
                 progress("stage", {"name": "planning"})
                 progress(
                     "plan_done",
-                    {"lanes": ["exact"], "domains": ["company"], "views": ["Robotics Co"]},
+                    {
+                        "lanes": ["exact"],
+                        "domains": ["company"],
+                        "views": ["Robotics Co"],
+                    },
                 )
                 progress("stage", {"name": "retrieval"})
                 progress(
                     "retrieval_done",
-                    {"lanes": [{"lane": "exact", "status": "succeeded", "candidates": 1}]},
+                    {
+                        "lanes": [
+                            {"lane": "exact", "status": "succeeded", "candidates": 1}
+                        ]
+                    },
                 )
                 progress("stage", {"name": "synthesis"})
             return seam.contracts_module.ChatResponse(
@@ -2472,7 +2493,15 @@ def test_s11a_post_chat_stream_emits_stage_and_answer_events() -> None:
         if data_lines:
             events.append((event_name, json.loads("\n".join(data_lines))))
     names = [name for name, _ in events]
-    assert names == ["stage", "plan_done", "stage", "retrieval_done", "stage", "answer", "done"]
+    assert names == [
+        "stage",
+        "plan_done",
+        "stage",
+        "retrieval_done",
+        "stage",
+        "answer",
+        "done",
+    ]
     stages = [data["name"] for name, data in events if name == "stage"]
     assert stages == ["planning", "retrieval", "synthesis"]
     plan_done = next(data for name, data in events if name == "plan_done")
@@ -2497,12 +2526,12 @@ def test_s11a_post_chat_stream_emits_stage_and_answer_events() -> None:
 
 
 def test_s11a_chat_stream_emits_answer_chunk_events() -> None:
-    """The SSE stream route passes token-level answer_chunk events through
-    between synthesis stage and the final answer event, in emission order."""
+    """The route publishes safe chunks before the adapter returns."""
     seam = _load_s11a_seam()
     getter = seam.deps_module.get_canonical_v2_chat_adapter
 
     chunks = ["深圳", "科创", "助手", "开始回答"]
+    first_chunk_published_before_return = threading.Event()
 
     class _ChunkStreamingAdapter:
         def answer_stream(
@@ -2512,7 +2541,8 @@ def test_s11a_chat_stream_emits_answer_chunk_events() -> None:
             session_id: str,
             option_id: str | None,
             as_of: datetime,
-            progress: Callable[[str, dict[str, Any]], None] | None = None,
+            progress: Callable[[str, dict[str, Any]], bool | None] | None = None,
+            **_: Any,
         ) -> Any:
             if progress is not None:
                 progress("stage", {"name": "planning"})
@@ -2520,8 +2550,11 @@ def test_s11a_chat_stream_emits_answer_chunk_events() -> None:
                 progress("stage", {"name": "retrieval"})
                 progress("retrieval_done", {"lanes": []})
                 progress("stage", {"name": "synthesis"})
-                for text in chunks:
-                    progress("answer_chunk", {"text": text})
+                for index, text in enumerate(chunks):
+                    published = progress("answer_chunk", {"text": text})
+                    if index == 0:
+                        assert published is True
+                        first_chunk_published_before_return.set()
             return seam.contracts_module.ChatResponse(
                 query=query,
                 query_type="canonical_v2:A:answer",
@@ -2548,6 +2581,7 @@ def test_s11a_chat_stream_emits_answer_chunk_events() -> None:
         else:
             seam.app.dependency_overrides[getter] = prior
 
+    assert first_chunk_published_before_return.is_set()
     assert response.status_code == 200
     events: list[tuple[str, dict[str, Any]]] = []
     for block in response.text.split("\n\n"):
@@ -2561,20 +2595,441 @@ def test_s11a_chat_stream_emits_answer_chunk_events() -> None:
         if data_lines:
             events.append((event_name, json.loads("\n".join(data_lines))))
     names = [name for name, _ in events]
-    assert names == [
+    assert names[:5] == [
         "stage",
         "plan_done",
         "stage",
         "retrieval_done",
         "stage",
-        *["answer_chunk"] * len(chunks),
+    ]
+    assert names[-2:] == ["answer", "done"]
+    assert names[5:-2] and set(names[5:-2]) == {"answer_chunk"}
+    chunk_events = [data for name, data in events if name == "answer_chunk"]
+    assert "".join(chunk["text"] for chunk in chunk_events) == "".join(chunks)
+    answer_payload = next(data for name, data in events if name == "answer")
+    assert answer_payload["answer_text"] == "".join(chunks)
+
+
+@pytest.mark.parametrize(
+    "marker",
+    (
+        "PROF-8000C9F994C3",
+        "COMP-012345abcdef",
+        "company-c-0123456789abcdef01234567",
+        "professor-c-0123456789abcdef01234567",
+        "paper-c-0123456789abcdef01234567",
+        "patent-c-0123456789abcdef01234567",
+        "web-object:sha256:" + ("a" * 64),
+        "web-handle:sha256:" + ("b" * 64),
+        "web-object:s12g-private",
+        "source_nature=current_web",
+    ),
+)
+def test_s12g_public_text_sanitizer_removes_only_producer_backed_markers(
+    marker: str,
+) -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    source = f"公开前文。{marker}；公开后文。"
+    expected = "公开前文。；公开后文。"
+
+    assert service._sanitize_public_text(source) == expected
+
+    split = len(marker) // 2
+    sanitizer = service._PublicTextStreamSanitizer()
+    streamed = (
+        sanitizer.feed(f"公开前文。{marker[:split]}")
+        + sanitizer.feed(f"{marker[split:]}；公开后文。")
+        + sanitizer.flush()
+    )
+    assert streamed == expected
+
+
+def test_s12g_public_text_sanitizer_releases_short_safe_text_immediately() -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    sanitizer = service._PublicTextStreamSanitizer()
+
+    assert sanitizer.feed("普通短回答。") == "普通短回答。"
+    assert sanitizer.flush() == ""
+
+
+def test_s12g_public_projection_is_idempotent_across_stream_and_final_response() -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    raw_markdown = (
+        "# 深圳科创\n\n"
+        "普通文本保持。web-object:s12g-privateCOMP-012345abcdef；结尾公开。"
+    )
+    expected = "# 深圳科创\n\n普通文本保持。；结尾公开。"
+
+    assert service._sanitize_public_text("普通文本保持。") == "普通文本保持。"
+
+    batch = service._sanitize_public_text(raw_markdown)
+    assert service._sanitize_public_text(batch) == batch
+
+    response = service.ChatResponse(
+        query=SIMPLE_QUERY,
+        query_type="canonical_v2:A:answer",
+        answer_text=raw_markdown,
+        citations=[],
+        evidence=[],
+        clarification=None,
+        structured_payload={},
+        answer_style="template",
+        citation_map={},
+        suggested_followups=[],
+    )
+    final_answer = service._sanitize_public_response(response).answer_text
+
+    sanitizer = service._PublicTextStreamSanitizer()
+    streamed = (
+        sanitizer.feed(
+            "# 深圳科创\n\n普通文本保持。web-object:s12g-private"
+        )
+        + sanitizer.feed("COMP-012345abcdef；结尾公开。")
+        + sanitizer.flush()
+    )
+
+    assert batch == streamed == final_answer == expected
+
+
+@pytest.mark.parametrize(
+    "failed_attempt",
+    (
+        "web-obje",
+        "source_nature=current_",
+    ),
+)
+def test_s12g_public_text_sanitizer_abort_discards_attempt_state(
+    failed_attempt: str,
+) -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    sanitizer = service._PublicTextStreamSanitizer()
+
+    assert sanitizer.feed(failed_attempt) == ""
+    assert hasattr(sanitizer, "abort")
+    sanitizer.abort()
+
+    assert sanitizer.feed("新的公开回答") == "新的公开回答"
+    assert sanitizer.flush() == ""
+
+
+def test_s12g_public_text_sanitizer_abort_resets_left_boundary_state() -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    sanitizer = service._PublicTextStreamSanitizer()
+
+    assert sanitizer.feed("web-object:s12g-private") == ""
+    sanitizer.abort()
+
+    streamed = sanitizer.feed("COMP-012345abcdef；") + sanitizer.flush()
+    assert streamed == "；"
+
+
+@pytest.mark.parametrize(
+    "public_text",
+    (
+        "source:github",
+        "paper:arxiv",
+        "query:python",
+        "paper-based",
+        "https://example.test/company:overview?ref=public",
+        "a" * 64,
+        "PROF-DING-WENBO",
+        "evidence:sha256:" + ("b" * 64),
+        "current_web",
+        "Source_nature=current_web",
+        "source_nature = current_web",
+    ),
+)
+def test_s12g_public_text_sanitizer_preserves_normal_text_verbatim(
+    public_text: str,
+) -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+
+    assert service._sanitize_public_text(public_text) == public_text
+
+    sanitizer = service._PublicTextStreamSanitizer()
+    split = max(1, len(public_text) // 2)
+    streamed = (
+        sanitizer.feed(public_text[:split])
+        + sanitizer.feed(public_text[split:])
+        + sanitizer.flush()
+    )
+    assert streamed == public_text
+
+
+@pytest.mark.parametrize(
+    ("candidate", "is_internal"),
+    (
+        ("COMP-012345abcdef", True),
+        ("COMP-3B95F48EB687", True),
+        ("COMP-012345aBcDeF", True),
+        ("COMP-012345abcde", False),
+        ("COMP-012345abcdef0", False),
+        ("COMP-012345abcdeg", False),
+    ),
+)
+def test_s12g_comp_marker_requires_exact_twelve_hex_digits(
+    candidate: str,
+    is_internal: bool,
+) -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    source = f"公开前文。{candidate}；公开后文。"
+    expected = "公开前文。；公开后文。" if is_internal else source
+
+    assert service._sanitize_public_text(source) == expected
+
+    sanitizer = service._PublicTextStreamSanitizer()
+    single_feed = sanitizer.feed(source) + sanitizer.flush()
+    assert single_feed == expected
+
+    for split in range(1, len(source)):
+        sanitizer = service._PublicTextStreamSanitizer()
+        streamed = (
+            sanitizer.feed(source[:split])
+            + sanitizer.feed(source[split:])
+            + sanitizer.flush()
+        )
+        assert streamed == expected, split
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    (
+        (
+            "Xcompany-c-0123456789abcdef01234567。。。",
+            "Xcompany-c-0123456789abcdef01234567。。。",
+        ),
+        (
+            "web-object:s12g-privateCOMP-012345abcdef；",
+            "；",
+        ),
+    ),
+)
+def test_s12g_public_text_stream_preserves_original_left_boundary_for_every_split(
+    source: str,
+    expected: str,
+) -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    batch = service._sanitize_public_text(source)
+    assert batch == expected
+
+    sanitizer = service._PublicTextStreamSanitizer()
+    single_feed = sanitizer.feed(source) + sanitizer.flush()
+    assert single_feed == batch
+
+    for split in range(1, len(source)):
+        sanitizer = service._PublicTextStreamSanitizer()
+        streamed = (
+            sanitizer.feed(source[:split])
+            + sanitizer.feed(source[split:])
+            + sanitizer.flush()
+        )
+        assert streamed == batch, split
+
+
+def test_s12g_public_text_stream_matches_batch_for_every_web_namespace_split() -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    marker = "web-object:s12g-private"
+    source = f"公开前文。{marker}；公开后文。"
+    expected = "公开前文。；公开后文。"
+    assert service._sanitize_public_text(source) == expected
+
+    for split in range(1, len(marker)):
+        sanitizer = service._PublicTextStreamSanitizer()
+        streamed = (
+            sanitizer.feed(f"公开前文。{marker[:split]}")
+            + sanitizer.feed(f"{marker[split:]}；公开后文。")
+            + sanitizer.flush()
+        )
+        assert streamed == expected, split
+
+
+def test_s12g_chat_stream_sanitizes_split_internal_markers_without_losing_public_text() -> (
+    None
+):
+    seam = _load_s11a_seam()
+    getter = seam.deps_module.get_canonical_v2_chat_adapter
+    safe_markdown = (
+        "# 深圳科创\n\n"
+        "这是 **公开回答**，详情见 [官网](https://example.com/product?q=robot)。\n\n"
+        "- 第一项\n- 第二项\n\n"
+    )
+    long_text = "长正文：" + ("深圳科创持续创新。" * 64)
+    internal_markers = (
+        "PROF-8000C9F994C3",
+        "web-object:s12g-private",
+        "source_nature=current_web",
+    )
+    chunks = (
+        "PROF-8000",
+        "C9F994C3",
+        safe_markdown,
+        "中段前文 web-object:s12g-",
+        "private 后文继续公开。\n\n",
+        long_text,
+        "\n\n结尾公开说明：source_",
+        "nature=current_web",
+    )
+    expected_public_text = "".join(chunks)
+    for marker in internal_markers:
+        expected_public_text = expected_public_text.replace(marker, "")
+
+    class _UnsafeChunkStreamingAdapter:
+        def answer_stream(
+            self,
+            *,
+            query: str,
+            progress: Callable[[str, dict[str, Any]], None] | None = None,
+            **_: Any,
+        ) -> Any:
+            if progress is not None:
+                progress("stage", {"name": "planning"})
+                progress("plan_done", {"lanes": ["exact"], "domains": [], "views": []})
+                progress("stage", {"name": "retrieval"})
+                progress("retrieval_done", {"lanes": []})
+                progress("stage", {"name": "synthesis"})
+                for text in chunks:
+                    progress("answer_chunk", {"text": text})
+            return seam.contracts_module.ChatResponse(
+                query=query,
+                query_type="canonical_v2:A:answer",
+                answer_text=expected_public_text,
+                citations=[],
+                evidence=[],
+                clarification=None,
+                structured_payload={},
+                answer_style="template",
+                citation_map={},
+                suggested_followups=[],
+            )
+
+    prior = seam.app.dependency_overrides.get(getter)
+    seam.app.dependency_overrides[getter] = lambda: _UnsafeChunkStreamingAdapter()
+    try:
+        response = TestClient(seam.app, raise_server_exceptions=False).post(
+            "/api/chat/stream",
+            json={"query": SIMPLE_QUERY, "entity_id_hint": None},
+        )
+    finally:
+        if prior is None:
+            seam.app.dependency_overrides.pop(getter, None)
+        else:
+            seam.app.dependency_overrides[getter] = prior
+
+    assert response.status_code == 200
+    for unsafe_fragment in internal_markers:
+        assert unsafe_fragment not in response.text
+
+    events: list[tuple[str, dict[str, Any]]] = []
+    for block in response.text.split("\n\n"):
+        event_name = "message"
+        data_lines: list[str] = []
+        for line in block.split("\n"):
+            if line.startswith("event:"):
+                event_name = line[6:].strip()
+            elif line.startswith("data:"):
+                data_lines.append(line[5:].strip())
+        if data_lines:
+            events.append((event_name, json.loads("\n".join(data_lines))))
+
+    assert [name for name, _ in events if name != "answer_chunk"] == [
+        "stage",
+        "plan_done",
+        "stage",
+        "retrieval_done",
+        "stage",
         "answer",
         "done",
     ]
-    chunk_events = [data for name, data in events if name == "answer_chunk"]
-    assert [chunk["text"] for chunk in chunk_events] == chunks
+    chunk_payloads = [data for name, data in events if name == "answer_chunk"]
+    assert all(
+        set(payload) == {"text"} and payload["text"] for payload in chunk_payloads
+    )
+    streamed_public_text = "".join(payload["text"] for payload in chunk_payloads)
     answer_payload = next(data for name, data in events if name == "answer")
-    assert answer_payload["answer_text"] == "".join(chunks)
+    assert set(answer_payload) == set(seam.contracts_module.ChatResponse.model_fields)
+    assert streamed_public_text == answer_payload["answer_text"] == expected_public_text
+    assert safe_markdown in streamed_public_text
+    assert "https://example.com/product?q=robot" in streamed_public_text
+    assert long_text in streamed_public_text
+
+
+def test_s12g_real_adapter_sse_sanitizes_answer_and_clarification() -> None:
+    seam = _load_s11a_seam()
+    answer_module = import_module("src.data_agents.canonical_v2.knowledge_answer")
+    read_module = import_module("src.data_agents.canonical_v2.knowledge_read")
+    getter = seam.deps_module.get_canonical_v2_chat_adapter
+    marker = "PROF-8000C9F994C3"
+    unsafe_answer = f"公开说明保留 source:github。{marker}"
+    expected_answer = "公开说明保留 source:github。"
+
+    class _Planner:
+        def plan(self, request: Any) -> Any:
+            return read_module.RetrievalPlan(
+                plan_version="retrieval-plan-v1",
+                original_query=request.original_query,
+                behavior_class="A",
+                release_id=RELEASE_ID,
+                domains=(),
+                protected_slots=(),
+                lanes=(),
+                max_candidates=0,
+                web_required=False,
+            )
+
+    class _Read:
+        def execute(self, plan: Any) -> Any:
+            return read_module.EvidenceSet(
+                release_id=RELEASE_ID,
+                original_query=plan.original_query,
+                protected_slots=(),
+                items=(),
+                traces=(),
+                limitations=(),
+            )
+
+    class _Answer:
+        prose_progress: Callable[[str], None] | None = None
+
+        def answer(self, turn: Any) -> Any:
+            return answer_module.TurnResult(
+                session_id=turn.session_id,
+                turn_id=turn.turn_id,
+                release_id=turn.release_id,
+                answer_text=unsafe_answer,
+                response_mode="clarification_only",
+            )
+
+    adapter = seam.adapter_type(
+        release_id=RELEASE_ID,
+        planner=_Planner(),
+        knowledge_read=_Read(),
+        answer_factory=_Answer,
+        answer_session_fork=lambda _: _Answer(),
+    )
+    prior = seam.app.dependency_overrides.get(getter)
+    seam.app.dependency_overrides[getter] = lambda: adapter
+    try:
+        response = TestClient(seam.app, raise_server_exceptions=False).post(
+            "/api/chat/stream",
+            json={"query": SIMPLE_QUERY, "entity_id_hint": None},
+        )
+    finally:
+        if prior is None:
+            seam.app.dependency_overrides.pop(getter, None)
+        else:
+            seam.app.dependency_overrides[getter] = prior
+
+    events = [
+        (
+            block.split("\n", 1)[0].removeprefix("event: "),
+            json.loads(block.split("data: ", 1)[1]),
+        )
+        for block in response.text.strip().split("\n\n")
+    ]
+    answer_payload = next(data for name, data in events if name == "answer")
+    assert answer_payload["answer_text"] == expected_answer
+    assert answer_payload["clarification"]["prompt"] == expected_answer
+    assert marker not in json.dumps(answer_payload, ensure_ascii=False)
 
 
 def test_s11a_chat_stream_integrity_error_emits_error_event() -> None:
@@ -2607,3 +3062,1233 @@ def test_s11a_chat_stream_integrity_error_emits_error_event() -> None:
     assert "event: error" in response.text
     assert RELEASE_MISMATCH in response.text
     assert "private release-bound lookup detail" not in response.text
+
+
+class _S12GStageProbe:
+    def __init__(self, *, blocked_stage: str | None, blocked_query: str) -> None:
+        self.blocked_stage = blocked_stage
+        self.blocked_query = blocked_query
+        self.entered = threading.Event()
+        self.release = threading.Event()
+        self.calls = {"plan": 0, "read": 0, "answer": 0}
+
+    def visit(self, stage: str, query: str) -> None:
+        self.calls[stage] += 1
+        if stage != self.blocked_stage or query != self.blocked_query:
+            return
+        self.entered.set()
+        if not self.release.wait(2.0):
+            raise TimeoutError(f"timed out waiting to release {stage}")
+
+
+class _S12GHistoryAnswer:
+    prose_progress: Callable[[str], None] | None = None
+
+    def __init__(
+        self,
+        *,
+        probe: _S12GStageProbe,
+        answer_module: Any,
+        history: tuple[str, ...] = (),
+    ) -> None:
+        self.probe = probe
+        self.answer_module = answer_module
+        self.history = list(history)
+
+    def answer(self, turn: Any) -> Any:
+        self.probe.visit("answer", turn.query)
+        if self.prose_progress is not None:
+            self.prose_progress(f"公开分片：{turn.query}")
+        self.history.append(turn.query)
+        return self.answer_module.TurnResult(
+            session_id=turn.session_id,
+            turn_id=turn.turn_id,
+            release_id=turn.release_id,
+            answer_text="｜".join(self.history),
+        )
+
+
+def _s12g_real_adapter(seam: _S11ASeam, probe: _S12GStageProbe) -> Any:
+    answer_module = import_module("src.data_agents.canonical_v2.knowledge_answer")
+    read_module = import_module("src.data_agents.canonical_v2.knowledge_read")
+
+    class _Planner:
+        def plan(self, request: Any) -> Any:
+            probe.visit("plan", request.original_query)
+            return read_module.RetrievalPlan(
+                plan_version="retrieval-plan-v1",
+                original_query=request.original_query,
+                behavior_class="A",
+                release_id=RELEASE_ID,
+                domains=(),
+                protected_slots=(),
+                lanes=(),
+                max_candidates=0,
+                web_required=False,
+            )
+
+    class _Read:
+        def execute(self, plan: Any) -> Any:
+            probe.visit("read", plan.original_query)
+            return read_module.EvidenceSet(
+                release_id=RELEASE_ID,
+                original_query=plan.original_query,
+                protected_slots=(),
+                items=(),
+                traces=(),
+                limitations=(),
+            )
+
+    return seam.adapter_type(
+        release_id=RELEASE_ID,
+        planner=_Planner(),
+        knowledge_read=_Read(),
+        answer_factory=lambda: _S12GHistoryAnswer(
+            probe=probe,
+            answer_module=answer_module,
+        ),
+        answer_session_fork=lambda base: _S12GHistoryAnswer(
+            probe=probe,
+            answer_module=answer_module,
+            history=tuple(base.history),
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    ("cancel_first", "expected_third_answer"),
+    (
+        (True, "第一轮公开问题｜第三轮公开问题"),
+        (False, "第一轮公开问题｜第二轮公开问题｜第三轮公开问题"),
+    ),
+)
+def test_s12g_turn_gate_linearizes_cancellation_and_session_commit(
+    cancel_first: bool,
+    expected_third_answer: str,
+) -> None:
+    seam = _load_s11a_seam()
+    second_query = "第二轮公开问题"
+    probe = _S12GStageProbe(blocked_stage="answer", blocked_query=second_query)
+    adapter = _s12g_real_adapter(seam, probe)
+    turn_gate = seam.service_module._TurnCommitGate()
+    session_id = f"session:s12g-linearized-{cancel_first}"
+    outcome: dict[str, Any] = {}
+    completed = threading.Event()
+
+    first = adapter.answer(
+        query="第一轮公开问题",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    assert first.answer_text == "第一轮公开问题"
+
+    def run_second_turn() -> None:
+        try:
+            outcome["response"] = adapter.answer_stream(
+                query=second_query,
+                session_id=session_id,
+                option_id=None,
+                as_of=NOW,
+                turn_gate=turn_gate,
+            )
+        except BaseException as exc:  # noqa: BLE001 - asserted through public outcome
+            outcome["error"] = exc
+        finally:
+            completed.set()
+
+    worker = threading.Thread(target=run_second_turn, daemon=True)
+    worker.start()
+    assert probe.entered.wait(1.5)
+    if cancel_first:
+        turn_gate.cancel()
+        probe.release.set()
+    else:
+        probe.release.set()
+        assert completed.wait(1.5)
+        turn_gate.cancel()
+    assert completed.wait(1.5)
+    worker.join(0.1)
+    assert not worker.is_alive()
+    if cancel_first:
+        assert "response" not in outcome
+    else:
+        assert outcome["response"].answer_text == "第一轮公开问题｜第二轮公开问题"
+
+    third = adapter.answer(
+        query="第三轮公开问题",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    assert third.answer_text == expected_third_answer
+
+
+@pytest.mark.parametrize(
+    ("blocked_stage", "expected_calls", "forbidden_event"),
+    (
+        ("plan", {"plan": 1, "read": 0, "answer": 0}, "plan_done"),
+        ("read", {"plan": 1, "read": 1, "answer": 0}, "retrieval_done"),
+        ("answer", {"plan": 1, "read": 1, "answer": 1}, "answer_chunk"),
+    ),
+)
+def test_s12g_cancelled_turn_exits_at_the_next_stage_boundary(
+    blocked_stage: str,
+    expected_calls: dict[str, int],
+    forbidden_event: str,
+) -> None:
+    seam = _load_s11a_seam()
+    cancelled_query = "需取消的公开问题"
+    probe = _S12GStageProbe(
+        blocked_stage=blocked_stage,
+        blocked_query=cancelled_query,
+    )
+    adapter = _s12g_real_adapter(seam, probe)
+    turn_gate = seam.service_module._TurnCommitGate()
+    progress_names: list[str] = []
+    outcome: dict[str, Any] = {}
+
+    def run_cancelled_turn() -> None:
+        try:
+            outcome["response"] = adapter.answer_stream(
+                query=cancelled_query,
+                session_id=f"session:s12g-stage-{blocked_stage}",
+                option_id=None,
+                as_of=NOW,
+                progress=lambda name, _: progress_names.append(name),
+                turn_gate=turn_gate,
+            )
+        except BaseException as exc:  # noqa: BLE001 - asserted through public outcome
+            outcome["error"] = exc
+
+    worker = threading.Thread(target=run_cancelled_turn, daemon=True)
+    worker.start()
+    assert probe.entered.wait(1.5)
+    turn_gate.cancel()
+    probe.release.set()
+    worker.join(1.5)
+
+    assert not worker.is_alive()
+    assert "response" not in outcome
+    assert probe.calls == expected_calls
+    assert forbidden_event not in progress_names
+    recovered = adapter.answer(
+        query="恢复后的公开问题",
+        session_id=f"session:s12g-stage-{blocked_stage}",
+        option_id=None,
+        as_of=NOW,
+    )
+    assert recovered.answer_text == "恢复后的公开问题"
+
+
+class _S12GFinishingProxy:
+    def __init__(self, adapter: Any, worker_finished: threading.Event) -> None:
+        self.adapter = adapter
+        self.worker_finished = worker_finished
+
+    def answer_stream(self, **kwargs: Any) -> Any:
+        try:
+            return self.adapter.answer_stream(**kwargs)
+        finally:
+            self.worker_finished.set()
+
+
+def test_s12g_chat_stream_aclose_cancels_before_real_adapter_commit() -> None:
+    seam = _load_s11a_seam()
+    query = "停止当前流"
+    probe = _S12GStageProbe(blocked_stage="plan", blocked_query=query)
+    worker_finished = threading.Event()
+    adapter = _S12GFinishingProxy(
+        _s12g_real_adapter(seam, probe),
+        worker_finished,
+    )
+
+    class _Request:
+        app = SimpleNamespace(state=SimpleNamespace())
+
+        async def is_disconnected(self) -> bool:
+            return False
+
+    async def stop_after_first_event() -> str:
+        stream = seam.route_module.chat_stream(
+            seam.contracts_module.ChatRequest(query=query, entity_id_hint=None),
+            Response(),
+            _Request(),
+            miroflow_chat_session="session:s12g-stop",
+            adapter=adapter,
+        )
+        iterator = cast(Any, stream.body_iterator)
+        first_event = await iterator.__anext__()
+        assert await asyncio.to_thread(probe.entered.wait, 1.5)
+        await iterator.aclose()
+        return str(first_event)
+
+    first_event = asyncio.run(stop_after_first_event())
+    probe.release.set()
+    assert worker_finished.wait(1.5)
+    assert probe.calls == {"plan": 1, "read": 0, "answer": 0}
+    assert "event: stage" in first_event
+    assert all(
+        f"event: {name}" not in first_event for name in ("answer", "done", "error")
+    )
+
+
+def test_s12g_chat_stream_disconnect_cancels_before_real_adapter_commit() -> None:
+    seam = _load_s11a_seam()
+    query = "断开当前流"
+    probe = _S12GStageProbe(blocked_stage="plan", blocked_query=query)
+    worker_finished = threading.Event()
+    disconnect_observed = threading.Event()
+    adapter = _S12GFinishingProxy(
+        _s12g_real_adapter(seam, probe),
+        worker_finished,
+    )
+
+    class _DisconnectedRequest:
+        app = SimpleNamespace(state=SimpleNamespace())
+
+        async def is_disconnected(self) -> bool:
+            if not await asyncio.to_thread(probe.entered.wait, 1.5):
+                raise TimeoutError("planner did not reach the disconnect boundary")
+            disconnect_observed.set()
+            return True
+
+    async def consume_until_disconnect() -> list[Any]:
+        stream = seam.route_module.chat_stream(
+            seam.contracts_module.ChatRequest(query=query, entity_id_hint=None),
+            Response(),
+            _DisconnectedRequest(),
+            miroflow_chat_session="session:s12g-disconnect",
+            adapter=adapter,
+        )
+        return [chunk async for chunk in stream.body_iterator]
+
+    chunks = asyncio.run(consume_until_disconnect())
+    assert disconnect_observed.is_set()
+    probe.release.set()
+    assert worker_finished.wait(1.5)
+    assert probe.calls == {"plan": 1, "read": 0, "answer": 0}
+    assert all(
+        f"event: {name}" not in str(chunk)
+        for chunk in chunks
+        for name in ("answer", "done", "error")
+    )
+
+
+@pytest.mark.parametrize("outcome", ("normal", "error", "disconnect"))
+def test_s12g_chat_stream_terminal_race_is_fifo_ordered(
+    outcome: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seam = _load_s11a_seam()
+    real_queue = import_module("queue")
+    adapter_entered = threading.Event()
+    release_adapter = threading.Event()
+    worker_exited = threading.Event()
+
+    class _TerminalAdapter:
+        def answer_stream(self, **kwargs: Any) -> Any:
+            adapter_entered.set()
+            if not release_adapter.wait(1.5):
+                raise TimeoutError("test did not release terminal adapter")
+            if outcome == "error":
+                raise RuntimeError("test-owned terminal failure")
+            return seam.contracts_module.ChatResponse(
+                query=kwargs["query"],
+                query_type="canonical_v2:A:answer",
+                answer_text="终态回答",
+                citations=[],
+                evidence=[],
+                clarification=None,
+                structured_payload={},
+                answer_style="template",
+                citation_map={},
+                suggested_followups=[],
+            )
+
+    class _ControlledQueue(real_queue.Queue):
+        def __init__(self) -> None:
+            super().__init__()
+            self.first_poll = True
+
+        def get_nowait(self) -> Any:
+            if self.first_poll:
+                self.first_poll = False
+                assert adapter_entered.wait(1.5)
+                release_adapter.set()
+                assert worker_exited.wait(1.5)
+                raise real_queue.Empty
+            return super().get_nowait()
+
+    class _ObservedThread(threading.Thread):
+        def __init__(self, *, target: Callable[[], None], daemon: bool) -> None:
+            def observed_target() -> None:
+                try:
+                    target()
+                finally:
+                    worker_exited.set()
+
+            super().__init__(target=observed_target, daemon=daemon)
+
+    monkeypatch.setattr(
+        seam.route_module,
+        "queue",
+        SimpleNamespace(Queue=_ControlledQueue, Empty=real_queue.Empty),
+    )
+    monkeypatch.setattr(
+        seam.route_module,
+        "threading",
+        SimpleNamespace(Thread=_ObservedThread, Event=threading.Event),
+    )
+
+    class _Request:
+        app = SimpleNamespace(state=SimpleNamespace())
+
+        def __init__(self) -> None:
+            self.disconnect_polls = 0
+
+        async def is_disconnected(self) -> bool:
+            self.disconnect_polls += 1
+            return outcome == "disconnect" and self.disconnect_polls >= 2
+
+    controlled_request = _Request()
+
+    async def consume() -> str:
+        stream = seam.route_module.chat_stream(
+            seam.contracts_module.ChatRequest(query=SIMPLE_QUERY, entity_id_hint=None),
+            Response(),
+            controlled_request,
+            miroflow_chat_session=f"session:s12g-terminal-race:{outcome}",
+            adapter=_TerminalAdapter(),
+        )
+        parts = [chunk async for chunk in stream.body_iterator]
+        return "".join(
+            chunk.decode("utf-8") if isinstance(chunk, bytes) else str(chunk)
+            for chunk in parts
+        )
+
+    body = asyncio.run(consume())
+    names = re.findall(r"^event: ([^\n]+)$", body, flags=re.MULTILINE)
+
+    assert worker_exited.is_set()
+    if outcome == "normal":
+        assert names == ["answer", "done"]
+    elif outcome == "error":
+        assert names == ["error"]
+    else:
+        assert controlled_request.disconnect_polls == 2
+        assert names == []
+
+
+def test_s12g_real_http_stream_blocks_split_dynamic_structured_value() -> None:
+    seam = _load_s11a_seam()
+    answer_module = import_module("src.data_agents.canonical_v2.knowledge_answer")
+    read_module = import_module("src.data_agents.canonical_v2.knowledge_read")
+    getter = seam.deps_module.get_canonical_v2_chat_adapter
+    marker = "evidence:s12g:http-dynamic:" + ("x" * 64)
+    claim_id = "claim:s12g:http-dynamic:" + ("y" * 64)
+    continuation_id = "continuation:s12g:http-dynamic:" + ("z" * 64)
+    company_id = "company:s12g:http-dynamic"
+    safe_prefix = "这是可公开的安全前缀。" * 12
+    safe_suffix = "这段后缀不得越过动态值安全边界。" * 8
+    split = len(marker) // 2
+    evidence = read_module.EvidenceItem(
+        evidence_id=marker,
+        object_id=company_id,
+        domain="company",
+        lane="exact",
+        source_nature="local",
+        source_authority="canonical_release",
+        source_locator="canonical-v2-isolated:s12g-http-dynamic",
+        snippet="The accepted Company name is Robotics Co.",
+        score=1.0,
+        observed_at=NOW,
+        claim_binding=read_module.EvidenceClaimBinding(
+            subject_id=company_id,
+            predicate="preferred_name",
+            value="Robotics Co",
+            status="accepted",
+        ),
+    )
+    candidate = read_module.ContinuationCandidate(
+        candidate_id=continuation_id,
+        reason="evidence_gap",
+        label="Search for targeted evidence",
+        operation="targeted_evidence_search",
+        target_kind="current_handle",
+        target_handle_ids=(company_id,),
+        constraint_pairs=(),
+        relation_type=None,
+        coverage_state=None,
+        evidence_ids=(marker,),
+        available=True,
+    )
+    evidence_set = read_module.EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query=SIMPLE_QUERY,
+        protected_slots=(),
+        items=(evidence,),
+        traces=(),
+        limitations=(),
+        continuation_candidates=(candidate,),
+    )
+
+    class _Planner:
+        def plan(self, request: Any) -> Any:
+            return read_module.RetrievalPlan(
+                plan_version="retrieval-plan-v1",
+                original_query=request.original_query,
+                behavior_class="A",
+                release_id=RELEASE_ID,
+                domains=("company",),
+                protected_slots=(),
+                lanes=("exact",),
+                max_candidates=1,
+                web_required=False,
+            )
+
+    class _Read:
+        def execute(self, plan: Any) -> Any:
+            assert plan.original_query == SIMPLE_QUERY
+            return evidence_set
+
+    def answer_selector(turn: Any) -> Any:
+        claim = answer_module.MaterialClaimProposal(
+            claim_id=claim_id,
+            text="Robotics Co 由已接受的本地公司档案证据支持。",
+            subject_id=company_id,
+            predicate="preferred_name",
+            value="Robotics Co",
+            subject_handle_ids=(company_id,),
+            evidence_ids=(marker,),
+            outcome="supported",
+            confirmed=True,
+            status="accepted",
+        )
+        return answer_module.AnswerSelectionProposal(
+            selection_input_sha256=turn.content_sha256,
+            schema_version="answer-selection-v1",
+            decision_id=f"answer-selection:{turn.turn_id}:http-dynamic",
+            model_id="recorded-answer-selector",
+            prompt_version="answer-selector-prompt-v1",
+            decision_run_id=f"answer-selector-run:{turn.turn_id}:http-dynamic",
+            answer_text="NON_AUTHORITATIVE_RAW_DRAFT",
+            claims=(claim,),
+        )
+
+    class _UnsafeRenderer:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def __call__(self, value: Any) -> str:
+            return "SYNC_RENDERED"
+
+        def stream(self, value: Any, *, on_chunk: Any) -> str:
+            self.calls += 1
+            chunks = (
+                safe_prefix + marker[:split],
+                marker[split:] + safe_suffix,
+            )
+            for chunk in chunks:
+                on_chunk(chunk)
+            return "".join(chunks)
+
+    renderer = _UnsafeRenderer()
+
+    def answer_factory() -> Any:
+        return answer_module.create_ephemeral_knowledge_answer(
+            answer_selector=answer_selector,
+            prose_renderer=renderer,
+        )
+
+    adapter = seam.adapter_type(
+        release_id=RELEASE_ID,
+        planner=_Planner(),
+        knowledge_read=_Read(),
+        answer_factory=answer_factory,
+        answer_session_fork=lambda _: answer_factory(),
+    )
+    prior = seam.app.dependency_overrides.get(getter)
+    seam.app.dependency_overrides[getter] = lambda: adapter
+    try:
+        response = TestClient(seam.app, raise_server_exceptions=False).post(
+            "/api/chat/stream",
+            json={"query": SIMPLE_QUERY, "entity_id_hint": None},
+        )
+    finally:
+        if prior is None:
+            seam.app.dependency_overrides.pop(getter, None)
+        else:
+            seam.app.dependency_overrides[getter] = prior
+
+    events: list[tuple[str, dict[str, Any]]] = []
+    for block in response.text.split("\n\n"):
+        lines = block.split("\n")
+        name = next(
+            (
+                line.removeprefix("event: ")
+                for line in lines
+                if line.startswith("event: ")
+            ),
+            "message",
+        )
+        data = "\n".join(
+            line.removeprefix("data: ") for line in lines if line.startswith("data: ")
+        )
+        if data:
+            events.append((name, json.loads(data)))
+
+    names = [name for name, _ in events]
+    streamed_text = "".join(
+        data["text"] for name, data in events if name == "answer_chunk"
+    )
+    assert response.status_code == 200
+    assert marker not in response.text
+    assert streamed_text and safe_prefix.startswith(streamed_text)
+    assert names[-1:] == ["error"]
+    assert "answer" not in names
+    assert "done" not in names
+    assert renderer.calls == 1
+
+
+def test_s12g_real_http_pre_output_retry_discards_pending_marker_tail() -> None:
+    seam = _load_s11a_seam()
+    answer_module = import_module("src.data_agents.canonical_v2.knowledge_answer")
+    read_module = import_module("src.data_agents.canonical_v2.knowledge_read")
+    getter = seam.deps_module.get_canonical_v2_chat_adapter
+    failed_text = "web-obje"
+    successful_text = "第二次成功短尾"
+
+    class _Planner:
+        def plan(self, request: Any) -> Any:
+            return read_module.RetrievalPlan(
+                plan_version="retrieval-plan-v1",
+                original_query=request.original_query,
+                behavior_class="A",
+                release_id=RELEASE_ID,
+                domains=(),
+                protected_slots=(),
+                lanes=(),
+                max_candidates=0,
+                web_required=False,
+            )
+
+    class _Read:
+        def execute(self, plan: Any) -> Any:
+            return read_module.EvidenceSet(
+                release_id=RELEASE_ID,
+                original_query=plan.original_query,
+                protected_slots=(),
+                items=(),
+                traces=(),
+                limitations=(),
+            )
+
+    class _RetryingRenderer:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def __call__(self, value: Any) -> str:
+            return "SYNC_RENDERED"
+
+        def stream(self, value: Any, *, on_chunk: Any) -> str:
+            self.calls += 1
+            text = failed_text if self.calls == 1 else successful_text
+            on_chunk(text)
+            if self.calls == 1:
+                raise TimeoutError("first attempt failed before public output")
+            return text
+
+    renderer = _RetryingRenderer()
+
+    def answer_factory() -> Any:
+        return answer_module.create_ephemeral_knowledge_answer(
+            prose_renderer=renderer,
+        )
+
+    adapter = seam.adapter_type(
+        release_id=RELEASE_ID,
+        planner=_Planner(),
+        knowledge_read=_Read(),
+        answer_factory=answer_factory,
+        answer_session_fork=lambda _: answer_factory(),
+    )
+    prior = seam.app.dependency_overrides.get(getter)
+    seam.app.dependency_overrides[getter] = lambda: adapter
+    try:
+        response = TestClient(seam.app, raise_server_exceptions=False).post(
+            "/api/chat/stream",
+            json={"query": SIMPLE_QUERY, "entity_id_hint": None},
+        )
+    finally:
+        if prior is None:
+            seam.app.dependency_overrides.pop(getter, None)
+        else:
+            seam.app.dependency_overrides[getter] = prior
+
+    events: list[tuple[str, dict[str, Any]]] = []
+    for block in response.text.split("\n\n"):
+        lines = block.split("\n")
+        name = next(
+            (
+                line.removeprefix("event: ")
+                for line in lines
+                if line.startswith("event: ")
+            ),
+            "message",
+        )
+        data = "\n".join(
+            line.removeprefix("data: ") for line in lines if line.startswith("data: ")
+        )
+        if data:
+            events.append((name, json.loads(data)))
+
+    names = [name for name, _ in events]
+    streamed_text = "".join(
+        data["text"] for name, data in events if name == "answer_chunk"
+    )
+    assert response.status_code == 200
+    assert renderer.calls == 2
+    answer_payload = next(data for name, data in events if name == "answer")
+    assert failed_text not in response.text
+    assert streamed_text == successful_text
+    assert answer_payload["answer_text"] == successful_text
+    assert names[-2:] == ["answer", "done"]
+    assert "error" not in names
+
+
+def test_s12g_real_http_stream_blocks_traversed_path_value() -> None:
+    seam = _load_s11a_seam()
+    answer_module = import_module("src.data_agents.canonical_v2.knowledge_answer")
+    read_module = import_module("src.data_agents.canonical_v2.knowledge_read")
+    getter = seam.deps_module.get_canonical_v2_chat_adapter
+    session_id = "session:s12g:http-traversed-path"
+    marker = "professor_to_company"
+    safe_prefix = "这是可公开的 traversal 回答前缀。" * 12
+    split = len(marker) // 2
+
+    class _Planner:
+        def plan(self, request: Any) -> Any:
+            return read_module.RetrievalPlan(
+                plan_version="retrieval-plan-v1",
+                original_query=request.original_query,
+                behavior_class="A",
+                release_id=RELEASE_ID,
+                domains=(),
+                protected_slots=(),
+                lanes=(),
+                max_candidates=0,
+                web_required=False,
+            )
+
+    class _Read:
+        def execute(self, plan: Any) -> Any:
+            return read_module.EvidenceSet(
+                release_id=RELEASE_ID,
+                original_query=plan.original_query,
+                protected_slots=(),
+                items=(),
+                traces=(),
+                limitations=(),
+            )
+
+    class _PathEchoRenderer:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def __call__(self, value: Any) -> str:
+            return "SYNC_RENDERED"
+
+        def stream(self, value: Any, *, on_chunk: Any) -> str:
+            self.calls += 1
+            assert value.context_receipt.traversed_path_ids == (marker,)
+            chunks = (safe_prefix + marker[:split], marker[split:])
+            for chunk in chunks:
+                on_chunk(chunk)
+            return "".join(chunks)
+
+    renderer = _PathEchoRenderer()
+
+    def answer_factory() -> Any:
+        answer = answer_module.create_ephemeral_knowledge_answer(
+            prose_renderer=renderer,
+        )
+        answer._sessions[session_id] = answer_module._SessionState(
+            release_id=RELEASE_ID,
+            traversed_path_ids=(marker,),
+        )
+        return answer
+
+    adapter = seam.adapter_type(
+        release_id=RELEASE_ID,
+        planner=_Planner(),
+        knowledge_read=_Read(),
+        answer_factory=answer_factory,
+        answer_session_fork=lambda _: answer_factory(),
+    )
+    prior = seam.app.dependency_overrides.get(getter)
+    seam.app.dependency_overrides[getter] = lambda: adapter
+    try:
+        response = TestClient(seam.app, raise_server_exceptions=False).post(
+            "/api/chat/stream",
+            json={"query": "张教授参与创立了哪些企业？", "entity_id_hint": None},
+            headers={"cookie": f"miroflow_chat_session={session_id}"},
+        )
+    finally:
+        if prior is None:
+            seam.app.dependency_overrides.pop(getter, None)
+        else:
+            seam.app.dependency_overrides[getter] = prior
+
+    events: list[tuple[str, dict[str, Any]]] = []
+    for block in response.text.split("\n\n"):
+        lines = block.split("\n")
+        name = next(
+            (
+                line.removeprefix("event: ")
+                for line in lines
+                if line.startswith("event: ")
+            ),
+            "message",
+        )
+        data = "\n".join(
+            line.removeprefix("data: ") for line in lines if line.startswith("data: ")
+        )
+        if data:
+            events.append((name, json.loads(data)))
+
+    names = [name for name, _ in events]
+    streamed_text = "".join(
+        data["text"] for name, data in events if name == "answer_chunk"
+    )
+    assert response.status_code == 200
+    assert marker not in response.text
+    assert streamed_text and safe_prefix.startswith(streamed_text)
+    assert names[-1:] == ["error"]
+    assert "answer" not in names
+    assert "done" not in names
+    assert renderer.calls == 1
+    assert adapter._sessions == {}
+
+
+def test_s12g_disconnect_observation_linearizes_before_session_commit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seam = _load_s11a_seam()
+    second_query = "第二轮断开问题"
+    probe = _S12GStageProbe(blocked_stage="answer", blocked_query=second_query)
+    adapter = _s12g_real_adapter(seam, probe)
+    worker_finished = threading.Event()
+    disconnect_observed = threading.Event()
+    cancel_entered = threading.Event()
+
+    class _DelayedCancelGate(seam.service_module._TurnCommitGate):
+        def cancel(self) -> None:
+            cancel_entered.set()
+            assert disconnect_observed.is_set()
+            probe.release.set()
+            if not worker_finished.wait(1.5):
+                raise TimeoutError("adapter did not finish in disconnect window")
+            super().cancel()
+
+    monkeypatch.setattr(seam.route_module, "_TurnCommitGate", _DelayedCancelGate)
+    session_id = "session:s12g-disconnect-linearization"
+    first = adapter.answer(
+        query="第一轮公开问题",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    assert first.answer_text == "第一轮公开问题"
+
+    class _DisconnectedRequest:
+        app = SimpleNamespace(state=SimpleNamespace())
+
+        async def is_disconnected(self) -> bool:
+            if not await asyncio.to_thread(probe.entered.wait, 1.5):
+                raise TimeoutError("answer did not reach the disconnect boundary")
+            disconnect_observed.set()
+            return True
+
+    async def consume_until_disconnect() -> list[Any]:
+        stream = seam.route_module.chat_stream(
+            seam.contracts_module.ChatRequest(
+                query=second_query,
+                entity_id_hint=None,
+            ),
+            Response(),
+            _DisconnectedRequest(),
+            miroflow_chat_session=session_id,
+            adapter=_S12GFinishingProxy(adapter, worker_finished),
+        )
+        return [chunk async for chunk in stream.body_iterator]
+
+    chunks = asyncio.run(consume_until_disconnect())
+    assert disconnect_observed.is_set()
+    assert cancel_entered.is_set()
+    assert worker_finished.is_set()
+    assert all(
+        f"event: {name}" not in str(chunk)
+        for chunk in chunks
+        for name in ("answer", "done", "error")
+    )
+
+    third = adapter.answer(
+        query="第三轮公开问题",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    assert third.answer_text == "第一轮公开问题｜第三轮公开问题"
+
+
+def test_s12g_pending_disconnect_observation_blocks_overlapping_commit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seam = _load_s11a_seam()
+    second_query = "第二轮重叠断开问题"
+    probe = _S12GStageProbe(blocked_stage="answer", blocked_query=second_query)
+    adapter = _s12g_real_adapter(seam, probe)
+    worker_finished = threading.Event()
+    observation_entered = threading.Event()
+    commit_attempted = threading.Event()
+    barrier_waiting = threading.Event()
+    overlap_verified = threading.Event()
+
+    class _ObservedCondition(threading.Condition):
+        def wait(self, timeout: float | None = None) -> bool:
+            barrier_waiting.set()
+            return super().wait(timeout)
+
+    class _ObservedGate(seam.service_module._TurnCommitGate):
+        def __init__(self) -> None:
+            super().__init__()
+            self._condition = _ObservedCondition()
+
+        def commit(self) -> Any:
+            commit_attempted.set()
+            return super().commit()
+
+    monkeypatch.setattr(seam.route_module, "_TurnCommitGate", _ObservedGate)
+    session_id = "session:s12g-pending-observation-overlap"
+    first = adapter.answer(
+        query="第一轮公开问题",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    assert first.answer_text == "第一轮公开问题"
+
+    class _OverlappingDisconnectRequest:
+        app = SimpleNamespace(state=SimpleNamespace())
+
+        async def is_disconnected(self) -> bool:
+            if not await asyncio.to_thread(probe.entered.wait, 1.5):
+                raise TimeoutError(
+                    "answer did not reach pending disconnect observation"
+                )
+            observation_entered.set()
+            probe.release.set()
+            if not await asyncio.to_thread(commit_attempted.wait, 1.5):
+                raise TimeoutError("adapter did not attempt overlapping session commit")
+            if not await asyncio.to_thread(barrier_waiting.wait, 1.5):
+                raise TimeoutError("overlapping commit did not wait for observation")
+            assert not worker_finished.is_set()
+            overlap_verified.set()
+            return True
+
+    async def consume_overlapping_disconnect() -> list[Any]:
+        stream = seam.route_module.chat_stream(
+            seam.contracts_module.ChatRequest(
+                query=second_query,
+                entity_id_hint=None,
+            ),
+            Response(),
+            _OverlappingDisconnectRequest(),
+            miroflow_chat_session=session_id,
+            adapter=_S12GFinishingProxy(adapter, worker_finished),
+        )
+        return [chunk async for chunk in stream.body_iterator]
+
+    chunks = asyncio.run(consume_overlapping_disconnect())
+    assert observation_entered.is_set()
+    assert commit_attempted.is_set()
+    assert barrier_waiting.is_set()
+    assert overlap_verified.is_set()
+    assert worker_finished.wait(1.5)
+    assert all(
+        f"event: {name}" not in str(chunk)
+        for chunk in chunks
+        for name in ("answer", "done", "error")
+    )
+
+    third = adapter.answer(
+        query="第三轮公开问题",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    assert third.answer_text == "第一轮公开问题｜第三轮公开问题"
+
+
+def test_s12g_commit_before_disconnect_observation_remains_committed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seam = _load_s11a_seam()
+    second_query = "第二轮先提交问题"
+    probe = _S12GStageProbe(blocked_stage=None, blocked_query=second_query)
+    adapter = _s12g_real_adapter(seam, probe)
+    worker_finished = threading.Event()
+
+    class _CommitFirstGate(seam.service_module._TurnCommitGate):
+        def begin_transport_observation(self) -> None:
+            if not worker_finished.wait(1.5):
+                raise TimeoutError("adapter did not commit before disconnect probe")
+            super().begin_transport_observation()
+
+    monkeypatch.setattr(seam.route_module, "_TurnCommitGate", _CommitFirstGate)
+    session_id = "session:s12g-commit-first-linearization"
+    first = adapter.answer(
+        query="第一轮公开问题",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    assert first.answer_text == "第一轮公开问题"
+
+    class _LateDisconnectedRequest:
+        app = SimpleNamespace(state=SimpleNamespace())
+
+        async def is_disconnected(self) -> bool:
+            if not await asyncio.to_thread(worker_finished.wait, 1.5):
+                raise TimeoutError("adapter did not finish before late disconnect")
+            return True
+
+    async def consume_after_commit() -> list[Any]:
+        stream = seam.route_module.chat_stream(
+            seam.contracts_module.ChatRequest(
+                query=second_query,
+                entity_id_hint=None,
+            ),
+            Response(),
+            _LateDisconnectedRequest(),
+            miroflow_chat_session=session_id,
+            adapter=_S12GFinishingProxy(adapter, worker_finished),
+        )
+        return [chunk async for chunk in stream.body_iterator]
+
+    asyncio.run(consume_after_commit())
+    assert worker_finished.is_set()
+
+    third = adapter.answer(
+        query="第三轮公开问题",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    assert third.answer_text == ("第一轮公开问题｜第二轮先提交问题｜第三轮公开问题")
+
+
+def _s12g_asgi_http_scope(*, spec_version: str) -> dict[str, Any]:
+    return {
+        "type": "http",
+        "asgi": {"version": "3.0", "spec_version": spec_version},
+        "http_version": "1.1",
+        "method": "POST",
+        "scheme": "http",
+        "path": "/api/chat/stream",
+        "raw_path": b"/api/chat/stream",
+        "query_string": b"",
+        "headers": [],
+        "client": ("testclient", 50000),
+        "server": ("testserver", 80),
+        "root_path": "",
+        "app": SimpleNamespace(state=SimpleNamespace()),
+    }
+
+
+@pytest.mark.parametrize(
+    ("spec_version", "transport_failure"),
+    (
+        pytest.param(
+            "2.3",
+            "receive_disconnect",
+            id="asgi-2.3-receive-disconnect",
+        ),
+        pytest.param(
+            "2.4",
+            "send_oserror",
+            id="asgi-2.4-send-oserror",
+        ),
+    ),
+)
+def test_s12g_full_asgi_transport_disconnect_cancels_before_session_commit(
+    spec_version: str,
+    transport_failure: str,
+) -> None:
+    seam = _load_s11a_seam()
+    second_query = f"第二轮完整 ASGI 断开问题 {spec_version}"
+    probe = _S12GStageProbe(blocked_stage="answer", blocked_query=second_query)
+    adapter = _s12g_real_adapter(seam, probe)
+    worker_finished = threading.Event()
+    stream_adapter = _S12GFinishingProxy(adapter, worker_finished)
+    session_id = f"session:s12g-full-asgi-disconnect:{spec_version}"
+
+    first = adapter.answer(
+        query="第一轮公开问题",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    assert first.answer_text == "第一轮公开问题"
+
+    async def exercise_transport_failure() -> list[dict[str, Any]]:
+        scope = _s12g_asgi_http_scope(spec_version=spec_version)
+        inbound: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
+        body_send_entered = asyncio.Event()
+        hold_body_send = asyncio.Event()
+        transport_observed = asyncio.Event()
+        sent: list[dict[str, Any]] = []
+
+        async def receive() -> dict[str, Any]:
+            message = await inbound.get()
+            if message["type"] == "http.disconnect":
+                transport_observed.set()
+            return message
+
+        async def send(message: dict[str, Any]) -> None:
+            sent.append(message)
+            if message["type"] != "http.response.body" or not message.get("more_body"):
+                return
+            body_send_entered.set()
+            if transport_failure == "send_oserror":
+                if not await asyncio.to_thread(probe.entered.wait, 1.5):
+                    raise TimeoutError("answer did not reach the send failure boundary")
+                transport_observed.set()
+                raise OSError("test-owned ASGI transport failure")
+            await hold_body_send.wait()
+
+        stream = seam.route_module.chat_stream(
+            seam.contracts_module.ChatRequest(
+                query=second_query,
+                entity_id_hint=None,
+            ),
+            Response(),
+            Request(scope, receive),
+            miroflow_chat_session=session_id,
+            adapter=stream_adapter,
+        )
+        response_task = asyncio.create_task(stream(scope, receive, send))
+        try:
+            if transport_failure == "receive_disconnect":
+                await asyncio.wait_for(body_send_entered.wait(), 1.5)
+                if not await asyncio.to_thread(probe.entered.wait, 1.5):
+                    raise TimeoutError(
+                        "answer did not reach the receive disconnect boundary"
+                    )
+                await inbound.put({"type": "http.disconnect"})
+                await asyncio.wait_for(response_task, 1.5)
+            else:
+                client_disconnect = import_module("starlette.requests").ClientDisconnect
+                with pytest.raises(client_disconnect):
+                    await asyncio.wait_for(response_task, 1.5)
+            assert transport_observed.is_set()
+        finally:
+            hold_body_send.set()
+            if not response_task.done():
+                response_task.cancel()
+                await asyncio.gather(response_task, return_exceptions=True)
+            probe.release.set()
+            assert await asyncio.to_thread(worker_finished.wait, 1.5)
+        return sent
+
+    sent = asyncio.run(exercise_transport_failure())
+    assert [message["type"] for message in sent[:2]] == [
+        "http.response.start",
+        "http.response.body",
+    ]
+
+    third = adapter.answer(
+        query="第三轮公开问题",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    assert third.answer_text == "第一轮公开问题｜第三轮公开问题"
+
+
+def test_s12g_full_asgi_late_disconnect_preserves_prior_session_commit() -> None:
+    seam = _load_s11a_seam()
+    second_query = "第二轮完整 ASGI 先提交问题"
+    probe = _S12GStageProbe(blocked_stage=None, blocked_query=second_query)
+    adapter = _s12g_real_adapter(seam, probe)
+    worker_finished = threading.Event()
+    session_id = "session:s12g-full-asgi-commit-first"
+
+    first = adapter.answer(
+        query="第一轮公开问题",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    assert first.answer_text == "第一轮公开问题"
+
+    async def disconnect_after_commit() -> list[dict[str, Any]]:
+        scope = _s12g_asgi_http_scope(spec_version="2.3")
+        inbound: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
+        body_send_entered = asyncio.Event()
+        hold_body_send = asyncio.Event()
+        disconnect_observed = asyncio.Event()
+        sent: list[dict[str, Any]] = []
+
+        async def receive() -> dict[str, Any]:
+            message = await inbound.get()
+            if message["type"] == "http.disconnect":
+                disconnect_observed.set()
+            return message
+
+        async def send(message: dict[str, Any]) -> None:
+            sent.append(message)
+            if message["type"] == "http.response.body" and message.get("more_body"):
+                body_send_entered.set()
+                await hold_body_send.wait()
+
+        stream = seam.route_module.chat_stream(
+            seam.contracts_module.ChatRequest(
+                query=second_query,
+                entity_id_hint=None,
+            ),
+            Response(),
+            Request(scope, receive),
+            miroflow_chat_session=session_id,
+            adapter=_S12GFinishingProxy(adapter, worker_finished),
+        )
+        response_task = asyncio.create_task(stream(scope, receive, send))
+        try:
+            await asyncio.wait_for(body_send_entered.wait(), 1.5)
+            assert await asyncio.to_thread(worker_finished.wait, 1.5)
+            await inbound.put({"type": "http.disconnect"})
+            await asyncio.wait_for(response_task, 1.5)
+            assert disconnect_observed.is_set()
+        finally:
+            hold_body_send.set()
+            if not response_task.done():
+                response_task.cancel()
+                await asyncio.gather(response_task, return_exceptions=True)
+        return sent
+
+    sent = asyncio.run(disconnect_after_commit())
+    assert [message["type"] for message in sent[:2]] == [
+        "http.response.start",
+        "http.response.body",
+    ]
+
+    third = adapter.answer(
+        query="第三轮公开问题",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    assert third.answer_text == (
+        "第一轮公开问题｜第二轮完整 ASGI 先提交问题｜第三轮公开问题"
+    )

@@ -2,9 +2,9 @@
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light" />
-    <title>Canonical V2 智能检索</title>
+    <title>国先检索助手</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23143d59'/%3E%3Cpath d='M17 19h8v11l12-11h10L33 32l15 13H37L25 34v11h-8z' fill='white'/%3E%3C/svg%3E" />
     <style>
       :root {
@@ -26,9 +26,14 @@
 
       * { box-sizing: border-box; }
 
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
       body {
         margin: 0;
-        min-width: 320px;
         color: var(--ink);
         background:
           radial-gradient(circle at 90% 0%, rgba(22, 139, 130, 0.08), transparent 26rem),
@@ -38,23 +43,46 @@
         line-height: 1.55;
       }
 
-      button, input, a { font: inherit; }
-      button:focus-visible, input:focus-visible, a:focus-visible {
+      button, input, textarea, a { font: inherit; }
+      button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible {
         outline: 3px solid rgba(22, 139, 130, 0.26);
         outline-offset: 2px;
       }
 
       .shell {
         width: min(980px, calc(100% - 32px));
-        min-height: 100vh;
+        height: 100vh;
+        height: var(--app-height, 100vh);
+        min-width: 0;
+        min-height: 0;
         margin: 0 auto;
+        overflow: hidden;
         display: grid;
-        grid-template-rows: auto auto minmax(320px, 1fr) auto;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+      }
+      .shell > .header { grid-row: 1; }
+      .shell > .demo-strip { grid-row: 2; }
+      .shell > .messages { grid-row: 3; }
+      .shell > .composer { grid-row: 4; }
+
+      @supports (height: 100dvh) {
+        .shell {
+          height: 100dvh;
+          height: var(--app-height, 100dvh);
+        }
       }
 
       .header {
+        --header-padding-block: 18px;
+        --header-padding-inline: 20px;
+        min-width: 0;
         margin-top: 18px;
-        padding: 18px 20px;
+        padding: var(--header-padding-block) var(--header-padding-inline);
+        padding:
+          calc(var(--header-padding-block) + env(safe-area-inset-top, 0px))
+          calc(var(--header-padding-inline) + env(safe-area-inset-right, 0px))
+          var(--header-padding-block)
+          calc(var(--header-padding-inline) + env(safe-area-inset-left, 0px));
         color: #fff;
         background: var(--navy-strong);
         border-radius: 19px 19px 0 0;
@@ -78,6 +106,29 @@
       }
       .header h1 { margin: 0; font-size: clamp(19px, 2.5vw, 25px); }
       .header p { margin: 3px 0 0; color: #bdd0d9; font-size: 12px; }
+      .demo-toggle {
+        min-width: 44px;
+        min-height: 44px;
+        display: none;
+        align-items: center;
+        padding: 7px 10px;
+        color: #fff;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.42);
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .demo-toggle:hover { background: rgba(255, 255, 255, 0.1); }
+      .demo-toggle:focus-visible {
+        outline: 3px solid rgba(255, 255, 255, 0.48);
+        outline-offset: 2px;
+      }
+      .shell[data-presentation-state="conversation"] .demo-strip { display: none; }
+      .shell[data-presentation-state="conversation"] .demo-toggle,
+      .shell[data-presentation-state="demo-expanded"] .demo-toggle { display: inline-flex; }
       .browse-link {
         padding: 8px 12px;
         color: var(--navy-strong);
@@ -90,6 +141,7 @@
       }
 
       .demo-strip {
+        min-width: 0;
         padding: 15px 18px;
         background: #fff;
         border: 1px solid var(--line);
@@ -97,8 +149,10 @@
       }
 
       .demo-title { margin: 0 0 10px; color: var(--muted); font-size: 12px; font-weight: 700; }
-      .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+      .demo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
       .demo-chip {
+        min-width: 44px;
+        min-height: 44px;
         display: grid;
         grid-template-columns: auto minmax(0, 1fr);
         align-items: start;
@@ -123,8 +177,9 @@
         text-align: center;
       }
       .demo-chip:nth-child(2) .step { color: var(--amber); background: var(--amber-soft); }
+      .demo-copy { min-width: 0; }
       .demo-copy strong { display: block; margin-bottom: 2px; font-size: 11px; }
-      .demo-copy span { display: block; color: #354853; font-size: 12px; }
+      .demo-copy span { display: block; overflow-wrap: anywhere; color: #354853; font-size: 12px; }
       .demo-empty {
         grid-column: 1 / -1;
         margin: 0;
@@ -137,13 +192,18 @@
       }
 
       .messages {
+        min-width: 0;
+        min-height: 0;
         padding: 22px;
         overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
         background: rgba(255, 255, 255, 0.65);
         border-inline: 1px solid var(--line);
       }
 
       .welcome {
+        min-width: 0;
         max-width: 620px;
         margin: 58px auto;
         padding: 25px;
@@ -156,7 +216,7 @@
       }
       .welcome strong { display: block; margin-bottom: 6px; color: var(--ink); font-size: 17px; }
 
-      .message { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 18px; }
+      .message { min-width: 0; display: flex; align-items: flex-start; gap: 10px; margin-bottom: 18px; }
       .message.user { flex-direction: row-reverse; }
       .avatar {
         width: 32px;
@@ -171,8 +231,27 @@
         font-weight: 800;
       }
       .message.user .avatar { color: var(--navy); background: var(--blue-soft); }
+      .message.assistant .avatar {
+        box-sizing: border-box;
+        position: relative;
+        overflow: hidden;
+        color: var(--navy);
+        background: #fff;
+        border: 1px solid var(--line);
+        font-size: 9px;
+      }
+      .message.assistant .avatar img {
+        position: absolute;
+        inset: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #fff;
+      }
       .bubble {
         width: min(760px, calc(100% - 46px));
+        min-width: 0;
         padding: 14px 15px;
         background: #fff;
         border: 1px solid var(--line);
@@ -191,7 +270,7 @@
       }
       .message.error .bubble { color: var(--danger); background: #fff1f3; border-color: #efc9cf; }
 
-      .answer { margin: 0; font-size: 14px; line-height: 1.75; word-break: break-word; }
+      .answer { min-width: 0; max-width: 100%; margin: 0; font-size: 14px; line-height: 1.75; word-break: break-word; }
       .answer > :first-child { margin-top: 0; }
       .answer > :last-child { margin-bottom: 0; }
       .answer p { margin: 0.5em 0; }
@@ -208,29 +287,61 @@
       .answer ul, .answer ol { margin: 0.5em 0; padding-left: 1.6em; }
       .answer li { margin: 0.25em 0; }
       .answer strong { font-weight: 600; }
+      .answer a { overflow-wrap: anywhere; }
       .answer code {
         padding: 0.1em 0.35em;
         border-radius: 4px;
+        overflow-wrap: anywhere;
+        word-break: break-word;
         font-size: 0.92em;
         background: rgba(128, 128, 128, 0.14);
       }
       .answer pre {
+        max-width: 100%;
         margin: 0.5em 0;
         padding: 0.6em 0.9em;
         border-radius: 6px;
         overflow-x: auto;
+        overscroll-behavior-inline: contain;
         background: rgba(128, 128, 128, 0.12);
       }
-      .answer pre code { padding: 0; background: transparent; }
+      .answer pre code {
+        padding: 0;
+        overflow-wrap: normal;
+        word-break: normal;
+        background: transparent;
+      }
+      .answer table {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+      }
+      .answer img { max-width: 100%; height: auto; }
+      .bubble details,
+      .citations {
+        min-width: 0;
+        max-width: 100%;
+      }
       .process { margin: 0 0 8px; padding: 8px 10px; border-radius: 8px; background: rgba(128, 128, 128, 0.08); }
       .process-row { display: flex; align-items: baseline; gap: 6px; font-size: 13px; line-height: 1.7; color: var(--muted); }
       .process-marker { font-size: 11px; }
       .process-done .process-marker { color: var(--teal); }
       .process-done .process-text { color: inherit; }
-      .process-summary summary { font-size: 12px; color: var(--muted); cursor: pointer; }
+      .process-summary summary {
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        font-size: 12px;
+        color: var(--muted);
+        cursor: pointer;
+      }
       .process-finished { margin-bottom: 10px; }
       .process-actions { margin-top: 4px; }
       .process-stop {
+        min-width: 44px;
+        min-height: 44px;
         padding: 3px 10px;
         color: var(--danger);
         background: #fff;
@@ -247,7 +358,11 @@
         border-top: 1px solid var(--line);
       }
       .evidence-summary {
+        min-width: 44px;
+        min-height: 44px;
         width: fit-content;
+        display: inline-flex;
+        align-items: center;
         color: var(--teal);
         cursor: pointer;
         font-size: 11px;
@@ -311,6 +426,8 @@
 
       .option-list { display: flex; flex-wrap: wrap; gap: 6px; }
       .option-button {
+        min-width: 44px;
+        min-height: 44px;
         padding: 6px 9px;
         color: var(--navy);
         background: #fff;
@@ -323,24 +440,62 @@
       .option-button:hover { color: #fff; background: var(--navy); }
 
       .composer {
-        padding: 15px 18px 18px;
+        --composer-padding-top: 15px;
+        --composer-padding-inline: 18px;
+        --composer-padding-bottom: 18px;
+        min-width: 0;
+        position: relative;
+        padding: var(--composer-padding-top) var(--composer-padding-inline) var(--composer-padding-bottom);
+        padding:
+          var(--composer-padding-top)
+          calc(var(--composer-padding-inline) + env(safe-area-inset-right, 0px))
+          calc(var(--composer-padding-bottom) + env(safe-area-inset-bottom, 0px))
+          calc(var(--composer-padding-inline) + env(safe-area-inset-left, 0px));
         background: #fff;
         border: 1px solid var(--line);
         border-radius: 0 0 19px 19px;
         box-shadow: var(--shadow);
       }
-      .input-row { display: flex; gap: 9px; }
-      .input-row input {
+      .back-to-latest {
+        min-width: 44px;
+        min-height: 44px;
+        position: absolute;
+        inset-inline-end: var(--composer-padding-inline);
+        bottom: calc(100% + 10px);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 14px;
+        color: #fff;
+        background: var(--navy);
+        border: 0;
+        border-radius: 999px;
+        box-shadow: var(--shadow);
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .back-to-latest[hidden] { display: none; }
+      .composer form { min-width: 0; }
+      .input-row { min-width: 0; display: flex; align-items: flex-end; gap: 9px; }
+      .input-row textarea {
         min-width: 0;
+        min-height: 44px;
         flex: 1;
+        box-sizing: border-box;
+        resize: none;
+        overflow-y: hidden;
         padding: 11px 13px;
         color: var(--ink);
         background: #f8fafb;
         border: 1px solid var(--line);
         border-radius: 11px;
+        line-height: 1.55;
       }
-      .input-row input:focus { border-color: var(--teal); background: #fff; }
+      .input-row textarea:focus { border-color: var(--teal); background: #fff; }
       .submit {
+        min-width: 44px;
+        min-height: 48px;
         padding: 0 19px;
         color: #fff;
         background: var(--teal);
@@ -355,73 +510,438 @@
 
       @media (max-width: 720px) {
         .shell { width: 100%; }
-        .header { margin: 0; border-radius: 0; align-items: flex-start; }
+        .header {
+          --header-padding-block: 14px;
+          --header-padding-inline: 15px;
+          margin: 0;
+          border-radius: 0;
+          align-items: flex-start;
+        }
+        .shell[data-presentation-state="conversation"] .header,
+        .shell[data-presentation-state="demo-expanded"] .header {
+          --header-padding-block: 8px;
+        }
+        .shell[data-presentation-state="conversation"] .header p,
+        .shell[data-presentation-state="demo-expanded"] .header p { display: none; }
         .brand-mark { display: none; }
-        .demo-grid { grid-template-columns: 1fr; }
+        .demo-strip { padding: 12px 15px; }
+        .demo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .demo-chip { padding: 9px 10px; }
         .messages { padding: 15px; }
         .trace-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        .composer { border-radius: 0; }
+        .composer {
+          --composer-padding-top: 12px;
+          --composer-padding-inline: 15px;
+          --composer-padding-bottom: 14px;
+          border-radius: 0;
+        }
+      }
+
+      @media (max-width: 430px) {
+        .demo-grid {
+          grid-template-columns: none;
+          grid-auto-flow: column;
+          grid-auto-columns: minmax(250px, 82vw);
+          max-width: 100%;
+          overflow-x: auto;
+          overflow-y: hidden;
+        }
+        .demo-chip {
+          width: 100%;
+          max-width: 100%;
+        }
+      }
+
+      :root.visual-viewport-short .header {
+        --header-padding-block: 8px;
+        margin-top: 0;
+      }
+      :root.visual-viewport-short .header p { display: none; }
+      :root.visual-viewport-short .brand-mark {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+      }
+      :root.visual-viewport-short .demo-strip { display: none; }
+      :root.visual-viewport-short .demo-toggle { display: none; }
+      :root.visual-viewport-short .messages { padding-block: 10px; }
+      :root.visual-viewport-short .welcome { margin-block: 16px; padding: 16px; }
+      :root.visual-viewport-short .composer {
+        --composer-padding-top: 8px;
+        --composer-padding-bottom: 8px;
+      }
+      :root.visual-viewport-short .input-row textarea { padding-block: 8px; }
+      :root.visual-viewport-short .composer-note { display: none; }
+
+      @media (max-height: 500px) {
+        .header {
+          --header-padding-block: 8px;
+          margin-top: 0;
+        }
+        .header p { display: none; }
+        .brand-mark { width: 34px; height: 34px; border-radius: 10px; }
+        .demo-strip { display: none; }
+        .shell[data-presentation-state] .demo-toggle { display: none; }
+        .demo-title { margin-bottom: 5px; }
+        .demo-grid { gap: 5px; }
+        .demo-chip { padding-block: 6px; }
+        .demo-chip .step, .demo-copy strong { display: none; }
+        .demo-copy span { font-size: 11px; line-height: 1.35; }
+        .messages { padding-block: 10px; }
+        .welcome { margin-block: 16px; padding: 16px; }
+        .composer {
+          --composer-padding-top: 8px;
+          --composer-padding-bottom: 8px;
+        }
+        .input-row textarea { padding-block: 8px; }
+        .composer-note { display: none; }
+      }
+
+      @media (orientation: landscape) and (max-height: 500px) {
+        .demo-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       }
     </style>
   </head>
   <body>
-    <div class="shell">
+    <div class="shell" data-presentation-state="landing">
       <header class="header">
         <div class="brand">
-          <div class="brand-mark" aria-hidden="true">V2</div>
+          <div class="brand-mark" aria-hidden="true">国先</div>
           <div>
-            <h1>Canonical V2 智能检索</h1>
-            <p>证据优先 · 发布版本绑定 · 支持连续追问的多轮检索</p>
+            <h1>国先检索助手</h1>
+            <p>科技信息检索 · 支持连续追问 · 补充公开网页信息</p>
           </div>
         </div>
+        <button
+          class="demo-toggle"
+          id="demo-toggle"
+          type="button"
+          aria-controls="demo-strip"
+          aria-expanded="true"
+        >收起示例问题</button>
       </header>
 
-      <section class="demo-strip" aria-labelledby="demo-title">
-        <p class="demo-title" id="demo-title">正在根据当前候选版本准备可核验问题</p>
+      <section class="demo-strip" id="demo-strip" aria-labelledby="demo-title">
+        <p class="demo-title" id="demo-title">正在准备可核验的问题示例</p>
         <div class="demo-grid" id="demo-grid" aria-live="polite" aria-busy="true"></div>
       </section>
 
-      <main class="messages" id="messages" aria-live="polite">
+      <main
+        class="messages"
+        id="messages"
+        aria-label="对话消息"
+        aria-live="polite"
+        tabindex="-1"
+        data-scroll-intent="following"
+      >
         <div class="welcome" id="welcome">
-          <strong>从一条可核验的问题开始</strong>
-          系统会展示版本、检索通道、证据与主张数量，并明确呈现限制项。
+          <strong>欢迎使用国先检索助手</strong>
+          可查询企业、教授、论文、专利、技术与产业信息。
         </div>
       </main>
 
       <footer class="composer">
+        <button
+          class="back-to-latest"
+          id="back-to-latest"
+          type="button"
+          aria-controls="messages"
+          hidden
+        >回到最新</button>
         <form id="chat-form">
           <div class="input-row">
-            <input id="chat-input" type="text" maxlength="500" autocomplete="off" aria-label="检索问题" placeholder="请输入企业、教授或论文名称开始检索" />
+            <textarea id="chat-input" rows="1" maxlength="500" autocomplete="off" aria-label="检索问题" placeholder="请输入企业、教授或论文名称开始检索"></textarea>
             <button class="submit" id="chat-submit" type="submit">发送</button>
           </div>
-          <p class="composer-note">回答仅使用当前发布版本允许的检索通道；未获证据支持的内容会保留为限制。</p>
+          <p class="composer-note">回答结合当前知识库与公开网页信息；重要事实可通过展示的来源核验。</p>
         </form>
       </footer>
     </div>
 
     <script>
+      function installViewportGeometry() {
+        const root = document.documentElement;
+        const viewport = window.visualViewport;
+        if (!viewport) return;
+        let framePending = false;
+        let lastHeight = null;
+
+        const updateGeometry = () => {
+          framePending = false;
+          const nextHeight = Math.round(Number(viewport.height));
+          if (!Number.isFinite(nextHeight) || nextHeight <= 0 || nextHeight === lastHeight) return;
+          lastHeight = nextHeight;
+          root.classList.toggle("visual-viewport-short", nextHeight <= 500);
+          root.style.setProperty("--app-height", `${nextHeight}px`);
+          maintainFollowingScroll();
+        };
+
+        const scheduleGeometryUpdate = () => {
+          if (framePending) return;
+          framePending = true;
+          window.requestAnimationFrame(updateGeometry);
+        };
+
+        window.addEventListener("resize", scheduleGeometryUpdate);
+        window.addEventListener("orientationchange", scheduleGeometryUpdate);
+        if (viewport) {
+          viewport.addEventListener("resize", scheduleGeometryUpdate);
+          viewport.addEventListener("scroll", scheduleGeometryUpdate);
+        }
+        scheduleGeometryUpdate();
+      }
+
+      installViewportGeometry();
+
+      const shell = document.querySelector(".shell");
       const messages = document.getElementById("messages");
       const form = document.getElementById("chat-form");
       const input = document.getElementById("chat-input");
       const submit = document.getElementById("chat-submit");
+      const backToLatest = document.getElementById("back-to-latest");
+      const demoStrip = document.getElementById("demo-strip");
       const demoTitle = document.getElementById("demo-title");
       const demoGrid = document.getElementById("demo-grid");
+      const demoToggle = document.getElementById("demo-toggle");
       const candidateDomainPath = "/api/canonical-v2/admin/domains/";
       const candidateDomains = Object.freeze(["company", "professor", "paper"]);
       const relatedTypes = Object.freeze({
         company: "company_has_patent",
         professor: "professor_authored_paper",
       });
-      const unsafePublicTextPatterns = Object.freeze([
-        /(?:^|[^a-f0-9])[a-f0-9]{64}(?=$|[^a-f0-9])/i,
-        /\b(?:COMP|PROF|PAPER|PAT)-[A-Z0-9][A-Z0-9_-]*\b/i,
-        /\b(?:canonical|company|professor|paper|patent|evidence|snapshot|release|query|answer|trace|plan|run|source|record|artifact|object|handle|assertion|decision)[_:](?:sha256:)?[a-z0-9][a-z0-9:._-]*\b/i,
-        /\b(?:web-(?:object|handle|snapshot)|evidence-set|query-request|continuation-option):[a-z0-9][a-z0-9:._-]*\b/i,
-        /\b(?:source_nature|source_authority|identity_kind|reference_kind|content_sha256|snapshot_id)\s*[:=]\s*[a-z0-9_:-]+\b/i,
-        /\b(?:current_web|official_snapshot|local_projection|canonical_identity|internal_reference|semantic_recall|llm_synthesized)\b/i,
+      const presentationStateValues = Object.freeze([
+        "landing",
+        "conversation",
+        "demo-expanded",
       ]);
+      let inputIsComposing = false;
+      let compositionJustEnded = false;
+      let compositionResetTimer = null;
+
+      function setPresentationState(nextState) {
+        if (!presentationStateValues.includes(nextState)) return false;
+        shell.dataset.presentationState = nextState;
+        const demoExpanded = nextState !== "conversation";
+        demoToggle.setAttribute("aria-expanded", String(demoExpanded));
+        demoToggle.textContent = demoExpanded ? "收起示例问题" : "展开示例问题";
+        maintainFollowingScroll();
+        return true;
+      }
+
+      function toggleDemoQuestions() {
+        const currentState = shell.dataset.presentationState;
+        if (currentState === "conversation") {
+          setPresentationState("demo-expanded");
+        } else if (currentState === "demo-expanded") {
+          setPresentationState("conversation");
+        }
+      }
+
+      function usesFinePointer() {
+        const hasFinePointer = window.matchMedia("(pointer: fine)").matches;
+        const hasAnyCoarsePointer = window.matchMedia("(any-pointer: coarse)").matches;
+        return hasFinePointer && !hasAnyCoarsePointer;
+      }
+
+      function shouldRestoreInputFocus() {
+        return usesFinePointer() && document.activeElement === input;
+      }
+
+      function restoreInputFocus(shouldRestore) {
+        if (shouldRestore && usesFinePointer()) input.focus({ preventScroll: true });
+      }
+
+      function resizeInputHeight() {
+        input.style.height = "auto";
+        const styles = window.getComputedStyle(input);
+        const lineHeight = Number.parseFloat(styles.lineHeight) || 0;
+        const verticalChrome = [
+          styles.paddingTop,
+          styles.paddingBottom,
+          styles.borderTopWidth,
+          styles.borderBottomWidth,
+        ].reduce((total, value) => total + (Number.parseFloat(value) || 0), 0);
+        const maxHeight = Math.ceil((lineHeight * 4) + verticalChrome);
+        const nextHeight = Math.min(input.scrollHeight, maxHeight);
+        input.style.maxHeight = `${maxHeight}px`;
+        input.style.height = `${nextHeight}px`;
+        input.style.overflowY = input.scrollHeight > maxHeight ? "auto" : "hidden";
+      }
+
+      function resetInputHeight() {
+        input.style.height = "auto";
+        input.style.overflowY = "hidden";
+      }
+
+      function submitInputQuery() {
+        const normalized = String(input.value || "").trim();
+        if (!normalized) return false;
+        const restoreFocusAfter = shouldRestoreInputFocus();
+        setPresentationState("conversation");
+        sendQuery(normalized, null, null, restoreFocusAfter);
+        return true;
+      }
+
+      function handleInputKeydown(event) {
+        if (
+          event.key !== "Enter"
+          || event.shiftKey
+          || event.isComposing
+          || inputIsComposing
+          || compositionJustEnded
+          || !usesFinePointer()
+        ) return;
+        event.preventDefault();
+        form.requestSubmit();
+      }
+
+      function handleCompositionStart() {
+        inputIsComposing = true;
+        compositionJustEnded = false;
+        if (compositionResetTimer !== null) {
+          clearTimeout(compositionResetTimer);
+          compositionResetTimer = null;
+        }
+      }
+
+      function handleCompositionEnd() {
+        inputIsComposing = false;
+        compositionJustEnded = true;
+        if (compositionResetTimer !== null) clearTimeout(compositionResetTimer);
+        compositionResetTimer = setTimeout(() => {
+          compositionJustEnded = false;
+          compositionResetTimer = null;
+        }, 0);
+      }
+
+      const unsafePublicTextPatterns = Object.freeze([
+        /(?<![A-Za-z0-9_])PROF-[0-9A-F]{12}(?![A-Za-z0-9_-])/g,
+        /(?<![A-Za-z0-9_])COMP-[0-9A-Fa-f]{12}(?![A-Za-z0-9_-])/g,
+        /(?<![A-Za-z0-9_])(?:company|professor|paper|patent)-c-[0-9a-f]{24}(?![A-Za-z0-9_-])/g,
+        /(?<![A-Za-z0-9_])(?:web-object|web-handle):[a-z0-9:._-]*/g,
+        /(?<![A-Za-z0-9_])source_nature=current_web(?![A-Za-z0-9_-])/g,
+      ]);
+      const unsafePublicTextPatternNamespaces = Object.freeze([
+        false, false, false, true, false,
+      ]);
+      const publicTextNamespaceChars = "abcdefghijklmnopqrstuvwxyz0123456789:._-";
+      const publicTextStreamTail = Math.max(
+        "professor-c-".length + 24,
+        "source_nature=current_web".length,
+      ) + 1;
+      const unsafePublicControlCharacters = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g;
+
+      function firstUnsafePublicTextMatch(text, fromIndex = 0, leftBoundary = "") {
+        const boundaryLength = leftBoundary.length;
+        const searchText = leftBoundary + text;
+        let earliest = null;
+        unsafePublicTextPatterns.forEach((pattern, index) => {
+          pattern.lastIndex = fromIndex + boundaryLength;
+          const match = pattern.exec(searchText);
+          pattern.lastIndex = 0;
+          if (match && (earliest === null || match.index < earliest.index)) {
+            earliest = {
+              index: match.index - boundaryLength,
+              end: match.index + match[0].length - boundaryLength,
+              namespace: unsafePublicTextPatternNamespaces[index],
+            };
+          }
+        });
+        return earliest;
+      }
+
+      function sanitizePublicText(text, leftBoundary = "") {
+        let projected = text;
+        for (;;) {
+          let cursor = 0;
+          let sanitized = "";
+          for (;;) {
+            const match = firstUnsafePublicTextMatch(projected, cursor, leftBoundary);
+            if (!match) {
+              sanitized += projected.slice(cursor);
+              break;
+            }
+            sanitized += projected.slice(cursor, match.index);
+            cursor = match.end;
+          }
+          if (sanitized === projected) return sanitized;
+          projected = sanitized;
+        }
+      }
+
+      function createPublicTextStreamSanitizer() {
+        let tail = "";
+        let tailBoundary = "";
+        let droppingNamespace = false;
+        return {
+          feed(text) {
+            if (!text) return "";
+            let data = tail + text;
+            let leftBoundary = tailBoundary;
+            tail = "";
+            tailBoundary = "";
+            const output = [];
+            while (data) {
+              if (droppingNamespace) {
+                let dropCount = 0;
+                while (
+                  dropCount < data.length
+                  && publicTextNamespaceChars.includes(data[dropCount])
+                ) {
+                  dropCount++;
+                }
+                data = data.slice(dropCount);
+                if (!data) {
+                  tailBoundary = leftBoundary;
+                  break;
+                }
+                droppingNamespace = false;
+              }
+
+              const match = firstUnsafePublicTextMatch(data, 0, leftBoundary);
+              if (match !== null) {
+                const matchBoundary = match.index > 0
+                  ? data[match.index - 1]
+                  : leftBoundary;
+                output.push(data.slice(0, match.index));
+                if (match.namespace && match.end === data.length) {
+                  droppingNamespace = true;
+                  tailBoundary = matchBoundary;
+                  break;
+                }
+                if (match.end === data.length) {
+                  tail = data.slice(match.index);
+                  tailBoundary = matchBoundary;
+                  break;
+                }
+                leftBoundary = matchBoundary;
+                data = data.slice(match.end);
+                continue;
+              }
+
+              const releaseEnd = Math.max(0, data.length - publicTextStreamTail);
+              output.push(data.slice(0, releaseEnd));
+              tail = data.slice(releaseEnd);
+              tailBoundary = releaseEnd > 0
+                ? data[releaseEnd - 1]
+                : leftBoundary;
+              break;
+            }
+            return output.join("");
+          },
+          flush() {
+            droppingNamespace = false;
+            const pending = tail;
+            const pendingBoundary = tailBoundary;
+            tail = "";
+            tailBoundary = "";
+            return sanitizePublicText(pending, pendingBoundary);
+          },
+        };
+      }
       let requestPending = false;
       let queuedDemoQuery = null;
+      let activeContinuationOwner = null;
 
       function create(tag, className, text) {
         const element = document.createElement(tag);
@@ -571,6 +1091,7 @@
 
       function renderStreamingMarkdown(container) {
         const state = createMarkdownState();
+        const sanitizer = createPublicTextStreamSanitizer();
         let buffer = "";
         function releaseReady() {
           for (;;) {
@@ -589,11 +1110,18 @@
         return {
           append(text) {
             if (typeof text !== "string") return;
-            if (unsafePublicText(text)) return; // 逐块安全过滤（不 trim，避免破坏 chunk 边界）
-            buffer += text;
+            const withoutControls = text.replace(unsafePublicControlCharacters, "");
+            const publicText = sanitizer.feed(withoutControls);
+            if (!publicText) return;
+            buffer += publicText;
             releaseReady();
           },
           flush() {
+            const publicText = sanitizer.flush();
+            if (publicText) {
+              buffer += publicText;
+              releaseReady();
+            }
             if (!buffer) return;
             for (const line of buffer.split("\n")) renderMarkdownLine(container, line, state);
             buffer = "";
@@ -602,17 +1130,11 @@
         };
       }
 
-      function unsafePublicText(text) {
-        if (typeof text !== "string") return true;
-        if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text)) return true;
-        return unsafePublicTextPatterns.some((pattern) => pattern.test(text));
-      }
-
       function safePublicText(value) {
         if (typeof value !== "string") return null;
-        const text = value.trim();
-        if (!text || unsafePublicText(text)) return null;
-        return text;
+        const withoutControls = value.replace(unsafePublicControlCharacters, "");
+        const text = sanitizePublicText(withoutControls);
+        return text ? text : null;
       }
 
       async function fetchJson(path) {
@@ -740,7 +1262,7 @@
       function renderDemoQuestions(questions) {
         demoGrid.setAttribute("aria-busy", "false");
         if (!questions.length) {
-          demoTitle.textContent = "当前候选版本暂无可用名称";
+          demoTitle.textContent = "暂无可用问题示例";
           demoGrid.replaceChildren(create("p", "demo-empty", "仍可在下方输入框中直接提问。"));
           return;
         }
@@ -756,7 +1278,7 @@
           button.append(create("span", "step", question.step), copy);
           return button;
         });
-        demoTitle.textContent = "根据当前候选数据生成的可核验问题";
+        demoTitle.textContent = "你可以试试这些问题";
         demoGrid.replaceChildren(...buttons);
       }
 
@@ -764,13 +1286,90 @@
         document.getElementById("welcome")?.remove();
       }
 
+      const scrollIntentValues = Object.freeze(["following", "detached"]);
+      let scrollIntent = "following";
+      let hasUnreadContent = false;
+      let followingScrollFramePending = false;
+      messages.dataset.scrollIntent = scrollIntent;
+
+      function messagesAtLatest() {
+        return messages.scrollHeight - messages.clientHeight - messages.scrollTop <= 2;
+      }
+
+      function setScrollIntent(nextIntent) {
+        if (!scrollIntentValues.includes(nextIntent)) return false;
+        scrollIntent = nextIntent;
+        messages.dataset.scrollIntent = nextIntent;
+        if (nextIntent === "following") {
+          hasUnreadContent = false;
+          if (backToLatest) backToLatest.hidden = true;
+        }
+        return true;
+      }
+
       function scrollToLatest() {
         messages.scrollTop = messages.scrollHeight;
       }
 
+      function scheduleFollowingScroll() {
+        if (followingScrollFramePending) return;
+        followingScrollFramePending = true;
+        window.requestAnimationFrame(() => {
+          followingScrollFramePending = false;
+          if (scrollIntent !== "following") return;
+          scrollToLatest();
+        });
+      }
+
+      function notifyContentUpdate() {
+        if (scrollIntent === "detached") {
+          hasUnreadContent = true;
+          if (backToLatest) backToLatest.hidden = false;
+          return;
+        }
+        scheduleFollowingScroll();
+      }
+
+      function maintainFollowingScroll() {
+        if (scrollIntent === "following") scheduleFollowingScroll();
+      }
+
+      function startFollowingTurn() {
+        setScrollIntent("following");
+      }
+
+      function handleMessagesScroll() {
+        setScrollIntent(messagesAtLatest() ? "following" : "detached");
+      }
+
+      function returnToLatest() {
+        const shouldTransferFocus = document.activeElement === backToLatest;
+        setScrollIntent("following");
+        scrollToLatest();
+        if (shouldTransferFocus) messages.focus({ preventScroll: true });
+      }
+
+      messages.addEventListener("scroll", handleMessagesScroll, { passive: true });
+      backToLatest?.addEventListener("click", returnToLatest);
+
       function messageShell(kind) {
         const row = create("article", `message ${kind}`);
-        row.append(create("div", "avatar", kind === "user" ? "我" : kind === "error" ? "!" : "V2"));
+        const avatar = create("div", "avatar");
+        if (kind === "assistant") {
+          avatar.textContent = "国先";
+          avatar.setAttribute("role", "img");
+          avatar.setAttribute("aria-label", "国先检索助手");
+          const image = create("img");
+          image.src = "/static/assets/guoxian-logo.jpg";
+          image.alt = "";
+          image.width = 32;
+          image.height = 32;
+          image.addEventListener("error", () => image.remove(), { once: true });
+          avatar.append(image);
+        } else {
+          avatar.textContent = kind === "user" ? "我" : "!";
+        }
+        row.append(avatar);
         const bubble = create("div", "bubble");
         row.append(bubble);
         return { row, bubble };
@@ -780,14 +1379,12 @@
         const view = messageShell("user");
         view.bubble.textContent = query;
         messages.append(view.row);
-        scrollToLatest();
       }
 
       function renderError(message) {
         const view = messageShell("error");
         view.bubble.textContent = message;
         messages.append(view.row);
-        scrollToLatest();
       }
 
       function safeCitationUrl(value) {
@@ -832,8 +1429,7 @@
       }
 
       function continuationText(option) {
-        if (option?.operation === "targeted_evidence_search") return "继续检索针对性证据";
-        return safePublicText(option?.label) || safePublicText(option?.title) || "继续";
+        return safePublicText(option?.label);
       }
 
       function enumerationText(coverage) {
@@ -951,21 +1547,86 @@
         container.append(section);
       }
 
-      function renderContinuation(container, trace, originalQuery) {
-        const offer = trace && typeof trace === "object" ? trace.continuation_offer : null;
-        const options = Array.isArray(offer?.options) ? offer.options : [];
-        if (!options.length) return;
+      function setContinuationOwnerState(owner, state) {
+        if (!owner) return;
+        owner.state = state;
+        const disabled = state !== "active";
+        for (const button of owner.buttons) button.disabled = disabled;
+      }
+
+      function beginContinuationRequest(optionOwner) {
+        const previous = activeContinuationOwner;
+        const optionFollowUp = Boolean(
+          previous && optionOwner === previous && previous.state === "active"
+        );
+        if (previous) {
+          setContinuationOwnerState(
+            previous,
+            optionFollowUp ? "pending" : "suspended",
+          );
+        }
+        return { previous, optionFollowUp };
+      }
+
+      function settleContinuationOwners(requestOwner, nextOwner, outcome) {
+        const { previous, optionFollowUp } = requestOwner;
+        if (outcome.status === "succeeded") {
+          setContinuationOwnerState(previous, optionFollowUp ? "consumed" : "retired");
+          activeContinuationOwner = nextOwner;
+          setContinuationOwnerState(nextOwner, "active");
+          return;
+        }
+        if (outcome.status === "failed") {
+          setContinuationOwnerState(nextOwner, "retired");
+          if (outcome.reason === "invalid_option" && optionFollowUp) {
+            setContinuationOwnerState(previous, "retired");
+            activeContinuationOwner = null;
+            return;
+          }
+          if (
+            previous &&
+            activeContinuationOwner === previous &&
+            (previous.state === "pending" || previous.state === "suspended")
+          ) {
+            setContinuationOwnerState(previous, "active");
+          }
+          return;
+        }
+        setContinuationOwnerState(previous, "uncertain");
+        setContinuationOwnerState(nextOwner, "uncertain");
+        activeContinuationOwner = null;
+      }
+
+      function renderContinuation(container, clarification, originalQuery) {
+        const options = Array.isArray(clarification?.options) ? clarification.options : [];
+        const validOptions = [];
+        const seenOptionIds = new Set();
+        for (const option of options) {
+          const optionId = typeof option?.id === "string" ? option.id.trim() : "";
+          const label = (continuationText(option) || "").trim();
+          if (!optionId || !label || seenOptionIds.has(optionId)) continue;
+          seenOptionIds.add(optionId);
+          validOptions.push({ optionId, label });
+        }
+        if (!validOptions.length) return null;
+
         const section = subsection("可继续探索");
         const list = create("div", "option-list");
-        for (const option of options) {
-          const label = continuationText(option);
+        const owner = { buttons: [], state: "inactive" };
+        for (const { optionId, label } of validOptions) {
           const button = create("button", "option-button", label);
           button.type = "button";
-          button.addEventListener("click", () => sendQuery(originalQuery, option.option_id || null, `选择：${label}`));
+          button.disabled = true;
+          button.addEventListener("click", () => {
+            if (owner !== activeContinuationOwner || owner.state !== "active") return;
+            return sendQuery(originalQuery, optionId, `选择：${label}`, false, owner);
+          });
+          owner.buttons.push(button);
           list.append(button);
         }
         section.append(list);
         container.append(section);
+        return owner;
       }
 
       function renderAssistant(data, originalQuery, view = null, answerBox = null) {
@@ -978,6 +1639,7 @@
         if (Array.isArray(data.citations) && data.citations.length) {
           const evidenceDetails = create("details", "evidence-disclosure");
           evidenceDetails.open = false;
+          evidenceDetails.addEventListener("toggle", maintainFollowingScroll);
           evidenceDetails.append(create("summary", "evidence-summary", "查看依据"));
           renderCitations(evidenceDetails, data.citations || []);
           bubble.append(evidenceDetails);
@@ -986,7 +1648,6 @@
           const row = bubble.closest(".message") || messageShell("assistant").row;
           messages.append(row);
         }
-        scrollToLatest();
       }
 
       function renderProcess(bubble) {
@@ -1007,7 +1668,6 @@
           line.querySelector(".process-marker").textContent = done ? "✓" : "●";
           line.classList.toggle("process-done", done);
           line.querySelector(".process-text").textContent = text;
-          scrollToLatest();
         }
         let actionLine = null;
         function finish(summary) {
@@ -1018,6 +1678,7 @@
           box.classList.add("process-finished");
           box.replaceChildren(create("details", "process-summary", ""));
           const details = box.querySelector("details");
+          details.addEventListener("toggle", maintainFollowingScroll);
           details.append(create("summary", "", summary));
         }
         function addAction(label, onClick) {
@@ -1035,32 +1696,62 @@
         return { set, finish, addAction };
       }
 
-      async function readSseEvents(stream, onEvent) {
-        const reader = stream.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-        for (;;) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          let sep;
-          while ((sep = buffer.indexOf("\n\n")) >= 0) {
-            const block = buffer.slice(0, sep);
-            buffer = buffer.slice(sep + 2);
-            let eventName = "message";
-            let data = "";
-            for (const line of block.split("\n")) {
-              if (line.startsWith("event:")) eventName = line.slice(6).trim();
-              else if (line.startsWith("data:")) data += line.slice(5).trim();
-            }
-            if (data) {
-              try {
-                onEvent(eventName, JSON.parse(data));
-              } catch {
-                // A malformed event must not break the whole turn.
-              }
-            }
+      function parseSseBlock(block, onEvent) {
+        let eventName = "message";
+        const dataLines = [];
+        for (const line of block.split(/\r\n|\n|\r/)) {
+          if (line.startsWith("event:")) {
+            eventName = line.slice(6).trim();
+          } else if (line.startsWith("data:")) {
+            const value = line.slice(5);
+            dataLines.push(value.startsWith(" ") ? value.slice(1) : value);
           }
+        }
+        if (!dataLines.length) return;
+        let data;
+        try {
+          data = JSON.parse(dataLines.join("\n"));
+        } catch {
+          // A malformed event must not break the whole turn.
+          return;
+        }
+        onEvent(eventName, data);
+      }
+
+      async function readSseEvents(stream, onEvent, onReader = null) {
+        const reader = stream.getReader();
+        try {
+          if (onReader) onReader(reader);
+          const decoder = new TextDecoder();
+          const blockDelimiter = /\r\n\r\n|\n\n|\r\r/;
+          let buffer = "";
+          const drainCompleteBlocks = () => {
+            for (;;) {
+              const match = blockDelimiter.exec(buffer);
+              if (!match) return;
+              const block = buffer.slice(0, match.index);
+              buffer = buffer.slice(match.index + match[0].length);
+              parseSseBlock(block, onEvent);
+            }
+          };
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            drainCompleteBlocks();
+          }
+          buffer += decoder.decode();
+          drainCompleteBlocks();
+          if (buffer.trim()) parseSseBlock(buffer, onEvent);
+        } catch (error) {
+          try {
+            await reader.cancel();
+          } catch {
+            // Preserve the original parser or callback failure.
+          }
+          throw error;
+        } finally {
+          reader.releaseLock();
         }
       }
 
@@ -1078,36 +1769,60 @@
         return parts.length ? parts.join(" · ") : "检索完成";
       }
 
-      async function sendQuery(query, optionId = null, displayQuery = null) {
+      async function sendQuery(
+        query,
+        optionId = null,
+        displayQuery = null,
+        restoreFocusAfter = false,
+        continuationOwner = null,
+      ) {
         const normalized = String(query || "").trim();
-        if (!normalized || requestPending) return;
+        if (!normalized) return { status: "rejected", reason: "empty" };
+        if (requestPending) return { status: "rejected", reason: "busy" };
+        const continuationRequest = beginContinuationRequest(continuationOwner);
+        startFollowingTurn();
         requestPending = true;
         removeWelcome();
         renderUser(displayQuery || normalized);
         input.value = "";
+        resetInputHeight();
         submit.disabled = true;
         submit.textContent = "检索中";
         const body = { query: normalized };
-        if (optionId) body.entity_id_hint = optionId;
+        const normalizedOptionId = typeof optionId === "string" ? optionId.trim() : "";
+        if (normalizedOptionId) body.entity_id_hint = normalizedOptionId;
         const view = messageShell("assistant");
         const process = renderProcess(view.bubble);
         messages.append(view.row);
-        scrollToLatest();
+        notifyContentUpdate();
         let responseBody = null;
-        let sawAnswer = false;
+        let responseReader = null;
+        let turnState = "streaming";
+        let terminalFailureReason = "sse_error";
+        let answeredBeforeDone = false;
+        let protocolConflict = false;
         let userStopped = false;
         let stopButtonAdded = false;
         let streaming = null;
         let answerBox = null;
+        let nextContinuationOwner = null;
+        let outcome = { status: "uncertain", reason: "eof" };
+        const finishInterrupted = () => {
+          if (streaming) streaming.flush();
+          process.finish("生成中断");
+          view.bubble.append(create("div", "response-meta", "生成中断，可重新提问"));
+          notifyContentUpdate();
+        };
         const stopGeneration = () => {
-          if (userStopped || sawAnswer) return;
+          if (userStopped || turnState !== "streaming") return;
           userStopped = true;
           if (streaming) streaming.flush(); // 把已收到但缓冲未渲染的部分也渲染出来
           process.finish("已停止生成");
           view.bubble.append(create("div", "response-meta", "已停止生成（已保留当前内容）"));
-          // 等价于 reader.cancel()：中断 fetch 流，后续 reader.read() 会抛错/结束
-          if (responseBody && typeof responseBody.cancel === "function") {
-            responseBody.cancel().catch(() => {});
+          notifyContentUpdate();
+          // 流已由 getReader() 锁定，只能通过持锁 reader 中断读取。
+          if (responseReader && typeof responseReader.cancel === "function") {
+            responseReader.cancel().catch(() => {});
           }
         };
         try {
@@ -1127,84 +1842,155 @@
             }
             process.finish("查询失败");
             renderError(detail);
-            return;
-          }
-          responseBody = response.body;
-          await readSseEvents(responseBody, (eventName, data) => {
-            if (eventName === "stage") {
-              if (data.name === "planning") process.set("planning", "正在理解问题…");
-              else if (data.name === "retrieval") process.set("retrieval", "正在检索本地与网络数据…");
-              else if (data.name === "synthesis") {
-                process.set("synthesis", "正在生成回答…");
-                if (!stopButtonAdded) {
-                  stopButtonAdded = true;
-                  process.addAction("停止生成", stopGeneration);
+            notifyContentUpdate();
+            outcome = { status: "failed", reason: "http_error" };
+          } else {
+            responseBody = response.body;
+            await readSseEvents(responseBody, (eventName, data) => {
+              if (userStopped) return;
+              if (turnState === "done" || turnState === "error") {
+                protocolConflict = true;
+                return;
+              }
+              if (turnState === "answered") {
+                if (eventName === "done") turnState = "done";
+                else protocolConflict = true;
+                return;
+              }
+              if (eventName === "done") {
+                turnState = "done";
+                return;
+              }
+              if (eventName === "stage") {
+                if (data.name === "planning") {
+                  process.set("planning", "正在理解问题…");
+                  notifyContentUpdate();
+                } else if (data.name === "retrieval") {
+                  process.set("retrieval", "正在检索本地与网络数据…");
+                  notifyContentUpdate();
+                } else if (data.name === "synthesis") {
+                  process.set("synthesis", "正在生成回答…");
+                  if (!stopButtonAdded) {
+                    stopButtonAdded = true;
+                    process.addAction("停止生成", stopGeneration);
+                  }
+                  notifyContentUpdate();
                 }
+              } else if (eventName === "plan_done") {
+                const viewCount = Array.isArray(data.views) ? data.views.length : 0;
+                process.set("planning", `✓ 已识别意图（${viewCount} 个检索视角）`, true);
+                notifyContentUpdate();
+              } else if (eventName === "retrieval_done") {
+                process.set("retrieval", `✓ ${laneSummary(data.lanes)}`, true);
+                notifyContentUpdate();
+              } else if (eventName === "answer_chunk") {
+                if (!streaming) {
+                  answerBox = create("div", "answer");
+                  view.bubble.append(answerBox);
+                  streaming = renderStreamingMarkdown(answerBox);
+                }
+                streaming.append(data.text);
+                notifyContentUpdate();
+              } else if (eventName === "answer") {
+                turnState = "answered";
+                answeredBeforeDone = true;
+                process.set("synthesis", "✓ 回答已生成", true);
+                process.finish("查看检索过程");
+                // 整体重渲染（清空流式容器 + 全量 renderMarkdown），消除缓冲差异并对齐 citations
+                renderAssistant(data, normalized, view, answerBox);
+                nextContinuationOwner = renderContinuation(
+                  view.bubble,
+                  data.clarification,
+                  normalized,
+                );
+                notifyContentUpdate();
+              } else if (eventName === "error") {
+                turnState = "error";
+                terminalFailureReason = data.detail === "canonical_v2_invalid_option"
+                  ? "invalid_option"
+                  : "sse_error";
+                if (streaming) streaming.flush();
+                process.finish("查询失败");
+                renderError(
+                  terminalFailureReason === "invalid_option"
+                    ? "该继续选项已失效，请重新提问。"
+                    : data.detail || "查询失败",
+                );
+                notifyContentUpdate();
               }
-            } else if (eventName === "plan_done") {
-              const viewCount = Array.isArray(data.views) ? data.views.length : 0;
-              process.set("planning", `✓ 已识别意图（${viewCount} 个检索视角）`, true);
-            } else if (eventName === "retrieval_done") {
-              process.set("retrieval", `✓ ${laneSummary(data.lanes)}`, true);
-            } else if (eventName === "answer_chunk") {
-              if (!streaming) {
-                answerBox = create("div", "answer");
-                view.bubble.append(answerBox);
-                streaming = renderStreamingMarkdown(answerBox);
-              }
-              streaming.append(data.text);
-              scrollToLatest();
-            } else if (eventName === "answer") {
-              sawAnswer = true;
-              process.set("synthesis", "✓ 回答已生成", true);
-              process.finish("查看检索过程");
-              // 整体重渲染（清空流式容器 + 全量 renderMarkdown），消除缓冲差异并对齐 citations
-              renderAssistant(data, normalized, view, answerBox);
-            } else if (eventName === "error") {
-              if (streaming) streaming.flush();
-              process.finish("查询失败");
-              renderError(data.detail || "查询失败");
+            }, (reader) => {
+              responseReader = reader;
+            });
+            if (userStopped) {
+              outcome = { status: "uncertain", reason: "stopped" };
+            } else if (protocolConflict) {
+              if (turnState === "done" && !answeredBeforeDone) finishInterrupted();
+              outcome = { status: "uncertain", reason: "protocol_conflict" };
+            } else if (turnState === "error") {
+              outcome = { status: "failed", reason: terminalFailureReason };
+            } else if (turnState === "done" && answeredBeforeDone) {
+              outcome = { status: "succeeded" };
+            } else if (turnState === "answered") {
+              outcome = { status: "uncertain", reason: "missing_done" };
+            } else {
+              finishInterrupted();
+              outcome = {
+                status: "uncertain",
+                reason: turnState === "done" ? "done_before_answer" : "eof",
+              };
             }
-          });
-          if (!sawAnswer && !userStopped) {
-            // 流意外中断（正常结束但无 answer 事件，且非用户停止）：保留已渲染部分
-            if (streaming) streaming.flush();
-            process.finish("生成中断");
-            view.bubble.append(create("div", "response-meta", "生成中断，可重新提问"));
           }
         } catch (error) {
-          if (!userStopped) {
-            // 用户停止时 reader.read() 抛错属预期，不算错误
-            process.finish("查询失败");
-            renderError(`连接失败：${error.message || error}`);
+          if (userStopped) {
+            outcome = { status: "uncertain", reason: "stopped" };
+          } else if (protocolConflict) {
+            if (turnState === "done" && !answeredBeforeDone) finishInterrupted();
+            outcome = { status: "uncertain", reason: "protocol_conflict" };
+          } else if (turnState === "error") {
+            outcome = { status: "failed", reason: terminalFailureReason };
+          } else if (turnState === "done" && answeredBeforeDone) {
+            outcome = { status: "succeeded" };
+          } else if (turnState === "done") {
+            finishInterrupted();
+            outcome = { status: "uncertain", reason: "done_before_answer" };
+          } else {
+            outcome = { status: "uncertain", reason: "network_error" };
+            if (!answeredBeforeDone) {
+              process.finish("查询失败");
+              renderError(`连接失败：${error.message || error}`);
+              notifyContentUpdate();
+            }
           }
         } finally {
           requestPending = false;
           submit.disabled = false;
           submit.textContent = "发送";
-          input.focus();
+          restoreInputFocus(restoreFocusAfter);
           if (queuedDemoQuery) {
             const nextQuery = queuedDemoQuery;
             queuedDemoQuery = null;
             queueMicrotask(() => sendQuery(nextQuery));
           }
         }
+        settleContinuationOwners(continuationRequest, nextContinuationOwner, outcome);
+        return outcome;
       }
 
       function runDemoQuery(query) {
         const normalized = String(query || "").trim();
         if (!normalized) return;
         input.value = normalized;
+        resizeInputHeight();
+        setPresentationState("conversation");
         if (requestPending) {
           queuedDemoQuery = normalized;
-          input.focus();
           return;
         }
         sendQuery(normalized);
       }
 
       async function loadDemoQuestions() {
-        demoGrid.replaceChildren(create("p", "demo-empty", "正在读取企业、教授与论文候选数据…"));
+        demoGrid.replaceChildren(create("p", "demo-empty", "正在准备问题示例…"));
         try {
           const candidatePages = await loadCandidatePages();
           const verifiedRelations = await loadVerifiedRelations(candidatePages);
@@ -1212,23 +1998,28 @@
           renderDemoQuestions(questions);
         } catch {
           demoGrid.setAttribute("aria-busy", "false");
-          demoTitle.textContent = "当前候选问题暂不可用";
+          demoTitle.textContent = "问题示例暂不可用";
           demoGrid.replaceChildren(create("p", "demo-empty", "仍可在下方输入框中直接提问。"));
         }
       }
 
       form.addEventListener("submit", (event) => {
         event.preventDefault();
-        sendQuery(input.value);
+        submitInputQuery();
       });
+      input.addEventListener("keydown", handleInputKeydown);
+      input.addEventListener("input", resizeInputHeight);
+      input.addEventListener("compositionstart", handleCompositionStart);
+      input.addEventListener("compositionend", handleCompositionEnd);
+      demoToggle.addEventListener("click", toggleDemoQuestions);
 
       demoGrid.addEventListener("click", (event) => {
         const chip = event.target.closest(".demo-chip");
         if (chip && demoGrid.contains(chip)) runDemoQuery(chip.dataset.query);
       });
 
+      resizeInputHeight();
       loadDemoQuestions();
-      input.focus();
     </script>
   </body>
 </html>

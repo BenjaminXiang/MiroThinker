@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 import hashlib
 import ipaddress
 import json
-from threading import RLock
-from typing import Any, Callable, Literal, Protocol, cast
+import re
+from threading import Condition, RLock
+from typing import Any, Callable, Iterator, Literal, Protocol, cast
 from urllib.parse import urlparse, urlsplit, urlunsplit
 
 from pydantic import Field, model_validator
@@ -76,6 +78,174 @@ _PUBLIC_CONTINUATION_OPERATION = {
     "resume_bounded_search": "继续有界检索",
     "traverse_relationship": "探索已验证关联",
 }
+_PUBLIC_TEXT_NAMESPACE_CHARS = frozenset("abcdefghijklmnopqrstuvwxyz0123456789:._-")
+_PUBLIC_TEXT_LEFT_TOKEN_CHARS = frozenset(
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_"
+)
+_PUBLIC_TEXT_PATTERN = re.compile(
+    r"(?P<namespace>(?<![A-Za-z0-9_])(?:web-object|web-handle):[a-z0-9:._-]*)"
+    r"|(?P<fixed>(?<![A-Za-z0-9_])(?:"
+    r"PROF-[0-9A-F]{12}"
+    r"|COMP-[0-9A-Fa-f]{12}"
+    r"|(?:company|professor|paper|patent)-c-[0-9a-f]{24}"
+    r"|source_nature=current_web"
+    r")(?![A-Za-z0-9_-]))"
+)
+_PUBLIC_TEXT_NAMESPACE_PREFIXES = ("web-object:", "web-handle:")
+_PUBLIC_TEXT_FIXED_MARKERS = ("source_nature=current_web",)
+_PUBLIC_TEXT_BOUNDED_MARKERS = (
+    ("PROF-", frozenset("0123456789ABCDEF"), 12),
+    ("COMP-", frozenset("0123456789ABCDEFabcdef"), 12),
+    ("company-c-", frozenset("0123456789abcdef"), 24),
+    ("professor-c-", frozenset("0123456789abcdef"), 24),
+    ("paper-c-", frozenset("0123456789abcdef"), 24),
+    ("patent-c-", frozenset("0123456789abcdef"), 24),
+)
+
+
+def _sanitize_public_text(text: str) -> str:
+    projected = text
+    while True:
+        sanitized = _PUBLIC_TEXT_PATTERN.sub("", projected)
+        if sanitized == projected:
+            return sanitized
+        projected = sanitized
+
+
+def _is_public_text_marker_candidate(candidate: str) -> bool:
+    literal_prefixes = _PUBLIC_TEXT_NAMESPACE_PREFIXES + _PUBLIC_TEXT_FIXED_MARKERS
+    if any(prefix.startswith(candidate) for prefix in literal_prefixes):
+        return True
+    for prefix in _PUBLIC_TEXT_NAMESPACE_PREFIXES:
+        if candidate.startswith(prefix):
+            return all(
+                char in _PUBLIC_TEXT_NAMESPACE_CHARS
+                for char in candidate[len(prefix) :]
+            )
+    for prefix, allowed_chars, marker_length in _PUBLIC_TEXT_BOUNDED_MARKERS:
+        if prefix.startswith(candidate):
+            return True
+        if candidate.startswith(prefix):
+            suffix = candidate[len(prefix) :]
+            return len(suffix) <= marker_length and all(
+                char in allowed_chars for char in suffix
+            )
+    return False
+
+
+def _public_text_marker_candidate_start(
+    data: str,
+    *,
+    preceded_by_token: bool,
+) -> int | None:
+    for start in range(len(data)):
+        left_is_token = (
+            data[start - 1] in _PUBLIC_TEXT_LEFT_TOKEN_CHARS
+            if start
+            else preceded_by_token
+        )
+        if not left_is_token and _is_public_text_marker_candidate(data[start:]):
+            return start
+    return None
+
+
+class _PublicTextStreamSanitizer:
+    """Apply the batch policy while retaining only a possible marker suffix."""
+
+    def __init__(self) -> None:
+        self._tail = ""
+        self._dropping_namespace = False
+        self._pending_preceded_by_token = False
+
+    def feed(self, text: str) -> str:
+        if not text:
+            return ""
+        data = self._tail + text
+        data_preceded_by_token = self._pending_preceded_by_token
+        self._tail = ""
+        self._pending_preceded_by_token = False
+        output: list[str] = []
+        while data:
+            if self._dropping_namespace:
+                drop_count = 0
+                while (
+                    drop_count < len(data)
+                    and data[drop_count] in _PUBLIC_TEXT_NAMESPACE_CHARS
+                ):
+                    drop_count += 1
+                data = data[drop_count:]
+                if not data:
+                    self._pending_preceded_by_token = data_preceded_by_token
+                    break
+                self._dropping_namespace = False
+
+            context = "A" if data_preceded_by_token else " "
+            match = _PUBLIC_TEXT_PATTERN.search(context + data, 1)
+            if match is not None:
+                match_start = match.start() - 1
+                match_end = match.end() - 1
+                match_preceded_by_token = (
+                    data[match_start - 1] in _PUBLIC_TEXT_LEFT_TOKEN_CHARS
+                    if match_start
+                    else data_preceded_by_token
+                )
+                output.append(data[:match_start])
+                if match.lastgroup == "namespace" and match_end == len(data):
+                    self._dropping_namespace = True
+                    self._pending_preceded_by_token = match_preceded_by_token
+                    break
+                if match_end == len(data):
+                    self._tail = data[match_start:]
+                    self._pending_preceded_by_token = match_preceded_by_token
+                    break
+                data_preceded_by_token = match_preceded_by_token
+                data = data[match_end:]
+                continue
+
+            pending_start = _public_text_marker_candidate_start(
+                data,
+                preceded_by_token=data_preceded_by_token,
+            )
+            if pending_start is None:
+                output.append(data)
+                self._pending_preceded_by_token = (
+                    data[-1] in _PUBLIC_TEXT_LEFT_TOKEN_CHARS
+                )
+            else:
+                output.append(data[:pending_start])
+                self._tail = data[pending_start:]
+                self._pending_preceded_by_token = (
+                    data[pending_start - 1] in _PUBLIC_TEXT_LEFT_TOKEN_CHARS
+                    if pending_start
+                    else data_preceded_by_token
+                )
+            break
+        return "".join(output)
+
+    def abort(self) -> None:
+        self._tail = ""
+        self._dropping_namespace = False
+        self._pending_preceded_by_token = False
+
+    def flush(self) -> str:
+        context = "A" if self._pending_preceded_by_token else " "
+        pending = context + self._tail
+        self.abort()
+        return _sanitize_public_text(pending)[1:]
+
+
+def _sanitize_public_response(response: ChatResponse) -> ChatResponse:
+    clarification = response.clarification
+    if clarification is not None:
+        clarification = clarification.model_copy(
+            update={"prompt": _sanitize_public_text(clarification.prompt)}
+        )
+    return response.model_copy(
+        update={
+            "answer_text": _sanitize_public_text(response.answer_text),
+            "clarification": clarification,
+        }
+    )
 
 
 class CanonicalV2InvalidOption(ValueError):
@@ -88,6 +258,49 @@ class CanonicalV2ReleaseMismatch(ValueError):
 
 class CanonicalV2MappingError(ValueError):
     """Validated stage output cannot be represented by the compatibility envelope."""
+
+
+class _CanonicalV2ChatInterrupted(RuntimeError):
+    """The transport observed cancellation before the candidate turn committed."""
+
+
+class _TurnCommitGate:
+    def __init__(self) -> None:
+        self._condition = Condition()
+        self._cancelled = False
+        self._transport_observation_pending = False
+
+    def cancel(self) -> None:
+        with self._condition:
+            self._cancelled = True
+            self._condition.notify_all()
+
+    def begin_transport_observation(self) -> None:
+        with self._condition:
+            self._transport_observation_pending = True
+
+    def finish_transport_observation(self, *, disconnected: bool) -> None:
+        with self._condition:
+            if disconnected:
+                self._cancelled = True
+            self._transport_observation_pending = False
+            self._condition.notify_all()
+
+    @contextmanager
+    def active(self) -> Iterator[None]:
+        with self._condition:
+            if self._cancelled:
+                raise _CanonicalV2ChatInterrupted
+            yield
+
+    @contextmanager
+    def commit(self) -> Iterator[None]:
+        with self._condition:
+            while self._transport_observation_pending and not self._cancelled:
+                self._condition.wait()
+            if self._cancelled:
+                raise _CanonicalV2ChatInterrupted
+            yield
 
 
 class _Planner(Protocol):
@@ -568,9 +781,7 @@ def _merge_prior_web_evidence(
     )
     if not carried:
         return evidence_set
-    merged = evidence_set.model_copy(
-        update={"items": evidence_set.items + carried}
-    )
+    merged = evidence_set.model_copy(update={"items": evidence_set.items + carried})
     return _validated_model(merged, EvidenceSet)
 
 
@@ -615,6 +826,7 @@ class CanonicalV2ChatAdapter:
         option_id: str | None,
         as_of: datetime,
     ) -> ChatResponse:
+        turn_gate = _TurnCommitGate()
         with self._session_lock(session_id):
             return self._answer_locked(
                 query=query,
@@ -622,6 +834,7 @@ class CanonicalV2ChatAdapter:
                 option_id=option_id,
                 as_of=as_of,
                 progress=None,
+                turn_gate=turn_gate,
             )
 
     def answer_stream(
@@ -631,13 +844,15 @@ class CanonicalV2ChatAdapter:
         session_id: str,
         option_id: str | None,
         as_of: datetime,
-        progress: Callable[[str, dict[str, Any]], None] | None = None,
+        progress: Callable[[str, dict[str, Any]], bool | None] | None = None,
+        turn_gate: _TurnCommitGate | None = None,
     ) -> ChatResponse:
-        """One turn with an optional per-call progress callback.
+        """One turn with optional per-call progress and a shared transport gate.
 
         Kept separate from ``answer`` so the frozen S11A input boundary stays
-        exact; the callback is per-call state, never shared instance state.
+        exact; per-call state is never shared on the adapter instance.
         """
+        active_gate = turn_gate if turn_gate is not None else _TurnCommitGate()
         with self._session_lock(session_id):
             return self._answer_locked(
                 query=query,
@@ -645,6 +860,7 @@ class CanonicalV2ChatAdapter:
                 option_id=option_id,
                 as_of=as_of,
                 progress=progress,
+                turn_gate=active_gate,
             )
 
     def _answer_locked(
@@ -654,12 +870,17 @@ class CanonicalV2ChatAdapter:
         session_id: str,
         option_id: str | None,
         as_of: datetime,
-        progress: Callable[[str, dict[str, Any]], None] | None = None,
+        progress: Callable[[str, dict[str, Any]], bool | None] | None,
+        turn_gate: _TurnCommitGate,
     ) -> ChatResponse:
-        def emit(name: str, payload: dict[str, Any]) -> None:
-            if progress is not None:
-                progress(name, payload)
+        def emit(name: str, payload: dict[str, Any]) -> bool:
+            if progress is None:
+                return False
+            with turn_gate.active():
+                return progress(name, payload) is True
 
+        with turn_gate.active():
+            pass
         normalized_query = query.strip()
         if not normalized_query:
             raise ValueError("query must be non-empty")
@@ -759,7 +980,11 @@ class CanonicalV2ChatAdapter:
         )
 
         emit("stage", {"name": "planning"})
+        with turn_gate.active():
+            pass
         raw_plan = self._planner.plan(planning_request)
+        with turn_gate.active():
+            pass
         self._require_release(raw_plan, stage="plan")
         plan = _validated_model(raw_plan, RetrievalPlan)
         self._require_release(plan, stage="plan")
@@ -778,7 +1003,11 @@ class CanonicalV2ChatAdapter:
         )
         emit("stage", {"name": "retrieval"})
 
+        with turn_gate.active():
+            pass
         raw_evidence_set = self._knowledge_read.execute(plan)
+        with turn_gate.active():
+            pass
         self._require_release(raw_evidence_set, stage="read")
         evidence_set = _validated_model(raw_evidence_set, EvidenceSet)
         self._require_release(evidence_set, stage="read")
@@ -803,12 +1032,16 @@ class CanonicalV2ChatAdapter:
         if progress is not None:
             # Token-level stream sink: the answer module duck-types renderers
             # exposing ``stream(result, *, on_chunk)`` and forwards each delta
-            # as an ``answer_chunk`` event. Set on the forked instance that
-            # actually answers and cleared before the session commit, so a
-            # later synchronous turn can never stream into a stale callback.
-            candidate_answer.prose_progress = lambda text: progress(
+            # as an ``answer_chunk`` event. The callback acknowledges only text
+            # accepted by the transport, while the optional abort hook drops
+            # downstream state buffered for a failed attempt. Both are cleared
+            # before commit so later turns cannot reach stale callbacks.
+            candidate_answer.prose_progress = lambda text: emit(
                 "answer_chunk", {"text": text}
             )
+            progress_abort = getattr(progress, "abort", None)
+            if callable(progress_abort):
+                candidate_answer.prose_progress_abort = progress_abort
         directive = self._session_directive(
             committed=committed,
             evidence_set=evidence_set,
@@ -836,7 +1069,11 @@ class CanonicalV2ChatAdapter:
                 else None
             ),
         )
+        with turn_gate.active():
+            pass
         raw_turn_result = candidate_answer.answer(turn_request)
+        with turn_gate.active():
+            pass
         self._require_release(raw_turn_result, stage="answer")
         turn_result = _validated_model(raw_turn_result, TurnResult)
         self._require_release(turn_result, stage="answer")
@@ -863,10 +1100,11 @@ class CanonicalV2ChatAdapter:
             context_receipt,
             fallback=displayed_ids,
         )
-        # Per-turn stream sink must not outlive this turn on the committed
+        # Per-turn stream lifecycle must not outlive this turn on the committed
         # session instance (the commit is the terminal statement, and any
         # earlier failure discards the fork, so no try/finally is needed).
         candidate_answer.prose_progress = None
+        candidate_answer.prose_progress_abort = None
         next_session = _CommittedSession(
             answer=candidate_answer,
             turn_count=turn_count,
@@ -882,7 +1120,8 @@ class CanonicalV2ChatAdapter:
         )
 
         with self._lock:
-            self._sessions[session_id] = next_session
+            with turn_gate.commit():
+                self._sessions[session_id] = next_session
         return response
 
     def _selection(
@@ -1148,7 +1387,7 @@ class CanonicalV2ChatAdapter:
                 else [option.label for option in clarification.options]
             ),
         }
-        return ChatResponse.model_validate(response_payload)
+        return _sanitize_public_response(ChatResponse.model_validate(response_payload))
 
     @staticmethod
     def _public_citations(
@@ -1179,7 +1418,8 @@ class CanonicalV2ChatAdapter:
                     official_hosts = frozenset(
                         host
                         for evidence_id in handle.evidence_ids
-                        if (bound_evidence := evidence_by_id.get(evidence_id)) is not None
+                        if (bound_evidence := evidence_by_id.get(evidence_id))
+                        is not None
                         and bound_evidence.source_nature != "current_web"
                         and (
                             local_official_url := _official_evidence_url(bound_evidence)

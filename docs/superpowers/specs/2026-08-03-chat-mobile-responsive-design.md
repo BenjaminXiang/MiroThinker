@@ -67,8 +67,8 @@ For legibility at avatar size, implementation may create a square avatar derivat
 
 - use an actual `<img>` with fixed dimensions and intrinsic width/height;
 - have a neutral white tile, subtle border, and `object-fit` behavior that does not distort the mark;
-- be decorative when the adjacent message semantics already identify the assistant;
-- fall back to the text `国先` if the image fails to load.
+- be decorative (`alt=""` or semantic equivalent) when the adjacent message semantics already identify the assistant;
+- fall back to the readable text `国先` if the image fails to load.
 
 The same asset may replace the current header `V2` mark for visual consistency. User and error avatars remain distinct.
 
@@ -210,60 +210,42 @@ The control must be reachable by keyboard and have a touch target of at least 44
 
 ## 10. Streaming correctness guardrail
 
-The responsive implementation must not worsen answer correctness or public-output safety. Investigation found two existing streaming risks that must be made explicit in the implementation plan:
+Responsive work must preserve the existing answer contract while making the same final synthesis visible progressively:
 
-1. Public-text checks currently operate on individual chunks. A sensitive token split across multiple chunks can evade a per-chunk regex and become visible after accumulation. Any partial text that becomes visible must therefore pass a stateful/cumulative public-copy gate across arbitrary chunk boundaries, including text retained after stop or network failure.
-2. The structured final synthesis contract includes selected claim/entity indexes. The streaming path must preserve the same validated selection and answer-scope semantics as the synchronous path; streaming must not silently downgrade the final renderer result to plain text.
+- when the provider is healthy and safe streamable content exists, at least one safe answer chunk must become public before the complete final result is available and before `done` is emitted; chunking must not be simulated after the complete answer is already available;
+- incremental text and the successful final DOM must represent the same complete synthesis as the existing final result;
+- selected scope, citations, and next-turn context continue to be accepted by the existing final parser;
+- neither raw SSE nor the rendered DOM may expose internal identifiers or structural fields;
+- the server reuses or extends deterministic public-output sanitization, with browser handling retained as defense in depth;
+- focused regressions cover representative beginning, middle, and end cross-chunk boundaries plus ordinary Chinese and Markdown;
+- answers are not shortened, no additional LLM call is introduced, and public SSE event names and payload schemas remain unchanged.
 
-These are correctness prerequisites around the already-shipped streaming seam. They do not authorize a new event protocol or broad backend refactor. The implementation plan must first add focused reproductions, then make the smallest contract-preserving correction. If a fix would require changing the public schema or SSE protocol, implementation must stop for a revised design decision.
+## 11. Error, retry, cancellation, and degradation behavior
 
-## 11. Error and degradation behavior
-
-- Browsers without `VisualViewport` use `100dvh`, then `100vh`; the composer remains part of the fixed shell.
-- Browsers returning zero safe-area values use ordinary padding.
+- Browsers without `VisualViewport` use `100dvh`, then `100vh`; zero safe-area values fall back to ordinary padding.
 - Logo load failure displays a compact text fallback without collapsing layout.
-- Stream interruption preserves only partial text that has passed the public-copy gate and labels it as interrupted.
-- User stop preserves only safe partial text and does not commit an incomplete answer as a successful semantic turn.
-- Final-answer replacement preserves current scroll intent.
-- Orientation changes require no reload and must not duplicate listeners or reset the conversation.
+- A failure before any answer text is public may use the existing bounded retry behavior.
+- Once answer text is public, a later failure preserves that text but never appends text from another attempt.
+- If the server observes stop, disconnect, or cancellation before commit, that turn is not committed as a successful session turn or used as next-turn context; previously committed context is unchanged. A client disconnect that the server does not observe before commit carries no non-commit guarantee.
+- Final reconciliation, stop, error, resize, and orientation changes preserve scroll intent and do not reset the conversation.
 
 ## 12. Contract and artifact ownership
 
-This is a successor UI slice under the existing `rebuild-canonical-v2-knowledge-platform` OpenSpec change, not a new OpenSpec change.
+This is a successor UI slice under the existing `rebuild-canonical-v2-knowledge-platform` OpenSpec change. The grounded-answer contract records progressive completeness and public-output safety; the evidence-first contract records the observable non-commit result when the server observes stop, disconnect, or cancellation before commit, without guaranteeing non-commit for a client disconnect the server does not observe before commit. The design, task, acceptance, verification contract, and slice contract describe those outcomes without prescribing private classes, interfaces, locking, or chunk algorithms.
 
-Before implementation, update:
-
-- `openspec/changes/rebuild-canonical-v2-knowledge-platform/specs/grounded-progressive-answer/spec.md` with observable viewport, focus, scroll-follow, partial-stream safety, and branding scenarios;
-- `openspec/changes/rebuild-canonical-v2-knowledge-platform/design.md` with the presentation-state boundary and streaming guardrail;
-- `openspec/changes/rebuild-canonical-v2-knowledge-platform/tasks.md` with one unchecked successor task;
-- `openspec/changes/rebuild-canonical-v2-knowledge-platform/acceptance.md` with the mobile, keyboard, scroll, branding, and cross-chunk acceptance matrix;
-- `.agents/runs/rebuild-canonical-v2-knowledge-platform/verification-contract.md` with the exact browser and stream-safety evidence requirements;
-- a new independently reviewable slice contract under `.agents/runs/rebuild-canonical-v2-knowledge-platform/slices/`.
-
-After implementation and verification, append evidence to the root verification ledger and `change-log.md`. Do not rewrite older S9J/S11/S12D/S12F evidence as proof of this slice.
-
-`evidence-first-query-orchestration/spec.md` remains unchanged unless implementation unexpectedly requires cancellation, reconnection, session-commit, or transport-semantics changes.
+After implementation and verification, append fresh evidence to the root verification ledger and `change-log.md`; older evidence is not proof of this slice.
 
 ## 13. Verification strategy
 
-### 13.1 Deterministic tests
+### 13.1 Focused deterministic checks
 
-Add focused tests for:
+Verify observable behavior through existing public paths:
 
-- public name, browser title, header identity, static logo availability, image fallback, and absence of public `Canonical V2` branding;
-- valid inline JavaScript;
-- textarea growth, reset, four-line cap, IME handling, and desktop/touch Enter semantics;
-- presentation-state transitions;
-- VisualViewport listener setup, requestAnimationFrame coalescing, and fallback behavior;
-- near-bottom detection, user detachment, no forced chunk scroll, return-to-latest, final replacement, stop, and error behavior;
-- arbitrary character/chunk splitting of unsafe public tokens;
-- preservation of final selected claim/entity indexes in the streaming path.
-
-Reuse current tests where appropriate:
-
-- `apps/admin-console/tests/test_canonical_v2_real_preview_ui.py`;
-- focused SSE tests in `apps/admin-console/tests/test_canonical_v2_chat_http_adapter.py`;
-- the stream-buffer harness, moved or superseded by a successor-slice test rather than treated as S12F data-rebuild evidence.
+- identity, logo fallback, viewport containment, textarea growth, IME submission, and touch/desktop Enter behavior;
+- scroll detachment, “回到最新”, final reconciliation, stop, error, resize, and orientation recovery;
+- when the provider is healthy and safe streamable content exists, at least one safe answer chunk becomes public before the complete final result is available and before `done`; streaming is not simulated after completion and preserves final-result consistency, representative cross-chunk public-output safety, normal Chinese/Markdown, and retry non-mixing;
+- non-commit when the server observes stop, disconnect, or cancellation before commit, with no non-commit guarantee for a client disconnect the server does not observe before commit;
+- unchanged public SSE names and payload shapes, no answer truncation, and no additional LLM call.
 
 ### 13.2 Browser matrix
 
@@ -277,42 +259,41 @@ Validate at least:
 
 For each applicable viewport verify:
 
-- no horizontal document overflow;
-- document scroll position remains fixed;
-- composer remains within the visual viewport;
-- safe-area padding does not duplicate or clip controls;
-- the keyboard-height simulation keeps the composer usable;
-- Markdown, long links, code blocks, citations, and long answers stay contained;
-- touch targets are at least 44 px;
-- rotation/resize needs no reload;
+- no horizontal document overflow and no document-level scrolling;
+- the composer remains usable within the visual viewport and safe area during keyboard and rotation simulations;
+- long answers, links, Markdown, code, citations, and media remain contained;
+- controls remain keyboard accessible and touch targets are at least 44 px;
 - examples collapse and can be restored;
-- the user can scroll upward during a real SSE answer without being dragged down;
-- “回到最新” restores following;
-- stop and interruption preserve only safe partial text.
+- users can read earlier content during streaming and “回到最新” restores following;
+- when the server observes stop, disconnect, or cancellation before commit, the interrupted turn does not enter successful session context; no non-commit guarantee applies to an unobserved client disconnect.
 
-Use Chromium with bounded concurrency to avoid browser-daemon resource exhaustion. Playwright WebKit is optional only if its browser binary can be installed in the project environment without changing global state. Otherwise record it as not run.
+Run every browser-runner invocation from the repository root through `uv run --project apps/miroflow-agent python`; that uv-managed project declares Playwright.
 
-### 13.3 Physical-device smoke
+Before the production-like pass, record lightweight provenance that the service on `127.0.0.1:18188` was launched from the current worktree and is serving its current Candidate code. An HTTP response from a pre-existing process is not sufficient. If establishing that provenance requires starting or restarting the service, first obtain explicit user authorization for that one action; after authorization, reuse the existing Candidate serving command from the current worktree and wait until `GET /api/health` returns HTTP 200. If provenance cannot be confirmed or authorization is not granted, record the production browser gate as blocked/skipped and do not count results from the old process as Candidate evidence.
 
-Linux emulation is not physical Safari/Chrome validation. Before production-like rollout, perform a five-minute smoke on one recent iPhone and one recent Android device covering:
+On that confirmed current Candidate, preflight candidate real queries through the existing public chat SSE path. Select and record a query only after it returns HTTP 200 and exposes at least one progressive `answer_chunk` before the final result and `done`, then pass that exact query to the runner. Non-binding candidates may include `请介绍丁文伯教授的研究方向` and `深圳无界智航科技有限公司是做什么的`; the observed preflight result, not either example, is authoritative. A known business badcase is not the fixed S12G UI query or an S12G UI blocker. If no candidate passes, record the gate as blocked/skipped rather than running against an old service or reporting a UI-runner failure.
 
-- initial load;
-- first submit and keyboard dismissal;
-- long streaming answer while scrolling up;
-- return to latest;
-- stop generation;
-- orientation change;
-- safe-area and Home Indicator clearance.
+Use the single repository-owned Chromium runner for the production-like pass:
+
+```bash
+: "${S12G_REAL_SSE_QUERY:?export the query recorded by the current-Candidate preflight}"
+uv run --project apps/miroflow-agent python .agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/browser_acceptance.py \
+  --url http://127.0.0.1:18188/chat \
+  --browser chromium \
+  --real-sse-query "$S12G_REAL_SSE_QUERY" \
+  --output-dir .agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/artifacts
+```
+
+Playwright WebKit is optional only when its browser binary is already available in the project environment; otherwise record it as not run.
+
+### Rollout-conditional native-device gate (not required for Candidate)
+
+Linux emulation is not physical Safari/Chrome validation. Before production-like rollout, perform a short smoke on one recent iPhone and one recent Android device covering initial load, keyboard dismissal, long-answer scrolling, return to latest, stop, orientation change, and safe-area clearance.
 
 ## 14. Rollback
 
-The slice is reversible:
-
-- restore the previous `chat.html` and focused tests;
-- remove the new static logo derivative;
-- leave backend retrieval, data, release pointers, and public response schemas untouched;
-- append rollback evidence rather than rewriting prior verification records.
+Restore the previous chat page, focused tests, logo derivative, and streaming changes as one reviewable slice. Backend retrieval, stored data, release pointers, public response schemas, and SSE event vocabulary remain unchanged; record rollback evidence without rewriting earlier verification history.
 
 ## 15. Acceptance summary
 
-The design is accepted when **国先检索助手** remains fully usable across the viewport matrix, the composer survives software-keyboard changes, only the message pane scrolls, streaming respects the user’s reading position, the supplied logo identifies assistant responses, no public-output or selected-scope regression is introduced, and all changes remain within the existing Candidate chat contract.
+The design is accepted when **国先检索助手** is responsive across the viewport matrix, IME submission is reliable, streaming respects reading position, the supplied brand is visible, at least one safe answer chunk becomes public before the complete final result and `done` when the provider is healthy and safe streamable content exists, streaming is not simulated after completion, and the same complete safe answer reaches the successful final DOM without retry mixing. A turn is not committed when the server observes stop, disconnect, or cancellation before commit; no non-commit guarantee applies to an unobserved client disconnect.
