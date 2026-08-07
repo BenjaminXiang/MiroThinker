@@ -5,6 +5,43 @@
 
 ---
 
+## 2026-08-07 · complete_build 收尾卡死：hasher 计算爆炸（已修复）+ Milvus Lite close 死锁（迁移阻塞项）
+
+**问题现象**：`test_complete_build_uses_verified_copies_landing_authority_projections_registry_index_and_verify`
+长时间 CPU 100%+，磁盘产物仅 36K（只有 source-build-manifest，无 envelope）。
+
+**根因（两个独立问题叠加）**：
+
+1. **hasher 组合爆炸**（已修复，`canonical_identity_resolution.py::_IdentityDecisionInputHasher`）：
+   py-spy 抓到卡在 `canonical_identity_resolution.py:1224` hexdigest 路径
+   （`_logical_graph → _map_public_authority → resolve → validate`）。旧实现把 request
+   的每个嵌套对象分别序列化 hash，identity resolution 对海量候选做逐项 hash 校验 →
+   O(N×M) 组合性能问题。
+   **修复**：hasher Merkle 化——request 先整体哈希一次得到 `_request_digest`，
+   hexdigest 输出改为 `_content_sha256({decision, request_digest, supporting_assertion_ids})`；
+   legacy 测试（test_canonical_identity_resolution_contract.py 的 legacy_payload 断言）同步更新。
+
+2. **Milvus Lite 2.5.1 close 死锁**（未修复，独立迁移阻塞项）：
+   hasher 修复后构建真实推进（566MB envelope 写出），但收尾时 Milvus Lite close 卡死：
+   主线程 `pthread_join` 等待事件循环线程（`epoll_wait timeout=-1` 无限等待）→ 死锁。
+   gdb 确认（Thread 1 futex join 事件循环线程）。隔离验证（停 18188 后重跑）同样卡死，
+   与 18188 并发无关；最小复现（open/close、upsert+flush+close）不卡——需完整构建的复杂序列触发。
+
+**3.2.0 升级试验（否决）**：依赖升 milvus-lite 3.2.0 后 complete_build 完整测试 PASSED
+（32 分钟），close 死锁解决；但 **3.2.0 与 2.5.1 本地存储格式不兼容**：
+- 2.5.1 的 `milvus.db` 是 SQLite 单文件；3.2.0 变成目录，`MilvusClient(uri=...)` 打不开 2.5.1 的 index
+- 现有 s12f index（2.5.1 构建）无法复用，服务启动即 `Open local milvus failed`
+- 全套件回归 18 failed + 13 errors（代码 `milvus_path.is_file()` 断言不匹配目录形态）
+
+**结论**：milvus-lite 保持 **2.5.1**；complete_build 收尾死锁记为**迁移阻塞项**——
+正式系统用正式 Milvus 服务（或验证其他 Lite 版本/绕过 close）后再收尾。hasher 修复
+使构建本身真实完成（566MB 产物），剩余仅为 close 阶段的库缺陷。
+
+**验证**：hasher 修复后 canonical 套件 900 passed（2.5.1）；3.2.0 下 complete_build 1 passed；
+回退 2.5.1 后 fast_boot + internal_reference 两套件 74 passed，服务恢复。
+
+---
+
 ## 2026-08-02 · 集合指代回归（T2 深圳筛选）— 待提交
 
 **问题现象**：同 session 两轮：
