@@ -1654,13 +1654,18 @@ def test_identity_resolution_does_not_rebuild_full_payload_per_decision_hash(
         for manifest in result.decision_manifests
         if manifest.decision_id == first_decision.decision_id
     )
-    legacy_payload = {
-        "request": request.model_dump(mode="json"),
+    # The decision input hash binds the full request via a single request
+    # digest (O(N+M)); the naive full-request-per-decision payload made
+    # full-scale builds O(N*M) and hung (complete-build performance fix).
+    payload = {
         "decision": first_decision.model_dump(mode="json"),
+        "request_digest": hashlib.sha256(
+            original_canonical_json(request.model_dump(mode="json"))
+        ).hexdigest(),
         "supporting_assertion_ids": sorted(first_manifest.supporting_assertion_ids),
     }
     assert first_manifest.input_content_sha256 == hashlib.sha256(
-        original_canonical_json(legacy_payload)
+        original_canonical_json(payload)
     ).hexdigest()
 
 

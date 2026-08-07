@@ -641,6 +641,11 @@ def test_parse_rewritten_queries(payload: str, expected: tuple[str, ...]) -> Non
         "推荐几家深圳的服务机器人企业",
         "酒店送餐机器人的技术方案和竞争力如何",
         "固态电池的能量密度发展趋势",
+        # Attribute questions carry an attribute dimension the deterministic
+        # entity view does not search, so they reach the rewrite views even
+        # with a named subject (matches test_rewrite_gate_fires_for_attribute_followups).
+        "丁文伯教授的研究方向是什么？",
+        "帕西尼感知科技（深圳）有限公司的专利以及论文情况",
     ],
 )
 def test_rewrite_trigger_fires(query: str) -> None:
@@ -651,11 +656,9 @@ def test_rewrite_trigger_fires(query: str) -> None:
     "query",
     [
         PROFILE_QUERY,
-        "丁文伯教授的研究方向是什么？",
         PATENT_QUERY,
         "arXiv:2401.12345这篇论文的贡献有哪些",
         "帕西尼感知科技（深圳）有限公司的详细信息",
-        "帕西尼感知科技（深圳）有限公司的专利以及论文情况",
         "如何防范黄赌毒场所的安全风险",
     ],
 )

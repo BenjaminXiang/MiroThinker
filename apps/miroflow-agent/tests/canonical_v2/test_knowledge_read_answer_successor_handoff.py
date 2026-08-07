@@ -835,7 +835,7 @@ def test_answer_rejects_prior_result_set_for_budget_but_keeps_current_handle_off
     )
 
 
-def test_blocking_planner_materializes_truthful_zero_option_clarification() -> None:
+def test_blocking_planner_materializes_blocked_candidates_without_continuation() -> None:
     read_module = _read_module()
     answer_module = _answer_module()
     company_id, item, _ = _fixture(read_module, token="alpha")
@@ -935,14 +935,23 @@ def test_blocking_planner_materializes_truthful_zero_option_clarification() -> N
     repeated = read.execute(plan)
 
     assert result.items == ()
-    assert result.entity_handles == ()
+    # Successor handoff registers the blocked candidates as handles so the
+    # clarification can offer evidenced discriminators and a later selection
+    # turn can resolve its target; no continuation option is materialized.
+    assert {handle.canonical_id for handle in result.entity_handles} == {
+        company_id,
+        other_id,
+    }
     assert result.continuation_candidates == ()
     decision = result.ambiguity_decision
     assert decision is not None
     assert decision.outcome == "blocked"
-    assert decision.candidates == ()
+    assert {candidate.handle_id for candidate in decision.candidates} == {
+        company_id,
+        other_id,
+    }
     assert decision.selected_handle_id is None
-    assert decision.viable_alternative_handle_ids == ()
+    assert set(decision.viable_alternative_handle_ids) == {company_id, other_id}
     assert decision.decision_id == repeated.ambiguity_decision.decision_id
     assert decision.decision_trace_id == repeated.ambiguity_decision.decision_trace_id
     assert decision.decision_id.startswith("ambiguity-decision:sha256:")
@@ -964,6 +973,16 @@ def test_blocking_planner_materializes_truthful_zero_option_clarification() -> N
     )
     assert answer.response_mode == "clarification_only"
     assert answer.claims == ()
-    assert answer.continuation_offer is None
-    assert "distinguishing detail" in answer.answer_text.lower()
-    assert "evidenced candidates" not in answer.answer_text.lower()
+    # The successor handoff turns the blocked candidates into an executable
+    # clarification offer (selection_kind clarification_selection) with the
+    # evidenced discriminators, so the user can resolve the ambiguity by
+    # choosing instead of typing a distinguishing detail.
+    offer = answer.continuation_offer
+    assert offer is not None
+    assert offer.selection_kind == "clarification_selection"
+    assert {option.target_handle_ids for option in offer.options} == {
+        (company_id,),
+        (other_id,),
+    }
+    assert all(option.discriminator for option in offer.options)
+    assert "evidenced candidates" in answer.answer_text.lower()

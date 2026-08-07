@@ -1200,12 +1200,20 @@ def canonical_identity_decision_input_sha256(
 
 
 class _IdentityDecisionInputHasher:
-    """Reuse exact canonical request bytes across a batch of decision hashes."""
+    """Bind every decision to the full request via one request digest.
+
+    The naive payload hashed the complete serialized request inside every
+    decision hash: N decisions x M-byte request made identity resolution
+    O(N*M) and hung the complete-build test (and real full-scale builds)
+    for tens of minutes. The request is hashed once and each decision hash
+    binds its digest instead, keeping the full-request binding guarantee
+    with O(N+M) cost.
+    """
 
     def __init__(self, request: IdentityResolutionRequest) -> None:
-        self._request_json = _canonical_json(
-            cast(JsonValue, request.model_dump(mode="json"))
-        )
+        self._request_digest = hashlib.sha256(
+            _canonical_json(cast(JsonValue, request.model_dump(mode="json")))
+        ).digest()
 
     def hexdigest(
         self,
@@ -1213,21 +1221,16 @@ class _IdentityDecisionInputHasher:
         decision: IdentityDecision,
         supporting_assertion_ids: Iterable[str],
     ) -> str:
-        digest = hashlib.sha256()
-        # These fragments reproduce _canonical_json() exactly. sort_keys=True orders
-        # the three payload fields as decision, request, supporting_assertion_ids.
-        digest.update(b'{"decision":')
-        digest.update(
-            _canonical_json(cast(JsonValue, decision.model_dump(mode="json")))
+        return _content_sha256(
+            cast(
+                JsonValue,
+                {
+                    "decision": decision.model_dump(mode="json"),
+                    "request_digest": self._request_digest.hex(),
+                    "supporting_assertion_ids": sorted(supporting_assertion_ids),
+                },
+            )
         )
-        digest.update(b',"request":')
-        digest.update(self._request_json)
-        digest.update(b',"supporting_assertion_ids":')
-        digest.update(
-            _canonical_json(cast(JsonValue, sorted(supporting_assertion_ids)))
-        )
-        digest.update(b"}")
-        return digest.hexdigest()
 
 
 def canonical_identity_applied_decision_id(

@@ -318,6 +318,13 @@ class QueryPlanningRequest(ContractModel):
     )
     content_sha256: str = Field(default=_ZERO_SHA256, pattern=r"^[0-9a-f]{64}$")
 
+    @model_serializer(mode="wrap")
+    def serialize_optional_displayed_names(self, handler: Any) -> Any:
+        data = handler(self)
+        if not self.displayed_entity_names:
+            data.pop("displayed_entity_names", None)
+        return data
+
     @model_validator(mode="after")
     def bind_request(self) -> QueryPlanningRequest:
         if self.displayed_entity_names and len(self.displayed_entity_names) != len(
@@ -4872,6 +4879,10 @@ class LaneRequest(_ContentModel):
             data.pop("relationship_reference_queries", None)
         if self.relationship_enumeration_policy is None:
             data.pop("relationship_enumeration_policy", None)
+        if not self.bound_entity_ids:
+            data.pop("bound_entity_ids", None)
+        if not self.bound_entity_names:
+            data.pop("bound_entity_names", None)
         return data
 
     @model_validator(mode="after")

@@ -1423,22 +1423,25 @@ def create_isolated_release_knowledge_read(
         else None
     )
 
-    lookup_view = _create_audited_lookup_view(validated_bundle)
+    # The audited lookup view is created lazily on first exact/structured/
+    # lexical/internal-reference use, never during factory construction: a
+    # relationship-only or web-only plan must execute without touching
+    # physical documents (S8R in-memory traversal contract, S8E fail-before-
+    # lookup). Internal-reference execution reads the bound documents on
+    # first use (its S11 design); each adapter builds its own view lazily and
+    # the bounded document cache deduplicates the physical read.
     lane_adapters: dict[str, Callable[[LaneRequest], RetrievalLaneResult]] = {
         "exact": create_isolated_exact_lookup_adapter(
             release_bundle=validated_bundle,
             published_release=validated_publication,
-            _lookup_view=lookup_view,
         ),
         "structured": create_isolated_structured_lookup_adapter(
             release_bundle=validated_bundle,
             published_release=validated_publication,
-            _lookup_view=lookup_view,
         ),
         "lexical": create_isolated_lexical_lookup_adapter(
             release_bundle=validated_bundle,
             published_release=validated_publication,
-            _lookup_view=lookup_view,
         ),
     }
     supported_lanes = {"exact", "structured", "lexical", "web"}
@@ -1461,7 +1464,6 @@ def create_isolated_release_knowledge_read(
                 release_institution_catalog=(
                     internal_reference_authority.institution_catalog
                 ),
-                _lookup_view=lookup_view,
             )
         )
         supported_lanes.add("internal_reference")

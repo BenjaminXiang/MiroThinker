@@ -126,7 +126,7 @@ _PRODUCTION_AUTHORITY = {
         _REPOSITORY_ROOT
     ).as_posix(),
     "accepted_s11b_receipt_sha256": (
-        "cee1beebe2bdb1eba3f09b06e4e3c819167bbba14d5b6d6072f1f4cbafb0a945"
+        "8c6266d5e981c3942beb389a7cc3386ae78047e2c7af0a94cd88c44772b1c0bf"
     ),
     "guarded_capture_accepted_s11b": {
         "owner_path": (
@@ -147,7 +147,7 @@ _PRODUCTION_AUTHORITY = {
             "s11b/verification-receipt.json"
         ),
         "receipt_sha256": (
-            "cee1beebe2bdb1eba3f09b06e4e3c819167bbba14d5b6d6072f1f4cbafb0a945"
+            "8c6266d5e981c3942beb389a7cc3386ae78047e2c7af0a94cd88c44772b1c0bf"
         ),
     },
     "accepted_s11b_collected": {
@@ -167,7 +167,7 @@ _PRODUCTION_AUTHORITY = {
     "evidence_root": str(_EVIDENCE_ROOT),
     "inventory_path": _INVENTORY.relative_to(_REPOSITORY_ROOT).as_posix(),
     "inventory_sha256": (
-        "c5a151b82cf308ec8504c31c10f6e6d997a3286ef18613d530088314a7f8f940"
+        "f7806aca667992232e364ce1510add536d9b91cc6505747f08f71c614f7425fc"
     ),
     "inventory_sha256_pointer": _INVENTORY_SHA256_POINTER,
     # Historical S11C execution provenance, never the current checkout locator.
@@ -175,7 +175,7 @@ _PRODUCTION_AUTHORITY = {
         "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2"
     ),
     "retired_failure_ledger_sha256": (
-        "271f4f9808a206e06cd616c95a778178f453fb67cf9284e9b93c33623fb75e7d"
+        "6e61559e51faaaf70d326ecabbd32d626b5dc26d8e5af8ce7af3404d8e4c8a44"
     ),
     "hardcoded_owner_nodeids_by_family": {
         "s11b_admin_quarantine": _S11B_ADMIN_QUARANTINE_OWNER_NODEIDS,
