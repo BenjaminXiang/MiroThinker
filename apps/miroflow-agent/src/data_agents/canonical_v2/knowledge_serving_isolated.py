@@ -48,6 +48,7 @@ from .knowledge_answer import (
     MaterialClaimProposal,
     ProseSynthesisResult,
     TurnRequest,
+    claim_text_is_raw_dump,
     create_ephemeral_knowledge_answer,
 )
 from .knowledge_gap_feedback import create_ephemeral_knowledge_gap_feedback
@@ -1389,6 +1390,54 @@ def _concept_term_view_text(query: str) -> str | None:
     return None
 
 
+# Answer-side relevance guard for data-theme concept questions.  The LLM
+# rewrite sometimes drifts to adjacent domains (traffic surveys, web
+# crawlers, crowdsourcing), and the prose prompt's relevance instruction is
+# not enough — the drifted claims reached the answer anyway (T19).  Claims
+# carrying these off-theme terms are dropped before they reach either the
+# prose prompt or the deterministic fallback.  A query that names an
+# alternate data domain itself (网页/交通/网络/地图… data collection) keeps
+# its own claims: the guard only fires for the embodied-AI data themes.
+_CONCEPT_QUERY_MARKERS = ("数据采集", "数据路线", "数据需求", "合成数据")
+_CONCEPT_QUERY_ALTERNATE_ANCHOR_MARKERS = (
+    "网页",
+    "网站",
+    "页面",
+    "网络",
+    "交通",
+    "地图",
+    "GIS",
+    "GPS",
+    "爬虫",
+)
+_CONCEPT_OFF_TOPIC_CLAIM_MARKERS = (
+    "交通",
+    "感应环",
+    "路调",
+    "点调",
+    "测绘",
+    "网约车",
+    "爬虫",
+    "众包",
+    "GIS",
+    "GPS",
+    "网页抓取",
+    "网络爬虫",
+)
+
+
+def _concept_theme_filter_active(query: str) -> bool:
+    if not any(marker in query for marker in _CONCEPT_QUERY_MARKERS):
+        return False
+    return not any(
+        marker in query for marker in _CONCEPT_QUERY_ALTERNATE_ANCHOR_MARKERS
+    )
+
+
+def _concept_off_topic_claim(text: str) -> bool:
+    return any(marker in text for marker in _CONCEPT_OFF_TOPIC_CLAIM_MARKERS)
+
+
 def _enumeration_ordered_view_queries(
     *,
     original_query: str,
@@ -1762,7 +1811,12 @@ def _serving_query_views(
     if term_view_text is not None and term_view_text not in existing_texts:
         if len(views) >= _SERVING_WEB_MAX_QUERY_VIEWS:
             views = views[:-1]
-        views.append(
+        # Promote the term view directly after the deterministic view: the
+        # merge is earliest-view-wins, so a term view appended last was
+        # drowned below the candidate cut by the rewrite views (T19 lost
+        # 动作捕捉 content that only the term view recalls).
+        views.insert(
+            1,
             QueryViewProposal(
                 view_id=f"view:serving:{request.request_id}:term:0",
                 kind="serving_search",
@@ -1773,7 +1827,7 @@ def _serving_query_views(
                 producer_version=_SERVING_QUERY_REWRITER_VERSION,
                 bound_entity_ids=request.displayed_entity_ids,
                 bound_entity_names=request.displayed_entity_names,
-            )
+            ),
         )
     return tuple(views)
 
@@ -2810,14 +2864,20 @@ def _person_evidence_match(
 ) -> bool:
     text = f"{result.title} {result.snippet}"
     searchable = _normalized_web_identity(text)
-    if not any(
-        _web_identity_text_matches(form, searchable)
-        for form in _web_identity_forms(company)
-    ):
+    # Person-name matching is plain containment: the brand-context marker
+    # rule (_web_identity_text_matches) is tuned for company names and
+    # misses person bios where the name stands alone (T13).
+    if not any(form in searchable for form in _web_identity_forms(company)):
         return False
-    if not any(marker in text for marker in _FOUNDER_TEXT_MARKERS):
-        return False
-    return constraint is None or constraint in text
+    if constraint is not None:
+        # Education-constrained person queries: the person name and the
+        # education constraint co-occurring in the same hit is enough.
+        # Requiring a founder marker in the same snippet misses pages that
+        # state the school without the role word (T13 早稻田企业家 returned
+        # "未找到" for exactly this reason); the LLM probe judge backstops
+        # any relaxed accept.
+        return constraint in text
+    return any(marker in text for marker in _FOUNDER_TEXT_MARKERS)
 
 
 def _person_probe_evidence_item(
@@ -3595,22 +3655,401 @@ def _semantic_text(item: EvidenceItem, display_name: str) -> str:
     return "；".join(parts) + "。"
 
 
-# The prose model answers as one JSON object with an ``answer_text`` string
-# value.  The streaming renderer strips this shell incrementally; the key
-# must be matched exactly as emitted by the model (no whitespace around the
-# colon), mirroring the request prompt contract.
-_ANSWER_TEXT_KEY = '"answer_text"'
-_JSON_SINGLE_CHAR_ESCAPES = {
-    "n": "\n",
-    '"': '"',
-    "\\": "\\",
-    "t": "\t",
-    "r": "\r",
-    "b": "\b",
-    "f": "\f",
-    "/": "/",
-}
-_HEX_DIGITS = frozenset("0123456789abcdefABCDEF")
+_PROSE_SELECTION_MARKER = "<|canonical_v2_selection_v1|>"
+_PROSE_ANSWER_MARKER = "<|canonical_v2_answer_v1|>"
+_PROSE_PRIVATE_MARKERS = (_PROSE_SELECTION_MARKER, _PROSE_ANSWER_MARKER)
+_PROSE_SELECTION_KEYS = frozenset(
+    {"selected_claim_indexes", "selected_entity_indexes"}
+)
+_PROSE_CLASSIFICATION_PREFIX_LIMIT = len(_PROSE_SELECTION_MARKER) + 64
+_PROSE_SELECTION_HEADER_LIMIT = 4096
+
+
+def _decode_prose_selection_header(header: str) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    def unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        decoded: dict[str, Any] = {}
+        for key, value in pairs:
+            if key in decoded:
+                raise ValueError("LLM prose selection header contains a duplicate key")
+            decoded[key] = value
+        return decoded
+
+    try:
+        selected = json.loads(header, object_pairs_hook=unique_object)
+    except json.JSONDecodeError as exc:
+        raise ValueError("LLM prose selection header is invalid JSON") from exc
+    if not isinstance(selected, dict) or set(selected) != _PROSE_SELECTION_KEYS:
+        raise ValueError(
+            "LLM prose selection header must contain exactly "
+            "selected_claim_indexes and selected_entity_indexes"
+        )
+
+    decoded_indexes: list[tuple[int, ...]] = []
+    for key in ("selected_claim_indexes", "selected_entity_indexes"):
+        indexes = selected[key]
+        if not isinstance(indexes, list) or any(
+            not isinstance(index, int) or isinstance(index, bool) for index in indexes
+        ):
+            raise ValueError(f"{key} must be integer indexes")
+        if len(indexes) != len(set(indexes)):
+            raise ValueError(f"{key} are duplicated")
+        decoded_indexes.append(tuple(indexes))
+    return decoded_indexes[0], decoded_indexes[1]
+
+
+class _ProseWireDecoder:
+    """Incrementally separate a validated selection header from plain prose."""
+
+    def __init__(self) -> None:
+        self._state: Literal["classifying", "header", "answer", "plain"] = (
+            "classifying"
+        )
+        self._buffer = ""
+        self._header_search_from = 0
+        self._selection: tuple[tuple[int, ...], tuple[int, ...]] | None = None
+        self._marker_candidate = ""
+
+    @property
+    def selection(self) -> tuple[tuple[int, ...], tuple[int, ...]] | None:
+        return self._selection
+
+    def _filter_private_markers(self, text: str, *, finish: bool = False) -> str:
+        safe_parts: list[str] = []
+        for char in text:
+            if not self._marker_candidate:
+                if char == "<":
+                    self._marker_candidate = char
+                else:
+                    safe_parts.append(char)
+                continue
+
+            candidate = self._marker_candidate + char
+            if any(marker.startswith(candidate) for marker in _PROSE_PRIVATE_MARKERS):
+                self._marker_candidate = candidate
+                if candidate in _PROSE_PRIVATE_MARKERS:
+                    self._marker_candidate = ""
+                    raise ValueError("LLM prose response contains a private marker")
+                continue
+
+            safe_parts.append(self._marker_candidate)
+            self._marker_candidate = "<" if char == "<" else ""
+            if char != "<":
+                safe_parts.append(char)
+
+        if finish and self._marker_candidate:
+            safe_parts.append(self._marker_candidate)
+            self._marker_candidate = ""
+        return "".join(safe_parts)
+
+    def _publish_plain(self) -> str:
+        self._state = "plain"
+        text = self._buffer
+        self._buffer = ""
+        return self._filter_private_markers(text)
+
+    @staticmethod
+    def _structured_object_kind(text: str) -> Literal["pending", "json", "plain"]:
+        body = text[1:].lstrip()
+        if not body:
+            return "pending"
+        return "json" if body[0] in {'"', "}"} else "plain"
+
+    def _consume_classification(self) -> str:
+        if self._buffer.startswith(_PROSE_SELECTION_MARKER):
+            self._buffer = self._buffer[len(_PROSE_SELECTION_MARKER) :]
+            self._state = "header"
+            self._header_search_from = 0
+            return self._consume_header()
+        if _PROSE_SELECTION_MARKER.startswith(self._buffer):
+            return ""
+
+        if self._buffer.startswith("{"):
+            object_kind = self._structured_object_kind(self._buffer)
+            if object_kind == "json":
+                raise ValueError(
+                    "LLM prose response uses an unsupported legacy JSON object"
+                )
+            if object_kind == "plain":
+                return self._publish_plain()
+        elif self._buffer.startswith("`"):
+            if "```".startswith(self._buffer):
+                return ""
+            if not self._buffer.startswith("```"):
+                return self._publish_plain()
+            fence_body = self._buffer[3:]
+            if "json".startswith(fence_body):
+                if fence_body == "json":
+                    raise ValueError(
+                        "LLM prose response uses an unsupported legacy JSON fence"
+                    )
+                return ""
+            if fence_body.startswith("json"):
+                raise ValueError(
+                    "LLM prose response uses an unsupported legacy JSON fence"
+                )
+            if fence_body and fence_body[0].isspace():
+                fenced_text = fence_body.lstrip()
+                if not fenced_text:
+                    return ""
+                if fenced_text.startswith("{"):
+                    object_kind = self._structured_object_kind(fenced_text)
+                    if object_kind == "json":
+                        raise ValueError(
+                            "LLM prose response uses an unsupported legacy JSON fence"
+                        )
+                    if object_kind == "pending":
+                        return ""
+                return self._publish_plain()
+            return self._publish_plain()
+        else:
+            return self._publish_plain()
+
+        if len(self._buffer) > _PROSE_CLASSIFICATION_PREFIX_LIMIT:
+            raise ValueError("LLM prose response has an incomplete structured prefix")
+        return ""
+
+    def _consume_header(self) -> str:
+        marker_index = self._buffer.find(
+            _PROSE_ANSWER_MARKER, self._header_search_from
+        )
+        if marker_index < 0:
+            confirmed_header_length = max(
+                0, len(self._buffer) - len(_PROSE_ANSWER_MARKER) + 1
+            )
+            if confirmed_header_length > _PROSE_SELECTION_HEADER_LIMIT:
+                raise ValueError("LLM prose selection header exceeds the size limit")
+            self._header_search_from = confirmed_header_length
+            return ""
+        if marker_index > _PROSE_SELECTION_HEADER_LIMIT:
+            raise ValueError("LLM prose selection header exceeds the size limit")
+
+        selection = _decode_prose_selection_header(
+            self._buffer[:marker_index].strip()
+        )
+        answer_start = marker_index + len(_PROSE_ANSWER_MARKER)
+        answer = self._buffer[answer_start:]
+        self._buffer = ""
+        self._header_search_from = 0
+        self._selection = selection
+        self._state = "answer"
+        return self._filter_private_markers(answer)
+
+    def feed(self, text: str) -> str:
+        if not text:
+            return ""
+        if self._state in {"answer", "plain"}:
+            return self._filter_private_markers(text)
+        if self._state == "classifying" and not self._buffer:
+            text = text.lstrip()
+            if not text:
+                return ""
+        self._buffer += text
+        if self._state == "classifying":
+            return self._consume_classification()
+        return self._consume_header()
+
+    def finish(self) -> str:
+        if self._state == "classifying":
+            if (
+                0 < len(self._buffer) < len(_PROSE_SELECTION_MARKER)
+                and _PROSE_SELECTION_MARKER.startswith(self._buffer)
+            ):
+                answer = self._publish_plain()
+            elif not self._buffer.strip():
+                answer = self._publish_plain()
+            else:
+                answer = self._consume_classification()
+            if self._state == "classifying":
+                raise ValueError("LLM prose response has an incomplete structured prefix")
+            if self._state == "header":
+                raise ValueError("LLM prose response is missing the answer marker")
+            return answer + self._filter_private_markers("", finish=True)
+        if self._state == "header":
+            raise ValueError("LLM prose response is missing the answer marker")
+        return self._filter_private_markers("", finish=True)
+
+
+class _ProseTextNormalizer:
+    """Publish only text that survives deterministic final normalization."""
+
+    _SENTENCE_ENDINGS = frozenset(".!?。！？")
+    _LINE_PREFIX_LIMIT = 16
+    _ROMAN_LIST_MARKER_CHARS = frozenset("IVXLCDMivxlcdm")
+
+    def __init__(
+        self,
+        *,
+        founder_prefix: str | None = None,
+        on_chunk: Callable[[str], None] | None = None,
+    ) -> None:
+        self._founder_prefix = founder_prefix or None
+        self._on_chunk = on_chunk
+        self._parts: list[str] = []
+        self._pending_whitespace: list[str] = []
+        self._founder_duplicate_candidate: list[str] = []
+        self._founder_prefix_added = False
+        self._founder_boundary_safe = True
+        self._line_prefix: list[str] = []
+        self._line_prefix_truncated = False
+        self._model_text_started = False
+        self._started = False
+
+    def _emit(self, text: str) -> None:
+        if not text:
+            return
+        self._parts.append(text)
+        if self._on_chunk is not None:
+            self._on_chunk(text)
+
+    def _period_follows_list_marker(self) -> bool:
+        if self._line_prefix_truncated:
+            return False
+        marker = "".join(self._line_prefix).strip()
+        if not marker:
+            return False
+        numeric_parts = marker.split(".")
+        if all(part.isdigit() for part in numeric_parts):
+            return True
+        if len(marker) == 1 and marker.isascii() and marker.isalpha():
+            return True
+        return len(marker) <= 6 and all(
+            char in self._ROMAN_LIST_MARKER_CHARS for char in marker
+        )
+
+    def _record_line_char(self, char: str) -> None:
+        if char in "\r\n":
+            self._line_prefix.clear()
+            self._line_prefix_truncated = False
+        elif not self._line_prefix_truncated:
+            if len(self._line_prefix) < self._LINE_PREFIX_LIMIT:
+                self._line_prefix.append(char)
+            else:
+                self._line_prefix_truncated = True
+
+    def _update_founder_boundary(self, char: str) -> None:
+        if char in "\r\n":
+            self._founder_boundary_safe = True
+        elif char.isspace():
+            pass
+        elif char in self._SENTENCE_ENDINGS:
+            self._founder_boundary_safe = not (
+                char == "." and self._period_follows_list_marker()
+            )
+        else:
+            self._founder_boundary_safe = False
+        self._record_line_char(char)
+
+    def _feed_stable_char(self, char: str) -> None:
+        if char.isspace():
+            self._pending_whitespace.append(char)
+            self._update_founder_boundary(char)
+            return
+        if not self._model_text_started:
+            self._pending_whitespace.clear()
+            if self._founder_prefix_added:
+                self._emit("\n\n")
+            self._model_text_started = True
+        elif self._pending_whitespace:
+            self._emit("".join(self._pending_whitespace))
+            self._pending_whitespace.clear()
+        self._emit(char)
+        self._update_founder_boundary(char)
+
+    def _flush_founder_candidate(self) -> None:
+        candidate = tuple(self._founder_duplicate_candidate)
+        self._founder_duplicate_candidate.clear()
+        for candidate_char in candidate:
+            self._feed_stable_char(candidate_char)
+
+    def _feed_founder_char(self, char: str) -> None:
+        founder_prefix = self._founder_prefix
+        if founder_prefix is None:
+            self._feed_stable_char(char)
+            return
+        if not self._founder_duplicate_candidate:
+            if not (
+                self._founder_boundary_safe and char == founder_prefix[0]
+            ):
+                self._feed_stable_char(char)
+                return
+        self._founder_duplicate_candidate.append(char)
+        candidate = "".join(self._founder_duplicate_candidate)
+        if not founder_prefix.startswith(candidate):
+            self._flush_founder_candidate()
+        elif candidate == founder_prefix:
+            self._founder_duplicate_candidate.clear()
+            self._founder_boundary_safe = True
+
+    def feed(self, text: str) -> None:
+        for char in text:
+            if "\ud800" <= char <= "\udfff":
+                raise ValueError(
+                    "LLM prose response has an unpaired UTF-16 surrogate"
+                )
+            if not self._started:
+                if char.isspace():
+                    continue
+                self._started = True
+                if self._founder_prefix is not None:
+                    self._founder_prefix_added = True
+                    self._emit(self._founder_prefix)
+            self._feed_founder_char(char)
+
+    def finish(self) -> str:
+        self._flush_founder_candidate()
+        self._pending_whitespace.clear()
+        return "".join(self._parts)
+
+
+def _founder_prefix(result: Any, active_anchor: Any, displayed_set: Any) -> str | None:
+    founder_claims = tuple(
+        claim
+        for claim in getattr(result, "claims", ())
+        if getattr(claim, "predicate", None) == "professor_company_role"
+        and "参与创立" in str(getattr(claim, "text", ""))
+    )
+    if len(founder_claims) != 1:
+        return None
+
+    handles = (() if active_anchor is None else (active_anchor,)) + (
+        () if displayed_set is None else tuple(displayed_set.handles)
+    )
+    handle_by_id: dict[str, Any] = {}
+    for handle in handles:
+        handle_id = getattr(handle, "canonical_id", None) or getattr(
+            handle, "handle_id", None
+        )
+        if isinstance(handle_id, str) and handle_id:
+            handle_by_id.setdefault(handle_id, handle)
+
+    bound_handles = tuple(
+        handle_by_id[handle_id]
+        for handle_id in dict.fromkeys(
+            getattr(founder_claims[0], "subject_handle_ids", ())
+        )
+        if handle_id in handle_by_id
+    )
+    professors = tuple(
+        handle for handle in bound_handles if handle.domain == "professor"
+    )
+    companies = tuple(handle for handle in bound_handles if handle.domain == "company")
+    if len(professors) != 1 or len(companies) != 1:
+        return None
+    professor_name = getattr(professors[0], "display_name", None)
+    company_name = getattr(companies[0], "display_name", None)
+    if not isinstance(professor_name, str) or not professor_name:
+        return None
+    if not isinstance(company_name, str) or not company_name:
+        return None
+    return f"{professor_name}参与创立了{company_name}。"
+
+
+def _reject_truncated_prose_finish_reason(choice: Any) -> None:
+    finish_reason = getattr(choice, "finish_reason", None)
+    if finish_reason in {"length", "content_filter"}:
+        raise ValueError(
+            f"LLM prose response rejected provider finish_reason={finish_reason}"
+        )
 
 
 class _OpenAIProseRenderer:
@@ -3713,7 +4152,7 @@ class _OpenAIProseRenderer:
                 ],
             }
         payload = {
-            "prompt_version": "canonical-v2-prose-v13",
+            "prompt_version": "canonical-v2-prose-v14",
             "user_question": getattr(result, "original_query", None),
             "question_frame": {
                 "subject_scope": frame.subject_scope,
@@ -3812,10 +4251,13 @@ class _OpenAIProseRenderer:
                         "输入中的 enumeration_coverage 是列表类问题的枚举核算；当其 mode 为 "
                         "representative 时，用自然语言交代覆盖度（如“共找到 N 个相关结果，"
                         "以上为其中有代表性的 M 个”），严禁暗示已穷尽全部结果。"
-                        "只返回一个JSON对象：answer_text是最终中文答案；selected_claim_indexes列出答案"
-                        "实际使用的全部claim_index（包括用于排除候选的反证）；selected_entity_indexes只"
-                        "列出答案最终确认或推荐的主体entity_index，不要列入被排除或仅作为背景的主体。"
-                        "不得输出JSON之外的文本。"
+                        "严格按以下 wire 格式返回：\n<|canonical_v2_selection_v1|>\n"
+                        "一个恰好只含 selected_claim_indexes 和 selected_entity_indexes 两个字段的"
+                        "JSON对象\n<|canonical_v2_answer_v1|>\n最终中文答案。"
+                        "selected_claim_indexes列出答案实际使用的全部claim_index（包括用于排除候选的"
+                        "反证）；selected_entity_indexes只列出答案最终确认或推荐的主体entity_index，"
+                        "不要列入被排除或仅作为背景的主体。答案 marker 后是未经JSON编码的纯文本，"
+                        "可以多行。禁止Markdown代码围栏、旧版JSON答案外壳、marker之外的附加文本。"
                     ),
                 },
                 {
@@ -3830,6 +4272,85 @@ class _OpenAIProseRenderer:
             handle_ids,
             active_anchor,
             displayed_set,
+        )
+
+    @staticmethod
+    def _selection_ids(
+        *,
+        selection: tuple[tuple[int, ...], tuple[int, ...]],
+        claims: tuple[Any, ...],
+        candidate_handles: list[Any],
+        handle_ids: list[str | None],
+    ) -> tuple[tuple[str, ...], tuple[str, ...]]:
+        claim_indexes, entity_indexes = selection
+        if len(claim_indexes) != len(set(claim_indexes)) or any(
+            index < 1 or index > len(claims) for index in claim_indexes
+        ):
+            raise ValueError("selected_claim_indexes are out of range or duplicated")
+        if len(entity_indexes) != len(set(entity_indexes)) or any(
+            index < 1
+            or index > len(candidate_handles)
+            or handle_ids[index - 1] is None
+            for index in entity_indexes
+        ):
+            raise ValueError("selected_entity_indexes are out of range or duplicated")
+        return (
+            tuple(cast(str, claims[index - 1].claim_id) for index in claim_indexes),
+            tuple(cast(str, handle_ids[index - 1]) for index in entity_indexes),
+        )
+
+    @classmethod
+    def _finalize_response(
+        cls,
+        *,
+        answer_text: str,
+        selection: tuple[tuple[int, ...], tuple[int, ...]] | None,
+        claims: tuple[Any, ...],
+        candidate_handles: list[Any],
+        handle_ids: list[str | None],
+    ) -> str | ProseSynthesisResult:
+        if not answer_text:
+            raise ValueError("LLM prose response is empty")
+        if selection is None:
+            return answer_text
+        selected_claim_ids, selected_handle_ids = cls._selection_ids(
+            selection=selection,
+            claims=claims,
+            candidate_handles=candidate_handles,
+            handle_ids=handle_ids,
+        )
+        return ProseSynthesisResult(
+            answer_text=answer_text,
+            selected_claim_ids=selected_claim_ids,
+            selected_handle_ids=selected_handle_ids,
+        )
+
+    def _parse_response(
+        self,
+        result: Any,
+        *,
+        content: Any,
+        claims: tuple[Any, ...],
+        candidate_handles: list[Any],
+        handle_ids: list[str | None],
+        active_anchor: Any,
+        displayed_set: Any,
+    ) -> str | ProseSynthesisResult:
+        """Decode and normalize one synchronous provider response."""
+        if not isinstance(content, str) or not content.strip():
+            raise ValueError("LLM prose response is empty")
+        decoder = _ProseWireDecoder()
+        normalizer = _ProseTextNormalizer(
+            founder_prefix=_founder_prefix(result, active_anchor, displayed_set)
+        )
+        normalizer.feed(decoder.feed(content))
+        normalizer.feed(decoder.finish())
+        return self._finalize_response(
+            answer_text=normalizer.finish(),
+            selection=decoder.selection,
+            claims=claims,
+            candidate_handles=candidate_handles,
+            handle_ids=handle_ids,
         )
 
     def __call__(self, result: Any) -> str | ProseSynthesisResult:
@@ -3851,109 +4372,35 @@ class _OpenAIProseRenderer:
             extra_body=self._extra_body,
         )
         choices = getattr(response, "choices", ())
+        choice = None if not choices else choices[0]
+        _reject_truncated_prose_finish_reason(choice)
         content = (
             None
-            if not choices
-            else getattr(getattr(choices[0], "message", None), "content", None)
+            if choice is None
+            else getattr(getattr(choice, "message", None), "content", None)
         )
-        if not isinstance(content, str) or not content.strip():
-            raise ValueError("LLM prose response is empty")
-        rendered = content.strip()
-        structured: ProseSynthesisResult | None = None
-        json_text = rendered
-        fenced = re.fullmatch(r"```(?:json)?\s*(.*?)\s*```", rendered, re.S)
-        if fenced is not None:
-            json_text = fenced.group(1)
-        try:
-            selected = json.loads(json_text)
-        except json.JSONDecodeError:
-            selected = None
-        if isinstance(selected, dict):
-            answer_text = selected.get("answer_text")
-            claim_indexes = selected.get("selected_claim_indexes")
-            entity_indexes = selected.get("selected_entity_indexes")
-            if not isinstance(answer_text, str) or not answer_text.strip():
-                raise ValueError("structured prose answer_text is empty")
-            if not isinstance(claim_indexes, list) or any(
-                not isinstance(index, int) or isinstance(index, bool)
-                for index in claim_indexes
-            ):
-                raise ValueError("selected_claim_indexes must be integer indexes")
-            if not isinstance(entity_indexes, list) or any(
-                not isinstance(index, int) or isinstance(index, bool)
-                for index in entity_indexes
-            ):
-                raise ValueError("selected_entity_indexes must be integer indexes")
-            if len(claim_indexes) != len(set(claim_indexes)) or any(
-                index < 1 or index > len(claims) for index in claim_indexes
-            ):
-                raise ValueError("selected_claim_indexes are out of range or duplicated")
-            if len(entity_indexes) != len(set(entity_indexes)) or any(
-                index < 1
-                or index > len(candidate_handles)
-                or handle_ids[index - 1] is None
-                for index in entity_indexes
-            ):
-                raise ValueError("selected_entity_indexes are out of range or duplicated")
-            structured = ProseSynthesisResult(
-                answer_text=answer_text.strip(),
-                selected_claim_ids=tuple(
-                    claims[index - 1].claim_id for index in claim_indexes
-                ),
-                selected_handle_ids=tuple(
-                    cast(str, handle_ids[index - 1]) for index in entity_indexes
-                ),
-            )
-            rendered = structured.answer_text
-        founder_supported = any(
-            claim.predicate == "professor_company_role" and "参与创立" in claim.text
-            for claim in result.claims
+        return self._parse_response(
+            result,
+            content=content,
+            claims=claims,
+            candidate_handles=candidate_handles,
+            handle_ids=handle_ids,
+            active_anchor=active_anchor,
+            displayed_set=displayed_set,
         )
-        if founder_supported and "参与创立" not in rendered:
-            handles = (() if active_anchor is None else (active_anchor,)) + (
-                () if displayed_set is None else displayed_set.handles
-            )
-            professor_name = next(
-                (
-                    handle.display_name
-                    for handle in handles
-                    if handle.domain == "professor"
-                ),
-                None,
-            )
-            company_name = next(
-                (
-                    handle.display_name
-                    for handle in handles
-                    if handle.domain == "company"
-                ),
-                None,
-            )
-            if professor_name is not None and company_name is not None:
-                rendered = f"{professor_name}参与创立了{company_name}。\n\n{rendered}"
-        if structured is not None:
-            return structured.model_copy(update={"answer_text": rendered})
-        return rendered
 
     def stream(
         self, result: Any, *, on_chunk: Callable[[str], None]
-    ) -> str:
-        """Token-level variant of ``__call__`` for SSE answer streaming.
-
-        The prose model answers as a JSON shell
-        (``{"answer_text": "<content>", ...}``); this strips the shell
-        incrementally as deltas arrive so ``on_chunk`` only ever receives the
-        plain answer text (JSON escapes decoded: ``\\n`` → newline,
-        ``\\"`` → quote, ``\\\\`` → backslash, ``\\t`` → tab, plus the
-        remaining JSON escapes). The state machine survives arbitrary delta
-        boundaries: the ``"answer_text":"`` prefix may be split anywhere, an
-        escape backslash may be the last character of a delta, and ``\\uXXXX``
-        hex digits may span deltas. A malformed shell raises ``ValueError`` so
-        the caller's retry/degrade path handles it like a synchronous parse
-        failure; the returned text equals ``json.loads``-style ``answer_text``
-        that ``__call__`` would produce.
-        """
-        messages, *_ = self._chat_request(result)
+    ) -> str | ProseSynthesisResult:
+        """Incrementally decode the selection header and publish plain answer text."""
+        (
+            messages,
+            claims,
+            candidate_handles,
+            handle_ids,
+            active_anchor,
+            displayed_set,
+        ) = self._chat_request(result)
         completion = self._client.chat.completions.create(
             model=self._model,
             temperature=0,
@@ -3962,86 +4409,49 @@ class _OpenAIProseRenderer:
             extra_body=self._extra_body,
             stream=True,
         )
-        parts: list[str] = []
-        prefix_window = ""
-        pending_escape = False
-        hex_digits: str | None = None
-        gap_seen_key = False
-        in_content = False
-        closed = False
+        decoder = _ProseWireDecoder()
+        normalizer = _ProseTextNormalizer(
+            founder_prefix=_founder_prefix(result, active_anchor, displayed_set),
+            on_chunk=on_chunk,
+        )
+        selection_validated = False
         for chunk in completion:
             choices = getattr(chunk, "choices", ())
             if not choices:
                 continue
-            delta = getattr(choices[0], "delta", None)
+            choice = choices[0]
+            _reject_truncated_prose_finish_reason(choice)
+            delta = getattr(choice, "delta", None)
             text = None if delta is None else getattr(delta, "content", None)
             if not isinstance(text, str) or not text:
                 continue
-            for char in text:
-                if closed:
-                    break
-                if not in_content:
-                    if not gap_seen_key:
-                        # Search for the key anywhere (skips a fenced ```json
-                        # preamble); keep only a sliding window the key's length.
-                        prefix_window = (prefix_window + char)[-len(_ANSWER_TEXT_KEY):]
-                        if prefix_window == _ANSWER_TEXT_KEY:
-                            gap_seen_key = True
-                        continue
-                    # Gap between the key and the value: tolerate any whitespace
-                    # and the colon (the model emits "answer_text": " with
-                    # spacing), then expect the opening quote.
-                    if char in " \t\r\n":
-                        continue
-                    if char == ":":
-                        continue
-                    if char == '"':
-                        in_content = True
-                        continue
-                    raise ValueError(
-                        "LLM prose stream has a malformed answer_text key"
-                    )
-                if hex_digits is not None:
-                    if char not in _HEX_DIGITS:
-                        raise ValueError(
-                            "LLM prose stream has a malformed \\u escape"
-                        )
-                    hex_digits += char
-                    if len(hex_digits) == 4:
-                        decoded = chr(int(hex_digits, 16))
-                        hex_digits = None
-                        on_chunk(decoded)
-                        parts.append(decoded)
-                    continue
-                if pending_escape:
-                    pending_escape = False
-                    if char == "u":
-                        hex_digits = ""
-                        continue
-                    decoded = _JSON_SINGLE_CHAR_ESCAPES.get(char)
-                    if decoded is None:
-                        raise ValueError(
-                            "LLM prose stream has an unsupported JSON escape"
-                        )
-                    on_chunk(decoded)
-                    parts.append(decoded)
-                    continue
-                if char == "\\":
-                    pending_escape = True
-                    continue
-                if char == '"':
-                    closed = True
-                    continue
-                on_chunk(char)
-                parts.append(char)
-        if not gap_seen_key:
-            raise ValueError("LLM prose response has no answer_text field")
-        if not closed:
-            raise ValueError("LLM prose response has an unterminated answer_text")
-        rendered = "".join(parts).strip()
-        if not rendered:
-            raise ValueError("LLM prose response is empty")
-        return rendered
+            answer_chunk = decoder.feed(text)
+            if decoder.selection is not None and not selection_validated:
+                self._selection_ids(
+                    selection=decoder.selection,
+                    claims=claims,
+                    candidate_handles=candidate_handles,
+                    handle_ids=handle_ids,
+                )
+                selection_validated = True
+            normalizer.feed(answer_chunk)
+
+        final_chunk = decoder.finish()
+        if decoder.selection is not None and not selection_validated:
+            self._selection_ids(
+                selection=decoder.selection,
+                claims=claims,
+                candidate_handles=candidate_handles,
+                handle_ids=handle_ids,
+            )
+        normalizer.feed(final_chunk)
+        return self._finalize_response(
+            answer_text=normalizer.finish(),
+            selection=decoder.selection,
+            claims=claims,
+            candidate_handles=candidate_handles,
+            handle_ids=handle_ids,
+        )
 
     def warm(self) -> None:
         self._client.chat.completions.create(
@@ -4094,8 +4504,6 @@ class _EnvironmentProseRenderer:
                 float(os.getenv("CHAT_LLM_TIMEOUT_SECONDS", "30")),
             )
             renderer = self._configured_renderer()
-            future = _PROSE_RENDER_EXECUTOR.submit(renderer, result)
-            return future.result(timeout=timeout)
         except (
             ConnectionError,
             FutureTimeoutError,
@@ -4107,9 +4515,35 @@ class _EnvironmentProseRenderer:
         ) as exc:
             raise TimeoutError("LLM prose synthesis is unavailable") from exc
 
-    def stream(self, result: Any, *, on_chunk: Callable[[str], None]) -> str:
+        try:
+            future = _PROSE_RENDER_EXECUTOR.submit(renderer, result)
+            return future.result(timeout=timeout)
+        except (
+            ConnectionError,
+            FutureTimeoutError,
+            OpenAIError,
+            OSError,
+            RuntimeError,
+        ) as exc:
+            raise TimeoutError("LLM prose synthesis is unavailable") from exc
+
+    def stream(
+        self, result: Any, *, on_chunk: Callable[[str], None]
+    ) -> str | ProseSynthesisResult:
         try:
             renderer = self._configured_renderer()
+        except (
+            ConnectionError,
+            FutureTimeoutError,
+            OpenAIError,
+            OSError,
+            RuntimeError,
+            TypeError,
+            ValueError,
+        ) as exc:
+            raise TimeoutError("LLM prose synthesis is unavailable") from exc
+
+        try:
             # The stream runs on the caller thread instead of the executor:
             # only the provider client's per-read timeout applies, so a stream
             # with continuous output is never cut by a whole-answer deadline.
@@ -4122,8 +4556,6 @@ class _EnvironmentProseRenderer:
             OpenAIError,
             OSError,
             RuntimeError,
-            TypeError,
-            ValueError,
         ) as exc:
             raise TimeoutError("LLM prose synthesis is unavailable") from exc
 
@@ -4348,6 +4780,17 @@ def _answer_selector(
             seen_objects.add(seen_key)
             handle = handle_by_evidence.get(item.evidence_id)
             display_name = handle.display_name if handle is not None else item.object_id
+            claim_text = _semantic_text(item, display_name)
+            # Content-farm/login-wall dumps are never answer content: dropping
+            # them here keeps both the prose prompt small (large prompts made
+            # the renderer fail its wire protocol) and the deterministic
+            # fallback readable.
+            if claim_text_is_raw_dump(claim_text):
+                continue
+            if _concept_theme_filter_active(
+                request.query
+            ) and _concept_off_topic_claim(claim_text):
+                continue
             if handle is not None:
                 handle_id = (
                     handle.canonical_id
@@ -4362,7 +4805,7 @@ def _answer_selector(
                         f"claim:serving:{request.turn_id}:"
                         f"{hashlib.sha256(item.evidence_id.encode()).hexdigest()[:16]}"
                     ),
-                    text=_semantic_text(item, display_name),
+                    text=claim_text,
                     subject_id=binding.subject_id,
                     predicate=binding.predicate,
                     value=binding.value,

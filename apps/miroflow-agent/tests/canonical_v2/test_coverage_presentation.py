@@ -142,13 +142,18 @@ class _Completions:
             choices=(
                 SimpleNamespace(
                     message=SimpleNamespace(
-                        content=json.dumps(
-                            {
-                                "answer_text": self._answer_text,
-                                "selected_claim_indexes": [1],
-                                "selected_entity_indexes": [],
-                            },
-                            ensure_ascii=False,
+                        content=(
+                            "<|canonical_v2_selection_v1|>\n"
+                            + json.dumps(
+                                {
+                                    "selected_claim_indexes": [1],
+                                    "selected_entity_indexes": [],
+                                },
+                                ensure_ascii=False,
+                                separators=(",", ":"),
+                            )
+                            + "\n<|canonical_v2_answer_v1|>\n"
+                            + self._answer_text
                         )
                     )
                 ),

@@ -4,7 +4,8 @@ from datetime import UTC, datetime
 import hashlib
 from importlib import import_module
 from pathlib import Path
-from typing import Any
+from types import SimpleNamespace
+from typing import Any, Callable
 
 import pytest
 
@@ -21,6 +22,14 @@ def _answer_module() -> Any:
 
 def _read_module() -> Any:
     return import_module(READ_TARGET)
+
+
+def _acknowledging_append(items: list[str]) -> Callable[[str], bool]:
+    def append(text: str) -> bool:
+        items.append(text)
+        return True
+
+    return append
 
 
 def _snapshot(module: Any, token: str) -> Any:
@@ -1126,9 +1135,11 @@ def test_prose_renderer_cannot_reintroduce_audit_values_or_omit_material_gap() -
     gap_sentence = "保留证据不足以支持问题中的 2026 年当前营收。"
     assert digest not in hostile.answer_text
     assert profile.evidence_id not in hostile.answer_text
-    # The degraded fallback is an honest notice, never a raw claim listing:
-    # the hostile renderer's text is fully replaced, not partially echoed.
-    assert hostile.answer_text.startswith("回答生成暂时不可用，请稍后重试。")
+    # The hostile renderer's text is fully discarded, while the bounded
+    # server-owned fallback keeps the already validated claim and material gap.
+    assert hostile.answer_text.startswith(f"- {semantic_claim.text}")
+    assert gap_sentence in hostile.answer_text
+    assert "回答生成暂时不可用" not in hostile.answer_text
     assert hostile.render_mode == "deterministic_fallback"
     assert any(
         limitation.code == "prose_synthesis_failed"
@@ -1205,9 +1216,10 @@ def test_prose_audit_value_matching_uses_token_boundaries_for_short_ids() -> Non
         prose_renderer=lambda _: f"{safe_prose} Audit token: {profile.evidence_id}.",
     ).answer(request)
     assert exposed.render_mode == "deterministic_fallback"
-    # The degraded fallback never echoes the renderer's text (which carried
-    # the audit token); it is an honest notice instead.
-    assert exposed.answer_text.startswith("回答生成暂时不可用，请稍后重试。")
+    # The unsafe renderer text is discarded; the fallback comes only from the
+    # already validated server-owned claim text.
+    assert exposed.answer_text == f"- {semantic_claim.text}"
+    assert "Audit token:" not in exposed.answer_text
     assert any(
         limitation.code == "prose_synthesis_failed"
         and limitation.failure_kind == "unsafe_output"
@@ -2323,15 +2335,15 @@ def test_prose_renderer_stream_is_duck_typed_only_when_progress_is_set() -> None
         answer_selector=selector,
         prose_renderer=stream_renderer,
     )
-    stream_module.prose_progress = forwarded.append
+    stream_module.prose_progress = _acknowledging_append(forwarded)
     streamed = stream_module.answer(request)
     assert stream_renderer.stream_calls == ["stream"]
     assert forwarded == ["深圳", "科创", "助手"]
     assert streamed.render_mode == "prose_renderer"
     assert streamed.answer_text == "深圳科创助手"
 
-    # The stream path keeps the retry-once semantics: two timeouts degrade to
-    # the honest fallback notice, never a raw claim listing.
+    # The stream path keeps the retry-once semantics: when both attempts time
+    # out before publication, it returns the bounded grounded fallback.
     class _TimingOutStreamRenderer:
         def __init__(self) -> None:
             self.calls = 0
@@ -2352,5 +2364,806 @@ def test_prose_renderer_stream_is_duck_typed_only_when_progress_is_set() -> None
     degraded = failed_module.answer(request)
     assert failing_renderer.calls == 2
     assert degraded.render_mode == "deterministic_fallback"
-    assert degraded.answer_text.startswith("回答生成暂时不可用，请稍后重试。")
-    assert "Evidence supports Robotics Co." not in degraded.answer_text
+    assert degraded.answer_text == f"- {semantic_claim.text}"
+    assert any(
+        limitation.code == "prose_synthesis_failed"
+        and limitation.failure_kind == "timeout"
+        for limitation in degraded.limitations
+    )
+
+
+def test_prose_stream_retries_once_before_any_output() -> None:
+    answer_module = _answer_module()
+    request = _turn(
+        answer_module,
+        session_id="session:s12g:retry-before-output",
+        turn_id="turn:s12g:retry-before-output",
+        evidence_set=_evidence_set(_read_module(), query="介绍深圳科创"),
+    )
+
+    class _RetryingRenderer:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def __call__(self, value: Any) -> str:
+            return "SYNC_RENDERED"
+
+        def stream(self, value: Any, *, on_chunk: Any) -> str:
+            self.calls += 1
+            if self.calls == 1:
+                raise TimeoutError("failed before output")
+            on_chunk("第二次尝试")
+            return "第二次尝试"
+
+    renderer = _RetryingRenderer()
+    forwarded: list[str] = []
+    stream_module = answer_module.create_ephemeral_knowledge_answer(
+        prose_renderer=renderer,
+    )
+    stream_module.prose_progress = _acknowledging_append(forwarded)
+
+    result = stream_module.answer(request)
+
+    assert renderer.calls == 2
+    assert forwarded == ["第二次尝试"]
+    assert result.render_mode == "prose_renderer"
+    assert result.answer_text == "第二次尝试"
+
+
+def test_unacknowledged_stream_mismatch_rolls_back_session() -> None:
+    answer_module = _answer_module()
+    read_module = _read_module()
+    session_id = "session:s12g:unacknowledged-stream-mismatch"
+    failed_handle = _canonical_handle(
+        read_module,
+        canonical_id="company:s12g:unacknowledged-stream-mismatch",
+        evidence_id="evidence:s12g:unacknowledged-stream-mismatch",
+    )
+    request = _turn(
+        answer_module,
+        session_id=session_id,
+        turn_id="turn:s12g:unacknowledged-stream-mismatch",
+        evidence_set=_evidence_set(
+            read_module,
+            query="介绍失败后不应保留的企业",
+            handles=(failed_handle,),
+        ),
+    )
+    proposal = _constructed_answer_proposal(
+        answer_module,
+        request,
+        displayed_handle_ids=(failed_handle.canonical_id,),
+    )
+
+    class _MismatchedRenderer:
+        def __call__(self, value: Any) -> str:
+            return "SYNC_RENDERED"
+
+        def stream(self, value: Any, *, on_chunk: Any) -> str:
+            on_chunk("x")
+            return "y"
+
+    answer = answer_module.create_ephemeral_knowledge_answer(
+        answer_selector=lambda _: proposal,
+        prose_renderer=_MismatchedRenderer(),
+    )
+    answer.prose_progress = lambda _text: False
+    answer._sessions[session_id] = answer_module._SessionState(release_id=RELEASE_ID)
+
+    with pytest.raises(ValueError, match="prose stream differs from its final answer"):
+        answer.answer(request)
+
+    restored = answer._sessions[session_id]
+    assert restored.handles == {}
+    assert restored.active_anchor is None
+    assert restored.displayed_result_set is None
+    assert restored.result_sets == {}
+
+
+@pytest.mark.parametrize(
+    "progress_result",
+    (
+        pytest.param(False, id="false"),
+        pytest.param(1, id="integer_one"),
+    ),
+)
+def test_prose_stream_aborts_each_unacknowledged_timeout_attempt(
+    progress_result: object,
+) -> None:
+    answer_module = _answer_module()
+    request = _turn(
+        answer_module,
+        session_id="session:s12g:unacknowledged-timeouts",
+        turn_id="turn:s12g:unacknowledged-timeouts",
+        evidence_set=_evidence_set(_read_module(), query="介绍深圳科创"),
+    )
+
+    class _UnacknowledgedRenderer:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def __call__(self, value: Any) -> str:
+            return "SYNC_RENDERED"
+
+        def stream(self, value: Any, *, on_chunk: Any) -> str:
+            self.calls += 1
+            on_chunk(f"attempt-{self.calls}")
+            raise TimeoutError(f"attempt {self.calls} timed out")
+
+    renderer = _UnacknowledgedRenderer()
+    forwarded: list[str] = []
+    aborts: list[str] = []
+    stream_module = answer_module.create_ephemeral_knowledge_answer(
+        prose_renderer=renderer,
+    )
+
+    def progress(text: str) -> object:
+        forwarded.append(text)
+        return progress_result
+
+    stream_module.prose_progress = progress
+    stream_module.prose_progress_abort = lambda: aborts.append("abort")
+
+    result = stream_module.answer(request)
+
+    assert renderer.calls == 2
+    assert forwarded == ["attempt-1", "attempt-2"]
+    assert aborts == ["abort", "abort"]
+    assert result.render_mode == "deterministic_fallback"
+    assert "attempt-1" not in result.answer_text
+    assert "attempt-2" not in result.answer_text
+
+
+@pytest.mark.parametrize(
+    ("failure_type", "callback_fails"),
+    (
+        pytest.param(TimeoutError, False, id="provider-timeout"),
+        pytest.param(ValueError, False, id="final-parse"),
+        pytest.param(ValueError, True, id="progress-callback"),
+        pytest.param(TimeoutError, True, id="progress-callback-timeout"),
+    ),
+)
+def test_visible_prose_stream_failure_is_not_retried_or_committed(
+    failure_type: type[Exception],
+    callback_fails: bool,
+) -> None:
+    answer_module = _answer_module()
+    request = _turn(
+        answer_module,
+        session_id=f"session:s12g:visible-failure:{failure_type.__name__}:{callback_fails}",
+        turn_id=f"turn:s12g:visible-failure:{failure_type.__name__}:{callback_fails}",
+        evidence_set=_evidence_set(_read_module(), query="介绍深圳科创"),
+    )
+
+    class _VisibleFailingRenderer:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def __call__(self, value: Any) -> str:
+            return "SYNC_RENDERED"
+
+        def stream(self, value: Any, *, on_chunk: Any) -> str:
+            self.calls += 1
+            on_chunk(f"attempt-{self.calls}")
+            if not callback_fails:
+                raise failure_type("failed after output")
+            return "UNREACHABLE"
+
+    renderer = _VisibleFailingRenderer()
+    forwarded: list[str] = []
+    stream_module = answer_module.create_ephemeral_knowledge_answer(
+        prose_renderer=renderer,
+    )
+
+    def progress(text: str) -> bool:
+        forwarded.append(text)
+        if callback_fails:
+            raise failure_type("progress stopped")
+        return True
+
+    stream_module.prose_progress = progress
+
+    with pytest.raises(failure_type):
+        stream_module.answer(request)
+
+    assert renderer.calls == 1
+    assert forwarded == ["attempt-1"]
+    assert request.session_id not in stream_module._sessions
+
+
+def test_environment_prose_stream_invalid_output_is_not_retried_as_timeout() -> None:
+    answer_module = _answer_module()
+    serving_module = import_module(
+        "src.data_agents.canonical_v2.knowledge_serving_isolated"
+    )
+    calls: list[dict[str, object]] = []
+    published: list[str] = []
+    malformed_shell = (
+        '{"selected_claim_indexes":[],"selected_entity_indexes":[]}'
+    )
+
+    class _Completions:
+        def create(self, **kwargs: object) -> object:
+            calls.append(kwargs)
+            return (
+                SimpleNamespace(
+                    choices=(
+                        SimpleNamespace(
+                            delta=SimpleNamespace(content=malformed_shell),
+                        ),
+                    )
+                ),
+            )
+
+    openai_renderer = serving_module._OpenAIProseRenderer(
+        client=SimpleNamespace(
+            chat=SimpleNamespace(completions=_Completions()),
+        ),
+        model="recorded-chat-model",
+        extra_body={},
+    )
+    environment_renderer = serving_module._EnvironmentProseRenderer()
+    environment_renderer._renderer = openai_renderer
+    answer = answer_module.create_ephemeral_knowledge_answer(
+        prose_renderer=environment_renderer,
+    )
+    answer.prose_progress = _acknowledging_append(published)
+    request = _turn(
+        answer_module,
+        session_id="session:s12g:malformed-environment-stream",
+        turn_id="turn:s12g:malformed-environment-stream",
+        evidence_set=_evidence_set(_read_module(), query="介绍深圳科创"),
+    )
+
+    result = answer.answer(request)
+
+    assert len(calls) == 1
+    assert published == []
+    assert result.render_mode == "deterministic_fallback"
+    assert any(
+        limitation.code == "prose_synthesis_failed"
+        and limitation.stage == "prose"
+        and limitation.failure_kind == "invalid_output"
+        for limitation in result.limitations
+    )
+
+
+def test_environment_prose_sync_invalid_output_is_not_retried_as_timeout() -> None:
+    answer_module = _answer_module()
+    serving_module = import_module(
+        "src.data_agents.canonical_v2.knowledge_serving_isolated"
+    )
+    calls: list[dict[str, object]] = []
+    malformed_wire = (
+        "<|canonical_v2_selection_v1|>\n"
+        '{"selected_claim_indexes":[]}\n'
+        "<|canonical_v2_answer_v1|>\n不得公开"
+    )
+
+    class _Completions:
+        def create(self, **kwargs: object) -> object:
+            calls.append(kwargs)
+            return SimpleNamespace(
+                choices=(
+                    SimpleNamespace(
+                        message=SimpleNamespace(content=malformed_wire),
+                    ),
+                )
+            )
+
+    openai_renderer = serving_module._OpenAIProseRenderer(
+        client=SimpleNamespace(
+            chat=SimpleNamespace(completions=_Completions()),
+        ),
+        model="recorded-chat-model",
+        extra_body={},
+    )
+    environment_renderer = serving_module._EnvironmentProseRenderer()
+    environment_renderer._renderer = openai_renderer
+    answer = answer_module.create_ephemeral_knowledge_answer(
+        prose_renderer=environment_renderer,
+    )
+    request = _turn(
+        answer_module,
+        session_id="session:s12g:malformed-environment-sync",
+        turn_id="turn:s12g:malformed-environment-sync",
+        evidence_set=_evidence_set(_read_module(), query="介绍深圳科创"),
+    )
+
+    result = answer.answer(request)
+
+    assert len(calls) == 1
+    assert result.render_mode == "deterministic_fallback"
+    assert any(
+        limitation.code == "prose_synthesis_failed"
+        and limitation.stage == "prose"
+        and limitation.failure_kind == "invalid_output"
+        for limitation in result.limitations
+    )
+
+
+@pytest.mark.parametrize(
+    ("marker_kind", "marker"),
+    (
+        ("evidence-id", "evidence:s12g:dynamic-stream-guard"),
+        ("claim-id", "claim:s12g:dynamic-stream-guard"),
+        ("continuation-id", "continuation:s12g:dynamic-stream-guard"),
+        ("continuation-reason", "evidence_gap"),
+        ("continuation-operation", "targeted_evidence_search"),
+    ),
+)
+def test_structured_only_stream_guard_rejects_every_dynamic_marker_split(
+    marker_kind: str,
+    marker: str,
+) -> None:
+    answer_module = _answer_module()
+    read_module = _read_module()
+    company_id = "company:s12g:dynamic-stream-guard"
+    evidence_id = "evidence:s12g:dynamic-stream-guard"
+    claim_id = "claim:s12g:dynamic-stream-guard"
+    continuation_id = "continuation:s12g:dynamic-stream-guard"
+    profile = _item(
+        read_module,
+        evidence_id=evidence_id,
+        object_id=company_id,
+        subject_id=company_id,
+        predicate="preferred_name",
+        value="Robotics Co",
+        status="accepted",
+        snippet="The accepted Company name is Robotics Co.",
+    )
+    candidate = read_module.ContinuationCandidate(
+        candidate_id=continuation_id,
+        reason="evidence_gap",
+        label="Search for targeted evidence",
+        operation="targeted_evidence_search",
+        target_kind="current_handle",
+        target_handle_ids=(company_id,),
+        constraint_pairs=(),
+        relation_type=None,
+        coverage_state=None,
+        evidence_ids=(evidence_id,),
+        available=True,
+    )
+    safe_prefix = "公开回答已经开始，以下内容可安全展示。"
+
+    for split in range(len(marker) + 1):
+        request = _turn(
+            answer_module,
+            session_id=f"session:s12g:stream-guard:{marker_kind}:{split}",
+            turn_id=f"turn:s12g:stream-guard:{marker_kind}:{split}",
+            evidence_set=_evidence_set(
+                read_module,
+                query="介绍 Robotics Co",
+                items=(profile,),
+                continuation_candidates=(candidate,),
+            ),
+        )
+        semantic_claim = _claim(
+            answer_module,
+            claim_id=claim_id,
+            text="Robotics Co 由已接受的本地公司档案证据支持。",
+            subject_id=company_id,
+            predicate="preferred_name",
+            value="Robotics Co",
+            evidence_ids=(evidence_id,),
+            status="accepted",
+        )
+
+        class _UnsafeStreamingRenderer:
+            def __init__(self) -> None:
+                self.calls = 0
+                self.chunks = (
+                    safe_prefix + marker[:split],
+                    marker[split:],
+                )
+
+            def __call__(self, value: Any) -> str:
+                return "SYNC_RENDERED"
+
+            def stream(self, value: Any, *, on_chunk: Any) -> str:
+                self.calls += 1
+                for chunk in self.chunks:
+                    on_chunk(chunk)
+                return "".join(self.chunks)
+
+        renderer = _UnsafeStreamingRenderer()
+        published: list[str] = []
+        stream_module = answer_module.create_ephemeral_knowledge_answer(
+            answer_selector=lambda value: _answer_proposal(
+                answer_module,
+                value,
+                claim=semantic_claim,
+            ),
+            prose_renderer=renderer,
+        )
+        stream_module.prose_progress = _acknowledging_append(published)
+
+        with pytest.raises(ValueError):
+            stream_module.answer(request)
+
+        assert renderer.calls == 1, split
+        assert "".join(published) == safe_prefix, split
+        assert request.session_id not in stream_module._sessions, split
+
+
+def test_stream_guard_preserves_safe_markdown_url_and_immediate_progress() -> None:
+    answer_module = _answer_module()
+    read_module = _read_module()
+    evidence_id = "evidence:s12g:safe-stream-guard"
+    company_id = "company:s12g:safe-stream-guard"
+    profile = _item(
+        read_module,
+        evidence_id=evidence_id,
+        object_id=company_id,
+        subject_id=company_id,
+        predicate="preferred_name",
+        value="Robotics Co",
+        status="accepted",
+        snippet="The accepted Company name is Robotics Co.",
+    )
+    candidate = read_module.ContinuationCandidate(
+        candidate_id="continuation:s12g:safe-stream-guard",
+        reason="evidence_gap",
+        label="Search for targeted evidence",
+        operation="targeted_evidence_search",
+        target_kind="current_handle",
+        target_handle_ids=(company_id,),
+        constraint_pairs=(),
+        relation_type=None,
+        coverage_state=None,
+        evidence_ids=(evidence_id,),
+        available=True,
+    )
+    request = _turn(
+        answer_module,
+        session_id="session:s12g:safe-stream-guard",
+        turn_id="turn:s12g:safe-stream-guard",
+        evidence_set=_evidence_set(
+            read_module,
+            query="介绍 Robotics Co",
+            items=(profile,),
+            continuation_candidates=(candidate,),
+        ),
+    )
+    semantic_claim = _claim(
+        answer_module,
+        claim_id="claim:s12g:safe-stream-guard",
+        text="Robotics Co 由已接受的本地公司档案证据支持。",
+        subject_id=company_id,
+        predicate="preferred_name",
+        value="Robotics Co",
+        evidence_ids=(evidence_id,),
+        status="accepted",
+    )
+    chunks = (
+        "# 深圳科创\n\n这是 **公开回答**，详情见 "
+        "[官网](https://example.test/product?q=robot)。",
+        "\n\n- 第一项\n- 第二项\n",
+        "结尾保留普通文本 evidence_ga",
+    )
+    published: list[str] = []
+
+    class _SafeStreamingRenderer:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def __call__(self, value: Any) -> str:
+            return "SYNC_RENDERED"
+
+        def stream(self, value: Any, *, on_chunk: Any) -> str:
+            self.calls += 1
+            on_chunk(chunks[0])
+            assert "".join(published) == chunks[0]
+            for chunk in chunks[1:]:
+                on_chunk(chunk)
+            return "".join(chunks)
+
+    renderer = _SafeStreamingRenderer()
+    stream_module = answer_module.create_ephemeral_knowledge_answer(
+        answer_selector=lambda value: _answer_proposal(
+            answer_module,
+            value,
+            claim=semantic_claim,
+        ),
+        prose_renderer=renderer,
+    )
+    stream_module.prose_progress = _acknowledging_append(published)
+
+    result = stream_module.answer(request)
+
+    assert renderer.calls == 1
+    assert "".join(published) == "".join(chunks)
+    assert result.answer_text == "".join(chunks)
+    assert result.render_mode == "prose_renderer"
+
+
+def test_stream_guard_rechecks_artificial_eos_before_fatal_marker_splits() -> None:
+    answer_module = _answer_module()
+    read_module = _read_module()
+    short_marker = "ambiguity"
+    long_marker = "evidence:s12g:adjacent-fatal:" + ("x" * 32)
+    company_id = "company:s12g:adjacent-fatal"
+    profile = _item(
+        read_module,
+        evidence_id=long_marker,
+        object_id=company_id,
+        subject_id=company_id,
+        predicate="preferred_name",
+        value="Robotics Co",
+        status="accepted",
+        snippet="The accepted Company name is Robotics Co.",
+    )
+    candidate = read_module.ContinuationCandidate(
+        candidate_id="continuation:s12g:adjacent-fatal",
+        reason=short_marker,
+        label="Switch candidate",
+        operation="switch_candidate",
+        target_kind="current_handle",
+        target_handle_ids=(),
+        constraint_pairs=(),
+        relation_type=None,
+        coverage_state=None,
+        evidence_ids=(long_marker,),
+        available=True,
+    )
+    claim = _claim(
+        answer_module,
+        claim_id="claim:s12g:adjacent-fatal",
+        text="Robotics Co 由已接受的本地公司档案证据支持。",
+        subject_id=company_id,
+        predicate="preferred_name",
+        value="Robotics Co",
+        evidence_ids=(long_marker,),
+        status="accepted",
+    )
+    safe_prefix = "这是可公开的安全前缀。"
+    unsafe_suffix = short_marker + long_marker
+
+    for split in range(len(unsafe_suffix) + 1):
+        request = _turn(
+            answer_module,
+            session_id=f"session:s12g:adjacent-fatal:{split}",
+            turn_id=f"turn:s12g:adjacent-fatal:{split}",
+            evidence_set=_evidence_set(
+                read_module,
+                query="介绍 Robotics Co",
+                items=(profile,),
+                continuation_candidates=(candidate,),
+            ),
+        )
+
+        class _AdjacentUnsafeRenderer:
+            def __init__(self) -> None:
+                self.calls = 0
+
+            def __call__(self, value: Any) -> str:
+                return "SYNC_RENDERED"
+
+            def stream(self, value: Any, *, on_chunk: Any) -> str:
+                self.calls += 1
+                chunks = (
+                    safe_prefix + unsafe_suffix[:split],
+                    unsafe_suffix[split:],
+                )
+                for chunk in chunks:
+                    on_chunk(chunk)
+                return "".join(chunks)
+
+        renderer = _AdjacentUnsafeRenderer()
+        published: list[str] = []
+        answer = answer_module.create_ephemeral_knowledge_answer(
+            answer_selector=lambda value: _answer_proposal(
+                answer_module,
+                value,
+                claim=claim,
+            ),
+            prose_renderer=renderer,
+        )
+        answer.prose_progress = _acknowledging_append(published)
+
+        with pytest.raises(ValueError):
+            answer.answer(request)
+
+        assert renderer.calls == 1, split
+        assert "".join(published) == safe_prefix, split
+        assert request.session_id not in answer._sessions, split
+
+
+def test_stream_guard_retains_revalidated_pending_suffix_until_resolution() -> None:
+    answer_module = _answer_module()
+    guard_type = answer_module._StructuredOnlyProseStreamGuard
+    short_marker = "ambiguity"
+    long_marker = "evidence:s12g:pending-adjacent:" + ("x" * 32)
+    marker_prefix = long_marker[:20]
+    safe_prefix = "公开前缀。"
+    first_chunk = safe_prefix + short_marker + marker_prefix
+
+    fatal_guard = guard_type(frozenset((short_marker, long_marker)))
+    fatal_published: list[str] = []
+    fatal_guard.feed(first_chunk, publish=fatal_published.append)
+    assert "".join(fatal_published) == safe_prefix
+    with pytest.raises(ValueError):
+        fatal_guard.feed(
+            long_marker[len(marker_prefix) :],
+            publish=fatal_published.append,
+        )
+    assert "".join(fatal_published) == safe_prefix
+
+    safe_guard = guard_type(frozenset((short_marker, long_marker)))
+    safe_published: list[str] = []
+    safe_guard.feed(first_chunk, publish=safe_published.append)
+    assert "".join(safe_published) == safe_prefix
+    divergent_suffix = "X，随后是普通公开文本。"
+    safe_guard.feed(divergent_suffix, publish=safe_published.append)
+    safe_guard.flush(publish=safe_published.append)
+    assert "".join(safe_published) == first_chunk + divergent_suffix
+
+
+def test_stream_guard_rechecks_true_eos_and_preserves_safe_adjacency() -> None:
+    answer_module = _answer_module()
+    guard_type = answer_module._StructuredOnlyProseStreamGuard
+    short_marker = "ambiguity"
+    long_marker = "evidence:s12g:flush-adjacent:" + ("x" * 32)
+    marker_prefix = long_marker[:20]
+    safe_prefix = "公开前缀。"
+
+    fatal_guard = guard_type(frozenset((short_marker, long_marker)))
+    fatal_published: list[str] = []
+    fatal_guard.feed(
+        safe_prefix + short_marker,
+        publish=fatal_published.append,
+    )
+    assert "".join(fatal_published) == safe_prefix
+    with pytest.raises(ValueError):
+        fatal_guard.flush(publish=fatal_published.append)
+    assert "".join(fatal_published) == safe_prefix
+
+    safe_guard = guard_type(frozenset((short_marker, long_marker)))
+    safe_published: list[str] = []
+    safe_text = safe_prefix + short_marker + marker_prefix
+    safe_guard.feed(safe_text, publish=safe_published.append)
+    assert "".join(safe_published) == safe_prefix
+    safe_guard.flush(publish=safe_published.append)
+    assert "".join(safe_published) == safe_text
+
+
+def test_traversed_path_marker_is_guarded_for_every_stream_split() -> None:
+    answer_module = _answer_module()
+    read_module = _read_module()
+    marker = "professor_to_company"
+    safe_prefix = "这是可公开的 traversal 回答前缀。"
+
+    for split in range(len(marker) + 1):
+        session_id = f"session:s12g:traversed-path:{split}"
+        request = _turn(
+            answer_module,
+            session_id=session_id,
+            turn_id=f"turn:s12g:traversed-path:{split}",
+            evidence_set=_evidence_set(
+                read_module,
+                query="他参与创立了哪些企业？",
+            ),
+        )
+
+        class _PathEchoRenderer:
+            def __init__(self) -> None:
+                self.calls = 0
+
+            def __call__(self, value: Any) -> str:
+                return "SYNC_RENDERED"
+
+            def stream(self, value: Any, *, on_chunk: Any) -> str:
+                self.calls += 1
+                assert value.context_receipt.traversed_path_ids == (marker,)
+                chunks = (safe_prefix + marker[:split], marker[split:])
+                for chunk in chunks:
+                    on_chunk(chunk)
+                return "".join(chunks)
+
+        renderer = _PathEchoRenderer()
+        published: list[str] = []
+        answer = answer_module.create_ephemeral_knowledge_answer(
+            prose_renderer=renderer,
+        )
+        answer._sessions[session_id] = answer_module._SessionState(
+            release_id=RELEASE_ID,
+            traversed_path_ids=(marker,),
+        )
+        answer.prose_progress = _acknowledging_append(published)
+
+        with pytest.raises(ValueError):
+            answer.answer(request)
+
+        assert renderer.calls == 1, split
+        assert "".join(published) == safe_prefix, split
+        restored = answer._sessions[session_id]
+        assert restored.traversed_path_ids == (marker,), split
+        assert restored.evidence_by_id == {}, split
+        assert restored.result_sets == {}, split
+
+
+def test_deterministic_fallback_renders_readable_points_not_raw_dumps() -> None:
+    """Deterministic/fallback rendering must never publish raw search dumps:
+    source-locator tails are stripped (except for link-seeking renders),
+    document-mill page text is dropped, and each grounded point is capped.
+    Regression for T15 光基多维力传感 raw-dump answers (2026-08-06)."""
+    module = _answer_module()
+    junk_claim = module.MaterialClaim(
+        claim_id="claim:s12g:t15-taodocs",
+        text=(
+            "光学传感器涉及的光学原理、效应.ppt_淘豆网：淘豆网 首页 分类 我的"
+            "日阅读TOP20 热门文档；来源：https://www.taodocs.com/p-123879375.html"
+        ),
+        evidence_ids=("evidence:s12g:t15-taodocs",),
+        source_natures=("current_web",),
+        synthesis=False,
+    )
+    web_claim = module.MaterialClaim(
+        claim_id="claim:s12g:t15-web",
+        text="王学谦：清华大学自动化系教师主页；来源：https://example.test/wang-xueqian",
+        evidence_ids=("evidence:s12g:t15-web",),
+        source_natures=("current_web",),
+        synthesis=False,
+    )
+    long_claim = module.MaterialClaim(
+        claim_id="claim:s12g:t15-long",
+        text="摘要：" + "长" * 200,
+        evidence_ids=("evidence:s12g:t15-long",),
+        source_natures=("local",),
+        synthesis=False,
+    )
+
+    assert (
+        module._clean_deterministic_claim_text(
+            junk_claim.text, keep_source_tails=False
+        )
+        is None
+    )
+    login_wall_claim = module.MaterialClaim(
+        claim_id="claim:s12g:t15-login-wall",
+        text=(
+            "具身智能技术科普之数据采集技术路线：请您登录后查看更多专业优质内容。"
+            "登录知乎 · 意见反馈"
+        ),
+        evidence_ids=("evidence:s12g:t15-login-wall",),
+        source_natures=("current_web",),
+        synthesis=False,
+    )
+    assert module.claim_text_is_raw_dump(login_wall_claim.text)
+    assert (
+        module._clean_deterministic_claim_text(
+            login_wall_claim.text, keep_source_tails=False
+        )
+        is None
+    )
+    assert not module.claim_text_is_raw_dump(web_claim.text)
+    assert module._clean_deterministic_claim_text(
+        web_claim.text, keep_source_tails=False
+    ) == "王学谦：清华大学自动化系教师主页"
+    assert module._clean_deterministic_claim_text(
+        web_claim.text, keep_source_tails=True
+    ) == web_claim.text
+    long_cleaned = module._clean_deterministic_claim_text(
+        long_claim.text, keep_source_tails=False
+    )
+    assert long_cleaned is not None
+    assert len(long_cleaned) <= module._DETERMINISTIC_CLAIM_TEXT_LIMIT + len("……")
+
+    answer = module._deterministic_answer_text(
+        (junk_claim, web_claim, long_claim),
+        required_sentences=("补充说明。",),
+    )
+    assert "来源：" not in answer
+    assert "淘豆网" not in answer
+    assert "- 王学谦：清华大学自动化系教师主页" in answer
+    assert answer.endswith("补充说明。")
+
+    link_answer = module._deterministic_answer_text(
+        (web_claim,),
+        keep_source_tails=True,
+    )
+    assert "https://example.test/wang-xueqian" in link_answer
+
+    all_junk = module._deterministic_answer_text((junk_claim,))
+    assert "暂无可直接确认的公开信息要点。" in all_junk

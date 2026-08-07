@@ -488,10 +488,13 @@ class KnowledgeAnswer(ABC):
 
     # Optional token-level prose progress sink. The chat adapter assigns this
     # on the session instance around a streaming turn; it is never a
-    # constructor argument. Renderers exposing ``stream(result, *, on_chunk)``
+    # constructor argument. The sink returns ``True`` only after the text is
+    # public, and its abort hook discards buffered downstream state belonging
+    # to a failed attempt. Renderers exposing ``stream(result, *, on_chunk)``
     # are duck-typed into the streaming path when this is set; plain callable
     # renderers keep the synchronous path untouched.
-    prose_progress: Callable[[str], None] | None = None
+    prose_progress: Callable[[str], bool] | None = None
+    prose_progress_abort: Callable[[], None] | None = None
 
     @abstractmethod
     def answer(self, turn: TurnRequest) -> TurnResult:
@@ -1257,41 +1260,100 @@ def _append_required_sentences(text: str, sentences: tuple[str, ...]) -> str:
 
 _DETERMINISTIC_ANSWER_MAX_CLAIMS = 10
 _DETERMINISTIC_ANSWER_MAX_CHARS = 2000
+# Deterministic/fallback rendering must never publish raw search dumps:
+# source-locator tails (；来源：https://…) and document-mill page text
+# (淘豆网/原创力文档/豆丁网/…) are stripped from each grounded point.
+# Link-seeking questions keep the tails because the verified locator IS the
+# answer there.
+_DETERMINISTIC_SOURCE_TAIL_MARKERS = ("；来源：", " 来源：", "\n来源：")
+_DETERMINISTIC_RAW_DUMP_MARKERS = (
+    "淘豆网",
+    "原创力文档",
+    "原创力文",
+    "豆丁网",
+    "道客巴巴",
+    "百度文库",
+    "book118",
+    # Generic content-farm / login-wall / download-bait markers: pages that
+    # carry them are never usable answer content, whatever the site name.
+    "登录后查看更多",
+    "立即下载",
+    "开通VIP",
+    "上传人",
+    "文档编号",
+    "搜题",
+)
 
 
-def _prose_fallback_message(claims: tuple[MaterialClaim, ...]) -> str:
-    """Honest degraded copy when prose synthesis exhausts its retries.
+def claim_text_is_raw_dump(text: str) -> bool:
+    """True when a claim text is a content-farm/login-wall page dump that must
+    never reach the prose prompt or the deterministic fallback."""
+    return any(marker in text for marker in _DETERMINISTIC_RAW_DUMP_MARKERS)
+# Cap each rendered point above the construction limits (web snippets are
+# cut at 240 chars, local fields at 160) so a grounded abstract survives the
+# deterministic rendering while multi-field claims stay bounded.
+_DETERMINISTIC_CLAIM_TEXT_LIMIT = 200
+_LINK_SEEKING_QUERY_MARKERS = ("链接", "网址", "官网", "url", "URL")
 
-    The answer must stay an LLM-synthesized whole; a raw claim listing is
-    never presented as an answer.  The user is told synthesis is temporarily
-    unavailable and how much was retrieved, nothing more.
-    """
-    if not claims:
-        return "回答生成暂时不可用，请稍后重试。"
-    return (
-        "回答生成暂时不可用，请稍后重试。"
-        f"（已检索到 {len(claims)} 条相关信息）"
-    )
+
+def _split_deterministic_source_tail(text: str) -> tuple[str, str]:
+    """Split a claim text into its descriptive head and source-locator tail."""
+    for marker in _DETERMINISTIC_SOURCE_TAIL_MARKERS:
+        index = text.rfind(marker)
+        if index > 0:
+            return text[:index], text[index:]
+    return text, ""
+
+
+def _clean_deterministic_claim_text(
+    text: str,
+    *,
+    keep_source_tails: bool,
+) -> str | None:
+    """One readable grounded point, or None for raw page dumps."""
+    head, tail = _split_deterministic_source_tail(text)
+    head = head.strip()
+    if not keep_source_tails:
+        tail = ""
+    if not head or claim_text_is_raw_dump(head):
+        return None
+    if len(head) + len(tail) > _DETERMINISTIC_CLAIM_TEXT_LIMIT:
+        head = (
+            head[: max(_DETERMINISTIC_CLAIM_TEXT_LIMIT - len(tail), 0)].rstrip()
+            + "……"
+        )
+    return f"{head}{tail}"
 
 
 def _deterministic_answer_text(
     claims: tuple[MaterialClaim, ...],
     *,
     required_sentences: tuple[str, ...] = (),
+    keep_source_tails: bool = False,
 ) -> str:
     if not claims:
         answer = "No supported material claims are available."
     else:
-        lines = [f"- {claim.text}" for claim in claims]
-        truncated = len(lines) > _DETERMINISTIC_ANSWER_MAX_CLAIMS
-        answer = "\n".join(lines[:_DETERMINISTIC_ANSWER_MAX_CLAIMS])
-        if truncated:
-            answer += (
-                f"\n……（其余 {len(lines) - _DETERMINISTIC_ANSWER_MAX_CLAIMS} 条"
-                "候选省略）"
+        lines: list[str] = []
+        for claim in claims:
+            cleaned = _clean_deterministic_claim_text(
+                claim.text,
+                keep_source_tails=keep_source_tails,
             )
-        if len(answer) > _DETERMINISTIC_ANSWER_MAX_CHARS:
-            answer = answer[:_DETERMINISTIC_ANSWER_MAX_CHARS] + "……"
+            if cleaned is not None:
+                lines.append(f"- {cleaned}")
+        if not lines:
+            answer = "暂无可直接确认的公开信息要点。"
+        else:
+            truncated = len(lines) > _DETERMINISTIC_ANSWER_MAX_CLAIMS
+            answer = "\n".join(lines[:_DETERMINISTIC_ANSWER_MAX_CLAIMS])
+            if truncated:
+                answer += (
+                    f"\n……（其余 {len(lines) - _DETERMINISTIC_ANSWER_MAX_CLAIMS} 条"
+                    "候选省略）"
+                )
+            if len(answer) > _DETERMINISTIC_ANSWER_MAX_CHARS:
+                answer = answer[:_DETERMINISTIC_ANSWER_MAX_CHARS] + "……"
     return _append_required_sentences(answer, required_sentences)
 
 
@@ -1311,6 +1373,7 @@ def _structured_only_public_values(
                 values.add(option.source_candidate_id)
     receipt = result.context_receipt
     if receipt is not None:
+        values.update(receipt.traversed_path_ids)
         values.update(
             value
             for value in (
@@ -1333,6 +1396,133 @@ def _prose_contains_structured_only_value(
         _text_contains_structured_only_value(prose, value)
         for value in _structured_only_public_values(result, evidence_set)
     )
+
+
+_STRUCTURED_ONLY_TOKEN_CHARS = frozenset(
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_:-"
+)
+
+
+class _StructuredOnlyProseStreamGuard:
+    """Publish only text proven safe against this turn's structured values."""
+
+    def __init__(self, values: frozenset[str]) -> None:
+        self._substring_values = tuple(
+            value for value in values if ":" in value or len(value) >= 16
+        )
+        self._bounded_values = tuple(
+            value for value in values if ":" not in value and len(value) < 16
+        )
+        self._tail = ""
+        self._tail_left_is_token = False
+
+    @staticmethod
+    def _is_token_char(value: str) -> bool:
+        return value in _STRUCTURED_ONLY_TOKEN_CHARS
+
+    def _left_is_token(self, data: str, start: int) -> bool:
+        if start == 0:
+            return self._tail_left_is_token
+        return self._is_token_char(data[start - 1])
+
+    def _unsafe_start(self, data: str, *, end_is_boundary: bool) -> int | None:
+        earliest: int | None = None
+        for value in self._substring_values:
+            start = data.find(value)
+            if start >= 0 and (earliest is None or start < earliest):
+                earliest = start
+        for value in self._bounded_values:
+            search_from = 0
+            while True:
+                start = data.find(value, search_from)
+                if start < 0:
+                    break
+                end = start + len(value)
+                left_is_boundary = not self._left_is_token(data, start)
+                right_is_boundary = (
+                    end_is_boundary
+                    if end == len(data)
+                    else not self._is_token_char(data[end])
+                )
+                if left_is_boundary and right_is_boundary:
+                    if earliest is None or start < earliest:
+                        earliest = start
+                    break
+                search_from = start + 1
+        return earliest
+
+    def _pending_start(self, data: str) -> int | None:
+        earliest: int | None = None
+        for value in self._substring_values:
+            max_prefix = min(len(value) - 1, len(data))
+            for prefix_length in range(max_prefix, 0, -1):
+                if data.endswith(value[:prefix_length]):
+                    start = len(data) - prefix_length
+                    if earliest is None or start < earliest:
+                        earliest = start
+                    break
+        for value in self._bounded_values:
+            max_prefix = min(len(value), len(data))
+            for prefix_length in range(max_prefix, 0, -1):
+                if not data.endswith(value[:prefix_length]):
+                    continue
+                start = len(data) - prefix_length
+                if not self._left_is_token(data, start):
+                    if earliest is None or start < earliest:
+                        earliest = start
+                    break
+        return earliest
+
+    def _safe_prefix_end(self, data: str, requested_end: int) -> int:
+        end = requested_end
+        while end:
+            unsafe_start = self._unsafe_start(
+                data[:end],
+                end_is_boundary=True,
+            )
+            if unsafe_start is None:
+                return end
+            end = unsafe_start
+        return 0
+
+    def feed(self, text: str, *, publish: Callable[[str], None]) -> None:
+        if not text:
+            return
+        data = self._tail + text
+        unsafe_start = self._unsafe_start(data, end_is_boundary=False)
+        if unsafe_start is not None:
+            safe_end = self._safe_prefix_end(data, unsafe_start)
+            self._tail = ""
+            if safe_end:
+                publish(data[:safe_end])
+            raise ValueError("prose stream failed safety validation")
+
+        pending_start = self._pending_start(data)
+        if pending_start is None:
+            self._tail = ""
+            self._tail_left_is_token = self._is_token_char(data[-1])
+            publish(data)
+            return
+
+        safe_end = self._safe_prefix_end(data, pending_start)
+        self._tail = data[safe_end:]
+        self._tail_left_is_token = self._left_is_token(data, safe_end)
+        if safe_end:
+            publish(data[:safe_end])
+
+    def flush(self, *, publish: Callable[[str], None]) -> None:
+        data = self._tail
+        self._tail = ""
+        if not data:
+            return
+        unsafe_start = self._unsafe_start(data, end_is_boundary=True)
+        if unsafe_start is not None:
+            safe_end = self._safe_prefix_end(data, unsafe_start)
+            if safe_end:
+                publish(data[:safe_end])
+            raise ValueError("prose stream failed safety validation")
+        self._tail_left_is_token = self._is_token_char(data[-1])
+        publish(data)
 
 
 def _handle_id(handle: EntityHandle) -> str:
@@ -1632,6 +1822,58 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
         session_snapshot = (
             deepcopy(self._sessions[session_key]) if session_existed else None
         )
+
+        def rollback_session() -> None:
+            if session_existed:
+                assert session_snapshot is not None
+                self._sessions[session_key] = session_snapshot
+            else:
+                self._sessions.pop(session_key, None)
+
+        def rollback_plain_prose_context(
+            context: ContextReceipt | None,
+        ) -> ContextReceipt | None:
+            # An unframed renderer response has no final entity selection. Restore
+            # the server-owned snapshot and rebuild the receipt from that state;
+            # never retain a selector-only current-turn result set.
+            rollback_session()
+            if context is None:
+                return None
+            restored_state = self._sessions.get(session_key)
+            if restored_state is None:
+                return ContextReceipt(transition_kind=context.transition_kind)
+
+            resolved = context.resolved_referent
+            restored_handle_ids = frozenset(restored_state.handles)
+            if resolved is not None and (
+                resolved.kind not in {"active_anchor", "displayed_member", "result_set"}
+                or not set(resolved.handle_ids) <= restored_handle_ids
+                or (
+                    resolved.result_set_id is not None
+                    and resolved.result_set_id not in restored_state.result_sets
+                )
+            ):
+                resolved = None
+            resolved_evidence_ids = (
+                ()
+                if resolved is None
+                else tuple(
+                    dict.fromkeys(
+                        evidence_id
+                        for handle_id in resolved.handle_ids
+                        for evidence_id in restored_state.handles[
+                            handle_id
+                        ].evidence_ids
+                    )
+                )
+            )
+            return self._context_receipt(
+                restored_state,
+                resolved_referent=resolved,
+                resolved_evidence_ids=resolved_evidence_ids,
+                transition_kind=context.transition_kind,
+            )
+
         advance = self._advance_session(request, proposal)
         if advance.suppress_claims:
             grounded_claims: tuple[MaterialClaim, ...] = ()
@@ -1714,11 +1956,7 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
                 # attributed fallback answers through the normal pipeline and
                 # keeps the turn's session state (prose scope commits and
                 # follow-up turns depend on it).
-                if session_existed:
-                    assert session_snapshot is not None
-                    self._sessions[session_key] = session_snapshot
-                else:
-                    self._sessions.pop(session_key, None)
+                rollback_session()
                 return self._degraded(
                     request,
                     reason="unsupported_material_claim",
@@ -1773,7 +2011,13 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             limitations=answer_limitations,
         )
         if not advance.suppress_claims:
-            base_answer_text = _deterministic_answer_text(claims)
+            base_answer_text = _deterministic_answer_text(
+                claims,
+                keep_source_tails=any(
+                    marker in request.query
+                    for marker in _LINK_SEEKING_QUERY_MARKERS
+                ),
+            )
         elif (
             advance.response_mode == "clarification_only"
             and advance.continuation_offer is not None
@@ -1790,6 +2034,16 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             base_answer_text,
             (*gap_sentences, *_enumeration_coverage_sentences(coverage)),
         )
+        # Suggested followups come only from the validated, executable
+        # continuation options (spec grounded-progressive-answer: suggestions
+        # SHALL reflect available eligible relations and SHALL NOT assert a
+        # relationship that has not been retrieved or shown to be available).
+        suggested_followups = (
+            tuple(option.label for option in advance.continuation_offer.options)
+            if advance.continuation_offer is not None
+            and advance.continuation_offer.options
+            else ()
+        )
         result = TurnResult(
             session_id=request.session_id,
             turn_id=request.turn_id,
@@ -1797,6 +2051,7 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             original_query=request.query,
             answer_text=answer_text,
             claims=claims,
+            suggested_followups=suggested_followups,
             limitations=answer_limitations,
             claim_evidence_map=mappings,
             citations=citations,
@@ -1814,24 +2069,71 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
         )
         if self._prose_renderer is None:
             return result
-        # The answer must be an LLM-synthesized whole, never a raw claim
-        # listing: a transient synthesis timeout is retried once before the
-        # deterministic fallback is ever considered.
+        # Normal answers use the prose renderer. Before any answer text is
+        # published, renderer failures may reuse the bounded, server-owned
+        # grounded result; after publication they must abort without fallback.
         rendered = None
         synthesis_error: BaseException | None = None
+        answer_text_published = False
+        progress_failed = False
+        published_parts: list[str] = []
+        structured_only_values = _structured_only_public_values(
+            result,
+            request.evidence_set,
+        )
+
+        def abort_prose_attempt() -> None:
+            if self.prose_progress_abort is not None:
+                self.prose_progress_abort()
+
         try:
             for _attempt in range(2):
+                attempt_parts: list[str] = []
+                progress_failed = False
+
+                def publish_prose_chunk(chunk: str) -> None:
+                    nonlocal answer_text_published, progress_failed
+                    attempt_parts.append(chunk)
+                    assert self.prose_progress is not None
+                    try:
+                        acknowledged = self.prose_progress(chunk)
+                    except BaseException:
+                        progress_failed = True
+                        raise
+                    if acknowledged is True:
+                        answer_text_published = True
+
                 try:
                     stream_fn = getattr(self._prose_renderer, "stream", None)
                     if stream_fn is not None and self.prose_progress is not None:
-                        rendered = stream_fn(result, on_chunk=self.prose_progress)
+                        stream_guard = _StructuredOnlyProseStreamGuard(
+                            structured_only_values
+                        )
+
+                        def guard_prose_chunk(chunk: str) -> None:
+                            stream_guard.feed(chunk, publish=publish_prose_chunk)
+
+                        rendered = stream_fn(result, on_chunk=guard_prose_chunk)
+                        stream_guard.flush(publish=publish_prose_chunk)
                     else:
                         rendered = self._prose_renderer(result)
-                    break
-                except TimeoutError as exc:
-                    synthesis_error = exc
+                except BaseException as exc:
+                    abort_prose_attempt()
+                    if (
+                        isinstance(exc, TimeoutError)
+                        and not answer_text_published
+                        and not progress_failed
+                    ):
+                        synthesis_error = exc
+                        continue
+                    raise
+                published_parts = attempt_parts
+                break
+            if rendered is None and published_parts:
+                abort_prose_attempt()
+                raise ValueError("prose stream has no final answer")
             if rendered is None and isinstance(synthesis_error, TimeoutError):
-                fallback_text = _prose_fallback_message(claims)
+                fallback_text = result.answer_text
                 prose_limitation = AnswerLimitation(
                     code="prose_synthesis_failed",
                     material=True,
@@ -1852,6 +2154,9 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
                     }
                 )
         except (TypeError, ValueError, ValidationError):
+            if answer_text_published or progress_failed:
+                rollback_session()
+                raise
             prose_limitation = AnswerLimitation(
                 code="prose_synthesis_failed",
                 material=True,
@@ -1870,80 +2175,102 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
                     ),
                 }
             )
-        rendered_text = (
-            rendered.answer_text
-            if isinstance(rendered, ProseSynthesisResult)
-            else rendered
-            if isinstance(rendered, str)
-            else None
-        )
-        if isinstance(rendered_text, str) and _prose_contains_structured_only_value(
-            rendered_text,
-            result=result,
-            evidence_set=request.evidence_set,
-        ):
-            fallback_text = _prose_fallback_message(claims)
-            prose_limitation = AnswerLimitation(
-                code="prose_synthesis_failed",
-                material=True,
-                stage="prose",
-                failure_kind="unsafe_output",
+        except BaseException:
+            rollback_session()
+            raise
+
+        try:
+            rendered_text = (
+                rendered.answer_text
+                if isinstance(rendered, ProseSynthesisResult)
+                else rendered
+                if isinstance(rendered, str)
+                else None
             )
-            return result.model_copy(
-                update={
-                    "answer_text": fallback_text,
-                    "limitations": (*result.limitations, prose_limitation),
-                    "render_mode": "deterministic_fallback",
-                    "fallback_sha256": _canonical_sha256(
-                        {
-                            "answer_text": fallback_text,
-                            "claim_ids": [claim.claim_id for claim in claims],
-                        }
-                    ),
-                }
-            )
-        if isinstance(rendered, ProseSynthesisResult):
-            try:
-                return self._apply_prose_synthesis(
-                    request=request,
-                    result=result,
-                    synthesis=rendered,
-                    # The prose renderer already owns insufficiency disclosure
-                    # (coverage sentence, unnamed unconfirmed); the
-                    # deterministic gap sentence is evidence jargon and stays
-                    # only in deterministic/fallback text.
-                    gap_sentences=(),
-                )
-            except (TypeError, ValueError, ValidationError):
+            if published_parts and (
+                not isinstance(rendered_text, str)
+                or rendered_text != "".join(published_parts)
+            ):
+                raise ValueError("prose stream differs from its final answer")
+            if isinstance(rendered_text, str) and _prose_contains_structured_only_value(
+                rendered_text,
+                result=result,
+                evidence_set=request.evidence_set,
+            ):
+                if answer_text_published:
+                    raise ValueError("published prose stream failed safety validation")
+                abort_prose_attempt()
+                fallback_text = result.answer_text
                 prose_limitation = AnswerLimitation(
                     code="prose_synthesis_failed",
                     material=True,
                     stage="prose",
-                    failure_kind="invalid_selection",
+                    failure_kind="unsafe_output",
                 )
                 return result.model_copy(
                     update={
+                        "answer_text": fallback_text,
                         "limitations": (*result.limitations, prose_limitation),
                         "render_mode": "deterministic_fallback",
                         "fallback_sha256": _canonical_sha256(
                             {
-                                "answer_text": answer_text,
+                                "answer_text": fallback_text,
                                 "claim_ids": [claim.claim_id for claim in claims],
                             }
                         ),
                     }
                 )
-        if isinstance(rendered, str):
-            return result.model_copy(
-                update={
-                    # Same split as the structured prose path: prose owns
-                    # insufficiency wording; deterministic gap sentences stay
-                    # out of prose-rendered answers.
-                    "answer_text": rendered,
-                    "render_mode": "prose_renderer",
-                }
-            )
-        return result
+            if isinstance(rendered, ProseSynthesisResult):
+                try:
+                    return self._apply_prose_synthesis(
+                        request=request,
+                        result=result,
+                        synthesis=rendered,
+                        # The prose renderer already owns insufficiency disclosure
+                        # (coverage sentence, unnamed unconfirmed); the
+                        # deterministic gap sentence is evidence jargon and stays
+                        # only in deterministic/fallback text.
+                        gap_sentences=(),
+                    )
+                except (TypeError, ValueError, ValidationError):
+                    if answer_text_published:
+                        raise
+                    abort_prose_attempt()
+                    prose_limitation = AnswerLimitation(
+                        code="prose_synthesis_failed",
+                        material=True,
+                        stage="prose",
+                        failure_kind="invalid_selection",
+                    )
+                    return result.model_copy(
+                        update={
+                            "limitations": (*result.limitations, prose_limitation),
+                            "render_mode": "deterministic_fallback",
+                            "fallback_sha256": _canonical_sha256(
+                                {
+                                    "answer_text": answer_text,
+                                    "claim_ids": [claim.claim_id for claim in claims],
+                                }
+                            ),
+                        }
+                    )
+            if isinstance(rendered, str):
+                restored_context = rollback_plain_prose_context(result.context_receipt)
+                return result.model_copy(
+                    update={
+                        # Same split as the structured prose path: prose owns
+                        # insufficiency wording; deterministic gap sentences stay
+                        # out of prose-rendered answers.
+                        "answer_text": rendered,
+                        "context_receipt": restored_context,
+                        "render_mode": "prose_renderer",
+                    }
+                )
+            return result
+        except BaseException:
+            abort_prose_attempt()
+            rollback_session()
+            raise
 
     def _apply_prose_synthesis(
         self,

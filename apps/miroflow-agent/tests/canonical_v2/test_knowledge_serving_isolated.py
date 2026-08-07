@@ -306,10 +306,11 @@ def test_content_addressed_serving_bundle_is_secret_free_and_executable(
             evidence_set=evidence_set,
         )
     )
-    # Prose synthesis is timeout-degraded here: the fallback is an honest
-    # notice, never a raw claim listing, so retrieval selection is asserted
-    # via citations and context below instead of answer text.
-    assert result.answer_text.startswith("回答生成暂时不可用，请稍后重试。")
+    # Prose synthesis is timeout-degraded here, so the server-owned grounded
+    # fallback must preserve the selected professor while excluding neighbors.
+    assert result.render_mode == "deterministic_fallback"
+    assert "丁文伯" in result.answer_text
+    assert "机器人技术" in result.answer_text
     assert "无关教授" not in result.answer_text
     assert result.context_receipt is not None
     assert result.context_receipt.displayed_result_set is not None
@@ -516,149 +517,642 @@ def test_normal_answer_uses_injected_llm_renderer_and_preserves_founder_role(
     assert "参与创立" in rendered_claims[0][0]
 
 
-def test_openai_prose_renderer_stream_emits_deltas_and_returns_full_text() -> None:
-    """The streaming renderer strips the JSON shell incrementally: deltas that
-    split the ``"answer_text":"`` prefix, escapes that cross delta boundaries
-    (``\\`` at a delta end, ``\\uXXXX`` hex spanning deltas), and the closing
-    quote with trailing JSON fields are all handled; ``on_chunk`` receives
-    only the decoded plain answer text, and the returned text equals what
-    ``json.loads`` would extract from the full shell."""
-    calls: list[dict[str, object]] = []
-    deltas = (
-        '{"an',
-        'swer_text":"你',
-        '好\\n世',
-        '界，他说\\"',
-        '你好\\"。\\t缩',
-        '进\\\\路径\\u4',
-        'e16"',
-        ',"selected_claim_indexes":[]}',
+_PROSE_SELECTION_MARKER = "<|canonical_v2_selection_v1|>"
+_PROSE_ANSWER_MARKER = "<|canonical_v2_answer_v1|>"
+
+
+def _prose_wire(
+    answer: str,
+    *,
+    claim_indexes: tuple[int, ...] = (),
+    entity_indexes: tuple[int, ...] = (),
+    header: str | None = None,
+) -> str:
+    selection = header or json.dumps(
+        {
+            "selected_claim_indexes": claim_indexes,
+            "selected_entity_indexes": entity_indexes,
+        },
+        ensure_ascii=False,
+        separators=(",", ":"),
     )
-    expected = '你好\n世界，他说"你好"。\t缩进\\路径世'
-
-    class _Completions:
-        def create(self, **kwargs: object) -> object:
-            calls.append(kwargs)
-            return (
-                SimpleNamespace(
-                    choices=(
-                        SimpleNamespace(delta=SimpleNamespace(content=delta)),
-                    )
-                )
-                for delta in deltas
-            )
-
-    client = SimpleNamespace(
-        chat=SimpleNamespace(completions=_Completions()),
-    )
-    renderer = serving_module._OpenAIProseRenderer(
-        client=client,
-        model="recorded-chat-model",
-        extra_body={"thinking": {"type": "disabled"}},
-    )
-    result = SimpleNamespace(
-        original_query="介绍深圳科创",
-        claims=(),
-        citations=(),
-        context_receipt=None,
-    )
-    received: list[str] = []
-
-    rendered = renderer.stream(result, on_chunk=received.append)
-
-    # on_chunk only ever sees decoded plain text, never shell fragments.
-    assert "".join(received) == expected
-    assert all("\n" not in part or part == "\n" for part in received)
-    assert rendered == expected
-    # Consistent with the synchronous __call__ extraction.
-    full_shell = "".join(deltas)
-    assert rendered == json.loads(full_shell)["answer_text"]
-
-
-def test_openai_prose_renderer_stream_tolerates_spaced_key() -> None:
-    """The real model emits ``\"answer_text\": \"`` with spacing and
-    indentation; the incremental stripper must tolerate the gap."""
-    deltas = (
-        '{\\n  "an',
-        'swer_text": "你',
-        '好\\n世界",\\n  "selected_claim_indexes": []\\n}',
+    return (
+        f"{_PROSE_SELECTION_MARKER}\n{selection}\n"
+        f"{_PROSE_ANSWER_MARKER}\n{answer}"
     )
 
-    class _Completions:
-        def create(self, **kwargs: object) -> object:
-            return (
-                SimpleNamespace(
-                    choices=(
-                        SimpleNamespace(delta=SimpleNamespace(content=delta)),
-                    )
-                )
-                for delta in deltas
-            )
 
-    class _Chat:
-        def __init__(self) -> None:
-            self.completions = _Completions()
+class _RecordedProseCompletions:
+    def __init__(
+        self,
+        content: str,
+        *,
+        chunk_width: int = 1,
+        finish_reason: str | None = None,
+    ) -> None:
+        self.content = content
+        self.chunk_width = chunk_width
+        self.finish_reason = finish_reason
+        self.calls: list[dict[str, object]] = []
+        self.provider_finished = False
 
-    renderer = serving_module._OpenAIProseRenderer(
-        client=SimpleNamespace(chat=_Chat()),
-        model="recorded-chat-model",
-        extra_body={"thinking": {"type": "disabled"}},
-    )
-    result = SimpleNamespace(
-        original_query="介绍深圳科创",
-        claims=(),
-        citations=(),
-        context_receipt=None,
-    )
-    received: list[str] = []
-    rendered = renderer.stream(result, on_chunk=received.append)
-    assert rendered == "你好\n世界"
-    assert "".join(received) == "你好\n世界"
-
-
-def test_openai_prose_renderer_stream_rejects_malformed_json_shell() -> None:
-    """Malformed shells (no answer_text field, unterminated value, bad
-    escape) raise ValueError so the caller retries/degrades exactly like a
-    synchronous parse failure."""
-
-    def stream_rendered(content: str) -> str:
-        class _Completions:
-            def create(self, **kwargs: object) -> object:
-                return (
+    def create(self, **kwargs: object) -> object:
+        self.calls.append(kwargs)
+        if not kwargs.get("stream"):
+            return SimpleNamespace(
+                choices=(
                     SimpleNamespace(
-                        choices=(
-                            SimpleNamespace(delta=SimpleNamespace(content=part)),
-                        )
-                    )
-                    for part in (content[i : i + 3] for i in range(0, len(content), 3))
+                        message=SimpleNamespace(content=self.content),
+                        finish_reason=self.finish_reason,
+                    ),
                 )
+            )
 
-        client = SimpleNamespace(
-            chat=SimpleNamespace(completions=_Completions()),
+        def completion() -> object:
+            for index in range(0, len(self.content), self.chunk_width):
+                yield SimpleNamespace(
+                    choices=(
+                        SimpleNamespace(
+                            delta=SimpleNamespace(
+                                content=self.content[index : index + self.chunk_width]
+                            ),
+                            finish_reason=None,
+                        ),
+                    )
+                )
+            yield SimpleNamespace(
+                choices=(
+                    SimpleNamespace(
+                        delta=SimpleNamespace(content=None),
+                        finish_reason=self.finish_reason,
+                    ),
+                )
+            )
+            self.provider_finished = True
+
+        return completion()
+
+
+def _prose_renderer(completions: _RecordedProseCompletions) -> Any:
+    return serving_module._OpenAIProseRenderer(
+        client=SimpleNamespace(
+            chat=SimpleNamespace(completions=completions),
+        ),
+        model="recorded-chat-model",
+        extra_body={"thinking": {"type": "disabled"}},
+    )
+
+
+def _prose_result() -> tuple[Any, Any, Any]:
+    claim = SimpleNamespace(
+        claim_id="claim:stream",
+        text="深圳科创助手提供服务。",
+        subject_id="company:stream",
+        subject_handle_ids=("company:stream",),
+        predicate="preferred_name",
+        status="accepted",
+        source_natures=("local",),
+        evidence_ids=("evidence:stream",),
+    )
+    handle = SimpleNamespace(
+        canonical_id="company:stream",
+        display_name="深圳科创助手",
+        domain="company",
+        evidence_ids=("evidence:stream",),
+    )
+    result = SimpleNamespace(
+        original_query="介绍深圳科创",
+        claims=(claim,),
+        citations=(),
+        context_receipt=SimpleNamespace(
+            active_anchor=None,
+            displayed_result_set=SimpleNamespace(handles=(handle,)),
+            traversed_path_ids=(),
+        ),
+    )
+    return result, claim, handle
+
+
+@pytest.mark.parametrize("finish_reason", ("length", "content_filter"))
+@pytest.mark.parametrize("mode", ("sync", "stream"))
+def test_openai_prose_renderer_rejects_explicit_truncated_finish_reason(
+    finish_reason: str,
+    mode: str,
+) -> None:
+    wire = _prose_wire(
+        "结构完整回答",
+        claim_indexes=(1,),
+        entity_indexes=(1,),
+    )
+    completions = _RecordedProseCompletions(
+        wire,
+        chunk_width=len(wire),
+        finish_reason=finish_reason,
+    )
+    renderer = _prose_renderer(completions)
+    result, _, _ = _prose_result()
+    published: list[str] = []
+
+    with pytest.raises(
+        ValueError,
+        match=rf"finish_reason={finish_reason}",
+    ):
+        if mode == "stream":
+            renderer.stream(result, on_chunk=published.append)
+        else:
+            renderer(result)
+
+    assert len(completions.calls) == 1
+
+
+def test_openai_prose_renderer_framed_wire_streams_answer_and_preserves_selection() -> (
+    None
+):
+    expected = '你好\n世界，他说"你好"。\t路径\\完成 {原样}'
+    wire = "\n" + _prose_wire(
+        f" {expected} \n",
+        claim_indexes=(1,),
+        entity_indexes=(1,),
+    )
+    result, claim, handle = _prose_result()
+
+    for chunk_width in (1, 7, 29):
+        completions = _RecordedProseCompletions(
+            wire,
+            chunk_width=chunk_width,
+            finish_reason="stop",
         )
-        renderer = serving_module._OpenAIProseRenderer(
-            client=client,
-            model="recorded-chat-model",
-            extra_body={},
-        )
-        return renderer.stream(
-            SimpleNamespace(
-                original_query="q",
-                claims=(),
-                citations=(),
-                context_receipt=None,
+        renderer = _prose_renderer(completions)
+        received: list[str] = []
+        observed_before_final: list[bool] = []
+        sync_rendered = renderer(result)
+
+        def receive(text: str) -> None:
+            observed_before_final.append(not completions.provider_finished)
+            received.append(text)
+
+        streamed = renderer.stream(result, on_chunk=receive)
+
+        assert isinstance(sync_rendered, ProseSynthesisResult)
+        assert isinstance(streamed, ProseSynthesisResult)
+        assert streamed == sync_rendered
+        assert streamed.answer_text == expected
+        assert streamed.selected_claim_ids == (claim.claim_id,)
+        assert streamed.selected_handle_ids == (handle.canonical_id,)
+        assert "".join(received) == expected
+        assert observed_before_final and all(observed_before_final)
+        assert completions.provider_finished is True
+        assert _PROSE_SELECTION_MARKER not in "".join(received)
+        assert _PROSE_ANSWER_MARKER not in "".join(received)
+        assert len(completions.calls) == 2
+        assert completions.calls[0].get("stream") is None
+        assert completions.calls[1]["stream"] is True
+
+
+@pytest.mark.parametrize(
+    "leading_whitespace_length",
+    (64, 65, 10_000),
+    ids=("boundary", "past-boundary", "long"),
+)
+def test_openai_prose_renderer_accepts_framed_wire_after_leading_whitespace(
+    leading_whitespace_length: int,
+) -> None:
+    wire = " " * leading_whitespace_length + _prose_wire(
+        "安全回答",
+        claim_indexes=(1,),
+        entity_indexes=(1,),
+    )
+    completions = _RecordedProseCompletions(wire, chunk_width=1)
+    renderer = _prose_renderer(completions)
+    result, claim, handle = _prose_result()
+    published: list[str] = []
+
+    sync_rendered = renderer(result)
+    streamed = renderer.stream(result, on_chunk=published.append)
+
+    expected = ProseSynthesisResult(
+        answer_text="安全回答",
+        selected_claim_ids=(claim.claim_id,),
+        selected_handle_ids=(handle.canonical_id,),
+    )
+    assert sync_rendered == expected
+    assert streamed == expected
+    assert "".join(published) == "安全回答"
+    assert len(completions.calls) == 2
+
+
+@pytest.mark.parametrize(
+    "content",
+    ("<", _PROSE_SELECTION_MARKER[:-1]),
+    ids=("less-than", "marker-strict-prefix"),
+)
+def test_openai_prose_renderer_treats_selection_marker_strict_prefix_at_eof_as_plain(
+    content: str,
+) -> None:
+    completions = _RecordedProseCompletions(content, chunk_width=1)
+    renderer = _prose_renderer(completions)
+    result, _, _ = _prose_result()
+    published: list[str] = []
+
+    sync_rendered = renderer(result)
+    streamed = renderer.stream(result, on_chunk=published.append)
+
+    assert sync_rendered == content
+    assert streamed == content
+    assert "".join(published) == content
+    assert len(completions.calls) == 2
+
+
+@pytest.mark.parametrize(
+    "marker",
+    (_PROSE_SELECTION_MARKER, _PROSE_ANSWER_MARKER),
+    ids=("selection-marker", "answer-marker"),
+)
+@pytest.mark.parametrize(
+    ("position", "prefix", "suffix"),
+    (
+        ("start", "", "公开后文"),
+        ("middle", "公开前文", "公开后文"),
+        ("end", "公开前文", ""),
+    ),
+)
+@pytest.mark.parametrize("wire_mode", ("plain", "framed"))
+def test_openai_prose_renderer_rejects_private_marker_in_answer_before_publish(
+    marker: str,
+    position: str,
+    prefix: str,
+    suffix: str,
+    wire_mode: str,
+) -> None:
+    del position
+    answer = f"{prefix}{marker}{suffix}"
+    content = _prose_wire(answer) if wire_mode == "framed" else answer
+    completions = _RecordedProseCompletions(content, chunk_width=1)
+    renderer = _prose_renderer(completions)
+    result, _, _ = _prose_result()
+    published: list[str] = []
+
+    with pytest.raises(ValueError):
+        renderer(result)
+    with pytest.raises(ValueError):
+        renderer.stream(result, on_chunk=published.append)
+
+    assert "".join(published) == prefix
+    assert _PROSE_SELECTION_MARKER not in "".join(published)
+    assert _PROSE_ANSWER_MARKER not in "".join(published)
+    assert len(completions.calls) == 2
+
+
+@pytest.mark.parametrize(
+    ("content", "expected", "expect_all_before_final"),
+    (
+        (" \n纯文本降级回答 \t", "纯文本降级回答", True),
+        ("{纯文本降级回答", "{纯文本降级回答", True),
+        (
+            "普通<文本 <<|canonical_v2_answer_vX|> 尾部<|canonical_v2_ans",
+            "普通<文本 <<|canonical_v2_answer_vX|> 尾部<|canonical_v2_ans",
+            False,
+        ),
+    ),
+)
+def test_openai_prose_renderer_plain_fallback_streams_progressively(
+    content: str,
+    expected: str,
+    *,
+    expect_all_before_final: bool,
+) -> None:
+    completions = _RecordedProseCompletions(content, chunk_width=1)
+    renderer = _prose_renderer(completions)
+    result = SimpleNamespace(
+        original_query="q",
+        claims=(),
+        citations=(),
+        context_receipt=None,
+    )
+    received: list[str] = []
+    observed_before_final: list[bool] = []
+
+    sync_rendered = renderer(result)
+
+    def receive(text: str) -> None:
+        observed_before_final.append(not completions.provider_finished)
+        received.append(text)
+
+    streamed = renderer.stream(result, on_chunk=receive)
+
+    assert sync_rendered == expected
+    assert streamed == expected
+    assert "".join(received) == expected
+    assert observed_before_final and any(observed_before_final)
+    assert all(observed_before_final) is expect_all_before_final
+    assert len(completions.calls) == 2
+
+
+@pytest.mark.parametrize(
+    (
+        "model_answer",
+        "expected",
+        "expected_founder_phrase_count",
+        "expect_progress_before_final",
+    ),
+    (
+        (
+            "丁文伯是深圳无界智航科技有限公司的创始人。",
+            "丁文伯参与创立了深圳无界智航科技有限公司。\n\n"
+            "丁文伯是深圳无界智航科技有限公司的创始人。",
+            1,
+            True,
+        ),
+        (
+            "Ding Wenbo is a founder of Boundaryless Robotics. "
+            "Public records confirm the relationship.",
+            "丁文伯参与创立了深圳无界智航科技有限公司。\n\n"
+            "Ding Wenbo is a founder of Boundaryless Robotics. "
+            "Public records confirm the relationship.",
+            1,
+            True,
+        ),
+        (
+            "丁文伯参与创立了深圳无界智航科技有限公司。\n\n公开信息可确认该关系。",
+            "丁文伯参与创立了深圳无界智航科技有限公司。\n\n公开信息可确认该关系。",
+            1,
+            True,
+        ),
+        (
+            "公开信息显示，丁文伯参与创立了深圳无界智航科技有限公司。",
+            "丁文伯参与创立了深圳无界智航科技有限公司。\n\n"
+            "公开信息显示，丁文伯参与创立了深圳无界智航科技有限公司。",
+            2,
+            True,
+        ),
+        (
+            "丁文伯是深圳无界智航科技有限公司的创始人",
+            "丁文伯参与创立了深圳无界智航科技有限公司。\n\n"
+            "丁文伯是深圳无界智航科技有限公司的创始人",
+            1,
+            True,
+        ),
+        (
+            "先给出公开结论。丁文伯参与创立了深圳无界智航科技有限公司。",
+            "丁文伯参与创立了深圳无界智航科技有限公司。\n\n"
+            "先给出公开结论。",
+            1,
+            True,
+        ),
+        (
+            "丁文伯是该公司的创始人",
+            "丁文伯参与创立了深圳无界智航科技有限公司。\n\n"
+            "丁文伯是该公司的创始人",
+            1,
+            True,
+        ),
+        (
+            "先给出公开结论。引用原文：“"
+            "丁文伯参与创立了深圳无界智航科技有限公司。"
+            "”以上为完整表述。",
+            "丁文伯参与创立了深圳无界智航科技有限公司。\n\n"
+            "先给出公开结论。引用原文：“"
+            "丁文伯参与创立了深圳无界智航科技有限公司。"
+            "”以上为完整表述。",
+            2,
+            True,
+        ),
+        (
+            "先给出公开结论。\n"
+            "1. 丁文伯参与创立了深圳无界智航科技有限公司。",
+            "丁文伯参与创立了深圳无界智航科技有限公司。\n\n"
+            "先给出公开结论。\n"
+            "1. 丁文伯参与创立了深圳无界智航科技有限公司。",
+            2,
+            True,
+        ),
+    ),
+)
+def test_openai_prose_renderer_stream_publishes_founder_prefix_safely(
+    model_answer: str,
+    expected: str,
+    expected_founder_phrase_count: int,
+    *,
+    expect_progress_before_final: bool,
+) -> None:
+    wire = _prose_wire(
+        model_answer,
+        claim_indexes=(1,),
+        entity_indexes=(1, 2),
+    )
+    completions = _RecordedProseCompletions(wire, chunk_width=5)
+    renderer = _prose_renderer(completions)
+    received: list[str] = []
+    observed_before_final: list[bool] = []
+    claim = SimpleNamespace(
+        claim_id="claim:founder",
+        text="丁文伯参与创立了深圳无界智航科技有限公司，角色为创始人。",
+        subject_id="professor:ding-wenbo",
+        subject_handle_ids=("professor:ding-wenbo", "company:boundaryless"),
+        predicate="professor_company_role",
+        status="accepted",
+        source_natures=("local",),
+        evidence_ids=("evidence:founder",),
+    )
+    professor = SimpleNamespace(
+        canonical_id="professor:ding-wenbo",
+        display_name="丁文伯",
+        domain="professor",
+        evidence_ids=("evidence:founder",),
+    )
+    company = SimpleNamespace(
+        canonical_id="company:boundaryless",
+        display_name="深圳无界智航科技有限公司",
+        domain="company",
+        evidence_ids=("evidence:founder",),
+    )
+    result = SimpleNamespace(
+        original_query="他是否有参与哪些企业的创立？",
+        claims=(claim,),
+        citations=(),
+        context_receipt=SimpleNamespace(
+            active_anchor=professor,
+            displayed_result_set=SimpleNamespace(handles=(company,)),
+            traversed_path_ids=(),
+        ),
+    )
+    sync_rendered = renderer(result)
+
+    def receive(text: str) -> None:
+        observed_before_final.append(not completions.provider_finished)
+        received.append(text)
+
+    streamed = renderer.stream(result, on_chunk=receive)
+
+    assert isinstance(sync_rendered, ProseSynthesisResult)
+    assert isinstance(streamed, ProseSynthesisResult)
+    assert streamed == sync_rendered
+    assert streamed.answer_text == expected
+    assert (
+        streamed.answer_text.count("参与创立")
+        == expected_founder_phrase_count
+    )
+    assert "".join(received) == expected
+    assert observed_before_final
+    assert all(observed_before_final) is expect_progress_before_final
+    assert streamed.selected_claim_ids == (claim.claim_id,)
+    assert streamed.selected_handle_ids == (
+        company.canonical_id,
+        professor.canonical_id,
+    )
+    assert len(completions.calls) == 2
+
+
+def test_prose_text_normalizer_finish_flushes_aborted_founder_duplicate_candidate(
+) -> None:
+    founder_prefix = "丁文伯参与创立了深圳无界智航科技有限公司。"
+    model_answer = "先给出公开结论。丁文"
+    expected_before_finish = f"{founder_prefix}\n\n先给出公开结论。"
+    expected = f"{expected_before_finish}丁文"
+    received: list[str] = []
+    normalizer = serving_module._ProseTextNormalizer(
+        founder_prefix=founder_prefix,
+        on_chunk=received.append,
+    )
+
+    normalizer.feed(model_answer)
+
+    assert "".join(received) == expected_before_finish
+    assert normalizer.finish() == expected
+    assert "".join(received) == expected
+
+
+@pytest.mark.parametrize(
+    "wire",
+    (
+        _prose_wire("不得公开", header='{"selected_claim_indexes":[]}'),
+        _prose_wire(
+            "不得公开",
+            header=(
+                '{"selected_claim_indexes":[],"selected_entity_indexes":[],'
+                '"extra":[]}'
             ),
-            on_chunk=lambda _text: None,
-        )
+        ),
+        _prose_wire(
+            "不得公开",
+            header=(
+                '{"selected_claim_indexes":"1","selected_entity_indexes":[]}'
+            ),
+        ),
+        _prose_wire(
+            "不得公开",
+            header=(
+                '{"selected_claim_indexes":[true],"selected_entity_indexes":[]}'
+            ),
+        ),
+        _prose_wire(
+            "不得公开",
+            header=(
+                '{"selected_claim_indexes":[1,1],"selected_entity_indexes":[]}'
+            ),
+        ),
+        _prose_wire(
+            "不得公开",
+            header=(
+                '{"selected_claim_indexes":[],"selected_claim_indexes":[],'
+                '"selected_entity_indexes":[]}'
+            ),
+        ),
+        _prose_wire(
+            "不得公开",
+            header=(
+                '{"selected_claim_indexes":[],"\\u0073elected_claim_indexes":[],'
+                '"selected_entity_indexes":[]}'
+            ),
+        ),
+        _prose_wire("不得公开", header=" " * 4097),
+        f'{_PROSE_SELECTION_MARKER}\n{{"selected_claim_indexes":[]',
+    ),
+    ids=(
+        "missing-key",
+        "extra-key",
+        "wrong-type",
+        "bool-index",
+        "duplicate-index",
+        "duplicate-key",
+        "escaped-duplicate-key",
+        "oversized",
+        "unclosed",
+    ),
+)
+def test_openai_prose_renderer_rejects_invalid_selection_header_before_publish(
+    wire: str,
+) -> None:
+    completions = _RecordedProseCompletions(wire, chunk_width=3)
+    renderer = _prose_renderer(completions)
+    result, _, _ = _prose_result()
+    published: list[str] = []
 
-    with pytest.raises(ValueError, match="no answer_text"):
-        stream_rendered("纯文本不是 JSON 外壳")
-    with pytest.raises(ValueError, match="unterminated answer_text"):
-        stream_rendered('{"answer_text":"你好')
-    with pytest.raises(ValueError, match="unsupported JSON escape"):
-        stream_rendered('{"answer_text":"你好\\q世界"}')
-    with pytest.raises(ValueError, match="malformed \\\\u escape"):
-        stream_rendered('{"answer_text":"你好\\u12"}')
+    with pytest.raises(ValueError):
+        renderer(result)
+    with pytest.raises(ValueError):
+        renderer.stream(result, on_chunk=published.append)
+
+    assert published == []
+    assert len(completions.calls) == 2
+
+
+@pytest.mark.parametrize(
+    "content",
+    (
+        '{"answer_text":"legacy","selected_claim_indexes":[],'
+        '"selected_entity_indexes":[]}',
+        '```json\n{"answer_text":"legacy","selected_claim_indexes":[],'
+        '"selected_entity_indexes":[]}\n```',
+        (
+            " " * 65
+            + '{"answer_text":"legacy","selected_claim_indexes":[],'
+            '"selected_entity_indexes":[]}'
+        ),
+        (
+            " " * 65
+            + '```json\n{"answer_text":"legacy","selected_claim_indexes":[],'
+            '"selected_entity_indexes":[]}\n```'
+        ),
+    ),
+    ids=(
+        "json-object",
+        "json-fence",
+        "json-object-after-whitespace",
+        "json-fence-after-whitespace",
+    ),
+)
+def test_openai_prose_renderer_rejects_legacy_json_before_publish(
+    content: str,
+) -> None:
+    completions = _RecordedProseCompletions(content, chunk_width=1)
+    renderer = _prose_renderer(completions)
+    result, _, _ = _prose_result()
+    published: list[str] = []
+
+    with pytest.raises(ValueError, match="legacy JSON"):
+        renderer(result)
+    with pytest.raises(ValueError, match="legacy JSON"):
+        renderer.stream(result, on_chunk=published.append)
+
+    assert published == []
+    assert len(completions.calls) == 2
+
+
+def test_openai_prose_renderer_rejects_real_unpaired_surrogate() -> None:
+    wire = _prose_wire("\ud83d")
+    completions = _RecordedProseCompletions(wire, chunk_width=4)
+    renderer = _prose_renderer(completions)
+    result, _, _ = _prose_result()
+    published: list[str] = []
+
+    with pytest.raises(ValueError, match="surrogate"):
+        renderer(result)
+    with pytest.raises(ValueError, match="surrogate"):
+        renderer.stream(result, on_chunk=published.append)
+
+    assert published == []
+    assert len(completions.calls) == 2
 
 
 def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
@@ -694,6 +1188,11 @@ def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
                 status="accepted",
                 source_natures=("local",),
                 evidence_ids=("evidence:renderer:founder",),
+                subject_id="professor:ding-wenbo",
+                subject_handle_ids=(
+                    "professor:ding-wenbo",
+                    "company:boundaryless",
+                ),
             ),
             SimpleNamespace(
                 text="Service Robot Arm 配备双机械手，可自主按下电梯按钮。",
@@ -711,12 +1210,19 @@ def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
             ),
         ),
         context_receipt=SimpleNamespace(
-            active_anchor=SimpleNamespace(display_name="丁文伯", domain="professor"),
+            active_anchor=SimpleNamespace(
+                display_name="丁文伯",
+                domain="professor",
+                canonical_id="professor:ding-wenbo",
+                evidence_ids=("evidence:renderer:founder",),
+            ),
             displayed_result_set=SimpleNamespace(
                 handles=(
                     SimpleNamespace(
                         display_name="深圳无界智航科技有限公司",
                         domain="company",
+                        canonical_id="company:boundaryless",
+                        evidence_ids=("evidence:renderer:founder",),
                     ),
                 )
             ),
@@ -738,7 +1244,11 @@ def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
     assert "他是否有参与哪些企业的创立" in serialized
     assert "回答用户" in serialized
     assert "不要逐字段复述" in serialized
-    assert "canonical-v2-prose-v13" in serialized
+    assert "canonical-v2-prose-v14" in serialized
+    assert _PROSE_SELECTION_MARKER in serialized
+    assert _PROSE_ANSWER_MARKER in serialized
+    assert "未经JSON编码的纯文本" in serialized
+    assert "旧版JSON答案外壳" in serialized
     assert "逐字一致" in serialized
     assert "语义覆盖而非逐字匹配" in serialized
     assert "不要逐一列名" in serialized
@@ -760,13 +1270,10 @@ def test_llm_prose_renderer_rejects_out_of_range_selection_indexes() -> None:
                 choices=(
                     SimpleNamespace(
                         message=SimpleNamespace(
-                            content=json.dumps(
-                                {
-                                    "answer_text": "无效选择",
-                                    "selected_claim_indexes": [2],
-                                    "selected_entity_indexes": [1],
-                                },
-                                ensure_ascii=False,
+                            content=_prose_wire(
+                                "无效选择",
+                                claim_indexes=(2,),
+                                entity_indexes=(1,),
                             )
                         )
                     ),
@@ -1075,13 +1582,19 @@ def test_focused_missing_entity_prefers_current_web_over_vector_neighbors(
         )
     )
 
-    # Prose synthesis is timeout-degraded (never a raw claim listing); the
-    # web-over-vector retrieval contract is asserted via citations below.
-    assert result.answer_text.startswith("回答生成暂时不可用，请稍后重试。")
+    # Timeout degradation keeps the relevant current-web claim and excludes
+    # the similarly named vector neighbor from the public answer.  The
+    # fallback text no longer embeds the source locator for non-link
+    # questions (that raw-dump shape was the T15 defect); traceability is
+    # preserved through the structured citation instead.
+    assert result.render_mode == "deterministic_fallback"
+    assert "王学谦" in result.answer_text
+    assert "https://example.test/wang-xueqian" not in result.answer_text
     assert "王学锋" not in result.answer_text
     assert tuple(citation.source_nature for citation in result.citations) == (
         "current_web",
     )
+    assert result.citations[0].source_locator == "https://example.test/wang-xueqian"
 
 
 def test_explicit_link_gap_keeps_current_web_url_with_exact_local_evidence(
@@ -1166,9 +1679,11 @@ def test_explicit_link_gap_keeps_current_web_url_with_exact_local_evidence(
         )
     )
 
-    # Prose synthesis is timeout-degraded (never a raw claim listing); the
-    # link-gap retrieval contract is asserted via citations below.
-    assert result.answer_text.startswith("回答生成暂时不可用，请稍后重试。")
+    # Timeout degradation keeps both the exact local title and its verified
+    # current-web link in the server-owned grounded answer.
+    assert result.render_mode == "deterministic_fallback"
+    assert title in result.answer_text
+    assert url in result.answer_text
     assert tuple(citation.source_nature for citation in result.citations) == (
         "local",
         "current_web",
@@ -1386,9 +1901,11 @@ def test_focused_title_accepts_only_the_exact_named_vector_handle(
         )
     )
 
-    # Prose synthesis is timeout-degraded (never a raw claim listing); the
-    # exact-title retrieval contract is asserted via citations and context.
-    assert result.answer_text.startswith("回答生成暂时不可用，请稍后重试。")
+    # Timeout degradation preserves the exact paper and its summary while
+    # excluding the unrelated vector neighbor from the public answer.
+    assert result.render_mode == "deterministic_fallback"
+    assert title in result.answer_text
+    assert "Diffusion-based aggregation" in result.answer_text
     assert "Generative Adversarial Networks" not in result.answer_text
     assert tuple(citation.source_locator for citation in result.citations) == (
         "canonical-v2-isolated:pfedgpa",
@@ -2583,26 +3100,32 @@ def test_product_capability_evidence_normalizes_official_traditional_chinese() -
 
 def test_final_llm_selection_commits_only_answer_entities(tmp_path: Path) -> None:
     calls: list[dict[str, object]] = []
+    forwarded: list[str] = []
+    observed_before_final: list[bool] = []
+    provider_finished = False
+    deltas = (
+        f"{_PROSE_SELECTION_MARKER}\n"
+        '{"selected_claim_indexes":[1,2],"selected_entity_indexes":[1]}\n'
+        f"{_PROSE_ANSWER_MARKER}\n总部",
+        "在深圳的只有深圳市普渡科技有限公司。",
+    )
 
     class _Completions:
         def create(self, **kwargs: object) -> object:
             calls.append(kwargs)
-            return SimpleNamespace(
-                choices=(
-                    SimpleNamespace(
-                        message=SimpleNamespace(
-                            content=json.dumps(
-                                {
-                                    "answer_text": "总部在深圳的只有深圳市普渡科技有限公司。",
-                                    "selected_claim_indexes": [1, 2],
-                                    "selected_entity_indexes": [1],
-                                },
-                                ensure_ascii=False,
-                            )
-                        )
-                    ),
-                )
-            )
+
+            def completion() -> object:
+                nonlocal provider_finished
+                for index, delta in enumerate(deltas):
+                    yield SimpleNamespace(
+                        choices=(SimpleNamespace(delta=SimpleNamespace(content=delta)),)
+                    )
+                    if index == 0:
+                        assert "".join(forwarded) == "总部"
+                        assert provider_finished is False
+                provider_finished = True
+
+            return completion()
 
     path, bundle = _write_bundle(tmp_path)
     renderer = serving_module._OpenAIProseRenderer(
@@ -2680,7 +3203,13 @@ def test_final_llm_selection_commits_only_answer_entities(tmp_path: Path) -> Non
         ),
     )
 
-    result = inputs.answer_factory().answer(
+    def receive(text: str) -> None:
+        observed_before_final.append(not provider_finished)
+        forwarded.append(text)
+
+    answer = inputs.answer_factory()
+    answer.prose_progress = receive
+    result = answer.answer(
         TurnRequest(
             session_id="session:headquarters-selection",
             turn_id="turn:headquarters-selection",
@@ -2691,6 +3220,10 @@ def test_final_llm_selection_commits_only_answer_entities(tmp_path: Path) -> Non
     )
 
     assert len(calls) == 1
+    assert calls[0]["stream"] is True
+    assert provider_finished is True
+    assert observed_before_final and all(observed_before_final)
+    assert "".join(forwarded) == "总部在深圳的只有深圳市普渡科技有限公司。"
     assert result.answer_text == "总部在深圳的只有深圳市普渡科技有限公司。"
     assert result.context_receipt is not None
     assert result.context_receipt.displayed_result_set is not None
@@ -2710,16 +3243,16 @@ def test_multi_entity_prose_commit_narrows_the_set_but_keeps_the_anchor(
 ) -> None:
     responses = iter(
         (
-            {
-                "answer_text": "丁文伯是清华大学深圳国际研究生院副教授。",
-                "selected_claim_indexes": [1],
-                "selected_entity_indexes": [1],
-            },
-            {
-                "answer_text": "他的代表性成果包括 pFedGPA 与摩擦电智能手套两篇论文。",
-                "selected_claim_indexes": [1, 2],
-                "selected_entity_indexes": [1, 2],
-            },
+            _prose_wire(
+                "丁文伯是清华大学深圳国际研究生院副教授。",
+                claim_indexes=(1,),
+                entity_indexes=(1,),
+            ),
+            _prose_wire(
+                "他的代表性成果包括 pFedGPA 与摩擦电智能手套两篇论文。",
+                claim_indexes=(1, 2),
+                entity_indexes=(1, 2),
+            ),
         )
     )
 
@@ -2728,9 +3261,7 @@ def test_multi_entity_prose_commit_narrows_the_set_but_keeps_the_anchor(
             return SimpleNamespace(
                 choices=(
                     SimpleNamespace(
-                        message=SimpleNamespace(
-                            content=json.dumps(next(responses), ensure_ascii=False)
-                        )
+                        message=SimpleNamespace(content=next(responses))
                     ),
                 )
             )
@@ -4328,3 +4859,178 @@ def test_rewrite_gate_fires_for_attribute_followups() -> None:
         "深圳银星智能科技股份有限公司"
     )
     assert not serving_module._should_rewrite_serving_query("介绍清华的丁文伯")
+
+
+def test_concept_term_view_is_promoted_after_deterministic_view() -> None:
+    """Data-theme concept questions must not bury the term-expansion view at
+    the end of the earliest-view-wins merge: a term view appended last was
+    drowned below the candidate cut by the rewrite views (T19 lost 动作捕捉
+    content that only the term view recalls)."""
+    request = QueryPlanningRequest(
+        request_id="query-request:s12g:term-view",
+        release_id=RELEASE_ID,
+        original_query="在真实数据采集路线中，有哪些具体方式",
+        as_of=NOW,
+    )
+    views = serving_module._serving_query_views(
+        request=request,
+        search_text="真实数据采集路线 具体方式",
+        retained_values=(),
+        protected_slots=(),
+        planner_model_id="canonical-v2-deterministic-planner-v1",
+        query_rewriter=lambda _query: ("数据采集 机器人 方法 遥操作",),
+    )
+    assert [view.producer_kind for view in views][:2] == [
+        "deterministic",
+        "term_expansion",
+    ]
+    term_text = serving_module._concept_term_view_text(request.original_query)
+    assert term_text is not None
+    assert term_text in {view.text for view in views}
+
+
+def test_concept_off_topic_claim_filter() -> None:
+    """The data-theme answer guard drops drifted claims (traffic surveys,
+    crawlers, crowdsourcing) before they reach prose/fallback, but stays off
+    when the query names an alternate data domain itself (网页/交通数据采集
+    keep their own claims)."""
+    assert serving_module._concept_theme_filter_active(
+        "在真实数据采集路线中，有哪些具体方式"
+    )
+    assert serving_module._concept_theme_filter_active("合成数据有哪些实现方法与厂商")
+    assert not serving_module._concept_theme_filter_active("网页数据采集有哪些方式")
+    assert not serving_module._concept_theme_filter_active("交通数据采集有哪些方式")
+    assert not serving_module._concept_theme_filter_active("介绍深圳科创")
+    assert serving_module._concept_off_topic_claim(
+        "使用感应环探测器与GPS采集道路交通数据"
+    )
+    assert serving_module._concept_off_topic_claim("通过网络爬虫抓取网页数据")
+    assert not serving_module._concept_off_topic_claim(
+        "通过遥操作与动作捕捉采集机器人操作数据"
+    )
+
+
+def test_answer_selector_drops_off_topic_claims_for_data_theme(
+    tmp_path: Path,
+) -> None:
+    """End-to-end selector guard: for a data-theme query the drifted traffic
+    claim is dropped while the embodied-AI data collection claim survives."""
+    path, bundle = _write_bundle(tmp_path)
+    query = "在真实数据采集路线中，有哪些具体方式"
+    traffic = EvidenceItem(
+        evidence_id="evidence:s12g:traffic-drift",
+        object_id="web-object:s12g:traffic",
+        domain="company",
+        lane="web",
+        source_nature="current_web",
+        source_locator="https://example.test/traffic",
+        snippet="使用感应环探测器与GPS采集道路交通数据的服务商",
+        score=1.0,
+        source_authority="other",
+        claim_binding=EvidenceClaimBinding(
+            subject_id="web-object:s12g:traffic",
+            predicate="current_web_result",
+            value="traffic",
+            status="observed",
+        ),
+    )
+    motion = EvidenceItem(
+        evidence_id="evidence:s12g:motion-capture",
+        object_id="web-object:s12g:motion",
+        domain="company",
+        lane="web",
+        source_nature="current_web",
+        source_locator="https://example.test/motion",
+        snippet="通过遥操作与动作捕捉采集机器人操作数据",
+        score=1.0,
+        source_authority="other",
+        claim_binding=EvidenceClaimBinding(
+            subject_id="web-object:s12g:motion",
+            predicate="current_web_result",
+            value="motion",
+            status="observed",
+        ),
+    )
+    evidence_set = EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query=query,
+        protected_slots=(),
+        items=(traffic, motion),
+        traces=(),
+        limitations=(),
+    )
+    request = TurnRequest(
+        session_id="session:s12g:concept-filter",
+        turn_id="turn:s12g:concept-filter",
+        query=query,
+        release_id=RELEASE_ID,
+        evidence_set=evidence_set,
+    )
+    proposal = serving_module._answer_selector(bundle=bundle)(request)
+    claim_texts = [claim.text for claim in proposal.claims]
+    assert any("遥操作" in text for text in claim_texts)
+    assert not any("感应环" in text or "GPS" in text for text in claim_texts)
+
+
+def test_person_evidence_match_accepts_name_with_education_constraint() -> None:
+    """Education-constrained person probes accept the person name plus the
+    constraint in the same hit; a founder marker in the same snippet is not
+    required (T13 早稻田企业家 refused with "未找到" because pages stated
+    the school without the role word)."""
+    result = serving_module._NormalizedWebResult(
+        title="许晋诚：早稻田大学机器人学硕士",
+        url="https://example.test/xujincheng",
+        snippet="许晋诚，深圳机器人创业者，毕业于早稻田大学。",
+        summary="",
+        primary_provider_version="bocha-v1",
+        corroborating_provider_versions=(),
+    )
+    assert serving_module._person_evidence_match(
+        result,
+        company="许晋诚",
+        constraint="早稻田",
+    )
+    # The founder-role marker requirement still holds without a constraint
+    # (创业者 alone is not a founder marker; 企业家 is).
+    assert not serving_module._person_evidence_match(
+        result,
+        company="许晋诚",
+        constraint=None,
+    )
+    entrepreneur = serving_module._NormalizedWebResult(
+        title="许晋诚：深圳机器人企业家",
+        url="https://example.test/xujincheng-entrepreneur",
+        snippet="许晋诚，深圳机器人企业家。",
+        summary="",
+        primary_provider_version="bocha-v1",
+        corroborating_provider_versions=(),
+    )
+    assert serving_module._person_evidence_match(
+        entrepreneur,
+        company="许晋诚",
+        constraint=None,
+    )
+    no_founder_word = serving_module._NormalizedWebResult(
+        title="许晋诚：早稻田大学机器人学硕士",
+        url="https://example.test/xujincheng-2",
+        snippet="许晋诚在早稻田大学完成学业后进入机器人行业。",
+        summary="",
+        primary_provider_version="bocha-v1",
+        corroborating_provider_versions=(),
+    )
+    assert serving_module._person_evidence_match(
+        no_founder_word,
+        company="许晋诚",
+        constraint="早稻田",
+    )
+    assert not serving_module._person_evidence_match(
+        no_founder_word,
+        company="许晋诚",
+        constraint=None,
+    )
+    # A different school in the hit does not satisfy the constraint.
+    assert not serving_module._person_evidence_match(
+        result,
+        company="许晋诚",
+        constraint="东京大学",
+    )

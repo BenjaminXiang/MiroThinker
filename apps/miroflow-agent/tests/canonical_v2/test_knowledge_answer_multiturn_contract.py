@@ -1317,6 +1317,12 @@ def test_continuation_triggers_bind_options_and_topic_switch_replaces_active_sta
         assert offer.reasons == (reason,)
         assert len(offer.options) == len(expected_candidates)
         assert len(offer.options) <= 3
+        # Suggested followups reflect only the validated, available options
+        # (grounded-progressive-answer spec: no asserted relation may be
+        # suggested that was not retrieved or shown to be available).
+        assert first.suggested_followups == tuple(
+            option.label for option in offer.options
+        )
         assert tuple(option.operation for option in offer.options) == tuple(
             candidate.operation for candidate in expected_candidates
         )
