@@ -1,3 +1,8 @@
+> **Cross-change correction (2026-07-10):** this change remains in verification, but its historical
+> ready-first topic fallback is superseded by `close-retrieval-generation-contract` D1. The SIGS
+> ingest/bridge capability still archives normally; archive is blocked until Task 5.20 aligns C0
+> exact-title identity partials and D1 topic competition so neither conflicting rule can migrate.
+
 ## Why
 
 SIGS professor pages already contain official publication lists, but those entries can remain trapped in professor raw profile text or be parsed with author strings as titles. This prevents officially listed papers from entering the paper canonical domain, professor-paper links, abstract enrichment, summaries, and paper retrieval indexes.

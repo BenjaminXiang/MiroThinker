@@ -1,8 +1,15 @@
 # Verification + Review — wire-professor-paper-list-traversal (2026-07-10)
 
-> Claude-owned. Behavior-affecting (new `A_prof_papers` path on the A-professor route). Closes the
-> Type2 gap from the paper-retrievability baseline. GREEN is eval-first, backed by real evidence
-> this session + 15 unit regression tests. Companion to `openspec/changes/wire-professor-paper-list-traversal/`.
+> **Status correction (2026-07-10): Candidate.** The historical review below accepted candidate
+> delivery on the local A-professor path. The later audit reproduced papers in the retrieval payload
+> that were omitted from synthesis evidence or answered as a professor profile, and found no
+> complete predicate-aware pagination. The controlling re-acceptance contract is
+> `openspec/changes/close-retrieval-generation-contract/` Slices A-C.
+>
+> Claude-owned. Behavior-affecting (new `A_prof_papers` path on the A-professor route). The
+> historical local slice targeted the Type2 candidate-delivery gap. Its local GREEN evidence remains
+> below, but no longer constitutes end-to-end acceptance. Companion to
+> `openspec/changes/wire-professor-paper-list-traversal/`.
 
 ## Change
 - **change-id:** `wire-professor-paper-list-traversal` (OpenSpec Standard; behavior-affecting).
@@ -20,14 +27,15 @@
 - Type2 (professor→paper) e2e recall = **1/9 (11%)**. "X教授发表了哪些论文" → `A_prof_profile` →
   answer showed only "已收录 N 篇论文" (count); the professor's verified papers were never listed.
 
-## GREEN (after fix — all required, verified this session)
+## Historical local GREEN (verified in the original session)
 
 1. **Routing + real retrieval (`eval_recall_chat.py`, synth off, backend cycled):**
    - qid106 常瑞华 → `A_prof_papers` **3/3** (VCSEL, Fabry-Perot, Grating; was 1/3).
    - qid107 刘江 → `A_prof_papers` **3/3** (Glaucoma, Retinal, SkrGAN; was 0/3).
    - qid108 陈勇勇 → `A_prof_papers` **2/3** (Mamba-Transformer, Snapshot Compressive; Quaternion
      not in top results; was 0/3).
-   - Type2 recall **1/9 → 8/9**; paper-domain **7/20 (35%) → 14/20 (70%)**; overall e2e
+   - Type2 token score **1/9 → 8/9**; the stored paper artifact recounts **8/20 → 15/20**
+     (historical 7/20 → 14/20 omitted already-passing qid16); overall response-wide score
      **21/43 (49%) → 28/43 (65%)**.
 2. **Zero regression.** All 21 other oracle cases (qid1-51, 100-105, 109-110) classify + recall
    identically before/after.
@@ -48,11 +56,11 @@
 
 ## Decision
 
-**Accept.** Contract scope met (professor→paper list traversal wired, reusing existing helpers),
-evidence traceable (e2e 28/43 + 15 unit tests + benchmark back to pre-existing), zero new
-regression, A-G semantics preserved (routing still A→professor; handler decides profile-vs-papers).
-Slice state: Candidate → **Accepted** (not Archived; waits on parent `agentic-rag-retrieval`
-settling).
+**Candidate (supersedes the historical local Accept decision).** The helper/wiring remains useful
+implementation evidence, but 8/9 substring retrieval does not establish complete Type2 predicates,
+canonical paper citation, or a semantically correct paper-list answer. Re-accept only after the
+umbrella's fixed-oracle, grounded-answer, Type2 pagination/predicate, semantic, and zero-regression
+gates pass. This change remains unarchived.
 
 ## Verification commands (run this session)
 
@@ -67,5 +75,5 @@ uv run pytest tests/test_classifier_benchmark.py -k deterministic         # Q004
 
 # e2e (backend DOWN — in-process Milvus; codex-companion auto-restarts after)
 DATABASE_URL=… MILVUS_USE_REAL_CLIENT=1 CHAT_LLM_SYNTHESIS=off UV_OFFLINE=1 \
-  uv run python scripts/eval_recall_chat.py        # 28/43 (65%); qid106-108 A_prof_papers
+  uv run python scripts/eval_recall_chat.py        # historical 28/43; qid106-108 A_prof_papers
 ```

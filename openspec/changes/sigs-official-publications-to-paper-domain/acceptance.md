@@ -882,3 +882,12 @@ Verification commands added for this slice:
 - `uv run --no-sync ruff check backend/api/chat.py tests/test_chat_v1.py` from `apps/admin-console` - passed.
 - `DATABASE_URL=postgresql://miroflow:miroflow@localhost:15432/miroflow_real MILVUS_USE_REAL_CLIENT=1 UV_CACHE_DIR=/tmp/codex-uv-cache PYTHONDONTWRITEBYTECODE=1 uv run --no-sync python scripts/run_milvus_backfill.py --domain professor --milvus-uri /home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db --rebuild --batch-size 32 --log-level WARNING` from `apps/miroflow-agent` - passed, 3,387 professors processed, 0 errors.
 - Live `GET http://127.0.0.1:18188/api/health`, `GET http://127.0.0.1:5180/api/seeds`, `GET http://127.0.0.1:18188/api/professor/PROF-5A6A9C6FCBE6`, and live `POST /api/chat` checks for the two Li Xuan queries - passed against the real backend and database.
+## 2026-07-10 Cross-change archive gate
+
+- [ ] Task 5.20 plus umbrella C0/D1 prove retrieval-active exact-title identity-only partial behavior
+  and one paper-level ready plus active-partial-rich topic competition with terminal/title-only
+  semantic exclusions, visible quality penalty, citation/semantic/regression/latency gates, and no
+  ready-first suppression.
+- [ ] This change is not normally archived until that aligned spec/implementation evidence passes;
+  its unique SIGS ingest capability requires normal spec migration, so `--skip-specs` is not the
+  disposition.

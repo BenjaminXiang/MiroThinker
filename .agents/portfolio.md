@@ -3,43 +3,60 @@
 > Per CLAUDE.md §7. Tracks Active / Candidate / Blocked / Frozen / Abandoned / Accepted / Archived
 > work for the retrieval-augmented refactor.
 
-## Active (2026-07-09)
+> **Branch status (2026-08-07):** this branch is the historical retrieval-gap-closure line. The
+> Canonical V2 implementation mainline lives in the worktree branch
+> `codex/canonical-v2-s11-consolidation` (task ledger 90/92, S12G Candidate, 25-turn regression
+> 23/25 as of 2026-08-07 — see that worktree's `.agents/portfolio.md` and
+> `openspec/changes/rebuild-canonical-v2-knowledge-platform/`). Entries below are historical status
+> snapshots, not current implementation authority.
+
+## Canonical V2 mainline (2026-07-13)
+
+- **`rebuild-canonical-v2-knowledge-platform`** (OpenSpec, behavior-affecting breaking Epic) is the
+  sole implementation mainline by user decision. S1 database-target safety is Accepted (5/73 tasks
+  complete). S2 read-only source/corpus baseline is the next candidate slice, but remains not Ready
+  until its slice contract, checks, stop conditions, and acceptance evidence are written and
+  reviewed. Original Postgres and Milvus remain frozen forbidden write targets.
+- **`close-retrieval-generation-contract`** and overlapping retrieval/Web implementation changes
+  are Frozen and superseded as implementation authorities by Canonical V2. Their contracts,
+  evaluators, manifests, RED evidence, and reusable requirements remain evidence inputs for the V2
+  refactor; no further production implementation or archive is authorized until their task/evidence
+  mapping into V2 is complete and reviewed.
+
+## Legacy retrieval portfolio (status as of 2026-07-10)
+
+The entries below preserve their last independently evidenced state. They are not the current
+implementation authority where Canonical V2 supersedes their pre-launch assumptions.
+
+- **`close-retrieval-generation-contract`** (OpenSpec, behavior-affecting Epic) — canonical closure
+  contract for paper retrieval → evidence → citation → semantic answer and Postgres-Milvus parity.
+  **State: Slice A In Progress, stopped at substrate gate; Slices B-F Specified/blocked.** A added
+  the allowlisted ID-grounded evaluator and captured stable read-only DB/Milvus manifests, but the
+  current index is non-viable (16,777 expected papers missing, 13,438 unexpected; 36,835 expected
+  chunks missing, 17,648 unexpected, 3,012 stale; all 46,035 actual chunks lack a verifiable
+  model/chunker/index/write tuple). An explicit sequencing/substrate decision is required before A
+  resumes; no production behavior or data/index write occurred. B canonicalizes evidence/claims/outcomes; C closes
+  Q004/Q017 + natural Type1 + predicate-aware Type2; D closes Type4 hybrid/paper-level quality; E
+  adds provenance-bearing Type3; F adds ledger/lanes/parity. Contract:
+  `openspec/changes/close-retrieval-generation-contract/`; execution:
+  `.agents/runs/close-retrieval-generation-contract/`. No later slice starts before its predecessor
+  is Accepted. Dependency correction: `sigs-official-publications-to-paper-domain` retains its
+  unique ingest capability but cannot archive normally until pending Task 5.20 aligns C0 exact-title
+  identity partials and D1 removes historical ready-first suppression; `make-partial-papers-retrievable` remains the Accepted
+  eligibility behavior dependency.
 - **`paper-retrievability-baseline`** (slice-contract; Measurement — NO OpenSpec, no prod-code
-  change) — establish the **behavioral retrievability baseline for the paper domain** (recall +
-  true-accuracy). Structural retrievability already done/measured by Lever 0
-  (`docs/solutions/2026-07-03-data-gap-first-principles.md`); behavioral is unmeasured — oracle has
-  ≈0 paper cases. Grilling-validated → contract at
-  `.agents/runs/paper-retrievability-baseline/slice-contract.md`. **State: retrieval-leg baseline
-  DONE (2026-07-09)** — 11 paper oracle cases in `eval_recall.py`; e2e recall (`eval_recall_chat.py`,
-  synth off) = **7/20 (35%)**, path-dependent: Type1 self-retrievability **6/6 (100%)**; Type2
-  professor→paper **1/9 (11%)** (FM4-reverse gap); Type4 topic→paper **0/4 (0%)** (classifier routes
-  paper-topic → `unknown` — NEW finding); Type3 company→paper **dead** (`professor_company_role`
-  empty). Findings + type-aware bar + gap→lever map in `baseline-summary.md`. **Decision: defer
-  generation leg (true-accuracy)** — retrieval is the binding constraint (can't cite unretrieved);
-  gen leg only tests the Type1 citation seam, a refinement for after Type2/Type4 fixes. Caveat:
-  recall is a **lower bound** (candidate-generator Q3 deferred). **Type4 classifier fix DONE
-  (2026-07-10, Accepted)** — `openspec/changes/fix-paper-topic-query-classification/` + review
-  `type4-classifier-fix.md`. Root cause: exact-paper rule over-fired on 论文+ASCII-run; B
-  paper-topic rule required ending in 论文. Fix: broadened B rule (topic-search intent + guards).
-  qid109/110 `unknown`→`B_paper_topic_search`, **0→8 relevant papers each** (curl-confirmed);
-  zero regression (21 other cases identical). Recall NUMBER stayed 0/4 (oracle tokens too
-  specific — measurement follow-up, not a defect). **Type2 professor→paper traversal DONE
-  (2026-07-10, Accepted)** — `openspec/changes/wire-professor-paper-list-traversal/` + review
-  `type2-prof-papers-fix.md`. Wired `_professor_profile_or_papers_response` (reuses existing
-  `_lookup_verified_papers_for_prof` + `_answer_prof_papers`) at the A-professor path; new
-  `A_prof_papers` query_type for paper-list intent. qid106-108 → A_prof_papers, Type2 **1/9→8/9**;
-  paper-domain **7/20 (35%) → 14/20 (70%)**; overall **21/43 (49%) → 28/43 (65%)**; zero regression.
-  Regression tests `tests/test_paper_retrievability.py` (15 pass); benchmark Q050 (Type4 over-fire
-  on 作者) fixed + guarded; Q004/Q017 (X教授是谁→G) pre-existing, filed as professor-ambiguity
-  follow-up. **Q004/Q017 professor-ambiguity FIXED + Type4 oracle refined (2026-07-10)** —
-  `openspec/changes/fix-professor-ambiguity-intro-rule/` (ambiguous-intro rule guarded vs
-  教授/研究员/博导/院士 → A). **100-case classifier benchmark now ALL GREEN** (was Q004/Q017/Q050
-  red). Type4 oracle tokens refined to topic-indicative title tokens (capital, vs lowercase query
-  echo) — measures "did topic papers surface". **Paper-domain recall 35% → 94%** (Type1 100% /
-  Type2 89% / Type4 100%); overall e2e **49% → 73% (30/41)**. 18 regression tests pass
-  (`test_paper_retrievability.py`). **Paper-retrievability Type1/2/4 + Q004/Q017 CLOSED** (Type3
-  dead: `professor_company_role` empty). **Next:** Slice B (Lever 3 ~24,285 needs_enrichment
-  abstract backfill, E-gated) — the data ceiling; or commit this batch (all uncommitted).
+  change) — **State: Candidate; not closed.** The stored baseline labeled the paper slice 7/20;
+  recounting the same artifact yields 8/20, while the later paper set is 17/18 after the Type4
+  expected set changed. The three local repairs remain useful implementation evidence. Their former
+  Accepted/CLOSED labels are superseded: `fix-paper-topic-query-classification`,
+  `wire-professor-paper-list-traversal`, and `fix-professor-ambiguity-intro-rule` are Candidate.
+  The later 30/41 report cannot be compared as recall because the scorer includes query echo and the
+  Type4 oracle changed; it also did not prove canonical citation or semantic generation. Current
+  closure gaps are Type2 predicate/page completeness, Type4 paper-level Precision@5, Q004/Q017
+  normalized entity/endpoint/IDs, canonical evidence/citations, Type3 two-hop provenance, and
+  active-only embedding parity. Re-acceptance is governed only by
+  `close-retrieval-generation-contract`; historical raw backlog totals are not the active
+  enrichment worklist and must be recomputed by Slice F.
 - **`layer-d-multi-turn-context`** (OpenSpec, Standard-to-Epic; rebuild Slice 4) — set
   coreference + cross-domain traversal + narrowing mechanisms + anchor discipline.
   Grilling-validated → ADR-011 + root CONTEXT.md; OpenSpec 4/4 artifacts;
@@ -95,6 +112,13 @@
   (qid5 reachability, prof region precision, classifier referent field, displayed-set cap).
 
 ## Accepted (contract closed this round)
+- **`make-partial-papers-retrievable`** (OpenSpec, behavior dependency) — **Accepted structural
+  behavior remains in force:** partial papers are indexable only under the single derived rich-text
+  predicate and must remain presentable through the accepted snippet/admission seams. Its historical
+  ready-but-not-embedded D3 measurement was never completed and is not parity evidence; that
+  disjoint full paper/chunk measurement is superseded by Slice F of
+  `close-retrieval-generation-contract`. Archive normally only after its accepted spec deltas are
+  migrated canonically; do not mark D3 measured.
 - **`add-synthesis-timeout`** (OpenSpec, Tiny/low) — delivered 0572d06+8da9053; behavior-affecting
   (3s→60s); validate 0; ledger in-verification. Review: Accept.
 

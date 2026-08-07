@@ -72,3 +72,10 @@
 - Runtime evidence: institution-prefixed professor-paper and professor-topic chat routing now splits the institution alias from the professor name before lookup. Live backend checks for `中山大学深圳王伟教授有哪些论文？` returned `D_prof_papers_followup` with 9 paper citations, and `中山大学深圳王伟教授的研究方向是什么？` returned `D_prof_topics_followup` with source-grounded research topics. The same paper-list query through the `:5180` frontend proxy returned `D_prof_papers_followup`.
 - Scope extension: parallel school-crawler workers added bounded shared fixes for UESTC YJSJY profile/readiness, UESTC/SZTU homepage-publication parsing, teacher-maintained personal homepage recursion, and verified-link professor metrics. These fixes are prerequisites for broad seed reruns and do not claim any school is fully re-collected.
 - Runtime evidence: main-thread integration tests passed for the combined professor/profile/publication/crawler/seed-runner/canonical-metrics changes, plus downstream homepage-paper ingest and controlled recollection tests. No mutating seed rerun, paper title-enrichment write, summary backfill, or Milvus refresh was run for this slice.
+## 2026-07-10 — Topic retrieval dependency corrected
+
+- Preserved the SIGS/publication ingest and bounded rollout evidence.
+- Superseded only the historical ready-first/non-ready-fallback topic policy with the umbrella D1
+  ready+active-partial-rich paper-level competition and explicit quality penalty/disclosure.
+- Added pending Task 5.20 and blocked normal archive until C0 exact-title and D1 topic compatibility
+  are verified, preventing both stale overlapping policies from migrating into canonical specs.

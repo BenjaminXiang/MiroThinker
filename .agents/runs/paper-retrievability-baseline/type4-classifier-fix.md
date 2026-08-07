@@ -1,8 +1,15 @@
 # Verification + Review — fix-paper-topic-query-classification (2026-07-10)
 
-> Claude-owned. Behavior-affecting (A-G classification routing). Slice closes the Type4 gap from
-> the paper-retrievability baseline. GREEN is eval-first (classification/RAG), backed by real
-> evidence this session. Companion to `openspec/changes/fix-paper-topic-query-classification/`.
+> **Status correction (2026-07-10): Candidate.** The historical review below accepted only the
+> local classification slice. The later audit found that response-wide query echo and a changed
+> Type4 token oracle prevent it from proving retrieval → citation → semantic correctness. The
+> controlling re-acceptance contract is
+> `openspec/changes/close-retrieval-generation-contract/` Slices A and D.
+>
+> Claude-owned. Behavior-affecting (A-G classification routing). The historical local slice targeted
+> the Type4 routing gap from the paper-retrievability baseline. Its local GREEN evidence remains
+> below, but no longer constitutes end-to-end acceptance. Companion to
+> `openspec/changes/fix-paper-topic-query-classification/`.
 
 ## Change
 - **change-id:** `fix-paper-topic-query-classification` (OpenSpec Standard; behavior-affecting).
@@ -18,7 +25,7 @@
   rule (`chat.py:637`) required ending in 论文. Direct `_classify_query_by_rules` diagnosis
   confirmed qid109/110 → type A, name=whole-query, reason "exact paper deterministic rule".
 
-## GREEN (after fix — all required, verified this session)
+## Historical local GREEN (verified in the original session)
 
 1. **Classification routing fixed (deterministic).** `_classify_query_by_rules`:
    - qid109 "关于perovskite…论文有哪些" → **B/paper**, topic="perovskite钙钛矿材料" (was A).
@@ -30,7 +37,7 @@
    - qid109/110 → `query_type=B_paper_topic_search` (was `unknown`).
    - All 21 other cases identical; overall 21/43 unchanged (Type4 went 0/4 → 0/4 by the
      existing required tokens — see measurement caveat below; the ROUTING is what changed).
-4. **Real value confirmed (live `/api/chat` curl, synth on, backend :18188):**
+4. **Historical live behavior observed (`/api/chat`, synth on, backend :18188):**
    - qid109 returns **8 perovskite papers** (Hybrid Perovskite LEDs, Dion–Jacobson Phase
      Perovskite, perovskite single-crystal, …) with a synthesized answer. Was: nothing.
    - qid110 returns **8 federated-learning papers** (FedTC, FedPN, FedLF, FedREM, …). Was: nothing.
@@ -40,10 +47,10 @@
 Type4 recall NUMBER stayed 0/4 because the oracle's `required` tokens for qid109/110 are
 specific notable top-cited paper titles ("Hybrid Halide Perovskites", "Federated Learning Over
 Wireless"), while `B_paper_topic_search` returns the **top-vector-similar** papers (different,
-also-relevant set). Substring topic-recall is a weak instrument (Q3 blind spot). The
-classification GATE is fixed and the system demonstrably returns relevant topic papers (curl
-evidence). Refining the Type4 oracle tokens (or a topic-relevance judge) is a separate
-measurement follow-up, not part of this classification slice.
+     different candidate set). Substring topic scoring is a weak instrument (Q3 blind spot). The
+classification routing changed and the system returned topic-shaped local candidates, but the
+manual “relevant” impression was not retained as blind labels and is not precision evidence.
+Refining the Type4 oracle is now owned by the umbrella contract.
 
 ## Verification commands (run this session; backend cycled per [[milvus-single-writer-real-index]])
 
@@ -65,8 +72,7 @@ curl -s -X POST http://localhost:18188/api/chat -H 'Content-Type: application/js
 
 ## Decision
 
-**Accept.** Contract scope met (paper-topic classification routing fixed), evidence traceable
-(deterministic + e2e + curl), zero regression, A-G semantics preserved (restores intended B
-routing). Measurement-caveat (Type4 oracle tokens) explicitly out of scope. Slice state:
-Candidate → **Accepted** (not Archived; waits on parent `agentic-rag-retrieval` settling, like
-`make-partial-papers-retrievable`).
+**Candidate (supersedes the historical local Accept decision).** The classifier implementation and
+live retrieval observations remain useful evidence, but the measurement caveat is now inside the
+umbrella acceptance boundary. Re-accept only after a same-snapshot, frozen-topic paper-level
+Precision@5 run plus canonical citation and semantic gates pass. This change remains unarchived.

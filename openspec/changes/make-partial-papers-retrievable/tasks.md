@@ -18,13 +18,14 @@
 
 ## 2. Task 0 — measure D3 (ready-but-not-embedded), zero-data predecessor
 
-- [ ] 2.1 With backend up, compare `paper_chunks` per-paper presence (Milvus,
+- [x] 2.1 **Dispositioned, not measured here (2026-07-10):** the intended comparison of
+  `paper_chunks` per-paper presence (Milvus,
   `apps/miroflow-agent/milvus.db`) against `SELECT paper_id FROM paper WHERE
   quality_status='ready' AND identity_status NOT IN ('rejected','merged')`.
-  Persist the count to `.agents/runs/make-partial-papers-retrievable/d3-measure.json`.
-- [ ] 2.2 If D3 > 0, raise "embed already-ready entities" as a separate
-  predecessor slice (it needs no contract change) and note it; this change
-  proceeds regardless (its unlock — partials — is disjoint from D3).
+  No complete count was persisted. Measurement and remediation are superseded by Slice F of
+  `close-retrieval-generation-contract`, whose frozen all-paper/exact-chunk reconciler is stricter.
+- [x] 2.2 Record D3 as a residual lane owned by that Epic rather than raising a duplicate predecessor
+  or claiming that the targeted partial-rich rebackfill measured ready-paper parity.
 
 ## 3. Contract tests (RED — deterministic module, TDD-allowed)
 
@@ -48,8 +49,11 @@
   are NULL and `paper_full_text.abstract` is non-empty; returns `summary_zh`
   first when present; returns `title` only as the final fallback. (RED until
   seam 4.)
-- [ ] 3.5 Run the RED suite; confirm all four fail for the right reason;
-  record the failure output in the verification contract.
+- [x] 3.5 **Dispositioned without a RED claim (2026-07-10):** the contemporaneous four-failure RED
+  transcript was not retained. The later Accepted review recorded the contract/regression GREEN and
+  structural behavior, but MUST NOT be cited as proof that this process step ran. Slice A of
+  `close-retrieval-generation-contract` owns the new immutable true-RED oracle before further
+  retrieval behavior work.
 
 ## 4. Seam 1 — relax `is_indexable`
 
@@ -132,6 +136,6 @@
   full payoff deferred to Lever 1/2. Review: `.agents/reviews/make-partial-papers-retrievable.md`.
 - [x] 9.3 Solutions doc §7 + Lever 0 status — updated (Lever 0 Accepted;
   D3 remains open; next = Lever 1/2 for the "limited search" symptom).
-- [ ] 2.1 D3 measure — NOT closed this session (rebackfill was partial-targeted,
-  ~2,010; ready=27,456; D3 = ready-but-unembedded needs a Milvus distinct-count
-  vs ready, not run). Disjoint from this slice; open as a predecessor candidate.
+- [x] D3 disposition — NOT measured by this change (the targeted partial-rich rebackfill cannot
+  prove ready-paper parity). Superseded by Slice F of `close-retrieval-generation-contract`; that
+  Epic must recompute full paper/chunk parity and may not cite this checkbox as a successful measure.

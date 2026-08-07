@@ -1,5 +1,14 @@
 # Proposal: wire-professor-paper-list-traversal
 
+> **Status correction (2026-07-10): Candidate.** The local traversal helper/wiring remains
+> implemented evidence, but retrieval payloads are not yet guaranteed to enter canonical prompt
+> evidence or a correct cited paper answer, and the current list path is not complete/predicate-aware
+> pagination. Re-acceptance requires Slices A-C of
+> `openspec/changes/close-retrieval-generation-contract/`. Do not archive this change before those
+> linked end-to-end scenarios pass. After they pass, accept this record only as superseded history
+> and archive with `openspec archive wire-professor-paper-list-traversal --skip-specs`, recording
+> `superseded_by=close-retrieval-generation-contract`; default spec migration is forbidden.
+>
 > Behavior-affecting. Amends `agentic-rag-retrieval` (professor→paper list traversal on the
 > A-professor path). Grounded in the paper-retrievability baseline (2026-07-09): Type2
 > (professor→paper) recall was **1/9** — "X教授发表了哪些论文" routed to `A_prof_profile`,
@@ -32,7 +41,8 @@ The infrastructure already existed but was only wired for the **D multi-turn fol
    unchanged (DRY with the D path).
 
 ### Non-goals
-- **Type4 (topic→paper)**: closed by `fix-paper-topic-query-classification` (separate change).
+- **Type4 (topic→paper)**: had a separate local classifier repair but remains Candidate until the
+  umbrella's paper-level precision, citation, semantic, and latency gates pass.
 - **Type3 (company→paper)**: structurally dead (`professor_company_role` empty) — separate data
   workstream.
 - **Q004/Q017 professor-ambiguity** ("X教授是谁" → G via the ambiguous-intro rule, should be A):
@@ -48,10 +58,14 @@ The infrastructure already existed but was only wired for the **D multi-turn fol
 ## Impact
 
 - **Retrieval**: qid106-108 `A_prof_profile` → `A_prof_papers`; Type2 recall **1/9 → 8/9**;
-  paper-domain recall **7/20 (35%) → 14/20 (70%)**; overall e2e **21/43 (49%) → 28/43 (65%)**.
+  the stored 20-token paper slice recounts **8/20 → 15/20** (the historical 7/20 → 14/20 text
+  omitted already-passing qid16); overall e2e **21/43 (49%) → 28/43 (65%)**.
   Zero regression on the 21 other oracle cases.
 - **Code**: `backend/api/chat.py` — one pure helper + one response helper + two call-site rewires.
   No schema, no migration, no persisted column. Reuses existing `_lookup_verified_papers_for_prof`
   + `_answer_prof_papers` (no new fetch/render logic).
 - **Invariant**: A-G classification semantics preserved — routing is still A→professor; the
   handler decides profile-vs-papers by intent. No new classifier type.
+
+The impact numbers above are historical response-wide token/payload measurements. They do not prove
+canonical ID retrieval, citation, or semantic answer stages and are not current acceptance evidence.

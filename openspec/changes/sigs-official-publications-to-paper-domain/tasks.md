@@ -128,3 +128,7 @@
 - [x] 5.17 Record verification evidence for the SUSTech `faculty.sustech.edu.cn` source-selection allowance without running mutating ingest scripts.
 - [x] 5.18 Record verification evidence for institution-prefixed professor-paper and professor-topic chat routing during broad seed rollout validation.
 - [x] 5.19 Record main-thread integration evidence for the UESTC/SZTU parser, personal-homepage recursion, and verified-link professor-metrics subagent patches.
+- [ ] 5.20 Before archive, pass `close-retrieval-generation-contract` C0 and D1: align exact-title
+  identity-only partial behavior with `retrieval-active-v1`, and replace historical ready-first topic
+  fallback with one ready+active-partial-rich paper-level competition, including quality disclosure,
+  terminal/semantic-title-only exclusions, regression, and latency proof.

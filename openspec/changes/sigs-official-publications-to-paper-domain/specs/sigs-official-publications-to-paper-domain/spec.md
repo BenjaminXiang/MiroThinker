@@ -75,11 +75,24 @@ The shared homepage paper ingest bridge and title-enrichment backfill MUST enfor
 
 Paper topic-search chat responses MUST deduplicate retrieval chunk hits by canonical paper ID before presenting answers, citations, and structured payload objects. When duplicate chunks for the same paper are retrieved, the response MUST keep one paper object and prefer the stronger score/snippet metadata.
 
-Paper topic-search and retrieval surfaces MUST NOT present paper rows whose `quality_status` or `identity_status` is `rejected`. This exclusion MUST still apply when a caller explicitly disables the ready-only quality filter for a fallback search. For paper topic chat, the system MUST first request ready paper candidates; it MAY fall back to non-ready non-rejected candidates only when no ready candidates are found, and fallback answers MUST keep the existing caveat behavior.
+Paper topic-search and retrieval surfaces MUST NOT present paper rows whose `quality_status` or
+`identity_status` is `rejected` or whose identity is `merged`. This exclusion MUST apply in every
+candidate lane. Once `close-retrieval-generation-contract` D1 is Accepted and
+`PAPER_D1_TOPIC_RETRIEVAL_MODE` is active, topic search MUST request
+ready and active partial-rich papers in the same paper-level candidate competition; partial-rich
+papers receive the versioned visible quality penalty/limitation but MUST NOT be suppressed merely
+because a ready candidate exists. Partial title-only papers remain ineligible for semantic/dense
+topic search. The historical ready-first-then-non-ready fallback is superseded and MUST NOT be
+migrated or retained as the canonical topic policy.
 
-Paper retrieval exact-title normalization MUST support natural Chinese question forms where the paper-domain word appears before the title, such as `论文 <title> 的摘要是什么`, as well as suffix forms such as `<title> 这篇论文主要讲什么`. These query decorations MUST be stripped before exact-title lookup so ready papers can be retrieved by their titles.
+Paper retrieval exact-title normalization MUST support natural Chinese question forms where the paper-domain word appears before the title, such as `论文 <title> 的摘要是什么`, as well as suffix forms such as `<title> 这篇论文主要讲什么`. These query decorations MUST be stripped before exact-title lookup so matching nonterminal papers can be resolved by title.
 
-When a paper exact-title candidate is non-rejected and has a source-grounded snippet from `summary_zh` or a real abstract, the retrieval service MAY return it even if `quality_status='partial'` and the default ready-only quality filter is enabled. This exception MUST apply only to conservative exact-title candidates. Partial title-only paper rows and ordinary semantic ANN paper candidates MUST remain filtered by the default ready-only gate.
+Once `close-retrieval-generation-contract` C0 is Accepted and
+`CHAT_C0_IDENTITY_TYPE1_MODE` is active, every exact-title match satisfying
+`retrieval-active-v1` MUST remain eligible regardless of ready status. A match with source-grounded
+requested detail returns that detail; a title/identity-only match returns a visibly limited identity
+`partial_result` and MUST NOT invent detail. Partial title-only rows remain ineligible only for
+ordinary semantic/dense topic retrieval, not conservative exact-title identity resolution.
 
 The shared reference-like title cleaner MUST recover real paper titles from source-page citation tails such as `[C/OL]//...`, venue/year download suffixes such as `-- Bioinformatics, 2020 [ Paper ] [ Software ]`, trailing `, with <authors>` notes, quote-plus-abbreviated-journal tails such as `" J. Am`, and known detached journal names such as `BMC biology` or `Communications in Computational Physics`. The shared title-quality guard MUST still reject terminal non-paper fragments such as standalone section/media labels, venue-only fragments, journal date/DOI rows, issue/page rows, CJK joint-lab/project rows, and author-list citation tails before resolver calls.
 
@@ -132,7 +145,8 @@ The shared title-quality guard MUST reject additional subagent-audited non-paper
 - **WHEN** `RetrievalService.retrieve` runs with the default ready-only quality filter enabled
 - **THEN** the paper is returned as a `paper_title_exact` result
 - **AND** the returned snippet source is `summary_zh`
-- **AND** a partial paper row with only a title and no `summary_zh` or real abstract is still filtered out
+- **AND** after umbrella C0 acceptance, a partial title/identity-only exact match remains retrievable
+  as a visibly limited identity `partial_result` without invented abstract/summary detail
 
 #### Scenario: Bounded title-enrichment run can skip slow providers
 
@@ -179,8 +193,9 @@ The shared title-quality guard MUST reject additional subagent-audited non-paper
 - **GIVEN** paper retrieval contains a rejected candidate and a ready candidate for the same topic
 - **WHEN** paper topic chat answers the query
 - **THEN** the rejected candidate is excluded from matched objects and citations
-- **AND** ready candidates are preferred before any non-ready fallback search
-- **AND** a fallback search with the ready-only quality filter disabled still excludes rejected rows
+- **AND** an eligible active partial-rich candidate MAY compete with the ready candidate under the
+  versioned quality penalty and visible limitation
+- **AND** no ready-only-first phase may suppress that eligible candidate
 
 #### Scenario: Reference-like page titles are cleaned or rejected before resolver calls
 

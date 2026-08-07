@@ -1,5 +1,12 @@
 # Proposal: make-partial-papers-retrievable
 
+> **Lifecycle clarification (2026-07-10): Accepted structural behavior dependency.** The implemented
+> partial-rich eligibility/snippet/admission contract remains authoritative. Historical Task 2.1
+> did not measure ready-but-not-embedded D3 and is not evidence of parity; that disjoint measurement
+> is superseded by Slice F of `close-retrieval-generation-contract`, which reconciles every paper
+> and exact chunk manifest under a frozen rule version. Archive this change normally only when its
+> accepted deltas can migrate into canonical specs; do not treat the superseded D3 task as measured.
+
 > Behavior-affecting. Deltas two in-flight capabilities: `data-quality-gating`
 > (relaxes the retrieval-readiness invariant `unify-data-quality-gating` just
 > established) and `agentic-rag-retrieval` (fixes an embedding-source ⊋
@@ -84,9 +91,9 @@ else it is half-finished.
 - **Professor path** (`unify`'s D2 was a false premise): owned by Lever 1
   (professor reason-class batch repair). Separate change.
 - **Graph rescue** (Move C): owned by Lever 2. Independent, zero-contract.
-- **D3 (ready-but-not-embedded)**: measured as the first implementation step;
-  if non-zero, "embed already-ready" is a zero-data-work predecessor and is
-  handled as task 0, not a contract change.
+- **D3 (ready-but-not-embedded)**: historical measurement was not completed in this change. It is
+  now owned by the complete paper/chunk reconciler in Slice F of
+  `close-retrieval-generation-contract`, not inferred from the partial targeted rebackfill.
 
 ## Capabilities
 

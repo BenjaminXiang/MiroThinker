@@ -1,5 +1,13 @@
 # Paper-retrievability baseline (2026-07-09)
 
+> **Lifecycle correction (2026-07-10): Candidate historical measurement, not closure evidence.**
+> The stored 20-token paper slice recounts 8/20, not 7/20, because already-passing qid16 was omitted
+> from the narrative arithmetic. After Type2 it recounts 15/20, not 14/20. The later 17/18 result
+> changed the Type4 expected-token set and is not the same recall series. The response-wide scorer
+> can pass on query echo and these runs did not prove canonical citation or semantic completeness.
+> Re-acceptance is governed only by `close-retrieval-generation-contract`; the three local repairs
+> remain Candidate implementation evidence.
+>
 > Behavioral retrievability baseline for the PAPER domain. Retrieval leg (synthesis OFF).
 > Companion to `slice-contract.md`. Numbers are a **lower bound** (candidate-generator Q3
 > deferred). Methodology per [[validation_methodology_fresh_fetch]] — run against the live
@@ -7,7 +15,8 @@
 
 ## Headline
 
-**Paper-domain e2e recall = 7/20 (35%)** — but the headline hides that retrievability is
+**Historical narrative headline: 7/20; corrected artifact recount: 8/20.** This token score is
+not canonical-ID recall, and it hides that retrievability is
 **path-dependent**. Decomposed by access path:
 
 | Type | Access path | Result | Verdict |
@@ -26,7 +35,7 @@ gated by the access path, not by the paper's indexability.
 | Eval | Path | synth | Paper result | Note |
 |---|---|---|---|---|
 | `eval_recall.py` | single-domain `retrieve(domains=("paper",))` | off | 4/20 (20%) | noisy: snippet chain is `summary_zh→abstract→title`, so ready papers with `summary_zh` yield a **Chinese** snippet → English title tokens false-miss (qid102/103/105) |
-| `eval_recall_chat.py` | full `/api/chat` (routing + cross-domain) | off | **7/20 (35%)** | primary; checks full JSON, resolves snippet-language artifact; Type1 → 6/6 |
+| `eval_recall_chat.py` | full `/api/chat` (routing + cross-domain) | off | **stored narrative 7/20; artifact recount 8/20** | historical response-wide token check; query echo and citation/semantic gaps make it non-accepting |
 
 Overall e2e (all domains): **21/43 (49%)**. Historical 13/24 preserved at
 `post-fix-recall.pre-paper-baseline-2026-07-09.json`; new run overwrote `post-fix-recall.json`.
@@ -80,7 +89,7 @@ Type-aware, not a single % (a single 35% hides the path-dependence):
 | Type4 0% | query classifier → `unknown` for paper-topic | classifier fix (NEW finding) | no (local) |
 | Type2 11% | no professor→paper traversal | wire traversal (FM4-reverse) | no (local) |
 | Type3 dead | `professor_company_role` empty | data: populate company↔professor links | data workstream |
-| headline ceiling | ~24,285 `needs_enrichment` papers have no abstract | **Slice B / Lever 3** abstract backfill | yes (OpenAlex) + local PDF |
+| enrichment ceiling | historical raw backlog mixed active and terminal rows | Slice F recomputed active worklists, then separately owned enrichment | source-dependent |
 
 ## Deferred
 
@@ -89,8 +98,8 @@ Type-aware, not a single % (a single 35% hides the path-dependence):
   unchanged by synthesis. The generation leg would only test the "retrieved-but-not-cited" seam
   on Type1 (where retrieval is 100%) — a refinement, run after the Type2/Type4 fixes surface more
   retrieved candidates. Needs paper head-turn cases in `tests/fixtures/test_cases.yaml`.
-- **Slice B (Lever 3):** the dominant data ceiling (~24,285 needs_enrichment papers, up from
-  14,343). Pursued after this baseline per the A→B decision.
+- **Historical Lever 3:** exact backlog totals are not retained here as durable evidence. Slice F
+  must recompute active/terminal worklists, ID sets, predicate version, query hash, and snapshot.
 
 ## Repro
 

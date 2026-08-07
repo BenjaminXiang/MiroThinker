@@ -1,5 +1,14 @@
 # Proposal: fix-paper-topic-query-classification
 
+> **Status correction (2026-07-10): Candidate.** The local classifier repair remains implemented
+> evidence, but its earlier acceptance used a response-wide substring oracle and a changing Type4
+> token set. Re-acceptance requires the frozen ID/citation/semantic and Precision@5 gates in
+> `openspec/changes/close-retrieval-generation-contract/` (Slice A, then Slice D). Do not archive
+> this change before those linked scenarios pass. After they pass, accept this record only as
+> superseded history and archive with
+> `openspec archive fix-paper-topic-query-classification --skip-specs`, recording
+> `superseded_by=close-retrieval-generation-contract`; default spec migration is forbidden.
+>
 > Behavior-affecting. Amends `agentic-rag-retrieval` (query-classification routing into paper
 > topic retrieval). Grounded in the paper-retrievability baseline (2026-07-09,
 > `.agents/runs/paper-retrievability-baseline/baseline-summary.md`): Type4 (topic→paper) recall
@@ -59,9 +68,9 @@ routed to neither B (topic search) nor a valid A (exact entity), but to `unknown
 
 ## Impact
 
-- **Retrieval**: qid109/110 `unknown` → `B_paper_topic_search`, each returning 8 relevant papers
-  (perovskite / federated-learning) where previously zero. Verified by direct classifier call +
-  live `/api/chat` curl.
+- **Retrieval**: qid109/110 `unknown` → `B_paper_topic_search`; historical live responses returned
+  eight local candidates per query where previously none. “Relevant” was an unretained anecdotal
+  inspection, not blind labels, so it is not precision or acceptance evidence.
 - **Code**: `backend/api/chat.py:637` — one rule broadened (added topic-search intent clause +
   two guards). No other rule, no schema, no migration, no persisted column.
 - **Regression**: zero. The 21 other oracle cases (professor/company/paper-profile/patent +
@@ -70,3 +79,6 @@ routed to neither B (topic search) nor a valid A (exact entity), but to `unknown
 - **Invariant**: A-G classification semantics preserved — the fix RESTORES intended B-topic
   routing that the exact-paper rule was violating; it does not add a new type or change any
   existing route's destination for non-topic queries.
+
+The impact numbers above are historical local measurements, not current acceptance evidence. They
+must not be compared as one recall series because the evaluator/oracle changed between runs.

@@ -1,0 +1,7 @@
+{
+  "database_url_configured": true,
+  "milvus_uri": "apps/miroflow-agent/milvus.db",
+  "proxy_variables_removed": true,
+  "python": "3.12.12",
+  "schema_version": "slice-a-environment-v1"
+}

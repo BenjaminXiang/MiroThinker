@@ -1,0 +1,267 @@
+{
+  "before_after_stable": true,
+  "code_sha": "c0f3db2e0493dc1bd104f10bf64ec2a76c166a3f",
+  "database_after": {
+    "index_eligibility_rule_sha256": "265a60542dbd1633fdbd16b01fc15ee3e2f02c267456d915ae15c6f600d6cd86",
+    "index_eligibility_rule_version": "index-eligibility-v1",
+    "manifest_sha256": "537c132b77729d88821735b0b2847640fcda485641de3160325069c20c933672",
+    "projection_version": "slice-a-query-visible-db-v1",
+    "retrieval_active_rule_sha256": "13ccaff72aade3923dce937c7586b4c3cccd84d9799050889841da2e36754f33",
+    "retrieval_active_rule_version": "retrieval-active-v1",
+    "tables": [
+      {
+        "columns_sha256": "0b181ed7aad298d2ff9944f2de8c127aad4f9bf80760c8c0f6b0334fd2dee2dc",
+        "ordered_rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "primary_key": [
+          "company_id"
+        ],
+        "query_sha256": "48ca349b42a232f08cc2bf15fd2eac93b2f508b1cc21ae18a2d7d5b28c38c16c",
+        "row_count": 0,
+        "table": "company"
+      },
+      {
+        "columns_sha256": "141b70ab5363f91433b3795eae024f225de31c5204dffc887762b58da6f5004f",
+        "ordered_rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "primary_key": [
+          "snapshot_id"
+        ],
+        "query_sha256": "1854564af24a9afceffa190124896f8903f3f4222edbff07fcf5d7c02a27c527",
+        "row_count": 0,
+        "table": "company_snapshot"
+      },
+      {
+        "columns_sha256": "71c6daf2e27e6929d91a9c87496dbfd75f2c71abd67c7aeeb6ca15d3c5000dfb",
+        "ordered_rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "primary_key": [
+          "member_id"
+        ],
+        "query_sha256": "c5d3ec7c8f76b0fd515315e2bbc39d03650e06661edf482d066cf2560125b5a7",
+        "row_count": 0,
+        "table": "company_team_member"
+      },
+      {
+        "columns_sha256": "6958117da7be7fbbd1244c2cfea238e3cc76873c345c1aff6f47f3c7f6b71b7a",
+        "ordered_rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "primary_key": [
+          "paper_id"
+        ],
+        "query_sha256": "fd4e8803f4d97113717862b98efb23ca802cb8384f7a485d6ee2231fa5b1b9bd",
+        "row_count": 0,
+        "table": "paper"
+      },
+      {
+        "columns_sha256": "1d7908fbf3efbe72073c3c63ca8a98bbc13effc145583fe1a1628b34e0aefb6c",
+        "ordered_rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "primary_key": [
+          "paper_id"
+        ],
+        "query_sha256": "ffddeb73b3d91f5b3359fcfa2456ae6a5a133b038e08c350854effbd9c7bf427",
+        "row_count": 0,
+        "table": "paper_full_text"
+      },
+      {
+        "columns_sha256": "33c8a73a5fea9890e42c87f222c3968022cc42819ffb3782df16104ca3bdba9f",
+        "ordered_rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "primary_key": [
+          "alias_id"
+        ],
+        "query_sha256": "4e7a7ec11f7435fe47b4a58e2edac7a5c53fe7b1b4e907a4349b5c78ec9dc6ed",
+        "row_count": 0,
+        "table": "paper_merge_alias"
+      },
+      {
+        "columns_sha256": "5ab437f35287ad6be6087dc1cd69f3b86d26831c3fa372c8ef4b10499bee2231",
+        "ordered_rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "primary_key": [
+          "professor_id"
+        ],
+        "query_sha256": "8b8f92b649bc73f0e8bd03837a6d7277bba36ce0ab904d827c345ae27a7ac6d9",
+        "row_count": 0,
+        "table": "professor"
+      },
+      {
+        "columns_sha256": "cbc209e3fc653103f5f3d611ed4e5d4e8518ac5b07941d6f4f6004ec62e1c315",
+        "ordered_rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "primary_key": [
+          "affiliation_id"
+        ],
+        "query_sha256": "e3b201fd9866f8bf9849189796e8c80f8943786bd503c05afebee289e6082e1e",
+        "row_count": 0,
+        "table": "professor_affiliation"
+      },
+      {
+        "columns_sha256": "db57ef9abeba989aa9e02d716909ab189320e81da927ea9cfe68b95723c7ad25",
+        "ordered_rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "primary_key": [
+          "role_id"
+        ],
+        "query_sha256": "729b2557356a57e6c7cb86ca2ca431cb53aa06d106f7a6dc9fe739b54c2eb93c",
+        "row_count": 0,
+        "table": "professor_company_role"
+      },
+      {
+        "columns_sha256": "5577a2b0f881281735db7f60650a41369f2ef78c2b2eff4d7b5b1ee581809094",
+        "ordered_rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "primary_key": [
+          "link_id"
+        ],
+        "query_sha256": "0d8d879bd5a8e4fd82d0a3164faed9b93fd1e58e8fa0f5beca07682e1c786e82",
+        "row_count": 0,
+        "table": "professor_paper_link"
+      }
+    ]
+  },
+  "database_before": {
+    "index_eligibility_rule_sha256": "265a60542dbd1633fdbd16b01fc15ee3e2f02c267456d915ae15c6f600d6cd86",
+    "index_eligibility_rule_version": "index-eligibility-v1",
+    "manifest_sha256": "537c132b77729d88821735b0b2847640fcda485641de3160325069c20c933672",
+    "projection_version": "slice-a-query-visible-db-v1",
+    "retrieval_active_rule_sha256": "13ccaff72aade3923dce937c7586b4c3cccd84d9799050889841da2e36754f33",
+    "retrieval_active_rule_version": "retrieval-active-v1",
+    "tables": [
+      {
+        "columns_sha256": "0b181ed7aad298d2ff9944f2de8c127aad4f9bf80760c8c0f6b0334fd2dee2dc",
+        "ordered_rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "primary_key": [
+          "company_id"
+        ],
+        "query_sha256": "48ca349b42a232f08cc2bf15fd2eac93b2f508b1cc21ae18a2d7d5b28c38c16c",
+        "row_count": 0,
+        "table": "company"
+      },
+      {
+        "columns_sha256": "141b70ab5363f91433b3795eae024f225de31c5204dffc887762b58da6f5004f",
+        "ordered_rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "primary_key": [
+          "snapshot_id"
+        ],
+        "query_sha256": "1854564af24a9afceffa190124896f8903f3f4222edbff07fcf5d7c02a27c527",
+        "row_count": 0,
+        "table": "company_snapshot"
+      },
+      {
+        "columns_sha256": "71c6daf2e27e6929d91a9c87496dbfd75f2c71abd67c7aeeb6ca15d3c5000dfb",
+        "ordered_rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "primary_key": [
+          "member_id"
+        ],
+        "query_sha256": "c5d3ec7c8f76b0fd515315e2bbc39d03650e06661edf482d066cf2560125b5a7",
+        "row_count": 0,
+        "table": "company_team_member"
+      },
+      {
+        "columns_sha256": "6958117da7be7fbbd1244c2cfea238e3cc76873c345c1aff6f47f3c7f6b71b7a",
+        "ordered_rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "primary_key": [
+          "paper_id"
+        ],
+        "query_sha256": "fd4e8803f4d97113717862b98efb23ca802cb8384f7a485d6ee2231fa5b1b9bd",
+        "row_count": 0,
+        "table": "paper"
+      },
+      {
+        "columns_sha256": "1d7908fbf3efbe72073c3c63ca8a98bbc13effc145583fe1a1628b34e0aefb6c",
+        "ordered_rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "primary_key": [
+          "paper_id"
+        ],
+        "query_sha256": "ffddeb73b3d91f5b3359fcfa2456ae6a5a133b038e08c350854effbd9c7bf427",
+        "row_count": 0,
+        "table": "paper_full_text"
+      },
+      {
+        "columns_sha256": "33c8a73a5fea9890e42c87f222c3968022cc42819ffb3782df16104ca3bdba9f",
+        "ordered_rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "primary_key": [
+          "alias_id"
+        ],
+        "query_sha256": "4e7a7ec11f7435fe47b4a58e2edac7a5c53fe7b1b4e907a4349b5c78ec9dc6ed",
+        "row_count": 0,
+        "table": "paper_merge_alias"
+      },
+      {
+        "columns_sha256": "5ab437f35287ad6be6087dc1cd69f3b86d26831c3fa372c8ef4b10499bee2231",
+        "ordered_rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "primary_key": [
+          "professor_id"
+        ],
+        "query_sha256": "8b8f92b649bc73f0e8bd03837a6d7277bba36ce0ab904d827c345ae27a7ac6d9",
+        "row_count": 0,
+        "table": "professor"
+      },
+      {
+        "columns_sha256": "cbc209e3fc653103f5f3d611ed4e5d4e8518ac5b07941d6f4f6004ec62e1c315",
+        "ordered_rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "primary_key": [
+          "affiliation_id"
+        ],
+        "query_sha256": "e3b201fd9866f8bf9849189796e8c80f8943786bd503c05afebee289e6082e1e",
+        "row_count": 0,
+        "table": "professor_affiliation"
+      },
+      {
+        "columns_sha256": "db57ef9abeba989aa9e02d716909ab189320e81da927ea9cfe68b95723c7ad25",
+        "ordered_rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "primary_key": [
+          "role_id"
+        ],
+        "query_sha256": "729b2557356a57e6c7cb86ca2ca431cb53aa06d106f7a6dc9fe739b54c2eb93c",
+        "row_count": 0,
+        "table": "professor_company_role"
+      },
+      {
+        "columns_sha256": "5577a2b0f881281735db7f60650a41369f2ef78c2b2eff4d7b5b1ee581809094",
+        "ordered_rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "primary_key": [
+          "link_id"
+        ],
+        "query_sha256": "0d8d879bd5a8e4fd82d0a3164faed9b93fd1e58e8fa0f5beca07682e1c786e82",
+        "row_count": 0,
+        "table": "professor_paper_link"
+      }
+    ]
+  },
+  "evaluator_code_sha256": "5a76f7ea6fd1c20b7110d13b0d61fb773acac80ddc83f6a2e3fc994d4faa62fc",
+  "milvus_after": {
+    "collection": "paper_chunks",
+    "entity_count": 46035,
+    "fields": [
+      "chunk_id",
+      "paper_id",
+      "chunk_type",
+      "segment_index",
+      "year",
+      "venue",
+      "content_text",
+      "content_vector"
+    ],
+    "index_count": 1,
+    "ordered_physical_rows_sha256": "9cbbf0f1d21b595516bb8cb5583b58d67408b9fa3c42f793e870a3999704efc0",
+    "physical_target_bytes": 1298632704,
+    "physical_target_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "schema_index_sha256": "27cadd4755413586553853043e4e35cf1a56c12ab038b5d47e469ce7e7b09001",
+    "vector_dimension": 4096
+  },
+  "milvus_before": {
+    "collection": "paper_chunks",
+    "entity_count": 46035,
+    "fields": [
+      "chunk_id",
+      "paper_id",
+      "chunk_type",
+      "segment_index",
+      "year",
+      "venue",
+      "content_text",
+      "content_vector"
+    ],
+    "index_count": 1,
+    "ordered_physical_rows_sha256": "9cbbf0f1d21b595516bb8cb5583b58d67408b9fa3c42f793e870a3999704efc0",
+    "physical_target_bytes": 1298632704,
+    "physical_target_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "schema_index_sha256": "27cadd4755413586553853043e4e35cf1a56c12ab038b5d47e469ce7e7b09001",
+    "vector_dimension": 4096
+  },
+  "schema_version": "slice-a-snapshot-manifest-v1",
+  "snapshot_id": "paper-snapshot-c75dac89a583b51c"
+}

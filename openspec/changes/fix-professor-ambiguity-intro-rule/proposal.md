@@ -1,5 +1,14 @@
 # Proposal: fix-professor-ambiguity-intro-rule
 
+> **Status correction (2026-07-10): Candidate.** The local ambiguity guard remains implemented
+> evidence, but Q004/Q017 still require normalized-name, domain, endpoint, target-ID, citation, and
+> semantic proof. Re-acceptance requires Slices A-C of
+> `openspec/changes/close-retrieval-generation-contract/`. A type-only 100-case classifier result is
+> insufficient for acceptance; do not archive this change before the linked scenarios pass. After
+> they pass, accept this record only as superseded history and archive with
+> `openspec archive fix-professor-ambiguity-intro-rule --skip-specs`, recording
+> `superseded_by=close-retrieval-generation-contract`; default spec migration is forbidden.
+>
 > Behavior-affecting. Amends `agentic-rag-retrieval` (the ambiguous-intro classification rule).
 > Pre-existing bug surfaced by the 100-case classifier benchmark (Q004/Q017), found while running
 > regression for the paper-retrievability Type4 fix.
@@ -44,3 +53,6 @@ professor-name extraction rule. The G result also mis-set `target_domain` to com
   verified by `tests/test_paper_retrievability.py` (untitled-name-still-G) + the full benchmark.
 - **Invariant**: A-G classification semantics preserved — restores intended A routing that the
   ambiguous-intro rule was violating for titled names.
+
+The 100-case result above is retained as a historical deterministic-classifier result, not an
+end-to-end entity-resolution or answer-quality acceptance result.
