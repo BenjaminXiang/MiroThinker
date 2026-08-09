@@ -385,7 +385,7 @@
         </div>
         <div class="top-actions">
           <span class="release-pill" id="release-pill" aria-live="polite">正在连接候选版本…</span>
-          <a class="chat-link" href="/chat">进入 V2 对话 <span aria-hidden="true">↗</span></a>
+          <a class="chat-link" href="chat">进入 V2 对话 <span aria-hidden="true">↗</span></a>
         </div>
       </div>
     </header>
@@ -454,9 +454,9 @@
     </main>
 
     <script>
-      const statusPath = "/api/canonical-v2/admin/status";
-      const domainPath = "/api/canonical-v2/admin/domains/";
-      const gapsPath = "/api/canonical-v2/operations/gaps";
+      const statusPath = "api/canonical-v2/admin/status";
+      const domainPath = "api/canonical-v2/admin/domains/";
+      const gapsPath = "api/canonical-v2/operations/gaps";
 
       const domains = ["company", "paper", "patent", "professor"];
       const domainLabels = {

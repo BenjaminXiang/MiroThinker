@@ -276,5 +276,5 @@ def test_canonical_v2_operations_api_is_bounded_read_only_and_quarantined(
     page = client.get("/browse")
     assert page.status_code == 200
     assert "V2 Gaps" in page.text
-    assert "/api/canonical-v2/operations/gaps" in page.text
+    assert 'const gapsPath = "api/canonical-v2/operations/gaps";' in page.text
     assert "esc(JSON.stringify" in page.text

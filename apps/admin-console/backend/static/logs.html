@@ -305,9 +305,9 @@
           <span>Canonical V2 用户访问记录 · 按会话组织</span>
         </div>
         <nav class="nav">
-          <a href="/chat">对话</a>
-          <a href="/browse">数据浏览</a>
-          <a href="/logs" class="active">访问日志</a>
+          <a href="chat">对话</a>
+          <a href="browse">数据浏览</a>
+          <a href="logs" class="active">访问日志</a>
         </nav>
       </div>
     </header>
@@ -352,7 +352,7 @@
 
     <script>
       // 纯 DOM 构建，不引入 innerHTML，无 XSS 面（与 chat.html / browse.html 同一约定）。
-      const sessionsPath = "/api/canonical-v2/admin/access-logs/sessions";
+      const sessionsPath = "api/canonical-v2/admin/access-logs/sessions";
       const PAGE_SIZE = 20;
 
       const searchInput = document.getElementById("search");

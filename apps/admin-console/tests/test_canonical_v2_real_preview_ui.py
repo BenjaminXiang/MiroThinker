@@ -193,7 +193,7 @@ def test_chat_preview_builds_questions_only_after_current_candidates_and_relatio
     assert 'Object.freeze(["company", "professor", "paper"])' in chat_script
     assert 'company: "company_has_patent"' in chat_script
     assert 'professor: "professor_authored_paper"' in chat_script
-    assert "/api/canonical-v2/admin/domains/" in chat_script
+    assert 'const candidateDomainPath = "api/canonical-v2/admin/domains/";' in chat_script
 
     loader = _section(
         chat_script,

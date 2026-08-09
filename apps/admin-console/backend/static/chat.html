@@ -703,7 +703,7 @@
       const demoTitle = document.getElementById("demo-title");
       const demoGrid = document.getElementById("demo-grid");
       const demoToggle = document.getElementById("demo-toggle");
-      const candidateDomainPath = "/api/canonical-v2/admin/domains/";
+      const candidateDomainPath = "api/canonical-v2/admin/domains/";
       const candidateDomains = Object.freeze(["company", "professor", "paper"]);
       const relatedTypes = Object.freeze({
         company: "company_has_patent",
@@ -1360,7 +1360,7 @@
           avatar.setAttribute("role", "img");
           avatar.setAttribute("aria-label", "国先检索助手");
           const image = create("img");
-          image.src = "/static/assets/guoxian-logo.jpg";
+          image.src = "static/assets/guoxian-logo.jpg";
           image.alt = "";
           image.width = 32;
           image.height = 32;
@@ -1826,7 +1826,7 @@
           }
         };
         try {
-          const response = await fetch("/api/chat/stream", {
+          const response = await fetch("api/chat/stream", {
             method: "POST",
             credentials: "same-origin",
             headers: { "Content-Type": "application/json" },
