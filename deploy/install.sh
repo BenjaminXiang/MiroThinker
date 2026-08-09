@@ -12,10 +12,12 @@ cp "$DEPLOY_DIR/$UNIT_NAME" "$UNIT_DIR/"
 systemctl --user daemon-reload
 systemctl --user enable "$UNIT_NAME"
 
-# 每日 03:17 备份（幂等：先清掉旧行再追加）
+# 每日 03:17 备份 + 03:41 访问日志滚动清理（幂等：先清掉旧行再追加）
 CRON_LINE="17 3 * * * $DEPLOY_DIR/backup-canonical-v2.sh >> $DEPLOY_DIR/backup.log 2>&1"
-( crontab -l 2>/dev/null | grep -vF 'backup-canonical-v2.sh' || true
-  echo "$CRON_LINE" ) | crontab -
+PURGE_LINE="41 3 * * * $DEPLOY_DIR/purge-access-logs.sh >> $DEPLOY_DIR/backup.log 2>&1"
+( crontab -l 2>/dev/null | grep -vF 'backup-canonical-v2.sh' | grep -vF 'purge-access-logs.sh' || true
+  echo "$CRON_LINE"
+  echo "$PURGE_LINE" ) | crontab -
 
 cat <<EOF
 安装完成。

@@ -77,8 +77,9 @@ systemctl --user start canonical-v2-backend
 ## 待办（上线前必须闭环）
 
 - [ ] 拿到 nginx 机器 IP，执行上面的防火墙规则
-- [ ] 切换 systemd 守护并观察一次自动拉起
-- [ ] 首次备份实跑 + 恢复演练一次
-- [ ] 访问日志保留策略定稿（当前无限期，建议 90 天滚动清理）
+- [x] 切换 systemd 守护并观察一次自动拉起（2026-08-07 验证：kill 后 50s 恢复）
+- [x] 首次备份实跑 + 恢复演练一次（2026-08-07/09：946MB 快照，库 integrity ok，
+      恢复副本行数与现网一致，manifest/npz 可解析）
+- [x] 访问日志保留策略（90 天滚动清理，`purge-access-logs.sh`，每日 03:41 cron）
 - [ ] 历史文档中残留的 `miroflow:miroflow` 弱口令清理（120 个 .agents 历史文档，
       均为 build 期 disposable PG 的记录；真实轮换在 PG 重新启用时再做）
