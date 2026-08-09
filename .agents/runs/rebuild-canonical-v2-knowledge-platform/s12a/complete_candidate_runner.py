@@ -493,6 +493,31 @@ def _compose_access_log_store() -> Any:
     return store
 
 
+def _compose_corrections_store() -> Any:
+    """Compose the optional SQLite corrections store from the environment.
+
+    ``CANONICAL_V2_CORRECTIONS_DB`` names the SQLite database file. Absent env
+    or any open failure degrades to ``None`` so browse read paths keep their
+    exact pre-existing behavior (no overlay, write API answers 503).
+    """
+
+    database_path = os.environ.get("CANONICAL_V2_CORRECTIONS_DB", "").strip()
+    if not database_path:
+        return None
+    try:
+        module = import_module("backend.services.canonical_v2_corrections")
+        store = module.CorrectionsStore(Path(database_path))
+    except Exception as exc:  # noqa: BLE001 - corrections stay fail-open at boot
+        print(
+            "corrections_store=disabled "
+            f"({type(exc).__name__}: {exc})",
+            flush=True,
+        )
+        return None
+    print(f"corrections_store={store.database_path}", flush=True)
+    return store
+
+
 def _serve(
     *,
     config: RunnerConfig,
@@ -595,6 +620,9 @@ def _serve(
     access_log_store = _compose_access_log_store()
     if access_log_store is not None:
         app.state.canonical_v2_access_log_store = access_log_store
+    corrections_store = _compose_corrections_store()
+    if corrections_store is not None:
+        app.state.canonical_v2_corrections_store = corrections_store
     run_uvicorn(
         app,
         host=config.host,

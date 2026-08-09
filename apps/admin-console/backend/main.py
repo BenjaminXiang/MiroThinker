@@ -19,6 +19,9 @@ from backend.api.canonical_v2_access_logs import (
 )
 from backend.api.canonical_v2_chat import router as canonical_v2_chat_router
 from backend.api.canonical_v2_consumers import router as canonical_v2_consumers_router
+from backend.api.canonical_v2_corrections import (
+    router as canonical_v2_corrections_router,
+)
 from backend.api.canonical_v2_operations import router as canonical_v2_operations_router
 from backend.api.canonical_v2_review import (
     review_error_response,
@@ -75,6 +78,7 @@ def _create_route_shell(*, include_review: bool) -> FastAPI:
     shell.include_router(canonical_v2_chat_router)
     shell.include_router(canonical_v2_operations_router)
     shell.include_router(canonical_v2_consumers_router)
+    shell.include_router(canonical_v2_corrections_router)
     shell.include_router(canonical_v2_access_logs_router)
 
     @shell.api_route("/api/{path:path}", methods=list(_REJECT_METHODS))

@@ -6,8 +6,15 @@ from collections.abc import Callable
 from datetime import date
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, Response
 
+from backend.api.canonical_v2_corrections import (
+    apply_detail_overlay,
+    apply_export_overlay,
+    apply_list_overlay,
+    corrections_store_from,
+    manual_detail_item,
+)
 from backend.canonical_v2_deps import get_canonical_v2_admin_runtime
 from backend.services.canonical_v2_admin import (
     CanonicalV2AdminRuntime,
@@ -129,6 +136,7 @@ def get_domain_facets(
 
 @router.get("/domains/{domain}/export")
 def export_domain(
+    request: Request,
     domain: PublicDomain,
     ids: Annotated[list[str] | None, Query(alias="id")] = None,
     format: Literal["jsonl"] | None = None,
@@ -145,12 +153,16 @@ def export_domain(
         _bounded_text(value, label="canonical ID")
     lines = _runtime_call(lambda: runtime.export(domain=domain, ids=values))
     assert isinstance(lines, tuple)
+    lines = apply_export_overlay(
+        corrections_store_from(request), domain=domain, lines=lines
+    )
     body = "" if not lines else "\n".join(lines) + "\n"
     return Response(content=body, media_type="application/x-ndjson")
 
 
 @router.get("/domains/{domain}")
 def list_domain(
+    request: Request,
     domain: PublicDomain,
     q: Annotated[str | None, Query(min_length=1, max_length=200)] = None,
     filter_fields: Annotated[
@@ -177,7 +189,7 @@ def list_domain(
     selected_sort = sort or _DEFAULT_SORT[domain]
     if selected_sort not in _SORTS[domain]:
         raise _unprocessable("sort field is not allowed for this domain")
-    return _runtime_call(
+    result = _runtime_call(
         lambda: runtime.list_domain(
             domain=domain,
             q=q,
@@ -187,6 +199,13 @@ def list_domain(
             limit=limit,
             offset=offset,
         )
+    )
+    assert isinstance(result, dict)
+    return apply_list_overlay(
+        corrections_store_from(request),
+        domain=domain,
+        result=result,
+        unfiltered_first_page=q is None and not pairs and offset == 0,
     )
 
 
@@ -212,6 +231,7 @@ def get_related(
 
 @router.get("/domains/{domain}/{canonical_id}")
 def get_detail(
+    request: Request,
     domain: PublicDomain,
     canonical_id: Annotated[str, Path(min_length=1, max_length=200)],
     runtime: CanonicalV2AdminRuntime = Depends(get_canonical_v2_admin_runtime),
@@ -220,8 +240,17 @@ def get_detail(
         lambda: runtime.detail(domain=domain, canonical_id=canonical_id)
     )
     if detail is None:
+        # manual added records have no projection; serve them from the overlay
+        manual = corrections_store_from(request)
+        if manual is not None:
+            row = manual.get_added_record(canonical_id)
+            if row is not None and row.domain == domain:
+                return manual_detail_item(row)
         raise HTTPException(status_code=404, detail="Canonical V2 object not found")
-    return detail
+    assert isinstance(detail, dict)
+    return apply_detail_overlay(
+        corrections_store_from(request), domain=domain, detail=detail
+    )
 
 
 __all__ = ["router"]
