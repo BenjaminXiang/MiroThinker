@@ -1,0 +1,13 @@
+[Unit]
+Description=Restrict canonical-v2 port 18188 to loopback + dbg21 nginx
+After=network-pre.target tailscaled.service
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/deploy/firewall-18188.sh
+ExecStop=/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/deploy/firewall-18188.sh remove
+
+[Install]
+WantedBy=multi-user.target
