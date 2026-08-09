@@ -328,6 +328,38 @@
       }
 
       .primary-action:hover { background: #0d756d; }
+      .pane-header .primary-action { width: auto; margin-top: 0; white-space: nowrap; }
+
+      .edit-action {
+        padding: 2px 8px;
+        margin-left: 6px;
+        color: var(--teal);
+        background: transparent;
+        border: 1px solid var(--teal);
+        border-radius: 7px;
+        cursor: pointer;
+        font-size: 11px;
+        justify-self: start;
+      }
+
+      .edit-action:hover { background: var(--teal-soft); }
+      .edit-action:disabled { cursor: default; opacity: 0.5; }
+
+      .edit-input {
+        box-sizing: border-box;
+        width: 100%;
+        margin-top: 6px;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        font: inherit;
+        font-size: 12px;
+      }
+
+      .edit-buttons { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+      .edit-buttons .primary-action { width: auto; margin-top: 0; }
+      .edit-buttons .edit-action { padding: 8px 14px; margin-left: 0; }
+
       .related-list { display: grid; gap: 8px; }
       .related-card { padding: 11px; background: var(--teal-soft); border-radius: 11px; }
       .related-card strong { display: block; font-size: 13px; }
@@ -421,7 +453,9 @@
                   <p id="list-caption">正在读取发布投影…</p>
                 </div>
                 <span class="count-badge" id="list-count">—</span>
+                <button class="primary-action" id="add-record-toggle" type="button">新增记录</button>
               </div>
+              <div id="add-record-region" aria-live="polite"></div>
               <div class="item-list" id="item-list" aria-live="polite"></div>
             </section>
 
@@ -444,10 +478,10 @@
           <p>条目、关联与知识缺口均绑定当前发布版本；页面只呈现接口返回的证据标识和字段血缘。</p>
         </article>
         <article class="notice-card">
-          <h3>只读候选环境</h3>
+          <h3>覆盖层编辑</h3>
           <ul>
-            <li>不提供编辑、删除、上传或发布操作。</li>
-            <li>限制项会与结果同时展示，不补造缺失字段。</li>
+            <li>纠错与新增记录写入独立修正库，不改动发布产物。</li>
+            <li>浏览页立即生效；chat 回答随下次构建更新。所有操作留痕。</li>
           </ul>
         </article>
       </section>
@@ -457,6 +491,8 @@
       const statusPath = "api/canonical-v2/admin/status";
       const domainPath = "api/canonical-v2/admin/domains/";
       const gapsPath = "api/canonical-v2/operations/gaps";
+      const correctionsPath = "api/canonical-v2/admin/corrections";
+      const nameFields = { company: "name", professor: "name", paper: "title", patent: "title" };
 
       const domains = ["company", "paper", "patent", "professor"];
       const domainLabels = {
@@ -518,6 +554,8 @@
       const listCount = document.getElementById("list-count");
       const itemList = document.getElementById("item-list");
       const inspector = document.getElementById("inspector-content");
+      const addRecordToggle = document.getElementById("add-record-toggle");
+      const addRecordRegion = document.getElementById("add-record-region");
 
       let activeView = "company";
       let selectedId = null;
@@ -591,6 +629,22 @@
       async function fetchJson(path) {
         const response = await fetch(path, { headers: { Accept: "application/json" } });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      }
+
+      async function postJson(path, body) {
+        const response = await fetch(path, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (!response.ok) {
+          let detail = "";
+          try {
+            detail = (await response.json())?.detail || "";
+          } catch { /* non-json error body */ }
+          throw new Error(detail ? `HTTP ${response.status} · ${detail}` : `HTTP ${response.status}`);
+        }
         return response.json();
       }
 
@@ -760,17 +814,105 @@
         return section;
       }
 
+      function editableRows(detail, domain) {
+        const fields = [nameFields[domain], ...(factFields[domain] || [])];
+        const corrected = new Set(detail.corrected_fields || []);
+        const rows = create("dl", "data-rows");
+        for (const field of fields) {
+          const row = create("div", "data-row");
+          const cell = create("dd", "");
+          cell.append(create("span", "", readable(detail[field])));
+          if (corrected.has(field)) {
+            const badge = create("span", "quality-badge", "已修正");
+            const original = (detail.corrections || []).find((item) => item.field_path === field);
+            if (original) badge.title = `原值：${readable(original.old_value)}`;
+            cell.append(badge);
+          }
+          const editButton = create("button", "edit-action", "改");
+          editButton.type = "button";
+          editButton.addEventListener("click", () => startFieldEdit(cell, detail, domain, field));
+          cell.append(editButton);
+          row.append(create("dt", "", fieldLabels[field] || field), cell);
+          rows.append(row);
+        }
+        return rows;
+      }
+
+      function startFieldEdit(cell, detail, domain, field) {
+        const current = detail[field];
+        const input = create("textarea", "edit-input");
+        input.value = current === null || current === undefined ? "" : String(current);
+        input.rows = 3;
+        const reason = create("input", "edit-input");
+        reason.type = "text";
+        reason.placeholder = "修改原因（必填，留痕）";
+        const save = create("button", "primary-action", "保存");
+        save.type = "button";
+        const cancel = create("button", "edit-action", "取消");
+        cancel.type = "button";
+        const note = create("p", "card-limitation", "");
+        const buttons = create("div", "edit-buttons");
+        buttons.append(save, cancel);
+        cell.replaceChildren(input, reason, buttons, note);
+        cancel.addEventListener("click", () => loadDetail(domain, detail.canonical_identity_id));
+        save.addEventListener("click", async () => {
+          note.textContent = "";
+          if (!reason.value.trim()) {
+            note.textContent = "请填写修改原因";
+            return;
+          }
+          save.disabled = true;
+          try {
+            await postJson(
+              domainPath + encodeURIComponent(domain) + "/" + encodeURIComponent(detail.canonical_identity_id) + "/corrections",
+              { field_path: field, new_value: input.value, reason: reason.value.trim() },
+            );
+            await loadDetail(domain, detail.canonical_identity_id);
+          } catch (error) {
+            note.textContent = `保存失败 · ${errorText(error)}`;
+            save.disabled = false;
+          }
+        });
+      }
+
+      function correctionHistorySection(detail, domain) {
+        const holder = create("div", "");
+        for (const item of detail.corrections || []) {
+          const row = create("div", "data-row");
+          const text = create("dd", "",
+            `${fieldLabels[item.field_path] || item.field_path}：${readable(item.old_value)} → ${readable(item.new_value)}（${item.operator} · ${formatTime(item.created_at)} · ${item.reason}）`);
+          const revert = create("button", "edit-action", "撤销");
+          revert.type = "button";
+          revert.addEventListener("click", async () => {
+            revert.disabled = true;
+            try {
+              await postJson(correctionsPath + "/" + encodeURIComponent(item.correction_id) + "/revert", {});
+              await loadDetail(domain, detail.canonical_identity_id);
+            } catch (error) {
+              row.append(create("p", "card-limitation", `撤销失败 · ${errorText(error)}`));
+              revert.disabled = false;
+            }
+          });
+          row.append(create("dt", "", "修正"), text, revert);
+          holder.append(row);
+        }
+        return holder;
+      }
+
       function renderDetail(detail, domain) {
         const card = create("article", "inspector-card");
         const top = create("div", "card-top");
         top.append(create("span", "type-badge", domainLabels[domain]));
         if (detail.quality_status) top.append(create("span", "quality-badge", qualityText(detail.quality_status)));
+        if (detail.origin === "manual") top.append(create("span", "quality-badge", "手工录入"));
         card.append(
           top,
           create("h3", "inspector-title", displayName(detail)),
           inspectorSection(
             "关键字段",
-            dataRows((factFields[domain] || []).map((field) => [fieldLabels[field] || field, detail[field]])),
+            detail.origin === "manual"
+              ? dataRows((factFields[domain] || []).map((field) => [fieldLabels[field] || field, detail[field]]))
+              : editableRows(detail, domain),
           ),
           inspectorSection(
             "证据标识",
@@ -788,6 +930,9 @@
             create("p", "card-limitation", limitationsText(detail.limitations)),
           ),
         );
+        if (Array.isArray(detail.corrections) && detail.corrections.length) {
+          card.append(inspectorSection("修正记录", correctionHistorySection(detail, domain)));
+        }
         const relatedButton = create("button", "primary-action", "查看关联");
         relatedButton.type = "button";
         relatedButton.dataset.action = "related";
@@ -937,6 +1082,62 @@
         else loadDomain(route.view, route.id);
       }
 
+      function newRecordForm(domain) {
+        const wrap = create("div", "inspector-section");
+        const name = create("input", "edit-input");
+        name.type = "text";
+        name.placeholder = domain === "paper" || domain === "patent" ? "标题（必填）" : "名称（必填）";
+        const extra = create("textarea", "edit-input");
+        extra.rows = 3;
+        extra.placeholder = '补充字段（可选，JSON 对象），如 {"industry_tags": ["机器人"]}';
+        const reason = create("input", "edit-input");
+        reason.type = "text";
+        reason.placeholder = "录入原因（必填，留痕）";
+        const note = create("p", "card-limitation", "");
+        const submit = create("button", "primary-action", "提交");
+        submit.type = "button";
+        const cancel = create("button", "edit-action", "取消");
+        cancel.type = "button";
+        cancel.addEventListener("click", () => addRecordRegion.replaceChildren());
+        submit.addEventListener("click", async () => {
+          note.textContent = "";
+          if (!name.value.trim()) {
+            note.textContent = "请填写名称/标题";
+            return;
+          }
+          if (!reason.value.trim()) {
+            note.textContent = "请填写录入原因";
+            return;
+          }
+          let payload = { [nameFields[domain]]: name.value.trim() };
+          if (extra.value.trim()) {
+            try {
+              const parsed = JSON.parse(extra.value);
+              if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("not object");
+              payload = { ...payload, ...parsed };
+            } catch {
+              note.textContent = "补充字段不是合法的 JSON 对象";
+              return;
+            }
+          }
+          submit.disabled = true;
+          try {
+            await postJson(domainPath + encodeURIComponent(domain) + "/records", {
+              payload,
+              reason: reason.value.trim(),
+            });
+            addRecordRegion.replaceChildren();
+            await loadDomain(domain);
+          } catch (error) {
+            note.textContent = `提交失败 · ${errorText(error)}`;
+            submit.disabled = false;
+          }
+        });
+        wrap.append(name, extra, reason, create("div", "edit-buttons"), note);
+        wrap.querySelector(".edit-buttons").append(submit, cancel);
+        return wrap;
+      }
+
       inspector.addEventListener("click", (event) => {
         const target = event.target instanceof Element
           ? event.target.closest('[data-action="related"]')
@@ -944,6 +1145,15 @@
         if (target && inspector.contains(target)) {
           loadRelated(target.dataset.domain, target.dataset.id, target);
         }
+      });
+
+      addRecordToggle.addEventListener("click", () => {
+        if (addRecordRegion.childElementCount) {
+          addRecordRegion.replaceChildren();
+          return;
+        }
+        if (!domains.includes(activeView)) return;
+        addRecordRegion.replaceChildren(newRecordForm(activeView));
       });
 
       buildTabs();

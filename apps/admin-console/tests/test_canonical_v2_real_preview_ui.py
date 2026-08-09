@@ -5303,3 +5303,121 @@ def test_browse_inline_javascript_parses(browse_script: str) -> None:
         check=False,
     )
     assert completed.returncode == 0, completed.stderr
+
+
+def test_browse_correction_overlay_ui_is_wired(
+    browse_html: str,
+    browse_script: str,
+) -> None:
+    assert (
+        'const correctionsPath = "api/canonical-v2/admin/corrections";'
+        in browse_script
+    )
+    assert (
+        'const nameFields = { company: "name", professor: "name", paper: "title", patent: "title" };'
+        in browse_script
+    )
+    for marker in (
+        "function editableRows(",
+        "function startFieldEdit(",
+        "function correctionHistorySection(",
+        "async function postJson(",
+        "function newRecordForm(",
+    ):
+        assert marker in browse_script
+
+    editable_rows = _section(
+        browse_script, "function editableRows(", "function startFieldEdit("
+    )
+    assert "detail.corrected_fields || []" in editable_rows
+    assert "已修正" in editable_rows
+    assert "原值：" in editable_rows
+
+    field_edit = _section(
+        browse_script, "function startFieldEdit(", "function correctionHistorySection("
+    )
+    assert '"/corrections"' in field_edit
+    assert "field_path: field" in field_edit
+    assert "new_value: input.value" in field_edit
+    assert "reason: reason.value.trim()" in field_edit
+    assert "请填写修改原因" in field_edit
+
+    history = _section(
+        browse_script, "function correctionHistorySection(", "function renderDetail("
+    )
+    assert "detail.corrections || []" in history
+    assert (
+        'correctionsPath + "/" + encodeURIComponent(item.correction_id) + "/revert"'
+        in history
+    )
+
+    render_detail = _section(
+        browse_script, "function renderDetail(", "function createEvidenceSummary"
+    )
+    assert 'detail.origin === "manual"' in render_detail
+    assert "手工录入" in render_detail
+
+    form = _section(browse_script, "function newRecordForm(", "inspector.addEventListener")
+    assert 'domainPath + encodeURIComponent(domain) + "/records"' in form
+    assert "请填写名称/标题" in form
+    assert "请填写录入原因" in form
+    assert "JSON.parse(extra.value)" in form
+    assert "[nameFields[domain]]" in form
+
+    assert "覆盖层编辑" in browse_html
+    assert "只读候选环境" not in browse_html
+    assert 'id="add-record-toggle"' in browse_html
+    assert 'id="add-record-region"' in browse_html
+
+    assert "cursor: pointer" in _css_rule(browse_html, r"\.edit-action")
+    assert "width: 100%" in _css_rule(browse_html, r"\.edit-input")
+    assert "display: flex" in _css_rule(browse_html, r"\.edit-buttons")
+    assert "width: auto" in _css_rule(browse_html, r"\.pane-header \.primary-action")
+
+
+def test_browse_post_json_posts_payload_and_surfaces_error_detail(
+    browse_script: str,
+) -> None:
+    post_json = _section(browse_script, "async function postJson(", "function stateBox(")
+    harness = f"""
+{post_json}
+const calls = [];
+globalThis.fetch = async (path, options) => {{
+  calls.push({{ path, options }});
+  if (path.endsWith("fail")) {{
+    return {{ ok: false, status: 422, json: async () => ({{ detail: "field not editable" }}) }};
+  }}
+  return {{ ok: true, status: 200, json: async () => ({{ correction_id: "c1" }}) }};
+}};
+(async () => {{
+  const ok = await postJson("api/ok", {{ a: 1 }});
+  let message = "";
+  try {{
+    await postJson("api/fail", {{}});
+  }} catch (error) {{
+    message = error.message;
+  }}
+  console.log(JSON.stringify({{
+    ok,
+    message,
+    method: calls[0].options.method,
+    contentType: calls[0].options.headers["Content-Type"],
+    body: calls[0].options.body,
+  }}));
+}})();
+"""
+    completed = subprocess.run(
+        ["node", "-"],
+        input=harness,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert json.loads(completed.stdout) == {
+        "ok": {"correction_id": "c1"},
+        "message": "HTTP 422 · field not editable",
+        "method": "POST",
+        "contentType": "application/json",
+        "body": '{"a":1}',
+    }
