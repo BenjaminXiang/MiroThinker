@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Canonical V2 每日备份：release 产物 + 访问日志库 -> /md1
+# Canonical V2 每日备份：release 产物 + 访问日志库 + 修正覆盖库 -> /md1
 # SQLite 库用 python sqlite3 在线 backup API（服务运行中也一致），
 # 其余文件直接 tar 拷贝。保留最近 KEEP 份。
 set -euo pipefail
@@ -28,6 +28,7 @@ PY
 # 1) 在线一致性备份所有 sqlite 库
 for db in \
   "$SRC/access-logs.sqlite3" \
+  "$SRC/corrections.sqlite3" \
   "$SRC/index-v1/milvus.db" \
   "$SRC/index-v1/lookup.sqlite3" \
   "$SRC/serving-pack/milvus.db" \

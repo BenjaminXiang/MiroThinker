@@ -12,7 +12,7 @@ Milvus Lite + 本地 serving-pack。对外经 **dbg21（100.64.0.34）的 nginx*
   PG 挂了自动降级。
 - 服务期数据全部自包含在 `/var/tmp/mirothinker-canonical-v2-s12f/`：
   `serving-pack/`（结构化数据 + milvus.db）、`index-v1/`（向量索引）、
-  `access-logs.sqlite3`（访问日志）。
+  `access-logs.sqlite3`（访问日志）、`corrections.sqlite3`（修正覆盖库，见下）。
 - 外部依赖只有 embedding（100.64.0.27:18005）和 reranker（18006），fail-closed，
   远端挂了检索即不可用——需要在那台机器上保证这两个服务常驻。
 - 已知迁移阻塞项：Milvus Lite 2.5.1 close 死锁（见 FIXLOG 2026-08-07 条目），
@@ -32,6 +32,32 @@ Milvus Lite + 本地 serving-pack。对外经 **dbg21（100.64.0.34）的 nginx*
   （`rewrite ^/guoxian(/.*)$ $1 break;` + 裸 `proxy_pass`——不要改回
   `proxy_pass .../;` 形式，长前缀 location 会把路径剥错）
 - 改 dbg21 配置前按该目录惯例先 `cp` 带时间戳的 .bak
+- 4 个管理块各有一行 `proxy_set_header X-Remote-User $remote_user;`
+  （把 basic auth 用户名透传给后端做操作留痕）；公开块用
+  `proxy_set_header X-Remote-User "";` 清掉客户端自带同名头，防伪造
+
+## 数据编辑（覆盖层，2026-08-10 上线）
+
+`/guoxian/browse` 页支持字段级纠错与手工新增记录（不提供删除）。
+所有写入进独立修正库 `corrections.sqlite3`（schema
+`canonical-v2-corrections-v1`，WAL，0600），**不改动发布产物**；读路径在
+API 层做 overlay 合并，无修正库时与上线前逐字节一致。
+
+- 生效时机：浏览页**立即生效**；chat 回答随**下次构建**生效
+  （`GET /api/canonical-v2/admin/corrections/export` 导出 active 记录
+  JSONL，作为构建输入）
+- 留痕：operator 取自 `X-Remote-User` 头（即 basic auth 用户名），
+  修改原因必填；纠错保存原值，可撤销（软撤销，历史保留）
+- 字段白名单：仅顶层标量字段可改；溯源/结构字段（field_lineage、
+  evidence、*_id 等）返回 422
+- 启动命令（s12g/serve-18188-command.sh）以
+  `CANONICAL_V2_CORRECTIONS_DB=/var/tmp/mirothinker-canonical-v2-s12f/corrections.sqlite3`
+  启用；缺该 env 或打开失败时浏览只读、写 API 503，不影响 chat
+- API 面：`POST .../domains/{domain}/{id}/corrections`、
+  `POST .../domains/{domain}/records`、`POST .../corrections/{id}/revert`、
+  `POST .../records/{id}/revert`、`GET .../corrections[?status=]`、
+  `GET .../corrections/export`（仅 active）
+- 备份：`backup-canonical-v2.sh` 已把 corrections.sqlite3 纳入在线一致性备份
 
 ## 文件
 
@@ -79,6 +105,8 @@ systemctl --user start canonical-v2-backend
 - [x] 首次备份实跑 + 恢复演练一次（2026-08-07/09：946MB 快照，库 integrity ok，
       恢复副本行数与现网一致，manifest/npz 可解析）
 - [x] 访问日志保留策略（90 天滚动清理，`purge-access-logs.sh`，每日 03:41 cron）
+- [x] 数据编辑覆盖层（2026-08-10：字段纠错 + 手工新增 + 撤销 + 导出，
+      operator 经 nginx X-Remote-User 透传，端到端验证通过）
 - [ ] `/api/canonical-v2/admin/status` 直连即 500（pre-existing，browse 页顶栏受影响；
       怀疑是 operations 运行环境未配置，需单独排查）
 - [ ] 历史文档中残留的 `miroflow:miroflow` 弱口令清理（120 个 .agents 历史文档，
