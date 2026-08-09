@@ -146,8 +146,6 @@ def test_public_chat_uses_guoxian_brand_identity(chat_html: str) -> None:
         ("正在根据当前候选版本准备可核验问题", "正在准备可核验的问题示例"),
         ("当前候选版本暂无可用名称", "暂无可用问题示例"),
         ("根据当前候选数据生成的可核验问题", "你可以试试这些问题"),
-        ("正在读取企业、教授与论文候选数据…", "正在准备问题示例…"),
-        ("当前候选问题暂不可用", "问题示例暂不可用"),
     ),
 )
 def test_public_demo_copy_uses_user_facing_language(
@@ -178,7 +176,7 @@ def test_public_root_enters_chat_without_advertising_internal_browse() -> None:
     assert response.headers["location"] == "/chat"
 
 
-def test_chat_preview_builds_questions_only_after_current_candidates_and_relations_load(
+def test_chat_preview_renders_static_demo_questions_without_data_api(
     chat_html: str,
     chat_script: str,
 ) -> None:
@@ -190,32 +188,30 @@ def test_chat_preview_builds_questions_only_after_current_candidates_and_relatio
     assert demo_grid is not None
     assert "demo-chip" not in demo_grid.group(1)
 
-    assert 'Object.freeze(["company", "professor", "paper"])' in chat_script
-    assert 'company: "company_has_patent"' in chat_script
-    assert 'professor: "professor_authored_paper"' in chat_script
-    assert 'const candidateDomainPath = "api/canonical-v2/admin/domains/";' in chat_script
+    # 示例问题对匿名用户可用：静态写死，不依赖需要登录的数据浏览 API。
+    assert "api/canonical-v2/admin/domains/" not in chat_script
+    assert "loadCandidatePages" not in chat_script
+    assert "buildSemanticQuestions" not in chat_script
+
+    static_block = _section(
+        chat_script,
+        "const STATIC_DEMO_QUESTIONS = Object.freeze([",
+        "]);",
+    )
+    queries = re.findall(r'query: "([^"]+)"', static_block)
+    steps = re.findall(r'step: "([^"]+)"', static_block)
+    labels = re.findall(r'label: "([^"]+)"', static_block)
+    assert 3 <= len(queries) <= 6
+    assert len(queries) == len(steps) == len(labels)
+    assert len(set(queries)) == len(queries)
 
     loader = _section(
         chat_script,
-        "async function loadDemoQuestions()",
+        "function loadDemoQuestions()",
         "form.addEventListener",
     )
-    pages_loaded = loader.index("await loadCandidatePages()")
-    relations_loaded = loader.index("await loadVerifiedRelations(candidatePages)")
-    questions_built = loader.index(
-        "buildSemanticQuestions(candidatePages, verifiedRelations)"
-    )
-    questions_rendered = loader.index("renderDemoQuestions(questions)")
-    assert pages_loaded < relations_loaded < questions_built < questions_rendered
-
-    candidate_name = _section(
-        chat_script,
-        "function candidateName(item)",
-        "function namedCandidates",
-    )
-    assert "canonical_identity_id" not in candidate_name
-    assert ".id" not in candidate_name
-    assert "return null" in candidate_name
+    assert "renderDemoQuestions(STATIC_DEMO_QUESTIONS)" in loader
+    assert "fetch(" not in loader
 
 
 def test_chat_preview_renders_only_safe_current_web_evidence(
@@ -303,7 +299,7 @@ def test_public_display_sanitizer_rejects_internal_tokens_and_keeps_real_copy(
     sanitizer = _section(
         chat_script,
         "const unsafePublicTextPatterns",
-        "async function fetchJson",
+        "function renderDemoQuestions",
     )
     evidence_helpers = _section(
         chat_script,
@@ -394,7 +390,6 @@ console.log(JSON.stringify({{
         "safePublicText(data.answer_text)",
         "safePublicText(citation.label)",
         "safePublicText(option?.label)",
-        "safePublicText(item[field])",
     ):
         assert display_source in chat_script
 

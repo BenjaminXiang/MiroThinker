@@ -18,17 +18,20 @@ Milvus Lite + 本地 serving-pack。对外经 **dbg21（100.64.0.34）的 nginx*
 - 已知迁移阻塞项：Milvus Lite 2.5.1 close 死锁（见 FIXLOG 2026-08-07 条目），
   只影响重新构建的收尾，不影响运行中的服务。
 
-## 对外访问（2026-08-09 已生效）
+## 对外访问（2026-08-09 已生效，两区分级）
 
 - 公网入口：`https://star.sustech.edu.cn/guoxian`（校网关 → dbg21:3001 → gpu01:18188）
-- 认证：dbg21 nginx `auth_basic`，凭据文件 `/etc/nginx/htpasswd_canonical_v2`，
-  用户名/密码存于 gpu01 `~/canonical-v2-basic-auth.txt`（0600）
-- 页面：`/guoxian/chat`（对话）、`/guoxian/browse`（数据浏览）、`/guoxian/logs`（访问日志）
-- 前端三个页面全部使用**相对路径**引用 API/静态资源/导航，因此同一套代码
-  在 18188 根路径和 /guoxian 前缀下都可用
-- dbg21 配置：`/etc/nginx/conf.d/sustech-ai.conf` 的 `location ^~ /guoxian/` 块
-  （根映射 `proxy_pass http://100.64.0.4:18188/;` + `proxy_redirect / /guoxian/;`
-  + `absolute_redirect off;`，改配置前按该目录惯例先 `cp` 带时间戳的 .bak）
+- **公开区（无需登录）**：`/guoxian/chat` 对话页、`/api/chat*`、`/static/*`
+  - chat 页示例问题为静态写死（`STATIC_DEMO_QUESTIONS`），不依赖需登录的数据浏览 API
+- **管理区（auth_basic）**：`/guoxian/logs`（访问日志）、`/guoxian/browse`（数据浏览）、
+  `/guoxian/api/canonical-v2/admin/*`、`/guoxian/api/canonical-v2/operations/*`
+  - 凭据文件 `/etc/nginx/htpasswd_canonical_v2`，用户名/密码存于 gpu01
+    `~/canonical-v2-basic-auth.txt`（0600）
+- dbg21 配置：`/etc/nginx/conf.d/sustech-ai.conf` 的 5 个 `/guoxian` location 块，
+  公共代理配置抽在 `/etc/nginx/snippets/canonical-v2-proxy.conf`
+  （`rewrite ^/guoxian(/.*)$ $1 break;` + 裸 `proxy_pass`——不要改回
+  `proxy_pass .../;` 形式，长前缀 location 会把路径剥错）
+- 改 dbg21 配置前按该目录惯例先 `cp` 带时间戳的 .bak
 
 ## 文件
 

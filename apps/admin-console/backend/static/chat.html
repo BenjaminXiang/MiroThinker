@@ -703,12 +703,14 @@
       const demoTitle = document.getElementById("demo-title");
       const demoGrid = document.getElementById("demo-grid");
       const demoToggle = document.getElementById("demo-toggle");
-      const candidateDomainPath = "api/canonical-v2/admin/domains/";
-      const candidateDomains = Object.freeze(["company", "professor", "paper"]);
-      const relatedTypes = Object.freeze({
-        company: "company_has_patent",
-        professor: "professor_authored_paper",
-      });
+      // 示例问题对匿名用户可用：静态写死，不依赖需要登录的数据浏览 API。
+      const STATIC_DEMO_QUESTIONS = Object.freeze([
+        { step: "企业", label: "了解产业概况", query: "深圳有哪些人工智能企业？" },
+        { step: "教授", label: "检索研究方向", query: "深圳有哪些研究集成电路的教授？" },
+        { step: "论文", label: "追踪学术成果", query: "深圳高校在人工智能领域有哪些代表性论文？" },
+        { step: "专利", label: "盘点技术布局", query: "深圳企业在新能源领域有哪些代表性专利？" },
+        { step: "企业", label: "核验企业动态", query: "介绍深圳的机器人产业，以及其中重点企业的最新动态" },
+      ]);
       const presentationStateValues = Object.freeze([
         "landing",
         "conversation",
@@ -1135,128 +1137,6 @@
         const withoutControls = value.replace(unsafePublicControlCharacters, "");
         const text = sanitizePublicText(withoutControls);
         return text ? text : null;
-      }
-
-      async function fetchJson(path) {
-        const response = await fetch(path, {
-          credentials: "same-origin",
-          headers: { Accept: "application/json" },
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json();
-      }
-
-      function candidateName(item) {
-        if (!item || typeof item !== "object") return null;
-        for (const field of ["name", "canonical_name_zh", "title_zh", "title", "normalized_name"]) {
-          const value = safePublicText(item[field]);
-          if (value) return value;
-        }
-        return null;
-      }
-
-      function namedCandidates(page) {
-        const items = Array.isArray(page?.items) ? page.items : [];
-        return items.flatMap((item) => {
-          const name = candidateName(item);
-          const id = typeof item?.canonical_identity_id === "string"
-            ? item.canonical_identity_id.trim()
-            : "";
-          return name && id ? [{ id, name, item }] : [];
-        });
-      }
-
-      async function loadCandidatePages() {
-        const entries = await Promise.all(candidateDomains.map(async (domain) => {
-          const page = await fetchJson(`${candidateDomainPath}${encodeURIComponent(domain)}?limit=25&offset=0`);
-          return [domain, page];
-        }));
-        return Object.fromEntries(entries);
-      }
-
-      async function firstVerifiedRelation(domain, sources, resolveTarget) {
-        const relationType = relatedTypes[domain];
-        if (!relationType) return null;
-        for (const source of sources) {
-          const path = `${candidateDomainPath}${encodeURIComponent(domain)}/${encodeURIComponent(source.id)}/related`
-            + `?relation_type=${encodeURIComponent(relationType)}&limit=20`;
-          try {
-            const page = await fetchJson(path);
-            const targets = Array.isArray(page?.items) ? page.items : [];
-            for (const item of targets) {
-              const target = resolveTarget(item);
-              if (target) return { source, target };
-            }
-          } catch {
-            // A failed relation check must not turn an identifier into visible fallback copy.
-          }
-        }
-        return null;
-      }
-
-      async function loadVerifiedRelations(candidatePages) {
-        const companies = namedCandidates(candidatePages.company);
-        const professors = namedCandidates(candidatePages.professor);
-        const papersById = new Map(
-          namedCandidates(candidatePages.paper).map((paper) => [paper.id, paper]),
-        );
-        const [company, professor] = await Promise.all([
-          firstVerifiedRelation("company", companies, (item) => {
-            const name = candidateName(item);
-            return name ? { name } : null;
-          }),
-          firstVerifiedRelation("professor", professors, (item) => {
-            const id = typeof item?.canonical_identity_id === "string"
-              ? item.canonical_identity_id.trim()
-              : "";
-            return papersById.get(id) || null;
-          }),
-        ]);
-        return { company, professor };
-      }
-
-      function buildSemanticQuestions(candidatePages, verifiedRelations) {
-        const questions = [];
-        const seen = new Set();
-        const add = (step, label, query) => {
-          const normalized = String(query || "").trim();
-          if (!normalized || seen.has(normalized)) return;
-          seen.add(normalized);
-          questions.push({ step, label, query: normalized });
-        };
-
-        const companies = namedCandidates(candidatePages.company);
-        const company = verifiedRelations.company?.source || companies[0];
-        if (company) {
-          add("企业", "核验企业近况", `介绍“${company.name}”，并用当前网页证据核实最新动态`);
-        }
-        if (verifiedRelations.company) {
-          add(
-            "追问",
-            "核验企业专利关系",
-            `列出已展示“${verifiedRelations.company.source.name}”作为申请人的代表性专利`,
-          );
-        }
-
-        const professors = namedCandidates(candidatePages.professor);
-        const professor = verifiedRelations.professor?.source || professors[0];
-        if (professor) {
-          add("教授", "查看教授研究概况", `介绍“${professor.name}”的研究方向与当前任职信息`);
-        }
-        if (verifiedRelations.professor) {
-          add(
-            "关系",
-            "核验教授论文署名",
-            `核验“${verifiedRelations.professor.source.name}”与论文“${verifiedRelations.professor.target.name}”之间的署名关系`,
-          );
-        }
-
-        const papers = namedCandidates(candidatePages.paper);
-        const paper = verifiedRelations.professor?.target || papers[0];
-        if (paper) {
-          add("论文", "查看论文证据", `概述论文“${paper.name}”的研究主题，并说明证据限制`);
-        }
-        return questions.slice(0, 5);
       }
 
       function renderDemoQuestions(questions) {
@@ -1989,18 +1869,8 @@
         sendQuery(normalized);
       }
 
-      async function loadDemoQuestions() {
-        demoGrid.replaceChildren(create("p", "demo-empty", "正在准备问题示例…"));
-        try {
-          const candidatePages = await loadCandidatePages();
-          const verifiedRelations = await loadVerifiedRelations(candidatePages);
-          const questions = buildSemanticQuestions(candidatePages, verifiedRelations);
-          renderDemoQuestions(questions);
-        } catch {
-          demoGrid.setAttribute("aria-busy", "false");
-          demoTitle.textContent = "问题示例暂不可用";
-          demoGrid.replaceChildren(create("p", "demo-empty", "仍可在下方输入框中直接提问。"));
-        }
+      function loadDemoQuestions() {
+        renderDemoQuestions(STATIC_DEMO_QUESTIONS);
       }
 
       form.addEventListener("submit", (event) => {
