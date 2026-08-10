@@ -19,6 +19,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, Response
 from pydantic import BaseModel, Field
 
+from backend.api.canonical_v2_manual_recall import manual_recall_store_from
 from backend.canonical_v2_deps import get_canonical_v2_admin_runtime
 from backend.services.canonical_v2_admin import (
     CanonicalV2AdminRuntime,
@@ -310,6 +311,23 @@ def create_added_record(
         )
     except CorrectionsStoreError as exc:
         raise _store_error(exc) from exc
+    recall_store = manual_recall_store_from(request)
+    if recall_store is not None:
+        try:
+            recall_store.add_manual_record(
+                record_id=detail.record_id,
+                domain=domain,
+                manual_object_id=detail.manual_object_id,
+                payload=detail.payload,
+                operator=_operator(request),
+                reason=body.reason,
+            )
+        except Exception as exc:  # noqa: BLE001 - embedding backend boundary
+            store.revert_added_record(detail.record_id)
+            raise HTTPException(
+                status_code=502,
+                detail="embedding backend failed; record was not saved",
+            ) from exc
     return {
         "record_id": detail.record_id,
         "manual_object_id": detail.manual_object_id,
@@ -325,6 +343,9 @@ def revert_added_record(
     store = _require_store(request)
     if not store.revert_added_record(record_id):
         raise HTTPException(status_code=404, detail="Canonical V2 added record not found")
+    recall_store = manual_recall_store_from(request)
+    if recall_store is not None:
+        recall_store.tombstone_by_ref(record_id)
     return {"record_id": record_id, "status": "reverted"}
 
 
