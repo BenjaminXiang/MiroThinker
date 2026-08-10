@@ -12,7 +12,8 @@ Milvus Lite + 本地 serving-pack。对外经 **dbg21（100.64.0.34）的 nginx*
   PG 挂了自动降级。
 - 服务期数据全部自包含在 `/var/tmp/mirothinker-canonical-v2-s12f/`：
   `serving-pack/`（结构化数据 + milvus.db）、`index-v1/`（向量索引）、
-  `access-logs.sqlite3`（访问日志）、`corrections.sqlite3`（修正覆盖库，见下）。
+  `access-logs.sqlite3`（访问日志）、`corrections.sqlite3`（修正覆盖库，见下）、
+  `manual-recall-v1/`（人工知识侧车，见下）。
 - 外部依赖只有 embedding（100.64.0.27:18005）和 reranker（18006），fail-closed，
   远端挂了检索即不可用——需要在那台机器上保证这两个服务常驻。
 - 已知迁移阻塞项：Milvus Lite 2.5.1 close 死锁（见 FIXLOG 2026-08-07 条目），
@@ -58,6 +59,32 @@ API 层做 overlay 合并，无修正库时与上线前逐字节一致。
   `POST .../records/{id}/revert`、`GET .../corrections[?status=]`、
   `GET .../corrections/export`（仅 active）
 - 备份：`backup-canonical-v2.sh` 已把 corrections.sqlite3 纳入在线一致性备份
+
+## 人工知识在线召回（2026-08-10 上线）
+
+手工新增记录与企业文档上传**即时进入 chat 向量召回**，不等下次构建。
+
+- 存储：可写侧车 `manual-recall-v1/manual-recall.json`（schema
+  `canonical-v2-manual-recall-v1`，0600，原子重写），与发布产物完全隔离；
+  写入时用 serving 同款 embedding（4096 维）预先 embed，查询期零新增外部调用
+- 召回机制：侧车点在向量道排序截断**之前**并入候选；trace 以
+  `target_id=manual-recall-v1` 标记，证据 `source_authority=manual_upload`，
+  发布绑定校验按标记豁免（lane 契约识别的唯一非发布来源）
+- 文档上传（`/guoxian/browse` 企业域"上传文档"，两步）：
+  预览解析（pdf/docx/txt/md，扩展名 + magic 嗅探，≤10MiB，抽取截断
+  24000 字符）→ 全文可编辑确认 → 分块（≤800 字符/块，≤200 块）embed 入库；
+  API：`POST .../admin/company-documents/preview`（multipart）、
+  `POST .../admin/company-documents`（json）、`GET .../company-documents`、
+  `POST .../company-documents/{doc_id}/revert`
+- 编辑挂钩：手工新增记录成功后同步 embed 进侧车（embed 失败则补偿撤销
+  该记录并 502）；撤销记录时 tombstone 对应召回点
+- 启动命令（s12g/serve-18188-command.sh）以
+  `CANONICAL_V2_MANUAL_RECALL_DIR=/var/tmp/mirothinker-canonical-v2-s12f/manual-recall-v1`
+  启用；缺该 env 或加载失败时 fail-open（无人工并集、上传 API 503），
+  chat 行为与上线前一致；启动日志有 `manual_recall_store=` 行
+- dbg21 管理块已加 `client_max_body_size 20M;`（默认 1M 会拦文档上传）
+- 备份：随 `/var/tmp/mirothinker-canonical-v2-s12f/` 整目录 tar 覆盖，
+  纯文件无需专门处理
 
 ## 文件
 
@@ -107,6 +134,8 @@ systemctl --user start canonical-v2-backend
 - [x] 访问日志保留策略（90 天滚动清理，`purge-access-logs.sh`，每日 03:41 cron）
 - [x] 数据编辑覆盖层（2026-08-10：字段纠错 + 手工新增 + 撤销 + 导出，
       operator 经 nginx X-Remote-User 透传，端到端验证通过）
+- [x] 人工知识在线召回（2026-08-10：侧车向量并集 + 文档上传两步 UI +
+      编辑挂钩 + nginx 20M body，直连/公网双路端到端验证）
 - [ ] `/api/canonical-v2/admin/status` 直连即 500（pre-existing，browse 页顶栏受影响；
       怀疑是 operations 运行环境未配置，需单独排查）
 - [ ] 历史文档中残留的 `miroflow:miroflow` 弱口令清理（120 个 .agents 历史文档，
