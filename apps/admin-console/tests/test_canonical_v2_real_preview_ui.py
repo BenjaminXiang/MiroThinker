@@ -5421,3 +5421,117 @@ globalThis.fetch = async (path, options) => {{
         "contentType": "application/json",
         "body": '{"a":1}',
     }
+
+
+def test_browse_company_document_upload_ui_is_wired(
+    browse_html: str,
+    browse_script: str,
+) -> None:
+    assert 'id="upload-doc-toggle"' in browse_html
+    assert 'id="upload-doc-region"' in browse_html
+    # The entry is company-only and the panel clears on domain switch.
+    toggle = _section(browse_html, 'id="upload-doc-toggle"', "上传文档")
+    assert "hidden" in toggle
+    set_active = _section(browse_script, "function setActiveTab(", "function addFactList(")
+    assert 'uploadDocToggle.hidden = view !== "company"' in set_active
+    assert 'if (view !== "company") uploadDocRegion.replaceChildren();' in set_active
+
+    assert (
+        'const companyDocsPath = "api/canonical-v2/admin/company-documents";'
+        in browse_script
+    )
+    for marker in (
+        "async function postFormData(",
+        "function confirmDocForm(",
+        "function uploadDocPanel(",
+        "async function refreshUploadList(",
+    ):
+        assert marker in browse_script
+
+    panel = _section(browse_script, "function confirmDocForm(", "async function refreshUploadList(")
+    assert "function uploadDocPanel(" in panel
+    assert 'file.accept = ".pdf,.docx,.txt,.md"' in panel
+    assert 'new FormData()' in panel
+    assert '`${companyDocsPath}/preview`' in panel
+    # Two-step confirm: editable full text + required company/reason.
+    assert "企业名称（必填）" in panel
+    assert "入库原因（必填，留痕）" in panel
+    assert "text.value = previewText;" in panel
+    assert "company_name: company.value.trim()" in panel
+    assert "text: text.value" in panel
+    assert "reason: reason.value.trim()" in panel
+    assert "matched_canonical_id: matched.value.trim() || null" in panel
+    assert "请填写企业名称" in panel
+    assert "请填写入库原因" in panel
+
+    listing = _section(
+        browse_script,
+        "async function refreshUploadList(",
+        "inspector.addEventListener",
+    )
+    assert "fetchJson(companyDocsPath)" in listing
+    assert (
+        "`${companyDocsPath}/${encodeURIComponent(item.doc_id)}/revert`" in listing
+    )
+    assert "生效中" in listing
+    assert "已撤销" in listing
+
+    toggle_listener = _section(
+        browse_script,
+        "uploadDocToggle.addEventListener",
+        "buildTabs();",
+    )
+    assert 'if (activeView !== "company") return;' in toggle_listener
+    assert "uploadDocRegion.replaceChildren(uploadDocPanel());" in toggle_listener
+
+
+def test_browse_post_form_data_posts_multipart_and_surfaces_error_detail(
+    browse_script: str,
+) -> None:
+    post_form_data = _section(
+        browse_script, "async function postFormData(", "function stateBox("
+    )
+    harness = f"""
+{post_form_data}
+const calls = [];
+globalThis.fetch = async (path, options) => {{
+  calls.push({{ path, options }});
+  if (path.endsWith("fail")) {{
+    return {{ ok: false, status: 413, json: async () => ({{ detail: "upload exceeds 10 MiB" }}) }};
+  }}
+  return {{ ok: true, status: 200, json: async () => ({{ chunk_count: 3 }}) }};
+}};
+(async () => {{
+  const data = new FormData();
+  data.append("file", new Blob(["x"]), "notes.txt");
+  const ok = await postFormData("api/preview", data);
+  let message = "";
+  try {{
+    await postFormData("api/fail", new FormData());
+  }} catch (error) {{
+    message = error.message;
+  }}
+  console.log(JSON.stringify({{
+    ok,
+    message,
+    method: calls[0].options.method,
+    hasContentType: "Content-Type" in calls[0].options.headers,
+    bodyIsFormData: calls[0].options.body instanceof FormData,
+  }}));
+}})();
+"""
+    completed = subprocess.run(
+        ["node", "-"],
+        input=harness,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert json.loads(completed.stdout) == {
+        "ok": {"chunk_count": 3},
+        "message": "HTTP 413 · upload exceeds 10 MiB",
+        "method": "POST",
+        "hasContentType": False,
+        "bodyIsFormData": True,
+    }

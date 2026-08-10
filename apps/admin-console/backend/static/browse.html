@@ -453,9 +453,11 @@
                   <p id="list-caption">正在读取发布投影…</p>
                 </div>
                 <span class="count-badge" id="list-count">—</span>
+                <button class="primary-action" id="upload-doc-toggle" type="button" hidden>上传文档</button>
                 <button class="primary-action" id="add-record-toggle" type="button">新增记录</button>
               </div>
               <div id="add-record-region" aria-live="polite"></div>
+              <div id="upload-doc-region" aria-live="polite"></div>
               <div class="item-list" id="item-list" aria-live="polite"></div>
             </section>
 
@@ -480,8 +482,8 @@
         <article class="notice-card">
           <h3>覆盖层编辑</h3>
           <ul>
-            <li>纠错与新增记录写入独立修正库，不改动发布产物。</li>
-            <li>浏览页立即生效；chat 回答随下次构建更新。所有操作留痕。</li>
+            <li>手工新增记录与企业文档上传即时进入 chat 向量召回。</li>
+            <li>字段纠错写入独立修正库，浏览页立即生效，chat 随下次构建更新。所有操作留痕。</li>
           </ul>
         </article>
       </section>
@@ -492,6 +494,7 @@
       const domainPath = "api/canonical-v2/admin/domains/";
       const gapsPath = "api/canonical-v2/operations/gaps";
       const correctionsPath = "api/canonical-v2/admin/corrections";
+      const companyDocsPath = "api/canonical-v2/admin/company-documents";
       const nameFields = { company: "name", professor: "name", paper: "title", patent: "title" };
 
       const domains = ["company", "paper", "patent", "professor"];
@@ -556,6 +559,8 @@
       const inspector = document.getElementById("inspector-content");
       const addRecordToggle = document.getElementById("add-record-toggle");
       const addRecordRegion = document.getElementById("add-record-region");
+      const uploadDocToggle = document.getElementById("upload-doc-toggle");
+      const uploadDocRegion = document.getElementById("upload-doc-region");
 
       let activeView = "company";
       let selectedId = null;
@@ -648,6 +653,22 @@
         return response.json();
       }
 
+      async function postFormData(path, formData) {
+        const response = await fetch(path, {
+          method: "POST",
+          headers: { Accept: "application/json" },
+          body: formData,
+        });
+        if (!response.ok) {
+          let detail = "";
+          try {
+            detail = (await response.json())?.detail || "";
+          } catch { /* non-json error body */ }
+          throw new Error(detail ? `HTTP ${response.status} · ${detail}` : `HTTP ${response.status}`);
+        }
+        return response.json();
+      }
+
       function stateBox(kind, message) {
         return create("div", kind, message);
       }
@@ -717,6 +738,8 @@
           button.classList.toggle("active", active);
           button.setAttribute("aria-current", active ? "page" : "false");
         }
+        uploadDocToggle.hidden = view !== "company";
+        if (view !== "company") uploadDocRegion.replaceChildren();
       }
 
       function addFactList(container, item, fields) {
@@ -1138,6 +1161,165 @@
         return wrap;
       }
 
+      function confirmDocForm(previewText, chunkCount, truncated, onDone) {
+        const form = create("div", "inspector-section");
+        form.id = "upload-doc-confirm";
+        const hint = create(
+          "p",
+          "card-limitation",
+          `解析完成：${previewText.length} 字 · ${chunkCount} 个召回块` + (truncated ? " · 内容过长已截断" : ""),
+        );
+        const company = create("input", "edit-input");
+        company.type = "text";
+        company.placeholder = "企业名称（必填）";
+        const title = create("input", "edit-input");
+        title.type = "text";
+        title.placeholder = "文档标题（可选）";
+        const matched = create("input", "edit-input");
+        matched.type = "text";
+        matched.placeholder = "关联已有企业 ID（可选，留空则作为新条目召回）";
+        const text = create("textarea", "edit-input");
+        text.rows = 10;
+        text.value = previewText;
+        const reason = create("input", "edit-input");
+        reason.type = "text";
+        reason.placeholder = "入库原因（必填，留痕）";
+        const note = create("p", "card-limitation", "");
+        const submit = create("button", "primary-action", "确认入库");
+        submit.type = "button";
+        const cancel = create("button", "edit-action", "取消");
+        cancel.type = "button";
+        cancel.addEventListener("click", () => onDone(false));
+        submit.addEventListener("click", async () => {
+          note.textContent = "";
+          if (!company.value.trim()) {
+            note.textContent = "请填写企业名称";
+            return;
+          }
+          if (!text.value.trim()) {
+            note.textContent = "文档内容不能为空";
+            return;
+          }
+          if (!reason.value.trim()) {
+            note.textContent = "请填写入库原因";
+            return;
+          }
+          submit.disabled = true;
+          try {
+            const result = await postJson(companyDocsPath, {
+              company_name: company.value.trim(),
+              title: title.value.trim(),
+              text: text.value,
+              reason: reason.value.trim(),
+              matched_canonical_id: matched.value.trim() || null,
+            });
+            onDone(true, `已入库 · ${result.chunk_count} 个召回块即时生效`);
+          } catch (error) {
+            note.textContent = `入库失败 · ${errorText(error)}`;
+            submit.disabled = false;
+          }
+        });
+        const buttons = create("div", "edit-buttons");
+        buttons.append(submit, cancel);
+        form.append(hint, company, title, matched, text, reason, buttons, note);
+        return form;
+      }
+
+      function uploadDocPanel() {
+        const wrap = create("div", "inspector-section");
+        wrap.id = "upload-doc-panel";
+        const note = create("p", "card-limitation", "");
+        const file = create("input", "edit-input");
+        file.type = "file";
+        file.accept = ".pdf,.docx,.txt,.md";
+        const parse = create("button", "primary-action", "解析文档");
+        parse.type = "button";
+        const stepOne = create("div", "edit-buttons");
+        stepOne.append(parse);
+        const formRegion = create("div", "");
+        const listRegion = create("div", "upload-doc-list");
+        parse.addEventListener("click", async () => {
+          note.textContent = "";
+          if (!file.files || !file.files.length) {
+            note.textContent = "请先选择文档（pdf / docx / txt / md）";
+            return;
+          }
+          parse.disabled = true;
+          try {
+            const data = new FormData();
+            data.append("file", file.files[0]);
+            const preview = await postFormData(`${companyDocsPath}/preview`, data);
+            formRegion.replaceChildren(
+              confirmDocForm(preview.text, preview.chunk_count, preview.truncated, (saved, message) => {
+                formRegion.replaceChildren();
+                file.value = "";
+                parse.disabled = false;
+                if (saved) {
+                  note.textContent = message || "已入库";
+                  refreshUploadList(listRegion, note);
+                }
+              }),
+            );
+            parse.disabled = false;
+          } catch (error) {
+            note.textContent = `解析失败 · ${errorText(error)}`;
+            parse.disabled = false;
+          }
+        });
+        wrap.append(
+          create("p", "card-limitation", "上传企业文档，解析确认后即时进入 chat 向量召回；可随时撤销。"),
+          file,
+          stepOne,
+          note,
+          formRegion,
+          listRegion,
+        );
+        refreshUploadList(listRegion, note);
+        return wrap;
+      }
+
+      async function refreshUploadList(container, note) {
+        try {
+          const data = await fetchJson(companyDocsPath);
+          const items = Array.isArray(data.items) ? data.items : [];
+          if (!items.length) {
+            container.replaceChildren(create("p", "card-limitation", "暂无已上传文档"));
+            return;
+          }
+          const rows = items.map((item) => {
+            const row = create("div", "upload-doc-item");
+            const active = item.status === "active";
+            row.append(
+              create(
+                "p",
+                "card-limitation",
+                `${item.company_name} · ${item.title || "未命名文档"} · ${item.chunk_count} 块 · `
+                  + `${active ? "生效中" : "已撤销"} · ${item.operator} · ${formatTime(item.created_at)}`,
+              ),
+            );
+            if (active) {
+              const revert = create("button", "edit-action", "撤销");
+              revert.type = "button";
+              revert.addEventListener("click", async () => {
+                revert.disabled = true;
+                try {
+                  await postJson(`${companyDocsPath}/${encodeURIComponent(item.doc_id)}/revert`, {});
+                  refreshUploadList(container, note);
+                } catch (error) {
+                  note.textContent = `撤销失败 · ${errorText(error)}`;
+                  revert.disabled = false;
+                }
+              });
+              row.append(revert);
+            }
+            return row;
+          });
+          container.replaceChildren(...rows);
+        } catch (error) {
+          container.replaceChildren(stateBox("error", `已上传文档加载失败 · ${errorText(error)}`));
+        }
+      }
+
       inspector.addEventListener("click", (event) => {
         const target = event.target instanceof Element
           ? event.target.closest('[data-action="related"]')
@@ -1154,6 +1336,15 @@
         }
         if (!domains.includes(activeView)) return;
         addRecordRegion.replaceChildren(newRecordForm(activeView));
+      });
+
+      uploadDocToggle.addEventListener("click", () => {
+        if (uploadDocRegion.childElementCount) {
+          uploadDocRegion.replaceChildren();
+          return;
+        }
+        if (activeView !== "company") return;
+        uploadDocRegion.replaceChildren(uploadDocPanel());
       });
 
       buildTabs();
