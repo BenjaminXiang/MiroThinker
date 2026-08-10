@@ -35,6 +35,13 @@ from .followup_referents import (
 
 _ZERO_SHA256 = "0" * 64
 _PUBLIC_DOMAINS = ("professor", "company", "paper", "patent")
+# Operator-attested manual recall sidecar (uploaded documents, manual
+# records). Manual vector traces carry this target marker instead of the
+# release hash chain, and their evidence carries this source authority; the
+# lane output contract recognizes exactly this pair as the one non-release
+# local provenance.
+MANUAL_RECALL_TARGET_ID = "manual-recall-v1"
+MANUAL_RECALL_SOURCE_AUTHORITY = "manual_upload"
 _INFORMATION_CLASSES = frozenset({"A", "B", "C", "D", "E", "G"})
 _SUPPORTED_LANES = frozenset(
     {
@@ -5513,7 +5520,14 @@ def _valid_local_projection_item(
         request.lane == trace.execution_lane
         and item.lane == trace.execution_lane
         and item.source_nature == "local"
-        and item.source_authority == "canonical_release"
+        and (
+            item.source_authority == "canonical_release"
+            or (
+                isinstance(trace, LocalVectorTrace)
+                and trace.target_id == MANUAL_RECALL_TARGET_ID
+                and item.source_authority == MANUAL_RECALL_SOURCE_AUTHORITY
+            )
+        )
         and item.evidence_id == trace.evidence_id
         and item.object_id == trace.canonical_object_id
         and item.domain == trace.domain

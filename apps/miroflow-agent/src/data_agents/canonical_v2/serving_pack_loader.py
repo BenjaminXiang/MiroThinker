@@ -51,6 +51,7 @@ import numpy as np
 from pydantic import Field
 
 from . import knowledge_read_isolated as iso
+from . import manual_recall_points
 from .candidate_projection import (
     CandidateProjectionRequest,
     CandidateProjectionResult,
@@ -1054,6 +1055,7 @@ def _create_pack_vector_recall_adapter(
     embedding_adapter: EmbeddingAdapter,
     vectorized_scoring: bool,
     preopened_snapshot: IsolatedIndexSnapshot | None,
+    manual_recall_provider: Any | None = None,
 ) -> Callable[[LaneRequest], RetrievalLaneResult]:
     expected_model_id = bundle.index_result.policy_snapshot.embedding_model
     if any(
@@ -1181,7 +1183,11 @@ def _create_pack_vector_recall_adapter(
                 point=point,
             )
         )
-        if not points:
+        manual_points = manual_recall_points.manual_points_for_request(
+            provider=manual_recall_provider,
+            request=validated_request,
+        )
+        if not points and not manual_points:
             return RetrievalLaneResult()
         professor_display_names = iso._professor_vector_display_names(
             points=points,
@@ -1220,6 +1226,14 @@ def _create_pack_vector_recall_adapter(
             )
             for point, score in zip(points, similarity_scores, strict=True)
         ]
+        manual_recall_points.append_manual_candidates(
+            provider=manual_recall_provider,
+            request=validated_request,
+            query_vector=query_vector,
+            query_embedding_sha256=query_embedding_sha256,
+            embedding_model=expected_model_id,
+            candidates=candidates,
+        )
         candidates.sort(
             key=lambda candidate: (
                 -candidate.raw_score,
@@ -1446,6 +1460,7 @@ def create_serving_pack_knowledge_read(
     web_handle_resolver: Callable[[WebHandleResolutionRequest], object] | None = None,
     accepted_identity_lookup: Callable[[AcceptedIdentityLookupRequest], object]
     | None = None,
+    manual_recall_provider: Any | None = None,
     web_handle_ttl: timedelta = timedelta(hours=1),
     clock: Callable[[], datetime] = lambda: datetime.now(timezone.utc),
 ) -> KnowledgeRead:
@@ -1558,6 +1573,7 @@ def create_serving_pack_knowledge_read(
             embedding_adapter=embedding_adapter,
             vectorized_scoring=vectorized_recall,
             preopened_snapshot=authority.index_snapshot,
+            manual_recall_provider=manual_recall_provider,
         )
         supported_lanes.add("vector")
     lane_adapters["internal_reference"] = (

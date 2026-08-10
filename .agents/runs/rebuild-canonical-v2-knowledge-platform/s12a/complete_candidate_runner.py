@@ -518,6 +518,31 @@ def _compose_corrections_store() -> Any:
     return store
 
 
+def _compose_manual_recall_store(embedding_adapter: Any) -> Any:
+    """Compose the optional manual recall sidecar store from the environment.
+
+    ``CANONICAL_V2_MANUAL_RECALL_DIR`` names the sidecar directory. Absent env
+    or any open failure degrades to ``None`` so recall keeps its exact
+    pre-existing behavior (no manual union, upload API answers 503).
+    """
+
+    directory = os.environ.get("CANONICAL_V2_MANUAL_RECALL_DIR", "").strip()
+    if not directory:
+        return None
+    try:
+        module = import_module("backend.services.canonical_v2_manual_recall")
+        store = module.ManualRecallStore(Path(directory), embedding_adapter)
+    except Exception as exc:  # noqa: BLE001 - sidecar stays fail-open at boot
+        print(
+            "manual_recall_store=disabled "
+            f"({type(exc).__name__}: {exc})",
+            flush=True,
+        )
+        return None
+    print(f"manual_recall_store={store.store_path}", flush=True)
+    return store
+
+
 def _serve(
     *,
     config: RunnerConfig,
@@ -549,6 +574,7 @@ def _serve(
         dependencies.uvicorn_run, name="uvicorn.run"
     )
     recorded = load_inputs(config)
+    manual_recall_store = _compose_manual_recall_store(recorded.embedding_adapter)
     verification = handoff.release_verification
     evidence_ids = tuple(
         _require_attribute(verification, "evidence_ids", owner="release verification")
@@ -592,6 +618,7 @@ def _serve(
         supplemental_search=recorded.supplemental_search,
         web_handle_resolver=recorded.web_handle_resolver,
         accepted_identity_lookup=recorded.accepted_identity_lookup,
+        manual_recall_provider=manual_recall_store,
     )
     runtime = compose_runtime(
         published_release=published,
@@ -623,6 +650,8 @@ def _serve(
     corrections_store = _compose_corrections_store()
     if corrections_store is not None:
         app.state.canonical_v2_corrections_store = corrections_store
+    if manual_recall_store is not None:
+        app.state.canonical_v2_manual_recall_store = manual_recall_store
     run_uvicorn(
         app,
         host=config.host,
@@ -1038,6 +1067,7 @@ def _production_dependencies(config: RunnerConfig) -> RunnerDependencies:
             supplemental_search=kwargs["supplemental_search"],
             web_handle_resolver=kwargs["web_handle_resolver"],
             accepted_identity_lookup=kwargs["accepted_identity_lookup"],
+            manual_recall_provider=kwargs.get("manual_recall_provider"),
         )
 
     def compose_pack_consumer_runtime(**kwargs: Any) -> Any:

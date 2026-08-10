@@ -124,6 +124,7 @@ from .knowledge_read import (
     create_ephemeral_knowledge_read,
     create_ephemeral_query_planner,
 )
+from . import manual_recall_points
 from .relationship_projection import (
     CurrentRelationshipProjection,
     RelationshipCandidateOutcome,
@@ -1324,6 +1325,7 @@ def create_isolated_release_knowledge_read(
     web_handle_resolver: Callable[[WebHandleResolutionRequest], object] | None = None,
     accepted_identity_lookup: Callable[[AcceptedIdentityLookupRequest], object]
     | None = None,
+    manual_recall_provider: Any | None = None,
     web_handle_ttl: timedelta = timedelta(hours=1),
     clock: Callable[[], datetime] = lambda: datetime.now(timezone.utc),
 ) -> KnowledgeRead:
@@ -1453,6 +1455,7 @@ def create_isolated_release_knowledge_read(
             reuse_audited_snapshot=reuse_audited_vector_snapshot,
             vectorized_scoring=vectorized_recall,
             fast_boot=fast_boot,
+            manual_recall_provider=manual_recall_provider,
         )
         supported_lanes.add("vector")
     if internal_reference_authority is not None:
@@ -7002,6 +7005,7 @@ def create_isolated_vector_recall_adapter(
     reuse_audited_snapshot: bool = False,
     vectorized_scoring: bool = False,
     fast_boot: bool = False,
+    manual_recall_provider: Any | None = None,
 ) -> Callable[[LaneRequest], RetrievalLaneResult]:
     """Bind deterministic semantic recall to one fully audited isolated release."""
 
@@ -7151,7 +7155,11 @@ def create_isolated_vector_recall_adapter(
                 point=point,
             )
         )
-        if not points:
+        manual_points = manual_recall_points.manual_points_for_request(
+            provider=manual_recall_provider,
+            request=validated_request,
+        )
+        if not points and not manual_points:
             return RetrievalLaneResult()
         professor_display_names = _professor_vector_display_names(
             points=points,
@@ -7190,6 +7198,14 @@ def create_isolated_vector_recall_adapter(
             )
             for point, score in zip(points, similarity_scores, strict=True)
         ]
+        manual_recall_points.append_manual_candidates(
+            provider=manual_recall_provider,
+            request=validated_request,
+            query_vector=query_vector,
+            query_embedding_sha256=query_embedding_sha256,
+            embedding_model=expected_model_id,
+            candidates=candidates,
+        )
         candidates.sort(
             key=lambda candidate: (
                 -candidate.raw_score,
@@ -7601,6 +7617,10 @@ def _validate_release_bound_vector_evidence(
             raise IsolatedKnowledgeReadIntegrityError(
                 "release-bound vector trace uses the wrong local path"
             )
+        if manual_recall_points.is_manual_vector_trace(trace):
+            # Operator-attested sidecar points are not release-bound; their
+            # provenance is the manual recall lineage on the trace itself.
+            continue
         point = points_by_id.get(trace.point_id)
         if point is None or point.domain is None:
             raise IsolatedKnowledgeReadIntegrityError(
