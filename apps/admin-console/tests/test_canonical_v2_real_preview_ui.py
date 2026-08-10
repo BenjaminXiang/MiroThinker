@@ -5535,3 +5535,82 @@ globalThis.fetch = async (path, options) => {{
         "hasContentType": False,
         "bodyIsFormData": True,
     }
+
+
+def test_browse_list_search_and_pager_ui_is_wired(
+    browse_html: str,
+    browse_script: str,
+) -> None:
+    assert 'id="list-search-input"' in browse_html
+    assert 'id="list-search-submit"' in browse_html
+    assert 'id="list-search-clear"' in browse_html
+    assert 'id="list-pager"' in browse_html
+    assert 'id="list-pager-prev"' in browse_html
+    assert 'id="list-pager-next"' in browse_html
+    assert "搜索当前域（名称、简介等任意字段）" in browse_html
+
+    for marker in (
+        "function domainListPath(",
+        "function renderPager(",
+        "function resetListQuery(",
+        "function submitListSearch(",
+    ):
+        assert marker in browse_script
+
+    # The list request carries the backend-supported q/limit/offset params.
+    path_builder = _section(browse_script, "function domainListPath(", "function renderPager(")
+    assert 'params.set("q", activeQuery)' in path_builder
+    assert 'params.set("limit", String(LIST_PAGE_SIZE))' in path_builder
+    assert 'params.set("offset", String(activeOffset))' in path_builder
+
+    # Search submit resets to the first page and guards non-domain views.
+    submit = _section(browse_script, "function submitListSearch(", "listSearchSubmit.addEventListener")
+    assert 'if (!domains.includes(activeView)) return;' in submit
+    assert "activeQuery = listSearchInput.value.trim();" in submit
+    assert "activeOffset = 0;" in submit
+    assert 'event.key === "Enter"' in browse_script
+
+    # Switching views resets the query; gaps hides search and pager.
+    set_active = _section(browse_script, "function setActiveTab(", "function addFactList(")
+    assert "if (view !== activeView) resetListQuery();" in set_active
+    assert "listSearchInput.parentElement.hidden = !domains.includes(view);" in set_active
+
+    pager = _section(browse_script, "function renderPager(", "async function loadDetail")
+    assert "listPager.hidden = total <= LIST_PAGE_SIZE;" in pager
+    assert "listPagerPrev.disabled = activeOffset <= 0;" in pager
+    assert "listPagerNext.disabled = activeOffset + LIST_PAGE_SIZE >= total;" in pager
+
+    empty = _section(browse_script, "async function loadDomain(", "function domainListPath(")
+    assert "未找到匹配" in empty
+
+
+def test_browse_domain_list_path_builds_query_params(browse_script: str) -> None:
+    path_builder = _section(browse_script, "function domainListPath(", "function renderPager(")
+    harness = f"""
+{path_builder}
+const domainPath = "api/canonical-v2/admin/domains/";
+const LIST_PAGE_SIZE = 25;
+let activeQuery = "";
+let activeOffset = 0;
+const paths = [];
+paths.push(domainListPath("company"));
+activeQuery = "机器人";
+activeOffset = 50;
+paths.push(domainListPath("company"));
+activeQuery = 'a"b&c';
+paths.push(domainListPath("paper"));
+console.log(JSON.stringify(paths));
+"""
+    completed = subprocess.run(
+        ["node", "-"],
+        input=harness,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert json.loads(completed.stdout) == [
+        "api/canonical-v2/admin/domains/company?limit=25&offset=0",
+        "api/canonical-v2/admin/domains/company?q=%E6%9C%BA%E5%99%A8%E4%BA%BA&limit=25&offset=50",
+        'api/canonical-v2/admin/domains/paper?q=a%22b%26c&limit=25&offset=50',
+    ]

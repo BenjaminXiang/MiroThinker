@@ -359,6 +359,9 @@
       .edit-buttons { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
       .edit-buttons .primary-action { width: auto; margin-top: 0; }
       .edit-buttons .edit-action { padding: 8px 14px; margin-left: 0; }
+      .search-row .edit-input { flex: 1; margin-top: 0; }
+      #list-pager { justify-content: center; }
+      #list-pager-info { margin: 0; }
 
       .related-list { display: grid; gap: 8px; }
       .related-card { padding: 11px; background: var(--teal-soft); border-radius: 11px; }
@@ -456,9 +459,20 @@
                 <button class="primary-action" id="upload-doc-toggle" type="button" hidden>上传文档</button>
                 <button class="primary-action" id="add-record-toggle" type="button">新增记录</button>
               </div>
+              <div class="edit-buttons search-row">
+                <input class="edit-input" id="list-search-input" type="search"
+                       placeholder="搜索当前域（名称、简介等任意字段）" aria-label="搜索当前域" />
+                <button class="primary-action" id="list-search-submit" type="button">搜索</button>
+                <button class="edit-action" id="list-search-clear" type="button" hidden>清除</button>
+              </div>
               <div id="add-record-region" aria-live="polite"></div>
               <div id="upload-doc-region" aria-live="polite"></div>
               <div class="item-list" id="item-list" aria-live="polite"></div>
+              <div class="edit-buttons" id="list-pager" hidden>
+                <button class="edit-action" id="list-pager-prev" type="button">上一页</button>
+                <span class="card-limitation" id="list-pager-info"></span>
+                <button class="edit-action" id="list-pager-next" type="button">下一页</button>
+              </div>
             </section>
 
             <aside class="inspector" aria-labelledby="inspector-heading">
@@ -561,6 +575,17 @@
       const addRecordRegion = document.getElementById("add-record-region");
       const uploadDocToggle = document.getElementById("upload-doc-toggle");
       const uploadDocRegion = document.getElementById("upload-doc-region");
+      const listSearchInput = document.getElementById("list-search-input");
+      const listSearchSubmit = document.getElementById("list-search-submit");
+      const listSearchClear = document.getElementById("list-search-clear");
+      const listPager = document.getElementById("list-pager");
+      const listPagerPrev = document.getElementById("list-pager-prev");
+      const listPagerNext = document.getElementById("list-pager-next");
+      const listPagerInfo = document.getElementById("list-pager-info");
+
+      const LIST_PAGE_SIZE = 25;
+      let activeQuery = "";
+      let activeOffset = 0;
 
       let activeView = "company";
       let selectedId = null;
@@ -731,7 +756,15 @@
         tabs.replaceChildren(...buttons, gapButton);
       }
 
+      function resetListQuery() {
+        activeQuery = "";
+        activeOffset = 0;
+        listSearchInput.value = "";
+        listSearchClear.hidden = true;
+      }
+
       function setActiveTab(view) {
+        if (view !== activeView) resetListQuery();
         activeView = view;
         for (const button of tabs.querySelectorAll("button")) {
           const active = button.dataset.view === view;
@@ -740,6 +773,8 @@
         }
         uploadDocToggle.hidden = view !== "company";
         if (view !== "company") uploadDocRegion.replaceChildren();
+        listSearchInput.parentElement.hidden = !domains.includes(view);
+        if (!domains.includes(view)) listPager.hidden = true;
       }
 
       function addFactList(container, item, fields) {
@@ -793,20 +828,43 @@
         itemList.replaceChildren(stateBox("loading", `正在加载${domainLabels[domain]}目录`));
         inspectorPrompt();
         try {
-          const page = await fetchJson(domainPath + encodeURIComponent(domain));
+          const page = await fetchJson(domainListPath(domain));
           const items = Array.isArray(page.items) ? page.items : [];
           listCaption.textContent = `发布于 ${formatTime(page.as_of)}`;
           listCount.textContent = `${page.total ?? items.length} 条`;
           if (!items.length) {
-            itemList.replaceChildren(stateBox("empty", `当前版本暂无${domainLabels[domain]}条目`));
+            const emptyText = activeQuery
+              ? `未找到匹配「${activeQuery}」的${domainLabels[domain]}条目`
+              : `当前版本暂无${domainLabels[domain]}条目`;
+            itemList.replaceChildren(stateBox("empty", emptyText));
           } else {
             itemList.replaceChildren(...items.map((item) => itemCard(item, domain, page.limitations || [])));
           }
+          renderPager(page);
           if (requestedId) await loadDetail(domain, requestedId);
         } catch (error) {
           itemList.replaceChildren(stateBox("error", `目录加载失败 · ${errorText(error)}`));
           listCaption.textContent = "候选运行时暂不可用";
+          listPager.hidden = true;
         }
+      }
+
+      function domainListPath(domain) {
+        const params = new URLSearchParams();
+        if (activeQuery) params.set("q", activeQuery);
+        params.set("limit", String(LIST_PAGE_SIZE));
+        params.set("offset", String(activeOffset));
+        return domainPath + encodeURIComponent(domain) + "?" + params.toString();
+      }
+
+      function renderPager(page) {
+        const total = page.total ?? 0;
+        const pages = Math.max(1, Math.ceil(total / LIST_PAGE_SIZE));
+        const current = Math.floor(activeOffset / LIST_PAGE_SIZE) + 1;
+        listPager.hidden = total <= LIST_PAGE_SIZE;
+        listPagerInfo.textContent = `第 ${current} / ${pages} 页 · 共 ${total} 条`;
+        listPagerPrev.disabled = activeOffset <= 0;
+        listPagerNext.disabled = activeOffset + LIST_PAGE_SIZE >= total;
       }
 
       function dataRows(values) {
@@ -1040,6 +1098,7 @@
         listTitle.textContent = "知识缺口";
         listCaption.textContent = "正在读取类型化运营记录…";
         listCount.textContent = "—";
+        listPager.hidden = true;
         itemList.replaceChildren(stateBox("loading", "正在加载知识缺口"));
         inspectorPrompt("请选择一个知识缺口，查看证据和处理历史。");
         try {
@@ -1345,6 +1404,31 @@
         }
         if (activeView !== "company") return;
         uploadDocRegion.replaceChildren(uploadDocPanel());
+      });
+
+      function submitListSearch() {
+        if (!domains.includes(activeView)) return;
+        activeQuery = listSearchInput.value.trim();
+        activeOffset = 0;
+        listSearchClear.hidden = !activeQuery;
+        loadDomain(activeView);
+      }
+
+      listSearchSubmit.addEventListener("click", submitListSearch);
+      listSearchInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") submitListSearch();
+      });
+      listSearchClear.addEventListener("click", () => {
+        resetListQuery();
+        loadDomain(activeView);
+      });
+      listPagerPrev.addEventListener("click", () => {
+        activeOffset = Math.max(0, activeOffset - LIST_PAGE_SIZE);
+        loadDomain(activeView);
+      });
+      listPagerNext.addEventListener("click", () => {
+        activeOffset += LIST_PAGE_SIZE;
+        loadDomain(activeView);
       });
 
       buildTabs();
