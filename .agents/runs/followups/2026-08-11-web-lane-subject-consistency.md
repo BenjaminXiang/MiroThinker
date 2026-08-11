@@ -1,6 +1,10 @@
 # Follow-up: web lane subject-consistency filtering (Bocha off-entity noise)
 
-Status: Proposed (needs OpenSpec change before implementation)
+Status: Implemented and deployed 2026-08-12 (commit 50c4f3a, production 18188 restarted).
+Residual: shared-alias lookalikes (e.g. 南开国际先进研究院) can still pass the
+identity-form gate; stream path has no off-anchor correction retry (chunks are
+irrevocable); official-site fetch injection (original R3) deferred to a later phase.
+OpenSpec backfill still owed per repo process.
 Date: 2026-08-11
 Context: deploy of `fix(canonical-v2): bind follow-up elaborations to the prior subject` (27d0231)
 
