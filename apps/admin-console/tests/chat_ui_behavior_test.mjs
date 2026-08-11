@@ -2982,3 +2982,78 @@ test("mismatched final answer falls back to a full re-render", async () => {
   assert.notEqual(answerBox.children[0], snapshotFirstChild, "mismatched answer must rebuild the answer DOM");
   assert.equal(answerBox.textContent, "完全不同的最终回答");
 });
+
+
+test("process disclosure lists web retrieval results as safe links", async () => {
+  const harness = createProcessFlowHarness([
+    ["stage", { name: "planning" }],
+    ["plan_done", { views: [{ domain: "company" }] }],
+    ["stage", { name: "retrieval" }],
+    ["retrieval_done", {
+      lanes: [{ lane: "web", status: "succeeded", candidates: 2 }],
+      web_items: [
+        { title: "甲公司发布新机器人", url: "https://www.example.com/news/a", source: "www.example.com" },
+        { title: "只有标题没有摘要", url: "https://news.example.org/b", source: "news.example.org" },
+        // javascript: URLs must be rejected by the safe-URL projection.
+        { title: "恶意链接", url: "javascript:alert(1)", source: "evil.example.com" },
+        // Duplicate URLs render once.
+        { title: "重复条目", url: "https://www.example.com/news/a", source: "www.example.com" },
+      ],
+    }],
+    ["stage", { name: "synthesis" }],
+    ["answer", { answer_text: "公开回答", citations: [] }],
+    ["done", {}],
+  ]);
+
+  const outcome = await harness.sendQuery("公开问题");
+
+  assert.deepEqual(plainOutcome(outcome), { status: "succeeded" });
+  assert.deepEqual(harness.errorMessages, []);
+  const [disclosure] = descendantsWithClass(harness.renderedMessages, "process-summary");
+  assert.ok(disclosure, "process disclosure must exist after finish");
+  const links = descendantsWithClass(disclosure, "process-web-link");
+  assert.equal(links.length, 2, "only sanitized, de-duplicated web items render");
+  assert.equal(links[0].textContent, "甲公司发布新机器人");
+  assert.equal(links[0].getAttribute("href"), "https://www.example.com/news/a");
+  assert.equal(links[0].getAttribute("target"), "_blank");
+  assert.equal(links[0].getAttribute("rel"), "noopener");
+  assert.equal(links[1].textContent, "只有标题没有摘要");
+  assert.equal(links[1].getAttribute("href"), "https://news.example.org/b");
+  assert.equal(links[1].getAttribute("target"), "_blank");
+  assert.equal(links[1].getAttribute("rel"), "noopener");
+  const sources = descendantsWithClass(disclosure, "process-web-source");
+  assert.deepEqual(
+    sources.map((node) => node.textContent),
+    ["www.example.com", "news.example.org"],
+  );
+
+  // 列表必须紧跟检索统计行（retrieval 过程行之后、synthesis 行之前）。
+  const rowsContainer = disclosure.children.find(
+    (child) => child.classList && child.classList.contains("process-rows"),
+  );
+  assert.ok(rowsContainer, "finish must collect the streamed rows into the disclosure");
+  const [webBlock] = descendantsWithClass(rowsContainer, "process-web");
+  assert.ok(webBlock, "web items block must live inside the process disclosure");
+  const rows = descendantsWithClass(rowsContainer, "process-row");
+  const retrievalRow = rows.find((row) => row.textContent.includes("网络 2 条"));
+  assert.ok(retrievalRow, "retrieval stats row must exist");
+  assert.ok(
+    rowsContainer.children.indexOf(webBlock) > rowsContainer.children.indexOf(retrievalRow),
+    "web items block must render below the retrieval stats row",
+  );
+});
+
+test("process disclosure renders no web block without web items", async () => {
+  const harness = createProcessFlowHarness([
+    ["stage", { name: "retrieval" }],
+    ["retrieval_done", { lanes: [{ lane: "vector", status: "succeeded", candidates: 1 }] }],
+    ["answer", { answer_text: "公开回答", citations: [] }],
+    ["done", {}],
+  ]);
+
+  const outcome = await harness.sendQuery("公开问题");
+
+  assert.deepEqual(plainOutcome(outcome), { status: "succeeded" });
+  assert.equal(descendantsWithClass(harness.renderedMessages, "process-web").length, 0);
+  assert.equal(descendantsWithClass(harness.renderedMessages, "process-web-link").length, 0);
+});

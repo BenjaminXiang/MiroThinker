@@ -335,6 +335,19 @@
       .process-marker { font-size: 11px; }
       .process-done .process-marker { color: var(--teal); }
       .process-done .process-text { color: inherit; }
+      .process-web { margin: 2px 0 2px 17px; font-size: 13px; line-height: 1.7; color: var(--muted); }
+      .process-web-list { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+      .process-web-item { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+      .process-web-link {
+        overflow: hidden;
+        color: var(--teal);
+        font-size: 12px;
+        text-decoration: none;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .process-web-link:hover { text-decoration: underline; }
+      .process-web-source { flex-shrink: 0; font-size: 11px; }
       .process-summary summary {
         min-width: 44px;
         min-height: 44px;
@@ -1565,6 +1578,42 @@
           line.querySelector(".process-text").textContent = text;
         }
         let actionLine = null;
+        let webItemsRendered = false;
+        function webItems(items) {
+          // 网络检索结果一次性渲染：挂在检索统计行之后，finish 时随过程行
+          // 一起收进"查看检索过程" details；URL/标题都经过公共投影清洗，
+          // 赋值只走 textContent/setAttribute，不拼接 innerHTML。
+          if (webItemsRendered) return;
+          webItemsRendered = true;
+          const entries = [];
+          const seenUrls = new Set();
+          for (const item of Array.isArray(items) ? items : []) {
+            const url = safeCitationUrl(item?.url);
+            if (!url || seenUrls.has(url)) continue;
+            seenUrls.add(url);
+            entries.push({
+              url,
+              title: safePublicText(item?.title) || url,
+              source: safePublicText(item?.source),
+            });
+            if (entries.length >= 10) break;
+          }
+          if (!entries.length) return;
+          const block = create("div", "process-web");
+          const list = create("ul", "process-web-list");
+          for (const entry of entries) {
+            const li = create("li", "process-web-item");
+            const link = create("a", "process-web-link", entry.title);
+            link.setAttribute("href", entry.url);
+            link.setAttribute("target", "_blank");
+            link.setAttribute("rel", "noopener");
+            li.append(link);
+            if (entry.source) li.append(create("span", "process-web-source", entry.source));
+            list.append(li);
+          }
+          block.append(list);
+          box.append(block);
+        }
         function finish(summary) {
           if (actionLine) {
             actionLine.remove();
@@ -1592,7 +1641,7 @@
           return button;
         }
         bubble.append(box);
-        return { set, finish, addAction };
+        return { set, finish, addAction, webItems };
       }
 
       function parseSseBlock(block, onEvent) {
@@ -1782,6 +1831,7 @@
                 notifyContentUpdate();
               } else if (eventName === "retrieval_done") {
                 process.set("retrieval", `✓ ${laneSummary(data.lanes)}`, true);
+                process.webItems(data.web_items);
                 notifyContentUpdate();
               } else if (eventName === "answer_chunk") {
                 if (!streaming) {

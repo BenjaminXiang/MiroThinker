@@ -316,9 +316,10 @@ def chat_stream(
 
     Events (``event:`` / ``data:`` JSON): ``stage`` (planning / retrieval /
     synthesis), ``plan_done`` (lanes, domains, web views), ``retrieval_done``
-    (per-lane status and candidate counts), ``answer`` (the full ChatResponse
-    JSON), ``done``, or ``error``.  Only stage summaries and counts are
-    streamed — never raw evidence, internal ids, or snapshots.
+    (per-lane status and candidate counts, plus up to 10 sanitized public web
+    results under ``web_items``), ``answer`` (the full ChatResponse JSON),
+    ``done``, or ``error``.  Only stage summaries, counts, and public web
+    titles/URLs are streamed — never raw evidence, internal ids, or snapshots.
     """
     from backend.services.canonical_v2_admin import (
         CanonicalV2ConsumerIntegrityError,

@@ -3473,6 +3473,191 @@ def test_s12g_real_adapter_sse_sanitizes_answer_and_clarification() -> None:
     assert marker not in json.dumps(answer_payload, ensure_ascii=False)
 
 
+def _web_items_evidence_item(
+    read_module: Any,
+    *,
+    index: int,
+    locator: str,
+    snippet: str,
+    lane: str = "web",
+) -> Any:
+    return read_module.EvidenceItem(
+        evidence_id=f"evidence:web-items:{index}",
+        object_id=f"web-object:web-items:{index}",
+        domain="company",
+        lane=lane,
+        source_nature="current_web" if lane == "web" else "local",
+        source_locator=locator,
+        snippet=snippet,
+        score=1.0,
+        source_authority="web_search",
+    )
+
+
+class _WebItemsPlanner:
+    def plan(self, request: Any) -> Any:
+        read_module = import_module("src.data_agents.canonical_v2.knowledge_read")
+        return read_module.RetrievalPlan(
+            plan_version="retrieval-plan-v1",
+            original_query=request.original_query,
+            behavior_class="A",
+            release_id=RELEASE_ID,
+            domains=("company",),
+            protected_slots=(),
+            lanes=("web",),
+            max_candidates=5,
+            web_required=False,
+        )
+
+
+class _WebItemsRead:
+    def __init__(self, items: tuple[Any, ...]) -> None:
+        self._items = items
+
+    def execute(self, plan: Any) -> Any:
+        read_module = import_module("src.data_agents.canonical_v2.knowledge_read")
+        return read_module.EvidenceSet(
+            release_id=RELEASE_ID,
+            original_query=plan.original_query,
+            protected_slots=(),
+            items=self._items,
+            traces=(),
+            limitations=(),
+        )
+
+
+class _WebItemsAnswer:
+    prose_progress: Callable[[str], None] | None = None
+
+    def answer(self, turn: Any) -> Any:
+        answer_module = import_module("src.data_agents.canonical_v2.knowledge_answer")
+        return answer_module.TurnResult(
+            session_id=turn.session_id,
+            turn_id=turn.turn_id,
+            release_id=turn.release_id,
+            answer_text=f"公开回答：{turn.query}",
+        )
+
+
+def _web_items_adapter(items: tuple[Any, ...]) -> Any:
+    service = import_module("backend.services.canonical_v2_chat")
+    return service.CanonicalV2ChatAdapter(
+        release_id=RELEASE_ID,
+        planner=_WebItemsPlanner(),
+        knowledge_read=_WebItemsRead(items),
+        answer_factory=_WebItemsAnswer,
+        answer_session_fork=lambda _: _WebItemsAnswer(),
+    )
+
+
+def _streamed_progress_events(
+    adapter: Any,
+    session_id: str,
+) -> list[tuple[str, dict[str, Any]]]:
+    events: list[tuple[str, dict[str, Any]]] = []
+    adapter.answer_stream(
+        query=SIMPLE_QUERY,
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+        progress=lambda name, data: events.append((name, data)),
+    )
+    return events
+
+
+def test_real_adapter_retrieval_done_lists_public_web_items() -> None:
+    """``retrieval_done`` carries up to 10 sanitized web lane results: the
+    title is split from the packed ``title：snippet`` form, the URL passes the
+    public-URL sanitizer, and the source host rides along. Non-web items,
+    non-public locators, and duplicate URLs never reach the event."""
+    read_module = import_module("src.data_agents.canonical_v2.knowledge_read")
+    items = [
+        _web_items_evidence_item(
+            read_module,
+            index=0,
+            locator="https://www.example.com/news/a",
+            snippet="甲公司发布新机器人：完整新闻摘要",
+        ),
+        _web_items_evidence_item(
+            read_module,
+            index=1,
+            locator="https://news.example.org/b",
+            snippet="只有标题没有摘要",
+        ),
+        # Non-public locators are dropped by the public-URL sanitizer.
+        _web_items_evidence_item(
+            read_module,
+            index=2,
+            locator="https://intranet.local/secret",
+            snippet="内部页面：不应出现",
+        ),
+        # Trailing-slash duplicate of the first item's normalized URL: dropped.
+        _web_items_evidence_item(
+            read_module,
+            index=3,
+            locator="https://www.example.com/news/a/",
+            snippet="重复条目：不应出现",
+        ),
+        # Non-web lanes never leak into the web list.
+        _web_items_evidence_item(
+            read_module,
+            index=4,
+            lane="exact",
+            locator="local://company-c-0123456789abcdef01234567",
+            snippet='{"name": "本地条目"}',
+        ),
+        *[
+            _web_items_evidence_item(
+                read_module,
+                index=10 + extra,
+                locator=f"https://extra.example.net/{extra}",
+                snippet=f"补充标题 {extra}",
+            )
+            for extra in range(10)
+        ],
+    ]
+    adapter = _web_items_adapter(tuple(items))
+
+    events = _streamed_progress_events(adapter, "session:retrieval-done-web-items")
+
+    retrieval_done = next(data for name, data in events if name == "retrieval_done")
+    # The lane contract stays intact and web_items is a pure addition.
+    assert "lanes" in retrieval_done
+    # 2 kept head items + 8 extras: internal, duplicate, and non-web items
+    # were filtered before the 10-item cap applies.
+    assert retrieval_done["web_items"] == [
+        {
+            "title": "甲公司发布新机器人",
+            "url": "https://www.example.com/news/a",
+            "source": "www.example.com",
+        },
+        {
+            "title": "只有标题没有摘要",
+            "url": "https://news.example.org/b",
+            "source": "news.example.org",
+        },
+        *[
+            {
+                "title": f"补充标题 {extra}",
+                "url": f"https://extra.example.net/{extra}",
+                "source": "extra.example.net",
+            }
+            for extra in range(8)
+        ],
+    ]
+
+
+def test_real_adapter_retrieval_done_web_items_empty_without_web_results() -> None:
+    """Without web lane items the field is present and empty — a backwards-
+    compatible addition older clients can simply ignore."""
+    adapter = _web_items_adapter(())
+
+    events = _streamed_progress_events(adapter, "session:retrieval-done-no-web")
+
+    retrieval_done = next(data for name, data in events if name == "retrieval_done")
+    assert retrieval_done["web_items"] == []
+
+
 def test_s11a_chat_stream_integrity_error_emits_error_event() -> None:
     """A knowledge-read integrity failure surfaces as an SSE error event with
     the stable public detail (never the private message)."""

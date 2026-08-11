@@ -763,6 +763,47 @@ def _session_web_items(evidence_set: EvidenceSet) -> tuple[EvidenceItem, ...]:
     return tuple(retained)
 
 
+_RETRIEVAL_DONE_WEB_ITEMS_LIMIT = 10
+
+
+def _retrieval_done_web_items(evidence_set: EvidenceSet) -> list[dict[str, str]]:
+    """Public web lane results carried by the ``retrieval_done`` progress event.
+
+    Only this read's own web lane items qualify (session carry-over merges
+    later, so stale items never leak into a fresh turn's list). The web lane
+    packs its page title into the snippet as ``title：snippet`` — the same
+    ``partition("：")`` idiom ``knowledge_serving_isolated`` uses to recover
+    it. URLs pass the public-URL sanitizer so internal locators never reach
+    the stream, and titles pass the public-text sanitizer like every other
+    user-facing string.
+    """
+    web_items: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for item in evidence_set.items:
+        if item.lane != "web":
+            continue
+        url = _public_url(item.source_locator)
+        if url is None:
+            continue
+        key = _normalized_web_url(url)
+        if key in seen:
+            continue
+        seen.add(key)
+        title, _, _ = item.snippet.partition("：")
+        title = _sanitize_public_text(title).strip()
+        hostname = (urlparse(url).hostname or "").casefold()
+        web_items.append(
+            {
+                "title": title or hostname or url,
+                "url": url,
+                "source": hostname,
+            }
+        )
+        if len(web_items) >= _RETRIEVAL_DONE_WEB_ITEMS_LIMIT:
+            break
+    return web_items
+
+
 _SOFT_SUBJECT_MAX_LENGTH = 30
 _SOFT_SUBJECT_QUESTION_MARKERS = ("吗", "呢", "哪些", "什么")
 # News-headline shapes a web display name takes when the handle was minted
@@ -1099,7 +1140,8 @@ class CanonicalV2ChatAdapter:
                     }
                     for trace in evidence_set.traces
                     if isinstance(getattr(trace, "lane", None), str)
-                ]
+                ],
+                "web_items": _retrieval_done_web_items(evidence_set),
             },
         )
         emit("stage", {"name": "synthesis"})
