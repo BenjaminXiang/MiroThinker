@@ -11,6 +11,7 @@ from __future__ import annotations
 import pytest
 
 from src.data_agents.canonical_v2.followup_referents import (
+    has_continuation_intent,
     has_explicit_named_subject,
     has_set_referent,
     has_singular_referent,
@@ -184,3 +185,53 @@ def test_referent_domain_hint(query: str, expected: str | None) -> None:
 )
 def test_referent_subject_domain(query: str, expected: str | None) -> None:
     assert referent_subject_domain(query) == expected
+
+
+@pytest.mark.parametrize(
+    "query",
+    (
+        # Leading-marker phrasings covered since the first version.
+        "具体说说",
+        "详细说说",
+        "展开讲讲",
+        # Conversational elaboration phrasings (the reported live case first).
+        "有没有更详细的信息",
+        "还有更多信息吗",
+        "还有更多资料吗",
+        "能再详细点吗",
+        "能不能再具体一点",
+        "可以再详细一点吗",
+        "想再深入了解一下",
+        "想要更多资料",
+        "再展开讲讲",
+        "更详细一点",
+        "请再具体说说",
+    ),
+)
+def test_continuation_intent_positive(query: str) -> None:
+    assert has_continuation_intent(query)
+
+
+@pytest.mark.parametrize(
+    "query",
+    (
+        # Expansion requests deliberately stay outside continuation: they ask
+        # for results beyond the displayed set, not a deeper take on it.
+        "还有哪些",
+        "还有哪些类似的",
+        "其他的呢",
+        "有没有类似的",
+        "更多结果呢",
+        # An enumeration that merely contains a detail word is a new topic.
+        "有哪些详细的论文",
+        "中国有哪些成熟的酒店送餐机器人供应商",
+        # 介绍 scaffolding marks a first-turn query, never an elaboration.
+        "介绍清华的丁文伯",
+        "有没有更详细的介绍",
+        # An explicitly named subject disqualifies the follow-up.
+        "有没有更详细的华为公司信息",
+        "专利 CN117873146A 有更详细的信息吗",
+    ),
+)
+def test_continuation_intent_negative(query: str) -> None:
+    assert not has_continuation_intent(query)

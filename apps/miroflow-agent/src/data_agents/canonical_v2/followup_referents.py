@@ -74,14 +74,30 @@ _LEADING_PRONOUN_PATTERN = re.compile(r"^(?:他|她|它)(?:们)?(?:的)?(?:还|�
 # query never looks like this (length cap + no 介绍 scaffolding).
 _CONTINUATION_PATTERN = re.compile(r"^(?:具体|详细|展开)")
 
+# Conversational elaboration phrasings that do not open with 具体/详细/展开
+# ("有没有更详细的信息", "能再详细点吗", "再展开讲讲"). The gradation word
+# 更/再 is mandatory and must directly follow the opening hedge, so plain
+# enumerations ("有哪些详细的论文") and expansion requests ("还有哪些",
+# "有没有类似的") stay outside; an explicitly named subject disqualifies the
+# query the same way it does at the planning layer.
+_CONTINUATION_ELABORATION_PATTERN = re.compile(
+    r"^(?:有没有|还有没有|还有|有|能|能不能|可以|想要|想|请)?"
+    r"(?:更|再)(?:多(?:的)?(?:信息|资料|内容)|.{0,4}?(?:详细|具体|深入|展开))"
+)
+
+_CONTINUATION_MAX_LENGTH = 15
+
 
 def has_continuation_intent(query: str) -> bool:
     """Whether the query is an elaboration of prior context."""
     stripped = query.strip()
+    if len(stripped) > _CONTINUATION_MAX_LENGTH or "介绍" in stripped:
+        return False
+    if _CONTINUATION_PATTERN.match(stripped) is not None:
+        return True
     return (
-        bool(_CONTINUATION_PATTERN.match(stripped))
-        and len(stripped) <= 10
-        and "介绍" not in stripped
+        _CONTINUATION_ELABORATION_PATTERN.match(stripped) is not None
+        and not has_explicit_named_subject(stripped)
     )
 
 
@@ -342,6 +358,49 @@ def strip_leading_pronoun(query: str) -> str:
     """Remove one leading referent pronoun so entity context can take its place."""
     stripped = _LEADING_PRONOUN_PATTERN.sub(" ", query, count=1).strip()
     return stripped or query
+
+
+def _without_introduction_prefix(value: str) -> str:
+    return re.sub(
+        r"^(?:我关注的是|我说的是|我指的是|这里指的是|"
+        r"(?:请问|请|麻烦|帮我)(?:介绍一下|介绍|了解一下|了解|查一下|查询|查)?|"
+        r"介绍一下|介绍|我想了解|帮我查一下|帮我查)\s*",
+        "",
+        value,
+    )
+
+
+def _without_information_suffix(value: str) -> str:
+    return re.sub(
+        r"(?:的)?(?:相关)?(?:信息|资料|情况|介绍)\s*$",
+        "",
+        value,
+    ).strip()
+
+
+def _search_view(query: str) -> str:
+    value = query.strip()
+    if any(marker in value for marker in ("不要", "不包括", "排除", "除外")):
+        return value
+    identifier = IDENTIFIER_PATTERN.search(value)
+    if identifier is not None:
+        return identifier.group(0)
+    search_value = _without_information_suffix(_without_introduction_prefix(value))
+    leading_company_name = extract_leading_company_name(search_value)
+    if leading_company_name is not None:
+        return leading_company_name
+    company = COMPANY_NAME_PATTERN.search(search_value)
+    if company is not None:
+        return company.group(1)
+    professor = PROFESSOR_NAME_PATTERN.match(value)
+    if professor is not None:
+        return professor.group("name")
+    institution_person_name = extract_institution_person_name(search_value)
+    if institution_person_name is not None:
+        return institution_person_name
+    if re.fullmatch(r"[一-鿿·]{2,4}[？?。！!]?", search_value):
+        return search_value.rstrip("？?。！!")
+    return search_value.rstrip("？?。！!")
 
 
 __all__ = [

@@ -318,6 +318,11 @@ class QueryPlanningRequest(ContractModel):
     displayed_entity_names: tuple[str, ...] = ()
     enumeration_context: EnumerationPlanningContext | None = None
     ambiguity_candidates: tuple[AmbiguityCandidate, ...] = ()
+    # Web-only continuation aid: the prior turn's subject name, injected by
+    # the chat layer for elaboration follow-ups that name no subject of their
+    # own. Independent of displayed_entity_names/ids (those bind canonical
+    # anchors); never set by the planner itself.
+    soft_context_subject: str | None = None
     original_query_sha256: str = Field(default=_ZERO_SHA256, pattern=r"^[0-9a-f]{64}$")
     ambiguity_candidate_manifest_sha256: str = Field(
         default=_ZERO_SHA256,
@@ -330,6 +335,8 @@ class QueryPlanningRequest(ContractModel):
         data = handler(self)
         if not self.displayed_entity_names:
             data.pop("displayed_entity_names", None)
+        if self.soft_context_subject is None:
+            data.pop("soft_context_subject", None)
         return data
 
     @model_validator(mode="after")
@@ -345,6 +352,11 @@ class QueryPlanningRequest(ContractModel):
             for name in self.displayed_entity_names
         ):
             raise ValueError("displayed entity names must be normalized and non-empty")
+        if self.soft_context_subject is not None and (
+            not self.soft_context_subject.strip()
+            or self.soft_context_subject != self.soft_context_subject.strip()
+        ):
+            raise ValueError("soft context subject must be normalized and non-empty")
         query_hash = hashlib.sha256(self.original_query.encode("utf-8")).hexdigest()
         manifest_hash = _canonical_sha256(
             [

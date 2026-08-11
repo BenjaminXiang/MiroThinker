@@ -178,6 +178,68 @@ def _source_relationship_trace(
     )
 
 
+def test_soft_context_subject_prefixes_the_deterministic_search_view(
+    tmp_path: Path,
+) -> None:
+    provider = serving_module._proposal_provider(bundle=_bundle(tmp_path))
+    request = QueryPlanningRequest(
+        request_id="query-request:soft-context-prefix",
+        release_id=RELEASE_ID,
+        original_query="有没有更详细的信息",
+        as_of=NOW,
+        soft_context_subject="优必选",
+    )
+
+    proposal = provider(request)
+
+    deterministic = proposal.query_views[0]
+    assert deterministic.producer_kind == "deterministic"
+    assert deterministic.text.startswith("优必选 ")
+    assert "有没有更详细" in deterministic.text
+    assert "优必选" in deterministic.retained_protected_values
+
+
+def test_soft_context_subject_is_appended_back_to_rewrite_views(
+    tmp_path: Path,
+) -> None:
+    provider = serving_module._proposal_provider(
+        bundle=_bundle(tmp_path),
+        query_rewriter=lambda _query: ("UBTECH robotics company profile",),
+    )
+    request = QueryPlanningRequest(
+        request_id="query-request:soft-context-rewrite",
+        release_id=RELEASE_ID,
+        original_query="有没有更详细的信息",
+        as_of=NOW,
+        soft_context_subject="优必选",
+    )
+
+    proposal = provider(request)
+
+    rewrite = next(
+        view for view in proposal.query_views if view.producer_kind == "llm_rewrite"
+    )
+    assert "UBTECH robotics company profile" in rewrite.text
+    assert "优必选" in rewrite.text
+
+
+def test_soft_context_subject_already_in_search_text_is_not_doubled(
+    tmp_path: Path,
+) -> None:
+    provider = serving_module._proposal_provider(bundle=_bundle(tmp_path))
+    request = QueryPlanningRequest(
+        request_id="query-request:soft-context-dedup",
+        release_id=RELEASE_ID,
+        original_query="优必选",
+        as_of=NOW,
+        soft_context_subject="优必选",
+    )
+
+    proposal = provider(request)
+
+    assert proposal.query_views[0].text == "优必选"
+
+
 def test_content_addressed_serving_bundle_is_secret_free_and_executable(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

@@ -33,8 +33,8 @@ from .contracts import ContractModel
 from .followup_referents import (
     COMPANY_NAME_PATTERN,
     IDENTIFIER_PATTERN,
-    PROFESSOR_NAME_PATTERN,
     _EXPLICIT_COMPANY_REJECT_MARKERS,
+    _search_view,
     extract_institution_person_name,
     extract_leading_company_name,
     has_continuation_intent,
@@ -390,49 +390,6 @@ def _infer_domains(query: str) -> tuple[str, ...]:
     )
 
 
-def _without_introduction_prefix(value: str) -> str:
-    return re.sub(
-        r"^(?:我关注的是|我说的是|我指的是|这里指的是|"
-        r"(?:请问|请|麻烦|帮我)(?:介绍一下|介绍|了解一下|了解|查一下|查询|查)?|"
-        r"介绍一下|介绍|我想了解|帮我查一下|帮我查)\s*",
-        "",
-        value,
-    )
-
-
-def _without_information_suffix(value: str) -> str:
-    return re.sub(
-        r"(?:的)?(?:相关)?(?:信息|资料|情况|介绍)\s*$",
-        "",
-        value,
-    ).strip()
-
-
-def _search_view(query: str) -> str:
-    value = query.strip()
-    if any(marker in value for marker in ("不要", "不包括", "排除", "除外")):
-        return value
-    identifier = IDENTIFIER_PATTERN.search(value)
-    if identifier is not None:
-        return identifier.group(0)
-    search_value = _without_information_suffix(_without_introduction_prefix(value))
-    leading_company_name = extract_leading_company_name(search_value)
-    if leading_company_name is not None:
-        return leading_company_name
-    company = COMPANY_NAME_PATTERN.search(search_value)
-    if company is not None:
-        return company.group(1)
-    professor = PROFESSOR_NAME_PATTERN.match(value)
-    if professor is not None:
-        return professor.group("name")
-    institution_person_name = extract_institution_person_name(search_value)
-    if institution_person_name is not None:
-        return institution_person_name
-    if re.fullmatch(r"[\u4e00-\u9fff·]{2,4}[？?。！!]?", search_value):
-        return search_value.rstrip("？?。！!")
-    return search_value.rstrip("？?。！!")
-
-
 def _contextual_web_search_view(query: str) -> str:
     frame = _question_frame(query)
     relation_term = {
@@ -699,6 +656,26 @@ def _proposal_provider(
             for slot in protected_slots
         ):
             search_text = request.original_query
+        soft_context_subject = request.soft_context_subject
+        if soft_context_subject is not None:
+            # Same shape as the displayed-entity context prefix above: the
+            # soft subject leads the web search text so an elaboration
+            # follow-up stays about the prior web-only subject.
+            if soft_context_subject not in search_text:
+                search_text = f"{soft_context_subject} {search_text}"
+            if soft_context_subject not in retained_values:
+                retained_values = (*retained_values, soft_context_subject)
+            # retained_values only records the value on each view; the
+            # rewrite missing-append below consumes protected slot raw text,
+            # so the soft subject rides a synthetic slot to be appended back
+            # into any LLM rewrite view that dropped it.
+            protected_slots = (
+                *protected_slots,
+                ProtectedSlot(
+                    kind="soft_context_subject",
+                    raw_text=soft_context_subject,
+                ),
+            )
         query_views = _serving_query_views(
             request=request,
             search_text=search_text,

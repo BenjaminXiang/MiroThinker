@@ -625,6 +625,443 @@ def test_set_follow_up_binds_the_displayed_result_set() -> None:
         ), query
 
 
+def test_continuation_follow_up_binds_the_active_anchor() -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    displayed = ("professor:active", "professor:other")
+
+    for query in (
+        # The reported live case: "介绍X" first turn, this follow-up second.
+        "有没有更详细的信息",
+        "还有更多信息吗",
+        "能再详细点吗",
+        "详细说说",
+        "再展开讲讲",
+    ):
+        assert service._planning_displayed_ids(
+            query=query,
+            displayed_ids=displayed,
+            active_anchor_id="professor:active",
+        ) == ("professor:active",), query
+
+    # Without an anchor an elaboration follow-up binds nothing instead of
+    # hijacking the displayed set.
+    assert (
+        service._planning_displayed_ids(
+            query="有没有更详细的信息",
+            displayed_ids=displayed,
+            active_anchor_id=None,
+        )
+        == ()
+    )
+
+    # Expansion phrasings that merely share the 还有/有没有 opening are not
+    # continuations and must keep binding nothing.
+    for query in (
+        "还有哪些企业",
+        "有没有类似的",
+    ):
+        assert (
+            service._planning_displayed_ids(
+                query=query,
+                displayed_ids=displayed,
+                active_anchor_id="professor:active",
+            )
+            == ()
+        ), query
+
+
+def _soft_anchor_web_turn() -> tuple[Any, Any, Any]:
+    """One web-lane item plus its single web entity handle (web-only turn)."""
+    read = import_module("src.data_agents.canonical_v2.knowledge_read")
+    item = read.EvidenceItem(
+        evidence_id="evidence:soft:ubtech-web",
+        object_id="web-object:soft:ubtech",
+        domain="company",
+        lane="web",
+        source_nature="current_web",
+        source_locator="https://www.ubt-robotics.example/about",
+        snippet="优必选科技是一家深圳人形机器人公司。",
+        score=1.0,
+        source_authority="web_search",
+        claim_binding=read.EvidenceClaimBinding(
+            subject_id="web-object:soft:ubtech",
+            predicate="current_web_result",
+            value="c" * 64,
+            status="observed",
+        ),
+    )
+    handle = read.WebEntityHandle(
+        handle_id="web-handle:soft:ubtech",
+        domain="company",
+        display_name="优必选",
+        evidence_snapshot_ids=("snapshot:soft:ubtech",),
+        evidence_ids=(item.evidence_id,),
+        resolution_state="unresolved",
+        candidate_canonical_ids=(),
+        originating_query="优必选公司怎么样",
+        origin_lane="web",
+        origin_attempt=1,
+    )
+    return read, item, handle
+
+
+class _SoftAnchorPlanner:
+    """One trivial plan per turn, recording every planning request."""
+
+    def __init__(self, captured: list[Any]) -> None:
+        self._captured = captured
+
+    def plan(self, request: Any) -> Any:
+        self._captured.append(request)
+        read = import_module("src.data_agents.canonical_v2.knowledge_read")
+        return read.RetrievalPlan(
+            plan_version="retrieval-plan-v1",
+            original_query=request.original_query,
+            behavior_class="A",
+            release_id=RELEASE_ID,
+            domains=("company",),
+            protected_slots=(),
+            lanes=("web",),
+            max_candidates=5,
+            web_required=False,
+        )
+
+
+class _SoftAnchorRead:
+    """Scripted per-turn evidence, one entry per planned turn."""
+
+    def __init__(self, script: list[tuple[tuple[Any, ...], tuple[Any, ...]]]) -> None:
+        self._script = script
+
+    def execute(self, plan: Any) -> Any:
+        read = import_module("src.data_agents.canonical_v2.knowledge_read")
+        items, handles = self._script.pop(0)
+        return read.EvidenceSet(
+            release_id=RELEASE_ID,
+            original_query=plan.original_query,
+            protected_slots=(),
+            items=items,
+            traces=(),
+            limitations=(),
+            entity_handles=handles,
+        )
+
+
+class _SoftAnchorAnswer:
+    """Records turn requests; returns receipt-less grounded turn results."""
+
+    def __init__(self, captured: list[Any]) -> None:
+        self._captured = captured
+
+    def answer(self, request: Any) -> Any:
+        self._captured.append(request)
+        answer = import_module("src.data_agents.canonical_v2.knowledge_answer")
+        return answer.TurnResult(
+            session_id=request.session_id,
+            turn_id=request.turn_id,
+            release_id=request.release_id,
+            answer_text=f"web answer for {request.query}",
+            citations=(),
+        )
+
+
+def _soft_anchor_adapter(
+    *,
+    read_script: list[tuple[tuple[Any, ...], tuple[Any, ...]]],
+    planning_requests: list[Any],
+    answer_requests: list[Any],
+) -> Any:
+    service = import_module("backend.services.canonical_v2_chat")
+    answer = _SoftAnchorAnswer(answer_requests)
+    return service.CanonicalV2ChatAdapter(
+        release_id=RELEASE_ID,
+        planner=_SoftAnchorPlanner(planning_requests),
+        knowledge_read=_SoftAnchorRead(read_script),
+        answer_factory=lambda: answer,
+        answer_session_fork=lambda value: value,
+    )
+
+
+def test_web_only_elaboration_binds_the_soft_subject_anchor() -> None:
+    """A web-only first answer leaves a soft subject anchor; an elaboration
+    follow-up binds it into planning instead of clarifying, and the turn
+    continues the session so prior web evidence carries over."""
+    _, web_item, web_handle = _soft_anchor_web_turn()
+    planning_requests: list[Any] = []
+    answer_requests: list[Any] = []
+    adapter = _soft_anchor_adapter(
+        read_script=[
+            ((web_item,), (web_handle,)),
+            ((), ()),
+        ],
+        planning_requests=planning_requests,
+        answer_requests=answer_requests,
+    )
+    session_id = "session:soft-anchor-elaboration"
+
+    first = adapter.answer(
+        query="优必选公司怎么样",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    assert first.query_type != "canonical_v2:G:clarification_only"
+
+    second = adapter.answer(
+        query="有没有更详细的信息",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+
+    # The soft anchor lets the elaboration through instead of clarifying, ...
+    assert second.query_type != "canonical_v2:G:clarification_only"
+    assert len(planning_requests) == 2
+    # ... carries the prior subject name into planning, ...
+    assert getattr(planning_requests[1], "soft_context_subject", None) == "优必选公司"
+    # ... keeps the turn a continuation (no topic switch), ...
+    assert answer_requests[1].session_directive is None
+    # ... and therefore merges the prior web evidence into the follow-up read.
+    assert web_item.evidence_id in {
+        item.evidence_id for item in answer_requests[1].evidence_set.items
+    }
+    # The elaboration chain keeps the soft anchor for later turns.
+    assert adapter._sessions[session_id].soft_subject_name == "优必选公司"
+
+
+def test_web_only_expansion_follow_up_never_binds_the_soft_subject() -> None:
+    """Expansion requests ("还有哪些类似的") ask beyond the current subject:
+    binding the soft anchor would narrow instead of expand, so it stays out."""
+    _, web_item, web_handle = _soft_anchor_web_turn()
+    planning_requests: list[Any] = []
+    answer_requests: list[Any] = []
+    adapter = _soft_anchor_adapter(
+        read_script=[
+            ((web_item,), (web_handle,)),
+            ((), ()),
+        ],
+        planning_requests=planning_requests,
+        answer_requests=answer_requests,
+    )
+    session_id = "session:soft-anchor-expansion"
+    adapter.answer(
+        query="优必选公司怎么样",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+
+    second = adapter.answer(
+        query="还有哪些类似的",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+
+    assert second.query_type != "canonical_v2:G:clarification_only"
+    assert len(planning_requests) == 2
+    assert getattr(planning_requests[1], "soft_context_subject", None) is None
+
+
+def test_explicit_named_follow_up_overrides_the_soft_subject() -> None:
+    """A follow-up naming its own subject never borrows the soft anchor."""
+    _, web_item, web_handle = _soft_anchor_web_turn()
+    planning_requests: list[Any] = []
+    answer_requests: list[Any] = []
+    adapter = _soft_anchor_adapter(
+        read_script=[
+            ((web_item,), (web_handle,)),
+            ((), ()),
+        ],
+        planning_requests=planning_requests,
+        answer_requests=answer_requests,
+    )
+    session_id = "session:soft-anchor-explicit-override"
+    adapter.answer(
+        query="优必选公司怎么样",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+
+    second = adapter.answer(
+        query="大疆创新科技有限公司怎么样",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+
+    assert second.query_type != "canonical_v2:G:clarification_only"
+    assert len(planning_requests) == 2
+    assert getattr(planning_requests[1], "soft_context_subject", None) is None
+
+
+def test_soft_subject_name_prefers_the_query_search_view_subject() -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    read, web_item, web_handle = _soft_anchor_web_turn()
+
+    def evidence_set(*handles: Any) -> Any:
+        return read.EvidenceSet(
+            release_id=RELEASE_ID,
+            original_query="优必选公司怎么样",
+            protected_slots=(),
+            items=(web_item,),
+            traces=(),
+            limitations=(),
+            entity_handles=handles,
+        )
+
+    def handle_with_name(name: str, token: str) -> Any:
+        return read.WebEntityHandle(
+            handle_id=f"web-handle:soft:{token}",
+            domain="company",
+            display_name=name,
+            evidence_snapshot_ids=(f"snapshot:soft:{token}",),
+            evidence_ids=(web_item.evidence_id,),
+            resolution_state="unresolved",
+            candidate_canonical_ids=(),
+            originating_query="fixture",
+            origin_lane="web",
+            origin_attempt=1,
+        )
+
+    other_handle = handle_with_name("猎户星空", "orion")
+
+    # The user's own query names the most reliable subject: it wins over any
+    # handle display name and survives multi-handle evidence.
+    assert (
+        service._soft_subject_name(
+            query="优必选公司怎么样",
+            evidence_set=evidence_set(web_handle),
+        )
+        == "优必选公司"
+    )
+    assert (
+        service._soft_subject_name(
+            query="优必选公司怎么样",
+            evidence_set=evidence_set(web_handle, other_handle),
+        )
+        == "优必选公司"
+    )
+    # Multi-handle evidence with an unextractable query anchors nothing.
+    assert (
+        service._soft_subject_name(
+            query="深圳有哪些机器人公司",
+            evidence_set=evidence_set(web_handle, other_handle),
+        )
+        is None
+    )
+    # A news-headline display name never binds: the query subject wins when
+    # extractable, and the headline itself is rejected when it is not.
+    headline_handle = handle_with_name(
+        "河套数学与交叉学科研究院、国际先进技术应用推进中心（深圳）揭牌",
+        "headline",
+    )
+    assert (
+        service._soft_subject_name(
+            query="介绍一下 国际先进技术应用推进中心（深圳）",
+            evidence_set=evidence_set(headline_handle),
+        )
+        == "国际先进技术应用推进中心（深圳）"
+    )
+    assert (
+        service._soft_subject_name(
+            query="再介绍下",
+            evidence_set=evidence_set(headline_handle),
+        )
+        is None
+    )
+    # Headline shapes: an enumerating 、 or an event-verb suffix disqualifies.
+    assert (
+        service._soft_subject_name(
+            query="再介绍下",
+            evidence_set=evidence_set(handle_with_name("优必选、大疆创新", "pair")),
+        )
+        is None
+    )
+    assert (
+        service._soft_subject_name(
+            query="再介绍下",
+            evidence_set=evidence_set(handle_with_name("优必选科技发布", "verb")),
+        )
+        is None
+    )
+    # A clean single display name is the fallback when the query has none.
+    assert (
+        service._soft_subject_name(
+            query="再介绍下",
+            evidence_set=evidence_set(web_handle),
+        )
+        == "优必选"
+    )
+    # Garbage guards: question words and whole-query echoes never bind.
+    assert (
+        service._soft_subject_name(
+            query="深圳有哪些机器人公司",
+            evidence_set=evidence_set(),
+        )
+        is None
+    )
+    assert (
+        service._soft_subject_name(
+            query="优必选",
+            evidence_set=evidence_set(),
+        )
+        is None
+    )
+
+
+def test_soft_bound_continuation_is_not_a_topic_switch() -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    read = import_module("src.data_agents.canonical_v2.knowledge_read")
+    evidence_set = read.EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query="有没有更详细的信息",
+        protected_slots=(),
+        items=(),
+        traces=(),
+        limitations=(),
+    )
+
+    directive = service.CanonicalV2ChatAdapter._session_directive(
+        committed=cast(Any, object()),
+        evidence_set=evidence_set,
+        planning_displayed_ids=(),
+        selection=None,
+        soft_context_subject="优必选",
+    )
+
+    assert directive is None
+
+
+def test_continuation_with_soft_subject_skips_clarification() -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    committed = SimpleNamespace(
+        context_receipt=None,
+        referent_history=(),
+        soft_subject_name="优必选",
+    )
+    assert (
+        service._referent_clarification_needed(
+            query="有没有更详细的信息",
+            committed=cast(Any, committed),
+        )
+        is False
+    )
+    # Without the soft anchor the same elaboration must still clarify.
+    committed_without_soft = SimpleNamespace(
+        context_receipt=None,
+        referent_history=(),
+    )
+    assert (
+        service._referent_clarification_needed(
+            query="有没有更详细的信息",
+            committed=cast(Any, committed_without_soft),
+        )
+        is True
+    )
+
+
 def test_independent_turn_declares_topic_switch_but_referential_turn_does_not() -> None:
     service = import_module("backend.services.canonical_v2_chat")
     read = import_module("src.data_agents.canonical_v2.knowledge_read")
@@ -679,6 +1116,10 @@ def test_independent_turn_declares_topic_switch_but_referential_turn_does_not() 
             False,
         ),
         ("他的论文有哪些", False, False, True),
+        # An elaboration follow-up with no anchor anywhere must clarify,
+        # never fall through to free retrieval; with an anchor it must not.
+        ("有没有更详细的信息", False, False, True),
+        ("有没有更详细的信息", True, True, False),
     ),
 )
 def test_referent_clarification_matrix(

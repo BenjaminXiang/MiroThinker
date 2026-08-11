@@ -24,6 +24,7 @@ from backend.api.chat_contracts import (
 )
 from src.data_agents.canonical_v2.contracts import ContractModel
 from src.data_agents.canonical_v2.followup_referents import (
+    _search_view,
     has_continuation_intent,
     has_explicit_named_subject,
     has_internal_set_antecedent,
@@ -507,15 +508,26 @@ def _referent_clarification_needed(
     Fires when the query carries a singular or set referent but neither the
     session nor its archived referent history has an anchor/displayed set to
     bind it to and the query itself names no explicit subject. Free retrieval
-    in that state answers about an arbitrary entity.
+    in that state answers about an arbitrary entity. An elaboration
+    continuation is exempt when the session holds a soft subject anchor: the
+    web lane carries the name into its search text instead.
     """
     context = None if committed is None else committed.context_receipt
     history: tuple[_ReferentHistoryEntry, ...] = (
         () if committed is None else getattr(committed, "referent_history", ())
     )
+    soft_subject_name = (
+        None if committed is None else getattr(committed, "soft_subject_name", None)
+    )
     if (has_singular_referent(query) or has_continuation_intent(query)) and (
         context is None or context.active_anchor is None
     ):
+        if (
+            soft_subject_name
+            and has_continuation_intent(query)
+            and not has_explicit_named_subject(query)
+        ):
+            return False
         return not has_explicit_named_subject(query) and not _history_displayed_ids(
             query=query, history=history
         )
@@ -713,6 +725,9 @@ class _CommittedSession:
     checkpoint: ChatFeedbackCheckpoint
     prior_web_items: tuple[EvidenceItem, ...] = ()
     referent_history: tuple[_ReferentHistoryEntry, ...] = ()
+    # Subject name of a web-only answer, kept so an elaboration follow-up can
+    # bind it as soft context instead of clarifying or topic-switching.
+    soft_subject_name: str | None = None
 
 
 _SESSION_WEB_CARRYOVER_LIMIT = 8
@@ -746,6 +761,52 @@ def _session_web_items(evidence_set: EvidenceSet) -> tuple[EvidenceItem, ...]:
         if len(retained) >= _SESSION_WEB_CARRYOVER_LIMIT:
             break
     return tuple(retained)
+
+
+_SOFT_SUBJECT_MAX_LENGTH = 30
+_SOFT_SUBJECT_QUESTION_MARKERS = ("吗", "呢", "哪些", "什么")
+# News-headline shapes a web display name takes when the handle was minted
+# off an article title instead of an entity name: an enumerating 、 joining
+# parallel names, or an event-verb suffix.
+_SOFT_SUBJECT_HEADLINE_VERB_SUFFIXES = ("揭牌", "挂牌", "成立", "发布", "签约")
+
+
+def _soft_subject_candidate_ok(candidate: str, *, query: str) -> bool:
+    """Base guards every soft-anchor candidate must pass."""
+    if not candidate or len(candidate) > _SOFT_SUBJECT_MAX_LENGTH:
+        return False
+    if candidate == query.strip():
+        return False
+    return not any(marker in candidate for marker in _SOFT_SUBJECT_QUESTION_MARKERS)
+
+
+def _soft_subject_name(*, query: str, evidence_set: EvidenceSet) -> str | None:
+    """Subject name a web-only answer was about, for soft continuation binding.
+
+    The user's own query is the most reliable source: its search view wins
+    whenever it yields a qualified subject. A handle display name is only the
+    fallback — exactly one web entity handle (aligned with the single-entity
+    anchoring rule: more than one anchors nothing), and only when it does not
+    look like a news headline. Either way the candidate must survive the
+    garbage guards: non-empty after stripping, short, not the whole query
+    echo, and free of question words.
+    """
+    extracted = _search_view(query).strip()
+    if _soft_subject_candidate_ok(extracted, query=query):
+        return extracted
+    web_handles = tuple(
+        handle
+        for handle in evidence_set.entity_handles
+        if isinstance(handle, WebEntityHandle)
+    )
+    if len(web_handles) != 1:
+        return None
+    name = web_handles[0].display_name.strip()
+    if not _soft_subject_candidate_ok(name, query=query):
+        return None
+    if "、" in name or name.endswith(_SOFT_SUBJECT_HEADLINE_VERB_SUFFIXES):
+        return None
+    return name
 
 
 def _merge_prior_web_evidence(
@@ -965,6 +1026,21 @@ class CanonicalV2ChatAdapter:
             displayed_ids=displayed_ids,
             history=() if committed is None else committed.referent_history,
         )
+        # Soft subject anchor: only elaboration continuations over a web-only
+        # session bind it. Expansion requests ("还有哪些/有没有类似的") must
+        # never narrow onto the prior subject, and an explicitly named
+        # subject always wins over the soft anchor.
+        soft_context_subject = (
+            committed.soft_subject_name
+            if (
+                committed is not None
+                and not displayed_ids
+                and has_continuation_intent(normalized_query)
+                and not has_explicit_named_subject(normalized_query)
+                and committed.soft_subject_name
+            )
+            else None
+        )
         planning_request = QueryPlanningRequest(
             request_id=f"query-request:chat:{turn_id}",
             release_id=self._release_id,
@@ -977,6 +1053,7 @@ class CanonicalV2ChatAdapter:
                 displayed_ids=displayed_ids,
                 as_of=observed_as_of,
             ),
+            soft_context_subject=soft_context_subject,
         )
 
         emit("stage", {"name": "planning"})
@@ -1048,6 +1125,7 @@ class CanonicalV2ChatAdapter:
             planning_displayed_ids=displayed_ids,
             selection=selection,
             from_history=ids_from_history,
+            soft_context_subject=soft_context_subject,
         )
         evidence_set = _merge_prior_web_evidence(
             committed=committed,
@@ -1105,6 +1183,24 @@ class CanonicalV2ChatAdapter:
         # earlier failure discards the fork, so no try/finally is needed).
         candidate_answer.prose_progress = None
         candidate_answer.prose_progress_abort = None
+        # Soft subject anchor for the next turn. An elaboration chain keeps
+        # the anchor it already bound: the follow-up query itself names no
+        # subject, so re-deriving from it would only produce garbage. Fresh
+        # and explicit-subject turns (re)derive the anchor, which also clears
+        # or overwrites it on a topic switch.
+        if (
+            committed is not None
+            and committed.soft_subject_name is not None
+            and has_continuation_intent(normalized_query)
+            and not has_explicit_named_subject(normalized_query)
+            and not (directive is not None and directive.transition == "topic_switch")
+        ):
+            soft_subject_name = committed.soft_subject_name
+        else:
+            soft_subject_name = _soft_subject_name(
+                query=normalized_query,
+                evidence_set=evidence_set,
+            )
         next_session = _CommittedSession(
             answer=candidate_answer,
             turn_count=turn_count,
@@ -1117,6 +1213,7 @@ class CanonicalV2ChatAdapter:
                 committed=committed,
                 directive=directive,
             ),
+            soft_subject_name=soft_subject_name,
         )
 
         with self._lock:
@@ -1190,6 +1287,7 @@ class CanonicalV2ChatAdapter:
         planning_displayed_ids: tuple[str, ...],
         selection: ContinuationSelection | None,
         from_history: bool = False,
+        soft_context_subject: str | None = None,
     ) -> SessionDirective | None:
         if committed is None:
             return None
@@ -1206,6 +1304,10 @@ class CanonicalV2ChatAdapter:
                 return SessionDirective(referent="displayed_result_set")
             return None
         if selection is None and not planning_displayed_ids:
+            if soft_context_subject is not None:
+                # A soft-anchored elaboration continues the session instead of
+                # switching topics, so prior web evidence keeps carrying over.
+                return None
             return SessionDirective(transition="topic_switch")
         return None
 

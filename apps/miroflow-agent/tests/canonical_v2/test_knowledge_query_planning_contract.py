@@ -224,6 +224,44 @@ def _without_content_hashes(value: Any) -> Any:
     return value
 
 
+def test_soft_context_subject_defaults_none_and_roundtrips_content_sha() -> None:
+    module = _module()
+    baseline = _request(
+        module,
+        token="soft-context-default",
+        query="有没有更详细的信息",
+    )
+    # Absent by default and invisible in the serialized form, so content
+    # hashes of requests that never carry the field stay unchanged.
+    assert baseline.soft_context_subject is None
+    assert "soft_context_subject" not in baseline.model_dump(mode="json")
+
+    anchored = module.QueryPlanningRequest(
+        request_id="query-request:soft-context-anchored",
+        release_id="release-r1",
+        original_query="有没有更详细的信息",
+        as_of=NOW,
+        soft_context_subject="优必选",
+    )
+    # The release-bound planner rebuilds requests through model_dump; the
+    # field must ride that payload with the content hash intact.
+    payload = anchored.model_dump(mode="json", exclude={"content_sha256"})
+    rebuilt = module.QueryPlanningRequest.model_validate(payload)
+    assert rebuilt.soft_context_subject == "优必选"
+    assert rebuilt.content_sha256 == anchored.content_sha256
+    # The field participates in the binding hash when present.
+    assert anchored.content_sha256 != baseline.content_sha256
+    # Non-normalized values are rejected like displayed entity names.
+    with pytest.raises(ValueError, match="soft context subject"):
+        module.QueryPlanningRequest(
+            request_id="query-request:soft-context-unnormalized",
+            release_id="release-r1",
+            original_query="有没有更详细的信息",
+            as_of=NOW,
+            soft_context_subject=" 优必选 ",
+        )
+
+
 def test_s8p2_planning_proposal_taxonomy_and_safety_matrix_is_machine_validated() -> (
     None
 ):
