@@ -50,6 +50,13 @@
       }
 
       .shell {
+        /* fixed 定位 + translateY 补偿 visualViewport.offsetTop：
+           iOS 键盘弹出时 Safari 向下平移可视窗口，普通文档流会把整个 shell 顶出可视区。 */
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        transform: translateY(var(--vv-offset, 0px));
         width: min(980px, calc(100% - 32px));
         height: 100vh;
         height: var(--app-height, 100vh);
@@ -665,14 +672,20 @@
         if (!viewport) return;
         let framePending = false;
         let lastHeight = null;
+        let lastOffset = null;
 
         const updateGeometry = () => {
           framePending = false;
           const nextHeight = Math.round(Number(viewport.height));
-          if (!Number.isFinite(nextHeight) || nextHeight <= 0 || nextHeight === lastHeight) return;
+          // iOS 键盘弹出时 height 可能不变但 offsetTop > 0，需要同步补偿，否则 shell 被顶出可视区。
+          const nextOffset = Math.round(Number(viewport.offsetTop) || 0);
+          if (!Number.isFinite(nextHeight) || nextHeight <= 0) return;
+          if (nextHeight === lastHeight && nextOffset === lastOffset) return;
           lastHeight = nextHeight;
+          lastOffset = nextOffset;
           root.classList.toggle("visual-viewport-short", nextHeight <= 500);
           root.style.setProperty("--app-height", `${nextHeight}px`);
+          root.style.setProperty("--vv-offset", `${nextOffset}px`);
           maintainFollowingScroll();
         };
 
@@ -1509,12 +1522,14 @@
         return owner;
       }
 
-      function renderAssistant(data, originalQuery, view = null, answerBox = null) {
+      function renderAssistant(data, originalQuery, view = null, answerBox = null, preserveStreamed = false) {
         const bubble = view ? view.bubble : messageShell("assistant").bubble;
         const answer = safePublicText(data.answer_text) || "当前版本未生成可安全展示的回答。";
         const box = answerBox || create("div", "answer");
-        if (answerBox) box.replaceChildren(); // 流式容器：整体重渲染，消除缓冲差异
-        renderMarkdown(box, answer);
+        // preserveStreamed：流式渲染结果已与最终答案一致，保留现有 DOM，
+        // 跳过 replaceChildren + 全量 renderMarkdown，避免长答案下的重复长任务。
+        if (answerBox && !preserveStreamed) box.replaceChildren(); // 流式容器：整体重渲染，消除缓冲差异
+        if (!preserveStreamed) renderMarkdown(box, answer);
         if (!box.parentNode) bubble.append(box);
         if (Array.isArray(data.citations) && data.citations.length) {
           const evidenceDetails = create("details", "evidence-disclosure");
@@ -1556,10 +1571,14 @@
             actionLine = null;
           }
           box.classList.add("process-finished");
-          box.replaceChildren(create("details", "process-summary", ""));
-          const details = box.querySelector("details");
+          // 流式期间渲染的过程行不能丢弃：replaceChildren 前先收进容器，
+          // 随后挂进 details，展开"查看检索过程"即可回看 planning/retrieval/synthesis。
+          const rowsContainer = create("div", "process-rows");
+          rowsContainer.append(...box.children);
+          const details = create("details", "process-summary", "");
+          box.replaceChildren(details);
           details.addEventListener("toggle", maintainFollowingScroll);
-          details.append(create("summary", "", summary));
+          details.append(create("summary", "", summary), rowsContainer);
         }
         function addAction(label, onClick) {
           if (!actionLine) {
@@ -1685,6 +1704,7 @@
         let stopButtonAdded = false;
         let streaming = null;
         let answerBox = null;
+        let streamedAnswer = "";
         let nextContinuationOwner = null;
         let outcome = { status: "uncertain", reason: "eof" };
         const finishInterrupted = () => {
@@ -1769,6 +1789,7 @@
                   view.bubble.append(answerBox);
                   streaming = renderStreamingMarkdown(answerBox);
                 }
+                if (typeof data.text === "string") streamedAnswer += data.text;
                 streaming.append(data.text);
                 notifyContentUpdate();
               } else if (eventName === "answer") {
@@ -1776,8 +1797,17 @@
                 answeredBeforeDone = true;
                 process.set("synthesis", "✓ 回答已生成", true);
                 process.finish("查看检索过程");
-                // 整体重渲染（清空流式容器 + 全量 renderMarkdown），消除缓冲差异并对齐 citations
-                renderAssistant(data, normalized, view, answerBox);
+                // 流式内容与最终答案一致时保留已渲染 DOM（先 flush 补齐缓冲尾部），
+                // 跳过整体重渲染，避免长答案下重渲染长任务与按钮出现撞在同一宏任务。
+                const preserveStreamed = Boolean(
+                  streaming
+                  && answerBox
+                  && streamedAnswer !== ""
+                  && streamedAnswer === data.answer_text
+                  && safePublicText(data.answer_text),
+                );
+                if (preserveStreamed) streaming.flush();
+                renderAssistant(data, normalized, view, answerBox, preserveStreamed);
                 nextContinuationOwner = renderContinuation(
                   view.bubble,
                   data.clarification,

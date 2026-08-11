@@ -69,6 +69,61 @@ class FakeNode {
     this.parentNode = null;
   }
 
+  get classList() {
+    const node = this;
+    const read = () => String(node.className || "").split(/\s+/).filter(Boolean);
+    const write = (classes) => {
+      node.className = classes.join(" ");
+    };
+    return {
+      add(...names) {
+        const classes = read();
+        for (const name of names) {
+          const key = String(name);
+          if (!classes.includes(key)) classes.push(key);
+        }
+        write(classes);
+      },
+      remove(...names) {
+        const drop = new Set(names.map(String));
+        write(read().filter((name) => !drop.has(name)));
+      },
+      toggle(name, force) {
+        const key = String(name);
+        const classes = read();
+        const has = classes.includes(key);
+        const shouldContain = force === undefined ? !has : Boolean(force);
+        if (shouldContain && !has) classes.push(key);
+        if (!shouldContain && has) classes.splice(classes.indexOf(key), 1);
+        write(classes);
+        return shouldContain;
+      },
+      contains(name) {
+        return read().includes(String(name));
+      },
+    };
+  }
+
+  querySelector(selector) {
+    const text = String(selector);
+    const matches = (node) => {
+      if (text.startsWith(".")) {
+        return String(node.className || "").split(/\s+/).includes(text.slice(1));
+      }
+      return node.tagName === text.toUpperCase();
+    };
+    const stack = [...this.children].reverse();
+    while (stack.length) {
+      const node = stack.pop();
+      if (node.tagName === "#text") continue;
+      if (matches(node)) return node;
+      for (let index = node.children.length - 1; index >= 0; index--) {
+        stack.push(node.children[index]);
+      }
+    }
+    return null;
+  }
+
   set textContent(value) {
     for (const child of this.children) child.parentNode = null;
     this.children = [];
@@ -114,7 +169,7 @@ const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/);
 assert.ok(scriptMatch, "chat.html must contain one inline script");
 const script = scriptMatch[1];
 const seamStart = script.indexOf("const unsafePublicTextPatterns");
-const seamEnd = script.indexOf("async function fetchJson", seamStart);
+const seamEnd = script.indexOf("function renderDemoQuestions(", seamStart);
 assert.ok(seamStart >= 0 && seamEnd > seamStart, "production sanitizer seam must exist");
 const messageShellStart = script.indexOf("function messageShell(kind)");
 const messageShellEnd = script.indexOf("function renderUser(query)", messageShellStart);
@@ -1340,7 +1395,7 @@ test("production messageShell preserves avatar identities and logo fallback", ()
   assert.equal(assistantImages.length, 1);
   const [image] = assistantImages;
   assert.equal(image.parentNode, assistantAvatar);
-  assert.equal(image.src, "/static/assets/guoxian-logo.jpg");
+  assert.equal(image.src, "static/assets/guoxian-logo.jpg");
   assert.equal(image.alt, "");
   assert.equal(image.width, 32);
   assert.equal(image.height, 32);
@@ -1481,7 +1536,10 @@ test("viewport geometry coalesces all visual viewport and window events per fram
   harness.fakeWindow.dispatchEvent({ type: "orientationchange" });
   assert.equal(harness.frames.length, 1);
   harness.flushFrame();
-  assert.deepEqual(harness.writes, [["--app-height", "612px"]]);
+  assert.deepEqual(harness.writes, [
+    ["--app-height", "612px"],
+    ["--vv-offset", "0px"],
+  ]);
 
   harness.viewport.height = 613.2;
   harness.viewport.dispatchEvent({ type: "resize" });
@@ -1489,7 +1547,9 @@ test("viewport geometry coalesces all visual viewport and window events per fram
   harness.flushFrame();
   assert.deepEqual(harness.writes, [
     ["--app-height", "612px"],
+    ["--vv-offset", "0px"],
     ["--app-height", "613px"],
+    ["--vv-offset", "0px"],
   ]);
 
   harness.viewport.height = 613.4;
@@ -1498,7 +1558,7 @@ test("viewport geometry coalesces all visual viewport and window events per fram
   assert.equal(harness.frames.length, 1);
   harness.flushFrame();
   assert.equal(harness.frames.length, 0);
-  assert.equal(harness.writes.length, 2);
+  assert.equal(harness.writes.length, 4);
   assert.equal(harness.sendQueryCalls, 0);
 });
 
@@ -1511,7 +1571,10 @@ test("viewport geometry marks short visual viewports within the coalesced frame"
   assert.equal(harness.frames.length, 1);
   harness.flushFrame();
   assert.equal(harness.root.classList.contains("visual-viewport-short"), false);
-  assert.deepEqual(harness.writes, [["--app-height", "700px"]]);
+  assert.deepEqual(harness.writes, [
+    ["--app-height", "700px"],
+    ["--vv-offset", "0px"],
+  ]);
   assert.equal(harness.sendQueryCalls, 0);
 
   harness.viewport.height = 300;
@@ -1524,7 +1587,9 @@ test("viewport geometry marks short visual viewports within the coalesced frame"
   assert.equal(harness.root.classList.contains("visual-viewport-short"), true);
   assert.deepEqual(harness.writes, [
     ["--app-height", "700px"],
+    ["--vv-offset", "0px"],
     ["--app-height", "300px"],
+    ["--vv-offset", "0px"],
   ]);
   assert.equal(harness.sendQueryCalls, 0);
 
@@ -1538,8 +1603,55 @@ test("viewport geometry marks short visual viewports within the coalesced frame"
   assert.equal(harness.root.classList.contains("visual-viewport-short"), false);
   assert.deepEqual(harness.writes, [
     ["--app-height", "700px"],
+    ["--vv-offset", "0px"],
     ["--app-height", "300px"],
+    ["--vv-offset", "0px"],
     ["--app-height", "640px"],
+    ["--vv-offset", "0px"],
+  ]);
+  assert.equal(harness.sendQueryCalls, 0);
+});
+
+test("viewport geometry compensates offsetTop shifts even when height is unchanged", () => {
+  const harness = createViewportGeometryHarness({
+    innerHeight: 900,
+    visualViewportHeight: 700,
+    withVisualViewport: true,
+  });
+  harness.flushFrame();
+  assert.deepEqual(harness.writes, [
+    ["--app-height", "700px"],
+    ["--vv-offset", "0px"],
+  ]);
+
+  // iOS 键盘弹出：可视窗口被向下平移（offsetTop > 0）但 height 不变，也必须写出补偿。
+  harness.viewport.offsetTop = 120;
+  harness.viewport.dispatchEvent({ type: "scroll" });
+  assert.equal(harness.frames.length, 1);
+  harness.flushFrame();
+  assert.deepEqual(harness.writes, [
+    ["--app-height", "700px"],
+    ["--vv-offset", "0px"],
+    ["--app-height", "700px"],
+    ["--vv-offset", "120px"],
+  ]);
+
+  // height 与 offsetTop 都不变时 early-return，不重复写入。
+  harness.viewport.dispatchEvent({ type: "scroll" });
+  harness.flushFrame();
+  assert.equal(harness.writes.length, 4);
+
+  // 键盘收起：offsetTop 回到 0，补偿随之撤销。
+  harness.viewport.offsetTop = 0;
+  harness.viewport.dispatchEvent({ type: "scroll" });
+  harness.flushFrame();
+  assert.deepEqual(harness.writes, [
+    ["--app-height", "700px"],
+    ["--vv-offset", "0px"],
+    ["--app-height", "700px"],
+    ["--vv-offset", "120px"],
+    ["--app-height", "700px"],
+    ["--vv-offset", "0px"],
   ]);
   assert.equal(harness.sendQueryCalls, 0);
 });
@@ -1572,7 +1684,7 @@ assert.ok(
 );
 const task6SeamSource = script.slice(task6SeamStart, task6SeamEnd);
 const runDemoQueryStart = script.indexOf("function runDemoQuery(");
-const runDemoQueryEnd = script.indexOf("async function loadDemoQuestions", runDemoQueryStart);
+const runDemoQueryEnd = script.indexOf("function loadDemoQuestions(", runDemoQueryStart);
 assert.ok(
   runDemoQueryStart >= 0 && runDemoQueryEnd > runDemoQueryStart,
   "production runDemoQuery seam must exist",
@@ -1995,7 +2107,7 @@ test("Task 6 accepted send clears textarea, preserves body, and restores fine fo
   assert.equal(harness.input.style.overflowY, "hidden");
   assert.equal(harness.fetchCalls.length, 1);
   const [url, options] = harness.fetchCalls[0];
-  assert.equal(url, "/api/chat/stream");
+  assert.equal(url, "api/chat/stream");
   assert.deepEqual(JSON.parse(options.body), { query: "公开问题" });
   assert.equal(harness.focusCalls.length, 1);
   assert.equal(harness.focusCalls[0].preventScroll, true);
@@ -2695,4 +2807,178 @@ test("Task 7 content renderers delegate scrolling to the turn coordinator", () =
   assert.equal(userRenderer.includes("scrollToLatest()"), false);
   assert.equal(assistantRenderers.includes("scrollToLatest()"), false);
   assert.equal(turnCoordinator.includes("scrollToLatest()"), false);
+});
+
+// 生产 renderProcess + renderAssistant + sendQuery 全链路 harness：
+// 与 createClarificationHarness 的差别是过程渲染不再 mock，可断言"查看检索过程"细节。
+function createProcessFlowHarness(events, { afterEvent } = {}) {
+  const flowRenderStart = script.indexOf("function safeCitationUrl(");
+  const flowRenderEnd = script.indexOf("function parseSseBlock(", flowRenderStart);
+  const flowLaneStart = script.indexOf("function laneSummary(", flowRenderEnd);
+  assert.ok(
+    flowRenderStart >= 0 && flowRenderEnd > flowRenderStart && flowLaneStart > flowRenderEnd,
+    "production process flow seams must exist",
+  );
+
+  const renderedMessages = document.createElement("main");
+  const errorMessages = [];
+  const flowContext = vm.createContext({
+    URL,
+    location: { origin: "https://chat.test" },
+    document,
+    input: { value: "", focus() {} },
+    submit: { disabled: false, textContent: "" },
+    messages: renderedMessages,
+    removeWelcome() {},
+    startFollowingTurn() {},
+    notifyContentUpdate() {},
+    renderUser() {},
+    scrollToLatest() {},
+    messageShell() {
+      const row = document.createElement("article");
+      row.className = "message assistant";
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      row.append(bubble);
+      return { row, bubble };
+    },
+    async fetch() {
+      return { ok: true, status: 200, body: { events } };
+    },
+    async readSseEvents(body, onEvent) {
+      for (const [eventName, data] of body.events) {
+        onEvent(eventName, data);
+        if (afterEvent) afterEvent(eventName);
+      }
+    },
+    renderError(detail) {
+      errorMessages.push(String(detail));
+    },
+    maintainFollowingScroll() {},
+    resetInputHeight() {},
+    restoreInputFocus() {},
+    queueMicrotask,
+  });
+  vm.runInContext(
+    `${script.slice(seamStart, seamEnd)}\n` +
+      `${script.slice(flowRenderStart, flowRenderEnd)}\n` +
+      `${script.slice(flowLaneStart, sendQueryStart)}\n` +
+      `${script.slice(sendQueryStart, sendQueryEnd)}\n` +
+      "globalThis.__processFlow = { sendQuery };",
+    flowContext,
+    { filename: chatPath.pathname },
+  );
+
+  return {
+    errorMessages,
+    renderedMessages,
+    sendQuery: flowContext.__processFlow.sendQuery,
+  };
+}
+
+test("process disclosure preserves streamed stage rows after finish", async () => {
+  const harness = createProcessFlowHarness([
+    ["stage", { name: "planning" }],
+    ["plan_done", { views: [{ domain: "paper" }, { domain: "professor" }] }],
+    ["stage", { name: "retrieval" }],
+    ["retrieval_done", {
+      lanes: [
+        { lane: "vector", status: "succeeded", candidates: 3 },
+        { lane: "web", status: "failed" },
+      ],
+    }],
+    ["stage", { name: "synthesis" }],
+    ["answer_chunk", { text: "第一段\n" }],
+    ["answer_chunk", { text: "第二段" }],
+    ["answer", { answer_text: "第一段\n第二段", citations: [] }],
+    ["done", {}],
+  ]);
+
+  const outcome = await harness.sendQuery("公开问题");
+
+  assert.deepEqual(plainOutcome(outcome), { status: "succeeded" });
+  assert.deepEqual(harness.errorMessages, []);
+  const [disclosure] = descendantsWithClass(harness.renderedMessages, "process-summary");
+  assert.ok(disclosure, "process disclosure must exist after finish");
+  assert.equal(disclosure.tagName, "DETAILS");
+  const [summary] = disclosure.children.filter((child) => child.tagName === "SUMMARY");
+  assert.ok(summary, "process disclosure must keep its summary");
+  assert.equal(summary.textContent, "查看检索过程");
+
+  // 回归：finish 不得丢弃流式期间渲染的 planning/retrieval/synthesis 过程行，
+  // 展开 details 必须能回看三行过程状态。
+  const rows = descendantsWithClass(disclosure, "process-row");
+  assert.equal(rows.length, 3);
+  assert.ok(rows[0].textContent.includes("已识别意图（2 个检索视角）"));
+  assert.ok(rows[1].textContent.includes("本地 3 条"));
+  assert.ok(rows[2].textContent.includes("回答已生成"));
+  for (const row of rows) {
+    assert.ok(row.classList.contains("process-done"), "finished rows keep the done state");
+  }
+  // finish 后停止按钮所在的操作行必须移除。
+  assert.equal(descendantsWithClass(harness.renderedMessages, "process-stop").length, 0);
+});
+
+test("matching streamed answer keeps the streamed DOM and still appends citations", async () => {
+  // 流式净化器保留最后 37 字符尾部，第二段必须够长，第一段才能在 answer 事件前渲染。
+  const firstParagraph = "流式第一段内容先渲染出来。";
+  const secondParagraph = `第二段${"长".repeat(40)}`;
+  const answerText = `${firstParagraph}\n${secondParagraph}`;
+  let snapshotFirstChild;
+  const harness = createProcessFlowHarness([
+    ["answer_chunk", { text: `${firstParagraph}\n` }],
+    ["answer_chunk", { text: secondParagraph }],
+    ["answer", {
+      answer_text: answerText,
+      citations: [{ type: "paper", label: "论文证据", url: "https://example.com/p/1" }],
+    }],
+    ["done", {}],
+  ], {
+    afterEvent(eventName) {
+      if (eventName !== "answer_chunk") return;
+      const [answerBox] = descendantsWithClass(harness.renderedMessages, "answer");
+      if (answerBox) snapshotFirstChild = answerBox.children[0] || null;
+    },
+  });
+
+  const outcome = await harness.sendQuery("公开问题");
+
+  assert.deepEqual(plainOutcome(outcome), { status: "succeeded" });
+  assert.deepEqual(harness.errorMessages, []);
+  const [answerBox] = descendantsWithClass(harness.renderedMessages, "answer");
+  assert.ok(answerBox, "answer box must exist");
+  assert.ok(snapshotFirstChild, "streaming must render the first paragraph before the answer event");
+  // 流式内容与最终答案一致：保留已渲染 DOM（节点身份不变），只 flush 尾部并补 citations。
+  assert.equal(answerBox.children[0], snapshotFirstChild, "matching answer must not rebuild the streamed DOM");
+  assert.equal(answerBox.textContent, `${firstParagraph}${secondParagraph}`);
+  const [evidence] = descendantsWithClass(harness.renderedMessages, "evidence-disclosure");
+  assert.ok(evidence, "citations disclosure must still be appended");
+  assert.equal(descendantsWithClass(evidence, "citation").length, 1);
+});
+
+test("mismatched final answer falls back to a full re-render", async () => {
+  const firstParagraph = "流式第一段内容先渲染出来。";
+  const secondParagraph = `第二段${"长".repeat(40)}`;
+  let snapshotFirstChild;
+  const harness = createProcessFlowHarness([
+    ["answer_chunk", { text: `${firstParagraph}\n` }],
+    ["answer_chunk", { text: secondParagraph }],
+    ["answer", { answer_text: "完全不同的最终回答", citations: [] }],
+    ["done", {}],
+  ], {
+    afterEvent(eventName) {
+      if (eventName !== "answer_chunk") return;
+      const [answerBox] = descendantsWithClass(harness.renderedMessages, "answer");
+      if (answerBox) snapshotFirstChild = answerBox.children[0] || null;
+    },
+  });
+
+  const outcome = await harness.sendQuery("公开问题");
+
+  assert.deepEqual(plainOutcome(outcome), { status: "succeeded" });
+  const [answerBox] = descendantsWithClass(harness.renderedMessages, "answer");
+  assert.ok(answerBox, "answer box must exist");
+  assert.ok(snapshotFirstChild, "streaming must render the first paragraph before the answer event");
+  assert.notEqual(answerBox.children[0], snapshotFirstChild, "mismatched answer must rebuild the answer DOM");
+  assert.equal(answerBox.textContent, "完全不同的最终回答");
 });
