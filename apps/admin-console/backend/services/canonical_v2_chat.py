@@ -235,6 +235,42 @@ class _PublicTextStreamSanitizer:
         return _sanitize_public_text(pending)[1:]
 
 
+_REFUSAL_ANSWER_MARKERS = (
+    "暂无可直接确认的公开信息要点",
+    "No supported material claims are available",
+    "未提供具体的主体信息",
+)
+# Only a short answer can be a bare refusal; a long answer that merely
+# contains a refusal fragment keeps its grounded content.
+_REFUSAL_ANSWER_MAX_CHARS = 120
+
+
+def _soft_fallback_answer_text(anchor_name: str | None) -> str:
+    if anchor_name:
+        return (
+            f"关于{anchor_name}的公开信息目前较为有限，"
+            "暂未能确认您问的具体内容；可以换个角度继续提问。"
+        )
+    return "目前公开信息较为有限，暂未能确认您问的具体内容；可以换个角度继续提问。"
+
+
+def _rewrite_refusal_answer_text(
+    answer_text: str,
+    *,
+    response_mode: str,
+    anchor_name: str | None,
+) -> str:
+    """Last-resort guard: a bare refusal never ships as the chat answer."""
+    if response_mode != "answer":
+        return answer_text
+    stripped = answer_text.strip()
+    if len(stripped) > _REFUSAL_ANSWER_MAX_CHARS:
+        return answer_text
+    if not any(marker in stripped for marker in _REFUSAL_ANSWER_MARKERS):
+        return answer_text
+    return _soft_fallback_answer_text(anchor_name)
+
+
 def _sanitize_public_response(response: ChatResponse) -> ChatResponse:
     clarification = response.clarification
     if clarification is not None:
@@ -1183,6 +1219,7 @@ class CanonicalV2ChatAdapter:
             assessment_intent=plan.assessment_intent,
             continuation_selection=selection,
             session_directive=directive,
+            soft_context_subject=soft_context_subject,
             safety_guidance=(
                 SafetyGuidanceDirective(mode="static")
                 if plan.interaction_mode == "safety_guidance"
@@ -1503,13 +1540,24 @@ class CanonicalV2ChatAdapter:
             turn_result=turn_result,
             handles_by_id=handles_by_id,
         )
+        context_receipt = turn_result.context_receipt
+        active_anchor = (
+            None if context_receipt is None else context_receipt.active_anchor
+        )
+        answer_text = _rewrite_refusal_answer_text(
+            turn_result.answer_text,
+            response_mode=turn_result.response_mode,
+            anchor_name=(
+                None if active_anchor is None else active_anchor.display_name
+            ),
+        )
         response_payload = {
             "query": outcome.query,
             "query_type": (
                 f"canonical_v2:{outcome.plan.behavior_class}:"
                 f"{turn_result.response_mode}"
             ),
-            "answer_text": turn_result.answer_text,
+            "answer_text": answer_text,
             "citations": [item.model_dump(mode="json") for item in public_citations],
             "evidence": [],
             "clarification": (

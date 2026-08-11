@@ -18,7 +18,7 @@ import re
 from types import MappingProxyType
 from typing import Any, Literal
 
-from pydantic import Field, ValidationError, model_validator
+from pydantic import Field, ValidationError, model_serializer, model_validator
 
 from .contracts import ContractModel
 from .knowledge_read import (
@@ -171,7 +171,18 @@ class TurnRequest(ContractModel):
     continuation_selection: ContinuationSelection | None = None
     session_directive: SessionDirective | None = None
     safety_guidance: SafetyGuidanceDirective | None = None
+    # Web-only soft subject anchor from the planner request: carried through
+    # to the context receipt so the prose correction judges the answer
+    # against it instead of a mis-anchored look-alike session anchor.
+    soft_context_subject: str | None = None
     content_sha256: str = Field(default=_ZERO_SHA256, pattern=r"^[0-9a-f]{64}$")
+
+    @model_serializer(mode="wrap")
+    def serialize_optional_request_fields(self, handler: Any) -> Any:
+        data = handler(self)
+        if self.soft_context_subject is None:
+            data.pop("soft_context_subject", None)
+        return data
 
     @model_validator(mode="before")
     @classmethod
@@ -194,6 +205,11 @@ class TurnRequest(ContractModel):
             raise ValueError("query must match evidence_set.original_query")
         if self.release_id != self.evidence_set.release_id:
             raise ValueError("release_id must match evidence_set.release_id")
+        if self.soft_context_subject is not None and (
+            not self.soft_context_subject.strip()
+            or self.soft_context_subject != self.soft_context_subject.strip()
+        ):
+            raise ValueError("soft context subject must be normalized and non-empty")
         expected = _canonical_sha256(
             self.model_dump(mode="json", exclude={"content_sha256"})
         )
@@ -428,6 +444,17 @@ class ContextReceipt(ContractModel):
     selected_operation: str | None = None
     performed_operation: str | None = None
     ambiguity_decision_trace_ids: tuple[str, ...] = ()
+    # Web-only soft subject of this turn, mirrored from the TurnRequest; the
+    # prose correction judges against it when the session anchor may be a
+    # mis-anchored look-alike. Popped from serialization when absent.
+    soft_context_subject: str | None = None
+
+    @model_serializer(mode="wrap")
+    def serialize_optional_receipt_fields(self, handler: Any) -> Any:
+        data = handler(self)
+        if self.soft_context_subject is None:
+            data.pop("soft_context_subject", None)
+        return data
 
 
 class SelectorDecisionTrace(ContractModel):
@@ -1173,14 +1200,14 @@ def _material_gap_sentence(
         label = "关键部分" if chinese else "the material part of the question"
     if chinese:
         return (
-            f"保留证据不足以支持问题中的 {label}。"
+            f"目前公开信息较为有限，暂未能确认问题中的 {label}。"
             if outcome == "missing"
-            else f"保留证据对问题中的 {label}存在冲突。"
+            else f"目前公开信息对问题中的 {label}存在不一致说法，暂未能确认。"
         )
     return (
-        f"Retained evidence does not support {label}."
+        f"Public information is currently too limited to confirm {label}."
         if outcome == "missing"
-        else f"Retained evidence conflicts on {label}."
+        else f"Public information currently conflicts on {label}."
     )
 
 
@@ -1260,6 +1287,11 @@ def _append_required_sentences(text: str, sentences: tuple[str, ...]) -> str:
 
 _DETERMINISTIC_ANSWER_MAX_CLAIMS = 10
 _DETERMINISTIC_ANSWER_MAX_CHARS = 2000
+# Soft non-refusal fallback: the chat always answers and never bounces the
+# question back to the user, even when nothing can be confirmed directly.
+_SOFT_FALLBACK_ANSWER_TEXT = (
+    "关于该主体的公开信息目前较为有限，暂未能确认您问的具体内容。"
+)
 # Deterministic/fallback rendering must never publish raw search dumps:
 # source-locator tails (；来源：https://…) and document-mill page text
 # (淘豆网/原创力文档/豆丁网/…) are stripped from each grounded point.
@@ -1332,7 +1364,7 @@ def _deterministic_answer_text(
     keep_source_tails: bool = False,
 ) -> str:
     if not claims:
-        answer = "No supported material claims are available."
+        answer = _SOFT_FALLBACK_ANSWER_TEXT
     else:
         lines: list[str] = []
         for claim in claims:
@@ -1343,7 +1375,7 @@ def _deterministic_answer_text(
             if cleaned is not None:
                 lines.append(f"- {cleaned}")
         if not lines:
-            answer = "暂无可直接确认的公开信息要点。"
+            answer = _SOFT_FALLBACK_ANSWER_TEXT
         else:
             truncated = len(lines) > _DETERMINISTIC_ANSWER_MAX_CLAIMS
             answer = "\n".join(lines[:_DETERMINISTIC_ANSWER_MAX_CLAIMS])
@@ -1672,6 +1704,7 @@ class _SessionState:
     traversed_path_ids: tuple[str, ...] = ()
     ambiguity_decision_trace_ids: tuple[str, ...] = ()
     last_offer: ContinuationOffer | None = None
+    soft_context_subject: str | None = None
 
 
 @dataclass(frozen=True)
@@ -2447,6 +2480,9 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
         if not existed or topic_switch:
             self._sessions[key] = _SessionState(release_id=request.release_id)
         state = self._sessions[key]
+        # Per-turn soft subject: reset every turn so a later named-entity or
+        # expansion turn never inherits a stale web-only anchor.
+        state.soft_context_subject = request.soft_context_subject
         transition_kind = "topic_switch" if topic_switch else "turn"
         previous_result_set = state.displayed_result_set
 
@@ -3081,6 +3117,7 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             selected_operation=selected_operation,
             performed_operation=performed_operation,
             ambiguity_decision_trace_ids=state.ambiguity_decision_trace_ids,
+            soft_context_subject=state.soft_context_subject,
         )
 
     @staticmethod
@@ -3212,7 +3249,7 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             existing_limitations=base_limitations,
         )
         answer_text = _append_required_sentences(
-            "No supported material claims are available.",
+            _SOFT_FALLBACK_ANSWER_TEXT,
             (*required_sentences, *gap_sentences),
         )
         return TurnResult(

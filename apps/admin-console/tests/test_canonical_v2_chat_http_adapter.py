@@ -420,6 +420,136 @@ def test_public_chat_response_omits_internal_evidence_and_trace() -> None:
     assert internal_id not in serialized
 
 
+_REFUSAL_ANCHOR_NAME = "国际先进技术应用推进中心（深圳）"
+
+
+def _refusal_outcome(
+    service: Any,
+    *,
+    answer_text: str,
+    response_mode: str = "answer",
+    anchored: bool = True,
+) -> Any:
+    answer = import_module("src.data_agents.canonical_v2.knowledge_answer")
+    read = import_module("src.data_agents.canonical_v2.knowledge_read")
+    handle = read.CanonicalEntityHandle(
+        canonical_id="company-c-refusal-anchor",
+        domain="company",
+        display_name=_REFUSAL_ANCHOR_NAME,
+        evidence_ids=(),
+    )
+    plan = read.RetrievalPlan(
+        plan_version="retrieval-plan-v1",
+        original_query=f"介绍{_REFUSAL_ANCHOR_NAME}",
+        behavior_class="A",
+        release_id=RELEASE_ID,
+        domains=("company",),
+        protected_slots=(),
+        lanes=("exact",),
+        max_candidates=5,
+        web_required=False,
+    )
+    evidence_set = read.EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query=plan.original_query,
+        protected_slots=(),
+        items=(),
+        traces=(),
+        limitations=(),
+        entity_handles=(handle,),
+    )
+    turn_result = answer.TurnResult(
+        session_id="session:s12d-refusal",
+        turn_id="turn:s12d-refusal",
+        release_id=RELEASE_ID,
+        answer_text=answer_text,
+        response_mode=response_mode,
+        render_mode="deterministic_fallback",
+        context_receipt=(
+            answer.ContextReceipt(active_anchor=handle) if anchored else None
+        ),
+    )
+    return service._CanonicalV2ChatOutcome(
+        query=plan.original_query,
+        plan=plan,
+        evidence_set=evidence_set,
+        turn_result=turn_result,
+    )
+
+
+@pytest.mark.parametrize(
+    "refusal_text",
+    (
+        "暂无可直接确认的公开信息要点。",
+        "No supported material claims are available.",
+        "未提供具体的主体信息。",
+    ),
+)
+def test_public_chat_response_softens_short_refusal_with_anchor(
+    refusal_text: str,
+) -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    adapter = object.__new__(service.CanonicalV2ChatAdapter)
+
+    response = adapter._map_response(
+        _refusal_outcome(service, answer_text=refusal_text)
+    )
+
+    assert response.answer_text == (
+        f"关于{_REFUSAL_ANCHOR_NAME}的公开信息目前较为有限，"
+        "暂未能确认您问的具体内容；可以换个角度继续提问。"
+    )
+    assert refusal_text not in response.answer_text
+    assert "请提供" not in response.answer_text
+    assert "请补充" not in response.answer_text
+
+
+def test_public_chat_response_softens_short_refusal_without_anchor() -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    adapter = object.__new__(service.CanonicalV2ChatAdapter)
+
+    response = adapter._map_response(
+        _refusal_outcome(
+            service,
+            answer_text="暂无可直接确认的公开信息要点。",
+            anchored=False,
+        )
+    )
+
+    assert response.answer_text == (
+        "目前公开信息较为有限，暂未能确认您问的具体内容；可以换个角度继续提问。"
+    )
+    assert "暂无可" not in response.answer_text
+
+
+def test_public_chat_response_keeps_long_answer_with_refusal_fragment() -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    adapter = object.__new__(service.CanonicalV2ChatAdapter)
+    long_answer = "国际先进技术应用推进中心（深圳）是位于深圳的共性技术服务平台。" * 4 + "暂无可直接确认的公开信息要点。"
+
+    response = adapter._map_response(
+        _refusal_outcome(service, answer_text=long_answer)
+    )
+
+    assert response.answer_text == long_answer
+
+
+def test_public_chat_response_keeps_clarification_only_text() -> None:
+    service = import_module("backend.services.canonical_v2_chat")
+    adapter = object.__new__(service.CanonicalV2ChatAdapter)
+    clarification_text = "Please provide one distinguishing detail so I can resolve the ambiguity."
+
+    response = adapter._map_response(
+        _refusal_outcome(
+            service,
+            answer_text=clarification_text,
+            response_mode="clarification_only",
+        )
+    )
+
+    assert response.answer_text == clarification_text
+
+
 def test_isolated_read_integrity_error_is_a_stable_public_conflict() -> None:
     seam = _load_s11a_seam()
     getter = seam.deps_module.get_canonical_v2_chat_adapter
@@ -2105,7 +2235,7 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
     assert "Robotics Co" in first.answer_text
     assert "Robotics company." in first.answer_text
     assert "2026 年当前营收" in first.answer_text
-    assert "保留证据不足以支持" in first.answer_text
+    assert "暂未能确认问题中的" in first.answer_text
     assert all(re.search(r"[0-9a-f]{64}", value) is None for value in public_strings)
     assert all(
         marker not in value

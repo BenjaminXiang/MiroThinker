@@ -824,6 +824,50 @@ def _prioritize_relation_evidence(
     )
 
 
+# Subject-consistency floor: with bound anchors, off-subject single-channel
+# results may only backfill the lane up to this many survivors; corroborated
+# results and subject hits always outrank them.
+_WEB_SUBJECT_CONSISTENCY_FLOOR = 3
+
+
+def _apply_web_subject_consistency(
+    *,
+    results: tuple[_NormalizedWebResult, ...],
+    request: LaneRequest,
+) -> tuple[_NormalizedWebResult, ...]:
+    bound_entity_names = request.bound_entity_names
+    if (
+        request.soft_context_subject is not None
+        and request.soft_context_subject not in bound_entity_names
+    ):
+        # Web-only sessions bind no canonical entities: the soft subject rides
+        # its own LaneRequest field and enters only this gate, never
+        # _matched_bound_entity (no entity id exists to anchor on, so the
+        # names/ids alignment contract stays untouched).
+        bound_entity_names = (*bound_entity_names, request.soft_context_subject)
+    if not bound_entity_names:
+        return results
+    kept: list[_NormalizedWebResult] = []
+    demoted: list[_NormalizedWebResult] = []
+    for result in results:
+        if len(result.corroborating_provider_versions) >= 2 or (
+            _web_result_hits_bound_entity(
+                bound_entity_names=bound_entity_names,
+                title=result.title,
+                snippet=result.snippet,
+            )
+        ):
+            kept.append(result)
+        else:
+            demoted.append(result)
+    if len(kept) >= _WEB_SUBJECT_CONSISTENCY_FLOOR:
+        return tuple(kept)
+    # Demotion first, filtering second: below the floor the demoted results
+    # backfill in their original order so obscure single-channel subjects keep
+    # evidence and the lane never empties into the unavailable branch.
+    return tuple(kept + demoted[: _WEB_SUBJECT_CONSISTENCY_FLOOR - len(kept)])
+
+
 def _normalized_web_url(value: str) -> str:
     parsed = urlsplit(value.strip())
     path = parsed.path.rstrip("/") or "/"
@@ -1010,7 +1054,18 @@ class _DualWebLaneAdapter:
                     continue
                 retained_urls.add(normalized_url)
                 ordered.append(merged_by_url[normalized_url])
-        return tuple(ordered)
+        # Dual-channel corroboration outranks provider rotation: a result both
+        # providers returned is a stronger subject signal than Bocha's raw rank
+        # (production badcase: Bocha filled top ranks with a similarly named
+        # wrong institution while Serper stayed on-topic). Relative order is
+        # preserved inside the corroborated and single-channel groups.
+        corroborated = [
+            item for item in ordered if len(item.corroborating_provider_versions) >= 2
+        ]
+        single_channel = [
+            item for item in ordered if len(item.corroborating_provider_versions) < 2
+        ]
+        return tuple(corroborated + single_channel)
 
     def _request_view_queries(
         self,
@@ -1121,8 +1176,11 @@ class _DualWebLaneAdapter:
         ).strip()
         question_frame = _question_frame(request.original_query)
         organic = _prioritize_relation_evidence(
-            results=self._merged_results_for_views(
-                self._request_view_queries(request, query_text)
+            results=_apply_web_subject_consistency(
+                results=self._merged_results_for_views(
+                    self._request_view_queries(request, query_text)
+                ),
+                request=request,
             ),
             frame=question_frame,
             request=request,
@@ -1741,6 +1799,7 @@ def _serving_query_views(
         producer_version=planner_model_id,
         bound_entity_ids=request.displayed_entity_ids,
         bound_entity_names=request.displayed_entity_names,
+        soft_context_subject=request.soft_context_subject,
     )
     if query_rewriter is None or not _should_rewrite_serving_query(
         request.original_query
@@ -1779,6 +1838,7 @@ def _serving_query_views(
                 producer_version=producer_version,
                 bound_entity_ids=request.displayed_entity_ids,
                 bound_entity_names=request.displayed_entity_names,
+        soft_context_subject=request.soft_context_subject,
             )
         )
         if len(views) >= _SERVING_WEB_MAX_QUERY_VIEWS:
@@ -1804,6 +1864,7 @@ def _serving_query_views(
                 producer_version=_SERVING_QUERY_REWRITER_VERSION,
                 bound_entity_ids=request.displayed_entity_ids,
                 bound_entity_names=request.displayed_entity_names,
+        soft_context_subject=request.soft_context_subject,
             ),
         )
     return tuple(views)
@@ -1885,6 +1946,23 @@ def _web_identity_domain_matches(entity_name: str, locator: str) -> bool:
     )
     allowed_labels = {f"{brand}{suffix}" for suffix in _BRAND_DOMAIN_SUFFIXES}
     return bool(set(labels) & allowed_labels)
+
+
+def _web_result_hits_bound_entity(
+    *,
+    bound_entity_names: tuple[str, ...],
+    title: str,
+    snippet: str,
+) -> bool:
+    # Only complete identity forms count: shared core fragments (e.g. 先进技术
+    # across 中国科学院深圳先进技术研究院 vs the anchor) must not score as a
+    # subject hit, so matching reuses the full _web_identity_forms output.
+    searchable = _normalized_web_identity(f"{title} {snippet}")
+    return any(
+        _web_identity_text_matches(form, searchable)
+        for entity_name in bound_entity_names
+        for form in _web_identity_forms(entity_name)
+    )
 
 
 def _matched_bound_entity(
@@ -4021,6 +4099,75 @@ def _founder_prefix(result: Any, active_anchor: Any, displayed_set: Any) -> str 
     return f"{professor_name}参与创立了{company_name}。"
 
 
+def _rendered_prose_answer_text(rendered: str | ProseSynthesisResult) -> str:
+    return rendered if isinstance(rendered, str) else rendered.answer_text
+
+
+def _anchor_correction_name(result: Any, active_anchor: Any) -> str | None:
+    """Anchor the synchronous answer must stay on, or None to skip the check.
+
+    A web-only soft context subject outranks the session anchor: the vector
+    lane can mis-anchor the session onto a look-alike canonical entity, and
+    judging the answer against that wrong anchor lets drifted answers pass.
+    Otherwise mirrors the ``_matched_bound_entity`` skip for web-handle
+    anchors: their display names come from unattributed Web text, so an
+    answer cannot be judged against them. Clarification-only turns are never
+    corrected.
+    """
+    if str(getattr(result, "response_mode", "answer") or "answer") != "answer":
+        return None
+    context = getattr(result, "context_receipt", None)
+    soft_subject = getattr(context, "soft_context_subject", None)
+    if (
+        isinstance(soft_subject, str)
+        and soft_subject.strip()
+        and _normalized_web_identity(soft_subject)
+    ):
+        return soft_subject
+    if active_anchor is None:
+        return None
+    entity_id = getattr(active_anchor, "canonical_id", None) or getattr(
+        active_anchor, "handle_id", None
+    )
+    if (
+        not isinstance(entity_id, str)
+        or not entity_id
+        or entity_id.startswith("web-handle:")
+    ):
+        return None
+    display_name = getattr(active_anchor, "display_name", None)
+    if (
+        not isinstance(display_name, str)
+        or not display_name.strip()
+        or not _normalized_web_identity(display_name)
+    ):
+        return None
+    return display_name
+
+
+def _answer_mentions_anchor(answer_text: str, anchor_name: str) -> bool:
+    searchable = _normalized_web_identity(answer_text)
+    for form in _web_identity_forms(anchor_name):
+        # The Web-lane marker rule for short forms targets noisy search
+        # snippets; on the answer side a bare 3+ char name (丁文伯是…) is a
+        # legitimate anchor mention, so plain substring wins from len 3 up.
+        if len(form) >= 3:
+            if form in searchable:
+                return True
+        elif _web_identity_text_matches(form, searchable):
+            return True
+    return False
+
+
+def _anchor_correction_message(anchor_name: str) -> str:
+    return (
+        f"上一轮答案没有围绕主体“{anchor_name}”作答，请重新回答："
+        f"仅依据与“{anchor_name}”直接相关的输入信息组织答案；"
+        "没有直接信息时，基于该主体可确认的信息概括作答。"
+        "不得反问用户，不得要求用户补充信息；保持既定的返回格式不变。"
+    )
+
+
 def _reject_truncated_prose_finish_reason(choice: Any) -> None:
     finish_reason = getattr(choice, "finish_reason", None)
     if finish_reason in {"length", "content_filter"}:
@@ -4129,7 +4276,7 @@ class _OpenAIProseRenderer:
                 ],
             }
         payload = {
-            "prompt_version": "canonical-v2-prose-v14",
+            "prompt_version": "canonical-v2-prose-v15",
             "user_question": getattr(result, "original_query", None),
             "question_frame": {
                 "subject_scope": frame.subject_scope,
@@ -4211,8 +4358,8 @@ class _OpenAIProseRenderer:
                         "（如主体概况、相关人物、公开背景、行业情况），最后说明该具体属性公开"
                         "信息未披露即可；不要生硬套模板，也不要为凑内容编造；"
                         "③ 主体本身无任何公开信息时，先说明公开信息中未找到该主体，"
-                        "再给出问题主题相关的概括性背景（行业常见情况、同类典型做法），"
-                        "并邀请用户提供更多线索（如完整名称、所属领域）以便进一步核实；"
+                        "再给出问题主题相关的概括性背景（行业常见情况、同类典型做法）"
+                        "直接作答；不得反问用户，不得要求用户补充信息；"
                         "④ 概括性内容基于公开常识，不得编造具体公司、人名、数字、日期等事实。"
                         "对依据不足或未入选的主体不要逐条解释、不要逐一列名。"
                         "列表与集合类问题必须求全：凡是有直接依据确认的主体都要列出，按相关度"
@@ -4339,37 +4486,71 @@ class _OpenAIProseRenderer:
             active_anchor,
             displayed_set,
         ) = self._chat_request(result)
-        response = self._client.chat.completions.create(
-            model=self._model,
-            temperature=0,
-            # 3000 tokens lifts the old 1200 ceiling that silently truncated
-            # long answers; streaming and sync synthesis share the same bound.
-            max_tokens=3000,
-            messages=messages,
-            extra_body=self._extra_body,
+
+        def synthesize(
+            request_messages: list[dict[str, Any]],
+        ) -> str | ProseSynthesisResult:
+            response = self._client.chat.completions.create(
+                model=self._model,
+                temperature=0,
+                # 3000 tokens lifts the old 1200 ceiling that silently truncated
+                # long answers; streaming and sync synthesis share the same bound.
+                max_tokens=3000,
+                messages=request_messages,
+                extra_body=self._extra_body,
+            )
+            choices = getattr(response, "choices", ())
+            choice = None if not choices else choices[0]
+            _reject_truncated_prose_finish_reason(choice)
+            content = (
+                None
+                if choice is None
+                else getattr(getattr(choice, "message", None), "content", None)
+            )
+            return self._parse_response(
+                result,
+                content=content,
+                claims=claims,
+                candidate_handles=candidate_handles,
+                handle_ids=handle_ids,
+                active_anchor=active_anchor,
+                displayed_set=displayed_set,
+            )
+
+        rendered = synthesize(messages)
+        anchor_name = _anchor_correction_name(result, active_anchor)
+        if anchor_name is None or _answer_mentions_anchor(
+            _rendered_prose_answer_text(rendered), anchor_name
+        ):
+            return rendered
+        # One bounded correction retry: an answer that never names the anchor
+        # entity is presumed to have drifted onto a look-alike subject. A
+        # correct pronoun-only answer pays one extra call; when the retry
+        # still misses, the caller's deterministic fallback answers instead.
+        corrected = synthesize(
+            [
+                *messages,
+                {
+                    "role": "user",
+                    "content": _anchor_correction_message(anchor_name),
+                },
+            ]
         )
-        choices = getattr(response, "choices", ())
-        choice = None if not choices else choices[0]
-        _reject_truncated_prose_finish_reason(choice)
-        content = (
-            None
-            if choice is None
-            else getattr(getattr(choice, "message", None), "content", None)
-        )
-        return self._parse_response(
-            result,
-            content=content,
-            claims=claims,
-            candidate_handles=candidate_handles,
-            handle_ids=handle_ids,
-            active_anchor=active_anchor,
-            displayed_set=displayed_set,
-        )
+        if not _answer_mentions_anchor(
+            _rendered_prose_answer_text(corrected), anchor_name
+        ):
+            raise ValueError("answer off-anchor")
+        return corrected
 
     def stream(
         self, result: Any, *, on_chunk: Callable[[str], None]
     ) -> str | ProseSynthesisResult:
-        """Incrementally decode the selection header and publish plain answer text."""
+        """Incrementally decode the selection header and publish plain answer text.
+
+        Unlike ``__call__`` there is no off-anchor correction retry here:
+        answer chunks are published as they arrive and cannot be revoked, so
+        the stream keeps its single provider call.
+        """
         (
             messages,
             claims,

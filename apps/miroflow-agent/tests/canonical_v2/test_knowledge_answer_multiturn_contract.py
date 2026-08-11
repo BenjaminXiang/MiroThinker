@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 from datetime import UTC, datetime
 from importlib import import_module
+from types import SimpleNamespace
 from typing import Any
 
 
@@ -189,6 +190,7 @@ def _request(
     evidence_set: Any,
     continuation_selection: Any | None = None,
     session_directive: Any | None = None,
+    soft_context_subject: str | None = None,
 ) -> Any:
     values: dict[str, Any] = {
         "session_id": session_id,
@@ -201,6 +203,8 @@ def _request(
         values["continuation_selection"] = continuation_selection
     if session_directive is not None:
         values["session_directive"] = session_directive
+    if soft_context_subject is not None:
+        values["soft_context_subject"] = soft_context_subject
     return module.TurnRequest(**values)
 
 
@@ -754,7 +758,7 @@ def test_unresolved_web_handle_corefers_but_never_traverses_as_canonical() -> No
     )
     assert blocked.answer_text == (
         "The requested operation requires a resolved canonical handle.\n"
-        "保留证据不足以支持问题中的 2026 年当前营收。"
+        "目前公开信息较为有限，暂未能确认问题中的 2026 年当前营收。"
     )
     assert "HOSTILE_UNRESOLVED_WEB_PART_TEXT" not in blocked.answer_text
     blocked_dump = blocked.model_dump(mode="python")
@@ -1107,7 +1111,7 @@ def test_ambiguity_modes_and_selection_bind_the_exact_candidate() -> None:
     )
     assert clarification.answer_text == (
         "Please select one of the evidenced candidates.\n"
-        "保留证据不足以支持问题中的 2026 年当前营收。"
+        "目前公开信息较为有限，暂未能确认问题中的 2026 年当前营收。"
     )
     assert "HOSTILE_BLOCKING_PART_TEXT" not in clarification.answer_text
     assert (
@@ -1913,10 +1917,10 @@ def test_prose_path_suppresses_deterministic_gap_jargon() -> None:
     """Prose owns insufficiency wording; the gap sentence stays in fallback.
 
     Live-derived: a prose answer that fully covered the question still ended
-    with "保留证据不足以支持问题中的 关键部分。" whenever a sufficiency part
-    stayed missing, contradicting the answer itself. The prose path now keeps
-    the renderer's wording only; deterministic fallback keeps the honest gap
-    sentence.
+    with a deterministic sufficiency-disclosure sentence whenever a
+    sufficiency part stayed missing, contradicting the answer itself. The
+    prose path now keeps the renderer's wording only; deterministic fallback
+    keeps the honest soft gap sentence.
     """
     module = _answer_module()
     read_module = _read_module()
@@ -2000,7 +2004,7 @@ def test_prose_path_suppresses_deterministic_gap_jargon() -> None:
     prose_result = prose_answer.answer(request)
     assert prose_result.render_mode == "prose_renderer"
     assert prose_result.answer_text == prose_text
-    assert "保留证据不足以支持" not in prose_result.answer_text
+    assert "暂未能确认问题中的" not in prose_result.answer_text
     assert any(
         limitation.code == "material_evidence_missing"
         for limitation in prose_result.limitations
@@ -2015,7 +2019,7 @@ def test_prose_path_suppresses_deterministic_gap_jargon() -> None:
     )
     fallback_result = fallback_answer.answer(request)
     assert fallback_result.render_mode == "deterministic_fallback"
-    assert "保留证据不足以支持问题中的 2026 年当前营收。" in (
+    assert "目前公开信息较为有限，暂未能确认问题中的 2026 年当前营收。" in (
         fallback_result.answer_text
     )
 
@@ -2345,7 +2349,9 @@ def test_attributed_items_failing_grounding_keep_the_degrade() -> None:
     result = answer.answer(second_request)
     assert result.claims == ()
     assert result.render_mode == "deterministic_fallback"
-    assert result.answer_text == "No supported material claims are available."
+    assert result.answer_text == (
+        "关于该主体的公开信息目前较为有限，暂未能确认您问的具体内容。"
+    )
     assert any(
         limitation.code == "answer_selection_rejected"
         and limitation.reason == "unsupported_material_claim"
@@ -2355,3 +2361,230 @@ def test_attributed_items_failing_grounding_keep_the_degrade() -> None:
         limitation.code != "attributed_evidence_fallback"
         for limitation in result.limitations
     )
+
+
+def test_off_anchor_correction_exhaustion_falls_back_without_refusal() -> None:
+    """A prose answer that keeps missing the anchor after one bounded retry is
+    discarded; the deterministic fallback stays a grounded non-refusal answer."""
+    module = _answer_module()
+    read_module = _read_module()
+    serving = import_module("src.data_agents.canonical_v2.knowledge_serving_isolated")
+    anchor_name = "国际先进技术应用推进中心（深圳）"
+    company_id = "company:s9m-off-anchor"
+    item = _item(
+        read_module,
+        evidence_id="evidence:s9m:off-anchor",
+        object_id=company_id,
+        domain="company",
+        subject_id=company_id,
+        predicate="profile_summary",
+        value=f"{anchor_name}是位于深圳的共性技术服务平台。",
+        snippet=f"{anchor_name}是位于深圳的共性技术服务平台。",
+    )
+    handle = _canonical_handle(
+        read_module,
+        canonical_id=company_id,
+        domain="company",
+        display_name=anchor_name,
+        evidence_ids=(item.evidence_id,),
+    )
+    request = _request(
+        module,
+        session_id="session:s9m:off-anchor",
+        turn_id="turn:s9m:off-anchor:1",
+        query=f"介绍{anchor_name}",
+        evidence_set=_evidence_set(
+            read_module,
+            query=f"介绍{anchor_name}",
+            items=(item,),
+            handles=(handle,),
+        ),
+    )
+
+    def selector(inner: Any) -> Any:
+        return _proposal(
+            module,
+            inner,
+            displayed_handle_ids=(company_id,),
+            claims=(
+                (
+                    "claim:s9m:off-anchor",
+                    f"{anchor_name}是位于深圳的共性技术服务平台。",
+                    (company_id,),
+                    (item.evidence_id,),
+                ),
+            ),
+        )
+
+    off_anchor_wire = (
+        "<|canonical_v2_selection_v1|>\n"
+        '{"selected_claim_indexes":[1],"selected_entity_indexes":[1]}\n'
+        "<|canonical_v2_answer_v1|>\n"
+        "华南先进技术应用研究院是一家位于广州的科研机构。"
+    )
+    calls: list[dict[str, object]] = []
+
+    class _Completions:
+        def create(self, **kwargs: Any) -> Any:
+            calls.append(kwargs)
+            return SimpleNamespace(
+                choices=(
+                    SimpleNamespace(
+                        message=SimpleNamespace(content=off_anchor_wire),
+                        finish_reason="stop",
+                    ),
+                )
+            )
+
+    renderer = serving._OpenAIProseRenderer(
+        client=SimpleNamespace(chat=SimpleNamespace(completions=_Completions())),
+        model="recorded-chat-model",
+        extra_body={},
+    )
+    result = module.create_ephemeral_knowledge_answer(
+        answer_selector=selector,
+        prose_renderer=renderer,
+    ).answer(request)
+
+    assert len(calls) == 2
+    assert result.render_mode == "deterministic_fallback"
+    assert result.answer_text == (
+        "- 国际先进技术应用推进中心（深圳）是位于深圳的共性技术服务平台。"
+    )
+    assert "请提供" not in result.answer_text
+    assert "暂无可" not in result.answer_text
+    assert "No supported material claims" not in result.answer_text
+    assert any(
+        limitation.code == "prose_synthesis_failed"
+        and limitation.failure_kind == "invalid_output"
+        for limitation in result.limitations
+    )
+
+
+def test_turn_request_soft_context_subject_stays_off_the_default_shape() -> None:
+    """Absent soft subject keeps the legacy serialized shape and content hash."""
+    module = _answer_module()
+    read_module = _read_module()
+    request = _request(
+        module,
+        session_id="session:s9m:soft-default",
+        turn_id="turn:s9m:soft-default:1",
+        query="介绍深圳理工大学",
+        evidence_set=_evidence_set(read_module, query="介绍深圳理工大学"),
+    )
+
+    assert request.soft_context_subject is None
+    assert "soft_context_subject" not in request.model_dump(mode="json")
+
+
+def test_soft_subject_correction_overrides_lookalike_session_anchor() -> None:
+    """The soft subject rides TurnRequest into the receipt and wins the check.
+
+    Live-derived: the vector lane anchored a web-only session onto a
+    look-alike canonical entity, so an answer naming that wrong anchor passed
+    the correction check. With a soft context subject present, the renderer
+    must correct against the soft subject instead, and the receipt must carry
+    it for the renderer to see.
+    """
+    module = _answer_module()
+    read_module = _read_module()
+    serving = import_module("src.data_agents.canonical_v2.knowledge_serving_isolated")
+    soft_subject = "国际先进技术应用推进中心（深圳）"
+    lookalike_name = "华南先进技术应用研究院"
+    company_id = "company:s9m-lookalike-anchor"
+    item = _item(
+        read_module,
+        evidence_id="evidence:s9m:lookalike-anchor",
+        object_id=company_id,
+        domain="company",
+        subject_id=company_id,
+        predicate="profile_summary",
+        value=f"{lookalike_name}是一家位于广州的科研机构。",
+        snippet=f"{lookalike_name}是一家位于广州的科研机构。",
+    )
+    handle = _canonical_handle(
+        read_module,
+        canonical_id=company_id,
+        domain="company",
+        display_name=lookalike_name,
+        evidence_ids=(item.evidence_id,),
+    )
+    request = _request(
+        module,
+        session_id="session:s9m:soft-correction",
+        turn_id="turn:s9m:soft-correction:1",
+        query="有没有更详细的信息",
+        evidence_set=_evidence_set(
+            read_module,
+            query="有没有更详细的信息",
+            items=(item,),
+            handles=(handle,),
+        ),
+        soft_context_subject=soft_subject,
+    )
+    assert "soft_context_subject" in request.model_dump(mode="json")
+
+    def selector(inner: Any) -> Any:
+        return _proposal(
+            module,
+            inner,
+            displayed_handle_ids=(company_id,),
+            claims=(
+                (
+                    "claim:s9m:lookalike-anchor",
+                    f"{lookalike_name}是一家位于广州的科研机构。",
+                    (company_id,),
+                    (item.evidence_id,),
+                ),
+            ),
+        )
+
+    off_subject_wire = (
+        "<|canonical_v2_selection_v1|>\n"
+        '{"selected_claim_indexes":[1],"selected_entity_indexes":[1]}\n'
+        "<|canonical_v2_answer_v1|>\n"
+        f"{lookalike_name}是一家位于广州的科研机构，主要开展应用基础研究。"
+    )
+    on_subject_wire = (
+        "<|canonical_v2_selection_v1|>\n"
+        '{"selected_claim_indexes":[1],"selected_entity_indexes":[1]}\n'
+        "<|canonical_v2_answer_v1|>\n"
+        f"{soft_subject}是位于深圳的共性技术服务平台。"
+    )
+    wires = iter((off_subject_wire, on_subject_wire))
+    calls: list[dict[str, object]] = []
+
+    class _Completions:
+        def create(self, **kwargs: Any) -> Any:
+            calls.append(kwargs)
+            return SimpleNamespace(
+                choices=(
+                    SimpleNamespace(
+                        message=SimpleNamespace(content=next(wires)),
+                        finish_reason="stop",
+                    ),
+                )
+            )
+
+    renderer = serving._OpenAIProseRenderer(
+        client=SimpleNamespace(chat=SimpleNamespace(completions=_Completions())),
+        model="recorded-chat-model",
+        extra_body={},
+    )
+    result = module.create_ephemeral_knowledge_answer(
+        answer_selector=selector,
+        prose_renderer=renderer,
+    ).answer(request)
+
+    assert len(calls) == 2
+    correction = calls[1]["messages"][-1]
+    assert isinstance(correction, dict)
+    assert soft_subject in correction["content"]
+    assert lookalike_name not in correction["content"]
+    assert result.render_mode == "prose_renderer"
+    assert result.answer_text == f"{soft_subject}是位于深圳的共性技术服务平台。"
+    receipt = result.context_receipt
+    assert receipt is not None
+    assert receipt.soft_context_subject == soft_subject
+    assert receipt.active_anchor is not None
+    assert receipt.active_anchor.display_name == lookalike_name

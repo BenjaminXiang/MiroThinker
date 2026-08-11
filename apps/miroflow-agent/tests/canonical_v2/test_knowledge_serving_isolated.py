@@ -1306,7 +1306,7 @@ def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
     assert "他是否有参与哪些企业的创立" in serialized
     assert "回答用户" in serialized
     assert "不要逐字段复述" in serialized
-    assert "canonical-v2-prose-v14" in serialized
+    assert "canonical-v2-prose-v15" in serialized
     assert _PROSE_SELECTION_MARKER in serialized
     assert _PROSE_ANSWER_MARKER in serialized
     assert "未经JSON编码的纯文本" in serialized
@@ -1424,6 +1424,198 @@ def test_llm_prose_renderer_keeps_each_public_domain_question(query: str) -> Non
         == "已整理回答"
     )
     assert query in json.dumps(calls[0], ensure_ascii=False)
+
+
+_ANCHOR_NAME = "国际先进技术应用推进中心（深圳）"
+_OFF_ANSWER = "华南先进技术应用研究院是一家位于广州的科研机构，主要开展应用基础研究。"
+_ON_ANSWER = "国际先进技术应用推进中心（深圳）是位于深圳的共性技术服务平台。"
+
+
+class _SequentialProseCompletions:
+    """Sync-only completions stub replaying one scripted content per call."""
+
+    def __init__(self, *contents: str) -> None:
+        self._contents = contents
+        self.calls: list[dict[str, object]] = []
+
+    def create(self, **kwargs: object) -> object:
+        self.calls.append(kwargs)
+        content = self._contents[min(len(self.calls), len(self._contents)) - 1]
+        return SimpleNamespace(
+            choices=(
+                SimpleNamespace(
+                    message=SimpleNamespace(content=content),
+                    finish_reason="stop",
+                ),
+            )
+        )
+
+
+def _anchored_prose_result(
+    *,
+    anchor_id: str = "company:anchor-serving",
+    anchor_name: str = _ANCHOR_NAME,
+    response_mode: str = "answer",
+    soft_context_subject: str | None = None,
+) -> Any:
+    claim = SimpleNamespace(
+        claim_id="claim:anchor-serving",
+        text=f"{anchor_name}是位于深圳的共性技术服务平台。",
+        subject_id=anchor_id,
+        subject_handle_ids=(anchor_id,),
+        predicate="profile_summary",
+        status="accepted",
+        source_natures=("local",),
+        evidence_ids=("evidence:anchor-serving",),
+    )
+    anchor_key = (
+        {"handle_id": anchor_id}
+        if anchor_id.startswith("web-handle:")
+        else {"canonical_id": anchor_id}
+    )
+    anchor = SimpleNamespace(
+        display_name=anchor_name,
+        domain="company",
+        evidence_ids=("evidence:anchor-serving",),
+        **anchor_key,
+    )
+    return SimpleNamespace(
+        original_query=f"介绍{anchor_name}",
+        response_mode=response_mode,
+        claims=(claim,),
+        citations=(),
+        context_receipt=SimpleNamespace(
+            active_anchor=anchor,
+            displayed_result_set=None,
+            traversed_path_ids=(),
+            soft_context_subject=soft_context_subject,
+        ),
+    )
+
+
+def test_openai_prose_renderer_retries_once_when_answer_leaves_the_anchor() -> None:
+    result = _anchored_prose_result()
+    completions = _SequentialProseCompletions(
+        _prose_wire(_OFF_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+        _prose_wire(_ON_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+    )
+    renderer = _prose_renderer(completions)
+
+    rendered = renderer(result)
+
+    assert isinstance(rendered, ProseSynthesisResult)
+    assert rendered.answer_text == _ON_ANSWER
+    assert rendered.selected_claim_ids == ("claim:anchor-serving",)
+    assert rendered.selected_handle_ids == ("company:anchor-serving",)
+    assert len(completions.calls) == 2
+    first_messages = completions.calls[0]["messages"]
+    retry_messages = completions.calls[1]["messages"]
+    assert isinstance(first_messages, list)
+    assert len(first_messages) == 2
+    assert len(retry_messages) == 3
+    correction = retry_messages[-1]
+    assert correction["role"] == "user"
+    assert _ANCHOR_NAME in correction["content"]
+    assert "不得反问" in correction["content"]
+    assert retry_messages[:2] == first_messages
+
+
+def test_openai_prose_renderer_raises_off_anchor_when_retry_still_misses() -> None:
+    result = _anchored_prose_result()
+    completions = _SequentialProseCompletions(
+        _prose_wire(_OFF_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+        _prose_wire(_OFF_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+    )
+    renderer = _prose_renderer(completions)
+
+    with pytest.raises(ValueError, match="answer off-anchor"):
+        renderer(result)
+
+    assert len(completions.calls) == 2
+
+
+def test_openai_prose_renderer_corrects_against_soft_subject_over_lookalike() -> None:
+    # The vector lane can mis-anchor a web-only session onto a look-alike
+    # canonical entity; an answer naming that wrong anchor must NOT pass the
+    # correction check while a soft context subject exists.
+    result = _anchored_prose_result(
+        anchor_id="company:lookalike-anchor",
+        anchor_name="华南先进技术应用研究院",
+        soft_context_subject=_ANCHOR_NAME,
+    )
+    completions = _SequentialProseCompletions(
+        _prose_wire(_OFF_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+        _prose_wire(_ON_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+    )
+    renderer = _prose_renderer(completions)
+
+    rendered = renderer(result)
+
+    assert isinstance(rendered, ProseSynthesisResult)
+    assert rendered.answer_text == _ON_ANSWER
+    assert len(completions.calls) == 2
+    correction = completions.calls[1]["messages"][-1]
+    assert isinstance(correction, dict)
+    assert _ANCHOR_NAME in correction["content"]
+
+
+@pytest.mark.parametrize(
+    ("anchor_id", "response_mode"),
+    (
+        ("company:anchor-serving", "clarification_only"),
+        ("web-handle:anchor-serving", "answer"),
+    ),
+    ids=("clarification-only", "web-handle-anchor"),
+)
+def test_openai_prose_renderer_anchor_check_skips_non_answer_or_web_anchor(
+    anchor_id: str,
+    response_mode: str,
+) -> None:
+    result = _anchored_prose_result(
+        anchor_id=anchor_id,
+        response_mode=response_mode,
+    )
+    completions = _SequentialProseCompletions(
+        _prose_wire(_OFF_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+    )
+    renderer = _prose_renderer(completions)
+
+    rendered = renderer(result)
+
+    assert isinstance(rendered, ProseSynthesisResult)
+    assert rendered.answer_text == _OFF_ANSWER
+    assert len(completions.calls) == 1
+
+
+def test_openai_prose_renderer_anchor_check_skips_without_active_anchor() -> None:
+    result, _, _ = _prose_result()
+    completions = _SequentialProseCompletions(
+        _prose_wire(_OFF_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+    )
+    renderer = _prose_renderer(completions)
+
+    rendered = renderer(result)
+
+    assert isinstance(rendered, ProseSynthesisResult)
+    assert rendered.answer_text == _OFF_ANSWER
+    assert len(completions.calls) == 1
+
+
+def test_openai_prose_renderer_stream_never_retries_off_anchor() -> None:
+    """Published stream chunks cannot be revoked, so the stream path keeps the
+    single-pass behavior even when the final answer misses the anchor."""
+    result = _anchored_prose_result()
+    wire = _prose_wire(_OFF_ANSWER, claim_indexes=(1,), entity_indexes=(1,))
+    completions = _RecordedProseCompletions(wire, chunk_width=7)
+    renderer = _prose_renderer(completions)
+    published: list[str] = []
+
+    streamed = renderer.stream(result, on_chunk=published.append)
+
+    assert isinstance(streamed, ProseSynthesisResult)
+    assert streamed.answer_text == _OFF_ANSWER
+    assert "".join(published) == _OFF_ANSWER
+    assert len(completions.calls) == 1
 
 
 def test_environment_prose_renderer_bounds_the_default_provider_wait(
@@ -2935,6 +3127,308 @@ def test_dual_web_lane_reports_unavailable_when_both_providers_fail() -> None:
         adapter(request)
 
 
+def test_dual_web_lane_orders_corroborated_results_before_single_channel() -> None:
+    class _Provider:
+        def search(self, query: str) -> dict[str, object]:
+            return {"organic": []}
+
+    adapter = serving_module._DualWebLaneAdapter(
+        bocha=_Provider(),
+        serper=_Provider(),
+        timeout_ms=1500,
+        max_snapshot_bytes=16384,
+        clock=lambda: NOW,
+    )
+
+    ordered = adapter._normalize_and_order_results(
+        provider_results={
+            "bocha-v1": [
+                {
+                    "title": "bocha 独有结果",
+                    "link": "https://bocha-only.example/1",
+                    "snippet": "仅 bocha 命中。",
+                },
+                {
+                    "title": "双通道印证结果",
+                    "link": "https://shared.example/page/",
+                    "snippet": "bocha 侧摘要。",
+                },
+            ],
+            "serper-v1": [
+                {
+                    "title": "serper 独有结果",
+                    "link": "https://serper-only.example/1",
+                    "snippet": "仅 serper 命中。",
+                },
+                {
+                    "title": "双通道印证结果",
+                    "link": "https://shared.example/page",
+                    "snippet": "serper 侧摘要。",
+                },
+            ],
+        }
+    )
+
+    assert tuple(item.title for item in ordered) == (
+        "双通道印证结果",
+        "bocha 独有结果",
+        "serper 独有结果",
+    )
+    assert ordered[0].corroborating_provider_versions == ("bocha-v1", "serper-v1")
+
+
+def _subject_consistency_request(**overrides: object) -> LaneRequest:
+    values: dict[str, object] = {
+        "lane": "web",
+        "release_id": RELEASE_ID,
+        "query_view": "view:subject-consistency",
+        "original_query": "介绍深圳理工大学",
+        "behavior_class": "A",
+        "interaction_mode": "information_retrieval",
+        "web_policy": WebSearchPolicy(
+            mode="universal",
+            max_provider_calls=2,
+            timeout_ms=1500,
+            max_results=5,
+        ),
+        "query_text": "深圳理工大学 [lane=web]",
+        "domains": ("company",),
+        "protected_slots": (),
+        "structured_constraints": StructuredConstraints(),
+        "max_candidates": 5,
+        "bound_entity_ids": ("company-c-sut",),
+        "bound_entity_names": ("深圳理工大学",),
+    }
+    values.update(overrides)
+    return LaneRequest(**values)  # type: ignore[arg-type]
+
+
+def _subject_consistency_adapter(
+    bocha_payload: dict[str, object],
+    serper_payload: dict[str, object],
+) -> Any:
+    class _Provider:
+        def __init__(self, payload: dict[str, object]) -> None:
+            self._payload = payload
+
+        def search(self, query: str) -> dict[str, object]:
+            return self._payload
+
+    return serving_module._DualWebLaneAdapter(
+        bocha=_Provider(bocha_payload),
+        serper=_Provider(serper_payload),
+        timeout_ms=1500,
+        max_snapshot_bytes=16384,
+        clock=lambda: NOW,
+    )
+
+
+def _sut_hit(title: str, url: str) -> dict[str, object]:
+    return {
+        "title": title,
+        "link": url,
+        "snippet": "深圳理工大学位于广东深圳的公办研究型大学。",
+    }
+
+
+def _siat_miss(title: str, url: str) -> dict[str, object]:
+    return {
+        "title": title,
+        "link": url,
+        "snippet": "中国科学院深圳先进技术研究院的最新动态。",
+    }
+
+
+def test_dual_web_lane_drops_off_subject_results_once_floor_is_met() -> None:
+    shared_url = "https://off-topic.example/shared"
+    adapter = _subject_consistency_adapter(
+        {
+            "organic": [
+                _siat_miss("中国科学院深圳先进技术研究院", "https://siat.example/a"),
+                _siat_miss("先进技术研究院招生", shared_url),
+            ]
+        },
+        {
+            "organic": [
+                _sut_hit("深圳理工大学官网", "https://sut.example/1"),
+                _sut_hit("深圳理工大学招生网", "https://sut.example/2"),
+                _siat_miss("先进技术研究院招生", shared_url),
+            ]
+        },
+    )
+
+    result = adapter(_subject_consistency_request())
+
+    locators = tuple(
+        candidate.evidence[0].source_locator for candidate in result.candidates
+    )
+    assert len(locators) == 3
+    assert "https://siat.example/a" not in locators
+    # The off-subject URL both providers returned stays: dual-channel
+    # corroboration counts as a keep signal even without a subject hit.
+    assert shared_url in locators
+    assert set(locators) == {
+        shared_url,
+        "https://sut.example/1",
+        "https://sut.example/2",
+    }
+
+
+def test_dual_web_lane_backfills_off_subject_results_to_reach_floor() -> None:
+    adapter = _subject_consistency_adapter(
+        {
+            "organic": [
+                _siat_miss("中国科学院深圳先进技术研究院", "https://siat.example/1"),
+                _siat_miss("先进技术研究院招生", "https://siat.example/2"),
+                _siat_miss("先进技术研究院招聘", "https://siat.example/3"),
+            ]
+        },
+        {"organic": [_sut_hit("深圳理工大学官网", "https://sut.example/1")]},
+    )
+
+    result = adapter(_subject_consistency_request())
+
+    locators = tuple(
+        candidate.evidence[0].source_locator for candidate in result.candidates
+    )
+    # kept (1 subject hit) < FLOOR (3): demoted results backfill in their
+    # original order instead of leaving the lane empty.
+    assert locators == (
+        "https://sut.example/1",
+        "https://siat.example/1",
+        "https://siat.example/2",
+    )
+
+
+def test_dual_web_lane_without_bound_entities_keeps_round_robin_order() -> None:
+    adapter = _subject_consistency_adapter(
+        {
+            "organic": [
+                _sut_hit("结果 A", "https://a.example/1"),
+                _sut_hit("结果 B", "https://b.example/1"),
+            ]
+        },
+        {
+            "organic": [
+                _sut_hit("结果 C", "https://c.example/1"),
+                _sut_hit("结果 D", "https://d.example/1"),
+            ]
+        },
+    )
+
+    result = adapter(
+        _subject_consistency_request(bound_entity_ids=(), bound_entity_names=())
+    )
+
+    assert tuple(
+        candidate.evidence[0].source_locator for candidate in result.candidates
+    ) == (
+        "https://a.example/1",
+        "https://c.example/1",
+        "https://b.example/1",
+        "https://d.example/1",
+    )
+
+
+def test_web_bound_entity_match_ignores_shared_fragment_substrings() -> None:
+    bound = ("国际先进技术应用推进中心（深圳）",)
+
+    assert not serving_module._web_result_hits_bound_entity(
+        bound_entity_names=bound,
+        title="中国科学院深圳先进技术研究院",
+        snippet="中国科学院深圳先进技术研究院在先进技术领域取得进展。",
+    )
+    assert serving_module._web_result_hits_bound_entity(
+        bound_entity_names=bound,
+        title="国际先进技术应用推进中心（深圳）",
+        snippet="国际先进技术应用推进中心（深圳）最新动态。",
+    )
+
+
+def test_dual_web_lane_subject_consistency_binds_soft_context_subject() -> None:
+    adapter = _subject_consistency_adapter(
+        {
+            "organic": [
+                _siat_miss("中国科学院深圳先进技术研究院", "https://siat.example/a"),
+                _siat_miss("先进技术研究院招生", "https://siat.example/b"),
+            ]
+        },
+        {
+            "organic": [
+                _sut_hit("深圳理工大学官网", "https://sut.example/1"),
+                _sut_hit("深圳理工大学招生网", "https://sut.example/2"),
+                _sut_hit("深圳理工大学新闻网", "https://sut.example/3"),
+            ]
+        },
+    )
+
+    result = adapter(
+        _subject_consistency_request(
+            bound_entity_ids=(),
+            bound_entity_names=(),
+            soft_context_subject="深圳理工大学",
+        )
+    )
+
+    locators = tuple(
+        candidate.evidence[0].source_locator for candidate in result.candidates
+    )
+    assert len(locators) == 3
+    assert set(locators) == {
+        "https://sut.example/1",
+        "https://sut.example/2",
+        "https://sut.example/3",
+    }
+    # The soft subject never enters _matched_bound_entity: no candidate may be
+    # anchored onto a canonical entity it merely resembles.
+    assert all(candidate.canonical_id is None for candidate in result.candidates)
+    assert all(
+        candidate.identity_kind == "web_only" for candidate in result.candidates
+    )
+
+
+def test_soft_context_subject_reaches_the_web_lane_request(tmp_path: Path) -> None:
+    path, bundle = _write_bundle(tmp_path)
+    inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
+        path=path,
+        expected_content_sha256=bundle.content_sha256,
+        expected_release_id=RELEASE_ID,
+        expected_database="miroflow_candidate_s12b_test",
+        expected_index_root=(tmp_path / "index").resolve(),
+        expected_envelope_path=(tmp_path / "envelope.json").resolve(),
+        embedding_adapter=_Embedding(),
+        clock=lambda: NOW,
+    )
+    plan = create_ephemeral_query_planner(
+        planning_policy=inputs.planning_policy,
+        institution_catalog=InstitutionCatalog(
+            catalog_id="institution-catalog:s12b-test",
+            catalog_version="institution-catalog-v1",
+            release_id=RELEASE_ID,
+            entries=(),
+        ),
+        proposal_provider=inputs.proposal_provider,
+    ).plan(
+        QueryPlanningRequest(
+            request_id="query-request:soft-context-lane-request",
+            release_id=RELEASE_ID,
+            original_query="有没有更详细的信息",
+            as_of=NOW,
+            soft_context_subject="优必选",
+        )
+    )
+
+    lane_request = _lane_request(plan, "web", inputs.universal_web_policy)
+
+    assert lane_request.soft_context_subject == "优必选"
+    # The soft subject rides its own field: bound names/ids stay aligned to
+    # displayed canonical entities (empty here), so _matched_bound_entity can
+    # never anchor the soft subject onto a look-alike canonical entity.
+    assert lane_request.bound_entity_names == ()
+    assert lane_request.bound_entity_ids == ()
+
+
 def test_provider_keepwarm_cycle_runs_all_external_paths_concurrently() -> None:
     barrier = Barrier(4, timeout=1.0)
     calls: list[str] = []
@@ -3315,6 +3809,14 @@ def test_multi_entity_prose_commit_narrows_the_set_but_keeps_the_anchor(
                 claim_indexes=(1, 2),
                 entity_indexes=(1, 2),
             ),
+            # The pronoun-only follow-up answer never names the anchor, so the
+            # renderer's bounded correction retry re-asks once and this
+            # anchor-named rewrite becomes the published answer.
+            _prose_wire(
+                "丁文伯的代表性成果包括 pFedGPA 与摩擦电智能手套两篇论文。",
+                claim_indexes=(1, 2),
+                entity_indexes=(1, 2),
+            ),
         )
     )
 
@@ -3444,6 +3946,9 @@ def test_multi_entity_prose_commit_narrows_the_set_but_keeps_the_anchor(
     )
 
     assert second.context_receipt is not None
+    assert second.answer_text == (
+        "丁文伯的代表性成果包括 pFedGPA 与摩擦电智能手套两篇论文。"
+    )
     assert second.context_receipt.displayed_result_set is not None
     assert second.context_receipt.displayed_result_set.handle_ids == (
         paper_one.object_id,
@@ -4749,7 +5254,9 @@ def test_displayed_set_follow_up_binds_claims_after_prose_scope_narrowing(
         )
     )
 
-    assert second.answer_text != "No supported material claims are available."
+    assert second.answer_text != (
+        "关于该主体的公开信息目前较为有限，暂未能确认您问的具体内容。"
+    )
     assert any(
         claim.predicate == "headquarters_city"
         and claim.subject_id == pudu.object_id

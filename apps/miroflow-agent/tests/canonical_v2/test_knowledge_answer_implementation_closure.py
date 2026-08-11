@@ -581,12 +581,12 @@ def test_material_claim_requires_complete_binding_and_filtered_draft_never_leaks
         (
             "missing",
             "material_evidence_missing",
-            "保留证据不足以支持问题中的 2026 年当前营收。",
+            "目前公开信息较为有限，暂未能确认问题中的 2026 年当前营收。",
         ),
         (
             "conflicting",
             "material_evidence_conflicting",
-            "保留证据对问题中的 2026 年当前营收存在冲突。",
+            "目前公开信息对问题中的 2026 年当前营收存在不一致说法，暂未能确认。",
         ),
     ),
 )
@@ -1055,7 +1055,7 @@ def test_opaque_only_rejection_preserves_material_gap() -> None:
         "handle_id": None,
         "requested_path_id": None,
     }
-    gap_sentence = "保留证据不足以支持问题中的 2026 年当前营收。"
+    gap_sentence = "目前公开信息较为有限，暂未能确认问题中的 2026 年当前营收。"
     assert result.answer_text.count(gap_sentence) == 1
     assert digest not in result.answer_text
     assert profile.evidence_id not in result.answer_text
@@ -1132,7 +1132,7 @@ def test_prose_renderer_cannot_reintroduce_audit_values_or_omit_material_gap() -
             f"Hostile renderer exposed {digest} and {profile.evidence_id}."
         ),
     ).answer(request)
-    gap_sentence = "保留证据不足以支持问题中的 2026 年当前营收。"
+    gap_sentence = "目前公开信息较为有限，暂未能确认问题中的 2026 年当前营收。"
     assert digest not in hostile.answer_text
     assert profile.evidence_id not in hostile.answer_text
     # The hostile renderer's text is fully discarded, while the bounded
@@ -1359,7 +1359,9 @@ def test_answer_selector_trace_binds_model_prompt_schema_run_and_visible_rejecti
         answer_selector=timed_out_selector
     ).answer(request)
     assert timed_out.claims == ()
-    assert timed_out.answer_text == "No supported material claims are available."
+    assert timed_out.answer_text == (
+        "关于该主体的公开信息目前较为有限，暂未能确认您问的具体内容。"
+    )
     assert timed_out.render_mode == "deterministic_fallback"
     assert len(timed_out.selector_traces) == 1
     assert timed_out.selector_traces[0].outcome == "degraded"
@@ -3166,4 +3168,9 @@ def test_deterministic_fallback_renders_readable_points_not_raw_dumps() -> None:
     assert "https://example.test/wang-xueqian" in link_answer
 
     all_junk = module._deterministic_answer_text((junk_claim,))
-    assert "暂无可直接确认的公开信息要点。" in all_junk
+    assert (
+        "关于该主体的公开信息目前较为有限，暂未能确认您问的具体内容。" in all_junk
+    )
+
+    empty = module._deterministic_answer_text(())
+    assert empty == "关于该主体的公开信息目前较为有限，暂未能确认您问的具体内容。"

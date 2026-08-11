@@ -251,12 +251,17 @@ def test_founder_prefix_uses_handles_bound_to_the_same_claim() -> None:
             traversed_path_ids=(),
         ),
     )
-    renderer, completions = _plain_renderer("公开信息可确认该关系。")
+    renderer, completions = _plain_renderer(
+        "公开信息可确认该关系。",
+        # The first answer never names the anchor, so the bounded correction
+        # retry re-asks once; the retry's answer names it and is published.
+        "诱饵教授公开信息可确认该关系。",
+    )
 
     rendered = renderer(result)
 
-    assert len(completions.calls) == 1
-    assert rendered == "正确教授参与创立了正确公司。\n\n公开信息可确认该关系。"
+    assert len(completions.calls) == 2
+    assert rendered == "正确教授参与创立了正确公司。\n\n诱饵教授公开信息可确认该关系。"
 
 
 def test_plain_prose_restores_prior_structured_scope_and_receipt() -> None:
@@ -326,8 +331,12 @@ def test_plain_prose_restores_prior_structured_scope_and_receipt() -> None:
     )
     renderer, completions = _plain_renderer(
         first_wire,
+        # Turns 2 and 3 never name the anchor 先前确认公司, so each pays one
+        # correction retry whose anchor-named rewrite is published instead.
         "本轮只能确认一般结论。",
+        "先前确认公司本轮只能确认一般结论。",
         "继续沿用先前已确认的公司范围。",
+        "先前确认公司继续沿用先前已确认的公司范围。",
     )
     answer = create_ephemeral_knowledge_answer(
         answer_selector=selector,
@@ -358,7 +367,7 @@ def test_plain_prose_restores_prior_structured_scope_and_receipt() -> None:
     assert follow_up_context.resolved_referent is not None
     assert follow_up_context.resolved_referent.kind == "result_set"
     assert follow_up_context.resolved_referent.handle_ids == (visible_id,)
-    assert len(completions.calls) == 3
+    assert len(completions.calls) == 5
 
 
 def test_founder_prefix_rejects_missing_or_ambiguous_claim_bindings() -> None:
@@ -464,9 +473,14 @@ def test_founder_prefix_rejects_missing_or_ambiguous_claim_bindings() -> None:
                 traversed_path_ids=(),
             ),
         )
-        renderer, completions = _plain_renderer("公开信息可确认该关系。")
+        renderer, completions = _plain_renderer(
+            "公开信息可确认该关系。",
+            # Off-anchor first pass triggers one correction retry; the retry
+            # names the anchor and is published without any founder prefix.
+            "甲教授公开信息可确认该关系。",
+        )
 
         rendered = renderer(result)
 
-        assert rendered == "公开信息可确认该关系。", label
-        assert len(completions.calls) == 1
+        assert rendered == "甲教授公开信息可确认该关系。", label
+        assert len(completions.calls) == 2

@@ -393,6 +393,17 @@ class QueryViewProposal(_ContentModel):
     protected_slot_ids: tuple[str, ...] = ()
     bound_entity_ids: tuple[str, ...] = ()
     bound_entity_names: tuple[str, ...] = ()
+    # Web-only continuation aid mirrored from QueryPlanningRequest: arms the
+    # web lane subject-consistency gate without entering the aligned
+    # bound_entity_ids/names contract (_matched_bound_entity never sees it).
+    soft_context_subject: str | None = None
+
+    @model_serializer(mode="wrap")
+    def serialize_optional_soft_subject(self, handler: Any) -> Any:
+        data = handler(self)
+        if self.soft_context_subject is None:
+            data.pop("soft_context_subject", None)
+        return data
 
     @model_validator(mode="after")
     def validate_bound_entities(self) -> QueryViewProposal:
@@ -404,6 +415,11 @@ class QueryViewProposal(_ContentModel):
             not name.strip() or name != name.strip() for name in self.bound_entity_names
         ):
             raise ValueError("bound entity names must be normalized and non-empty")
+        if self.soft_context_subject is not None and (
+            not self.soft_context_subject.strip()
+            or self.soft_context_subject != self.soft_context_subject.strip()
+        ):
+            raise ValueError("soft context subject must be normalized and non-empty")
         return self
 
 
@@ -4884,6 +4900,9 @@ class LaneRequest(_ContentModel):
     relationship_enumeration_policy: EnumerationPolicy | None = None
     bound_entity_ids: tuple[str, ...] = ()
     bound_entity_names: tuple[str, ...] = ()
+    # Web-only soft anchor carried from the serving query view: consumed only
+    # by the web lane subject-consistency gate, never by _matched_bound_entity.
+    soft_context_subject: str | None = None
 
     @model_serializer(mode="wrap")
     def serialize_optional_lane_fields(self, handler: Any) -> Any:
@@ -4902,6 +4921,8 @@ class LaneRequest(_ContentModel):
             data.pop("bound_entity_ids", None)
         if not self.bound_entity_names:
             data.pop("bound_entity_names", None)
+        if self.soft_context_subject is None:
+            data.pop("soft_context_subject", None)
         return data
 
     @model_validator(mode="after")
@@ -5076,6 +5097,9 @@ def _lane_request(
         ),
         bound_entity_names=(
             serving_view.bound_entity_names if serving_view is not None else ()
+        ),
+        soft_context_subject=(
+            serving_view.soft_context_subject if serving_view is not None else None
         ),
     )
 
