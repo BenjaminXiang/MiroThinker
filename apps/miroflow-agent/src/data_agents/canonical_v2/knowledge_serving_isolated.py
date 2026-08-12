@@ -4481,10 +4481,86 @@ def _reject_truncated_prose_finish_reason(choice: Any) -> None:
 
 
 class _OpenAIProseRenderer:
-    def __init__(self, *, client: Any, model: str, extra_body: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        *,
+        client: Any,
+        model: str,
+        extra_body: dict[str, Any],
+        page_fetcher: Callable[[str], str | None] | None = None,
+        fetch_timeout_seconds: float = 10.0,
+    ) -> None:
         self._client = client
         self._model = model
         self._extra_body = extra_body
+        self._page_fetcher = page_fetcher
+        # Advisory only: the reference fetch is a direct call guarded by
+        # try/except (see _fetch_anchor_reference_material). This layer owns
+        # no executor to enforce a separate deadline, so the tiered fetcher's
+        # internal timeouts (page_fetch tier0 5s) are the effective bound.
+        self._fetch_timeout_seconds = fetch_timeout_seconds
+
+    def _fetch_anchor_reference_material(
+        self, *, result: Any, anchor_name: str,
+    ) -> str | None:
+        """Fetch at most one anchor-relevant page for the correction retry.
+
+        Candidate: the first ``current_web`` citation locator whose domain
+        matches the anchor brand, else the first whose title/snippet head
+        names the anchor. The anti-echo guard drops fetched pages that never
+        mention the anchor stem, so a wrong-subject page is never injected.
+        Fail-open: any error yields None (a bare correction message).
+        """
+        if self._page_fetcher is None:
+            return None
+        citations = tuple(
+            citation
+            for citation in getattr(result, "citations", ())
+            if getattr(citation, "source_nature", None) == "current_web"
+        )
+        if not citations:
+            return None
+
+        def locator(citation: Any) -> str:
+            return str(getattr(citation, "source_locator", "") or "")
+
+        chosen = next(
+            (
+                citation
+                for citation in citations
+                if _web_identity_domain_matches(anchor_name, locator(citation))
+            ),
+            None,
+        )
+        if chosen is None:
+            forms = _web_identity_forms(anchor_name)
+
+            def title_hits(citation: Any) -> bool:
+                raw = str(
+                    getattr(citation, "title", "")
+                    or getattr(citation, "snippet", "")
+                    or ""
+                )
+                head = raw.partition("：")[0]
+                searchable = _normalized_web_identity(head)
+                return any(
+                    _web_identity_text_matches(form, searchable) for form in forms
+                )
+
+            chosen = next((c for c in citations if title_hits(c)), None)
+        if chosen is None:
+            return None
+        try:
+            text = self._page_fetcher(locator(chosen))
+        except Exception:
+            _logger.info("anchor reference fetch failed", exc_info=True)
+            return None
+        if not isinstance(text, str) or not text.strip():
+            return None
+        stem = _org_name_stem(anchor_name)
+        if not stem or stem not in _normalized_web_identity(text):
+            return None
+        return text.strip()[:1200]
 
     def _chat_request(
         self, result: Any
@@ -4860,6 +4936,9 @@ class _OpenAIProseRenderer:
         # entity is presumed to have drifted onto a look-alike subject. A
         # correct pronoun-only answer pays one extra call; when the retry
         # still misses, the caller's deterministic fallback answers instead.
+        reference = self._fetch_anchor_reference_material(
+            result=result, anchor_name=anchor_name,
+        )
         corrected = self._synthesize_once(
             result=result,
             request_messages=[
@@ -4867,7 +4946,9 @@ class _OpenAIProseRenderer:
                 {
                     "role": "user",
                     "content": _anchor_correction_message(
-                        anchor_name, location_qualifier=qualifier,
+                        anchor_name,
+                        location_qualifier=qualifier,
+                        reference_material=reference,
                     ),
                 },
             ],
@@ -4971,6 +5052,9 @@ class _OpenAIProseRenderer:
         # chat.html answer-event mismatch fallback). Failure is fail-open:
         # the original streamed result stands, matching phase-1 behavior.
         try:
+            reference = self._fetch_anchor_reference_material(
+                result=result, anchor_name=anchor_name,
+            )
             corrected = self._synthesize_once(
                 result=result,
                 request_messages=[
@@ -4978,7 +5062,9 @@ class _OpenAIProseRenderer:
                     {
                         "role": "user",
                         "content": _anchor_correction_message(
-                            anchor_name, location_qualifier=qualifier,
+                            anchor_name,
+                            location_qualifier=qualifier,
+                            reference_material=reference,
                         ),
                     },
                 ],
@@ -5010,9 +5096,12 @@ class _OpenAIProseRenderer:
 
 
 class _EnvironmentProseRenderer:
-    def __init__(self) -> None:
+    def __init__(
+        self, *, page_fetcher: Callable[[str], str | None] | None = None,
+    ) -> None:
         self._renderer: _OpenAIProseRenderer | None = None
         self._renderer_lock = Lock()
+        self._page_fetcher = page_fetcher
 
     def _configured_renderer(self) -> _OpenAIProseRenderer:
         with self._renderer_lock:
@@ -5040,6 +5129,7 @@ class _EnvironmentProseRenderer:
                 ),
                 model=model,
                 extra_body=build_non_thinking_extra_body(model),
+                page_fetcher=self._page_fetcher,
             )
             return self._renderer
 
@@ -5477,7 +5567,9 @@ def load_recorded_serving_inputs(
     )
     keepwarm_bocha = BochaSearchProvider(timeout=provider_attempt_timeout)
     keepwarm_serper = WebSearchProvider(timeout=provider_attempt_timeout)
-    environment_renderer = _EnvironmentProseRenderer()
+    # The correction retry fetches reference pages through the same tiered
+    # fetcher the web lane uses — one shared object, never a second fetcher.
+    environment_renderer = _EnvironmentProseRenderer(page_fetcher=page_fetcher)
     selected_prose_renderer = prose_renderer or environment_renderer
     selected_llm_keepwarm = llm_keepwarm or (
         environment_renderer.warm

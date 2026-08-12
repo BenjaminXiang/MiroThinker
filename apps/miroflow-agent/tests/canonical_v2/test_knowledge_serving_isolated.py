@@ -655,13 +655,18 @@ class _RecordedProseCompletions:
         return completion()
 
 
-def _prose_renderer(completions: _RecordedProseCompletions) -> Any:
+def _prose_renderer(
+    completions: _RecordedProseCompletions,
+    *,
+    page_fetcher: Any = None,
+) -> Any:
     return serving_module._OpenAIProseRenderer(
         client=SimpleNamespace(
             chat=SimpleNamespace(completions=completions),
         ),
         model="recorded-chat-model",
         extra_body={"thinking": {"type": "disabled"}},
+        page_fetcher=page_fetcher,
     )
 
 
@@ -1474,8 +1479,10 @@ class _StreamThenSyncProseCompletions:
         self._sync_error = sync_error
         self.stream_create_calls = 0
         self.sync_create_calls = 0
+        self.calls: list[dict[str, object]] = []
 
     def create(self, **kwargs: object) -> object:
+        self.calls.append(kwargs)
         if kwargs.get("stream"):
             self.stream_create_calls += 1
             content = self._stream_content
@@ -1525,6 +1532,7 @@ def _anchored_prose_result(
     anchor_name: str = _ANCHOR_NAME,
     response_mode: str = "answer",
     soft_context_subject: str | None = None,
+    citations: tuple[Any, ...] = (),
 ) -> Any:
     claim = SimpleNamespace(
         claim_id="claim:anchor-serving",
@@ -1551,7 +1559,7 @@ def _anchored_prose_result(
         original_query=f"介绍{anchor_name}",
         response_mode=response_mode,
         claims=(claim,),
-        citations=(),
+        citations=citations,
         context_receipt=SimpleNamespace(
             active_anchor=anchor,
             displayed_result_set=None,
@@ -1803,6 +1811,280 @@ def test_stream_on_anchor_single_call() -> None:
     assert rendered.answer_text == _ON_ANSWER
     assert completions.stream_create_calls == 1
     assert completions.sync_create_calls == 0
+
+
+_REFERENCE_PAGE_TEXT = (
+    "国际先进技术应用推进中心（深圳）是依托粤港澳大湾区数字经济研究院建设的机构。" * 40
+)
+_REFERENCE_URL = "https://www.guojixianjin.cn/about"
+
+
+def _web_citation(
+    *,
+    locator: str,
+    title: str | None = None,
+    snippet: str | None = None,
+    source_nature: str = "current_web",
+) -> Any:
+    citation = SimpleNamespace(
+        evidence_id="evidence:reference-material",
+        source_nature=source_nature,
+        source_locator=locator,
+    )
+    if title is not None:
+        citation.title = title
+    if snippet is not None:
+        citation.snippet = snippet
+    return citation
+
+
+def test_reference_material_fetched_from_domain_matched_url() -> None:
+    fetched: list[str] = []
+
+    def fetcher(url: str) -> str:
+        fetched.append(url)
+        return _REFERENCE_PAGE_TEXT
+
+    renderer = _prose_renderer(
+        _SequentialProseCompletions("unused"), page_fetcher=fetcher,
+    )
+    result = SimpleNamespace(
+        citations=(
+            _web_citation(locator="https://example.com/unrelated"),
+            _web_citation(locator=_REFERENCE_URL),
+        ),
+    )
+
+    material = renderer._fetch_anchor_reference_material(
+        result=result, anchor_name=_ANCHOR_NAME,
+    )
+
+    assert material is not None
+    # 1520 fetched chars are truncated to the 1200-char injection budget.
+    assert len(material) == 1200
+    assert "国际先进技术应用推进中心" in material
+    assert fetched == [_REFERENCE_URL]
+
+
+def test_reference_material_selected_by_title_when_domain_misses() -> None:
+    fetched: list[str] = []
+
+    def fetcher(url: str) -> str:
+        fetched.append(url)
+        return _REFERENCE_PAGE_TEXT
+
+    renderer = _prose_renderer(
+        _SequentialProseCompletions("unused"), page_fetcher=fetcher,
+    )
+    result = SimpleNamespace(
+        citations=(
+            _web_citation(
+                locator="https://example.com/profile",
+                title="国际先进技术应用推进中心（深圳）：机构简介",
+            ),
+        ),
+    )
+
+    material = renderer._fetch_anchor_reference_material(
+        result=result, anchor_name=_ANCHOR_NAME,
+    )
+
+    assert material is not None
+    assert fetched == ["https://example.com/profile"]
+
+
+def test_reference_material_selected_by_snippet_head_when_title_absent() -> None:
+    fetched: list[str] = []
+
+    def fetcher(url: str) -> str:
+        fetched.append(url)
+        return _REFERENCE_PAGE_TEXT
+
+    renderer = _prose_renderer(
+        _SequentialProseCompletions("unused"), page_fetcher=fetcher,
+    )
+    result = SimpleNamespace(
+        citations=(
+            _web_citation(
+                locator="https://example.com/profile",
+                snippet="国际先进技术应用推进中心（深圳）：依托数字经济研究院建设",
+            ),
+        ),
+    )
+
+    material = renderer._fetch_anchor_reference_material(
+        result=result, anchor_name=_ANCHOR_NAME,
+    )
+
+    assert material is not None
+    assert fetched == ["https://example.com/profile"]
+
+
+def test_reference_material_skips_non_current_web_citations() -> None:
+    fetched: list[str] = []
+
+    def fetcher(url: str) -> str:
+        fetched.append(url)
+        return _REFERENCE_PAGE_TEXT
+
+    renderer = _prose_renderer(
+        _SequentialProseCompletions("unused"), page_fetcher=fetcher,
+    )
+    result = SimpleNamespace(
+        citations=(
+            _web_citation(locator=_REFERENCE_URL, source_nature="local"),
+        ),
+    )
+
+    material = renderer._fetch_anchor_reference_material(
+        result=result, anchor_name=_ANCHOR_NAME,
+    )
+
+    assert material is None
+    assert fetched == []
+
+
+def test_reference_material_returns_none_without_fetcher() -> None:
+    renderer = _prose_renderer(_SequentialProseCompletions("unused"))
+    result = SimpleNamespace(citations=(_web_citation(locator=_REFERENCE_URL),))
+
+    assert (
+        renderer._fetch_anchor_reference_material(
+            result=result, anchor_name=_ANCHOR_NAME,
+        )
+        is None
+    )
+
+
+def test_reference_material_returns_none_without_candidate() -> None:
+    fetched: list[str] = []
+
+    def fetcher(url: str) -> str:
+        fetched.append(url)
+        return _REFERENCE_PAGE_TEXT
+
+    renderer = _prose_renderer(
+        _SequentialProseCompletions("unused"), page_fetcher=fetcher,
+    )
+    result = SimpleNamespace(
+        citations=(_web_citation(locator="https://example.com/unrelated"),),
+    )
+
+    material = renderer._fetch_anchor_reference_material(
+        result=result, anchor_name=_ANCHOR_NAME,
+    )
+
+    assert material is None
+    assert fetched == []
+
+
+def test_reference_material_rejected_by_anti_echo_guard() -> None:
+    def fetcher(url: str) -> str:
+        return "中国科学院深圳先进技术研究院简介……" * 50
+
+    renderer = _prose_renderer(
+        _SequentialProseCompletions("unused"), page_fetcher=fetcher,
+    )
+    result = SimpleNamespace(citations=(_web_citation(locator=_REFERENCE_URL),))
+
+    assert (
+        renderer._fetch_anchor_reference_material(
+            result=result, anchor_name=_ANCHOR_NAME,
+        )
+        is None
+    )
+
+
+def test_reference_material_fail_open_on_fetch_error() -> None:
+    def fetcher(url: str) -> str:
+        raise RuntimeError("boom")
+
+    renderer = _prose_renderer(
+        _SequentialProseCompletions("unused"), page_fetcher=fetcher,
+    )
+    result = SimpleNamespace(citations=(_web_citation(locator=_REFERENCE_URL),))
+
+    assert (
+        renderer._fetch_anchor_reference_material(
+            result=result, anchor_name=_ANCHOR_NAME,
+        )
+        is None
+    )
+
+
+def test_correction_message_carries_reference_material() -> None:
+    result = _anchored_prose_result(
+        citations=(_web_citation(locator=_REFERENCE_URL),),
+    )
+    completions = _SequentialProseCompletions(
+        _prose_wire(_OFF_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+        _prose_wire(_ON_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+    )
+    renderer = _prose_renderer(
+        completions, page_fetcher=lambda url: _REFERENCE_PAGE_TEXT,
+    )
+
+    rendered = renderer(result)
+
+    assert isinstance(rendered, ProseSynthesisResult)
+    assert rendered.answer_text == _ON_ANSWER
+    assert len(completions.calls) == 2
+    correction = completions.calls[1]["messages"][-1]
+    assert isinstance(correction, dict)
+    assert "补充材料" in correction["content"]
+    assert "粤港澳大湾区数字经济研究院" in correction["content"]
+
+
+def test_stream_correction_carries_reference_material() -> None:
+    result = _anchored_prose_result(
+        citations=(_web_citation(locator=_REFERENCE_URL),),
+    )
+    completions = _StreamThenSyncProseCompletions(
+        _prose_wire(_OFF_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+        _prose_wire(_ON_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+    )
+    renderer = _prose_renderer(
+        completions, page_fetcher=lambda url: _REFERENCE_PAGE_TEXT,
+    )
+    published: list[str] = []
+
+    rendered = renderer.stream(result, on_chunk=published.append)
+
+    assert isinstance(rendered, ProseSynthesisResult)
+    assert rendered.answer_text == _ON_ANSWER
+    assert completions.stream_create_calls == 1
+    assert completions.sync_create_calls == 1
+    correction = completions.calls[-1]["messages"][-1]
+    assert isinstance(correction, dict)
+    assert "补充材料" in correction["content"]
+    assert "粤港澳大湾区数字经济研究院" in correction["content"]
+
+
+def test_stream_correction_fetch_error_stays_fail_open() -> None:
+    # A failing reference fetch must not escape the stream correction: the
+    # retry still runs, just without injected material.
+    def fetcher(url: str) -> str:
+        raise RuntimeError("boom")
+
+    result = _anchored_prose_result(
+        citations=(_web_citation(locator=_REFERENCE_URL),),
+    )
+    completions = _StreamThenSyncProseCompletions(
+        _prose_wire(_OFF_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+        _prose_wire(_ON_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+    )
+    renderer = _prose_renderer(completions, page_fetcher=fetcher)
+    published: list[str] = []
+
+    rendered = renderer.stream(result, on_chunk=published.append)
+
+    assert isinstance(rendered, ProseSynthesisResult)
+    assert rendered.answer_text == _ON_ANSWER
+    assert completions.stream_create_calls == 1
+    assert completions.sync_create_calls == 1
+    correction = completions.calls[-1]["messages"][-1]
+    assert isinstance(correction, dict)
+    assert "补充材料" not in correction["content"]
 
 
 def test_environment_prose_renderer_bounds_the_default_provider_wait(
