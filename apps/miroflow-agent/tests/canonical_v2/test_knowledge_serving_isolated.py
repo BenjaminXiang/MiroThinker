@@ -2943,18 +2943,27 @@ def test_dual_web_lane_prioritizes_relation_evidence_before_candidate_cap(
             self._official_at = official_at
 
         def search(self, query: str) -> dict[str, object]:
+            # Controller amendment (three-tier gate): the phase-2 gate classifies
+            # loose-alias-only evidence as T4 and backfills to FLOOR=3 when no
+            # T0/T1 exists, so this fixture's old all-distinct URLs collapsed to
+            # 3 survivors and cut the official evidence before prioritization.
+            # Industry items now share provider-independent URLs, so overlapping
+            # ranks corroborate (T0) and six results survive the gate; the
+            # official title carries the full-name form 普渡科技 (T2), keeping
+            # the official page behind five survivors pre-prioritization so the
+            # candidate cap would still cut it without relation prioritization.
             return {
                 "organic": [
                     {
                         "title": (
-                            "普渡官方资料"
+                            "普渡科技官方资料"
                             if index == self._official_at
                             else f"普渡行业资讯 {self._prefix}-{index}"
                         ),
                         "link": (
                             "https://www.pudurobotics.com/official-evidence"
                             if index == self._official_at
-                            else f"https://{self._prefix}.example/{index}"
+                            else f"https://pudu-news.example/{index}"
                         ),
                         "snippet": (
                             official_snippet
@@ -2967,8 +2976,8 @@ def test_dual_web_lane_prioritizes_relation_evidence_before_candidate_cap(
             }
 
     adapter = serving_module._DualWebLaneAdapter(
-        bocha=_Provider("bocha", 3, official_at=None),
-        serper=_Provider("serper", 4, official_at=3),
+        bocha=_Provider("bocha", 5, official_at=None),
+        serper=_Provider("serper", 5, official_at=4),
         timeout_ms=1500,
         max_snapshot_bytes=16384,
         clock=lambda: NOW,
@@ -3469,6 +3478,90 @@ def test_evidence_branch_qualifiers_excludes_anchor_and_non_locations() -> None:
         texts=texts,
         anchor_qualifier="深圳",
     ) == ("合肥", "大湾区")
+
+
+def _gate(
+    results: list[serving_module._NormalizedWebResult],
+    *,
+    bound: tuple[str, ...] = (_ANCHOR,),
+    soft: str | None = None,
+) -> tuple[serving_module._NormalizedWebResult, ...]:
+    request = _subject_consistency_request(
+        bound_entity_names=bound,
+        soft_context_subject=soft,
+    )
+    return serving_module._apply_web_subject_consistency(
+        results=tuple(results),
+        request=request,
+    )
+
+
+def test_gate_drops_loose_alias_and_miss_when_kept_meets_floor() -> None:
+    results = [
+        _result("国际先进技术应用推进中心（深圳）揭牌"),  # T1
+        _result(
+            "河套深圳园区打造深港科技创新聚集地", providers=("bocha", "serper")
+        ),  # T0
+        _result("国际先进技术应用推进中心（合肥）理事会扩容"),  # T3
+        _result("南开国际先进研究院（深圳福田）在实验室参观交流中"),  # T4
+        # Controller amendment: the brief labeled this T5, but 国际先进水平
+        # contains the compact alias 国际先进, so it classifies T4 by design
+        # (same amendment as test_tier_t5_no_match); T4/T5 both drop here.
+        _result("两台国际先进水平手术的背后"),  # T4
+        _result("国际先进技术应用推进中心是由国家发展改革委指导的机构"),  # T2
+        # Controller amendment: the brief's verbatim fixture yielded only two
+        # kept (T0∪T1) results — below the floor this test's name asserts —
+        # so backfill would drop the T3 fixture its assertions require; one
+        # additional T1 result makes kept meet FLOOR as intended.
+        _result("国际先进技术应用推进中心（深圳）召开第一届理事会会议"),  # T1
+    ]
+    out = _gate(results)
+    titles = [r.title for r in out]
+    assert "南开国际先进研究院（深圳福田）在实验室参观交流中" not in titles  # T4 dropped
+    assert "两台国际先进水平手术的背后" not in titles  # T4 dropped
+    assert titles.index("国际先进技术应用推进中心（合肥）理事会扩容") > titles.index(
+        "国际先进技术应用推进中心是由国家发展改革委指导的机构"
+    )  # T2 before T3
+    assert set(titles[:2]) == {
+        "国际先进技术应用推进中心（深圳）揭牌",
+        "河套深圳园区打造深港科技创新聚集地",
+    }  # T0∪T1 first
+
+
+def test_gate_backfills_in_tier_order_below_floor() -> None:
+    results = [
+        _result("国际先进技术应用推进中心（深圳）揭牌"),  # T1 only, kept=1
+        _result("国际先进技术应用推进中心（合肥）理事会扩容"),  # T3
+        _result("国际先进技术应用推进中心由发改委指导"),  # T2
+        _result("南开国际先进研究院（深圳福田）"),  # T4
+        _result("完全无关"),  # T5
+    ]
+    out = [r.title for r in _gate(results)]
+    assert out == [
+        "国际先进技术应用推进中心（深圳）揭牌",
+        "国际先进技术应用推进中心由发改委指导",
+        "国际先进技术应用推进中心（合肥）理事会扩容",
+    ]  # backfilled to FLOOR=3 in T2→T3 order; T4/T5 dropped
+
+
+def test_gate_soft_subject_still_binds_and_qualifier_comes_from_soft_name() -> None:
+    # Web-only path: no canonical bound names, soft subject carries （深圳）.
+    results = [
+        _result("南开国际先进研究院（深圳福田）"),  # T4 for the soft anchor
+        _result(
+            "国际先进技术应用推进中心（深圳）依托粤港澳大湾区数字经济研究院建设"
+        ),  # T1
+        _result("国际先进技术应用推进中心（合肥）"),  # T3
+        _result("河套揭牌新闻", providers=("bocha", "serper")),  # T0
+    ]
+    out = [r.title for r in _gate(results, bound=(), soft=_ANCHOR)]
+    assert "南开国际先进研究院（深圳福田）" not in out
+    assert len(out) == 3
+
+
+def test_gate_without_bound_names_is_passthrough() -> None:
+    results = [_result("a"), _result("b", providers=("bocha", "serper"))]
+    assert list(_gate(results, bound=(), soft=None)) == results
 
 
 def test_dual_web_lane_subject_consistency_binds_soft_context_subject() -> None:

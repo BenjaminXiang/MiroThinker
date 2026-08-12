@@ -847,25 +847,53 @@ def _apply_web_subject_consistency(
         bound_entity_names = (*bound_entity_names, request.soft_context_subject)
     if not bound_entity_names:
         return results
-    kept: list[_NormalizedWebResult] = []
-    demoted: list[_NormalizedWebResult] = []
-    for result in results:
-        if len(result.corroborating_provider_versions) >= 2 or (
-            _web_result_hits_bound_entity(
-                bound_entity_names=bound_entity_names,
-                title=result.title,
-                snippet=result.snippet,
+    anchor_qualifier = next(
+        (
+            qualifier
+            for name in bound_entity_names
+            if (
+                qualifier := _anchor_location_qualifier(
+                    name, str(getattr(request, "original_query", "") or "")
+                )
             )
-        ):
-            kept.append(result)
-        else:
-            demoted.append(result)
+            is not None
+        ),
+        None,
+    )
+    tiered = [
+        (
+            _web_result_relevance_tier(
+                result=result,
+                bound_entity_names=bound_entity_names,
+                anchor_qualifier=anchor_qualifier,
+            ),
+            index,
+            result,
+        )
+        for index, result in enumerate(results)
+    ]
+    kept = [entry for entry in tiered if entry[0] in (0, 1)]
+    # Tier order decides among the non-kept channels (T2 before T3 before T4
+    # before T5); within a tier the original result order stays stable.
+    related = sorted(
+        (entry for entry in tiered if entry[0] in (2, 3)),
+        key=lambda entry: entry[0],
+    )
+    suspect = [entry for entry in tiered if entry[0] == 4]
+    missed = [entry for entry in tiered if entry[0] == 5]
+
+    def unwrap(entries):
+        return [result for _, _, result in entries]
+
     if len(kept) >= _WEB_SUBJECT_CONSISTENCY_FLOOR:
-        return tuple(kept)
+        # T4/T5 are the wrong-organization channels and drop out; T2/T3 are
+        # same-organization background and stay, ordered after the anchor hits.
+        return tuple(unwrap(kept) + unwrap(related))
     # Demotion first, filtering second: below the floor the demoted results
-    # backfill in their original order so obscure single-channel subjects keep
-    # evidence and the lane never empties into the unavailable branch.
-    return tuple(kept + demoted[: _WEB_SUBJECT_CONSISTENCY_FLOOR - len(kept)])
+    # backfill in tier order so obscure single-channel subjects keep evidence
+    # and the lane never empties into the unavailable branch.
+    pool = unwrap(related) + unwrap(suspect) + unwrap(missed)
+    return tuple(unwrap(kept) + pool[: _WEB_SUBJECT_CONSISTENCY_FLOOR - len(kept)])
 
 
 def _normalized_web_url(value: str) -> str:
