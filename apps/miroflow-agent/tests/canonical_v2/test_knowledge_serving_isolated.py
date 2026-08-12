@@ -3345,6 +3345,132 @@ def test_web_bound_entity_match_ignores_shared_fragment_substrings() -> None:
     )
 
 
+_ANCHOR = "国际先进技术应用推进中心（深圳）"
+
+
+def _result(
+    title: str,
+    snippet: str = "",
+    url: str = "https://example.com/a",
+    providers: tuple[str, ...] = ("bocha",),
+) -> serving_module._NormalizedWebResult:
+    return serving_module._NormalizedWebResult(
+        title=title,
+        url=url,
+        snippet=snippet,
+        summary="",
+        primary_provider_version=providers[0],
+        corroborating_provider_versions=providers,
+    )
+
+
+def test_tier_t1_branch_qualified_hit() -> None:
+    r = _result("国际先进技术应用推进中心（深圳）揭牌", "河套深港科技创新合作区")
+    assert (
+        serving_module._web_result_relevance_tier(
+            result=r, bound_entity_names=(_ANCHOR,), anchor_qualifier="深圳"
+        )
+        == 1
+    )
+
+
+def test_tier_t2_same_org_unqualified() -> None:
+    r = _result("国际先进技术应用推进中心是由国家发展改革委指导的综合性技术应用机构")
+    assert (
+        serving_module._web_result_relevance_tier(
+            result=r, bound_entity_names=(_ANCHOR,), anchor_qualifier="深圳"
+        )
+        == 2
+    )
+
+
+def test_tier_t3_other_branch_content() -> None:
+    # Controller amendment: the brief's verbatim fixture used the 国先中心
+    # abbreviation, which matches no identity form; the full stem is required
+    # for the T3 branch to fire.
+    r = _result("国际先进技术应用推进中心（合肥）执行主任程羽强调推动机器人真实应用")
+    assert (
+        serving_module._web_result_relevance_tier(
+            result=r, bound_entity_names=(_ANCHOR,), anchor_qualifier="深圳"
+        )
+        == 3
+    )
+
+
+def test_tier_t4_loose_alias_only() -> None:
+    # 南开国际先进研究院 shares the compact alias 国际先进 but not the org stem.
+    r = _result("南开国际先进研究院（深圳福田）在实验室参观交流中")
+    assert (
+        serving_module._web_result_relevance_tier(
+            result=r, bound_entity_names=(_ANCHOR,), anchor_qualifier="深圳"
+        )
+        == 4
+    )
+
+
+def test_tier_t0_corroborated_trumps_everything() -> None:
+    r = _result("完全无关的标题", providers=("bocha", "serper"))
+    assert (
+        serving_module._web_result_relevance_tier(
+            result=r, bound_entity_names=(_ANCHOR,), anchor_qualifier="深圳"
+        )
+        == 0
+    )
+
+
+def test_tier_t5_no_match() -> None:
+    # Controller amendment: the brief's verbatim title was
+    # 两台国际先进水平手术的背后, but 国际先进水平 contains the compact alias
+    # 国际先进, which classifies T4 by design; a T5 fixture must avoid it.
+    r = _result("两台腹腔镜手术的背后", "华西口腔医院")
+    assert (
+        serving_module._web_result_relevance_tier(
+            result=r, bound_entity_names=(_ANCHOR,), anchor_qualifier="深圳"
+        )
+        == 5
+    )
+
+
+def test_company_truncation_stays_full_name_form() -> None:
+    forms = serving_module._web_identity_full_name_forms("深圳市普渡科技有限公司")
+    assert any("普渡科技" in f for f in forms)
+    assert (
+        serving_module._web_result_relevance_tier(
+            result=_result("普渡科技完成Pre-D轮融资"),
+            bound_entity_names=("深圳市普渡科技有限公司",),
+            anchor_qualifier=None,
+        )
+        == 2
+    )
+
+
+def test_anchor_location_qualifier_from_parens_and_query() -> None:
+    assert serving_module._anchor_location_qualifier(_ANCHOR, "介绍一下") == "深圳"
+    assert (
+        serving_module._anchor_location_qualifier(
+            "国际先进技术应用推进中心", "国际先进技术应用推进中心在深圳的布局"
+        )
+        == "深圳"
+    )
+    assert (
+        serving_module._anchor_location_qualifier("国际先进技术应用推进中心", "介绍一下")
+        is None
+    )
+
+
+def test_evidence_branch_qualifiers_excludes_anchor_and_non_locations() -> None:
+    texts = (
+        "国际先进技术应用推进中心（合肥）成立理事会",
+        "国先中心（深圳）揭牌",
+        "国际先进技术应用推进中心（大湾区）中心在广州南沙设立",
+    )
+    assert serving_module._evidence_branch_qualifiers(
+        org_stem=serving_module._org_name_stem(_ANCHOR),
+        texts=texts,
+        anchor_qualifier="深圳",
+    ) == ("合肥", "大湾区")
+
+
 def test_dual_web_lane_subject_consistency_binds_soft_context_subject() -> None:
     adapter = _subject_consistency_adapter(
         {

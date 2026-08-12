@@ -1874,9 +1874,52 @@ def _normalized_web_identity(value: str) -> str:
     return re.sub(r"[^0-9a-z\u3400-\u9fff]+", "", value.casefold())
 
 
-def _web_identity_forms(value: str) -> tuple[str, ...]:
+_ANCHOR_LOCATION_LEXICON = frozenset({
+    "北京", "上海", "广州", "深圳", "合肥", "南沙", "杭州", "苏州", "南京",
+    "武汉", "成都", "重庆", "西安", "天津", "青岛", "宁波", "无锡", "长沙",
+    "郑州", "佛山", "东莞", "珠海", "厦门", "福州", "济南", "大连", "沈阳",
+    "哈尔滨", "长春", "昆明", "贵阳", "南昌", "太原", "石家庄", "兰州",
+    "乌鲁木齐", "呼和浩特", "南宁", "海口", "银川", "西宁", "拉萨", "香港",
+    "澳门", "台北", "雄安", "大湾区",
+})
+
+_PAREN_QUALIFIER_RE = re.compile(r"[（(]([^（）()]{1,8})[）)]")
+
+
+def _parenthesized_qualifier(value: str) -> str | None:
+    match = _PAREN_QUALIFIER_RE.search(value)
+    if match is None:
+        return None
+    qualifier = _normalized_web_identity(match.group(1))
+    return qualifier or None
+
+
+def _org_name_stem(value: str) -> str:
+    return _normalized_web_identity(_PAREN_QUALIFIER_RE.sub("", value))
+
+
+def _anchor_location_qualifier(anchor_name: str, query: str) -> str | None:
+    qualifier = _parenthesized_qualifier(anchor_name)
+    if qualifier is not None:
+        return qualifier if qualifier in _ANCHOR_LOCATION_LEXICON else None
+    stem = _org_name_stem(anchor_name)
+    if not stem:
+        return None
+    normalized_query = _normalized_web_identity(query)
+    if stem not in normalized_query:
+        return None
+    for location in _ANCHOR_LOCATION_LEXICON:
+        if location in normalized_query:
+            return location
+    return None
+
+
+def _web_identity_full_name_forms(value: str) -> tuple[str, ...]:
     normalized = _normalized_web_identity(value)
     forms = [normalized]
+    stem = _org_name_stem(value)
+    if stem and stem != normalized:
+        forms.append(stem)
     for suffix in ("有限责任公司", "股份有限公司", "有限公司", "公司"):
         normalized_suffix = _normalized_web_identity(suffix)
         if normalized.endswith(normalized_suffix):
@@ -1884,18 +1927,24 @@ def _web_identity_forms(value: str) -> tuple[str, ...]:
             if len(shortened) >= 4:
                 forms.append(shortened)
                 without_city = re.sub(
-                    r"^[\u3400-\u9fff]{2,4}市",
-                    "",
-                    shortened,
-                    count=1,
+                    r"^[\u3400-\u9fff]{2,4}市", "", shortened, count=1,
                 )
                 if len(without_city) >= 4:
                     forms.append(without_city)
             break
-    compact_alias = _normalized_web_identity(_compact_company_alias(value))
-    if len(compact_alias) >= 2:
-        forms.append(compact_alias)
     return tuple(dict.fromkeys(form for form in forms if form))
+
+
+def _web_identity_compact_aliases(value: str) -> tuple[str, ...]:
+    compact_alias = _normalized_web_identity(_compact_company_alias(value))
+    full = set(_web_identity_full_name_forms(value))
+    if len(compact_alias) >= 2 and compact_alias not in full:
+        return (compact_alias,)
+    return ()
+
+
+def _web_identity_forms(value: str) -> tuple[str, ...]:  # re-implemented, same output
+    return (*_web_identity_full_name_forms(value), *_web_identity_compact_aliases(value))
 
 
 _SHORT_BRAND_CONTEXT_MARKERS = (
@@ -1929,6 +1978,66 @@ def _web_identity_text_matches(form: str, searchable: str) -> bool:
         f"{form}{marker}" in searchable or f"{marker}{form}" in searchable
         for marker in _SHORT_BRAND_CONTEXT_MARKERS
     )
+
+
+def _evidence_branch_qualifiers(
+    *, org_stem: str, texts: tuple[str, ...], anchor_qualifier: str | None
+) -> tuple[str, ...]:
+    if not org_stem:
+        return ()
+    found: list[str] = []
+    pattern = re.compile(
+        r"[（(]([^（）()]{1,8})[）)]"
+    )
+    for text in texts:
+        if org_stem not in _normalized_web_identity(text):
+            continue
+        for match in pattern.finditer(text):
+            qualifier = _normalized_web_identity(match.group(1))
+            if (
+                qualifier in _ANCHOR_LOCATION_LEXICON
+                and qualifier != anchor_qualifier
+                and qualifier not in found
+            ):
+                found.append(qualifier)
+    return tuple(found)
+
+
+def _web_result_relevance_tier(
+    *,
+    result: _NormalizedWebResult,
+    bound_entity_names: tuple[str, ...],
+    anchor_qualifier: str | None,
+) -> int:
+    if len(result.corroborating_provider_versions) >= 2:
+        return 0
+    searchable = _normalized_web_identity(f"{result.title} {result.snippet}")
+    best = 5
+    for entity_name in bound_entity_names:
+        stem = _org_name_stem(entity_name)
+        full_hit = any(
+            _web_identity_text_matches(form, searchable)
+            for form in _web_identity_full_name_forms(entity_name)
+        )
+        if full_hit:
+            if anchor_qualifier is not None and stem and stem in searchable:
+                if anchor_qualifier in searchable:
+                    return 1  # best possible, stop early
+                other_branches = _evidence_branch_qualifiers(
+                    org_stem=stem,
+                    texts=(f"{result.title} {result.snippet}",),
+                    anchor_qualifier=anchor_qualifier,
+                )
+                best = min(best, 3 if other_branches else 2)
+            else:
+                best = min(best, 2)
+            continue
+        if any(
+            _web_identity_text_matches(form, searchable)
+            for form in _web_identity_compact_aliases(entity_name)
+        ):
+            best = min(best, 4)
+    return best
 
 
 def _web_identity_domain_matches(entity_name: str, locator: str) -> bool:
