@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import hashlib
 import json
+import logging
 import os
 from pathlib import Path
 import re
@@ -154,6 +155,7 @@ _PROSE_RENDER_EXECUTOR = ThreadPoolExecutor(
     max_workers=4,
     thread_name_prefix="canonical-v2-prose",
 )
+_logger = logging.getLogger(__name__)
 
 
 def _canonical_sha256(value: object) -> str:
@@ -4645,6 +4647,49 @@ class _OpenAIProseRenderer:
             handle_ids=handle_ids,
         )
 
+    def _synthesize_once(
+        self,
+        *,
+        result: Any,
+        request_messages: list[dict[str, Any]],
+        claims: tuple[Any, ...],
+        candidate_handles: list[Any],
+        handle_ids: list[str | None],
+        active_anchor: Any,
+        displayed_set: Any,
+    ) -> str | ProseSynthesisResult:
+        """Run one non-stream synthesis round-trip and parse the response.
+
+        Shared by the synchronous ``__call__`` (initial render plus its one
+        correction retry) and the stream path's final-answer correction.
+        """
+        response = self._client.chat.completions.create(
+            model=self._model,
+            temperature=0,
+            # 3000 tokens lifts the old 1200 ceiling that silently truncated
+            # long answers; streaming and sync synthesis share the same bound.
+            max_tokens=3000,
+            messages=request_messages,
+            extra_body=self._extra_body,
+        )
+        choices = getattr(response, "choices", ())
+        choice = None if not choices else choices[0]
+        _reject_truncated_prose_finish_reason(choice)
+        content = (
+            None
+            if choice is None
+            else getattr(getattr(choice, "message", None), "content", None)
+        )
+        return self._parse_response(
+            result,
+            content=content,
+            claims=claims,
+            candidate_handles=candidate_handles,
+            handle_ids=handle_ids,
+            active_anchor=active_anchor,
+            displayed_set=displayed_set,
+        )
+
     def __call__(self, result: Any) -> str | ProseSynthesisResult:
         (
             messages,
@@ -4655,37 +4700,15 @@ class _OpenAIProseRenderer:
             displayed_set,
         ) = self._chat_request(result)
 
-        def synthesize(
-            request_messages: list[dict[str, Any]],
-        ) -> str | ProseSynthesisResult:
-            response = self._client.chat.completions.create(
-                model=self._model,
-                temperature=0,
-                # 3000 tokens lifts the old 1200 ceiling that silently truncated
-                # long answers; streaming and sync synthesis share the same bound.
-                max_tokens=3000,
-                messages=request_messages,
-                extra_body=self._extra_body,
-            )
-            choices = getattr(response, "choices", ())
-            choice = None if not choices else choices[0]
-            _reject_truncated_prose_finish_reason(choice)
-            content = (
-                None
-                if choice is None
-                else getattr(getattr(choice, "message", None), "content", None)
-            )
-            return self._parse_response(
-                result,
-                content=content,
-                claims=claims,
-                candidate_handles=candidate_handles,
-                handle_ids=handle_ids,
-                active_anchor=active_anchor,
-                displayed_set=displayed_set,
-            )
-
-        rendered = synthesize(messages)
+        rendered = self._synthesize_once(
+            result=result,
+            request_messages=messages,
+            claims=claims,
+            candidate_handles=candidate_handles,
+            handle_ids=handle_ids,
+            active_anchor=active_anchor,
+            displayed_set=displayed_set,
+        )
         anchor_name = _anchor_correction_name(result, active_anchor)
         qualifier = (
             None
@@ -4701,8 +4724,9 @@ class _OpenAIProseRenderer:
         # entity is presumed to have drifted onto a look-alike subject. A
         # correct pronoun-only answer pays one extra call; when the retry
         # still misses, the caller's deterministic fallback answers instead.
-        corrected = synthesize(
-            [
+        corrected = self._synthesize_once(
+            result=result,
+            request_messages=[
                 *messages,
                 {
                     "role": "user",
@@ -4710,7 +4734,12 @@ class _OpenAIProseRenderer:
                         anchor_name, location_qualifier=qualifier,
                     ),
                 },
-            ]
+            ],
+            claims=claims,
+            candidate_handles=candidate_handles,
+            handle_ids=handle_ids,
+            active_anchor=active_anchor,
+            displayed_set=displayed_set,
         )
         if not _answer_mentions_anchor(
             _rendered_prose_answer_text(corrected), anchor_name,
@@ -4724,9 +4753,13 @@ class _OpenAIProseRenderer:
     ) -> str | ProseSynthesisResult:
         """Incrementally decode the selection header and publish plain answer text.
 
-        Unlike ``__call__`` there is no off-anchor correction retry here:
-        answer chunks are published as they arrive and cannot be revoked, so
-        the stream keeps its single provider call.
+        Answer chunks are published as they arrive and cannot be revoked, so
+        the stream keeps its single streaming provider call. When the finished
+        answer has drifted off the correction anchor, the FINAL answer is
+        corrected with one bounded non-stream retry; the returned result then
+        differs from the streamed draft and the SSE answer event triggers the
+        frontend re-render. Correction failure is fail-open: the original
+        streamed result stands.
         """
         (
             messages,
@@ -4780,13 +4813,55 @@ class _OpenAIProseRenderer:
                 handle_ids=handle_ids,
             )
         normalizer.feed(final_chunk)
-        return self._finalize_response(
+        finalized = self._finalize_response(
             answer_text=normalizer.finish(),
             selection=decoder.selection,
             claims=claims,
             candidate_handles=candidate_handles,
             handle_ids=handle_ids,
         )
+        anchor_name = _anchor_correction_name(result, active_anchor)
+        if anchor_name is None:
+            return finalized
+        qualifier = _anchor_location_qualifier_for_result(result, anchor_name)
+        if _answer_mentions_anchor(
+            _rendered_prose_answer_text(finalized), anchor_name,
+            location_qualifier=qualifier,
+        ):
+            return finalized
+        # Chunks are already published and irrevocable; correct the FINAL
+        # answer with one non-stream retry. The SSE answer event then differs
+        # from the streamed draft and the frontend re-renders (see
+        # chat.html answer-event mismatch fallback). Failure is fail-open:
+        # the original streamed result stands, matching phase-1 behavior.
+        try:
+            corrected = self._synthesize_once(
+                result=result,
+                request_messages=[
+                    *messages,
+                    {
+                        "role": "user",
+                        "content": _anchor_correction_message(
+                            anchor_name, location_qualifier=qualifier,
+                        ),
+                    },
+                ],
+                claims=claims,
+                candidate_handles=candidate_handles,
+                handle_ids=handle_ids,
+                active_anchor=active_anchor,
+                displayed_set=displayed_set,
+            )
+        except Exception:  # provider/parse failure mid-correction: keep original
+            _logger.info("stream off-anchor correction failed; keeping streamed answer")
+            return finalized
+        if _answer_mentions_anchor(
+            _rendered_prose_answer_text(corrected), anchor_name,
+            location_qualifier=qualifier,
+        ):
+            return corrected
+        _logger.info("stream off-anchor correction missed; keeping streamed answer")
+        return finalized
 
     def warm(self) -> None:
         self._client.chat.completions.create(

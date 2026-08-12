@@ -1452,6 +1452,73 @@ class _SequentialProseCompletions:
         )
 
 
+class _StreamThenSyncProseCompletions:
+    """Stream-first completions stub for the renderer's stream path.
+
+    ``stream=True`` calls replay one scripted wire as content chunks;
+    non-stream calls replay scripted sync contents in order (or raise
+    ``sync_error``). Per-mode call counters let tests pin the stream
+    contract: one streaming call, plus at most one non-stream correction.
+    """
+
+    def __init__(
+        self,
+        stream_content: str,
+        *sync_contents: str,
+        chunk_width: int = 7,
+        sync_error: Exception | None = None,
+    ) -> None:
+        self._stream_content = stream_content
+        self._sync_contents = sync_contents
+        self._chunk_width = chunk_width
+        self._sync_error = sync_error
+        self.stream_create_calls = 0
+        self.sync_create_calls = 0
+
+    def create(self, **kwargs: object) -> object:
+        if kwargs.get("stream"):
+            self.stream_create_calls += 1
+            content = self._stream_content
+            width = self._chunk_width
+
+            def completion() -> object:
+                for index in range(0, len(content), width):
+                    yield SimpleNamespace(
+                        choices=(
+                            SimpleNamespace(
+                                delta=SimpleNamespace(
+                                    content=content[index : index + width]
+                                ),
+                                finish_reason=None,
+                            ),
+                        )
+                    )
+                yield SimpleNamespace(
+                    choices=(
+                        SimpleNamespace(
+                            delta=SimpleNamespace(content=None),
+                            finish_reason="stop",
+                        ),
+                    )
+                )
+
+            return completion()
+        self.sync_create_calls += 1
+        if self._sync_error is not None:
+            raise self._sync_error
+        content = self._sync_contents[
+            min(self.sync_create_calls, len(self._sync_contents)) - 1
+        ]
+        return SimpleNamespace(
+            choices=(
+                SimpleNamespace(
+                    message=SimpleNamespace(content=content),
+                    finish_reason="stop",
+                ),
+            )
+        )
+
+
 def _anchored_prose_result(
     *,
     anchor_id: str = "company:anchor-serving",
@@ -1649,21 +1716,93 @@ def test_openai_prose_renderer_anchor_check_skips_without_active_anchor() -> Non
     assert len(completions.calls) == 1
 
 
-def test_openai_prose_renderer_stream_never_retries_off_anchor() -> None:
-    """Published stream chunks cannot be revoked, so the stream path keeps the
-    single-pass behavior even when the final answer misses the anchor."""
+def test_stream_correction_replaces_final_answer_on_drift() -> None:
+    """Off-anchor drift on the stream path is corrected in the FINAL answer.
+
+    Published chunks are irrevocable, so one bounded non-stream retry replaces
+    the returned result while the streamed draft stays published; the SSE
+    answer event then differs from the draft and the frontend re-renders.
+
+    Replaces the phase-1 pin ``stream never retries off-anchor``: the contract
+    is now "single STREAM call; off-anchor adds one bounded non-stream
+    correction call"."""
     result = _anchored_prose_result()
-    wire = _prose_wire(_OFF_ANSWER, claim_indexes=(1,), entity_indexes=(1,))
-    completions = _RecordedProseCompletions(wire, chunk_width=7)
+    completions = _StreamThenSyncProseCompletions(
+        _prose_wire(_OFF_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+        _prose_wire(_ON_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+    )
     renderer = _prose_renderer(completions)
     published: list[str] = []
 
-    streamed = renderer.stream(result, on_chunk=published.append)
+    rendered = renderer.stream(result, on_chunk=published.append)
 
-    assert isinstance(streamed, ProseSynthesisResult)
-    assert streamed.answer_text == _OFF_ANSWER
+    assert isinstance(rendered, ProseSynthesisResult)
+    assert "国际先进技术应用推进中心（深圳）" in (
+        serving_module._rendered_prose_answer_text(rendered)
+    )
+    assert rendered.answer_text == _ON_ANSWER
+    # Already-published chunks keep the drifted draft.
     assert "".join(published) == _OFF_ANSWER
-    assert len(completions.calls) == 1
+    assert completions.stream_create_calls == 1
+    assert completions.sync_create_calls == 1  # one corrective retry
+
+
+def test_stream_correction_failure_returns_original_streamed_answer() -> None:
+    """Fail-open: when the corrective retry also misses the anchor, the
+    original streamed result stands — no exception, no second retry."""
+    result = _anchored_prose_result()
+    completions = _StreamThenSyncProseCompletions(
+        _prose_wire(_OFF_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+        _prose_wire(_OFF_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+    )
+    renderer = _prose_renderer(completions)
+    published: list[str] = []
+
+    rendered = renderer.stream(result, on_chunk=published.append)
+
+    assert isinstance(rendered, ProseSynthesisResult)
+    assert "华南先进技术应用研究院" in (
+        serving_module._rendered_prose_answer_text(rendered)
+    )
+    assert rendered.answer_text == _OFF_ANSWER
+    assert completions.stream_create_calls == 1
+    assert completions.sync_create_calls == 1  # bounded: no further retry
+
+
+def test_stream_correction_provider_error_keeps_streamed_answer() -> None:
+    """Fail-open on provider failure mid-correction: the exception is
+    swallowed and the original streamed result is returned."""
+    result = _anchored_prose_result()
+    completions = _StreamThenSyncProseCompletions(
+        _prose_wire(_OFF_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+        sync_error=RuntimeError("provider boom"),
+    )
+    renderer = _prose_renderer(completions)
+    published: list[str] = []
+
+    rendered = renderer.stream(result, on_chunk=published.append)
+
+    assert isinstance(rendered, ProseSynthesisResult)
+    assert rendered.answer_text == _OFF_ANSWER
+    assert completions.stream_create_calls == 1
+    assert completions.sync_create_calls == 1
+
+
+def test_stream_on_anchor_single_call() -> None:
+    """An on-anchor stream needs no correction: exactly one provider call."""
+    result = _anchored_prose_result()
+    completions = _StreamThenSyncProseCompletions(
+        _prose_wire(_ON_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+    )
+    renderer = _prose_renderer(completions)
+    published: list[str] = []
+
+    rendered = renderer.stream(result, on_chunk=published.append)
+
+    assert isinstance(rendered, ProseSynthesisResult)
+    assert rendered.answer_text == _ON_ANSWER
+    assert completions.stream_create_calls == 1
+    assert completions.sync_create_calls == 0
 
 
 def test_environment_prose_renderer_bounds_the_default_provider_wait(
