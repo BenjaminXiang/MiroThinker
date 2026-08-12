@@ -1803,6 +1803,74 @@ def _discovery_front_merge(
     )
 
 
+def _authority_seeking_view_texts(
+    *,
+    request: QueryPlanningRequest,
+    original_query: str,
+) -> tuple[str, ...]:
+    """Authority-seeking view texts for org-level anchors (spec §2c).
+
+    The qualifying anchor is the first displayed entity name, then the soft
+    context subject, whose ``_anchor_location_qualifier`` is None — i.e. an
+    org-level anchor where the user named no city.  A city-qualified anchor
+    keeps the phase-1 view set (pin, don't broaden), so no texts are
+    produced; likewise when no anchor exists at all.
+    """
+    candidates = (
+        *request.displayed_entity_names,
+        *((request.soft_context_subject,) if request.soft_context_subject else ()),
+    )
+    for name in candidates:
+        if not isinstance(name, str) or not name.strip():
+            continue
+        if _anchor_location_qualifier(name, original_query) is not None:
+            continue
+        stripped = name.strip()
+        return (f"{stripped} 百度百科", f"{stripped} 官网")
+    return ()
+
+
+def _append_authority_seeking_views(
+    views: list[QueryViewProposal],
+    *,
+    request: QueryPlanningRequest,
+    retained_values: tuple[str, ...],
+    required_raw_texts: tuple[str, ...],
+) -> tuple[QueryViewProposal, ...]:
+    """Append authority-seeking views last, deduplicated by exact text.
+
+    Appending last means the extra recall never displaces the deterministic,
+    rewrite, or term views; the web lane's per-view concurrency treats them
+    as extra views.  Like the rewrite views, any protected raw text the
+    authority text dropped is appended back so the plan-level
+    lost_protected_slot invariant holds on every view.
+    """
+    seen_texts = {view.text for view in views}
+    for text in _authority_seeking_view_texts(
+        request=request, original_query=request.original_query,
+    ):
+        missing = tuple(raw for raw in required_raw_texts if raw not in text)
+        view_text = " ".join((text, *missing)) if missing else text
+        if view_text in seen_texts:
+            continue
+        seen_texts.add(view_text)
+        views.append(
+            QueryViewProposal(
+                view_id=f"view:serving:{request.request_id}:authority:{len(views)}",
+                kind="serving_search",
+                text=view_text,
+                original_query_sha256=request.original_query_sha256,
+                retained_protected_values=retained_values,
+                producer_kind="authority_seeking",
+                producer_version=_SERVING_QUERY_REWRITER_VERSION,
+                bound_entity_ids=request.displayed_entity_ids,
+                bound_entity_names=request.displayed_entity_names,
+                soft_context_subject=request.soft_context_subject,
+            )
+        )
+    return tuple(views)
+
+
 def _serving_query_views(
     *,
     request: QueryPlanningRequest,
@@ -1812,12 +1880,15 @@ def _serving_query_views(
     planner_model_id: str,
     query_rewriter: Callable[[str], tuple[str, ...]] | None,
 ) -> tuple[QueryViewProposal, ...]:
-    """Deterministic view first, then up to three LLM rewrite views.
+    """Deterministic view first, then up to three LLM rewrite views, then
+    authority-seeking views for org-level anchors.
 
     Rewrite views keep the retained protected values of the turn; any
     protected raw text the rewrite dropped (geography, year, quoted name,
     identifier, negation term) is appended back so the plan-level
-    lost_protected_slot invariant holds on every view.
+    lost_protected_slot invariant holds on every view.  Authority-seeking
+    views are appended last on every return path so they never displace the
+    phase-1 views; they get the same missing-raw-text append.
     """
     deterministic = QueryViewProposal(
         view_id=f"view:serving:{request.request_id}",
@@ -1831,10 +1902,20 @@ def _serving_query_views(
         bound_entity_names=request.displayed_entity_names,
         soft_context_subject=request.soft_context_subject,
     )
+    required_raw_texts = tuple(
+        slot.raw_text
+        for slot in protected_slots
+        if slot.kind != "displayed_entity_set" and slot.raw_text
+    )
     if query_rewriter is None or not _should_rewrite_serving_query(
         request.original_query
     ):
-        return (deterministic,)
+        return _append_authority_seeking_views(
+            [deterministic],
+            request=request,
+            retained_values=retained_values,
+            required_raw_texts=required_raw_texts,
+        )
     try:
         rewritten = query_rewriter(request.original_query)
         candidates = tuple(dict.fromkeys(rewritten))
@@ -1846,12 +1927,12 @@ def _serving_query_views(
             )
         )
     except Exception:  # noqa: BLE001 - recall widening must never break planning
-        return (deterministic,)
-    required_raw_texts = tuple(
-        slot.raw_text
-        for slot in protected_slots
-        if slot.kind != "displayed_entity_set" and slot.raw_text
-    )
+        return _append_authority_seeking_views(
+            [deterministic],
+            request=request,
+            retained_values=retained_values,
+            required_raw_texts=required_raw_texts,
+        )
     views = [deterministic]
     for text in candidates:
         if not isinstance(text, str) or not text or text == search_text:
@@ -1897,7 +1978,12 @@ def _serving_query_views(
         soft_context_subject=request.soft_context_subject,
             ),
         )
-    return tuple(views)
+    return _append_authority_seeking_views(
+        views,
+        request=request,
+        retained_values=retained_values,
+        required_raw_texts=required_raw_texts,
+    )
 
 
 def _normalized_web_identity(value: str) -> str:

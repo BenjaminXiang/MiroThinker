@@ -3948,14 +3948,14 @@ def test_contextual_web_query_binds_display_name_and_headquarters_relation(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     path, bundle = _write_bundle(tmp_path)
-    observed: dict[str, str] = {}
+    observed: dict[str, list[str]] = {"queries": []}
 
     class _Provider:
         def __init__(self, **_: object) -> None:
             pass
 
         def search(self, query: str) -> dict[str, object]:
-            observed["query"] = query
+            observed["queries"].append(query)
             return {
                 "organic": [
                     {
@@ -4017,8 +4017,16 @@ def test_contextual_web_query_binds_display_name_and_headquarters_relation(
 
     result = inputs.web_search(lane_request)
 
-    assert observed["query"] == "普渡 总部 深圳"
-    assert "[lane=web]" not in observed["query"]
+    # The displayed company is an org-level anchor (its name is not in the
+    # follow-up query), so the web lane also fires the two authority-seeking
+    # views (spec §2c) after the deterministic view query; view calls run
+    # concurrently, so order is not asserted.
+    assert set(observed["queries"]) == {
+        "普渡 总部 深圳",
+        "普渡 百度百科",
+        "普渡 官网",
+    }
+    assert all("[lane=web]" not in query for query in observed["queries"])
     assert len(result.candidates) == 1
     candidate = result.candidates[0]
     assert candidate.canonical_id == company_id
@@ -5950,6 +5958,150 @@ def test_concept_term_view_is_promoted_after_deterministic_view() -> None:
     term_text = serving_module._concept_term_view_text(request.original_query)
     assert term_text is not None
     assert term_text in {view.text for view in views}
+
+
+def planning_request(
+    *,
+    soft: str | None,
+    names: tuple[str, ...] = (),
+    query: str = "介绍一下国际先进技术应用推进中心",
+) -> QueryPlanningRequest:
+    """QueryPlanningRequest factory for authority-view tests.
+
+    The task brief references a ``planning_request(soft=..., names=...)``
+    fixture; none existed, so this mirrors ``_term_view_request`` while
+    adding the displayed-entity / soft-subject anchors the authority-view
+    helper consumes.
+    """
+    return QueryPlanningRequest(
+        request_id=f"query-request:authority:{abs(hash((query, soft, names)))}",
+        release_id=RELEASE_ID,
+        original_query=query,
+        as_of=NOW,
+        displayed_entity_ids=tuple(
+            f"company-c:authority:{index}" for index in range(len(names))
+        ),
+        displayed_entity_names=names,
+        soft_context_subject=soft,
+    )
+
+
+def test_authority_views_added_for_org_level_soft_subject() -> None:
+    texts = serving_module._authority_seeking_view_texts(
+        request=planning_request(soft="国际先进技术应用推进中心"),
+        original_query="介绍一下国际先进技术应用推进中心",
+    )
+    assert texts == (
+        "国际先进技术应用推进中心 百度百科",
+        "国际先进技术应用推进中心 官网",
+    )
+
+
+def test_authority_views_absent_when_city_named() -> None:
+    assert (
+        serving_module._authority_seeking_view_texts(
+            request=planning_request(
+                soft="国际先进技术应用推进中心（深圳）",
+                query="介绍一下国际先进技术应用推进中心（深圳）",
+            ),
+            original_query="介绍一下国际先进技术应用推进中心（深圳）",
+        )
+        == ()
+    )
+
+
+def test_authority_views_absent_without_any_anchor() -> None:
+    assert (
+        serving_module._authority_seeking_view_texts(
+            request=planning_request(
+                soft=None, names=(), query="深圳有哪些机器人公司"
+            ),
+            original_query="深圳有哪些机器人公司",
+        )
+        == ()
+    )
+
+
+def test_authority_views_use_first_qualifying_anchor() -> None:
+    """First-qualifying-anchor rule: a city-qualified displayed name does not
+    qualify (pin, don't broaden), so the org-level soft subject is used; when
+    the displayed name itself qualifies it wins over the soft subject."""
+    assert serving_module._authority_seeking_view_texts(
+        request=planning_request(
+            soft="国际先进技术应用推进中心",
+            names=("国际先进技术应用推进中心（深圳）",),
+            query="理事会如何组成",
+        ),
+        original_query="理事会如何组成",
+    ) == (
+        "国际先进技术应用推进中心 百度百科",
+        "国际先进技术应用推进中心 官网",
+    )
+    assert serving_module._authority_seeking_view_texts(
+        request=planning_request(
+            soft="优必选",
+            names=("国际先进技术应用推进中心",),
+            query="理事会如何组成",
+        ),
+        original_query="理事会如何组成",
+    ) == (
+        "国际先进技术应用推进中心 百度百科",
+        "国际先进技术应用推进中心 官网",
+    )
+
+
+def test_serving_query_views_appends_authority_views_deduped() -> None:
+    request = planning_request(soft="国际先进技术应用推进中心")
+    views = serving_module._serving_query_views(
+        request=request,
+        search_text=request.original_query,
+        retained_values=(),
+        protected_slots=(),
+        planner_model_id="planner-v1",
+        query_rewriter=None,  # deterministic phase-1 view set
+    )
+    texts = [view.text for view in views]
+    assert len(texts) == len(set(texts))
+    assert "国际先进技术应用推进中心 百度百科" in texts
+    # Authority views ride last: they never displace the phase-1 views.
+    assert texts[-2:] == [
+        "国际先进技术应用推进中心 百度百科",
+        "国际先进技术应用推进中心 官网",
+    ]
+    assert all(
+        view.soft_context_subject == request.soft_context_subject for view in views
+    )
+    assert [view.producer_kind for view in views if "百度百科" in view.text] == [
+        "authority_seeking"
+    ]
+    authority_ids = [
+        view.view_id for view in views if view.producer_kind == "authority_seeking"
+    ]
+    assert len(authority_ids) == len(set(authority_ids))
+
+
+def test_serving_query_views_authority_views_keep_protected_raw_texts() -> None:
+    """Plan-level lost_protected_slot invariant: like the rewrite views, an
+    authority view that dropped a protected raw text gets it appended back so
+    the planner validator never rejects the proposal."""
+    request = planning_request(
+        soft="国际先进技术应用推进中心",
+        query="国际先进技术应用推进中心2024年有哪些成果",
+    )
+    views = serving_module._serving_query_views(
+        request=request,
+        search_text=request.original_query,
+        retained_values=("2024",),
+        protected_slots=(ProtectedSlot(kind="year", value="2024", raw_text="2024"),),
+        planner_model_id="planner-v1",
+        query_rewriter=None,
+    )
+    assert [
+        view.text for view in views if view.producer_kind == "authority_seeking"
+    ] == [
+        "国际先进技术应用推进中心 百度百科 2024",
+        "国际先进技术应用推进中心 官网 2024",
+    ]
 
 
 def test_concept_off_topic_claim_filter() -> None:
