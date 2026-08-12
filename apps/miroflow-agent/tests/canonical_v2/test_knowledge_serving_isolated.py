@@ -1306,7 +1306,7 @@ def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
     assert "他是否有参与哪些企业的创立" in serialized
     assert "回答用户" in serialized
     assert "不要逐字段复述" in serialized
-    assert "canonical-v2-prose-v15" in serialized
+    assert "canonical-v2-prose-v16" in serialized
     assert _PROSE_SELECTION_MARKER in serialized
     assert _PROSE_ANSWER_MARKER in serialized
     assert "未经JSON编码的纯文本" in serialized
@@ -3665,6 +3665,94 @@ def test_evidence_branch_qualifiers_excludes_anchor_and_non_locations() -> None:
         texts=texts,
         anchor_qualifier="深圳",
     ) == ("合肥", "大湾区")
+
+
+def _branch_evidence_result(
+    *,
+    query: str = "介绍一下国际先进技术应用推进中心",
+    soft_context_subject: str | None = None,
+    anchor_name: str = "国际先进技术应用推进中心",
+    claim_texts: tuple[str, ...] = (
+        "国际先进技术应用推进中心（合肥）成立理事会，聚焦长三角成果转化。",
+        "国际先进技术应用推进中心（大湾区）中心在广州南沙设立。",
+    ),
+) -> Any:
+    claims = tuple(
+        SimpleNamespace(
+            claim_id=f"claim:branch:{index}",
+            text=text,
+            subject_id="company:branch-anchor",
+            subject_handle_ids=("company:branch-anchor",),
+            predicate="current_web_result",
+            status="accepted",
+            source_natures=("current_web",),
+            evidence_ids=(),
+        )
+        for index, text in enumerate(claim_texts, start=1)
+    )
+    return SimpleNamespace(
+        original_query=query,
+        response_mode="answer",
+        claims=claims,
+        citations=(),
+        context_receipt=SimpleNamespace(
+            active_anchor=SimpleNamespace(
+                display_name=anchor_name,
+                domain="company",
+                canonical_id="company:branch-anchor",
+                evidence_ids=(),
+            ),
+            displayed_result_set=None,
+            traversed_path_ids=(),
+            soft_context_subject=soft_context_subject,
+        ),
+    )
+
+
+def test_multi_branch_guidance_injected_with_detected_branches() -> None:
+    result = _branch_evidence_result(
+        soft_context_subject="国际先进技术应用推进中心",
+    )
+
+    block = serving_module._multi_branch_context_for_result(result)
+
+    assert block is not None
+    assert "合肥" in block and "大湾区" in block
+    assert "不得拒答" in block or "不得反问" in block
+    assert "引导" in block or "注明" in block or "城市" in block
+
+
+def test_multi_branch_guidance_absent_without_branch_evidence() -> None:
+    result = _branch_evidence_result(
+        claim_texts=("国际先进技术应用推进中心是国家级共性技术服务平台。",),
+    )
+
+    assert serving_module._multi_branch_context_for_result(result) is None
+
+
+def test_multi_branch_guidance_absent_when_user_named_a_city() -> None:
+    # The query pins 深圳, so qualifier pinning owns this turn; no guidance.
+    result = _branch_evidence_result(
+        query="介绍一下国际先进技术应用推进中心在深圳的布局",
+    )
+
+    assert serving_module._multi_branch_context_for_result(result) is None
+
+
+def test_multi_branch_guidance_chat_request_appends_block_and_bumps_version() -> None:
+    result = _branch_evidence_result()
+    renderer = serving_module._OpenAIProseRenderer(
+        client=SimpleNamespace(chat=SimpleNamespace(completions=None)),
+        model="recorded-chat-model",
+        extra_body={"thinking": {"type": "disabled"}},
+    )
+
+    messages, *_ = renderer._chat_request(result)
+
+    system = messages[0]["content"]
+    assert "情境说明" in system
+    assert "合肥" in system and "大湾区" in system
+    assert '"prompt_version": "canonical-v2-prose-v16"' in messages[-1]["content"]
 
 
 def _gate(

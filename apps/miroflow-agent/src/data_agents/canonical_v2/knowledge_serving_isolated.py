@@ -4338,6 +4338,54 @@ def _anchor_location_qualifier_for_result(result: Any, anchor_name: str) -> str 
     )
 
 
+def _multi_branch_guidance_block(
+    *, anchor_name: str, branch_qualifiers: tuple[str, ...],
+) -> str:
+    branches = "、".join(branch_qualifiers)
+    return (
+        f"情境说明：用户问的是机构级名称“{anchor_name}”，未指明城市。"
+        f"输入信息显示该机构在以下地区设有分部：{branches}。"
+        "要求：先完整回答用户的问题，总部及各分部的内容都是合法素材，"
+        "但涉及具体分部的事实时必须明确归属（不得把一个分部的事实写成另一个分部的）；"
+        "任何情况下不得拒答、不得反问。"
+        "如果用户的需求可能特指某一分部，请在答案中自然地说明该机构在上述城市设有分部，"
+        "并顺势引导用户在提问中注明想了解的城市——引导要与答案内容融为一体，"
+        "不要使用模板式附录句；如果对话上下文已经表明用户聚焦某一分部，"
+        "则直接按该分部作答，不再引导。"
+    )
+
+
+def _multi_branch_context_for_result(result: Any) -> str | None:
+    context = getattr(result, "context_receipt", None)
+    soft_subject = getattr(context, "soft_context_subject", None)
+    anchor = getattr(context, "active_anchor", None)
+    anchor_name = (
+        soft_subject
+        if isinstance(soft_subject, str) and soft_subject.strip()
+        else getattr(anchor, "display_name", None)
+    )
+    if not isinstance(anchor_name, str) or not anchor_name.strip():
+        return None
+    original_query = str(getattr(result, "original_query", "") or "")
+    if _anchor_location_qualifier(anchor_name, original_query) is not None:
+        return None
+    stem = _org_name_stem(anchor_name)
+    if not stem:
+        return None
+    claim_texts = tuple(
+        str(getattr(claim, "text", "") or "")
+        for claim in getattr(result, "claims", ())
+    )
+    branches = _evidence_branch_qualifiers(
+        org_stem=stem, texts=claim_texts, anchor_qualifier=None,
+    )
+    if not branches:
+        return None
+    return _multi_branch_guidance_block(
+        anchor_name=anchor_name, branch_qualifiers=branches,
+    )
+
+
 def _reject_truncated_prose_finish_reason(choice: Any) -> None:
     finish_reason = getattr(choice, "finish_reason", None)
     if finish_reason in {"length", "content_filter"}:
@@ -4446,7 +4494,7 @@ class _OpenAIProseRenderer:
                 ],
             }
         payload = {
-            "prompt_version": "canonical-v2-prose-v15",
+            "prompt_version": "canonical-v2-prose-v16",
             "user_question": getattr(result, "original_query", None),
             "question_frame": {
                 "subject_scope": frame.subject_scope,
@@ -4495,6 +4543,7 @@ class _OpenAIProseRenderer:
             ],
             "enumeration_coverage": coverage_payload,
         }
+        guidance = _multi_branch_context_for_result(result)
         messages = [
             {
                 "role": "system",
@@ -4552,6 +4601,7 @@ class _OpenAIProseRenderer:
                         "反证）；selected_entity_indexes只列出答案最终确认或推荐的主体entity_index，"
                         "不要列入被排除或仅作为背景的主体。答案 marker 后是未经JSON编码的纯文本，"
                         "可以多行。禁止Markdown代码围栏、旧版JSON答案外壳、marker之外的附加文本。"
+                        + ("" if guidance is None else f"\n{guidance}")
                     ),
                 },
                 {
