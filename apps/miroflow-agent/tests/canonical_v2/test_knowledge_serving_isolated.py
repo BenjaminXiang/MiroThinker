@@ -1429,6 +1429,7 @@ def test_llm_prose_renderer_keeps_each_public_domain_question(query: str) -> Non
 _ANCHOR_NAME = "国际先进技术应用推进中心（深圳）"
 _OFF_ANSWER = "华南先进技术应用研究院是一家位于广州的科研机构，主要开展应用基础研究。"
 _ON_ANSWER = "国际先进技术应用推进中心（深圳）是位于深圳的共性技术服务平台。"
+_HEFEI_ANSWER = "国际先进技术应用推进中心（合肥）采用事业单位企业化运作模式。"
 
 
 class _SequentialProseCompletions:
@@ -1557,6 +1558,53 @@ def test_openai_prose_renderer_corrects_against_soft_subject_over_lookalike() ->
     correction = completions.calls[1]["messages"][-1]
     assert isinstance(correction, dict)
     assert _ANCHOR_NAME in correction["content"]
+
+
+def test_mentions_anchor_with_qualifier_requires_branch_cooccurrence() -> None:
+    assert serving_module._answer_mentions_anchor(
+        "国际先进技术应用推进中心（深圳）依托粤港澳大湾区数字经济研究院建设。",
+        "国际先进技术应用推进中心（深圳）",
+        location_qualifier="深圳",
+    )
+    # Org mentioned, branch never pinned -> treated as off-anchor.
+    assert not serving_module._answer_mentions_anchor(
+        "国际先进技术应用推进中心（合肥）采用事业单位企业化运作模式。",
+        "国际先进技术应用推进中心（深圳）",
+        location_qualifier="深圳",
+    )
+    # No qualifier -> org-level mention passes (phase-1 behavior).
+    assert serving_module._answer_mentions_anchor(
+        "国际先进技术应用推进中心（合肥）采用事业单位企业化运作模式。",
+        "国际先进技术应用推进中心",
+    )
+
+
+def test_correction_message_mentions_branch_when_qualified() -> None:
+    msg = serving_module._anchor_correction_message(
+        "国际先进技术应用推进中心（深圳）", location_qualifier="深圳",
+    )
+    assert "深圳" in msg and "不得反问" in msg and "明确归属" in msg
+
+
+def test_openai_prose_renderer_pins_qualified_anchor_to_its_branch() -> None:
+    # The first answer names the org but only its 合肥 branch; with the 深圳
+    # qualifier pinned that still counts as off-anchor, so the corrective
+    # retry must fire and its message must name the branch.
+    result = _anchored_prose_result()
+    completions = _SequentialProseCompletions(
+        _prose_wire(_HEFEI_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+        _prose_wire(_ON_ANSWER, claim_indexes=(1,), entity_indexes=(1,)),
+    )
+    renderer = _prose_renderer(completions)
+
+    rendered = renderer(result)
+
+    assert isinstance(rendered, ProseSynthesisResult)
+    assert rendered.answer_text == _ON_ANSWER
+    assert len(completions.calls) == 2
+    correction = completions.calls[1]["messages"][-1]
+    assert isinstance(correction, dict)
+    assert "深圳" in correction["content"]
 
 
 @pytest.mark.parametrize(

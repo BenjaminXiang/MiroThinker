@@ -4282,8 +4282,13 @@ def _anchor_correction_name(result: Any, active_anchor: Any) -> str | None:
     return display_name
 
 
-def _answer_mentions_anchor(answer_text: str, anchor_name: str) -> bool:
+def _answer_mentions_anchor(
+    answer_text: str, anchor_name: str, *, location_qualifier: str | None = None
+) -> bool:
     searchable = _normalized_web_identity(answer_text)
+    if location_qualifier is not None:
+        stem = _org_name_stem(anchor_name)
+        return bool(stem) and stem in searchable and location_qualifier in searchable
     for form in _web_identity_forms(anchor_name):
         # The Web-lane marker rule for short forms targets noisy search
         # snippets; on the answer side a bare 3+ char name (丁文伯是…) is a
@@ -4296,12 +4301,38 @@ def _answer_mentions_anchor(answer_text: str, anchor_name: str) -> bool:
     return False
 
 
-def _anchor_correction_message(anchor_name: str) -> str:
-    return (
-        f"上一轮答案没有围绕主体“{anchor_name}”作答，请重新回答："
-        f"仅依据与“{anchor_name}”直接相关的输入信息组织答案；"
-        "没有直接信息时，基于该主体可确认的信息概括作答。"
-        "不得反问用户，不得要求用户补充信息；保持既定的返回格式不变。"
+def _anchor_correction_message(
+    anchor_name: str,
+    *,
+    location_qualifier: str | None = None,
+    reference_material: str | None = None,
+) -> str:
+    if location_qualifier is not None:
+        instruction = (
+            f"上一轮答案没有聚焦“{anchor_name}”作答，请重新回答："
+            f"围绕“{anchor_name}”组织答案；该分部的公开信息不足时，"
+            "基于已确认的信息概括作答，涉及其他分部的内容须明确归属，"
+            "不得把其他分部的事实写入该分部；不得反问用户，不得要求用户补充信息；"
+            "保持既定的返回格式不变。"
+        )
+    else:
+        instruction = (
+            f"上一轮答案没有围绕主体“{anchor_name}”作答，请重新回答："
+            f"仅依据与“{anchor_name}”直接相关的输入信息组织答案；"
+            "没有直接信息时，基于该主体可确认的信息概括作答。"
+            "不得反问用户，不得要求用户补充信息；保持既定的返回格式不变。"
+        )
+    if reference_material:
+        return (
+            f"{instruction}\n以下是与该主体直接相关的补充材料，"
+            f"优先采用其中与“{anchor_name}”直接相关的事实：\n{reference_material}"
+        )
+    return instruction
+
+
+def _anchor_location_qualifier_for_result(result: Any, anchor_name: str) -> str | None:
+    return _anchor_location_qualifier(
+        anchor_name, str(getattr(result, "original_query", "") or "")
     )
 
 
@@ -4656,8 +4687,14 @@ class _OpenAIProseRenderer:
 
         rendered = synthesize(messages)
         anchor_name = _anchor_correction_name(result, active_anchor)
+        qualifier = (
+            None
+            if anchor_name is None
+            else _anchor_location_qualifier_for_result(result, anchor_name)
+        )
         if anchor_name is None or _answer_mentions_anchor(
-            _rendered_prose_answer_text(rendered), anchor_name
+            _rendered_prose_answer_text(rendered), anchor_name,
+            location_qualifier=qualifier,
         ):
             return rendered
         # One bounded correction retry: an answer that never names the anchor
@@ -4669,12 +4706,15 @@ class _OpenAIProseRenderer:
                 *messages,
                 {
                     "role": "user",
-                    "content": _anchor_correction_message(anchor_name),
+                    "content": _anchor_correction_message(
+                        anchor_name, location_qualifier=qualifier,
+                    ),
                 },
             ]
         )
         if not _answer_mentions_anchor(
-            _rendered_prose_answer_text(corrected), anchor_name
+            _rendered_prose_answer_text(corrected), anchor_name,
+            location_qualifier=qualifier,
         ):
             raise ValueError("answer off-anchor")
         return corrected
