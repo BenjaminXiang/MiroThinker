@@ -857,7 +857,11 @@ def _soft_subject_candidate_ok(candidate: str, *, query: str) -> bool:
     return not any(marker in candidate for marker in _SOFT_SUBJECT_QUESTION_MARKERS)
 
 
-def _soft_subject_name(*, query: str, evidence_set: EvidenceSet) -> str | None:
+def _soft_subject_name(
+    *,
+    query: str,
+    evidence_set: EvidenceSet | None = None,
+) -> str | None:
     """Subject name a web-only answer was about, for soft continuation binding.
 
     The user's own query is the most reliable source: its search view wins
@@ -867,10 +871,17 @@ def _soft_subject_name(*, query: str, evidence_set: EvidenceSet) -> str | None:
     look like a news headline. Either way the candidate must survive the
     garbage guards: non-empty after stripping, short, not the whole query
     echo, and free of question words.
+
+    ``evidence_set`` is optional: at the injection point no resolved evidence
+    exists yet, so the derivation runs query-first only and the web-handle
+    fallback stays unreachable without it. The commit path keeps passing the
+    resolved evidence set, so its behavior is unchanged.
     """
     extracted = _search_view(query).strip()
     if _soft_subject_candidate_ok(extracted, query=query):
         return extracted
+    if evidence_set is None:
+        return None
     web_handles = tuple(
         handle
         for handle in evidence_set.entity_handles
@@ -1103,11 +1114,11 @@ class CanonicalV2ChatAdapter:
             displayed_ids=displayed_ids,
             history=() if committed is None else committed.referent_history,
         )
-        # Soft subject anchor: only elaboration continuations over a web-only
-        # session bind it. Expansion requests ("还有哪些/有没有类似的") must
-        # never narrow onto the prior subject, and an explicitly named
-        # subject always wins over the soft anchor.
-        soft_context_subject = (
+        # Soft subject anchor, continuation leg: only elaboration continuations
+        # over a web-only session bind it. Expansion requests ("还有哪些/有没有
+        # 类似的") must never narrow onto the prior subject, and an explicitly
+        # named subject always wins over the soft anchor.
+        continuation_soft_subject = (
             committed.soft_subject_name
             if (
                 committed is not None
@@ -1118,6 +1129,18 @@ class CanonicalV2ChatAdapter:
             )
             else None
         )
+        soft_context_subject = continuation_soft_subject
+        if soft_context_subject is None and not displayed_ids:
+            # Fresh / explicit-subject turns name the subject in the query
+            # itself: derive the same anchor the commit path would store
+            # (query-first extraction only — no resolved evidence exists at
+            # this point), so the web-lane gate, authority views, multi-branch
+            # guidance, and prose correction engage on THIS turn instead of
+            # only from the next one.
+            soft_context_subject = _soft_subject_name(
+                query=normalized_query,
+                evidence_set=None,
+            )
         planning_request = QueryPlanningRequest(
             request_id=f"query-request:chat:{turn_id}",
             release_id=self._release_id,
@@ -1203,7 +1226,10 @@ class CanonicalV2ChatAdapter:
             planning_displayed_ids=displayed_ids,
             selection=selection,
             from_history=ids_from_history,
-            soft_context_subject=soft_context_subject,
+            # topic_switch suppression stays continuation-only: a derived
+            # current-query subject anchors this turn's retrieval and answer
+            # but must not flip session-transition semantics.
+            soft_context_subject=continuation_soft_subject,
         )
         evidence_set = _merge_prior_web_evidence(
             committed=committed,

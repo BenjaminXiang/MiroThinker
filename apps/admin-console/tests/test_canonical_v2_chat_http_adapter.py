@@ -994,7 +994,8 @@ def test_web_only_expansion_follow_up_never_binds_the_soft_subject() -> None:
 
 
 def test_explicit_named_follow_up_overrides_the_soft_subject() -> None:
-    """A follow-up naming its own subject never borrows the soft anchor."""
+    """A follow-up naming its own subject never borrows the soft anchor: the
+    turn anchors on the subject derived from its own query instead."""
     _, web_item, web_handle = _soft_anchor_web_turn()
     planning_requests: list[Any] = []
     answer_requests: list[Any] = []
@@ -1023,7 +1024,204 @@ def test_explicit_named_follow_up_overrides_the_soft_subject() -> None:
 
     assert second.query_type != "canonical_v2:G:clarification_only"
     assert len(planning_requests) == 2
+    # Intentional behavior change (Task 10): the stored "优必选公司" anchor is
+    # still never injected on an explicit-subject turn, but the turn now
+    # anchors on the subject derived from its own query.
+    assert (
+        getattr(planning_requests[1], "soft_context_subject", None)
+        == "大疆创新科技有限公司"
+    )
+
+
+def test_fresh_turn_org_query_soft_subject_derivation() -> None:
+    """A fresh-turn web-only org query anchors THIS turn: the subject derived
+    from the query itself is injected into planning and the answer request,
+    instead of only taking effect from the next continuation turn."""
+    _, web_item, web_handle = _soft_anchor_web_turn()
+    planning_requests: list[Any] = []
+    answer_requests: list[Any] = []
+    adapter = _soft_anchor_adapter(
+        read_script=[((web_item,), (web_handle,))],
+        planning_requests=planning_requests,
+        answer_requests=answer_requests,
+    )
+    session_id = "session:soft-anchor-fresh-org"
+
+    response = adapter.answer(
+        query="介绍一下国际先进技术应用推进中心",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+
+    assert response.query_type != "canonical_v2:G:clarification_only"
+    assert len(planning_requests) == 1
+    assert (
+        getattr(planning_requests[0], "soft_context_subject", None)
+        == "国际先进技术应用推进中心"
+    )
+    # The same anchor reaches the answer session on this turn, ...
+    assert answer_requests[0].soft_context_subject == "国际先进技术应用推进中心"
+    # ... and it is exactly the anchor the commit path stores for later turns.
+    assert (
+        adapter._sessions[session_id].soft_subject_name == "国际先进技术应用推进中心"
+    )
+
+
+def test_fresh_turn_qualified_org_query_soft_subject_derivation() -> None:
+    """A branch-qualified org name keeps its qualifier: the derived subject
+    matches the pinned commit-path extraction verbatim."""
+    _, web_item, web_handle = _soft_anchor_web_turn()
+    planning_requests: list[Any] = []
+    answer_requests: list[Any] = []
+    adapter = _soft_anchor_adapter(
+        read_script=[((web_item,), (web_handle,))],
+        planning_requests=planning_requests,
+        answer_requests=answer_requests,
+    )
+    session_id = "session:soft-anchor-fresh-qualified-org"
+
+    response = adapter.answer(
+        query="介绍一下 国际先进技术应用推进中心（深圳）",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+
+    assert response.query_type != "canonical_v2:G:clarification_only"
+    assert len(planning_requests) == 1
+    assert (
+        getattr(planning_requests[0], "soft_context_subject", None)
+        == "国际先进技术应用推进中心（深圳）"
+    )
+    assert (
+        answer_requests[0].soft_context_subject == "国际先进技术应用推进中心（深圳）"
+    )
+
+
+def test_continuation_anchor_still_wins_over_derivation() -> None:
+    """A stored continuation anchor always wins over derivation: the
+    elaboration follow-up would derive "有没有更详细" from its own query if
+    the new branch overrode the anchor, so carrying the STORED name pins the
+    priority explicitly."""
+    _, web_item, web_handle = _soft_anchor_web_turn()
+    planning_requests: list[Any] = []
+    answer_requests: list[Any] = []
+    adapter = _soft_anchor_adapter(
+        read_script=[
+            ((web_item,), (web_handle,)),
+            ((), ()),
+        ],
+        planning_requests=planning_requests,
+        answer_requests=answer_requests,
+    )
+    session_id = "session:soft-anchor-continuation-priority"
+
+    adapter.answer(
+        query="优必选公司怎么样",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    second = adapter.answer(
+        query="有没有更详细的信息",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+
+    assert second.query_type != "canonical_v2:G:clarification_only"
+    assert len(planning_requests) == 2
+    assert getattr(planning_requests[1], "soft_context_subject", None) == "优必选公司"
+    assert answer_requests[1].soft_context_subject == "优必选公司"
+
+
+def test_explicit_subject_turn_keeps_topic_switch_directive() -> None:
+    """Mid-session explicit org switch with no stored anchor: the request
+    carries the derived subject, but _session_directive sees the
+    continuation-only value, so the topic_switch decision is identical to
+    pre-change behavior."""
+    planning_requests: list[Any] = []
+    answer_requests: list[Any] = []
+    adapter = _soft_anchor_adapter(
+        read_script=[
+            # No web handle on the set turn: the commit-path handle fallback
+            # must not store an anchor either.
+            ((), ()),
+            ((), ()),
+        ],
+        planning_requests=planning_requests,
+        answer_requests=answer_requests,
+    )
+    session_id = "session:soft-anchor-explicit-topic-switch"
+
+    # A set question stores no soft anchor and displays no canonical ids.
+    adapter.answer(
+        query="深圳有哪些机器人公司",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    assert adapter._sessions[session_id].soft_subject_name is None
+
+    second = adapter.answer(
+        query="介绍大疆创新科技有限公司",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+
+    assert second.query_type != "canonical_v2:G:clarification_only"
+    assert len(planning_requests) == 2
+    # The derived current-query subject anchors this turn's planning/answer, ...
+    assert (
+        getattr(planning_requests[1], "soft_context_subject", None)
+        == "大疆创新科技有限公司"
+    )
+    assert answer_requests[1].soft_context_subject == "大疆创新科技有限公司"
+    # ... but session-transition semantics stay continuation-only: the turn
+    # still declares a topic switch exactly as before.
+    directive = answer_requests[1].session_directive
+    assert directive is not None
+    assert directive.transition == "topic_switch"
+
+
+def test_question_echo_and_negation_queries_do_not_derive_soft_subject() -> None:
+    """The garbage guards self-gate derivation: a whole-query echo and a
+    negation query both anchor nothing on a fresh turn."""
+    _, web_item, web_handle = _soft_anchor_web_turn()
+    planning_requests: list[Any] = []
+    answer_requests: list[Any] = []
+    adapter = _soft_anchor_adapter(
+        read_script=[
+            ((web_item,), (web_handle,)),
+            ((web_item,), (web_handle,)),
+        ],
+        planning_requests=planning_requests,
+        answer_requests=answer_requests,
+    )
+
+    for index, query in enumerate(
+        (
+            # The search view is the whole query: the echo guard rejects it.
+            "国际先进技术应用推进中心怎么样",
+            # Negation markers return the query unchanged, also an echo.
+            "不包括国际先进技术应用推进中心的介绍",
+        )
+    ):
+        response = adapter.answer(
+            query=query,
+            session_id=f"session:soft-anchor-guard-{index}",
+            option_id=None,
+            as_of=NOW,
+        )
+        assert response.query_type != "canonical_v2:G:clarification_only", query
+
+    assert len(planning_requests) == 2
+    assert getattr(planning_requests[0], "soft_context_subject", None) is None
     assert getattr(planning_requests[1], "soft_context_subject", None) is None
+    assert answer_requests[0].soft_context_subject is None
+    assert answer_requests[1].soft_context_subject is None
 
 
 def test_soft_subject_name_prefers_the_query_search_view_subject() -> None:
