@@ -79,7 +79,9 @@ def test_tier_t2_same_org_unqualified():
     ) == 2
 
 def test_tier_t3_other_branch_content():
-    r = _result("国先中心（合肥）执行主任程羽强调推动机器人真实应用")
+    # Controller amendment (execution): full stem required for the T3 branch;
+    # the abbreviation 国先中心 matches no identity form.
+    r = _result("国际先进技术应用推进中心（合肥）执行主任程羽强调推动机器人真实应用")
     assert _web_result_relevance_tier(
         result=r, bound_entity_names=(_ANCHOR,), anchor_qualifier="深圳",
     ) == 3
@@ -98,7 +100,9 @@ def test_tier_t0_corroborated_trumps_everything():
     ) == 0
 
 def test_tier_t5_no_match():
-    r = _result("两台国际先进水平手术的背后", "华西口腔医院")
+    # Controller amendment (execution): the original title contained 国际先进水平,
+    # which the compact alias 国际先进 matches → T4 by design, not T5.
+    r = _result("两台腹腔镜手术的背后", "华西口腔医院")
     assert _web_result_relevance_tier(
         result=r, bound_entity_names=(_ANCHOR,), anchor_qualifier="深圳",
     ) == 5
@@ -1104,6 +1108,8 @@ git commit -m "feat(canonical-v2): correction-triggered tiered fetch with anti-e
 
 ### Task 8: End-to-end verification + production deploy
 
+> **Amendment 2026-08-13:** The first run of Steps 1-2 (commits `7cad141..377f249`) is archived in the SDD ledger — verdicts: badcase PASS-with-concerns / unqualified FAIL / control PASS; regressions B/C green, A 1134 passed with only the known-baseline failure. That run exposed two plan defects (turn-1 web-only queries have no anchor; `_answer_mentions_anchor` is a mention test, not a subject test). User ruled: fix both, then deploy. **Steps 1-2 must be re-run AFTER Tasks 10 and 11 land; Steps 3-4 proceed only on 3/3 session PASS.** The retest service on 39878 is left running for the re-run.
+
 **Files:**
 - No production code. Scratch files under `/tmp` only (cleaned up at the end).
 
@@ -1209,9 +1215,220 @@ locations.
 Run: `cd /home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation && git add openspec/changes/followup-subject-consistency .agents/runs/followup-subject-consistency && git commit -m "docs(openspec): backfill follow-up subject-consistency change artifacts"`
 If an openspec CLI validator is configured in the repo (`openspec validate` — check `pyproject.toml`/justfile first), run it before committing.
 
+**Amendment 2026-08-13:** the backfill must also cover Tasks 10-11 (turn-1 soft-subject derivation; subject-organization off-anchor check) as phase-2 slices, including their e2e evidence from the Task-8 re-run.
+
+---
+
+### Task 10: Turn-1 soft-subject derivation at the chat layer
+
+> **Amendment 2026-08-13 (user-ruled).** Root cause of the unqualified e2e FAIL: `soft_context_subject` is only injected for continuation follow-ups (`canonical_v2_chat.py:1106-1120`), so a fresh-turn web-only org-level query (`介绍一下国际先进技术应用推进中心`) gets NO anchor — no authority views, no gate binding, no multi-branch guidance, no correction anchor — and the answer deterministically resolves to the most salient branch (合肥-only). Fix: derive the soft subject from the current query on fresh/explicit-subject turns, reusing the exact extractor the commit path already uses. Must land BEFORE the Task-8 re-run.
+
+**Files:**
+- Modify: `apps/admin-console/backend/services/canonical_v2_chat.py` (`_soft_subject_name` :860-886, injection block :1106-1120, `_session_directive` call :1200-1207)
+- Test: `apps/admin-console/tests/test_canonical_v2_chat_http_adapter.py`
+
+**Interfaces:**
+- Consumes: `_search_view` (`followup_referents.py:381-403` — query-first extraction: intro-prefix/info-suffix stripping, company/professor/institution patterns, fallthrough), `_soft_subject_candidate_ok` (:851-857 — guards: non-empty, ≤30 chars, not whole-query echo, no `吗/呢/哪些/什么`, no headline-verb suffixes; negation markers make `_search_view` return the query unchanged which the echo guard then rejects), `has_continuation_intent` / `has_explicit_named_subject`, `displayed_ids` (:1046-1105, prior-context canonical ids only).
+- Produces:
+  - `_soft_subject_name(*, query: str, evidence_set: EvidenceSet | None = None) -> str | None` — `evidence_set` optional; the web-handle fallback branch only runs when it is provided (commit path behavior unchanged).
+  - Injection keeps TWO variables: `continuation_soft_subject` (today's exact expression) and `soft_context_subject` (continuation value, else the derived one).
+
+**Derivation rules:**
+
+- Derive only when `continuation_soft_subject is None and not displayed_ids` — i.e. no continuation anchor AND no canonical ids from prior context/history. Both conditions already exist at the injection point.
+- The derived value comes ONLY from `_soft_subject_name(query=normalized_query, evidence_set=None)` (query-first extraction; no resolved evidence exists at the injection point). Existing guards self-gate negation/question/echo/over-length queries.
+- `_session_directive(...)` receives `continuation_soft_subject` (pre-derivation), NOT the derived value — session-transition (topic_switch) semantics stay byte-identical to today. The derived subject anchors only the current turn's planning/serving/answer.
+- Commit-time behavior unchanged: `:1265-1296` already re-derives/stores the anchor for fresh and explicit-subject turns.
+- Continuation priority unchanged: a stored continuation anchor always wins over derivation.
+
+- [ ] **Step 1: Write the failing tests**
+
+Mirror the observation pattern of the existing continuation-injection tests (grep `soft_context_subject` / `soft_subject_name` in the test file to find how the injected value is observed — planner spy or recorded request).
+
+```python
+def test_fresh_turn_org_query_derives_soft_subject(...):
+    # no committed session; "介绍一下国际先进技术应用推进中心"
+    # -> planning request soft_context_subject == "国际先进技术应用推进中心"
+
+def test_fresh_turn_qualified_org_query_derives_qualified_subject(...):
+    # "介绍一下 国际先进技术应用推进中心（深圳）"
+    # -> "国际先进技术应用推进中心（深圳）" (matches the pinned extraction at :1090-1096)
+
+def test_continuation_anchor_still_wins_over_derivation(...):
+    # stored soft_subject_name present + elaboration follow-up
+    # -> request carries the STORED name (existing behavior, now explicitly pinned against the new branch)
+
+def test_explicit_subject_turn_keeps_topic_switch_directive(...):
+    # mid-session explicit org switch, no stored anchor: request carries the
+    # derived subject, but _session_directive sees the continuation-only value
+    # -> topic_switch decision identical to pre-change behavior.
+
+def test_question_echo_and_negation_queries_do_not_derive(...):
+    # "国际先进技术应用推进中心怎么样" (whole-query echo) and
+    # "不包括国际先进技术应用推进中心的介绍" (negation) -> no derivation.
+```
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+Run: `cd apps/admin-console && uv run pytest tests/test_canonical_v2_chat_http_adapter.py -k "derive_soft_subject or derivation or topic_switch_directive" -q`
+Expected: FAIL (fresh/explicit turns currently inject None).
+
+- [ ] **Step 3: Implement**
+
+3a. Make `evidence_set` optional in `_soft_subject_name` (:860-886); guard the web-handle fallback with `evidence_set is not None`. Keep all call sites keyword-based.
+
+3b. Split the injection block (:1106-1120):
+
+```python
+    continuation_soft_subject = (
+        committed.soft_subject_name
+        if (
+            committed is not None
+            and not displayed_ids
+            and has_continuation_intent(normalized_query)
+            and not has_explicit_named_subject(normalized_query)
+            and committed.soft_subject_name
+        )
+        else None
+    )
+    soft_context_subject = continuation_soft_subject
+    if soft_context_subject is None and not displayed_ids:
+        # Fresh / explicit-subject turns name the subject in the query itself:
+        # derive the same anchor the commit path would store (query-first
+        # extraction only — no resolved evidence exists at this point), so the
+        # web-lane gate, authority views, multi-branch guidance, and prose
+        # correction engage on THIS turn instead of only from the next one.
+        soft_context_subject = _soft_subject_name(
+            query=normalized_query, evidence_set=None,
+        )
+```
+
+3c. The `_session_directive(...)` call (:1200-1207) passes `continuation_soft_subject` instead of `soft_context_subject`, with a comment:
+
+```python
+        # topic_switch suppression stays continuation-only: a derived
+        # current-query subject anchors this turn's retrieval and answer but
+        # must not flip session-transition semantics.
+```
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `cd apps/admin-console && uv run pytest tests/test_canonical_v2_chat_http_adapter.py -k "derive_soft_subject or derivation or topic_switch_directive or soft" -q`
+Expected: PASS.
+
+- [ ] **Step 5: Regression + lint + commit**
+
+Run: `cd apps/admin-console && uv run pytest tests/test_canonical_v2_chat_http_adapter.py tests/test_chat_anchor_clarification.py tests/test_canonical_v2_referent_history.py -q && uv run ruff check backend/services/canonical_v2_chat.py tests/test_canonical_v2_chat_http_adapter.py`
+Expected: PASS. Existing tests pinning turn-1 `soft_context_subject is None` for org queries are the behavior being intentionally changed — update those fixtures and call each out in the commit message body.
+
+```bash
+git add apps/admin-console/backend/services/canonical_v2_chat.py apps/admin-console/tests/test_canonical_v2_chat_http_adapter.py
+git commit -m "feat(canonical-v2-chat): derive soft subject on fresh explicit org-level turns"
+```
+
+---
+
+### Task 11: Subject-organization off-anchor check
+
+> **Amendment 2026-08-13 (user-ruled).** Root cause of badcase-T3 mode A: the qualified `_answer_mentions_anchor` check is a co-occurrence MENTION test — an answer organized around a lookalike (SIAT) passes as long as it name-drops the anchor stem once and mentions the city. The e2e criterion is a SUBJECT test (the answer must be organized around the anchor). Tighten the qualified path; leave the unqualified path byte-identical. Must land BEFORE the Task-8 re-run.
+
+**Files:**
+- Modify: `apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_serving_isolated.py` (`_answer_mentions_anchor` :4373-4389)
+- Test: `apps/miroflow-agent/tests/canonical_v2/test_knowledge_serving_isolated.py`
+
+**Interfaces:**
+- Consumes: `_org_name_stem`, `_normalized_web_identity` (strips ALL punctuation — sentence splitting must happen on the RAW answer text), `_web_identity_forms`, `_web_identity_text_matches`.
+- Produces: `_answer_lead_mentions_stem(answer_text: str, org_stem: str) -> bool`.
+
+**Rule (qualified path only):** on-anchor = `stem in searchable AND qualifier in searchable AND (stem in the answer's first sentence OR searchable.count(stem) >= 2)`. The `location_qualifier=None` path stays byte-identical to phase 1.
+
+- [ ] **Step 1: Write the failing tests**
+
+```python
+def test_mentions_anchor_qualified_rejects_lookalike_organized_answer():
+    answer = (
+        "中国科学院深圳先进技术研究院（简称“深圳先进院”）是深圳市人民政府与中国科学院共建的新型研发机构。"
+        "深圳先进院在人才团队方面拥有李成睿、周磊等教授。"
+        "该院的合作机构包括国际先进技术应用推进中心等。"
+    )
+    assert not _answer_mentions_anchor(
+        answer, "国际先进技术应用推进中心（深圳）", location_qualifier="深圳",
+    )
+
+def test_mentions_anchor_qualified_accepts_lead_with_stem():
+    assert _answer_mentions_anchor(
+        "国际先进技术应用推进中心（深圳）依托粤港澳大湾区数字经济研究院建设。",
+        "国际先进技术应用推进中心（深圳）", location_qualifier="深圳",
+    )
+
+def test_mentions_anchor_qualified_accepts_framing_opener_with_repeated_stem():
+    answer = (
+        "从公开信息看，这家机构的分量不低。"
+        "国际先进技术应用推进中心（深圳）近日揭牌，国际先进技术应用推进中心由国家发改委指导。"
+    )
+    assert _answer_mentions_anchor(
+        answer, "国际先进技术应用推进中心（深圳）", location_qualifier="深圳",
+    )
+
+def test_mentions_anchor_unqualified_path_unchanged():
+    # phase-1 semantics: a single mid-answer mention still counts.
+    assert _answer_mentions_anchor(
+        "从公开信息看，这家机构的分量不低。国际先进技术应用推进中心（合肥）采用理事会模式。",
+        "国际先进技术应用推进中心",
+    )
+```
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+Run: `cd apps/miroflow-agent && uv run pytest tests/canonical_v2/test_knowledge_serving_isolated.py -k "lookalike_organized or lead_with_stem or framing_opener or unqualified_path_unchanged" -q --no-cov`
+Expected: the first test FAILS (mention test passes the SIAT-organized answer today).
+
+- [ ] **Step 3: Implement**
+
+```python
+_ANSWER_LEAD_SENTENCE_RE = re.compile(r"[。！？!?]")
+
+
+def _answer_lead_mentions_stem(answer_text: str, org_stem: str) -> bool:
+    """Whether the answer's opening sentence names the organization."""
+    if not org_stem:
+        return False
+    head = _ANSWER_LEAD_SENTENCE_RE.split(answer_text, maxsplit=1)[0]
+    return org_stem in _normalized_web_identity(head)
+```
+
+Qualified branch of `_answer_mentions_anchor` becomes:
+
+```python
+    if location_qualifier is not None:
+        stem = _org_name_stem(anchor_name)
+        if not (stem and stem in searchable and location_qualifier in searchable):
+            return False
+        # A lookalike-organized answer can still name-drop the anchor once;
+        # require the anchor to lead the answer or recur in it.
+        return _answer_lead_mentions_stem(answer_text, stem) or searchable.count(stem) >= 2
+```
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `cd apps/miroflow-agent && uv run pytest tests/canonical_v2/test_knowledge_serving_isolated.py -k "lookalike_organized or lead_with_stem or framing_opener or unqualified_path_unchanged or mentions_anchor or corrects_against or stream_correction" -q --no-cov`
+Expected: PASS.
+
+- [ ] **Step 5: Regression + lint + commit**
+
+Run: `cd apps/miroflow-agent && uv run pytest tests/canonical_v2/test_knowledge_serving_isolated.py tests/canonical_v2/test_knowledge_answer_multiturn_contract.py -q --no-cov && uv run ruff check src/data_agents/canonical_v2/knowledge_serving_isolated.py tests/canonical_v2/test_knowledge_serving_isolated.py`
+Expected: PASS. Existing correction fixtures whose "corrected" text mentions the stem only once mid-answer now legitimately fail — update those FIXTURES to lead with or repeat the stem (never production logic to please an old test), and call each out in the commit message body.
+
+```bash
+git add apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_serving_isolated.py apps/miroflow-agent/tests/canonical_v2/test_knowledge_serving_isolated.py
+git commit -m "feat(canonical-v2): qualified off-anchor check requires subject organization"
+```
+
 ---
 
 ## Self-review notes (planner)
+
+- Amendment 2026-08-13 (user-ruled): Task 1 fixture strings repaired (T3/T5 — see controller amendment in the Task-1 brief); Tasks 10-11 added for the two plan defects found by the first Task-8 run; Task 8 re-run gated on them; Task 9 backfill scope extended.
 
 - Spec coverage: §1→Tasks 1-2, §2→Tasks 3-4, §2b→Task 5, §2c→Task 6, §3→Task 7, testing/e2e→Task 8, OpenSpec→Task 9. No gaps.
 - Type consistency: `_anchor_location_qualifier` / `_org_name_stem` / `_evidence_branch_qualifiers` / `_web_result_relevance_tier` / `_web_identity_full_name_forms` / `_web_identity_compact_aliases` / `_multi_branch_context_for_result` / `_multi_branch_guidance_block` / `_authority_seeking_view_texts` / `_fetch_anchor_reference_material` / `_synthesize_once` are used consistently across tasks; `_anchor_correction_message(anchor_name, *, location_qualifier=None, reference_material=None)` is defined in Task 3 and consumed in Tasks 4 and 7.
