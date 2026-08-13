@@ -2412,19 +2412,32 @@ def test_prose_stream_retries_once_before_any_output() -> None:
     assert result.answer_text == "第二次尝试"
 
 
-def test_unacknowledged_stream_mismatch_rolls_back_session() -> None:
+@pytest.mark.parametrize(
+    "rendered_kind",
+    (
+        pytest.param("plain_text", id="plain_text"),
+        pytest.param("unmarked_synthesis", id="unmarked_synthesis"),
+    ),
+)
+def test_unacknowledged_stream_mismatch_rolls_back_session(
+    rendered_kind: str,
+) -> None:
+    """A final answer differing from its published stream raises and rolls
+    back — unless the renderer marked it as superseding the streamed draft
+    (see test_marked_stream_correction_supersedes_published_draft). Both the
+    plain-text and the unmarked-synthesis shapes must still raise."""
     answer_module = _answer_module()
     read_module = _read_module()
-    session_id = "session:s12g:unacknowledged-stream-mismatch"
+    session_id = f"session:s12g:unacknowledged-stream-mismatch:{rendered_kind}"
     failed_handle = _canonical_handle(
         read_module,
-        canonical_id="company:s12g:unacknowledged-stream-mismatch",
-        evidence_id="evidence:s12g:unacknowledged-stream-mismatch",
+        canonical_id=f"company:s12g:unacknowledged-stream-mismatch:{rendered_kind}",
+        evidence_id=f"evidence:s12g:unacknowledged-stream-mismatch:{rendered_kind}",
     )
     request = _turn(
         answer_module,
         session_id=session_id,
-        turn_id="turn:s12g:unacknowledged-stream-mismatch",
+        turn_id=f"turn:s12g:unacknowledged-stream-mismatch:{rendered_kind}",
         evidence_set=_evidence_set(
             read_module,
             query="介绍失败后不应保留的企业",
@@ -2441,8 +2454,10 @@ def test_unacknowledged_stream_mismatch_rolls_back_session() -> None:
         def __call__(self, value: Any) -> str:
             return "SYNC_RENDERED"
 
-        def stream(self, value: Any, *, on_chunk: Any) -> str:
+        def stream(self, value: Any, *, on_chunk: Any) -> Any:
             on_chunk("x")
+            if rendered_kind == "unmarked_synthesis":
+                return answer_module.ProseSynthesisResult(answer_text="y")
             return "y"
 
     answer = answer_module.create_ephemeral_knowledge_answer(
@@ -2460,6 +2475,64 @@ def test_unacknowledged_stream_mismatch_rolls_back_session() -> None:
     assert restored.active_anchor is None
     assert restored.displayed_result_set is None
     assert restored.result_sets == {}
+
+
+def test_marked_stream_correction_supersedes_published_draft() -> None:
+    """The one legitimate mismatch: the renderer corrected the FINAL answer
+    after the drifted draft was already published and marked the result
+    ``supersedes_streamed_draft``. The stream guard exempts it, the corrected
+    text becomes the turn answer, and the session commits (no rollback)."""
+    answer_module = _answer_module()
+    read_module = _read_module()
+    session_id = "session:s12g:marked-stream-correction"
+    anchor_handle = _canonical_handle(
+        read_module,
+        canonical_id="company:s12g:marked-stream-correction",
+        evidence_id="evidence:s12g:marked-stream-correction",
+    )
+    request = _turn(
+        answer_module,
+        session_id=session_id,
+        turn_id="turn:s12g:marked-stream-correction",
+        evidence_set=_evidence_set(
+            read_module,
+            query="介绍修正后应保留的企业",
+            handles=(anchor_handle,),
+        ),
+    )
+    proposal = _constructed_answer_proposal(
+        answer_module,
+        request,
+        displayed_handle_ids=(anchor_handle.canonical_id,),
+    )
+    corrected_text = "修正后的最终回答。"
+    published: list[str] = []
+
+    class _CorrectingRenderer:
+        def __call__(self, value: Any) -> str:
+            return "SYNC_RENDERED"
+
+        def stream(self, value: Any, *, on_chunk: Any) -> Any:
+            on_chunk("已发布的漂移片段。")
+            return answer_module.ProseSynthesisResult(
+                answer_text=corrected_text,
+                supersedes_streamed_draft=True,
+            )
+
+    answer = answer_module.create_ephemeral_knowledge_answer(
+        answer_selector=lambda _: proposal,
+        prose_renderer=_CorrectingRenderer(),
+    )
+    answer.prose_progress = _acknowledging_append(published)
+
+    result = answer.answer(request)
+
+    assert "".join(published) == "已发布的漂移片段。"
+    assert result.render_mode == "prose_renderer"
+    assert result.answer_text == corrected_text
+    committed = answer._sessions[session_id]
+    assert committed.active_anchor is not None
+    assert committed.displayed_result_set is not None
 
 
 @pytest.mark.parametrize(

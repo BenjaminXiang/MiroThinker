@@ -5096,6 +5096,13 @@ class _OpenAIProseRenderer:
             _rendered_prose_answer_text(corrected), anchor_name,
             location_qualifier=qualifier,
         ):
+            if isinstance(corrected, ProseSynthesisResult):
+                # The corrected FINAL answer supersedes the already-published
+                # drifted chunks; the mark lets the knowledge_answer stream
+                # guard exempt this one legitimate mismatch.
+                return corrected.model_copy(
+                    update={"supersedes_streamed_draft": True}
+                )
             return corrected
         _logger.info("stream off-anchor correction missed; keeping streamed answer")
         return finalized

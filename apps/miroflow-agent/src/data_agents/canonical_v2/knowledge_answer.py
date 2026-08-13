@@ -495,11 +495,21 @@ class TurnResult(ContractModel):
 
 
 class ProseSynthesisResult(ContractModel):
-    """Internal result from the single final prose call; never serialized publicly."""
+    """Internal result from the single final prose call; never serialized publicly.
+
+    ``supersedes_streamed_draft`` marks the one legitimate case where the
+    returned answer differs from the already-published streamed draft: the
+    stream path's off-anchor correction replaced the FINAL answer after the
+    drifted chunks went out. The knowledge_answer stream guard exempts marked
+    results from its published-vs-final equality check so the SSE answer
+    event can supersede the draft. It stays unset on the non-stream path and
+    on every fail-open branch.
+    """
 
     answer_text: str = Field(min_length=1)
     selected_claim_ids: tuple[str, ...] = ()
     selected_handle_ids: tuple[str, ...] = ()
+    supersedes_streamed_draft: bool = False
 
     @model_validator(mode="after")
     def require_unique_selections(self) -> ProseSynthesisResult:
@@ -2220,9 +2230,16 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
                 if isinstance(rendered, str)
                 else None
             )
+            # A corrected FINAL answer legitimately differs from the published
+            # drifted chunks when the renderer marked it as superseding the
+            # streamed draft; every other mismatch still raises.
+            supersedes_draft = (
+                isinstance(rendered, ProseSynthesisResult)
+                and rendered.supersedes_streamed_draft
+            )
             if published_parts and (
                 not isinstance(rendered_text, str)
-                or rendered_text != "".join(published_parts)
+                or (rendered_text != "".join(published_parts) and not supersedes_draft)
             ):
                 raise ValueError("prose stream differs from its final answer")
             if isinstance(rendered_text, str) and _prose_contains_structured_only_value(

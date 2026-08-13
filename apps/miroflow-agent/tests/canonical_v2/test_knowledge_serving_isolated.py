@@ -1580,6 +1580,9 @@ def test_openai_prose_renderer_retries_once_when_answer_leaves_the_anchor() -> N
     rendered = renderer(result)
 
     assert isinstance(rendered, ProseSynthesisResult)
+    # The non-stream path publishes nothing, so its corrected result is never
+    # marked as superseding a streamed draft.
+    assert rendered.supersedes_streamed_draft is False
     assert rendered.answer_text == _ON_ANSWER
     assert rendered.selected_claim_ids == ("claim:anchor-serving",)
     assert rendered.selected_handle_ids == ("company:anchor-serving",)
@@ -1781,6 +1784,9 @@ def test_stream_correction_replaces_final_answer_on_drift() -> None:
     rendered = renderer.stream(result, on_chunk=published.append)
 
     assert isinstance(rendered, ProseSynthesisResult)
+    # Correction success marks the result: it supersedes the already-published
+    # drifted draft, so the knowledge_answer stream guard exempts the mismatch.
+    assert rendered.supersedes_streamed_draft is True
     assert "国际先进技术应用推进中心（深圳）" in (
         serving_module._rendered_prose_answer_text(rendered)
     )
@@ -1805,6 +1811,8 @@ def test_stream_correction_failure_returns_original_streamed_answer() -> None:
     rendered = renderer.stream(result, on_chunk=published.append)
 
     assert isinstance(rendered, ProseSynthesisResult)
+    # Fail-open keeps the streamed result: never marked as superseding.
+    assert rendered.supersedes_streamed_draft is False
     assert "华南先进技术应用研究院" in (
         serving_module._rendered_prose_answer_text(rendered)
     )
@@ -1827,6 +1835,7 @@ def test_stream_correction_provider_error_keeps_streamed_answer() -> None:
     rendered = renderer.stream(result, on_chunk=published.append)
 
     assert isinstance(rendered, ProseSynthesisResult)
+    assert rendered.supersedes_streamed_draft is False
     assert rendered.answer_text == _OFF_ANSWER
     assert completions.stream_create_calls == 1
     assert completions.sync_create_calls == 1
@@ -1844,6 +1853,7 @@ def test_stream_on_anchor_single_call() -> None:
     rendered = renderer.stream(result, on_chunk=published.append)
 
     assert isinstance(rendered, ProseSynthesisResult)
+    assert rendered.supersedes_streamed_draft is False
     assert rendered.answer_text == _ON_ANSWER
     assert completions.stream_create_calls == 1
     assert completions.sync_create_calls == 0
