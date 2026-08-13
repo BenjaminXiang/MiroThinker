@@ -1,0 +1,6 @@
+event: answer
+data: {"query":"它有哪些布局和进展","query_type":"canonical_v2:G:clarification_only","answer_text":"您的问题里使用了“他/她/它/这家”等指代词，但我暂时无法确定具体指代对象，为了准确回答，请补充您想了解的对象（例如教授姓名、公司名、论文标题或专利号），我会立即为您查询。如果您只是想了解某一类信息的大致情况，也可以直接描述需求，我会先给出概要说明。","citations":[],"evidence":[],"clarification":{"prompt":"您的问题里使用了“他/她/它/这家”等指代词，但我暂时无法确定具体指代对象，为了准确回答，请补充您想了解的对象（例如教授姓名、公司名、论文标题或专利号），我会立即为您查询。如果您只是想了解某一类信息的大致情况，也可以直接描述需求，我会先给出概要说明。","options":[],"default_id":"","omitted":0},"structured_payload":{},"answer_style":"template","citation_map":{},"suggested_followups":[]}
+
+event: done
+data: {}
+

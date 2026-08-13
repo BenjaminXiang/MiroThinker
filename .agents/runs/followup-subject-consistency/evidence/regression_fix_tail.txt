@@ -1,0 +1,6 @@
+SKIPPED [1] tests/canonical_v2/test_knowledge_gap_postgres.py:539: S10O PostgreSQL checks require all four explicit target settings
+SKIPPED [1] tests/canonical_v2/test_knowledge_gap_postgres.py:566: S10O PostgreSQL checks require all four explicit target settings
+SKIPPED [1] tests/canonical_v2/test_knowledge_gap_postgres.py:681: S10O PostgreSQL checks require all four explicit target settings
+SKIPPED [1] tests/canonical_v2/test_knowledge_gap_postgres.py:756: S10O PostgreSQL checks require all four explicit target settings
+FAILED tests/canonical_v2/test_consumer_migration_boundary.py::test_s11b_sanctioned_entrypoints_classify_and_exclude_legacy_consumers
+1 failed, 1144 passed, 149 skipped, 16 warnings in 3449.44s (0:57:29)

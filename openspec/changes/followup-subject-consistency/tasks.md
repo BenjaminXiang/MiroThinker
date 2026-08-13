@@ -98,9 +98,51 @@
 - [x] 5.3 `openspec validate followup-subject-consistency --strict` exits 0.
 - [ ] 5.4 Claude review against acceptance; accept / revise / reject.
 
+## 6. Final-review fix round (C1 + I1, user-ruled fix-before-archive, DEPLOYED)
+
+The SDD final branch review (verdict "With fixes") found one Critical and one
+Important; both fixed with TDD, scoped re-review Clean, deployed at HEAD `45d39dd`.
+
+- [x] 6.1 **C1 — stream drift-correction crashed the turn in production.** The
+      published-vs-final integrity guard (`knowledge_answer.py`) treated a successful
+      stream correction as corruption → `rollback_session(); raise` → SSE error after the
+      drifted draft had already streamed out (dead correction path; strictly worse than
+      phase-1). Fix (`4c2bf80`): `ProseSynthesisResult.supersedes_streamed_draft`
+      marker set only on the renderer's stream correction-success branch; the guard
+      exempts marked results; unmarked mismatches still roll back (closure pin amended,
+      intentional contract change called out in the commit body). SSE-level integration
+      test: forced drift → corrected `answer` event + `done` + session committed.
+      Caught live on pre-fix production during the fix round (journal:
+      `canonical v2 stream turn failed: prose stream differs from its final answer`).
+- [x] 6.2 **I1 — `_anchor_location_qualifier` misfired on city-prefixed legal names.**
+      A city inside the legal name stem (e.g. `深圳市普渡科技有限公司`) was re-matched as
+      a query qualifier, forcing spurious corrections and skipping authority views. Fix
+      (`45d39dd`): the lexicon scan runs on the query with the stem removed
+      (`residual = normalized_query.replace(stem, "")`); multi-location matches resolve
+      deterministically to the earliest occurrence in the residual (was frozenset hash
+      order); lexicon members returned verbatim with an invariance pin.
+- [x] 6.3 Fix-round verification: scoped re-review **Clean**; retest service (39878)
+      sessions — 普渡 control PASS (no spurious correction), badcase T1/T2 PASS (no
+      substitution), three drift probes did not drift (correction path covered by the
+      deterministic adapter SSE test); both probe-observed subject substitutions
+      reproduced on PRE-FIX production (byte-identical for one) → pre-existing defect
+      class registered in
+      `.agents/runs/followups/2026-08-13-subject-consistency-phase2-residuals.md`, not
+      introduced by the fixes.
+- [x] 6.4 Fix-round regression: canonical_v2 **1144 passed / 1 known-baseline failure /
+      149 skipped**; admin-console **141 passed**; chat UI node **87 pass / 0 fail**.
+- [x] 6.5 Production deploy (HEAD `45d39dd`, systemd auto-respawn, health ~87 s) +
+      production smoke: badcase PASS (T2 is the exact wording that crashed pre-fix
+      production earlier the same day), 普渡 PASS, unqualified PASS; journal clean.
+
 ## Out of scope (recorded, not claimed)
 - Official-site fetch injection on the hot path (original R3) — deferred to a later phase.
 - Residual e2e risks from the re-run report: single-sample sessions; cold-cache retrieval
   variance can still shift web tops (retest instance shares the production Postgres
   `web_search_cache`, 24 h TTL); the re-run unqualified answer enumerated only the 合肥
   branch (city invitation covered the criterion).
+- Deepening-turn anchor loss at plan/referent level (e.g. `它有哪些布局和进展`,
+  `这个中心的企业培育情况怎么样`), prose truncation reaching the client, and web-lane
+  `unavailable` telemetry — registered in
+  `.agents/runs/followups/2026-08-13-subject-consistency-phase2-residuals.md`; NOT
+  claimed solved.

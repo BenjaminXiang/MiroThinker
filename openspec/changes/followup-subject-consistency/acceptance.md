@@ -92,3 +92,33 @@ Repeat the badcase turn 1+2 and the unqualified query against
 - [x] Known residual risks (single-sample sessions; cold-cache retrieval variance; the
       re-run unqualified answer enumerated only the 合肥 branch — the explicit city
       invitation covered the criterion) are recorded in `tasks.md` §Out of scope.
+
+## 5. Final-review fix round acceptance (HEAD `45d39dd`)
+
+Criteria added by the SDD final review fix loop (C1 + I1, see `tasks.md` §6).
+
+- [x] **C1 SSE behavior:** a forced-drift streamed turn completes with the corrected
+      text in the `answer` event, followed by `done`, no `error` event, session
+      committed — deterministic adapter-level test
+      (`apps/admin-console/tests/test_canonical_v2_chat_http_adapter.py`,
+      `http_stream_correction_supersedes…`). Unmarked published-vs-final mismatch
+      still raises and rolls back (closure pin, parametrized).
+- [x] **I1 unit behavior:** `("深圳市普渡科技有限公司", "介绍一下深圳市普渡科技有限公司")`
+      derives NO location qualifier; legit co-occurrence
+      (`国际先进技术应用推进中心在深圳的布局`) still derives `深圳`; multi-city queries
+      resolve to the earliest occurrence deterministically across `PYTHONHASHSEED`s;
+      every `_ANCHOR_LOCATION_LEXICON` member invariant under
+      `_normalized_web_identity`.
+- [x] **Retest service (39878):** 普渡 control PASS (`llm_synthesized`, no
+      off-anchor/correction log lines), badcase T1/T2 PASS (0 hits for
+      `中国科学院深圳先进技术研究院|南开`), three drift probes did not drift. Evidence:
+      `phase2_fix_*.sse`.
+- [x] **Pre-existing triage:** both probe subject substitutions reproduce on PRE-FIX
+      production (one byte-identical) → registered in
+      `.agents/runs/followups/2026-08-13-subject-consistency-phase2-residuals.md`;
+      the fixes are not their cause. Evidence: `phase2_prefix_prod_*.sse`.
+- [x] **Regression:** canonical_v2 1144 passed / 1 known-baseline failure / 149 skipped;
+      admin-console 141 passed; chat UI node 87/0.
+- [x] **Production smoke after deploy (HEAD `45d39dd`):** badcase T1/T2 PASS (T2 = the
+      wording that crashed pre-fix production earlier the same day), 普渡 PASS,
+      unqualified PASS; journal clean. Evidence: `phase2_final_prod_*.sse`.

@@ -128,14 +128,18 @@ gate; `7cad141` identity-form split + tier classifier; `6fda6b6` three-tier gate
 
 The sync prose renderer SHALL pin a qualified anchor to its branch: when the anchor
 carries a location qualifier (from its parenthesized qualifier, or a location lexicon
-term co-occurring with the org stem in the user query), the renderer SHALL treat the
+term co-occurring with the org stem in the user query OUTSIDE the org name itself — a
+city that is part of the legal full name, e.g. `深圳市普渡科技有限公司`, SHALL NOT
+qualify; when several lexicon terms co-occur, the earliest-occurring in the query SHALL
+win deterministically), the renderer SHALL treat the
 answer as on-anchor only when the org stem AND the normalized qualifier co-occur in the
 answer. An off-anchor answer SHALL trigger one corrective re-synthesis with a
 branch-focused correction message (name the branch; attribute other-branch content
 explicitly; never interrogate the user); if the retry still misses, the renderer SHALL
 fall back to the deterministic evidence list rather than publish a wrong-branch
 synthesis. Without a qualifier, the phase-1 identity-form mention behavior SHALL apply
-unchanged. (Shipped: `50c4f3a` sync correction; `9afe730` qualifier pinning.)
+unchanged. (Shipped: `50c4f3a` sync correction; `9afe730` qualifier pinning; `45d39dd`
+stem-residual qualifier scan + deterministic multi-location resolution.)
 
 #### Scenario: branch-qualified answer passes without correction
 - **GIVEN** anchor 国际先进技术应用推进中心（深圳） with qualifier 深圳
@@ -193,7 +197,11 @@ success the final `answer` event SHALL carry the corrected text (the frontend re
 via the existing mismatch path). On correction failure or a still-off-anchor retry, the
 original streamed result SHALL stand (fail-open, with an info-level log marker); the
 stream path SHALL never raise for off-anchor. An on-anchor stream SHALL make no correction
-call at all. (Shipped: `2686804`.)
+call at all. The turn-level published-vs-final integrity guard SHALL exempt only a
+renderer-marked correction result (`supersedes_streamed_draft`, set solely on the
+correction-success branch); an UNMARKED mismatch between the published chunks and the
+final result SHALL still abort the turn and roll back the session. (Shipped: `2686804`
+renderer correction; `4c2bf80` guard exemption making the replaced-scenario reachable.)
 
 #### Scenario: drifted stream final answer is replaced
 - **GIVEN** a streamed answer that drifted off the anchor
@@ -205,6 +213,12 @@ call at all. (Shipped: `2686804`.)
 - **GIVEN** a drifted streamed answer whose retry errors or still misses
 - **WHEN** the stream completes
 - **THEN** the original streamed answer is returned and no exception propagates
+
+#### Scenario: unmarked stream mismatch aborts the turn
+- **GIVEN** a streamed turn whose final result differs from the published chunks without
+  the renderer's correction marker
+- **WHEN** the integrity guard runs
+- **THEN** the turn aborts with an error and the session is rolled back
 
 #### Scenario: on-anchor stream makes a single call
 - **GIVEN** a streamed answer that is on-anchor
