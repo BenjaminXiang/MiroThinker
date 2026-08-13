@@ -1654,6 +1654,42 @@ def test_mentions_anchor_with_qualifier_requires_branch_cooccurrence() -> None:
     )
 
 
+def test_mentions_anchor_qualified_rejects_lookalike_organized_answer() -> None:
+    answer = (
+        "中国科学院深圳先进技术研究院（简称“深圳先进院”）是深圳市人民政府与中国科学院共建的新型研发机构。"
+        "深圳先进院在人才团队方面拥有李成睿、周磊等教授。"
+        "该院的合作机构包括国际先进技术应用推进中心等。"
+    )
+    assert not serving_module._answer_mentions_anchor(
+        answer, "国际先进技术应用推进中心（深圳）", location_qualifier="深圳",
+    )
+
+
+def test_mentions_anchor_qualified_accepts_lead_with_stem() -> None:
+    assert serving_module._answer_mentions_anchor(
+        "国际先进技术应用推进中心（深圳）依托粤港澳大湾区数字经济研究院建设。",
+        "国际先进技术应用推进中心（深圳）", location_qualifier="深圳",
+    )
+
+
+def test_mentions_anchor_qualified_accepts_framing_opener_with_repeated_stem() -> None:
+    answer = (
+        "从公开信息看，这家机构的分量不低。"
+        "国际先进技术应用推进中心（深圳）近日揭牌，国际先进技术应用推进中心由国家发改委指导。"
+    )
+    assert serving_module._answer_mentions_anchor(
+        answer, "国际先进技术应用推进中心（深圳）", location_qualifier="深圳",
+    )
+
+
+def test_mentions_anchor_unqualified_path_unchanged() -> None:
+    # phase-1 semantics: a single mid-answer mention still counts.
+    assert serving_module._answer_mentions_anchor(
+        "从公开信息看，这家机构的分量不低。国际先进技术应用推进中心（合肥）采用理事会模式。",
+        "国际先进技术应用推进中心",
+    )
+
+
 def test_correction_message_mentions_branch_when_qualified() -> None:
     msg = serving_module._anchor_correction_message(
         "国际先进技术应用推进中心（深圳）", location_qualifier="深圳",

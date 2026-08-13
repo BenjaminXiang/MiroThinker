@@ -4370,13 +4370,28 @@ def _anchor_correction_name(result: Any, active_anchor: Any) -> str | None:
     return display_name
 
 
+_ANSWER_LEAD_SENTENCE_RE = re.compile(r"[。！？!?]")
+
+
+def _answer_lead_mentions_stem(answer_text: str, org_stem: str) -> bool:
+    """Whether the answer's opening sentence names the organization."""
+    if not org_stem:
+        return False
+    head = _ANSWER_LEAD_SENTENCE_RE.split(answer_text, maxsplit=1)[0]
+    return org_stem in _normalized_web_identity(head)
+
+
 def _answer_mentions_anchor(
     answer_text: str, anchor_name: str, *, location_qualifier: str | None = None
 ) -> bool:
     searchable = _normalized_web_identity(answer_text)
     if location_qualifier is not None:
         stem = _org_name_stem(anchor_name)
-        return bool(stem) and stem in searchable and location_qualifier in searchable
+        if not (stem and stem in searchable and location_qualifier in searchable):
+            return False
+        # A lookalike-organized answer can still name-drop the anchor once;
+        # require the anchor to lead the answer or recur in it.
+        return _answer_lead_mentions_stem(answer_text, stem) or searchable.count(stem) >= 2
     for form in _web_identity_forms(anchor_name):
         # The Web-lane marker rule for short forms targets noisy search
         # snippets; on the answer side a bare 3+ char name (丁文伯是…) is a
