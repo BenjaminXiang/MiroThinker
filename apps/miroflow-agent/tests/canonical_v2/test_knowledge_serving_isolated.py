@@ -3982,6 +3982,55 @@ def test_anchor_location_qualifier_from_parens_and_query() -> None:
     )
 
 
+def test_anchor_location_qualifier_ignores_city_inside_legal_name_stem() -> None:
+    """A city that is part of the legal name stem itself (深圳市普渡科技
+    有限公司) must not qualify the anchor: the lexicon scan runs on the query
+    residual outside the stem, not on the full query. Legitimate co-occurrence
+    outside the stem still qualifies."""
+    assert (
+        serving_module._anchor_location_qualifier(
+            "深圳市普渡科技有限公司", "介绍一下深圳市普渡科技有限公司"
+        )
+        is None
+    )
+    assert (
+        serving_module._anchor_location_qualifier(
+            "深圳市普渡科技有限公司", "深圳市普渡科技有限公司在北京的布局"
+        )
+        == "北京"
+    )
+
+
+@pytest.mark.parametrize(
+    ("query", "expected"),
+    (
+        ("国际先进技术应用推进中心在深圳和广州的布局", "深圳"),
+        ("国际先进技术应用推进中心在广州和深圳的布局", "广州"),
+    ),
+)
+def test_anchor_location_qualifier_returns_earliest_residual_location(
+    query: str,
+    expected: str,
+) -> None:
+    """Multiple co-occurring locations resolve deterministically to the
+    earliest one in the query residual — frozenset iteration order is a hash
+    randomization artifact and must not decide the qualifier."""
+    assert (
+        serving_module._anchor_location_qualifier("国际先进技术应用推进中心", query)
+        == expected
+    )
+
+
+def test_anchor_location_lexicon_members_stay_normalized() -> None:
+    """Every lexicon member is invariant under _normalized_web_identity, so
+    the verbatim member returned by the scan needs no normalize-at-return."""
+    assert serving_module._ANCHOR_LOCATION_LEXICON
+    assert all(
+        serving_module._normalized_web_identity(location) == location
+        for location in serving_module._ANCHOR_LOCATION_LEXICON
+    )
+
+
 def test_evidence_branch_qualifiers_excludes_anchor_and_non_locations() -> None:
     texts = (
         "国际先进技术应用推进中心（合肥）成立理事会",

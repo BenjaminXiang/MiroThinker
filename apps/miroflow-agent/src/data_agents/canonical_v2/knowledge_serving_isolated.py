@@ -2024,10 +2024,18 @@ def _anchor_location_qualifier(anchor_name: str, query: str) -> str | None:
     normalized_query = _normalized_web_identity(query)
     if stem not in normalized_query:
         return None
-    for location in _ANCHOR_LOCATION_LEXICON:
-        if location in normalized_query:
-            return location
-    return None
+    # The stem itself may carry a city prefix (深圳市普渡科技有限公司): only
+    # the query residual outside the stem is scanned, so the legal name cannot
+    # qualify itself; co-occurrence outside the stem still qualifies.
+    residual = normalized_query.replace(stem, "")
+    matches = [
+        location for location in _ANCHOR_LOCATION_LEXICON if location in residual
+    ]
+    if not matches:
+        return None
+    # Deterministic: the earliest occurrence in the residual wins (frozenset
+    # iteration order is a hash randomization artifact).
+    return min(matches, key=residual.index)
 
 
 def _web_identity_full_name_forms(value: str) -> tuple[str, ...]:
