@@ -29,7 +29,24 @@
 
 **影响**：P1（观测）地基落地；1.1.2（服务层挂点）/1.1.3（serving 上报）待做。
 
-**状态**：继续 1.1.2。
+**状态**：1.1.1 完成。
+
+---
+
+## 2026-08-18 · 任务 1.1.2 完成（服务层 turn 边界挂点，RED→GREEN）
+
+**做了什么**：`CanonicalV2ChatAdapter` 挂上 turn-trace：每轮在 `_answer_locked` 构造 collector（会话快照：轮序/活动锚点/已展示数/软主题；计划后回填 domains；证据集后按 lane 累计候选数；成功/澄清/异常三条出口都写 journal）。生产装配在 `canonical_v2_admin.py` 聚合构造处注入 `TurnTraceJournalStore()`。
+
+**发现**：
+1. **S11A 冻结边界**：http-adapter 契约测试逐字校验适配器构造参数与 `answer` 参数元组——构造器加参会被打回。改用**构造后注入** `attach_turn_trace()`，冻结签名零改动（该套件 128/128 保持全绿）。
+2. `RetrievalTrace` 已带 lane/candidate_count/status，服务层就能记 lane 候选总数；更深的 retained/filtered 拆分和 web provider 明细归 1.1.3。
+3. `test_canonical_v2_consumer_migration.py` 有 2 个**既有失败**（`create_canonical_v2_candidate_app` keyword-only seam 检查、typed public copy），stash 对照确认与本切片无关，未修（非本轮范围，记录在案）。
+
+**验证**：新增 `tests/test_canonical_v2_turn_trace_hook.py` 4 用例（成功含全阶段断言/第二轮锚点快照/异常轮写 error trace 且重抛/无 store 纯 no-op）RED→GREEN；连同 store 套件与 http-adapter/carryover/referent 回归共 **167 通过 + 2 既有失败**。
+
+**影响**：P1。turn 一进一出即有 trace（journal 默认 `var/turn-trace/`，`TURN_TRACE_DIR` 可配）。
+
+**状态**：继续 1.1.3（serving 层上报：门控丢弃/web provider 明细/降级 token 判定）。
 
 ---
 

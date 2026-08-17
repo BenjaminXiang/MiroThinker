@@ -12,11 +12,16 @@ reaches Candidate. RED definitions live in
        Evidence: `apps/admin-console/tests/test_canonical_v2_turn_trace_store.py`
        RED (collection error) → GREEN 11/11 on 2026-08-18. Implemented as
        dataclasses matching `canonical_v2_access_log` style (design.md updated).
-- [ ] 1.1.2 Service turn-boundary hook in
+- [x] 1.1.2 Service turn-boundary hook in
        `services/canonical_v2_chat.py::_answer_locked`: construct collector,
        attach session snapshot + interpretation fields, emit record on
        success/degradation/error; wire store into the FastAPI app alongside the
        access-log store.
+       Evidence: `tests/test_canonical_v2_turn_trace_hook.py` RED (3 failed:
+       constructor/store absent) → GREEN 4/4; frozen S11A boundary preserved
+       via post-construction `attach_turn_trace` (http-adapter contract suite
+       128/128). Production wiring: `canonical_v2_admin.py` aggregate attaches
+       `TurnTraceJournalStore()`. 2026-08-18.
 - [ ] 1.1.3 Serving-layer reporting: lane in/retained/filtered counts, named
        gate drops, web provider outcomes (attempt/error/timeout/retry/cache),
        degradation token selection.

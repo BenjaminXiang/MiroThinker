@@ -23,6 +23,10 @@ from backend.api.chat_contracts import (
     ClarificationPayload,
     TargetDomain,
 )
+from backend.services.canonical_v2_turn_trace import (
+    TurnTraceCollector,
+    TurnTraceJournalStore,
+)
 from src.data_agents.canonical_v2.contracts import ContractModel
 from src.data_agents.canonical_v2.followup_referents import (
     _search_view,
@@ -1038,9 +1042,17 @@ class CanonicalV2ChatAdapter:
         self._knowledge_read = knowledge_read
         self._answer_factory = answer_factory
         self._answer_session_fork = answer_session_fork
+        # The S11A constructor boundary is frozen (params are signature-checked
+        # by the http-adapter contract tests); the turn-trace journal is
+        # attached post-construction instead.
+        self._turn_trace: TurnTraceJournalStore | None = None
         self._sessions: dict[str, _CommittedSession] = {}
         self._session_locks: dict[str, RLock] = {}
         self._lock = RLock()
+
+    def attach_turn_trace(self, store: TurnTraceJournalStore) -> None:
+        """Attach the turn-trace journal; tracing is a no-op until attached."""
+        self._turn_trace = store
 
     def get_feedback_checkpoint(self, session_id: str) -> ChatFeedbackCheckpoint | None:
         with self._session_lock(session_id):
@@ -1061,15 +1073,21 @@ class CanonicalV2ChatAdapter:
         as_of: datetime,
     ) -> ChatResponse:
         turn_gate = _TurnCommitGate()
+        trace: list[TurnTraceCollector] = []
         with self._session_lock(session_id):
-            return self._answer_locked(
-                query=query,
-                session_id=session_id,
-                option_id=option_id,
-                as_of=as_of,
-                progress=None,
-                turn_gate=turn_gate,
-            )
+            try:
+                return self._answer_locked(
+                    query=query,
+                    session_id=session_id,
+                    option_id=option_id,
+                    as_of=as_of,
+                    progress=None,
+                    turn_gate=turn_gate,
+                    trace_sink=trace.append,
+                )
+            except Exception:
+                self._trace_turn_error(trace)
+                raise
 
     def answer_stream(
         self,
@@ -1087,15 +1105,94 @@ class CanonicalV2ChatAdapter:
         exact; per-call state is never shared on the adapter instance.
         """
         active_gate = turn_gate if turn_gate is not None else _TurnCommitGate()
+        trace: list[TurnTraceCollector] = []
         with self._session_lock(session_id):
-            return self._answer_locked(
-                query=query,
-                session_id=session_id,
-                option_id=option_id,
-                as_of=as_of,
-                progress=progress,
-                turn_gate=active_gate,
+            try:
+                return self._answer_locked(
+                    query=query,
+                    session_id=session_id,
+                    option_id=option_id,
+                    as_of=as_of,
+                    progress=progress,
+                    turn_gate=active_gate,
+                    trace_sink=trace.append,
+                )
+            except Exception:
+                self._trace_turn_error(trace)
+                raise
+
+    def _begin_turn_trace(
+        self,
+        *,
+        session_id: str,
+        committed: _CommittedSession | None,
+        query: str,
+    ) -> TurnTraceCollector | None:
+        if self._turn_trace is None:
+            return None
+        collector = TurnTraceCollector(
+            session_id=session_id,
+            turn_ordinal=1 if committed is None else committed.turn_count + 1,
+            ts_start=datetime.now(UTC),
+        )
+        anchor = (
+            None
+            if committed is None or committed.context_receipt is None
+            else committed.context_receipt.active_anchor
+        )
+        collector.set_session_snapshot(
+            active_anchor_id=None if anchor is None else _handle_id(anchor),
+            active_anchor_name=None if anchor is None else anchor.display_name,
+            displayed_id_count=(
+                0 if committed is None else len(committed.displayed_ids or ())
+            ),
+            referent_hint=None if committed is None else committed.soft_subject_name,
+        )
+        collector.set_interpretation(
+            query_raw=query,
+            question_frame="",
+            inferred_domains=(),
+            subject_candidates=(),
+        )
+        return collector
+
+    def _write_turn_trace(
+        self,
+        collector: TurnTraceCollector | None,
+        *,
+        status: str,
+        response: ChatResponse | None,
+        degradation: str | None = None,
+        answer_subject: str | None = None,
+        error_detail: str | None = None,
+    ) -> None:
+        if collector is None or self._turn_trace is None:
+            return
+        if degradation is not None:
+            collector.set_degradation(degradation)
+        citations = getattr(response, "citations", None) or ()
+        self._turn_trace.write_turn(
+            collector.finalize(
+                status=status,
+                answer_subject=answer_subject,
+                citation_count=len(citations),
+                ts_end=datetime.now(UTC),
+                error_detail=error_detail,
             )
+        )
+
+    def _trace_turn_error(self, collectors: list[TurnTraceCollector]) -> None:
+        if not collectors or self._turn_trace is None:
+            return
+        try:
+            self._write_turn_trace(
+                collectors[0],
+                status="error",
+                response=None,
+                error_detail="turn raised before completion",
+            )
+        except Exception:  # noqa: BLE001 - tracing must never break the error path
+            pass
 
     def _answer_locked(
         self,
@@ -1106,6 +1203,7 @@ class CanonicalV2ChatAdapter:
         as_of: datetime,
         progress: Callable[[str, dict[str, Any]], bool | None] | None,
         turn_gate: _TurnCommitGate,
+        trace_sink: Callable[[TurnTraceCollector], None] | None = None,
     ) -> ChatResponse:
         def emit(name: str, payload: dict[str, Any]) -> bool:
             if progress is None:
@@ -1126,12 +1224,24 @@ class CanonicalV2ChatAdapter:
 
         with self._lock:
             committed = self._sessions.get(session_id)
+        trace = self._begin_turn_trace(
+            session_id=session_id, committed=committed, query=normalized_query
+        )
+        if trace is not None and trace_sink is not None:
+            trace_sink(trace)
         selection = self._selection(committed, option_id=option_id)
         if selection is None and _referent_clarification_needed(
             query=normalized_query,
             committed=committed,
         ):
-            return _referent_clarification_response(normalized_query)
+            clarification = _referent_clarification_response(normalized_query)
+            self._write_turn_trace(
+                trace,
+                status="ok",
+                response=clarification,
+                degradation="clarification",
+            )
+            return clarification
         turn_count = 1 if committed is None else committed.turn_count + 1
         turn_id = self._turn_id(
             session_id=session_id,
@@ -1252,6 +1362,13 @@ class CanonicalV2ChatAdapter:
         plan = _validated_model(raw_plan, RetrievalPlan)
         self._require_release(plan, stage="plan")
         plan = _session_bound_plan(plan=plan, session_id=session_id)
+        if trace is not None:
+            trace.set_interpretation(
+                query_raw=normalized_query,
+                question_frame="",
+                inferred_domains=tuple(plan.domains),
+                subject_candidates=(),
+            )
         emit(
             "plan_done",
             {
@@ -1274,6 +1391,21 @@ class CanonicalV2ChatAdapter:
         self._require_release(raw_evidence_set, stage="read")
         evidence_set = _validated_model(raw_evidence_set, EvidenceSet)
         self._require_release(evidence_set, stage="read")
+        if trace is not None:
+            # Service-boundary lane view: candidate totals per lane as observed
+            # on the evidence set. The deeper retained/filtered split and web
+            # provider outcomes land with the serving-layer reporting (1.1.3).
+            lane_totals: dict[str, int] = {}
+            for lane_trace in evidence_set.traces:
+                lane_name = getattr(lane_trace, "lane", None)
+                if not isinstance(lane_name, str) or not lane_name:
+                    continue
+                candidates = int(getattr(lane_trace, "candidate_count", 0) or 0)
+                lane_totals[lane_name] = lane_totals.get(lane_name, 0) + candidates
+            for lane_name, total in lane_totals.items():
+                trace.record_lane_counts(
+                    lane_name, in_=total, retained=total, filtered=0
+                )
         emit(
             "retrieval_done",
             {
@@ -1414,6 +1546,16 @@ class CanonicalV2ChatAdapter:
         with self._lock:
             with turn_gate.commit():
                 self._sessions[session_id] = next_session
+        self._write_turn_trace(
+            trace,
+            status="ok",
+            response=response,
+            answer_subject=(
+                None
+                if context_receipt is None or context_receipt.active_anchor is None
+                else context_receipt.active_anchor.display_name
+            ),
+        )
         return response
 
     def _selection(
