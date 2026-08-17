@@ -558,11 +558,25 @@ and are consistent.
    acceptance) plus `.agents/runs/<change-id>/` verification contract and
    evidence. This system gates implementation.
 
-Mandatory cross-linking: the human doc names its `<change-id>`; the OpenSpec
-proposal/design links the human doc. When behavior or scope changes, both systems
-are updated in the same slice — a human doc that describes behavior the OpenSpec
-change does not contract (or vice versa) is a defect of the slice, not a style
-issue.
+Mandatory operational rules (all three; violating any of them is a defect of the
+slice, not a style issue):
+
+- **Cross-linking**: the human doc names its `<change-id>`; the OpenSpec
+  proposal/design links the human doc. When behavior or scope changes, both
+  systems are updated in the same slice.
+- **Master progress index (总目录)**: the human doc system maintains ONE living
+  index — `docs/plans/index.md` (a fix round may add a round ledger section) —
+  where every active work item has a row: problem/task id, one-line description,
+  owning phase and `<change-id>`, doc link, status (planned / in-progress /
+  candidate / accepted / done), last-updated date. A person must be able to open
+  this single file and track the whole round's progress without reading anything
+  else. Every doc write updates its index row in the same slice.
+- **Terminal confirmation output (写后确认)**: after writing or updating any
+  document in either system, the agent MUST print a confirmation block to the
+  terminal for the human to verify — no silent doc writes. Block contents:
+  files written (paths) with a one-line purpose each; index row updated
+  (yes/no); cross-links updated (yes/no); OpenSpec task checkboxes ticked
+  (ids). The next action waits until the block is printed.
 
 ### 15.1 Before editing code
 
