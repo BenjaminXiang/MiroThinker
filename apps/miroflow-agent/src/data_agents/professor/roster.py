@@ -399,6 +399,8 @@ def _extract_site_specific_hub_links(
     parsed = urlparse(source_url)
     hostname = (parsed.hostname or "").lower()
 
+    if hostname.endswith("suat-sz.edu.cn"):
+        return _extract_suat_pagination_links(soup, source_url)
     if hostname.endswith("szu.edu.cn"):
         ceie_links = _extract_szu_ceie_teacher_category_links(soup, source_url)
         if ceie_links:
@@ -678,6 +680,8 @@ def _extract_site_specific_markdown_roster_links(
         return _extract_sustech_hub_links(markdown)
     if hostname == "www.szu.edu.cn" and path in {"/szdw/jsjj.htm", "/yxjg/xbxy.htm"}:
         return _extract_szu_hub_links(markdown)
+    if hostname.endswith("suat-sz.edu.cn"):
+        return _extract_suat_markdown_pagination_links(markdown, source_url)
     if hostname == "www.pkusz.edu.cn" and path == "/szdw.htm":
         return _extract_pkusz_hub_links(markdown)
     return []
@@ -1296,6 +1300,69 @@ def _extract_suat_profile_links(markdown: str) -> list[tuple[str, str]]:
             continue
         links.append((href, name))
     return links
+
+
+def _extract_suat_pagination_links(
+    soup: BeautifulSoup,
+    source_url: str,
+) -> list[tuple[str, str]]:
+    links: list[tuple[str, str]] = []
+    for anchor in soup.find_all("a", href=True):
+        if not isinstance(anchor, Tag):
+            continue
+        href = str(anchor.get("href", "")).strip()
+        label = anchor.get_text(" ", strip=True)
+        if _looks_like_suat_pagination_link(href, label, source_url):
+            links.append((href, label))
+    return links
+
+
+def _extract_suat_markdown_pagination_links(
+    markdown: str,
+    source_url: str,
+) -> list[tuple[str, str]]:
+    links: list[tuple[str, str]] = []
+    for label, href in _iter_markdown_links(markdown):
+        if _looks_like_suat_pagination_link(href, label, source_url):
+            links.append((href, _normalize_link_label(label)))
+    return links
+
+
+def _looks_like_suat_pagination_link(
+    href: str,
+    label: str,
+    source_url: str,
+) -> bool:
+    cleaned_label = _normalize_link_label(label)
+    if not cleaned_label:
+        return False
+    if not (cleaned_label.isdigit() or cleaned_label in {"上页", "下页", "尾页"}):
+        return False
+    if "/info/" in href.lower() or not href.lower().endswith((".htm", ".html")):
+        return False
+    source_parsed = urlparse(source_url)
+    source_host = (source_parsed.hostname or "").lower()
+    if not source_host.endswith("suat-sz.edu.cn"):
+        return False
+    absolute_url = _normalize_profile_url(source_url, href)
+    parsed = urlparse(absolute_url)
+    if (parsed.hostname or "").lower() != source_host:
+        return False
+    source_list_path = _suat_list_base_path(source_parsed.path)
+    if not source_list_path:
+        return False
+    candidate_path = parsed.path.rstrip("/")
+    return candidate_path.startswith(f"{source_list_path}/") and candidate_path != source_parsed.path.rstrip("/")
+
+
+def _suat_list_base_path(path: str) -> str:
+    normalized = path.rstrip("/")
+    leaf = normalized.rsplit("/", 1)[-1]
+    if re.fullmatch(r"\d+\.html?", leaf, flags=re.IGNORECASE):
+        return normalized.rsplit("/", 1)[0]
+    if leaf.lower().endswith((".htm", ".html")):
+        return re.sub(r"\.html?$", "", normalized, flags=re.IGNORECASE)
+    return normalized
 
 
 def _extract_inline_record_profile_links(html: str) -> list[tuple[str, str]]:

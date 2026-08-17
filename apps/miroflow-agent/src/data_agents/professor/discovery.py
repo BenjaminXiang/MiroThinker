@@ -1181,6 +1181,8 @@ def _should_continue_after_roster_entries(
     parsed = urlparse(seed_url)
     hostname = (parsed.hostname or "").lower()
     path = parsed.path.rstrip("/").lower()
+    if hostname.endswith("suat-sz.edu.cn") and path.startswith("/swyxgcxy/szll/"):
+        return bool(extract_roster_page_links(html, seed_url))
     if hostname != "ceie.szu.edu.cn" or path != "/szdw/ysfc.htm":
         return False
     category_links = extract_roster_page_links(html, seed_url)

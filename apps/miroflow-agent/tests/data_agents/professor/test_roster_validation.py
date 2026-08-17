@@ -3156,6 +3156,83 @@ def test_extract_roster_entries_supports_inline_suat_records_without_anchor_tags
     ]
 
 
+def test_extract_roster_page_links_supports_suat_biomed_pagination_after_entries():
+    html = """
+    <html><body>
+      <a href="../info/1052/1124.htm">
+        宋冰 副院长、讲席教授 songbing@suat-sz.edu.cn 深圳理工大学生物医学工程学院
+      </a>
+      <div class="pages">
+        <a href="jxky/1.htm">2</a>
+        <a href="jxky/2.htm">3</a>
+        <a href="jxky/3.htm">4</a>
+        <a href="jxky/1.htm">下页</a>
+      </div>
+    </body></html>
+    """
+
+    links = extract_roster_page_links(
+        html,
+        "https://suat-sz.edu.cn/swyxgcxy/szll/jxky.htm",
+    )
+
+    assert links == [
+        ("https://suat-sz.edu.cn/swyxgcxy/szll/jxky/1.htm", "2"),
+        ("https://suat-sz.edu.cn/swyxgcxy/szll/jxky/2.htm", "3"),
+        ("https://suat-sz.edu.cn/swyxgcxy/szll/jxky/3.htm", "4"),
+    ]
+
+
+def test_discover_professor_seeds_continues_suat_biomed_pagination_after_entries():
+    seed_url = "https://suat-sz.edu.cn/swyxgcxy/szll/jxky.htm"
+    page2_url = "https://suat-sz.edu.cn/swyxgcxy/szll/jxky/1.htm"
+    pages = {
+        seed_url: """
+        <html><body>
+          <a href="../info/1052/1124.htm">
+            宋冰 副院长、讲席教授 songbing@suat-sz.edu.cn 深圳理工大学生物医学工程学院
+          </a>
+          <a href="../info/1052/1121.htm">
+            吴景龙 讲席教授、博士生导师 wujinglong@suat-sz.edu.cn 深圳理工大学生物医学工程学院
+          </a>
+          <a href="jxky/1.htm">2</a>
+          <a href="jxky/1.htm">下页</a>
+        </body></html>
+        """,
+        page2_url: """
+        <html><body>
+          <a href="/swyxgcxy/info/1052/1134.htm">
+            胡庆茂 教学名师 huqingmao@suat-sz.edu.cn 深圳理工大学生物医学工程学院
+          </a>
+        </body></html>
+        """,
+    }
+    visited: list[str] = []
+
+    def fetch_html(url: str) -> str:
+        visited.append(url)
+        return pages[url]
+
+    result = discover_professor_seeds(
+        [
+            ProfessorRosterSeed(
+                institution="深圳理工大学",
+                department="生物医学工程学院",
+                roster_url=seed_url,
+            )
+        ],
+        fetch_html=fetch_html,
+        limits=DiscoveryLimits(max_depth=1, max_pages_per_seed=4),
+    )
+
+    assert visited == [seed_url, page2_url]
+    assert [(prof.name, prof.profile_url) for prof in result.professors] == [
+        ("宋冰", "https://suat-sz.edu.cn/swyxgcxy/info/1052/1124.htm"),
+        ("吴景龙", "https://suat-sz.edu.cn/swyxgcxy/info/1052/1121.htm"),
+        ("胡庆茂", "https://suat-sz.edu.cn/swyxgcxy/info/1052/1134.htm"),
+    ]
+
+
 def test_extract_roster_entries_keeps_latin_names_containing_en_substrings():
     html = """
     <html><body>
