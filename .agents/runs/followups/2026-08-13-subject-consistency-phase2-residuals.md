@@ -59,6 +59,11 @@ omitted the flag or the stream decoder missed it. Same SSE as trigger B above.
 
 ## 3. Web-lane `unavailable` episodes have no logged cause
 
+**First hard evidence 2026-08-17**: user test group 2 (followup
+`.agents/runs/followups/2026-08-17-bare-name-session-subject-collapse.md`) got a
+refusal-shaped T1 with no way to tell why from logs — journal holds only HTTP
+access lines, zero web-lane/provider/gate lines in a 2h window.
+
 Production journal 2026-08-13 14:15-14:17: web lane reported `unavailable`
 (0 web_items) with no serper/quota/rate-limit lines; recovered ~14:18. On pre-fix
 code this degradation produced the C1 crash live (journal:
