@@ -1,6 +1,5 @@
-import os
-
-from src.data_agents.professor.models import DiscoveredProfessorSeed
+from src.data_agents.professor.adapter_resolution import resolve_seed_adapter_name
+from src.data_agents.professor.models import ProfessorRosterSeed
 from src.data_agents.professor.school_adapters import (
     SchoolRosterAdapter,
     find_matching_school_adapter,
@@ -56,3 +55,20 @@ def test_find_matching_school_adapter_returns_none_without_match():
         (adapter,),
         bypass=False,
     ) is None
+
+
+def test_resolve_seed_adapter_supports_sysu_seed_url_families():
+    urls = [
+        "http://sece.sysu.edu.cn/szll/index.htm",
+        "https://sic.sysu.edu.cn/members/index.htm",
+        "https://am.sysu.edu.cn/szdw/index.htm",
+    ]
+
+    for url in urls:
+        seed = ProfessorRosterSeed(
+            institution="中山大学（深圳）",
+            department="SYSU fixture",
+            roster_url=url,
+        )
+
+        assert resolve_seed_adapter_name(seed) == "sysu-faculty-staff"

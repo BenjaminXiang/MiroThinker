@@ -279,6 +279,66 @@ def test_run_single_seed_writes_success_status_after_supported_pipeline(
     assert _issue_rows(pg_conn) == []
 
 
+def test_sysu_single_seed_rerun_updates_professor_to_latest_run_id(
+    pg_conn: psycopg.Connection,
+) -> None:
+    seed_id = _insert_seed(
+        pg_conn,
+        school="中山大学（深圳）",
+        department="电子与通信工程学院",
+        seed_url="http://sece.sysu.edu.cn/szll/index.htm",
+    )
+    first_run_id = open_pipeline_run(
+        pg_conn,
+        run_kind="roster_crawl",
+        run_scope={"seed_id": seed_id, "attempt": 1},
+        triggered_by="test",
+    )
+    second_run_id = open_pipeline_run(
+        pg_conn,
+        run_kind="roster_crawl",
+        run_scope={"seed_id": seed_id, "attempt": 2},
+        triggered_by="test",
+    )
+
+    def pipeline_runner(seed: ProfessorRosterSeed, _timeout: float) -> ProfessorPipelineResult:
+        profile = _profile(
+            institution=seed.institution,
+            department=seed.department,
+            homepage="https://sece.sysu.edu.cn/teacher/2001",
+            profile_url="https://sece.sysu.edu.cn/teacher/2001",
+            evidence=("https://sece.sysu.edu.cn/teacher/2001",),
+            roster_source=seed.roster_url,
+        )
+        return _pipeline_result(seed=seed, profiles=[profile])
+
+    first = run_single_seed_with_conn(
+        pg_conn,
+        seed_id=seed_id,
+        run_id=first_run_id,
+        adapter_resolver=lambda _seed: "sysu-faculty-staff",
+        pipeline_runner=pipeline_runner,
+    )
+    second = run_single_seed_with_conn(
+        pg_conn,
+        seed_id=seed_id,
+        run_id=second_run_id,
+        pipeline_runner=pipeline_runner,
+    )
+
+    assert first.status == "success"
+    assert second.status == "success"
+    row = pg_conn.execute(
+        """
+        SELECT run_id
+          FROM professor
+         WHERE canonical_name = '李华'
+        """
+    ).fetchone()
+    assert row is not None
+    assert row[0] == second_run_id
+
+
 def test_run_single_seed_marks_failed_discovery_as_failure(
     pg_conn: psycopg.Connection,
 ) -> None:

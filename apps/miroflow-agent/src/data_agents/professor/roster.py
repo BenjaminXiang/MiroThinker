@@ -768,7 +768,16 @@ def _matches_sysu_faculty_staff_family(source_url: str) -> bool:
     hostname = (parsed.hostname or "").lower()
     path = parsed.path.lower()
     return hostname.endswith("sysu.edu.cn") and any(
-        token in path for token in ("/faculty", "/staff", "/teacher", "/teachers")
+        token in path
+        for token in (
+            "/faculty",
+            "/staff",
+            "/teacher",
+            "/teachers",
+            "/members",
+            "/szdw",
+            "/szll",
+        )
     )
 
 
