@@ -5465,3 +5465,383 @@ def test_s12g_full_asgi_late_disconnect_preserves_prior_session_commit() -> None
     assert third.answer_text == (
         "第一轮公开问题｜第二轮完整 ASGI 先提交问题｜第三轮公开问题"
     )
+
+
+class _ReceiptAnchorAnswer:
+    """Records turn requests; returns grounded results with a scripted
+    ContextReceipt whose active_anchor is one scripted handle per turn."""
+
+    def __init__(self, captured: list[Any], anchors: list[Any]) -> None:
+        self._captured = captured
+        self._anchors = anchors
+
+    def answer(self, request: Any) -> Any:
+        self._captured.append(request)
+        answer = import_module("src.data_agents.canonical_v2.knowledge_answer")
+        anchor = self._anchors.pop(0) if self._anchors else None
+        return answer.TurnResult(
+            session_id=request.session_id,
+            turn_id=request.turn_id,
+            release_id=request.release_id,
+            answer_text=f"web answer for {request.query}",
+            citations=(),
+            context_receipt=answer.ContextReceipt(active_anchor=anchor),
+        )
+
+
+def _receipt_anchor_adapter(
+    *,
+    read_script: list[tuple[tuple[Any, ...], tuple[Any, ...]]],
+    planning_requests: list[Any],
+    answer_requests: list[Any],
+    anchors: list[Any],
+) -> Any:
+    service = import_module("backend.services.canonical_v2_chat")
+    answer = _ReceiptAnchorAnswer(answer_requests, anchors)
+    return service.CanonicalV2ChatAdapter(
+        release_id=RELEASE_ID,
+        planner=_SoftAnchorPlanner(planning_requests),
+        knowledge_read=_SoftAnchorRead(read_script),
+        answer_factory=lambda: answer,
+        answer_session_fork=lambda value: value,
+    )
+
+
+def _canonical_handle(canonical_id: str, domain: str, display_name: str) -> Any:
+    read = import_module("src.data_agents.canonical_v2.knowledge_read")
+    return read.CanonicalEntityHandle(
+        canonical_id=canonical_id,
+        domain=domain,
+        display_name=display_name,
+        evidence_ids=(),
+    )
+
+
+def test_deepening_reference_carries_soft_subject_into_planning() -> None:
+    """Register §1 trigger B: a referential deepening turn keeps the org
+    subject in planning instead of degrading to unpinned topic views."""
+    _, web_item, web_handle = _soft_anchor_web_turn()
+    planning_requests: list[Any] = []
+    answer_requests: list[Any] = []
+    adapter = _soft_anchor_adapter(
+        read_script=[((web_item,), (web_handle,)), ((), ())],
+        planning_requests=planning_requests,
+        answer_requests=answer_requests,
+    )
+    session_id = "session:deepening-carryover"
+
+    first = adapter.answer(
+        query="介绍一下 国际先进技术应用推进中心（深圳）",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    assert first.query_type != "canonical_v2:G:clarification_only"
+
+    second = adapter.answer(
+        query="这个中心的企业培育情况怎么样",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+
+    assert second.query_type != "canonical_v2:G:clarification_only"
+    assert (
+        planning_requests[1].soft_context_subject
+        == "国际先进技术应用推进中心（深圳）"
+    )
+
+
+def test_deepening_reference_keeps_soft_subject_after_commit() -> None:
+    """The commit path keeps the stored soft subject across a deepening turn
+    instead of re-deriving garbage from the referential query (and losing
+    the anchor for every later turn)."""
+    _, web_item, web_handle = _soft_anchor_web_turn()
+    planning_requests: list[Any] = []
+    answer_requests: list[Any] = []
+    adapter = _soft_anchor_adapter(
+        read_script=[((web_item,), (web_handle,)), ((), ())],
+        planning_requests=planning_requests,
+        answer_requests=answer_requests,
+    )
+    session_id = "session:deepening-keep"
+
+    adapter.answer(
+        query="介绍一下 国际先进技术应用推进中心（深圳）",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    adapter.answer(
+        query="这个中心的企业培育情况怎么样",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+
+    assert (
+        adapter._sessions[session_id].soft_subject_name
+        == "国际先进技术应用推进中心（深圳）"
+    )
+
+
+def test_bare_pronoun_deepening_answers_about_soft_subject() -> None:
+    """Register §1 trigger A: after the badcase pair, a bare-它 deepening
+    answers about the carried subject instead of clarifying (and instead of
+    binding whatever record the vector lane leaked)."""
+    _, web_item, web_handle = _soft_anchor_web_turn()
+    planning_requests: list[Any] = []
+    answer_requests: list[Any] = []
+    adapter = _soft_anchor_adapter(
+        read_script=[((web_item,), (web_handle,)), ((), ()), ((), ())],
+        planning_requests=planning_requests,
+        answer_requests=answer_requests,
+    )
+    session_id = "session:pronoun-deepening"
+
+    adapter.answer(
+        query="介绍一下 国际先进技术应用推进中心（深圳）",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    adapter.answer(
+        query="有没有更详细的信息",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    third = adapter.answer(
+        query="它有哪些布局和进展",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+
+    assert third.query_type != "canonical_v2:G:clarification_only"
+    assert (
+        planning_requests[2].soft_context_subject
+        == "国际先进技术应用推进中心（深圳）"
+    )
+    assert planning_requests[2].displayed_entity_ids == ()
+
+
+def test_anaphoric_reference_binds_canonical_anchor() -> None:
+    """With a legitimate canonical anchor active, a generic referential
+    institution noun binds it into planning like a typed singular referent."""
+    planning_requests: list[Any] = []
+    answer_requests: list[Any] = []
+    adapter = _receipt_anchor_adapter(
+        read_script=[((), ()), ((), ())],
+        planning_requests=planning_requests,
+        answer_requests=answer_requests,
+        anchors=[_canonical_handle("company:hualichuang", "company", "华力创科学")],
+    )
+    session_id = "session:anaphoric-canonical"
+
+    adapter.answer(
+        query="介绍一下华力创科学",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    second = adapter.answer(
+        query="该机构的发展情况怎么样",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+
+    assert second.query_type != "canonical_v2:G:clarification_only"
+    assert planning_requests[1].displayed_entity_ids == ("company:hualichuang",)
+
+
+def test_person_pronoun_over_org_soft_subject_still_clarifies() -> None:
+    """A person-typed pronoun over an organization-level soft subject is a
+    genuine mismatch and must keep yielding the referent clarification."""
+    _, web_item, web_handle = _soft_anchor_web_turn()
+    planning_requests: list[Any] = []
+    answer_requests: list[Any] = []
+    adapter = _soft_anchor_adapter(
+        read_script=[((web_item,), (web_handle,))],
+        planning_requests=planning_requests,
+        answer_requests=answer_requests,
+    )
+    session_id = "session:person-pronoun-guard"
+
+    adapter.answer(
+        query="介绍一下 国际先进技术应用推进中心（深圳）",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    second = adapter.answer(
+        query="他有哪些论文",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+
+    assert second.query_type == "canonical_v2:G:clarification_only"
+
+
+def test_explicit_subject_deepening_does_not_carry_soft_anchor() -> None:
+    """An explicit named subject on the deepening turn wins over the stored
+    soft anchor; the org subject must not leak into that planning request."""
+    _, web_item, web_handle = _soft_anchor_web_turn()
+    planning_requests: list[Any] = []
+    answer_requests: list[Any] = []
+    adapter = _soft_anchor_adapter(
+        read_script=[((web_item,), (web_handle,)), ((), ())],
+        planning_requests=planning_requests,
+        answer_requests=answer_requests,
+    )
+    session_id = "session:explicit-subject-guard"
+
+    adapter.answer(
+        query="介绍一下 国际先进技术应用推进中心（深圳）",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    adapter.answer(
+        query="华力创科学这家公司的情况怎么样",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+
+    assert (
+        planning_requests[1].soft_context_subject
+        != "国际先进技术应用推进中心（深圳）"
+    )
+
+
+def test_leaked_canonical_anchor_dropped_on_soft_turn() -> None:
+    """Register §1 root cause 3: a vector-lane canonical record that captured
+    the answer receipt on a web-only turn must not become the session anchor
+    nor bind the next referential turn."""
+    _, web_item, web_handle = _soft_anchor_web_turn()
+    planning_requests: list[Any] = []
+    answer_requests: list[Any] = []
+    adapter = _receipt_anchor_adapter(
+        read_script=[((web_item,), (web_handle,)), ((), ())],
+        planning_requests=planning_requests,
+        answer_requests=answer_requests,
+        anchors=[_canonical_handle("professor:hit-sz:zhangty", "professor", "张天尧")],
+    )
+    session_id = "session:leak-guard"
+
+    adapter.answer(
+        query="介绍一下 国际先进技术应用推进中心（深圳）",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    committed_receipt = adapter._sessions[session_id].context_receipt
+    assert committed_receipt is None or committed_receipt.active_anchor is None
+
+    second = adapter.answer(
+        query="它有哪些布局和进展",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+
+    assert second.query_type != "canonical_v2:G:clarification_only"
+    assert planning_requests[1].displayed_entity_ids == ()
+    assert (
+        planning_requests[1].soft_context_subject
+        == "国际先进技术应用推进中心（深圳）"
+    )
+
+
+def test_matching_canonical_anchor_kept_on_soft_turn() -> None:
+    """A canonical anchor whose name matches the turn's subject survives the
+    commit sanitize (legitimate canonical capture on a soft-anchored turn)."""
+    _, web_item, web_handle = _soft_anchor_web_turn()
+    planning_requests: list[Any] = []
+    answer_requests: list[Any] = []
+    adapter = _receipt_anchor_adapter(
+        read_script=[((web_item,), (web_handle,))],
+        planning_requests=planning_requests,
+        answer_requests=answer_requests,
+        anchors=[_canonical_handle("company:ubtech", "company", "优必选科技")],
+    )
+    session_id = "session:matching-anchor"
+
+    adapter.answer(
+        query="介绍一下优必选",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+
+    receipt = adapter._sessions[session_id].context_receipt
+    assert receipt is not None
+    assert receipt.active_anchor is not None
+    assert receipt.active_anchor.display_name == "优必选科技"
+
+
+def test_web_handle_anchor_kept_on_soft_turn() -> None:
+    """Web handles are the soft subject's own anchor shape and are never
+    dropped by the commit sanitize."""
+    _, web_item, web_handle = _soft_anchor_web_turn()
+    planning_requests: list[Any] = []
+    answer_requests: list[Any] = []
+    adapter = _receipt_anchor_adapter(
+        read_script=[((web_item,), (web_handle,))],
+        planning_requests=planning_requests,
+        answer_requests=answer_requests,
+        anchors=[web_handle],
+    )
+    session_id = "session:web-handle-anchor"
+
+    adapter.answer(
+        query="介绍一下 国际先进技术应用推进中心（深圳）",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+
+    receipt = adapter._sessions[session_id].context_receipt
+    assert receipt is not None
+    assert receipt.active_anchor is web_handle or (
+        receipt.active_anchor is not None
+        and receipt.active_anchor.kind == "web"
+    )
+
+
+def test_planned_canonical_ids_never_sanitized() -> None:
+    """Turns that planned canonical displayed ids (real referent/entity
+    turns) keep the receipt anchor untouched even when the names mismatch."""
+    planning_requests: list[Any] = []
+    answer_requests: list[Any] = []
+    adapter = _receipt_anchor_adapter(
+        read_script=[((), ()), ((), ())],
+        planning_requests=planning_requests,
+        answer_requests=answer_requests,
+        anchors=[
+            _canonical_handle("company:hualichuang", "company", "华力创科学"),
+            _canonical_handle("company:hualichuang", "company", "华力创科学"),
+        ],
+    )
+    session_id = "session:planned-ids-guard"
+
+    adapter.answer(
+        query="介绍一下华力创科学",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+    adapter.answer(
+        query="该公司的专利有哪些",
+        session_id=session_id,
+        option_id=None,
+        as_of=NOW,
+    )
+
+    receipt = adapter._sessions[session_id].context_receipt
+    assert receipt is not None
+    assert receipt.active_anchor is not None
+    assert receipt.active_anchor.display_name == "华力创科学"

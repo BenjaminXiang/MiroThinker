@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 import hashlib
 import ipaddress
 import json
+import logging
 import re
 from threading import Condition, RLock
 from typing import Any, Callable, Iterator, Literal, Protocol, cast
@@ -25,11 +26,13 @@ from backend.api.chat_contracts import (
 from src.data_agents.canonical_v2.contracts import ContractModel
 from src.data_agents.canonical_v2.followup_referents import (
     _search_view,
+    has_anaphoric_subject_reference,
     has_continuation_intent,
     has_explicit_named_subject,
     has_internal_set_antecedent,
     has_set_referent,
     has_singular_referent,
+    is_subject_carryover_reference,
     referent_subject_domain,
 )
 from src.data_agents.canonical_v2.knowledge_answer import (
@@ -56,6 +59,8 @@ from src.data_agents.canonical_v2.knowledge_read import (
 _ZERO_SHA256 = "0" * 64
 _PUBLIC_DOMAINS = frozenset({"professor", "company", "paper", "patent"})
 _ENUMERATION_MARKERS = ("哪些", "谁", "多少", "几个", "列出", "所有", "分别")
+
+_logger = logging.getLogger(__name__)
 _OFFICIAL_URL_FIELDS = {
     "professor": ("homepage",),
     "company": ("website",),
@@ -391,7 +396,11 @@ def _planning_displayed_ids(
     active_anchor_name: str | None = None,
     active_anchor_domain: str | None = None,
 ) -> tuple[str, ...]:
-    if not displayed_ids:
+    # The prior displayed universe gates set-referent binding; anchor-referent
+    # binding (singular/anaphoric/continuation) only needs the active anchor,
+    # so an anchor-only session (no displayed set on the prior turn) still
+    # binds instead of free-retrieving.
+    if not displayed_ids and active_anchor_id is None:
         return ()
     # An explicitly named subject that is NOT the anchor always wins over
     # referent binding: "华力创科学这家公司…" asks about 华力创科学, not
@@ -400,12 +409,13 @@ def _planning_displayed_ids(
         active_anchor_name is not None and active_anchor_name in query
     ):
         return ()
-    if has_singular_referent(query):
+    if has_singular_referent(query) or has_anaphoric_subject_reference(query):
         if active_anchor_id is None:
             return ()
         # A typed referent (他/她 → person, 该公司 → company) must not bind an
         # anchor of another kind just because it is current; the miss falls
-        # through to the referent history instead.
+        # through to the referent history instead. Generic institution nouns
+        # (该中心/这个机构) are domain-unconstrained and bind like bare 它.
         subject_domain = referent_subject_domain(query)
         if (
             subject_domain is not None
@@ -555,14 +565,15 @@ def _referent_clarification_needed(
     soft_subject_name = (
         None if committed is None else getattr(committed, "soft_subject_name", None)
     )
-    if (has_singular_referent(query) or has_continuation_intent(query)) and (
-        context is None or context.active_anchor is None
-    ):
-        if (
-            soft_subject_name
-            and has_continuation_intent(query)
-            and not has_explicit_named_subject(query)
-        ):
+    if (
+        has_singular_referent(query)
+        or has_anaphoric_subject_reference(query)
+        or has_continuation_intent(query)
+    ) and (context is None or context.active_anchor is None):
+        # A subject-carryover deepening (elaboration, generic institution
+        # noun, domain-unconstrained singular referent) over a soft-anchored
+        # session answers about the carried subject instead of clarifying.
+        if soft_subject_name and is_subject_carryover_reference(query):
             return False
         return not has_explicit_named_subject(query) and not _history_displayed_ids(
             query=query, history=history
@@ -897,6 +908,80 @@ def _soft_subject_name(
     return name
 
 
+_SUBJECT_NAME_STRIP_PATTERN = re.compile(r"[\s·、，,。;；:：'\"‘’“”（）()【】\[\]——\-—]")
+
+
+def _subject_name_stem(name: str) -> str:
+    """Name with parenthetical qualifiers (city/branch) and punctuation removed."""
+    without_parens = re.sub(r"[（(][^（）()]*[)）]", "", name)
+    return _SUBJECT_NAME_STRIP_PATTERN.sub("", without_parens)
+
+
+def _subject_names_overlap(anchor_name: str, subject: str) -> bool:
+    """Whether a canonical anchor plausibly names the turn's soft subject.
+
+    Qualifier-stripped containment either way, or a shared contiguous run of
+    at least three characters (优必选 ⊂ 优必选科技; 微众银行 shared between
+    深圳前海微众银行 and 微众银行科技). Two-char city overlaps (深圳 alone)
+    stay below the bar on purpose.
+    """
+    stem_a = _subject_name_stem(anchor_name)
+    stem_b = _subject_name_stem(subject)
+    if not stem_a or not stem_b:
+        return False
+    if stem_a in stem_b or stem_b in stem_a:
+        return True
+    best = 0
+    for i in range(len(stem_a)):
+        for j in range(len(stem_b)):
+            run = 0
+            while (
+                i + run < len(stem_a)
+                and j + run < len(stem_b)
+                and stem_a[i + run] == stem_b[j + run]
+            ):
+                run += 1
+            best = max(best, run)
+    return best >= 3
+
+
+def _sanitize_soft_turn_anchor(
+    receipt: ContextReceipt | None,
+    *,
+    planned_displayed_ids: tuple[str, ...],
+    soft_context_subject: str | None,
+) -> ContextReceipt | None:
+    """A canonical handle that captured the answer receipt on a soft-anchored
+    turn must not become the session anchor.
+
+    Web-only-subject turns plan no canonical displayed ids, yet a vector-lane
+    record leaked into the prose selection can register itself as the
+    receipt's active anchor; later referential turns would then bind that
+    junk record (the register §1 trigger-A shape). The anchor survives only
+    when its name plausibly matches the turn's subject. Web handles are the
+    soft subject's own shape and are never dropped; turns that planned
+    canonical displayed ids are untouched.
+    """
+    if (
+        receipt is None
+        or receipt.active_anchor is None
+        or planned_displayed_ids
+        or soft_context_subject is None
+    ):
+        return receipt
+    anchor = receipt.active_anchor
+    if anchor.kind != "canonical":
+        return receipt
+    if _subject_names_overlap(anchor.display_name, soft_context_subject):
+        return receipt
+    _logger.info(
+        "soft-turn anchor capture dropped: anchor=%r subject=%r",
+        anchor.display_name,
+        soft_context_subject,
+    )
+    return receipt.model_copy(update={"active_anchor": None})
+
+
 def _merge_prior_web_evidence(
     *,
     committed: _CommittedSession | None,
@@ -1114,17 +1199,18 @@ class CanonicalV2ChatAdapter:
             displayed_ids=displayed_ids,
             history=() if committed is None else committed.referent_history,
         )
-        # Soft subject anchor, continuation leg: only elaboration continuations
-        # over a web-only session bind it. Expansion requests ("还有哪些/有没有
-        # 类似的") must never narrow onto the prior subject, and an explicitly
-        # named subject always wins over the soft anchor.
+        # Soft subject anchor, carryover leg: only subject-carryover deepening
+        # turns (elaboration continuations, generic institution nouns, bare
+        # domain-unconstrained singular referents) over a web-only session
+        # bind it. Expansion requests ("还有哪些/有没有类似的") must never narrow
+        # onto the prior subject, and an explicitly named subject always wins
+        # over the soft anchor.
         continuation_soft_subject = (
             committed.soft_subject_name
             if (
                 committed is not None
                 and not displayed_ids
-                and has_continuation_intent(normalized_query)
-                and not has_explicit_named_subject(normalized_query)
+                and is_subject_carryover_reference(normalized_query)
                 and committed.soft_subject_name
             )
             else None
@@ -1278,7 +1364,11 @@ class CanonicalV2ChatAdapter:
             turn_result=turn_result,
             fallback_observed_at=observed_as_of,
         )
-        context_receipt = turn_result.context_receipt
+        context_receipt = _sanitize_soft_turn_anchor(
+            turn_result.context_receipt,
+            planned_displayed_ids=displayed_ids,
+            soft_context_subject=soft_context_subject,
+        )
         next_displayed_ids = self._displayed_ids(
             context_receipt,
             fallback=displayed_ids,
@@ -1288,16 +1378,16 @@ class CanonicalV2ChatAdapter:
         # earlier failure discards the fork, so no try/finally is needed).
         candidate_answer.prose_progress = None
         candidate_answer.prose_progress_abort = None
-        # Soft subject anchor for the next turn. An elaboration chain keeps
-        # the anchor it already bound: the follow-up query itself names no
-        # subject, so re-deriving from it would only produce garbage. Fresh
-        # and explicit-subject turns (re)derive the anchor, which also clears
-        # or overwrites it on a topic switch.
+        # Soft subject anchor for the next turn. A subject-carryover deepening
+        # chain (elaboration or referential) keeps the anchor it already
+        # bound: the follow-up query itself names no subject, so re-deriving
+        # from it would only produce garbage (and destroy the anchor for every
+        # later turn). Fresh and explicit-subject turns (re)derive the anchor,
+        # which also clears or overwrites it on a topic switch.
         if (
             committed is not None
             and committed.soft_subject_name is not None
-            and has_continuation_intent(normalized_query)
-            and not has_explicit_named_subject(normalized_query)
+            and is_subject_carryover_reference(normalized_query)
             and not (directive is not None and directive.transition == "topic_switch")
         ):
             soft_subject_name = committed.soft_subject_name

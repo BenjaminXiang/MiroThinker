@@ -6626,3 +6626,37 @@ def test_person_evidence_match_accepts_name_with_education_constraint() -> None:
         company="许晋诚",
         constraint="东京大学",
     )
+
+
+def test_rewrite_views_repin_soft_subject_and_log_marker(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Plan-level view-pin invariant (deepening-turn-anchor-carryover): every
+    rewrite view contains the soft subject, and the re-pin tripwire logs a
+    journal marker so production can observe the drop/repin rate."""
+    provider = serving_module._proposal_provider(
+        bundle=_bundle(tmp_path),
+        query_rewriter=lambda _query: (
+            "企业培育中心 运营模式",
+            "企业孵化中心 培育成效",
+            "企业服务中心 入驻企业情况",
+        ),
+    )
+    request = QueryPlanningRequest(
+        request_id="query-request:deepening-view-repin",
+        release_id=RELEASE_ID,
+        original_query="这个中心的企业培育情况怎么样",
+        as_of=NOW,
+        soft_context_subject="国际先进技术应用推进中心（深圳）",
+    )
+
+    with caplog.at_level("INFO", logger="src.data_agents.canonical_v2.knowledge_serving_isolated"):
+        proposal = provider(request)
+
+    rewrite_views = [
+        view for view in proposal.query_views if view.producer_kind == "llm_rewrite"
+    ]
+    assert rewrite_views
+    for view in rewrite_views:
+        assert "国际先进技术应用推进中心（深圳）" in view.text
+    assert any("view repin" in record.message for record in caplog.records)

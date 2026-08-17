@@ -87,6 +87,38 @@ _CONTINUATION_ELABORATION_PATTERN = re.compile(
 
 _CONTINUATION_MAX_LENGTH = 15
 
+# Generic referential institution nouns: a deepening follow-up points at the
+# active organization-level subject without naming it and without disclosing
+# its domain. Only determiner-led shapes count (该/这个/此 immediately before
+# the noun), so quantifier phrases (其他中心/指定中心/每个机构) and plain topic
+# nouns (有哪些中心) stay outside.
+_ANAPHORIC_SUBJECT_REFERENCE_PATTERN = re.compile(
+    r"(?:该|这个|此)(?:中心|机构|组织|平台|单位|项目|实验室|研究院|研究所|基地|联合体)"
+)
+
+
+def has_anaphoric_subject_reference(query: str) -> bool:
+    """Whether the query refers to the active subject by a generic institution noun."""
+    return _ANAPHORIC_SUBJECT_REFERENCE_PATTERN.search(query) is not None
+
+
+def is_subject_carryover_reference(query: str) -> bool:
+    """Whether a follow-up keeps the session subject and asks a new aspect of it.
+
+    Continuation elaborations, generic referential institution nouns, and
+    domain-unconstrained singular referents (bare 它) all carry the subject;
+    a typed referent (他/她 person, 该公司 company, 该论文 paper) discloses a
+    domain and must not soft-carry an organization-level subject, and a query
+    that names its own subject never carries anything. A co-mentioned named
+    entity (这个中心和国先中心是什么关系) does NOT block carryover: the relation
+    question needs both the carried subject and the named one.
+    """
+    if has_explicit_named_subject(query):
+        return False
+    if has_continuation_intent(query) or has_anaphoric_subject_reference(query):
+        return True
+    return has_singular_referent(query) and referent_subject_domain(query) is None
+
 
 def has_continuation_intent(query: str) -> bool:
     """Whether the query is an elaboration of prior context."""
@@ -414,8 +446,10 @@ __all__ = [
     "has_continuation_intent",
     "has_explicit_named_subject",
     "has_internal_set_antecedent",
+    "has_anaphoric_subject_reference",
     "has_set_referent",
     "has_singular_referent",
+    "is_subject_carryover_reference",
     "referent_domain_hint",
     "referent_subject_domain",
     "strip_leading_pronoun",

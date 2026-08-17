@@ -1934,10 +1934,16 @@ def _serving_query_views(
             required_raw_texts=required_raw_texts,
         )
     views = [deterministic]
+    soft_subject_repinned = False
     for text in candidates:
         if not isinstance(text, str) or not text or text == search_text:
             continue
         missing = tuple(raw for raw in required_raw_texts if raw not in text)
+        if (
+            request.soft_context_subject is not None
+            and request.soft_context_subject in missing
+        ):
+            soft_subject_repinned = True
         views.append(
             QueryViewProposal(
                 view_id=f"view:serving:{request.request_id}:rewrite:{len(views)}",
@@ -1954,6 +1960,14 @@ def _serving_query_views(
         )
         if len(views) >= _SERVING_WEB_MAX_QUERY_VIEWS:
             break
+    if soft_subject_repinned:
+        # View-pin tripwire (deepening-turn-anchor-carryover): the rewriter
+        # dropped the session subject and the protected-slot append restored
+        # it; the marker makes the drop/repin rate observable in journals.
+        _logger.info(
+            "serving view repin: soft subject re-appended to rewrite views (subject=%r)",
+            request.soft_context_subject,
+        )
     term_view_text = _concept_term_view_text(request.original_query)
     existing_texts = {view.text for view in views}
     if term_view_text is not None and term_view_text not in existing_texts:

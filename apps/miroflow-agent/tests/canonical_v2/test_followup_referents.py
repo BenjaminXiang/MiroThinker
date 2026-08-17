@@ -11,10 +11,12 @@ from __future__ import annotations
 import pytest
 
 from src.data_agents.canonical_v2.followup_referents import (
+    has_anaphoric_subject_reference,
     has_continuation_intent,
     has_explicit_named_subject,
     has_set_referent,
     has_singular_referent,
+    is_subject_carryover_reference,
     referent_domain_hint,
     referent_subject_domain,
     strip_leading_pronoun,
@@ -235,3 +237,71 @@ def test_continuation_intent_positive(query: str) -> None:
 )
 def test_continuation_intent_negative(query: str) -> None:
     assert not has_continuation_intent(query)
+
+
+@pytest.mark.parametrize(
+    "query",
+    (
+        "这个中心的企业培育情况怎么样",
+        "该中心的主要职能是什么",
+        "此中心的依托单位是谁",
+        "这个机构有哪些布局",
+        "该组织的成员单位有哪些",
+        "这个平台接入了哪些企业",
+        "该单位的性质是什么",
+        "这个项目的进展如何",
+        "该实验室的方向有哪些",
+        "这个研究院的成果怎么样",
+        "该研究所做哪些业务",
+        "这个基地落户在哪里",
+        "该联合体有哪些成员",
+    ),
+)
+def test_anaphoric_subject_reference_positive(query: str) -> None:
+    assert has_anaphoric_subject_reference(query)
+
+
+@pytest.mark.parametrize(
+    "query",
+    (
+        "其他中心有哪些",
+        "指定中心的联系方式",
+        "每个机构的名单",
+        "有哪些中心",
+        "什么机构适合申报",
+        "国家先进技术应用中心是做什么的",
+        "介绍这个领域的头部机构",
+        "数据中心的标准有哪些",
+        "城市中心的交通便利吗",
+    ),
+)
+def test_anaphoric_subject_reference_negative(query: str) -> None:
+    assert not has_anaphoric_subject_reference(query)
+
+
+@pytest.mark.parametrize(
+    "query,expected",
+    (
+        # carryover: elaboration, anaphoric noun, or domain-unconstrained singular
+        ("有没有更详细的信息", True),
+        ("这个中心的企业培育情况怎么样", True),
+        ("该机构有哪些布局", True),
+        ("它有哪些布局和进展", True),
+        # typed referents disclose a domain and never soft-carry an org subject
+        ("他有哪些论文", False),
+        ("她的研究方向是什么", False),
+        ("该公司的专利有哪些", False),
+        ("这家企业的情况怎么样", False),
+        # explicit subject / expansion / fresh topic stay outside
+        ("介绍华力创科学这家公司的情况", False),
+        ("还有哪些类似的机构", False),
+        ("深圳有哪些做具身智能的公司", False),
+        # a co-mentioned named institution does not block carryover: the
+        # relation question needs both the carried subject and the named one
+        ("这个中心和国先中心是什么关系", True),
+    ),
+)
+def test_subject_carryover_reference_classification(
+    query: str, expected: bool
+) -> None:
+    assert is_subject_carryover_reference(query) is expected
