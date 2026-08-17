@@ -11,6 +11,12 @@ from alembic.config import Config
 import psycopg
 import pytest
 
+import src.data_agents.professor.canonical_writer as canonical_writer
+from src.data_agents.professor.quality_gate import (
+    ProfessorCanonicalState,
+    ProfessorQualityEvaluation,
+    ProfessorQualityReason,
+)
 from src.data_agents.professor.canonical_writer import (
     upsert_source_page_for_url,
     write_professor_bundle,
@@ -285,6 +291,101 @@ def test_research_topics_become_facts(pg_conn: psycopg.Connection):
         )
         == 3
     )
+
+
+def test_write_professor_bundle_persists_quality_status_for_incomplete_trustworthy_row(
+    pg_conn: psycopg.Connection,
+):
+    enriched = _build_enriched(research_directions=[])
+    professor_id = build_professor_id(enriched)
+    page_id = _official_page_id(pg_conn, enriched.profile_url)
+
+    write_professor_bundle(
+        pg_conn,
+        enriched=enriched,
+        official_profile_page_id=page_id,
+        run_id=_LEGACY_RUN_ID,
+    )
+
+    assert (
+        _scalar(
+            pg_conn,
+            "SELECT quality_status FROM professor WHERE professor_id = %s",
+            (professor_id,),
+        )
+        == "needs_enrichment"
+    )
+    assert (
+        _scalar(
+            pg_conn,
+            """
+            SELECT count(*)
+              FROM pipeline_issue
+             WHERE professor_id = %s
+               AND reported_by = 'professor_quality_gate'
+               AND stage = 'research_directions'
+               AND resolved = false
+            """,
+            (professor_id,),
+        )
+        == 1
+    )
+
+
+def test_evaluate_and_persist_professor_quality_helper_wires_loader_and_persistence(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    state = ProfessorCanonicalState(
+        professor_id="PROF-1",
+        canonical_name="张三",
+        identity_status="resolved",
+        current_institution="南方科技大学",
+        title=None,
+        department=None,
+        has_official_source=True,
+    )
+    evaluation = ProfessorQualityEvaluation(
+        quality_status="needs_enrichment",
+        reasons=(
+            ProfessorQualityReason(
+                rule_id="missing_title_or_department",
+                stage="affiliation",
+                message="title or department missing",
+            ),
+        ),
+    )
+    calls: list[tuple[str, object]] = []
+
+    monkeypatch.setattr(
+        canonical_writer,
+        "load_professor_canonical_state",
+        lambda conn, professor_id: calls.append(("load", professor_id)) or state,
+    )
+    monkeypatch.setattr(
+        canonical_writer,
+        "evaluate_professor_quality",
+        lambda loaded_state: calls.append(("evaluate", loaded_state)) or evaluation,
+    )
+    monkeypatch.setattr(
+        canonical_writer,
+        "persist_professor_quality_evaluation",
+        lambda conn, professor_id, evaluation: calls.append(
+            ("persist", (professor_id, evaluation.quality_status))
+        )
+        or {"issues_upserted": 1, "stale_issues_reconciled": 1},
+    )
+
+    report = canonical_writer._evaluate_and_persist_professor_quality(
+        object(),
+        professor_id="PROF-1",
+    )
+
+    assert report == {"issues_upserted": 1, "stale_issues_reconciled": 1}
+    assert calls == [
+        ("load", "PROF-1"),
+        ("evaluate", state),
+        ("persist", ("PROF-1", "needs_enrichment")),
+    ]
 
 
 def test_paper_staging_produces_verified_link_when_official(

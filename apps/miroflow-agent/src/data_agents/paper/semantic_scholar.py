@@ -13,6 +13,7 @@ from src.data_agents.normalization import normalize_person_name
 
 from .models import (
     DiscoveredPaper,
+    PaperAuthor,
     PaperMetadataEnrichment,
     ProfessorPaperDiscoveryResult,
 )
@@ -152,18 +153,25 @@ def enrich_paper_metadata_from_semantic_scholar(
         {
             "fields": (
                 "title,abstract,tldr,fieldsOfStudy,publicationDate,venue,url,"
-                "isOpenAccess,openAccessPdf,citationCount,referenceCount"
+                "isOpenAccess,openAccessPdf,citationCount,referenceCount,"
+                "externalIds,authors"
             ),
         },
     )
     if not isinstance(payload, dict):
         return None
+    external_ids = payload.get("externalIds")
+    if not isinstance(external_ids, dict):
+        external_ids = {}
 
     enrichment = PaperMetadataEnrichment(
         abstract=_normalize_optional_str(payload.get("abstract")),
         venue=_normalize_optional_str(payload.get("venue")),
         publication_date=_normalize_optional_str(payload.get("publicationDate")),
         citation_count=_coerce_non_negative_int(payload.get("citationCount")),
+        authors=_extract_enrichment_authors(payload.get("authors")),
+        doi=_normalize_optional_str(external_ids.get("DOI")),
+        arxiv_id=_normalize_optional_str(external_ids.get("ArXiv")),
         fields_of_study=_extract_fields_of_study(payload.get("fieldsOfStudy")),
         tldr=_extract_tldr(payload.get("tldr")),
         oa_status=_extract_oa_status(payload),
@@ -323,6 +331,19 @@ def _extract_fields_of_study(value: object) -> tuple[str, ...]:
     return tuple(field for item in value if (field := _normalize_optional_str(item)))
 
 
+def _extract_enrichment_authors(value: object) -> tuple[PaperAuthor, ...]:
+    if not isinstance(value, list):
+        return ()
+    authors: list[PaperAuthor] = []
+    for author in value:
+        if not isinstance(author, dict):
+            continue
+        name = _normalize_optional_str(author.get("name"))
+        if name:
+            authors.append(PaperAuthor(name=name, source="semantic_scholar"))
+    return tuple(authors)
+
+
 def _extract_oa_status(payload: dict[str, object]) -> str | None:
     if payload.get("isOpenAccess") is True or isinstance(
         payload.get("openAccessPdf"), dict
@@ -340,6 +361,9 @@ def _has_enrichment_content(enrichment: PaperMetadataEnrichment) -> bool:
             enrichment.venue,
             enrichment.publication_date,
             enrichment.citation_count is not None,
+            enrichment.authors,
+            enrichment.doi,
+            enrichment.arxiv_id,
             enrichment.fields_of_study,
             enrichment.tldr,
             enrichment.oa_status,

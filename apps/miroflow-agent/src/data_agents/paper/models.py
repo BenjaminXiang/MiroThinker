@@ -4,11 +4,29 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True, slots=True)
+class PaperAuthor:
+    name: str
+    orcid: str | None = None
+    source: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class IdentifierConflict:
+    identifier_type: str
+    canonical_value: str
+    incoming_value: str
+    incoming_source: str
+
+
+@dataclass(frozen=True, slots=True)
 class PaperMetadataEnrichment:
     abstract: str | None = None
     venue: str | None = None
     publication_date: str | None = None
     citation_count: int | None = None
+    authors: tuple[PaperAuthor, ...] = ()
+    doi: str | None = None
+    arxiv_id: str | None = None
     fields_of_study: tuple[str, ...] = ()
     tldr: str | None = None
     license: str | None = None
@@ -17,6 +35,7 @@ class PaperMetadataEnrichment:
     reference_count: int | None = None
     source_url: str | None = None
     enrichment_sources: tuple[str, ...] = ()
+    identifier_conflicts: tuple[IdentifierConflict, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

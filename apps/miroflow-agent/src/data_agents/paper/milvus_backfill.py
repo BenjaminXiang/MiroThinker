@@ -31,6 +31,7 @@ def backfill_paper_chunks(
     limit=None,
     batch_size=32,
     resume_ids: set[str] | None = None,
+    paper_ids: set[str] | None = None,
 ) -> BackfillReport:
     started_at = time.monotonic()
     papers_processed = 0
@@ -40,6 +41,7 @@ def backfill_paper_chunks(
 
     try:
         ensure_paper_chunks_collection(milvus_client)
+        _load_collection_if_supported(milvus_client)
     except Exception as exc:
         logger.warning(
             "Failed to ensure %s collection: %s", PAPER_CHUNKS_COLLECTION, exc
@@ -53,6 +55,10 @@ def backfill_paper_chunks(
     )
     params: list[object] = []
     where_clauses: list[str] = []
+    if paper_ids:
+        placeholders = ", ".join(["%s"] * len(paper_ids))
+        where_clauses.append(f"p.paper_id IN ({placeholders})")
+        params.extend(sorted(paper_ids))
     if resume_ids:
         placeholders = ", ".join(["%s"] * len(resume_ids))
         where_clauses.append(f"p.paper_id NOT IN ({placeholders})")
@@ -63,7 +69,7 @@ def backfill_paper_chunks(
         sql = f"{sql} LIMIT %s"
         params.append(limit)
 
-    rows = conn.execute(sql, params).fetchall()
+    rows = conn.execute(sql, tuple(params)).fetchall()
     papers_total = len(rows)
 
     for batch_start in range(0, papers_total, max(1, batch_size)):
@@ -154,6 +160,13 @@ def backfill_paper_chunks(
 
 def _paper_embedding_abstract(row: dict) -> str | None:
     return row.get("summary_zh") or row.get("abstract_clean") or row.get("abstract")
+
+
+def _load_collection_if_supported(milvus_client) -> None:
+    load_collection = getattr(milvus_client, "load_collection", None)
+    if not callable(load_collection):
+        return
+    load_collection(collection_name=PAPER_CHUNKS_COLLECTION)
 
 
 def _chunk_to_row(chunk: PaperChunk, vector: list[float]) -> dict[str, object]:

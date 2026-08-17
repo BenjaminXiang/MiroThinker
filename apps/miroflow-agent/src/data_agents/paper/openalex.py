@@ -18,7 +18,12 @@ from src.data_agents.professor.institution_names import (
 )
 
 from .author_id_picker import AuthorCandidate
-from .models import DiscoveredPaper, PaperMetadataEnrichment, ProfessorPaperDiscoveryResult
+from .models import (
+    DiscoveredPaper,
+    PaperAuthor,
+    PaperMetadataEnrichment,
+    ProfessorPaperDiscoveryResult,
+)
 
 _AUTHOR_SEARCH_ENDPOINT = "https://api.openalex.org/authors"
 _WORKS_ENDPOINT = "https://api.openalex.org/works"
@@ -625,6 +630,8 @@ def enrich_paper_with_openalex(
         venue=_normalize_optional_str(source_meta.get("display_name")),
         publication_date=_normalize_optional_str(payload.get("publication_date")),
         citation_count=_coerce_non_negative_int(payload.get("cited_by_count")),
+        authors=_extract_enrichment_authors(payload.get("authorships")),
+        doi=_normalize_doi(payload.get("doi")) or normalized_doi,
         fields_of_study=_extract_concepts_as_fields(payload.get("concepts")),
         oa_status=_extract_oa_status(payload),
         source_url=(
@@ -636,6 +643,40 @@ def enrich_paper_with_openalex(
     if not _enrichment_has_content(enrichment):
         return None
     return enrichment
+
+
+def _extract_enrichment_authors(value: object) -> tuple[PaperAuthor, ...]:
+    if not isinstance(value, list):
+        return ()
+    authors: list[PaperAuthor] = []
+    for authorship in value:
+        if not isinstance(authorship, dict):
+            continue
+        author = authorship.get("author")
+        if not isinstance(author, dict):
+            continue
+        name = _normalize_optional_str(author.get("display_name"))
+        if not name:
+            continue
+        authors.append(
+            PaperAuthor(
+                name=name,
+                orcid=_normalize_orcid(author.get("orcid")),
+                source="openalex",
+            )
+        )
+    return tuple(authors)
+
+
+def _normalize_orcid(value: object) -> str | None:
+    item = _normalize_optional_str(value)
+    if not item:
+        return None
+    lower = item.lower()
+    for prefix in ("https://orcid.org/", "http://orcid.org/"):
+        if lower.startswith(prefix):
+            return item[len(prefix) :]
+    return item
 
 
 def _extract_concepts_as_fields(value: object) -> tuple[str, ...]:
@@ -671,6 +712,8 @@ def _enrichment_has_content(enrichment: PaperMetadataEnrichment) -> bool:
             "venue",
             "publication_date",
             "citation_count",
+            "authors",
+            "doi",
             "fields_of_study",
             "oa_status",
             "source_url",

@@ -207,3 +207,34 @@ def test_cli_prints_ingest_report_as_json(monkeypatch, capsys, tmp_path):
         except (json.JSONDecodeError, TypeError):
             continue
     assert found_json, f"expected JSON report in output, got: {captured.out!r}"
+
+
+def test_cli_commits_after_successful_non_dry_run(monkeypatch, capsys):
+    cli = _import_cli_module()
+    conn = MagicMock()
+
+    def _fake_run(conn_arg, **kwargs):
+        from src.data_agents.paper.homepage_ingest import IngestReport
+        from uuid import UUID
+
+        assert conn_arg is conn
+        assert kwargs["dry_run"] is False
+        return IngestReport(
+            run_id=UUID("11111111-1111-1111-1111-111111111111"),
+            profs_total=1,
+            profs_processed=1,
+            profs_skipped=0,
+            papers_linked_total=1,
+            full_text_fetched_total=0,
+            pipeline_issues_filed=0,
+            run_duration_seconds=1.0,
+        )
+
+    monkeypatch.setattr(cli, "run_homepage_paper_ingest", _fake_run)
+    monkeypatch.setattr(cli, "_open_database_connection", lambda url: conn)
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+    monkeypatch.setattr(sys, "argv", ["run_homepage_paper_ingest.py", "--limit", "1"])
+
+    assert cli.main() == 0
+
+    conn.commit.assert_called_once()

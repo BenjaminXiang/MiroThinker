@@ -70,11 +70,18 @@ def main() -> int:
             prof_id=args.prof_id,
             resume_checkpoint_path=resume_checkpoint_path,
         )
+        if not args.dry_run:
+            conn.commit()
         payload = asdict(report)
         payload["run_id"] = str(report.run_id)
         print(json.dumps(payload, ensure_ascii=False))
         return 0
     except Exception:
+        if conn is not None:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
         logging.exception("Homepage paper ingest failed")
         return 1
     finally:

@@ -2,10 +2,20 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
 from src.data_agents.professor.models import EnrichedProfessorProfile
 from src.data_agents.professor.quality_gate import (
+    ProfessorAdminAction,
+    ProfessorAffiliationState,
+    ProfessorCanonicalState,
+    ProfessorContactFact,
+    ProfessorIssueSignal,
     build_quality_report,
+    evaluate_professor_quality,
     evaluate_quality,
+    load_professor_canonical_state,
+    persist_professor_quality_evaluation,
     _check_profile_summary_boilerplate,
     _check_profile_summary_length,
 )
@@ -39,6 +49,351 @@ def _pad_summary(base: str, target_len: int) -> str:
     if len(base) >= target_len:
         return base[:target_len]
     return base + "。" * (target_len - len(base))
+
+
+def _canonical_state(**overrides) -> ProfessorCanonicalState:
+    defaults = {
+        "professor_id": "PROF-1",
+        "canonical_name": "张三",
+        "identity_status": "resolved",
+        "current_institution": "南方科技大学",
+        "title": "教授",
+        "department": "计算机科学与工程系",
+        "research_topics": ("大语言模型安全对齐",),
+        "profile_summary": "张三教授长期从事大语言模型安全对齐研究。",
+        "has_official_source": True,
+        "has_paper_candidates": True,
+        "has_verified_paper_signal": True,
+        "canonical_watermark": datetime(2026, 5, 1, tzinfo=UTC),
+    }
+    defaults.update(overrides)
+    return ProfessorCanonicalState(**defaults)
+
+
+def _rule_ids(result) -> set[str]:
+    return {reason.rule_id for reason in result.reasons}
+
+
+def test_professor_quality_complete_state_ready():
+    result = evaluate_professor_quality(_canonical_state())
+
+    assert result.quality_status == "ready"
+    assert result.reasons == ()
+
+
+def test_professor_quality_missing_summary_needs_enrichment_not_review():
+    result = evaluate_professor_quality(_canonical_state(profile_summary=None))
+
+    assert result.quality_status == "needs_enrichment"
+    assert _rule_ids(result) == {"missing_profile_summary"}
+
+
+def test_professor_quality_missing_official_source_low_confidence():
+    result = evaluate_professor_quality(_canonical_state(has_official_source=False))
+
+    assert result.quality_status == "low_confidence"
+    assert _rule_ids(result) == {"missing_official_source"}
+
+
+def test_professor_quality_unresolved_identity_needs_review_priority_over_low_confidence():
+    result = evaluate_professor_quality(
+        _canonical_state(identity_status="unverified", has_official_source=False)
+    )
+
+    assert result.quality_status == "needs_review"
+    assert "identity_unresolved" in _rule_ids(result)
+    assert "missing_official_source" in _rule_ids(result)
+
+
+def test_professor_quality_gate_authored_issue_does_not_block_itself():
+    result = evaluate_professor_quality(
+        _canonical_state(
+            open_issues=(
+                ProfessorIssueSignal(
+                    stage="coverage",
+                    reported_by="professor_quality_gate",
+                    reported_at=datetime(2026, 5, 2, tzinfo=UTC),
+                ),
+            )
+        )
+    )
+
+    assert result.quality_status == "ready"
+    assert "external_blocking_issue" not in _rule_ids(result)
+
+
+def test_professor_quality_external_issue_blocks_without_duplicate_persist_reason():
+    result = evaluate_professor_quality(
+        _canonical_state(
+            open_issues=(
+                ProfessorIssueSignal(
+                    stage="identity_gate",
+                    reported_by="name_identity_gate",
+                    reported_at=datetime(2026, 5, 2, tzinfo=UTC),
+                ),
+            )
+        )
+    )
+
+    assert result.quality_status == "needs_review"
+    reason = result.reasons[0]
+    assert reason.rule_id == "external_blocking_issue"
+    assert reason.persist_issue is False
+
+
+def test_professor_quality_fresh_confirm_ready_override_applies():
+    watermark = datetime(2026, 5, 3, tzinfo=UTC)
+    result = evaluate_professor_quality(
+        _canonical_state(profile_summary=None, canonical_watermark=watermark),
+        latest_admin_action=ProfessorAdminAction(
+            action="confirm_ready",
+            observed_data_updated_at=watermark,
+        ),
+    )
+
+    assert result.quality_status == "ready"
+    assert _rule_ids(result) == {"human_override"}
+
+
+def test_professor_quality_later_external_issue_invalidates_override():
+    observed = datetime(2026, 5, 3, tzinfo=UTC)
+    result = evaluate_professor_quality(
+        _canonical_state(
+            open_issues=(
+                ProfessorIssueSignal(
+                    stage="identity_gate",
+                    reported_by="name_identity_gate",
+                    reported_at=observed + timedelta(hours=1),
+                ),
+            ),
+            canonical_watermark=observed,
+        ),
+        latest_admin_action=ProfessorAdminAction(
+            action="confirm_ready",
+            observed_data_updated_at=observed,
+        ),
+    )
+
+    assert result.quality_status == "needs_review"
+    assert "external_blocking_issue" in _rule_ids(result)
+    assert "human_override" not in _rule_ids(result)
+
+
+def test_professor_quality_multiple_current_primary_institutions_are_contradiction():
+    result = evaluate_professor_quality(
+        _canonical_state(
+            affiliations=(
+                ProfessorAffiliationState(
+                    institution="南方科技大学",
+                    is_current=True,
+                    is_primary=True,
+                ),
+                ProfessorAffiliationState(
+                    institution="深圳大学",
+                    is_current=True,
+                    is_primary=True,
+                ),
+            )
+        )
+    )
+
+    assert result.quality_status == "needs_review"
+    assert "field_contradiction" in _rule_ids(result)
+
+
+def test_professor_quality_missing_title_department_is_not_contradiction():
+    result = evaluate_professor_quality(_canonical_state(title=None, department=None))
+
+    assert result.quality_status == "needs_enrichment"
+    assert "missing_title_or_department" in _rule_ids(result)
+    assert "field_contradiction" not in _rule_ids(result)
+
+
+def test_professor_quality_conflicting_same_source_contacts_are_contradiction():
+    result = evaluate_professor_quality(
+        _canonical_state(
+            contact_facts=(
+                ProfessorContactFact(
+                    subtype="email",
+                    value="a@example.edu.cn",
+                    source_page_id="SRC-1",
+                ),
+                ProfessorContactFact(
+                    subtype="email",
+                    value="b@example.edu.cn",
+                    source_page_id="SRC-1",
+                ),
+            )
+        )
+    )
+
+    assert result.quality_status == "needs_review"
+    assert "field_contradiction" in _rule_ids(result)
+
+
+def test_professor_quality_verified_paper_signal_only_required_when_candidates_exist():
+    no_candidates = evaluate_professor_quality(
+        _canonical_state(has_paper_candidates=False, has_verified_paper_signal=False)
+    )
+    candidates_unverified = evaluate_professor_quality(
+        _canonical_state(has_paper_candidates=True, has_verified_paper_signal=False)
+    )
+
+    assert no_candidates.quality_status == "ready"
+    assert candidates_unverified.quality_status == "needs_enrichment"
+    assert _rule_ids(candidates_unverified) == {"missing_verified_paper_signal"}
+
+
+class _Cursor:
+    def __init__(self, *, one=None, all_rows=None, rowcount=0):
+        self._one = one
+        self._all_rows = all_rows if all_rows is not None else []
+        self.rowcount = rowcount
+
+    def fetchone(self):
+        return self._one
+
+    def fetchall(self):
+        return self._all_rows
+
+
+class _SequencedConn:
+    def __init__(self, cursors):
+        self._cursors = list(cursors)
+        self.calls = []
+
+    def execute(self, sql, params=()):
+        self.calls.append((sql, params))
+        if self._cursors:
+            return self._cursors.pop(0)
+        return _Cursor()
+
+
+def test_load_professor_canonical_state_maps_persisted_rows():
+    conn = _SequencedConn(
+        [
+            _Cursor(
+                one={
+                    "professor_id": "PROF-1",
+                    "canonical_name": "张三",
+                    "identity_status": "resolved",
+                    "primary_official_profile_page_id": "PAGE-1",
+                    "profile_summary": "张三教授研究大语言模型。",
+                    "updated_at": datetime(2026, 5, 1, tzinfo=UTC),
+                }
+            ),
+            _Cursor(
+                all_rows=[
+                    {
+                        "institution": "南方科技大学",
+                        "department": "计算机科学与工程系",
+                        "title": "教授",
+                        "is_current": True,
+                        "is_primary": True,
+                        "updated_at": datetime(2026, 5, 2, tzinfo=UTC),
+                    }
+                ]
+            ),
+            _Cursor(
+                all_rows=[
+                    {
+                        "fact_type": "research_topic",
+                        "value_raw": "大语言模型安全",
+                        "source_page_id": "PAGE-1",
+                        "updated_at": datetime(2026, 5, 3, tzinfo=UTC),
+                    }
+                ]
+            ),
+            _Cursor(all_rows=[]),
+            _Cursor(one={"paper_candidates": 1, "verified_paper_signals": 1}),
+        ]
+    )
+
+    state = load_professor_canonical_state(conn, "PROF-1")
+
+    assert state.professor_id == "PROF-1"
+    assert state.has_official_source is True
+    assert state.current_institution == "南方科技大学"
+    assert state.research_topics == ("大语言模型安全",)
+    assert state.has_paper_candidates is True
+    assert state.has_verified_paper_signal is True
+    assert state.canonical_watermark == datetime(2026, 5, 3, tzinfo=UTC)
+
+
+def test_persist_professor_quality_evaluation_upserts_gate_issue_and_resolves_stale():
+    conn = _SequencedConn(
+        [
+            _Cursor(rowcount=1),
+            _Cursor(rowcount=1),
+            _Cursor(rowcount=1),
+        ]
+    )
+    evaluation = evaluate_professor_quality(_canonical_state(profile_summary=None))
+
+    report = persist_professor_quality_evaluation(
+        conn,
+        professor_id="PROF-1",
+        evaluation=evaluation,
+    )
+
+    assert report["issues_upserted"] == 1
+    assert report["stale_issues_reconciled"] == 1
+    insert_sql, insert_params = conn.calls[1]
+    assert "INSERT INTO pipeline_issue" in insert_sql
+    assert "professor_quality_gate" in insert_params
+    assert "coverage" in insert_params
+    update_sql, update_params = conn.calls[-1]
+    assert "UPDATE pipeline_issue" in update_sql
+    assert "reported_by = %s" in update_sql
+    assert "professor_quality_gate" in update_params
+
+
+def test_persist_professor_quality_evaluation_reports_actual_rowcounts():
+    conn = _SequencedConn(
+        [
+            _Cursor(rowcount=1),
+            _Cursor(rowcount=0),
+            _Cursor(rowcount=0),
+        ]
+    )
+    evaluation = evaluate_professor_quality(_canonical_state(profile_summary=None))
+
+    report = persist_professor_quality_evaluation(
+        conn,
+        professor_id="PROF-1",
+        evaluation=evaluation,
+    )
+
+    assert report == {"issues_upserted": 0, "stale_issues_reconciled": 0}
+
+
+def test_persist_professor_quality_external_blocking_issue_is_display_only():
+    conn = _SequencedConn(
+        [
+            _Cursor(rowcount=1),
+            _Cursor(rowcount=0),
+        ]
+    )
+    evaluation = evaluate_professor_quality(
+        _canonical_state(
+            open_issues=(
+                ProfessorIssueSignal(
+                    stage="identity_gate",
+                    reported_by="name_identity_gate",
+                    reported_at=datetime(2026, 5, 2, tzinfo=UTC),
+                ),
+            )
+        )
+    )
+
+    report = persist_professor_quality_evaluation(
+        conn,
+        professor_id="PROF-1",
+        evaluation=evaluation,
+    )
+
+    assert report["issues_upserted"] == 0
+    assert not any("INSERT INTO pipeline_issue" in sql for sql, _ in conn.calls)
 
 
 def test_passes_l1_with_all_fields():

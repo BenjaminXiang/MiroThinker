@@ -67,6 +67,7 @@ class PaperEnrichmentSignals:
     has_abstract: bool
     has_summary_zh: bool
     summary_zh_boilerplate_rejected: bool = False
+    has_identifier_contradiction: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,6 +104,9 @@ def evaluate_paper_promotion(
     # a fresh judge pass can move it.
     if current_status == REJECTED:
         return PromotionDecision(REJECTED, reason="terminal_rejected")
+
+    if signals.has_identifier_contradiction:
+        return PromotionDecision(NEEDS_REVIEW, reason="identifier_contradiction")
 
     # Forward-monotonic: once ready, only admin can degrade (see
     # apply_admin_override). Re-running enrichment / promotion on a

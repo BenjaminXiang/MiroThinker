@@ -89,14 +89,15 @@ def test_build_patent_row_uses_canonical_name_when_no_inventors():
     assert row["inventors_raw"] == "王教授"
 
 
-def test_build_patent_row_rejects_entry_without_patent_id():
+def test_build_patent_row_accepts_title_only_entry():
     entry = PatentEntry(title="未授权的方法", patent_id=None)
-    try:
-        _build_patent_row(entry, canonical_name="王教授", run_id=_RUN_ID)
-    except ValueError as exc:
-        assert "patent_id" in str(exc)
-    else:
-        raise AssertionError("expected ValueError for entry without patent_id")
+    row = _build_patent_row(entry, canonical_name="王教授", run_id=_RUN_ID)
+
+    assert row["patent_id"].startswith("PAT-")
+    assert row["patent_number"] is None
+    assert row["title_clean"] == "未授权的方法"
+    assert row["identity_status"] == "unverified"
+    assert row["quality_status"] == "needs_enrichment"
 
 
 # ---------------------------------------------------------------------------
@@ -123,7 +124,7 @@ def test_zero_patents_emits_no_sql_and_no_issue():
     assert conn.calls == []
 
 
-def test_title_only_candidate_files_data_quality_flag_and_skips_canonical():
+def test_title_only_candidate_inserts_canonical_and_link():
     conn = _FakeConn()
     entries = [
         PatentEntry(
@@ -141,18 +142,24 @@ def test_title_only_candidate_files_data_quality_flag_and_skips_canonical():
         dry_run=False,
     )
     assert outcome == _IngestOutcome(
-        upserted=0,
-        skipped_no_id=1,
-        links_written=0,
-        issues_filed=1,
+        upserted=1,
+        skipped_no_id=0,
+        links_written=1,
+        issues_filed=0,
     )
-    assert len(conn.calls) == 1
-    sql, params = conn.calls[0]
-    assert sql.startswith("INSERT INTO pipeline_issue")
-    # Stage must be data_quality_flag per spec.
-    assert "data_quality_flag" in params
-    # No canonical insert ran.
-    assert not any("INSERT INTO patent (" in call[0] for call in conn.calls)
+    sql_statements = [call[0] for call in conn.calls]
+    assert any(sql.startswith("INSERT INTO patent (") for sql in sql_statements)
+    assert any(
+        sql.startswith("INSERT INTO professor_patent_link (")
+        for sql in sql_statements
+    )
+    assert not any(
+        sql.startswith("INSERT INTO pipeline_issue") for sql in sql_statements
+    )
+    patent_insert_sql = next(
+        sql for sql in sql_statements if sql.startswith("INSERT INTO patent (")
+    )
+    assert "ON CONFLICT (patent_id) DO UPDATE" in patent_insert_sql
 
 
 def test_full_patent_id_inserts_canonical_and_link():
@@ -226,7 +233,7 @@ def test_conflict_with_existing_patent_id_uses_on_conflict_clause():
 
 def test_mixed_batch_routes_each_candidate_independently():
     conn = _FakeConn()
-    conn.patent_id_rows = ["PAT-A", "PAT-B"]
+    conn.patent_id_rows = ["PAT-A", "PAT-B", "PAT-C"]
     entries = [
         PatentEntry(title="一种A方法的实现", patent_id="ZL202310011111"),
         PatentEntry(title="一种B方法没有编号示例", patent_id=None),
@@ -241,10 +248,10 @@ def test_mixed_batch_routes_each_candidate_independently():
         dry_run=False,
     )
     assert outcome == _IngestOutcome(
-        upserted=2,
-        skipped_no_id=1,
-        links_written=2,
-        issues_filed=1,
+        upserted=3,
+        skipped_no_id=0,
+        links_written=3,
+        issues_filed=0,
     )
 
 
@@ -263,9 +270,9 @@ def test_dry_run_skips_all_writes_but_keeps_counters():
         dry_run=True,
     )
     assert outcome == _IngestOutcome(
-        upserted=1,
-        skipped_no_id=1,
+        upserted=2,
+        skipped_no_id=0,
         links_written=0,
-        issues_filed=1,
+        issues_filed=0,
     )
     assert conn.calls == []

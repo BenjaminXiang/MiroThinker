@@ -9,7 +9,9 @@ L3: Statistical alerts (aggregate-level warnings)
 
 from __future__ import annotations
 
+from datetime import datetime
 from dataclasses import dataclass
+import json
 import re
 
 from src.data_agents.contracts import (
@@ -77,6 +79,634 @@ HSS_AWARD_KEYWORDS = frozenset(
         "优秀成果",
     }
 )
+
+PROFESSOR_QUALITY_GATE_REPORTER = "professor_quality_gate"
+PROFESSOR_QUALITY_STATUSES = frozenset(
+    {"ready", "needs_enrichment", "low_confidence", "needs_review"}
+)
+PROFESSOR_QUALITY_STAGE_BY_RULE_ID = {
+    "missing_canonical_name": "name_extraction",
+    "non_person_name": "name_extraction",
+    "missing_official_source": "coverage",
+    "reader_artifact_detected": "data_quality_flag",
+    "profile_blob_detected": "data_quality_flag",
+    "missing_current_institution": "affiliation",
+    "missing_title_or_department": "affiliation",
+    "missing_research_topic": "research_directions",
+    "missing_profile_summary": "coverage",
+    "missing_verified_paper_signal": "paper_attribution",
+    "identity_unresolved": "identity_gate",
+    "same_name_conflict": "identity_gate",
+    "field_contradiction": "data_quality_flag",
+}
+
+
+@dataclass(frozen=True, slots=True)
+class ProfessorAffiliationState:
+    institution: str | None
+    is_current: bool = True
+    is_primary: bool = True
+    updated_at: datetime | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ProfessorContactFact:
+    subtype: str
+    value: str
+    source_page_id: str | None
+    is_active: bool = True
+    updated_at: datetime | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ProfessorIssueSignal:
+    stage: str
+    reported_by: str
+    reported_at: datetime | None = None
+    resolved: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class ProfessorAdminAction:
+    action: str
+    observed_data_updated_at: datetime | None
+
+
+@dataclass(frozen=True, slots=True)
+class ProfessorCanonicalState:
+    professor_id: str
+    canonical_name: str | None
+    identity_status: str | None
+    current_institution: str | None
+    title: str | None
+    department: str | None
+    research_topics: tuple[str, ...] = ()
+    profile_summary: str | None = None
+    has_official_source: bool = False
+    has_paper_candidates: bool = False
+    has_verified_paper_signal: bool = False
+    same_name_conflict: bool = False
+    non_person_name: bool = False
+    reader_artifact_detected: bool = False
+    profile_blob_detected: bool = False
+    title_department_conflict: bool = False
+    affiliations: tuple[ProfessorAffiliationState, ...] = ()
+    contact_facts: tuple[ProfessorContactFact, ...] = ()
+    open_issues: tuple[ProfessorIssueSignal, ...] = ()
+    canonical_watermark: datetime | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ProfessorQualityReason:
+    rule_id: str
+    stage: str | None
+    message: str
+    persist_issue: bool = True
+
+
+@dataclass(frozen=True, slots=True)
+class ProfessorQualityEvaluation:
+    quality_status: str
+    reasons: tuple[ProfessorQualityReason, ...]
+
+
+def evaluate_professor_quality(
+    state: ProfessorCanonicalState,
+    *,
+    latest_admin_action: ProfessorAdminAction | None = None,
+) -> ProfessorQualityEvaluation:
+    """Evaluate professor quality from persisted canonical state.
+
+    This pure evaluator is the professor-domain four-state contract used
+    by canonical writes and standalone re-evaluation. It intentionally
+    ignores quality-gate-authored issues when detecting external
+    blocking issues, preventing the gate from blocking itself.
+    """
+    watermark = _canonical_watermark(state)
+    if _admin_action_is_fresh(latest_admin_action, watermark):
+        if latest_admin_action and latest_admin_action.action == "confirm_ready":
+            return ProfessorQualityEvaluation(
+                quality_status="ready",
+                reasons=(
+                    ProfessorQualityReason(
+                        rule_id="human_override",
+                        stage=None,
+                        message="fresh admin confirm_ready override",
+                        persist_issue=False,
+                    ),
+                ),
+            )
+        if latest_admin_action and latest_admin_action.action == "send_to_review":
+            return ProfessorQualityEvaluation(
+                quality_status="needs_review",
+                reasons=(
+                    ProfessorQualityReason(
+                        rule_id="human_override",
+                        stage=None,
+                        message="fresh admin send_to_review override",
+                        persist_issue=False,
+                    ),
+                ),
+            )
+
+    anomaly_reasons = _needs_review_reasons(state)
+    low_confidence_reasons = _low_confidence_reasons(state)
+    enrichment_reasons = _needs_enrichment_reasons(state)
+
+    reasons = anomaly_reasons + low_confidence_reasons + enrichment_reasons
+    if anomaly_reasons:
+        status = "needs_review"
+    elif low_confidence_reasons:
+        status = "low_confidence"
+    elif not enrichment_reasons:
+        status = "ready"
+    else:
+        status = "needs_enrichment"
+
+    return ProfessorQualityEvaluation(
+        quality_status=status,
+        reasons=tuple(reasons),
+    )
+
+
+def load_professor_canonical_state(conn, professor_id: str) -> ProfessorCanonicalState:
+    professor_row = conn.execute(
+        """
+        SELECT professor_id,
+               canonical_name,
+               identity_status,
+               primary_official_profile_page_id,
+               profile_summary,
+               updated_at
+          FROM professor
+         WHERE professor_id = %s
+        """,
+        (professor_id,),
+    ).fetchone()
+    if professor_row is None:
+        raise ValueError(f"Professor not found: {professor_id}")
+
+    affiliation_rows = conn.execute(
+        """
+        SELECT institution,
+               department,
+               title,
+               is_current,
+               is_primary,
+               updated_at
+          FROM professor_affiliation
+         WHERE professor_id = %s
+        """,
+        (professor_id,),
+    ).fetchall()
+    fact_rows = conn.execute(
+        """
+        SELECT fact_type,
+               value_raw,
+               source_page_id,
+               updated_at
+          FROM professor_fact
+         WHERE professor_id = %s
+           AND status = 'active'
+        """,
+        (professor_id,),
+    ).fetchall()
+    issue_rows = conn.execute(
+        """
+        SELECT stage,
+               reported_by,
+               reported_at,
+               resolved
+          FROM pipeline_issue
+         WHERE professor_id = %s
+           AND resolved = false
+        """,
+        (professor_id,),
+    ).fetchall()
+    paper_signal_row = conn.execute(
+        """
+        SELECT count(*) AS paper_candidates,
+               count(*) FILTER (WHERE link_status = 'verified') AS verified_paper_signals
+          FROM professor_paper_link
+         WHERE professor_id = %s
+        """,
+        (professor_id,),
+    ).fetchone()
+
+    primary_affiliation = _select_primary_current_affiliation(affiliation_rows)
+    affiliations = tuple(
+        ProfessorAffiliationState(
+            institution=_row_get(row, "institution", 0),
+            is_current=bool(_row_get(row, "is_current", 3)),
+            is_primary=bool(_row_get(row, "is_primary", 4)),
+            updated_at=_row_get(row, "updated_at", 5),
+        )
+        for row in affiliation_rows
+    )
+    contacts = tuple(
+        contact
+        for row in fact_rows
+        if (
+            contact := _contact_from_fact_row(row)
+        )
+        is not None
+    )
+    research_topics = tuple(
+        value
+        for row in fact_rows
+        if _row_get(row, "fact_type", 0) == "research_topic"
+        and (value := _normalize_optional_text(_row_get(row, "value_raw", 1)))
+    )
+    open_issues = tuple(
+        ProfessorIssueSignal(
+            stage=str(_row_get(row, "stage", 0)),
+            reported_by=str(_row_get(row, "reported_by", 1)),
+            reported_at=_row_get(row, "reported_at", 2),
+            resolved=bool(_row_get(row, "resolved", 3)),
+        )
+        for row in issue_rows
+    )
+    watermark_values = [
+        value
+        for value in (
+            _row_get(professor_row, "updated_at", 5),
+            *(affiliation.updated_at for affiliation in affiliations),
+            *(_row_get(row, "updated_at", 3) for row in fact_rows),
+            *(contact.updated_at for contact in contacts),
+        )
+        if value is not None
+    ]
+
+    return ProfessorCanonicalState(
+        professor_id=str(_row_get(professor_row, "professor_id", 0)),
+        canonical_name=_row_get(professor_row, "canonical_name", 1),
+        identity_status=_row_get(professor_row, "identity_status", 2),
+        current_institution=(
+            _row_get(primary_affiliation, "institution", 0)
+            if primary_affiliation is not None
+            else None
+        ),
+        title=(
+            _row_get(primary_affiliation, "title", 2)
+            if primary_affiliation is not None
+            else None
+        ),
+        department=(
+            _row_get(primary_affiliation, "department", 1)
+            if primary_affiliation is not None
+            else None
+        ),
+        research_topics=research_topics,
+        profile_summary=_row_get(professor_row, "profile_summary", 4),
+        has_official_source=bool(
+            _row_get(professor_row, "primary_official_profile_page_id", 3)
+        ),
+        has_paper_candidates=(
+            int(_row_get(paper_signal_row, "paper_candidates", 0) or 0) > 0
+            if paper_signal_row is not None
+            else False
+        ),
+        has_verified_paper_signal=(
+            int(_row_get(paper_signal_row, "verified_paper_signals", 1) or 0) > 0
+            if paper_signal_row is not None
+            else False
+        ),
+        affiliations=affiliations,
+        contact_facts=contacts,
+        open_issues=open_issues,
+        canonical_watermark=max(watermark_values) if watermark_values else None,
+    )
+
+
+def persist_professor_quality_evaluation(
+    conn,
+    *,
+    professor_id: str,
+    evaluation: ProfessorQualityEvaluation,
+) -> dict[str, int]:
+    conn.execute(
+        """
+        UPDATE professor
+           SET quality_status = %s,
+               updated_at = now()
+         WHERE professor_id = %s
+        """,
+        (evaluation.quality_status, professor_id),
+    )
+
+    persisted_descriptions: list[str] = []
+    issues_upserted = 0
+    for reason in evaluation.reasons:
+        if not reason.persist_issue or reason.stage is None:
+            continue
+        description = _quality_issue_description(reason)
+        persisted_descriptions.append(description)
+        insert_cursor = conn.execute(
+            """
+            INSERT INTO pipeline_issue (
+                professor_id,
+                link_id,
+                institution,
+                stage,
+                severity,
+                description,
+                evidence_snapshot,
+                reported_by
+            )
+            VALUES (%s, NULL, NULL, %s, %s, %s, %s::jsonb, %s)
+            ON CONFLICT DO NOTHING
+            """,
+            (
+                professor_id,
+                reason.stage,
+                _severity_for_quality_status(evaluation.quality_status),
+                description,
+                json.dumps(
+                    {
+                        "professor_id": professor_id,
+                        "quality_status": evaluation.quality_status,
+                        "rule_id": reason.rule_id,
+                    },
+                    ensure_ascii=False,
+                ),
+                PROFESSOR_QUALITY_GATE_REPORTER,
+            ),
+        )
+        issues_upserted += _cursor_rowcount(insert_cursor)
+
+    if persisted_descriptions:
+        stale_cursor = conn.execute(
+            """
+            UPDATE pipeline_issue
+               SET resolved = true,
+                   resolved_at = now(),
+                   resolution_notes = 'resolved by professor quality re-evaluation'
+             WHERE professor_id = %s
+               AND reported_by = %s
+               AND resolved = false
+               AND description <> ALL(%s)
+            """,
+            (
+                professor_id,
+                PROFESSOR_QUALITY_GATE_REPORTER,
+                persisted_descriptions,
+            ),
+        )
+    else:
+        stale_cursor = conn.execute(
+            """
+            UPDATE pipeline_issue
+               SET resolved = true,
+                   resolved_at = now(),
+                   resolution_notes = 'resolved by professor quality re-evaluation'
+             WHERE professor_id = %s
+               AND reported_by = %s
+               AND resolved = false
+            """,
+            (professor_id, PROFESSOR_QUALITY_GATE_REPORTER),
+        )
+
+    return {
+        "issues_upserted": issues_upserted,
+        "stale_issues_reconciled": _cursor_rowcount(stale_cursor),
+    }
+
+
+def _cursor_rowcount(cursor: object) -> int:
+    rowcount = getattr(cursor, "rowcount", 0)
+    return rowcount if isinstance(rowcount, int) and rowcount > 0 else 0
+
+
+def _needs_review_reasons(
+    state: ProfessorCanonicalState,
+) -> tuple[ProfessorQualityReason, ...]:
+    reasons: list[ProfessorQualityReason] = []
+    if _normalize_optional_text(state.identity_status) != "resolved":
+        reasons.append(_reason("identity_unresolved", "identity is not resolved"))
+    if state.same_name_conflict:
+        reasons.append(_reason("same_name_conflict", "same-name conflict is open"))
+    if _has_field_contradiction(state):
+        reasons.append(
+            _reason("field_contradiction", "contradictory canonical facts detected")
+        )
+    for issue in _external_open_issues(state):
+        reasons.append(
+            ProfessorQualityReason(
+                rule_id="external_blocking_issue",
+                stage=issue.stage,
+                message=f"external open pipeline issue at stage {issue.stage}",
+                persist_issue=False,
+            )
+        )
+    return tuple(reasons)
+
+
+def _row_get(row: object, key: str, index: int) -> object:
+    if isinstance(row, dict):
+        return row.get(key)
+    try:
+        return row[index]  # type: ignore[index]
+    except (IndexError, TypeError):
+        return None
+
+
+def _select_primary_current_affiliation(rows: object) -> object | None:
+    if not isinstance(rows, list | tuple):
+        return None
+    current_rows = [row for row in rows if bool(_row_get(row, "is_current", 3))]
+    primary_rows = [row for row in current_rows if bool(_row_get(row, "is_primary", 4))]
+    candidates = primary_rows or current_rows
+    return candidates[0] if candidates else None
+
+
+def _contact_from_fact_row(row: object) -> ProfessorContactFact | None:
+    fact_type = _normalize_optional_text(_row_get(row, "fact_type", 0))
+    if fact_type not in {"contact", "homepage"}:
+        return None
+    value = _normalize_optional_text(_row_get(row, "value_raw", 1))
+    if not value:
+        return None
+    return ProfessorContactFact(
+        subtype="email" if fact_type == "contact" else "homepage",
+        value=value,
+        source_page_id=_normalize_optional_text(_row_get(row, "source_page_id", 2)),
+        is_active=True,
+        updated_at=_row_get(row, "updated_at", 3),
+    )
+
+
+def _quality_issue_description(reason: ProfessorQualityReason) -> str:
+    return f"[professor_quality_gate:{reason.rule_id}] {reason.message}"
+
+
+def _severity_for_quality_status(quality_status: str) -> str:
+    if quality_status == "needs_review":
+        return "high"
+    if quality_status == "low_confidence":
+        return "medium"
+    return "low"
+
+
+def _low_confidence_reasons(
+    state: ProfessorCanonicalState,
+) -> tuple[ProfessorQualityReason, ...]:
+    reasons: list[ProfessorQualityReason] = []
+    canonical_name = _normalize_optional_text(state.canonical_name)
+    if state.non_person_name or (
+        canonical_name
+        and (
+            is_obvious_non_person_name(canonical_name)
+            or looks_like_profile_blob(canonical_name)
+        )
+    ):
+        reasons.append(_reason("non_person_name", "canonical name is not a person"))
+    if not state.has_official_source:
+        reasons.append(_reason("missing_official_source", "official source missing"))
+    if state.reader_artifact_detected:
+        reasons.append(
+            _reason("reader_artifact_detected", "reader artifact detected")
+        )
+    if state.profile_blob_detected:
+        reasons.append(_reason("profile_blob_detected", "profile blob detected"))
+    return tuple(reasons)
+
+
+def _needs_enrichment_reasons(
+    state: ProfessorCanonicalState,
+) -> tuple[ProfessorQualityReason, ...]:
+    reasons: list[ProfessorQualityReason] = []
+    if not _normalize_optional_text(state.canonical_name):
+        reasons.append(_reason("missing_canonical_name", "canonical name missing"))
+    if not _normalize_optional_text(state.current_institution):
+        reasons.append(
+            _reason("missing_current_institution", "current institution missing")
+        )
+    if not (
+        _normalize_optional_text(state.title)
+        or _normalize_optional_text(state.department)
+    ):
+        reasons.append(
+            _reason("missing_title_or_department", "title or department missing")
+        )
+    if not any(_normalize_optional_text(topic) for topic in state.research_topics):
+        reasons.append(_reason("missing_research_topic", "research topic missing"))
+    if not _normalize_optional_text(state.profile_summary):
+        reasons.append(_reason("missing_profile_summary", "profile summary missing"))
+    if state.has_paper_candidates and not state.has_verified_paper_signal:
+        reasons.append(
+            _reason(
+                "missing_verified_paper_signal",
+                "paper candidates lack verified attribution signal",
+            )
+        )
+    return tuple(reasons)
+
+
+def _reason(rule_id: str, message: str) -> ProfessorQualityReason:
+    return ProfessorQualityReason(
+        rule_id=rule_id,
+        stage=PROFESSOR_QUALITY_STAGE_BY_RULE_ID[rule_id],
+        message=message,
+        persist_issue=True,
+    )
+
+
+def _external_open_issues(
+    state: ProfessorCanonicalState,
+) -> tuple[ProfessorIssueSignal, ...]:
+    return tuple(
+        issue
+        for issue in state.open_issues
+        if not issue.resolved and issue.reported_by != PROFESSOR_QUALITY_GATE_REPORTER
+    )
+
+
+def _canonical_watermark(state: ProfessorCanonicalState) -> datetime | None:
+    values: list[datetime] = []
+    if state.canonical_watermark is not None:
+        values.append(state.canonical_watermark)
+    values.extend(
+        issue.reported_at
+        for issue in _external_open_issues(state)
+        if issue.reported_at is not None
+    )
+    values.extend(
+        affiliation.updated_at
+        for affiliation in state.affiliations
+        if affiliation.updated_at is not None
+    )
+    values.extend(
+        contact.updated_at
+        for contact in state.contact_facts
+        if contact.updated_at is not None
+    )
+    return max(values) if values else None
+
+
+def _admin_action_is_fresh(
+    action: ProfessorAdminAction | None,
+    watermark: datetime | None,
+) -> bool:
+    if action is None or action.action not in {"confirm_ready", "send_to_review"}:
+        return False
+    if action.observed_data_updated_at is None:
+        return watermark is None
+    if watermark is None:
+        return True
+    return action.observed_data_updated_at >= watermark
+
+
+def _has_field_contradiction(state: ProfessorCanonicalState) -> bool:
+    if state.title_department_conflict:
+        return True
+    if _has_conflicting_primary_affiliations(state.affiliations):
+        return True
+    if _has_conflicting_same_source_contacts(state.contact_facts):
+        return True
+    return False
+
+
+def _has_conflicting_primary_affiliations(
+    affiliations: tuple[ProfessorAffiliationState, ...],
+) -> bool:
+    active_primary_institutions = {
+        normalized
+        for affiliation in affiliations
+        if affiliation.is_current
+        and affiliation.is_primary
+        and (normalized := _normalize_for_compare(affiliation.institution))
+    }
+    return len(active_primary_institutions) > 1
+
+
+def _has_conflicting_same_source_contacts(
+    contact_facts: tuple[ProfessorContactFact, ...],
+) -> bool:
+    values_by_key: dict[tuple[str, str], set[str]] = {}
+    for fact in contact_facts:
+        if not fact.is_active or fact.subtype not in {"email", "homepage"}:
+            continue
+        source_page_id = _normalize_optional_text(fact.source_page_id)
+        value = _normalize_for_compare(fact.value)
+        if not source_page_id or not value:
+            continue
+        key = (fact.subtype, source_page_id)
+        values_by_key.setdefault(key, set()).add(value)
+    return any(len(values) > 1 for values in values_by_key.values())
+
+
+def _normalize_optional_text(value: object) -> str | None:
+    if value is None:
+        return None
+    item = str(value).strip()
+    return item or None
+
+
+def _normalize_for_compare(value: object) -> str | None:
+    item = _normalize_optional_text(value)
+    if item is None:
+        return None
+    return re.sub(r"\s+", "", item).casefold()
 
 
 @dataclass(frozen=True)

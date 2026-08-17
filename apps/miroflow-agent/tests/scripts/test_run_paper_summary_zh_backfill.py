@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -35,6 +36,7 @@ def test_cli_help(capsys):
     assert "--only-missing" in captured.out
     assert "--all" in captured.out
     assert "--dry-run" in captured.out
+    assert "--paper-id" in captured.out
 
 
 def test_build_select_sql_only_missing_default():
@@ -57,6 +59,20 @@ def test_build_select_sql_all_disables_summary_filter():
     )
 
     assert "p.summary_zh IS NULL" not in sql
+
+
+def test_build_select_sql_filters_explicit_paper_ids():
+    cli = _import_cli()
+    args = cli._parse_args(["--paper-id", "PAPER-2", "--paper-id", "PAPER-1"])
+    sql, params = cli._build_select_sql(
+        only_missing=args.only_missing,
+        limit=None,
+        paper_ids=args.paper_ids,
+    )
+
+    compact = " ".join(sql.split())
+    assert "p.paper_id = ANY(%s)" in compact
+    assert params == (["PAPER-2", "PAPER-1"],)
 
 
 def test_cli_dry_run_dispatches_without_paper_update(monkeypatch, tmp_path, capsys):
@@ -202,6 +218,23 @@ def test_cli_successful_summary_promotes_paper_status(monkeypatch, tmp_path, cap
     assert report["summaries_written"] == 1
     assert report["summaries_rejected"] == 0
 
+    rows = [
+        json.loads(line)
+        for line in (tmp_path / "run.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert rows[-1]["milvus_refresh"] == {
+        "domain": "paper",
+        "paper_id": "PAPER-1",
+        "reason": "summary_zh_changed",
+        "command": [
+            "run_milvus_backfill.py",
+            "--domain",
+            "paper",
+            "--paper-id",
+            "PAPER-1",
+        ],
+    }
+
 
 def test_cli_skips_already_chinese_abstract(monkeypatch, tmp_path):
     cli = _import_cli()
@@ -252,6 +285,40 @@ def test_cli_missing_database_url_exits_nonzero(monkeypatch):
         with pytest.raises(SystemExit) as exc:
             cli.main()
         assert exc.value.code != 0
+
+
+def test_open_llm_client_disables_ambient_proxy_env(monkeypatch):
+    cli = _import_cli()
+    constructed: dict[str, object] = {}
+
+    class FakeHttpClient:
+        def __init__(self, *, trust_env: bool, timeout: float):
+            constructed["trust_env"] = trust_env
+            constructed["timeout"] = timeout
+            constructed["http_client"] = self
+
+    class FakeOpenAI:
+        def __init__(self, **kwargs):
+            constructed["openai_kwargs"] = kwargs
+
+    monkeypatch.setitem(sys.modules, "httpx", SimpleNamespace(Client=FakeHttpClient))
+    monkeypatch.setitem(sys.modules, "openai", SimpleNamespace(OpenAI=FakeOpenAI))
+    monkeypatch.setattr(
+        cli,
+        "resolve_professor_llm_settings",
+        lambda *_a, **_kw: {
+            "local_llm_base_url": "http://127.0.0.1:11434/v1",
+            "local_llm_api_key": "EMPTY",
+            "local_llm_model": "llama3.1:8b-instruct-fp16",
+        },
+    )
+
+    _client, model, _extra_body = cli._open_llm_client()
+
+    assert model == "llama3.1:8b-instruct-fp16"
+    assert constructed["trust_env"] is False
+    assert constructed["timeout"] == 90.0
+    assert constructed["openai_kwargs"]["http_client"] is constructed["http_client"]
 
 
 class _patch_argv:

@@ -4,6 +4,7 @@ from src.data_agents.paper.crossref import (
     discover_professor_paper_candidates_from_crossref,
     enrich_paper_metadata_from_crossref,
 )
+from src.data_agents.paper.models import PaperAuthor
 
 
 def test_discover_professor_paper_candidates_from_crossref_filters_exact_author_names_and_parses_works() -> None:
@@ -85,6 +86,10 @@ def test_enrich_paper_metadata_from_crossref_by_doi() -> None:
                 "funder": [{"name": "NSFC"}, {"name": "National Key R&D Program of China"}],
                 "reference-count": 77,
                 "URL": "https://doi.org/10.1109/example",
+                "author": [
+                    {"family": "高", "given": "会军", "ORCID": "https://orcid.org/0000-0002-1111-2222"},
+                    {"family": "Zhang", "given": "Wei"},
+                ],
             }
         }
 
@@ -103,3 +108,12 @@ def test_enrich_paper_metadata_from_crossref_by_doi() -> None:
     assert enrichment.reference_count == 77
     assert enrichment.source_url == "https://doi.org/10.1109/example"
     assert enrichment.enrichment_sources == ("crossref",)
+    assert enrichment.doi == "10.1109/example"
+    assert enrichment.authors == (
+        PaperAuthor(
+            name="高会军",
+            orcid="0000-0002-1111-2222",
+            source="crossref",
+        ),
+        PaperAuthor(name="Wei Zhang", source="crossref"),
+    )

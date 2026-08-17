@@ -14,6 +14,7 @@ import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import DomainList from "./pages/DomainList";
 import RecordDetail from "./pages/RecordDetail";
+import ProfessorWorkbench from "./pages/ProfessorWorkbench";
 import Chat from "./pages/Chat";
 import PipelineRuns from "./pages/PipelineRuns";
 import PipelineIssues from "./pages/PipelineIssues";
@@ -75,6 +76,7 @@ export default function App() {
             <Route path="/pipeline-runs" element={<PipelineRuns />} />
             <Route path="/pipeline-runs/:runId" element={<PipelineRuns />} />
             <Route path="/pipeline-issues" element={<PipelineIssues />} />
+            <Route path="/professor/:id" element={<ProfessorWorkbench />} />
             <Route path="/:domain" element={<DomainList />} />
             <Route path="/:domain/:id" element={<RecordDetail />} />
           </Routes>

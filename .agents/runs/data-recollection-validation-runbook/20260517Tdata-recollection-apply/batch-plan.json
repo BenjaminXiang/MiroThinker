@@ -1,0 +1,58 @@
+{
+  "change_id": "data-recollection-validation-runbook",
+  "generated_at": "2026-05-17T03:01:40+00:00",
+  "full_run": false,
+  "seed_ids": [
+    1,
+    2,
+    3
+  ],
+  "sample_limit": 3,
+  "sample_evidence_path": null,
+  "commands": {
+    "professor_seed_trigger": [
+      "/home/longxiang/MiroThinker/.worktrees/paper-pipeline-cleanup/apps/miroflow-agent/scripts/run_data_recollection_validation.py",
+      "plan-batch",
+      "--seed-id",
+      "1",
+      "--seed-id",
+      "2",
+      "--seed-id",
+      "3",
+      "--sample-limit",
+      "3"
+    ],
+    "paper_homepage_ingest": [
+      "uv",
+      "run",
+      "python",
+      "scripts/run_homepage_paper_ingest.py",
+      "--limit",
+      "3"
+    ],
+    "patent_homepage_ingest": [
+      "uv",
+      "run",
+      "python",
+      "scripts/run_homepage_patent_ingest.py",
+      "--limit",
+      "3"
+    ],
+    "paper_summary_backfill": [
+      "uv",
+      "run",
+      "python",
+      "scripts/run_paper_summary_zh_backfill.py",
+      "--limit",
+      "3"
+    ],
+    "milvus_refresh": [
+      "uv",
+      "run",
+      "python",
+      "scripts/run_milvus_backfill.py",
+      "--domain",
+      "paper"
+    ]
+  }
+}

@@ -108,6 +108,18 @@ def test_backfill_deletes_before_insert_per_paper():
         assert "paper_id" in expr, f"delete call missing paper_id filter: {call}"
 
 
+def test_backfill_loads_collection_before_refresh_delete():
+    conn = _fake_pg_conn_returning([_paper_row(paper_id="p1")])
+    milvus = _fake_milvus_client()
+    embed = _fake_embedding_client()
+
+    backfill_paper_chunks(conn, milvus, embed)
+
+    method_names = [call[0] for call in milvus.method_calls]
+    assert "load_collection" in method_names
+    assert method_names.index("load_collection") < method_names.index("delete")
+
+
 def test_backfill_respects_limit():
     rows = [_paper_row(paper_id=f"p{i}") for i in range(5)]
     conn = _fake_pg_conn_returning(rows[:1])  # LIMIT 1 returns only 1 row
@@ -160,6 +172,25 @@ def test_backfill_prefers_summary_zh_for_abstract_chunk():
     inserted = milvus.insert.call_args.kwargs["data"]
     abstract_chunks = [row for row in inserted if row["chunk_type"] == "abstract"]
     assert abstract_chunks
+    assert abstract_chunks[0]["content_text"] == summary_zh
+
+
+def test_backfill_targets_explicit_paper_ids_for_summary_refresh():
+    summary_zh = "新的中文摘要。" * 20
+    conn = _fake_pg_conn_returning(
+        [_paper_row(paper_id="p_target", abstract="Old abstract.", summary_zh=summary_zh)]
+    )
+    milvus = _fake_milvus_client()
+    embed = _fake_embedding_client()
+
+    report = backfill_paper_chunks(conn, milvus, embed, paper_ids={"p_target"})
+
+    assert report.papers_processed == 1
+    sql, params = conn.execute.call_args.args
+    assert "p.paper_id IN" in sql
+    assert params == ("p_target",)
+    inserted = milvus.insert.call_args.kwargs["data"]
+    abstract_chunks = [row for row in inserted if row["chunk_type"] == "abstract"]
     assert abstract_chunks[0]["content_text"] == summary_zh
 
 

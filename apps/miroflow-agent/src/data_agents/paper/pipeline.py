@@ -11,10 +11,10 @@ Migration target: callers should invoke ``paper.homepage_ingest`` for
 discovery + ``paper.enrichment.enrich_paper_with_hybrid_sources`` for
 enrichment of each discovered paper.
 
-Until callers migrate, ``run_paper_pipeline`` continues to function for
-backward compatibility but emits a ``DeprecationWarning`` on first call.
-Removal is planned in OpenSpec change ``paper-pipeline-cleanup``
-(follow-up to ``prof-paper-patent-from-page-flow``).
+``run_paper_pipeline`` no longer provides a default author-discovery
+backend. It remains importable only for legacy tests or explicitly
+injected compatibility callers and emits a ``DeprecationWarning`` on
+first call.
 """
 
 from __future__ import annotations
@@ -23,16 +23,16 @@ import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Callable
+from typing import Any, Callable
 
 from src.data_agents.contracts import PaperRecord, ProfessorRecord, ReleasedObject
 
 from .feedback import apply_paper_feedback_to_professors
 from .models import AuthorPaperMetrics, DiscoveredPaper, ProfessorPaperDiscoveryResult
 from .release import build_paper_release
-from .semantic_scholar import RequestJson, discover_professor_paper_candidates
 
 DiscoverPapers = Callable[..., ProfessorPaperDiscoveryResult]
+RequestJson = Callable[..., Any]
 
 _DEPRECATION_WARNED = False
 _DEPRECATION_MESSAGE = (
@@ -77,18 +77,25 @@ def run_paper_pipeline(
 ) -> PaperPipelineResult:
     """DEPRECATED. See module docstring for migration target.
 
-    Emits ``DeprecationWarning`` once per process. Continues to function
-    for backward compatibility until callers migrate; tracked under
-    OpenSpec change ``prof-paper-patent-from-page-flow`` T2 + the
-    follow-up ``paper-pipeline-cleanup`` change.
+    Emits ``DeprecationWarning`` once per process. A caller must inject
+    a compatibility discovery function explicitly; no default external
+    database author discovery backend is wired here anymore.
     """
     global _DEPRECATION_WARNED
     if not _DEPRECATION_WARNED:
         warnings.warn(_DEPRECATION_MESSAGE, DeprecationWarning, stacklevel=2)
         _DEPRECATION_WARNED = True
+    if discover_papers is None:
+        raise RuntimeError(
+            "paper.pipeline.run_paper_pipeline no longer has a default author "
+            "discovery backend. Use paper.homepage_ingest for page-first "
+            "discovery, or pass an explicit compatibility discovery callable "
+            "from legacy-only tests."
+        )
+
     discovery_results, failed_professor_count = _discover_all_professor_papers(
         professors=professors,
-        discover_papers=discover_papers or discover_professor_paper_candidates,
+        discover_papers=discover_papers,
         request_json=request_json,
         max_workers=max_workers,
         max_papers_per_professor=max_papers_per_professor,

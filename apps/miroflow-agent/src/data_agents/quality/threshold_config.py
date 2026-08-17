@@ -59,6 +59,8 @@ PROFESSOR_PAPER_LINK_PROMOTION = LinkPromotionPolicy(
     allowed_evidence_sources=(
         "official_publication_page",
         "personal_homepage",
+        "prof_homepage_tier2",
+        "prof_homepage_tier3",
         "cv_pdf",
         "official_external_profile",
         # academic_api_with_affiliation_match is allowed ONLY if institution

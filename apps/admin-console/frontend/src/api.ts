@@ -168,6 +168,21 @@ export function fetchDomainObject(
   return fetchJSON(`/api/${domain}/${id}`);
 }
 
+export function fetchAdminProfessorDetail(id: string): Promise<unknown> {
+  return fetchJSON(`/api/admin/professor/${id}`);
+}
+
+export function markAdminProfessor(
+  id: string,
+  body: { action: "confirm_ready" | "send_to_review" | "flag_recrawl"; note?: string }
+): Promise<unknown> {
+  return fetchJSON(`/api/admin/professor/${id}/mark`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
 export function fetchFilterOptions(
   domain: string,
   field: string

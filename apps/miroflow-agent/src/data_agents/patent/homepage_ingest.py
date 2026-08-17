@@ -9,12 +9,10 @@ The entry point `run_homepage_patent_ingest` walks the same professor
 roster as `paper.homepage_ingest.run_homepage_paper_ingest`, fetches each
 prof's homepage HTML, calls
 `professor.homepage_patents.extract_patents_from_html`, and persists
-candidates that satisfy V004 NOT NULL constraints (i.e. carry a
-`patent_id` / registration number). Candidates without a patent_id are
-recorded as `pipeline_issue` rows with `stage="data_quality_flag"` —
-they remain visible for human review but are not inserted as canonical
-patents because V004 makes `patent_number` NOT NULL UNIQUE, and Phase B
-of this change does not migrate that constraint.
+candidates into canonical rows. Candidates without a registration number
+use a stable page/title-derived internal `patent_id`, keep
+`patent_number=NULL`, and stay `quality_status="needs_enrichment"` until
+later enrichment or human review supplies stronger identity evidence.
 """
 
 from __future__ import annotations
@@ -45,7 +43,6 @@ _DRY_RUN_SENTINEL_RUN_ID = UUID("00000000-0000-0000-0000-000000000000")
 _LINK_MATCH_REASON_PAGE_ONLY = "prof_page_declaration"
 _LINK_EVIDENCE_SOURCE = "personal_homepage"
 _LINK_ROLE_INVENTOR = "inventor"
-_PIPELINE_STAGE_DATA_QUALITY = "data_quality_flag"
 _REPORTED_BY = "homepage_patent_ingest"
 
 
@@ -215,30 +212,6 @@ def _ingest_patents_for_professor(
     issues_filed = 0
 
     for entry in entries:
-        if entry.patent_id is None:
-            # V004 makes patent_number NOT NULL UNIQUE — title-only
-            # candidates cannot satisfy that constraint, so we file a
-            # data_quality_flag issue and move on. The candidate is not
-            # lost; admin sees it in the issue log.
-            skipped_no_id += 1
-            issues_filed += 1
-            if not dry_run:
-                _file_pipeline_issue(
-                    conn,
-                    issue_type="patent_missing_registration_number",
-                    professor_id=professor_id,
-                    stage=_PIPELINE_STAGE_DATA_QUALITY,
-                    severity="low",
-                    message="Patent candidate lacks registration number (patent_number)",
-                    details={
-                        "title": entry.title,
-                        "source_url": entry.source_url,
-                        "source_anchor": entry.source_anchor,
-                        "inventors": list(entry.inventors),
-                    },
-                )
-            continue
-
         row = _build_patent_row(
             entry,
             canonical_name=canonical_name,
@@ -270,18 +243,14 @@ def _build_patent_row(
     canonical_name: str | None,
     run_id: UUID | str,
 ) -> dict[str, Any]:
-    """Build a V004/V019/V020 patent-table row from a homepage entry.
-
-    Caller must have checked `entry.patent_id is not None` first.
-    """
-    if entry.patent_id is None:
-        raise ValueError(
-            "_build_patent_row called without patent_id; ingest must skip "
-            "title-only candidates upstream"
-        )
-
-    patent_number = entry.patent_id.strip().upper()
-    internal_patent_id = build_stable_id("PAT", patent_number)
+    """Build a patent-table row from a homepage entry."""
+    patent_number = entry.patent_id.strip().upper() if entry.patent_id else None
+    stable_key = (
+        f"number:{patent_number}"
+        if patent_number
+        else f"page-title:{entry.source_url.strip()}:{entry.title.strip().casefold()}"
+    )
+    internal_patent_id = build_stable_id("PAT", stable_key)
 
     inventors = (
         list(entry.inventors)
@@ -320,18 +289,38 @@ def _build_patent_row(
 
 
 def _upsert_patent_canonical(conn, *, row: dict[str, Any]) -> str:
-    """INSERT ... ON CONFLICT (patent_number) DO UPDATE the patent row.
+    """INSERT and merge the patent row.
 
-    Conflict key is `patent_number` rather than `patent_id` so that
-    re-discovery of the same real-world patent on a different prof page
-    (or via xlsx import) merges into the existing canonical row instead
-    of inserting a duplicate. Per spec Requirement "Patent canonical
-    upsert with patent_id hard match".
+    Numbered patents merge on `patent_number`; page-only title rows have
+    no stable registration number and merge only on the deterministic
+    source/title-derived `patent_id`.
     """
     run_id = require_real_run_id(row["run_id"], writer_name="patent.homepage_ingest")
+    if row["patent_number"]:
+        conflict_clause = """
+        ON CONFLICT (patent_number) DO UPDATE
+           SET title_clean         = COALESCE(NULLIF(EXCLUDED.title_clean, ''), patent.title_clean),
+               inventors_raw       = COALESCE(EXCLUDED.inventors_raw, patent.inventors_raw),
+               inventors_parsed    = COALESCE(EXCLUDED.inventors_parsed, patent.inventors_parsed),
+               filing_date         = COALESCE(EXCLUDED.filing_date, patent.filing_date),
+               grant_date          = COALESCE(EXCLUDED.grant_date, patent.grant_date),
+               run_id              = EXCLUDED.run_id,
+               updated_at          = EXCLUDED.updated_at
+        """
+    else:
+        conflict_clause = """
+        ON CONFLICT (patent_id) DO UPDATE
+           SET title_clean         = COALESCE(NULLIF(EXCLUDED.title_clean, ''), patent.title_clean),
+               inventors_raw       = COALESCE(EXCLUDED.inventors_raw, patent.inventors_raw),
+               inventors_parsed    = COALESCE(EXCLUDED.inventors_parsed, patent.inventors_parsed),
+               filing_date         = COALESCE(EXCLUDED.filing_date, patent.filing_date),
+               grant_date          = COALESCE(EXCLUDED.grant_date, patent.grant_date),
+               run_id              = EXCLUDED.run_id,
+               updated_at          = EXCLUDED.updated_at
+        """
 
     result = conn.execute(
-        """
+        f"""
         INSERT INTO patent (
             patent_id,
             patent_number,
@@ -362,14 +351,7 @@ def _upsert_patent_canonical(conn, *, row: dict[str, Any]) -> str:
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
         )
-        ON CONFLICT (patent_number) DO UPDATE
-           SET title_clean         = COALESCE(NULLIF(EXCLUDED.title_clean, ''), patent.title_clean),
-               inventors_raw       = COALESCE(EXCLUDED.inventors_raw, patent.inventors_raw),
-               inventors_parsed    = COALESCE(EXCLUDED.inventors_parsed, patent.inventors_parsed),
-               filing_date         = COALESCE(EXCLUDED.filing_date, patent.filing_date),
-               grant_date          = COALESCE(EXCLUDED.grant_date, patent.grant_date),
-               run_id              = EXCLUDED.run_id,
-               updated_at          = EXCLUDED.updated_at
+        {conflict_clause}
         RETURNING patent_id
         """,
         (

@@ -75,6 +75,49 @@ def test_cli_dispatches_paper_domain(monkeypatch, tmp_path):
     assert called_kwargs.get("batch_size") == 8
 
 
+def test_cli_forwards_target_paper_ids(monkeypatch):
+    cli = _import_cli_module()
+    called_kwargs: dict = {}
+
+    def _fake_backfill(conn, milvus, embed, **kwargs):
+        called_kwargs.update(kwargs)
+        from src.data_agents.paper.milvus_backfill import BackfillReport
+
+        return BackfillReport(
+            papers_total=0,
+            papers_processed=0,
+            papers_skipped=0,
+            chunks_inserted=0,
+            papers_with_errors=0,
+            duration_seconds=0.0,
+        )
+
+    monkeypatch.setattr(cli, "backfill_paper_chunks", _fake_backfill)
+    monkeypatch.setattr(cli, "_open_database_connection", lambda url: MagicMock())
+    monkeypatch.setattr(cli, "_open_milvus_client", lambda uri: MagicMock())
+    monkeypatch.setattr(cli, "_open_embedding_client", lambda: MagicMock())
+    monkeypatch.setenv("DATABASE_URL", "postgresql://fake/test")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_milvus_backfill.py",
+            "--domain",
+            "paper",
+            "--paper-id",
+            "PAPER-1",
+            "--paper-id",
+            "PAPER-2",
+            "--milvus-uri",
+            ":memory:",
+        ],
+    )
+
+    cli.main()
+
+    assert called_kwargs.get("paper_ids") == {"PAPER-1", "PAPER-2"}
+
+
 def test_cli_dispatches_professor_domain(monkeypatch):
     """--domain professor invokes professor backfill path (mocked)."""
     cli = _import_cli_module()

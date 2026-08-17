@@ -28,7 +28,6 @@ from src.data_agents.patent.vectorizer import (  # noqa: E402
     _patent_row_to_payload,
 )
 from src.data_agents.professor.vectorizer import EmbeddingClient  # noqa: E402
-from src.data_agents.providers.local_api_key import load_local_api_key  # noqa: E402
 from src.data_agents.storage.milvus_collections import (  # noqa: E402
     COMPANY_PROFILES_COLLECTION,
     PAPER_CHUNKS_COLLECTION,
@@ -64,7 +63,25 @@ def _open_milvus_client(uri: str):
 
 
 def _open_embedding_client() -> EmbeddingClient:
-    return EmbeddingClient(api_key=load_local_api_key())
+    return EmbeddingClient(api_key=_load_local_api_key())
+
+
+def _load_local_api_key() -> str:
+    for env_name in ("API_KEY", "OPENAI_API_KEY", "SGLANG_API_KEY"):
+        api_key = os.getenv(env_name, "").strip()
+        if api_key:
+            return api_key
+
+    for parent in Path(__file__).resolve().parents:
+        key_path = parent / ".sglang_api_key"
+        try:
+            api_key = key_path.read_text(encoding="utf-8").strip()
+        except FileNotFoundError:
+            continue
+        if api_key:
+            return api_key
+
+    return ""
 
 
 def _load_resume_ids(path: Path | None) -> set[str]:
@@ -513,10 +530,19 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--milvus-uri", default="./milvus.db")
     parser.add_argument("--resume", nargs="?")
+    parser.add_argument(
+        "--paper-id",
+        dest="paper_ids",
+        action="append",
+        default=[],
+        help="Refresh one paper id; may be repeated. Only valid with --domain paper.",
+    )
     parser.add_argument("--log-level", default="INFO")
     args = parser.parse_args()
     if args.domain is None and args.collection is None:
         parser.error("one of --domain or --collection is required")
+    if args.paper_ids and args.domain not in (None, "paper"):
+        parser.error("--paper-id is only valid with --domain paper")
     return args
 
 
@@ -598,6 +624,8 @@ def _dry_run_collection_report(milvus_client, collection_name: str) -> dict[str,
 def main() -> int:
     args = _parse_args()
     domain = _resolve_domain(args)
+    if args.paper_ids and domain != "paper":
+        raise ValueError("--paper-id is only valid for the paper domain")
     collection_by_domain = {
         "paper": PAPER_CHUNKS_COLLECTION,
         "professor": PROFESSOR_PROFILES_COLLECTION,
@@ -648,6 +676,7 @@ def main() -> int:
                 limit=args.limit,
                 batch_size=args.batch_size,
                 resume_ids=resume_ids,
+                paper_ids=set(args.paper_ids) or None,
             )
         elif domain == "professor":
             report = _backfill_professor_domain(

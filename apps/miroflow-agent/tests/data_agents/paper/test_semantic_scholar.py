@@ -8,6 +8,7 @@ from src.data_agents.paper.semantic_scholar import (
     discover_professor_paper_candidates,
     enrich_paper_metadata_from_semantic_scholar,
 )
+from src.data_agents.paper.models import PaperAuthor
 
 
 def test_discover_professor_paper_candidates_selects_exact_name_author_and_parses_papers():
@@ -100,6 +101,14 @@ def test_enrich_paper_metadata_from_semantic_scholar_by_doi():
             "tldr": {"text": "课程思政治理路径综述。"},
             "isOpenAccess": True,
             "openAccessPdf": {"url": "https://example.org/open.pdf"},
+            "externalIds": {
+                "DOI": "10.16697/J.1674-5485.2021.04.005",
+                "ArXiv": "2401.01234",
+            },
+            "authors": [
+                {"name": "靳玉乐", "authorId": "136691277"},
+                {"name": "张良", "authorId": "2054877067"},
+            ],
         }
 
     enrichment = enrich_paper_metadata_from_semantic_scholar(
@@ -118,6 +127,12 @@ def test_enrich_paper_metadata_from_semantic_scholar_by_doi():
     assert enrichment.oa_status == "open"
     assert enrichment.source_url == "https://www.semanticscholar.org/paper/618beb097e1266e339db5ae81a75a8908dbe8a6b"
     assert enrichment.enrichment_sources == ("semantic_scholar",)
+    assert enrichment.doi == "10.16697/J.1674-5485.2021.04.005"
+    assert enrichment.arxiv_id == "2401.01234"
+    assert enrichment.authors == (
+        PaperAuthor(name="靳玉乐", source="semantic_scholar"),
+        PaperAuthor(name="张良", source="semantic_scholar"),
+    )
 
 
 def test_request_json_retries_429_with_short_bounded_backoff(

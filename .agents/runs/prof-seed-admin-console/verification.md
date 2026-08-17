@@ -349,3 +349,18 @@ Commands and outcomes:
   - Full log: `/tmp/admin-console-full-pytest-20260513.log`.
   - Result: 220 passed, 116 skipped, 12 warnings in 2.57s.
   - Exit code: 0.
+
+## 2026-05-15 V022 migration close-out
+
+Scope:
+
+- Close the remaining T1.4 checkbox for V022 professor seed migration
+  up/down idempotency.
+- Use a schema-only Alembic fixture; `postgres_data_ready` is not
+  appropriate here because this worktree does not include the large Excel
+  fixture it tries to import.
+
+Command and outcome:
+
+- `PYTHONPATH=/home/longxiang/MiroThinker UV_INDEX_URL=https://pypi.org/simple DATABASE_URL_TEST=postgresql://miroflow:miroflow@localhost:15432/miroflow_test_mock uv run pytest tests/test_migration_v022.py -q`
+  - Result: `2 passed, 4 warnings`.

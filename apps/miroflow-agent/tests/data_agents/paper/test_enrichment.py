@@ -7,10 +7,15 @@ Requirement.
 
 from __future__ import annotations
 
-import pytest
-
-from src.data_agents.paper.enrichment import enrich_paper_with_hybrid_sources
-from src.data_agents.paper.models import PaperMetadataEnrichment
+from src.data_agents.paper.enrichment import (
+    enrich_paper_with_hybrid_sources,
+    write_identifier_contradiction_issues,
+)
+from src.data_agents.paper.models import (
+    IdentifierConflict,
+    PaperAuthor,
+    PaperMetadataEnrichment,
+)
 
 
 def _make(**overrides) -> PaperMetadataEnrichment:
@@ -28,6 +33,10 @@ def _make(**overrides) -> PaperMetadataEnrichment:
         reference_count=None,
         source_url=None,
         enrichment_sources=(),
+        authors=(),
+        doi=None,
+        arxiv_id=None,
+        identifier_conflicts=(),
     )
     base.update(overrides)
     return PaperMetadataEnrichment(**base)
@@ -133,6 +142,138 @@ def test_s2_fills_tldr_when_others_lack_it():
     assert result is not None
     assert result.tldr == "Short TLDR summary."
     assert result.enrichment_sources == ("semantic_scholar",)
+
+
+def test_arxiv_fills_abstract_after_openalex_crossref_and_s2_miss():
+    arxiv = _make(
+        abstract="Abstract from arXiv.",
+        arxiv_id="2301.00001",
+        enrichment_sources=("arxiv",),
+    )
+    result = enrich_paper_with_hybrid_sources(
+        "10.1234/abc",
+        arxiv_id="2301.00001",
+        openalex_lookup=lambda d: _make(enrichment_sources=("openalex",)),
+        crossref_lookup=lambda d: _make(enrichment_sources=("crossref",)),
+        semantic_scholar_lookup=lambda d: _make(enrichment_sources=("semantic_scholar",)),
+        arxiv_lookup=lambda identifier: arxiv,
+    )
+    assert result is not None
+    assert result.abstract == "Abstract from arXiv."
+    assert result.enrichment_sources == (
+        "openalex",
+        "crossref",
+        "semantic_scholar",
+        "arxiv",
+    )
+
+
+def test_authors_fill_from_lower_priority_source_when_missing():
+    crossref = _make(
+        authors=(PaperAuthor(name="Ada Lovelace", source="crossref"),),
+        enrichment_sources=("crossref",),
+    )
+    result = enrich_paper_with_hybrid_sources(
+        "10.1234/abc",
+        openalex_lookup=lambda d: _make(enrichment_sources=("openalex",)),
+        crossref_lookup=lambda d: crossref,
+        semantic_scholar_lookup=lambda d: None,
+    )
+    assert result is not None
+    assert result.authors == (PaperAuthor(name="Ada Lovelace", source="crossref"),)
+
+
+def test_orcid_bearing_author_identity_survives_plain_author_fill():
+    openalex_author = PaperAuthor(
+        name="Ada Lovelace",
+        orcid="0000-0001-2345-6789",
+        source="openalex",
+    )
+    crossref = _make(
+        authors=(
+            PaperAuthor(name="Ada Lovelace", source="crossref"),
+            PaperAuthor(name="Grace Hopper", source="crossref"),
+        ),
+        enrichment_sources=("crossref",),
+    )
+    result = enrich_paper_with_hybrid_sources(
+        "10.1234/abc",
+        openalex_lookup=lambda d: _make(
+            authors=(openalex_author,),
+            enrichment_sources=("openalex",),
+        ),
+        crossref_lookup=lambda d: crossref,
+        semantic_scholar_lookup=lambda d: None,
+    )
+    assert result is not None
+    assert result.authors == (
+        openalex_author,
+        PaperAuthor(name="Grace Hopper", source="crossref"),
+    )
+
+
+def test_identifier_contradictions_are_reported_on_merged_enrichment():
+    result = enrich_paper_with_hybrid_sources(
+        "10.1234/abc",
+        arxiv_id="2301.00001",
+        openalex_lookup=lambda d: _make(
+            doi="10.1234/abc",
+            arxiv_id="2301.00001",
+            enrichment_sources=("openalex",),
+        ),
+        crossref_lookup=lambda d: _make(
+            doi="10.999/conflict",
+            enrichment_sources=("crossref",),
+        ),
+        semantic_scholar_lookup=lambda d: _make(
+            arxiv_id="2301.99999",
+            enrichment_sources=("semantic_scholar",),
+        ),
+    )
+    assert result is not None
+    assert result.identifier_conflicts == (
+        IdentifierConflict(
+            identifier_type="doi",
+            canonical_value="10.1234/abc",
+            incoming_value="10.999/conflict",
+            incoming_source="crossref",
+        ),
+        IdentifierConflict(
+            identifier_type="arxiv_id",
+            canonical_value="2301.00001",
+            incoming_value="2301.99999",
+            incoming_source="semantic_scholar",
+        ),
+    )
+
+
+def test_write_identifier_contradiction_issues_uses_existing_pipeline_stage():
+    calls: list[tuple[str, tuple]] = []
+
+    class FakeConn:
+        def execute(self, sql, params=()):
+            calls.append((sql, tuple(params)))
+
+    conflict = IdentifierConflict(
+        identifier_type="doi",
+        canonical_value="10.1234/abc",
+        incoming_value="10.999/conflict",
+        incoming_source="crossref",
+    )
+
+    write_identifier_contradiction_issues(
+        FakeConn(),
+        paper_id="paper:doi:10.1234/abc",
+        run_id="run-1",
+        conflicts=(conflict,),
+        professor_id="PROF-1",
+    )
+
+    assert calls
+    sql, params = calls[0]
+    assert "INSERT INTO pipeline_issue" in sql
+    assert "paper_quality" in params
+    assert any("identifier_contradiction" in str(param) for param in params)
 
 
 def test_returns_none_when_all_sources_empty():

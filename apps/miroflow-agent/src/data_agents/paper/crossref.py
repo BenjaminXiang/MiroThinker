@@ -14,6 +14,7 @@ from src.data_agents.normalization import normalize_person_name
 
 from .models import (
     DiscoveredPaper,
+    PaperAuthor,
     PaperMetadataEnrichment,
     ProfessorPaperDiscoveryResult,
 )
@@ -116,6 +117,8 @@ def enrich_paper_metadata_from_crossref(
         or _first_text(message.get("short-container-title")),
         publication_date=publication_date if year is not None else None,
         fields_of_study=_extract_subjects(message.get("subject")),
+        authors=_extract_enrichment_authors(message.get("author")),
+        doi=_normalize_optional_str(message.get("DOI")) or normalized_doi,
         license=_extract_license_url(message.get("license")),
         funders=_extract_funders(message.get("funder")),
         reference_count=_coerce_non_negative_int(message.get("reference-count")),
@@ -219,6 +222,43 @@ def _extract_authors(value: object) -> list[str]:
         else:
             authors.append(" ".join(part for part in (given, family) if part))
     return authors
+
+
+def _extract_enrichment_authors(value: object) -> tuple[PaperAuthor, ...]:
+    if not isinstance(value, list):
+        return ()
+    authors: list[PaperAuthor] = []
+    for author in value:
+        if not isinstance(author, dict):
+            continue
+        given = _normalize_optional_str(author.get("given"))
+        family = _normalize_optional_str(author.get("family"))
+        if not given and not family:
+            continue
+        if _contains_cjk(given or "") or _contains_cjk(family or ""):
+            name = f"{family or ''}{given or ''}".strip()
+        else:
+            name = " ".join(part for part in (given, family) if part)
+        if name:
+            authors.append(
+                PaperAuthor(
+                    name=name,
+                    orcid=_normalize_orcid(author.get("ORCID")),
+                    source="crossref",
+                )
+            )
+    return tuple(authors)
+
+
+def _normalize_orcid(value: object) -> str | None:
+    item = _normalize_optional_str(value)
+    if not item:
+        return None
+    lower = item.lower()
+    for prefix in ("https://orcid.org/", "http://orcid.org/"):
+        if lower.startswith(prefix):
+            return item[len(prefix) :]
+    return item
 
 
 def _extract_date(item: dict[str, object]) -> tuple[int | None, str | None]:
@@ -332,6 +372,8 @@ def _has_enrichment_content(enrichment: PaperMetadataEnrichment) -> bool:
             enrichment.venue,
             enrichment.publication_date,
             enrichment.fields_of_study,
+            enrichment.authors,
+            enrichment.doi,
             enrichment.license,
             enrichment.funders,
             enrichment.reference_count is not None,

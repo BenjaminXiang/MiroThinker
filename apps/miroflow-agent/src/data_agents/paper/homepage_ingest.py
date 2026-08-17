@@ -34,6 +34,10 @@ _AUTHOR_NAME_MATCH_SCORE = Decimal("1.0")
 _LINK_MATCH_REASON = "homepage_title_resolution"
 _LINK_MATCH_REASON_PAGE_ONLY = "prof_page_declaration"
 _PROF_PAGE_ONLY_SOURCE = "prof_page_only"
+_TIER2_EVIDENCE_SOURCE = "prof_homepage_tier2"
+_TIER3_EVIDENCE_SOURCE = "prof_homepage_tier3"
+_TIER2_PAGE_ROLES = frozenset({"official_profile", "official_publication_page"})
+_TIER3_PAGE_ROLES = frozenset({"personal_homepage", "lab_homepage"})
 
 
 def _synthesize_page_only_resolution(
@@ -242,6 +246,9 @@ def run_homepage_paper_ingest(
                         html,
                         page_url=prof["homepage_url"],
                     )
+                    page_evidence_source_type = _homepage_paper_evidence_source_type(
+                        prof.get("homepage_page_role")
+                    )
                     if 0 < len(publications) < 3:
                         pipeline_issues_filed += 1
                         prof_pipeline_issues += 1
@@ -260,6 +267,27 @@ def run_homepage_paper_ingest(
                                     "publications_count": len(publications),
                                 },
                             )
+                    if publications and page_evidence_source_type is None:
+                        pipeline_issues_filed += 1
+                        prof_pipeline_issues += 1
+                        prof_had_error = True
+                        if not dry_run:
+                            _file_pipeline_issue(
+                                conn,
+                                run_id=run_id,
+                                issue_type="homepage_tier_missing",
+                                professor_id=professor_id,
+                                message=(
+                                    "Homepage publication evidence cannot be written "
+                                    "because the source page has no Tier 2/Tier 3 role"
+                                ),
+                                details={
+                                    "homepage_url": prof["homepage_url"],
+                                    "homepage_page_role": prof.get("homepage_page_role"),
+                                    "publications_count": len(publications),
+                                },
+                            )
+                        continue
 
                     cache = None if dry_run else PostgresTitleResolutionCache(conn)
                     unresolved_count = 0
@@ -322,8 +350,8 @@ def run_homepage_paper_ingest(
                                 professor_id=professor_id,
                                 paper_id=actual_paper_id,
                                 link_status="verified",
-                                evidence_source_type="personal_homepage",
-                                evidence_page_id=None,
+                                evidence_source_type=page_evidence_source_type,
+                                evidence_page_id=prof.get("homepage_page_id"),
                                 evidence_api_source=None,
                                 match_reason=(
                                     _LINK_MATCH_REASON_PAGE_ONLY
@@ -443,6 +471,15 @@ def _authors_display(authors: tuple[str, ...]) -> str | None:
     return ", ".join(author for author in authors if author)
 
 
+def _homepage_paper_evidence_source_type(page_role: str | None) -> str | None:
+    normalized = (page_role or "").strip().lower()
+    if normalized in _TIER2_PAGE_ROLES:
+        return _TIER2_EVIDENCE_SOURCE
+    if normalized in _TIER3_PAGE_ROLES:
+        return _TIER3_EVIDENCE_SOURCE
+    return None
+
+
 def _append_checkpoint_line(
     checkpoint_path: Path | None,
     *,
@@ -495,7 +532,9 @@ def _fetch_professors(
         "SELECT p.professor_id::text AS professor_id,",
         "       p.canonical_name,",
         "       COALESCE(primary_aff.institution, '') AS institution,",
-        "       sp.url AS homepage_url",
+        "       sp.url AS homepage_url,",
+        "       sp.page_id AS homepage_page_id,",
+        "       sp.page_role AS homepage_page_role",
         "  FROM professor p",
         "  LEFT JOIN LATERAL (",
         "    SELECT pa.institution",
@@ -534,6 +573,8 @@ def _fetch_professors(
                 "canonical_name": row[1],
                 "institution": row[2],
                 "homepage_url": row[3],
+                "homepage_page_id": row[4],
+                "homepage_page_role": row[5],
             }
         )
     return normalized_rows

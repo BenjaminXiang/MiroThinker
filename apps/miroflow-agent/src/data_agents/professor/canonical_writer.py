@@ -19,6 +19,11 @@ from src.data_agents.storage.postgres.pipeline_run import require_real_run_id
 
 from .name_identity_gate import NameIdentityCandidate, NameIdentityDecision
 from .publish_helpers import build_professor_id, is_official_url
+from .quality_gate import (
+    evaluate_professor_quality,
+    load_professor_canonical_state,
+    persist_professor_quality_evaluation,
+)
 from .topic_quality import split_compound_research_topic
 
 if TYPE_CHECKING:
@@ -443,6 +448,8 @@ def write_professor_bundle(
         if link_status == "verified":
             verified_link_keys.add(link_key)
 
+    _evaluate_and_persist_professor_quality(conn, professor_id=professor_id)
+
     return ProfessorCanonicalReport(
         professor_id=professor_id,
         is_new_professor=is_new_professor,
@@ -451,6 +458,20 @@ def write_professor_bundle(
         papers_written=len(written_paper_ids),
         professor_paper_links_written=len(written_link_keys),
         professor_paper_links_verified=len(verified_link_keys),
+    )
+
+
+def _evaluate_and_persist_professor_quality(
+    conn: Connection,
+    *,
+    professor_id: str,
+) -> dict[str, int]:
+    state = load_professor_canonical_state(conn, professor_id)
+    evaluation = evaluate_professor_quality(state)
+    return persist_professor_quality_evaluation(
+        conn,
+        professor_id=professor_id,
+        evaluation=evaluation,
     )
 
 
@@ -1052,6 +1073,8 @@ def _paper_canonical_source(record: Any) -> str:
     if source in {
         "official_publication_page",
         "personal_homepage",
+        "prof_homepage_tier2",
+        "prof_homepage_tier3",
         "cv_pdf",
         "official_external_profile",
     }:
@@ -1089,14 +1112,23 @@ def _paper_evidence_page_id(
     source_url = _clean_text(_get_attr(staging_record, "source_url"))
     if not source_url:
         return None
+    page_role = evidence_source_type
+    if evidence_source_type == "prof_homepage_tier2":
+        page_role = "official_profile"
+    elif evidence_source_type == "prof_homepage_tier3":
+        page_role = "personal_homepage"
     return upsert_source_page_for_url(
         conn,
         url=source_url,
-        page_role=evidence_source_type,
+        page_role=page_role,
         owner_scope_kind="professor",
         owner_scope_ref=professor_id,
         is_official_source=evidence_source_type
-        in {"official_publication_page", "official_external_profile"},
+        in {
+            "official_publication_page",
+            "official_external_profile",
+            "prof_homepage_tier2",
+        },
         run_id=run_id,
     )
 

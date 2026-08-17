@@ -6,7 +6,9 @@ import requests
 import src.data_agents.paper.openalex as openalex
 from src.data_agents.paper.openalex import (
     discover_professor_paper_candidates_from_openalex,
+    enrich_paper_with_openalex,
 )
+from src.data_agents.paper.models import PaperAuthor
 
 
 def test_discover_professor_paper_candidates_from_openalex_selects_exact_name_author_and_parses_works():
@@ -79,6 +81,53 @@ def test_discover_professor_paper_candidates_from_openalex_selects_exact_name_au
     assert paper.abstract == "CT 三维重建 解剖学"
     assert paper.authors == ("白志强", "陶宝虹")
     assert paper.professor_ids == ("PROF-1",)
+
+
+def test_enrich_paper_with_openalex_preserves_doi_and_orcid_authors():
+    def fake_request_json(url: str, params: dict[str, object]) -> dict[str, object]:
+        assert url == "https://api.openalex.org/works/doi:10.1234/example"
+        assert params == {}
+        return {
+            "id": "https://openalex.org/W1",
+            "display_name": "CT 三维重建解剖学研究",
+            "publication_date": "2014-01-01",
+            "cited_by_count": 8,
+            "doi": "https://doi.org/10.1234/example",
+            "abstract_inverted_index": {
+                "CT": [0],
+                "三维重建": [1],
+                "解剖学": [2],
+            },
+            "primary_location": {
+                "landing_page_url": "https://example.org/paper/w1",
+                "source": {"display_name": "解剖学报"},
+            },
+            "authorships": [
+                {
+                    "author": {
+                        "display_name": "白志强",
+                        "orcid": "https://orcid.org/0000-0001-2345-6789",
+                    }
+                },
+                {"author": {"display_name": "陶宝虹"}},
+            ],
+        }
+
+    enrichment = enrich_paper_with_openalex(
+        "10.1234/example",
+        request_json=fake_request_json,
+    )
+
+    assert enrichment is not None
+    assert enrichment.doi == "10.1234/example"
+    assert enrichment.authors == (
+        PaperAuthor(
+            name="白志强",
+            orcid="0000-0001-2345-6789",
+            source="openalex",
+        ),
+        PaperAuthor(name="陶宝虹", source="openalex"),
+    )
 
 
 def test_discover_professor_paper_candidates_from_openalex_prefers_institution_matched_author():

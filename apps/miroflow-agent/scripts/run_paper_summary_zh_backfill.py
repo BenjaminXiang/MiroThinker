@@ -63,6 +63,13 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=None,
         help="Checkpoint JSONL path to skip already-processed paper_ids",
     )
+    parser.add_argument(
+        "--paper-id",
+        dest="paper_ids",
+        action="append",
+        default=[],
+        help="Process one explicit paper_id; may be repeated",
+    )
     parser.add_argument("--dry-run", action="store_true", help="No DB writes")
     parser.add_argument("--log-level", default="INFO")
     return parser.parse_args(argv)
@@ -73,12 +80,14 @@ def _open_database_connection(url: str):
 
 
 def _open_llm_client():
+    import httpx
     from openai import OpenAI
 
     settings = resolve_professor_llm_settings("gemma4", include_profile=True)
     client = OpenAI(
         base_url=settings["local_llm_base_url"],
         api_key=settings["local_llm_api_key"] or "EMPTY",
+        http_client=httpx.Client(trust_env=False, timeout=90.0),
         timeout=90.0,
     )
     extra_body = {"chat_template_kwargs": {"enable_thinking": False}}
@@ -117,10 +126,26 @@ def _append_checkpoint(path: Path, row: dict[str, Any]) -> None:
         fh.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
+def _milvus_refresh_signal(paper_id: str) -> dict[str, Any]:
+    return {
+        "domain": "paper",
+        "paper_id": paper_id,
+        "reason": "summary_zh_changed",
+        "command": [
+            "run_milvus_backfill.py",
+            "--domain",
+            "paper",
+            "--paper-id",
+            paper_id,
+        ],
+    }
+
+
 def _build_select_sql(
     *,
     only_missing: bool,
     limit: int | None,
+    paper_ids: list[str] | tuple[str, ...] | None = None,
 ) -> tuple[str, tuple[Any, ...]]:
     conditions = [
         "p.abstract_clean IS NOT NULL",
@@ -129,6 +154,10 @@ def _build_select_sql(
     params: list[Any] = []
     if only_missing:
         conditions.append("(p.summary_zh IS NULL OR length(trim(p.summary_zh)) = 0)")
+    explicit_paper_ids = [paper_id for paper_id in (paper_ids or []) if paper_id]
+    if explicit_paper_ids:
+        conditions.append("p.paper_id = ANY(%s)")
+        params.append(explicit_paper_ids)
     sql = (
         "SELECT p.paper_id, p.title_clean, p.title_raw, p.year, p.venue, "
         "p.authors_display, p.abstract_clean, p.summary_zh, p.quality_status "
@@ -207,6 +236,7 @@ def main(argv: list[str] | None = None) -> None:
                 "only_missing": args.only_missing,
                 "limit": args.limit,
                 "resume": args.resume,
+                "paper_ids": args.paper_ids,
                 "dry_run": args.dry_run,
             },
             triggered_by="run_paper_summary_zh_backfill",
@@ -221,7 +251,11 @@ def main(argv: list[str] | None = None) -> None:
     checkpoint_path = _resolve_checkpoint_path(None, run_id)
 
     llm, llm_model, extra_body = _open_llm_client()
-    sql, params = _build_select_sql(only_missing=args.only_missing, limit=args.limit)
+    sql, params = _build_select_sql(
+        only_missing=args.only_missing,
+        limit=args.limit,
+        paper_ids=args.paper_ids,
+    )
     rows = conn.execute(sql, params).fetchall()
 
     started_at = time.monotonic()
@@ -353,14 +387,14 @@ def main(argv: list[str] | None = None) -> None:
                     )
                     continue
             report["summaries_written"] += 1
-            _append_checkpoint(
-                checkpoint_path,
-                {
-                    "paper_id": paper_id,
-                    "status": "dry_run_success" if args.dry_run else "written",
-                    "chars": len(summary_zh),
-                },
-            )
+            checkpoint_row = {
+                "paper_id": paper_id,
+                "status": "dry_run_success" if args.dry_run else "written",
+                "chars": len(summary_zh),
+            }
+            if not args.dry_run:
+                checkpoint_row["milvus_refresh"] = _milvus_refresh_signal(paper_id)
+            _append_checkpoint(checkpoint_path, checkpoint_row)
         else:
             report["summaries_rejected"] += 1
             _append_checkpoint(

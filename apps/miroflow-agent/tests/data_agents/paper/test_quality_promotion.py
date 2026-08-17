@@ -24,7 +24,10 @@ from src.data_agents.paper.quality_promotion import (
 )
 
 
-def _all_fields_present(boilerplate_rejected: bool = False) -> PaperEnrichmentSignals:
+def _all_fields_present(
+    boilerplate_rejected: bool = False,
+    has_identifier_contradiction: bool = False,
+) -> PaperEnrichmentSignals:
     return PaperEnrichmentSignals(
         has_title=True,
         has_year=True,
@@ -33,6 +36,7 @@ def _all_fields_present(boilerplate_rejected: bool = False) -> PaperEnrichmentSi
         has_abstract=True,
         has_summary_zh=True,
         summary_zh_boilerplate_rejected=boilerplate_rejected,
+        has_identifier_contradiction=has_identifier_contradiction,
     )
 
 
@@ -65,6 +69,24 @@ def test_promotes_to_ready_when_all_required_fields_present():
     )
     assert decision.next_status == READY
     assert decision.reason == "all_required_fields_present"
+
+
+def test_identifier_contradiction_blocks_ready_promotion():
+    decision = evaluate_paper_promotion(
+        current_status=NEEDS_ENRICHMENT,
+        signals=_all_fields_present(has_identifier_contradiction=True),
+    )
+    assert decision.next_status == NEEDS_REVIEW
+    assert decision.reason == "identifier_contradiction"
+
+
+def test_identifier_contradiction_degrades_ready_to_review():
+    decision = evaluate_paper_promotion(
+        current_status=READY,
+        signals=_all_fields_present(has_identifier_contradiction=True),
+    )
+    assert decision.next_status == NEEDS_REVIEW
+    assert decision.reason == "identifier_contradiction"
 
 
 def test_boilerplate_rejection_takes_precedence_over_required_fields():

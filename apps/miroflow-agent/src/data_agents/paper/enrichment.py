@@ -38,11 +38,12 @@ in this change's spec drift addendum.
 
 from __future__ import annotations
 
+import json
 from dataclasses import replace
 from typing import Callable
 
 from .crossref import enrich_paper_metadata_from_crossref
-from .models import PaperMetadataEnrichment
+from .models import IdentifierConflict, PaperAuthor, PaperMetadataEnrichment
 from .openalex import enrich_paper_with_openalex
 from .semantic_scholar import enrich_paper_metadata_from_semantic_scholar
 
@@ -52,9 +53,11 @@ EnrichmentLookup = Callable[[str], PaperMetadataEnrichment | None]
 def enrich_paper_with_hybrid_sources(
     doi: str | None,
     *,
+    arxiv_id: str | None = None,
     openalex_lookup: EnrichmentLookup | None = None,
     crossref_lookup: EnrichmentLookup | None = None,
     semantic_scholar_lookup: EnrichmentLookup | None = None,
+    arxiv_lookup: EnrichmentLookup | None = None,
 ) -> PaperMetadataEnrichment | None:
     """Enrich a paper canonical row by DOI lookup across multiple sources.
 
@@ -67,41 +70,70 @@ def enrich_paper_with_hybrid_sources(
     do not let downstream sources fill it (they may report stale or
     incompatible numbers).
     """
-    if not doi or not doi.strip():
+    normalized_doi = _normalize_identifier(doi)
+    normalized_arxiv_id = _normalize_identifier(arxiv_id)
+    if not normalized_doi and not normalized_arxiv_id:
         return None
-    normalized_doi = doi.strip()
 
     fetch_openalex = openalex_lookup or enrich_paper_with_openalex
     fetch_crossref = crossref_lookup or enrich_paper_metadata_from_crossref
     fetch_s2 = semantic_scholar_lookup or enrich_paper_metadata_from_semantic_scholar
+    fetch_arxiv = arxiv_lookup or enrich_paper_metadata_from_arxiv
 
-    # Source 1: OpenAlex (primary)
     merged: PaperMetadataEnrichment | None = None
-    try:
-        openalex_result = fetch_openalex(normalized_doi)
-    except Exception:  # noqa: BLE001 — enrichment must never raise
-        openalex_result = None
-    if openalex_result is not None:
-        merged = openalex_result
 
-    # Source 2: Crossref (fills gaps; never overrides OpenAlex)
+    if normalized_doi:
+        try:
+            openalex_result = fetch_openalex(normalized_doi)
+        except Exception:  # noqa: BLE001 — enrichment must never raise
+            openalex_result = None
+        if openalex_result is not None:
+            merged = _merge_enrichment(
+                merged,
+                openalex_result,
+                omit_citation=False,
+                canonical_doi=normalized_doi,
+                canonical_arxiv_id=normalized_arxiv_id,
+            )
+
+        try:
+            crossref_result = fetch_crossref(normalized_doi)
+        except Exception:  # noqa: BLE001
+            crossref_result = None
+        if crossref_result is not None:
+            merged = _merge_enrichment(
+                merged,
+                crossref_result,
+                omit_citation=True,
+                canonical_doi=normalized_doi,
+                canonical_arxiv_id=normalized_arxiv_id,
+            )
+
+        try:
+            s2_result = fetch_s2(normalized_doi)
+        except Exception:  # noqa: BLE001
+            s2_result = None
+        if s2_result is not None:
+            merged = _merge_enrichment(
+                merged,
+                s2_result,
+                omit_citation=True,
+                canonical_doi=normalized_doi,
+                canonical_arxiv_id=normalized_arxiv_id,
+            )
+
     try:
-        crossref_result = fetch_crossref(normalized_doi)
+        arxiv_result = fetch_arxiv(normalized_arxiv_id or normalized_doi or "")
     except Exception:  # noqa: BLE001
-        crossref_result = None
-    if crossref_result is not None:
-        merged = _merge_enrichment(merged, crossref_result, omit_citation=True)
-
-    # Source 3: Semantic Scholar (fills gaps; never overrides OpenAlex)
-    try:
-        s2_result = fetch_s2(normalized_doi)
-    except Exception:  # noqa: BLE001
-        s2_result = None
-    if s2_result is not None:
-        merged = _merge_enrichment(merged, s2_result, omit_citation=True)
-
-    # Source 4: arXiv — not yet implemented (no client). Spec drift
-    # addendum documents the deferral.
+        arxiv_result = None
+    if arxiv_result is not None:
+        merged = _merge_enrichment(
+            merged,
+            arxiv_result,
+            omit_citation=True,
+            canonical_doi=normalized_doi,
+            canonical_arxiv_id=normalized_arxiv_id,
+        )
 
     return merged
 
@@ -111,6 +143,8 @@ def _merge_enrichment(
     incoming: PaperMetadataEnrichment,
     *,
     omit_citation: bool,
+    canonical_doi: str | None = None,
+    canonical_arxiv_id: str | None = None,
 ) -> PaperMetadataEnrichment:
     """Merge ``incoming`` into ``base``; ``incoming`` only fills gaps.
 
@@ -120,7 +154,27 @@ def _merge_enrichment(
     if base is None:
         if omit_citation and incoming.citation_count is not None:
             incoming = replace(incoming, citation_count=None)
+        conflicts = _detect_identifier_conflicts(
+            None,
+            incoming,
+            canonical_doi=canonical_doi,
+            canonical_arxiv_id=canonical_arxiv_id,
+        )
+        if conflicts:
+            incoming = replace(
+                incoming,
+                identifier_conflicts=_merge_conflicts(
+                    incoming.identifier_conflicts, conflicts
+                ),
+            )
         return incoming
+
+    conflicts = _detect_identifier_conflicts(
+        base,
+        incoming,
+        canonical_doi=canonical_doi,
+        canonical_arxiv_id=canonical_arxiv_id,
+    )
 
     return PaperMetadataEnrichment(
         abstract=base.abstract or incoming.abstract,
@@ -129,6 +183,9 @@ def _merge_enrichment(
         citation_count=base.citation_count
         if (omit_citation or base.citation_count is not None)
         else incoming.citation_count,
+        authors=_merge_authors(base.authors, incoming.authors),
+        doi=base.doi or incoming.doi,
+        arxiv_id=base.arxiv_id or incoming.arxiv_id,
         fields_of_study=base.fields_of_study or incoming.fields_of_study,
         tldr=base.tldr or incoming.tldr,
         license=base.license or incoming.license,
@@ -139,7 +196,140 @@ def _merge_enrichment(
         enrichment_sources=_merge_unique_strings(
             base.enrichment_sources, incoming.enrichment_sources
         ),
+        identifier_conflicts=_merge_conflicts(
+            _merge_conflicts(base.identifier_conflicts, incoming.identifier_conflicts),
+            conflicts,
+        ),
     )
+
+
+def enrich_paper_metadata_from_arxiv(identifier: str) -> PaperMetadataEnrichment | None:
+    """Placeholder arXiv enrichment entry point.
+
+    The aggregator wires arXiv as the fourth source and tests inject a
+    deterministic lookup. Network-backed arXiv parsing belongs with the
+    title/full-text clients and can replace this no-op without changing
+    the merge contract.
+    """
+    del identifier
+    return None
+
+
+def write_identifier_contradiction_issues(
+    conn,
+    *,
+    paper_id: str,
+    run_id: str,
+    conflicts: tuple[IdentifierConflict, ...],
+    professor_id: str | None = None,
+    link_id: str | None = None,
+) -> None:
+    for conflict in conflicts:
+        evidence_snapshot = json.dumps(
+            {
+                "paper_id": paper_id,
+                "run_id": str(run_id),
+                "identifier_type": conflict.identifier_type,
+                "canonical_value": conflict.canonical_value,
+                "incoming_value": conflict.incoming_value,
+                "incoming_source": conflict.incoming_source,
+            },
+            ensure_ascii=False,
+        )
+        conn.execute(
+            """
+            INSERT INTO pipeline_issue (
+                professor_id,
+                link_id,
+                institution,
+                stage,
+                severity,
+                description,
+                evidence_snapshot,
+                reported_by
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s)
+            ON CONFLICT DO NOTHING
+            """,
+            (
+                professor_id,
+                link_id,
+                None,
+                "paper_quality",
+                "medium",
+                (
+                    "[identifier_contradiction] "
+                    f"{paper_id} {conflict.identifier_type}: "
+                    f"{conflict.canonical_value} != {conflict.incoming_value} "
+                    f"from {conflict.incoming_source}"
+                ),
+                evidence_snapshot,
+                "paper_enrichment",
+            ),
+        )
+
+
+def _normalize_identifier(value: str | None) -> str | None:
+    item = (value or "").strip()
+    return item or None
+
+
+def _detect_identifier_conflicts(
+    base: PaperMetadataEnrichment | None,
+    incoming: PaperMetadataEnrichment,
+    *,
+    canonical_doi: str | None,
+    canonical_arxiv_id: str | None,
+) -> tuple[IdentifierConflict, ...]:
+    source = incoming.enrichment_sources[0] if incoming.enrichment_sources else "unknown"
+    conflicts: list[IdentifierConflict] = []
+    doi_anchor = canonical_doi or (base.doi if base else None)
+    arxiv_anchor = canonical_arxiv_id or (base.arxiv_id if base else None)
+    incoming_doi = _normalize_identifier(incoming.doi)
+    incoming_arxiv = _normalize_identifier(incoming.arxiv_id)
+    if doi_anchor and incoming_doi and doi_anchor.casefold() != incoming_doi.casefold():
+        conflicts.append(
+            IdentifierConflict(
+                identifier_type="doi",
+                canonical_value=doi_anchor,
+                incoming_value=incoming_doi,
+                incoming_source=source,
+            )
+        )
+    if (
+        arxiv_anchor
+        and incoming_arxiv
+        and arxiv_anchor.casefold() != incoming_arxiv.casefold()
+    ):
+        conflicts.append(
+            IdentifierConflict(
+                identifier_type="arxiv_id",
+                canonical_value=arxiv_anchor,
+                incoming_value=incoming_arxiv,
+                incoming_source=source,
+            )
+        )
+    return tuple(conflicts)
+
+
+def _merge_authors(
+    base: tuple[PaperAuthor, ...],
+    incoming: tuple[PaperAuthor, ...],
+) -> tuple[PaperAuthor, ...]:
+    merged: list[PaperAuthor] = list(base)
+    seen_orcids = {author.orcid.casefold() for author in merged if author.orcid}
+    seen_names = {author.name.casefold() for author in merged if author.name}
+    for author in incoming:
+        if author.orcid and author.orcid.casefold() in seen_orcids:
+            continue
+        if author.name and author.name.casefold() in seen_names:
+            continue
+        merged.append(author)
+        if author.orcid:
+            seen_orcids.add(author.orcid.casefold())
+        if author.name:
+            seen_names.add(author.name.casefold())
+    return tuple(merged)
 
 
 def _max_int(a: int | None, b: int | None) -> int | None:
@@ -157,4 +347,15 @@ def _merge_unique_strings(
     for source in incoming:
         if source not in merged:
             merged.append(source)
+    return tuple(merged)
+
+
+def _merge_conflicts(
+    base: tuple[IdentifierConflict, ...],
+    incoming: tuple[IdentifierConflict, ...],
+) -> tuple[IdentifierConflict, ...]:
+    merged: list[IdentifierConflict] = list(base)
+    for conflict in incoming:
+        if conflict not in merged:
+            merged.append(conflict)
     return tuple(merged)

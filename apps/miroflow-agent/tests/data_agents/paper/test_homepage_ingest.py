@@ -33,12 +33,16 @@ def _prof_row(
     name: str = "Test Prof",
     institution: str = "南方科技大学",
     homepage_url: str = "https://example.edu/prof/x",
+    homepage_page_id: str | None = None,
+    homepage_page_role: str | None = "official_profile",
 ) -> dict:
     return {
         "professor_id": prof_id or str(uuid.uuid4()),
         "canonical_name": name,
         "institution": institution,
         "homepage_url": homepage_url,
+        "homepage_page_id": homepage_page_id,
+        "homepage_page_role": homepage_page_role,
     }
 
 
@@ -162,9 +166,21 @@ def test_happy_path_single_prof_five_pubs_all_resolvable(tmp_path):
         assert m_close.call_args.kwargs.get("status") == "succeeded"
 
 
-def test_happy_path_evidence_source_type_is_personal_homepage(tmp_path):
-    """link writer must receive evidence_source_type='personal_homepage'."""
-    prof = _prof_row()
+@pytest.mark.parametrize(
+    ("page_role", "expected_evidence_source"),
+    [
+        ("official_profile", "prof_homepage_tier2"),
+        ("official_publication_page", "prof_homepage_tier2"),
+        ("personal_homepage", "prof_homepage_tier3"),
+        ("lab_homepage", "prof_homepage_tier3"),
+    ],
+)
+def test_happy_path_evidence_source_type_preserves_homepage_tier(
+    tmp_path,
+    page_role,
+    expected_evidence_source,
+):
+    prof = _prof_row(homepage_page_role=page_role)
     conn = _mock_conn_with_profs([prof])
 
     with patch(
@@ -198,7 +214,46 @@ def test_happy_path_evidence_source_type_is_personal_homepage(tmp_path):
 
         assert m_upsert_link.called
         kwargs = m_upsert_link.call_args.kwargs
-        assert kwargs.get("evidence_source_type") == "personal_homepage"
+        assert kwargs.get("evidence_source_type") == expected_evidence_source
+
+
+def test_missing_page_tier_files_pipeline_issue_without_link_write(tmp_path):
+    prof = _prof_row(homepage_page_role=None)
+    conn = _mock_conn_with_profs([prof])
+
+    with patch(
+        "src.data_agents.paper.homepage_ingest.open_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.close_pipeline_run"
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.fetch_homepage_html",
+        return_value="<html></html>",
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.extract_publications_from_html",
+        return_value=[_pub()],
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.resolve_paper_by_title",
+        return_value=_resolved(),
+    ), patch(
+        "src.data_agents.paper.homepage_ingest.upsert_paper"
+    ) as m_upsert_paper, patch(
+        "src.data_agents.paper.homepage_ingest._upsert_professor_paper_link"
+    ) as m_upsert_link, patch(
+        "src.data_agents.paper.homepage_ingest.paper_full_text_exists",
+        return_value=True,
+    ), patch(
+        "src.data_agents.paper.homepage_ingest._file_pipeline_issue"
+    ) as m_issue:
+        m_upsert_paper.return_value = MagicMock(paper_id="paper:doi:x", is_new=True)
+
+        report = run_homepage_paper_ingest(
+            conn, resume_checkpoint_path=tmp_path / "c.jsonl"
+        )
+
+        assert report.pipeline_issues_filed >= 1
+        issue_types = [c.kwargs.get("issue_type") for c in m_issue.call_args_list]
+        assert "homepage_tier_missing" in issue_types
+        m_upsert_link.assert_not_called()
 
 
 def test_page_only_publication_initializes_needs_enrichment(tmp_path):
