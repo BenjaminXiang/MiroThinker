@@ -74,8 +74,9 @@ change's criteria — in hindsight those criteria were too lenient about FRAMING
 
 ## Open questions
 
-- Is the "国先" UI chip the displayed subject indicator, and does it show the org name
-  while the answer frame is the park? (Confirms anchor-vs-name split.)
+- ~~Is the "国先" UI chip the displayed subject indicator~~ — **withdrawn 2026-08-17
+  (user clarification): "国先" is the assistant/system name label, not a subject
+  indicator.**
 - Does turn-2 (`有没有更详细的信息`) drift arise from the same anchor-name prefixing,
   or also from carried prior-web-evidence framing? Both turns share the anchor;
   distinguishing needs the SSE dumps of THIS user session (not captured — the UI

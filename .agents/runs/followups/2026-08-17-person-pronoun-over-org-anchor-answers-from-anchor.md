@@ -76,4 +76,5 @@ bare-name).
 ## Evidence
 
 - Gate-level verification output (this file's section above; run 2026-08-17).
-- User transcript verbatim (above). UI showed the 国先 chip on both turns.
+- User transcript verbatim (above). ("国先" in transcripts is the assistant/system
+  name label, not a subject chip — clarified 2026-08-17.)

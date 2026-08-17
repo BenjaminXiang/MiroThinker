@@ -74,6 +74,6 @@ at all → every follow-up clarifies → multi-turn unusable for this session sh
 - Derivation verification output (above, run against worktree HEAD `4079bbf`).
 - Journal excerpt: only access lines around the two turns; zero provider/telemetry
   lines in 2h (`journalctl --user -u canonical-v2-backend --since "2 hours ago"`).
-- User transcripts (verbatim above; UI also showed the 国先 subject chip on both
-  turns — chip present even when no session subject is stored; UI indicator
-  semantics worth confirming too).
+- User transcripts (verbatim above). ~~UI 国先 subject chip observation~~ —
+  **withdrawn 2026-08-17 (user clarification): "国先" is the assistant/system name
+  label, not a subject indicator.**
