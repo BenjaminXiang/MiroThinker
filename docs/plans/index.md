@@ -11,7 +11,7 @@
 | [轮计划](./2026-08-17-systematic-fix-round-1.md) | 问题账本 · 逐组验收线 · 十阶段路线 · 发布节奏（冻结） |
 | [执行日志](./2026-08-17-systematic-fix-round-1-log.md) | 实际做了什么、发现了什么（只追加）——**看进度点这里** |
 
-**当前进度**：Phase 0 已完成（8-17：重放工具 + 基线取证，4 组稳定复现、P7 定案、P9 新发现）；Phase 1 子 change `add-turn-trace-observability` 已起草（8-18，**待审**，未动代码）。
+**当前进度**：Phase 0 已完成（8-17：重放工具 + 基线取证，4 组稳定复现、P7 定案、P9 新发现）；Phase 1 子 change `add-turn-trace-observability` 已建立（8-18，文件级审阅已按用户规则取消，实现待开工）。
 
 ### 问题状态板
 

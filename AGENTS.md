@@ -120,6 +120,12 @@ otherwise keep it inside the log entry.
 
 Mandatory rules (violating any is a defect of the slice):
 
+- **Review flow (user rule 2026-08-18)**: the user does NOT review OpenSpec
+  artifacts — they are agent-governed (validate, tasks, acceptance evidence).
+  Never block implementation waiting for user review of `openspec/` files. The
+  user reads and accepts work via the human doc system only: evidence reports
+  at slice/phase boundaries and `docs/plans/` docs.
+
 - **Index purity**: `index.md` links ONLY to human docs under `docs/plans/`. No
   change-ids, `openspec/` paths, `.agents/` paths, or tool paths in the index.
   The index is a problem-centric status board (id / one-line symptom / status /
