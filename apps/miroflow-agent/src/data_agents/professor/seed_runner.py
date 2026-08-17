@@ -1,28 +1,69 @@
 from __future__ import annotations
 
 import json
+import re
 import tempfile
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
-from urllib.parse import urlparse
+from urllib.parse import parse_qsl, urljoin, urlparse
 
 from psycopg import Connection
 from psycopg.types.json import Jsonb
+import requests
+from bs4 import BeautifulSoup
 
-from .canonical_writer import upsert_source_page_for_url, write_professor_bundle
 from .adapter_resolution import resolve_seed_adapter_name
+from .canonical_writer import upsert_source_page_for_url, write_professor_bundle
 from .models import (
     EnrichedProfessorProfile,
     MergedProfessorProfileRecord,
     ProfessorRosterSeed,
 )
+from .name_selection import is_obvious_non_person_name
 from .pipeline import ProfessorPipelineResult, run_professor_pipeline
+from .publish_helpers import build_professor_id
 from ..storage.postgres.connection import connect
 from ..storage.postgres.pipeline_run import close_pipeline_run, open_pipeline_run
 
 _REPORTED_BY = "professor_seed_runner"
+_SZU_CSSE_INSTITUTION = "深圳大学"
+_SZU_CSSE_DEPARTMENT = "计算机与软件学院"
+_SOURCE_PAGE_ROLE_PROVENANCE_PREFIX = "source_page_role:"
+_SZU_CSSE_SUPPLEMENT_SOURCE_TIMEOUT = 5.0
+_SZU_CSSE_OFFICIAL_SUPPLEMENT_SOURCE_URLS = (
+    "https://bigdata.szu.edu.cn/kytd.htm",
+    "https://aisc.szu.edu.cn/AISC/Faculty.htm",
+    "https://csse.szu.edu.cn/se/team-Staff",
+)
+_SZU_CSSE_NON_PERSON_LABELS = {
+    "about",
+    "faculty",
+    "home",
+    "research",
+    "staff",
+    "team",
+    "博士生导师",
+    "副教授",
+    "讲师",
+    "教授",
+    "科研成果",
+    "科研团队",
+    "人才培养",
+    "师资队伍",
+    "团队成员",
+    "文化建设",
+    "学院概况",
+    "研究团队",
+    "助理教授",
+}
+_CHINESE_PERSON_RE = re.compile(r"[\u4e00-\u9fff]")
+_WHITESPACE_RE = re.compile(r"\s+")
+_SZU_BIGDATA_PROFILE_PATH_RE = re.compile(r"^/info/\d+/\d+\.htm$")
+_SZU_AISC_PROFILE_PATH_RE = re.compile(r"^/info/1060/\d+\.htm$")
+_SZU_BIGDATA_PUBLICATION_PATH_RE = re.compile(r"^/kycg/lwfb(?:/\d+)?\.htm$")
+_SZU_AISC_PUBLICATION_PATH_RE = re.compile(r"^/(?:aisc/)?kycg(?:/a\d+)?\.htm$")
 
 AdapterResolver = Callable[[ProfessorRosterSeed], str | None]
 PipelineRunner = Callable[[ProfessorRosterSeed, float], ProfessorPipelineResult]
@@ -149,7 +190,11 @@ def run_single_seed_with_conn(
 
     try:
         result = (pipeline_runner or _default_pipeline_runner)(seed, timeout)
-        if _has_fatal_discovery_result(result):
+        profiles = list(result.profiles)
+        if _is_szu_csse_seed(seed):
+            profiles = _prepare_szu_csse_profiles(seed, profiles, timeout=timeout)
+
+        if _has_fatal_discovery_result(result) and not profiles:
             return _mark_failure(
                 conn,
                 seed_id=seed_id,
@@ -163,8 +208,12 @@ def run_single_seed_with_conn(
 
         writer = profile_writer or _default_profile_writer
         written = 0
-        for profile in result.profiles:
-            if profile.error or not (profile.name or "").strip():
+        for profile in profiles:
+            if (
+                profile.error
+                or not (profile.name or "").strip()
+                or not _profile_matches_seed_scope(seed, profile)
+            ):
                 continue
             writer(conn, profile=profile, run_id=run_id)
             written += 1
@@ -261,6 +310,450 @@ def _default_pipeline_runner(
         seed_doc.unlink(missing_ok=True)
 
 
+def _prepare_szu_csse_profiles(
+    seed: ProfessorRosterSeed,
+    profiles: list[MergedProfessorProfileRecord],
+    *,
+    timeout: float,
+) -> list[MergedProfessorProfileRecord]:
+    scoped_profiles = [
+        profile for profile in profiles if _profile_matches_seed_scope(seed, profile)
+    ]
+    supplement_profiles = _collect_szu_csse_official_supplement_profiles(
+        seed,
+        timeout=timeout,
+    )
+    return _attach_szu_csse_official_supplement_sources(
+        seed,
+        _dedupe_szu_csse_profiles([*scoped_profiles, *supplement_profiles]),
+        timeout=timeout,
+    )
+
+
+def _collect_szu_csse_official_supplement_profiles(
+    seed: ProfessorRosterSeed,
+    *,
+    timeout: float,
+    fetch_source_page: Callable[[str, float], str] | None = None,
+) -> list[MergedProfessorProfileRecord]:
+    if not _is_szu_csse_seed(seed):
+        return []
+    pages = _fetch_szu_csse_official_supplement_pages(
+        timeout=timeout,
+        fetch_source_page=fetch_source_page,
+    )
+    profiles: list[MergedProfessorProfileRecord] = []
+    for source_url, html in pages.items():
+        if not html.strip():
+            continue
+        if source_url == "https://bigdata.szu.edu.cn/kytd.htm":
+            profiles.extend(_parse_szu_bigdata_supplement_profiles(seed, source_url, html))
+        elif source_url == "https://aisc.szu.edu.cn/AISC/Faculty.htm":
+            profiles.extend(_parse_szu_aisc_supplement_profiles(seed, source_url, html))
+        elif source_url == "https://csse.szu.edu.cn/se/team-Staff":
+            profiles.extend(_parse_szu_lab_staff_supplement_profiles(seed, source_url, html))
+    return _dedupe_szu_csse_profiles(
+        [
+            profile
+            for profile in profiles
+            if _profile_matches_seed_scope(seed, profile)
+        ]
+    )
+
+
+def _fetch_szu_csse_official_supplement_pages(
+    *,
+    timeout: float,
+    fetch_source_page: Callable[[str, float], str] | None = None,
+) -> dict[str, str]:
+    fetcher = fetch_source_page or _fetch_szu_csse_supplement_source_page_no_env
+    source_timeout = min(max(timeout, 0.1), _SZU_CSSE_SUPPLEMENT_SOURCE_TIMEOUT)
+    pages: dict[str, str] = {}
+    for source_url in _SZU_CSSE_OFFICIAL_SUPPLEMENT_SOURCE_URLS:
+        try:
+            pages[source_url] = fetcher(source_url, source_timeout)
+        except Exception:
+            pages[source_url] = ""
+    return pages
+
+
+def _fetch_szu_csse_supplement_source_page_no_env(
+    url: str,
+    timeout: float,
+) -> str:
+    session = requests.Session()
+    session.trust_env = False
+    response = session.get(
+        url,
+        timeout=timeout,
+        headers={
+            "User-Agent": (
+                "Mozilla/5.0 (X11; Linux x86_64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/125.0 Safari/537.36"
+            )
+        },
+    )
+    response.raise_for_status()
+    encoding = response.encoding or response.apparent_encoding or "utf-8"
+    return response.content.decode(encoding, errors="replace")
+
+
+def _parse_szu_bigdata_supplement_profiles(
+    seed: ProfessorRosterSeed,
+    source_url: str,
+    html: str,
+) -> list[MergedProfessorProfileRecord]:
+    soup = BeautifulSoup(html, "html.parser")
+    profiles: list[MergedProfessorProfileRecord] = []
+    cards = soup.select(".gbteam1")
+    for card in cards:
+        name = _clean_szu_csse_text(card.find("h3").get_text(" ", strip=True) if card.find("h3") else "")
+        if not _is_szu_csse_probable_person_name(name):
+            continue
+        profile_url = _first_szu_csse_profile_link(card, source_url)
+        if profile_url is None:
+            continue
+        profiles.append(
+            _build_szu_csse_supplement_profile(
+                seed=seed,
+                source_url=source_url,
+                name=name,
+                profile_url=profile_url,
+                research_directions=_extract_szu_csse_research_directions(card),
+            )
+        )
+    return profiles
+
+
+def _parse_szu_aisc_supplement_profiles(
+    seed: ProfessorRosterSeed,
+    source_url: str,
+    html: str,
+) -> list[MergedProfessorProfileRecord]:
+    soup = BeautifulSoup(html, "html.parser")
+    container = soup.find("main") or soup.body or soup
+    profiles: list[MergedProfessorProfileRecord] = []
+    for anchor in container.find_all("a", href=True):
+        name = _clean_szu_csse_text(anchor.get_text(" ", strip=True))
+        if not _is_szu_csse_probable_person_name(name):
+            continue
+        profile_url = urljoin(source_url, anchor["href"])
+        if not _is_szu_csse_supplement_profile_url(profile_url, source_url):
+            continue
+        profiles.append(
+            _build_szu_csse_supplement_profile(
+                seed=seed,
+                source_url=source_url,
+                name=name,
+                profile_url=profile_url,
+                research_directions=(),
+            )
+        )
+    return profiles
+
+
+def _parse_szu_lab_staff_supplement_profiles(
+    seed: ProfessorRosterSeed,
+    source_url: str,
+    html: str,
+) -> list[MergedProfessorProfileRecord]:
+    soup = BeautifulSoup(html, "html.parser")
+    cards = soup.select(".staff-list article") or soup.find_all("article")
+    profiles: list[MergedProfessorProfileRecord] = []
+    for card in cards:
+        name_node = card.find("h3")
+        name = _clean_szu_csse_text(
+            name_node.get_text(" ", strip=True) if name_node else ""
+        )
+        if not _is_szu_csse_probable_person_name(name):
+            continue
+        profile_url = _first_szu_csse_profile_link(card, source_url)
+        if profile_url is None:
+            continue
+        profiles.append(
+            _build_szu_csse_supplement_profile(
+                seed=seed,
+                source_url=source_url,
+                name=name,
+                profile_url=profile_url,
+                research_directions=_extract_szu_csse_research_directions(card),
+            )
+        )
+    return profiles
+
+
+def _attach_szu_csse_official_supplement_sources(
+    seed: ProfessorRosterSeed,
+    profiles: list[MergedProfessorProfileRecord],
+    *,
+    timeout: float,
+    fetch_source_page: Callable[[str, float], str] | None = None,
+) -> list[MergedProfessorProfileRecord]:
+    if not _is_szu_csse_seed(seed):
+        return profiles
+    pages = _fetch_szu_csse_official_supplement_pages(
+        timeout=timeout,
+        fetch_source_page=fetch_source_page,
+    )
+    updated_profiles: list[MergedProfessorProfileRecord] = []
+    for profile in profiles:
+        additions: list[str] = []
+        for source_url, html in pages.items():
+            if not html.strip() or not _szu_csse_page_mentions_profile(html, profile):
+                continue
+            additions.append(source_url)
+            additions.extend(
+                _discover_szu_csse_supplement_publication_source_urls(source_url, html)
+            )
+        if additions:
+            updated_profiles.append(
+                replace(
+                    profile,
+                    source_urls=tuple(_dedupe_szu_csse_urls([*profile.source_urls, *additions])),
+                    evidence=tuple(_dedupe_szu_csse_urls([*profile.evidence, *additions])),
+                )
+            )
+            continue
+        updated_profiles.append(profile)
+    return updated_profiles
+
+
+def _build_szu_csse_supplement_profile(
+    *,
+    seed: ProfessorRosterSeed,
+    source_url: str,
+    name: str,
+    profile_url: str,
+    research_directions: tuple[str, ...],
+) -> MergedProfessorProfileRecord:
+    urls = tuple(_dedupe_szu_csse_urls([source_url, profile_url]))
+    return MergedProfessorProfileRecord(
+        name=name,
+        institution=seed.institution,
+        department=seed.department,
+        title=None,
+        email=None,
+        office=None,
+        homepage=profile_url,
+        profile_url=profile_url,
+        source_urls=urls,
+        evidence=urls,
+        research_directions=research_directions,
+        extraction_status="structured",
+        skip_reason=None,
+        error=None,
+        roster_source=source_url,
+    )
+
+
+def _first_szu_csse_profile_link(node: Any, source_url: str) -> str | None:
+    for anchor in node.find_all("a", href=True):
+        profile_url = urljoin(source_url, anchor["href"])
+        if _is_szu_csse_supplement_profile_url(profile_url, source_url):
+            return profile_url
+    return None
+
+
+def _extract_szu_csse_research_directions(node: Any) -> tuple[str, ...]:
+    for text_node in node.find_all(["p", "span", "li"]):
+        text = _clean_szu_csse_text(text_node.get_text(" ", strip=True))
+        match = re.search(r"研究方向\s*[:：]\s*(.+)", text)
+        if match:
+            value = _clean_szu_csse_text(match.group(1))
+            return (value,) if value else ()
+    return ()
+
+
+def _discover_szu_csse_supplement_publication_source_urls(
+    source_url: str,
+    html: str,
+) -> list[str]:
+    soup = BeautifulSoup(html, "html.parser")
+    publication_urls: list[str] = []
+    for anchor in soup.find_all("a", href=True):
+        candidate = urljoin(source_url, anchor["href"])
+        if _is_szu_csse_publication_evidence_source_url(candidate):
+            publication_urls.append(candidate)
+    return _dedupe_szu_csse_urls(publication_urls)
+
+
+def _profile_matches_seed_scope(
+    seed: ProfessorRosterSeed,
+    profile: MergedProfessorProfileRecord,
+) -> bool:
+    if not _is_szu_csse_seed(seed):
+        return True
+    name = _clean_szu_csse_text(profile.name)
+    if not _is_szu_csse_probable_person_name(name):
+        return False
+    scoped_urls = [
+        profile.profile_url,
+        profile.homepage,
+        profile.roster_source,
+        *profile.source_urls,
+        *profile.evidence,
+    ]
+    for url in scoped_urls:
+        if not url:
+            continue
+        if _is_szu_csse_roster_profile_url(url):
+            return True
+        if _is_szu_csse_supplement_profile_url(url, profile.roster_source):
+            return True
+        if _is_szu_csse_official_supplement_source_url(url):
+            return True
+    return False
+
+
+def _is_szu_csse_seed(seed: ProfessorRosterSeed) -> bool:
+    hostname = (urlparse(seed.roster_url).hostname or "").lower()
+    institution = seed.institution or ""
+    department = seed.department or ""
+    return (
+        hostname == "csse.szu.edu.cn"
+        and _SZU_CSSE_INSTITUTION in institution
+        and _SZU_CSSE_DEPARTMENT in department
+    )
+
+
+def _is_szu_csse_probable_person_name(name: str | None) -> bool:
+    text = _clean_szu_csse_text(name)
+    if not text:
+        return False
+    if text in _SZU_CSSE_NON_PERSON_LABELS:
+        return False
+    if text.casefold() in _SZU_CSSE_NON_PERSON_LABELS:
+        return False
+    chinese_chars = _CHINESE_PERSON_RE.findall(text)
+    if chinese_chars:
+        return 2 <= len(chinese_chars) <= 4 and len(text) <= 8
+    if is_obvious_non_person_name(text):
+        return False
+    normalized = text.replace("'", " ").replace("-", " ")
+    tokens = [token for token in normalized.split() if token]
+    return 2 <= len(tokens) <= 4 and all(token.isalpha() for token in tokens)
+
+
+def _is_szu_csse_roster_profile_url(url: str | None) -> bool:
+    if not url:
+        return False
+    parsed = urlparse(url)
+    if (parsed.hostname or "").lower() != "csse.szu.edu.cn":
+        return False
+    if parsed.path != "/pages/user/index":
+        return False
+    return any(key == "id" and value.isdigit() for key, value in parse_qsl(parsed.query))
+
+
+def _is_szu_csse_supplement_profile_url(
+    profile_url: str | None,
+    source_url: str | None,
+) -> bool:
+    if not profile_url:
+        return False
+    parsed = urlparse(profile_url)
+    hostname = (parsed.hostname or "").lower()
+    path = parsed.path
+    if hostname == "bigdata.szu.edu.cn":
+        return bool(_SZU_BIGDATA_PROFILE_PATH_RE.match(path))
+    if hostname == "aisc.szu.edu.cn":
+        return bool(_SZU_AISC_PROFILE_PATH_RE.match(path))
+    if hostname == "csse.szu.edu.cn":
+        path_lower = path.lower()
+        return (
+            path_lower != "/se/team-staff"
+            and path_lower.startswith("/se/")
+            and any(
+                segment in path_lower
+                for segment in ("/member/", "/members/", "/people/", "/staff/")
+            )
+        )
+    source_host = (urlparse(source_url or "").hostname or "").lower()
+    return hostname == source_host and bool(path)
+
+
+def _is_szu_csse_official_supplement_source_url(url: str | None) -> bool:
+    return _strip_url_fragment(url) in _SZU_CSSE_OFFICIAL_SUPPLEMENT_SOURCE_URLS
+
+
+def _is_szu_csse_publication_evidence_source_url(url: str | None) -> bool:
+    if not url:
+        return False
+    stripped = _strip_url_fragment(url)
+    if stripped == "https://bigdata.szu.edu.cn/kytd.htm":
+        return True
+    parsed = urlparse(stripped)
+    hostname = (parsed.hostname or "").lower()
+    path_lower = parsed.path.lower()
+    if hostname == "bigdata.szu.edu.cn":
+        return bool(_SZU_BIGDATA_PUBLICATION_PATH_RE.match(path_lower))
+    if hostname == "aisc.szu.edu.cn":
+        return bool(_SZU_AISC_PUBLICATION_PATH_RE.match(path_lower))
+    return False
+
+
+def _szu_csse_page_mentions_profile(
+    html: str,
+    profile: MergedProfessorProfileRecord,
+) -> bool:
+    name_key = _szu_csse_person_match_key(profile.name)
+    if not name_key:
+        return False
+    soup = BeautifulSoup(html, "html.parser")
+    for node in soup(["script", "style", "noscript", "footer"]):
+        node.decompose()
+    page_key = _szu_csse_person_match_key(soup.get_text(" ", strip=True))
+    return name_key in page_key
+
+
+def _szu_csse_person_match_key(value: str | None) -> str:
+    text = _clean_szu_csse_text(value)
+    return re.sub(r"[\s·\-.']", "", text).casefold()
+
+
+def _clean_szu_csse_text(value: str | None) -> str:
+    if value is None:
+        return ""
+    return _WHITESPACE_RE.sub(" ", str(value)).strip(" \t\r\n:：|/-")
+
+
+def _dedupe_szu_csse_profiles(
+    profiles: list[MergedProfessorProfileRecord],
+) -> list[MergedProfessorProfileRecord]:
+    deduped: list[MergedProfessorProfileRecord] = []
+    seen: set[tuple[str, str]] = set()
+    for profile in profiles:
+        key = (_szu_csse_person_match_key(profile.name), profile.profile_url.casefold())
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(profile)
+    return deduped
+
+
+def _dedupe_szu_csse_urls(urls: list[str | None]) -> list[str]:
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for url in urls:
+        stripped = _strip_url_fragment(url)
+        if not stripped:
+            continue
+        key = stripped.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(stripped)
+    return deduped
+
+
+def _strip_url_fragment(url: str | None) -> str:
+    if not url:
+        return ""
+    parsed = urlparse(url.strip())
+    return parsed._replace(fragment="").geturl()
+
+
 def _default_profile_writer(
     conn: Connection,
     *,
@@ -271,6 +764,7 @@ def _default_profile_writer(
         raise ValueError("run_id is required for canonical professor writes")
     enriched = _merged_to_enriched(profile)
     fetched_at = datetime.now(timezone.utc)
+    professor_id = build_professor_id(enriched)
     primary_page_id = upsert_source_page_for_url(
         conn,
         url=enriched.profile_url,
@@ -292,6 +786,17 @@ def _default_profile_writer(
             is_official_source=_is_official_source(enriched.roster_source),
             run_id=run_id,
         )
+    for publication_url in enriched.publication_evidence_urls:
+        upsert_source_page_for_url(
+            conn,
+            url=publication_url,
+            page_role="official_publication_page",
+            owner_scope_kind="professor",
+            owner_scope_ref=professor_id,
+            fetched_at=fetched_at,
+            is_official_source=_is_official_source(publication_url),
+            run_id=run_id,
+        )
     write_professor_bundle(
         conn,
         enriched=enriched,
@@ -304,6 +809,15 @@ def _default_profile_writer(
 def _merged_to_enriched(
     profile: MergedProfessorProfileRecord,
 ) -> EnrichedProfessorProfile:
+    publication_evidence_urls = [
+        url
+        for url in _dedupe_szu_csse_urls([*profile.evidence, *profile.source_urls])
+        if _is_szu_csse_publication_evidence_source_url(url)
+    ]
+    field_provenance = {
+        f"{_SOURCE_PAGE_ROLE_PROVENANCE_PREFIX}{url}": "official_publication_page"
+        for url in publication_evidence_urls
+    }
     return EnrichedProfessorProfile(
         name=(profile.name or "").strip(),
         institution=(profile.institution or "").strip(),
@@ -319,6 +833,8 @@ def _merged_to_enriched(
         extraction_status=profile.extraction_status,
         enrichment_source="regex_only",
         evidence_urls=list(profile.evidence),
+        publication_evidence_urls=publication_evidence_urls,
+        field_provenance=field_provenance,
     )
 
 
