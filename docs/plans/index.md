@@ -6,6 +6,7 @@
 
 | 计划 | 主题 | 状态 |
 |---|---|---|
+| [2026-08-14-customer-site-migration-plan](./2026-08-14-customer-site-migration-plan.md) | 客户现场迁移（无 GPU、纯 LLM API） | OPEN — Kimi session 恢复版：10 步路线图 + 第 1–5 步 + 1.3G 门槛摘除决策已落盘；第 6–10 步待补，runner 小改未实现 |
 | [2026-04-16-007-plan-portfolio-execution-roadmap](./2026-04-16-007-plan-portfolio-execution-roadmap.md) | 顶层波次路线图 | ACTIVE — Round 7/8 系列已从此接过主线 |
 | [2026-04-17-005-company-primary-knowledge-graph-architecture-plan](./2026-04-17-005-company-primary-knowledge-graph-architecture-plan.md) | 企业主 KG 架构（北极星） | PARTIAL — canonical model/import code 已在；统一 KG 迁移、关系回填、Milvus/search 未完成 |
 | [2026-04-08-001-feat-paper-multi-source-priority-implementation-plan](./2026-04-08-001-feat-paper-multi-source-priority-implementation-plan.md) | 论文多源证据优先级 | PARTIAL — Phase A 代码/单测在；真实 dogfood 验收模板未填，Phase B 排队 |
