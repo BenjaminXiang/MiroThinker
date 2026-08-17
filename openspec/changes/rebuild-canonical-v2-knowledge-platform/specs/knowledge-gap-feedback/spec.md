@@ -12,6 +12,12 @@ the query/answer trace, release, affected domain/path, observed symptom, and ava
 - **THEN** the system records or updates a coverage/enrichment gap tied to the affected domain and
   query family
 
+#### Scenario: Product capability is repeatedly answer-scoped
+- **WHEN** accepted demand repeatedly asks for one Product capability that lacks direct retained
+  binding evidence
+- **THEN** the system records or updates a Product-capability evidence gap
+- **AND** it does not create a canonical Product-capability relationship online
+
 ### Requirement: Gap classification distinguishes ownership
 
 A gap SHALL distinguish at least knowledge coverage, identity, source conflict/freshness,

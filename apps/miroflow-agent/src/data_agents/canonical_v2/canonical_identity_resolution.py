@@ -240,6 +240,35 @@ class IdentityResolutionRequest(ContractModel):
     def validate_request(self) -> IdentityResolutionRequest:
         if self.policy.policy_kind is not PolicyKind.identity:
             raise ValueError("identity resolution requires an identity policy")
+        if (
+            any(source.entity_type == "person" for source in self.source_identities)
+            and self.identity_method_version != PERSON_IDENTITY_METHOD_VERSION
+        ):
+            raise ValueError(
+                "Person identity resolution requires its versioned Person rule set"
+            )
+        if (
+            any(
+                source.entity_type in {"technology_concept", "technology_route"}
+                for source in self.source_identities
+            )
+            and self.identity_method_version != TECHNOLOGY_IDENTITY_METHOD_VERSION
+        ):
+            raise ValueError(
+                "Technology identity resolution requires its versioned Technology "
+                "rule set"
+            )
+        if self.identity_method_version == PERSON_IDENTITY_METHOD_VERSION and any(
+            source.entity_type != "person" for source in self.source_identities
+        ):
+            raise ValueError("the Person identity method only accepts Person sources")
+        if self.identity_method_version == TECHNOLOGY_IDENTITY_METHOD_VERSION and any(
+            source.entity_type not in {"technology_concept", "technology_route"}
+            for source in self.source_identities
+        ):
+            raise ValueError(
+                "the Technology identity method only accepts Technology sources"
+            )
         source_by_id = {
             value.source_identity_id: value for value in self.source_identities
         }
@@ -684,15 +713,19 @@ class _IdentityDecisionContextContent(ContractModel):
             for allocation in self.output_allocations
             for source_id in allocation.source_identity_ids
         ]
-        if (
-            len(allocated_sources) != len(set(allocated_sources))
-            or set(allocated_sources) != set(source_by_id)
-            or any(
-                allocation_by_output[canonical_id]
-                != set(output_by_id[canonical_id].source_identity_ids)
-                for canonical_id in output_by_id
+        if self.decision.action is IdentityAction.reject:
+            invalid_allocation = bool(allocated_sources or allocation_by_output)
+        else:
+            invalid_allocation = (
+                len(allocated_sources) != len(set(allocated_sources))
+                or set(allocated_sources) != set(source_by_id)
+                or any(
+                    allocation_by_output[canonical_id]
+                    != set(output_by_id[canonical_id].source_identity_ids)
+                    for canonical_id in output_by_id
+                )
             )
-        ):
+        if invalid_allocation:
             raise ValueError(
                 "identity context output allocation must partition exact sources"
             )
@@ -953,8 +986,57 @@ class IdentityResolutionResult(_IdentityResolutionContent):
             if assignment.source_identity_id in assignments:
                 raise ValueError("source assignment IDs must be unique")
             assignments[assignment.source_identity_id] = assignment
-        if set(assignments) != set(source_ids):
-            raise ValueError("every source identity requires one current assignment")
+        assignment_source_ids = set(assignments)
+        source_id_set = set(source_ids)
+        if assignment_source_ids != source_id_set:
+            if not assignment_source_ids <= source_id_set:
+                raise ValueError(
+                    "every source identity requires one current assignment"
+                )
+            allowed_unassigned_source_ids = {
+                source_id
+                for decision in self.identity_decisions
+                if decision.action is IdentityAction.reject
+                for source_id in decision.source_identity_ids
+            }
+            if self.identity_method_version in {
+                PERSON_IDENTITY_METHOD_VERSION,
+                TECHNOLOGY_IDENTITY_METHOD_VERSION,
+            }:
+                verdict_source_ids = {
+                    source_id
+                    for verdict in self.candidate_verdicts
+                    for source_id in verdict.source_identity_ids
+                }
+                allowed_unassigned_source_ids.update(
+                    source_id
+                    for verdict in self.candidate_verdicts
+                    if verdict.verdict is IdentityCandidateOutcome.unresolved
+                    for source_id in verdict.source_identity_ids
+                )
+                allowed_unassigned_source_ids.update(
+                    source.source_identity_id
+                    for source in self.source_identities
+                    if source.source_identity_id not in verdict_source_ids
+                    and not _has_evidence_bound_internal_identifier(
+                        source=source,
+                        assertions=self.identity_assertions,
+                        method_version=self.identity_method_version,
+                    )
+                )
+            if (source_id_set - assignment_source_ids) - (
+                allowed_unassigned_source_ids
+            ):
+                message = (
+                    "resolved internal-reference sources require current assignments"
+                    if self.identity_method_version
+                    in {
+                        PERSON_IDENTITY_METHOD_VERSION,
+                        TECHNOLOGY_IDENTITY_METHOD_VERSION,
+                    }
+                    else "every source identity requires one current assignment"
+                )
+                raise ValueError(message)
         if {
             source_id: assignment.canonical_identity_id
             for source_id, assignment in assignments.items()
@@ -965,6 +1047,55 @@ class IdentityResolutionResult(_IdentityResolutionContent):
         decision_by_id = {
             decision.decision_id: decision for decision in self.identity_decisions
         }
+        manifest_by_decision_id = {
+            manifest.decision_id: manifest for manifest in self.decision_manifests
+        }
+        if self.identity_method_version in {
+            PERSON_IDENTITY_METHOD_VERSION,
+            TECHNOLOGY_IDENTITY_METHOD_VERSION,
+        }:
+            unresolved_verdict_ids = {
+                verdict.verdict_id
+                for verdict in self.candidate_verdicts
+                if verdict.verdict is IdentityCandidateOutcome.unresolved
+            }
+            source_by_id = {
+                source.source_identity_id: source for source in self.source_identities
+            }
+            unresolved_source_ids = {
+                source_id
+                for verdict in self.candidate_verdicts
+                if verdict.verdict is IdentityCandidateOutcome.unresolved
+                for source_id in verdict.source_identity_ids
+            }
+            for decision in self.identity_decisions:
+                manifest = manifest_by_decision_id[decision.decision_id]
+                if (
+                    manifest.candidate_verdict_id in unresolved_verdict_ids
+                    or set(decision.source_identity_ids) & unresolved_source_ids
+                ):
+                    raise ValueError(
+                        "unresolved internal references cannot create identity decisions"
+                    )
+                if (
+                    decision.action is IdentityAction.create
+                    and manifest.candidate_verdict_id is None
+                    and (
+                        bool(set(decision.source_identity_ids) - set(source_by_id))
+                        or any(
+                            not _has_evidence_bound_internal_identifier(
+                                source=source_by_id[source_id],
+                                assertions=self.identity_assertions,
+                                method_version=self.identity_method_version,
+                            )
+                            for source_id in decision.source_identity_ids
+                        )
+                    )
+                ):
+                    raise ValueError(
+                        "internal-reference singleton identity requires an "
+                        "evidence-bound stable identifier"
+                    )
         for assignment in assignments.values():
             provenance_decision = decision_by_id.get(assignment.identity_decision_id)
             if provenance_decision is None:
@@ -1079,14 +1210,17 @@ def canonical_identity_applied_decision_id(
 
 def canonical_identity_rule_set_sha256(method_version: str) -> str:
     thresholds = _LLM_AUTO_ACTION_THRESHOLDS.get(method_version, {})
+    strong_identifier_keys, candidate_recall_keys, high_confidence_composites = (
+        _identity_rule_maps(method_version)
+    )
     payload = cast(
         JsonValue,
         {
             "context_schema_version": "identity-decision-context-v1",
             "method_version": method_version,
-            "strong_identifier_keys": _STRONG_IDENTIFIER_KEYS,
-            "candidate_recall_keys": _CANDIDATE_RECALL_KEYS,
-            "high_confidence_composites": _HIGH_CONFIDENCE_COMPOSITES,
+            "strong_identifier_keys": strong_identifier_keys,
+            "candidate_recall_keys": candidate_recall_keys,
+            "high_confidence_composites": high_confidence_composites,
             "llm_auto_action_thresholds": {
                 outcome.value: threshold for outcome, threshold in thresholds.items()
             },
@@ -1308,6 +1442,255 @@ def canonical_identity_candidate_verdict_id(
     return f"identity-verdict:{_content_sha256(payload)}"
 
 
+def _expected_identity_history(
+    request: IdentityResolutionRequest,
+    decisions: tuple[IdentityDecision, ...],
+) -> tuple[CanonicalIdentity, ...]:
+    expected_by_id = {
+        identity.canonical_identity_id: identity
+        for identity in request.canonical_identity_history
+    }
+    current_by_id = {
+        identity.canonical_identity_id: identity
+        for identity in request.current_canonical_identities
+    }
+    owner_by_source = {
+        source_id: identity.canonical_identity_id
+        for identity in request.current_canonical_identities
+        for source_id in identity.source_identity_ids
+    }
+    used_input_ids: set[str] = set()
+    for decision in decisions:
+        input_ids = decision.input_canonical_identity_ids
+        output_ids = decision.output_canonical_identity_ids
+        decision_source_ids = set(decision.source_identity_ids)
+        expected_input_ids = {
+            owner_by_source[source_id]
+            for source_id in decision_source_ids
+            if source_id in owner_by_source
+        }
+        if (
+            set(input_ids) != expected_input_ids
+            or used_input_ids & set(input_ids)
+            or any(
+                not set(current_by_id[canonical_identity_id].source_identity_ids)
+                <= decision_source_ids
+                for canonical_identity_id in input_ids
+            )
+        ):
+            raise IdentityResolutionIntegrityError(
+                "identity decision inputs do not match owned decision sources"
+            )
+        used_input_ids.update(input_ids)
+        if decision.action is IdentityAction.create:
+            if input_ids:
+                raise IdentityResolutionIntegrityError(
+                    "create identity decision cannot consume a request owner"
+                )
+            continue
+        if decision.action is IdentityAction.link:
+            if len(input_ids) != 1 or output_ids != input_ids:
+                raise IdentityResolutionIntegrityError(
+                    "link identity decision must update one exact request owner"
+                )
+            continue
+        if decision.action is IdentityAction.merge:
+            terminal_state = CanonicalIdentityState.merged
+            successor_ids = output_ids
+        elif decision.action in {
+            IdentityAction.split_identity,
+            IdentityAction.reverse,
+        }:
+            terminal_state = CanonicalIdentityState.split_identity
+            successor_ids = output_ids
+        elif decision.action is IdentityAction.reject:
+            terminal_state = CanonicalIdentityState.rejected
+            successor_ids = ()
+        else:  # pragma: no cover - enum exhaustiveness guard
+            raise IdentityResolutionIntegrityError(
+                "unsupported identity transition action"
+            )
+        for canonical_identity_id in input_ids:
+            input_identity = current_by_id.get(canonical_identity_id)
+            if input_identity is None or canonical_identity_id in expected_by_id:
+                raise IdentityResolutionIntegrityError(
+                    "identity transition does not consume one exact current owner"
+                )
+            expected_by_id[canonical_identity_id] = CanonicalIdentity(
+                **{
+                    **input_identity.model_dump(mode="python"),
+                    "state": terminal_state,
+                    "identity_decision_id": decision.decision_id,
+                    "successor_identity_ids": successor_ids,
+                }
+            )
+    return tuple(
+        sorted(expected_by_id.values(), key=lambda value: value.canonical_identity_id)
+    )
+
+
+def _expected_identity_decision_outputs(
+    *,
+    request: IdentityResolutionRequest,
+    decision: IdentityDecision,
+    context: IdentityDecisionContext,
+    candidate_verdict: IdentityCandidateVerdict | None,
+) -> tuple[tuple[CanonicalIdentity, ...], tuple[SourceIdentityAssignment, ...]]:
+    if decision.action is IdentityAction.reject:
+        return (), ()
+    source_by_id = {
+        source.source_identity_id: source for source in request.source_identities
+    }
+    request_identity_by_id = {
+        identity.canonical_identity_id: identity
+        for identity in request.current_canonical_identities
+    }
+    request_assignment_by_source = {
+        assignment.source_identity_id: assignment
+        for assignment in request.current_source_identity_assignments
+    }
+    allocation_by_output = {
+        allocation.canonical_identity_id: allocation.source_identity_ids
+        for allocation in context.output_allocations
+    }
+    if set(allocation_by_output) != set(decision.output_canonical_identity_ids):
+        raise IdentityResolutionIntegrityError(
+            "identity decision output allocation is incomplete"
+        )
+
+    expected_outputs: list[CanonicalIdentity] = []
+    expected_assignments: list[SourceIdentityAssignment] = []
+    for output_id in decision.output_canonical_identity_ids:
+        allocation = allocation_by_output[output_id]
+        try:
+            group_sources = tuple(source_by_id[source_id] for source_id in allocation)
+        except KeyError as exc:
+            raise IdentityResolutionIntegrityError(
+                "identity decision output allocation references an unknown source"
+            ) from exc
+        entity_types = {source.entity_type for source in group_sources}
+        if not group_sources or len(entity_types) != 1:
+            raise IdentityResolutionIntegrityError(
+                "identity decision output must allocate one exact entity type"
+            )
+        entity_type = group_sources[0].entity_type
+        if decision.action is IdentityAction.link:
+            input_id = decision.input_canonical_identity_ids[0]
+            input_identity = request_identity_by_id[input_id]
+            expected_output_id = input_id
+            output = CanonicalIdentity(
+                **{
+                    **input_identity.model_dump(mode="python"),
+                    "source_identity_ids": allocation,
+                    "identity_decision_id": decision.decision_id,
+                }
+            )
+        else:
+            if decision.action is IdentityAction.create:
+                predecessor_ids: tuple[str, ...] = ()
+                if candidate_verdict is None:
+                    if len(allocation) != 1:
+                        raise IdentityResolutionIntegrityError(
+                            "singleton create must allocate exactly one source"
+                        )
+                    generation_key = f"singleton:{request.decision_run_id}"
+                elif candidate_verdict.verdict is IdentityCandidateOutcome.unresolved:
+                    generation_key = f"unresolved:{candidate_verdict.verdict_id}"
+                elif (
+                    candidate_verdict.verdict
+                    is IdentityCandidateOutcome.different_entities
+                ):
+                    generation_key = f"separate:{candidate_verdict.verdict_id}"
+                else:
+                    generation_key = f"create:{candidate_verdict.verdict_id}"
+            elif decision.action is IdentityAction.merge:
+                if candidate_verdict is None:
+                    raise IdentityResolutionIntegrityError(
+                        "merge identity decision requires a candidate verdict"
+                    )
+                predecessor_ids = decision.input_canonical_identity_ids
+                generation_key = (
+                    "merge:"
+                    + ",".join(sorted(predecessor_ids))
+                    + f":{candidate_verdict.verdict_id}"
+                )
+            elif decision.action is IdentityAction.reverse:
+                if (
+                    candidate_verdict is None
+                    or decision.reversal_of_decision_id is None
+                ):
+                    raise IdentityResolutionIntegrityError(
+                        "reverse identity decision requires exact verdict lineage"
+                    )
+                predecessor_ids = decision.input_canonical_identity_ids
+                generation_key = (
+                    f"reverse:{decision.reversal_of_decision_id}:"
+                    f"{candidate_verdict.verdict_id}"
+                )
+            elif decision.action is IdentityAction.split_identity:
+                if candidate_verdict is None:
+                    raise IdentityResolutionIntegrityError(
+                        "split identity decision requires a candidate verdict"
+                    )
+                predecessor_ids = decision.input_canonical_identity_ids
+                generation_key = (
+                    f"split:{predecessor_ids[0]}:{candidate_verdict.verdict_id}"
+                )
+            else:  # pragma: no cover - enum exhaustiveness guard
+                raise IdentityResolutionIntegrityError(
+                    "unsupported identity output action"
+                )
+            expected_output_id = _canonical_identity_id(
+                request.release_id,
+                entity_type,
+                allocation,
+                generation_key=generation_key,
+            )
+            output = CanonicalIdentity(
+                canonical_identity_id=expected_output_id,
+                entity_type=entity_type,
+                state=CanonicalIdentityState.active,
+                display_name=_display_name(group_sources),
+                source_identity_ids=allocation,
+                identity_decision_id=decision.decision_id,
+                predecessor_identity_ids=predecessor_ids,
+                release_id=request.release_id,
+            )
+        if output_id != expected_output_id:
+            raise IdentityResolutionIntegrityError(
+                "identity decision output ID does not match exact transition"
+            )
+        expected_outputs.append(output)
+        expected_assignments.extend(
+            SourceIdentityAssignment(
+                release_id=request.release_id,
+                source_identity_id=source_id,
+                canonical_identity_id=output_id,
+                identity_decision_id=(
+                    request_assignment_by_source[source_id].identity_decision_id
+                    if decision.action is IdentityAction.link
+                    and source_id in request_assignment_by_source
+                    else decision.decision_id
+                ),
+            )
+            for source_id in allocation
+        )
+    return (
+        tuple(
+            sorted(
+                expected_outputs,
+                key=lambda identity: identity.canonical_identity_id,
+            )
+        ),
+        tuple(
+            sorted(
+                expected_assignments,
+                key=lambda assignment: assignment.source_identity_id,
+            )
+        ),
+    )
+
+
 def validate_identity_resolution_result(
     request: IdentityResolutionRequest,
     result: IdentityResolutionResult,
@@ -1409,6 +1792,23 @@ def validate_identity_resolution_result(
             raise IdentityResolutionIntegrityError(
                 "identity candidate verdict content binding mismatch"
             )
+    expected_verdict_components = tuple(
+        sorted(
+            tuple(source.source_identity_id for source in component)
+            for component in _candidate_components(validated_request)
+            if len(component) > 1
+        )
+    )
+    actual_verdict_components = tuple(
+        sorted(
+            verdict.source_identity_ids
+            for verdict in validated_result.candidate_verdicts
+        )
+    )
+    if actual_verdict_components != expected_verdict_components:
+        raise IdentityResolutionIntegrityError(
+            "candidate verdicts must exactly cover recalled multi-source components"
+        )
     applied_review_resolutions = tuple(
         verdict.human_review_resolution
         for verdict in validated_result.candidate_verdicts
@@ -1439,6 +1839,76 @@ def validate_identity_resolution_result(
         identity.canonical_identity_id
         for identity in validated_request.current_canonical_identities
     }
+    request_current_by_id = {
+        identity.canonical_identity_id: identity
+        for identity in validated_request.current_canonical_identities
+    }
+    decision_output_ids = {
+        canonical_identity_id
+        for decision in validated_result.identity_decisions
+        for canonical_identity_id in decision.output_canonical_identity_ids
+    }
+    decision_input_ids = {
+        canonical_identity_id
+        for decision in validated_result.identity_decisions
+        for canonical_identity_id in decision.input_canonical_identity_ids
+    }
+    if validated_result.canonical_identity_history != _expected_identity_history(
+        validated_request, validated_result.identity_decisions
+    ):
+        raise IdentityResolutionIntegrityError(
+            "canonical identity history does not match exact request transitions"
+        )
+    result_current_by_id = {
+        identity.canonical_identity_id: identity
+        for identity in validated_result.current_canonical_identities
+    }
+    if any(
+        canonical_identity_id not in decision_input_ids
+        and result_current_by_id.get(canonical_identity_id) != identity
+        for canonical_identity_id, identity in request_current_by_id.items()
+    ):
+        raise IdentityResolutionIntegrityError(
+            "identity result dropped unconsumed request identity or assignment"
+        )
+    for identity in validated_result.current_canonical_identities:
+        if identity.canonical_identity_id in decision_output_ids:
+            continue
+        if request_current_by_id.get(identity.canonical_identity_id) != identity:
+            raise IdentityResolutionIntegrityError(
+                "current identity is neither an exact request owner nor a decision output"
+            )
+    request_assignment_by_source = {
+        assignment.source_identity_id: assignment
+        for assignment in validated_request.current_source_identity_assignments
+    }
+    decision_source_ids = {
+        source_id
+        for decision in validated_result.identity_decisions
+        for source_id in decision.source_identity_ids
+    }
+    result_assignment_by_source = {
+        assignment.source_identity_id: assignment
+        for assignment in validated_result.source_identity_assignments
+    }
+    if any(
+        source_id not in decision_source_ids
+        and result_assignment_by_source.get(source_id) != assignment
+        for source_id, assignment in request_assignment_by_source.items()
+    ):
+        raise IdentityResolutionIntegrityError(
+            "identity result dropped unconsumed request identity or assignment"
+        )
+    for assignment in validated_result.source_identity_assignments:
+        if assignment.source_identity_id in decision_source_ids:
+            continue
+        if (
+            request_assignment_by_source.get(assignment.source_identity_id)
+            != assignment
+        ):
+            raise IdentityResolutionIntegrityError(
+                "source assignment is neither exact request state nor decision output"
+            )
     for decision in validated_result.identity_decisions:
         manifest = manifest_by_decision_id[decision.decision_id]
         context = context_by_decision_id[decision.decision_id]
@@ -1459,6 +1929,30 @@ def validate_identity_resolution_result(
                 )
         else:
             linked_verdict = None
+        expected_outputs, expected_assignments = _expected_identity_decision_outputs(
+            request=validated_request,
+            decision=decision,
+            context=context,
+            candidate_verdict=linked_verdict,
+        )
+        if context.output_canonical_identities != expected_outputs:
+            raise IdentityResolutionIntegrityError(
+                "identity decision output payload does not match exact transition"
+            )
+        actual_assignments = tuple(
+            sorted(
+                (
+                    result_assignment_by_source[source_id]
+                    for source_id in decision.source_identity_ids
+                    if source_id in result_assignment_by_source
+                ),
+                key=lambda assignment: assignment.source_identity_id,
+            )
+        )
+        if actual_assignments != expected_assignments:
+            raise IdentityResolutionIntegrityError(
+                "identity decision output assignment does not match exact transition"
+            )
         try:
             bound_output_identities = tuple(
                 result_identity_by_id[canonical_identity_id]
@@ -1577,7 +2071,12 @@ def validate_identity_resolution_result(
             for identity in output_identities
             for source_id in identity.source_identity_ids
         }
-        if output_source_ids != set(decision.source_identity_ids):
+        expected_output_source_ids = (
+            set()
+            if decision.action is IdentityAction.reject
+            else set(decision.source_identity_ids)
+        )
+        if output_source_ids != expected_output_source_ids:
             raise IdentityResolutionIntegrityError(
                 "identity decision output allocation must cover its exact sources"
             )
@@ -1604,6 +2103,30 @@ def validate_identity_resolution_result(
         if manifest.input_content_sha256 != expected_manifest_sha256:
             raise IdentityResolutionIntegrityError(
                 "identity decision manifest content hash mismatch"
+            )
+    for verdict in validated_result.candidate_verdicts:
+        if verdict.verdict not in {
+            IdentityCandidateOutcome.same_entity,
+            IdentityCandidateOutcome.different_entities,
+        }:
+            continue
+        verdict_sources = set(verdict.source_identity_ids)
+        accepted_materialized_groups: list[tuple[str, ...]] = []
+        for identity in validated_result.current_canonical_identities:
+            membership = set(identity.source_identity_ids)
+            if not membership & verdict_sources:
+                continue
+            if not membership <= verdict_sources:
+                raise IdentityResolutionIntegrityError(
+                    "accepted identity verdict spans another candidate component"
+                )
+            accepted_materialized_groups.append(tuple(sorted(membership)))
+        if (
+            tuple(sorted(accepted_materialized_groups))
+            != verdict.source_identity_groups
+        ):
+            raise IdentityResolutionIntegrityError(
+                "accepted identity verdict does not match materialized groups"
             )
     for verdict in validated_result.candidate_verdicts:
         if verdict.human_review_resolution is None:
@@ -1712,11 +2235,77 @@ _HIGH_CONFIDENCE_COMPOSITES = {
     "patent": (("title_key", "applicant_key", "filing_date"),),
 }
 
+PERSON_IDENTITY_METHOD_VERSION = "canonical-identity-resolution-person-v1"
+_PERSON_STRONG_IDENTIFIER_KEYS = {
+    **_STRONG_IDENTIFIER_KEYS,
+    "person": ("orcid",),
+}
+_PERSON_CANDIDATE_RECALL_KEYS = {
+    **_CANDIDATE_RECALL_KEYS,
+    "person": ("name_key",),
+}
+_PERSON_HIGH_CONFIDENCE_COMPOSITES = {
+    **_HIGH_CONFIDENCE_COMPOSITES,
+    "person": (),
+}
+
+TECHNOLOGY_IDENTITY_METHOD_VERSION = "canonical-identity-resolution-technology-v1"
+_TECHNOLOGY_STRONG_IDENTIFIER_KEYS = {
+    **_STRONG_IDENTIFIER_KEYS,
+    "technology_concept": ("technology_id",),
+    "technology_route": ("technology_id",),
+}
+_TECHNOLOGY_CANDIDATE_RECALL_KEYS = {
+    **_CANDIDATE_RECALL_KEYS,
+    "technology_concept": ("name_key",),
+    "technology_route": ("name_key",),
+}
+_TECHNOLOGY_HIGH_CONFIDENCE_COMPOSITES = {
+    **_HIGH_CONFIDENCE_COMPOSITES,
+    "technology_concept": (),
+    "technology_route": (),
+}
+
+
+def _identity_rule_maps(
+    method_version: str,
+) -> tuple[
+    dict[str, tuple[str, ...]],
+    dict[str, tuple[str, ...]],
+    dict[str, tuple[tuple[str, ...], ...]],
+]:
+    if method_version == PERSON_IDENTITY_METHOD_VERSION:
+        return (
+            _PERSON_STRONG_IDENTIFIER_KEYS,
+            _PERSON_CANDIDATE_RECALL_KEYS,
+            _PERSON_HIGH_CONFIDENCE_COMPOSITES,
+        )
+    if method_version == TECHNOLOGY_IDENTITY_METHOD_VERSION:
+        return (
+            _TECHNOLOGY_STRONG_IDENTIFIER_KEYS,
+            _TECHNOLOGY_CANDIDATE_RECALL_KEYS,
+            _TECHNOLOGY_HIGH_CONFIDENCE_COMPOSITES,
+        )
+    return (
+        _STRONG_IDENTIFIER_KEYS,
+        _CANDIDATE_RECALL_KEYS,
+        _HIGH_CONFIDENCE_COMPOSITES,
+    )
+
+
 _LLM_AUTO_ACTION_THRESHOLDS = {
     "canonical-identity-resolution-v1": {
         IdentityCandidateOutcome.same_entity: 0.90,
         IdentityCandidateOutcome.different_entities: 0.85,
-    }
+    },
+    PERSON_IDENTITY_METHOD_VERSION: {
+        IdentityCandidateOutcome.same_entity: 0.90,
+        IdentityCandidateOutcome.different_entities: 0.85,
+    },
+    TECHNOLOGY_IDENTITY_METHOD_VERSION: {
+        IdentityCandidateOutcome.same_entity: 0.90,
+        IdentityCandidateOutcome.different_entities: 0.85,
+    },
 }
 
 
@@ -1742,16 +2331,66 @@ def _normalize_key_value(key: str, value: str | None) -> str | None:
     return normalized or None
 
 
+def normalize_identity_key_value(key: str, value: str | None) -> str | None:
+    """Return the version-stable normalized value used by identity rules."""
+
+    return _normalize_key_value(key, value)
+
+
+def _has_evidence_bound_internal_identifier(
+    *,
+    source: SourceIdentity,
+    assertions: Iterable[SourceAssertion],
+    method_version: str,
+) -> bool:
+    identity_spec = {
+        PERSON_IDENTITY_METHOD_VERSION: {
+            "person": ("orcid", "identity.orcid"),
+        },
+        TECHNOLOGY_IDENTITY_METHOD_VERSION: {
+            "technology_concept": (
+                "technology_id",
+                "identity.technology_id",
+            ),
+            "technology_route": (
+                "technology_id",
+                "identity.technology_id",
+            ),
+        },
+    }.get(method_version, {})
+    key_and_path = identity_spec.get(source.entity_type)
+    if key_and_path is None:
+        return False
+    key, field_path = key_and_path
+    normalized_identifier = _normalize_key_value(key, source.normalized_keys.get(key))
+    if normalized_identifier is None:
+        return False
+    identifier_assertions = tuple(
+        assertion
+        for assertion in assertions
+        if assertion.source_identity_id == source.source_identity_id
+        and assertion.field_path == field_path
+    )
+    return bool(identifier_assertions) and all(
+        isinstance(assertion.value, str)
+        and _normalize_key_value(key, assertion.value) == normalized_identifier
+        for assertion in identifier_assertions
+    )
+
+
 def _normalized_source_key(source: SourceIdentity, key: str) -> str | None:
     return _normalize_key_value(key, source.normalized_keys.get(key))
 
 
 def _matching_composite_keys(
     sources: tuple[SourceIdentity, ...],
+    *,
+    method_version: str,
 ) -> tuple[str, ...] | None:
     if not sources or len({source.entity_type for source in sources}) != 1:
         return None
-    for keys in _HIGH_CONFIDENCE_COMPOSITES.get(sources[0].entity_type, ()):
+    _, _, composites = _identity_rule_maps(method_version)
+    for keys in composites.get(sources[0].entity_type, ()):
         values_by_key = [
             tuple(_normalized_source_key(source, key) for source in sources)
             for key in keys
@@ -1764,12 +2403,15 @@ def _matching_composite_keys(
 def _sources_are_recall_candidates(
     left: SourceIdentity,
     right: SourceIdentity,
+    *,
+    method_version: str,
 ) -> bool:
     if left.entity_type != right.entity_type:
         return False
+    strong_keys, recall_keys, _ = _identity_rule_maps(method_version)
     keys = (
-        *_STRONG_IDENTIFIER_KEYS.get(left.entity_type, ()),
-        *_CANDIDATE_RECALL_KEYS.get(left.entity_type, ()),
+        *strong_keys.get(left.entity_type, ()),
+        *recall_keys.get(left.entity_type, ()),
     )
     return any(
         (left_value := _normalized_source_key(left, key)) is not None
@@ -1802,7 +2444,11 @@ def _candidate_components(
 
     for index, left in enumerate(sources):
         for right in sources[index + 1 :]:
-            if _sources_are_recall_candidates(left, right):
+            if _sources_are_recall_candidates(
+                left,
+                right,
+                method_version=request.identity_method_version,
+            ):
                 union(left.source_identity_id, right.source_identity_id)
     for identity in (
         *request.current_canonical_identities,
@@ -1826,10 +2472,13 @@ def _candidate_components(
     )
 
 
-def _matching_strong_key(sources: tuple[SourceIdentity, ...]) -> str | None:
+def _matching_strong_key(
+    sources: tuple[SourceIdentity, ...], *, method_version: str
+) -> str | None:
     if not sources or len({source.entity_type for source in sources}) != 1:
         return None
-    keys = _STRONG_IDENTIFIER_KEYS.get(sources[0].entity_type, ())
+    strong_keys, _, _ = _identity_rule_maps(method_version)
+    keys = strong_keys.get(sources[0].entity_type, ())
     for key in keys:
         values = [_normalized_source_key(source, key) for source in sources]
         if all(values) and len(set(values)) == 1:
@@ -1837,10 +2486,13 @@ def _matching_strong_key(sources: tuple[SourceIdentity, ...]) -> str | None:
     return None
 
 
-def _conflicting_strong_key(sources: tuple[SourceIdentity, ...]) -> str | None:
+def _conflicting_strong_key(
+    sources: tuple[SourceIdentity, ...], *, method_version: str
+) -> str | None:
     if not sources or len({source.entity_type for source in sources}) != 1:
         return None
-    keys = _STRONG_IDENTIFIER_KEYS.get(sources[0].entity_type, ())
+    strong_keys, _, _ = _identity_rule_maps(method_version)
+    keys = strong_keys.get(sources[0].entity_type, ())
     for key in keys:
         values = [_normalized_source_key(source, key) for source in sources]
         if all(values) and len(set(values)) > 1:
@@ -1877,6 +2529,27 @@ def _unresolved_identity_result(
     verdict: IdentityCandidateVerdict,
 ) -> IdentityResolutionResult:
     """Keep existing ownership and isolate only sources that have no current owner."""
+
+    if request.identity_method_version in {
+        PERSON_IDENTITY_METHOD_VERSION,
+        TECHNOLOGY_IDENTITY_METHOD_VERSION,
+    }:
+        content = _IdentityResolutionContent(
+            release_id=request.release_id,
+            decision_run_id=request.decision_run_id,
+            identity_method_version=request.identity_method_version,
+            as_of=request.as_of,
+            policy=request.policy,
+            source_identities=request.source_identities,
+            identity_assertions=request.identity_assertions,
+            candidate_verdicts=(verdict,),
+            identity_decisions=(),
+            current_canonical_identities=request.current_canonical_identities,
+            canonical_identity_history=request.canonical_identity_history,
+            source_identity_assignments=(request.current_source_identity_assignments),
+            decision_manifests=(),
+        )
+        return _finalize_identity_result(request, content)
 
     owned_source_ids = {
         source_id
@@ -2159,13 +2832,19 @@ def _different_existing_owner_result(
         decision.decision_id: decision for decision in request.prior_identity_decisions
     }
     reversed_decision = prior_by_id.get(predecessor.identity_decision_id)
-    if (
-        reversed_decision is None
-        or reversed_decision.action is not IdentityAction.merge
-    ):
-        raise IdentityResolutionIntegrityError(
-            "named mistaken-merge correction requires its exact prior merge decision"
-        )
+    named_reversal = (
+        reversed_decision is not None
+        and reversed_decision.action is IdentityAction.merge
+    )
+    if named_reversal:
+        assert reversed_decision is not None
+        action = IdentityAction.reverse
+        reversal_of_decision_id = reversed_decision.decision_id
+        generation_prefix = f"reverse:{reversal_of_decision_id}"
+    else:
+        action = IdentityAction.split_identity
+        reversal_of_decision_id = None
+        generation_prefix = f"split:{predecessor.canonical_identity_id}"
 
     source_by_id = {
         source.source_identity_id: source for source in request.source_identities
@@ -2178,9 +2857,7 @@ def _different_existing_owner_result(
                 request.release_id,
                 source_by_id[source_ids[0]].entity_type,
                 source_ids,
-                generation_key=(
-                    f"reverse:{reversed_decision.decision_id}:{verdict.verdict_id}"
-                ),
+                generation_key=(f"{generation_prefix}:{verdict.verdict_id}"),
             ),
         )
         for source_ids in verdict.source_identity_groups
@@ -2191,16 +2868,16 @@ def _different_existing_owner_result(
     )
     decision_id = _decision_id(
         request=request,
-        action=IdentityAction.reverse,
+        action=action,
         source_identity_ids=source_ids,
         input_canonical_identity_ids=(predecessor.canonical_identity_id,),
         output_canonical_identity_ids=output_ids,
-        reversal_of_decision_id=reversed_decision.decision_id,
+        reversal_of_decision_id=reversal_of_decision_id,
         verdict=verdict,
     )
     decision = IdentityDecision(
         decision_id=decision_id,
-        action=IdentityAction.reverse,
+        action=action,
         source_identity_ids=source_ids,
         input_canonical_identity_ids=(predecessor.canonical_identity_id,),
         output_canonical_identity_ids=output_ids,
@@ -2218,7 +2895,7 @@ def _different_existing_owner_result(
         confidence=verdict.confidence,
         rationale=verdict.rationale,
         decided_at=request.as_of,
-        reversal_of_decision_id=reversed_decision.decision_id,
+        reversal_of_decision_id=reversal_of_decision_id,
         llm_trace=verdict.llm_trace,
         human_review_resolution=verdict.human_review_resolution,
     )
@@ -2509,6 +3186,31 @@ def _singleton_component_result(
         )
         return _finalize_identity_result(request, content)
 
+    if request.identity_method_version in {
+        PERSON_IDENTITY_METHOD_VERSION,
+        TECHNOLOGY_IDENTITY_METHOD_VERSION,
+    } and not _has_evidence_bound_internal_identifier(
+        source=source,
+        assertions=request.identity_assertions,
+        method_version=request.identity_method_version,
+    ):
+        content = _IdentityResolutionContent(
+            release_id=request.release_id,
+            decision_run_id=request.decision_run_id,
+            identity_method_version=request.identity_method_version,
+            as_of=request.as_of,
+            policy=request.policy,
+            source_identities=request.source_identities,
+            identity_assertions=request.identity_assertions,
+            candidate_verdicts=(),
+            identity_decisions=(),
+            current_canonical_identities=(),
+            canonical_identity_history=request.canonical_identity_history,
+            source_identity_assignments=(),
+            decision_manifests=(),
+        )
+        return _finalize_identity_result(request, content)
+
     output_id = _canonical_identity_id(
         request.release_id,
         source.entity_type,
@@ -2781,9 +3483,15 @@ class _EphemeralCanonicalIdentityResolutionEngine(CanonicalIdentityResolutionEng
                 "one identity component cannot apply multiple human reviews"
             )
         proposed_outcome: IdentityCandidateOutcome | None = None
-        matching_strong_key = _matching_strong_key(sources)
-        conflicting_strong_key = _conflicting_strong_key(sources)
-        matching_composite_keys = _matching_composite_keys(sources)
+        matching_strong_key = _matching_strong_key(
+            sources, method_version=validated.identity_method_version
+        )
+        conflicting_strong_key = _conflicting_strong_key(
+            sources, method_version=validated.identity_method_version
+        )
+        matching_composite_keys = _matching_composite_keys(
+            sources, method_version=validated.identity_method_version
+        )
         if conflicting_strong_key is not None:
             candidate_outcome = IdentityCandidateOutcome.different_entities
             target_groups = _strong_identifier_groups(sources, conflicting_strong_key)
@@ -3115,6 +3823,9 @@ __all__ = [
     "IdentityResolutionIntegrityError",
     "IdentityResolutionRequest",
     "IdentityResolutionResult",
+    "PERSON_IDENTITY_METHOD_VERSION",
+    "TECHNOLOGY_IDENTITY_METHOD_VERSION",
+    "normalize_identity_key_value",
     "HumanReviewOutcome",
     "HumanReviewResolution",
     "PolicyReference",

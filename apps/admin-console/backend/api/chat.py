@@ -23,7 +23,6 @@ import logging
 import os
 import re
 import time
-from datetime import datetime
 from typing import Any, Literal, cast
 from urllib.parse import urlparse
 
@@ -32,6 +31,17 @@ from openai import OpenAI
 from pydantic import BaseModel, Field
 from psycopg.types.json import Jsonb
 
+from backend.api.canonical_v2_chat import router as canonical_v2_chat_router
+from backend.api.chat_contracts import (
+    CandidateOption,
+    ChatCitation,
+    ChatFeedbackRequest,
+    ChatFeedbackResponse,
+    ChatRequest,
+    ChatResponse,
+    ChatSessionResetResponse,
+    ClarificationPayload,
+)
 from backend.deps import (
     _get_reranker_client,
     _get_web_search_provider,
@@ -1760,70 +1770,6 @@ def _answer_knowledge_qa_with_web_search(
         fallback=_answer_knowledge_qa_fallback,
         logger=logger,
     )
-
-
-# --- Pydantic schemas ---
-
-
-class ChatCitation(BaseModel):
-    type: Literal["professor", "paper", "patent", "company"]
-    id: str
-    label: str
-    url: str | None = None
-
-
-class CandidateOption(BaseModel):
-    id: str
-    domain: TargetDomain
-    label: str
-    hint: str
-
-
-class ClarificationPayload(BaseModel):
-    prompt: str
-    options: list[CandidateOption]
-    default_id: str
-    omitted: int = 0
-
-
-class ChatRequest(BaseModel):
-    query: str = Field(..., min_length=1, max_length=500)
-    entity_id_hint: str | None = None
-
-
-class ChatResponse(BaseModel):
-    query: str
-    query_type: str  # A_prof_profile | A_prof_list_by_topic | A_patent_by_applicant | unknown
-    answer_text: str
-    citations: list[ChatCitation] = Field(default_factory=list)
-    evidence: list[dict[str, Any]] = Field(default_factory=list)
-    clarification: ClarificationPayload | None = None
-    structured_payload: dict[str, Any] = Field(default_factory=dict)
-    answer_style: Literal["template", "llm_synthesized"] = "template"
-    citation_map: dict[str, str] = Field(default_factory=dict)
-    suggested_followups: list[str] = Field(default_factory=list, max_length=5)
-
-
-class ChatFeedbackRequest(BaseModel):
-    query: str = Field(..., min_length=1, max_length=500)
-    query_type: str = Field(..., min_length=1, max_length=120)
-    answer_text: str = Field(..., min_length=1, max_length=8000)
-    answer_style: Literal["template", "llm_synthesized"] = "template"
-    citations: list[ChatCitation] = Field(default_factory=list, max_length=30)
-    citation_map: dict[str, str] = Field(default_factory=dict)
-    structured_payload: dict[str, Any] = Field(default_factory=dict)
-    feedback_type: str = Field(default="incorrect_answer", max_length=80)
-    note: str | None = Field(default=None, max_length=1000)
-
-
-class ChatFeedbackResponse(BaseModel):
-    issue_id: str
-    status: Literal["filed"]
-    reported_at: datetime | None = None
-
-
-class ChatSessionResetResponse(BaseModel):
-    session_id: str
 
 
 # --- Institution alias map ---
@@ -5645,7 +5591,6 @@ def _chat_feedback_evidence(
     }
 
 
-@router.post("/chat/session/reset", response_model=ChatSessionResetResponse)
 def reset_chat_session(response: Response) -> ChatSessionResetResponse:
     session = _get_or_create_session(None)
     response.set_cookie(
@@ -5727,7 +5672,6 @@ def create_chat_feedback(
     )
 
 
-@router.post("/chat", response_model=ChatResponse)
 def chat(
     payload: ChatRequest,
     response: Response,
@@ -6930,3 +6874,10 @@ def chat(
         ),
         citations=[],
     )
+
+
+# Keep the comparison/feedback callables importable while V2 owns chat/reset.
+_legacy_comparison_router = router
+router = APIRouter()
+router.include_router(_legacy_comparison_router)
+router.include_router(canonical_v2_chat_router)

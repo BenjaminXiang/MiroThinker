@@ -8,13 +8,27 @@ and refuses startup when its identity or bytes drift.
 from __future__ import annotations
 
 import hashlib
+from importlib import import_module
 from importlib.resources import files
 import json
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from pydantic import Field, JsonValue, model_validator
 
 from .contracts import ContractModel, NonEmptyStr, Sha256
+
+if TYPE_CHECKING:
+    from .internal_reference_catalog import (
+        PACKAGED_REFERENCE_CATALOG,
+        REFERENCE_CATALOG_CONTENT_SHA256,
+        REFERENCE_CATALOG_FILE_SHA256,
+        REFERENCE_CATALOG_RESOURCE,
+        REFERENCE_CATALOG_SCHEMA_VERSION,
+        REFERENCE_CATALOG_VERSION,
+        InstalledInternalReferenceCatalog,
+        InternalReferenceTypeDefinition,
+        ReferenceRelationshipTypeDefinition,
+    )
 
 
 CATALOG_RESOURCE = "catalogs/domain-catalog-v1.json"
@@ -154,6 +168,35 @@ def _load_packaged_catalog() -> InstalledDomainCatalog:
 PACKAGED_CATALOG = _load_packaged_catalog()
 
 
+_REFERENCE_CATALOG_EXPORTS = frozenset(
+    {
+        "InstalledInternalReferenceCatalog",
+        "InternalReferenceTypeDefinition",
+        "PACKAGED_REFERENCE_CATALOG",
+        "REFERENCE_CATALOG_CONTENT_SHA256",
+        "REFERENCE_CATALOG_FILE_SHA256",
+        "REFERENCE_CATALOG_RESOURCE",
+        "REFERENCE_CATALOG_SCHEMA_VERSION",
+        "REFERENCE_CATALOG_VERSION",
+        "ReferenceRelationshipTypeDefinition",
+    }
+)
+
+
+def __getattr__(name: str) -> Any:
+    """Lazily expose additive reference knowledge without coupling v1 imports."""
+    if name not in _REFERENCE_CATALOG_EXPORTS:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    module = import_module(".internal_reference_catalog", package=__package__)
+    for export_name in _REFERENCE_CATALOG_EXPORTS:
+        globals()[export_name] = getattr(module, export_name)
+    return globals()[name]
+
+
+def __dir__() -> list[str]:
+    return sorted({*globals(), *_REFERENCE_CATALOG_EXPORTS})
+
+
 __all__ = [
     "CATALOG_CONTENT_SHA256",
     "CATALOG_FILE_SHA256",
@@ -164,5 +207,14 @@ __all__ = [
     "CatalogSubobjectDefinition",
     "CatalogSubobjectMember",
     "InstalledDomainCatalog",
+    "InstalledInternalReferenceCatalog",
+    "InternalReferenceTypeDefinition",
     "PACKAGED_CATALOG",
+    "PACKAGED_REFERENCE_CATALOG",
+    "REFERENCE_CATALOG_CONTENT_SHA256",
+    "REFERENCE_CATALOG_FILE_SHA256",
+    "REFERENCE_CATALOG_RESOURCE",
+    "REFERENCE_CATALOG_SCHEMA_VERSION",
+    "REFERENCE_CATALOG_VERSION",
+    "ReferenceRelationshipTypeDefinition",
 ]

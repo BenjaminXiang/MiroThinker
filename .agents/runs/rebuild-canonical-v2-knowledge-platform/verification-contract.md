@@ -240,6 +240,12 @@ matrix is 348 passed with only the four future public-module xfails. No producti
 migration was weakened. The aggregate review has zero open Critical/Important findings, all owned
 databases were removed, and the durable candidate remains C2_0004.
 
+ADR-013 through ADR-022 later clarified requirements that were not part of the historical S2/S6
+acceptance contracts. Tasks 2.7-2.8/S2C and 6.9-6.11/S6R are therefore pending reconciliation gates:
+S2C must be Accepted before S8/S9 acceptance-oracle execution, and S6R must be Accepted before S7.
+This specification update does not reopen, relabel, or claim implementation of the historical S2/S6
+slices; it records the new predecessor obligations explicitly.
+
 Git `main` promotion is separately gated after aggregate S6 acceptance. The execution session must
 re-prove a clean V2 integration worktree, complete side-branch accounting, preservation of root dirty
 state, strict-ancestor topology, and all aggregate checks before a fast-forward-only ref move. This
@@ -315,6 +321,18 @@ Last identity/hash check recorded in `verification.md`: `2026-07-12T08:40:35Z`.
 10. Direct online Web/LLM write to active canonical/index: zero.
 11. Canonical V2/landing write before accepted complete backup and restore verification: zero.
 12. Query/answer-path canonical identity or source-identity mapping mutation: zero.
+13. False exhaustive list claim or hidden required-member omission: zero.
+14. URL used as a Professor/Company/Paper/Patent identity, or Web snapshot replaced after binding:
+    zero.
+15. Company or Technology capability propagated to a named Product without direct Product evidence:
+    zero.
+16. Safety-guidance venue allegation, discovery/evasion assistance, or unrequested general-Web call:
+    zero.
+17. Continuation option without an accepted trigger, executable binding, or supported wording: zero.
+18. Ambiguous entity auto-selection that fails the accepted evidence/confidence/margin/protected-slot
+    gate, or dominant interpretation rendered without notice: zero.
+19. Unresolved Person reference materialized as a Person identity, or Person/Technology admitted as a
+    fifth public domain: zero.
 
 ## RED artifacts by slice
 
@@ -343,6 +361,24 @@ Last identity/hash check recorded in `verification.md`: `2026-07-12T08:40:35Z`.
   copied without opening a client; only the verified copy may be inspected.
 - Accepted evidence covers 50/50 source records and passed PostgreSQL, Milvus, forensic/WAL/FPI,
   mount-policy, independent-materialization, and source-invariant probes.
+
+### S2C — Claim-level acceptance-oracle reconciliation
+
+- Task 2.7 RED defines one versioned public case-contract schema and observable failure reasons for
+  missing/invalid required or forbidden claims/entities, allowed variants, source snapshots/as-of,
+  enumeration policy, stage oracles, and content identity. Reference prose remains review context.
+- GREEN migrates applicable regression/challenge turns without converting known-bad prose or model
+  memory into truth. Dynamic cases bind immutable snapshots; unsupported evidence produces an
+  explicit unavailable-evidence outcome rather than an invented expectation.
+- Task 2.8 validates per-case hard failures independently of aggregate metrics, snapshot/version
+  tamper detection, evidence-bounded LLM judging, and reviewed human agreement by family.
+- Focused commands are the S2C schema/fixture validator and its tests under
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s2c/`, followed by strict OpenSpec,
+  deterministic manifest rebuild/check, and diff/source-hash checks. No runtime provider, database,
+  Milvus, or canonical write belongs to S2C.
+- Done evidence records schema/corpus versions and SHA-256, migrated/pending/excluded case counts,
+  each hard-case outcome, reviewer state, and zero unresolved Critical/Important findings. S2C is not
+  Accepted while any case used by S8/S9 remains `pending_user_review`.
 
 ### S3–S7 — Data platform and release
 
@@ -440,9 +476,41 @@ Last identity/hash check recorded in `verification.md`: `2026-07-12T08:40:35Z`.
   Accepted backup/source/Candidate evidence without replaying database, source, Candidate, Milvus,
   or provider safety totals because those tasks touch none of those boundaries.
 
+### S6R — Internal Person/Technology reconciliation
+
+- Task 6.9 RED first proves the Accepted S6 catalog is stale against the reconciled authority, then
+  freezes catalog/interface scenarios for resolved and unresolved Person references, internal
+  Technology concept/route aliases/definitions/hierarchy, distinct non-adoption discussion-or-
+  mention/claimed-adoption/demonstrated-use relations, exact relationship-type versioning, and the
+  four-public-domain plus answer-scoped Product-capability boundaries.
+- RED exercises a new package-internal `InternalReferenceProjectionBuilder.project(...)` interface.
+  It remains separate from four-domain `DomainProjectionBuilder`, inclusion, public path-domain, S7
+  publication/index persistence, and query/answer behavior. Normal RED must fail for the exact absent
+  interface/contract behavior rather than a typo or unrelated dependency.
+- Task 6.10 GREEN accepts only resolved Person/Technology identities and retained evidence anchored
+  to Professor, Company, Paper, or Patent; unresolved names/terms remain evidence-bearing references.
+  Relationship projection consumes an explicit internal-reference registry instead of accepting
+  unchecked `registry_entity` endpoints. Product capability remains non-canonical.
+- Focused commands include deterministic catalog build/check, catalog/shared-contract tests,
+  identity-resolution scenarios, `test_internal_reference_projection_contract.py`, relationship
+  projection tests, and four-domain/path negative invariants. If persistence changes, a new reversible
+  migration and explicit disposable Postgres matrix are mandatory; historical migrations are never
+  rewritten. Pure S6R reference projections otherwise remain persistence-free until S7.
+- Task 6.11 reruns the complete S6 catalog/domain/relationship/identity/path and applicable Postgres
+  matrix, source-hash binding, Ruff, Pyright, strict OpenSpec, diff/scope/secret checks, and independent
+  review. Done evidence records four public domains, internal reference counts/hashes, unresolved-
+  reference outcomes, relationship versions, zero `product_has_capability`, and zero open Critical/
+  Important findings before S7 becomes Ready.
+
 ### S8–S10 — Query, answer, and feedback
 
 - Scenario eval and trace replay are mandatory RED/GREEN evidence; unit-only evidence is insufficient.
+- S8/S9 acceptance consumes only an Accepted S2C claim-level contract version. Required/forbidden
+  claims/entities, source snapshots/as-of, enumeration policy, and stage outcomes are reported per
+  case; hard case failures cannot be averaged away.
+- S7 consumes only an Accepted S6R reconciliation. Internal Person/Technology projections remain
+  release-scoped auxiliaries over the four public domains, unresolved Person references are not
+  forced into identity, and Product capability remains answer-scoped.
 - S8 institution-query replay records the original query, matched institution span, resolution
   state, canonical candidate IDs/names or unresolved raw text, catalog and accepted-release
   versions, pure topic, protected slots, and every lane query/filter.
@@ -455,6 +523,9 @@ Last identity/hash check recorded in `verification.md`: `2026-07-12T08:40:35Z`.
   Generic topic stopwords contain no institution names or aliases.
 - Recorded external-provider adapters cover success, timeout, invalid schema, conflict, duplicate,
   missing evidence, and budget exhaustion.
+- Recorded scenarios cover all enumeration modes, false exhaustiveness, Product-capability non-
+  propagation, confidence-gated ambiguity, safety guidance/default Web exclusion, Web entity handle/
+  snapshot lifecycle, and conditional ContinuationOffer trigger/selection behavior.
 - Named real-provider acceptance run covers Universal Web, LLM plan/rerank/sufficiency/synthesis,
   claim citation, progressive multi-turn behavior, latency, and cost.
 
@@ -474,6 +545,10 @@ Every verification run SHALL record:
 - counts, hashes, per-domain/path metrics, failures, and hard-invariant results;
 - provider availability, calls, latency, cost, and degradation path;
 - artifact paths and SHA-256 hashes;
+- accepted claim-level case-contract/corpus versions, source snapshot hashes/as-of, enumeration mode,
+  per-stage outcomes, and every hard per-case result for S2C/S8/S9/S12;
+- internal Person/Technology catalog/projection/release identities and the no-fifth-public-domain
+  accounting for S6R/S7;
 - for S2B, source/backup/restore identities, family completeness, copy independence, format-specific
   recovery probes, and the accepted backup-manifest hash;
 - reviewer/acceptance status without claiming later-slice closure.
@@ -484,14 +559,16 @@ Every verification run SHALL record:
 2. Nearest pure/interface tests.
 3. Complete backup manifest and independent recovery verification; accept S2B before any rebuild
    write.
-4. Real isolated Postgres migration/integration tests.
-5. Recorded adapter/trace replay scenarios.
-6. Bounded isolated source/candidate replay.
-7. Full versioned Milvus candidate and parity.
-8. API/session/admin integration.
-9. Frozen regression then challenge evaluation.
-10. Named real-provider acceptance.
-11. Rollback rehearsal and final evidence review.
+4. Accept S2C claim-level case contracts before S8/S9 acceptance-oracle execution.
+5. Real isolated Postgres migration/integration tests.
+6. Accept S6R internal Person/Technology reconciliation before S7 publication/index work.
+7. Recorded adapter/trace replay scenarios.
+8. Bounded isolated source/candidate replay.
+9. Full versioned Milvus candidate and parity.
+10. API/session/admin integration.
+11. Frozen claim-level regression then challenge evaluation.
+12. Named real-provider acceptance.
+13. Rollback rehearsal and final evidence review.
 
 ## Stop conditions
 
@@ -501,6 +578,10 @@ Every verification run SHALL record:
 - A slice requires behavior absent from the OpenSpec capability.
 - A later slice depends on a predecessor not marked Accepted.
 - Threshold, corpus, schema, policy, or model version changes without a new versioned baseline.
+- S8/S9 attempts to use reference prose/free-text key points as the normative oracle before S2C is
+  Accepted.
+- S7 attempts to build publication/index projections before S6R reconciles internal Person/
+  Technology boundaries with the Accepted S6 catalog.
 - Verification evidence cannot distinguish local, current-Web, LLM inference, or release identity.
 - A task 3.2+ or other rebuild-write command is proposed before complete S2B backup/restore evidence
   is reviewed and Accepted.

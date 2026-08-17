@@ -1,0 +1,94 @@
+{
+  "schema_version": "canonical-v2-s8v2-professor-typed-vector-view-selection-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s8v2-professor-typed-vector-view-selection",
+  "status": "accepted",
+  "accepted_at": "2026-07-19T14:45:45Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "git_branch": "canonical-v2-s2-baseline",
+  "formal_task_ledger_before": "56/80",
+  "formal_task_ledger_after": "56/80",
+  "implementation": {
+    "knowledge_read_sha256": "e14f42223384670d9f608410346d01ff290c07c183639fc7074e4753f5cac8ca",
+    "knowledge_read_isolated_sha256": "869e7816201f5f4a4048a1e4734b7593bb8cc4e0dcf8532f691c2c9bf7f90856",
+    "physical_owner_test_sha256": "5ecae0c1be30223aeb1c21c0adfe7849b5972b29c20307dc048e2034d21ccb08",
+    "query_planning_test_sha256": "0976e8b5756721bcfe35e5f7910d06bd18b0957bb0352e18483efba6f78470d5",
+    "slice_contract_sha256": "8fbf9048da71adedb49cb4da5be43e111022972266a028001dc88cafab859a42",
+    "implementation_plan_sha256": "1cec7d35a3fc6e50fc60307d7be88aa01b34896878fcb357ce36573d33a80e24",
+    "tasks_sha256_unchanged": "5f61c097729e1107ff387a89c9f6f62b3783ef88debf1612b6156fb2056cdd7d",
+    "acceptance_sha256_unchanged": "742b29dc9805214b4b7059d5c801189209c26e35831f3f834ef01e4ac9f6df50"
+  },
+  "behavior": {
+    "planning": "one finite recorded professor_vector_view selector is required for Professor plus vector information retrieval, copied unchanged into nonblocking planner-owned plans and only their vector LaneRequest",
+    "compatibility": "None is omitted from proposal, unbound plan, and lane-request serialization so literal pre-S8V2 JSON and content hashes remain unchanged; legacy unbound Professor vector requests may omit it but real isolated execution rejects omission before effects",
+    "execution": "identity, research, or both selects the corresponding accepted Professor points before deterministic scoring and the existing raw max_candidates bound",
+    "display_authority": "Professor display names come only from one structurally unique same-release public identity exact-lookup document whose manifest, canonical ID, typed ProfessorProjection hash, and selected point source hash agree",
+    "release_authority": "post-delegate validation rejects an unselected Professor vector view or a fused candidate/canonical handle display name that differs from the bound lookup authority"
+  },
+  "tdd": {
+    "legacy_baseline_before_production": "1 passed with exact proposal, unbound plan, and LaneRequest JSON/SHA identities",
+    "red_normal": "1 xfailed",
+    "red_forced": "1 failed at exact _MissingProfessorVectorViewSelection before fixture acquisition",
+    "green_focused": "1 passed with warnings treated as errors",
+    "review_red": "self-consistent same-Professor duplicate lookup authority with a different source hash failed DID NOT RAISE",
+    "review_green": "1 passed after structural uniqueness was checked before source-hash continuity"
+  },
+  "verification": {
+    "focused_and_predecessor_matrix": "8 passed",
+    "shared_physical_release_owner": "53 passed, 2 skipped",
+    "knowledge_read_and_query_planning_owners": "17 passed",
+    "canonical_v2_no_external": "342 passed, 141 skipped, 0 xfailed, 3 intentional hostile-model serializer warnings",
+    "ruff_check": "passed for complete src/data_agents/canonical_v2 and tests/canonical_v2",
+    "ruff_format": "74 files already formatted",
+    "py_compile": "passed for both changed production files and both changed test owners",
+    "pyright": "0 errors, 0 warnings, 0 informations for complete Canonical V2 source/tests",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "scope_secret_cache": "passed after removing only S8V2-owned generated cache files"
+  },
+  "wheel": {
+    "path_before_owned_cleanup": "/var/tmp/canonical-v2-s8v2-wheel-LMbd7i/miroflow_agent-0.1.0-py3-none-any.whl",
+    "sha256": "ac5a9958459c7130e9ece7cbdf817f7f6071b1698fb0678717570c75692d8e35",
+    "entry_count": 276,
+    "contains_knowledge_read": true,
+    "contains_knowledge_read_isolated": true,
+    "contains_tests_or_agents": false,
+    "packaged_production_hashes_match_source": true,
+    "owned_output_cleaned_after_receipt": true
+  },
+  "frozen_targets": {
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_paused": true,
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "recovery_lab_network": "none",
+    "recovery_lab_published_ports": false,
+    "recovery_lab_restart_policy": "no",
+    "latest_isolated_target_marker_sha256": "65863cb2797056b24420df5d74de3d455eea0e8a825dff156cc25ce3103864ae",
+    "latest_isolated_target_milvus_sha256": "96ee45661f2058c36924db99962e41db02f230f25c9da84257a4ec41ad274503",
+    "latest_isolated_target_lookup_sha256": "98b0337d068db6965277c0ed555d85c176f81af7a38dd797504b71748d885941"
+  },
+  "review": {
+    "contract_review": {
+      "final_critical": 0,
+      "final_important": 0,
+      "final_minor": 0,
+      "final_yagni": 0,
+      "verdict": "ready"
+    },
+    "implementation_review": {
+      "critical": 0,
+      "important_found_and_closed": 1,
+      "closed_important": [
+        "Professor lookup authority now proves structural uniqueness before source-hash continuity and cannot ignore a self-consistent different-source duplicate"
+      ],
+      "final_critical": 0,
+      "final_important": 0,
+      "final_minor": 0,
+      "final_yagni": 0,
+      "verdict": "accept"
+    }
+  },
+  "nonblocking_minor_yagni": [],
+  "next_ready_slice": "S8IR1 release-scoped internal-reference lookup/filter",
+  "forbidden_actions_performed": []
+}

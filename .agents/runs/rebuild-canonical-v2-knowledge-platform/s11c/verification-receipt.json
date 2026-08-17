@@ -1,0 +1,272 @@
+{
+  "schema_version": "canonical-v2-s11c-aggregate-consumer-acceptance-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "S11C",
+  "status": "Accepted",
+  "ready_history": [
+    {
+      "at": "2026-07-21T15:02:07Z",
+      "disposition": "superseded"
+    },
+    {
+      "at": "2026-07-21T17:42:54Z",
+      "disposition": "execution_reauthorized_then_superseded_for_candidate_progression"
+    },
+    {
+      "at": "2026-07-21T18:42:28Z",
+      "disposition": "traceability_reauthorized"
+    }
+  ],
+  "candidate_at": "2026-07-21T19:05:17Z",
+  "accepted_at": "2026-07-21T19:10:41Z",
+  "git_branch": "canonical-v2-s2-baseline",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "ledger": {
+    "before": "65/80",
+    "candidate": "65/80",
+    "accepted": "70/80",
+    "delta_at_candidate": 0,
+    "tasks_changed_at_candidate": [],
+    "tasks_changed_at_acceptance": [
+      "11.1",
+      "11.2",
+      "11.3",
+      "11.4",
+      "11.5"
+    ],
+    "other_tasks_changed": [],
+    "accepted_delta": 5,
+    "open_s11_tasks": [],
+    "task_2_8_unchanged": true,
+    "tasks_sha256_before": "87eb7c1e6d9e5b80e535cb94398f42798cdf4f3c83fb818011d0948519e32e54",
+    "acceptance_sha256_before": "1943943ee6fbc50b33357db1cceb987af93eba129042e6e4d6edfb68c9d5261f",
+    "tasks_sha256_after": "24072a4c2f24a9e45e60370f3574bc6a8f9dcadae0ad07ab94db93f681f7e009",
+    "acceptance_sha256_after": "f9f02a330f707415fa87645fb101e469042cc26a18b87a45ae6d60b8b925c3ac"
+  },
+  "dependencies": {
+    "historical_s11a_receipt_sha256": "b0b1848b2a15aca7f8d1fa33587f2276b19f2c1183327a28c0bf128a864c97f3",
+    "s9j_successor_receipt_sha256": "ae34240cde353a272faa23710bfdf3818763ac261891bf48bc5307048a8759bc",
+    "s11b_receipt_sha256": "cee1beebe2bdb1eba3f09b06e4e3c819167bbba14d5b6d6072f1f4cbafb0a945",
+    "s10o_receipt_sha256": "e0cc1b031066b346e62582fd585ee15a30d7483a498b701b204605a242b92246",
+    "s2c2_contract_sha256": "3ce0bf7425e0bfb63c88da62dc22500f683c7aaa2f89d1f460ef4e53b1cfbac7",
+    "s2c_dependency_scope": "Accepted Task 2.7 structural claim-level contracts only; Task 2.8 external human review is not an S11C gate"
+  },
+  "candidate_artifact_hashes": {
+    "slice_contract_sha256": "3c4bf6e81037ea3c4e547a8cf588eb4def2cf5760a8640cee7b4b75893575b74",
+    "dependency_audit_sha256": "c02dc5c4e3d6779866264e8b2713e95f918dad4cbd3d73a4c2078b63bebba98d",
+    "implementation_plan_sha256": "0c23fd736aefe2a6cf4a48f43967e146f2c0d0fb749b34300b67c886fe16b0fc",
+    "review_sha256": "b2903807bb00ab0b038675e2a6351377d96ed856542e61c71ad71a7dfa40d7cf",
+    "validator_sha256": "3924a00af6dbe183f0a1199ed7b9977b5475dad3ee558b4fa4fd7758f9ca62bb",
+    "guarded_capture_helper_sha256": "31aee4c517e09f6b7a40413a8949b285df35f9032b78e126c94b675fb3867ed1",
+    "guarded_capture_owner_sha256": "f70855fa251c18d6e6b3cfed9871ee09cd994ba3fe07cd0525bae5373b1d606d",
+    "traceability_capture_helper_sha256": "a1bbf4d60ee2e73aee93a27ff3d75a6d94526f08d4701c243c40ca204da7bdf4",
+    "traceability_capture_owner_sha256": "060c7ab2979bb9d69b6a30533660205d226ef5bb660cd62897616ddff171db8c",
+    "disposition_overlay_sha256": "b36e551d06f8c1b958f469ffa080f99055c0e9cee980bb6ea1148b0ec91bc935",
+    "retired_failure_ledger_sha256": "271f4f9808a206e06cd616c95a778178f453fb67cf9284e9b93c33623fb75e7d",
+    "guarded_partitions_receipt_sha256": "9b5e1c786bc62e6df5b7736e3fd9f1bf47ef6b5a26ea46c8f1338172b3245493",
+    "guarded_execution_provenance_sha256": "8b307160f9f1231896d11f43d71b06daed329824a50f3255a127d922aa35f467",
+    "predecessor_reruns_v1_sha256": "84507b7c3fd6a441547922cfc7012c58a74b6a11c82ec001ffe8e300ffc5eb11",
+    "predecessor_reruns_v2_sha256": "6043e991ff2971aba8bb5a1492261be302412aab1cb272b9027ac24009282d8d",
+    "disposable_postgres_target_receipt_sha256": "51278f966935dfa8f988f72905cfe72ffda13ccb7a520c2b5f8a7f59bd53e712",
+    "focused_junit_sha256": "7183f3b8a41958ed0c4199649834d42f605dd679b35a07b2a036e65e75fc0cbb",
+    "focused_postflight_receipt_sha256": "eabd02a7da2561b697fb31cd66e42ca3e96859eefa9460f664b4e8eaa4c57172"
+  },
+  "reviewed_candidate_receipt_sha256": "b8de0b41387273b3e213cf9770649db68befa0fd185f4758c55454ca06abdd8f",
+  "accepted_artifact_hashes": {
+    "slice_contract_sha256": "ceb169931099839fc143d246d357e953319eb33f43237b5ab2d9b1d41a76ce44",
+    "dependency_audit_sha256": "7b14e7a44456fb66f1267fe059f1c394d43e8a7d04460205bd072d43d4acfe1a",
+    "implementation_plan_sha256": "b6909637ebdc024fc147facd9ff1599c55351661f2949c66371f0c720a67d836",
+    "review_sha256": "b2903807bb00ab0b038675e2a6351377d96ed856542e61c71ad71a7dfa40d7cf",
+    "tasks_sha256": "24072a4c2f24a9e45e60370f3574bc6a8f9dcadae0ad07ab94db93f681f7e009",
+    "acceptance_sha256": "f9f02a330f707415fa87645fb101e469042cc26a18b87a45ae6d60b8b925c3ac"
+  },
+  "inventory_authority": {
+    "path": "apps/miroflow-agent/src/data_agents/canonical_v2/catalogs/legacy-consumer-inventory-v1.json",
+    "receipt_json_pointer": "/legacy_consumer_inventory/sha256",
+    "sha256": "c5a151b82cf308ec8504c31c10f6e6d997a3286ef18613d530088314a7f8f940",
+    "disposition_counts": {
+      "reference_only": 136,
+      "replaced": 5,
+      "s11c_disposition": 0
+    },
+    "overlay_entry_count": 0,
+    "overlay_unresolved_count": 0
+  },
+  "verification": {
+    "traceability_tdd": {
+      "red": "6 tamper cases failed because the prior validator did not reject missing or changed cwd/UTC/source hashes; capture helper owner initially had 2 missing-helper failures",
+      "green": "2 capture-owner passes, 1 exact aggregate pass, 55 complete-validator passes",
+      "xfail_added": false
+    },
+    "targeted_runs": {
+      "s2c_task_2_7": {
+        "passed": 11,
+        "junit_sha256": "735b98c91e795bba69268e6b9c4b71f1af5f8aecdb03b023e755097518d38bca"
+      },
+      "interface_trace": {
+        "passed": 22,
+        "junit_sha256": "4fa9d6b13d2b467f2e34d23b54b7a9d566c1a22048d556fea0709a12f1580100"
+      },
+      "release_index_adapters": {
+        "passed": 70,
+        "junit_sha256": "a125fcc204598a57917f46c671debf906c7c4ef66a0d708a6eb8392d69551705"
+      },
+      "disposable_postgres": {
+        "passed": 122,
+        "junit_sha256": "0cc9fedfd76ff9aa66b485d6a64a92cb61bf419cda865fe53e38b3837ee78f36"
+      },
+      "s11a_http_session": {
+        "passed": 7,
+        "junit_sha256": "5fc6239cb01fabae8519644474e770e8e9bf7c25b874771e7acba69c40c2711c"
+      },
+      "s11b_agent_quarantine": {
+        "passed": 1,
+        "junit_sha256": "d436f4273303349366b07e760d620d193cc6d74d6a9b5580d90a84d696cb38db"
+      },
+      "s11b_admin_smoke": {
+        "passed": 2,
+        "junit_sha256": "4c3b7cd4cdb1bd088e5895e6f77007347b4759b7e12b48decc908d65794255d2"
+      },
+      "s10o_operations": {
+        "passed": 1,
+        "junit_sha256": "7fdff84efeb05c60e3587c7c67c306eec32fcbf4ca9ff7689e482430b0b3d544"
+      }
+    },
+    "broad_runs": {
+      "admin_no_external": {
+        "collected": 596,
+        "passed": 444,
+        "failures": 18,
+        "errors": 4,
+        "skipped": 130,
+        "exit_code": 1,
+        "collected_sha256": "b54da3fa9ce707775848ab00cd071b8678017395ec97a527fb264fc33c025457",
+        "junit_sha256": "9e03b138fb5628d7d91dd5f97330f8e44cd14c66e55bfe044f77da8b57966c29",
+        "derived_started_at_utc": "2026-07-21T17:58:13.490872Z",
+        "derived_finished_at_utc": "2026-07-21T17:58:54.040872Z"
+      },
+      "canonical_v2_predecessors": {
+        "collected": 530,
+        "passed": 382,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 148,
+        "exit_code": 0,
+        "collected_sha256": "2d70c10e585eca77836d15912fc70c6bd0a51dcc5dcbc6cb7a402894148611bd",
+        "junit_sha256": "8423692c128ebd819d187e1af7728c6d2474e8f2f8e4656f3438e870d800c914",
+        "derived_started_at_utc": "2026-07-21T17:58:58.245407Z",
+        "derived_finished_at_utc": "2026-07-21T18:02:35.051407Z"
+      }
+    },
+    "failure_reconciliation": {
+      "total": 22,
+      "accounted": 22,
+      "unaccounted": 0,
+      "accepted_behavior_failures": 0,
+      "retired_replaced": 6,
+      "retired_reference_only": 5,
+      "unrelated_preexisting": 11
+    },
+    "focused": {
+      "passed": 1,
+      "predecessor_file_count": 47,
+      "discovered_file_count": 48,
+      "predecessor_plus_focused_equals_discovered": true
+    },
+    "static": {
+      "ruff_check": "passed",
+      "ruff_format_check": "passed",
+      "py_compile": "passed",
+      "pyright": "0 errors",
+      "strict_openspec": "passed",
+      "git_diff_check": "passed",
+      "authorized_pointer_documents_updated": true
+    },
+    "package": {
+      "accepted_s11b_wheel_sha256": "77760e758acc47a8d0b4b2fade9b724d2f9a96973b137bc9a4905eb2fede0ca9",
+      "fresh_locked_offline_build": "passed",
+      "fresh_entry_count": 281,
+      "source_entries_compared": 278,
+      "source_mismatches": 0,
+      "contains_tests_or_agents": false,
+      "owned_output_cleanup_complete": true
+    },
+    "generated_cleanup": {
+      "ignored_files_removed": 42,
+      "s11c_owned_temp_roots_removed": 2,
+      "ready_after_generated_files": 0,
+      "pre_ready_user_generated_files_preserved": 1114
+    }
+  },
+  "failure_ledger": {
+    "run_count": 10,
+    "failure_row_count": 22,
+    "signature_schema_version": "canonical-v2-s11b-baseline-signature-v3",
+    "all_junit_and_collected_hashes_match": true
+  },
+  "disposable_postgres": {
+    "container_name": "canonical-v2-s6c-pg-20260712",
+    "container_id": "dc9ca5347d5445a55b04f634c078b46821579ab0f3264bbfd4527887eab7ef5d",
+    "network_mode": "none",
+    "published_ports": [],
+    "database": "miroflow_canonical_v2_s4c_disposable",
+    "created_by_s11c": true,
+    "credentials_or_dsn_stored": false,
+    "final_database_absent": true,
+    "base_container_and_original_pgtest_unchanged": true
+  },
+  "protected_targets": {
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_milvus_size": 1298632704,
+    "original_milvus_mtime": 1783567641,
+    "original_pgtest_container_id": "dabafbdc0fdd9f4f61f10bfa3d1d799e3ff78a9461430edd1b3f4b7e85d36328",
+    "original_pgtest_paused": true,
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "original_pgtest_host_port": "15432",
+    "forensic_hash_count": 8,
+    "active_pointer_or_original_index_changes": 0,
+    "secret_or_credential_findings": 0
+  },
+  "task_evidence": {
+    "11.1": [
+      "predecessor-reruns-v2.json",
+      "s11a-http-session",
+      "s11b-focused-agent-junit",
+      "s11b-focused-admin-junit"
+    ],
+    "11.2": [
+      "s2c-task-2-7",
+      "interface-trace",
+      "disposable-postgres",
+      "release-index-adapters"
+    ],
+    "11.3": [
+      "legacy-consumer-inventory-v1.json",
+      "disposition-overlay-v1.json",
+      "retired-failure-ledger-v1.json"
+    ],
+    "11.4": [
+      "guarded-partitions-receipt.json",
+      "guarded-execution-provenance-v1.json",
+      "disposable-postgres-target-receipt.json"
+    ],
+    "11.5": [
+      "test_consumer_acceptance_contract.py::test_s11c_reconciles_all_consumer_evidence_without_legacy_dependency",
+      "review.md",
+      "focused/postflight-receipt.json"
+    ]
+  },
+  "reviews": {
+    "traceability_repair_final": "Critical=0, Important=0",
+    "candidate_evidence_final": "Critical=0, Important=0, Minor=0, YAGNI=0",
+    "protected_scope_final": "Critical=0, Important=0, Minor=0, YAGNI=0"
+  },
+  "non_authoritative_attempts": [
+    "The first release/index run produced 68 passes and 2 explicit PostgreSQL-target skips; the final authoritative run used the exact safe target and produced 70 passes.",
+    "One combined Admin JUnit attempt exposed a fixture only because --noconftest was applied to the S10O owner; final S11B Admin and S10O runs were split and pass-only.",
+    "Early basetemp parent setup attempts were not acceptance evidence.",
+    "A duplicate predecessor-v2 capture reran four side-effect-free pytest commands and then failed exclusive creation because the authoritative v2 receipt already existed; it overwrote no artifact."
+  ],
+  "forbidden_actions_performed": [],
+  "next_required_action": "After atomic S11C acceptance, repair S12A Ready contracts and implement Task 12.1 complete isolated candidate plus run-local 0.0.0.0:18188 serving without promotion or cutover."
+}

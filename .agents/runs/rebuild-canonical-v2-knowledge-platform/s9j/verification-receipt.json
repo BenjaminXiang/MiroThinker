@@ -1,0 +1,131 @@
+{
+  "schema_version": "canonical-v2-s9j-public-answer-integrity-correction-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s9j-public-answer-integrity-correction",
+  "status": "Accepted",
+  "candidate_at": "2026-07-21T09:48:56Z",
+  "accepted_at": "2026-07-21T09:57:11Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "git_branch": "canonical-v2-s2-baseline",
+  "ledger": {
+    "before": "65/80",
+    "after": "65/80",
+    "tasks_changed": [],
+    "task_checkboxes_changed": false,
+    "acceptance_changed": false
+  },
+  "dependencies": {
+    "s9i_receipt_sha256": "658c12f519a55d3e5ca02eea7b2a5deba36d47954fe04d9233934a434e0ac366",
+    "s9i_contract_sha256": "4464272b83f2f8edcabfa5d125a7b8e8e680c0aa07b6bcd3503ec259ec2e3461",
+    "historical_s11a_receipt_sha256": "b0b1848b2a15aca7f8d1fa33587f2276b19f2c1183327a28c0bf128a864c97f3",
+    "historical_s11a_contract_sha256": "ecf8e53a2d44801f561becbf97a3502fcdfb4ddc72cbff3396c0d5ea7398abd4",
+    "historical_s11a_chat_service_sha256": "163691d31a36134df3c6975e820d759fd1734a367ae93e33005f2e8247444644",
+    "historical_s11a_owner_sha256": "e91aecf229c19e18f98696e2abced0ab9605191d7d8aa54fe6cfa3e0e74a7ba8",
+    "authority_note": "S9J is a successor correction. Its live service and owner hashes do not rewrite or rebaseline the immutable historical S11A receipt."
+  },
+  "scope": {
+    "implementation_files": [
+      "apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_answer.py",
+      "apps/admin-console/backend/services/canonical_v2_chat.py",
+      "apps/admin-console/backend/static/chat.html"
+    ],
+    "owner_files": [
+      "apps/miroflow-agent/tests/canonical_v2/test_knowledge_answer_implementation_closure.py",
+      "apps/miroflow-agent/tests/canonical_v2/test_knowledge_answer_multiturn_contract.py",
+      "apps/admin-console/tests/test_canonical_v2_chat_http_adapter.py",
+      "apps/admin-console/tests/test_canonical_v2_consumer_migration.py",
+      "apps/admin-console/tests/test_canonical_v2_real_preview_ui.py"
+    ],
+    "schema_or_migration_changed": false,
+    "evidence_binding_changed": false,
+    "release_or_index_manifest_changed": false,
+    "source_or_active_pointer_changed": false,
+    "preview_overlay_adopted_as_s9j_oracle": false
+  },
+  "accepted_artifact_hashes": {
+    "dependency_audit_sha256": "de4b81802306c191dffd5bb9347d83a7aca8849084a54de2288c3da7e1466554",
+    "implementation_plan_sha256": "f5f06cec8c3095149054888f0c60930f0b74955f4e57b45f51e6d368ec2eb6f3",
+    "slice_contract_sha256": "7be6d549dd126f653cb36645ed339f9fb0245a06337558a3fb5041c0d8d0344f",
+    "knowledge_answer_sha256": "c930872d04cd3c900b24ec8d779c195d595b1ed20b8b8da5828f345d235e1414",
+    "knowledge_answer_implementation_owner_sha256": "17a962e945850082512344f201b80713c22310d1ac4fae72ff7ee28c3df8eabf",
+    "knowledge_answer_multiturn_owner_sha256": "c217a5ebfd2469020c69068728d274f1f76f361090f4f3ee99f8f851fcc5cd7f",
+    "corrected_chat_service_sha256": "15385247c9cf780e189651c97d15a9ad91fb6a5f8ef5f201bebcc19bb2814b82",
+    "corrected_s11a_owner_sha256": "71e04271b9c6ef867795fba0ca3f9427ef418a8b5f736a952f9594130088a06a",
+    "chat_html_sha256": "657c7d68c22e19ec1fd9470531dd0a71ed2b6587224d648fc842ea6223da463a",
+    "corrected_s11b_owner_sha256": "21e7a68fe7699fd3a4295f87479f060cb2e05de326cf274d6dc9dbae57437f47",
+    "preview_ui_owner_sha256": "b808e6918b5ed8b5400457149d1282b64f8f5fbf81dbeead516fdb01e52b176d",
+    "tasks_sha256": "87eb7c1e6d9e5b80e535cb94398f42798cdf4f3c83fb818011d0948519e32e54",
+    "acceptance_sha256": "1943943ee6fbc50b33357db1cceb987af93eba129042e6e4d6edfb68c9d5261f"
+  },
+  "tdd": {
+    "original_preimplementation_terminal_output_retained": false,
+    "historical_red_disposition": "The original pre-implementation RED output was not retained and is not reconstructed or invented.",
+    "acceptance_audit_red": "Four exact failures reproduced the escaped suppress/degraded defect across missing/conflicting selector timeout, unresolved Web traversal, and blocking ambiguity before the shared finalization repair.",
+    "mutation_sensitivity": "Three independent mutations were killed: missing-material-gap output removal, opaque-binding public-copy admission, and unsafe-prose admission.",
+    "final_core_and_multiturn_green": "29 passed in 3.51 seconds with warnings treated as errors.",
+    "regression_invariant": "Every unspecialized material missing/conflicting part produces exactly one typed limitation and one server-owned public gap sentence across normal, suppress-claims, and degraded paths; structured-only values remain excluded from public copy."
+  },
+  "verification": {
+    "evidence_partition": "The exact S11A HTTP owner proves the recorded missing-revenue gap plus structured continuation; the executable Node harness proves the built-in localized continuation label; the 18190 real-data browser/API replay proves real-entity rendering, two bound turns, current-Web evidence, responsive layout, and public-copy sanitization.",
+    "core_and_multiturn": {
+      "command": "cd apps/miroflow-agent && uv run pytest -o addopts='' -p no:cacheprovider -W error -q tests/canonical_v2/test_knowledge_answer_implementation_closure.py tests/canonical_v2/test_knowledge_answer_multiturn_contract.py",
+      "result": "29 passed in 3.51 seconds"
+    },
+    "existing_answer_owners": {
+      "command": "cd apps/miroflow-agent && uv run pytest -o addopts='' -p no:cacheprovider -q tests/canonical_v2/test_knowledge_answer_atomic_green_contract.py tests/canonical_v2/test_knowledge_answer_assessment_contract.py tests/canonical_v2/test_knowledge_answer_grounding_contract.py tests/canonical_v2/test_knowledge_answer_interface.py",
+      "result": "9 passed with 3 retained hostile-model Pydantic serializer warnings"
+    },
+    "s11a_owner": {
+      "command": "cd apps/admin-console && uv run pytest -o addopts='' -p no:cacheprovider -W error -q tests/test_canonical_v2_chat_http_adapter.py",
+      "result": "7 passed"
+    },
+    "s9j_s11b_preview_owners": {
+      "command_scope": "Admin-console S9J static owner, exact S11B owner, and preview UI owner with --noconftest",
+      "result": "11 passed in 19.86 seconds"
+    },
+    "s10o_owner": {
+      "command_scope": "Exact Accepted S10O UI owner with normal conftest",
+      "result": "1 passed in 1.17 seconds"
+    },
+    "static_checks": {
+      "agent": "Ruff check/format, py_compile, and changed-scope Pyright passed; Pyright reported 0 errors",
+      "admin": "Ruff check/format, py_compile, inline JavaScript execution harness, and changed-scope Pyright passed; Pyright reported 0 errors",
+      "openspec": "openspec validate rebuild-canonical-v2-knowledge-platform --strict passed",
+      "diff": "git diff --check passed"
+    },
+    "browser": {
+      "server": "Disposable read-only candidate on 127.0.0.1:18190, stopped after verification",
+      "data": "Manifest-selected real Company and linked Patent; no synthetic public entity",
+      "desktop": "Two turns passed; two assistant messages and four HTTPS Web evidence links; console and page errors empty",
+      "mobile": "390x844 passed with no horizontal overflow and all input/actions visible",
+      "public_copy_scan": "No 64-hex digest, typed canonical/reference identifier, raw execution enum, or forbidden operational meta copy was visible",
+      "desktop_screenshot_sha256": "d933201f4d8d114399cddcffb8d04ec67129fc7106b345f182e76b9d36683f55",
+      "mobile_screenshot_sha256": "261cf3eacc401ab20bc9e033968d10ac6699eee91798afe8d27491c25737ff95"
+    },
+    "api": {
+      "transport": "httpx.Client(trust_env=False) against loopback to bypass ambient proxy inheritance",
+      "turn_one": "HTTP 200; exact+web lanes; 4 evidence records, 1 claim, 3 HTTPS Web records",
+      "turn_two": "HTTP 200; relationship+web lanes; 3 evidence records, 2 claims, 1 HTTPS Web record; session cookie remained bound",
+      "public_copy_scan": "No 64-hex digest, typed canonical/reference identifier, raw execution enum, or forbidden operational meta copy"
+    }
+  },
+  "reviews": {
+    "final_spec_compliance": "Critical=0, Important=0, Minor=0, YAGNI=0",
+    "final_code_and_test_integrity": "Critical=0, Important=0; one static-UI Minor was closed with an executable Node harness; one unused optional-parameter YAGNI remains nonblocking",
+    "final_open_findings": "Critical=0, Important=0"
+  },
+  "protected_targets": {
+    "accepted_restore_relative_path": "workspace/logs/data_agents/released_objects.db",
+    "accepted_restore_sha256": "7637d808559685f1bcf0316cd22cfeac4e50bd0850c53652ec95b3dbb5e43bce",
+    "accepted_restore_bytes": 20267008,
+    "accepted_restore_mode": "0440",
+    "accepted_restore_sidecars": [],
+    "existing_preview_ports_preserved": [
+      18188,
+      18189
+    ],
+    "original_postgres_milvus_forensic_sources_mutated": false
+  },
+  "next_required_action": "Bind this Accepted S9J receipt and corrected successor hashes into the in-progress S11B dependency artifacts, then run the exact S11B focused owners before the guarded broad baseline producer. Tasks 11.1-11.5 remain open until S11C aggregate acceptance.",
+  "forbidden_actions_performed": []
+}

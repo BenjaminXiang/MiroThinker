@@ -101,6 +101,55 @@ category SHALL be represented as a source-grounded canonical relationship.
 - **THEN** the derived recommendation may change without changing canonical Paper facts or
   source-grounded relationships
 
+### Requirement: Person identity is internal to the four public domains
+
+The system SHALL retain Professor, Company, Paper, and Patent as the only public PRD inclusion
+domains. When accepted offline evidence resolves Professor, Company-personnel, Paper-author, or
+Patent-inventor references to one role-neutral Person, the offline build SHALL materialize that
+internal Person identity and a release-scoped read projection shared by the resolved references.
+The projection SHALL retain its originating public-domain evidence, typed roles, source/time
+lineage, and resolution decision. An unresolved source name SHALL remain an evidence-bearing source
+reference and SHALL NOT be forced into a Person identity.
+
+#### Scenario: Non-Professor entrepreneur is found by education and Company role
+- **WHEN** accepted Company evidence identifies an entrepreneur, education, role, and geography
+- **THEN** the accepted release materializes an internal Person projection that supports the
+  person-oriented query through those typed facts
+- **AND** the person is not misclassified as a Professor or admitted through a fifth public domain
+
+#### Scenario: Same-name author references remain unresolved
+- **WHEN** two Paper-author references share a name but accepted evidence cannot resolve them to one
+  Person
+- **THEN** both references retain their own evidence and unresolved state
+- **AND** no shared Person identity or projection is fabricated
+
+### Requirement: Technology reference knowledge is internal and versioned
+
+The system SHALL represent accepted Technology concepts/routes through internal versioned identities,
+aliases, definitions, hierarchy, source assertions, and precise typed discussion/adoption relations.
+Professor, Company, Paper, and Patent SHALL remain the only public PRD inclusion domains. A
+release-scoped Industry Brief SHALL be derived answer/research output and SHALL NOT become a canonical
+fact solely because a model synthesized it.
+
+#### Scenario: Company mentions a technical route in marketing text
+- **WHEN** evidence mentions a route without proving adoption or demonstrated use
+- **THEN** the route mention remains distinguishable from claimed adoption or demonstrated use
+- **AND** the system does not flatten both into one generic capability relation
+
+### Requirement: Product capability remains answer-scoped in this change
+
+Canonical V2 SHALL retain Company capability and Company Product as separate canonical surfaces and
+SHALL NOT add a canonical Product-capability assertion/relationship in this change. The answer path
+MAY construct a product capability material claim only when retrieved evidence directly binds the
+named Product and capability. Company-level capability, another Product, a Technology route, or model
+plausibility SHALL NOT entail that claim.
+
+#### Scenario: Company is capable of robotics integration
+- **WHEN** the user asks whether one named delivery Product can autonomously press an elevator button
+- **AND** retrieved evidence supports only the Company's general integration capability
+- **THEN** the Product capability remains unsupported or qualified
+- **AND** no canonical Product-capability relation is created
+
 ### Requirement: Inclusion and path eligibility are separate
 
 The system SHALL evaluate retrieval eligibility by named, versioned path. Exact lookup, verified

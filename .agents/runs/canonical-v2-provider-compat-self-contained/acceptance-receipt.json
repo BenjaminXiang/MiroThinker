@@ -1,0 +1,126 @@
+{
+  "accepted_at_utc": "2026-07-21T03:57:07Z",
+  "file_sha256": {
+    ".agents/runs/canonical-v2-provider-compat-self-contained/refactor-contract.md": "f279615df04af5e5c2712792d4efd6cf364f000e54c905549073d2423971157f",
+    ".agents/runs/canonical-v2-provider-compat-self-contained/verification.md": "64ae8d8755a6cde55d26cf12c20fc3e0cb97a2ade664cd5d2219cc452e84c890",
+    "apps/miroflow-agent/src/data_agents/providers/mirothinker.py": "7a2acdf3ad0673ea93f699b1e4f94bdceb9f7750996e596fc71231ad07a04168",
+    "apps/miroflow-agent/src/data_agents/providers/openai_client_compat.py": "b629c3b0e57def94ea1246445281fb7248cb88fd80a04a69759cfc3bc202359f",
+    "apps/miroflow-agent/src/data_agents/providers/qwen.py": "553cb3f31a2992ec28aaeadbad455d56c5e444a01dd983b1e8b40e6de6dbc14d",
+    "apps/miroflow-agent/tests/data_agents/providers/test_openai_client_compat.py": "820ed789e886fd549e27e0cee095d2872f7b8f25dbe07b0d07bab44d2a95dcea"
+  },
+  "required_checks": {
+    "dashscope_regression": {
+      "command": "uv run pytest -n0 tests/data_agents/providers/test_dashscope.py",
+      "outcome": "passed",
+      "passed": 4
+    },
+    "focused_werror": {
+      "command": "uv run pytest -n0 -W error tests/data_agents/providers/test_openai_client_compat.py",
+      "executions": 7,
+      "outcome": "passed"
+    },
+    "full_runtime_diagnostic": {
+      "command": "uv run pytest -n0 tests/data_agents/test_runtime.py",
+      "exit_code": 1,
+      "failed": 2,
+      "failure_signatures": [
+        {
+          "exception": "FileNotFoundError",
+          "missing_path": "recommended_client_template_mirothinker17_fp8.py",
+          "nodeid": "tests/data_agents/test_runtime.py::test_recommended_templates_delegate_to_shared_provider_entrypoints[recommended_client_template_mirothinker17_fp8.py-MiroThinkerProvider]"
+        },
+        {
+          "exception": "FileNotFoundError",
+          "missing_path": "recommended_client_template_35b_a3b.py",
+          "nodeid": "tests/data_agents/test_runtime.py::test_recommended_templates_delegate_to_shared_provider_entrypoints[recommended_client_template_35b_a3b.py-QwenProvider]"
+        }
+      ],
+      "outcome": "accepted_signature_locked_pre_existing_baseline",
+      "passed": 13
+    },
+    "git_diff_check": {
+      "command": "git diff --check",
+      "outcome": "passed"
+    },
+    "helper_signature": {
+      "expected": "build_openai_client(*, base_url: str, api_key: str, timeout: float) -> openai.Client",
+      "outcome": "passed"
+    },
+    "isolated_wheel_import": {
+      "empty_cwd": true,
+      "module_origins_inside_wheel": [
+        "src/data_agents/providers/openai_client_compat.py",
+        "src/data_agents/providers/qwen.py",
+        "src/data_agents/providers/mirothinker.py"
+      ],
+      "outcome": "passed",
+      "providers_share_packaged_helper": true,
+      "python_isolated": true,
+      "pythonpath_present": false
+    },
+    "provider_runtime_gate": {
+      "command": "uv run pytest -n0 -o addopts='' tests/data_agents/test_runtime.py::test_provider_adapters_are_thin_and_configurable tests/data_agents/test_runtime.py::test_mirothinker_provider_uses_compat_client_helper",
+      "outcome": "passed",
+      "passed": 2
+    },
+    "py_compile": {
+      "command": "uv run python -m py_compile src/data_agents/providers/openai_client_compat.py src/data_agents/providers/qwen.py src/data_agents/providers/mirothinker.py tests/data_agents/providers/test_openai_client_compat.py",
+      "outcome": "passed"
+    },
+    "pyright": {
+      "command": "uv run pyright src/data_agents/providers/openai_client_compat.py src/data_agents/providers/qwen.py src/data_agents/providers/mirothinker.py tests/data_agents/providers/test_openai_client_compat.py",
+      "errors": 0,
+      "informations": 0,
+      "outcome": "passed",
+      "warnings": 0
+    },
+    "ruff_check": {
+      "command": "uv run ruff check src/data_agents/providers/openai_client_compat.py src/data_agents/providers/qwen.py src/data_agents/providers/mirothinker.py tests/data_agents/providers/test_openai_client_compat.py",
+      "outcome": "passed"
+    },
+    "ruff_format_check": {
+      "command": "uv run ruff format --check src/data_agents/providers/openai_client_compat.py src/data_agents/providers/qwen.py src/data_agents/providers/mirothinker.py tests/data_agents/providers/test_openai_client_compat.py",
+      "files_checked": 4,
+      "outcome": "passed"
+    },
+    "tdd_red": {
+      "failed_as_expected": 2,
+      "node": "tests/data_agents/providers/test_openai_client_compat.py::test_provider_import_uses_packaged_compat_helper",
+      "outcome": "expected_failure_observed_before_production_edit"
+    },
+    "wheel_build_and_contents": {
+      "entry_count": 281,
+      "offline": true,
+      "outcome": "passed",
+      "package_helper_count": 1,
+      "root_helper_count": 0,
+      "size_bytes": 1228166
+    },
+    "worktree_scope_guard": {
+      "candidate_final_status_receipt_sha256": "8e34352e8f1b743a2abd01786af5e70e4a9584c031bf6a4a856595bf1b8330a2",
+      "outcome": "passed",
+      "pre_status_receipt_sha256": "c123156b222f8809c9118bc1d01e3eddc366414e418a1ae77013f548059bac55",
+      "unrelated_paths_compared": 240
+    }
+  },
+  "review": {
+    "acceptance_authorized": true,
+    "critical_concerns": 0,
+    "important_concerns": 0,
+    "result": "C0/I0"
+  },
+  "schema": "canonical-v2-provider-compat-acceptance-receipt",
+  "unrelated_manifest": {
+    "path_count": 240,
+    "sha256": "7c4beba1878e6a60eba60e249f8cad1da590034387e6dee88caa57eaef41883b",
+    "status_size_and_bytes_unchanged": true
+  },
+  "version": 1,
+  "wheel": {
+    "entry_count": 281,
+    "package_helper_count": 1,
+    "root_helper_count": 0,
+    "sha256": "86c2a78a764c5828186c648c00d5d1a5b38c67de5e3553d879c1e9b57c2345eb",
+    "size_bytes": 1228166
+  }
+}

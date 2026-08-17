@@ -1,0 +1,94 @@
+{
+  "schema_version": "canonical-v2-s7j-vector-eligibility-lineage-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s7j-vector-eligibility-lineage-correction",
+  "status": "accepted",
+  "accepted_at": "2026-07-19T09:11:49Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "git_branch": "canonical-v2-s2-baseline",
+  "formal_task_ledger_before": "56/80",
+  "formal_task_ledger_after": "56/80",
+  "implementation": {
+    "index_projection_sha256": "c814dbe31ae5003dc6583a00cec4572bfd738853494036b6da70a5aada20ee4d",
+    "release_publication_sha256": "aa1732d47a7181144fc863e20b2ca28ced3ba946d1f5a188fe70217eecaa786e",
+    "physical_owner_test_sha256": "47afa5fc8dd3616010ec00e299b81a4913946db3cbc673f21ad2b2367c8c6782",
+    "release_owner_test_sha256": "1416575590338dd8addee3f4fd0173cde7aff7c2ff83dd1cd5fe82033bc0d068",
+    "slice_contract_sha256_before_acceptance_evidence": "5822e85940f8d4600d284ea86a9ff53b9f520184d3c027fb93ae6df8e76fc886",
+    "implementation_plan_sha256_before_acceptance_evidence": "b472b440cc130092cf4c886ba9392ef2c96180401eefe4c74fae8d3e6115e222",
+    "tasks_sha256_unchanged": "5f61c097729e1107ff387a89c9f6f62b3783ef88debf1612b6156fb2056cdd7d",
+    "acceptance_sha256_unchanged": "742b29dc9805214b4b7059d5c801189209c26e35831f3f834ef01e4ac9f6df50"
+  },
+  "behavior": {
+    "public_vector_lineage": "every public point carries the exact replay-validated semantic_recall decision ID, admitted-or-limited outcome, and sorted visible limitations",
+    "internal_vector_lineage": "internal Person and Technology auxiliary points remain decision-free admitted points with no public limitations",
+    "inventory_hash": "one canonical full typed point-envelope hash is shared by index manifest construction and release inventory verification",
+    "unchanged_identity": "point populations, point IDs, embedded content and hashes, vectors, projection views, source evidence, and physical target semantics are unchanged"
+  },
+  "tdd": {
+    "red_normal": "1 xfailed",
+    "red_forced": "1 failed; exact _MissingS7JSemanticEligibilityLineage sentinel before candidate or physical build",
+    "green_focused": "1 passed",
+    "review_hardening": "production-derived default release fixture hash, fourteen-row valid point-envelope mutation matrix, sorted/duplicate validator negative, and inventory-only release rejection assertions"
+  },
+  "verification": {
+    "s7j_focused": "1 passed",
+    "s7i_predecessor": "1 passed",
+    "release_publication_owner": "6 passed",
+    "s8_physical_successors": "4 passed",
+    "shared_physical_release_owner": "50 passed, 2 skipped",
+    "canonical_v2_no_external": "339 passed, 141 skipped, 0 xfailed, 3 intentional hostile-model serializer warnings",
+    "ruff_check": "passed for complete src/data_agents/canonical_v2 and tests/canonical_v2",
+    "ruff_format": "74 files already formatted",
+    "py_compile": "passed for both changed production and both changed test files",
+    "pyright": "0 errors, 0 warnings, 0 informations for complete Canonical V2 source/tests",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "scope_secret_cache": "passed"
+  },
+  "wheel": {
+    "path_before_owned_cleanup": "/var/tmp/canonical-v2-s7j-wheel-W3nVta/miroflow_agent-0.1.0-py3-none-any.whl",
+    "sha256": "30fd6cd73eb8384b073ae7756f0b933e60312a8579c6b1ebfdf676b04831b5cb",
+    "entry_count": 276,
+    "contains_index_projection": true,
+    "contains_release_publication": true,
+    "contains_tests_or_agents": false,
+    "packaged_production_hashes_match_source": true,
+    "owned_output_cleaned_after_receipt": true
+  },
+  "frozen_targets": {
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_paused": true,
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "recovery_lab_network": "none",
+    "recovery_lab_published_ports": false,
+    "recovery_lab_restart_policy": "no"
+  },
+  "review": {
+    "contract_review": {
+      "critical": 0,
+      "important_found_and_closed": 3,
+      "minor_found_and_closed": 1,
+      "closed_findings": [
+        "release fixtures derive manifest content from the production shared hash",
+        "a valid mutation matrix machine-locks every required point-envelope field family",
+        "release rejection is isolated to expected and actual inventory hashing with no point or manifest discrepancy",
+        "duplicate and unsorted limitations are rejected"
+      ],
+      "final_critical": 0,
+      "final_important": 0,
+      "final_minor": 0,
+      "final_yagni": 0,
+      "verdict": "ready"
+    },
+    "implementation_review": {
+      "critical": 0,
+      "important": 0,
+      "minor": 0,
+      "yagni": 0,
+      "verdict": "accept"
+    }
+  },
+  "nonblocking_minor_yagni": [],
+  "next_ready_slice": "S8V1 release-scoped vector retrieval",
+  "forbidden_actions_performed": []
+}

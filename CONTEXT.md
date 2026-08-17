@@ -18,11 +18,23 @@ What the follow-up does to the referent: profile (O1), filter (O2), cross-domain
 traversal (O3), attribute aggregation (O4), constraint re-query (O5).
 
 **Result set (结果集)**:
-The per-domain list of entity IDs a prior turn's answer *displayed to the user*
-(answer list + citations). The thing set-referents (上述/这些/他们) resolve to.
+The per-domain ordered list of entity handles a prior turn's answer *displayed to the user*
+(answer list + citations). A handle is either an accepted Canonical identity ID or a session-scoped
+Web entity handle; the list is what set-referents (上述/这些/他们) resolve to.
 Retrieved-but-not-displayed evidence is NOT part of the result set — set coreference
 must match the user's mental model, not retrieval internals.
 _Avoid_: candidates, matches (those are retrieval-internal, pre-display)
+
+**Web entity handle (网络实体句柄)**:
+A session-scoped, evidence-bound reference to a displayed Web-only entity candidate, carrying its
+claimed domain, display identity, evidence snapshots, retrieval time, and resolution state. It is
+not a Canonical identity or a URL-as-ID and cannot traverse canonical relations while unresolved.
+_Avoid_: temporary canonical ID, URL entity ID, Web canonical object
+
+**Web evidence snapshot (网络证据快照)**:
+A content-addressed bounded capture of the Web evidence used by a result or claim, retaining source
+URL/nature, retrieval time, provider trace, and the exact excerpt or normalized response content.
+_Avoid_: live URL as reproducible evidence, unbounded page archive
 
 **Set coreference (集合指代)**:
 Resolving a set-referent expression (上述教授/这些公司/他们) to a prior result set,
@@ -66,7 +78,49 @@ member-centric (per-member listing, when the query says 分别).
 
 **Coverage statement (覆盖声明)**:
 The mandatory answer line stating how many set members had linked records and how
-many had none — distinguishes "no data" from "not searched".
+many had none over one bounded prior displayed set — distinguishes "no data" from
+"not searched". It is not an open-world enumeration coverage claim.
+
+**Enumeration policy (列举策略)**:
+The declared list-answer mode: exhaustive over a named bounded universe, required-member coverage,
+or representative results. Open-world list questions default to representative mode when neither a
+bounded universe nor a required-member contract exists.
+_Avoid_: treating Top-K as complete, implicit exhaustiveness
+
+**Enumeration coverage report (列举覆盖报告)**:
+The evidence-bearing account of a list answer's scope, as-of boundary, checked and displayed members,
+omissions, unknowns, and continuation state. It never claims exhaustiveness without a bounded universe.
+_Avoid_: coverage score, result count
+
+**Continuation offer (继续探索建议)**:
+An optional structured answer-ending control with up to three executable next-turn choices, emitted
+only for broad scope, ambiguity, partial coverage, evidence gaps, budget exhaustion, or an available
+eligible next hop. Each choice is bound to validated result/session metadata rather than generic prose.
+_Avoid_: always-on “ask me more”, unsupported followup claim, decorative suggestion
+
+**Safety guidance (安全化回答)**:
+A narrow response policy for local safety or compliance questions that gives brief, conservative,
+lawful risk-avoidance advice and, when useful, official help/reporting channels. It does not identify
+or speculate about illegal venues, facilitate evasion, or expand into general lifestyle assistance.
+_Avoid_: ordinary Web retrieval, blanket refusal, suspected-venue list
+
+**Confidence-gated ambiguity (置信度门控歧义)**:
+An entity ambiguity policy that selects an interpretation only when one evidence-backed candidate
+passes a versioned confidence floor and lead margin without protected-constraint conflict. Otherwise
+the turn is blocking clarification; model self-confidence alone cannot clear the gate.
+_Avoid_: always pick rank one, always clarify, LLM confidence threshold
+
+**Acceptance case contract (验收案例契约)**:
+A versioned machine-readable per-turn oracle defining required and forbidden claims/entities, allowed
+variants, evidence snapshots, as-of, enumeration policy, and expected stage outcomes. Reference prose
+is explanatory and non-normative.
+_Avoid_: golden answer text, prompt-only judge rubric
+
+**Stage oracle (阶段判定契约)**:
+The observable expected outcome for one acceptance stage such as query understanding, candidate
+recall, fusion/sufficiency, answer claims, or session transition. It localizes failure without using
+the final prose as a proxy for every stage.
+_Avoid_: one aggregate answer score, implementation-detail assertion
 
 **Constraint re-query (换约束重查)**:
 Re-running the prior query frame with one constraint swapped (深圳的→那广东的呢).
@@ -117,6 +171,34 @@ four PRD domains and their business-required relationships. It is independent of
 source formats and serving indexes.
 _Avoid_: recovered database copy, Milvus snapshot, answer-key database
 
+**Person identity (人物身份)**:
+The role-neutral internal identity of one real-world person, shared by resolved Professor, Company
+personnel, Paper author, and Patent inventor references. It is not a fifth public PRD domain, and an
+unresolved source name is not forced into a Person identity.
+_Avoid_: professor identity, author string, team-member row
+
+**Person projection (人物投影)**:
+An internal release-scoped, evidence-backed read projection over Person identities and their typed
+education, work, and role relations. It supports person-oriented retrieval without creating a
+separate public-domain inclusion policy.
+_Avoid_: public Person domain, synthesized biography
+
+**Technology concept (技术概念)**:
+A versioned internal taxonomy identity for a technical field, method, component, or capability,
+with evidence-backed names, aliases, definitions, and hierarchy. It is not a fifth public PRD domain.
+_Avoid_: free-form tag, prompt keyword, model-invented category
+
+**Technology route (技术路线)**:
+An evidence-backed method category describing how a technical outcome is pursued, linked to the
+relevant Technology concepts and to typed adoption or discussion evidence. A route is not inferred
+from general Company positioning alone.
+_Avoid_: technology summary, marketing theme, capability claim
+
+**Industry brief (行业简报)**:
+A release-scoped derived synthesis over accepted knowledge and current-Web evidence, with an explicit
+scope and as-of boundary. It is an answer/research artifact rather than a canonical fact or taxonomy node.
+_Avoid_: canonical industry truth, timeless market summary
+
 **Canonical relation (规范事实关系)**:
 A source-grounded relationship between canonical entities, carrying its own semantics,
 evidence, confidence, and validity state.
@@ -164,6 +246,12 @@ _Avoid_: quality gate (when no exclusion is intended)
 A user-visible assertion about a concrete entity, relationship, capability, role, date, or number
 whose correctness could materially change the answer. It requires local or current-Web evidence.
 _Avoid_: treating model confidence as evidence
+
+**Product capability claim (产品能力断言)**:
+An answer-scoped material claim that one named product has a capability, supported by evidence that
+directly binds that product and capability. A Company-level capability or general technical
+feasibility does not establish the product claim, which is not canonical in the current V2 boundary.
+_Avoid_: Company capability propagation, inferred product feature
 
 **LLM judgment (模型判断)**:
 Use of model reasoning and world knowledge to interpret a query, assess plausibility and relevance,
@@ -230,9 +318,16 @@ The internal mapping from each material answer claim to the local or current-Web
 supports it. User-visible citation presentation may be grouped, but the mapping remains explicit.
 _Avoid_: unstructured source list
 
+**Assessment frame (评价框架)**:
+The per-turn structured dimensions selected from the user's criteria or by the LLM for the current
+assessment question. Each dimension names its supporting evidence and uncertainty; no global
+dimension registry, fixed weights, or canonical score is required.
+_Avoid_: universal score, canonical quality label
+
 **Evidence-based assessment (证据化评价)**:
-An LLM-synthesized judgment over explicit evaluation dimensions and sourced facts, with conditions
-and uncertainty stated. The judgment is not stored or presented as an objective canonical fact.
+A synthesized judgment over the current Assessment frame and sourced facts, with conditions and
+uncertainty stated. Missing evidence is not poor performance, and the judgment is not stored or
+presented as an objective canonical fact.
 _Avoid_: subjective label as field, unsupported verdict
 
 **Candidate release (候选版本)**:

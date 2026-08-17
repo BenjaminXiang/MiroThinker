@@ -1,0 +1,7 @@
+{
+  "schema_version": "canonical-v2-s11c-disposition-overlay-v1",
+  "accepted_s11b_receipt_sha256": "cee1beebe2bdb1eba3f09b06e4e3c819167bbba14d5b6d6072f1f4cbafb0a945",
+  "base_inventory_receipt_json_pointer": "/legacy_consumer_inventory/sha256",
+  "base_inventory_sha256": "c5a151b82cf308ec8504c31c10f6e6d997a3286ef18613d530088314a7f8f940",
+  "entries": []
+}

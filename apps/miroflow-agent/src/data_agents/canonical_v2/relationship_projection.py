@@ -33,10 +33,13 @@ from .contracts import (
     RelationshipAssertion,
     RelationshipDecision,
     RelationshipDecisionState,
+    RelationshipDirection,
     RelationshipLayer,
     RelationshipRole,
     RelationshipType,
+    RoleAppliesTo,
     Sha256,
+    TimeSemantics,
     TemporalComparisonContext,
     TemporalDateValue,
     TemporalInstantValue,
@@ -44,6 +47,7 @@ from .contracts import (
     TemporalValue,
     compare_temporal_values,
 )
+from .canonical_identity_resolution import normalize_identity_key_value
 from .domain_catalog import (
     CATALOG_CONTENT_SHA256,
     CATALOG_RESOURCE,
@@ -58,6 +62,12 @@ from .domain_projection_models import (
     PatentProjection,
     ProfessorProjection,
 )
+from .internal_reference_catalog import PACKAGED_REFERENCE_CATALOG
+from .internal_reference_projection import (
+    InternalReferenceProjectionRequest,
+    InternalReferenceProjectionResult,
+    validate_internal_reference_projection_result,
+)
 
 
 DomainProjection = (
@@ -67,10 +77,43 @@ EndpointReferenceKind = Literal[
     "canonical_identity", "registry_entity", "typed_subobject", "lineage_record"
 ]
 DecisionStateValue = Literal["accepted", "unresolved", "rejected", "superseded"]
+RelationshipRegistryVersion = Literal[
+    "canonical-v2-domain-relationship-registry-v1",
+    "canonical-v2-internal-reference-relationship-registry-v1",
+]
+RelationshipProjectionSchemaVersion = Literal[
+    "relationship-projection-result-v1",
+    "relationship-projection-result-v2",
+]
 SourcePotentialOutcome = Literal["supported", "insufficient_evidence", "absent"]
 CurrentProjectionState = Literal[
     "current", "not_current", "indeterminate", "not_applicable"
 ]
+_INTERNAL_ENDPOINT_TYPES = {"person", "technology_concept", "technology_route"}
+_TECHNOLOGY_RELATIONSHIP_SOURCE_PATHS = {
+    "entity_discusses_or_mentions_technology": (
+        "internal_reference.technology_discussion_or_mention"
+    ),
+    "entity_claims_adoption_of_technology": (
+        "internal_reference.technology_claimed_adoption"
+    ),
+    "entity_demonstrates_use_of_technology": (
+        "internal_reference.technology_demonstrated_use"
+    ),
+}
+_TECHNOLOGY_RELATIONSHIP_SEMANTIC_STATES = {
+    "entity_discusses_or_mentions_technology": "discussion_or_mention",
+    "entity_claims_adoption_of_technology": "claimed_adoption",
+    "entity_demonstrates_use_of_technology": "demonstrated_use",
+}
+_PERSON_RELATIONSHIP_SOURCE_KINDS = {
+    "company_has_team_member": "company_personnel",
+    "paper_has_author": "paper_author",
+    "patent_has_inventor": "patent_inventor",
+}
+_INTERNAL_REFERENCE_RELATIONSHIP_TYPE_IDS = frozenset(
+    (*_PERSON_RELATIONSHIP_SOURCE_KINDS, *_TECHNOLOGY_RELATIONSHIP_SOURCE_PATHS)
+)
 
 
 class RelationshipProjectionIntegrityError(ValueError):
@@ -94,6 +137,71 @@ def _canonical_sha256(value: JsonValue) -> str:
             allow_nan=False,
         ).encode("utf-8")
     ).hexdigest()
+
+
+LEGACY_RELATIONSHIP_REGISTRY_VERSION = "canonical-v2-domain-relationship-registry-v1"
+LEGACY_RELATIONSHIP_REGISTRY_CONTENT_SHA256 = CATALOG_CONTENT_SHA256
+LEGACY_RELATIONSHIP_PROJECTION_SCHEMA_VERSION = "relationship-projection-result-v1"
+CURRENT_RELATIONSHIP_PROJECTION_SCHEMA_VERSION = "relationship-projection-result-v2"
+REFERENCE_RELATIONSHIP_ADAPTER_VERSION = "internal-reference-relationship-adapter-v1"
+_REFERENCE_ROLE_DESCRIPTIONS = {
+    "company_has_team_member": "Resolved Person holds the retained Company team role",
+    "paper_has_author": "Resolved Person appears in the retained Paper author list",
+    "patent_has_inventor": "Resolved Person appears in the retained Patent inventor list",
+    "entity_discusses_or_mentions_technology": (
+        "Resolved Technology is discussed or mentioned by the retained source"
+    ),
+    "entity_claims_adoption_of_technology": (
+        "Resolved Technology is the subject of a retained adoption claim"
+    ),
+    "entity_demonstrates_use_of_technology": (
+        "Resolved Technology is the subject of retained demonstrated-use evidence"
+    ),
+}
+REFERENCE_RELATIONSHIP_ADAPTER_CONTENT_SHA256 = _canonical_sha256(
+    cast(
+        JsonValue,
+        {
+            "adapter_version": REFERENCE_RELATIONSHIP_ADAPTER_VERSION,
+            "base_catalog_content_sha256": CATALOG_CONTENT_SHA256,
+            "reference_catalog_content_sha256": (
+                PACKAGED_REFERENCE_CATALOG.content_sha256
+            ),
+            "role_applies_to": "target",
+            "role_required": True,
+            "role_descriptions": _REFERENCE_ROLE_DESCRIPTIONS,
+            "allowed_states": [
+                "accepted",
+                "unresolved",
+                "rejected",
+                "superseded",
+            ],
+        },
+    )
+)
+INTERNAL_REFERENCE_RELATIONSHIP_REGISTRY_VERSION = (
+    "canonical-v2-internal-reference-relationship-registry-v1"
+)
+INTERNAL_REFERENCE_RELATIONSHIP_REGISTRY_CONTENT_SHA256 = _canonical_sha256(
+    cast(
+        JsonValue,
+        {
+            "registry_version": (INTERNAL_REFERENCE_RELATIONSHIP_REGISTRY_VERSION),
+            "base_catalog_content_sha256": CATALOG_CONTENT_SHA256,
+            "reference_catalog_content_sha256": (
+                PACKAGED_REFERENCE_CATALOG.content_sha256
+            ),
+            "adapter_version": REFERENCE_RELATIONSHIP_ADAPTER_VERSION,
+            "adapter_content_sha256": (REFERENCE_RELATIONSHIP_ADAPTER_CONTENT_SHA256),
+        },
+    )
+)
+_RELATIONSHIP_REGISTRY_IDENTITIES = {
+    LEGACY_RELATIONSHIP_REGISTRY_VERSION: (LEGACY_RELATIONSHIP_REGISTRY_CONTENT_SHA256),
+    INTERNAL_REFERENCE_RELATIONSHIP_REGISTRY_VERSION: (
+        INTERNAL_REFERENCE_RELATIONSHIP_REGISTRY_CONTENT_SHA256
+    ),
+}
 
 
 def _index_unique[T](values: Iterable[T], attribute: str, label: str) -> dict[str, T]:
@@ -309,12 +417,24 @@ class RelationshipLayerProbe(ContractModel):
 
 class RelationshipProjectionRequest(ContractModel):
     catalog: RelationshipCatalogIdentity
+    relationship_registry_version: RelationshipRegistryVersion = (
+        "canonical-v2-domain-relationship-registry-v1"
+    )
+    relationship_registry_content_sha256: Sha256 = (
+        LEGACY_RELATIONSHIP_REGISTRY_CONTENT_SHA256
+    )
     release_id: NonEmptyStr
     projection_run_id: NonEmptyStr
     as_of: CanonicalDatetime
     temporal_comparison_context: TemporalComparisonContext | None = None
     decision_policy: PolicyReference
     domain_projections: tuple[DomainProjection, ...]
+    internal_reference_projection_request: InternalReferenceProjectionRequest | None = (
+        None
+    )
+    internal_reference_projection_result: InternalReferenceProjectionResult | None = (
+        None
+    )
     candidates: tuple[RelationshipProjectionCandidate, ...]
     relationship_assertions: tuple[RelationshipAssertion, ...]
     typed_relationship_assertions: tuple[TypedRelationshipAssertionInput, ...]
@@ -324,6 +444,40 @@ class RelationshipProjectionRequest(ContractModel):
     layer_probes: tuple[RelationshipLayerProbe, ...] = ()
     retained_assertions: tuple[RetainedAssertionReference, ...]
     retained_artifacts: tuple[RetainedArtifactReference, ...]
+
+    @model_validator(mode="after")
+    def validate_internal_reference_pair(self) -> RelationshipProjectionRequest:
+        expected_registry_hash = _RELATIONSHIP_REGISTRY_IDENTITIES[
+            self.relationship_registry_version
+        ]
+        if self.relationship_registry_content_sha256 != expected_registry_hash:
+            raise ValueError("relationship registry identity is not installed")
+        internal_request = self.internal_reference_projection_request
+        internal_result = self.internal_reference_projection_result
+        if (internal_request is None) != (internal_result is None):
+            raise ValueError(
+                "internal reference projection request/result must be supplied together"
+            )
+        if (
+            internal_request is not None
+            and internal_result is not None
+            and (
+                internal_request.release_id != self.release_id
+                or internal_result.release_id != self.release_id
+                or internal_request.as_of > self.as_of
+                or internal_result.as_of > self.as_of
+            )
+        ):
+            raise ValueError(
+                "internal reference projection pair differs from relationship envelope"
+            )
+        if internal_request is not None and self.relationship_registry_version != (
+            INTERNAL_REFERENCE_RELATIONSHIP_REGISTRY_VERSION
+        ):
+            raise ValueError(
+                "internal reference projections require the combined registry"
+            )
+        return self
 
 
 class TypedRelationshipDecision(ContractModel):
@@ -371,6 +525,7 @@ class CurrentRelationshipProjection(ContractModel):
 class RelationshipCandidateOutcome(ContractModel):
     candidate_id: NonEmptyStr
     relationship_type_id: NonEmptyStr
+    relationship_type_version: NonEmptyStr | None = None
     admitted: bool
     reason_codes: tuple[NonEmptyStr, ...]
     decision_state: DecisionStateValue | None = None
@@ -407,11 +562,36 @@ class RelationshipLayerOutcome(ContractModel):
     reason_codes: tuple[NonEmptyStr, ...]
 
 
+def _relationship_result_hash_payload(
+    result: RelationshipProjectionResult,
+) -> JsonValue:
+    payload = result.model_dump(mode="json", exclude={"content_sha256"})
+    if (
+        result.projection_schema_version
+        == LEGACY_RELATIONSHIP_PROJECTION_SCHEMA_VERSION
+    ):
+        payload.pop("projection_schema_version", None)
+        payload.pop("relationship_registry_version", None)
+        payload.pop("relationship_registry_content_sha256", None)
+        for outcome in cast(list[dict[str, JsonValue]], payload["candidate_outcomes"]):
+            outcome.pop("relationship_type_version", None)
+    return cast(JsonValue, payload)
+
+
 class RelationshipProjectionResult(ContractModel):
     release_id: NonEmptyStr
     projection_run_id: NonEmptyStr
     as_of: CanonicalDatetime
     catalog: RelationshipCatalogIdentity
+    projection_schema_version: RelationshipProjectionSchemaVersion = (
+        LEGACY_RELATIONSHIP_PROJECTION_SCHEMA_VERSION
+    )
+    relationship_registry_version: RelationshipRegistryVersion = (
+        "canonical-v2-domain-relationship-registry-v1"
+    )
+    relationship_registry_content_sha256: Sha256 = (
+        LEGACY_RELATIONSHIP_REGISTRY_CONTENT_SHA256
+    )
     relationship_types: tuple[RelationshipType, ...]
     candidate_outcomes: tuple[RelationshipCandidateOutcome, ...]
     retained_assertion_refs: tuple[NonEmptyStr, ...]
@@ -432,11 +612,38 @@ class RelationshipProjectionResult(ContractModel):
     def validate_content_hash(
         self, info: ValidationInfo
     ) -> RelationshipProjectionResult:
-        if not (info.context or {}).get("allow_unbound_content_hash"):
-            payload = cast(
-                JsonValue,
-                self.model_dump(mode="json", exclude={"content_sha256"}),
+        registry = _installed_registry_for_identity(
+            self.relationship_registry_version,
+            self.relationship_registry_content_sha256,
+        )
+        if self.relationship_types != registry.relationship_types:
+            raise ValueError(
+                "relationship result types differ from its exact registry identity"
             )
+        is_legacy = (
+            self.projection_schema_version
+            == LEGACY_RELATIONSHIP_PROJECTION_SCHEMA_VERSION
+        )
+        if is_legacy and (
+            self.relationship_registry_version != LEGACY_RELATIONSHIP_REGISTRY_VERSION
+            or any(
+                outcome.relationship_type_version is not None
+                for outcome in self.candidate_outcomes
+            )
+        ):
+            raise ValueError(
+                "legacy relationship results require the legacy registry and "
+                "unversioned historical outcomes"
+            )
+        if not is_legacy and any(
+            outcome.relationship_type_version is None
+            for outcome in self.candidate_outcomes
+        ):
+            raise ValueError(
+                "current relationship outcomes require an exact type version"
+            )
+        if not (info.context or {}).get("allow_unbound_content_hash"):
+            payload = _relationship_result_hash_payload(self)
             if self.content_sha256 != _canonical_sha256(payload):
                 raise ValueError("content_sha256 must bind the relationship result")
         return self
@@ -463,7 +670,7 @@ def _installed_catalog_payload() -> dict[str, Any]:
 
 
 @lru_cache(maxsize=1)
-def _installed_relationship_types() -> tuple[RelationshipType, ...]:
+def _installed_base_relationship_types() -> tuple[RelationshipType, ...]:
     rows = cast(list[dict[str, Any]], _installed_catalog_payload()["relationships"])
     return tuple(
         RelationshipType.model_validate(
@@ -483,6 +690,131 @@ def _installed_relationship_types() -> tuple[RelationshipType, ...]:
         )
         for row in rows
     )
+
+
+@lru_cache(maxsize=1)
+def _installed_reference_relationship_types() -> tuple[RelationshipType, ...]:
+    return tuple(
+        RelationshipType(
+            relationship_type_id=item.relationship_type_id,
+            version=item.version,
+            layer=RelationshipLayer(item.layer),
+            source_entity_types=item.source_entity_types,
+            target_entity_types=item.target_entity_types,
+            direction=RelationshipDirection(item.direction),
+            roles=(
+                RelationshipRole(
+                    role_id=item.role_id,
+                    applies_to=RoleAppliesTo.target,
+                    description=_REFERENCE_ROLE_DESCRIPTIONS[item.relationship_type_id],
+                    required=True,
+                ),
+            ),
+            required_evidence_kinds=item.required_evidence_kinds,
+            time_semantics=TimeSemantics(item.time_semantics),
+            allowed_states=(
+                RelationshipDecisionState.accepted,
+                RelationshipDecisionState.unresolved,
+                RelationshipDecisionState.rejected,
+                RelationshipDecisionState.superseded,
+            ),
+            eligible_paths=item.eligible_paths,
+        )
+        for item in PACKAGED_REFERENCE_CATALOG.relationship_types
+    )
+
+
+@lru_cache(maxsize=1)
+def _installed_relationship_types() -> tuple[RelationshipType, ...]:
+    values = (
+        *_installed_base_relationship_types(),
+        *_installed_reference_relationship_types(),
+    )
+    keys = tuple((item.relationship_type_id, item.version) for item in values)
+    if len(keys) != len(set(keys)):
+        raise RelationshipProjectionIntegrityError(
+            "installed relationship catalogs contain an exact-version conflict"
+        )
+    return tuple(
+        sorted(values, key=lambda item: (item.relationship_type_id, item.version))
+    )
+
+
+class RelationshipTypeRegistry(ContractModel):
+    registry_version: RelationshipRegistryVersion
+    content_sha256: Sha256
+    relationship_types: tuple[RelationshipType, ...]
+
+    @model_validator(mode="after")
+    def validate_exact_versions(self) -> RelationshipTypeRegistry:
+        if (
+            self.content_sha256
+            != _RELATIONSHIP_REGISTRY_IDENTITIES[self.registry_version]
+        ):
+            raise ValueError("relationship registry content identity differs")
+        keys = tuple(
+            (item.relationship_type_id, item.version)
+            for item in self.relationship_types
+        )
+        if keys != tuple(sorted(keys)) or len(keys) != len(set(keys)):
+            raise ValueError(
+                "relationship registry keys must be exact, unique, and sorted"
+            )
+        return self
+
+    def resolve(self, relationship_type_id: str, version: str) -> RelationshipType:
+        for relationship_type in self.relationship_types:
+            if (
+                relationship_type.relationship_type_id == relationship_type_id
+                and relationship_type.version == version
+            ):
+                return relationship_type
+        raise KeyError(
+            f"unregistered relationship type: {relationship_type_id}@{version}"
+        )
+
+    def contains_type_id(self, relationship_type_id: str) -> bool:
+        return any(
+            item.relationship_type_id == relationship_type_id
+            for item in self.relationship_types
+        )
+
+
+@lru_cache(maxsize=1)
+def create_installed_relationship_type_registry() -> RelationshipTypeRegistry:
+    return RelationshipTypeRegistry(
+        registry_version=INTERNAL_REFERENCE_RELATIONSHIP_REGISTRY_VERSION,
+        content_sha256=INTERNAL_REFERENCE_RELATIONSHIP_REGISTRY_CONTENT_SHA256,
+        relationship_types=_installed_relationship_types(),
+    )
+
+
+@lru_cache(maxsize=1)
+def _create_legacy_relationship_type_registry() -> RelationshipTypeRegistry:
+    return RelationshipTypeRegistry(
+        registry_version=LEGACY_RELATIONSHIP_REGISTRY_VERSION,
+        content_sha256=LEGACY_RELATIONSHIP_REGISTRY_CONTENT_SHA256,
+        relationship_types=tuple(
+            sorted(
+                _installed_base_relationship_types(),
+                key=lambda item: (item.relationship_type_id, item.version),
+            )
+        ),
+    )
+
+
+def _installed_registry_for_identity(
+    registry_version: RelationshipRegistryVersion,
+    content_sha256: str,
+) -> RelationshipTypeRegistry:
+    registry = (
+        create_installed_relationship_type_registry()
+        if registry_version == INTERNAL_REFERENCE_RELATIONSHIP_REGISTRY_VERSION
+        else _create_legacy_relationship_type_registry()
+    )
+    if registry.content_sha256 != content_sha256:
+        raise ValueError("relationship registry identity is not installed")
+    return registry
 
 
 def _reason(reasons: list[str], code: str, condition: bool) -> None:
@@ -626,6 +958,21 @@ class RelationshipProjection(ABC):
 
 
 class _EphemeralRelationshipProjection(RelationshipProjection):
+    def __init__(
+        self, relationship_type_registry: RelationshipTypeRegistry | None
+    ) -> None:
+        if (
+            relationship_type_registry is not None
+            and relationship_type_registry
+            != create_installed_relationship_type_registry()
+            and relationship_type_registry
+            != _create_legacy_relationship_type_registry()
+        ):
+            raise RelationshipProjectionIntegrityError(
+                "relationship projector accepts only the installed exact registry"
+            )
+        self._restricted_relationship_type_registry = relationship_type_registry
+
     def project(
         self, request: RelationshipProjectionRequest
     ) -> RelationshipProjectionResult:
@@ -666,14 +1013,54 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
                 "domain projections must bind this release, as_of, and installed catalog"
             )
 
-        relationship_types = _installed_relationship_types()
-        type_by_id = {
-            relationship.relationship_type_id: relationship
-            for relationship in relationship_types
-        }
+        relationship_type_registry = _installed_registry_for_identity(
+            request.relationship_registry_version,
+            request.relationship_registry_content_sha256,
+        )
+        if (
+            self._restricted_relationship_type_registry is not None
+            and self._restricted_relationship_type_registry
+            != relationship_type_registry
+        ):
+            raise RelationshipProjectionIntegrityError(
+                "request registry differs from the projector's exact registry"
+            )
+        relationship_types = relationship_type_registry.relationship_types
         canonical_registry, subobject_registry = _projection_registries(
             request.domain_projections
         )
+        internal_registry: set[tuple[str, str]] = set()
+        validated_internal: InternalReferenceProjectionResult | None = None
+        internal_request = request.internal_reference_projection_request
+        internal_result = request.internal_reference_projection_result
+        if internal_request is not None and internal_result is not None:
+            try:
+                validated_internal = validate_internal_reference_projection_result(
+                    internal_request, internal_result
+                )
+            except ValueError as exc:
+                raise RelationshipProjectionIntegrityError(
+                    "internal reference projection pair cannot be replayed"
+                ) from exc
+            if (
+                internal_request.public_domain_projection_result.projections
+                != request.domain_projections
+            ):
+                raise RelationshipProjectionIntegrityError(
+                    "relationship domain projections differ from the internal graph"
+                )
+            internal_registry.update(
+                ("person", item.canonical_person_identity_id)
+                for item in validated_internal.person_projections
+            )
+            internal_registry.update(
+                ("technology_concept", item.canonical_technology_identity_id)
+                for item in validated_internal.technology_concept_projections
+            )
+            internal_registry.update(
+                ("technology_route", item.canonical_technology_identity_id)
+                for item in validated_internal.technology_route_projections
+            )
         retained_assertions = _index_unique(
             request.retained_assertions, "reference_id", "retained assertion reference"
         )
@@ -727,8 +1114,21 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
         current_relationships: list[CurrentRelationshipProjection] = []
 
         for candidate in request.candidates:
-            relationship_type = type_by_id.get(candidate.relationship_type_id)
             reasons: list[str] = []
+            try:
+                relationship_type = relationship_type_registry.resolve(
+                    candidate.relationship_type_id,
+                    candidate.relationship_type_version,
+                )
+            except KeyError:
+                relationship_type = None
+                reasons.append(
+                    "relationship_type_version_not_registered"
+                    if relationship_type_registry.contains_type_id(
+                        candidate.relationship_type_id
+                    )
+                    else "relationship_type_not_registered"
+                )
             source_potential = (
                 scenario_outcomes.get(candidate.catalog_scenario_id)
                 if candidate.catalog_scenario_id is not None
@@ -753,14 +1153,7 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
                     and candidate.relationship_type_id
                     not in cast(list[str], scenario["relationship_type_ids"]),
                 )
-            if relationship_type is None:
-                reasons.append("relationship_type_not_registered")
-            else:
-                _reason(
-                    reasons,
-                    "relationship_type_version_not_registered",
-                    candidate.relationship_type_version != relationship_type.version,
-                )
+            if relationship_type is not None:
                 _reason(
                     reasons,
                     "endpoint_type_not_allowed",
@@ -773,12 +1166,14 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
                     candidate.source_endpoint,
                     canonical_registry,
                     subobject_registry,
+                    internal_registry,
                     reasons,
                 )
                 self._validate_endpoint_registry(
                     candidate.target_endpoint,
                     canonical_registry,
                     subobject_registry,
+                    internal_registry,
                     reasons,
                 )
                 self._validate_relationship_semantics(
@@ -789,6 +1184,22 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
                     relationship_type,
                     retained_assertions,
                     retained_artifacts,
+                    reasons,
+                )
+                self._validate_technology_relationship_evidence(
+                    candidate,
+                    relationship_type,
+                    retained_assertions,
+                    internal_request,
+                    validated_internal,
+                    reasons,
+                )
+                self._validate_person_relationship_evidence(
+                    candidate,
+                    relationship_type,
+                    retained_assertions,
+                    internal_request,
+                    validated_internal,
                     reasons,
                 )
 
@@ -802,6 +1213,7 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
                 request,
                 shared_assertions,
                 typed_assertions,
+                retained_assertions,
                 assignments,
                 decision_input,
                 reasons,
@@ -954,6 +1366,7 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
                 RelationshipCandidateOutcome(
                     candidate_id=candidate.candidate_id,
                     relationship_type_id=candidate.relationship_type_id,
+                    relationship_type_version=(candidate.relationship_type_version),
                     admitted=admitted,
                     reason_codes=tuple(sorted(reasons)),
                     decision_state=decision_state,
@@ -1001,6 +1414,15 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
                 "projection_run_id": request.projection_run_id,
                 "as_of": request.as_of,
                 "catalog": request.catalog,
+                "projection_schema_version": (
+                    CURRENT_RELATIONSHIP_PROJECTION_SCHEMA_VERSION
+                ),
+                "relationship_registry_version": (
+                    request.relationship_registry_version
+                ),
+                "relationship_registry_content_sha256": (
+                    request.relationship_registry_content_sha256
+                ),
                 "relationship_types": relationship_types,
                 "candidate_outcomes": tuple(candidate_outcomes),
                 "retained_assertion_refs": tuple(sorted(retained_assertions)),
@@ -1035,10 +1457,7 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
             },
             context={"allow_unbound_content_hash": True},
         )
-        payload = cast(
-            JsonValue,
-            provisional.model_dump(mode="json", exclude={"content_sha256"}),
-        )
+        payload = _relationship_result_hash_payload(provisional)
         return RelationshipProjectionResult.model_validate(
             {
                 **provisional.model_dump(mode="python"),
@@ -1047,19 +1466,326 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
         )
 
     @staticmethod
+    def _validate_person_relationship_evidence(
+        candidate: RelationshipProjectionCandidate,
+        relationship_type: RelationshipType,
+        retained_assertions: dict[str, RetainedAssertionReference],
+        internal_request: InternalReferenceProjectionRequest | None,
+        internal_result: InternalReferenceProjectionResult | None,
+        reasons: list[str],
+    ) -> None:
+        expected_source_kind = _PERSON_RELATIONSHIP_SOURCE_KINDS.get(
+            relationship_type.relationship_type_id
+        )
+        if (
+            expected_source_kind is None
+            or candidate.target_endpoint.endpoint_type != "person"
+        ):
+            return
+        if internal_request is None or internal_result is None:
+            _reason(
+                reasons,
+                "person_relationship_requires_internal_reference_projection",
+                True,
+            )
+            return
+        person_projection = next(
+            (
+                item
+                for item in internal_result.person_projections
+                if item.canonical_person_identity_id
+                == candidate.target_endpoint.canonical_identity_id
+            ),
+            None,
+        )
+        if person_projection is None:
+            _reason(
+                reasons,
+                "person_relationship_evidence_not_in_internal_graph",
+                True,
+            )
+            return
+        if (
+            relationship_type.relationship_type_id == "patent_has_inventor"
+            and relationship_type.version == "canonical-v2-relationship-v2"
+            and {
+                "patent_to_professor",
+                "professor_to_patent",
+            }
+            & set(candidate.requested_paths)
+        ):
+            _reason(
+                reasons,
+                "professor_paths_require_person_with_professor_reference",
+                not any(
+                    reference.source_kind == "professor"
+                    for reference in person_projection.references
+                ),
+            )
+        anchors_by_id = {
+            item.anchor_id: item for item in internal_result.public_evidence_anchors
+        }
+        source_assertions_by_id = {
+            item.assertion_id: item
+            for item in internal_request.public_domain_projection_request.source_assertions
+        }
+        bound_assertions = tuple(
+            retained_assertions[reference]
+            for binding in candidate.evidence_bindings
+            for reference in binding.assertion_refs
+            if reference in retained_assertions
+        )
+        bound_artifact_refs = {
+            reference
+            for binding in candidate.evidence_bindings
+            for reference in binding.artifact_refs
+        }
+        attached_artifact_refs = {
+            reference
+            for retained in bound_assertions
+            for reference in retained.artifact_refs
+        }
+        bound_assertion_keys = tuple(
+            (item.assertion_id, item.source_record_ref) for item in bound_assertions
+        )
+        evidence_matches = False
+        for reference in person_projection.references:
+            if reference.source_kind != expected_source_kind:
+                continue
+            anchor = anchors_by_id.get(reference.source_anchor_id)
+            if anchor is None:
+                continue
+            source_matches = (
+                candidate.source_endpoint.reference_kind == "canonical_identity"
+                and candidate.source_endpoint.endpoint_type == anchor.public_domain
+                and candidate.source_endpoint.canonical_identity_id
+                == anchor.root_canonical_identity_id
+                and candidate.source_endpoint.stable_reference
+                == (
+                    f"canonical:{anchor.public_domain}:"
+                    f"{anchor.root_canonical_identity_id}"
+                )
+            )
+            evidence_matches = (
+                source_matches
+                and candidate.observed_at == anchor.observed_at
+                and candidate.valid_from == anchor.valid_from
+                and candidate.valid_to == anchor.valid_to
+                and {item.assertion_id for item in bound_assertions}
+                == set(anchor.supporting_assertion_ids)
+                and all(
+                    (source_assertion := source_assertions_by_id.get(item.assertion_id))
+                    is not None
+                    and source_assertion.source_record_id == item.source_record_ref
+                    and source_assertion.source_record_id in anchor.source_record_ids
+                    and source_assertion.field_path in anchor.source_field_paths
+                    and source_assertion.subject_entity_type == anchor.public_domain
+                    for item in bound_assertions
+                )
+                and bound_artifact_refs <= attached_artifact_refs
+                and len(bound_assertion_keys) == len(set(bound_assertion_keys))
+            )
+            if evidence_matches:
+                break
+        _reason(
+            reasons,
+            "person_relationship_evidence_not_in_internal_graph",
+            not evidence_matches,
+        )
+
+    @staticmethod
+    def _validate_technology_relationship_evidence(
+        candidate: RelationshipProjectionCandidate,
+        relationship_type: RelationshipType,
+        retained_assertions: dict[str, RetainedAssertionReference],
+        internal_request: InternalReferenceProjectionRequest | None,
+        internal_result: InternalReferenceProjectionResult | None,
+        reasons: list[str],
+    ) -> None:
+        expected_path = _TECHNOLOGY_RELATIONSHIP_SOURCE_PATHS.get(
+            relationship_type.relationship_type_id
+        )
+        if expected_path is None:
+            return
+        if internal_request is None or internal_result is None:
+            _reason(
+                reasons,
+                "technology_relationship_requires_internal_reference_projection",
+                True,
+            )
+            return
+        expected_semantic_state = _TECHNOLOGY_RELATIONSHIP_SEMANTIC_STATES[
+            relationship_type.relationship_type_id
+        ]
+        declared_semantic_state = candidate.evidence_metadata.get("semantic_state")
+        _reason(
+            reasons,
+            "technology_relationship_semantic_state_mismatch",
+            declared_semantic_state is not None
+            and declared_semantic_state != expected_semantic_state,
+        )
+        target_identity_id = candidate.target_endpoint.canonical_identity_id
+        target_projection = next(
+            (
+                item
+                for item in (
+                    *internal_result.technology_concept_projections,
+                    *internal_result.technology_route_projections,
+                )
+                if item.canonical_technology_identity_id == target_identity_id
+            ),
+            None,
+        )
+        if target_projection is None:
+            _reason(
+                reasons,
+                "technology_relationship_evidence_not_in_internal_graph",
+                True,
+            )
+            return
+        source_to_canonical = {
+            item.source_identity_id: item.canonical_identity_id
+            for item in internal_request.public_domain_projection_request.source_identity_assignments
+        }
+        assertion_by_id = {
+            item.assertion_id: item
+            for item in internal_request.public_domain_projection_request.source_assertions
+        }
+        assertion_refs = tuple(
+            assertion_ref
+            for binding in candidate.evidence_bindings
+            for assertion_ref in binding.assertion_refs
+        )
+        bound_artifact_refs = {
+            reference
+            for binding in candidate.evidence_bindings
+            for reference in binding.artifact_refs
+        }
+        attached_artifact_refs = {
+            reference
+            for assertion_ref in assertion_refs
+            if assertion_ref in retained_assertions
+            for reference in retained_assertions[assertion_ref].artifact_refs
+        }
+        bound_assertion_keys = tuple(
+            (
+                retained_assertions[assertion_ref].assertion_id,
+                retained_assertions[assertion_ref].source_record_ref,
+            )
+            for assertion_ref in assertion_refs
+            if assertion_ref in retained_assertions
+        )
+        normalized_target_terms = {
+            normalized
+            for value in (
+                target_projection.preferred_name,
+                *target_projection.aliases,
+            )
+            if (normalized := normalize_identity_key_value("name_key", value))
+            is not None
+        }
+        evidence_matches = (
+            bool(assertion_refs)
+            and len(assertion_refs) == len(set(assertion_refs))
+            and len(bound_assertion_keys) == len(set(bound_assertion_keys))
+            and bound_artifact_refs <= attached_artifact_refs
+        )
+        for assertion_ref in assertion_refs:
+            retained = retained_assertions.get(assertion_ref)
+            if retained is None:
+                evidence_matches = False
+                break
+            source_assertion = assertion_by_id.get(retained.assertion_id)
+            if (
+                source_assertion is None
+                or source_assertion.field_path != expected_path
+                or retained.source_record_ref != source_assertion.source_record_id
+                or candidate.observed_at != source_assertion.observed_at
+                or candidate.source_event_time != source_assertion.source_event_time
+                or candidate.valid_from != source_assertion.valid_from
+                or candidate.valid_to != source_assertion.valid_to
+                or not isinstance(source_assertion.value, dict)
+            ):
+                evidence_matches = False
+                break
+            value = source_assertion.value
+            technology_source_id = value.get("technology_source_identity_id")
+            root_identity_id = value.get("root_canonical_identity_id")
+            source_subobject_type = value.get("source_subobject_type")
+            source_subobject_id = value.get("source_subobject_id")
+            term = value.get("term")
+            if (
+                technology_source_id not in target_projection.source_identity_ids
+                or source_to_canonical.get(source_assertion.source_identity_id)
+                != root_identity_id
+                or not isinstance(term, str)
+                or normalize_identity_key_value("name_key", term)
+                not in normalized_target_terms
+            ):
+                evidence_matches = False
+                break
+            if candidate.source_endpoint.reference_kind == "typed_subobject":
+                source_matches = (
+                    candidate.source_endpoint.endpoint_type == source_subobject_type
+                    and candidate.source_endpoint.stable_reference
+                    == source_subobject_id
+                    and candidate.source_endpoint.parent_canonical_identity_ref
+                    == (
+                        f"canonical:{source_assertion.subject_entity_type}:"
+                        f"{root_identity_id}"
+                    )
+                )
+            else:
+                source_matches = (
+                    candidate.source_endpoint.reference_kind == "canonical_identity"
+                    and candidate.source_endpoint.endpoint_type
+                    == source_assertion.subject_entity_type
+                    and candidate.source_endpoint.canonical_identity_id
+                    == root_identity_id
+                    and source_subobject_type is None
+                    and source_subobject_id is None
+                )
+            if not source_matches:
+                evidence_matches = False
+                break
+        _reason(
+            reasons,
+            "technology_relationship_evidence_not_in_internal_graph",
+            not evidence_matches,
+        )
+
+    @staticmethod
     def _validate_endpoint_registry(
         endpoint: RelationshipEndpointReference,
         canonical_registry: set[tuple[str, str]],
         subobject_registry: dict[str, tuple[str, str]],
+        internal_registry: set[tuple[str, str]],
         reasons: list[str],
     ) -> None:
-        if endpoint.reference_kind == "canonical_identity":
-            key = (endpoint.endpoint_type, cast(str, endpoint.canonical_identity_id))
+        if (
+            endpoint.endpoint_type in _INTERNAL_ENDPOINT_TYPES
+            and endpoint.reference_kind != "canonical_identity"
+        ):
             _reason(
                 reasons,
-                "canonical_endpoint_not_in_domain_projection",
-                key not in canonical_registry,
+                "unresolved_internal_reference_endpoint",
+                True,
             )
+            return
+        if endpoint.reference_kind == "canonical_identity":
+            key = (endpoint.endpoint_type, cast(str, endpoint.canonical_identity_id))
+            if endpoint.endpoint_type in _INTERNAL_ENDPOINT_TYPES:
+                _reason(
+                    reasons,
+                    "canonical_endpoint_not_in_internal_reference_projection",
+                    key not in internal_registry,
+                )
+            else:
+                _reason(
+                    reasons,
+                    "canonical_endpoint_not_in_domain_projection",
+                    key not in canonical_registry,
+                )
             _reason(
                 reasons,
                 "canonical_endpoint_reference_mismatch",
@@ -1153,7 +1879,10 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
                     or candidate.target_endpoint.reference_kind != "canonical_identity"
                 ),
             )
-        if relationship_id == "patent_has_inventor":
+        if (
+            relationship_id == "patent_has_inventor"
+            and relationship_type.version == "canonical-v2-relationship-v1"
+        ):
             _reason(
                 reasons,
                 "professor_paths_require_target_type_professor_and_accepted_professor_identity",
@@ -1243,6 +1972,7 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
         request: RelationshipProjectionRequest,
         shared_assertions: dict[str, RelationshipAssertion],
         typed_assertions: dict[str, TypedRelationshipAssertionInput],
+        retained_assertions: dict[str, RetainedAssertionReference],
         assignments: dict[str, SourceCanonicalAssignment],
         decision_input: RelationshipDecisionInput | None,
         reasons: list[str],
@@ -1328,6 +2058,12 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
                 reasons, "unresolved_relationship_assertion_input", assertion is None
             )
             if isinstance(assertion, TypedRelationshipAssertionInput):
+                bound_source_record_refs = {
+                    retained_assertions[reference].source_record_ref
+                    for binding in candidate.evidence_bindings
+                    for reference in binding.assertion_refs
+                    if reference in retained_assertions
+                }
                 _reason(
                     reasons,
                     "typed_relationship_assertion_continuity_mismatch",
@@ -1337,6 +2073,12 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
                     or assertion.source_endpoint != candidate.source_endpoint
                     or assertion.target_endpoint != candidate.target_endpoint
                     or assertion.evidence_bindings != candidate.evidence_bindings
+                    or (
+                        candidate.relationship_type_id
+                        in _INTERNAL_REFERENCE_RELATIONSHIP_TYPE_IDS
+                        and bool(bound_source_record_refs)
+                        and assertion.source_record_ref not in bound_source_record_refs
+                    )
                     or assertion.observed_at != candidate.observed_at
                     or assertion.source_event_time != candidate.source_event_time
                     or assertion.valid_from != candidate.valid_from
@@ -1476,12 +2218,21 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
         )
 
 
-def create_ephemeral_relationship_projection() -> RelationshipProjection:
+def create_ephemeral_relationship_projection(
+    *,
+    relationship_type_registry: RelationshipTypeRegistry | None = None,
+) -> RelationshipProjection:
     """Return the pure in-process adapter used by builds and contract tests."""
-    return _EphemeralRelationshipProjection()
+    return _EphemeralRelationshipProjection(relationship_type_registry)
 
 
 __all__ = [
+    "INTERNAL_REFERENCE_RELATIONSHIP_REGISTRY_CONTENT_SHA256",
+    "INTERNAL_REFERENCE_RELATIONSHIP_REGISTRY_VERSION",
+    "CURRENT_RELATIONSHIP_PROJECTION_SCHEMA_VERSION",
+    "LEGACY_RELATIONSHIP_PROJECTION_SCHEMA_VERSION",
+    "LEGACY_RELATIONSHIP_REGISTRY_CONTENT_SHA256",
+    "LEGACY_RELATIONSHIP_REGISTRY_VERSION",
     "RelationshipAssertion",
     "RelationshipCatalogIdentity",
     "RelationshipDecision",
@@ -1495,10 +2246,14 @@ __all__ = [
     "RelationshipProjectionRequest",
     "RelationshipProjectionResult",
     "RelationshipType",
+    "RelationshipTypeRegistry",
+    "REFERENCE_RELATIONSHIP_ADAPTER_CONTENT_SHA256",
+    "REFERENCE_RELATIONSHIP_ADAPTER_VERSION",
     "RetainedArtifactReference",
     "RetainedAssertionReference",
     "RetainedEvidenceBinding",
     "SourceCanonicalAssignment",
     "TypedRelationshipAssertionInput",
     "create_ephemeral_relationship_projection",
+    "create_installed_relationship_type_registry",
 ]

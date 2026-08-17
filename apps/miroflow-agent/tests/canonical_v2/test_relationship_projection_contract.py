@@ -1427,14 +1427,20 @@ def test_scholarly_output_keeps_attribution_evidence_separate_from_identity() ->
 
     result = module.create_ephemeral_relationship_projection().project(request)
 
+    public_relationship_ids = set(relationship_by_id) - {"paper_has_author"}
     valid_outcomes = tuple(
         _outcome(result, f"valid:{relationship_id}")
-        for relationship_id in relationship_by_id
+        for relationship_id in public_relationship_ids
     )
     assert {outcome.relationship_type_id for outcome in valid_outcomes} == set(
-        relationship_by_id
+        public_relationship_ids
     )
     assert all(outcome.admitted is True for outcome in valid_outcomes)
+    unresolved_authorship = _outcome(result, "valid:paper_has_author")
+    assert unresolved_authorship.admitted is False
+    assert "unresolved_internal_reference_endpoint" in (
+        unresolved_authorship.reason_codes
+    )
     _assert_canonical_decision_layers(
         request, result, "valid:professor_attributed_to_paper"
     )

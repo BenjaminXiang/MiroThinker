@@ -1,0 +1,53 @@
+{
+  "schema_version": "canonical-v2-s11c-disposable-postgres-target-receipt-v1",
+  "status": "passed_cleanup_complete",
+  "generated_at": "2026-07-21T18:03:33Z",
+  "s10o_receipt_sha256": "e0cc1b031066b346e62582fd585ee15a30d7483a498b701b204605a242b92246",
+  "container": {
+    "name": "canonical-v2-s6c-pg-20260712",
+    "id": "dc9ca5347d5445a55b04f634c078b46821579ab0f3264bbfd4527887eab7ef5d",
+    "image_id": "sha256:8ed3192326bb9d114cd5ef9acace453d5dae17425bd089d089330584c84c5a34",
+    "network_mode": "none",
+    "published_ports": [],
+    "postflight_unchanged": true
+  },
+  "backup_gate": {
+    "source_count": 50,
+    "status": "accepted"
+  },
+  "base": {
+    "database": "canonical_v2_s6c_base",
+    "marker": "miroflow:destructive-target:v1:disposable:canonical_v2_s6c_base"
+  },
+  "target": {
+    "created": true,
+    "credentials_stored": false,
+    "database": "miroflow_canonical_v2_s4c_disposable",
+    "dsn_stored": false,
+    "marker": "miroflow:destructive-target:v1:disposable:miroflow_canonical_v2_s4c_disposable",
+    "preexisting": false
+  },
+  "provided_env_names": [
+    "CANONICAL_V2_TEST_BACKUP_GATE_ROOT",
+    "CANONICAL_V2_TEST_DATABASE_URL",
+    "CANONICAL_V2_TEST_EXPECTED_DATABASE",
+    "CANONICAL_V2_TEST_TARGET_KIND"
+  ],
+  "owner_matrix": {
+    "run_id": "disposable-postgres",
+    "exit_code": 0,
+    "passed": 122,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "collected_nodeids_sha256": "1d12f872efb7415aede3a080e3eaaf2291e8e11dfdbe06e6faab9dceeae3aea3",
+    "junit_xml_sha256": "0cc9fedfd76ff9aa66b485d6a64a92cb61bf419cda865fe53e38b3837ee78f36"
+  },
+  "cleanup": {
+    "base_unchanged": true,
+    "container_unchanged": true,
+    "original_pgtest_unchanged": true,
+    "target_database_absent": true
+  },
+  "credential_bearing_dsn_stored": false
+}

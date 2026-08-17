@@ -10,12 +10,13 @@ import inspect
 import json
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from alembic import command
 from alembic.config import Config
 import psycopg
 from psycopg import sql
+from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 import pytest
 from sqlalchemy import exc as sa_exc
@@ -104,6 +105,56 @@ def _module() -> Any:
         raise _MissingTargetModule(
             f"exact target module is absent: {TARGET_MODULE}"
         ) from exc
+
+
+class _Rows:
+    def __init__(self, rows: list[dict[str, Any]]) -> None:
+        self._rows = rows
+
+    def fetchall(self) -> list[dict[str, Any]]:
+        return self._rows
+
+
+class _RecordingRelationshipTypeConnection:
+    def __init__(self, durable_rows: list[dict[str, Any]]) -> None:
+        self.durable_rows = durable_rows
+        self.calls: list[tuple[str, Any]] = []
+
+    def execute(self, statement: str, parameters: Any = None) -> _Rows:
+        self.calls.append((statement, parameters))
+        return _Rows(
+            self.durable_rows
+            if statement.startswith("SELECT relationship_type_id")
+            else []
+        )
+
+
+def test_relationship_type_persistence_compares_exact_version_pairs() -> None:
+    module = _module()
+    relationship_module = import_module(
+        "src.data_agents.canonical_v2.relationship_projection"
+    )
+    registry = relationship_module.create_installed_relationship_type_registry()
+    v1 = registry.resolve("paper_has_author", "canonical-v2-relationship-v1")
+    v2 = registry.resolve("paper_has_author", "canonical-v2-relationship-v2")
+    connection = _RecordingRelationshipTypeConnection(
+        [
+            v1.model_dump(mode="python"),
+            v2.model_dump(mode="python"),
+        ]
+    )
+
+    module._PostgresRelationshipProjectionStore._insert_relationship_types(
+        connection, (v2, v1)
+    )
+
+    select_statement, parameters = connection.calls[-1]
+    assert "unnest(%s::text[], %s::text[])" in select_statement
+    assert "ORDER BY relationship_type_id, version" in select_statement
+    assert parameters == (
+        ["paper_has_author", "paper_has_author"],
+        ["canonical-v2-relationship-v1", "canonical-v2-relationship-v2"],
+    )
 
 
 def _explicit_environment() -> tuple[str, str, str, str]:
@@ -261,6 +312,19 @@ def _canonical_sha256(value: Any) -> str:
             allow_nan=False,
         ).encode()
     ).hexdigest()
+
+
+def _legacy_relationship_result_payload(result: Any) -> dict[str, Any]:
+    payload = result.model_dump(mode="json")
+    payload.pop("projection_schema_version")
+    payload.pop("relationship_registry_version")
+    payload.pop("relationship_registry_content_sha256")
+    for outcome in payload["candidate_outcomes"]:
+        outcome.pop("relationship_type_version")
+    payload["content_sha256"] = _canonical_sha256(
+        {key: value for key, value in payload.items() if key != "content_sha256"}
+    )
+    return payload
 
 
 def _content_bound_projection(model: Any, values: dict[str, Any]) -> Any:
@@ -1023,6 +1087,212 @@ def test_postgres_store_requires_complete_explicit_target_identity() -> None:
         and parameter.default is inspect.Parameter.empty
         for parameter in signature.parameters.values()
     )
+
+
+def test_postgres_store_defers_internal_reference_relationship_batches() -> None:
+    module = _module()
+    relationship_module = import_module(
+        "src.data_agents.canonical_v2.relationship_projection"
+    )
+    request = _projection_request().model_copy(
+        update={
+            "relationship_registry_version": (
+                relationship_module.INTERNAL_REFERENCE_RELATIONSHIP_REGISTRY_VERSION
+            ),
+            "relationship_registry_content_sha256": (
+                relationship_module.INTERNAL_REFERENCE_RELATIONSHIP_REGISTRY_CONTENT_SHA256
+            ),
+        }
+    )
+    result = create_ephemeral_relationship_projection().project(request)
+
+    with pytest.raises(
+        module.RelationshipProjectionPersistenceError,
+        match="internal-reference relationship persistence is deferred",
+    ):
+        module._PostgresRelationshipProjectionStore._validated_pair(request, result)
+
+
+def test_postgres_store_rejects_orphan_internal_typed_assertion() -> None:
+    module = _module()
+    request = _projection_request()
+    orphan_person_endpoint = RelationshipEndpointReference(
+        reference_kind="registry_entity",
+        endpoint_type="person",
+        stable_reference="unresolved-person:orphan",
+    )
+    orphan = request.typed_relationship_assertions[0].model_copy(
+        update={
+            "assertion_id": "typed-relationship-assertion:orphan-person",
+            "target_endpoint": orphan_person_endpoint,
+        }
+    )
+    request_with_orphan = request.model_copy(
+        update={
+            "typed_relationship_assertions": (
+                *request.typed_relationship_assertions,
+                orphan,
+            )
+        }
+    )
+    result = create_ephemeral_relationship_projection().project(request_with_orphan)
+    assert orphan in result.typed_relationship_assertions
+
+    with pytest.raises(
+        module.RelationshipProjectionPersistenceError,
+        match="internal-reference relationship persistence is deferred",
+    ):
+        module._PostgresRelationshipProjectionStore._validated_pair(
+            request_with_orphan,
+            result,
+        )
+
+
+def test_legacy_relationship_payload_and_request_hash_remain_replayable() -> None:
+    module = _module()
+    relationship_module = import_module(
+        "src.data_agents.canonical_v2.relationship_projection"
+    )
+    request = _projection_request()
+    current = create_ephemeral_relationship_projection().project(request)
+    legacy_payload = _legacy_relationship_result_payload(current)
+
+    historical = relationship_module.RelationshipProjectionResult.model_validate(
+        legacy_payload
+    )
+    validated_request, validated_result = (
+        module._PostgresRelationshipProjectionStore._validated_pair(
+            request,
+            historical,
+        )
+    )
+    manual_legacy_request = request.model_dump(mode="json")
+    for field_name in (
+        "relationship_registry_version",
+        "relationship_registry_content_sha256",
+        "internal_reference_projection_request",
+        "internal_reference_projection_result",
+    ):
+        manual_legacy_request.pop(field_name)
+
+    assert historical.projection_schema_version == (
+        relationship_module.LEGACY_RELATIONSHIP_PROJECTION_SCHEMA_VERSION
+    )
+    assert historical.candidate_outcomes[0].relationship_type_version is None
+    assert validated_request == request
+    assert validated_result == historical
+    assert module._legacy_request_content_sha256(request) == _canonical_sha256(
+        manual_legacy_request
+    )
+
+
+def test_legacy_relationship_row_restarts_and_replays(target: _Target) -> None:
+    relationship_module = import_module(
+        "src.data_agents.canonical_v2.relationship_projection"
+    )
+    module = _module()
+    _seed_prerequisites(target)
+    request = _projection_request()
+    current = create_ephemeral_relationship_projection().project(request)
+    store = _store(target)
+    assert store.persist(request, current) == current
+    legacy_payload = _legacy_relationship_result_payload(current)
+
+    with _connect(target, autocommit=True) as connection:
+        for table in (
+            "relationship_projection_run",
+            "relationship_projection_outcome",
+        ):
+            connection.execute(
+                sql.SQL(
+                    "ALTER TABLE knowledge.{} DISABLE TRIGGER trg_reject_mutation"
+                ).format(sql.Identifier(table))
+            )
+        try:
+            connection.execute(
+                "UPDATE knowledge.relationship_projection_run SET "
+                "request_content_sha256 = %s, result_content_sha256 = %s, "
+                "result_payload = %s WHERE release_id = %s AND projection_run_id = %s",
+                (
+                    module._legacy_request_content_sha256(request),
+                    legacy_payload["content_sha256"],
+                    Jsonb(legacy_payload),
+                    RELEASE_ID,
+                    PROJECTION_RUN_ID,
+                ),
+            )
+            for outcome in current.candidate_outcomes:
+                legacy_outcome = outcome.model_dump(mode="json")
+                legacy_outcome.pop("relationship_type_version")
+                connection.execute(
+                    "UPDATE knowledge.relationship_projection_outcome SET "
+                    "outcome_payload = %s, content_sha256 = %s "
+                    "WHERE release_id = %s AND projection_run_id = %s "
+                    "AND candidate_id = %s",
+                    (
+                        Jsonb(legacy_outcome),
+                        _canonical_sha256(legacy_outcome),
+                        RELEASE_ID,
+                        PROJECTION_RUN_ID,
+                        outcome.candidate_id,
+                    ),
+                )
+        finally:
+            for table in (
+                "relationship_projection_run",
+                "relationship_projection_outcome",
+            ):
+                connection.execute(
+                    sql.SQL(
+                        "ALTER TABLE knowledge.{} ENABLE TRIGGER trg_reject_mutation"
+                    ).format(sql.Identifier(table))
+                )
+
+    restarted = _store(target)
+    historical = restarted.load(RELEASE_ID, PROJECTION_RUN_ID)
+
+    assert historical.projection_schema_version == (
+        relationship_module.LEGACY_RELATIONSHIP_PROJECTION_SCHEMA_VERSION
+    )
+    assert historical.candidate_outcomes[0].relationship_type_version is None
+    assert restarted.persist(request, current) == historical
+    assert restarted.persist(request, historical) == historical
+
+
+def test_relationship_type_versions_coexist_in_real_postgres(target: _Target) -> None:
+    module = _module()
+    relationship_module = import_module(
+        "src.data_agents.canonical_v2.relationship_projection"
+    )
+    registry = relationship_module.create_installed_relationship_type_registry()
+    v1 = registry.resolve("paper_has_author", "canonical-v2-relationship-v1")
+    v2 = registry.resolve("paper_has_author", "canonical-v2-relationship-v2")
+
+    with psycopg.connect(
+        _psycopg_dsn(target.database_url),
+        row_factory=cast(Any, dict_row),
+    ) as connection:
+        module._PostgresRelationshipProjectionStore._insert_relationship_types(
+            connection,
+            (v2, v1),
+        )
+        rows = connection.execute(
+            "SELECT relationship_type_id, version FROM "
+            "knowledge.relationship_type WHERE relationship_type_id = %s "
+            "ORDER BY version",
+            ("paper_has_author",),
+        ).fetchall()
+        assert rows == [
+            {
+                "relationship_type_id": "paper_has_author",
+                "version": "canonical-v2-relationship-v1",
+            },
+            {
+                "relationship_type_id": "paper_has_author",
+                "version": "canonical-v2-relationship-v2",
+            },
+        ]
+        connection.rollback()
 
 
 def test_c2_0010_empty_downgrade_and_upgrade_cycle(target: _Target) -> None:

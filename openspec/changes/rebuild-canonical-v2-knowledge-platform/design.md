@@ -283,6 +283,65 @@ and benchmark failures produce typed gap records tied to the query/answer trace 
 classification may propose the owning lane and a recollection/enrichment action, but a reviewed
 offline run performs any canonical mutation.
 
+### 13. Make list completeness and continuation explicit
+
+Every list plan declares one enumeration mode: `exhaustive_bounded` over a named finite universe,
+`required_members` over accepted required entities, or `representative`. Open-world lists default to
+`representative`; Top-K or a non-empty result never implies exhaustiveness. The answer carries scope,
+as-of, checked/eligible/retrieved/displayed accounting, omissions, unknowns, and continuation state.
+
+Answers may end with a structured `ContinuationOffer` only for broad scope, ambiguity, partial
+coverage, evidence gaps, budget exhaustion, or an actually available eligible next hop. It contains
+at most three validated operations bound to the current handles/result set/constraints. Blocking
+ambiguity uses the same structure as clarification choices instead of producing an unsupported
+primary answer.
+
+### 14. Keep Person and Technology internal to the four-domain product
+
+Professor, Company, Paper, and Patent remain the only public inclusion domains. A role-neutral
+internal Person identity/projection may connect resolved Professor, Company-personnel, author, and
+inventor evidence without forcing unresolved names into one identity. Internal versioned Technology
+concepts/routes provide alias, hierarchy, definition, and typed discussion/adoption semantics.
+Release-scoped Industry Briefs synthesize local and current-Web evidence but are not canonical facts.
+
+These internal projections are not storage-only conveniences. S8 uses accepted Person projections
+for bounded evidence-backed filters such as education, Company role, and geography, and resolves
+Technology aliases/routes for typed comparison and representative cross-domain retrieval. S9 renders
+scoped/as-of Industry Briefs with evidence and enumeration coverage. The internal surfaces remain
+auxiliaries: they add no public inclusion population or independently promoted business domain.
+
+Company capability and Product remain separate canonical surfaces in this change. A product
+capability may appear only as an answer-scoped material claim when evidence directly binds the named
+product and capability; Company capability or technical plausibility is insufficient.
+
+### 15. Preserve Web-only continuity without creating online identity
+
+A displayed Web-only entity enters session state only through a typed, session-scoped
+`WebEntityHandle` bound to bounded content-addressed evidence snapshots, retrieval/provider trace,
+claimed domain, display identity, and resolution state. A URL is evidence metadata, not an entity ID.
+An unresolved handle may support displayed-set coreference and Web-evidence narrowing but cannot
+perform canonical traversal or structured filtering. Later read-only resolution retains handle
+lineage and never mutates canonical identity.
+
+### 16. Use lightweight explicit interaction and acceptance policies
+
+Entity ambiguity uses a versioned evidence/confidence/margin gate. One clearly dominant candidate may
+be answered with an interpretation notice and switch option; otherwise the turn is clarification-
+only. Local safety/compliance questions use a narrow safety-guidance policy rather than ordinary F
+refusal: brief lawful risk advice is allowed, while venue allegations, discovery, evasion assistance,
+and general Web search are forbidden.
+
+S8 records assessment intent and any explicit user criteria but does not finalize evidence-dependent
+dimensions. After retrieval, S9 may select dimensions per turn from the question and returned
+evidence, with explicit user criteria taking precedence. A compact structured frame binds each
+dimension to evidence, conclusion/insufficiency, and uncertainty; no global policy registry, fixed
+weighting, or canonical score is required.
+
+Acceptance uses versioned machine-readable per-turn contracts for required/forbidden claims and
+entities, allowed variants, source snapshots, as-of, enumeration policy, and observable stage
+outcomes. Reference prose is explanatory only, hard case requirements cannot be averaged away, and
+an LLM judge cannot establish external truth from model memory.
+
 ## Risks / Trade-offs
 
 - **[Risk] The clean-slate scope is large and may stay half-finished.** → Deliver independently
@@ -319,20 +378,25 @@ offline run performs any canonical mutation.
    after read-only inventory work.
 2. Complete the source inventory and reviewed baseline in the isolated recovery lab. Freeze numeric
    acceptance thresholds without writing the original sources.
-3. Create content-addressed backups for every required original/recovery/historical source family,
+3. Migrate applicable regression/challenge turns to reviewed claim-level case contracts and accept
+   S2C before using the corpus as the S8/S9 acceptance oracle.
+4. Create content-addressed backups for every required original/recovery/historical source family,
    restore them into independent isolated targets, and accept the backup/restore gate. No Canonical
    V2 or landing write may occur before this checkpoint.
-4. Create the new Canonical V2 database baseline and module interface contract tests.
-5. Ingest forensic/historical sources into immutable landing through source adapters; checkpoint and
+5. Create the new Canonical V2 database baseline and module interface contract tests.
+6. Ingest forensic/historical sources into immutable landing through source adapters; checkpoint and
    verify chain-of-custody manifests.
-6. Build typed domain identity/assertion/relationship projections into a candidate release; add
+7. Build typed domain identity/assertion/relationship projections into a candidate release; add
    targeted recollection/enrichment for measured PRD gaps.
-7. Build versioned published projections and full Milvus indexes from the same candidate manifest.
-8. Run domain/path retrieval, relation, grounded-answer, Web, parity, latency/cost, and rollback
+8. Reconcile and accept S6R internal Person/Technology reference contracts without adding a fifth
+   public inclusion domain or canonical Product-capability relation.
+9. Build versioned public plus internal auxiliary projections and full Milvus indexes from the same
+   candidate manifest.
+10. Run domain/path retrieval, relation, grounded-answer, Web, parity, latency/cost, and rollback
    acceptance. Iterate only inside isolated candidate releases.
-9. Migrate admin/chat/data consumers to the new module interfaces and run old/new scenario comparison
+11. Migrate admin/chat/data consumers to the new module interfaces and run old/new scenario comparison
    as evidence, not as a compatibility promise.
-10. Obtain explicit acceptance and separate cutover authorization. Promotion to any production-like
+12. Obtain explicit acceptance and separate cutover authorization. Promotion to any production-like
    target is outside this plan until then.
 
 Rollback during development discards or deactivates the rejected candidate and restores the prior

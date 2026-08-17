@@ -28,6 +28,9 @@ from .contracts import RelationshipAssertion
 from .contracts import RelationshipType
 from .rebuild_write_gate import require_accepted_backup_gate
 from .relationship_projection import (
+    CURRENT_RELATIONSHIP_PROJECTION_SCHEMA_VERSION,
+    LEGACY_RELATIONSHIP_PROJECTION_SCHEMA_VERSION,
+    LEGACY_RELATIONSHIP_REGISTRY_VERSION,
     RelationshipProjectionRequest,
     RelationshipProjectionResult,
     create_ephemeral_relationship_projection,
@@ -67,6 +70,112 @@ def _canonical_sha256(value: Any) -> str:
 
 def _model_hash(value: BaseModel) -> str:
     return _canonical_sha256(value.model_dump(mode="json"))
+
+
+def _legacy_request_content_sha256(request: RelationshipProjectionRequest) -> str:
+    payload = request.model_dump(mode="json")
+    for field_name in (
+        "relationship_registry_version",
+        "relationship_registry_content_sha256",
+        "internal_reference_projection_request",
+        "internal_reference_projection_result",
+    ):
+        payload.pop(field_name, None)
+    return _canonical_sha256(payload)
+
+
+def _legacy_outcome_hash(value: BaseModel) -> str:
+    payload = value.model_dump(mode="json")
+    payload.pop("relationship_type_version", None)
+    return _canonical_sha256(payload)
+
+
+def _request_uses_internal_reference(
+    request: RelationshipProjectionRequest,
+) -> bool:
+    internal_types = {"person", "technology_concept", "technology_route"}
+    relationship_endpoints = (
+        endpoint
+        for candidate in request.candidates
+        for endpoint in (candidate.source_endpoint, candidate.target_endpoint)
+    )
+    typed_assertion_endpoints = (
+        endpoint
+        for assertion in request.typed_relationship_assertions
+        for endpoint in (assertion.source_endpoint, assertion.target_endpoint)
+    )
+    probe_endpoints = (
+        endpoint
+        for probe in request.direction_probes
+        for endpoint in (probe.source_endpoint, probe.target_endpoint)
+    )
+    return (
+        request.relationship_registry_version != LEGACY_RELATIONSHIP_REGISTRY_VERSION
+        or request.internal_reference_projection_request is not None
+        or request.internal_reference_projection_result is not None
+        or any(
+            endpoint.endpoint_type in internal_types
+            for endpoint in (
+                *relationship_endpoints,
+                *typed_assertion_endpoints,
+                *probe_endpoints,
+            )
+        )
+        or any(
+            endpoint.entity_type in internal_types
+            for assertion in request.relationship_assertions
+            for endpoint in (assertion.source_endpoint, assertion.target_endpoint)
+        )
+        or any(
+            assignment.entity_type in internal_types
+            for assignment in request.source_canonical_assignments
+        )
+    )
+
+
+def _legacy_result_is_current_equivalent(
+    request: RelationshipProjectionRequest,
+    historical: RelationshipProjectionResult,
+    current: RelationshipProjectionResult,
+) -> bool:
+    if (
+        historical.projection_schema_version
+        != LEGACY_RELATIONSHIP_PROJECTION_SCHEMA_VERSION
+        or current.projection_schema_version
+        != CURRENT_RELATIONSHIP_PROJECTION_SCHEMA_VERSION
+    ):
+        return False
+    versions = {
+        candidate.candidate_id: candidate.relationship_type_version
+        for candidate in request.candidates
+    }
+    if any(
+        outcome.candidate_id not in versions
+        for outcome in historical.candidate_outcomes
+    ):
+        return False
+    upgraded_outcomes = tuple(
+        outcome.model_copy(
+            update={
+                "relationship_type_version": versions[outcome.candidate_id],
+            }
+        )
+        for outcome in historical.candidate_outcomes
+    )
+    try:
+        upgraded = RelationshipProjectionResult.model_validate(
+            {
+                **historical.model_dump(mode="python"),
+                "projection_schema_version": (
+                    CURRENT_RELATIONSHIP_PROJECTION_SCHEMA_VERSION
+                ),
+                "candidate_outcomes": upgraded_outcomes,
+                "content_sha256": current.content_sha256,
+            }
+        )
+    except (TypeError, ValueError, ValidationError):
+        return False
+    return upgraded == current
 
 
 def _temporal_json(value: Any | None) -> Jsonb | None:
@@ -258,6 +367,11 @@ class _PostgresRelationshipProjectionStore(RelationshipProjectionStore):
             validated_result = RelationshipProjectionResult.model_validate(
                 result.model_dump(mode="python")
             )
+            if _request_uses_internal_reference(validated_request):
+                raise RelationshipProjectionPersistenceError(
+                    "internal-reference relationship persistence is deferred until "
+                    "its canonical projections are durable"
+                )
             projected = create_ephemeral_relationship_projection().project(
                 validated_request
             )
@@ -265,7 +379,11 @@ class _PostgresRelationshipProjectionStore(RelationshipProjectionStore):
             raise RelationshipProjectionPersistenceError(
                 "relationship request/result failed typed validation"
             ) from exc
-        if projected != validated_result:
+        if projected != validated_result and not _legacy_result_is_current_equivalent(
+            validated_request,
+            validated_result,
+            projected,
+        ):
             raise RelationshipProjectionPersistenceError(
                 "relationship result is not the exact projection of its request"
             )
@@ -290,7 +408,20 @@ class _PostgresRelationshipProjectionStore(RelationshipProjectionStore):
         connection: psycopg.Connection[dict[str, Any]],
         relationship_types: tuple[RelationshipType, ...],
     ) -> None:
-        for relationship_type in relationship_types:
+        ordered_types = tuple(
+            sorted(
+                relationship_types,
+                key=lambda item: (item.relationship_type_id, item.version),
+            )
+        )
+        keys = tuple(
+            (item.relationship_type_id, item.version) for item in ordered_types
+        )
+        if len(keys) != len(set(keys)):
+            raise RelationshipProjectionPersistenceError(
+                "relationship catalog contains duplicate exact-version keys"
+            )
+        for relationship_type in ordered_types:
             connection.execute(
                 "INSERT INTO knowledge.relationship_type "
                 "(relationship_type_id, version, layer, source_entity_types, "
@@ -321,14 +452,17 @@ class _PostgresRelationshipProjectionStore(RelationshipProjectionStore):
             "SELECT relationship_type_id, version, layer, source_entity_types, "
             "target_entity_types, direction, roles, required_evidence_kinds, "
             "time_semantics, allowed_states, eligible_paths "
-            "FROM knowledge.relationship_type WHERE relationship_type_id = ANY(%s) "
-            "ORDER BY relationship_type_id",
-            ([item.relationship_type_id for item in relationship_types],),
+            "FROM knowledge.relationship_type "
+            "WHERE (relationship_type_id, version) IN ("
+            "SELECT * FROM unnest(%s::text[], %s::text[])) "
+            "ORDER BY relationship_type_id, version",
+            (
+                [item.relationship_type_id for item in ordered_types],
+                [item.version for item in ordered_types],
+            ),
         ).fetchall()
         durable = tuple(RelationshipType.model_validate(row) for row in rows)
-        if durable != tuple(
-            sorted(relationship_types, key=lambda item: item.relationship_type_id)
-        ):
+        if durable != ordered_types:
             raise RelationshipProjectionPersistenceError(
                 "installed relationship catalog conflicts with durable rows"
             )
@@ -851,7 +985,15 @@ class _PostgresRelationshipProjectionStore(RelationshipProjectionStore):
             (
                 "relationship_projection_outcome",
                 "candidate_id",
-                cls._expected_hashes(result.candidate_outcomes, "candidate_id"),
+                (
+                    {
+                        outcome.candidate_id: _legacy_outcome_hash(outcome)
+                        for outcome in result.candidate_outcomes
+                    }
+                    if result.projection_schema_version
+                    == LEGACY_RELATIONSHIP_PROJECTION_SCHEMA_VERSION
+                    else cls._expected_hashes(result.candidate_outcomes, "candidate_id")
+                ),
             ),
             (
                 "current_relationship_projection",
@@ -968,6 +1110,14 @@ class _PostgresRelationshipProjectionStore(RelationshipProjectionStore):
         request_content_sha256 = _canonical_sha256(
             validated_request.model_dump(mode="json")
         )
+        acceptable_request_hashes = {request_content_sha256}
+        if (
+            validated_request.relationship_registry_version
+            == LEGACY_RELATIONSHIP_REGISTRY_VERSION
+        ):
+            acceptable_request_hashes.add(
+                _legacy_request_content_sha256(validated_request)
+            )
         try:
             with self._connection(write=True) as connection:
                 try:
@@ -991,28 +1141,43 @@ class _PostgresRelationshipProjectionStore(RelationshipProjectionStore):
                         ),
                     ).fetchone()
                     if existing is not None:
-                        if existing["request_content_sha256"] != request_content_sha256:
-                            raise RelationshipProjectionPersistenceError(
-                                "one release/run cannot identify changed request content"
-                            )
                         if (
-                            existing["result_content_sha256"]
-                            != validated_result.content_sha256
+                            existing["request_content_sha256"]
+                            not in acceptable_request_hashes
                         ):
                             raise RelationshipProjectionPersistenceError(
-                                "one release/run cannot identify changed relationship content"
+                                "one release/run cannot identify changed request content"
                             )
                         durable = self._load_snapshot(
                             connection,
                             validated_result.release_id,
                             validated_result.projection_run_id,
                         )
-                        if durable != validated_result:
+                        if durable != validated_result and not (
+                            _legacy_result_is_current_equivalent(
+                                validated_request,
+                                durable,
+                                validated_result,
+                            )
+                            or _legacy_result_is_current_equivalent(
+                                validated_request,
+                                validated_result,
+                                durable,
+                            )
+                        ):
                             raise RelationshipProjectionPersistenceError(
                                 "idempotent relationship replay is not exact"
                             )
                         connection.rollback()
                         return durable
+
+                    if (
+                        validated_result.projection_schema_version
+                        == LEGACY_RELATIONSHIP_PROJECTION_SCHEMA_VERSION
+                    ):
+                        raise RelationshipProjectionPersistenceError(
+                            "legacy relationship results may replay existing runs only"
+                        )
 
                     self._require_candidate_release(connection, validated_result)
                     self._require_retained_evidence(connection, validated_request)

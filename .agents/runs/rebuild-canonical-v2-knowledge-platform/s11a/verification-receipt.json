@@ -1,0 +1,142 @@
+{
+  "schema_version": "canonical-v2-s11a-release-bound-chat-http-adapter-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s11a-release-bound-chat-http-adapter",
+  "status": "Accepted",
+  "candidate_at": "2026-07-20T19:44:36Z",
+  "accepted_at": "2026-07-20T19:56:07Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "git_branch": "canonical-v2-s2-baseline",
+  "ledger": {
+    "before": "65/80",
+    "after": "65/80",
+    "tasks_changed": [],
+    "task_11_checkboxes_changed": false,
+    "acceptance_changed": false
+  },
+  "dependencies": {
+    "s8c_receipt_sha256": "9e912de80fad1d82c6b6e27d71f04b458a0c78799c104ff6ca0e659e0f43ebca",
+    "s8c_contract_sha256": "9f2e7c290eb043cda2d361c01055590b85f0480ba9336cd162e61acf3c7ed666",
+    "s9i_receipt_sha256": "658c12f519a55d3e5ca02eea7b2a5deba36d47954fe04d9233934a434e0ac366",
+    "s9i_contract_sha256": "4464272b83f2f8edcabfa5d125a7b8e8e680c0aa07b6bcd3503ec259ec2e3461",
+    "s10o_receipt_sha256": "e0cc1b031066b346e62582fd585ee15a30d7483a498b701b204605a242b92246",
+    "s10o_contract_sha256": "ba7b5d6e4978796da58c30ea21ae0529c90d0bfc226137fe438b8e52a9b09931",
+    "s8x_receipt_sha256": "b00e3fd9594b821d5df13a2c0e012f86f9f468c6d66dda8777b4d889fa3100ac",
+    "s8x_contract_sha256": "b9e0ca287ad1b8efa530c95e48bad6c77ab2501728f16efa67872e27e685e0db",
+    "knowledge_read_sha256": "a28488c400a8e1dea66b3ad9f87fc048895b4f96f0da15548bcc9590e85b86fc",
+    "knowledge_answer_sha256": "386ce550f9b3f1c47c76f854307d9461cb8177bf44968dd7f4f51678ee104d9e",
+    "successor_owner_sha256": "29191a15c875cf95f4d2c6c432a2c6136c3f4cd9571369ef00306a4767b79d01",
+    "physical_owner_sha256": "61c9ec362e39d7e4eca9a3db7e02d9bf5ebde095e4acb0f02c989437baed147f"
+  },
+  "scope": {
+    "implementation_files": [
+      "apps/admin-console/backend/api/chat.py",
+      "apps/admin-console/backend/api/chat_contracts.py",
+      "apps/admin-console/backend/api/canonical_v2_chat.py",
+      "apps/admin-console/backend/canonical_v2_deps.py",
+      "apps/admin-console/backend/services/canonical_v2_chat.py"
+    ],
+    "owner": "apps/admin-console/tests/test_canonical_v2_chat_http_adapter.py",
+    "evidence_files": [
+      ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11a/dependency-audit.md",
+      ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11a/implementation-plan.md",
+      ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11a/verification-receipt.json",
+      ".agents/runs/rebuild-canonical-v2-knowledge-platform/slices/s11a-release-bound-chat-http-adapter.md"
+    ],
+    "frontend_changed": false,
+    "canonical_v2_predecessor_changed": false,
+    "schema_or_migration_changed": false,
+    "source_or_active_pointer_changed": false
+  },
+  "final_implementation_hashes": {
+    "legacy_chat_sha256": "c15974c579cd1e1d58592c13b8600d535868d3d9f749c0b67c6ba8473918bfb6",
+    "chat_contracts_sha256": "1cd021180556aa8bddab44848c341fdc4ecb83f17f991b4fa3b4d76d4c7e2c62",
+    "canonical_v2_chat_route_sha256": "b8f6fa7b6c8a3469160a8b1699cd87d4af20ddc2b35d0bbbb5cd075d506c9c48",
+    "canonical_v2_deps_sha256": "5567bdbd5fdc0b0f7181b9ee1a989b027e4991811afb2f79b744821f91cbdac7",
+    "canonical_v2_chat_service_sha256": "163691d31a36134df3c6975e820d759fd1734a367ae93e33005f2e8247444644",
+    "owner_sha256": "e91aecf229c19e18f98696e2abced0ab9605191d7d8aa54fe6cfa3e0e74a7ba8",
+    "chat_schema_sha256": "04584086d12ca5c56e5fd28f702d2fe5f71a20038be84f0dbdcc45524edcbd94",
+    "root_openai_helper_sha256": "95aad03fd4fb8cd0a6491af91842e2a729e7861aed398f0dce4624cbe5d1916a"
+  },
+  "tdd": {
+    "normal_red": "exactly 1 xfailed with zero failure/error/XPASS at the missing S11A seam",
+    "forced_red": "exactly 1 _MissingS11AChatAdapter failure before fixture, SQL, provider, release, or answer effects",
+    "post_red_contract_corrections": [
+      "information-retrieval exact proposal includes required bounded Universal Web",
+      "route-private clock seam is bound to deterministic NOW",
+      "typed explicit-name punctuation lets the real isolated exact adapter resolve Robotics Co",
+      "Accepted S8C server-owned SupplementalBudget is exact-revalidated over each real plan",
+      "Accepted S8R2 representative EnumerationPolicy is exact-revalidated only for one already-typed public relationship path with displayed canonical IDs"
+    ],
+    "focused_green_warnings_as_errors": "1 passed in 11.95 seconds; no skip/xfail/XPASS",
+    "real_vertical": "three HTTP turns use the real release-bound planner, Read, and Answer once per successful turn; invalid selections fail before effects",
+    "atomicity": "plan/read/answer/release/mapping/response failures preserve the prior answer session and immutable feedback checkpoint byte-for-byte"
+  },
+  "verification": {
+    "legacy_chat_baseline": "250 passed, 7 failed, 3 skipped, 4 warnings in 10.07 seconds; exactly the frozen seven failure node IDs",
+    "legacy_chat_canonical_payload_sha256_before_and_after": "de88a0b8a64bba955d80fe06b8e54a1783a46fda36549f43c9cb11ac192bc959",
+    "focused_predecessors": "26 passed with the three retained hostile serializer warnings in 13.42 seconds",
+    "s10o_admin_owner": "1 passed in 1.09 seconds with four frozen FastAPI on_event warnings",
+    "s8x_physical_four": "4 passed in 148.45 seconds",
+    "canonical_v2_no_external": "363 passed, 148 skipped, 3 retained hostile serializer warnings in 208.84 seconds; exit 0",
+    "admin_console_guarded_no_external": "preflight blocked AF_INET/AF_INET6 connect and connect_ex, blocked psycopg, kept 15 sensitive environment names explicitly empty, and allowed only AF_UNIX; 579 collected, 578 executed, 440 passed, 130 skipped, 8 failed, 1 deselected, 12 warnings, 0 errors, 0 xfail/XPASS in 21.63 seconds; exit 1",
+    "admin_console_guarded_failure_disposition": "seven failures are the exact frozen legacy set; tests/test_data_api_quality_status.py::test_get_paper_detail_returns_quality_status is one unrelated pre-existing call-order mismatch between tracked git-diff-clean backend/api/domains.py and that test: the payload quality_status is correct, while the stale assertion expects the detail SELECT at conn.calls[0] although alias resolution occupies that position; S11A-related unexpected failures are zero",
+    "ruff_check": "passed for all six S11A production/test files",
+    "ruff_format": "five non-legacy changed files already formatted; legacy chat.py is a documented pre-existing whole-file format exception",
+    "py_compile": "passed for all six S11A production/test files",
+    "pyright": "0 errors, 0 warnings, 0 informations for the five V2-safe modules/owner changed scope",
+    "route_import_contract_guards": "passed: one POST /api/chat owned by V2, no conn parameter, identity re-exports exact, V2 modules quarantine legacy chat/deps",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "uv_lock_check_offline": "resolved 222 packages without lock drift",
+    "secret_conflict_scope_checks": "no production credential assignment, conflict marker, or missing surgical legacy diff guard",
+    "owned_generated_cache_cleanup": "complete",
+    "full_unfiltered_admin_attempt": "not evidence: intentionally interrupted after dotenv restored a forbidden real-data DSN and the suite refused that target"
+  },
+  "wheel": {
+    "sha256": "77760e758acc47a8d0b4b2fade9b724d2f9a96973b137bc9a4905eb2fede0ca9",
+    "entry_count": 32,
+    "contains_tests_agents_or_openspec": false,
+    "all_five_production_source_hashes_match_wheel_entries": true,
+    "owned_output_cleanup_complete": true
+  },
+  "reviews": {
+    "final_deep_review": "Critical=0, Important=0, Minor=0, YAGNI=0",
+    "final_independent_read_only_review": "Critical=0, Important=0, Minor=0, YAGNI=0",
+    "admin_exception_audit_primary": "Critical=0, Important=0, Minor=1, YAGNI=0; exact domains.py/test wording repaired before acceptance",
+    "admin_exception_audit_independent": "Critical=0, Important=0, Minor=2, YAGNI=0; exact domains.py/test wording and stale pending-status prose repaired before acceptance",
+    "final_open_findings": "Critical=0, Important=0; all reported wording Minors closed"
+  },
+  "protected_targets": {
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_milvus_size": 1298632704,
+    "original_milvus_mtime": 1783567641,
+    "original_pgtest_container_id": "dabafbdc0fdd9f4f61f10bfa3d1d799e3ff78a9461430edd1b3f4b7e85d36328",
+    "original_pgtest_state": "status=paused running=true paused=true restart=no",
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "original_pgtest_host_port": "15432",
+    "recovery_lab": "network=none ports={} restart=no",
+    "forensic_hashes": {
+      "FORENSIC-CHECKPOINT.md": "cb542decb9bceabee6d3c0bbdba2221d966f2660cc0d29bf55b48a4871184ca7",
+      "RECOVERY-EXPERIMENT-REPORT.md": "5f1e942ac84c16381888f39067c2c2f75da92afaf126e32e39083441374907b3",
+      "LOGICAL-REBUILD-PLAN.md": "aa9ef89cc5424e16a3c95560f91651a70e158e549ae051025ffa536860a59159",
+      "host-ext4-journal-20260711T024500Z.bin": "e24b1ae32004cc7213e15b1da34a79774978e61d328807b45b715b755e045c65",
+      "lab-01/ext4-dir-inode-27017891.bin": "74d990fd2e25cb0a8562d16643feacb2baf5322e93ebf00a81722c14ba98ef37",
+      "lab-01/miroflow-real-fpi-salvage.dump": "cef8eb6ba18ebd23fde3e47023222ecb82bc8f27582040efe5a212a7f9fdfbb7",
+      "lab-01/recovered-paper-ids.txt": "92cf87dc820a118c8eeee7924f7991314e825a31f699b70f6db4d014738adc9c",
+      "lab-01/recovered-link-ids.txt": "e137eb68ee174663eb7d563706ddaa9ee48574e4da8aa1130acb488a1918a292"
+    }
+  },
+  "candidate_artifact_hashes": {
+    "dependency_audit_sha256": "247f455e06689b92bfff4f13cf2021deabcf9bd9581df9f7ed94c52758992332",
+    "implementation_plan_sha256": "e3576652f4fef513b45db2472346b32b63be951e3895bc8610ff8f9fadb26117",
+    "slice_contract_sha256": "4918216c9ec17e292150d1f1b2ba56b6151aacc495e6c2d9d1b75ef7d382fc7a"
+  },
+  "accepted_artifact_hashes": {
+    "dependency_audit_sha256": "247f455e06689b92bfff4f13cf2021deabcf9bd9581df9f7ed94c52758992332",
+    "implementation_plan_sha256": "e954b033c0d734d6a0ee9109d64de814f79c332c36d498c6f324ac776ff73c7e",
+    "slice_contract_sha256": "ecf8e53a2d44801f561becbf97a3502fcdfb4ddc72cbff3396c0d5ea7398abd4"
+  },
+  "next_required_action": "Start the already-specified S11B consumer/writer quarantine slice from the Accepted S11A dependency checkpoint; keep Tasks 11.1-11.5 open for S11C aggregate closure.",
+  "forbidden_actions_performed": []
+}

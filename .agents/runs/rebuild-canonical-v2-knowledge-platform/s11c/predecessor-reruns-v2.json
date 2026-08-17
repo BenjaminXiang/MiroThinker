@@ -1,0 +1,154 @@
+{
+  "accepted_s11b_receipt_path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11b/verification-receipt.json",
+  "accepted_s11b_receipt_sha256": "cee1beebe2bdb1eba3f09b06e4e3c819167bbba14d5b6d6072f1f4cbafb0a945",
+  "runs": [
+    {
+      "accepted_command": "cd apps/miroflow-agent && uv run pytest -o addopts='' -p no:cacheprovider -W error -q tests/canonical_v2/test_consumer_migration_boundary.py tests/scripts/test_run_canonical_v2_evidence_ingest.py tests/scripts/test_capture_canonical_v2_s11b_baseline.py",
+      "accepted_command_json_pointer": "/verification/focused_agent_owners/command",
+      "accepted_command_sha256": "9f3cf0ed8b0fb12fd0ffc19bc33c2f088da391c08a592a65c62b0869a3528ae7",
+      "cross_links": [
+        {
+          "junit_xml_sha256": "d436f4273303349366b07e760d620d193cc6d74d6a9b5580d90a84d696cb38db",
+          "ledger_run_id": "s11b-focused-agent-junit",
+          "nodeid": "tests/canonical_v2/test_consumer_migration_boundary.py::test_s11b_sanctioned_entrypoints_classify_and_exclude_legacy_consumers"
+        }
+      ],
+      "cwd": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2",
+      "exit_code": 0,
+      "finished_at": "2026-07-21T18:39:37.713894Z",
+      "launcher_argv": [
+        "/bin/bash",
+        "-lc",
+        "cd apps/miroflow-agent && uv run pytest -o addopts='' -p no:cacheprovider -W error -q tests/canonical_v2/test_consumer_migration_boundary.py tests/scripts/test_run_canonical_v2_evidence_ingest.py tests/scripts/test_capture_canonical_v2_s11b_baseline.py"
+      ],
+      "run_id": "s11b-focused-agent-owners",
+      "sanitized_env_unset": [
+        "HF_TOKEN"
+      ],
+      "started_at": "2026-07-21T18:39:27.100796Z",
+      "stderr_sha256": "f3e34d0d4d53667dbd690adde8d21ba90338503696b6fdd31d2512688e26350f",
+      "stdout_sha256": "b6280b3b17a823a68e8e6994429a70929ccf047a3ed081ca893b6878c81f8b26"
+    },
+    {
+      "accepted_command": "cd apps/admin-console && uv run pytest -o addopts='' -p no:cacheprovider --noconftest -W error -q tests/test_canonical_v2_consumer_migration.py::test_s11b_candidate_app_exposes_only_release_bound_v2_consumers tests/test_smoke_canonical_v2_candidate.py",
+      "accepted_command_json_pointer": "/verification/focused_admin_s11b_owners/command",
+      "accepted_command_sha256": "2c245915e8b3c6e90536a5201700905d426a39fec254aa23a6922829b19bb7cb",
+      "cross_links": [
+        {
+          "junit_xml_sha256": "4c3b7cd4cdb1bd088e5895e6f77007347b4759b7e12b48decc908d65794255d2",
+          "ledger_run_id": "s11b-focused-admin-junit",
+          "nodeid": "tests/test_canonical_v2_consumer_migration.py::test_s11b_candidate_app_exposes_only_release_bound_v2_consumers"
+        },
+        {
+          "junit_xml_sha256": "4c3b7cd4cdb1bd088e5895e6f77007347b4759b7e12b48decc908d65794255d2",
+          "ledger_run_id": "s11b-focused-admin-junit",
+          "nodeid": "tests/test_smoke_canonical_v2_candidate.py::test_smoke_requires_explicit_release_and_reuses_one_cookie_session"
+        }
+      ],
+      "cwd": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2",
+      "exit_code": 0,
+      "finished_at": "2026-07-21T18:39:59.575874Z",
+      "launcher_argv": [
+        "/bin/bash",
+        "-lc",
+        "cd apps/admin-console && uv run pytest -o addopts='' -p no:cacheprovider --noconftest -W error -q tests/test_canonical_v2_consumer_migration.py::test_s11b_candidate_app_exposes_only_release_bound_v2_consumers tests/test_smoke_canonical_v2_candidate.py"
+      ],
+      "run_id": "s11b-focused-admin-owners",
+      "sanitized_env_unset": [
+        "HF_TOKEN"
+      ],
+      "started_at": "2026-07-21T18:39:37.713960Z",
+      "stderr_sha256": "f3e34d0d4d53667dbd690adde8d21ba90338503696b6fdd31d2512688e26350f",
+      "stdout_sha256": "47a6914f74f54563152a4e4a4bb4975e73822a601b2ced244a049de0c6340c42"
+    },
+    {
+      "accepted_command": "cd apps/admin-console && ROOT_HELPER=/home/longxiang/MiroThinker env -u DATABASE_URL -u DATABASE_URL_TEST PYTHONPATH=\"$ROOT_HELPER${PYTHONPATH:+:$PYTHONPATH}\" uv run pytest -o addopts='' -p no:cacheprovider -W error -W 'ignore::DeprecationWarning:backend.main' -W 'ignore::DeprecationWarning:fastapi.applications' tests/test_canonical_v2_chat_http_adapter.py -q",
+      "accepted_command_json_pointer": "/verification/s11a_predecessor_owner/command",
+      "accepted_command_sha256": "05e8320438da67d49ee0d696d456fd29787ec2859f4f18641af9a299f46647cc",
+      "cross_links": [
+        {
+          "junit_xml_sha256": "5fc6239cb01fabae8519644474e770e8e9bf7c25b874771e7acba69c40c2711c",
+          "ledger_run_id": "s11a-http-session",
+          "nodeid": "tests/test_canonical_v2_chat_http_adapter.py::test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql"
+        },
+        {
+          "junit_xml_sha256": "5fc6239cb01fabae8519644474e770e8e9bf7c25b874771e7acba69c40c2711c",
+          "ledger_run_id": "s11a-http-session",
+          "nodeid": "tests/test_canonical_v2_chat_http_adapter.py::test_s9j_chat_adapter_maps_continuation_execution_to_public_copy[ambiguity-switch_candidate-\\u53ef\\u5207\\u6362\\u5230\\u5176\\u4ed6\\u6709\\u8bc1\\u636e\\u652f\\u6301\\u7684\\u5019\\u9009\\u5b9e\\u4f53-\\u5207\\u6362\\u5019\\u9009\\u5b9e\\u4f53]"
+        },
+        {
+          "junit_xml_sha256": "5fc6239cb01fabae8519644474e770e8e9bf7c25b874771e7acba69c40c2711c",
+          "ledger_run_id": "s11a-http-session",
+          "nodeid": "tests/test_canonical_v2_chat_http_adapter.py::test_s9j_chat_adapter_maps_continuation_execution_to_public_copy[broad_scope-narrow_scope-\\u53ef\\u8fdb\\u4e00\\u6b65\\u7f29\\u5c0f\\u5f53\\u524d\\u7ed3\\u679c\\u8303\\u56f4-\\u7f29\\u5c0f\\u5f53\\u524d\\u7ed3\\u679c\\u8303\\u56f4]"
+        },
+        {
+          "junit_xml_sha256": "5fc6239cb01fabae8519644474e770e8e9bf7c25b874771e7acba69c40c2711c",
+          "ledger_run_id": "s11a-http-session",
+          "nodeid": "tests/test_canonical_v2_chat_http_adapter.py::test_s9j_chat_adapter_maps_continuation_execution_to_public_copy[budget_exhausted-resume_bounded_search-\\u672c\\u8f6e\\u68c0\\u7d22\\u9884\\u7b97\\u5df2\\u7528\\u5c3d-\\u7ee7\\u7eed\\u6709\\u754c\\u68c0\\u7d22]"
+        },
+        {
+          "junit_xml_sha256": "5fc6239cb01fabae8519644474e770e8e9bf7c25b874771e7acba69c40c2711c",
+          "ledger_run_id": "s11a-http-session",
+          "nodeid": "tests/test_canonical_v2_chat_http_adapter.py::test_s9j_chat_adapter_maps_continuation_execution_to_public_copy[eligible_next_hop-traverse_relationship-\\u53ef\\u7ee7\\u7eed\\u63a2\\u7d22\\u5df2\\u9a8c\\u8bc1\\u7684\\u5173\\u8054-\\u63a2\\u7d22\\u5df2\\u9a8c\\u8bc1\\u5173\\u8054]"
+        },
+        {
+          "junit_xml_sha256": "5fc6239cb01fabae8519644474e770e8e9bf7c25b874771e7acba69c40c2711c",
+          "ledger_run_id": "s11a-http-session",
+          "nodeid": "tests/test_canonical_v2_chat_http_adapter.py::test_s9j_chat_adapter_maps_continuation_execution_to_public_copy[evidence_gap-targeted_evidence_search-\\u5f53\\u524d\\u95ee\\u9898\\u4ecd\\u6709\\u8bc1\\u636e\\u7f3a\\u53e3-\\u7ee7\\u7eed\\u68c0\\u7d22\\u9488\\u5bf9\\u6027\\u8bc1\\u636e]"
+        },
+        {
+          "junit_xml_sha256": "5fc6239cb01fabae8519644474e770e8e9bf7c25b874771e7acba69c40c2711c",
+          "ledger_run_id": "s11a-http-session",
+          "nodeid": "tests/test_canonical_v2_chat_http_adapter.py::test_s9j_chat_adapter_maps_continuation_execution_to_public_copy[partial_coverage-continue_coverage-\\u5f53\\u524d\\u8986\\u76d6\\u4ecd\\u4e0d\\u5b8c\\u6574-\\u7ee7\\u7eed\\u8865\\u5145\\u8986\\u76d6]"
+        }
+      ],
+      "cwd": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2",
+      "exit_code": 0,
+      "finished_at": "2026-07-21T18:40:14.948175Z",
+      "launcher_argv": [
+        "/bin/bash",
+        "-lc",
+        "cd apps/admin-console && ROOT_HELPER=/home/longxiang/MiroThinker env -u DATABASE_URL -u DATABASE_URL_TEST PYTHONPATH=\"$ROOT_HELPER${PYTHONPATH:+:$PYTHONPATH}\" uv run pytest -o addopts='' -p no:cacheprovider -W error -W 'ignore::DeprecationWarning:backend.main' -W 'ignore::DeprecationWarning:fastapi.applications' tests/test_canonical_v2_chat_http_adapter.py -q"
+      ],
+      "run_id": "s11a-predecessor-owner",
+      "sanitized_env_unset": [
+        "HF_TOKEN"
+      ],
+      "started_at": "2026-07-21T18:39:59.575935Z",
+      "stderr_sha256": "f3e34d0d4d53667dbd690adde8d21ba90338503696b6fdd31d2512688e26350f",
+      "stdout_sha256": "0594794af54f1482c67e4c1539cf3bc58af145ef2fa7483cf70a390f681478be"
+    },
+    {
+      "accepted_command": "cd apps/admin-console && uv run pytest -o addopts='' -p no:cacheprovider -q --tb=short tests/test_canonical_v2_operations_api.py",
+      "accepted_command_json_pointer": "/verification/s10o_predecessor_owner/command",
+      "accepted_command_sha256": "f1473cc764b31ba95d5bc838f744121ccf09ce583b85658094c5354effeb8753",
+      "cross_links": [
+        {
+          "junit_xml_sha256": "7fdff84efeb05c60e3587c7c67c306eec32fcbf4ca9ff7689e482430b0b3d544",
+          "ledger_run_id": "s10o-operations-junit",
+          "nodeid": "tests/test_canonical_v2_operations_api.py::test_canonical_v2_operations_api_is_bounded_read_only_and_quarantined"
+        }
+      ],
+      "cwd": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s2",
+      "exit_code": 0,
+      "finished_at": "2026-07-21T18:40:18.335407Z",
+      "launcher_argv": [
+        "/bin/bash",
+        "-lc",
+        "cd apps/admin-console && uv run pytest -o addopts='' -p no:cacheprovider -q --tb=short tests/test_canonical_v2_operations_api.py"
+      ],
+      "run_id": "s10o-predecessor-owner",
+      "sanitized_env_unset": [
+        "HF_TOKEN"
+      ],
+      "started_at": "2026-07-21T18:40:14.948228Z",
+      "stderr_sha256": "f3e34d0d4d53667dbd690adde8d21ba90338503696b6fdd31d2512688e26350f",
+      "stdout_sha256": "57be52af4623aba7a288aead2dd5009536a86c289e7cfad4320fe4586d4c738b"
+    }
+  ],
+  "schema_version": "canonical-v2-s11c-predecessor-reruns-v2",
+  "supersedes": {
+    "path": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s11c/predecessor-reruns-v1.json",
+    "sha256": "84507b7c3fd6a441547922cfc7012c58a74b6a11c82ec001ffe8e300ffc5eb11"
+  }
+}
