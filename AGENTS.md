@@ -540,6 +540,30 @@ CLAUDE.md §14 is the canonical statement of the discipline. This section operat
 
 **Language rule (mirrors CLAUDE.md §14.1):** All OpenSpec artifacts written or edited by Codex must be in English — `openspec/specs/**`, `openspec/changes/**` (proposal, specs deltas, design, tasks, acceptance, source-links, agent-links, change-log), plus any `change-log.md` / `acceptance.md` evidence rows Codex appends under §15.3. `.agents/runs/<change-id>/` execution artifacts that are part of the OpenSpec record (implementation-plan, verification, review) follow the same rule. Inline code comments, commit messages, and reports to the user may remain Chinese or English per the user's preference; only the committed OpenSpec documents must be English.
 
+### 15.0 Dual documentation system — human docs + agent (OpenSpec) docs (user rule 2026-08-17)
+
+Every fix and behavior-affecting work item maintains TWO synchronized document
+systems. Neither replaces the other; a work item is not Accepted until both exist
+and are consistent.
+
+1. **Human-facing docs (给人看的)** — `docs/plans/<date>-<slug>.md`, written in
+   Chinese. Purpose: problem statements with user-visible symptoms and verbatim
+   transcripts, design rationale, trade-off decisions, progress and review
+   narratives — everything the product owner needs to read, discuss, and accept.
+   This is the entry point for people. Test-round records, audits, and followup
+   registers (`.agents/runs/<id>/`) feed this system and keep verbatim evidence.
+2. **Agent-facing docs (给 code agent 看的)** — the OpenSpec change
+   `openspec/changes/<change-id>/` in English, per this section and §9: the
+   executable behavior contract (proposal, spec deltas, design, tasks,
+   acceptance) plus `.agents/runs/<change-id>/` verification contract and
+   evidence. This system gates implementation.
+
+Mandatory cross-linking: the human doc names its `<change-id>`; the OpenSpec
+proposal/design links the human doc. When behavior or scope changes, both systems
+are updated in the same slice — a human doc that describes behavior the OpenSpec
+change does not contract (or vice versa) is a defect of the slice, not a style
+issue.
+
 ### 15.1 Before editing code
 
 Identify the active `<change-id>` from the handoff or task contract.
