@@ -2,9 +2,32 @@
 
 ## Status
 
-Candidate (pending review). Implementation complete on worktree
-`canonical-v2-s11-consolidation` (uncommitted working tree on top of `02c3f30`).
-Production deploy/smoke deliberately NOT performed (live 18188; user decision).
+Candidate — implementation shipped, deployed, and production-probed.
+Commits `438300a` (code+tests) + `0e2d247` (change artifacts) on
+`codex/canonical-v2-s12a-ready`; deployed 2026-08-17 by TERM + systemd respawn
+(`canonical-v2-backend.service`, user unit; health OK ~80 s).
+
+## Production smoke (2026-08-17, port 18188, HEAD `438300a`)
+
+- **Trigger B (register §1 probe3 shape)** — `evidence/prod_deepen_t1/t2.sse`:
+  T2 `这个中心的企业培育情况怎么样` → deterministic view pinned with the carried
+  subject (`河套数学与…国际先进技术应用推进中心（深圳）揭牌 这个中心的企业培育情况怎么样`),
+  answer on-subject with an honest no-detailed-data disclosure; **no 微众银行
+  drift, no junk web list** (web lane returned 16 candidates, the subject gate
+  filtered them all — aggressive but fail-safe). PASS.
+- **Trigger A (register §1 probe1 shape)** — `evidence/prod_pronoun_t1/t2/t3.sse`:
+  T3 `它有哪些布局和进展` → views pinned (deterministic view + 百度百科/官网
+  authority views fired — both require a carried anchor), answer fully on-subject
+  (国先中心 揭牌/具身智能试验场/光源资本 合作, multi-region note), **not 张天尧, no
+  off-topic web_items, no clarification, no correction**. PASS.
+- Honest notes: on production both deepening turns bound via the web-handle anchor
+  path (T1's single on-subject web handle), not the soft-subject injection path —
+  anchor binding outranks the soft subject by design, and the adapter tests cover
+  the soft path where no anchor exists. Rewrite views stay unpinned on
+  anchor-path turns (no soft slot); earliest-view-wins merge keeps the pinned
+  deterministic view leading, and the gate filtered the junk they would have
+  fetched. The web-lane filter-to-zero behavior deserves a follow-up look
+  (register §3 telemetry would have shown the cause directly).
 
 ## RED evidence
 
