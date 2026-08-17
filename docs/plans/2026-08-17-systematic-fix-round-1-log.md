@@ -17,7 +17,19 @@
 
 **影响**：P1（观测）+ web 通道韧性；Phase 2–8 全部阶段的归因地基。
 
-**状态**：~~等用户审阅 change 包~~（8-18 更新：用户明确不再审 OpenSpec 文件，文件级审阅关卡取消，见下一条）。
+---
+
+## 2026-08-18 · Phase 1 开工 + 任务 1.1.1 完成（RED→GREEN）
+
+**做了什么**：用户授权完全自主决策（目标执行期间不看任何文档，含人看文档；阶段间不再停等 Accept，本条目即授权记录）。随即按 verification-contract 开工 1.1.1：先写 11 个 RED 单测（模块不存在，collection error 为 RED 证据），再实现 `backend/services/canonical_v2_turn_trace.py`——`TurnTrace` 记录（全阶段字段）+ `TurnTraceCollector`（线程安全、单次 finalize）+ `TurnTraceJournalStore`（JSONL 按日文件、保留期清理、写失败 fail-open 且计数、`TURN_TRACE_DIR` 可配）。风格对齐隔壁 `canonical_v2_access_log`（frozen slots dataclass）。
+
+**发现**：无阻塞。实现与 design.md 唯一偏差：模型用 dataclass 而非 Pydantic（跟随本地惯例），design.md 已同步。
+
+**验证**：`uv run pytest tests/test_canonical_v2_turn_trace_store.py` → RED（1 collection error）→ 修复一个 date-timedelta 类型错 → **11/11 通过**。纯新增文件，未触碰任何现有行为。
+
+**影响**：P1（观测）地基落地；1.1.2（服务层挂点）/1.1.3（serving 上报）待做。
+
+**状态**：继续 1.1.2。
 
 ---
 

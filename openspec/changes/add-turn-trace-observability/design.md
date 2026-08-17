@@ -16,7 +16,7 @@
   failures). No stage-level data anywhere. Keepwarm loop runs 2 real searches
   every 300 s idle via `canonical_v2_keepwarm.py`.
 
-## TurnTrace record (additive, Pydantic)
+## TurnTrace record (additive, dataclass-based — matches `canonical_v2_access_log` style)
 
 One record per turn, written at turn end (and finalized on error):
 

@@ -6,9 +6,12 @@ reaches Candidate. RED definitions live in
 
 ## 1.1 Turn trace
 
-- [ ] 1.1.1 `TurnTrace` Pydantic model + `TurnTraceCollector` (thread-safe,
+- [x] 1.1.1 `TurnTrace` Pydantic model + `TurnTraceCollector` (thread-safe,
        optional-pass, no-op when absent) + JSONL journal store with day-file
        layout, retention pruning, and env-configurable dir.
+       Evidence: `apps/admin-console/tests/test_canonical_v2_turn_trace_store.py`
+       RED (collection error) → GREEN 11/11 on 2026-08-18. Implemented as
+       dataclasses matching `canonical_v2_access_log` style (design.md updated).
 - [ ] 1.1.2 Service turn-boundary hook in
        `services/canonical_v2_chat.py::_answer_locked`: construct collector,
        attach session snapshot + interpretation fields, emit record on
