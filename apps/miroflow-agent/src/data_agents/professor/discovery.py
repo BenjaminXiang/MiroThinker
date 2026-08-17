@@ -1182,10 +1182,22 @@ def _should_continue_after_roster_entries(
     hostname = (parsed.hostname or "").lower()
     path = parsed.path.rstrip("/").lower()
     if hostname != "ceie.szu.edu.cn" or path != "/szdw/ysfc.htm":
-        return False
+        return _should_continue_sztu_category_seed(seed_url=seed_url, html=html)
     category_links = extract_roster_page_links(html, seed_url)
     category_labels = {label for _url, label in category_links}
     return bool({"教授", "副教授", "讲师/助理教授"} & category_labels)
+
+
+def _should_continue_sztu_category_seed(*, seed_url: str, html: str) -> bool:
+    parsed = urlparse(seed_url)
+    hostname = (parsed.hostname or "").lower()
+    path = parsed.path.rstrip("/").lower()
+    if not hostname.endswith("sztu.edu.cn"):
+        return False
+    if "/szdw/" not in path:
+        return False
+    category_labels = {label for _url, label in extract_roster_page_links(html, seed_url)}
+    return bool({"特聘教授", "教授", "副教授", "助理教授"} & category_labels)
 
 
 def _enqueue_seed_fallback_pages(

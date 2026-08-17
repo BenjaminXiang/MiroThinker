@@ -48,6 +48,90 @@ def test_extract_professor_profile_from_sustech_like_labeled_html():
     assert profile.source_urls == ("https://cse.sustech.edu.cn/faculty/baiyuhui/",)
 
 
+def test_extract_professor_profile_infers_sztu_title_from_role_nodes():
+    html = """
+    <html><body>
+      <div class="v_news_content">
+        <p class="ldxm">王红志</p>
+        <p class="ldzw">教授.</p>
+        <div class="ldjs">研究方向：机电装备开发</div>
+      </div>
+    </body></html>
+    """
+
+    profile = extract_professor_profile(
+        html=html,
+        source_url="https://sgim.sztu.edu.cn/info/1273/4113.htm",
+        institution="深圳技术大学",
+        department="中德智能制造学院",
+    )
+
+    assert profile.name == "王红志"
+    assert profile.title == "教授"
+
+
+def test_extract_professor_profile_infers_sztu_title_from_first_person_sentence():
+    html = """
+    <html><body>
+      <div class="v_news_content">
+        <p>梁永生，现任深圳技术大学副校长、哈尔滨工业大学（深圳）二级教授、博士生导师。</p>
+      </div>
+    </body></html>
+    """
+
+    profile = extract_professor_profile(
+        html=html,
+        source_url="https://ai.sztu.edu.cn/info/1332/6055.htm",
+        institution="深圳技术大学",
+        department="人工智能学院",
+    )
+
+    assert profile.name == "梁永生"
+    assert profile.title == "二级教授"
+
+
+def test_extract_professor_profile_ignores_sztu_sitewide_homepage_navigation():
+    html = """
+    <html><body>
+      <nav>
+        <a href="http://www.sztu.edu.cn/">学校主页</a>
+        <a href="/xygk/index.htm">学院主页</a>
+      </nav>
+      <div class="v_news_content">
+        <p>周沧涛，特聘教授，博士生导师。</p>
+      </div>
+    </body></html>
+    """
+    source_url = "https://cep.sztu.edu.cn/info/1053/1046.htm"
+
+    profile = extract_professor_profile(
+        html=html,
+        source_url=source_url,
+        institution="深圳技术大学",
+        department="工程物理学院",
+    )
+
+    assert profile.homepage_url == source_url
+
+
+def test_extract_professor_profile_keeps_explicit_personal_homepage_link():
+    html = """
+    <html><body>
+      <a href="https://teacher.example.edu/zhou">个人主页</a>
+      <div>姓名：周沧涛</div>
+    </body></html>
+    """
+
+    profile = extract_professor_profile(
+        html=html,
+        source_url="https://cep.sztu.edu.cn/info/1053/1046.htm",
+        institution="深圳技术大学",
+        department="工程物理学院",
+    )
+
+    assert profile.homepage_url == "https://teacher.example.edu/zhou"
+
+
 def test_extract_professor_profile_prefers_visible_heading_and_ignores_script_noise():
     html = """
     <html>

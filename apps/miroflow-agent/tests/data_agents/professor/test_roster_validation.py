@@ -974,6 +974,30 @@ def test_extract_roster_entries_skips_sztu_teacher_hub_without_direct_people():
     assert entries == []
 
 
+def test_extract_roster_entries_rejects_sztu_icoc_empty_category_navigation_headings():
+    html = """
+    <html><body>
+      <div class="nav-show">
+        <a href="../../kxyj/xsdt.htm">科学研究</a>
+        <a href="../../dtjs/dqgz.htm">党团建设</a>
+        <a href="../../hzhz/gjjl.htm">合作交流</a>
+        <a href="../../jpkc/jpkj.htm">精品课程</a>
+        <a href="../jfgc/gcs.htm">工程师</a>
+      </div>
+      <div class="s_team_main"></div>
+    </body></html>
+    """
+
+    entries = extract_roster_entries(
+        html=html,
+        institution="深圳技术大学",
+        department="集成电路与光电芯片学院",
+        source_url="https://icoc.sztu.edu.cn/szdw/jytd/jzjs.htm",
+    )
+
+    assert entries == []
+
+
 def test_extract_roster_entries_supports_sztu_heading_profiles_without_detail_links():
     html = """
     <html><body>
@@ -1203,6 +1227,64 @@ def test_extract_roster_entries_uses_sztu_detail_pages_wrapping_profile_cards():
     assert [(entry.name, entry.profile_url) for entry in entries] == [
         ("傅强", "https://cop.sztu.edu.cn/info/1025/1331.htm"),
         ("隋文", "https://cop.sztu.edu.cn/info/1025/2713.htm"),
+    ]
+
+
+def test_discover_professor_seeds_continues_sztu_category_pages_after_seed_category_entries():
+    seed_url = "https://ai.sztu.edu.cn/szdw/jytd/jxjs.htm"
+    pages = {
+        seed_url: """
+        <html><body>
+          <a href="../../info/1332/6055.htm">梁永生</a>
+          <a href="tpjs.htm">特聘教授</a>
+          <a href="js.htm">教授</a>
+          <a href="fjs.htm">副教授</a>
+          <a href="zljs.htm">助理教授</a>
+        </body></html>
+        """,
+        "https://ai.sztu.edu.cn/szdw/jytd/tpjs.htm": """
+        <html><body><a href="../../info/1332/6060.htm">徐刚</a></body></html>
+        """,
+        "https://ai.sztu.edu.cn/szdw/jytd/js.htm": """
+        <html><body><a href="../../info/1332/6070.htm">傅向华</a></body></html>
+        """,
+        "https://ai.sztu.edu.cn/szdw/jytd/fjs.htm": """
+        <html><body><a href="../../info/1332/6080.htm">王树兰</a></body></html>
+        """,
+        "https://ai.sztu.edu.cn/szdw/jytd/zljs.htm": """
+        <html><body><a href="../../info/1332/6090.htm">许永庆</a></body></html>
+        """,
+    }
+
+    result = discover_professor_seeds(
+        seeds=[
+            ProfessorRosterSeed(
+                institution="深圳技术大学",
+                department="人工智能学院",
+                roster_url=seed_url,
+            )
+        ],
+        fetch_html=lambda url: pages[url],
+        limits=DiscoveryLimits(
+            max_depth=1,
+            max_candidate_links_per_page=8,
+            max_pages_per_seed=8,
+        ),
+    )
+
+    assert [(item.name, item.profile_url) for item in result.professors] == [
+        ("梁永生", "https://ai.sztu.edu.cn/info/1332/6055.htm"),
+        ("徐刚", "https://ai.sztu.edu.cn/info/1332/6060.htm"),
+        ("傅向华", "https://ai.sztu.edu.cn/info/1332/6070.htm"),
+        ("王树兰", "https://ai.sztu.edu.cn/info/1332/6080.htm"),
+        ("许永庆", "https://ai.sztu.edu.cn/info/1332/6090.htm"),
+    ]
+    assert result.source_statuses[0].visited_urls == [
+        seed_url,
+        "https://ai.sztu.edu.cn/szdw/jytd/tpjs.htm",
+        "https://ai.sztu.edu.cn/szdw/jytd/js.htm",
+        "https://ai.sztu.edu.cn/szdw/jytd/fjs.htm",
+        "https://ai.sztu.edu.cn/szdw/jytd/zljs.htm",
     ]
 
 

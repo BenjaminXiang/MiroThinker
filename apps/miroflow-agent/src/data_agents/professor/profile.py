@@ -17,6 +17,8 @@ _EMAIL_PATTERN = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 _HEADING_TAGS = {"h1", "h2", "h3", "h4", "h5", "h6"}
 _STRUCTURED_TEXT_TAGS = {"div", "p", "li", "td", "th", "dd", "dt", "section", "article"}
 _IGNORED_TEXT_TAGS = {"script", "style", "noscript"}
+_SZTU_NAME_CLASS_TOKENS = {"ldxm"}
+_SZTU_TITLE_CLASS_TOKENS = {"ldzw"}
 _INLINE_LABEL_BOUNDARY_RE = re.compile(
     r"\s+(?:姓名|Name|职位|职称|Title|邮箱|电子邮箱|Email|E-mail|"
     r"办公地点|办公室|Office|研究方向|研究领域|Research Directions|"
@@ -80,6 +82,14 @@ _STRUCTURED_RESEARCH_BLOCKERS = (
     "博士",
     "硕士",
 )
+_TITLE_CANDIDATE_RE = re.compile(
+    r"二级教授|讲席教授|特聘教授|助理教授|副教授|教授|副研究员|研究员|"
+    r"正高级工程师|高级工程师|工程师|讲师|院士"
+)
+_SENTENCE_NAME_RE = re.compile(
+    r"(?:^|\s)([\u3400-\u4DBF\u4E00-\u9FFF·]{2,4})[，,]\s*"
+    r"(?:现任|生于|特聘|教授|副教授|助理教授|讲席教授|博士)"
+)
 
 
 class _ProfileParser(HTMLParser):
@@ -89,6 +99,8 @@ class _ProfileParser(HTMLParser):
         self.full_text_parts: list[str] = []
         self.name_candidates: list[str] = []
         self.generic_heading_name_candidates: list[str] = []
+        self.sztu_name_candidates: list[str] = []
+        self.sztu_title_candidates: list[str] = []
         self.homepage_links: list[tuple[str, str]] = []
         self.page_title_parts: list[str] = []
         self.structured_text_samples: list[str] = []
@@ -100,6 +112,10 @@ class _ProfileParser(HTMLParser):
         self._name_parts: list[str] = []
         self._generic_heading_depth = 0
         self._generic_heading_parts: list[str] = []
+        self._sztu_name_depth = 0
+        self._sztu_name_parts: list[str] = []
+        self._sztu_title_depth = 0
+        self._sztu_title_parts: list[str] = []
         self._title_depth = 0
         self._active_anchor_href: str | None = None
         self._active_anchor_text_parts: list[str] = []
@@ -131,6 +147,12 @@ class _ProfileParser(HTMLParser):
             else:
                 self._generic_heading_depth += 1
                 self._generic_heading_parts = []
+        if class_tokens & _SZTU_NAME_CLASS_TOKENS:
+            self._sztu_name_depth += 1
+            self._sztu_name_parts = []
+        if class_tokens & _SZTU_TITLE_CLASS_TOKENS:
+            self._sztu_title_depth += 1
+            self._sztu_title_parts = []
         if tag == "title":
             self._title_depth += 1
 
@@ -153,6 +175,10 @@ class _ProfileParser(HTMLParser):
             self._name_parts.append(data)
         if self._generic_heading_depth > 0:
             self._generic_heading_parts.append(data)
+        if self._sztu_name_depth > 0:
+            self._sztu_name_parts.append(data)
+        if self._sztu_title_depth > 0:
+            self._sztu_title_parts.append(data)
         if self._title_depth > 0:
             self.page_title_parts.append(data)
         if self._active_anchor_href is not None:
@@ -191,13 +217,29 @@ class _ProfileParser(HTMLParser):
                 self.generic_heading_name_candidates.append(candidate)
             self._generic_heading_depth -= 1
             self._generic_heading_parts = []
+        if self._sztu_name_depth > 0:
+            candidate = _normalize_text("".join(self._sztu_name_parts))
+            if candidate:
+                self.sztu_name_candidates.append(candidate)
+            self._sztu_name_depth -= 1
+            self._sztu_name_parts = []
+        if self._sztu_title_depth > 0:
+            candidate = _normalize_text("".join(self._sztu_title_parts))
+            if candidate:
+                self.sztu_title_candidates.append(candidate)
+            self._sztu_title_depth -= 1
+            self._sztu_title_parts = []
         if tag == "title" and self._title_depth > 0:
             self._title_depth -= 1
 
         if tag == "a" and self._active_anchor_href is not None:
             anchor_text = _normalize_text("".join(self._active_anchor_text_parts))
             lowered = anchor_text.lower()
-            if anchor_text and any(keyword in lowered for keyword in _HOMEPAGE_TEXT_KEYWORDS):
+            if (
+                anchor_text
+                and any(keyword in lowered for keyword in _HOMEPAGE_TEXT_KEYWORDS)
+                and not _is_sitewide_homepage_link_text(anchor_text)
+            ):
                 self.homepage_links.append((self._active_anchor_href, anchor_text))
             self._active_anchor_href = None
             self._active_anchor_text_parts = []
@@ -224,11 +266,19 @@ def extract_professor_profile(
     )
     name = _first_non_empty(
         parser.name_candidates
+        + [_clean_sztu_name_candidate(candidate) for candidate in parser.sztu_name_candidates]
         + [labeled_name]
         + [title_name]
         + parser.generic_heading_name_candidates
+        + [_infer_sztu_name_from_text(text_samples, source_url, institution)]
     )
-    title = _extract_first_labeled_value(text_samples, _TITLE_LABELS)
+    title = _extract_first_labeled_value(text_samples, _TITLE_LABELS) or _infer_sztu_title(
+        title_candidates=parser.sztu_title_candidates,
+        name=name,
+        text_samples=text_samples,
+        source_url=source_url,
+        institution=institution,
+    )
     office = _extract_first_labeled_value(text_samples, _OFFICE_LABELS)
     research_raw = _extract_first_labeled_value(text_samples, _RESEARCH_LABELS)
     research_directions = _extract_research_directions(
@@ -275,6 +325,77 @@ def _extract_homepage_url(
         return urljoin(source_url, parser_homepage_links[0][0])
 
     return source_url
+
+
+def _is_sitewide_homepage_link_text(text: str) -> bool:
+    normalized = _normalize_text(text)
+    return normalized in {"首页", "学校主页", "学院主页", "网站首页", "官网", "返回首页"}
+
+
+def _infer_sztu_name_from_text(
+    text_samples: list[str],
+    source_url: str,
+    institution: str | None,
+) -> str | None:
+    if not _is_sztu_context(source_url, institution):
+        return None
+    for sample in text_samples:
+        match = _SENTENCE_NAME_RE.search(_normalize_text(sample))
+        if not match:
+            continue
+        candidate = _clean_sztu_name_candidate(match.group(1))
+        if candidate:
+            return candidate
+    return None
+
+
+def _clean_sztu_name_candidate(value: str | None) -> str | None:
+    normalized = _normalize_text(value or "")
+    if not normalized:
+        return None
+    if is_obvious_non_person_name(normalized):
+        return None
+    if re.fullmatch(r"[\u3400-\u4DBF\u4E00-\u9FFF·]{2,4}", normalized):
+        return normalized
+    return None
+
+
+def _infer_sztu_title(
+    *,
+    title_candidates: list[str],
+    name: str | None,
+    text_samples: list[str],
+    source_url: str,
+    institution: str | None,
+) -> str | None:
+    if not _is_sztu_context(source_url, institution):
+        return None
+    for candidate in title_candidates:
+        title = _extract_title_candidate(candidate)
+        if title:
+            return title
+    for sample in text_samples:
+        normalized = _normalize_text(sample)
+        if name and name not in normalized:
+            continue
+        title = _extract_title_candidate(normalized[:200])
+        if title:
+            return title
+    return None
+
+
+def _extract_title_candidate(value: str | None) -> str | None:
+    normalized = _normalize_text(value or "").strip(".。；;,，")
+    if not normalized:
+        return None
+    match = _TITLE_CANDIDATE_RE.search(normalized)
+    if not match:
+        return None
+    return match.group(0)
+
+
+def _is_sztu_context(source_url: str, institution: str | None) -> bool:
+    return "sztu.edu.cn" in source_url.lower() or "深圳技术大学" in (institution or "")
 
 
 def _extract_first_labeled_value(text_samples: list[str], labels: tuple[str, ...]) -> str | None:
