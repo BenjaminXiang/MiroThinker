@@ -43,3 +43,29 @@ def test_extract_roster_entries_supports_cuhk_teacher_search_cards():
         ("崔曙光", "https://myweb.cuhk.edu.cn/cuishuguang"),
         ("Alice Zhang", "https://myweb.cuhk.edu.cn/alicezhang"),
     ]
+
+
+def test_extract_roster_entries_supports_cuhk_teacher_search_markdown_personal_homepages():
+    markdown = """
+    * [返回主站](https://www.cuhk.edu.cn/)
+    * [院长致辞](https://sse.cuhk.edu.cn/page/42)
+    * [黄建伟](https://jianwei.cuhk.edu.cn/)
+
+    校长讲座教授
+
+    * [崔曙光](https://myweb.cuhk.edu.cn/cuishuguang)
+
+    校长学勤讲座教授
+    """
+
+    entries = extract_roster_entries(
+        markdown,
+        institution="香港中文大学（深圳）",
+        department="理工学院",
+        source_url="https://sse.cuhk.edu.cn/teacher-search",
+    )
+
+    assert [(entry.name, entry.profile_url) for entry in entries] == [
+        ("黄建伟", "https://jianwei.cuhk.edu.cn/"),
+        ("崔曙光", "https://myweb.cuhk.edu.cn/cuishuguang"),
+    ]

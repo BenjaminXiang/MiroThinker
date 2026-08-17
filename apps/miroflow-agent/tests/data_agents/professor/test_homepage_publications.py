@@ -105,6 +105,47 @@ def test_extract_publications_preserves_relative_absolute_and_doi_adjacent_pdf_l
     assert pubs[2].source_anchor == "https://doi.org/10.1234/clinical"
 
 
+def test_extract_publications_from_google_sites_research_section_with_citations():
+    html = """
+    <html><body>
+      <h1>Miha Brešar</h1>
+      <h2>Research:</h2>
+      <p>
+        Central Limit Theorem for ergodic averages of Markov chains and the
+        comparison of sampling algorithms for heavy-tailed distributions
+        (with A. Mijatovic and G. Roberts), Submitted, 2025.
+        <a href="https://arxiv.org/abs/2501.00001">ArXiv</a>
+      </p>
+      <p>
+        Brownian motion with asymptotically normal reflection in unbounded
+        domains: from transience to stability (with A. Mijatovic and A. Wade),
+        Annals of Probability 53(1): 175-222 (2025).
+        <a href="https://arxiv.org/abs/2401.00001">ArXiv</a>
+      </p>
+    </body></html>
+    """
+
+    pubs = extract_publications_from_html(
+        html,
+        page_url="https://sites.google.com/view/mihabresar",
+    )
+
+    assert [pub.clean_title for pub in pubs] == [
+        (
+            "Central Limit Theorem for ergodic averages of Markov chains and the "
+            "comparison of sampling algorithms for heavy-tailed distributions"
+        ),
+        (
+            "Brownian motion with asymptotically normal reflection in unbounded "
+            "domains: from transience to stability"
+        ),
+    ]
+    assert [pub.source_anchor for pub in pubs] == [
+        "https://arxiv.org/abs/2501.00001",
+        "https://arxiv.org/abs/2401.00001",
+    ]
+
+
 # --- _strip_item_prefix ---
 
 

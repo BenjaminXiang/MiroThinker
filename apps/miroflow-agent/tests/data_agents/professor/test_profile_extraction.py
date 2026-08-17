@@ -234,3 +234,50 @@ def test_extract_professor_profile_uses_person_name_from_page_title_with_at_sepa
     )
 
     assert profile.name == "Jianwei Huang"
+
+
+def test_extract_professor_profile_handles_cuhk_sds_comma_name_title_and_personal_site():
+    html = """
+    <html>
+      <head><title>BRESAR, Miha | 香港中文大学（深圳）数据科学学院</title></head>
+      <body>
+        <nav>学院概况 师资力量 学术科研 人才招聘</nav>
+        <main>
+          <h2>BRESAR, Miha</h2>
+          <div>助理教授</div>
+          <section>
+            <h3>教育背景</h3>
+            <p>博士，统计学，华威大学</p>
+          </section>
+          <section>
+            <h3>研究领域</h3>
+            <p>概率论、马尔可夫过程的稳定性、随机分析</p>
+          </section>
+          <section>
+            <h3>个人网站</h3>
+            <p><a href="https://sites.google.com/view/mihabresar">https://sites.google.com/view/mihabresar</a></p>
+          </section>
+          <section>
+            <h3>电子邮箱</h3>
+            <p>mihabresar@cuhk.edu.cn</p>
+          </section>
+          <section>
+            <h3>学术著作</h3>
+            <p>Brownian motion with asymptotically normal reflection in unbounded domains: from transience to stability, Annals of Probability, 2025.</p>
+          </section>
+        </main>
+      </body>
+    </html>
+    """
+
+    profile = extract_professor_profile(
+        html=html,
+        source_url="https://sds.cuhk.edu.cn/teacher/2238",
+        institution="香港中文大学（深圳）",
+        department="数据科学学院",
+    )
+
+    assert profile.name == "BRESAR, Miha"
+    assert profile.title == "助理教授"
+    assert profile.homepage_url == "https://sites.google.com/view/mihabresar"
+    assert profile.email == "mihabresar@cuhk.edu.cn"

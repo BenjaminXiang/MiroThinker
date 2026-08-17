@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import re
-from urllib.parse import quote, urljoin, urlparse
+from urllib.parse import ParseResult, quote, urljoin, urlparse
 
 from bs4 import BeautifulSoup, Tag
 
@@ -1078,16 +1078,36 @@ def extract_cuhk_markdown_profile_links(markdown: str) -> list[tuple[str, str]]:
     links: list[tuple[str, str]] = []
     for label, href in _iter_markdown_links(markdown):
         parsed = urlparse(href)
-        hostname = (parsed.hostname or "").lower()
-        if not hostname.endswith("cuhk.edu.cn"):
-            continue
-        if "/teacher/" not in parsed.path:
+        if not _is_cuhk_teacher_search_profile_href(parsed):
             continue
         name = _extract_candidate_person_name(label)
         if not name or not _is_likely_professor_name(name):
             continue
         links.append((href, name))
     return links
+
+
+def _is_cuhk_teacher_search_profile_href(parsed: ParseResult) -> bool:
+    hostname = (parsed.hostname or "").lower()
+    if not hostname.endswith("cuhk.edu.cn"):
+        return False
+
+    path = parsed.path.lower()
+    if "/teacher/" in path:
+        return True
+    if hostname == "myweb.cuhk.edu.cn":
+        return True
+
+    school_hosts = {
+        "sai.cuhk.edu.cn",
+        "sds.cuhk.edu.cn",
+        "sse.cuhk.edu.cn",
+        "www.cuhk.edu.cn",
+        "sp16.cuhk.edu.cn",
+    }
+    if hostname in school_hosts:
+        return False
+    return True
 
 
 def _extract_sysu_drupal_profile_links(soup: BeautifulSoup) -> list[tuple[str, str]]:

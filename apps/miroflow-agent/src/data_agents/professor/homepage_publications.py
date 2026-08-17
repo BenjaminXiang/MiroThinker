@@ -185,6 +185,10 @@ _AUTHOR_NOTE_RE = re.compile(
     r"学生|corresponding\s+authors?|co-?first\s+authors?|equal\s+contribution)\s*[）)]",
     re.IGNORECASE,
 )
+_TRAILING_WITH_AUTHORS_NOTE_RE = re.compile(
+    r"\s*[\(（]\s*with\s+[^()（）]{3,160}[\)）]\s*$",
+    re.IGNORECASE,
+)
 _LEADING_CHINESE_AUTHOR_NOTE_FRAGMENT_RE = re.compile(
     r"^\s*(?:[*#†‡+&,\s，,;；、]*(?:[（(]\s*)?"
     r"(?:同等贡献作者|同等贡献|共同第一作者|共同通讯作者|通讯作者|通信作者|第一作者)"
@@ -612,6 +616,7 @@ _CONCATENATED_AUTHOR_NAME_RE = re.compile(r"^[A-Z][a-z]{1,24}[A-Z][a-z]{1,24}$")
 _HEADING_TAG_NAMES = frozenset({"h1", "h2", "h3", "h4", "h5", "h6"})
 _NON_HEADING_SECTION_TAG_NAMES = ("p", "div")
 _GENERAL_PUBLICATIONS_HEADING_TEXTS = frozenset({"学术成果"})
+_RESEARCH_PUBLICATION_HEADING_TEXTS = frozenset({"research"})
 _LANDMARK_TAGS = ("header", "footer", "nav", "aside")
 _MIN_TITLE_LENGTH = 10
 
@@ -2881,6 +2886,7 @@ def _clean_publication_title_segment(
             clean_title = candidate_title
     clean_title = _strip_parseable_author_prefix_from_title(clean_title)
     clean_title = _repair_split_title_words(clean_title)
+    clean_title = _TRAILING_WITH_AUTHORS_NOTE_RE.sub("", clean_title).strip()
     title_without_tail, remainder = _split_title_and_remainder(clean_title)
     if (
         remainder
@@ -7476,7 +7482,9 @@ def _find_publications_sections(soup: BeautifulSoup) -> list[Tag]:
     seen: set[int] = set()
 
     for tag in soup.find_all(_HEADING_TAG_NAMES):
-        if _is_publications_heading_text(tag.get_text(" ", strip=True)):
+        if _is_publications_heading_text(
+            tag.get_text(" ", strip=True)
+        ) or _is_research_heading_with_publication_citations(tag):
             key = id(tag)
             if key not in seen:
                 seen.add(key)
@@ -8068,9 +8076,61 @@ def _has_year_group_structure(section: Tag) -> bool:
 
 
 def _is_heading_tag(tag: Tag) -> bool:
-    return tag.name in _HEADING_TAG_NAMES and _is_publications_heading_text(
-        tag.get_text(" ", strip=True)
+    return tag.name in _HEADING_TAG_NAMES and (
+        _is_publications_heading_text(tag.get_text(" ", strip=True))
+        or _is_research_heading_with_publication_citations(tag)
     )
+
+
+def _is_research_heading_with_publication_citations(tag: Tag) -> bool:
+    if tag.name not in _HEADING_TAG_NAMES:
+        return False
+    normalized = _strip_heading_trailing_punctuation(tag.get_text(" ", strip=True))
+    if normalized.casefold() not in _RESEARCH_PUBLICATION_HEADING_TEXTS:
+        return False
+
+    current_level = int(tag.name[1])
+    citation_count = 0
+    for block in _following_section_blocks(tag, current_level=current_level):
+        if not isinstance(block, Tag):
+            continue
+        paragraphs = (
+            [block]
+            if block.name in {"p", "li"}
+            else list(block.find_all(["p", "li"]))
+        )
+        for paragraph in paragraphs:
+            text = paragraph.get_text(" ", strip=True)
+            if _looks_like_research_publication_paragraph(text):
+                citation_count += 1
+                if citation_count >= 2:
+                    return True
+    return False
+
+
+def _looks_like_research_publication_paragraph(text: str) -> bool:
+    normalized = _normalize_sentence(text)
+    if len(normalized) < 40:
+        return False
+    if _looks_like_biography_prose(normalized):
+        return False
+    if not (
+        _extract_year_from_text(normalized) is not None
+        or re.search(r"\b(?:submitted|to appear|accepted)\b", normalized, re.IGNORECASE)
+        or re.search(r"\b(?:arxiv|doi)\b", normalized, re.IGNORECASE)
+    ):
+        return False
+
+    title_text, authors_text, venue_text = _split_title_authors_venue(normalized)
+    clean_title = _clean_publication_title_segment(
+        title_text,
+        authors_text=authors_text,
+    )
+    if len(clean_title) < _MIN_TITLE_LENGTH:
+        return False
+    if _is_non_publication_title_noise(clean_title):
+        return False
+    return bool(venue_text or _extract_year_from_text(normalized) is not None)
 
 
 def _filter_publications_section_candidates(candidates: list[Tag]) -> list[Tag]:

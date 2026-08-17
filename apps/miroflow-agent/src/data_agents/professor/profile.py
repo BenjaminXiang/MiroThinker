@@ -11,8 +11,25 @@ _EMAIL_LABELS = ("邮箱", "电子邮箱", "Email", "E-mail")
 _OFFICE_LABELS = ("办公地点", "办公室", "Office")
 _RESEARCH_LABELS = ("研究方向", "研究领域", "Research Directions", "Research Interests")
 _NAME_LABELS = ("姓名", "Name")
-_HOMEPAGE_LABELS = ("主页", "个人主页", "Homepage", "Home Page", "Profile")
-_HOMEPAGE_TEXT_KEYWORDS = ("主页", "homepage", "home page", "profile")
+_HOMEPAGE_LABELS = (
+    "主页",
+    "个人主页",
+    "个人网站",
+    "Homepage",
+    "Home Page",
+    "Personal Website",
+    "Website",
+    "Profile",
+)
+_HOMEPAGE_TEXT_KEYWORDS = (
+    "主页",
+    "个人网站",
+    "homepage",
+    "home page",
+    "personal website",
+    "website",
+    "profile",
+)
 _EMAIL_PATTERN = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 _HEADING_TAGS = {"h1", "h2", "h3", "h4", "h5", "h6"}
 _STRUCTURED_TEXT_TAGS = {"div", "p", "li", "td", "th", "dd", "dt", "section", "article"}
@@ -34,12 +51,16 @@ _NON_NAME_HEADING_KEYWORDS = (
     "个人信息",
     "研究方向",
     "研究领域",
+    "学术领域",
     "教育背景",
     "工作经历",
     "学术成果",
+    "学术著作",
     "科研项目",
     "论文发表",
     "联系方式",
+    "个人网站",
+    "个人主页",
     "社会兼职",
     "课程教学",
     "招生信息",
@@ -56,6 +77,18 @@ _NON_NAME_HEADING_KEYWORDS = (
     "中国哲学",
     "中国史",
     "汉语国际教育系",
+    "basic information",
+    "biography",
+    "contact",
+    "education",
+    "homepage",
+    "home page",
+    "personal website",
+    "profile",
+    "publications",
+    "research",
+    "research interests",
+    "website",
 )
 _STRUCTURED_RESEARCH_BLOCKERS = (
     "教育背景",
@@ -80,6 +113,48 @@ _STRUCTURED_RESEARCH_BLOCKERS = (
     "博士",
     "硕士",
 )
+_TITLE_TERMS = (
+    "校长学勤讲座教授",
+    "校长永平讲座教授",
+    "校长讲座教授",
+    "特聘杰出教授",
+    "讲席教授",
+    "特聘教授",
+    "杰出教授",
+    "教研助理教授",
+    "教研副教授",
+    "教研教授",
+    "教学正教授",
+    "教学副教授",
+    "教学教授",
+    "研究助理教授",
+    "助理教授（教学）",
+    "助理教授",
+    "副教授（教学）",
+    "副教授",
+    "教授",
+    "副研究员",
+    "研究员",
+    "讲师",
+    "Assistant Professor",
+    "Associate Professor",
+    "Professor",
+    "Research Assistant Professor",
+    "Research Associate Professor",
+)
+_TITLE_PREFIX_RE = re.compile(
+    r"^(?P<title>"
+    + "|".join(re.escape(term) for term in _TITLE_TERMS)
+    + r")(?:\s|$|[，,；;、/])",
+    re.IGNORECASE,
+)
+_LATIN_HEADING_NAME_TITLE_RE = re.compile(
+    r"^(?P<name>[A-Za-z][A-Za-z ,.'’\-]{1,80})\s+"
+    r"(?P<title>"
+    + "|".join(re.escape(term) for term in _TITLE_TERMS)
+    + r")$",
+    re.IGNORECASE,
+)
 
 
 class _ProfileParser(HTMLParser):
@@ -89,6 +164,7 @@ class _ProfileParser(HTMLParser):
         self.full_text_parts: list[str] = []
         self.name_candidates: list[str] = []
         self.generic_heading_name_candidates: list[str] = []
+        self.title_candidates: list[str] = []
         self.homepage_links: list[tuple[str, str]] = []
         self.page_title_parts: list[str] = []
         self.structured_text_samples: list[str] = []
@@ -182,13 +258,21 @@ class _ProfileParser(HTMLParser):
         if tag in _HEADING_TAGS and self._name_heading_depth > 0:
             candidate = _normalize_text("".join(self._name_parts))
             if candidate:
-                self.name_candidates.append(candidate)
+                heading_profile = _split_latin_heading_name_title(candidate)
+                if heading_profile:
+                    self.name_candidates.append(heading_profile[0])
+                    self.title_candidates.append(heading_profile[1])
+                else:
+                    self.name_candidates.append(candidate)
             self._name_heading_depth -= 1
             self._name_parts = []
         elif tag in _HEADING_TAGS and self._generic_heading_depth > 0:
             candidate = _normalize_text("".join(self._generic_heading_parts))
             if _is_generic_name_heading(candidate):
                 self.generic_heading_name_candidates.append(candidate)
+            elif heading_profile := _split_latin_heading_name_title(candidate):
+                self.generic_heading_name_candidates.append(heading_profile[0])
+                self.title_candidates.append(heading_profile[1])
             self._generic_heading_depth -= 1
             self._generic_heading_parts = []
         if tag == "title" and self._title_depth > 0:
@@ -228,7 +312,13 @@ def extract_professor_profile(
         + [title_name]
         + parser.generic_heading_name_candidates
     )
-    title = _extract_first_labeled_value(text_samples, _TITLE_LABELS)
+    title = _first_non_empty(
+        parser.title_candidates
+        + [
+            _extract_first_labeled_value(text_samples, _TITLE_LABELS),
+            _extract_unlabeled_title_after_name(full_text=full_text, name=name),
+        ]
+    )
     office = _extract_first_labeled_value(text_samples, _OFFICE_LABELS)
     research_raw = _extract_first_labeled_value(text_samples, _RESEARCH_LABELS)
     research_directions = _extract_research_directions(
@@ -265,6 +355,10 @@ def _extract_homepage_url(
     parser_homepage_links: list[tuple[str, str]],
     source_url: str,
 ) -> str:
+    homepage_url = _extract_labeled_homepage_url(text_samples)
+    if homepage_url:
+        return homepage_url
+
     homepage_text = _extract_first_labeled_value(text_samples, _HOMEPAGE_LABELS)
     if homepage_text:
         match = re.search(r"https?://[^\s]+", homepage_text)
@@ -275,6 +369,22 @@ def _extract_homepage_url(
         return urljoin(source_url, parser_homepage_links[0][0])
 
     return source_url
+
+
+def _extract_labeled_homepage_url(text_samples: list[str]) -> str | None:
+    for sample in text_samples:
+        normalized = _normalize_text(sample)
+        if not normalized:
+            continue
+        for label in _HOMEPAGE_LABELS:
+            match = re.search(
+                rf"(?:^|[\s/|；;，,]){re.escape(label)}\s*(?:[：:]\s*)?(https?://[^\s]+)",
+                normalized,
+                flags=re.IGNORECASE,
+            )
+            if match:
+                return match.group(1).rstrip("，。,.;；）)")
+    return None
 
 
 def _extract_first_labeled_value(text_samples: list[str], labels: tuple[str, ...]) -> str | None:
@@ -432,9 +542,54 @@ def _is_generic_name_heading(value: str) -> bool:
         normalized,
     ):
         return True
-    if re.fullmatch(r"[A-Za-z][A-Za-z .'-]{1,39}", normalized) and " " in normalized:
+    if re.fullmatch(r"[A-Za-z][A-Za-z ,.'’-]{1,59}", normalized) and (
+        " " in normalized or "," in normalized
+    ):
         return True
     return False
+
+
+def _split_latin_heading_name_title(value: str) -> tuple[str, str] | None:
+    normalized = _normalize_text(value)
+    if not normalized:
+        return None
+    match = _LATIN_HEADING_NAME_TITLE_RE.fullmatch(normalized)
+    if match is None:
+        return None
+    name = _normalize_text(match.group("name").rstrip(",，"))
+    title = _normalize_title_value(match.group("title"))
+    if not title or not _is_generic_name_heading(name):
+        return None
+    return name, title
+
+
+def _extract_unlabeled_title_after_name(*, full_text: str, name: str | None) -> str | None:
+    normalized_name = _normalize_text(name or "")
+    if not normalized_name:
+        return None
+    full_text = _normalize_text(full_text)
+    if not full_text:
+        return None
+
+    for match in re.finditer(re.escape(normalized_name), full_text, flags=re.IGNORECASE):
+        suffix = full_text[match.end() :].lstrip(" ：:，,;；|/-")
+        title_match = _TITLE_PREFIX_RE.match(suffix)
+        if title_match is None:
+            continue
+        title = _normalize_title_value(title_match.group("title"))
+        if title:
+            return title
+    return None
+
+
+def _normalize_title_value(value: str | None) -> str | None:
+    normalized = _normalize_text(value or "").strip("：:;,，；/|").strip()
+    if not normalized:
+        return None
+    match = _TITLE_PREFIX_RE.match(normalized)
+    if match is None:
+        return None
+    return _normalize_text(match.group("title"))
 
 
 def _clean_value(value: str) -> str:
