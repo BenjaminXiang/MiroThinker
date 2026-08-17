@@ -1,6 +1,9 @@
 # Follow-up register: subject-consistency phase 2 residuals
 
 Status: Open (registered 2026-08-13, at deploy of branch `codex/canonical-v2-s12a-ready`, HEAD `45d39dd`).
+§1 update (2026-08-16): addressed by change `openspec/changes/deepening-turn-anchor-carryover/`
+(Candidate; local evidence in `.agents/runs/deepening-turn-anchor-carryover/verification.md`).
+Item stays Open until a post-deploy production probe confirms the fix live.
 Context: phase-2 branch (Tasks 1-11 + final-review fixes C1/I1) closed the canonical badcase pair and the stream-correction crash. This register collects everything deliberately NOT fixed in that branch, with evidence pointers. Evidence files live in `.agents/runs/followup-subject-consistency/evidence/` (uncommitted).
 
 ## 1. Deepening-turn anchor loss at plan/referent level (highest priority)
