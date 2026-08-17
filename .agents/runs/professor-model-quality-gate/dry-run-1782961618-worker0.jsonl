@@ -1,0 +1,1 @@
+{"professor_id": "PROF-000003A9EBC4", "status": "processed", "base_quality_status": "needs_review", "final_quality_status": "needs_review", "model_called": false, "skip_reason": "base_gate_needs_review", "wrote": false, "confidence": null, "reason_codes": [], "rationale": null, "usage": {}}

@@ -296,3 +296,4 @@ milvus.db*
 
 # Superpowers brainstorming visual-companion artifacts
 .superpowers/
+.paper_search_env

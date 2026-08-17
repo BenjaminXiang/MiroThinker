@@ -60,6 +60,7 @@ dependencies = [
     "milvus-lite>=2.5.1",
     "socksio>=1.0.0",
     "playwright-stealth>=2.0.3",
+    "paper-search-mcp>=0.1.4",
 ]
 
 [build-system]
