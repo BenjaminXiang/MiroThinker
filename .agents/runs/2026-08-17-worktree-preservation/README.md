@@ -35,3 +35,22 @@ Mode: 保全性整理（preserve-before-migration）。原则：真实代码与�
   `issue-*` 分支仅远端存在（无需处理）。
 - 建议一次性：`git push origin main && git push origin --all && git push origin --tags`
   （密钥类文件已确认在 .gitignore，不会误推）。
+
+## 分支血缘地图（2026-08-17 补充，答"分支是否混乱"）
+
+结论：**不混乱**——只有一个权威容器 `codex/canonical-v2-s12a-ready`（包含
+main 及全部历史），其余分支 = 权威线 + ≤2 个提交的小增量。
+
+| 类别 | 分支 | 相对 s12a-ready 独有提交 | 处置建议 |
+|---|---|---|---|
+| **权威线** | codex/canonical-v2-s12a-ready | —（容器） | 推送；生产 serving |
+| | main | 0（完全包含） | 推送（+234 到 origin） |
+| | feat/professor-retrievability | 2（a4e19b7 legacy 终点 + a389abc 保全） | 推送；legacy 冻结线存档 |
+| **纯档案**（0 独有，历史已全在 s12a 内） | canonical-v2-s1-safety、codex/canonical-v2-s11-consolidation、chore/refactor-prep-agent-harness、paper-identity-gate-title-cleanup、professor-paper-data-quality-cleanup、professor-seed-full-run-20260610 | 0 | 推送留档后**本地可删**（worktree 可移除） |
+| **小增量档案**（1–2 独有） | canonical-v2-s2-baseline(1=今日保全)、codex/canonical-v2-s11-recovery-20260722(1=恢复检查点)、codex/canonical-v2-s6c-db-red(2=原始 RED+实现)、s6d(1)、s6f(1)、task61-prep(1)、5×seed(1 各=今日保全)、paper-pipeline-cleanup(1=今日保全)、prof-quality-status-rework(1=今日保全) | 1–2 | 推送留档；V2 切片内容已以聚合提交导入权威线，legacy 线增量不值得合入 |
+| **origin 独有** | issue-9/10/11/12/13（早期协作：company schema/identity、master-list parser、skeleton import、config contract） | — | 已在 GitHub，无需处理 |
+
+可选本地清理（推送完成之后才做）：删除 6 个纯档案分支；`git worktree remove`
+s1/s2/s6c/s6d/s6f/task61/5×seed/professor-seed-full-run/paper-pipeline-cleanup
+等档案 worktree（分支在远端留底）。保留：主 checkout、s11-consolidation
+（生产 serving）。
