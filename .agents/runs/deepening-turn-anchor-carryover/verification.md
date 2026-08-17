@@ -2,10 +2,14 @@
 
 ## Status
 
-Candidate — implementation shipped, deployed, and production-probed.
-Commits `438300a` (code+tests) + `0e2d247` (change artifacts) on
-`codex/canonical-v2-s12a-ready`; deployed 2026-08-17 by TERM + systemd respawn
+**Accepted** (2026-08-17, user review — `.agents/reviews/2026-08-17-deepening-turn-anchor-carryover.md`).
+Implementation shipped, deployed, and production-probed.
+Commits `438300a` (code+tests) + `0e2d247` (change artifacts) + `689fa95` (prod evidence)
+on `codex/canonical-v2-s12a-ready`; deployed 2026-08-17 by TERM + systemd respawn
 (`canonical-v2-backend.service`, user unit; health OK ~80 s).
+Accepted as a transitional deterministic layer: fallback + regression floor for the
+planned LLM-based contextual query interpretation change (research phase ordered
+by the user 2026-08-17).
 
 ## Production smoke (2026-08-17, port 18188, HEAD `438300a`)
 
