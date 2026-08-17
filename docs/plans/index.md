@@ -1,13 +1,35 @@
 # 计划索引
 
 一张表说清楚现在什么是活的、什么是完成的、什么该看哪个文档。状态以代码 + 测试 + 数据/E2E 证据校准；没有验收证据的 plan 不标 COMPLETE。
+本文件同时是**人看文档的总目录与进度板**（AGENTS.md §15.0 规则 2）：每个进行中的工作轮在顶部持有活的进度表，与 OpenSpec Epic 任务勾选同 slice 同步。
+
+## 🔧 系统性修复第一轮（ACTIVE · 2026-08-17 启动 · 分支 fix/p1-p8-systematic）
+
+总纲（人）：[2026-08-17-systematic-fix-round-1](./2026-08-17-systematic-fix-round-1.md) ｜
+契约（agent）：OpenSpec Epic `fix-round-1-serving-pipeline` ｜
+回归工具：`apps/admin-console/scripts/replay_fix_round1.py`（每次热更新前必跑）
+
+| 阶段 | 内容 | 状态 | owning change-id | 证据 |
+|---|---|---|---|---|
+| P0 | 冻结基线 + 重放工具 + 双文档 | **已完成** 08-17 | (Epic) | `.agents/runs/fix-round-1-serving-pipeline/baseline-2026-08-17/`（G1/G3/G5/G7 RED；G6 PASS 定案 P7；P9 入账） |
+| P1 | 观测线 turn-trace + web 通道韧性（重试/缓存/熔断/keepwarm 降耗） | 未开始 | `add-turn-trace-observability` | — |
+| P2 | 绝不拒答契约 + 降级语义（通道故障≠世界没有） | 未开始 | `enforce-never-refuse-contracts` | — |
+| P3 | 确定性主题层 v2 → **R1 热更新** | 未开始 | `harden-deterministic-subject-layer` | — |
+| P4 | 数据重建（全列全量+关系回填，**并行线**）→ 数据版 v2 | 未开始 | `full-column-serving-pack-rebuild` | — |
+| P5 | 枚举抓正文 top-2 → **R2 热更新** | 未开始 | `fetch-top-pages-for-enumerations` | — |
+| P6 | 语境化理解层（带 GO/NO-GO 闸门） | 未开始 | `contextual-query-interpretation` | — |
+| P7 | 融合召回下限 + UI 理解披露 + P9 前端收敛 | 未开始 | `fusion-recall-floor-and-disclosure` | — |
+| P8 | 总验收（八组复测+金标）→ **R3 热更新** | 未开始 | (Epic 收口) | — |
+
+问题追踪：P1–P9 → 阶段映射见总纲第四节。发布节奏：R1/R2/R3 = git 热更新；数据版 v2 = rsync 切换。
 
 ## 🟢 当前活跃（OPEN / PARTIAL — 还在推进）
 
 | 计划 | 主题 | 状态 |
 |---|---|---|
-| [2026-08-17-contextual-query-interpretation-research](./2026-08-17-contextual-query-interpretation-research.md) | LLM 理解 + 确定性校验（查询理解层） | RESEARCH — 调研完成待立项：外部（CAsT/NVIDIA 蓝图/护栏工具链）+ 内部先例（rewriter 骨架可放大、legacy 0.690 教训、无对话原文硬缺口）；Phase 0-2 路线与验收草案在内 |
-| [2026-08-14-customer-site-migration-plan](./2026-08-14-customer-site-migration-plan.md) | 客户现场迁移（无 GPU、纯 LLM API） | OPEN — Kimi session 恢复版：10 步路线图 + 第 1–5 步 + 1.3G 门槛摘除决策已落盘；第 6–10 步待补，runner 小改未实现 |
+| [2026-08-17-evidence-first-design-review](./2026-08-17-evidence-first-design-review.md) | 证据优先设计返审（本轮重做的理论依据） | REFERENCE — 推翻 5 条 / 保留 5 条已裁定，供第一轮各阶段引用 |
+| [2026-08-17-contextual-query-interpretation-research](./2026-08-17-contextual-query-interpretation-research.md) | LLM 理解 + 确定性校验（查询理解层） | RESEARCH→已立项 — 调研完成；实现归本轮 Phase 6（change-id 同名） |
+| [2026-08-14-customer-site-migration-plan](./2026-08-14-customer-site-migration-plan.md) | 客户现场迁移（无 GPU、纯 LLM API） | OPEN — 10 步路线图 + 第 1–5 步已落盘；第 6–10 步待补，runner 小改未实现 |
 | [2026-04-16-007-plan-portfolio-execution-roadmap](./2026-04-16-007-plan-portfolio-execution-roadmap.md) | 顶层波次路线图 | ACTIVE — Round 7/8 系列已从此接过主线 |
 | [2026-04-17-005-company-primary-knowledge-graph-architecture-plan](./2026-04-17-005-company-primary-knowledge-graph-architecture-plan.md) | 企业主 KG 架构（北极星） | PARTIAL — canonical model/import code 已在；统一 KG 迁移、关系回填、Milvus/search 未完成 |
 | [2026-04-08-001-feat-paper-multi-source-priority-implementation-plan](./2026-04-08-001-feat-paper-multi-source-priority-implementation-plan.md) | 论文多源证据优先级 | PARTIAL — Phase A 代码/单测在；真实 dogfood 验收模板未填，Phase B 排队 |
