@@ -5,6 +5,22 @@
 
 ---
 
+## 2026-08-18 · Phase 1 子 change 起草（待审，未动生产代码）
+
+**做了什么**：经用户授权（builder 不自建 change，本次明确授权起草），完成 Phase 1 子 change `add-turn-trace-observability` 五件套：proposal + spec delta（canonical-v2-chat）+ design + tasks（13 项）+ acceptance，并按 RED 先行建立 `.agents/runs/add-turn-trace-observability/verification-contract.md`（含故障注入验收场景）。`openspec validate` 通过。
+
+**勘察结论**（design.md 的地基）：现有 `AccessLogStore` 只记输出级（query/answer/citations/latency），全栈仅约 7 处 logger 调用——逐阶段归因确实不可能；web 双通道适配器（`_DualWebLaneAdapter`）逐 provider 静默吞异常、零缓存零重试零熔断，keepwarm 空闲期每 300 秒烧 2 次真实搜索。1.1 的 trace 扩展点（服务层 `_answer_locked` + serving 各 lane/gate）与 1.3 的韧性改造点都已落到具体函数。
+
+**发现**：Serper 的「not enough credits」进程级粘性禁用将被熔断器的可恢复 OPEN 状态取代（design 已写明）；降级话术（通道不可用≠世界没有）明确留给 Phase 2.2，本轮只做韧性+可见。
+
+**验证**：`openspec validate add-turn-trace-observability` → valid；未动任何生产代码。
+
+**影响**：P1（观测）+ web 通道韧性；Phase 2–8 全部阶段的归因地基。
+
+**状态**：**等用户审阅 change 包**，审过即按 verification-contract 的 RED 定义开工。
+
+---
+
 ## 2026-08-18 · 文档体系与仓库整理（非代码，无行为影响）
 
 **做了什么**
