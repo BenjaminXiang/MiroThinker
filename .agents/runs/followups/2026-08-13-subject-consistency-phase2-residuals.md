@@ -8,6 +8,12 @@ evidence `prod_deepen_t*.sse` / `prod_pronoun_t*.sse`: both triggers on-subject,
 no substitution, no clarification). Residual observation retained: on anchor-path
 deepening turns the rewrite views stay unpinned and the subject gate can filter the
 web lane to zero — fold into the §3 telemetry follow-up or a gate-recall tune.
+**Successor defect registered 2026-08-17 (user test, worse than the probe scoring
+caught): follow-up answers frame the subject one level up — organized around the
+container 河套园区 instead of the anchored org. Root cause: the carried web-handle
+anchor's display_name is the park-framed ARTICLE TITLE. See
+`.agents/runs/followups/2026-08-17-followup-subject-framed-one-level-up.md`
+(record-only per user instruction).**
 Context: phase-2 branch (Tasks 1-11 + final-review fixes C1/I1) closed the canonical badcase pair and the stream-correction crash. This register collects everything deliberately NOT fixed in that branch, with evidence pointers. Evidence files live in `.agents/runs/followup-subject-consistency/evidence/` (uncommitted).
 
 ## 1. Deepening-turn anchor loss at plan/referent level (highest priority)
