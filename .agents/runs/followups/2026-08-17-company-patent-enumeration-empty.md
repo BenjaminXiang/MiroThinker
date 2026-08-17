@@ -24,14 +24,22 @@ question to external services.
 
 ## Analysis deferred — open questions parked for the chain audit
 
-Per the user's instruction (record now, analyze later), the following are parked,
+**RESOLVED 2026-08-17 (coverage audit, `.agents/runs/2026-08-17-serving-pack-coverage-audit.md`)**:
+question 3 answered — the serving pack contains only the OLD 1,931-patent set
+with 727 company↔patent links total, and UBTECH has **zero** patent links in the
+relationship graph. The turn had no local patent data to enumerate: data absence,
+not a retrieval/wiring failure. The never-refuse/deflection wording remains a
+separate open defect. Remaining parked questions (binding/path-firing telemetry)
+are moot for this instance but stay parked for the general audit.
+
+Per the user's instruction (record now, analyze later), the following were parked,
 NOT investigated yet:
 
 1. Did the typed referent bind the canonical UBTECH anchor at planning time?
 2. Did the `company_has_patent` relationship path fire, fire-and-return-empty,
    or never fire?
-3. If it fired empty: does the V2 serving pack contain patents for UBTECH
-   (restore scope / eligibility), or is the count genuinely small?
+3. ~~If it fired empty: does the V2 serving pack contain patents for UBTECH~~ —
+   ANSWERED: no (0 links; 727 total).
 4. Never-refuse invariant: the "未找到 + 外甩" wording family (P2/P4/P5) —
    is the deflection template behavior or model phrasing?
 
