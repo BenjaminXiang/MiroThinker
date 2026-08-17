@@ -1,0 +1,681 @@
+event: stage
+data: {"name":"planning"}
+
+event: plan_done
+data: {"lanes":["exact","structured","lexical","vector","web"],"domains":["company"],"views":["还有哪些类似的公司","类似公司","同行业竞争对手","竞品分析"]}
+
+event: stage
+data: {"name":"retrieval"}
+
+event: retrieval_done
+data: {"lanes":[{"lane":"exact","status":"succeeded","candidates":0},{"lane":"structured","status":"succeeded","candidates":0},{"lane":"lexical","status":"succeeded","candidates":0},{"lane":"vector","status":"succeeded","candidates":48},{"lane":"web","status":"succeeded","candidates":48},{"lane":"supplemental","status":"succeeded","candidates":5}],"web_items":[{"title":"与深信服同类型的公司有哪些?_知乎","url":"https://www.zhihu.com/question/287124282/answer/459784150","source":"www.zhihu.com"},{"title":"除了OpenAI，从融资角度看还有哪些AI公司值得关注？","url":"https://m.cyzone.cn/article/726964.html","source":"m.cyzone.cn"},{"title":"请问类似海康威视的同类公司?_知乎","url":"https://www.zhihu.com/question/283124674/answer/2447413940","source":"www.zhihu.com"},{"title":"国内类似ChatGPT的大模型应用有哪些？发展情况如何了 - 知乎专栏","url":"https://zhuanlan.zhihu.com/p/620613971","source":"zhuanlan.zhihu.com"},{"title":"又一家类似","url":"https://xueqiu.com/1108553766/246636112","source":"xueqiu.com"},{"title":"一文了解中国AI江湖的核心玩家及美中AI竞逐格局 - 美国之音","url":"https://www.voachinese.com/a/china-ai-ecosystem-20250215/7975051.html","source":"www.voachinese.com"},{"title":"类似于360之类的公司有哪些 - 搜狗问问","url":"http://wenwen.sogou.com/z/q896769043.htm","source":"wenwen.sogou.com"},{"title":"央企名录 - 国务院国有资产监督管理委员会","url":"http://wap.sasac.gov.cn/n2588045/n27271785/n27271792/c14159097/content.html","source":"wap.sasac.gov.cn"},{"title":"投资者提问:请问与公司主营业务类似的公司(竞争对手)有哪些?目前整个行业的...新浪财经_新浪财经_新浪网","url":"https://finance.sina.com.cn/stock/relnews/dongmiqa/2020-03-27/doc-iimxyqwa3547142.shtml","source":"finance.sina.com.cn"},{"title":"2026 年不容错过的12 款最佳AI 生产力工具 - Manus","url":"https://manus.im/zh-cn/blog/best-ai-productivity-tools","source":"manus.im"}]}
+
+event: stage
+data: {"name":"synthesis"}
+
+event: answer_chunk
+data: {"text":"与"}
+
+event: answer_chunk
+data: {"text":"深"}
+
+event: answer_chunk
+data: {"text":"圳"}
+
+event: answer_chunk
+data: {"text":"前"}
+
+event: answer_chunk
+data: {"text":"海"}
+
+event: answer_chunk
+data: {"text":"微"}
+
+event: answer_chunk
+data: {"text":"众"}
+
+event: answer_chunk
+data: {"text":"银"}
+
+event: answer_chunk
+data: {"text":"行"}
+
+event: answer_chunk
+data: {"text":"股"}
+
+event: answer_chunk
+data: {"text":"份"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"限"}
+
+event: answer_chunk
+data: {"text":"公"}
+
+event: answer_chunk
+data: {"text":"司"}
+
+event: answer_chunk
+data: {"text":"（"}
+
+event: answer_chunk
+data: {"text":"国"}
+
+event: answer_chunk
+data: {"text":"内"}
+
+event: answer_chunk
+data: {"text":"首"}
+
+event: answer_chunk
+data: {"text":"家"}
+
+event: answer_chunk
+data: {"text":"民"}
+
+event: answer_chunk
+data: {"text":"营"}
+
+event: answer_chunk
+data: {"text":"银"}
+
+event: answer_chunk
+data: {"text":"行"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"数"}
+
+event: answer_chunk
+data: {"text":"字"}
+
+event: answer_chunk
+data: {"text":"银"}
+
+event: answer_chunk
+data: {"text":"行"}
+
+event: answer_chunk
+data: {"text":"）"}
+
+event: answer_chunk
+data: {"text":"业"}
+
+event: answer_chunk
+data: {"text":"务"}
+
+event: answer_chunk
+data: {"text":"模"}
+
+event: answer_chunk
+data: {"text":"式"}
+
+event: answer_chunk
+data: {"text":"类"}
+
+event: answer_chunk
+data: {"text":"似"}
+
+event: answer_chunk
+data: {"text":"的"}
+
+event: answer_chunk
+data: {"text":"公"}
+
+event: answer_chunk
+data: {"text":"司"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"公"}
+
+event: answer_chunk
+data: {"text":"开"}
+
+event: answer_chunk
+data: {"text":"信"}
+
+event: answer_chunk
+data: {"text":"息"}
+
+event: answer_chunk
+data: {"text":"中"}
+
+event: answer_chunk
+data: {"text":"可"}
+
+event: answer_chunk
+data: {"text":"确"}
+
+event: answer_chunk
+data: {"text":"认"}
+
+event: answer_chunk
+data: {"text":"的"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"招"}
+
+event: answer_chunk
+data: {"text":"商"}
+
+event: answer_chunk
+data: {"text":"银"}
+
+event: answer_chunk
+data: {"text":"行"}
+
+event: answer_chunk
+data: {"text":"。"}
+
+event: answer_chunk
+data: {"text":"\n\n"}
+
+event: answer_chunk
+data: {"text":"招"}
+
+event: answer_chunk
+data: {"text":"商"}
+
+event: answer_chunk
+data: {"text":"银"}
+
+event: answer_chunk
+data: {"text":"行"}
+
+event: answer_chunk
+data: {"text":"是"}
+
+event: answer_chunk
+data: {"text":"一"}
+
+event: answer_chunk
+data: {"text":"家"}
+
+event: answer_chunk
+data: {"text":"全"}
+
+event: answer_chunk
+data: {"text":"国"}
+
+event: answer_chunk
+data: {"text":"性"}
+
+event: answer_chunk
+data: {"text":"股"}
+
+event: answer_chunk
+data: {"text":"份"}
+
+event: answer_chunk
+data: {"text":"制"}
+
+event: answer_chunk
+data: {"text":"商"}
+
+event: answer_chunk
+data: {"text":"业"}
+
+event: answer_chunk
+data: {"text":"银"}
+
+event: answer_chunk
+data: {"text":"行"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"以"}
+
+event: answer_chunk
+data: {"text":"零"}
+
+event: answer_chunk
+data: {"text":"售"}
+
+event: answer_chunk
+data: {"text":"金"}
+
+event: answer_chunk
+data: {"text":"融"}
+
+event: answer_chunk
+data: {"text":"为"}
+
+event: answer_chunk
+data: {"text":"核"}
+
+event: answer_chunk
+data: {"text":"心"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"拥"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"商"}
+
+event: answer_chunk
+data: {"text":"业"}
+
+event: answer_chunk
+data: {"text":"银"}
+
+event: answer_chunk
+data: {"text":"行"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"金"}
+
+event: answer_chunk
+data: {"text":"融"}
+
+event: answer_chunk
+data: {"text":"租"}
+
+event: answer_chunk
+data: {"text":"赁"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"基"}
+
+event: answer_chunk
+data: {"text":"金"}
+
+event: answer_chunk
+data: {"text":"管"}
+
+event: answer_chunk
+data: {"text":"理"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"寿"}
+
+event: answer_chunk
+data: {"text":"保"}
+
+event: answer_chunk
+data: {"text":"险"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"境"}
+
+event: answer_chunk
+data: {"text":"外"}
+
+event: answer_chunk
+data: {"text":"投"}
+
+event: answer_chunk
+data: {"text":"行"}
+
+event: answer_chunk
+data: {"text":"等"}
+
+event: answer_chunk
+data: {"text":"金"}
+
+event: answer_chunk
+data: {"text":"融"}
+
+event: answer_chunk
+data: {"text":"牌"}
+
+event: answer_chunk
+data: {"text":"照"}
+
+event: answer_chunk
+data: {"text":"。"}
+
+event: answer_chunk
+data: {"text":"其"}
+
+event: answer_chunk
+data: {"text":"主"}
+
+event: answer_chunk
+data: {"text":"要"}
+
+event: answer_chunk
+data: {"text":"产"}
+
+event: answer_chunk
+data: {"text":"品"}
+
+event: answer_chunk
+data: {"text":"与"}
+
+event: answer_chunk
+data: {"text":"服"}
+
+event: answer_chunk
+data: {"text":"务"}
+
+event: answer_chunk
+data: {"text":"涵"}
+
+event: answer_chunk
+data: {"text":"盖"}
+
+event: answer_chunk
+data: {"text":"个"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"银"}
+
+event: answer_chunk
+data: {"text":"行"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"公"}
+
+event: answer_chunk
+data: {"text":"司"}
+
+event: answer_chunk
+data: {"text":"银"}
+
+event: answer_chunk
+data: {"text":"行"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"投"}
+
+event: answer_chunk
+data: {"text":"资"}
+
+event: answer_chunk
+data: {"text":"银"}
+
+event: answer_chunk
+data: {"text":"行"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"财"}
+
+event: answer_chunk
+data: {"text":"富"}
+
+event: answer_chunk
+data: {"text":"管"}
+
+event: answer_chunk
+data: {"text":"理"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"私"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"银"}
+
+event: answer_chunk
+data: {"text":"行"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"信"}
+
+event: answer_chunk
+data: {"text":"用"}
+
+event: answer_chunk
+data: {"text":"卡"}
+
+event: answer_chunk
+data: {"text":"及"}
+
+event: answer_chunk
+data: {"text":"数"}
+
+event: answer_chunk
+data: {"text":"字"}
+
+event: answer_chunk
+data: {"text":"金"}
+
+event: answer_chunk
+data: {"text":"融"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"具"}
+
+event: answer_chunk
+data: {"text":"体"}
+
+event: answer_chunk
+data: {"text":"包"}
+
+event: answer_chunk
+data: {"text":"括"}
+
+event: answer_chunk
+data: {"text":"“"}
+
+event: answer_chunk
+data: {"text":"一"}
+
+event: answer_chunk
+data: {"text":"卡"}
+
+event: answer_chunk
+data: {"text":"通"}
+
+event: answer_chunk
+data: {"text":"”"}
+
+event: answer_chunk
+data: {"text":"“"}
+
+event: answer_chunk
+data: {"text":"一"}
+
+event: answer_chunk
+data: {"text":"网"}
+
+event: answer_chunk
+data: {"text":"通"}
+
+event: answer_chunk
+data: {"text":"”"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"招"}
+
+event: answer_chunk
+data: {"text":"商"}
+
+event: answer_chunk
+data: {"text":"银"}
+
+event: answer_chunk
+data: {"text":"行"}
+
+event: answer_chunk
+data: {"text":"A"}
+
+event: answer_chunk
+data: {"text":"p"}
+
+event: answer_chunk
+data: {"text":"p"}
+
+event: answer_chunk
+data: {"text":"和"}
+
+event: answer_chunk
+data: {"text":"掌"}
+
+event: answer_chunk
+data: {"text":"上"}
+
+event: answer_chunk
+data: {"text":"生"}
+
+event: answer_chunk
+data: {"text":"活"}
+
+event: answer_chunk
+data: {"text":"A"}
+
+event: answer_chunk
+data: {"text":"p"}
+
+event: answer_chunk
+data: {"text":"p"}
+
+event: answer_chunk
+data: {"text":"等"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"服"}
+
+event: answer_chunk
+data: {"text":"务"}
+
+event: answer_chunk
+data: {"text":"网"}
+
+event: answer_chunk
+data: {"text":"络"}
+
+event: answer_chunk
+data: {"text":"覆"}
+
+event: answer_chunk
+data: {"text":"盖"}
+
+event: answer_chunk
+data: {"text":"中"}
+
+event: answer_chunk
+data: {"text":"国"}
+
+event: answer_chunk
+data: {"text":"境"}
+
+event: answer_chunk
+data: {"text":"内"}
+
+event: answer_chunk
+data: {"text":"及"}
+
+event: answer_chunk
+data: {"text":"境"}
+
+event: answer_chunk
+data: {"text":"外"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"应"}
+
+event: answer_chunk
+data: {"text":"用"}
+
+event: answer_chunk
+data: {"text":"于"}
+
+event: answer_chunk
+data: {"text":"个"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"消"}
+
+event: answer_chunk
+data: {"text":"费"}
+
+event: answer_chunk
+data: {"text":"及"}
+
+event: answer_chunk
+data: {"text":"企"}
+
+event: answer_chunk
+data: {"text":"业"}
+
+event: answer_chunk
+data: {"text":"金"}
+
+event: answer_chunk
+data: {"text":"融"}
+
+event: answer_chunk
+data: {"text":"场"}
+
+event: answer_chunk
+data: {"text":"景"}
+
+event: answer_chunk
+data: {"text":"。"}
+
+event: answer
+data: {"query":"还有哪些类似的公司","query_type":"canonical_v2:A:answer","answer_text":"与深圳前海微众银行股份有限公司（国内首家民营银行、数字银行）业务模式类似的公司，公开信息中可确认的有招商银行。\n\n招商银行是一家全国性股份制商业银行，以零售金融为核心，拥有商业银行、金融租赁、基金管理、人寿保险、境外投行等金融牌照。其主要产品与服务涵盖个人银行、公司银行、投资银行、财富管理、私人银行、信用卡及数字金融，具体包括“一卡通”“一网通”、招商银行App和掌上生活App等，服务网络覆盖中国境内及境外，应用于个人消费及企业金融场景。","citations":[],"evidence":[],"clarification":null,"structured_payload":{},"answer_style":"llm_synthesized","citation_map":{},"suggested_followups":[]}
+
+event: done
+data: {}
+
