@@ -2,10 +2,20 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
+
 from src.data_agents.professor.models import EnrichedProfessorProfile
 from src.data_agents.professor.quality_gate import (
+    QUALITY_GATE_REPORTED_BY,
+    ProfessorAdminActionState,
+    ProfessorAffiliationState,
+    ProfessorCanonicalState,
+    ProfessorFactState,
+    ProfessorIssueState,
     build_quality_report,
     evaluate_quality,
+    evaluate_professor_quality,
+    persist_professor_quality_evaluation,
     _check_profile_summary_boilerplate,
     _check_profile_summary_length,
 )
@@ -41,6 +51,96 @@ def _pad_summary(base: str, target_len: int) -> str:
     return base + "。" * (target_len - len(base))
 
 
+def _canonical_state(**overrides) -> ProfessorCanonicalState:
+    now = datetime(2026, 5, 14, 8, 0, tzinfo=timezone.utc)
+    defaults = {
+        "professor_id": "prof-001",
+        "canonical_name": "张三",
+        "identity_status": "resolved",
+        "primary_official_profile_page_id": "11111111-1111-1111-1111-111111111111",
+        "profile_summary": "张三现任南方科技大学计算机科学与工程系教授，研究方向为大语言模型安全。",
+        "updated_at": now,
+        "facts": (
+            ProfessorFactState(
+                fact_type="research_topic",
+                value_raw="大语言模型安全",
+                source_page_id="11111111-1111-1111-1111-111111111111",
+                updated_at=now,
+            ),
+        ),
+        "affiliations": (
+            ProfessorAffiliationState(
+                institution="南方科技大学",
+                department="计算机科学与工程系",
+                title="教授",
+                is_primary=True,
+                is_current=True,
+                source_page_id="11111111-1111-1111-1111-111111111111",
+                updated_at=now,
+            ),
+        ),
+        "open_issues": (),
+        "has_paper_candidates": False,
+        "has_verified_paper_link": False,
+    }
+    defaults.update(overrides)
+    return ProfessorCanonicalState(**defaults)
+
+
+def _reason_ids(evaluation) -> set[str]:
+    return {reason.rule_id for reason in evaluation.reasons}
+
+
+class _Rows:
+    def __init__(self, rows):
+        self._rows = rows
+
+    def fetchall(self):
+        return self._rows
+
+    def fetchone(self):
+        return self._rows[0] if self._rows else None
+
+
+class _QualityPersistenceConn:
+    def __init__(self, *, open_gate_issues=None):
+        self.open_gate_issues = list(open_gate_issues or [])
+        self.inserted_issue_descriptions: list[str] = []
+        self.resolved_issue_ids: list[str] = []
+        self.quality_status_updates: list[str] = []
+        self.statements: list[tuple[str, tuple[object, ...]]] = []
+
+    def execute(self, sql: str, params: tuple[object, ...] = ()):
+        compact_sql = " ".join(sql.split())
+        self.statements.append((compact_sql, params))
+        if compact_sql.startswith("SELECT issue_id, description FROM pipeline_issue"):
+            return _Rows(list(self.open_gate_issues))
+        if compact_sql.startswith("UPDATE professor"):
+            self.quality_status_updates.append(str(params[0]))
+            return _Rows([])
+        if compact_sql.startswith("INSERT INTO pipeline_issue"):
+            description = str(params[3])
+            if description not in {
+                str(row["description"]) for row in self.open_gate_issues
+            }:
+                self.inserted_issue_descriptions.append(description)
+                self.open_gate_issues.append(
+                    {
+                        "issue_id": f"new-{len(self.inserted_issue_descriptions)}",
+                        "description": description,
+                    }
+                )
+            return _Rows([])
+        if compact_sql.startswith("UPDATE pipeline_issue"):
+            issue_id = str(params[2])
+            self.resolved_issue_ids.append(issue_id)
+            self.open_gate_issues = [
+                row for row in self.open_gate_issues if row["issue_id"] != issue_id
+            ]
+            return _Rows([])
+        raise AssertionError(f"Unexpected SQL: {compact_sql}")
+
+
 def test_passes_l1_with_all_fields():
     profile = _profile(
         profile_summary=_pad_summary(
@@ -51,6 +151,240 @@ def test_passes_l1_with_all_fields():
     result = evaluate_quality(profile)
     assert result.passed_l1
     assert result.l1_failures == []
+
+
+def test_professor_quality_ready_with_all_pinned_key_fields():
+    result = evaluate_professor_quality(_canonical_state())
+
+    assert result.quality_status == "ready"
+    assert result.reasons == ()
+
+
+def test_professor_quality_missing_summary_needs_enrichment_not_review():
+    result = evaluate_professor_quality(_canonical_state(profile_summary=""))
+
+    assert result.quality_status == "needs_enrichment"
+    assert "missing_profile_summary" in _reason_ids(result)
+    assert "field_contradiction" not in _reason_ids(result)
+
+
+def test_professor_quality_missing_official_source_is_low_confidence():
+    result = evaluate_professor_quality(
+        _canonical_state(primary_official_profile_page_id=None)
+    )
+
+    assert result.quality_status == "low_confidence"
+    assert "missing_official_source" in _reason_ids(result)
+
+
+def test_professor_quality_external_issue_blocks_without_duplicate_reason():
+    result = evaluate_professor_quality(
+        _canonical_state(
+            open_issues=(
+                ProfessorIssueState(
+                    stage="identity_gate",
+                    reported_by="manual_reviewer",
+                    description="same-name conflict requires review",
+                    reported_at=datetime(2026, 5, 14, 9, 0, tzinfo=timezone.utc),
+                ),
+            )
+        )
+    )
+
+    assert result.quality_status == "needs_review"
+    reason = result.reasons[0]
+    assert reason.rule_id == "external_blocking_issue"
+    assert reason.stage is None
+    assert reason.persist is False
+
+
+def test_professor_quality_ignores_gate_authored_issue_self_feedback():
+    result = evaluate_professor_quality(
+        _canonical_state(
+            open_issues=(
+                ProfessorIssueState(
+                    stage="identity_gate",
+                    reported_by=QUALITY_GATE_REPORTED_BY,
+                    description="old quality gate reason",
+                    reported_at=datetime(2026, 5, 14, 9, 0, tzinfo=timezone.utc),
+                ),
+            )
+        )
+    )
+
+    assert result.quality_status == "ready"
+    assert "external_blocking_issue" not in _reason_ids(result)
+
+
+def test_professor_quality_multiple_primary_institutions_is_field_contradiction():
+    now = datetime(2026, 5, 14, 8, 0, tzinfo=timezone.utc)
+    result = evaluate_professor_quality(
+        _canonical_state(
+            affiliations=(
+                ProfessorAffiliationState(
+                    institution="南方科技大学",
+                    department="计算机科学与工程系",
+                    title="教授",
+                    is_primary=True,
+                    is_current=True,
+                    source_page_id="11111111-1111-1111-1111-111111111111",
+                    updated_at=now,
+                ),
+                ProfessorAffiliationState(
+                    institution="深圳大学",
+                    department="计算机与软件学院",
+                    title="教授",
+                    is_primary=True,
+                    is_current=True,
+                    source_page_id="22222222-2222-2222-2222-222222222222",
+                    updated_at=now,
+                ),
+            )
+        )
+    )
+
+    assert result.quality_status == "needs_review"
+    assert "field_contradiction" in _reason_ids(result)
+
+
+def test_professor_quality_missing_title_or_department_is_not_contradiction():
+    result = evaluate_professor_quality(
+        _canonical_state(
+            affiliations=(
+                ProfessorAffiliationState(
+                    institution="南方科技大学",
+                    department=None,
+                    title=None,
+                    is_primary=True,
+                    is_current=True,
+                    source_page_id="11111111-1111-1111-1111-111111111111",
+                    updated_at=datetime(2026, 5, 14, 8, 0, tzinfo=timezone.utc),
+                ),
+            )
+        )
+    )
+
+    assert result.quality_status == "needs_enrichment"
+    assert "missing_title_or_department" in _reason_ids(result)
+    assert "field_contradiction" not in _reason_ids(result)
+
+
+def test_professor_quality_verified_paper_signal_only_required_when_candidates_exist():
+    no_candidates = evaluate_professor_quality(_canonical_state())
+    candidates_without_verified_link = evaluate_professor_quality(
+        _canonical_state(has_paper_candidates=True, has_verified_paper_link=False)
+    )
+    candidates_with_verified_link = evaluate_professor_quality(
+        _canonical_state(has_paper_candidates=True, has_verified_paper_link=True)
+    )
+
+    assert no_candidates.quality_status == "ready"
+    assert candidates_without_verified_link.quality_status == "needs_enrichment"
+    assert "missing_verified_paper_signal" in _reason_ids(candidates_without_verified_link)
+    assert candidates_with_verified_link.quality_status == "ready"
+
+
+def test_professor_quality_fresh_human_override_is_display_only():
+    state = _canonical_state(profile_summary="")
+    override = ProfessorAdminActionState(
+        action="confirm_ready",
+        observed_data_updated_at=state.updated_at,
+        created_at=state.updated_at + timedelta(minutes=1),
+    )
+
+    result = evaluate_professor_quality(state, latest_admin_action=override)
+
+    assert result.quality_status == "ready"
+    assert result.reasons[0].rule_id == "human_override"
+    assert result.reasons[0].persist is False
+
+
+def test_professor_quality_external_issue_invalidates_human_override():
+    base = datetime(2026, 5, 14, 8, 0, tzinfo=timezone.utc)
+    state = _canonical_state(
+        updated_at=base,
+        open_issues=(
+            ProfessorIssueState(
+                stage="identity_gate",
+                reported_by="manual_reviewer",
+                description="filed after override",
+                reported_at=base + timedelta(hours=1),
+            ),
+        ),
+    )
+    override = ProfessorAdminActionState(
+        action="confirm_ready",
+        observed_data_updated_at=base,
+        created_at=base + timedelta(minutes=1),
+    )
+
+    result = evaluate_professor_quality(state, latest_admin_action=override)
+
+    assert result.quality_status == "needs_review"
+    assert "external_blocking_issue" in _reason_ids(result)
+    assert "human_override" not in _reason_ids(result)
+
+
+def test_persist_professor_quality_reasons_is_idempotent_and_resolves_stale_gate_rows():
+    evaluation = evaluate_professor_quality(_canonical_state(profile_summary=""))
+    conn = _QualityPersistenceConn(
+        open_gate_issues=(
+            {
+                "issue_id": "old-research-topic",
+                "description": (
+                    "missing_research_topic: no active research_topic fact is present"
+                ),
+            },
+        )
+    )
+
+    first = persist_professor_quality_evaluation(
+        conn,
+        professor_id="prof-001",
+        evaluation=evaluation,
+    )
+    second = persist_professor_quality_evaluation(
+        conn,
+        professor_id="prof-001",
+        evaluation=evaluation,
+    )
+
+    assert first.quality_status == "needs_enrichment"
+    assert first.issues_inserted == 1
+    assert first.issues_resolved == 1
+    assert second.issues_inserted == 0
+    assert second.issues_resolved == 0
+    assert conn.inserted_issue_descriptions == [
+        "missing_profile_summary: profile_summary is missing"
+    ]
+    assert conn.resolved_issue_ids == ["old-research-topic"]
+
+
+def test_persist_professor_quality_does_not_duplicate_external_blocking_issue():
+    evaluation = evaluate_professor_quality(
+        _canonical_state(
+            open_issues=(
+                ProfessorIssueState(
+                    stage="identity_gate",
+                    reported_by="manual_reviewer",
+                    description="existing external identity issue",
+                    reported_at=datetime(2026, 5, 14, 9, 0, tzinfo=timezone.utc),
+                ),
+            )
+        )
+    )
+    conn = _QualityPersistenceConn()
+
+    report = persist_professor_quality_evaluation(
+        conn,
+        professor_id="prof-001",
+        evaluation=evaluation,
+    )
+
+    assert report.quality_status == "needs_review"
+    assert report.issues_inserted == 0
+    assert conn.inserted_issue_descriptions == []
+    assert conn.quality_status_updates == ["needs_review"]
 
 
 def test_fails_l1_empty_name():

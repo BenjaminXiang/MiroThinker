@@ -259,6 +259,51 @@ def test_idempotent_on_repeat_upsert(pg_conn: psycopg.Connection):
     assert _scalar(pg_conn, "SELECT count(*) FROM professor_affiliation") == 1
 
 
+def test_write_professor_bundle_persists_quality_status_from_canonical_state(
+    pg_conn: psycopg.Connection,
+):
+    enriched = _build_enriched(profile_summary="")
+    professor_id = build_professor_id(enriched)
+    page_id = _official_page_id(pg_conn, enriched.profile_url)
+
+    write_professor_bundle(
+        pg_conn,
+        enriched=enriched,
+        official_profile_page_id=page_id,
+        run_id=_LEGACY_RUN_ID,
+    )
+    write_professor_bundle(
+        pg_conn,
+        enriched=enriched,
+        official_profile_page_id=page_id,
+        run_id=_LEGACY_RUN_ID,
+    )
+
+    assert (
+        _scalar(
+            pg_conn,
+            "SELECT quality_status FROM professor WHERE professor_id = %s",
+            (professor_id,),
+        )
+        == "needs_enrichment"
+    )
+    assert (
+        _scalar(
+            pg_conn,
+            """
+            SELECT count(*)
+            FROM pipeline_issue
+            WHERE professor_id = %s
+              AND reported_by = 'professor_quality_gate'
+              AND resolved = false
+              AND description LIKE 'missing_profile_summary:%%'
+            """,
+            (professor_id,),
+        )
+        == 1
+    )
+
+
 def test_research_topics_become_facts(pg_conn: psycopg.Connection):
     enriched = _build_enriched(
         research_directions=["人工智能", "机器学习", "计算机视觉"]

@@ -19,6 +19,11 @@ from src.data_agents.storage.postgres.pipeline_run import require_real_run_id
 
 from .name_identity_gate import NameIdentityCandidate, NameIdentityDecision
 from .publish_helpers import build_professor_id, is_official_url
+from .quality_gate import (
+    evaluate_professor_quality,
+    load_professor_canonical_state,
+    persist_professor_quality_evaluation,
+)
 from .topic_quality import split_compound_research_topic
 
 if TYPE_CHECKING:
@@ -443,6 +448,14 @@ def write_professor_bundle(
         if link_status == "verified":
             verified_link_keys.add(link_key)
 
+    quality_state = load_professor_canonical_state(conn, professor_id)
+    quality_evaluation = evaluate_professor_quality(quality_state)
+    persist_professor_quality_evaluation(
+        conn,
+        professor_id=professor_id,
+        evaluation=quality_evaluation,
+    )
+
     return ProfessorCanonicalReport(
         professor_id=professor_id,
         is_new_professor=is_new_professor,
@@ -598,6 +611,7 @@ def _upsert_professor_row(
     now = datetime.now(timezone.utc)
     canonical_name = _clean_text(getattr(enriched, "name", None))
     candidate_name_en = _clean_text(getattr(enriched, "name_en", None))
+    profile_summary = _clean_text(getattr(enriched, "profile_summary", None))
     if candidate_name_en and canonical_name and name_identity_gate is not None:
         if inspect.iscoroutinefunction(name_identity_gate):
             raise TypeError("name_identity_gate must be sync")
@@ -626,16 +640,21 @@ def _upsert_professor_row(
             canonical_name_en,
             discipline_family,
             primary_official_profile_page_id,
+            profile_summary,
             first_seen_at,
             last_refreshed_at,
             run_id
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT (professor_id) DO UPDATE
            SET canonical_name                    = EXCLUDED.canonical_name,
                canonical_name_en                 = EXCLUDED.canonical_name_en,
                discipline_family                 = EXCLUDED.discipline_family,
                primary_official_profile_page_id  = COALESCE(EXCLUDED.primary_official_profile_page_id, professor.primary_official_profile_page_id),
+               profile_summary                   = COALESCE(
+                   EXCLUDED.profile_summary,
+                   professor.profile_summary
+               ),
                last_refreshed_at                 = EXCLUDED.last_refreshed_at,
                run_id                            = COALESCE(EXCLUDED.run_id, professor.run_id),
                updated_at                        = now()
@@ -646,6 +665,7 @@ def _upsert_professor_row(
             candidate_name_en,
             _classify_discipline(enriched),
             primary_page_id,
+            profile_summary,
             now,
             now,
             run_id,
