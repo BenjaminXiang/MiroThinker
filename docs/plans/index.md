@@ -5,7 +5,7 @@
 
 ## 🔧 系统性修复第一轮（ACTIVE · 2026-08-17 启动 · 分支 fix/p1-p8-systematic）
 
-总纲（人）：[2026-08-17-systematic-fix-round-1](./2026-08-17-systematic-fix-round-1.md) ｜
+总纲（人）：[2026-08-17-systematic-fix-round-1](./2026-08-17-systematic-fix-round-1.md)（08-18 补：§七 历史分支归档备忘——19 条转 `archive/*` tag，Phase 4/8 回取指引） ｜
 契约（agent）：OpenSpec Epic `fix-round-1-serving-pipeline` ｜
 回归工具：`apps/admin-console/scripts/replay_fix_round1.py`（每次热更新前必跑）
 

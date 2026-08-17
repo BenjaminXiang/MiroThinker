@@ -88,3 +88,17 @@ web 通道**无缓存、无重试、异常静默吞**（`except Exception: retur
 R1（止血代码）→ git 热更新；数据版 v2（serving pack）→ rsync 切换；
 R2（抓正文+融合）→ git 热更新；R3（理解层[若过闸]+UI 披露+前端收敛）→ git 热更新。
 每次热更新前跑重放套件一键回归。
+
+## 七、历史分支归档备忘（2026-08-18 执行）
+
+修复轮开工前对 19 条历史分支做了代码级分诊（逐条读提交与代码），结论：**无一需要整体合入**；
+全部转为 `archive/<原分支名>` tag（本地+远端各 19 个），分支已删除。分诊依据存档于当次会话记录。
+按阶段可能回取的三个 tag：
+
+| 到达阶段 | 回取内容 | tag |
+|---|---|---|
+| Phase 4（数据全列重建） | V2 PRD 七大关系族规划 + 目录候选数据（比现服务包关系更丰富，作重建参考） | `archive/codex/canonical-v2-task61-prep` |
+| Phase 4（教授域补数） | 深大计算机学院官方补充页抓取器（6 月版基座，需移植） | `archive/szu-seed5-quality-20260613` |
+| Phase 8（论文域质量） | `paper_retrieval_gate.py` 工具族（1056 行 ID 锚定检索/引用/语义门 + 快照预检 + 1118 行测试，直接读 canonical 响应格式；cherry-pick 后须在本轮 change 下适配验证） | `archive/feat/professor-retrievability`（提交 a389abc） |
+
+复活任意归档分支：`git branch <名> archive/<名>`。
