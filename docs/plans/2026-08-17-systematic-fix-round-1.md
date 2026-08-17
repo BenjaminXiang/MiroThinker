@@ -1,12 +1,14 @@
 # 系统性修复第一轮：总计划（冻结版）
 
+> **进度与执行记录看 [执行日志](./2026-08-17-systematic-fix-round-1-log.md)（只追加）**；本计划冻结后不再更新状态。
+>
 > 2026-08-17 冻结。本轮 = 用户实测八组问题（P1–P8，2026-08-17）+ 审计发现的
 > 背景缺陷的系统性修复。**本文是给人看的总纲**；机器可执行契约为 OpenSpec
 > Epic `openspec/changes/fix-round-1-serving-pipeline/`（英文）。两文互链，
 > 按 AGENTS.md §15.0 双文档体系维护。
 >
-> 工作分支：`fix/p1-p8-systematic`（worktree `.worktrees/systematic-fix`）；
-> 发布线：`release/customer-test`（客户测试服务器跟踪，热更新用）。
+> 工作分支：`fix/p1-p8-systematic`（主工作区）；发布线：`release/customer-test`
+> （客户测试服务器跟踪，热更新用）。
 
 ## 一、问题总账（9 项）
 

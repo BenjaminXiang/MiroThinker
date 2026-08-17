@@ -1,8 +1,9 @@
 # Proposal: fix-round-1-serving-pipeline
 
 > Umbrella Epic for systematic fix round 1 (frozen 2026-08-17).
-> Human-facing plan (authoritative narrative, Chinese):
-> `docs/plans/2026-08-17-systematic-fix-round-1.md` — cross-linked per AGENTS.md §15.0.
+> Human-facing docs (authoritative narrative, Chinese), per AGENTS.md §3:
+> plan `docs/plans/2026-08-17-systematic-fix-round-1.md` ·
+> execution log `docs/plans/2026-08-17-systematic-fix-round-1-log.md` (append-only progress).
 > Behavior-affecting: YES. Capabilities touched: `canonical-v2-chat` (primary),
   data-supply/release (via child changes).
 
