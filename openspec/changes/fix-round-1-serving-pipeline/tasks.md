@@ -25,12 +25,26 @@
        degradation reason, final answer subject; journal reader tool.
 - [ ] 1.2 Trace verified by replaying the baseline sessions and reading each
        failure's stage from the trace alone.
+- [ ] 1.3 Web-lane resilience (verified zero-cache/zero-retry/silent-swallow
+       2026-08-17): single retry with backoff per provider (idempotent search),
+       web-result cache keyed by view+day (port the legacy V017
+       web_search_cache pattern), per-provider health circuit-breaker with
+       preference bias + probe recovery, quota-watermark counters. Acceptance:
+       fault-injection (kill one provider key) shows retry/cache engaging and
+       the lane serving from the surviving channel or cache, all visible in
+       the trace.
 
 ## Phase 2 — never-refuse contracts (child change: enforce-never-refuse-contracts)
 
 - [ ] 2.1 Fallback/synthesis wording contracts: answer from confirmed evidence,
        name gaps explicitly, ban deflection (国知局/PatSnap/Incopat pattern),
        mandatory enumeration coverage statement.
+- [ ] 2.2 Lane-failure semantic correction: "no results" vs "lane unavailable"
+       are distinct answer states — a web-lane failure MUST be reported as
+       网络检索暂不可用 (with cached/prior/local evidence when available) and
+       MUST NEVER be phrased as a negative factual claim about the world
+       (the G2 failure mode: channel outage phrased as 未找到该机构). RED case:
+       fault-injected empty web lane over a web-only subject.
 - [ ] 2.2 RED cases from verbatim transcripts (P2/P4/P5 wordings) → GREEN.
 
 ## Phase 3 — deterministic subject layer v2 (child change: harden-deterministic-subject-layer)
