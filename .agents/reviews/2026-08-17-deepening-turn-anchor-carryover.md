@@ -14,6 +14,9 @@
    回归下限。
 3. Production evidence (implementer-run, recorded in verification.md § Production smoke):
    both registered triggers PASS on 18188 (subject carried, no substitution, no junk web list).
+4. Design-level confirmation (同日晚些): design.md（6 断点根因表 + M1 认路/M2 点名核对/
+   M3 计数器三机制，含 M2 的"误请合法锚点"取舍与优先级顺序）经白话逐项讲解后，
+   用户明确确认无异议（"这个我也没问题 Accept"）。
 
 ## Decisions recorded
 
