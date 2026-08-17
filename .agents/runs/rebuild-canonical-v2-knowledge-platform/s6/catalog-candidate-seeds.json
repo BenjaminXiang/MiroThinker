@@ -1,0 +1,1795 @@
+{
+  "schema_version": "canonical-v2-prd-catalog-candidates-v1",
+  "status": "preparation_only",
+  "purpose": "Deterministic PRD-traceable candidates for Task 6.1; not a frozen catalog and not an acceptance record.",
+  "dependencies": {
+    "task_5_5": "not_accepted",
+    "task_5_6": "not_accepted"
+  },
+  "source_precedence": [
+    "OpenSpec behavior contract",
+    "Data-Agent-Shared-Spec",
+    "domain PRD plus explicit requirement-review overrides",
+    "accepted S2 coverage evidence",
+    "workbook only as seed scenarios, never as schema authority"
+  ],
+  "citation_sources": {
+    "company_success_relations": {
+      "source": "docs/Company-Data-Agent-PRD.md",
+      "line_start": 20,
+      "line_end": 40
+    },
+    "company_fields": {
+      "source": "docs/Company-Data-Agent-PRD.md",
+      "line_start": 115,
+      "line_end": 143
+    },
+    "company_identity_signals": {
+      "source": "docs/Company-Data-Agent-PRD.md",
+      "line_start": 81,
+      "line_end": 93
+    },
+    "company_personnel": {
+      "source": "docs/Company-Data-Agent-PRD.md",
+      "line_start": 145,
+      "line_end": 175
+    },
+    "company_relations": {
+      "source": "docs/Company-Data-Agent-PRD.md",
+      "line_start": 259,
+      "line_end": 287
+    },
+    "company_source_facts": {
+      "source": "docs/Company-Data-Agent-PRD.md",
+      "line_start": 45,
+      "line_end": 64
+    },
+    "company_web_facts": {
+      "source": "docs/Company-Data-Agent-PRD.md",
+      "line_start": 211,
+      "line_end": 243
+    },
+    "openspec_assertions": {
+      "source": "openspec/changes/rebuild-canonical-v2-knowledge-platform/specs/canonical-v2-knowledge/spec.md",
+      "line_start": 28,
+      "line_end": 51
+    },
+    "openspec_identity": {
+      "source": "openspec/changes/rebuild-canonical-v2-knowledge-platform/specs/canonical-v2-knowledge/spec.md",
+      "line_start": 53,
+      "line_end": 77
+    },
+    "openspec_relationships": {
+      "source": "openspec/changes/rebuild-canonical-v2-knowledge-platform/specs/canonical-v2-knowledge/spec.md",
+      "line_start": 79,
+      "line_end": 90
+    },
+    "openspec_temporal": {
+      "source": "openspec/changes/rebuild-canonical-v2-knowledge-platform/specs/canonical-v2-knowledge/spec.md",
+      "line_start": 128,
+      "line_end": 137
+    },
+    "paper_fields": {
+      "source": "docs/Paper-Data-Agent-PRD.md",
+      "line_start": 80,
+      "line_end": 142
+    },
+    "paper_fulltext": {
+      "source": "docs/Paper-Data-Agent-PRD.md",
+      "line_start": 231,
+      "line_end": 271
+    },
+    "paper_relations": {
+      "source": "docs/Paper-Data-Agent-PRD.md",
+      "line_start": 208,
+      "line_end": 229
+    },
+    "paper_research_relations": {
+      "source": "docs/Paper-Data-Agent-PRD.md",
+      "line_start": 299,
+      "line_end": 358
+    },
+    "paper_review_fields": {
+      "source": "docs/Paper-Requirement-Review-2026-05-10.md",
+      "line_start": 133,
+      "line_end": 143
+    },
+    "paper_review_quality": {
+      "source": "docs/Paper-Requirement-Review-2026-05-10.md",
+      "line_start": 179,
+      "line_end": 193
+    },
+    "paper_review_sources": {
+      "source": "docs/Paper-Requirement-Review-2026-05-10.md",
+      "line_start": 145,
+      "line_end": 167
+    },
+    "patent_fields": {
+      "source": "docs/Patent-Data-Agent-PRD.md",
+      "line_start": 89,
+      "line_end": 138
+    },
+    "patent_relations": {
+      "source": "docs/Patent-Data-Agent-PRD.md",
+      "line_start": 217,
+      "line_end": 240
+    },
+    "professor_fields": {
+      "source": "docs/Professor-Data-Agent-Requirements-Audit-2026-05-09.md",
+      "line_start": 145,
+      "line_end": 191
+    },
+    "professor_lifecycle": {
+      "source": "docs/Professor-Data-Agent-Requirements-Audit-2026-05-09.md",
+      "line_start": 216,
+      "line_end": 255
+    },
+    "professor_review_fields": {
+      "source": "docs/Professor-Requirement-Review-2026-05-10.md",
+      "line_start": 132,
+      "line_end": 172
+    },
+    "professor_review_inclusion": {
+      "source": "docs/Professor-Requirement-Review-2026-05-10.md",
+      "line_start": 101,
+      "line_end": 106
+    },
+    "professor_review_lifecycle": {
+      "source": "docs/Professor-Requirement-Review-2026-05-10.md",
+      "line_start": 174,
+      "line_end": 183
+    },
+    "shared_common_fields": {
+      "source": "docs/Data-Agent-Shared-Spec.md",
+      "line_start": 273,
+      "line_end": 287
+    },
+    "shared_company_fields": {
+      "source": "docs/Data-Agent-Shared-Spec.md",
+      "line_start": 304,
+      "line_end": 319
+    },
+    "shared_cross_domain": {
+      "source": "docs/Data-Agent-Shared-Spec.md",
+      "line_start": 121,
+      "line_end": 136
+    },
+    "shared_filters": {
+      "source": "docs/Data-Agent-Shared-Spec.md",
+      "line_start": 384,
+      "line_end": 401
+    },
+    "shared_paper_fields": {
+      "source": "docs/Data-Agent-Shared-Spec.md",
+      "line_start": 347,
+      "line_end": 364
+    },
+    "shared_patent_fields": {
+      "source": "docs/Data-Agent-Shared-Spec.md",
+      "line_start": 366,
+      "line_end": 382
+    },
+    "shared_professor_fields": {
+      "source": "docs/Data-Agent-Shared-Spec.md",
+      "line_start": 321,
+      "line_end": 345
+    },
+    "s2_relationship_families": {
+      "source": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s2/source-coverage-matrix.md",
+      "line_start": 52,
+      "line_end": 67
+    },
+    "s2_structured_company_case": {
+      "source": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s2/corpora/regression-v1.jsonl",
+      "line_start": 28,
+      "line_end": 28
+    },
+    "s2_typed_subobjects": {
+      "source": ".agents/runs/rebuild-canonical-v2-knowledge-platform/s2/source-coverage-matrix.md",
+      "line_start": 41,
+      "line_end": 50
+    }
+  },
+  "shared_projection_fields": [
+    {
+      "candidate_id": "field.shared.core_facts",
+      "field_name": "core_facts",
+      "logical_shape": "typed_domain_projection_envelope",
+      "requirement": "required_shared_contract",
+      "citation_refs": ["shared_common_fields"],
+      "source_terms": ["`core_facts`"]
+    },
+    {
+      "candidate_id": "field.shared.display_name",
+      "field_name": "display_name",
+      "logical_shape": "domain_projection_alias",
+      "requirement": "required_shared_contract",
+      "citation_refs": ["shared_common_fields"],
+      "source_terms": ["`display_name`"]
+    },
+    {
+      "candidate_id": "field.shared.object_type",
+      "field_name": "object_type",
+      "logical_shape": "domain_discriminator",
+      "requirement": "required_shared_contract",
+      "citation_refs": ["shared_common_fields"],
+      "source_terms": ["`object_type`"]
+    },
+    {
+      "candidate_id": "field.shared.summary_fields",
+      "field_name": "summary_fields",
+      "logical_shape": "typed_summary_projection_envelope",
+      "requirement": "required_shared_contract",
+      "citation_refs": ["shared_common_fields"],
+      "source_terms": ["`summary_fields`"]
+    }
+  ],
+  "domains": [
+    {
+      "domain": "company",
+      "fields": [
+        {
+          "candidate_id": "field.company.credit_code",
+          "field_name": "credit_code",
+          "logical_shape": "scalar",
+          "requirement": "optional",
+          "citation_refs": ["company_fields"],
+          "source_terms": ["`credit_code`"]
+        },
+        {
+          "candidate_id": "field.company.evidence",
+          "field_name": "evidence",
+          "logical_shape": "collection",
+          "requirement": "required",
+          "citation_refs": ["company_fields", "shared_common_fields"],
+          "source_terms": ["`evidence`"]
+        },
+        {
+          "candidate_id": "field.company.id",
+          "field_name": "id",
+          "logical_shape": "identifier",
+          "requirement": "required",
+          "citation_refs": ["company_fields"],
+          "source_terms": ["`id`"]
+        },
+        {
+          "candidate_id": "field.company.industry",
+          "field_name": "industry",
+          "logical_shape": "taxonomy_reference",
+          "requirement": "conflict_shared_required_domain_optional",
+          "citation_refs": ["company_fields", "shared_company_fields"],
+          "source_terms": ["`industry`"]
+        },
+        {
+          "candidate_id": "field.company.industry_tags",
+          "field_name": "industry_tags",
+          "logical_shape": "collection",
+          "requirement": "candidate_enrichment",
+          "citation_refs": ["company_web_facts"],
+          "source_terms": ["`industry_tags`"]
+        },
+        {
+          "candidate_id": "field.company.key_personnel",
+          "field_name": "key_personnel",
+          "logical_shape": "structured_collection",
+          "requirement": "conflict_shared_required_domain_optional",
+          "citation_refs": ["company_fields", "shared_company_fields"],
+          "source_terms": ["`key_personnel`"]
+        },
+        {
+          "candidate_id": "field.company.last_updated",
+          "field_name": "last_updated",
+          "logical_shape": "timestamp",
+          "requirement": "required",
+          "citation_refs": ["company_fields", "shared_common_fields"],
+          "source_terms": ["`last_updated`"]
+        },
+        {
+          "candidate_id": "field.company.latest_public_updates",
+          "field_name": "latest_public_updates",
+          "logical_shape": "structured_collection",
+          "requirement": "candidate_enrichment",
+          "citation_refs": ["company_web_facts"],
+          "source_terms": ["最新公开动态"]
+        },
+        {
+          "candidate_id": "field.company.legal_representative",
+          "field_name": "legal_representative",
+          "logical_shape": "person_reference",
+          "requirement": "optional",
+          "citation_refs": ["company_fields"],
+          "source_terms": ["`legal_representative`"]
+        },
+        {
+          "candidate_id": "field.company.name",
+          "field_name": "name",
+          "logical_shape": "scalar",
+          "requirement": "required",
+          "citation_refs": ["company_fields"],
+          "source_terms": ["`name`"]
+        },
+        {
+          "candidate_id": "field.company.normalized_name",
+          "field_name": "normalized_name",
+          "logical_shape": "scalar",
+          "requirement": "required",
+          "citation_refs": ["company_fields"],
+          "source_terms": ["`normalized_name`"]
+        },
+        {
+          "candidate_id": "field.company.patent_count",
+          "field_name": "patent_count",
+          "logical_shape": "integer",
+          "requirement": "optional",
+          "citation_refs": ["company_fields"],
+          "source_terms": ["`patent_count`"]
+        },
+        {
+          "candidate_id": "field.company.product_description",
+          "field_name": "product_description",
+          "logical_shape": "text",
+          "requirement": "candidate_enrichment",
+          "citation_refs": ["company_web_facts"],
+          "source_terms": ["`product_description`"]
+        },
+        {
+          "candidate_id": "field.company.profile_summary",
+          "field_name": "profile_summary",
+          "logical_shape": "text",
+          "requirement": "required",
+          "citation_refs": ["company_fields", "shared_company_fields"],
+          "source_terms": ["`profile_summary`"]
+        },
+        {
+          "candidate_id": "field.company.quality_status",
+          "field_name": "quality_status",
+          "logical_shape": "status",
+          "requirement": "required_shared_contract",
+          "citation_refs": ["shared_common_fields"],
+          "source_terms": ["`quality_status`"]
+        },
+        {
+          "candidate_id": "field.company.registered_capital",
+          "field_name": "registered_capital",
+          "logical_shape": "amount",
+          "requirement": "optional",
+          "citation_refs": ["company_fields"],
+          "source_terms": ["`registered_capital`"]
+        },
+        {
+          "candidate_id": "field.company.run_id",
+          "field_name": "run_id",
+          "logical_shape": "lineage_identifier",
+          "requirement": "required_shared_contract",
+          "citation_refs": ["shared_common_fields"],
+          "source_terms": ["`run_id`"]
+        },
+        {
+          "candidate_id": "field.company.team_description",
+          "field_name": "team_description",
+          "logical_shape": "text",
+          "requirement": "candidate_enrichment",
+          "citation_refs": ["company_web_facts"],
+          "source_terms": ["`team_description`"]
+        },
+        {
+          "candidate_id": "field.company.tech_tags",
+          "field_name": "tech_tags",
+          "logical_shape": "collection",
+          "requirement": "candidate_enrichment",
+          "citation_refs": ["company_web_facts"],
+          "source_terms": ["`tech_tags`"]
+        },
+        {
+          "candidate_id": "field.company.technology_route_summary",
+          "field_name": "technology_route_summary",
+          "logical_shape": "text",
+          "requirement": "required",
+          "citation_refs": ["company_fields", "shared_company_fields"],
+          "source_terms": ["`technology_route_summary`"]
+        },
+        {
+          "candidate_id": "field.company.website",
+          "field_name": "website",
+          "logical_shape": "url",
+          "requirement": "optional",
+          "citation_refs": ["company_fields"],
+          "source_terms": ["`website`"]
+        }
+      ],
+      "subobjects": [
+        {
+          "candidate_id": "subobject.company.financing_event",
+          "subobject_name": "financing_event",
+          "member_fields": ["round", "amount", "investors", "date"],
+          "catalog_status": "prd_effect_shape_incomplete",
+          "citation_refs": ["company_source_facts", "company_web_facts", "s2_typed_subobjects"],
+          "source_terms": ["融资轮次 / 金额 / 投资方", "融资金额、日期", "Company team/financing/business/product/scenario"]
+        },
+        {
+          "candidate_id": "subobject.company.key_personnel",
+          "subobject_name": "key_personnel",
+          "member_fields": ["name", "role", "education_structured", "work_experience", "description"],
+          "catalog_status": "prd_explicit",
+          "citation_refs": ["company_personnel"],
+          "source_terms": ["`key_personnel`", "education_structured", "work_experience"]
+        },
+        {
+          "candidate_id": "subobject.company.personnel_education",
+          "subobject_name": "personnel_education",
+          "member_fields": ["institution", "degree", "field", "year"],
+          "catalog_status": "prd_explicit",
+          "citation_refs": ["company_personnel"],
+          "source_terms": ["education_structured", "institution", "degree"]
+        },
+        {
+          "candidate_id": "subobject.company.personnel_work_experience",
+          "subobject_name": "personnel_work_experience",
+          "member_fields": ["organization", "role", "start_year", "end_year", "description"],
+          "catalog_status": "prd_explicit",
+          "citation_refs": ["company_personnel"],
+          "source_terms": ["work_experience", "start_year", "end_year"]
+        },
+        {
+          "candidate_id": "subobject.company.product",
+          "subobject_name": "product",
+          "member_fields": ["description", "technology_tags", "industry_tags", "source_evidence"],
+          "catalog_status": "prd_effect_shape_incomplete",
+          "citation_refs": ["company_web_facts", "s2_typed_subobjects"],
+          "source_terms": ["产品页", "`product_description`", "Company team/financing/business/product/scenario"]
+        },
+        {
+          "candidate_id": "subobject.company.public_update",
+          "subobject_name": "public_update",
+          "member_fields": ["headline_or_description", "source_evidence", "event_time"],
+          "catalog_status": "prd_effect_shape_incomplete",
+          "citation_refs": ["company_web_facts"],
+          "source_terms": ["新闻页", "最新公开动态"]
+        }
+      ]
+    },
+    {
+      "domain": "paper",
+      "fields": [
+        {
+          "candidate_id": "field.paper.abstract",
+          "field_name": "abstract",
+          "logical_shape": "text",
+          "requirement": "optional",
+          "citation_refs": ["paper_fields"],
+          "source_terms": ["`abstract`"]
+        },
+        {
+          "candidate_id": "field.paper.arxiv_id",
+          "field_name": "arxiv_id",
+          "logical_shape": "identifier",
+          "requirement": "optional",
+          "citation_refs": ["paper_fields"],
+          "source_terms": ["`arxiv_id`"]
+        },
+        {
+          "candidate_id": "field.paper.authors",
+          "field_name": "authors",
+          "logical_shape": "structured_collection",
+          "requirement": "required",
+          "citation_refs": ["paper_fields", "paper_review_fields"],
+          "source_terms": ["`authors`"]
+        },
+        {
+          "candidate_id": "field.paper.citation_count",
+          "field_name": "citation_count",
+          "logical_shape": "integer",
+          "requirement": "optional",
+          "citation_refs": ["paper_fields"],
+          "source_terms": ["`citation_count`"]
+        },
+        {
+          "candidate_id": "field.paper.doi",
+          "field_name": "doi",
+          "logical_shape": "identifier",
+          "requirement": "optional",
+          "citation_refs": ["paper_fields"],
+          "source_terms": ["`doi`"]
+        },
+        {
+          "candidate_id": "field.paper.enrichment_sources",
+          "field_name": "enrichment_sources",
+          "logical_shape": "structured_collection",
+          "requirement": "phase_b_contract_candidate",
+          "citation_refs": ["paper_review_fields"],
+          "source_terms": ["enrichment_sources"]
+        },
+        {
+          "candidate_id": "field.paper.evidence",
+          "field_name": "evidence",
+          "logical_shape": "collection",
+          "requirement": "required",
+          "citation_refs": ["paper_fields", "shared_common_fields"],
+          "source_terms": ["`evidence`"]
+        },
+        {
+          "candidate_id": "field.paper.fields_of_study",
+          "field_name": "fields_of_study",
+          "logical_shape": "taxonomy_collection",
+          "requirement": "phase_b_contract_candidate",
+          "citation_refs": ["paper_review_fields"],
+          "source_terms": ["fields_of_study"]
+        },
+        {
+          "candidate_id": "field.paper.funders",
+          "field_name": "funders",
+          "logical_shape": "structured_collection",
+          "requirement": "phase_b_contract_candidate",
+          "citation_refs": ["paper_review_fields"],
+          "source_terms": ["funders"]
+        },
+        {
+          "candidate_id": "field.paper.id",
+          "field_name": "id",
+          "logical_shape": "identifier",
+          "requirement": "required",
+          "citation_refs": ["paper_fields"],
+          "source_terms": ["`id`"]
+        },
+        {
+          "candidate_id": "field.paper.keywords",
+          "field_name": "keywords",
+          "logical_shape": "collection",
+          "requirement": "conflict_shared_required_domain_optional",
+          "citation_refs": ["paper_fields", "shared_paper_fields"],
+          "source_terms": ["`keywords`"]
+        },
+        {
+          "candidate_id": "field.paper.last_updated",
+          "field_name": "last_updated",
+          "logical_shape": "timestamp",
+          "requirement": "required",
+          "citation_refs": ["paper_fields", "shared_common_fields"],
+          "source_terms": ["`last_updated`"]
+        },
+        {
+          "candidate_id": "field.paper.license",
+          "field_name": "license",
+          "logical_shape": "scalar",
+          "requirement": "phase_b_contract_candidate",
+          "citation_refs": ["paper_review_fields"],
+          "source_terms": ["license"]
+        },
+        {
+          "candidate_id": "field.paper.oa_status",
+          "field_name": "oa_status",
+          "logical_shape": "status",
+          "requirement": "phase_b_contract_candidate",
+          "citation_refs": ["paper_review_fields"],
+          "source_terms": ["oa_status"]
+        },
+        {
+          "candidate_id": "field.paper.pdf_path",
+          "field_name": "pdf_path",
+          "logical_shape": "storage_reference",
+          "requirement": "optional",
+          "citation_refs": ["paper_fields", "paper_review_quality"],
+          "source_terms": ["`pdf_path`"]
+        },
+        {
+          "candidate_id": "field.paper.professor_ids",
+          "field_name": "professor_ids",
+          "logical_shape": "relationship_projection",
+          "requirement": "conflict_shared_required_domain_optional",
+          "citation_refs": ["paper_fields", "shared_paper_fields"],
+          "source_terms": ["`professor_ids`"]
+        },
+        {
+          "candidate_id": "field.paper.publication_date",
+          "field_name": "publication_date",
+          "logical_shape": "date",
+          "requirement": "candidate_reinforcement_filter",
+          "citation_refs": ["paper_review_sources", "professor_review_fields"],
+          "source_terms": ["publication_date"]
+        },
+        {
+          "candidate_id": "field.paper.quality_status",
+          "field_name": "quality_status",
+          "logical_shape": "status",
+          "requirement": "conflict_shared_four_values_paper_six_values",
+          "citation_refs": ["shared_common_fields", "paper_review_quality"],
+          "source_terms": ["`quality_status`"]
+        },
+        {
+          "candidate_id": "field.paper.reference_count",
+          "field_name": "reference_count",
+          "logical_shape": "integer",
+          "requirement": "phase_b_contract_candidate",
+          "citation_refs": ["paper_review_fields"],
+          "source_terms": ["reference_count"]
+        },
+        {
+          "candidate_id": "field.paper.run_id",
+          "field_name": "run_id",
+          "logical_shape": "lineage_identifier",
+          "requirement": "required_shared_contract",
+          "citation_refs": ["shared_common_fields"],
+          "source_terms": ["`run_id`"]
+        },
+        {
+          "candidate_id": "field.paper.summary_text",
+          "field_name": "summary_text",
+          "logical_shape": "projection_alias",
+          "requirement": "required_alias_of_summary_zh",
+          "citation_refs": ["paper_fields"],
+          "source_terms": ["`summary_text`", "等同于 `summary_zh`"]
+        },
+        {
+          "candidate_id": "field.paper.summary_zh",
+          "field_name": "summary_zh",
+          "logical_shape": "text",
+          "requirement": "required_ready_projection",
+          "citation_refs": ["paper_fields", "paper_review_quality"],
+          "source_terms": ["`summary_zh`"]
+        },
+        {
+          "candidate_id": "field.paper.title",
+          "field_name": "title",
+          "logical_shape": "scalar",
+          "requirement": "required",
+          "citation_refs": ["paper_fields", "paper_review_fields"],
+          "source_terms": ["`title`"]
+        },
+        {
+          "candidate_id": "field.paper.title_zh",
+          "field_name": "title_zh",
+          "logical_shape": "scalar",
+          "requirement": "optional",
+          "citation_refs": ["paper_fields", "paper_review_quality"],
+          "source_terms": ["`title_zh`"]
+        },
+        {
+          "candidate_id": "field.paper.tldr",
+          "field_name": "tldr",
+          "logical_shape": "text",
+          "requirement": "phase_b_contract_candidate",
+          "citation_refs": ["paper_review_fields"],
+          "source_terms": ["`tldr"]
+        },
+        {
+          "candidate_id": "field.paper.venue",
+          "field_name": "venue",
+          "logical_shape": "venue_reference",
+          "requirement": "conflict_prd_optional_thin_record_required",
+          "citation_refs": ["paper_fields", "paper_review_fields"],
+          "source_terms": ["`venue`"]
+        },
+        {
+          "candidate_id": "field.paper.year",
+          "field_name": "year",
+          "logical_shape": "integer",
+          "requirement": "required",
+          "citation_refs": ["paper_fields", "paper_review_fields"],
+          "source_terms": ["`year`"]
+        }
+      ],
+      "subobjects": [
+        {
+          "candidate_id": "subobject.paper.author",
+          "subobject_name": "author",
+          "member_fields": ["display_name", "orcid", "position", "canonical_person_reference"],
+          "catalog_status": "prd_effect_shape_incomplete",
+          "citation_refs": ["paper_fields", "paper_review_sources", "s2_typed_subobjects"],
+          "source_terms": ["`authors`", "ORCID", "Paper identifiers/authors/content/metrics"]
+        },
+        {
+          "candidate_id": "subobject.paper.enrichment_provenance",
+          "subobject_name": "enrichment_provenance",
+          "member_fields": ["source", "field", "source_identifier", "observation_time"],
+          "catalog_status": "phase_b_contract_candidate",
+          "citation_refs": ["paper_review_fields", "paper_review_sources"],
+          "source_terms": ["enrichment_sources", "OpenAlex"]
+        },
+        {
+          "candidate_id": "subobject.paper.full_text",
+          "subobject_name": "full_text",
+          "member_fields": ["storage_ref", "content_sha256", "source_url", "sections"],
+          "catalog_status": "prd_explicit_shape_partial",
+          "citation_refs": ["paper_fulltext"],
+          "source_terms": ["paper_full_text", "pdf_sha256", "sections"]
+        },
+        {
+          "candidate_id": "subobject.paper.funding",
+          "subobject_name": "funding",
+          "member_fields": ["funder", "grant_or_program", "source_evidence"],
+          "catalog_status": "phase_b_contract_shape_incomplete",
+          "citation_refs": ["paper_review_fields"],
+          "source_terms": ["funders"]
+        },
+        {
+          "candidate_id": "subobject.paper.identifier",
+          "subobject_name": "identifier",
+          "member_fields": ["doi", "arxiv_id", "source"],
+          "catalog_status": "prd_explicit",
+          "citation_refs": ["paper_fields", "paper_research_relations"],
+          "source_terms": ["`doi`", "`arxiv_id`", "DOI"]
+        },
+        {
+          "candidate_id": "subobject.paper.publication",
+          "subobject_name": "publication",
+          "member_fields": ["year", "publication_date", "venue"],
+          "catalog_status": "prd_effect_shape_partial",
+          "citation_refs": ["paper_fields", "paper_review_sources"],
+          "source_terms": ["`year`", "`venue`", "publication_date"]
+        },
+        {
+          "candidate_id": "subobject.paper.reference",
+          "subobject_name": "reference",
+          "member_fields": ["referenced_paper", "reference_count", "source_evidence"],
+          "catalog_status": "s2_family_and_phase_b_candidate",
+          "citation_refs": ["paper_review_fields", "s2_relationship_families"],
+          "source_terms": ["reference_count", "Paper→venue/topic/reference"]
+        },
+        {
+          "candidate_id": "subobject.paper.summary",
+          "subobject_name": "summary",
+          "member_fields": ["summary_zh", "summary_text_alias", "generation_evidence"],
+          "catalog_status": "prd_explicit",
+          "citation_refs": ["paper_fields"],
+          "source_terms": ["`summary_zh`", "`summary_text`"]
+        }
+      ]
+    },
+    {
+      "domain": "patent",
+      "fields": [
+        {
+          "candidate_id": "field.patent.abstract",
+          "field_name": "abstract",
+          "logical_shape": "text",
+          "requirement": "optional",
+          "citation_refs": ["patent_fields"],
+          "source_terms": ["`abstract`"]
+        },
+        {
+          "candidate_id": "field.patent.applicants",
+          "field_name": "applicants",
+          "logical_shape": "structured_collection",
+          "requirement": "required",
+          "citation_refs": ["patent_fields"],
+          "source_terms": ["`applicants`"]
+        },
+        {
+          "candidate_id": "field.patent.company_ids",
+          "field_name": "company_ids",
+          "logical_shape": "relationship_projection",
+          "requirement": "conflict_shared_required_domain_optional",
+          "citation_refs": ["patent_fields", "shared_patent_fields"],
+          "source_terms": ["`company_ids`"]
+        },
+        {
+          "candidate_id": "field.patent.evidence",
+          "field_name": "evidence",
+          "logical_shape": "collection",
+          "requirement": "required",
+          "citation_refs": ["patent_fields", "shared_common_fields"],
+          "source_terms": ["`evidence`"]
+        },
+        {
+          "candidate_id": "field.patent.filing_date",
+          "field_name": "filing_date",
+          "logical_shape": "date",
+          "requirement": "conflict_shared_required_domain_optional",
+          "citation_refs": ["patent_fields", "shared_patent_fields"],
+          "source_terms": ["`filing_date`"]
+        },
+        {
+          "candidate_id": "field.patent.grant_date",
+          "field_name": "grant_date",
+          "logical_shape": "date",
+          "requirement": "optional",
+          "citation_refs": ["patent_fields"],
+          "source_terms": ["`grant_date`"]
+        },
+        {
+          "candidate_id": "field.patent.id",
+          "field_name": "id",
+          "logical_shape": "identifier",
+          "requirement": "required",
+          "citation_refs": ["patent_fields"],
+          "source_terms": ["`id`"]
+        },
+        {
+          "candidate_id": "field.patent.inventors",
+          "field_name": "inventors",
+          "logical_shape": "structured_collection",
+          "requirement": "conflict_shared_required_domain_optional",
+          "citation_refs": ["patent_fields", "shared_patent_fields"],
+          "source_terms": ["`inventors`"]
+        },
+        {
+          "candidate_id": "field.patent.ipc_codes",
+          "field_name": "ipc_codes",
+          "logical_shape": "taxonomy_collection",
+          "requirement": "optional",
+          "citation_refs": ["patent_fields"],
+          "source_terms": ["`ipc_codes`"]
+        },
+        {
+          "candidate_id": "field.patent.last_updated",
+          "field_name": "last_updated",
+          "logical_shape": "timestamp",
+          "requirement": "required",
+          "citation_refs": ["patent_fields", "shared_common_fields"],
+          "source_terms": ["`last_updated`"]
+        },
+        {
+          "candidate_id": "field.patent.patent_number",
+          "field_name": "patent_number",
+          "logical_shape": "identifier",
+          "requirement": "optional",
+          "citation_refs": ["patent_fields"],
+          "source_terms": ["`patent_number`"]
+        },
+        {
+          "candidate_id": "field.patent.patent_type",
+          "field_name": "patent_type",
+          "logical_shape": "taxonomy_reference",
+          "requirement": "conflict_shared_required_domain_optional",
+          "citation_refs": ["patent_fields", "shared_patent_fields"],
+          "source_terms": ["`patent_type`"]
+        },
+        {
+          "candidate_id": "field.patent.professor_ids",
+          "field_name": "professor_ids",
+          "logical_shape": "relationship_projection",
+          "requirement": "conflict_shared_required_domain_optional",
+          "citation_refs": ["patent_fields", "shared_patent_fields"],
+          "source_terms": ["`professor_ids`"]
+        },
+        {
+          "candidate_id": "field.patent.publication_date",
+          "field_name": "publication_date",
+          "logical_shape": "date",
+          "requirement": "conflict_shared_required_domain_optional",
+          "citation_refs": ["patent_fields", "shared_patent_fields"],
+          "source_terms": ["`publication_date`"]
+        },
+        {
+          "candidate_id": "field.patent.quality_status",
+          "field_name": "quality_status",
+          "logical_shape": "status",
+          "requirement": "required_shared_contract",
+          "citation_refs": ["shared_common_fields"],
+          "source_terms": ["`quality_status`"]
+        },
+        {
+          "candidate_id": "field.patent.run_id",
+          "field_name": "run_id",
+          "logical_shape": "lineage_identifier",
+          "requirement": "required_shared_contract",
+          "citation_refs": ["shared_common_fields"],
+          "source_terms": ["`run_id`"]
+        },
+        {
+          "candidate_id": "field.patent.summary_text",
+          "field_name": "summary_text",
+          "logical_shape": "text",
+          "requirement": "required",
+          "citation_refs": ["patent_fields", "shared_patent_fields"],
+          "source_terms": ["`summary_text`"]
+        },
+        {
+          "candidate_id": "field.patent.technology_effect",
+          "field_name": "technology_effect",
+          "logical_shape": "text",
+          "requirement": "optional",
+          "citation_refs": ["patent_fields"],
+          "source_terms": ["`technology_effect`"]
+        },
+        {
+          "candidate_id": "field.patent.title",
+          "field_name": "title",
+          "logical_shape": "scalar",
+          "requirement": "required",
+          "citation_refs": ["patent_fields"],
+          "source_terms": ["`title`"]
+        },
+        {
+          "candidate_id": "field.patent.title_en",
+          "field_name": "title_en",
+          "logical_shape": "scalar",
+          "requirement": "optional",
+          "citation_refs": ["patent_fields"],
+          "source_terms": ["`title_en`"]
+        }
+      ],
+      "subobjects": [
+        {
+          "candidate_id": "subobject.patent.applicant",
+          "subobject_name": "applicant",
+          "member_fields": ["display_name", "normalized_name", "canonical_company_reference", "source_evidence"],
+          "catalog_status": "prd_effect_shape_incomplete",
+          "citation_refs": ["patent_fields", "patent_relations", "s2_typed_subobjects"],
+          "source_terms": ["`applicants`", "申请人标准化名称", "Patent applicant/inventor/classification/content"]
+        },
+        {
+          "candidate_id": "subobject.patent.inventor",
+          "subobject_name": "inventor",
+          "member_fields": ["display_name", "institution", "canonical_professor_reference", "source_evidence"],
+          "catalog_status": "prd_effect_shape_incomplete",
+          "citation_refs": ["patent_fields", "patent_relations", "s2_typed_subobjects"],
+          "source_terms": ["`inventors`", "发明人姓名", "Patent applicant/inventor/classification/content"]
+        },
+        {
+          "candidate_id": "subobject.patent.ipc_classification",
+          "subobject_name": "ipc_classification",
+          "member_fields": ["code", "label", "taxonomy_version"],
+          "catalog_status": "prd_effect_shape_incomplete",
+          "citation_refs": ["patent_fields", "s2_typed_subobjects"],
+          "source_terms": ["`ipc_codes`", "Patent applicant/inventor/classification/content"]
+        },
+        {
+          "candidate_id": "subobject.patent.milestone",
+          "subobject_name": "patent_milestone",
+          "member_fields": ["kind", "date", "source_evidence"],
+          "catalog_status": "prd_explicit_time_policy_deferred",
+          "citation_refs": ["patent_fields", "openspec_temporal"],
+          "source_terms": ["`filing_date`", "`publication_date`", "`grant_date`", "source publication/event time"]
+        },
+        {
+          "candidate_id": "subobject.patent.technical_summary",
+          "subobject_name": "technical_summary",
+          "member_fields": ["what", "problem", "method", "effect"],
+          "catalog_status": "optional_structured_extension",
+          "citation_refs": ["patent_fields"],
+          "source_terms": ["`what`", "`problem`", "`method`", "`effect`"]
+        }
+      ]
+    },
+    {
+      "domain": "professor",
+      "fields": [
+        {
+          "candidate_id": "field.professor.awards",
+          "field_name": "awards",
+          "logical_shape": "structured_collection",
+          "requirement": "candidate_academic_field",
+          "citation_refs": ["professor_fields"],
+          "source_terms": ["awards"]
+        },
+        {
+          "candidate_id": "field.professor.canonical_name_en",
+          "field_name": "canonical_name_en",
+          "logical_shape": "scalar",
+          "requirement": "conditional_identity_gate",
+          "citation_refs": ["shared_professor_fields", "professor_lifecycle"],
+          "source_terms": ["`canonical_name_en`"]
+        },
+        {
+          "candidate_id": "field.professor.canonical_name_zh",
+          "field_name": "canonical_name_zh",
+          "logical_shape": "scalar",
+          "requirement": "required_identity",
+          "citation_refs": ["shared_professor_fields", "professor_lifecycle"],
+          "source_terms": ["`canonical_name_zh`"]
+        },
+        {
+          "candidate_id": "field.professor.citation_count",
+          "field_name": "citation_count",
+          "logical_shape": "integer",
+          "requirement": "best_effort",
+          "citation_refs": ["professor_fields", "shared_professor_fields"],
+          "source_terms": ["`citation_count`"]
+        },
+        {
+          "candidate_id": "field.professor.company_roles",
+          "field_name": "company_roles",
+          "logical_shape": "relationship_projection",
+          "requirement": "required",
+          "citation_refs": ["professor_fields", "shared_professor_fields"],
+          "source_terms": ["`company_roles`"]
+        },
+        {
+          "candidate_id": "field.professor.department",
+          "field_name": "department",
+          "logical_shape": "organization_reference",
+          "requirement": "required",
+          "citation_refs": ["professor_fields", "shared_professor_fields"],
+          "source_terms": ["`department`"]
+        },
+        {
+          "candidate_id": "field.professor.email",
+          "field_name": "email",
+          "logical_shape": "contact",
+          "requirement": "required_audit",
+          "citation_refs": ["professor_fields", "professor_lifecycle"],
+          "source_terms": ["`email`"]
+        },
+        {
+          "candidate_id": "field.professor.evidence",
+          "field_name": "evidence",
+          "logical_shape": "collection",
+          "requirement": "required",
+          "citation_refs": ["shared_professor_fields", "shared_common_fields"],
+          "source_terms": ["`evidence`"]
+        },
+        {
+          "candidate_id": "field.professor.h_index",
+          "field_name": "h_index",
+          "logical_shape": "integer",
+          "requirement": "best_effort",
+          "citation_refs": ["professor_fields", "shared_professor_fields"],
+          "source_terms": ["`h_index`"]
+        },
+        {
+          "candidate_id": "field.professor.homepage",
+          "field_name": "homepage",
+          "logical_shape": "url",
+          "requirement": "required_audit",
+          "citation_refs": ["professor_fields"],
+          "source_terms": ["`homepage`"]
+        },
+        {
+          "candidate_id": "field.professor.id",
+          "field_name": "id",
+          "logical_shape": "identifier",
+          "requirement": "required_shared_contract",
+          "citation_refs": ["shared_professor_fields"],
+          "source_terms": ["`id`"]
+        },
+        {
+          "candidate_id": "field.professor.institution",
+          "field_name": "institution",
+          "logical_shape": "organization_reference",
+          "requirement": "required",
+          "citation_refs": ["professor_fields", "shared_professor_fields"],
+          "source_terms": ["`institution`"]
+        },
+        {
+          "candidate_id": "field.professor.last_updated",
+          "field_name": "last_updated",
+          "logical_shape": "timestamp",
+          "requirement": "required_shared_contract",
+          "citation_refs": ["shared_professor_fields", "shared_common_fields"],
+          "source_terms": ["`last_updated`"]
+        },
+        {
+          "candidate_id": "field.professor.lifecycle_state",
+          "field_name": "lifecycle_state",
+          "logical_shape": "status",
+          "requirement": "review_locked_candidate",
+          "citation_refs": ["professor_review_lifecycle"],
+          "source_terms": ["`lifecycle_state`", "active / archived / merged_to_other_school"]
+        },
+        {
+          "candidate_id": "field.professor.manual_override",
+          "field_name": "manual_override",
+          "logical_shape": "field_level_policy_marker",
+          "requirement": "review_locked_candidate",
+          "citation_refs": ["professor_lifecycle", "professor_review_lifecycle"],
+          "source_terms": ["`manual_override`", "永久锁"]
+        },
+        {
+          "candidate_id": "field.professor.name",
+          "field_name": "name",
+          "logical_shape": "scalar",
+          "requirement": "required",
+          "citation_refs": ["professor_fields", "shared_professor_fields"],
+          "source_terms": ["`name`"]
+        },
+        {
+          "candidate_id": "field.professor.name_en",
+          "field_name": "name_en",
+          "logical_shape": "scalar",
+          "requirement": "required_audit_but_overlaps_canonical_name_en",
+          "citation_refs": ["professor_fields", "professor_review_fields"],
+          "source_terms": ["`name_en`"]
+        },
+        {
+          "candidate_id": "field.professor.office",
+          "field_name": "office",
+          "logical_shape": "contact",
+          "requirement": "required_audit",
+          "citation_refs": ["professor_lifecycle"],
+          "source_terms": ["`office`"]
+        },
+        {
+          "candidate_id": "field.professor.paper_count",
+          "field_name": "paper_count",
+          "logical_shape": "integer",
+          "requirement": "best_effort",
+          "citation_refs": ["professor_fields", "shared_professor_fields"],
+          "source_terms": ["`paper_count`"]
+        },
+        {
+          "candidate_id": "field.professor.paper_summary",
+          "field_name": "paper_summary",
+          "logical_shape": "text",
+          "requirement": "required_audit_review_locked",
+          "citation_refs": ["professor_fields", "professor_review_fields"],
+          "source_terms": ["`paper_summary`"]
+        },
+        {
+          "candidate_id": "field.professor.patent_ids",
+          "field_name": "patent_ids",
+          "logical_shape": "relationship_projection",
+          "requirement": "required_audit",
+          "citation_refs": ["professor_fields"],
+          "source_terms": ["`patent_ids`"]
+        },
+        {
+          "candidate_id": "field.professor.patent_summary",
+          "field_name": "patent_summary",
+          "logical_shape": "text",
+          "requirement": "required_audit_review_locked",
+          "citation_refs": ["professor_fields", "professor_review_fields"],
+          "source_terms": ["`patent_summary`"]
+        },
+        {
+          "candidate_id": "field.professor.phone",
+          "field_name": "phone",
+          "logical_shape": "contact",
+          "requirement": "required_audit",
+          "citation_refs": ["professor_lifecycle"],
+          "source_terms": ["`phone`"]
+        },
+        {
+          "candidate_id": "field.professor.profile_summary",
+          "field_name": "profile_summary",
+          "logical_shape": "text",
+          "requirement": "required",
+          "citation_refs": ["professor_fields", "shared_professor_fields"],
+          "source_terms": ["`profile_summary`"]
+        },
+        {
+          "candidate_id": "field.professor.projects",
+          "field_name": "projects",
+          "logical_shape": "structured_collection",
+          "requirement": "review_locked_candidate",
+          "citation_refs": ["professor_fields", "professor_review_fields"],
+          "source_terms": ["projects", "`projects`"]
+        },
+        {
+          "candidate_id": "field.professor.quality_status",
+          "field_name": "quality_status",
+          "logical_shape": "status",
+          "requirement": "required_shared_contract",
+          "citation_refs": ["shared_common_fields", "professor_lifecycle"],
+          "source_terms": ["`quality_status`"]
+        },
+        {
+          "candidate_id": "field.professor.research_directions",
+          "field_name": "research_directions",
+          "logical_shape": "taxonomy_collection",
+          "requirement": "required",
+          "citation_refs": ["professor_fields", "shared_professor_fields"],
+          "source_terms": ["`research_directions`"]
+        },
+        {
+          "candidate_id": "field.professor.run_id",
+          "field_name": "run_id",
+          "logical_shape": "lineage_identifier",
+          "requirement": "required_shared_contract",
+          "citation_refs": ["shared_common_fields"],
+          "source_terms": ["`run_id`"]
+        },
+        {
+          "candidate_id": "field.professor.title",
+          "field_name": "title",
+          "logical_shape": "role",
+          "requirement": "required",
+          "citation_refs": ["professor_fields", "shared_professor_fields"],
+          "source_terms": ["`title`"]
+        }
+      ],
+      "subobjects": [
+        {
+          "candidate_id": "subobject.professor.affiliation_history",
+          "subobject_name": "affiliation_history",
+          "member_fields": ["institution", "department", "title_or_role", "validity", "evidence"],
+          "catalog_status": "s2_effect_temporal_dependency",
+          "citation_refs": ["s2_typed_subobjects", "openspec_temporal"],
+          "source_terms": ["Professor affiliation/education/work history", "Professor changes institution"]
+        },
+        {
+          "candidate_id": "subobject.professor.award",
+          "subobject_name": "award",
+          "member_fields": ["name", "awarding_body", "date_or_year", "evidence"],
+          "catalog_status": "audit_field_shape_incomplete",
+          "citation_refs": ["professor_fields", "s2_typed_subobjects"],
+          "source_terms": ["awards", "Professor research/projects/awards/metrics"]
+        },
+        {
+          "candidate_id": "subobject.professor.contact",
+          "subobject_name": "contact",
+          "member_fields": ["email", "phone", "office", "homepage", "evidence"],
+          "catalog_status": "audit_explicit",
+          "citation_refs": ["professor_fields", "professor_lifecycle"],
+          "source_terms": ["`email`", "`phone`", "`office`", "`homepage`"]
+        },
+        {
+          "candidate_id": "subobject.professor.education_history",
+          "subobject_name": "education_history",
+          "member_fields": ["institution", "degree", "field", "time", "evidence"],
+          "catalog_status": "shared_filter_and_s2_effect_shape_incomplete",
+          "citation_refs": ["shared_filters", "s2_typed_subobjects"],
+          "source_terms": ["`education_filter`", "Professor affiliation/education/work history"]
+        },
+        {
+          "candidate_id": "subobject.professor.metric_snapshot",
+          "subobject_name": "metric_snapshot",
+          "member_fields": ["h_index", "citation_count", "paper_count", "observed_at", "evidence"],
+          "catalog_status": "audit_best_effort",
+          "citation_refs": ["professor_fields", "s2_typed_subobjects"],
+          "source_terms": ["`h_index`", "`citation_count`", "`paper_count`", "metrics"]
+        },
+        {
+          "candidate_id": "subobject.professor.project",
+          "subobject_name": "research_project",
+          "member_fields": ["name", "role", "funding", "time", "description", "evidence"],
+          "catalog_status": "review_locked_shape_incomplete",
+          "citation_refs": ["professor_review_fields", "s2_typed_subobjects"],
+          "source_terms": ["项目（funding）", "`projects`", "Professor research/projects/awards/metrics"]
+        },
+        {
+          "candidate_id": "subobject.professor.work_history",
+          "subobject_name": "work_history",
+          "member_fields": ["organization", "role", "validity", "description", "evidence"],
+          "catalog_status": "s2_effect_shape_incomplete",
+          "citation_refs": ["s2_typed_subobjects", "openspec_temporal"],
+          "source_terms": ["Professor affiliation/education/work history", "validity start/end"]
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "candidate_id": "relationship.artifact.derived_from_artifact",
+      "family": "evidence_lineage",
+      "source_type": "evidence_artifact",
+      "target_type": "evidence_artifact",
+      "direction": "directed",
+      "roles": ["derived_artifact", "parent_artifact"],
+      "evidence_obligation": "content_addressed_lineage",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["s2_relationship_families"],
+      "source_terms": ["assertion→artifact/page/record"]
+    },
+    {
+      "candidate_id": "relationship.assertion.supported_by_record",
+      "family": "evidence_lineage",
+      "source_type": "source_assertion",
+      "target_type": "source_record",
+      "direction": "directed",
+      "roles": ["assertion", "supporting_record"],
+      "evidence_obligation": "exact_landing_record_reference",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["openspec_assertions", "s2_relationship_families"],
+      "source_terms": ["landing evidence", "assertion→artifact/page/record"]
+    },
+    {
+      "candidate_id": "relationship.canonical_identity.alias_of",
+      "family": "identity_lifecycle",
+      "source_type": "canonical_identity",
+      "target_type": "canonical_identity",
+      "direction": "directed",
+      "roles": ["alias", "survivor"],
+      "evidence_obligation": "identity_decision_and_source_lineage",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["openspec_identity", "s2_relationship_families"],
+      "source_terms": ["identity resolution is reversible", "alias-of"]
+    },
+    {
+      "candidate_id": "relationship.canonical_identity.merged_into",
+      "family": "identity_lifecycle",
+      "source_type": "canonical_identity",
+      "target_type": "canonical_identity",
+      "direction": "directed",
+      "roles": ["merged_identity", "merge_survivor"],
+      "evidence_obligation": "identity_decision_and_reversal_lineage",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["openspec_identity", "s2_relationship_families"],
+      "source_terms": ["Merge and split decisions", "merged-into"]
+    },
+    {
+      "candidate_id": "relationship.canonical_identity.split_from",
+      "family": "identity_lifecycle",
+      "source_type": "canonical_identity",
+      "target_type": "canonical_identity",
+      "direction": "directed",
+      "roles": ["replacement_identity", "split_predecessor"],
+      "evidence_obligation": "identity_decision_and_exact_source_allocation",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["openspec_identity", "s2_relationship_families"],
+      "source_terms": ["merge/split", "split-from"]
+    },
+    {
+      "candidate_id": "relationship.company.applicant_for_patent",
+      "family": "intellectual_property",
+      "source_type": "company",
+      "target_type": "patent",
+      "direction": "directed",
+      "roles": ["applicant_company", "applied_patent"],
+      "evidence_obligation": "normalized_applicant_name_plus_public_evidence",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["patent_relations", "company_relations", "shared_cross_domain"],
+      "source_terms": ["申请人标准化名称", "专利申请人", "Company <-> Patent"]
+    },
+    {
+      "candidate_id": "relationship.company.classified_by_industry",
+      "family": "taxonomy_topic_geography",
+      "source_type": "company",
+      "target_type": "industry_taxon",
+      "direction": "directed",
+      "roles": ["classified_company", "industry_classification"],
+      "evidence_obligation": "source_assertion_and_taxonomy_version",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["company_fields", "shared_filters", "s2_relationship_families"],
+      "source_terms": ["`industry`", "`industry` | 企业行业", "industry"]
+    },
+    {
+      "candidate_id": "relationship.company.has_capability",
+      "family": "company_business_product_event",
+      "source_type": "company",
+      "target_type": "capability",
+      "direction": "directed",
+      "roles": ["capable_company", "supported_capability"],
+      "evidence_obligation": "source_grounded_capability_assertion",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["company_web_facts", "s2_relationship_families"],
+      "source_terms": ["`tech_tags`", "Company→product/scenario/financing/news/team/capability"]
+    },
+    {
+      "candidate_id": "relationship.company.has_financing_event",
+      "family": "company_business_product_event",
+      "source_type": "company",
+      "target_type": "financing_event",
+      "direction": "directed",
+      "roles": ["financed_company", "financing_event"],
+      "evidence_obligation": "source_grounded_event_assertion",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["company_source_facts", "s2_relationship_families"],
+      "source_terms": ["融资轮次 / 金额 / 投资方", "Company→product/scenario/financing/news/team/capability"]
+    },
+    {
+      "candidate_id": "relationship.company.has_product",
+      "family": "company_business_product_event",
+      "source_type": "company",
+      "target_type": "product",
+      "direction": "directed",
+      "roles": ["product_company", "product"],
+      "evidence_obligation": "source_grounded_product_assertion",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["company_web_facts", "s2_relationship_families"],
+      "source_terms": ["产品页", "Company→product/scenario/financing/news/team/capability"]
+    },
+    {
+      "candidate_id": "relationship.company.has_public_update",
+      "family": "company_business_product_event",
+      "source_type": "company",
+      "target_type": "public_update",
+      "direction": "directed",
+      "roles": ["subject_company", "public_update"],
+      "evidence_obligation": "source_grounded_event_assertion",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["company_web_facts", "s2_relationship_families"],
+      "source_terms": ["最新公开动态", "news"]
+    },
+    {
+      "candidate_id": "relationship.company.has_team_member",
+      "family": "organization_role",
+      "source_type": "company",
+      "target_type": "person",
+      "direction": "directed",
+      "roles": ["company", "team_member", "personnel_role"],
+      "evidence_obligation": "source_grounded_person_role_assertion",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["company_personnel", "company_relations", "company_success_relations", "s2_relationship_families"],
+      "source_terms": ["`key_personnel`", "企业 → 关键人物", "person→Company team role"]
+    },
+    {
+      "candidate_id": "relationship.company.serves_scenario",
+      "family": "company_business_product_event",
+      "source_type": "company",
+      "target_type": "business_scenario",
+      "direction": "directed",
+      "roles": ["solution_company", "served_scenario"],
+      "evidence_obligation": "source_grounded_scenario_assertion",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["s2_typed_subobjects", "s2_relationship_families"],
+      "source_terms": ["Company team/financing/business/product/scenario", "Company→product/scenario/financing/news/team/capability"]
+    },
+    {
+      "candidate_id": "relationship.decision.produced_by_run",
+      "family": "evidence_lineage",
+      "source_type": "canonical_decision",
+      "target_type": "decision_run",
+      "direction": "directed",
+      "roles": ["decision", "producing_run"],
+      "evidence_obligation": "immutable_run_reference",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["s2_relationship_families"],
+      "source_terms": ["decision→assertion/run/policy"]
+    },
+    {
+      "candidate_id": "relationship.decision.uses_policy",
+      "family": "evidence_lineage",
+      "source_type": "canonical_decision",
+      "target_type": "decision_policy",
+      "direction": "directed",
+      "roles": ["decision", "governing_policy"],
+      "evidence_obligation": "content_addressed_policy_reference",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["openspec_assertions", "s2_relationship_families"],
+      "source_terms": ["policy", "decision→assertion/run/policy"]
+    },
+    {
+      "candidate_id": "relationship.decision.selects_assertion",
+      "family": "evidence_lineage",
+      "source_type": "canonical_decision",
+      "target_type": "source_assertion",
+      "direction": "directed",
+      "roles": ["decision", "selected_or_conflicting_assertion"],
+      "evidence_obligation": "exact_assertion_role_binding",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["openspec_assertions", "s2_relationship_families"],
+      "source_terms": ["supporting evidence", "decision→assertion/run/policy"]
+    },
+    {
+      "candidate_id": "relationship.decision.supersedes_decision",
+      "family": "identity_lifecycle",
+      "source_type": "canonical_decision",
+      "target_type": "canonical_decision",
+      "direction": "directed",
+      "roles": ["new_decision", "superseded_decision"],
+      "evidence_obligation": "decision_history_and_reversal_lineage",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["s2_relationship_families", "openspec_identity"],
+      "source_terms": ["supersedes", "reversal history"]
+    },
+    {
+      "candidate_id": "relationship.entity.classified_by_topic",
+      "family": "taxonomy_topic_geography",
+      "source_type": "canonical_entity",
+      "target_type": "topic_taxon",
+      "direction": "directed",
+      "roles": ["classified_entity", "topic_classification"],
+      "evidence_obligation": "source_assertion_or_versioned_derivation",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["s2_relationship_families"],
+      "source_terms": ["entity→research topic"]
+    },
+    {
+      "candidate_id": "relationship.entity.located_in_geography",
+      "family": "taxonomy_topic_geography",
+      "source_type": "canonical_entity",
+      "target_type": "geography",
+      "direction": "directed",
+      "roles": ["located_entity", "location"],
+      "evidence_obligation": "source_grounded_location_assertion",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["shared_filters", "s2_relationship_families"],
+      "source_terms": ["institution", "geography"]
+    },
+    {
+      "candidate_id": "relationship.paper.has_author",
+      "family": "scholarly_output",
+      "source_type": "paper",
+      "target_type": "person",
+      "direction": "directed",
+      "roles": ["paper", "author"],
+      "evidence_obligation": "source_grounded_author_assertion",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["paper_fields", "s2_relationship_families"],
+      "source_terms": ["`authors`", "Paper→author"]
+    },
+    {
+      "candidate_id": "relationship.paper.has_topic",
+      "family": "taxonomy_topic_geography",
+      "source_type": "paper",
+      "target_type": "topic_taxon",
+      "direction": "directed",
+      "roles": ["paper", "research_topic"],
+      "evidence_obligation": "source_assertion_or_versioned_topic_derivation",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["paper_research_relations", "s2_relationship_families"],
+      "source_terms": ["精细研究方向标签", "Paper→venue/topic/reference"]
+    },
+    {
+      "candidate_id": "relationship.paper.published_in_venue",
+      "family": "scholarly_output",
+      "source_type": "paper",
+      "target_type": "venue",
+      "direction": "directed",
+      "roles": ["paper", "publication_venue"],
+      "evidence_obligation": "source_grounded_venue_assertion",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["paper_fields", "s2_relationship_families"],
+      "source_terms": ["`venue`", "Paper→venue/topic/reference"]
+    },
+    {
+      "candidate_id": "relationship.paper.references_paper",
+      "family": "scholarly_output",
+      "source_type": "paper",
+      "target_type": "paper",
+      "direction": "directed",
+      "roles": ["citing_paper", "referenced_paper"],
+      "evidence_obligation": "source_grounded_reference_assertion",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["paper_review_fields", "s2_relationship_families"],
+      "source_terms": ["reference_count", "Paper→venue/topic/reference"]
+    },
+    {
+      "candidate_id": "relationship.patent.classified_by_ipc",
+      "family": "taxonomy_topic_geography",
+      "source_type": "patent",
+      "target_type": "ipc_taxon",
+      "direction": "directed",
+      "roles": ["classified_patent", "ipc_classification"],
+      "evidence_obligation": "source_assertion_and_taxonomy_version",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["patent_fields", "s2_relationship_families"],
+      "source_terms": ["`ipc_codes`", "IPC"]
+    },
+    {
+      "candidate_id": "relationship.patent.has_applicant",
+      "family": "intellectual_property",
+      "source_type": "patent",
+      "target_type": "organization_or_person",
+      "direction": "directed",
+      "roles": ["patent", "applicant"],
+      "evidence_obligation": "source_grounded_applicant_assertion",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["patent_fields", "s2_relationship_families"],
+      "source_terms": ["`applicants`", "Patent→inventor/applicant"]
+    },
+    {
+      "candidate_id": "relationship.patent.has_inventor",
+      "family": "intellectual_property",
+      "source_type": "patent",
+      "target_type": "person",
+      "direction": "directed",
+      "roles": ["patent", "inventor"],
+      "evidence_obligation": "source_grounded_inventor_assertion",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["patent_fields", "s2_relationship_families"],
+      "source_terms": ["`inventors`", "Patent→inventor/applicant"]
+    },
+    {
+      "candidate_id": "relationship.professor.affiliated_with_institution",
+      "family": "organization_role",
+      "source_type": "professor",
+      "target_type": "institution",
+      "direction": "directed",
+      "roles": ["professor", "affiliated_institution", "faculty_role"],
+      "evidence_obligation": "source_grounded_affiliation_assertion",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["professor_fields", "s2_relationship_families", "openspec_temporal"],
+      "source_terms": ["`institution`", "Professor→institution/department", "Professor changes institution"]
+    },
+    {
+      "candidate_id": "relationship.professor.authored_or_listed_paper",
+      "family": "scholarly_output",
+      "source_type": "professor",
+      "target_type": "paper",
+      "direction": "directed",
+      "roles": ["professor", "author_or_page_listing", "paper"],
+      "evidence_obligation": "professor_page_or_verified_authorship_assertion",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["paper_relations", "s2_relationship_families", "shared_cross_domain"],
+      "source_terms": ["professor_paper_link", "Professor→Paper authorship/listing", "Professor roster -> Paper"]
+    },
+    {
+      "candidate_id": "relationship.professor.member_of_department",
+      "family": "organization_role",
+      "source_type": "professor",
+      "target_type": "department",
+      "direction": "directed",
+      "roles": ["professor", "department", "department_role"],
+      "evidence_obligation": "source_grounded_department_assertion",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["professor_fields", "s2_relationship_families"],
+      "source_terms": ["`department`", "Professor→institution/department"]
+    },
+    {
+      "candidate_id": "relationship.professor.company_role",
+      "family": "organization_role",
+      "source_type": "professor",
+      "target_type": "company",
+      "direction": "directed",
+      "roles": ["founder", "employee", "advisor", "investor", "cooperator"],
+      "evidence_obligation": "source_grounded_role_assertion_with_role_specific_evidence",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["professor_review_fields", "company_relations", "openspec_relationships"],
+      "source_terms": ["教授↔公司", "`company_roles`", "founder role"]
+    },
+    {
+      "candidate_id": "relationship.professor.educated_at_institution",
+      "family": "organization_role",
+      "source_type": "professor",
+      "target_type": "institution",
+      "direction": "directed",
+      "roles": ["learner", "education_institution", "degree_or_program"],
+      "evidence_obligation": "source_grounded_education_assertion",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["shared_filters", "s2_typed_subobjects"],
+      "source_terms": ["`education_filter`", "Professor affiliation/education/work history"]
+    },
+    {
+      "candidate_id": "relationship.professor.has_research_topic",
+      "family": "taxonomy_topic_geography",
+      "source_type": "professor",
+      "target_type": "topic_taxon",
+      "direction": "directed",
+      "roles": ["professor", "research_topic"],
+      "evidence_obligation": "source_assertion_or_versioned_paper_derivation",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["professor_fields", "paper_research_relations", "s2_relationship_families"],
+      "source_terms": ["`research_directions`", "研究方向标签", "entity→research topic"]
+    },
+    {
+      "candidate_id": "relationship.professor.inventor_or_associated_with_patent",
+      "family": "intellectual_property",
+      "source_type": "professor",
+      "target_type": "patent",
+      "direction": "directed",
+      "roles": ["inventor", "page_declared_association", "patent"],
+      "evidence_obligation": "unresolved_professor_review_vs_patent_prd",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["professor_review_fields", "patent_relations", "shared_cross_domain"],
+      "source_terms": ["教授↔专利同名", "发明人姓名", "Professor <-> Patent"]
+    },
+    {
+      "candidate_id": "relationship.source_record.resolves_to_entity",
+      "family": "identity_lifecycle",
+      "source_type": "source_record",
+      "target_type": "canonical_identity",
+      "direction": "directed",
+      "roles": ["source_record", "resolved_canonical_identity"],
+      "evidence_obligation": "identity_decision_and_source_record_lineage",
+      "allowed_state_policy": "unresolved_task_6_5",
+      "time_semantics": "unresolved_task_5_5",
+      "citation_refs": ["openspec_identity", "s2_relationship_families"],
+      "source_terms": ["source-identity mapping", "source-record→entity"]
+    }
+  ],
+  "unresolved_records": [
+    {
+      "candidate_id": "unresolved.company_geography_and_foundation_fields",
+      "topic": "Company geography and foundation-time typed representation",
+      "resolution": "deferred",
+      "dependency": "task_6_1_final_freeze",
+      "evidence_summary": "Company PRD requires Shenzhen-local structured filtering and names registration place as an identity signal; the accepted PRD-derived corpus also requires founded-after filtering, but the minimum field table freezes neither typed field name or subobject shape.",
+      "citation_refs": ["company_success_relations", "company_identity_signals", "company_fields", "s2_structured_company_case"],
+      "source_terms": ["深圳本地", "注册地", "成立于2020年后", "最低发布字段"]
+    },
+    {
+      "candidate_id": "unresolved.company_required_fields_shared_vs_prd",
+      "topic": "Company industry and key_personnel requiredness",
+      "resolution": "deferred",
+      "dependency": "task_6_1_final_freeze",
+      "evidence_summary": "Shared minimum fields list industry and key_personnel; Company PRD marks both optional while making key_personnel structurally searchable when present.",
+      "citation_refs": ["shared_company_fields", "company_fields", "company_personnel"],
+      "source_terms": ["`industry`", "`key_personnel`", "必填"]
+    },
+    {
+      "candidate_id": "unresolved.paper_required_fields_shared_vs_prd_review",
+      "topic": "Paper venue, professor_ids, keywords, and enriched-summary requiredness by lifecycle/path",
+      "resolution": "deferred",
+      "dependency": "task_6_1_final_freeze",
+      "evidence_summary": "Shared minimum fields are broader than PRD optionality, while Review makes title/year/venue/authors the thin-record minimum and defers enrichment.",
+      "citation_refs": ["shared_paper_fields", "paper_fields", "paper_review_fields"],
+      "source_terms": ["`professor_ids`", "`keywords`", "`venue`", "其余 12 项 optional"]
+    },
+    {
+      "candidate_id": "unresolved.patent_applicant_vs_owner_role",
+      "topic": "Applicant is authoritative; owner semantics lack an authoritative PRD rule",
+      "resolution": "deferred",
+      "dependency": "task_6_5_relationship_catalog",
+      "evidence_summary": "Patent PRD explicitly defines applicant linkage; S2 names applicant/owner as representative alternatives without accepting owner edges.",
+      "citation_refs": ["patent_relations", "s2_relationship_families"],
+      "source_terms": ["申请人标准化名称", "applicant/owner"]
+    },
+    {
+      "candidate_id": "unresolved.patent_required_fields_shared_vs_prd",
+      "topic": "Patent optionality versus shared minimum publication contract",
+      "resolution": "deferred",
+      "dependency": "task_6_1_final_freeze",
+      "evidence_summary": "Shared minimum lists inventor/type/date/link fields; Patent PRD marks them optional because approved export evidence is incomplete.",
+      "citation_refs": ["shared_patent_fields", "patent_fields", "s2_typed_subobjects"],
+      "source_terms": ["`inventors`", "`patent_type`", "partial"]
+    },
+    {
+      "candidate_id": "unresolved.professor_inclusion_seed_vs_shenzhen_wording",
+      "topic": "Professor inclusion anchor wording",
+      "resolution": "deferred",
+      "dependency": "task_6_2_inclusion_scenarios",
+      "evidence_summary": "OpenSpec/shared wording says approved Shenzhen seed roster, while the explicit Professor Review removes system-side Shenzhen whitelist validation and treats admin seed admission as the boundary.",
+      "citation_refs": ["professor_review_inclusion", "shared_professor_fields"],
+      "source_terms": ["系统不做\"机构是否在深圳\"前置校验", "institution"]
+    },
+    {
+      "candidate_id": "unresolved.professor_name_en_vs_canonical_name_en",
+      "topic": "Professor English-name field vocabulary",
+      "resolution": "deferred",
+      "dependency": "task_6_1_final_freeze",
+      "evidence_summary": "Audit/Review use name_en while Shared contract uses canonical_name_en; final catalog must choose one ubiquitous field or define an explicit alias/projection.",
+      "citation_refs": ["professor_fields", "professor_review_fields", "shared_professor_fields"],
+      "source_terms": ["`name_en`", "`canonical_name_en`"]
+    },
+    {
+      "candidate_id": "unresolved.professor_patent_attribution_evidence",
+      "topic": "Professor-Patent attribution confidence and same-name handling",
+      "resolution": "deferred",
+      "dependency": "task_6_5_relationship_catalog",
+      "evidence_summary": "Professor Review says trust and no same-name disambiguation; Patent PRD requires sufficient confidence and cross-evidence before formal linkage.",
+      "citation_refs": ["professor_review_fields", "patent_relations"],
+      "source_terms": ["完全 trust，不消歧", "置信度足够才落正式关联"]
+    },
+    {
+      "candidate_id": "unresolved.professor_top_papers_field_vs_derived_relation",
+      "topic": "Professor top_papers field versus derived verified Paper relation",
+      "resolution": "deferred",
+      "dependency": "task_6_1_final_freeze",
+      "evidence_summary": "Paper PRD requires top_papers reinforcement, while Shared Spec explicitly forbids publishing representative papers as a raw Professor field and requires derivation through verified professor_paper_link.",
+      "citation_refs": ["paper_research_relations", "shared_professor_fields"],
+      "source_terms": ["`top_papers`", "不再作为 professor 对象上的原始字段发布", "verified professor_paper_link"]
+    },
+    {
+      "candidate_id": "unresolved.quality_status_shared_vs_paper",
+      "topic": "Shared four-state quality_status versus Paper six-state decision",
+      "resolution": "deferred",
+      "dependency": "task_6_1_final_freeze",
+      "evidence_summary": "Shared contract defines four canonical values; Paper Review explicitly retains partial and rejected in addition to those four.",
+      "citation_refs": ["shared_common_fields", "paper_review_quality"],
+      "source_terms": ["4 个 canonical 值", "保留 6 值"]
+    },
+    {
+      "candidate_id": "unresolved.relationship_state_catalog",
+      "topic": "Per-relationship allowed states",
+      "resolution": "deferred",
+      "dependency": "task_6_5_relationship_catalog",
+      "evidence_summary": "OpenSpec requires allowed states, but the authoritative domain sources do not freeze a state set for each candidate relation.",
+      "citation_refs": ["openspec_relationships", "s2_relationship_families"],
+      "source_terms": ["allowed state", "Relationship family"]
+    },
+    {
+      "candidate_id": "unresolved.relationship_time_catalog",
+      "topic": "Per-relationship time semantics",
+      "resolution": "deferred",
+      "dependency": "tasks_5_5_and_5_6",
+      "evidence_summary": "OpenSpec requires applicable time semantics; Task 5.5 vocabulary and Task 5.6 acceptance are not stable in this preparation branch.",
+      "citation_refs": ["openspec_relationships", "openspec_temporal"],
+      "source_terms": ["applicable time semantics", "validity start/end"]
+    }
+  ]
+}
