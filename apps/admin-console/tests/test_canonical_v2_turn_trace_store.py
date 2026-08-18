@@ -17,7 +17,6 @@ from backend.services.canonical_v2_turn_trace import (
     TurnTrace,
     TurnTraceCollector,
     TurnTraceJournalStore,
-    WebLaneOutcome,
 )
 
 
@@ -53,15 +52,13 @@ class TestTurnTraceRecord:
         collector.record_lane_counts("web", in_=8, retained=4, filtered=4)
         collector.record_gate_drop("web_subject_consistency", 3)
         collector.record_web_outcome(
-            WebLaneOutcome(
-                provider="bocha-v1",
-                view="view-1",
-                attempted=2,
-                errored=1,
-                timed_out=0,
-                retried=1,
-                cache_hit=0,
-            )
+            provider="bocha-v1",
+            view="view-1",
+            attempted=2,
+            errored=1,
+            timed_out=0,
+            retried=1,
+            cache_hit=0,
         )
         collector.set_degradation("web-lane-unavailable")
         trace = collector.finalize(

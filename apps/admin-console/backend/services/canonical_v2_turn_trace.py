@@ -144,6 +144,9 @@ class TurnTraceCollector:
         self._web_outcomes: list[WebLaneOutcome] = []
         self._degradation: DegradationToken = "none"
         self._finalized = False
+        # Opaque contextvar token stashed by the chat service when this
+        # collector is bound as the serving-layer trace reporter.
+        self.context_token: object | None = None
 
     @property
     def trace_id(self) -> str:
@@ -184,22 +187,58 @@ class TurnTraceCollector:
         self, lane: str, *, in_: int, retained: int, filtered: int,
     ) -> None:
         with self._lock:
+            if self._finalized:
+                return
             self._lanes[lane] = {"in": in_, "retained": retained, "filtered": filtered}
+
+    def has_lane(self, lane: str) -> bool:
+        with self._lock:
+            return lane in self._lanes
 
     def record_gate_drop(self, gate_name: str, count: int) -> None:
         with self._lock:
+            if self._finalized:
+                return
             self._gate_drops[gate_name] = (
                 self._gate_drops.get(gate_name, 0) + count
             )
 
-    def record_web_outcome(self, outcome: WebLaneOutcome) -> None:
+    def record_web_outcome(
+        self,
+        *,
+        provider: str,
+        view: str,
+        attempted: int,
+        errored: int,
+        timed_out: int,
+        retried: int,
+        cache_hit: int,
+        breaker_state_before: str | None = None,
+        breaker_state_after: str | None = None,
+    ) -> None:
         with self._lock:
-            self._web_outcomes.append(outcome)
+            if self._finalized:
+                return
+            self._web_outcomes.append(
+                WebLaneOutcome(
+                    provider=provider,
+                    view=view,
+                    attempted=attempted,
+                    errored=errored,
+                    timed_out=timed_out,
+                    retried=retried,
+                    cache_hit=cache_hit,
+                    breaker_state_before=breaker_state_before,
+                    breaker_state_after=breaker_state_after,
+                )
+            )
 
     def set_degradation(self, token: DegradationToken) -> None:
         if token not in _VALID_DEGRADATION_TOKENS:
             raise ValueError(f"unknown degradation token: {token}")
         with self._lock:
+            if self._finalized:
+                return
             if token != "none":
                 self._degradation = token
 

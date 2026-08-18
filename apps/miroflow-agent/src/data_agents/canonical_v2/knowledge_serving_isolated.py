@@ -85,6 +85,7 @@ from .knowledge_read import (
 )
 from .knowledge_read_isolated import _NAMED_COMPANY_PATENT_PATTERN
 from .llm_judgments import create_llm_judge
+from .turn_trace_context import TurnTraceReporter, current_turn_trace
 
 
 # Pinned to knowledge_build_isolated._PROFESSOR_MISSING_FIELD_FALLBACK.  The
@@ -890,12 +891,21 @@ def _apply_web_subject_consistency(
     if len(kept) >= _WEB_SUBJECT_CONSISTENCY_FLOOR:
         # T4/T5 are the wrong-organization channels and drop out; T2/T3 are
         # same-organization background and stay, ordered after the anchor hits.
-        return tuple(unwrap(kept) + unwrap(related))
-    # Demotion first, filtering second: below the floor the demoted results
-    # backfill in tier order so obscure single-channel subjects keep evidence
-    # and the lane never empties into the unavailable branch.
-    pool = unwrap(related) + unwrap(suspect) + unwrap(missed)
-    return tuple(unwrap(kept) + pool[: _WEB_SUBJECT_CONSISTENCY_FLOOR - len(kept)])
+        filtered = tuple(unwrap(kept) + unwrap(related))
+    else:
+        # Demotion first, filtering second: below the floor the demoted results
+        # backfill in tier order so obscure single-channel subjects keep evidence
+        # and the lane never empties into the unavailable branch.
+        pool = unwrap(related) + unwrap(suspect) + unwrap(missed)
+        filtered = tuple(
+            unwrap(kept) + pool[: _WEB_SUBJECT_CONSISTENCY_FLOOR - len(kept)]
+        )
+    reporter = current_turn_trace()
+    if reporter is not None and len(filtered) < len(results):
+        reporter.record_gate_drop(
+            "web_subject_consistency", len(results) - len(filtered)
+        )
+    return filtered
 
 
 def _normalized_web_url(value: str) -> str:
@@ -977,10 +987,31 @@ class _DualWebLaneAdapter:
         )
 
     @staticmethod
-    def _search_provider(provider: Any, query: str) -> list[dict[str, Any]]:
+    def _search_provider(
+        provider: Any,
+        query: str,
+        provider_version: str | None = None,
+        reporter: TurnTraceReporter | None = None,
+        error_flags: dict[str, bool] | None = None,
+    ) -> list[dict[str, Any]]:
         try:
             payload = provider.search(query)
         except Exception:  # noqa: BLE001 - each provider degrades independently
+            # Executor threads do not inherit the turn context; the reporter
+            # reference is captured and passed down by the submitting thread.
+            if provider_version is not None:
+                if error_flags is not None:
+                    error_flags[provider_version] = True
+                if reporter is not None:
+                    reporter.record_web_outcome(
+                        provider=provider_version,
+                        view=query,
+                        attempted=1,
+                        errored=1,
+                        timed_out=0,
+                        retried=0,
+                        cache_hit=0,
+                    )
             return []
         organic = payload.get("organic", ()) if isinstance(payload, dict) else ()
         if not isinstance(organic, list):
@@ -1013,26 +1044,76 @@ class _DualWebLaneAdapter:
         return normalized
 
     def _merged_results(self, query: str) -> tuple[_NormalizedWebResult, ...]:
+        reporter = current_turn_trace()
+        error_flags: dict[str, bool] = {}
+        queries = {
+            "bocha-v1": query,
+            "serper-v1": _relaxed_serper_query(query),
+        }
         futures = {
-            "bocha-v1": self._executor.submit(
+            provider_version: self._executor.submit(
                 self._search_provider,
-                self._bocha,
-                query,
-            ),
-            "serper-v1": self._executor.submit(
-                self._search_provider,
-                self._serper,
-                _relaxed_serper_query(query),
-            ),
+                provider,
+                queries[provider_version],
+                provider_version,
+                reporter,
+                error_flags,
+            )
+            for provider_version, provider in (
+                ("bocha-v1", self._bocha),
+                ("serper-v1", self._serper),
+            )
         }
         timeout_seconds = self._timeout_ms / 1000
         provider_results: dict[str, list[dict[str, Any]]] = {}
+        timed_out: set[str] = set()
         for provider_version, future in futures.items():
             try:
-                provider_results[provider_version] = future.result(timeout=timeout_seconds)
+                provider_results[provider_version] = future.result(
+                    timeout=timeout_seconds
+                )
             except FutureTimeoutError:
                 provider_results[provider_version] = []
-        return self._normalize_and_order_results(provider_results=provider_results)
+                timed_out.add(provider_version)
+                if reporter is not None:
+                    reporter.record_web_outcome(
+                        provider=provider_version,
+                        view=queries[provider_version],
+                        attempted=1,
+                        errored=0,
+                        timed_out=1,
+                        retried=0,
+                        cache_hit=0,
+                    )
+        merged = self._normalize_and_order_results(provider_results=provider_results)
+        self._report_web_degradation(
+            reporter=reporter,
+            providers=tuple(futures),
+            error_flags=error_flags,
+            timed_out=timed_out,
+            merged_count=len(merged),
+        )
+        return merged
+
+    @staticmethod
+    def _report_web_degradation(
+        *,
+        reporter: TurnTraceReporter | None,
+        providers: tuple[str, ...],
+        error_flags: dict[str, bool],
+        timed_out: set[str],
+        merged_count: int,
+    ) -> None:
+        """Channel-outage detection: every provider attempt this call errored
+        or timed out and the merged lane is empty — the web channel was
+        unavailable, which is NOT the same fact as "no results"."""
+        if reporter is None or not providers or merged_count > 0:
+            return
+        if all(
+            error_flags.get(provider, False) or provider in timed_out
+            for provider in providers
+        ):
+            reporter.set_degradation("web-lane-unavailable")
 
     def _normalize_and_order_results(
         self,
@@ -1122,20 +1203,32 @@ class _DualWebLaneAdapter:
     ) -> tuple[_NormalizedWebResult, ...]:
         if len(queries) <= 1:
             return self._merged_results(queries[0] if queries else "")
+        reporter = current_turn_trace()
         timeout_seconds = self._timeout_ms / 1000
+        error_flags: dict[str, bool] = {}
+        provider_queries: dict[tuple[int, str], str] = {}
         futures: dict[tuple[int, str], Any] = {}
         for index, query in enumerate(queries):
+            provider_queries[(index, "bocha-v1")] = query
             futures[(index, "bocha-v1")] = self._executor.submit(
                 self._search_provider,
                 self._bocha,
                 query,
+                "bocha-v1",
+                reporter,
+                error_flags,
             )
+            provider_queries[(index, "serper-v1")] = _relaxed_serper_query(query)
             futures[(index, "serper-v1")] = self._executor.submit(
                 self._search_provider,
                 self._serper,
-                _relaxed_serper_query(query),
+                provider_queries[(index, "serper-v1")],
+                "serper-v1",
+                reporter,
+                error_flags,
             )
         per_view: list[tuple[_NormalizedWebResult, ...]] = []
+        timed_out: set[str] = set()
         for index in range(len(queries)):
             provider_results: dict[str, list[dict[str, Any]]] = {}
             for provider_version in ("bocha-v1", "serper-v1"):
@@ -1145,15 +1238,38 @@ class _DualWebLaneAdapter:
                     ].result(timeout=timeout_seconds)
                 except FutureTimeoutError:
                     provider_results[provider_version] = []
+                    timed_out.add(provider_version)
+                    if reporter is not None:
+                        reporter.record_web_outcome(
+                            provider=provider_version,
+                            view=provider_queries[(index, provider_version)],
+                            attempted=1,
+                            errored=0,
+                            timed_out=1,
+                            retried=0,
+                            cache_hit=0,
+                        )
             per_view.append(
                 self._normalize_and_order_results(provider_results=provider_results)
             )
-        discovery_indexes = tuple(
-            index
-            for index, query in enumerate(queries[1:], start=1)
-            if _is_brand_discovery_view(query)
+        merged = _discovery_front_merge(
+            per_view,
+            tuple(
+                index
+                for index, query in enumerate(queries[1:], start=1)
+                if _is_brand_discovery_view(query)
+            ),
         )
-        return _discovery_front_merge(per_view, discovery_indexes)
+        self._report_web_degradation(
+            reporter=reporter,
+            providers=tuple(
+                provider for _, provider in sorted(provider_queries)
+            ),
+            error_flags=error_flags,
+            timed_out=timed_out,
+            merged_count=len(merged),
+        )
+        return merged
 
     def _enrich_with_page_text(
         self,
@@ -1205,16 +1321,23 @@ class _DualWebLaneAdapter:
             request.query_text,
         ).strip()
         question_frame = _question_frame(request.original_query)
+        merged = self._merged_results_for_views(
+            self._request_view_queries(request, query_text)
+        )
+        gated = _apply_web_subject_consistency(results=merged, request=request)
         organic = _prioritize_relation_evidence(
-            results=_apply_web_subject_consistency(
-                results=self._merged_results_for_views(
-                    self._request_view_queries(request, query_text)
-                ),
-                request=request,
-            ),
+            results=gated,
             frame=question_frame,
             request=request,
         )
+        reporter = current_turn_trace()
+        if reporter is not None:
+            reporter.record_lane_counts(
+                "web",
+                in_=len(merged),
+                retained=len(gated),
+                filtered=len(merged) - len(gated),
+            )
         # List-style questions get deeper page fetches: company/theme mentions
         # that bind recall (开普勒/九号 in brand listicles) sit below the
         # snippet cut, so two fetches miss them.

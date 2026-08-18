@@ -28,6 +28,10 @@ from backend.services.canonical_v2_turn_trace import (
     TurnTraceJournalStore,
 )
 from src.data_agents.canonical_v2.contracts import ContractModel
+from src.data_agents.canonical_v2.turn_trace_context import (
+    reset_turn_trace_reporter,
+    set_turn_trace_reporter,
+)
 from src.data_agents.canonical_v2.followup_referents import (
     _search_view,
     has_anaphoric_subject_reference,
@@ -1088,6 +1092,8 @@ class CanonicalV2ChatAdapter:
             except Exception:
                 self._trace_turn_error(trace)
                 raise
+            finally:
+                self._unbind_turn_trace(trace)
 
     def answer_stream(
         self,
@@ -1120,6 +1126,15 @@ class CanonicalV2ChatAdapter:
             except Exception:
                 self._trace_turn_error(trace)
                 raise
+            finally:
+                self._unbind_turn_trace(trace)
+
+    def _unbind_turn_trace(self, collectors: list[TurnTraceCollector]) -> None:
+        if not collectors:
+            return
+        token = getattr(collectors[0], "context_token", None)
+        if token is not None:
+            reset_turn_trace_reporter(token)
 
     def _begin_turn_trace(
         self,
@@ -1227,8 +1242,12 @@ class CanonicalV2ChatAdapter:
         trace = self._begin_turn_trace(
             session_id=session_id, committed=committed, query=normalized_query
         )
-        if trace is not None and trace_sink is not None:
-            trace_sink(trace)
+        if trace is not None:
+            if trace_sink is not None:
+                trace_sink(trace)
+            # Bind the collector as the serving-layer trace reporter for this
+            # turn's dynamic scope; the public entry points reset it on exit.
+            trace.context_token = set_turn_trace_reporter(trace)
         selection = self._selection(committed, option_id=option_id)
         if selection is None and _referent_clarification_needed(
             query=normalized_query,
@@ -1403,9 +1422,12 @@ class CanonicalV2ChatAdapter:
                 candidates = int(getattr(lane_trace, "candidate_count", 0) or 0)
                 lane_totals[lane_name] = lane_totals.get(lane_name, 0) + candidates
             for lane_name, total in lane_totals.items():
-                trace.record_lane_counts(
-                    lane_name, in_=total, retained=total, filtered=0
-                )
+                # Serving-layer reporting (web lane) records the real
+                # in/retained/filtered split; only fill lanes it did not cover.
+                if not trace.has_lane(lane_name):
+                    trace.record_lane_counts(
+                        lane_name, in_=total, retained=total, filtered=0
+                    )
         emit(
             "retrieval_done",
             {
