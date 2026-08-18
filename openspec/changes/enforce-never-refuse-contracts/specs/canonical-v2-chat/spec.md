@@ -59,3 +59,9 @@ with confirmed content rather than refusal forms; never recommend external
 databases as a substitute for the answer; when told the web lane is
 unavailable, state 网络检索暂不可用 instead of claiming the information does
 not exist. (Deterministic guards remain the backstop.)
+
+#### Scenario: prompt carries the contract lines
+
+- **WHEN** the prose renderer builds its synthesis prompt
+- **THEN** the prompt text contains the never-refuse, no-deflection, and
+  lane-outage wording rules
