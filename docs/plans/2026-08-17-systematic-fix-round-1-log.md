@@ -46,7 +46,28 @@
 
 **影响**：P1。turn 一进一出即有 trace（journal 默认 `var/turn-trace/`，`TURN_TRACE_DIR` 可配）。
 
-**状态**：继续 1.1.3（serving 层上报：门控丢弃/web provider 明细/降级 token 判定）。
+---
+
+## 2026-08-18 · 任务 1.1.3–1.1.4 完成 + 1.2 重放验证通过（trace 可归因）
+
+**做了什么**：
+1. **1.1.3 serving 层上报**：新建 `turn_trace_context.py`（Protocol + ContextVar 跨层通道，executor 线程显式传引用）；`_DualWebLaneAdapter` 上报逐 provider 尝试/错误/超时、全通道皆败时置 `web-lane-unavailable` 降级 token、web lane 真实 in/retained/filtered（来自门控拆分）；`_apply_web_subject_consistency` 上报门控丢弃计数。collector 改原始参数签名 + finalize 后容忍。测试：agent 侧 5 新增 + serving 回归 250 全绿；admin 侧 148 全绿。
+2. **1.1.4 读工具**：`scripts/read_turn_trace.py`（--session/--degradation/--status/--date/--all/--expand，逐行流式）+ 4 单测。
+3. **fix 分支 serve 拉起**（1.2 前置，过程曲折）：发现并处理三件事——① 18188 旧实例由 **systemd user 单元** `canonical-v2-backend.service` 自动复活（已临时 `systemctl --user stop`，恢复方式见下）；② s12g 钉死命令里的 serving-bundle sha 与 bundle 实际声明**差一个字符**（e1 vs c1，抄录错误一路传播）——用 bundle 实际声明值即可通过；③ pack 模式下 runner 用**镜像实现**组装适配器，绕过我挂的 admin 组装函数——改为挂到唯一收敛点 `create_canonical_v2_candidate_app`（backend/main.py），所有组装路径全覆盖。
+4. **1.2 重放验证**：七会话重放对 trace 版 serve 全量执行。
+
+**1.2 结果**（证据 `.agents/runs/add-turn-trace-observability/trace-baseline/`）：
+- **结果与基线逐组一致**（稳定性线零漂移）：G1/G3/G5 稳定 RED 保持，G2/G6 PASS 保持；方差线在包络内（G4 今天 FAIL=正是用户实录的 P5 缺陷形态、通道本身健康；G7 今天 3/3 全过）——**trace 没有改变任何行为**（验收线 C1）。
+- **四个失败全部仅凭 journal 归因**（无需看代码）：G1/G3 = 锚点绑定阶段（新闻标题「河套…香港中联办」成为会话锚点和答题主语，web-only 42/42 无门控丢弃）→ Phase 3 靶点；G4 = 数据阶段（锚点正确=优必选，但 `relationship` lane (0,0)，专利关系数据缺失）→ Phase 4 靶点；G5 = 扩展基准选择阶段（锚点=优必选但答题主语=微众银行，web 0 条）→ Phase 3 靶点。
+- 健康路径：G6 澄清轮 trace 为 `degradation=clarification, status=ok`，断言 PASS。
+
+**运维备忘**：fix 分支 serve 现于 18188 运行（TURN_TRACE_DIR=/var/tmp/turn-trace-fixline，journal 按日落盘）；systemd 单元已停——恢复旧实例用 `systemctl --user start canonical-v2-backend`，或后续把单元改指 fix 线代码（R1 时一并处理）。**注意：s12g/serve-18188-command.sh 里钉的 bundle sha 是错的（e1 应为 c1），该服务若原样重启会起不来——需修命令文件或换修复线入口。**
+
+**验证**：单测 5+250+148+4 全绿；重放 report.json + 13 份 SSE + journal 存档；归因文档 attribution.md。
+
+**影响**：P1 观测落地完成（1.1/1.2 全勾）；Phase 2–8 的验收从此有 trace 佐证。G4/G7 方差提醒：P5/P8 的重放断言需保留重复防线。
+
+**状态**：1.3（web 通道韧性）未开始——下一步。
 
 ---
 

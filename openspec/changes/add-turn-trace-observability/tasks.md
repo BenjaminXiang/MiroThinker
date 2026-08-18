@@ -25,17 +25,26 @@ reaches Candidate. RED definitions live in
 - [ ] 1.1.3 Serving-layer reporting: lane in/retained/filtered counts, named
        gate drops, web provider outcomes (attempt/error/timeout/retry/cache),
        degradation token selection.
-- [ ] 1.1.4 Reader CLI `apps/admin-console/scripts/read_turn_trace.py`
+- [x] 1.1.4 Reader CLI `apps/admin-console/scripts/read_turn_trace.py`
        (`--session/--degradation/--status/--date/--expand`), line-streaming.
+       Evidence: `tests/test_read_turn_trace.py` 4/4 green; exercised against
+       the live journal during 1.2 (summary + --expand on real turns).
 
 ## 1.2 Trace verified by replay
 
-- [ ] 1.2.1 Run the frozen baseline sessions against the traced build; for each
+- [x] 1.2.1 Run the frozen baseline sessions against the traced build; for each
        failing assertion (G1/G3/G5/G7 form) record the stage attribution read
        from the trace alone; save evidence under
        `.agents/runs/add-turn-trace-observability/trace-baseline/`.
-- [ ] 1.2.2 Confirm healthy sessions (G6 form) produce `degradation: none` and
+       Evidence: replay 2026-08-18 vs baseline — stable lines identical (G1/G3/G5
+       RED, G2/G6 PASS), variance lines within envelope (G4 FAIL today = P5
+       defect form; G7 PASS 3/3); all four failures attributed from journal
+       alone: G1/G3 anchor binding (news headline), G4 relationship-lane (0,0)
+       data gap, G5 expansion-base drift. See `trace-baseline/attribution.md`.
+- [x] 1.2.2 Confirm healthy sessions (G6 form) produce `degradation: none` and
        unchanged answers.
+       Evidence: G6 clarification turn traced `degradation=clarification,
+       status=ok`, session PASS; smoke turn `status=ok, degradation=none`.
 
 ## 1.3 Web-lane resilience
 
