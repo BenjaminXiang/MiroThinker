@@ -4638,7 +4638,9 @@ def _anchor_correction_name(result: Any, active_anchor: Any) -> str | None:
     return display_name
 
 
-_ANSWER_LEAD_SENTENCE_RE = re.compile(r"[。！？!?]")
+# First-sentence boundary aligned with the replay acceptance line (G1):
+# colon-terminated list headers and line breaks end the opening sentence too.
+_ANSWER_LEAD_SENTENCE_RE = re.compile(r"[。！？!?：:\n]")
 
 
 def _answer_lead_mentions_stem(answer_text: str, org_stem: str) -> bool:
@@ -4660,15 +4662,22 @@ def _answer_mentions_anchor(
         # A lookalike-organized answer can still name-drop the anchor once;
         # require the anchor to lead the answer or recur in it.
         return _answer_lead_mentions_stem(answer_text, stem) or searchable.count(stem) >= 2
+    stem = _org_name_stem(anchor_name)
+    # Subject-led answers lead with the anchor or recur to it; a single
+    # mid-text name-drop (city/industry-framed drift, G1 T3 form) is the
+    # drift signature and must trigger the correction retry.
+    lead_or_recur = _answer_lead_mentions_stem(
+        answer_text, stem
+    ) or searchable.count(stem) >= 2 if stem else False
     for form in _web_identity_forms(anchor_name):
         # The Web-lane marker rule for short forms targets noisy search
         # snippets; on the answer side a bare 3+ char name (丁文伯是…) is a
         # legitimate anchor mention, so plain substring wins from len 3 up.
         if len(form) >= 3:
             if form in searchable:
-                return True
+                return lead_or_recur
         elif _web_identity_text_matches(form, searchable):
-            return True
+            return lead_or_recur
     return False
 
 

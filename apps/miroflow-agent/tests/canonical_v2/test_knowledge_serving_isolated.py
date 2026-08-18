@@ -1686,8 +1686,11 @@ def test_mentions_anchor_qualified_accepts_framing_opener_with_repeated_stem() -
 
 
 def test_mentions_anchor_unqualified_path_unchanged() -> None:
-    # phase-1 semantics: a single mid-answer mention still counts.
-    assert serving_module._answer_mentions_anchor(
+    # Phase 3 semantics (G1 T3 form): a single mid-answer name-drop inside a
+    # differently-framed answer is the drift signature — it must trigger the
+    # correction retry, so it no longer counts as anchored. Leading or
+    # recurring mentions still count (see test_answer_anchor_lead.py).
+    assert not serving_module._answer_mentions_anchor(
         "从公开信息看，这家机构的分量不低。国际先进技术应用推进中心（合肥）采用理事会模式。",
         "国际先进技术应用推进中心",
     )
