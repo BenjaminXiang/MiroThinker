@@ -10,6 +10,9 @@ export CANONICAL_V2_ACCESS_LOG_DB=/var/tmp/mirothinker-canonical-v2-s12f/access-
 export CANONICAL_V2_CORRECTIONS_DB=/var/tmp/mirothinker-canonical-v2-s12f/corrections.sqlite3
 export CANONICAL_V2_MANUAL_RECALL_DIR=/var/tmp/mirothinker-canonical-v2-s12f/manual-recall-v1
 export CHAT_LLM_PROFILE=${CHAT_LLM_PROFILE:-gemma4}
+# Long enumeration prose streams exceed the 30s default under load
+# (G7 full-suite fault: timeout -> deterministic single-entity fallback).
+export CHAT_LLM_TIMEOUT_SECONDS=${CHAT_LLM_TIMEOUT_SECONDS:-90}
 exec uv run python "$R/s12e/serve_s12e_port.py" 18188 \
   --database-url postgresql://miroflow@127.0.0.1:55458/miroflow_candidate_s12f_20260801_v1 \
   --expected-database miroflow_candidate_s12f_20260801_v1 \
