@@ -321,7 +321,7 @@ _DECODABLE_EMAIL_PATTERN = re.compile(
     r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\."
     r"(?:biz|cn|com|edu|gov|info|io|me|net|org)$"
 )
-_EXPECTED_ALEMBIC_REVISION = "C2_0012"
+_EXPECTED_ALEMBIC_REVISION = "C2_0013"
 _OWNER_SCHEMAS = (
     "company",
     "knowledge",

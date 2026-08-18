@@ -140,6 +140,10 @@ def _temporal_json(value: object | None) -> Jsonb | None:
     return Jsonb(cast(Any, value).model_dump(mode="json"))
 
 
+def _as_jsonb(value: Any) -> Jsonb:
+    return Jsonb(value)
+
+
 def _legacy_instant(value: object | None) -> Any | None:
     return value.value if isinstance(value, TemporalInstantValue) else None
 
@@ -745,6 +749,12 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
         *,
         build_authority: str,
     ) -> None:
+        from .snapshot_chunks import serialize_snapshot_chunks
+
+        request_chunks = serialize_snapshot_chunks(
+            request.model_dump(mode="json")
+        )
+        result_chunks = serialize_snapshot_chunks(result.model_dump(mode="json"))
         connection.execute(
             "INSERT INTO knowledge.identity_resolution_run "
             "(release_id, decision_run_id, identity_method_version, as_of, "
@@ -759,12 +769,39 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
                 request.policy.policy_id,
                 request.policy.policy_version,
                 build_authority,
-                Jsonb(request.model_dump(mode="json")),
+                (
+                    _as_jsonb(request_chunks.inline_jsonb)
+                    if request_chunks.inline_jsonb is not None
+                    else None
+                ),
                 _identity.canonical_identity_resolution_request_sha256(request),
-                Jsonb(result.model_dump(mode="json")),
+                (
+                    _as_jsonb(result_chunks.inline_jsonb)
+                    if result_chunks.inline_jsonb is not None
+                    else None
+                ),
                 result.content_sha256,
             ),
         )
+        for role, chunks in (
+            ("request", request_chunks.chunks),
+            ("result", result_chunks.chunks),
+        ):
+            for chunk_index, chunk_b64, chunk_sha256 in chunks:
+                connection.execute(
+                    "INSERT INTO "
+                    "knowledge.identity_resolution_run_content_chunk "
+                    "(release_id, decision_run_id, role, chunk_index, "
+                    "chunk_b64, chunk_sha256) VALUES (%s, %s, %s, %s, %s, %s)",
+                    (
+                        request.release_id,
+                        request.decision_run_id,
+                        role,
+                        chunk_index,
+                        chunk_b64,
+                        chunk_sha256,
+                    ),
+                )
 
     @staticmethod
     def _insert_decisions(
@@ -1007,13 +1044,39 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
         if row is None:
             raise CanonicalIdentityNotFoundError(
                 "canonical identity resolution was not found"
+                )
+        from .snapshot_chunks import reassemble_snapshot_chunks
+
+        if row["request_content"] is None or row["result_content"] is None:
+            def _reassemble(role: str) -> Any:
+                chunk_rows = connection.execute(
+                    "SELECT chunk_index, chunk_b64, chunk_sha256 FROM "
+                    "knowledge.identity_resolution_run_content_chunk "
+                    "WHERE release_id = %s AND decision_run_id = %s AND "
+                    "role = %s",
+                    (release_id, decision_run_id, role),
+                ).fetchall()
+                return reassemble_snapshot_chunks(chunk_rows)
+
+            request_payload = (
+                row["request_content"]
+                if row["request_content"] is not None
+                else _reassemble("request")
             )
+            result_payload = (
+                row["result_content"]
+                if row["result_content"] is not None
+                else _reassemble("result")
+            )
+        else:
+            request_payload = row["request_content"]
+            result_payload = row["result_content"]
         try:
             request = _identity.IdentityResolutionRequest.model_validate(
-                row["request_content"]
+                request_payload
             )
             result = _identity.IdentityResolutionResult.model_validate(
-                row["result_content"]
+                result_payload
             )
             validated = _identity.validate_identity_resolution_result(request, result)
         except (ValueError, ValidationError) as exc:
