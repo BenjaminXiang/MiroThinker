@@ -4605,9 +4605,14 @@ def _anchor_correction_name(result: Any, active_anchor: Any) -> str | None:
     Otherwise mirrors the ``_matched_bound_entity`` skip for web-handle
     anchors: their display names come from unattributed Web text, so an
     answer cannot be judged against them. Clarification-only turns are never
-    corrected.
+    corrected. Enumeration answers are never corrected either: a list has no
+    single subject, and refocusing a list onto one member (or onto a lone
+    look-alike handle) destroys the answer (G7 fault form).
     """
     if str(getattr(result, "response_mode", "answer") or "answer") != "answer":
+        return None
+    coverage = getattr(result, "enumeration_coverage", None)
+    if coverage is not None:
         return None
     context = getattr(result, "context_receipt", None)
     soft_subject = getattr(context, "soft_context_subject", None)

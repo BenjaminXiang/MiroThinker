@@ -143,3 +143,13 @@ class TestExpansionPlanningBindsSubject:
         _turn(adapter, "介绍深圳市优必选科技股份有限公司", "sess-deep")
         _turn(adapter, "它的总部在哪里", "sess-deep")
         assert planner.requests[1].original_query == "它的总部在哪里"
+
+
+class TestEnumerationNoSoftSubject:
+    def test_enumeration_query_never_yields_soft_subject(self) -> None:
+        # G7 fault: a lone web handle from list results must not become the
+        # session's soft subject and refocus later answers.
+        assert (
+            service._soft_subject_name(query="深圳有哪些做具身智能的公司")
+            is None
+        )

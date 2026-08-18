@@ -1093,8 +1093,12 @@ def _soft_subject_name(
     ``evidence_set`` is optional: at the injection point no resolved evidence
     exists yet, so the derivation runs query-first only and the web-handle
     fallback stays unreachable without it. The commit path keeps passing the
-    resolved evidence set, so its behavior is unchanged.
+    resolved evidence set, so its behavior is unchanged. Enumeration queries
+    never yield a soft subject: a list has no single subject, and a lone
+    web handle from list results (G7: 深圳国创) would poison the next turn.
     """
+    if any(marker in query for marker in _ENUMERATION_MARKERS):
+        return None
     extracted = _search_view(query).strip()
     if _soft_subject_candidate_ok(extracted, query=query):
         return extracted
