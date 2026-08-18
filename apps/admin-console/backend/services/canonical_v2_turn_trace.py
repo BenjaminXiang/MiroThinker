@@ -109,7 +109,20 @@ class TurnTrace:
             "session_snapshot": dict(self.session_snapshot),
             "lanes": {lane: dict(counts) for lane, counts in self.lanes.items()},
             "gate_drops": dict(self.gate_drops),
-            "web_outcomes": [vars(outcome) for outcome in self.web_outcomes],
+            "web_outcomes": [
+                {
+                    "provider": outcome.provider,
+                    "view": outcome.view,
+                    "attempted": outcome.attempted,
+                    "errored": outcome.errored,
+                    "timed_out": outcome.timed_out,
+                    "retried": outcome.retried,
+                    "cache_hit": outcome.cache_hit,
+                    "breaker_state_before": outcome.breaker_state_before,
+                    "breaker_state_after": outcome.breaker_state_after,
+                }
+                for outcome in self.web_outcomes
+            ],
             "degradation": self.degradation,
             "answer_subject": self.answer_subject,
             "citation_count": self.citation_count,
@@ -322,7 +335,7 @@ class TurnTraceJournalStore:
                 with day_file.open("a", encoding="utf-8") as handle:
                     handle.write(line + "\n")
                 self._prune_locked(now)
-        except (OSError, ValueError) as exc:
+        except Exception as exc:  # noqa: BLE001 - fail-open: never break a turn
             with self._lock:
                 self.write_failure_count += 1
             logger.warning(

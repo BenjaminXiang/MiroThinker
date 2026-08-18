@@ -67,7 +67,22 @@
 
 **影响**：P1 观测落地完成（1.1/1.2 全勾）；Phase 2–8 的验收从此有 trace 佐证。G4/G7 方差提醒：P5/P8 的重放断言需保留重复防线。
 
-**状态**：1.3（web 通道韧性）未开始——下一步。
+---
+
+## 2026-08-18 · 任务 1.3 完成 + Phase 1 全部收口 —— ✅
+
+**做了什么**（RED→GREEN，9 个新单测先失败后通过）：
+1. **web 通道韧性**（`web_lane_resilience.py` + 适配器改造）：单次重试+250ms 退避（仅传输/超时类；auth/配额类不重试）、SQLite 结果缓存（provider+view+UTC 日键，日界即 TTL）、逐 provider 熔断器（连败 3 次开、60s 探测恢复）、配额水位（默认 4000/日，`WEB_LANE_DAILY_QUOTA` 可配）。
+2. **两处行为契约更新**（均有测试跟随更新+理由注释）：Serper「积分不足」进程级粘性禁用**移除**（熔断器接管，可探测恢复）；keepwarm 从独立传输改为**走 lane 同一传输**并受水位+熔断门控（旧设计在烧配额预热 lane 根本不用的连接）。
+3. **Bocha 提供方语义修正**：传输/HTTP/API 错误**改为抛出**（原来静默吞成空结果，错误不可见）；成功但零结果仍返回空列表（事实≠失败）。composite 兜底不受影响。
+4. **两个生产级 bug 修复**（故障注入揭出的）：① lane 派发线程不传播 contextvar（Python 3.12 ThreadPoolExecutor 也不传播）→ `knowledge_read` 派发处逐 lane 复制 context 快照；② slotted dataclass 的 `vars()` 序列化崩溃 + journal fail-open 未兜 TypeError（曾把 turn 打成 internal_error）→ 显式字段序列化 + fail-open 收紧为全异常。
+5. **RED-4 故障注入验收**：废掉 Bocha key 重启 serve → G2 重放 **ALL PASS**（serper+缓存供血，lane 存活）；72 条 web 明细入 trace（bocha auth 错误不重试、熔断 closed→open×34、serper 36 条正常大量 cache=1、门控丢弃 37 条可见）；通道存活时**无误报降级**。
+
+**验证**：agent 侧 269 全过（serving 251 + 韧性 9 + 上报 5 + runtime）；admin 侧 163 全过（store/hook 15 + adapter 套件 148）；重放 1.2 证据 + 故障注入证据均入库。
+
+**影响**：P2/P4/P5 的「通道波动」因素被压缩（重试+缓存+熔断）；keepwarm 配额燃烧受控；Phase 2 起的验收有完整 trace 佐证。生产 serve 已恢复真实 key 运行（18188）。
+
+**状态**：**Phase 1 完成（13/13 任务，acceptance A1–A4/B1–B5/C1 全回填）**。下一步 Phase 2（绝不拒答契约+降级语义，子 change `enforce-never-refuse-contracts`）。
 
 ---
 

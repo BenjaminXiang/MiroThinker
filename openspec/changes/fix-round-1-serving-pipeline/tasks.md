@@ -20,12 +20,12 @@
 
 ## Phase 1 — observability (child change: add-turn-trace-observability)
 
-- [ ] 1.1 Structured turn-trace: session snapshot, interpretation inputs/outputs,
+- [x] 1.1 Structured turn-trace: session snapshot, interpretation inputs/outputs,
        per-lane in/out/filtered counts, gate drop counts, fetch outcomes,
        degradation reason, final answer subject; journal reader tool.
-- [ ] 1.2 Trace verified by replaying the baseline sessions and reading each
+- [x] 1.2 Trace verified by replaying the baseline sessions and reading each
        failure's stage from the trace alone.
-- [ ] 1.3 Web-lane resilience (verified zero-cache/zero-retry/silent-swallow
+- [x] 1.3 Web-lane resilience (verified zero-cache/zero-retry/silent-swallow
        2026-08-17): single retry with backoff per provider (idempotent search),
        web-result cache keyed by view+day (port the legacy V017
        web_search_cache pattern), per-provider health circuit-breaker with

@@ -81,6 +81,17 @@ class TestTurnTraceRecord:
 
     def test_trace_serializes_to_one_json_line(self) -> None:
         collector = _make_collector()
+        collector.record_web_outcome(
+            provider="bocha-v1",
+            view="view-1",
+            attempted=1,
+            errored=1,
+            timed_out=0,
+            retried=0,
+            cache_hit=0,
+            breaker_state_before="closed",
+            breaker_state_after="open",
+        )
         trace = collector.finalize(
             status="ok",
             answer_subject=None,
@@ -93,6 +104,8 @@ class TestTurnTraceRecord:
         restored = json.loads(line)
         assert restored["degradation"] == "none"
         assert restored["status"] == "ok"
+        # Slotted WebLaneOutcome must serialize explicitly (vars() fails).
+        assert restored["web_outcomes"][0]["breaker_state_after"] == "open"
 
     def test_unknown_degradation_token_rejected(self) -> None:
         collector = _make_collector()

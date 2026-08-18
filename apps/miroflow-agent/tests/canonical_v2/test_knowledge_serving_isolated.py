@@ -3285,7 +3285,12 @@ def test_dual_web_lane_reuses_request_transport_and_isolates_keepwarm_transport(
 
     assert len(result.candidates) == 1
     assert len(repeated_result.candidates) == 1
-    assert observed["provider_constructions"] == 2
+    # Web-lane resilience contract (add-turn-trace-observability 1.3): the
+    # lane transport is constructed once and reused across requests, and
+    # keepwarm now routes through the SAME lane transport (gated by the
+    # quota watermark + breaker) — warming a separate transport burned quota
+    # on connections the serving lane never used.
+    assert observed["provider_constructions"] == 1
     assert observed["query"] == "王学谦"
     kwargs = observed["kwargs"]
     assert isinstance(kwargs, dict)

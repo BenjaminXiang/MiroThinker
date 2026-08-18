@@ -15,7 +15,7 @@ from pathlib import Path
 import re
 from threading import Lock
 import threading
-from time import monotonic
+from time import monotonic, sleep
 from typing import Any, Literal, cast
 from urllib.parse import urlparse, urlsplit, urlunsplit
 
@@ -86,6 +86,16 @@ from .knowledge_read import (
 from .knowledge_read_isolated import _NAMED_COMPANY_PATENT_PATTERN
 from .llm_judgments import create_llm_judge
 from .turn_trace_context import TurnTraceReporter, current_turn_trace
+from .web_lane_resilience import (
+    RETRY_BACKOFF_SECONDS,
+    NullWebLaneStore,
+    WebLaneBreaker,
+    _WebLaneStore,
+    _utc_day,
+    classify_search_error,
+    quota_watermark,
+    view_cache_key,
+)
 
 
 # Pinned to knowledge_build_isolated._PROFESSOR_MISSING_FIELD_FALLBACK.  The
@@ -968,6 +978,8 @@ class _DualWebLaneAdapter:
         page_fetcher: Callable[[str], str | None] | None = None,
         extra_view_queries: Callable[[str], tuple[str, ...]] | None = None,
         gap_judge: Any | None = None,
+        resilience_store: _WebLaneStore | None = None,
+        breaker: WebLaneBreaker | None = None,
     ) -> None:
         self._timeout_ms = timeout_ms
         self._max_snapshot_bytes = max_snapshot_bytes
@@ -979,6 +991,13 @@ class _DualWebLaneAdapter:
         self._page_fetch_timeout = max(2.0, provider_attempt_timeout)
         self._extra_view_queries = extra_view_queries
         self._gap_judge = gap_judge
+        self._breaker = breaker or WebLaneBreaker(clock=clock)
+        # Storage is opt-in (hermetic by default); the serving composition
+        # wires the shared store so production gets cache + quota accounting.
+        self._resilience_store = (
+            resilience_store if resilience_store is not None else NullWebLaneStore()
+        )
+        self._quota_watermark = quota_watermark()
         self._executor = ThreadPoolExecutor(
             # 4 plan query views x 2 providers run concurrently per Web lane;
             # a smaller pool would serialize later views past their deadline.
@@ -986,37 +1005,132 @@ class _DualWebLaneAdapter:
             thread_name_prefix="canonical-v2-web",
         )
 
-    @staticmethod
-    def _search_provider(
+    def keepwarm_allowed(self, provider_version: str) -> bool:
+        """Keepwarm must not burn quota past the watermark or into an open
+        breaker; user turns are unaffected (they always search)."""
+        if self._breaker.state(provider_version) != "closed":
+            return False
+        day = _utc_day(self._clock)
+        return (
+            self._resilience_store.quota_count(provider_version, day)
+            <= self._quota_watermark
+        )
+
+    def warm(self, provider_version: str, query: str = "深圳科技创新") -> None:
+        """One keepwarm search routed through resilience (best-effort)."""
+        try:
+            provider = (
+                self._bocha if provider_version == "bocha-v1" else self._serper
+            )
+            if not self.keepwarm_allowed(provider_version):
+                return
+            self._provider_search(
+                provider, query, provider_version, None, None
+            )
+        except Exception:  # noqa: BLE001 - keepwarm is best-effort
+            pass
+
+    def _provider_search(
+        self,
         provider: Any,
         query: str,
         provider_version: str | None = None,
         reporter: TurnTraceReporter | None = None,
         error_flags: dict[str, bool] | None = None,
     ) -> list[dict[str, Any]]:
+        """One provider search with cache read-through, single retry with
+        backoff (transport/timeout errors only), breaker gating, and quota
+        accounting. Runs on executor threads; the reporter reference is
+        captured and passed down by the submitting thread."""
+        if provider_version is None:
+            try:
+                payload = provider.search(query)
+            except Exception:  # noqa: BLE001 - each provider degrades independently
+                return []
+            organic = payload.get("organic", ()) if isinstance(payload, dict) else ()
+            if not isinstance(organic, list):
+                return []
+            return [item for item in organic if isinstance(item, dict)]
+
+        allowed, breaker_before = self._breaker.attempt_allowed(provider_version)
+        if not allowed:
+            if reporter is not None:
+                reporter.record_web_outcome(
+                    provider=provider_version,
+                    view=query,
+                    attempted=0,
+                    errored=0,
+                    timed_out=0,
+                    retried=0,
+                    cache_hit=0,
+                    breaker_state_before=breaker_before,
+                    breaker_state_after=breaker_before,
+                )
+            return []
+        day = _utc_day(self._clock)
+        cached = self._resilience_store.cache_get(
+            provider_version, view_cache_key(query), day
+        )
+        if cached is not None:
+            if reporter is not None:
+                reporter.record_web_outcome(
+                    provider=provider_version,
+                    view=query,
+                    attempted=0,
+                    errored=0,
+                    timed_out=0,
+                    retried=0,
+                    cache_hit=1,
+                    breaker_state_before=breaker_before,
+                    breaker_state_after=breaker_before,
+                )
+            return [dict(item) for item in cached]
+        self._resilience_store.quota_incr(provider_version, day)
+        results: list[dict[str, Any]] = []
+        errored = 0
+        retried = 0
+        reason: str | None = None
+
+        def _extract(payload: Any) -> list[dict[str, Any]]:
+            organic = payload.get("organic", ()) if isinstance(payload, dict) else ()
+            if not isinstance(organic, list):
+                return []
+            return [item for item in organic if isinstance(item, dict)]
+
         try:
-            payload = provider.search(query)
-        except Exception:  # noqa: BLE001 - each provider degrades independently
-            # Executor threads do not inherit the turn context; the reporter
-            # reference is captured and passed down by the submitting thread.
-            if provider_version is not None:
-                if error_flags is not None:
-                    error_flags[provider_version] = True
-                if reporter is not None:
-                    reporter.record_web_outcome(
-                        provider=provider_version,
-                        view=query,
-                        attempted=1,
-                        errored=1,
-                        timed_out=0,
-                        retried=0,
-                        cache_hit=0,
-                    )
-            return []
-        organic = payload.get("organic", ()) if isinstance(payload, dict) else ()
-        if not isinstance(organic, list):
-            return []
-        return [item for item in organic if isinstance(item, dict)]
+            results = _extract(provider.search(query))
+        except Exception as exc:  # noqa: BLE001 - classified below
+            retryable, reason = classify_search_error(exc)
+            if retryable:
+                retried = 1
+                sleep(RETRY_BACKOFF_SECONDS)
+                try:
+                    results = _extract(provider.search(query))
+                except Exception as exc2:  # noqa: BLE001
+                    _, reason = classify_search_error(exc2)
+                    errored = 1
+            else:
+                errored = 1
+        breaker_after = self._breaker.record(provider_version, errored == 0, reason)
+        if errored and error_flags is not None:
+            error_flags[provider_version] = True
+        if not errored:
+            self._resilience_store.cache_put(
+                provider_version, view_cache_key(query), day, results
+            )
+        if reporter is not None:
+            reporter.record_web_outcome(
+                provider=provider_version,
+                view=query,
+                attempted=1,
+                errored=errored,
+                timed_out=0,
+                retried=retried,
+                cache_hit=0,
+                breaker_state_before=breaker_before,
+                breaker_state_after=breaker_after,
+            )
+        return results
 
     @staticmethod
     def _normalize_results(
@@ -1052,7 +1166,7 @@ class _DualWebLaneAdapter:
         }
         futures = {
             provider_version: self._executor.submit(
-                self._search_provider,
+                self._provider_search,
                 provider,
                 queries[provider_version],
                 provider_version,
@@ -1075,6 +1189,7 @@ class _DualWebLaneAdapter:
             except FutureTimeoutError:
                 provider_results[provider_version] = []
                 timed_out.add(provider_version)
+                self._breaker.record(provider_version, False, "timeout")
                 if reporter is not None:
                     reporter.record_web_outcome(
                         provider=provider_version,
@@ -1211,7 +1326,7 @@ class _DualWebLaneAdapter:
         for index, query in enumerate(queries):
             provider_queries[(index, "bocha-v1")] = query
             futures[(index, "bocha-v1")] = self._executor.submit(
-                self._search_provider,
+                self._provider_search,
                 self._bocha,
                 query,
                 "bocha-v1",
@@ -1220,7 +1335,7 @@ class _DualWebLaneAdapter:
             )
             provider_queries[(index, "serper-v1")] = _relaxed_serper_query(query)
             futures[(index, "serper-v1")] = self._executor.submit(
-                self._search_provider,
+                self._provider_search,
                 self._serper,
                 provider_queries[(index, "serper-v1")],
                 "serper-v1",
@@ -1239,6 +1354,7 @@ class _DualWebLaneAdapter:
                 except FutureTimeoutError:
                     provider_results[provider_version] = []
                     timed_out.add(provider_version)
+                    self._breaker.record(provider_version, False, "timeout")
                     if reporter is not None:
                         reporter.record_web_outcome(
                             provider=provider_version,
@@ -5731,9 +5847,8 @@ def load_recorded_serving_inputs(
         page_fetcher=page_fetcher,
         extra_view_queries=query_view_store.views_for,
         gap_judge=create_llm_judge(),
+        resilience_store=_WebLaneStore(),
     )
-    keepwarm_bocha = BochaSearchProvider(timeout=provider_attempt_timeout)
-    keepwarm_serper = WebSearchProvider(timeout=provider_attempt_timeout)
     # The correction retry fetches reference pages through the same tiered
     # fetcher the web lane uses — one shared object, never a second fetcher.
     environment_renderer = _EnvironmentProseRenderer(page_fetcher=page_fetcher)
@@ -5745,10 +5860,12 @@ def load_recorded_serving_inputs(
     )
 
     def warm_bocha() -> None:
-        keepwarm_bocha.search("深圳科技创新")
+        # Routed through the web lane's resilience: quota watermark and the
+        # per-provider breaker both gate keepwarm traffic.
+        web_search.warm("bocha-v1")
 
     def warm_serper() -> None:
-        keepwarm_serper.search("深圳科技创新")
+        web_search.warm("serper-v1")
 
     def warm_embedding() -> None:
         embedding_adapter.embed_batch(

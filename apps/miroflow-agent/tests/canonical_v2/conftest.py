@@ -12,6 +12,12 @@ def pytest_xdist_auto_num_workers(config: pytest.Config) -> int:
 
 
 @pytest.fixture(autouse=True)
+def _isolated_web_lane_resilience(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Web-lane cache/quota storage must never leak across tests or runs."""
+    monkeypatch.setenv("TURN_TRACE_DIR", str(tmp_path / "web-lane"))
+
+
+@pytest.fixture(autouse=True)
 def _disable_environment_llm_judge(monkeypatch: pytest.MonkeyPatch) -> None:
     """Keep probe acceptance deterministic across the canonical_v2 suite.
 
