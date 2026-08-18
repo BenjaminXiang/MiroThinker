@@ -33,6 +33,39 @@ if ! docker ps --format '{{.Names}}' | grep -q '^canonical-v2-s12c-pg-20260726-r
   exit 2
 fi
 
+# Prepare the disposable target database when absent (marker + C2_0012 head).
+# The s12f database on the same cluster is never touched.
+cd "$APP_ROOT"
+if ! uv run python - <<'PY'
+import psycopg
+
+connection = psycopg.connect(
+    "postgresql://miroflow@127.0.0.1:55458/postgres", autocommit=True
+)
+exists = connection.execute(
+    "SELECT 1 FROM pg_database WHERE datname = 'miroflow_candidate_v2_20260819_r1'"
+).fetchone()
+if exists:
+    print("target database already prepared")
+else:
+    connection.execute("CREATE DATABASE miroflow_candidate_v2_20260819_r1")
+    connection.execute(
+        "COMMENT ON DATABASE miroflow_candidate_v2_20260819_r1 IS "
+        "'miroflow:destructive-target:v1:disposable:"
+        "miroflow_candidate_v2_20260819_r1'"
+    )
+    print("target database created and marked")
+PY
+then
+  echo "target database preparation failed" >&2
+  exit 2
+fi
+CANONICAL_V2_BACKUP_GATE_ROOT="$GATE_ROOT" \
+ALEMBIC_DATABASE_URL="postgresql+psycopg://miroflow@127.0.0.1:55458/miroflow_candidate_v2_20260819_r1" \
+ALEMBIC_EXPECTED_DATABASE=miroflow_candidate_v2_20260819_r1 \
+ALEMBIC_TARGET_KIND=disposable \
+uv run alembic -c canonical_v2_alembic.ini upgrade head >/dev/null
+
 mkdir -p /var/tmp/mirothinker-data-v2
 cd "$APP_ROOT"
 PYTHONUNBUFFERED=1 uv run python "$RUNNER" \
@@ -44,7 +77,7 @@ PYTHONUNBUFFERED=1 uv run python "$RUNNER" \
   --source-manifest-sha256 "$MANIFEST_SHA256" \
   --candidate-staging-root /var/tmp/mirothinker-data-v2/staging-v1 \
   --index-root /var/tmp/mirothinker-data-v2/index-v1 \
-  --index-marker-sha256 7d2f0a91c4b8e635a1f09d8c27e4b5a631872a4f9c0d1e2b3a4f5e6d7c8b9a01 \
+  --index-marker-sha256 8848197caaa665fa093f054aa6c7c241b90376f311ec62e089ddb479a6e97c8b \
   --candidate-release-id candidate-v2-20260819-r1 \
   --run-id p4-build-20260819-v1 \
   --source-batch-id s12a-released-objects-full-v1 \
