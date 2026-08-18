@@ -240,6 +240,13 @@ End every non-trivial task with:
 ## 文档确认块 — per §3 (index/log/cross-links/checkboxes)
 ```
 
+Verification reporting must be layered (user rule 2026-08-18 — aggregate
+"all green" counts are illegible): ① new tests written this slice (count,
+what each cluster locks, fixture source — verbatim transcript / constructed
+scenario); ② pre-existing regression suites (count, all-pass status); ③
+replay / fault-injection evidence for RAG/chat-level claims. A bare total is
+not an acceptable verification report.
+
 For pattern-fix work add: reported case fixed / defect class / sibling patterns
 searched / sibling issues fixed / not fixed and why / new invariant or test /
 remaining systemic risk.
