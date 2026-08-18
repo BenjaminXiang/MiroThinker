@@ -4434,11 +4434,18 @@ class _ProseTextNormalizer:
         self._line_prefix_truncated = False
         self._model_text_started = False
         self._started = False
+        self._streamed_chars = 0
+
+    @property
+    def streamed_chars(self) -> int:
+        """Total model-text characters fed so far (truncation policy input)."""
+        return self._streamed_chars
 
     def _emit(self, text: str) -> None:
         if not text:
             return
         self._parts.append(text)
+        self._streamed_chars += len(text)
         if self._on_chunk is not None:
             self._on_chunk(text)
 
@@ -4754,6 +4761,30 @@ def _reject_truncated_prose_finish_reason(choice: Any) -> None:
         raise ValueError(
             f"LLM prose response rejected provider finish_reason={finish_reason}"
         )
+
+
+# Streaming UX (Phase 3.6, G5 fault): a length-capped finish on prose that
+# already streamed substantially must NOT discard the turn — the client has
+# the text. Ship the partial (truncation mid-list is benign for enumeration
+# answers; the prompt's coverage statement governs completeness); keep the
+# strict rejection for short/empty renderings where truncation likely cut
+# mid-sentence near the start.
+_STREAMED_PARTIAL_MIN_CHARS = 800
+
+
+def _accept_streamed_truncation(
+    choice: Any, streamed_chars: int
+) -> bool:
+    finish_reason = getattr(choice, "finish_reason", None)
+    if finish_reason != "length":
+        return False
+    if streamed_chars < _STREAMED_PARTIAL_MIN_CHARS:
+        return False
+    logger.warning(
+        "prose finish_reason=length after %d streamed chars — shipping partial",
+        streamed_chars,
+    )
+    return True
 
 
 class _OpenAIProseRenderer:
@@ -5294,7 +5325,10 @@ class _OpenAIProseRenderer:
             if not choices:
                 continue
             choice = choices[0]
-            _reject_truncated_prose_finish_reason(choice)
+            if not _accept_streamed_truncation(
+                choice, normalizer.streamed_chars
+            ):
+                _reject_truncated_prose_finish_reason(choice)
             delta = getattr(choice, "delta", None)
             text = None if delta is None else getattr(delta, "content", None)
             if not isinstance(text, str) or not text:
