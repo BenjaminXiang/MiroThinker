@@ -15,7 +15,7 @@ from pathlib import Path
 import re
 from threading import Lock
 import threading
-from time import monotonic
+from time import monotonic, sleep
 from typing import Any, Literal, cast
 from urllib.parse import urlparse, urlsplit, urlunsplit
 
@@ -85,6 +85,17 @@ from .knowledge_read import (
 )
 from .knowledge_read_isolated import _NAMED_COMPANY_PATENT_PATTERN
 from .llm_judgments import create_llm_judge
+from .turn_trace_context import TurnTraceReporter, current_turn_trace
+from .web_lane_resilience import (
+    RETRY_BACKOFF_SECONDS,
+    NullWebLaneStore,
+    WebLaneBreaker,
+    _WebLaneStore,
+    _utc_day,
+    classify_search_error,
+    quota_watermark,
+    view_cache_key,
+)
 
 
 # Pinned to knowledge_build_isolated._PROFESSOR_MISSING_FIELD_FALLBACK.  The
@@ -890,12 +901,21 @@ def _apply_web_subject_consistency(
     if len(kept) >= _WEB_SUBJECT_CONSISTENCY_FLOOR:
         # T4/T5 are the wrong-organization channels and drop out; T2/T3 are
         # same-organization background and stay, ordered after the anchor hits.
-        return tuple(unwrap(kept) + unwrap(related))
-    # Demotion first, filtering second: below the floor the demoted results
-    # backfill in tier order so obscure single-channel subjects keep evidence
-    # and the lane never empties into the unavailable branch.
-    pool = unwrap(related) + unwrap(suspect) + unwrap(missed)
-    return tuple(unwrap(kept) + pool[: _WEB_SUBJECT_CONSISTENCY_FLOOR - len(kept)])
+        filtered = tuple(unwrap(kept) + unwrap(related))
+    else:
+        # Demotion first, filtering second: below the floor the demoted results
+        # backfill in tier order so obscure single-channel subjects keep evidence
+        # and the lane never empties into the unavailable branch.
+        pool = unwrap(related) + unwrap(suspect) + unwrap(missed)
+        filtered = tuple(
+            unwrap(kept) + pool[: _WEB_SUBJECT_CONSISTENCY_FLOOR - len(kept)]
+        )
+    reporter = current_turn_trace()
+    if reporter is not None and len(filtered) < len(results):
+        reporter.record_gate_drop(
+            "web_subject_consistency", len(results) - len(filtered)
+        )
+    return filtered
 
 
 def _normalized_web_url(value: str) -> str:
@@ -958,6 +978,8 @@ class _DualWebLaneAdapter:
         page_fetcher: Callable[[str], str | None] | None = None,
         extra_view_queries: Callable[[str], tuple[str, ...]] | None = None,
         gap_judge: Any | None = None,
+        resilience_store: _WebLaneStore | None = None,
+        breaker: WebLaneBreaker | None = None,
     ) -> None:
         self._timeout_ms = timeout_ms
         self._max_snapshot_bytes = max_snapshot_bytes
@@ -969,6 +991,13 @@ class _DualWebLaneAdapter:
         self._page_fetch_timeout = max(2.0, provider_attempt_timeout)
         self._extra_view_queries = extra_view_queries
         self._gap_judge = gap_judge
+        self._breaker = breaker or WebLaneBreaker(clock=clock)
+        # Storage is opt-in (hermetic by default); the serving composition
+        # wires the shared store so production gets cache + quota accounting.
+        self._resilience_store = (
+            resilience_store if resilience_store is not None else NullWebLaneStore()
+        )
+        self._quota_watermark = quota_watermark()
         self._executor = ThreadPoolExecutor(
             # 4 plan query views x 2 providers run concurrently per Web lane;
             # a smaller pool would serialize later views past their deadline.
@@ -976,16 +1005,132 @@ class _DualWebLaneAdapter:
             thread_name_prefix="canonical-v2-web",
         )
 
-    @staticmethod
-    def _search_provider(provider: Any, query: str) -> list[dict[str, Any]]:
+    def keepwarm_allowed(self, provider_version: str) -> bool:
+        """Keepwarm must not burn quota past the watermark or into an open
+        breaker; user turns are unaffected (they always search)."""
+        if self._breaker.state(provider_version) != "closed":
+            return False
+        day = _utc_day(self._clock)
+        return (
+            self._resilience_store.quota_count(provider_version, day)
+            <= self._quota_watermark
+        )
+
+    def warm(self, provider_version: str, query: str = "深圳科技创新") -> None:
+        """One keepwarm search routed through resilience (best-effort)."""
         try:
-            payload = provider.search(query)
-        except Exception:  # noqa: BLE001 - each provider degrades independently
+            provider = (
+                self._bocha if provider_version == "bocha-v1" else self._serper
+            )
+            if not self.keepwarm_allowed(provider_version):
+                return
+            self._provider_search(
+                provider, query, provider_version, None, None
+            )
+        except Exception:  # noqa: BLE001 - keepwarm is best-effort
+            pass
+
+    def _provider_search(
+        self,
+        provider: Any,
+        query: str,
+        provider_version: str | None = None,
+        reporter: TurnTraceReporter | None = None,
+        error_flags: dict[str, bool] | None = None,
+    ) -> list[dict[str, Any]]:
+        """One provider search with cache read-through, single retry with
+        backoff (transport/timeout errors only), breaker gating, and quota
+        accounting. Runs on executor threads; the reporter reference is
+        captured and passed down by the submitting thread."""
+        if provider_version is None:
+            try:
+                payload = provider.search(query)
+            except Exception:  # noqa: BLE001 - each provider degrades independently
+                return []
+            organic = payload.get("organic", ()) if isinstance(payload, dict) else ()
+            if not isinstance(organic, list):
+                return []
+            return [item for item in organic if isinstance(item, dict)]
+
+        allowed, breaker_before = self._breaker.attempt_allowed(provider_version)
+        if not allowed:
+            if reporter is not None:
+                reporter.record_web_outcome(
+                    provider=provider_version,
+                    view=query,
+                    attempted=0,
+                    errored=0,
+                    timed_out=0,
+                    retried=0,
+                    cache_hit=0,
+                    breaker_state_before=breaker_before,
+                    breaker_state_after=breaker_before,
+                )
             return []
-        organic = payload.get("organic", ()) if isinstance(payload, dict) else ()
-        if not isinstance(organic, list):
-            return []
-        return [item for item in organic if isinstance(item, dict)]
+        day = _utc_day(self._clock)
+        cached = self._resilience_store.cache_get(
+            provider_version, view_cache_key(query), day
+        )
+        if cached is not None:
+            if reporter is not None:
+                reporter.record_web_outcome(
+                    provider=provider_version,
+                    view=query,
+                    attempted=0,
+                    errored=0,
+                    timed_out=0,
+                    retried=0,
+                    cache_hit=1,
+                    breaker_state_before=breaker_before,
+                    breaker_state_after=breaker_before,
+                )
+            return [dict(item) for item in cached]
+        self._resilience_store.quota_incr(provider_version, day)
+        results: list[dict[str, Any]] = []
+        errored = 0
+        retried = 0
+        reason: str | None = None
+
+        def _extract(payload: Any) -> list[dict[str, Any]]:
+            organic = payload.get("organic", ()) if isinstance(payload, dict) else ()
+            if not isinstance(organic, list):
+                return []
+            return [item for item in organic if isinstance(item, dict)]
+
+        try:
+            results = _extract(provider.search(query))
+        except Exception as exc:  # noqa: BLE001 - classified below
+            retryable, reason = classify_search_error(exc)
+            if retryable:
+                retried = 1
+                sleep(RETRY_BACKOFF_SECONDS)
+                try:
+                    results = _extract(provider.search(query))
+                except Exception as exc2:  # noqa: BLE001
+                    _, reason = classify_search_error(exc2)
+                    errored = 1
+            else:
+                errored = 1
+        breaker_after = self._breaker.record(provider_version, errored == 0, reason)
+        if errored and error_flags is not None:
+            error_flags[provider_version] = True
+        if not errored:
+            self._resilience_store.cache_put(
+                provider_version, view_cache_key(query), day, results
+            )
+        if reporter is not None:
+            reporter.record_web_outcome(
+                provider=provider_version,
+                view=query,
+                attempted=1,
+                errored=errored,
+                timed_out=0,
+                retried=retried,
+                cache_hit=0,
+                breaker_state_before=breaker_before,
+                breaker_state_after=breaker_after,
+            )
+        return results
 
     @staticmethod
     def _normalize_results(
@@ -1013,26 +1158,77 @@ class _DualWebLaneAdapter:
         return normalized
 
     def _merged_results(self, query: str) -> tuple[_NormalizedWebResult, ...]:
+        reporter = current_turn_trace()
+        error_flags: dict[str, bool] = {}
+        queries = {
+            "bocha-v1": query,
+            "serper-v1": _relaxed_serper_query(query),
+        }
         futures = {
-            "bocha-v1": self._executor.submit(
-                self._search_provider,
-                self._bocha,
-                query,
-            ),
-            "serper-v1": self._executor.submit(
-                self._search_provider,
-                self._serper,
-                _relaxed_serper_query(query),
-            ),
+            provider_version: self._executor.submit(
+                self._provider_search,
+                provider,
+                queries[provider_version],
+                provider_version,
+                reporter,
+                error_flags,
+            )
+            for provider_version, provider in (
+                ("bocha-v1", self._bocha),
+                ("serper-v1", self._serper),
+            )
         }
         timeout_seconds = self._timeout_ms / 1000
         provider_results: dict[str, list[dict[str, Any]]] = {}
+        timed_out: set[str] = set()
         for provider_version, future in futures.items():
             try:
-                provider_results[provider_version] = future.result(timeout=timeout_seconds)
+                provider_results[provider_version] = future.result(
+                    timeout=timeout_seconds
+                )
             except FutureTimeoutError:
                 provider_results[provider_version] = []
-        return self._normalize_and_order_results(provider_results=provider_results)
+                timed_out.add(provider_version)
+                self._breaker.record(provider_version, False, "timeout")
+                if reporter is not None:
+                    reporter.record_web_outcome(
+                        provider=provider_version,
+                        view=queries[provider_version],
+                        attempted=1,
+                        errored=0,
+                        timed_out=1,
+                        retried=0,
+                        cache_hit=0,
+                    )
+        merged = self._normalize_and_order_results(provider_results=provider_results)
+        self._report_web_degradation(
+            reporter=reporter,
+            providers=tuple(futures),
+            error_flags=error_flags,
+            timed_out=timed_out,
+            merged_count=len(merged),
+        )
+        return merged
+
+    @staticmethod
+    def _report_web_degradation(
+        *,
+        reporter: TurnTraceReporter | None,
+        providers: tuple[str, ...],
+        error_flags: dict[str, bool],
+        timed_out: set[str],
+        merged_count: int,
+    ) -> None:
+        """Channel-outage detection: every provider attempt this call errored
+        or timed out and the merged lane is empty — the web channel was
+        unavailable, which is NOT the same fact as "no results"."""
+        if reporter is None or not providers or merged_count > 0:
+            return
+        if all(
+            error_flags.get(provider, False) or provider in timed_out
+            for provider in providers
+        ):
+            reporter.set_degradation("web-lane-unavailable")
 
     def _normalize_and_order_results(
         self,
@@ -1122,20 +1318,32 @@ class _DualWebLaneAdapter:
     ) -> tuple[_NormalizedWebResult, ...]:
         if len(queries) <= 1:
             return self._merged_results(queries[0] if queries else "")
+        reporter = current_turn_trace()
         timeout_seconds = self._timeout_ms / 1000
+        error_flags: dict[str, bool] = {}
+        provider_queries: dict[tuple[int, str], str] = {}
         futures: dict[tuple[int, str], Any] = {}
         for index, query in enumerate(queries):
+            provider_queries[(index, "bocha-v1")] = query
             futures[(index, "bocha-v1")] = self._executor.submit(
-                self._search_provider,
+                self._provider_search,
                 self._bocha,
                 query,
+                "bocha-v1",
+                reporter,
+                error_flags,
             )
+            provider_queries[(index, "serper-v1")] = _relaxed_serper_query(query)
             futures[(index, "serper-v1")] = self._executor.submit(
-                self._search_provider,
+                self._provider_search,
                 self._serper,
-                _relaxed_serper_query(query),
+                provider_queries[(index, "serper-v1")],
+                "serper-v1",
+                reporter,
+                error_flags,
             )
         per_view: list[tuple[_NormalizedWebResult, ...]] = []
+        timed_out: set[str] = set()
         for index in range(len(queries)):
             provider_results: dict[str, list[dict[str, Any]]] = {}
             for provider_version in ("bocha-v1", "serper-v1"):
@@ -1145,15 +1353,39 @@ class _DualWebLaneAdapter:
                     ].result(timeout=timeout_seconds)
                 except FutureTimeoutError:
                     provider_results[provider_version] = []
+                    timed_out.add(provider_version)
+                    self._breaker.record(provider_version, False, "timeout")
+                    if reporter is not None:
+                        reporter.record_web_outcome(
+                            provider=provider_version,
+                            view=provider_queries[(index, provider_version)],
+                            attempted=1,
+                            errored=0,
+                            timed_out=1,
+                            retried=0,
+                            cache_hit=0,
+                        )
             per_view.append(
                 self._normalize_and_order_results(provider_results=provider_results)
             )
-        discovery_indexes = tuple(
-            index
-            for index, query in enumerate(queries[1:], start=1)
-            if _is_brand_discovery_view(query)
+        merged = _discovery_front_merge(
+            per_view,
+            tuple(
+                index
+                for index, query in enumerate(queries[1:], start=1)
+                if _is_brand_discovery_view(query)
+            ),
         )
-        return _discovery_front_merge(per_view, discovery_indexes)
+        self._report_web_degradation(
+            reporter=reporter,
+            providers=tuple(
+                provider for _, provider in sorted(provider_queries)
+            ),
+            error_flags=error_flags,
+            timed_out=timed_out,
+            merged_count=len(merged),
+        )
+        return merged
 
     def _enrich_with_page_text(
         self,
@@ -1205,16 +1437,23 @@ class _DualWebLaneAdapter:
             request.query_text,
         ).strip()
         question_frame = _question_frame(request.original_query)
+        merged = self._merged_results_for_views(
+            self._request_view_queries(request, query_text)
+        )
+        gated = _apply_web_subject_consistency(results=merged, request=request)
         organic = _prioritize_relation_evidence(
-            results=_apply_web_subject_consistency(
-                results=self._merged_results_for_views(
-                    self._request_view_queries(request, query_text)
-                ),
-                request=request,
-            ),
+            results=gated,
             frame=question_frame,
             request=request,
         )
+        reporter = current_turn_trace()
+        if reporter is not None:
+            reporter.record_lane_counts(
+                "web",
+                in_=len(merged),
+                retained=len(gated),
+                filtered=len(merged) - len(gated),
+            )
         # List-style questions get deeper page fetches: company/theme mentions
         # that bind recall (开普勒/九号 in brand listicles) sit below the
         # snippet cut, so two fetches miss them.
@@ -4195,11 +4434,18 @@ class _ProseTextNormalizer:
         self._line_prefix_truncated = False
         self._model_text_started = False
         self._started = False
+        self._streamed_chars = 0
+
+    @property
+    def streamed_chars(self) -> int:
+        """Total model-text characters fed so far (truncation policy input)."""
+        return self._streamed_chars
 
     def _emit(self, text: str) -> None:
         if not text:
             return
         self._parts.append(text)
+        self._streamed_chars += len(text)
         if self._on_chunk is not None:
             self._on_chunk(text)
 
@@ -4359,9 +4605,27 @@ def _anchor_correction_name(result: Any, active_anchor: Any) -> str | None:
     Otherwise mirrors the ``_matched_bound_entity`` skip for web-handle
     anchors: their display names come from unattributed Web text, so an
     answer cannot be judged against them. Clarification-only turns are never
-    corrected.
+    corrected. Enumeration answers are never corrected either: a list has no
+    single subject, and refocusing a list onto one member (or onto a lone
+    look-alike handle) destroys the answer (G7 fault form).
     """
     if str(getattr(result, "response_mode", "answer") or "answer") != "answer":
+        return None
+    coverage = getattr(result, "enumeration_coverage", None)
+    if coverage is not None:
+        return None
+    # G7 final fault: an enumeration answer is about MANY subjects; the
+    # selection phase can bind one enumerated member as the receipt's soft
+    # subject, and a single-subject correction then rewrites the whole list
+    # into that member's profile. Multi-subject answers are never corrected.
+    distinct_subjects = {
+        str(subject)
+        for subject in (
+            getattr(claim, "subject_id", None) for claim in getattr(result, "claims", ()) or ()
+        )
+        if subject
+    }
+    if len(distinct_subjects) >= 3:
         return None
     context = getattr(result, "context_receipt", None)
     soft_subject = getattr(context, "soft_context_subject", None)
@@ -4392,7 +4656,9 @@ def _anchor_correction_name(result: Any, active_anchor: Any) -> str | None:
     return display_name
 
 
-_ANSWER_LEAD_SENTENCE_RE = re.compile(r"[。！？!?]")
+# First-sentence boundary aligned with the replay acceptance line (G1):
+# colon-terminated list headers and line breaks end the opening sentence too.
+_ANSWER_LEAD_SENTENCE_RE = re.compile(r"[。！？!?：:\n]")
 
 
 def _answer_lead_mentions_stem(answer_text: str, org_stem: str) -> bool:
@@ -4414,15 +4680,22 @@ def _answer_mentions_anchor(
         # A lookalike-organized answer can still name-drop the anchor once;
         # require the anchor to lead the answer or recur in it.
         return _answer_lead_mentions_stem(answer_text, stem) or searchable.count(stem) >= 2
+    stem = _org_name_stem(anchor_name)
+    # Subject-led answers lead with the anchor or recur to it; a single
+    # mid-text name-drop (city/industry-framed drift, G1 T3 form) is the
+    # drift signature and must trigger the correction retry.
+    lead_or_recur = _answer_lead_mentions_stem(
+        answer_text, stem
+    ) or searchable.count(stem) >= 2 if stem else False
     for form in _web_identity_forms(anchor_name):
         # The Web-lane marker rule for short forms targets noisy search
         # snippets; on the answer side a bare 3+ char name (丁文伯是…) is a
         # legitimate anchor mention, so plain substring wins from len 3 up.
         if len(form) >= 3:
             if form in searchable:
-                return True
+                return lead_or_recur
         elif _web_identity_text_matches(form, searchable):
-            return True
+            return lead_or_recur
     return False
 
 
@@ -4515,6 +4788,30 @@ def _reject_truncated_prose_finish_reason(choice: Any) -> None:
         raise ValueError(
             f"LLM prose response rejected provider finish_reason={finish_reason}"
         )
+
+
+# Streaming UX (Phase 3.6, G5 fault): a length-capped finish on prose that
+# already streamed substantially must NOT discard the turn — the client has
+# the text. Ship the partial (truncation mid-list is benign for enumeration
+# answers; the prompt's coverage statement governs completeness); keep the
+# strict rejection for short/empty renderings where truncation likely cut
+# mid-sentence near the start.
+_STREAMED_PARTIAL_MIN_CHARS = 800
+
+
+def _accept_streamed_truncation(
+    choice: Any, streamed_chars: int
+) -> bool:
+    finish_reason = getattr(choice, "finish_reason", None)
+    if finish_reason != "length":
+        return False
+    if streamed_chars < _STREAMED_PARTIAL_MIN_CHARS:
+        return False
+    logger.warning(
+        "prose finish_reason=length after %d streamed chars — shipping partial",
+        streamed_chars,
+    )
+    return True
 
 
 class _OpenAIProseRenderer:
@@ -4775,14 +5072,29 @@ class _OpenAIProseRenderer:
                         "② 所问的具体属性无直接依据时，充分利用该主体相关的其他可确认信息作答"
                         "（如主体概况、相关人物、公开背景、行业情况），最后说明该具体属性公开"
                         "信息未披露即可；不要生硬套模板，也不要为凑内容编造；"
-                        "③ 主体本身无任何公开信息时，先说明公开信息中未找到该主体，"
+                        "②b 当输入中只有间接/软性网络证据（营销页、媒体报道、榜单提及）时，"
+                        "以从容的语气正面呈现它并带上归因标注（如“据公开报道”“公开资料显示”），"
+                        "数字保持来源原有的精度（来源说“数百件”就写“数百件”，不得自行精确化），"
+                        "随后补充主体已确认的实质内容，并以能力口吻引导深化"
+                        "（如“您更关心哪条产品线的细节？我可以再深入检索”）——"
+                        "不得以“您的问题不够具体”归因用户，也不得推荐外部数据库；"
+                        "③ 主体本身无任何公开信息时，先说明当前检索与本地库尚未覆盖到该主体"
+                        "（这是覆盖范围所限，不得表述成“该主体不存在/没有相关信息”的世界性断言），"
                         "再给出问题主题相关的概括性背景（行业常见情况、同类典型做法）"
                         "直接作答；不得反问用户，不得要求用户补充信息；"
                         "④ 概括性内容基于公开常识，不得编造具体公司、人名、数字、日期等事实。"
+                        "不得以“建议前往国家知识产权局/PatSnap/Incopat 等外部数据库查询”"
+                        "作为答案落点或结尾——某类信息（如专利）未覆盖时，如实说明"
+                        "“本地库暂未建立该关联（数据覆盖缺口）”即可，继续给出已确认的内容；"
+                        "当输入信息不足以支撑网络检索结论且答案需要降级说明时，"
+                        "用“网络检索暂不可用/覆盖暂不完整”这类系统状态表述，"
+                        "严禁写成“未找到该机构”这类否定性事实断言。"
                         "对依据不足或未入选的主体不要逐条解释、不要逐一列名。"
-                        "列表与集合类问题必须求全：凡是有直接依据确认的主体都要列出，按相关度"
-                        "从高到低排序，宁多勿漏——不得因为篇幅或知名度只挑少数几家；每个主体"
-                        "用一两句给出其关键事实即可，确需取舍时按 enumeration_coverage 如实交代。"
+                        "列表与集合类问题按条目预算回答：默认列出不超过 12 个主体，按证据"
+                        "充分度与行业代表性从高到低排序（领域龙头必须包含），每个主体用一两句"
+                        "给出关键事实；全集可能很大时（如某地某领域的企业）以代表性清单+覆盖"
+                        "声明为默认形态（“以上为该领域代表性企业”），不得试图穷尽；只有明确的"
+                        "小有限全集（如“上述几家中…”）才要求列全。"
                         "对“上述/这些”集合问题，只回答有直接依据的主体，其余主体不列名、不解释，"
                         "用覆盖度一句带过。"
                         "对“方法/路线/方式/差异/原理”类概念问题：按行业常见分类分条组织答案，"
@@ -4915,9 +5227,9 @@ class _OpenAIProseRenderer:
         response = self._client.chat.completions.create(
             model=self._model,
             temperature=0,
-            # 3000 tokens lifts the old 1200 ceiling that silently truncated
-            # long answers; streaming and sync synthesis share the same bound.
-            max_tokens=3000,
+            # Safety net only (enumeration entry budget governs length);
+            # sized so legitimate long lists never hit it.
+            max_tokens=6000,
             messages=request_messages,
             extra_body=self._extra_body,
         )
@@ -5026,7 +5338,9 @@ class _OpenAIProseRenderer:
         completion = self._client.chat.completions.create(
             model=self._model,
             temperature=0,
-            max_tokens=3000,
+            # Safety net only (enumeration entry budget governs length); sized
+            # so legitimate long lists never hit it.
+            max_tokens=6000,
             messages=messages,
             extra_body=self._extra_body,
             stream=True,
@@ -5042,7 +5356,10 @@ class _OpenAIProseRenderer:
             if not choices:
                 continue
             choice = choices[0]
-            _reject_truncated_prose_finish_reason(choice)
+            if not _accept_streamed_truncation(
+                choice, normalizer.streamed_chars
+            ):
+                _reject_truncated_prose_finish_reason(choice)
             delta = getattr(choice, "delta", None)
             text = None if delta is None else getattr(delta, "content", None)
             if not isinstance(text, str) or not text:
@@ -5608,9 +5925,8 @@ def load_recorded_serving_inputs(
         page_fetcher=page_fetcher,
         extra_view_queries=query_view_store.views_for,
         gap_judge=create_llm_judge(),
+        resilience_store=_WebLaneStore(),
     )
-    keepwarm_bocha = BochaSearchProvider(timeout=provider_attempt_timeout)
-    keepwarm_serper = WebSearchProvider(timeout=provider_attempt_timeout)
     # The correction retry fetches reference pages through the same tiered
     # fetcher the web lane uses — one shared object, never a second fetcher.
     environment_renderer = _EnvironmentProseRenderer(page_fetcher=page_fetcher)
@@ -5622,10 +5938,12 @@ def load_recorded_serving_inputs(
     )
 
     def warm_bocha() -> None:
-        keepwarm_bocha.search("深圳科技创新")
+        # Routed through the web lane's resilience: quota watermark and the
+        # per-provider breaker both gate keepwarm traffic.
+        web_search.warm("bocha-v1")
 
     def warm_serper() -> None:
-        keepwarm_serper.search("深圳科技创新")
+        web_search.warm("serper-v1")
 
     def warm_embedding() -> None:
         embedding_adapter.embed_batch(

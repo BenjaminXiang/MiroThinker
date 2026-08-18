@@ -65,7 +65,6 @@ class BochaSearchProvider:
         self.timeout = timeout
         self.session = session or requests.Session()
         self.curl_runner = curl_runner or subprocess.run
-        self._disabled_reason: str | None = None
         if hasattr(self.session, "trust_env"):
             self.session.trust_env = False  # guard against proxy env pollution
 
@@ -103,13 +102,17 @@ class BochaSearchProvider:
         return {"organic": organic}
 
     def search(self, query: str, *, gl: str | None = None, hl: str | None = None) -> dict[str, Any]:
-        """Search via Bocha. Best-effort: on failure returns {organic: []} (consumers fall
-        through to local-only results — the add-web-augment graceful-degradation contract)."""
-        if self._disabled_reason:
-            return {"organic": []}
+        """Search via Bocha.
+
+        Error contract (canonical-v2 web-lane resilience): transport failures,
+        HTTP errors, and API-level error payloads RAISE so the dual-lane
+        adapter can classify (retry / breaker / trace); callers needing
+        fail-open semantics catch and degrade themselves (composite lane,
+        legacy augment). A successful search with zero organic results still
+        returns ``{"organic": []}`` — that is a fact, not a failure.
+        """
         if not self.api_key:
-            self._disabled_reason = "missing bocha api key"
-            return {"organic": []}
+            raise RuntimeError("Bocha API error: missing api key")
         try:
             response = self.session.post(
                 self.endpoint,
@@ -119,9 +122,14 @@ class BochaSearchProvider:
             )
             response.raise_for_status()
             payload = response.json()
-        except Exception:
-            # Graceful degradation: never propagate to the caller (add-web-augment contract).
-            return {"organic": []}
-        if str(payload.get("code", "")).strip() not in ("200", ""):
-            return {"organic": []}
+        except Exception as exc:
+            raise RuntimeError(f"Bocha transport error: {exc}") from exc
+        code = str(payload.get("code", "")).strip()
+        if code not in ("200", ""):
+            message = str(payload.get("msg", "")).strip()
+            raise RuntimeError(
+                f"Bocha API error ({code}): {message}"
+                if message
+                else f"Bocha API error ({code})"
+            )
         return self._normalize(payload)

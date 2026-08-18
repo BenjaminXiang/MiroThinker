@@ -183,6 +183,18 @@ def create_canonical_v2_candidate_app(
     """Install one exact aggregate and its two predecessor dependency overrides."""
 
     exact_runtime = require_canonical_v2_consumer_runtime(runtime)
+    # Single choke point for every serving composition (admin compose AND the
+    # pack-mode mirror in the candidate runner): attach the turn-trace journal
+    # here so every path serves traced turns. Fail-open by construction.
+    candidate_chat_adapter = getattr(exact_runtime, "chat_adapter", None)
+    candidate_attach = getattr(candidate_chat_adapter, "attach_turn_trace", None)
+    if (
+        callable(candidate_attach)
+        and getattr(candidate_chat_adapter, "_turn_trace", None) is None
+    ):
+        from backend.services.canonical_v2_turn_trace import TurnTraceJournalStore
+
+        candidate_attach(TurnTraceJournalStore())
     candidate = _create_canonical_v2_route_shell()
     candidate.state.canonical_v2_consumer_runtime = exact_runtime
     if idle_keepwarm_cycle is not None:

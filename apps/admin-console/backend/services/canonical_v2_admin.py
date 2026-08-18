@@ -12,6 +12,7 @@ from typing import Any, Literal, cast
 from pydantic import ValidationError
 
 from backend.services.canonical_v2_chat import CanonicalV2ChatAdapter
+from backend.services.canonical_v2_turn_trace import TurnTraceJournalStore
 from src.data_agents.canonical_v2.candidate_projection import (
     CandidateProjectionResult,
     compose_candidate_projections,
@@ -1076,6 +1077,9 @@ def compose_canonical_v2_consumer_runtime(
         answer_factory=per_turn_answer_factory,
         answer_session_fork=per_turn_answer_fork,
     )
+    # Turn-trace journal (fail-open, env-configurable root TURN_TRACE_DIR);
+    # attached post-construction to keep the frozen S11A constructor boundary.
+    chat_adapter.attach_turn_trace(TurnTraceJournalStore())
     admin_runtime = CanonicalV2AdminRuntime(
         release_id=bundle.release_id,
         manifest=bundle.manifest,

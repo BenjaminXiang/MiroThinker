@@ -495,13 +495,15 @@ def test_public_chat_response_softens_short_refusal_with_anchor(
         _refusal_outcome(service, answer_text=refusal_text)
     )
 
-    assert response.answer_text == (
-        f"关于{_REFUSAL_ANCHOR_NAME}的公开信息目前较为有限，"
-        "暂未能确认您问的具体内容；可以换个角度继续提问。"
+    # Never-refuse contract (enforce-never-refuse-contracts): subject-first,
+    # confirmed-identity statement, named coverage gap, actionable next step.
+    assert response.answer_text.startswith(
+        f"已确认您关注的是{_REFUSAL_ANCHOR_NAME}。"
     )
+    assert "暂未能确认您问的具体内容" not in response.answer_text
+    assert "换个角度" not in response.answer_text
     assert refusal_text not in response.answer_text
     assert "请提供" not in response.answer_text
-    assert "请补充" not in response.answer_text
 
 
 def test_public_chat_response_softens_short_refusal_without_anchor() -> None:
@@ -516,9 +518,10 @@ def test_public_chat_response_softens_short_refusal_without_anchor() -> None:
         )
     )
 
-    assert response.answer_text == (
-        "目前公开信息较为有限，暂未能确认您问的具体内容；可以换个角度继续提问。"
-    )
+    # No anchor: still contract-formed — actionable, no brush-off refusal.
+    assert response.answer_text.startswith("已收到您的问题。")
+    assert "暂未能确认您问的具体内容" not in response.answer_text
+    assert "换个角度" not in response.answer_text
     assert "暂无可" not in response.answer_text
 
 
@@ -1322,7 +1325,10 @@ def test_soft_subject_name_prefers_the_query_search_view_subject() -> None:
         )
         == "优必选"
     )
-    # Garbage guards: question words and whole-query echoes never bind.
+    # Garbage guards: question words never bind; whole-query echoes are only
+    # rejected for QUESTION shapes — a bare entity-name query IS its own
+    # subject (Phase 3.1, P3 relaxation: bare-name openings must establish
+    # the soft subject instead of starving the follow-up into clarification).
     assert (
         service._soft_subject_name(
             query="深圳有哪些机器人公司",
@@ -1335,7 +1341,7 @@ def test_soft_subject_name_prefers_the_query_search_view_subject() -> None:
             query="优必选",
             evidence_set=evidence_set(),
         )
-        is None
+        == "优必选"
     )
 
 

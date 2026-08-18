@@ -23,7 +23,15 @@ from backend.api.chat_contracts import (
     ClarificationPayload,
     TargetDomain,
 )
+from backend.services.canonical_v2_turn_trace import (
+    TurnTraceCollector,
+    TurnTraceJournalStore,
+)
 from src.data_agents.canonical_v2.contracts import ContractModel
+from src.data_agents.canonical_v2.turn_trace_context import (
+    reset_turn_trace_reporter,
+    set_turn_trace_reporter,
+)
 from src.data_agents.canonical_v2.followup_referents import (
     _search_view,
     has_anaphoric_subject_reference,
@@ -250,13 +258,70 @@ _REFUSAL_ANSWER_MARKERS = (
 _REFUSAL_ANSWER_MAX_CHARS = 120
 
 
-def _soft_fallback_answer_text(anchor_name: str | None) -> str:
+# Never-refuse contract (Phase 2, enforce-never-refuse-contracts): the
+# fallback names the subject, states what is confirmed, names the coverage
+# gap, and offers an actionable next step — never a subject-less brush-off.
+_DOMAIN_GAP_WORDING = {
+    "patent": "专利关联",
+    "paper": "论文收录",
+    "company": "企业明细",
+    "professor": "教授画像",
+}
+
+
+def _web_lane_state(traces: Any) -> str:
+    """Channel-state for fallback wording: unavailable / ran / not_run."""
+    web_traces = [
+        trace
+        for trace in traces
+        if str(getattr(trace, "lane", "") or "") == "web"
+    ]
+    if not web_traces:
+        return "not_run"
+    if _web_lane_unavailable_from_traces(traces):
+        return "unavailable"
+    return "ran"
+
+
+def _soft_fallback_answer_text(
+    anchor_name: str | None,
+    *,
+    domain: str | None = None,
+    web_state: str = "not_run",
+) -> str:
+    """Never-refuse fallback, channel-aware (user feedback 2026-08-18):
+    the wording must reflect BOTH knowledge channels honestly — web ran and
+    missed, web is down, or web never ran — never present the system as
+    local-only."""
+    gap = _DOMAIN_GAP_WORDING.get(domain or "", "该方向的公开资料")
     if anchor_name:
+        if web_state == "ran":
+            return (
+                f"已确认您关注的是{anchor_name}。"
+                f"本地知识库与网络检索的结果中，暂未检索到与{gap}直接相关的"
+                "可靠信息——这是当前检索覆盖所限，不代表该信息不存在；"
+                "您可以换个更具体的问法（如具体产品、年份或方向），"
+                "我会基于已确认的信息继续检索。"
+            )
+        if web_state == "unavailable":
+            return (
+                f"已确认您关注的是{anchor_name}。"
+                f"网络检索暂不可用，本地知识库对{gap}的覆盖也暂未完整，"
+                "因此这部分暂无法给出可靠的具体内容；"
+                "网络检索恢复后可再次提问，我会尝试补全这部分。"
+            )
         return (
-            f"关于{anchor_name}的公开信息目前较为有限，"
-            "暂未能确认您问的具体内容；可以换个角度继续提问。"
+            f"已确认您关注的是{anchor_name}。"
+            f"当前本地知识库与网络检索对{gap}的覆盖暂未完整，"
+            "因此这部分暂无法给出可靠的具体内容；"
+            "您可以补充想了解的具体方面（如业务、产品、论文或专利），"
+            "我会基于已确认的信息继续检索。"
         )
-    return "目前公开信息较为有限，暂未能确认您问的具体内容；可以换个角度继续提问。"
+    return (
+        "已收到您的问题。当前本地知识库与网络检索的覆盖暂未完整，"
+        "暂无法给出可靠的具体内容；请补充您关注的具体机构、人物或主题名称，"
+        "我会继续检索。"
+    )
 
 
 def _rewrite_refusal_answer_text(
@@ -264,6 +329,7 @@ def _rewrite_refusal_answer_text(
     *,
     response_mode: str,
     anchor_name: str | None,
+    web_state: str = "not_run",
 ) -> str:
     """Last-resort guard: a bare refusal never ships as the chat answer."""
     if response_mode != "answer":
@@ -273,7 +339,100 @@ def _rewrite_refusal_answer_text(
         return answer_text
     if not any(marker in stripped for marker in _REFUSAL_ANSWER_MARKERS):
         return answer_text
-    return _soft_fallback_answer_text(anchor_name)
+    return _soft_fallback_answer_text(
+        anchor_name, web_state=web_state
+    )
+
+
+# External-database deflection guard: recommending 国知局/PatSnap/Incopat as
+# the substance of an answer is banned when the turn produced no patent
+# evidence — a coverage gap must be stated as a data fact, not dodged.
+_DEFLECTION_MARKERS = (
+    "国家知识产权局",
+    "国知局",
+    "PatSnap".casefold(),
+    "Incopat".casefold(),
+    "Soopat".casefold(),
+    "专利数据库",
+    "专利检索平台",
+)
+
+
+def _rewrite_deflection_answer_text(
+    answer_text: str,
+    *,
+    patent_evidence_count: int,
+    anchor_name: str | None,
+) -> str:
+    if patent_evidence_count > 0:
+        return answer_text
+    folded = answer_text.casefold()
+    if not any(marker.casefold() in folded for marker in _DEFLECTION_MARKERS):
+        return answer_text
+    name = anchor_name or "该主体"
+    return (
+        f"关于{name}：本地知识库中暂未建立其专利关联，"
+        "这是当前数据覆盖的缺口，并不代表其没有专利；"
+        "上面已给出可确认的主体信息。"
+        "网络检索恢复后会尝试补全专利部分，也可以稍后再次提问。"
+    )
+
+
+# Lane-failure semantics: a web-lane outage is a system state, not a fact
+# about the world. Negative world claims over an outage turn are rewritten.
+_NEGATIVE_CLAIM_MARKERS = (
+    "未找到",
+    "没有找到",
+    "无法找到",
+    "暂无公开",
+    "无相关信息",
+)
+
+
+def _rewrite_lane_outage_answer_text(
+    answer_text: str,
+    *,
+    anchor_name: str | None,
+) -> str:
+    if not any(marker in answer_text for marker in _NEGATIVE_CLAIM_MARKERS):
+        return answer_text
+    name = anchor_name or "您关注的主体"
+    return (
+        f"网络检索暂不可用，本次未能为{name}取到网络侧的最新公开资料；"
+        "以上为当前已可确认的本地与缓存信息，"
+        "网络检索恢复后可再次提问获取补充内容。"
+    )
+
+
+def _web_lane_unavailable_from_traces(traces: Any) -> bool:
+    """True when web-lane traces show provider failures with zero served
+    results — the trace-visible condition behind the outage wording."""
+    web_traces = [
+        trace
+        for trace in traces
+        if str(getattr(trace, "lane", "") or "") == "web"
+    ]
+    if not web_traces:
+        return False
+    served = any(
+        str(getattr(trace, "status", "succeeded") or "succeeded") == "succeeded"
+        and int(getattr(trace, "candidate_count", 0) or 0) > 0
+        for trace in web_traces
+    )
+    if served:
+        return False
+    return any(
+        str(getattr(trace, "status", "") or "") != "succeeded"
+        for trace in web_traces
+    )
+
+
+def _patent_evidence_count(evidence_set: Any) -> int:
+    return sum(
+        1
+        for item in getattr(evidence_set, "items", ()) or ()
+        if str(getattr(item, "domain", "") or "") == "patent"
+    )
 
 
 def _sanitize_public_response(response: ChatResponse) -> ChatResponse:
@@ -373,6 +532,30 @@ def _validated_model(value: Any, model_type: type[Any]) -> Any:
 
 def _handle_id(handle: CanonicalEntityHandle | WebEntityHandle) -> str:
     return handle.canonical_id if handle.kind == "canonical" else handle.handle_id
+
+
+_EXPANSION_REQUEST_RE = re.compile(
+    r"(还有|再?有哪些?|有没有)(类似|像|同类|相关|差不多)"
+)
+_EXPANSION_NOUN_RE = re.compile(r"(公司|企业|机构|单位|学校|团队|厂商|产品|平台)")
+
+
+def _expansion_subject_rewrite(query: str, *, subject_name: str | None) -> str | None:
+    """Expansion-family turns must search ANCHORED to the session subject
+    (P6/G5): the raw expansion text alone produces subject-free views
+    (类似公司/竞品分析) and free vector retrieval answers about an arbitrary
+    entity. The planning query names the subject; the answer still enumerates
+    PEERS (the query says 与X类似), so this anchors the search without
+    narrowing the answer onto the subject."""
+    if not subject_name:
+        return None
+    if _subject_names_overlap(query, subject_name):
+        return None
+    if not _EXPANSION_REQUEST_RE.search(query):
+        return None
+    noun_match = _EXPANSION_NOUN_RE.search(query)
+    noun = noun_match.group(1) if noun_match else "公司"
+    return f"与{subject_name}类似的{noun}还有哪些"
 
 
 def _enumeration_context(
@@ -859,11 +1042,35 @@ _SOFT_SUBJECT_QUESTION_MARKERS = ("吗", "呢", "哪些", "什么")
 _SOFT_SUBJECT_HEADLINE_VERB_SUFFIXES = ("揭牌", "挂牌", "成立", "发布", "签约")
 
 
+_BARE_NAME_REFERENT_MARKERS = (
+    "他", "她", "它", "该", "这家", "此", "哪些", "什么", "怎么", "如何",
+    "吗", "呢", "还", "又", "介绍", "一下", "请问", "查", "找",
+)
+
+
+def _is_bare_entity_name_query(query: str) -> bool:
+    """A query that IS an entity name (P3 relaxation): the anti-echo rule
+    exists to reject candidates that parrot a QUESTION; an entity-shaped
+    query naming its own subject is the strongest soft subject there is."""
+    text = query.strip()
+    if not text or len(text) > _SOFT_SUBJECT_MAX_LENGTH:
+        return False
+    if any(marker in text for marker in _BARE_NAME_REFERENT_MARKERS):
+        return False
+    if is_headline_shaped_name(text):
+        return False
+    # Entity shape: a CJK run (with optional parenthetical qualifier), no
+    # sentence punctuation.
+    return bool(
+        re.fullmatch(r"[\u4e00-\u9fffA-Za-z0-9·]+(（[^）]*）)?", text)
+    )
+
+
 def _soft_subject_candidate_ok(candidate: str, *, query: str) -> bool:
     """Base guards every soft-anchor candidate must pass."""
     if not candidate or len(candidate) > _SOFT_SUBJECT_MAX_LENGTH:
         return False
-    if candidate == query.strip():
+    if candidate == query.strip() and not _is_bare_entity_name_query(query):
         return False
     return not any(marker in candidate for marker in _SOFT_SUBJECT_QUESTION_MARKERS)
 
@@ -886,8 +1093,12 @@ def _soft_subject_name(
     ``evidence_set`` is optional: at the injection point no resolved evidence
     exists yet, so the derivation runs query-first only and the web-handle
     fallback stays unreachable without it. The commit path keeps passing the
-    resolved evidence set, so its behavior is unchanged.
+    resolved evidence set, so its behavior is unchanged. Enumeration queries
+    never yield a soft subject: a list has no single subject, and a lone
+    web handle from list results (G7: 深圳国创) would poison the next turn.
     """
+    if any(marker in query for marker in _ENUMERATION_MARKERS):
+        return None
     extracted = _search_view(query).strip()
     if _soft_subject_candidate_ok(extracted, query=query):
         return extracted
@@ -904,6 +1115,8 @@ def _soft_subject_name(
     if not _soft_subject_candidate_ok(name, query=query):
         return None
     if "、" in name or name.endswith(_SOFT_SUBJECT_HEADLINE_VERB_SUFFIXES):
+        return None
+    if is_headline_shaped_name(name):
         return None
     return name
 
@@ -945,6 +1158,38 @@ def _subject_names_overlap(anchor_name: str, subject: str) -> bool:
     return best >= 3
 
 
+_HEADLINE_SOURCE_SUFFIX_RE = re.compile(r"\s[-—_|｜~]\s?[^-—_|｜]{2,14}$")
+_HEADLINE_EVENT_VERB_RE = re.compile(
+    r"(打造|推进|揭牌|正式成立|加快建设|深化合作|落地|签署|发布|合作共建|达成合作|新添|再添)"
+)
+_ORG_NAME_SUFFIX_RE = re.compile(
+    r"(公司|银行|大学|学院|研究院|研究所|研究中心|中心|集团|医院|基金会|协会|学会|"
+    r"实验室|事务所|管理局|委员会|办事处)$"
+)
+_PAREN_QUALIFIER_RE = re.compile(r"（[^）]*）|\([^)]*\)")
+
+
+def is_headline_shaped_name(name: str | None) -> bool:
+    """Headline-shaped names must never become session anchors: an article
+    title is a text ABOUT the subject, not the subject. Three narrow signals
+    (source suffix / event verb / sentence scale), guarded by an org-name
+    suffix whitelist so real entity names (建设银行、推进中心) never trip."""
+    text = (name or "").strip()
+    if not text:
+        return False
+    core = _PAREN_QUALIFIER_RE.sub("", text).strip()
+    if core and _ORG_NAME_SUFFIX_RE.search(core):
+        return False
+    if _HEADLINE_SOURCE_SUFFIX_RE.search(text):
+        return True
+    if _HEADLINE_EVENT_VERB_RE.search(text):
+        return True
+    cjk_count = len(re.findall(r"[\u4e00-\u9fff]", text))
+    if cjk_count > 24 and any(marker in text for marker in ("的", "了", "将")):
+        return True
+    return False
+
+
 def _sanitize_soft_turn_anchor(
     receipt: ContextReceipt | None,
     *,
@@ -971,6 +1216,17 @@ def _sanitize_soft_turn_anchor(
         return receipt
     anchor = receipt.active_anchor
     if anchor.kind != "canonical":
+        # Web handles were previously always kept — but a web handle whose
+        # display name is an ARTICLE TITLE (G1: 「河套…- 香港中联办」) poisons
+        # the session exactly like a mismatched canonical capture. Headline
+        # guard (Phase 3.4): drop it; the soft subject carries the session.
+        if is_headline_shaped_name(anchor.display_name):
+            _logger.info(
+                "soft-turn headline anchor dropped: anchor=%r subject=%r",
+                anchor.display_name,
+                soft_context_subject,
+            )
+            return receipt.model_copy(update={"active_anchor": None})
         return receipt
     if _subject_names_overlap(anchor.display_name, soft_context_subject):
         return receipt
@@ -1038,9 +1294,17 @@ class CanonicalV2ChatAdapter:
         self._knowledge_read = knowledge_read
         self._answer_factory = answer_factory
         self._answer_session_fork = answer_session_fork
+        # The S11A constructor boundary is frozen (params are signature-checked
+        # by the http-adapter contract tests); the turn-trace journal is
+        # attached post-construction instead.
+        self._turn_trace: TurnTraceJournalStore | None = None
         self._sessions: dict[str, _CommittedSession] = {}
         self._session_locks: dict[str, RLock] = {}
         self._lock = RLock()
+
+    def attach_turn_trace(self, store: TurnTraceJournalStore) -> None:
+        """Attach the turn-trace journal; tracing is a no-op until attached."""
+        self._turn_trace = store
 
     def get_feedback_checkpoint(self, session_id: str) -> ChatFeedbackCheckpoint | None:
         with self._session_lock(session_id):
@@ -1061,15 +1325,23 @@ class CanonicalV2ChatAdapter:
         as_of: datetime,
     ) -> ChatResponse:
         turn_gate = _TurnCommitGate()
+        trace: list[TurnTraceCollector] = []
         with self._session_lock(session_id):
-            return self._answer_locked(
-                query=query,
-                session_id=session_id,
-                option_id=option_id,
-                as_of=as_of,
-                progress=None,
-                turn_gate=turn_gate,
-            )
+            try:
+                return self._answer_locked(
+                    query=query,
+                    session_id=session_id,
+                    option_id=option_id,
+                    as_of=as_of,
+                    progress=None,
+                    turn_gate=turn_gate,
+                    trace_sink=trace.append,
+                )
+            except Exception:
+                self._trace_turn_error(trace)
+                raise
+            finally:
+                self._unbind_turn_trace(trace)
 
     def answer_stream(
         self,
@@ -1087,15 +1359,103 @@ class CanonicalV2ChatAdapter:
         exact; per-call state is never shared on the adapter instance.
         """
         active_gate = turn_gate if turn_gate is not None else _TurnCommitGate()
+        trace: list[TurnTraceCollector] = []
         with self._session_lock(session_id):
-            return self._answer_locked(
-                query=query,
-                session_id=session_id,
-                option_id=option_id,
-                as_of=as_of,
-                progress=progress,
-                turn_gate=active_gate,
+            try:
+                return self._answer_locked(
+                    query=query,
+                    session_id=session_id,
+                    option_id=option_id,
+                    as_of=as_of,
+                    progress=progress,
+                    turn_gate=active_gate,
+                    trace_sink=trace.append,
+                )
+            except Exception:
+                self._trace_turn_error(trace)
+                raise
+            finally:
+                self._unbind_turn_trace(trace)
+
+    def _unbind_turn_trace(self, collectors: list[TurnTraceCollector]) -> None:
+        if not collectors:
+            return
+        token = getattr(collectors[0], "context_token", None)
+        if token is not None:
+            reset_turn_trace_reporter(token)
+
+    def _begin_turn_trace(
+        self,
+        *,
+        session_id: str,
+        committed: _CommittedSession | None,
+        query: str,
+    ) -> TurnTraceCollector | None:
+        if self._turn_trace is None:
+            return None
+        collector = TurnTraceCollector(
+            session_id=session_id,
+            turn_ordinal=1 if committed is None else committed.turn_count + 1,
+            ts_start=datetime.now(UTC),
+        )
+        anchor = (
+            None
+            if committed is None or committed.context_receipt is None
+            else committed.context_receipt.active_anchor
+        )
+        collector.set_session_snapshot(
+            active_anchor_id=None if anchor is None else _handle_id(anchor),
+            active_anchor_name=None if anchor is None else anchor.display_name,
+            displayed_id_count=(
+                0 if committed is None else len(committed.displayed_ids or ())
+            ),
+            referent_hint=None if committed is None else committed.soft_subject_name,
+        )
+        collector.set_interpretation(
+            query_raw=query,
+            question_frame="",
+            inferred_domains=(),
+            subject_candidates=(),
+        )
+        return collector
+
+    def _write_turn_trace(
+        self,
+        collector: TurnTraceCollector | None,
+        *,
+        status: str,
+        response: ChatResponse | None,
+        degradation: str | None = None,
+        answer_subject: str | None = None,
+        error_detail: str | None = None,
+    ) -> None:
+        if collector is None or self._turn_trace is None:
+            return
+        if degradation is not None:
+            collector.set_degradation(degradation)
+        citations = getattr(response, "citations", None) or ()
+        self._turn_trace.write_turn(
+            collector.finalize(
+                status=status,
+                answer_subject=answer_subject,
+                citation_count=len(citations),
+                ts_end=datetime.now(UTC),
+                error_detail=error_detail,
             )
+        )
+
+    def _trace_turn_error(self, collectors: list[TurnTraceCollector]) -> None:
+        if not collectors or self._turn_trace is None:
+            return
+        try:
+            self._write_turn_trace(
+                collectors[0],
+                status="error",
+                response=None,
+                error_detail="turn raised before completion",
+            )
+        except Exception:  # noqa: BLE001 - tracing must never break the error path
+            pass
 
     def _answer_locked(
         self,
@@ -1106,6 +1466,7 @@ class CanonicalV2ChatAdapter:
         as_of: datetime,
         progress: Callable[[str, dict[str, Any]], bool | None] | None,
         turn_gate: _TurnCommitGate,
+        trace_sink: Callable[[TurnTraceCollector], None] | None = None,
     ) -> ChatResponse:
         def emit(name: str, payload: dict[str, Any]) -> bool:
             if progress is None:
@@ -1126,12 +1487,28 @@ class CanonicalV2ChatAdapter:
 
         with self._lock:
             committed = self._sessions.get(session_id)
+        trace = self._begin_turn_trace(
+            session_id=session_id, committed=committed, query=normalized_query
+        )
+        if trace is not None:
+            if trace_sink is not None:
+                trace_sink(trace)
+            # Bind the collector as the serving-layer trace reporter for this
+            # turn's dynamic scope; the public entry points reset it on exit.
+            trace.context_token = set_turn_trace_reporter(trace)
         selection = self._selection(committed, option_id=option_id)
         if selection is None and _referent_clarification_needed(
             query=normalized_query,
             committed=committed,
         ):
-            return _referent_clarification_response(normalized_query)
+            clarification = _referent_clarification_response(normalized_query)
+            self._write_turn_trace(
+                trace,
+                status="ok",
+                response=clarification,
+                degradation="clarification",
+            )
+            return clarification
         turn_count = 1 if committed is None else committed.turn_count + 1
         turn_id = self._turn_id(
             session_id=session_id,
@@ -1227,15 +1604,29 @@ class CanonicalV2ChatAdapter:
                 query=normalized_query,
                 evidence_set=None,
             )
+        # P6/G5: expansion-family turns plan with the session subject named
+        # (anchored views/web budget/gate); the user-facing query stays as
+        # asked, and the answer still enumerates peers (与X类似).
+        expansion_subject = (
+            None
+            if prior_context is None or prior_context.active_anchor is None
+            else prior_context.active_anchor.display_name
+        ) or continuation_soft_subject
+        planning_query = (
+            _expansion_subject_rewrite(
+                normalized_query, subject_name=expansion_subject
+            )
+            or normalized_query
+        )
         planning_request = QueryPlanningRequest(
             request_id=f"query-request:chat:{turn_id}",
             release_id=self._release_id,
-            original_query=normalized_query,
+            original_query=planning_query,
             as_of=observed_as_of,
             displayed_entity_ids=displayed_ids,
             displayed_entity_names=displayed_names,
             enumeration_context=_enumeration_context(
-                query=normalized_query,
+                query=planning_query,
                 displayed_ids=displayed_ids,
                 as_of=observed_as_of,
             ),
@@ -1252,6 +1643,13 @@ class CanonicalV2ChatAdapter:
         plan = _validated_model(raw_plan, RetrievalPlan)
         self._require_release(plan, stage="plan")
         plan = _session_bound_plan(plan=plan, session_id=session_id)
+        if trace is not None:
+            trace.set_interpretation(
+                query_raw=normalized_query,
+                question_frame="",
+                inferred_domains=tuple(plan.domains),
+                subject_candidates=(),
+            )
         emit(
             "plan_done",
             {
@@ -1274,6 +1672,24 @@ class CanonicalV2ChatAdapter:
         self._require_release(raw_evidence_set, stage="read")
         evidence_set = _validated_model(raw_evidence_set, EvidenceSet)
         self._require_release(evidence_set, stage="read")
+        if trace is not None:
+            # Service-boundary lane view: candidate totals per lane as observed
+            # on the evidence set. The deeper retained/filtered split and web
+            # provider outcomes land with the serving-layer reporting (1.1.3).
+            lane_totals: dict[str, int] = {}
+            for lane_trace in evidence_set.traces:
+                lane_name = getattr(lane_trace, "lane", None)
+                if not isinstance(lane_name, str) or not lane_name:
+                    continue
+                candidates = int(getattr(lane_trace, "candidate_count", 0) or 0)
+                lane_totals[lane_name] = lane_totals.get(lane_name, 0) + candidates
+            for lane_name, total in lane_totals.items():
+                # Serving-layer reporting (web lane) records the real
+                # in/retained/filtered split; only fill lanes it did not cover.
+                if not trace.has_lane(lane_name):
+                    trace.record_lane_counts(
+                        lane_name, in_=total, retained=total, filtered=0
+                    )
         emit(
             "retrieval_done",
             {
@@ -1325,7 +1741,7 @@ class CanonicalV2ChatAdapter:
         turn_request = TurnRequest(
             session_id=session_id,
             turn_id=turn_id,
-            query=normalized_query,
+            query=planning_query,
             release_id=self._release_id,
             evidence_set=evidence_set,
             assessment_intent=plan.assessment_intent,
@@ -1414,6 +1830,20 @@ class CanonicalV2ChatAdapter:
         with self._lock:
             with turn_gate.commit():
                 self._sessions[session_id] = next_session
+        if trace is not None and str(
+            getattr(turn_result, "render_mode", "") or ""
+        ) in {"deterministic_fallback", "prose_partial"}:
+            trace.set_degradation("synthesis-fallback")
+        self._write_turn_trace(
+            trace,
+            status="ok",
+            response=response,
+            answer_subject=(
+                None
+                if context_receipt is None or context_receipt.active_anchor is None
+                else context_receipt.active_anchor.display_name
+            ),
+        )
         return response
 
     def _selection(
@@ -1666,6 +2096,21 @@ class CanonicalV2ChatAdapter:
             anchor_name=(
                 None if active_anchor is None else active_anchor.display_name
             ),
+            web_state=_web_lane_state(outcome.evidence_set.traces),
+        )
+        # Never-refuse guards (Phase 2): lane-outage wording first (an outage
+        # reframe beats deflection rewriting), then deflection.
+        anchor_display = (
+            None if active_anchor is None else active_anchor.display_name
+        )
+        if _web_lane_unavailable_from_traces(outcome.evidence_set.traces):
+            answer_text = _rewrite_lane_outage_answer_text(
+                answer_text, anchor_name=anchor_display
+            )
+        answer_text = _rewrite_deflection_answer_text(
+            answer_text,
+            patent_evidence_count=_patent_evidence_count(outcome.evidence_set),
+            anchor_name=anchor_display,
         )
         response_payload = {
             "query": outcome.query,
