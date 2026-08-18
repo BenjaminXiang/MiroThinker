@@ -358,7 +358,8 @@ _EXPECTED_OWNER_TABLES: frozenset[str] = frozenset(
     knowledge.release knowledge.source_assertion knowledge.source_identity
     knowledge.source_identity_record knowledge.typed_relationship_assertion
     knowledge.typed_relationship_decision knowledge.typed_relationship_decision_assertion
-    landing.evidence_artifact landing.ingest_run landing.parser_run landing.source_error
+    knowledge.identity_resolution_run_content_chunk landing.evidence_artifact
+    landing.ingest_run landing.parser_run landing.source_error
     landing.source_record ops.gap_remediation_transition ops.knowledge_gap paper.author
     paper.current_projection paper.enrichment_provenance paper.full_text paper.funding
     paper.identifier paper.publication paper.reference paper.summary patent.applicant
@@ -367,15 +368,15 @@ _EXPECTED_OWNER_TABLES: frozenset[str] = frozenset(
     professor.award professor.contact professor.current_projection
     professor.education_history professor.metric_snapshot professor.research_project
     professor.work_history publish.active_release publish.build_manifest
-    publish.manifest_section
+    publish.manifest_section knowledge.relationship_projection_run_content_chunk
     """.split()
 )
 _EXPECTED_LIVE_SCHEMA_CATALOG_COUNTS = {
-    "column": 1363,
-    "constraint": 1110,
-    "index": 166,
+    "column": 1375,
+    "constraint": 1112,
+    "index": 168,
     "internal_trigger_summary": 1,
-    "relation": 85,
+    "relation": 87,
     "routine": 47,
     "schema": 8,
     "server": 1,
@@ -383,7 +384,7 @@ _EXPECTED_LIVE_SCHEMA_CATALOG_COUNTS = {
     "view": 1,
 }
 _EXPECTED_LIVE_SCHEMA_CATALOG_SHA256 = (
-    "a3fc6a1f534e7b81e13223cb18f2be2c246fb7ad82ca4a2bc518e1adfadc69e4"
+    "e1aa4b5e3e1aa507b893f74641ec34c94391b75881b0160b03b432b5e9966e4a"
 )
 _LIBPQ_CONNECTION_ENVIRONMENT_KEYS = frozenset(
     {
