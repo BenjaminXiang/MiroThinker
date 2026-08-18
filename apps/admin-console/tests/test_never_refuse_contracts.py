@@ -32,6 +32,27 @@ class TestNeverRefuseFallback:
         assert "暂未能确认您问的具体内容" not in text
         assert len(text) > 20
 
+    def test_fallback_web_ran_mentions_both_channels(self) -> None:
+        text = service._soft_fallback_answer_text(
+            "深圳市优必选科技股份有限公司",
+            domain="patent",
+            web_state="ran",
+        )
+        # User feedback 2026-08-18: the system has web search; the fallback
+        # must never present itself as local-only when the web lane ran.
+        assert "网络检索" in text
+        assert "本地知识库" in text
+        assert "不代表该信息不存在" in text
+
+    def test_fallback_web_unavailable_names_outage(self) -> None:
+        text = service._soft_fallback_answer_text(
+            "深圳市优必选科技股份有限公司",
+            domain="patent",
+            web_state="unavailable",
+        )
+        assert "网络检索暂不可用" in text
+        assert "恢复后" in text
+
 
 class TestDeflectionGuard:
     def _evidence(self, patent_count: int) -> Any:

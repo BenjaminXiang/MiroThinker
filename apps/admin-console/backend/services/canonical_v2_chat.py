@@ -269,16 +269,50 @@ _DOMAIN_GAP_WORDING = {
 }
 
 
+def _web_lane_state(traces: Any) -> str:
+    """Channel-state for fallback wording: unavailable / ran / not_run."""
+    web_traces = [
+        trace
+        for trace in traces
+        if str(getattr(trace, "lane", "") or "") == "web"
+    ]
+    if not web_traces:
+        return "not_run"
+    if _web_lane_unavailable_from_traces(traces):
+        return "unavailable"
+    return "ran"
+
+
 def _soft_fallback_answer_text(
     anchor_name: str | None,
     *,
     domain: str | None = None,
+    web_state: str = "not_run",
 ) -> str:
+    """Never-refuse fallback, channel-aware (user feedback 2026-08-18):
+    the wording must reflect BOTH knowledge channels honestly — web ran and
+    missed, web is down, or web never ran — never present the system as
+    local-only."""
     gap = _DOMAIN_GAP_WORDING.get(domain or "", "该方向的公开资料")
     if anchor_name:
+        if web_state == "ran":
+            return (
+                f"已确认您关注的是{anchor_name}。"
+                f"本地知识库与网络检索的结果中，暂未检索到与{gap}直接相关的"
+                "可靠信息——这是当前检索覆盖所限，不代表该信息不存在；"
+                "您可以换个更具体的问法（如具体产品、年份或方向），"
+                "我会基于已确认的信息继续检索。"
+            )
+        if web_state == "unavailable":
+            return (
+                f"已确认您关注的是{anchor_name}。"
+                f"网络检索暂不可用，本地知识库对{gap}的覆盖也暂未完整，"
+                "因此这部分暂无法给出可靠的具体内容；"
+                "网络检索恢复后可再次提问，我会尝试补全这部分。"
+            )
         return (
             f"已确认您关注的是{anchor_name}。"
-            f"当前本地知识库对{gap}的覆盖暂未完整，"
+            f"当前本地知识库与网络检索对{gap}的覆盖暂未完整，"
             "因此这部分暂无法给出可靠的具体内容；"
             "您可以补充想了解的具体方面（如业务、产品、论文或专利），"
             "我会基于已确认的信息继续检索。"
@@ -295,6 +329,7 @@ def _rewrite_refusal_answer_text(
     *,
     response_mode: str,
     anchor_name: str | None,
+    web_state: str = "not_run",
 ) -> str:
     """Last-resort guard: a bare refusal never ships as the chat answer."""
     if response_mode != "answer":
@@ -304,7 +339,9 @@ def _rewrite_refusal_answer_text(
         return answer_text
     if not any(marker in stripped for marker in _REFUSAL_ANSWER_MARKERS):
         return answer_text
-    return _soft_fallback_answer_text(anchor_name)
+    return _soft_fallback_answer_text(
+        anchor_name, web_state=web_state
+    )
 
 
 # External-database deflection guard: recommending 国知局/PatSnap/Incopat as
@@ -1944,6 +1981,7 @@ class CanonicalV2ChatAdapter:
             anchor_name=(
                 None if active_anchor is None else active_anchor.display_name
             ),
+            web_state=_web_lane_state(outcome.evidence_set.traces),
         )
         # Never-refuse guards (Phase 2): lane-outage wording first (an outage
         # reframe beats deflection rewriting), then deflection.
