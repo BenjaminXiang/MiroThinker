@@ -19,12 +19,12 @@
 
 ## 3.1 Echo-guard relaxation (P3)
 
-- [ ] 3.1.1 Bare entity-name query = subject statement; no clarification
+- [x] 3.1.1 Bare entity-name query = subject statement; no clarification
        loop. RED from the P3 verbatim (bare name opening → follow-up).
 
 ## 3.2 Type-aware referent handling (P4)
 
-- [ ] 3.2.1 Personal referent over org-anchored session → typed
+- [x] 3.2.1 Personal referent over org-anchored session → typed
        clarification or person-scoped answer; synthesis subject-type check.
        RED from G3 verbatim (他有哪些论文).
 

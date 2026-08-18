@@ -1325,7 +1325,10 @@ def test_soft_subject_name_prefers_the_query_search_view_subject() -> None:
         )
         == "优必选"
     )
-    # Garbage guards: question words and whole-query echoes never bind.
+    # Garbage guards: question words never bind; whole-query echoes are only
+    # rejected for QUESTION shapes — a bare entity-name query IS its own
+    # subject (Phase 3.1, P3 relaxation: bare-name openings must establish
+    # the soft subject instead of starving the follow-up into clarification).
     assert (
         service._soft_subject_name(
             query="深圳有哪些机器人公司",
@@ -1338,7 +1341,7 @@ def test_soft_subject_name_prefers_the_query_search_view_subject() -> None:
             query="优必选",
             evidence_set=evidence_set(),
         )
-        is None
+        == "优必选"
     )
 
 

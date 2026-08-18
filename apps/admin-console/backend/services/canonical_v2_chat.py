@@ -1018,11 +1018,35 @@ _SOFT_SUBJECT_QUESTION_MARKERS = ("吗", "呢", "哪些", "什么")
 _SOFT_SUBJECT_HEADLINE_VERB_SUFFIXES = ("揭牌", "挂牌", "成立", "发布", "签约")
 
 
+_BARE_NAME_REFERENT_MARKERS = (
+    "他", "她", "它", "该", "这家", "此", "哪些", "什么", "怎么", "如何",
+    "吗", "呢", "还", "又", "介绍", "一下", "请问", "查", "找",
+)
+
+
+def _is_bare_entity_name_query(query: str) -> bool:
+    """A query that IS an entity name (P3 relaxation): the anti-echo rule
+    exists to reject candidates that parrot a QUESTION; an entity-shaped
+    query naming its own subject is the strongest soft subject there is."""
+    text = query.strip()
+    if not text or len(text) > _SOFT_SUBJECT_MAX_LENGTH:
+        return False
+    if any(marker in text for marker in _BARE_NAME_REFERENT_MARKERS):
+        return False
+    if is_headline_shaped_name(text):
+        return False
+    # Entity shape: a CJK run (with optional parenthetical qualifier), no
+    # sentence punctuation.
+    return bool(
+        re.fullmatch(r"[\u4e00-\u9fffA-Za-z0-9·]+(（[^）]*）)?", text)
+    )
+
+
 def _soft_subject_candidate_ok(candidate: str, *, query: str) -> bool:
     """Base guards every soft-anchor candidate must pass."""
     if not candidate or len(candidate) > _SOFT_SUBJECT_MAX_LENGTH:
         return False
-    if candidate == query.strip():
+    if candidate == query.strip() and not _is_bare_entity_name_query(query):
         return False
     return not any(marker in candidate for marker in _SOFT_SUBJECT_QUESTION_MARKERS)
 
