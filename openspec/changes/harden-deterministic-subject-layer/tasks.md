@@ -31,5 +31,5 @@
 ## 3.5 / 3.6 Close
 
 - [x] 3.5 P7 verification note (G6 stands; product contract recorded).
-- [ ] 3.6 Full replay suite green-run vs Phase 2 outcomes; R1 merge prep
+- [x] 3.6 Full replay suite green-run vs Phase 2 outcomes; R1 merge prep
       (P1+P2+P3 package → release/customer-test) per Epic.

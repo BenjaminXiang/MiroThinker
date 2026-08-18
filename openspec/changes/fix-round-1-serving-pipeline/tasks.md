@@ -49,12 +49,12 @@
 
 ## Phase 3 — deterministic subject layer v2 (child change: harden-deterministic-subject-layer)
 
-- [ ] 3.1 Echo-guard relaxation (bare entity-name query = subject).
-- [ ] 3.2 Type-aware clarification gate + synthesis-side referent type check.
-- [ ] 3.3 Expansion base = session subject; no silent base substitution.
-- [ ] 3.4 News-headline guards on anchor names.
-- [ ] 3.5 Session-reset semantics verification (P7 product decision recorded).
-- [ ] 3.6 Merge accepted → release/customer-test → hot update R1; replay suite green run.
+- [x] 3.1 Echo-guard relaxation (bare entity-name query = subject).
+- [x] 3.2 Type-aware clarification gate + synthesis-side referent type check.
+- [x] 3.3 Expansion base = session subject; no silent base substitution.
+- [x] 3.4 News-headline guards on anchor names.
+- [x] 3.5 Session-reset semantics verification (P7 product decision recorded).
+- [x] 3.6 Merge accepted → release/customer-test → hot update R1; replay suite green run.
 
 ## Phase 4 — data line (child change: full-column-serving-pack-rebuild)
 
