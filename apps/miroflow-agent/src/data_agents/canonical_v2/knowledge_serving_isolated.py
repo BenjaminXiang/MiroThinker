@@ -4614,6 +4614,19 @@ def _anchor_correction_name(result: Any, active_anchor: Any) -> str | None:
     coverage = getattr(result, "enumeration_coverage", None)
     if coverage is not None:
         return None
+    # G7 final fault: an enumeration answer is about MANY subjects; the
+    # selection phase can bind one enumerated member as the receipt's soft
+    # subject, and a single-subject correction then rewrites the whole list
+    # into that member's profile. Multi-subject answers are never corrected.
+    distinct_subjects = {
+        str(subject)
+        for subject in (
+            getattr(claim, "subject_id", None) for claim in getattr(result, "claims", ()) or ()
+        )
+        if subject
+    }
+    if len(distinct_subjects) >= 3:
+        return None
     context = getattr(result, "context_receipt", None)
     soft_subject = getattr(context, "soft_context_subject", None)
     if (
