@@ -951,6 +951,14 @@ def _dedupe_normalized_results(
     return tuple(merged.values())
 
 
+def _truncate_utf8_bytes(data: bytes, limit: int) -> bytes:
+    """Byte-cap that never splits a multibyte UTF-8 sequence (a raw slice at
+    16384 produced invalid UTF-8 snapshots that crashed lane validation)."""
+    if len(data) <= limit:
+        return data
+    return data[:limit].decode("utf-8", errors="ignore").encode("utf-8")
+
+
 def _normalized_web_url(value: str) -> str:
     parsed = urlsplit(value.strip())
     path = parsed.path.rstrip("/") or "/"
@@ -1562,7 +1570,8 @@ class _DualWebLaneAdapter:
                 ensure_ascii=False,
                 sort_keys=True,
                 separators=(",", ":"),
-            ).encode("utf-8")[: self._max_snapshot_bytes]
+            ).encode("utf-8")
+            snapshot_content = _truncate_utf8_bytes(snapshot_content, self._max_snapshot_bytes)
             snapshot_sha256 = hashlib.sha256(snapshot_content).hexdigest()
             snapshot_id = f"web-snapshot:sha256:{snapshot_sha256}"
             object_id = (
@@ -3507,7 +3516,8 @@ def _person_probe_evidence_item(
         ensure_ascii=False,
         sort_keys=True,
         separators=(",", ":"),
-    ).encode("utf-8")[:max_snapshot_bytes]
+    ).encode("utf-8")
+    snapshot_content = _truncate_utf8_bytes(snapshot_content, max_snapshot_bytes)
     snapshot_sha256 = hashlib.sha256(snapshot_content).hexdigest()
     snapshot_id = f"web-snapshot:sha256:{snapshot_sha256}"
     evidence_identity = {
@@ -3777,7 +3787,8 @@ def _theme_probe_evidence_item(
         ensure_ascii=False,
         sort_keys=True,
         separators=(",", ":"),
-    ).encode("utf-8")[:max_snapshot_bytes]
+    ).encode("utf-8")
+    snapshot_content = _truncate_utf8_bytes(snapshot_content, max_snapshot_bytes)
     snapshot_sha256 = hashlib.sha256(snapshot_content).hexdigest()
     snapshot_id = f"web-snapshot:sha256:{snapshot_sha256}"
     evidence_identity = {
@@ -3841,7 +3852,8 @@ def _relation_probe_evidence_item(
         ensure_ascii=False,
         sort_keys=True,
         separators=(",", ":"),
-    ).encode("utf-8")[:max_snapshot_bytes]
+    ).encode("utf-8")
+    snapshot_content = _truncate_utf8_bytes(snapshot_content, max_snapshot_bytes)
     snapshot_sha256 = hashlib.sha256(snapshot_content).hexdigest()
     snapshot_id = f"web-snapshot:sha256:{snapshot_sha256}"
     evidence_identity = {
