@@ -37,3 +37,24 @@ Accepted resolution (recorded same day):
   clear questions (G4), and erodes the product's core evidence-trust value.
 
 No phase order changes; Phase 3 proceeds next as planned.
+
+## 2026-08-18 — Amendment: user rules B (confident attributed presentation) for the weak-web-evidence case
+
+User picked **B** for the flagship edge case (专利 enumeration with only a
+marketing-page "数百件专利" as web evidence): present it confidently WITH an
+attribution marker (据公开报道), keep numbers at source precision, add the
+entity's confirmed substance, and guide refinement as a capability offer
+("我可以再细化") — never as question-blame, never as external-DB deflection.
+
+Resulting policy (supersedes the C-plus query-class split for the
+web-has-signal branch):
+
+- web lane alive with ANY usable signal (incl. indirect/soft evidence) →
+  B form (attributed confident presentation + substance + depth offer).
+- web lane dead or zero hits → outage/coverage wording (cannot be packaged —
+  a dead channel must not masquerade as a world fact).
+
+Two hard lines retained: no fabricated specifics (exact counts/numbers/titles
+require direct evidence; source-precise vagueness only) and no
+external-database deflection. Implemented in the synthesis prompt as
+degradation tier ②b (same day).
