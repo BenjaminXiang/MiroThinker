@@ -58,3 +58,24 @@ Two hard lines retained: no fabricated specifics (exact counts/numbers/titles
 require direct evidence; source-precise vagueness only) and no
 external-database deflection. Implemented in the synthesis prompt as
 degradation tier ②b (same day).
+
+## 2026-08-18 — Enumeration answer contract redesigned (user ruling)
+
+User rulings on the token cap and enumeration answers:
+
+- **Token cap**: retained but re-purposed as a rarely-hit safety net (runaway
+  loops / cost / wall-clock), raised to a generous value (~6000); it must
+  never act as the quality ceiling it became (3000 fighting the 求全 prompt).
+- **Enumeration contract**: completeness is the WRONG goal for large-universe
+  queries (深圳具身智能公司 = hundreds). New contract: entry budget ≤ 12 by
+  evidence-strength then leadership ranking; representative-list + explicit
+  coverage statement is the DEFAULT form; exhaustive only for small finite
+  universes; domain-leading companies must be included (G7 anchor names).
+  The existing enumeration_coverage mechanism already supports this — the
+  prompt's 宁多勿漏 directive is replaced by the budgeted-representative rule.
+
+Effects: entry budget bounds answer length → token cap stops being hit →
+trailing wire-format segments stop being corrupted (the suspected G7
+fallback trigger) — one mechanism addresses four faults. Lands with Phase 5
+enumeration scope; the G7-fallback repair principles (log 2026-08-18) remain
+the immediate next-session task.
