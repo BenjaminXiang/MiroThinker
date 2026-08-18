@@ -918,6 +918,39 @@ def _apply_web_subject_consistency(
     return filtered
 
 
+_ORG_LOOKING_TITLE_RE = re.compile(
+    "(公司|科技|机器人|智能|集团|研究院|实验室|有限| institute| lab| robotics)"
+)
+
+
+def _org_looking_result_count(
+    results: tuple[_NormalizedWebResult, ...],
+) -> int:
+    """Distinct-organization signal for the enumeration refinement gate."""
+    seen_urls: set[str] = set()
+    count = 0
+    for result in results:
+        normalized = _normalized_web_url(result.url)
+        if normalized in seen_urls:
+            continue
+        seen_urls.add(normalized)
+        if _ORG_LOOKING_TITLE_RE.search(result.title) or _ORG_LOOKING_TITLE_RE.search(
+            result.snippet
+        ):
+            count += 1
+    return count
+
+
+def _dedupe_normalized_results(
+    results: tuple[_NormalizedWebResult, ...],
+) -> tuple[_NormalizedWebResult, ...]:
+    merged: dict[str, _NormalizedWebResult] = {}
+    for result in results:
+        normalized = _normalized_web_url(result.url)
+        merged.setdefault(normalized, result)
+    return tuple(merged.values())
+
+
 def _normalized_web_url(value: str) -> str:
     parsed = urlsplit(value.strip())
     path = parsed.path.rstrip("/") or "/"
@@ -1416,11 +1449,12 @@ class _DualWebLaneAdapter:
                 fetched_by_url[url] = text
         if not fetched_by_url:
             return results
+        snippet_window = 2400 if depth >= 5 else 1200
         return tuple(
             _NormalizedWebResult(
                 title=result.title,
                 url=result.url,
-                snippet=fetched_by_url[result.url][:1200],
+                snippet=fetched_by_url[result.url][:snippet_window],
                 summary=fetched_by_url[result.url],
                 primary_provider_version=result.primary_provider_version,
                 corroborating_provider_versions=result.corroborating_provider_versions,
@@ -1441,6 +1475,22 @@ class _DualWebLaneAdapter:
             self._request_view_queries(request, query_text)
         )
         gated = _apply_web_subject_consistency(results=merged, request=request)
+        if (
+            any(
+                marker in request.original_query
+                for marker in _ENUMERATION_QUERY_MARKERS
+            )
+            and not getattr(request, "bound_entity_names", None)
+            and not getattr(request, "soft_context_subject", None)
+            and _org_looking_result_count(gated) < 6
+        ):
+            # Phase 5: one refinement round for thin enumerations — the
+            # round-2 views (榜单/名单) are budgeted (rounds <= 2 total) and
+            # flow through the quota counters like any other search.
+            refined = self._merged_results_for_views(
+                (f"{query_text} 榜单", f"{query_text} 名单")
+            )
+            gated = _dedupe_normalized_results((*gated, *refined))
         organic = _prioritize_relation_evidence(
             results=gated,
             frame=question_frame,
@@ -1458,7 +1508,7 @@ class _DualWebLaneAdapter:
         # that bind recall (开普勒/九号 in brand listicles) sit below the
         # snippet cut, so two fetches miss them.
         fetch_depth = (
-            5
+            8
             if any(
                 marker in request.original_query
                 for marker in _ENUMERATION_QUERY_MARKERS
