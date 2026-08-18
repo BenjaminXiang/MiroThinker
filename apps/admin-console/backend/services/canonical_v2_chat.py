@@ -1747,11 +1747,7 @@ class CanonicalV2ChatAdapter:
             assessment_intent=plan.assessment_intent,
             continuation_selection=selection,
             session_directive=directive,
-            # Carryover soft subject outranks the fresh derivation on
-            # continuation turns: it is what the anchor-led correction checks
-            # (G1-T3 fault — the answer led with 深圳 while the session
-            # subject was 国先中心 and the correction saw None).
-            soft_context_subject=continuation_soft_subject or soft_context_subject,
+            soft_context_subject=soft_context_subject,
             safety_guidance=(
                 SafetyGuidanceDirective(mode="static")
                 if plan.interaction_mode == "safety_guidance"
