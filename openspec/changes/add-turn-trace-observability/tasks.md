@@ -22,7 +22,7 @@ reaches Candidate. RED definitions live in
        via post-construction `attach_turn_trace` (http-adapter contract suite
        128/128). Production wiring: `canonical_v2_admin.py` aggregate attaches
        `TurnTraceJournalStore()`. 2026-08-18.
-- [ ] 1.1.3 Serving-layer reporting: lane in/retained/filtered counts, named
+- [x] 1.1.3 Serving-layer reporting: lane in/retained/filtered counts, named
        gate drops, web provider outcomes (attempt/error/timeout/retry/cache),
        degradation token selection.
 - [x] 1.1.4 Reader CLI `apps/admin-console/scripts/read_turn_trace.py`
