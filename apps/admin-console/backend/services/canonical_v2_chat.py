@@ -534,6 +534,30 @@ def _handle_id(handle: CanonicalEntityHandle | WebEntityHandle) -> str:
     return handle.canonical_id if handle.kind == "canonical" else handle.handle_id
 
 
+_EXPANSION_REQUEST_RE = re.compile(
+    r"(还有|再?有哪些?|有没有)(类似|像|同类|相关|差不多)"
+)
+_EXPANSION_NOUN_RE = re.compile(r"(公司|企业|机构|单位|学校|团队|厂商|产品|平台)")
+
+
+def _expansion_subject_rewrite(query: str, *, subject_name: str | None) -> str | None:
+    """Expansion-family turns must search ANCHORED to the session subject
+    (P6/G5): the raw expansion text alone produces subject-free views
+    (类似公司/竞品分析) and free vector retrieval answers about an arbitrary
+    entity. The planning query names the subject; the answer still enumerates
+    PEERS (the query says 与X类似), so this anchors the search without
+    narrowing the answer onto the subject."""
+    if not subject_name:
+        return None
+    if _subject_names_overlap(query, subject_name):
+        return None
+    if not _EXPANSION_REQUEST_RE.search(query):
+        return None
+    noun_match = _EXPANSION_NOUN_RE.search(query)
+    noun = noun_match.group(1) if noun_match else "公司"
+    return f"与{subject_name}类似的{noun}还有哪些"
+
+
 def _enumeration_context(
     *, query: str, displayed_ids: tuple[str, ...], as_of: datetime
 ) -> EnumerationPlanningContext | None:
@@ -1576,15 +1600,29 @@ class CanonicalV2ChatAdapter:
                 query=normalized_query,
                 evidence_set=None,
             )
+        # P6/G5: expansion-family turns plan with the session subject named
+        # (anchored views/web budget/gate); the user-facing query stays as
+        # asked, and the answer still enumerates peers (与X类似).
+        expansion_subject = (
+            None
+            if prior_context is None or prior_context.active_anchor is None
+            else prior_context.active_anchor.display_name
+        ) or continuation_soft_subject
+        planning_query = (
+            _expansion_subject_rewrite(
+                normalized_query, subject_name=expansion_subject
+            )
+            or normalized_query
+        )
         planning_request = QueryPlanningRequest(
             request_id=f"query-request:chat:{turn_id}",
             release_id=self._release_id,
-            original_query=normalized_query,
+            original_query=planning_query,
             as_of=observed_as_of,
             displayed_entity_ids=displayed_ids,
             displayed_entity_names=displayed_names,
             enumeration_context=_enumeration_context(
-                query=normalized_query,
+                query=planning_query,
                 displayed_ids=displayed_ids,
                 as_of=observed_as_of,
             ),
@@ -1699,7 +1737,7 @@ class CanonicalV2ChatAdapter:
         turn_request = TurnRequest(
             session_id=session_id,
             turn_id=turn_id,
-            query=normalized_query,
+            query=planning_query,
             release_id=self._release_id,
             evidence_set=evidence_set,
             assessment_intent=plan.assessment_intent,

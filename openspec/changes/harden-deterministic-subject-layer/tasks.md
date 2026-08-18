@@ -12,7 +12,7 @@
 
 ## 3.3 Expansion base = session subject (P6)
 
-- [ ] 3.3.1 Expansion-family turns bind the session subject into planning
+- [x] 3.3.1 Expansion-family turns bind the session subject into planning
        inputs (displayed ids / soft subject) exactly as deepening turns;
        RED: G5-form session — expansion turn carries 优必选 as base, answer
        subject not 微众银行.
@@ -30,6 +30,6 @@
 
 ## 3.5 / 3.6 Close
 
-- [ ] 3.5 P7 verification note (G6 stands; product contract recorded).
+- [x] 3.5 P7 verification note (G6 stands; product contract recorded).
 - [ ] 3.6 Full replay suite green-run vs Phase 2 outcomes; R1 merge prep
       (P1+P2+P3 package → release/customer-test) per Epic.
