@@ -1104,6 +1104,38 @@ def _subject_names_overlap(anchor_name: str, subject: str) -> bool:
     return best >= 3
 
 
+_HEADLINE_SOURCE_SUFFIX_RE = re.compile(r"\s[-—_|｜~]\s?[^-—_|｜]{2,14}$")
+_HEADLINE_EVENT_VERB_RE = re.compile(
+    r"(打造|推进|揭牌|正式成立|加快建设|深化合作|落地|签署|发布|合作共建|达成合作|新添|再添)"
+)
+_ORG_NAME_SUFFIX_RE = re.compile(
+    r"(公司|银行|大学|学院|研究院|研究所|研究中心|中心|集团|医院|基金会|协会|学会|"
+    r"实验室|事务所|管理局|委员会|办事处)$"
+)
+_PAREN_QUALIFIER_RE = re.compile(r"（[^）]*）|\([^)]*\)")
+
+
+def is_headline_shaped_name(name: str | None) -> bool:
+    """Headline-shaped names must never become session anchors: an article
+    title is a text ABOUT the subject, not the subject. Three narrow signals
+    (source suffix / event verb / sentence scale), guarded by an org-name
+    suffix whitelist so real entity names (建设银行、推进中心) never trip."""
+    text = (name or "").strip()
+    if not text:
+        return False
+    core = _PAREN_QUALIFIER_RE.sub("", text).strip()
+    if core and _ORG_NAME_SUFFIX_RE.search(core):
+        return False
+    if _HEADLINE_SOURCE_SUFFIX_RE.search(text):
+        return True
+    if _HEADLINE_EVENT_VERB_RE.search(text):
+        return True
+    cjk_count = len(re.findall(r"[\u4e00-\u9fff]", text))
+    if cjk_count > 24 and any(marker in text for marker in ("的", "了", "将")):
+        return True
+    return False
+
+
 def _sanitize_soft_turn_anchor(
     receipt: ContextReceipt | None,
     *,
@@ -1130,6 +1162,17 @@ def _sanitize_soft_turn_anchor(
         return receipt
     anchor = receipt.active_anchor
     if anchor.kind != "canonical":
+        # Web handles were previously always kept — but a web handle whose
+        # display name is an ARTICLE TITLE (G1: 「河套…- 香港中联办」) poisons
+        # the session exactly like a mismatched canonical capture. Headline
+        # guard (Phase 3.4): drop it; the soft subject carries the session.
+        if is_headline_shaped_name(anchor.display_name):
+            _logger.info(
+                "soft-turn headline anchor dropped: anchor=%r subject=%r",
+                anchor.display_name,
+                soft_context_subject,
+            )
+            return receipt.model_copy(update={"active_anchor": None})
         return receipt
     if _subject_names_overlap(anchor.display_name, soft_context_subject):
         return receipt

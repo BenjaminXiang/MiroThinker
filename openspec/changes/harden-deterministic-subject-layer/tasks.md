@@ -2,10 +2,10 @@
 
 ## 3.4 Headline anchor guard (P1 root — first slice)
 
-- [ ] 3.4.1 `is_headline_shaped_name` detector (source-suffix / event-verb /
+- [x] 3.4.1 `is_headline_shaped_name` detector (source-suffix / event-verb /
        sentence-scale) + unit REDs on the G1 verbatim headline and real
        entity names as negatives.
-- [ ] 3.4.2 Sanitize extension: headline-shaped WEB anchors dropped;
+- [x] 3.4.2 Sanitize extension: headline-shaped WEB anchors dropped;
        previous anchor retained when present; else soft subject carries.
        Unit REDs: G1-form session (headline anchor does not survive commit),
        real-company web anchor survives.
