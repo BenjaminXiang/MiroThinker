@@ -78,3 +78,125 @@
 `pgtest-recovery-lab-01`（network=none，docker exec 只读查询）；活路径
 （/var/tmp/mirothinker-canonical-v2-s12f/**、miroflow_candidate_s12f_20260801_v1、
 18188）零写入。抽取完成后将停回原状。
+
+---
+
+## 2026-08-19 R2：4.2 构建方案（设计定案）
+
+**做了什么**：读穿 s12 构建管道（knowledge_build_isolated.py 的源准入/merge/
+投影/关系/索引流），校准 s12f 切片成本（单切片 ≈688 行管道代码+691 行测试），
+定案 P4 全列重建方案。
+
+**方案（六批一策略）**：
+
+1. **六个新补充源批次**（s12e/s12f 同款准入模式：payload 落
+   restore 树 `workspace/docs/source_backfills/p4-*.jsonl`（只增新文件，不动
+   既有文件——s12f 先例），byte+sha256 钉死进 manifest）：
+   - `p4-company-full-v1`：企业总表 6,528 → 全列 company（行业/省份地区/业务/
+     成立时间/法人/团队/企业类型/注册地址/网址/产品简介/特点/应用场景）；
+   - `p4-patent-full-v1`：11,408 全量专利（灾前已处理好的 released 形态）+
+     类型推断 backfill（确定性号码规则，11,408 全覆盖）；
+   - `p4-paper-salvage-v1`：salvage ready 24,101（authors 从 authors_display
+     切分为 author dict 列表，供派生锚点机制使用）；
+   - `p4-professor-full-v1`：v2+v3 并集 3,736（v3 覆盖同 (name,institution)；
+     PROF-id 尽量取自恢复映射，取不到用 sha 稳定生成；污染名过滤）；
+   - `p4-professor-paper-links-v1`：salvage verified 55,063 中 prof-id 可映射
+     的 18,655 条（professor 端解析到 p4 教授 id，paper 端保留 PAPER-id）；
+   - `p4-applicant-binding-full-v1`：全量申请人解析（s12f 819 条既有解析
+     复用 + 对 6,528+700+1,037 企业名做归一化精确/别名连接；机构分类沿用
+     s12f 判据；无匹配记 unresolved，不做启发式凑数）。
+2. **mapper 政策升 v3**：`_ALLOWED_FIELD_PATHS_BY_OBJECT_TYPE` +
+   `_selected_fields` 扩展全列可选字段（仅当 payload 携带才投影，缺失不产生
+   gap）：company +geography/founded_at/legal_representative/registered_address/
+   registered_capital/team_description/product_description/tech_tags/
+   industry_tags；patent +patent_type/abstract/technology_effect/grant_date/
+   ipc_codes/title_en；paper +abstract/summary_zh/citation_count/title_zh/
+   publication_date/keywords；professor +name_en/h_index/citation_count/
+   education/projects/awards/work_experience/office。政策版本
+   `canonical-v2-released-objects-mapper-v3`（构建侧，serving 行为不变，
+   lookup 文档内容=投影模型全量 dump，字段自然流入）。
+3. **新 merge 函数**：company_full/patent_full/paper_salvage/professor_full
+   照 company_backfill 模式合成 released 对象（已存在同名/同号/同 DOI 的跳过
+   或并字段，绝不覆盖既有数据）；professor_paper_links 合成 link 对象进
+   links 泳道（端点校验复用）；applicant_binding_full 复用 s12f 绑定语义。
+4. **论文教授锚点门保持**：无锚点论文照旧被移除并记 typed gap——这是 PRD
+   纳入契约（论文须锚定教授），不是可以绕过的薄回填。ready 24,101 中
+   verified-锚定 7,805 为下界，构建时派生作者别名锚点会再加。
+5. **构建参数**（全部新名，零写入活路径）：
+   - gate root = 本 worktree 的 `.agents/runs/rebuild-canonical-v2-knowledge-platform`
+     （四份 gate 文档实测 hash 与代码钉死值一致）；
+   - DB `miroflow_candidate_v2_20260819_r1`（55458 集群新库，不碰
+     miroflow_candidate_s12f_20260801_v1）；
+   - staging/index 根 `/var/tmp/mirothinker-data-v2/{staging,index}-v1`；
+   - run-id `p4-build-20260819-v1`，release `candidate-v2-20260819-r1`；
+   - envelope 落本 worktree gate root 的 s12a 槽（fresh，已确认不存在）；
+   - 嵌入沿用 qwen bundle（学校端点 100.64.0.27:18005 实测存活）；
+   - 主源 s12a SQLite 及其 5,561 行校验不动（计数断言只对主源生效，已核实）。
+
+**怎么验证的**：管道关键断言逐条读码核实（主源 hash 钉死不可替换⇒必须走
+补充批次；5561 计数断言仅主源；supplemental 须完整 parse；论文锚点移除门；
+lookup 文档=投影模型 dump）。gate 四文档 hash 与 rebuild_write_gate.py 常量
+逐一比对相等。s12f serve 包装器（serve_s12e_port.py 端口 monkeypatch）确认
+可用于 18200 冒烟。
+
+**影响哪些问题**：同 R1（P5/P8/论文覆盖/关系规模），另解锁 G7 枚举抓手
+（industry/geography/tech_tags 进入 lookup）。
+
+---
+
+## 2026-08-19 R3：4.2 构建方案落地（抽取+管道+脚本+测试）
+
+**做了什么**：
+1. **源抽取** `.agents/runs/full-column-serving-pack-rebuild/extract_p4_sources.py`
+   （可重跑、确定性排序；payload 落 restore 树 source_backfills，只增不改）：
+   - company 6,514（表内重名去重后，恰=审计基线 6,514）；
+   - patent 11,408（admin release + 类型推断全覆盖）；
+   - paper 24,101（salvage ready；authors 由 authors_display 切分）；
+   - professor 3,735（v2+v3 并集，污染名过滤）；
+   - 教授↔论文 verified 链接 18,655（prof 名字可锚定）；
+   - 申请人解析 2,373（resolved 957 / institution 125 / individual 52 /
+     unresolved 1,239 typed-gap）。
+   首轮论文抽取踩坑：psql 行式导出被多行字段打断（26,261≠24,101）→ 改
+   `\copy CSV` 后精确对上；六批 payload hash/字节数固化为
+   `batch-inventory.json`。
+2. **管道扩展** `knowledge_build_isolated.py`（s12e/s12f 同款准入）：
+   - 6 个 `_SupplementalSourceAuthority`（byte+sha256 钉死）+ purposes +
+     registered_unprojected 槽位；
+   - `_merge_p4_created_rows`：四域创建型合并（重叠保守跳过：company 名/别名、
+     patent 号、paper doi/题名、professor 名；绝不覆盖既有对象）；全列 selected
+     塑形对齐投影模型（NamedReference/Date/named members）；
+   - `_merge_p4_professor_paper_links`：端点完备才成链，缺端点记 typed gap；
+     合成链接走主 lane 同款端点 lineage；
+   - applicant binding 全量批复用 s12f 绑定语义（purpose 集合扩展）；
+   - mapper 政策保持 v2——补充批次绕过主 lane `_selected_fields`，全列字段
+     经合并函数直入 selected→投影（lookup 文档=投影模型全量 dump，字段自然
+     流入服务侧）。
+3. **manifest** `source-build-manifest-p4.json`：s12f 全量 + 6 个
+   evidence_input 条目，`SourceBuildManifest` 真实校验器验证通过
+   （content_sha256 `a6e82fcd…`，58 源）。
+4. **构建脚本** `build-v2.sh`：DB `miroflow_candidate_v2_20260819_r1`（55458
+   集群，与 s12f 库同集群不同库）、staging/index 根
+   `/var/tmp/mirothinker-data-v2/`、envelope 落本 worktree gate root s12a 槽、
+   run-id `p4-build-20260819-v1`、release `candidate-v2-20260819-r1`、
+   16 个 batch id、嵌入学校端点 bundle。
+5. **测试**：新增 `tests/canonical_v2/test_knowledge_build_p4_full_column.py`
+   9 用例（authority 钉死/四域创建塑形/重叠跳过/链接端点门/绑定复用/payload
+   hash 对账/manifest 校验）；更新既有两个测试文件的 disposition 镜像与
+   batch 列表并补 6 条 side-effect-free 夹具行。
+
+**发现**：
+- 既有 `test_knowledge_build_isolated.py` 有 4 个全持久化 e2e 用例在**基线
+  （stash 我的改动后）同样挂起**——需要 127.0.0.1:5432 上可用的 miroflow
+  trust 一次性库（当前环境无）。**非本切片回归**（stash 对比复现）。其余
+  137 用例全绿。
+- 教授 `company_roles` 投影是 RelationshipProjectionReference（来自关系 lane），
+  不能从 core_facts 直投——builder 已移出 selected（与 s12a 行为一致）。
+- 申请人池 1,239 个企业名未入企业名录（unresolved）是**源侧真实缺口**（typed
+  gap 记录在案），不做启发式凑数。
+
+**怎么验证的**：`uv run pytest tests/canonical_v2/test_knowledge_build_p4_full_column.py`
+9/9 PASS；`test_knowledge_build_isolated.py` 137 passed / 4 env-deselect（基线
+同样挂起，stash 对比）；`test_knowledge_build_professor_backfill.py` 13/13；
+ruff 全过；manifest 过真实 SourceBuildManifest 校验；嵌入端点探针 4096 维。
+
+**影响哪些问题**：为 4.3 构建（P5/P8/论文覆盖/关系规模）铺平管道。

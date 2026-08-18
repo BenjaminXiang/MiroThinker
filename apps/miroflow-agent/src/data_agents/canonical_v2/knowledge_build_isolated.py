@@ -1025,6 +1025,42 @@ _APPLICANT_BINDING_SOURCE_ID = "inventory:" + _canonical_sha256(
 )
 _APPLICANT_BINDING_BATCH_ID = "s12f-applicant-binding-v1"
 
+# P4 full-column rebuild batches (2026-08-19, full-column-serving-pack-rebuild).
+# Same admission pattern as the s12f post-checkpoint batches: payloads are
+# pinned by byte_size/content_sha256 at staging, carry no historical backup
+# lineage, and live in the accepted restore tree's source_backfills directory.
+_P4_COMPANY_FULL_BATCH_ID = "p4-company-full-v1"
+_P4_COMPANY_FULL_SOURCE_ID = (
+    "inventory:" + _canonical_sha256(cast(JsonValue, {"authority": "p4-company-full-v1"}))
+)
+_P4_PATENT_FULL_BATCH_ID = "p4-patent-full-v1"
+_P4_PATENT_FULL_SOURCE_ID = (
+    "inventory:" + _canonical_sha256(cast(JsonValue, {"authority": "p4-patent-full-v1"}))
+)
+_P4_PAPER_SALVAGE_BATCH_ID = "p4-paper-salvage-v1"
+_P4_PAPER_SALVAGE_SOURCE_ID = (
+    "inventory:" + _canonical_sha256(cast(JsonValue, {"authority": "p4-paper-salvage-v1"}))
+)
+_P4_PROFESSOR_FULL_BATCH_ID = "p4-professor-full-v1"
+_P4_PROFESSOR_FULL_SOURCE_ID = (
+    "inventory:"
+    + _canonical_sha256(cast(JsonValue, {"authority": "p4-professor-full-v1"}))
+)
+_P4_PROFESSOR_PAPER_LINKS_BATCH_ID = "p4-professor-paper-links-v1"
+_P4_PROFESSOR_PAPER_LINKS_SOURCE_ID = (
+    "inventory:"
+    + _canonical_sha256(
+        cast(JsonValue, {"authority": "p4-professor-paper-links-v1"})
+    )
+)
+_P4_APPLICANT_BINDING_FULL_BATCH_ID = "p4-applicant-binding-full-v1"
+_P4_APPLICANT_BINDING_FULL_SOURCE_ID = (
+    "inventory:"
+    + _canonical_sha256(
+        cast(JsonValue, {"authority": "p4-applicant-binding-full-v1"})
+    )
+)
+
 _SUPPLEMENTAL_SOURCE_AUTHORITIES = {
     "inventory:f8fea06321bd45af4c88c9654497a8c504defbf56c5eaee1d758e26248ea2bae": (
         _SupplementalSourceAuthority(
@@ -1191,6 +1227,102 @@ _SUPPLEMENTAL_SOURCE_AUTHORITIES = {
             parser_options={},
         )
     ),
+    _P4_COMPANY_FULL_SOURCE_ID: (
+        _SupplementalSourceAuthority(
+            filename="p4-company-full-v1.jsonl",
+            byte_size=9010377,
+            content_sha256=(
+                "112ee058013912ea9d5a17aa5b7162e6710cec98eb786405a261c3738991b019"
+            ),
+            backup_manifest_filename=None,
+            backup_manifest_sha256=None,
+            source_member_manifest_sha256=None,
+            source_kind="historical_jsonl",
+            source_batch_id=_P4_COMPANY_FULL_BATCH_ID,
+            parser_name="historical_jsonl",
+            parser_options={},
+        )
+    ),
+    _P4_PATENT_FULL_SOURCE_ID: (
+        _SupplementalSourceAuthority(
+            filename="p4-patent-full-v1.jsonl",
+            byte_size=25530112,
+            content_sha256=(
+                "04536c4f55dc69595d44c629111fd38e9bd0766f4225d04c720e12ead1abf2a6"
+            ),
+            backup_manifest_filename=None,
+            backup_manifest_sha256=None,
+            source_member_manifest_sha256=None,
+            source_kind="historical_jsonl",
+            source_batch_id=_P4_PATENT_FULL_BATCH_ID,
+            parser_name="historical_jsonl",
+            parser_options={},
+        )
+    ),
+    _P4_PAPER_SALVAGE_SOURCE_ID: (
+        _SupplementalSourceAuthority(
+            filename="p4-paper-salvage-v1.jsonl",
+            byte_size=39620884,
+            content_sha256=(
+                "23bed7a3c18b75ca915a5fd67220b96f83fc77e392b6e053dc373507bc23acb3"
+            ),
+            backup_manifest_filename=None,
+            backup_manifest_sha256=None,
+            source_member_manifest_sha256=None,
+            source_kind="historical_jsonl",
+            source_batch_id=_P4_PAPER_SALVAGE_BATCH_ID,
+            parser_name="historical_jsonl",
+            parser_options={},
+        )
+    ),
+    _P4_PROFESSOR_FULL_SOURCE_ID: (
+        _SupplementalSourceAuthority(
+            filename="p4-professor-full-v1.jsonl",
+            byte_size=10080151,
+            content_sha256=(
+                "6d8dd6ed53183d24a15a69d5f0dd523f64512c032b2b5746489ad8d0b538faef"
+            ),
+            backup_manifest_filename=None,
+            backup_manifest_sha256=None,
+            source_member_manifest_sha256=None,
+            source_kind="historical_jsonl",
+            source_batch_id=_P4_PROFESSOR_FULL_BATCH_ID,
+            parser_name="historical_jsonl",
+            parser_options={},
+        )
+    ),
+    _P4_PROFESSOR_PAPER_LINKS_SOURCE_ID: (
+        _SupplementalSourceAuthority(
+            filename="p4-professor-paper-links-v1.jsonl",
+            byte_size=4850870,
+            content_sha256=(
+                "6e1adbd92bd501777314be6e31ce2dae6a5024c7a06dd0e93130278862fd7ef8"
+            ),
+            backup_manifest_filename=None,
+            backup_manifest_sha256=None,
+            source_member_manifest_sha256=None,
+            source_kind="historical_jsonl",
+            source_batch_id=_P4_PROFESSOR_PAPER_LINKS_BATCH_ID,
+            parser_name="historical_jsonl",
+            parser_options={},
+        )
+    ),
+    _P4_APPLICANT_BINDING_FULL_SOURCE_ID: (
+        _SupplementalSourceAuthority(
+            filename="p4-applicant-binding-full-v1.jsonl",
+            byte_size=744528,
+            content_sha256=(
+                "46c7337ab9b15d9c2a15dc235c6f683a73c9db05fbf8cd4673bbe578601d30f5"
+            ),
+            backup_manifest_filename=None,
+            backup_manifest_sha256=None,
+            source_member_manifest_sha256=None,
+            source_kind="historical_jsonl",
+            source_batch_id=_P4_APPLICANT_BINDING_FULL_BATCH_ID,
+            parser_name="historical_jsonl",
+            parser_options={},
+        )
+    ),
 }
 _SUPPLEMENTAL_SOURCE_IDS = frozenset(_SUPPLEMENTAL_SOURCE_AUTHORITIES)
 _SUPPLEMENTAL_SOURCE_PURPOSES = {
@@ -1202,6 +1334,12 @@ _SUPPLEMENTAL_SOURCE_PURPOSES = {
     _PROFESSOR_BACKFILL_SOURCE_ID: "professor_backfill",
     _COMPANY_BACKFILL_SOURCE_ID: "company_backfill",
     _APPLICANT_BINDING_SOURCE_ID: "applicant_binding",
+    _P4_COMPANY_FULL_SOURCE_ID: "company_full",
+    _P4_PATENT_FULL_SOURCE_ID: "patent_full",
+    _P4_PAPER_SALVAGE_SOURCE_ID: "paper_salvage",
+    _P4_PROFESSOR_FULL_SOURCE_ID: "professor_full",
+    _P4_PROFESSOR_PAPER_LINKS_SOURCE_ID: "professor_paper_links",
+    _P4_APPLICANT_BINDING_FULL_SOURCE_ID: "applicant_binding_full",
 }
 
 
@@ -1247,6 +1385,12 @@ _SOURCE_IDS_BY_DISPOSITION: dict[SourceDisposition, frozenset[str]] = {
             "inventory:2d237edecb0f22c141c270f0c9147e3c5a18824025d155f607bb58ef79acc1bb",
             "inventory:306888219094fdee6713d1d21bf2716d8fd1326efaf5a7a4875c08ce3cbc58f5",
             "inventory:3371136d61fe041eb7e7ba087d9ddc37843330b4d39187b355310ba50599d1d2",
+            _P4_COMPANY_FULL_SOURCE_ID,
+            _P4_PATENT_FULL_SOURCE_ID,
+            _P4_PAPER_SALVAGE_SOURCE_ID,
+            _P4_PROFESSOR_FULL_SOURCE_ID,
+            _P4_PROFESSOR_PAPER_LINKS_SOURCE_ID,
+            _P4_APPLICANT_BINDING_FULL_SOURCE_ID,
             "inventory:3bf673d8c10db3fc95558037794443a0b8f4a3994d5ae36ac7c85191440f1cd6",
             "inventory:4384044cb138f62be89edc0f9457065d00f08ce44d8dd9d06e0caefc555c3eef",
             "inventory:573305265d755bf3d85fb60e5e3d33e588838f7d71075d663f5f1b6836bf3ff7",
@@ -3161,6 +3305,18 @@ def _supplemental_record_object_ids(
         # handled entirely by their dedicated merge stages, which attach
         # lineage only for adopted records.
         matches = frozenset()
+    elif purpose in {
+        "company_full",
+        "patent_full",
+        "paper_salvage",
+        "professor_full",
+        "professor_paper_links",
+        "applicant_binding_full",
+    }:
+        # P4 full-column batches are create/binding lanes handled entirely by
+        # their dedicated merge stages (creation decisions happen inside the
+        # merges where existing-object overlap is resolved conservatively).
+        matches = frozenset()
     else:
         professor_key = _identity_lookup_key(payload.get("professor_name"))
         company_key = _identity_lookup_key(payload.get("company_name"))
@@ -3755,7 +3911,10 @@ def _merge_applicant_binding_rows(
     }
     adopted_patents: list[tuple[str, str]] = []
     for item in rows:
-        if _SUPPLEMENTAL_SOURCE_PURPOSES.get(item.source_id) != "applicant_binding":
+        if _SUPPLEMENTAL_SOURCE_PURPOSES.get(item.source_id) not in {
+            "applicant_binding",
+            "applicant_binding_full",
+        }:
             continue
         stats["records_seen"] += 1
         payload = item.payload
@@ -3946,6 +4105,736 @@ def _remap_applicant_binding_canonical_ids(
             if selected is not None and selected.get("applicants") is value:
                 selected["applicants"] = cast(JsonValue, remapped)
     return merged
+
+
+_P4_COMPANY_PROFILE_FALLBACK = (
+    "No dedicated summary was supplied by the full-column workbook source."
+)
+_P4_COMPANY_ROUTE_FALLBACK = "Not supplied by the full-column workbook source."
+_P4_PATENT_SUMMARY_FALLBACK = "Not supplied by the full-column patent source."
+_P4_PAPER_VENUE_FALLBACK = "未提供期刊出处"
+_P4_LINK_EVIDENCE_SOURCE = "postgres_salvage_verified_link"
+
+
+def _p4_named_reference(value: Any) -> JsonValue | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    reference, _, invalid = _named_reference_audit(
+        value.strip(), path="p4.full_column"
+    )
+    if invalid or not isinstance(reference, dict):
+        return None
+    return reference
+
+
+def _p4_named_reference_list(value: Any) -> list[dict[str, JsonValue]] | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    reference = _p4_named_reference(value)
+    return [reference] if reference is not None else None
+
+
+def _p4_optional_string(value: Any) -> str | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    if value.strip() in {"-", "—", "无", "暂无", "None", "null"}:
+        return None
+    return value.strip()
+
+
+def _p4_company_record(
+    payload: Mapping[str, Any], *, now: datetime
+) -> tuple[str, str, dict[str, Any], dict[str, JsonValue]] | None:
+    name = _p4_optional_string(payload.get("company_name"))
+    if not name:
+        return None
+    industry = _p4_named_reference(payload.get("industry"))
+    geography = _p4_named_reference(payload.get("geography"))
+    legal = _p4_named_reference(payload.get("legal_representative"))
+    tech_tags = _p4_named_reference_list(payload.get("business"))
+    founded_date, _ = _source_iso_date_string(
+        payload.get("founded_date"), path="p4.founded_date"
+    )
+    website = _p4_optional_string(payload.get("website"))
+    address = _p4_optional_string(payload.get("registered_address"))
+    team = _p4_optional_string(payload.get("team"))
+    product = _p4_optional_string(payload.get("product_summary"))
+    scenarios = _p4_optional_string(payload.get("application_scenarios"))
+    business = _p4_optional_string(payload.get("business"))
+    profile_summary = (
+        product
+        or business
+        or _P4_COMPANY_PROFILE_FALLBACK
+    )
+    route_summary = scenarios or _P4_COMPANY_ROUTE_FALLBACK
+    object_id = "company-p4:" + _canonical_sha256(cast(JsonValue, {"name": name}))
+    evidence = [
+        {
+            "source_type": "company_source_workbook",
+            "source_file": "企业总表.xlsx",
+            "fetched_at": now.isoformat(),
+        }
+    ]
+    core: dict[str, Any] = {"name": name, "normalized_name": name}
+    if industry is not None:
+        core["industry"] = industry
+        core["industry_tags"] = [industry]
+    if website is not None:
+        core["website"] = website
+    released_payload: dict[str, Any] = {
+        "id": object_id,
+        "object_type": "company",
+        "display_name": name,
+        "core_facts": core,
+        "summary_fields": {
+            "profile_summary": profile_summary,
+            "technology_route_summary": route_summary,
+        },
+        "evidence": evidence,
+        "last_updated": now.isoformat(),
+        "quality_status": "ready",
+    }
+    selected: dict[str, JsonValue] = {
+        "name": name,
+        "normalized_name": name,
+        "profile_summary": profile_summary,
+        "technology_route_summary": route_summary,
+    }
+    if industry is not None:
+        selected["industry"] = industry
+        selected["industry_tags"] = [industry]
+    if geography is not None:
+        selected["geography"] = geography
+    if legal is not None:
+        selected["legal_representative"] = legal
+    if tech_tags:
+        selected["tech_tags"] = tech_tags
+    if founded_date is not None:
+        selected["founded_at"] = founded_date
+    if website is not None:
+        selected["website"] = website
+    if address is not None:
+        selected["registered_address"] = address
+    if team is not None:
+        selected["team_description"] = team
+    if product is not None:
+        selected["product_description"] = product
+    return object_id, "company", released_payload, selected
+
+
+def _p4_patent_record(
+    payload: Mapping[str, Any], *, now: datetime
+) -> tuple[str, str, dict[str, Any], dict[str, JsonValue]] | None:
+    patent_id = payload.get("patent_id")
+    title = _p4_optional_string(payload.get("title"))
+    patent_number = _p4_optional_string(payload.get("patent_number"))
+    if (
+        not isinstance(patent_id, str)
+        or not patent_id.strip()
+        or not title
+        or not patent_number
+    ):
+        return None
+    applicants, invalid_applicants = _source_named_members(
+        payload.get("applicants"), path="p4.applicants", order_field="applicant_order"
+    )
+    inventors, invalid_inventors = _source_named_members(
+        payload.get("inventors"), path="p4.inventors", order_field="inventor_order"
+    )
+    if invalid_applicants or invalid_inventors or not applicants:
+        return None
+    patent_type = _p4_optional_string(payload.get("patent_type"))
+    abstract = _p4_optional_string(payload.get("abstract"))
+    summary_text = _p4_optional_string(payload.get("summary_text"))
+    effect = _p4_optional_string(payload.get("technology_effect"))
+    title_en = _p4_optional_string(payload.get("title_en"))
+    filing_date, _ = _source_iso_date_string(
+        payload.get("filing_date"), path="p4.filing_date"
+    )
+    publication_date, _ = _source_iso_date_string(
+        payload.get("publication_date"), path="p4.publication_date"
+    )
+    grant_date, _ = _source_iso_date_string(
+        payload.get("grant_date"), path="p4.grant_date"
+    )
+    evidence = [
+        {
+            "source_type": "admin_patent_release",
+            "source_file": "11月专利完整版-patent-release/released_objects.jsonl",
+            "fetched_at": now.isoformat(),
+        }
+    ]
+    core: dict[str, Any] = {
+        "title": title,
+        "applicants": applicants,
+        "inventors": inventors,
+        "patent_number": patent_number,
+    }
+    summary: dict[str, Any] = {
+        "summary_text": summary_text or _P4_PATENT_SUMMARY_FALLBACK
+    }
+    if patent_type is not None:
+        core["patent_type"] = patent_type
+    released_payload: dict[str, Any] = {
+        "id": patent_id,
+        "object_type": "patent",
+        "display_name": title,
+        "core_facts": core,
+        "summary_fields": summary,
+        "evidence": evidence,
+        "last_updated": now.isoformat(),
+        "quality_status": "ready",
+    }
+    selected: dict[str, JsonValue] = {
+        "title": title,
+        "applicants": applicants,
+        "inventors": inventors,
+        "patent_number": patent_number,
+        "summary_text": summary_text or _P4_PATENT_SUMMARY_FALLBACK,
+    }
+    if patent_type is not None:
+        selected["patent_type"] = patent_type
+    if abstract is not None:
+        selected["abstract"] = abstract
+    if effect is not None:
+        selected["technology_effect"] = effect
+    if title_en is not None:
+        selected["title_en"] = title_en
+    if filing_date is not None:
+        selected["filing_date"] = filing_date
+    if publication_date is not None:
+        selected["publication_date"] = publication_date
+    if grant_date is not None:
+        selected["grant_date"] = grant_date
+    return patent_id, "patent", released_payload, selected
+
+
+def _p4_paper_record(
+    payload: Mapping[str, Any], *, now: datetime
+) -> tuple[str, str, dict[str, Any], dict[str, JsonValue]] | None:
+    paper_id = payload.get("paper_id")
+    title = _p4_optional_string(payload.get("title"))
+    year = payload.get("year")
+    if (
+        not isinstance(paper_id, str)
+        or not paper_id.strip()
+        or not title
+        or not isinstance(year, int)
+        or isinstance(year, bool)
+        or not 1000 <= year <= 9999
+    ):
+        return None
+    authors, invalid_authors = _source_named_members(
+        payload.get("authors"), path="p4.authors", order_field="author_order"
+    )
+    if invalid_authors or not authors:
+        return None
+    venue_reference = _p4_named_reference(payload.get("venue")) or _p4_named_reference(
+        _P4_PAPER_VENUE_FALLBACK
+    )
+    doi = _p4_optional_string(payload.get("doi"))
+    arxiv_id = _p4_optional_string(payload.get("arxiv_id"))
+    abstract = _p4_optional_string(payload.get("abstract"))
+    summary_zh = _p4_optional_string(payload.get("summary_zh"))
+    citation_count = payload.get("citation_count")
+    evidence = [
+        {
+            "source_type": "postgres_salvage",
+            "source_file": "salvage.paper",
+            "fetched_at": now.isoformat(),
+        }
+    ]
+    core: dict[str, Any] = {
+        "title": title,
+        "authors": authors,
+        "year": year,
+        "venue": venue_reference,
+    }
+    summary: dict[str, Any] = {}
+    if doi is not None:
+        core["doi"] = doi
+    if arxiv_id is not None:
+        core["arxiv_id"] = arxiv_id
+    if abstract is not None:
+        core["abstract"] = abstract
+        summary["summary_text"] = abstract
+    if summary_zh is not None:
+        summary["summary_zh"] = summary_zh
+    released_payload: dict[str, Any] = {
+        "id": paper_id,
+        "object_type": "paper",
+        "display_name": title,
+        "core_facts": core,
+        "summary_fields": summary,
+        "evidence": evidence,
+        "last_updated": now.isoformat(),
+        "quality_status": "ready",
+    }
+    selected: dict[str, JsonValue] = {
+        "title": title,
+        "authors": authors,
+        "year": year,
+        "venue": venue_reference,
+    }
+    if doi is not None:
+        selected["doi"] = doi
+    if arxiv_id is not None:
+        selected["arxiv_id"] = arxiv_id
+    if abstract is not None:
+        selected["abstract"] = abstract
+        selected["summary_text"] = abstract
+    if summary_zh is not None:
+        selected["summary_zh"] = summary_zh
+    if isinstance(citation_count, int) and not isinstance(citation_count, bool):
+        selected["citation_count"] = citation_count
+    return paper_id, "paper", released_payload, selected
+
+
+def _p4_professor_record(
+    payload: Mapping[str, Any], *, now: datetime
+) -> tuple[str, str, dict[str, Any], dict[str, JsonValue]] | None:
+    professor_id = payload.get("professor_id")
+    name = _p4_optional_string(payload.get("name"))
+    institution = _p4_optional_string(payload.get("institution"))
+    if (
+        not isinstance(professor_id, str)
+        or not professor_id.strip()
+        or not name
+        or name in _PROFESSOR_POLLUTION_NAME_LABELS
+        or not institution
+    ):
+        return None
+    department = _p4_named_reference(payload.get("department"))
+    email = _p4_optional_string(payload.get("email"))
+    if email is not None:
+        email, _ = _decode_reversed_professor_email(email)
+    homepage = _p4_optional_string(payload.get("homepage"))
+    if homepage is not None and not homepage.startswith(("http://", "https://")):
+        homepage = None
+    title = _p4_optional_string(payload.get("title"))
+    profile_summary = _p4_optional_string(payload.get("profile_summary"))
+    research_directions, _ = _source_named_references(
+        payload.get("research_directions")
+        if isinstance(payload.get("research_directions"), list)
+        else [],
+        path="p4.research_directions",
+    )
+    patent_ids, invalid_patent_ids = _source_string_list(
+        payload.get("patent_ids"), path="p4.patent_ids"
+    )
+    if invalid_patent_ids:
+        patent_ids = []
+    paper_summary = _P4_COMPANY_PROFILE_FALLBACK
+    patent_summary = _P4_COMPANY_PROFILE_FALLBACK
+    core: dict[str, Any] = {
+        "name": name,
+        "canonical_name_zh": name,
+        "institution": institution,
+        "department": (
+            department
+            if department is not None
+            else _p4_named_reference(_PROFESSOR_MISSING_FIELD_FALLBACK)
+        ),
+        "email": email or _PROFESSOR_MISSING_FIELD_FALLBACK,
+        "homepage": homepage or _PROFESSOR_MISSING_FIELD_FALLBACK,
+        "title": title or _PROFESSOR_MISSING_FIELD_FALLBACK,
+        "paper_summary": paper_summary,
+        "patent_ids": patent_ids,
+        "patent_summary": patent_summary,
+        "research_directions": research_directions,
+    }
+    summary: dict[str, Any] = {
+        "profile_summary": profile_summary or _PROFESSOR_PROFILE_SUMMARY_FALLBACK
+    }
+    released_payload: dict[str, Any] = {
+        "id": professor_id,
+        "object_type": "professor",
+        "display_name": name,
+        "core_facts": core,
+        "summary_fields": summary,
+        "evidence": [
+            {
+                "source_type": "legacy_professor_jsonl",
+                "source_file": "enriched_v2/enriched_v3_merged union",
+                "fetched_at": now.isoformat(),
+            }
+        ],
+        "last_updated": now.isoformat(),
+        "quality_status": "ready",
+    }
+    selected: dict[str, JsonValue] = dict(core)
+    selected["profile_summary"] = summary["profile_summary"]
+    name_en = _p4_optional_string(payload.get("name_en"))
+    if name_en is not None:
+        selected["canonical_name_en"] = name_en
+    h_index = payload.get("h_index")
+    if isinstance(h_index, int) and not isinstance(h_index, bool):
+        selected["h_index"] = h_index
+    citation_count = payload.get("citation_count")
+    if isinstance(citation_count, int) and not isinstance(citation_count, bool):
+        selected["citation_count"] = citation_count
+    paper_count = payload.get("paper_count")
+    if isinstance(paper_count, int) and not isinstance(paper_count, bool):
+        selected["paper_count"] = paper_count
+    return professor_id, "professor", released_payload, selected
+
+
+def _p4_existing_overlap_keys(
+    *,
+    selected_by_object: Mapping[str, Mapping[str, JsonValue]],
+    domain_by_object: Mapping[str, str],
+) -> dict[str, dict[str, set[str]]]:
+    """Overlap indexes per domain for conservative create-or-skip decisions."""
+    company: set[str] = set()
+    patent: set[str] = set()
+    paper_doi: set[str] = set()
+    paper_title: set[str] = set()
+    professor_name_institution: set[str] = set()
+    for object_id, domain in domain_by_object.items():
+        selected = selected_by_object.get(object_id, {})
+        if domain == "company":
+            for value in (selected.get("name"), selected.get("normalized_name")):
+                if (key := _identity_lookup_key(value)) is not None:
+                    company.add(key)
+            aliases = selected.get("aliases")
+            if isinstance(aliases, list):
+                for alias in aliases:
+                    if (key := _identity_lookup_key(alias)) is not None:
+                        company.add(key)
+        elif domain == "patent":
+            if (key := _identity_lookup_key(selected.get("patent_number"))) is not None:
+                patent.add(key)
+        elif domain == "paper":
+            if (key := _identity_lookup_key(selected.get("doi"))) is not None:
+                paper_doi.add(key)
+            if (key := _identity_lookup_key(selected.get("title"))) is not None:
+                paper_title.add(key)
+        elif domain == "professor":
+            name_key = _identity_lookup_key(selected.get("name"))
+            institution_key = _identity_lookup_key(selected.get("institution"))
+            if name_key is not None:
+                professor_name_institution.add(name_key)
+                if institution_key is not None:
+                    professor_name_institution.add(f"{name_key}|{institution_key}")
+    return {
+        "company": company,
+        "patent": patent,
+        "paper_doi": paper_doi,
+        "paper_title": paper_title,
+        "professor": professor_name_institution,
+    }
+
+
+_P4_RECORD_BUILDERS = {
+    "company_full": _p4_company_record,
+    "patent_full": _p4_patent_record,
+    "paper_salvage": _p4_paper_record,
+    "professor_full": _p4_professor_record,
+}
+
+
+def _merge_p4_created_rows(
+    *,
+    request: BuildCandidateRequest,
+    rows: tuple[_ParsedReleasedObject, ...],
+    selected_by_object: dict[str, dict[str, JsonValue]],
+    domain_by_object: dict[str, str],
+    row_by_object: dict[str, _ParsedReleasedObject],
+    source_identities: dict[str, SourceIdentity],
+    identity_assertions: list[SourceAssertion],
+    field_assertions: list[SourceAssertion],
+    gaps: list[_RecordedGap],
+    supplemental_domains_by_batch: defaultdict[str, set[str]],
+    now: datetime,
+) -> tuple[
+    list[SourceAssertion],
+    list[SourceAssertion],
+    dict[str, dict[str, int]],
+    tuple[tuple[str, str], ...],
+]:
+    """Admit P4 full-column records as first-class released objects.
+
+    Conservative semantics mirroring the s12f company backfill: a record whose
+    identity overlaps a retained object (company name/alias, patent number,
+    paper doi/title, professor name) is skipped, never merged on top; only
+    genuinely new objects are synthesized and enter identity, decision,
+    inclusion, and projection exactly like released rows.
+    """
+    overlap = _p4_existing_overlap_keys(
+        selected_by_object=selected_by_object, domain_by_object=domain_by_object
+    )
+    stats = {
+        purpose: {
+            "records_seen": 0,
+            "records_created": 0,
+            "records_skipped_existing": 0,
+            "records_duplicate": 0,
+            "records_invalid": 0,
+        }
+        for purpose in _P4_RECORD_BUILDERS
+    }
+    created_keys: dict[str, set[str]] = {
+        "company": set(),
+        "patent": set(),
+        "paper": set(),
+        "professor": set(),
+    }
+    adopted: list[tuple[str, str]] = []
+    merged_assertions = list(field_assertions)
+    merged_identity_assertions = list(identity_assertions)
+    for item in rows:
+        purpose = _SUPPLEMENTAL_SOURCE_PURPOSES.get(item.source_id)
+        builder = _P4_RECORD_BUILDERS.get(purpose or "")
+        if builder is None:
+            continue
+        current = stats[purpose]
+        current["records_seen"] += 1
+        built = builder(item.payload, now=now)
+        if built is None:
+            current["records_invalid"] += 1
+            gaps.append(
+                _gap(
+                    release_id=request.candidate_release_id,
+                    run_id=request.run_id,
+                    record=item.record,
+                    domain="cross_domain",
+                    reason=(
+                        f"p4 full-column record ({purpose}) carries malformed "
+                        "identity fields"
+                    ),
+                    affected_paths=("p4.identity",),
+                    now=now,
+                )
+            )
+            continue
+        object_id, domain, released_payload, selected = built
+        if object_id in selected_by_object:
+            current["records_duplicate"] += 1
+            continue
+        if domain == "company":
+            name_key = _identity_lookup_key(selected.get("name"))
+            if name_key in overlap["company"]:
+                current["records_skipped_existing"] += 1
+                continue
+            if name_key in created_keys["company"]:
+                current["records_duplicate"] += 1
+                continue
+            created_keys["company"].add(name_key)
+        elif domain == "patent":
+            number_key = _identity_lookup_key(selected.get("patent_number"))
+            if number_key in overlap["patent"]:
+                current["records_skipped_existing"] += 1
+                continue
+            if number_key in created_keys["patent"]:
+                current["records_duplicate"] += 1
+                continue
+            created_keys["patent"].add(number_key)
+        elif domain == "paper":
+            doi_key = _identity_lookup_key(selected.get("doi"))
+            title_key = _identity_lookup_key(selected.get("title"))
+            if doi_key in overlap["paper_doi"] or title_key in overlap["paper_title"]:
+                current["records_skipped_existing"] += 1
+                continue
+            if title_key in created_keys["paper"]:
+                current["records_duplicate"] += 1
+                continue
+            created_keys["paper"].add(title_key)
+        elif domain == "professor":
+            name_key = _identity_lookup_key(selected.get("name"))
+            if name_key in overlap["professor"]:
+                current["records_skipped_existing"] += 1
+                continue
+            if name_key in created_keys["professor"]:
+                current["records_duplicate"] += 1
+                continue
+            created_keys["professor"].add(name_key)
+        synthesized = _ParsedReleasedObject(
+            source_id=item.source_id,
+            source_batch_id=item.source_batch_id,
+            record=item.record,
+            artifact=item.artifact,
+            payload=released_payload,
+        )
+        observed_at = _observed_at(released_payload, now)
+        source_identity_id = f"source-released-object:{object_id}"
+        normalized_keys = _released_object_identity_keys(
+            object_id=object_id,
+            domain=domain,
+            selected=selected,
+            payload=released_payload,
+        )
+        source_identities[object_id] = SourceIdentity(
+            source_identity_id=source_identity_id,
+            source_system="p4-full-column-rebuild",
+            source_key=object_id,
+            entity_type=domain,
+            source_record_ids=(item.record.record_id,),
+            normalized_keys=normalized_keys,
+            first_observed_at=observed_at,
+            last_observed_at=observed_at,
+            state=SourceIdentityState.active,
+        )
+        merged_identity_assertions.extend(
+            SourceAssertion(
+                assertion_id=f"identity-assertion:{object_id}:{key}",
+                source_record_id=item.record.record_id,
+                source_identity_id=source_identity_id,
+                subject_entity_type=domain,
+                field_path=f"identity.{key}",
+                value=value,
+                observed_at=observed_at,
+                assertion_run_id=f"identity-assertions:{request.run_id}",
+            )
+            for key, value in sorted(normalized_keys.items())
+        )
+        selected_by_object[object_id] = selected
+        domain_by_object[object_id] = domain
+        row_by_object[object_id] = synthesized
+        merged_assertions.extend(
+            SourceAssertion(
+                assertion_id=f"assertion:{object_id}:{field_path}",
+                source_record_id=item.record.record_id,
+                source_identity_id=source_identity_id,
+                subject_entity_type=domain,
+                field_path=field_path,
+                value=value,
+                observed_at=observed_at,
+                assertion_run_id=f"assertions:{request.run_id}",
+            )
+            for field_path, value in sorted(selected.items())
+        )
+        current["records_created"] += 1
+        adopted.append((object_id, item.record.record_id))
+        supplemental_domains_by_batch[item.source_batch_id].add(domain)
+    return (
+        merged_assertions,
+        merged_identity_assertions,
+        stats,
+        tuple(adopted),
+    )
+
+
+def _merge_p4_professor_paper_links(
+    *,
+    request: BuildCandidateRequest,
+    rows: tuple[_ParsedReleasedObject, ...],
+    domain_by_object: Mapping[str, str],
+    gaps: list[_RecordedGap],
+    now: datetime,
+) -> tuple[tuple[_ParsedReleasedObject, ...], dict[str, int]]:
+    """Synthesize verified salvage attribution links as released link objects.
+
+    A link survives only when both endpoints exist as retained objects; every
+    unmatched endpoint is recorded as a typed gap (never silently dropped).
+    """
+    stats = {
+        "records_seen": 0,
+        "links_created": 0,
+        "records_unmatched_professor": 0,
+        "records_unmatched_paper": 0,
+    }
+    synthesized: list[_ParsedReleasedObject] = []
+    for item in rows:
+        if (
+            _SUPPLEMENTAL_SOURCE_PURPOSES.get(item.source_id)
+            != "professor_paper_links"
+        ):
+            continue
+        stats["records_seen"] += 1
+        payload = item.payload
+        professor_id = payload.get("professor_id")
+        paper_id = payload.get("paper_id")
+        if (
+            not isinstance(professor_id, str)
+            or not professor_id.strip()
+            or not isinstance(paper_id, str)
+            or not paper_id.strip()
+        ):
+            stats["records_unmatched_professor"] += 1
+            gaps.append(
+                _gap(
+                    release_id=request.candidate_release_id,
+                    run_id=request.run_id,
+                    record=item.record,
+                    domain="cross_domain",
+                    reason="p4 salvage link carries malformed endpoints",
+                    affected_paths=("professor_id", "paper_id"),
+                    now=now,
+                )
+            )
+            continue
+        if domain_by_object.get(professor_id) != "professor":
+            stats["records_unmatched_professor"] += 1
+            gaps.append(
+                _gap(
+                    release_id=request.candidate_release_id,
+                    run_id=request.run_id,
+                    record=item.record,
+                    domain="professor",
+                    reason=(
+                        f"p4 salvage link professor endpoint {professor_id!r} "
+                        "is not a retained professor object"
+                    ),
+                    affected_paths=("core_facts.professor_id",),
+                    now=now,
+                )
+            )
+            continue
+        if domain_by_object.get(paper_id) != "paper":
+            stats["records_unmatched_paper"] += 1
+            gaps.append(
+                _gap(
+                    release_id=request.candidate_release_id,
+                    run_id=request.run_id,
+                    record=item.record,
+                    domain="paper",
+                    reason=(
+                        f"p4 salvage link paper endpoint {paper_id!r} "
+                        "is not a retained paper object"
+                    ),
+                    affected_paths=("core_facts.paper_id",),
+                    now=now,
+                )
+            )
+            continue
+        professor_name = payload.get("professor_name")
+        display = (
+            f"{professor_name} -> {paper_id}"
+            if isinstance(professor_name, str) and professor_name.strip()
+            else f"{professor_id} -> {paper_id}"
+        )
+        link_digest = _canonical_sha256(
+            cast(JsonValue, {"paper_id": paper_id, "professor_id": professor_id})
+        )
+        synthesized.append(
+            _ParsedReleasedObject(
+                source_id=item.source_id,
+                source_batch_id=item.source_batch_id,
+                record=item.record,
+                artifact=item.artifact,
+                payload={
+                    "id": f"p4-professor-paper-link:{link_digest}",
+                    "object_type": "professor_paper_link",
+                    "display_name": display,
+                    "core_facts": {
+                        "professor_id": professor_id,
+                        "paper_id": paper_id,
+                    },
+                    "summary_fields": {},
+                    "evidence": [
+                        {
+                            "source_type": _P4_LINK_EVIDENCE_SOURCE,
+                            "source_file": "salvage.professor_paper_link",
+                            "fetched_at": now.isoformat(),
+                        }
+                    ],
+                    "last_updated": now.isoformat(),
+                    "quality_status": "ready",
+                },
+            )
+        )
+        stats["links_created"] += 1
+    return tuple(synthesized), stats
 
 
 def _professor_author_aliases(selected: Mapping[str, JsonValue]) -> frozenset[str]:
@@ -4459,6 +5348,30 @@ def _map_public_authority(
             )
 
     supplemental_domains_by_batch: defaultdict[str, set[str]] = defaultdict(set)
+
+    # P4 full-column creation runs before supplemental matching so the new
+    # objects participate in the same identity/decision/inclusion graph as
+    # released rows; overlap with retained objects is resolved conservatively
+    # (skip, never overwrite) inside the merge.
+    (
+        field_assertions,
+        identity_assertions,
+        _p4_create_stats,
+        _p4_adopted_creates,
+    ) = _merge_p4_created_rows(
+        request=request,
+        rows=supplemental_rows,
+        selected_by_object=selected_by_object,
+        domain_by_object=domain_by_object,
+        row_by_object=row_by_object,
+        source_identities=source_identities,
+        identity_assertions=identity_assertions,
+        field_assertions=field_assertions,
+        gaps=gaps,
+        supplemental_domains_by_batch=supplemental_domains_by_batch,
+        now=now,
+    )
+
     supplemental_indexes = _supplemental_match_indexes(
         selected_by_object=selected_by_object,
         row_by_object=row_by_object,
@@ -4467,6 +5380,12 @@ def _map_public_authority(
         if _SUPPLEMENTAL_SOURCE_PURPOSES.get(item.source_id) in {
             "company_backfill",
             "applicant_binding",
+            "company_full",
+            "patent_full",
+            "paper_salvage",
+            "professor_full",
+            "professor_paper_links",
+            "applicant_binding_full",
         }:
             # S12F company backfill and applicant binding never match retained
             # objects here: company_backfill creates new companies and
@@ -4651,6 +5570,34 @@ def _map_public_authority(
             )
         valid_links.append(item)
     links = valid_links
+
+    # P4 salvage links: endpoints were validated against the retained graph
+    # inside the merge (professor/paper objects including P4-created ones);
+    # attach the same endpoint lineage the main-lane validation grants.
+    p4_links, _p4_link_stats = _merge_p4_professor_paper_links(
+        request=request,
+        rows=supplemental_rows,
+        domain_by_object=domain_by_object,
+        gaps=gaps,
+        now=now,
+    )
+    for item in p4_links:
+        core = cast(dict[str, Any], item.payload["core_facts"])
+        for endpoint in (
+            cast(str, core["professor_id"]),
+            cast(str, core["paper_id"]),
+        ):
+            assert domain_by_object[endpoint] in {"professor", "paper"}
+            source = source_identities[endpoint]
+            source_identities[endpoint] = source.model_copy(
+                update={
+                    "source_record_ids": tuple(
+                        sorted({*source.source_record_ids, item.record.record_id})
+                    )
+                },
+                deep=True,
+            )
+    links.extend(p4_links)
 
     derived_links = _derived_professor_paper_links(
         source_identities=source_identities,

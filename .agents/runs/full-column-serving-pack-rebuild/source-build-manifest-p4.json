@@ -1,0 +1,868 @@
+{
+  "acceptance_record_sha256": "3155d8908ab560d8d97ed08881f067564f38e23c097e46fe111a056ef739fc5b",
+  "approved_recollection_root": null,
+  "backup_manifest_sha256": "a14c1eab673f8fca2bdbf4d50dfe8e9b33cf077b9314855298d29a16a82e59c8",
+  "content_sha256": "a6e82fcd9dd5b2da22fd0c73cfe81b674ad04827092eb01fd4442956f70e184d",
+  "inventory_entries": [
+    {
+      "approval_reference": null,
+      "disposition": "protection_only",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact protection_only disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "forensic_recovery_tree"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "acceptance_only",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact acceptance_only disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:03cdece09485247f5a036871021e770a9b3b35c25a515fb0314655589f5d9c44"
+    },
+    {
+      "approval_reference": "approved-p4-full-column-rebuild",
+      "disposition": "evidence_input",
+      "gap_id": null,
+      "members": [
+        {
+          "backup_member_manifest_path": null,
+          "backup_member_manifest_sha256": null,
+          "byte_size": 744528,
+          "content_path": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z/workspace/docs/source_backfills/p4-applicant-binding-full-v1.jsonl",
+          "content_sha256": "46c7337ab9b15d9c2a15dc235c6f683a73c9db05fbf8cd4673bbe578601d30f5",
+          "member_id": "accepted-restore:workspace/docs/source_backfills/p4-applicant-binding-full-v1.jsonl",
+          "observed_at": "2026-08-19T00:00:00Z",
+          "parent_source_id": "inventory:0ac8facebb646f370afc25f8f68fe81b32d4c014663f3528bf59f28acb3455f6",
+          "parser": {
+            "options": {},
+            "parser_name": "historical_jsonl",
+            "parser_version": "v1",
+            "schema_version": "historical-jsonl-record-v1"
+          },
+          "restore_member_path": "workspace/docs/source_backfills/p4-applicant-binding-full-v1.jsonl",
+          "source_batch_id": "p4-applicant-binding-full-v1",
+          "source_kind": "historical_jsonl",
+          "source_member_manifest_sha256": null
+        }
+      ],
+      "rationale": "P4 full-column rebuild admits the full applicant-pool resolution (2,373 applicants; s12f audited resolutions reused verbatim, full-column name-normalization joins, typed-gap unmatched).",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:0ac8facebb646f370afc25f8f68fe81b32d4c014663f3528bf59f28acb3455f6"
+    },
+    {
+      "approval_reference": "approved-p4-full-column-rebuild",
+      "disposition": "evidence_input",
+      "gap_id": null,
+      "members": [
+        {
+          "backup_member_manifest_path": null,
+          "backup_member_manifest_sha256": null,
+          "byte_size": 4850870,
+          "content_path": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z/workspace/docs/source_backfills/p4-professor-paper-links-v1.jsonl",
+          "content_sha256": "6e1adbd92bd501777314be6e31ce2dae6a5024c7a06dd0e93130278862fd7ef8",
+          "member_id": "accepted-restore:workspace/docs/source_backfills/p4-professor-paper-links-v1.jsonl",
+          "observed_at": "2026-08-19T00:00:00Z",
+          "parent_source_id": "inventory:0c79c0f1a9639abad93a2f4b702fce6ee21a2fffa3855893bc85ea1f2c053850",
+          "parser": {
+            "options": {},
+            "parser_name": "historical_jsonl",
+            "parser_version": "v1",
+            "schema_version": "historical-jsonl-record-v1"
+          },
+          "restore_member_path": "workspace/docs/source_backfills/p4-professor-paper-links-v1.jsonl",
+          "source_batch_id": "p4-professor-paper-links-v1",
+          "source_kind": "historical_jsonl",
+          "source_member_manifest_sha256": null
+        }
+      ],
+      "rationale": "P4 full-column rebuild admits the salvage verified professor-paper links (18,655 name-anchored rows) as attribution evidence.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:0c79c0f1a9639abad93a2f4b702fce6ee21a2fffa3855893bc85ea1f2c053850"
+    },
+    {
+      "approval_reference": "approved-s12f-applicant-resolution-backfill",
+      "disposition": "evidence_input",
+      "gap_id": null,
+      "members": [
+        {
+          "backup_member_manifest_path": null,
+          "backup_member_manifest_sha256": null,
+          "byte_size": 442650,
+          "content_path": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z/workspace/docs/source_backfills/applicant_name_resolution.jsonl",
+          "content_sha256": "2ddd712d5cf518ec84fb0445282abde193b2c4c304f0439caaa67168c71fc9e2",
+          "member_id": "accepted-restore:workspace/docs/source_backfills/applicant_name_resolution.jsonl",
+          "observed_at": "2026-08-01T13:35:30Z",
+          "parent_source_id": "inventory:1107b1df6dfa2f0faab5b04640a0317f53513781e63f4977078df4b6f5427a89",
+          "parser": {
+            "options": {},
+            "parser_name": "historical_jsonl",
+            "parser_version": "v1",
+            "schema_version": "historical-jsonl-record-v1"
+          },
+          "restore_member_path": "workspace/docs/source_backfills/applicant_name_resolution.jsonl",
+          "source_batch_id": "s12f-applicant-binding-v1",
+          "source_kind": "historical_jsonl",
+          "source_member_manifest_sha256": null
+        }
+      ],
+      "rationale": "S12F admits the company backfill and applicant-binding batches produced by the s12f applicant-resolution pipeline (700 audited companies; every released patent applicant mapped to a canonical company).  Both payloads postdate the Accepted S2B checkpoint, so they carry no historical backup lineage and are verified by pinned content hash at staging.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:1107b1df6dfa2f0faab5b04640a0317f53513781e63f4977078df4b6f5427a89"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:11c9847d8bb362984a35e54c25d6f3f01f74b6209245d359e40f7dbd98738829"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "protection_only",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact protection_only disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:1a873f91cf59065877e3b21a5b5a046c3c7705b128d9ae8c9db31c23588e439f"
+    },
+    {
+      "approval_reference": "approved-s12c-r7-fixed-source-promotion",
+      "disposition": "evidence_input",
+      "gap_id": null,
+      "members": [
+        {
+          "backup_member_manifest_path": "manifests/inventory/012-1a987406c94c0f1e7b69e0272d8f06582f7f1fe2668f3cfbdd0e48780eed3026.jsonl",
+          "backup_member_manifest_sha256": "a701f6e6cd879738923c2c0bb104cb75114f6fec1dae753dde71a87fe4562107",
+          "byte_size": 579,
+          "content_path": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z/workspace/docs/source_backfills/professor_company_roles.jsonl",
+          "content_sha256": "8b3ffd1a8d4a9f5fda7ec760fc241b25de9417a2477d8ec51dbdb588de2e7e02",
+          "member_id": "accepted-restore:workspace/docs/source_backfills/professor_company_roles.jsonl",
+          "observed_at": "2026-07-11T15:44:30Z",
+          "parent_source_id": "inventory:1a987406c94c0f1e7b69e0272d8f06582f7f1fe2668f3cfbdd0e48780eed3026",
+          "parser": {
+            "options": {},
+            "parser_name": "historical_jsonl",
+            "parser_version": "v1",
+            "schema_version": "historical-jsonl-record-v1"
+          },
+          "restore_member_path": "workspace/docs/source_backfills/professor_company_roles.jsonl",
+          "source_batch_id": "s12c-r7-professor-company-roles-v1",
+          "source_kind": "historical_jsonl",
+          "source_member_manifest_sha256": "acfcb07613a840a923310a42690d3e9a08a6cb955330548628c10b4216883550"
+        }
+      ],
+      "rationale": "S12C r7 restore-verified fixed source admitted through immutable landing; production serving never reads the customer workbook.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:1a987406c94c0f1e7b69e0272d8f06582f7f1fe2668f3cfbdd0e48780eed3026"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:20be9e411f58e2d8a13f82ff094c5424074ba95bf6668177f64edc2396463d07"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:27e2129243e993646d1e976814f26fd42590dd6c02639577c1ce6cdf36329ce7"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:2d237edecb0f22c141c270f0c9147e3c5a18824025d155f607bb58ef79acc1bb"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:306888219094fdee6713d1d21bf2716d8fd1326efaf5a7a4875c08ce3cbc58f5"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:3371136d61fe041eb7e7ba087d9ddc37843330b4d39187b355310ba50599d1d2"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:3bf673d8c10db3fc95558037794443a0b8f4a3994d5ae36ac7c85191440f1cd6"
+    },
+    {
+      "approval_reference": "approved-s12c-r7-fixed-source-promotion",
+      "disposition": "evidence_input",
+      "gap_id": null,
+      "members": [
+        {
+          "backup_member_manifest_path": "manifests/inventory/009-4384044cb138f62be89edc0f9457065d00f08ce44d8dd9d06e0caefc555c3eef.jsonl",
+          "backup_member_manifest_sha256": "5408445fc4d706ab180b9c86f3e1b42f1e3a0632f21d7034d8dec07d5645fcbb",
+          "byte_size": 1619,
+          "content_path": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z/workspace/docs/source_backfills/paper_exact_identifier_backfills.jsonl",
+          "content_sha256": "beb47502842916d8a37cadc06fe356b45b1111f8c4456852e50549fe3651c004",
+          "member_id": "accepted-restore:workspace/docs/source_backfills/paper_exact_identifier_backfills.jsonl",
+          "observed_at": "2026-07-11T15:44:30Z",
+          "parent_source_id": "inventory:4384044cb138f62be89edc0f9457065d00f08ce44d8dd9d06e0caefc555c3eef",
+          "parser": {
+            "options": {},
+            "parser_name": "historical_jsonl",
+            "parser_version": "v1",
+            "schema_version": "historical-jsonl-record-v1"
+          },
+          "restore_member_path": "workspace/docs/source_backfills/paper_exact_identifier_backfills.jsonl",
+          "source_batch_id": "s12c-r7-paper-identifiers-v1",
+          "source_kind": "historical_jsonl",
+          "source_member_manifest_sha256": "338b825e6cffeadb9813ed1e87ce1db89019760dd8eb38f8fa6c2eda4f53d33d"
+        }
+      ],
+      "rationale": "S12C r7 restore-verified fixed source admitted through immutable landing; production serving never reads the customer workbook.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:4384044cb138f62be89edc0f9457065d00f08ce44d8dd9d06e0caefc555c3eef"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "acceptance_only",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact acceptance_only disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:43c44a4cb584803b79fcd4760461af7dcd68304ac163d961a83643067e5227d8"
+    },
+    {
+      "approval_reference": "approved-p4-full-column-rebuild",
+      "disposition": "evidence_input",
+      "gap_id": null,
+      "members": [
+        {
+          "backup_member_manifest_path": null,
+          "backup_member_manifest_sha256": null,
+          "byte_size": 10080151,
+          "content_path": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z/workspace/docs/source_backfills/p4-professor-full-v1.jsonl",
+          "content_sha256": "6d8dd6ed53183d24a15a69d5f0dd523f64512c032b2b5746489ad8d0b538faef",
+          "member_id": "accepted-restore:workspace/docs/source_backfills/p4-professor-full-v1.jsonl",
+          "observed_at": "2026-08-19T00:00:00Z",
+          "parent_source_id": "inventory:526ff7d6bcb6e9fc29396f64db776f113e3aed3e1fec342cfaaa7c781378457c",
+          "parser": {
+            "options": {},
+            "parser_name": "historical_jsonl",
+            "parser_version": "v1",
+            "schema_version": "historical-jsonl-record-v1"
+          },
+          "restore_member_path": "workspace/docs/source_backfills/p4-professor-full-v1.jsonl",
+          "source_batch_id": "p4-professor-full-v1",
+          "source_kind": "historical_jsonl",
+          "source_member_manifest_sha256": null
+        }
+      ],
+      "rationale": "P4 full-column rebuild admits the legacy professor JSONL union (v2 3,274 + v3-merged 825, 3,735 distinct name+institution) as released professor objects.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:526ff7d6bcb6e9fc29396f64db776f113e3aed3e1fec342cfaaa7c781378457c"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "requirements_only",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact requirements_only disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:531d3cb88f7c5605d5c3fe2d8c4e6564106c71cf3d278f23b3eea6daad08d145"
+    },
+    {
+      "approval_reference": "approved-s12f-applicant-resolution-backfill",
+      "disposition": "evidence_input",
+      "gap_id": null,
+      "members": [
+        {
+          "backup_member_manifest_path": null,
+          "backup_member_manifest_sha256": null,
+          "byte_size": 632688,
+          "content_path": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z/workspace/docs/source_backfills/company_backfill.jsonl",
+          "content_sha256": "97b2e1ad4c60bc8e944a701d1d7b956df420ed6a20b565e038733307f7621eae",
+          "member_id": "accepted-restore:workspace/docs/source_backfills/company_backfill.jsonl",
+          "observed_at": "2026-08-01T13:35:30Z",
+          "parent_source_id": "inventory:53bb8f4ab16868619fdfa2380bf091c45bd9999e9008a1fdea884d30050adf67",
+          "parser": {
+            "options": {},
+            "parser_name": "historical_jsonl",
+            "parser_version": "v1",
+            "schema_version": "historical-jsonl-record-v1"
+          },
+          "restore_member_path": "workspace/docs/source_backfills/company_backfill.jsonl",
+          "source_batch_id": "s12f-company-backfill-v1",
+          "source_kind": "historical_jsonl",
+          "source_member_manifest_sha256": null
+        }
+      ],
+      "rationale": "S12F admits the company backfill and applicant-binding batches produced by the s12f applicant-resolution pipeline (700 audited companies; every released patent applicant mapped to a canonical company).  Both payloads postdate the Accepted S2B checkpoint, so they carry no historical backup lineage and are verified by pinned content hash at staging.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:53bb8f4ab16868619fdfa2380bf091c45bd9999e9008a1fdea884d30050adf67"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "acceptance_only",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact acceptance_only disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:55c969432f588015934396a66874ea6b533d431aa3b521a61f5681c4f2f886a2"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:573305265d755bf3d85fb60e5e3d33e588838f7d71075d663f5f1b6836bf3ff7"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "protection_only",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact protection_only disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:5880891dd3b3c04f1f8e9b29c308dd9be12b233a3165338bf992c17f3aa848a8"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "requirements_only",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact requirements_only disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:5b0c06ada31be18bfb8ce8704c3e1a7cf04346f243756b451e5d37b414328d2f"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "requirements_only",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact requirements_only disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:5b17380f2b046730ccda68910ee8dec2af10319093d7b86734780f6a19f4c847"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:5e1ba9daab456914060f8df8b826a57006cb6ae8486ac816f7b1721186c17c73"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:5eed796459843f74ecaebf4f0f8b20fd4570d2a343a442f9ddcbe0f26362d6ab"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:603b9b33d7e8f3581d670659002768778ec06914a1f1586a0742619024038083"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "requirements_only",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact requirements_only disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:619924e69182f9fffe9bef24455d50ebee787fabe9fb92b74e413a5e7a46544c"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:6533126e9f7b14a478e8fc098541258d9b075ce70de16288b43dcf9abed59cc1"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "protection_only",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact protection_only disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:65c4a289550957659155a00799158dd615be14005eb8f35afc778cfa3943accd"
+    },
+    {
+      "approval_reference": "approved-p4-full-column-rebuild",
+      "disposition": "evidence_input",
+      "gap_id": null,
+      "members": [
+        {
+          "backup_member_manifest_path": null,
+          "backup_member_manifest_sha256": null,
+          "byte_size": 9010377,
+          "content_path": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z/workspace/docs/source_backfills/p4-company-full-v1.jsonl",
+          "content_sha256": "112ee058013912ea9d5a17aa5b7162e6710cec98eb786405a261c3738991b019",
+          "member_id": "accepted-restore:workspace/docs/source_backfills/p4-company-full-v1.jsonl",
+          "observed_at": "2026-08-19T00:00:00Z",
+          "parent_source_id": "inventory:68b1c236d47f75f448fd9e1627b209b62526a2a5c1d11d055c49881af55b1ee2",
+          "parser": {
+            "options": {},
+            "parser_name": "historical_jsonl",
+            "parser_version": "v1",
+            "schema_version": "historical-jsonl-record-v1"
+          },
+          "restore_member_path": "workspace/docs/source_backfills/p4-company-full-v1.jsonl",
+          "source_batch_id": "p4-company-full-v1",
+          "source_kind": "historical_jsonl",
+          "source_member_manifest_sha256": null
+        }
+      ],
+      "rationale": "P4 full-column rebuild admits the complete company workbook (6,514 deduplicated rows x 16 columns) as released company objects.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:68b1c236d47f75f448fd9e1627b209b62526a2a5c1d11d055c49881af55b1ee2"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:6cf786f09478810a09cffe194d96e046a4d3e28a465c4418d8be2a13a126e5f7"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:7a323115d06360192111c84e2a4da324146948d18c3189751885f6b95ac6d255"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "requirements_only",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact requirements_only disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:7bbd1e8e41e98162add1fbb385443061ac91b8a8fd7e0da3fa9a2a6a5dac47ee"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:82e601426705c3ab7ea24b9b9736975fc8f22128e077aa279075e19558309ee3"
+    },
+    {
+      "approval_reference": "approved-s12f-professor-backfill-promotion",
+      "disposition": "evidence_input",
+      "gap_id": null,
+      "members": [
+        {
+          "backup_member_manifest_path": null,
+          "backup_member_manifest_sha256": null,
+          "byte_size": 33352,
+          "content_path": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z/workspace/docs/source_backfills/professor_backfill_batch.jsonl",
+          "content_sha256": "06b44c047a618ba9e9e90404bf4ecf57ce4e007b9164f9e226ed8085ad9832ab",
+          "member_id": "accepted-restore:workspace/docs/source_backfills/professor_backfill_batch.jsonl",
+          "observed_at": "2026-08-01T13:35:30Z",
+          "parent_source_id": "inventory:8c3084c6d7364e43089903d8bd60c182534aa199eb7c04e6721291ad0b358e99",
+          "parser": {
+            "options": {},
+            "parser_name": "historical_jsonl",
+            "parser_version": "v1",
+            "schema_version": "historical-jsonl-record-v1"
+          },
+          "restore_member_path": "workspace/docs/source_backfills/professor_backfill_batch.jsonl",
+          "source_batch_id": "s12e-professor-backfill-v1",
+          "source_kind": "historical_jsonl",
+          "source_member_manifest_sha256": null
+        }
+      ],
+      "rationale": "S12F admits the s12e-professor-backfill-v1 field backfill (16 audited professors; department/email/title from official institution pages) through the registered-but-unprojected professor-metrics inventory slot.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:8c3084c6d7364e43089903d8bd60c182534aa199eb7c04e6721291ad0b358e99"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:909ada3e637a0220acc7d7a6335d3743045762e5c720e6120141c79ae5b0d8f8"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:98a87f5fea987e586f33ead0914b848d4acd9e03a3312eaa5a8eb01f7c8765f5"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "acceptance_only",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact acceptance_only disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:9d70d6f276e39cd177079766739fbce58723ef79435cf502eedd798207f5c720"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:aa84883ccf6e8034b9ebe6d03fa91d6b265f4abd1f096ceb13d219d38a1a6435"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:b2fd4e9bcf4238424785571f65e94161f07f9631a5b589ace749397527ac35ad"
+    },
+    {
+      "approval_reference": "approved-s12c-r7-fixed-source-promotion",
+      "disposition": "evidence_input",
+      "gap_id": null,
+      "members": [
+        {
+          "backup_member_manifest_path": "manifests/inventory/014-b84a6eac6bc59c9b9431b94ae8735bcda813b3186c28455719ac3bd6718d41ae.jsonl",
+          "backup_member_manifest_sha256": "0ec89486e7fe05ddc7cc2862d2472b4c2f0ae3893c3c02de67c77c24205900ee",
+          "byte_size": 6924,
+          "content_path": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z/workspace/docs/source_backfills/company_workbook_critical_supplement.xlsx",
+          "content_sha256": "cdefadb03a4a804690d8ee9fe708a53c71f9a7b7ca858be0b8911dc767193790",
+          "member_id": "accepted-restore:workspace/docs/source_backfills/company_workbook_critical_supplement.xlsx",
+          "observed_at": "2026-07-11T15:44:30Z",
+          "parent_source_id": "inventory:b84a6eac6bc59c9b9431b94ae8735bcda813b3186c28455719ac3bd6718d41ae",
+          "parser": {
+            "options": {
+              "header_row": 2,
+              "sheet": "sheet1"
+            },
+            "parser_name": "historical_xlsx",
+            "parser_version": "v1",
+            "schema_version": "historical-xlsx-record-v1"
+          },
+          "restore_member_path": "workspace/docs/source_backfills/company_workbook_critical_supplement.xlsx",
+          "source_batch_id": "s12c-r7-company-workbook-supplement-v1",
+          "source_kind": "historical_xlsx",
+          "source_member_manifest_sha256": "575ccd1b8e2bc0bdb22d0902fe311933fce242d3e761e701e942b1f3f6d8b02b"
+        }
+      ],
+      "rationale": "S12C r7 restore-verified fixed source admitted through immutable landing; production serving never reads the customer workbook.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:b84a6eac6bc59c9b9431b94ae8735bcda813b3186c28455719ac3bd6718d41ae"
+    },
+    {
+      "approval_reference": "approved-s12c-r7-fixed-source-promotion",
+      "disposition": "evidence_input",
+      "gap_id": null,
+      "members": [
+        {
+          "backup_member_manifest_path": "manifests/inventory/015-b9a8975b2d147348ef47cbd08ad12c6e550c6012ecc29e2979a4db76e3b3c4a0.jsonl",
+          "backup_member_manifest_sha256": "1e6d9b8d6099f0be5ad89f511537530bec488c517ada36ec1fcba63e32c9bb24",
+          "byte_size": 5447,
+          "content_path": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z/workspace/docs/source_backfills/patent_exact_identifier_supplement.xlsx",
+          "content_sha256": "9780b96ac6a97b5086a3acfc2324391c8611b8163515614661d3131d1ec94b5a",
+          "member_id": "accepted-restore:workspace/docs/source_backfills/patent_exact_identifier_supplement.xlsx",
+          "observed_at": "2026-07-11T15:44:30Z",
+          "parent_source_id": "inventory:b9a8975b2d147348ef47cbd08ad12c6e550c6012ecc29e2979a4db76e3b3c4a0",
+          "parser": {
+            "options": {
+              "sheet": "Sheet1"
+            },
+            "parser_name": "historical_xlsx",
+            "parser_version": "v1",
+            "schema_version": "historical-xlsx-record-v1"
+          },
+          "restore_member_path": "workspace/docs/source_backfills/patent_exact_identifier_supplement.xlsx",
+          "source_batch_id": "s12c-r7-patent-identifiers-v1",
+          "source_kind": "historical_xlsx",
+          "source_member_manifest_sha256": "0348cdb61e437f7cc547a27e1beeeca5141ea4fa502c195194406713a8808adc"
+        }
+      ],
+      "rationale": "S12C r7 restore-verified fixed source admitted through immutable landing; production serving never reads the customer workbook.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:b9a8975b2d147348ef47cbd08ad12c6e550c6012ecc29e2979a4db76e3b3c4a0"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:bdb272f5232f7d7bdb9df3e6341f8be4235c57bcc7f11917cb628b216a7367b5"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "requirements_only",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact requirements_only disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:bfd2f9771e12452101507f8e0d10b2243f7f1807e96905ed35c327c430f349b6"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "requirements_only",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact requirements_only disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:c037008730833b28b5e9fb200a4ed9078d8571382b1250d36795d6ca18456e6b"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:c2199ac16504af74d0e8a0a00c7e9fea5cf79c65c9de9631ceaa81a3ad0347d2"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "acceptance_only",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact acceptance_only disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:c72421b11813abe836836545eb8925076e5e3c09b975a9a11387b7fef6e8bde4"
+    },
+    {
+      "approval_reference": "approved-p4-full-column-rebuild",
+      "disposition": "evidence_input",
+      "gap_id": null,
+      "members": [
+        {
+          "backup_member_manifest_path": null,
+          "backup_member_manifest_sha256": null,
+          "byte_size": 39620884,
+          "content_path": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z/workspace/docs/source_backfills/p4-paper-salvage-v1.jsonl",
+          "content_sha256": "23bed7a3c18b75ca915a5fd67220b96f83fc77e392b6e053dc373507bc23acb3",
+          "member_id": "accepted-restore:workspace/docs/source_backfills/p4-paper-salvage-v1.jsonl",
+          "observed_at": "2026-08-19T00:00:00Z",
+          "parent_source_id": "inventory:cdce88c48ec2845e049ac977df26ed069627633f15889e98aa398b06ddf0a7b9",
+          "parser": {
+            "options": {},
+            "parser_name": "historical_jsonl",
+            "parser_version": "v1",
+            "schema_version": "historical-jsonl-record-v1"
+          },
+          "restore_member_path": "workspace/docs/source_backfills/p4-paper-salvage-v1.jsonl",
+          "source_batch_id": "p4-paper-salvage-v1",
+          "source_kind": "historical_jsonl",
+          "source_member_manifest_sha256": null
+        }
+      ],
+      "rationale": "P4 full-column rebuild admits the salvage ready-paper set (24,101 quality-gated rows) as released paper objects.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:cdce88c48ec2845e049ac977df26ed069627633f15889e98aa398b06ddf0a7b9"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:d0306b9ab385b64379e437978a971e1d4a8abecee0de0863e0cdb53163b1028d"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "acceptance_only",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact acceptance_only disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:d26dd2f6d1e9a24699d642b68760c03df65b13e07edc5335868d5923eab43189"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:dc465266f3a71f9c820cba8cf83f860feb053f6da5bfef79ec02283e9f5ee673"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "acceptance_only",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact acceptance_only disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:e425f399185195b5e1c187db87869032e000e9c7e17b29353b61bce1b6ce025f"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "registered_unprojected",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact registered_unprojected disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:eb4faa13a8f4c00f703b2fb014ecc5eb671cb29b3dd20e0836afb9b1024bf8a0"
+    },
+    {
+      "approval_reference": "approved-s12c-r7-fixed-source-promotion",
+      "disposition": "evidence_input",
+      "gap_id": null,
+      "members": [
+        {
+          "backup_member_manifest_path": "manifests/inventory/008-f8fea06321bd45af4c88c9654497a8c504defbf56c5eaee1d758e26248ea2bae.jsonl",
+          "backup_member_manifest_sha256": "0f9665ac38877818aadbaa936ec0964c43d04486091eea62579af1bb95a2ac9a",
+          "byte_size": 3609,
+          "content_path": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z/workspace/docs/source_backfills/company_knowledge_fields.jsonl",
+          "content_sha256": "954ad91b06d767550fef38700cae8fc854f68b1856bcb22824525c1cce384c5b",
+          "member_id": "accepted-restore:workspace/docs/source_backfills/company_knowledge_fields.jsonl",
+          "observed_at": "2026-07-11T15:44:30Z",
+          "parent_source_id": "inventory:f8fea06321bd45af4c88c9654497a8c504defbf56c5eaee1d758e26248ea2bae",
+          "parser": {
+            "options": {},
+            "parser_name": "historical_jsonl",
+            "parser_version": "v1",
+            "schema_version": "historical-jsonl-record-v1"
+          },
+          "restore_member_path": "workspace/docs/source_backfills/company_knowledge_fields.jsonl",
+          "source_batch_id": "s12c-r7-company-knowledge-v1",
+          "source_kind": "historical_jsonl",
+          "source_member_manifest_sha256": "d55fb7578a48fa2d379125e624520b9e54c782f34f2795b31923499671f7c8d7"
+        }
+      ],
+      "rationale": "S12C r7 restore-verified fixed source admitted through immutable landing; production serving never reads the customer workbook.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:f8fea06321bd45af4c88c9654497a8c504defbf56c5eaee1d758e26248ea2bae"
+    },
+    {
+      "approval_reference": "approved-p4-full-column-rebuild",
+      "disposition": "evidence_input",
+      "gap_id": null,
+      "members": [
+        {
+          "backup_member_manifest_path": null,
+          "backup_member_manifest_sha256": null,
+          "byte_size": 25530112,
+          "content_path": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z/workspace/docs/source_backfills/p4-patent-full-v1.jsonl",
+          "content_sha256": "04536c4f55dc69595d44c629111fd38e9bd0766f4225d04c720e12ead1abf2a6",
+          "member_id": "accepted-restore:workspace/docs/source_backfills/p4-patent-full-v1.jsonl",
+          "observed_at": "2026-08-19T00:00:00Z",
+          "parent_source_id": "inventory:f959a736a70a602635955542822dd9e915ab251ca3a8a06fd0aa53daea97227f",
+          "parser": {
+            "options": {},
+            "parser_name": "historical_jsonl",
+            "parser_version": "v1",
+            "schema_version": "historical-jsonl-record-v1"
+          },
+          "restore_member_path": "workspace/docs/source_backfills/p4-patent-full-v1.jsonl",
+          "source_batch_id": "p4-patent-full-v1",
+          "source_kind": "historical_jsonl",
+          "source_member_manifest_sha256": null
+        }
+      ],
+      "rationale": "P4 full-column rebuild admits the full 11,408-patent admin release with deterministic type inference as released patent objects.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:f959a736a70a602635955542822dd9e915ab251ca3a8a06fd0aa53daea97227f"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "evidence_input",
+      "gap_id": null,
+      "members": [
+        {
+          "backup_member_manifest_path": "manifests/inventory/027-ffe87de3fe5cefe929194235d43fe7bcf09be406976a81cea23efb464d4d34a0.jsonl",
+          "backup_member_manifest_sha256": "6820786a2e055def2828c82de60f3b90cad9ac5dcc8f1477943a9f46a02777ae",
+          "byte_size": 20267008,
+          "content_path": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z/workspace/logs/data_agents/released_objects.db",
+          "content_sha256": "7637d808559685f1bcf0316cd22cfeac4e50bd0850c53652ec95b3dbb5e43bce",
+          "member_id": "accepted-restore:workspace/logs/data_agents/released_objects.db",
+          "observed_at": "2026-07-22T12:00:00Z",
+          "parent_source_id": "inventory:ffe87de3fe5cefe929194235d43fe7bcf09be406976a81cea23efb464d4d34a0",
+          "parser": {
+            "options": {
+              "limit": null,
+              "order": "primary_key",
+              "table": "released_objects"
+            },
+            "parser_name": "released_objects_sqlite",
+            "parser_version": "canonical-v2-s12a-full-table-v1",
+            "schema_version": "released-objects-v1"
+          },
+          "restore_member_path": "workspace/logs/data_agents/released_objects.db",
+          "source_batch_id": "s12a-released-objects-full-v1",
+          "source_kind": "released_objects_sqlite",
+          "source_member_manifest_sha256": "4c91d1d7dce88e5c9d9924b2c21d6f3111292eb3e5c30a60e688fd40ccf8b594"
+        }
+      ],
+      "rationale": "S12A exact evidence_input disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "inventory:ffe87de3fe5cefe929194235d43fe7bcf09be406976a81cea23efb464d4d34a0"
+    },
+    {
+      "approval_reference": null,
+      "disposition": "protection_only",
+      "gap_id": null,
+      "members": [],
+      "rationale": "S12A exact protection_only disposition from Accepted S2B authority.",
+      "source_family": "accepted-s2b-source",
+      "source_id": "original_postgresql_volume"
+    }
+  ],
+  "released_objects_expected_row_counts": {
+    "company": 1037,
+    "paper": 574,
+    "patent": 1931,
+    "professor": 1439,
+    "professor_paper_link": 580
+  },
+  "released_objects_mapper_policy_sha256": "4c6265ce5b585368aeddfb4820b5fbd62f8e178c7708e2561b78f5de1d40d0ff",
+  "released_objects_mapper_policy_version": "canonical-v2-released-objects-mapper-v2",
+  "restore_root": "/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z",
+  "restore_verification_sha256": "98826e8da7ee66af20199c4998f4cdccc9276179119f30cd318f7ce8c0e7d231",
+  "schema_version": "canonical-v2-source-build-manifest-v2",
+  "source_inventory_sha256": "83a9e2c82aee4cbe5c02f088ba0fdbf8d15359d87a85bf4ee901b0f58f70fa09",
+  "targeted_recollection_entries": []
+}

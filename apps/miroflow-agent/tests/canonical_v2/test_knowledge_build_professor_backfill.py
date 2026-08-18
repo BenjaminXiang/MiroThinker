@@ -634,6 +634,12 @@ def test_preflight_admits_manifest_with_backfill_authority(tmp_path: Path) -> No
                 BACKFILL_BATCH_ID,
                 "s12f-company-backfill-v1",
                 "s12f-applicant-binding-v1",
+                "p4-company-full-v1",
+                "p4-patent-full-v1",
+                "p4-paper-salvage-v1",
+                "p4-professor-full-v1",
+                "p4-professor-paper-links-v1",
+                "p4-applicant-binding-full-v1",
             )
         )
     )
@@ -698,6 +704,12 @@ def test_legacy_manifest_without_backfill_authority_is_rejected(
                 BACKFILL_BATCH_ID,
                 "s12f-company-backfill-v1",
                 "s12f-applicant-binding-v1",
+                "p4-company-full-v1",
+                "p4-patent-full-v1",
+                "p4-paper-salvage-v1",
+                "p4-professor-full-v1",
+                "p4-professor-paper-links-v1",
+                "p4-applicant-binding-full-v1",
             )
         )
     )

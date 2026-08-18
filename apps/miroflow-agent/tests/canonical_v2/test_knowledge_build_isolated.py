@@ -49,6 +49,12 @@ SUPPLEMENTAL_BATCH_IDS = (
     "s12e-professor-backfill-v1",
     "s12f-company-backfill-v1",
     "s12f-applicant-binding-v1",
+    "p4-company-full-v1",
+    "p4-patent-full-v1",
+    "p4-paper-salvage-v1",
+    "p4-professor-full-v1",
+    "p4-professor-paper-links-v1",
+    "p4-applicant-binding-full-v1",
 )
 EVIDENCE_BATCH_IDS = tuple(sorted((SOURCE_BATCH_ID, *SUPPLEMENTAL_BATCH_IDS)))
 
@@ -4440,6 +4446,14 @@ _SOURCE_IDS_BY_DISPOSITION: dict[str, tuple[str, ...]] = {
         # evidence_input under the v2 manifest like the professor backfill.
         "inventory:53bb8f4ab16868619fdfa2380bf091c45bd9999e9008a1fdea884d30050adf67",
         "inventory:1107b1df6dfa2f0faab5b04640a0317f53513781e63f4977078df4b6f5427a89",
+        # P4 full-column rebuild authorities (2026-08-19); same v2-manifest
+        # admission as the S12F post-checkpoint batches.
+        "inventory:68b1c236d47f75f448fd9e1627b209b62526a2a5c1d11d055c49881af55b1ee2",
+        "inventory:f959a736a70a602635955542822dd9e915ab251ca3a8a06fd0aa53daea97227f",
+        "inventory:cdce88c48ec2845e049ac977df26ed069627633f15889e98aa398b06ddf0a7b9",
+        "inventory:526ff7d6bcb6e9fc29396f64db776f113e3aed3e1fec342cfaaa7c781378457c",
+        "inventory:0c79c0f1a9639abad93a2f4b702fce6ee21a2fffa3855893bc85ea1f2c053850",
+        "inventory:0ac8facebb646f370afc25f8f68fe81b32d4c014663f3528bf59f28acb3455f6",
     ),
     "unrecoverable": (),
 }
@@ -5720,6 +5734,50 @@ _SUPPLEMENTAL_ROW_PAYLOADS: dict[str, dict[str, Any]] = {
         "confidence": "",
         "note": "机构（大学/研究院/医院等，不做公司解析）",
     },
+    # P4 full-column rows stay side-effect free in the full-build fixture:
+    # company/patent/paper/professor records reuse released identities (the
+    # create merges skip overlap conservatively), the link references absent
+    # endpoints (typed gap, no graph change), and the binding is an
+    # institution record (never bound).
+    "p4-company-full-v1": {
+        "company_name": "Company 00000",
+        "industry": "Historical industry",
+    },
+    "p4-patent-full-v1": {
+        "patent_id": "patent:00000",
+        "title": "Patent 00000",
+        "patent_number": "CN000000000A",
+        "applicants": ["Historical Applicant 0"],
+        "patent_type": "发明",
+    },
+    "p4-paper-salvage-v1": {
+        "paper_id": "paper:00000",
+        "title": "Paper 00000",
+        "year": 2026,
+        "venue": "S12A Test Journal",
+        "authors": [{"name": "Historical Author 0"}],
+    },
+    "p4-professor-full-v1": {
+        "professor_id": "professor:00000",
+        "name": "Professor 00000",
+        "institution": "SUSTech",
+    },
+    "p4-professor-paper-links-v1": {
+        "professor_id": "professor:99999",
+        "paper_id": "paper:99999",
+        "professor_name": "不存在的教授",
+        "link_status": "verified",
+    },
+    "p4-applicant-binding-full-v1": {
+        "applicant_name": "Some Institution Applicant",
+        "patent_count": 1,
+        "status": "institution",
+        "resolved_company": "",
+        "aliases": [],
+        "evidence_urls": [],
+        "confidence": "",
+        "note": "机构（大学/研究院/医院等，不做公司解析）",
+    },
 }
 
 
@@ -5893,11 +5951,11 @@ def test_source_manifest_accounts_for_every_accepted_source_without_using_requir
         RELEASED_OBJECTS_SOURCE_MEMBER_MANIFEST_SHA256
     )
     counts = Counter(entry["disposition"] for entry in valid["inventory_entries"])
-    assert len(valid["inventory_entries"]) == 52
+    assert len(valid["inventory_entries"]) == 58
     assert counts == {
         "requirements_only": 7,
         "acceptance_only": 7,
-        "evidence_input": 9,
+        "evidence_input": 15,
         "protection_only": 5,
         "registered_unprojected": 24,
     }
