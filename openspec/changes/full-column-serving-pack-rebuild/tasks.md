@@ -9,9 +9,16 @@
        total ~45.8k. Links: 18,655 salvage verified prof-paper links
        name-anchored; company-patent via applicant normalization. Findings in
        docs/plans/2026-08-19-p4-data-rebuild-log.md R1.)
-- [ ] 4.2 Build plan: assemble the runner invocation (mirror the s12f
+- [x] 4.2 Build plan: assemble the runner invocation (mirror the s12f
        manifest arg pattern; NEW database + NEW /var/tmp roots; new run-id;
        full-column parser switch; relationship backfill batches).
+       (2026-08-19: extract_p4_sources.py staged six hash-pinned batches
+       into the restore tree; knowledge_build_isolated.py admits them via
+       six supplemental authorities + conservative create/link/binding
+       merges; source-build-manifest-p4.json validated by the real
+       SourceBuildManifest class; build-v2.sh pins the full invocation.
+       9 new pin tests + 137 existing green; 4 env-dependent e2e tests hang
+       identically at baseline (no 5432 disposable PG), documented in log R3.)
 - [ ] 4.3 Execute the build (embedding via school API batch; fallback per
        ruling); monitor and log.
 - [ ] 4.4 Reconciliation report: domain counts / field non-null rates /
