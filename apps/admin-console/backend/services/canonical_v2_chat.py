@@ -1064,6 +1064,8 @@ def _soft_subject_name(
         return None
     if "、" in name or name.endswith(_SOFT_SUBJECT_HEADLINE_VERB_SUFFIXES):
         return None
+    if is_headline_shaped_name(name):
+        return None
     return name
 
 
