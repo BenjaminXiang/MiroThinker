@@ -36,16 +36,16 @@
 
 ## Phase 2 — never-refuse contracts (child change: enforce-never-refuse-contracts)
 
-- [ ] 2.1 Fallback/synthesis wording contracts: answer from confirmed evidence,
+- [x] 2.1 Fallback/synthesis wording contracts: answer from confirmed evidence,
        name gaps explicitly, ban deflection (国知局/PatSnap/Incopat pattern),
        mandatory enumeration coverage statement.
-- [ ] 2.2 Lane-failure semantic correction: "no results" vs "lane unavailable"
+- [x] 2.2 Lane-failure semantic correction: "no results" vs "lane unavailable"
        are distinct answer states — a web-lane failure MUST be reported as
        网络检索暂不可用 (with cached/prior/local evidence when available) and
        MUST NEVER be phrased as a negative factual claim about the world
        (the G2 failure mode: channel outage phrased as 未找到该机构). RED case:
        fault-injected empty web lane over a web-only subject.
-- [ ] 2.2 RED cases from verbatim transcripts (P2/P4/P5 wordings) → GREEN.
+- [x] 2.2 RED cases from verbatim transcripts (P2/P4/P5 wordings) → GREEN.
 
 ## Phase 3 — deterministic subject layer v2 (child change: harden-deterministic-subject-layer)
 

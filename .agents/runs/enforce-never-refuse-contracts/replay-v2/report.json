@@ -1,0 +1,224 @@
+{
+  "base_url": "http://127.0.0.1:18188",
+  "generated_at": "2026-08-18T14:50:09",
+  "sessions": {
+    "G1_framing": {
+      "turns": [
+        {
+          "query": "介绍一下 国际先进技术应用推进中心（深圳）",
+          "repeat": 1,
+          "sse": "G1_framing_r1_t1.sse",
+          "seconds": 7.4,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）（简称“国先中心”）近日在河套深港科技创新合作区深圳园区正式揭牌成立。该中心依托粤港澳大湾区数字经济研究院建设，旨在进一步提升深圳在基础研究、技术应用等关键环节的创新发展能力，打造深港科技创新聚集地。\n\n在业",
+          "failures": []
+        },
+        {
+          "query": "有没有更详细的信息",
+          "repeat": 1,
+          "sse": "G1_framing_r1_t2.sse",
+          "seconds": 7.1,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "河套数学与交叉学科研究院、国际先进技术应用推进中心（深圳）于2025年4月27日举行了揭牌仪式。该信息来源于深圳特区报，并由深圳市政府网站公开披露。",
+          "failures": []
+        },
+        {
+          "query": "它有哪些布局和进展",
+          "repeat": 1,
+          "sse": "G1_framing_r1_t3.sse",
+          "seconds": 4.9,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "河套数学与交叉学科研究院、国际先进技术应用推进中心（深圳）已于2025年4月27日正式揭牌。",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G2_bare_name": {
+      "turns": [
+        {
+          "query": "国际先进技术应用推进中心（深圳）",
+          "repeat": 1,
+          "sse": "G2_bare_name_r1_t1.sse",
+          "seconds": 6.7,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）位于河套深港科技创新合作区深圳园区。\n\n该中心与河套数学与交叉学科研究院于2025年4月25日在河套深圳园区正式揭牌成立，旨在进一步提升该区域在基础研究和技术应用等关键环节的创新发展能力。",
+          "failures": []
+        },
+        {
+          "query": "这个中心的企业培育情况怎么样",
+          "repeat": 1,
+          "sse": "G2_bare_name_r1_t2.sse",
+          "seconds": 5.4,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "关于中国科学院深圳先进技术研究院的企业培育情况，当前公开信息中该机构的相关页面无法访问，具体企业培育数据未予披露。",
+          "failures": [
+            "none of required-any present: ('国先中心', '国际先进技术应用推进中心')"
+          ]
+        },
+        {
+          "query": "国际先进技术应用推进中心（深圳）",
+          "repeat": 2,
+          "sse": "G2_bare_name_r2_t1.sse",
+          "seconds": 8.1,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）位于河套深港科技创新合作区深圳园区。\n\n该中心与河套数学与交叉学科研究院于2025年4月25日在河套深圳园区正式揭牌成立，旨在进一步提升该区域在基础研究和技术应用等关键环节的创新发展能力。",
+          "failures": []
+        },
+        {
+          "query": "这个中心的企业培育情况怎么样",
+          "repeat": 2,
+          "sse": "G2_bare_name_r2_t2.sse",
+          "seconds": 1.9,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "关于中国科学院深圳先进技术研究院的企业培育情况，当前公开信息中该机构的相关页面无法访问，具体企业培育数据未予披露。",
+          "failures": [
+            "none of required-any present: ('国先中心', '国际先进技术应用推进中心')"
+          ]
+        },
+        {
+          "query": "国际先进技术应用推进中心（深圳）",
+          "repeat": 3,
+          "sse": "G2_bare_name_r3_t1.sse",
+          "seconds": 6.7,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）位于河套深港科技创新合作区深圳园区。\n\n该中心与河套数学与交叉学科研究院于2025年4月25日在河套深圳园区正式揭牌成立，旨在进一步提升该区域在基础研究和技术应用等关键环节的创新发展能力。",
+          "failures": []
+        },
+        {
+          "query": "这个中心的企业培育情况怎么样",
+          "repeat": 3,
+          "sse": "G2_bare_name_r3_t2.sse",
+          "seconds": 1.9,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "关于中国科学院深圳先进技术研究院的企业培育情况，当前公开信息中该机构的相关页面无法访问，具体企业培育数据未予披露。",
+          "failures": [
+            "none of required-any present: ('国先中心', '国际先进技术应用推进中心')"
+          ]
+        }
+      ],
+      "pass": false
+    },
+    "G3_person_pronoun": {
+      "turns": [
+        {
+          "query": "介绍一下 国际先进技术应用推进中心（深圳）",
+          "repeat": 1,
+          "sse": "G3_person_pronoun_r1_t1.sse",
+          "seconds": 6.8,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）（简称“国先中心”）近日在河套深港科技创新合作区深圳园区正式揭牌成立。该中心依托粤港澳大湾区数字经济研究院建设，旨在进一步提升深圳在基础研究、技术应用等关键环节的创新发展能力，打造深港科技创新聚集地。\n\n在业",
+          "failures": []
+        },
+        {
+          "query": "他有哪些论文",
+          "repeat": 1,
+          "sse": "G3_person_pronoun_r1_t2.sse",
+          "seconds": 5.5,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "当前信息仅显示“河套数学与交叉学科研究院、国际先进技术应用推进中心（深圳）揭牌”这一政务动态事件，未包含任何关于该主体（或相关研究人员）具体论文列表的信息。\n\n河套数学与交叉学科研究院是深圳河套深港科技创新合作区重点布局的科研机构，主要聚焦",
+          "failures": [
+            "neither clarification nor person-scoped answer (type=canonical_v2:A:answer)"
+          ]
+        }
+      ],
+      "pass": false
+    },
+    "G4_patents": {
+      "turns": [
+        {
+          "query": "优必选科技怎么样",
+          "repeat": 1,
+          "sse": "G4_patents_r1_t1.sse",
+          "seconds": 7.8,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "- 深圳市优必选科技股份有限公司；简介：深圳市优必选科技股份有限公司是一家集人工智能和人形机器人研发、平台软件开发运用及产品销售为一体的全球性高科技创新企业。公司专注于人形机器人及其核心驱动技术的研发与制造，主要产品线包括Walker系列全",
+          "failures": []
+        },
+        {
+          "query": "该公司的专利有哪些",
+          "repeat": 1,
+          "sse": "G4_patents_r1_t2.sse",
+          "seconds": 7.0,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "关于深圳市优必选科技股份有限公司：本地知识库中暂未建立其专利关联，这是当前数据覆盖的缺口，并不代表其没有专利；上面已给出可确认的主体信息。网络检索恢复后会尝试补全专利部分，也可以稍后再次提问。",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G5_expansion": {
+      "turns": [
+        {
+          "query": "优必选科技怎么样",
+          "repeat": 1,
+          "sse": "G5_expansion_r1_t1.sse",
+          "seconds": 7.8,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳市优必选科技股份有限公司（UBTECH）是一家成立于2012年3月、总部位于深圳市南山区的全球性高科技创新企业，也是本土人形机器人和智能服务机器人领域的领导品牌。\n\n在核心技术与产品方面，优必选是全球极少数具备人形机器人全栈式技术能力的",
+          "failures": []
+        },
+        {
+          "query": "还有哪些类似的公司",
+          "repeat": 1,
+          "sse": "G5_expansion_r1_t2.sse",
+          "seconds": 36.0,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "在提供的候选信息中，与深圳前海微众银行股份有限公司（国内首家民营银行、数字银行）业务属性最相似的公司是招商银行股份有限公司。\n\n招商银行是一家全国性股份制商业银行，同样以零售金融为核心，拥有商业银行牌照，并提供个人银行、财富管理、信用卡及数",
+          "failures": [
+            "forbidden substring in answer: 微众银行"
+          ]
+        }
+      ],
+      "pass": false
+    },
+    "G6_anaphoric_opener": {
+      "turns": [
+        {
+          "query": "这个中心是做什么的",
+          "repeat": 1,
+          "sse": "G6_anaphoric_opener_r1_t1.sse",
+          "seconds": 0.0,
+          "query_type": "canonical_v2:G:clarification_only",
+          "answer_head": "您的问题里使用了“他/她/它/这家”等指代词，但我暂时无法确定具体指代对象，为了准确回答，请补充您想了解的对象（例如教授姓名、公司名、论文标题或专利号），我会立即为您查询。如果您只是想了解某一类信息的大致情况，也可以直接描述需求，我会先给出",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G7_enumeration": {
+      "turns": [
+        {
+          "query": "深圳有哪些做具身智能的公司",
+          "repeat": 1,
+          "sse": "G7_enumeration_r1_t1.sse",
+          "seconds": 32.5,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳在具身智能与机器人领域拥有扎实的产业基础，汇聚了众多本体研发、核心零部件及平台型企业。根据公开信息，深圳主要的具身智能相关企业包括：\n\n**头部本体与整机企业**\n*   **优必选（深圳市优必选科技股份有限公司）**：全球少数掌握人形",
+          "failures": []
+        },
+        {
+          "query": "深圳有哪些做具身智能的公司",
+          "repeat": 2,
+          "sse": "G7_enumeration_r2_t1.sse",
+          "seconds": 30.6,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳在具身智能与机器人领域拥有扎实的产业基础，汇聚了众多本体研发、核心零部件及平台型企业。根据公开信息，深圳主要的具身智能相关企业包括：\n\n**头部本体与整机企业**\n*   **优必选（深圳市优必选科技股份有限公司）**：全球少数掌握人形",
+          "failures": []
+        },
+        {
+          "query": "深圳有哪些做具身智能的公司",
+          "repeat": 3,
+          "sse": "G7_enumeration_r3_t1.sse",
+          "seconds": 28.9,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳在具身智能与机器人领域拥有扎实的产业基础，汇聚了众多本体研发、核心零部件及平台型企业。根据公开信息，深圳主要的具身智能相关企业包括：\n\n**头部本体与整机企业**\n*   **优必选（深圳市优必选科技股份有限公司）**：全球少数掌握人形",
+          "failures": []
+        }
+      ],
+      "pass": true
+    }
+  },
+  "all_pass": false,
+  "total_failures": 5
+}
