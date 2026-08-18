@@ -258,13 +258,36 @@ _REFUSAL_ANSWER_MARKERS = (
 _REFUSAL_ANSWER_MAX_CHARS = 120
 
 
-def _soft_fallback_answer_text(anchor_name: str | None) -> str:
+# Never-refuse contract (Phase 2, enforce-never-refuse-contracts): the
+# fallback names the subject, states what is confirmed, names the coverage
+# gap, and offers an actionable next step — never a subject-less brush-off.
+_DOMAIN_GAP_WORDING = {
+    "patent": "专利关联",
+    "paper": "论文收录",
+    "company": "企业明细",
+    "professor": "教授画像",
+}
+
+
+def _soft_fallback_answer_text(
+    anchor_name: str | None,
+    *,
+    domain: str | None = None,
+) -> str:
+    gap = _DOMAIN_GAP_WORDING.get(domain or "", "该方向的公开资料")
     if anchor_name:
         return (
-            f"关于{anchor_name}的公开信息目前较为有限，"
-            "暂未能确认您问的具体内容；可以换个角度继续提问。"
+            f"已确认您关注的是{anchor_name}。"
+            f"当前本地知识库对{gap}的覆盖暂未完整，"
+            "因此这部分暂无法给出可靠的具体内容；"
+            "您可以补充想了解的具体方面（如业务、产品、论文或专利），"
+            "我会基于已确认的信息继续检索。"
         )
-    return "目前公开信息较为有限，暂未能确认您问的具体内容；可以换个角度继续提问。"
+    return (
+        "已收到您的问题。当前本地知识库与网络检索的覆盖暂未完整，"
+        "暂无法给出可靠的具体内容；请补充您关注的具体机构、人物或主题名称，"
+        "我会继续检索。"
+    )
 
 
 def _rewrite_refusal_answer_text(
@@ -282,6 +305,97 @@ def _rewrite_refusal_answer_text(
     if not any(marker in stripped for marker in _REFUSAL_ANSWER_MARKERS):
         return answer_text
     return _soft_fallback_answer_text(anchor_name)
+
+
+# External-database deflection guard: recommending 国知局/PatSnap/Incopat as
+# the substance of an answer is banned when the turn produced no patent
+# evidence — a coverage gap must be stated as a data fact, not dodged.
+_DEFLECTION_MARKERS = (
+    "国家知识产权局",
+    "国知局",
+    "PatSnap".casefold(),
+    "Incopat".casefold(),
+    "Soopat".casefold(),
+    "专利数据库",
+    "专利检索平台",
+)
+
+
+def _rewrite_deflection_answer_text(
+    answer_text: str,
+    *,
+    patent_evidence_count: int,
+    anchor_name: str | None,
+) -> str:
+    if patent_evidence_count > 0:
+        return answer_text
+    folded = answer_text.casefold()
+    if not any(marker.casefold() in folded for marker in _DEFLECTION_MARKERS):
+        return answer_text
+    name = anchor_name or "该主体"
+    return (
+        f"关于{name}：本地知识库中暂未建立其专利关联，"
+        "这是当前数据覆盖的缺口，并不代表其没有专利；"
+        "上面已给出可确认的主体信息。"
+        "网络检索恢复后会尝试补全专利部分，也可以稍后再次提问。"
+    )
+
+
+# Lane-failure semantics: a web-lane outage is a system state, not a fact
+# about the world. Negative world claims over an outage turn are rewritten.
+_NEGATIVE_CLAIM_MARKERS = (
+    "未找到",
+    "没有找到",
+    "无法找到",
+    "暂无公开",
+    "无相关信息",
+)
+
+
+def _rewrite_lane_outage_answer_text(
+    answer_text: str,
+    *,
+    anchor_name: str | None,
+) -> str:
+    if not any(marker in answer_text for marker in _NEGATIVE_CLAIM_MARKERS):
+        return answer_text
+    name = anchor_name or "您关注的主体"
+    return (
+        f"网络检索暂不可用，本次未能为{name}取到网络侧的最新公开资料；"
+        "以上为当前已可确认的本地与缓存信息，"
+        "网络检索恢复后可再次提问获取补充内容。"
+    )
+
+
+def _web_lane_unavailable_from_traces(traces: Any) -> bool:
+    """True when web-lane traces show provider failures with zero served
+    results — the trace-visible condition behind the outage wording."""
+    web_traces = [
+        trace
+        for trace in traces
+        if str(getattr(trace, "lane", "") or "") == "web"
+    ]
+    if not web_traces:
+        return False
+    served = any(
+        str(getattr(trace, "status", "succeeded") or "succeeded") == "succeeded"
+        and int(getattr(trace, "candidate_count", 0) or 0) > 0
+        for trace in web_traces
+    )
+    if served:
+        return False
+    return any(
+        str(getattr(trace, "status", "") or "") != "succeeded"
+        for trace in web_traces
+    )
+
+
+def _patent_evidence_count(evidence_set: Any) -> int:
+    return sum(
+        1
+        for item in getattr(evidence_set, "items", ()) or ()
+        if str(getattr(item, "domain", "") or "") == "patent"
+    )
 
 
 def _sanitize_public_response(response: ChatResponse) -> ChatResponse:
@@ -1830,6 +1944,20 @@ class CanonicalV2ChatAdapter:
             anchor_name=(
                 None if active_anchor is None else active_anchor.display_name
             ),
+        )
+        # Never-refuse guards (Phase 2): lane-outage wording first (an outage
+        # reframe beats deflection rewriting), then deflection.
+        anchor_display = (
+            None if active_anchor is None else active_anchor.display_name
+        )
+        if _web_lane_unavailable_from_traces(outcome.evidence_set.traces):
+            answer_text = _rewrite_lane_outage_answer_text(
+                answer_text, anchor_name=anchor_display
+            )
+        answer_text = _rewrite_deflection_answer_text(
+            answer_text,
+            patent_evidence_count=_patent_evidence_count(outcome.evidence_set),
+            anchor_name=anchor_display,
         )
         response_payload = {
             "query": outcome.query,
