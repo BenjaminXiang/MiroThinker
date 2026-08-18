@@ -5077,9 +5077,11 @@ class _OpenAIProseRenderer:
                         "用“网络检索暂不可用/覆盖暂不完整”这类系统状态表述，"
                         "严禁写成“未找到该机构”这类否定性事实断言。"
                         "对依据不足或未入选的主体不要逐条解释、不要逐一列名。"
-                        "列表与集合类问题必须求全：凡是有直接依据确认的主体都要列出，按相关度"
-                        "从高到低排序，宁多勿漏——不得因为篇幅或知名度只挑少数几家；每个主体"
-                        "用一两句给出其关键事实即可，确需取舍时按 enumeration_coverage 如实交代。"
+                        "列表与集合类问题按条目预算回答：默认列出不超过 12 个主体，按证据"
+                        "充分度与行业代表性从高到低排序（领域龙头必须包含），每个主体用一两句"
+                        "给出关键事实；全集可能很大时（如某地某领域的企业）以代表性清单+覆盖"
+                        "声明为默认形态（“以上为该领域代表性企业”），不得试图穷尽；只有明确的"
+                        "小有限全集（如“上述几家中…”）才要求列全。"
                         "对“上述/这些”集合问题，只回答有直接依据的主体，其余主体不列名、不解释，"
                         "用覆盖度一句带过。"
                         "对“方法/路线/方式/差异/原理”类概念问题：按行业常见分类分条组织答案，"
@@ -5212,9 +5214,9 @@ class _OpenAIProseRenderer:
         response = self._client.chat.completions.create(
             model=self._model,
             temperature=0,
-            # 3000 tokens lifts the old 1200 ceiling that silently truncated
-            # long answers; streaming and sync synthesis share the same bound.
-            max_tokens=3000,
+            # Safety net only (enumeration entry budget governs length);
+            # sized so legitimate long lists never hit it.
+            max_tokens=6000,
             messages=request_messages,
             extra_body=self._extra_body,
         )
@@ -5323,7 +5325,9 @@ class _OpenAIProseRenderer:
         completion = self._client.chat.completions.create(
             model=self._model,
             temperature=0,
-            max_tokens=3000,
+            # Safety net only (enumeration entry budget governs length); sized
+            # so legitimate long lists never hit it.
+            max_tokens=6000,
             messages=messages,
             extra_body=self._extra_body,
             stream=True,

@@ -1319,7 +1319,10 @@ def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
     assert "逐字一致" in serialized
     assert "语义覆盖而非逐字匹配" in serialized
     assert "不要逐一列名" in serialized
-    assert "宁多勿漏" in serialized
+    # Enumeration contract (2026-08-18 ruling): budgeted representative
+    # list replaces the 求全 directive.
+    assert "条目预算" in serialized
+    assert "代表性清单" in serialized
     assert "另有X、Y暂未能确认" not in serialized
     assert "材料显示" in serialized
     assert "直接绑定具体产品与具体功能" in serialized
@@ -2262,7 +2265,7 @@ def test_environment_prose_renderer_reuses_client_for_warm_and_answers(
     assert renderer(result) == "已整理回答"
 
     assert len(client_calls) == 1
-    assert [call["max_tokens"] for call in completion_calls] == [3000, 1, 3000]
+    assert [call["max_tokens"] for call in completion_calls] == [6000, 1, 6000]
 
 
 def test_environment_prose_renderer_stays_out_of_answer_session_copy() -> None:

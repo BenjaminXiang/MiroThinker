@@ -36,11 +36,12 @@ DegradationToken = Literal[
     "no-local-evidence",
     "subject-gate-empty",
     "clarification",
+    "synthesis-fallback",
     "error",
 ]
 _VALID_DEGRADATION_TOKENS = frozenset(
     {"none", "web-lane-unavailable", "no-local-evidence",
-     "subject-gate-empty", "clarification", "error"}
+     "subject-gate-empty", "clarification", "synthesis-fallback", "error"}
 )
 
 TurnStatus = Literal["ok", "degraded", "error"]

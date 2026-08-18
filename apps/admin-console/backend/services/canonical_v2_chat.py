@@ -1830,6 +1830,10 @@ class CanonicalV2ChatAdapter:
         with self._lock:
             with turn_gate.commit():
                 self._sessions[session_id] = next_session
+        if trace is not None and str(
+            getattr(turn_result, "render_mode", "") or ""
+        ) in {"deterministic_fallback", "prose_partial"}:
+            trace.set_degradation("synthesis-fallback")
         self._write_turn_trace(
             trace,
             status="ok",
