@@ -1384,6 +1384,58 @@ class CanonicalV2ChatAdapter:
         if token is not None:
             reset_turn_trace_reporter(token)
 
+    def _interpret_query(
+        self,
+        *,
+        query: str,
+        committed: _CommittedSession | None,
+        trace: TurnTraceCollector | None,
+    ):
+        """Phase 6 contextual interpretation. Returns Interpretation or None;
+        None covers: switch off, timeout, LLM failure, validation rejection."""
+        from backend.services.canonical_v2_query_interpreter import (
+            get_interpreter,
+            interpretation_enabled,
+        )
+
+        if not interpretation_enabled():
+            return None
+        manifest_names: list[str] = []
+        if committed is not None:
+            anchor = getattr(
+                getattr(committed, "context_receipt", None),
+                "active_anchor",
+                None,
+            )
+            if anchor is not None and anchor.display_name:
+                manifest_names.append(anchor.display_name)
+            for entry in getattr(committed, "referent_history", ()) or ():
+                name = getattr(entry, "display_name", None)
+                if name and name not in manifest_names:
+                    manifest_names.append(name)
+            soft = getattr(committed, "soft_subject_name", None)
+            if soft and soft not in manifest_names:
+                manifest_names.append(soft)
+        anchor_domain = (
+            None
+            if committed is None
+            or getattr(committed, "context_receipt", None) is None
+            or committed.context_receipt.active_anchor is None
+            else committed.context_receipt.active_anchor.domain
+        )
+        try:
+            interpretation = get_interpreter().interpret(
+                query=query,
+                manifest_names=tuple(manifest_names),
+                active_anchor_domain=anchor_domain,
+            )
+        except Exception:  # noqa: BLE001 - interpreter is fail-open
+            interpretation = None
+        if interpretation is None:
+            if trace is not None:
+                trace.set_degradation("interpretation-rejected")
+        return interpretation
+
     def _begin_turn_trace(
         self,
         *,
@@ -1497,9 +1549,29 @@ class CanonicalV2ChatAdapter:
             # turn's dynamic scope; the public entry points reset it on exit.
             trace.context_token = set_turn_trace_reporter(trace)
         selection = self._selection(committed, option_id=option_id)
-        if selection is None and _referent_clarification_needed(
-            query=normalized_query,
-            committed=committed,
+        # Phase 6: contextual interpretation (default OFF). When enabled and
+        # valid, the resolved subject informs the four decision points below;
+        # None (off/timeout/rejected) leaves the deterministic path unchanged.
+        contextual_interpretation = self._interpret_query(
+            query=normalized_query, committed=committed, trace=trace
+        )
+        if contextual_interpretation is not None:
+            interp_subject = (
+                contextual_interpretation.subject_ref.name
+                if contextual_interpretation.subject_ref is not None
+                else None
+            )
+            interp_intent = contextual_interpretation.intent
+        else:
+            interp_subject = None
+            interp_intent = None
+        if (
+            selection is None
+            and interp_subject is None
+            and _referent_clarification_needed(
+                query=normalized_query,
+                committed=committed,
+            )
         ):
             clarification = _referent_clarification_response(normalized_query)
             self._write_turn_trace(
@@ -1594,16 +1666,21 @@ class CanonicalV2ChatAdapter:
         )
         soft_context_subject = continuation_soft_subject
         if soft_context_subject is None and not displayed_ids:
-            # Fresh / explicit-subject turns name the subject in the query
-            # itself: derive the same anchor the commit path would store
-            # (query-first extraction only — no resolved evidence exists at
-            # this point), so the web-lane gate, authority views, multi-branch
-            # guidance, and prose correction engage on THIS turn instead of
-            # only from the next one.
-            soft_context_subject = _soft_subject_name(
-                query=normalized_query,
-                evidence_set=None,
-            )
+            # Phase 6: a valid contextual interpretation's subject_ref
+            # outranks the query-first derivation — the LLM resolved the
+            # anaphora ("它") to a session subject the deterministic
+            # extraction cannot reach (G1-T3).
+            if interp_subject is not None and interp_intent in (
+                "deepen",
+                "profile",
+                "relation",
+            ):
+                soft_context_subject = interp_subject
+            else:
+                soft_context_subject = _soft_subject_name(
+                    query=normalized_query,
+                    evidence_set=None,
+                )
         # P6/G5: expansion-family turns plan with the session subject named
         # (anchored views/web budget/gate); the user-facing query stays as
         # asked, and the answer still enumerates peers (与X类似).
@@ -2119,6 +2196,7 @@ class CanonicalV2ChatAdapter:
                 f"{turn_result.response_mode}"
             ),
             "answer_text": answer_text,
+            "understood_subject": anchor_display,
             "citations": [item.model_dump(mode="json") for item in public_citations],
             "evidence": [],
             "clarification": (
