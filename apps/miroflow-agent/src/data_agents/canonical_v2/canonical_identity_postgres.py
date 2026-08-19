@@ -625,7 +625,7 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
                 assertion.subject_entity_type,
                 assertion.field_path,
                 Jsonb(assertion.value),
-                assertion.assertion_fingerprint_sha256,
+                _assertion_fingerprint(assertion),
                 assertion.observed_at,
                 assertion.source_event_time,
                 _legacy_instant(assertion.valid_from),
