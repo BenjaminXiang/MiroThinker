@@ -83,9 +83,9 @@
 
 ## Phase 7 — fusion floor, disclosure, frontend convergence (child change: fusion-recall-floor-and-disclosure)
 
-- [ ] 7.1 Subject-gate recall floor; dual-source weighting.
-- [ ] 7.2 查看检索过程 v2: "系统理解为：关于X" + evidence list.
-- [ ] 7.3 P9 convergence: static streaming page declared the reference; React
+- [x] 7.1 Subject-gate recall floor; dual-source weighting.
+- [x] 7.2 查看检索过程 v2: "系统理解为：关于X" + evidence list.
+- [x] 7.3 P9 convergence: static streaming page declared the reference; React
        sync path upgraded or deprecated.
 
 ## Phase 8 — round acceptance

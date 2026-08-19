@@ -1,0 +1,21 @@
+event: stage
+data: {"name":"planning"}
+
+event: plan_done
+data: {"lanes":["exact","structured","lexical","vector","web"],"domains":["professor","company","paper","patent"],"views":["国际先进技术应用推进中心（深圳） 它有哪些布局和进展","具身智能布局进展 国际先进技术应用推进中心（深圳）","具身智能产业链布局 国际先进技术应用推进中心（深圳）","具身智能技术路线进展 国际先进技术应用推进中心（深圳）"]}
+
+event: stage
+data: {"name":"retrieval"}
+
+event: retrieval_done
+data: {"lanes":[{"lane":"exact","status":"succeeded","candidates":0},{"lane":"structured","status":"succeeded","candidates":0},{"lane":"lexical","status":"succeeded","candidates":0},{"lane":"vector","status":"succeeded","candidates":48},{"lane":"web","status":"succeeded","candidates":46}],"web_items":[{"title":"深圳:支持国际先进技术应用推进中心(深圳)建设具身智能技术试验场,推动场景应用落地","url":"https://www.yicai.com/brief/102494143.html","source":"www.yicai.com"},{"title":"支持国际先进技术应用推进中心（深圳）建设具身智能技术试验场 ...","url":"https://wap.eastmoney.com/a/202503033334729133.html","source":"wap.eastmoney.com"},{"title":"深圳:支持国际先进技术应用推进中心(深圳)建设具身智能技术试验场","url":"https://new.qq.com/rain/a/20250303A05RP900","source":"new.qq.com"},{"title":"深圳市科技创新局关于印发《深圳市具身智能机器人技术创新与产业 ...","url":"https://stic.sz.gov.cn/xxgk/tzgg/content/post_12052515.html","source":"stic.sz.gov.cn"},{"title":"深圳:支持国际先进技术应用推进中心(深圳)建设具身智能技术试验场深圳市智能机器人世界人工智能大会_网易订阅","url":"https://www.163.com/dy/article/JPO40CUJ053469RG.html","source":"www.163.com"},{"title":"河套深圳园区打造深港科技创新聚集地 - 新华网","url":"http://www.news.cn/fortune/20250502/5ec5fd219ed74af2a0b16c0d8b9a9ba4/c.html","source":"www.news.cn"},{"title":"深圳:支持国际先进技术应用推进中心(深圳)建设具身智能技术试验场_股票频道_证券之星","url":"https://stock.stockstar.com/IG2025030300015401.shtml","source":"stock.stockstar.com"},{"title":"深圳:支持国际先进技术应用推进中心(深圳)建设具身智能技术试验场,推动场景应用落地","url":"https://www.yicai.com/news/102494144.html","source":"www.yicai.com"},{"title":"深圳市具身智能机器人技术创新与产业发展行动计划（2025-2027年）","url":"https://baike.baidu.com/item/%E6%B7%B1%E5%9C%B3%E5%B8%82%E5%85%B7%E8%BA%AB%E6%99%BA%E8%83%BD%E6%9C%BA%E5%99%A8%E4%BA%BA%E6%8A%80%E6%9C%AF%E5%88%9B%E6%96%B0%E4%B8%8E%E4%BA%A7%E4%B8%9A%E5%8F%91%E5%B1%95%E8%A1%8C%E5%8A%A8%E8%AE%A1%E5%88%92%EF%BC%882025-2027%E5%B9%B4%EF%BC%89/65456927","source":"baike.baidu.com"},{"title":"深圳:支持国际先进技术应用推进中心(深圳)建设具身智能技术试验场 推动场景应用落地 _ 东方财富网","url":"https://finance.eastmoney.com/a/202503033334729133.html","source":"finance.eastmoney.com"}]}
+
+event: stage
+data: {"name":"synthesis"}
+
+event: answer
+data: {"query":"它有哪些布局和进展","query_type":"canonical_v2:A:answer","answer_text":"（以下为基于本地数据的简要信息）\n- 张进；机构：哈尔滨工业大学（深圳）。\n- 深圳:支持国际先进技术应用推进中心(深圳)建设具身智能技术试验场,推动场景应用落地：首页\nVIP\n新闻\n关注\n视听\n快讯\n一财号\n直播\n电视\nESG\n图集\n专题\n数字报\n搜索\n登录\n首页 > 快讯\n分享到：\n35\n2025/03/03\n\n15:27【深圳：支持国际先进技术应用推进中心（深圳）建设具身智能技术试验场，推动场景应用落地】《深圳市具身智能机器人技术创新与产业发展行动计划（2025-202……\n- 肖华攀；机构：中山大学（深圳）；职称：副教授。\n- 支持国际先进技术应用推进中心（深圳）建设具身智能技术试验场 ...：支持深圳市人工智能与机器人研究院建设广东省具身智能机器人创新中心，带动产业上下游协同开展技术攻关和产业应用。面向具身智能领域建设开放创新平台、 ...\n- 孙进兴；机构：中山大学（深圳）；职称：副教授。\n- 深圳:支持国际先进技术应用推进中心(深圳)建设具身智能技术试验场：首页\n要闻\n深圳\n科技\n财经\nAI\n更多\n证券时报e公司\n搜索\n游戏\n网页设置\n登录\n内容更精彩\n安装电脑版\n广告\n\n0\n\n评论\n\n收藏\n\n分享\n\n手机看\n\n元宝 · 新闻妹\n\n深圳：支持国际先进技术应用推进中心（深圳）建设具身智能技术试验场\n\n证券时报e公司\n\n2025-03-03 15:26发布于广东证券时报旗下《e公司》官方账……\n- 周磊；机构：哈尔滨工业大学（深圳）。\n- 深圳市科技创新局关于印发《深圳市具身智能机器人技术创新与产业 ...：无障碍阅读 进入关怀版 为您推荐： 外国人来华许可 项目申报 科技计划 深圳市财政专项资金统一管理平台 首页 政务公开 政务服务 公众参与 党建园地 科技服务 智能推荐 菜单 菜单 您当前的位置 > 首页 > 政务公开 > 通知公告 深圳市科技创新局关于印发《深圳市具身智能机器人技术创新与产业发展行动计划（2025-2027年）……\n- 林进顺；机构：清华大学深圳国际研究生院。\n- 深圳:支持国际先进技术应用推进中心(深圳)建设具身智能技术试验场深圳市智能机器人世界人工智能大会_网易订阅：网易首页 应用 网易新闻 网易公开课 网易红彩 网易严选 邮箱大师 网易云课堂 快速导航 新闻 国内 国际 王三三 体育 NBA CBA 综合 中超 国际足球 英超 西甲 意甲 娱乐 明星 电影 电视 音乐 封面故事 财经 股票 原创 智库 汽车 购车 车型库 科技 网易智能 原创 IT 互……\n……（其余 30 条候选省略）","citations":[],"evidence":[],"clarification":null,"structured_payload":{},"answer_style":"template","citation_map":{},"suggested_followups":[]}
+
+event: done
+data: {}
+
