@@ -69,7 +69,7 @@
 
 ## Phase 5 — evidence acquisition (child change: fetch-top-pages-for-enumerations)
 
-- [ ] 5.1 Top-2 result-page body fetch for enumeration/deep queries with
+- [x] 5.1 Top-2 result-page body fetch for enumeration/deep queries with
        anti-echo, parallel lanes, hard timeout, degrade-to-current.
 - [ ] 5.2 G7 stability line (3/3 flagship) green; merge → hot update R2.
 
