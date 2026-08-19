@@ -530,7 +530,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
             for decision in decisions
         ]
         if rows:
-            connection.executemany(
+            connection.cursor().executemany(
                 "INSERT INTO knowledge.canonical_decision "
                 "(release_id, decision_id, canonical_identity_id, field_path, state, "
                 "policy_id, policy_version, method, method_version, decision_run_id, "
@@ -577,7 +577,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
             for decision in decisions
         ]
         if rows:
-            connection.executemany(
+            connection.cursor().executemany(
                 "INSERT INTO knowledge.relationship_decision "
                 "(release_id, decision_id, canonical_relationship_id, "
                 "relationship_type_id, relationship_type_version, "
@@ -638,7 +638,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
         if rows:
             # executemany keeps the exact per-row statement while batching
             # the round trips through the pipeline protocol.
-            connection.executemany(
+            connection.cursor().executemany(
                 sql.SQL(
                     "INSERT INTO knowledge.{} "
                     "(release_id, decision_id, assertion_id, assertion_role) "
@@ -672,7 +672,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                 )
             )
         for table, rows in rows_by_table.items():
-            connection.executemany(
+            connection.cursor().executemany(
                 f"INSERT INTO knowledge.{table} "
                 "(release_id, decision_id, assertion_id, admitted, reason_codes) "
                 "VALUES (%s, %s, %s, %s, %s)",
@@ -702,7 +702,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                 )
             )
         for table, rows in rows_by_table.items():
-            connection.executemany(
+            connection.cursor().executemany(
                 f"INSERT INTO knowledge.{table} "
                 "(release_id, decision_id, canonical_identity_contexts, "
                 "source_identity_contexts, content_sha256) "

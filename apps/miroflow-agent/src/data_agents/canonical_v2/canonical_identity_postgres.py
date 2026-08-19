@@ -597,7 +597,7 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
             for source in _all_sources(request, result)
         ]
         if source_rows:
-            connection.executemany(
+            connection.cursor().executemany(
                 "INSERT INTO knowledge.source_identity "
                 "(source_identity_id, source_system, source_key, entity_type, "
                 "normalized_keys, first_observed_at, last_observed_at, state) "
@@ -611,7 +611,7 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
             for record_id in source.source_record_ids
         ]
         if record_rows:
-            connection.executemany(
+            connection.cursor().executemany(
                 "INSERT INTO knowledge.source_identity_record "
                 "(source_identity_id, record_id) VALUES (%s, %s) "
                 "ON CONFLICT (source_identity_id, record_id) DO NOTHING",
@@ -637,7 +637,7 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
             for assertion in _all_assertions(request, result)
         ]
         if assertion_rows:
-            connection.executemany(
+            connection.cursor().executemany(
                 "INSERT INTO knowledge.source_assertion "
                 "(assertion_id, source_record_id, source_identity_id, "
                 "subject_entity_type, field_path, value, "

@@ -1004,7 +1004,7 @@ def _write_lookup_projection(
             ) STRICT;
             """
         )
-        connection.executemany(
+        connection.cursor().executemany(
             """
             INSERT INTO lookup_document (
                 document_id, release_id, projection_id,
@@ -1022,7 +1022,7 @@ def _write_lookup_projection(
                 for item in documents
             ],
         )
-        connection.executemany(
+        connection.cursor().executemany(
             """
             INSERT INTO lookup_manifest (
                 projection_id, release_id, manifest_json
