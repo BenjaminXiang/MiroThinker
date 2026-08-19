@@ -165,3 +165,23 @@ def test_rich_round1_skips_refinement() -> None:
         "榜单" in o["view"] or "名单" in o["view"] or "盘点" in o["view"]
         for o in reporter.web_outcomes
     ), "refinement fired despite rich round-1"
+
+
+class TestDualSourceWeighting:
+    """Phase 7.1: corroborated (dual-channel) results outrank single-channel."""
+
+    def test_corroborated_first(self) -> None:
+        adapter = _adapter(
+            bocha=_OrgResultsProvider([
+                {"title": "单通道A", "link": "https://a.com", "snippet": ""},
+                {"title": "双通道B", "link": "https://b.com", "snippet": ""},
+            ]),
+            serper=_OrgResultsProvider([
+                {"title": "双通道B", "link": "https://b.com", "snippet": ""},
+                {"title": "单通道C", "link": "https://c.com", "snippet": ""},
+            ]),
+        )
+        results = adapter._merged_results("测试查询")
+        titles = [r.title for r in results]
+        assert titles[0] == "双通道B"  # corroborated first
+        assert set(titles[1:]) == {"单通道A", "单通道C"}

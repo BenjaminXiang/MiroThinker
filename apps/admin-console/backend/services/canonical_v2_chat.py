@@ -2196,6 +2196,7 @@ class CanonicalV2ChatAdapter:
                 f"{turn_result.response_mode}"
             ),
             "answer_text": answer_text,
+            "understood_subject": anchor_display,
             "citations": [item.model_dump(mode="json") for item in public_citations],
             "evidence": [],
             "clarification": (
