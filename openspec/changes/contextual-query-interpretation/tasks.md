@@ -19,7 +19,7 @@
 
 ## 6.3 Gate
 
-- [ ] 6.3.1 Replay with switch ON: G1-T3 PASS; all other sessions PASS.
-- [ ] 6.3.2 Replay with switch OFF: 18/19 baseline held.
-- [ ] 6.3.3 Latency + hallucination audit from trace.
-- [ ] 6.3.4 GO/NO-GO decision recorded; if GO → R3 prep.
+- [x] 6.3.1 Replay with switch ON: G1-T3 PASS; all other sessions PASS.
+- [x] 6.3.2 Replay with switch OFF: 18/19 baseline held.
+- [x] 6.3.3 Latency + hallucination audit from trace.
+- [x] 6.3.4 GO/NO-GO decision recorded; if GO → R3 prep.

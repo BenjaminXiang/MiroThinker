@@ -75,10 +75,10 @@
 
 ## Phase 6 — interpretation layer (child change: contextual-query-interpretation)
 
-- [ ] 6.1 Dialogue ring buffer (≤5 turns) in session state.
-- [ ] 6.2 Typed interpreter (subject/aspect/op) + five validators + kill switch;
+- [x] 6.1 Dialogue ring buffer (≤5 turns) in session state.
+- [x] 6.2 Typed interpreter (subject/aspect/op) + five validators + kill switch;
        fallback = Phase 3 layer.
-- [ ] 6.3 GO/NO-GO gate evaluation (multi-turn ≥ Phase 3 baseline, single-turn
+- [x] 6.3 GO/NO-GO gate evaluation (multi-turn ≥ Phase 3 baseline, single-turn
        zero regression, p95 delta ≤ 1.5s). No-go ships behind flag.
 
 ## Phase 7 — fusion floor, disclosure, frontend convergence (child change: fusion-recall-floor-and-disclosure)
