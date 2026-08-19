@@ -583,33 +583,61 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
         request: _identity.IdentityResolutionRequest,
         result: _identity.IdentityResolutionResult,
     ) -> None:
-        for source in _all_sources(request, result):
-            connection.execute(
+        source_rows = [
+            (
+                source.source_identity_id,
+                source.source_system,
+                source.source_key,
+                source.entity_type,
+                Jsonb(source.normalized_keys),
+                source.first_observed_at,
+                source.last_observed_at,
+                source.state.value,
+            )
+            for source in _all_sources(request, result)
+        ]
+        if source_rows:
+            connection.executemany(
                 "INSERT INTO knowledge.source_identity "
                 "(source_identity_id, source_system, source_key, entity_type, "
                 "normalized_keys, first_observed_at, last_observed_at, state) "
                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s) "
                 "ON CONFLICT (source_identity_id) DO NOTHING",
-                (
-                    source.source_identity_id,
-                    source.source_system,
-                    source.source_key,
-                    source.entity_type,
-                    Jsonb(source.normalized_keys),
-                    source.first_observed_at,
-                    source.last_observed_at,
-                    source.state.value,
-                ),
+                source_rows,
             )
-            for record_id in source.source_record_ids:
-                connection.execute(
-                    "INSERT INTO knowledge.source_identity_record "
-                    "(source_identity_id, record_id) VALUES (%s, %s) "
-                    "ON CONFLICT (source_identity_id, record_id) DO NOTHING",
-                    (source.source_identity_id, record_id),
-                )
-        for assertion in _all_assertions(request, result):
-            connection.execute(
+        record_rows = [
+            (source.source_identity_id, record_id)
+            for source in _all_sources(request, result)
+            for record_id in source.source_record_ids
+        ]
+        if record_rows:
+            connection.executemany(
+                "INSERT INTO knowledge.source_identity_record "
+                "(source_identity_id, record_id) VALUES (%s, %s) "
+                "ON CONFLICT (source_identity_id, record_id) DO NOTHING",
+                record_rows,
+            )
+        assertion_rows = [
+            (
+                assertion.assertion_id,
+                assertion.source_record_id,
+                assertion.source_identity_id,
+                assertion.subject_entity_type,
+                assertion.field_path,
+                Jsonb(assertion.value),
+                assertion.assertion_fingerprint_sha256,
+                assertion.observed_at,
+                assertion.source_event_time,
+                _legacy_instant(assertion.valid_from),
+                _legacy_instant(assertion.valid_to),
+                _temporal_json(assertion.valid_from),
+                _temporal_json(assertion.valid_to),
+                assertion.assertion_run_id,
+            )
+            for assertion in _all_assertions(request, result)
+        ]
+        if assertion_rows:
+            connection.executemany(
                 "INSERT INTO knowledge.source_assertion "
                 "(assertion_id, source_record_id, source_identity_id, "
                 "subject_entity_type, field_path, value, "
@@ -619,22 +647,7 @@ class _PostgresCanonicalIdentityStore(CanonicalIdentityStore):
                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
                 "%s, %s) "
                 "ON CONFLICT (assertion_id) DO NOTHING",
-                (
-                    assertion.assertion_id,
-                    assertion.source_record_id,
-                    assertion.source_identity_id,
-                    assertion.subject_entity_type,
-                    assertion.field_path,
-                    Jsonb(assertion.value),
-                    _assertion_fingerprint(assertion),
-                    assertion.observed_at,
-                    assertion.source_event_time,
-                    _legacy_instant(assertion.valid_from),
-                    _legacy_instant(assertion.valid_to),
-                    _temporal_json(assertion.valid_from),
-                    _temporal_json(assertion.valid_to),
-                    assertion.assertion_run_id,
-                ),
+                assertion_rows,
             )
 
     @staticmethod

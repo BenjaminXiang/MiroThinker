@@ -508,8 +508,29 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
         connection: psycopg.Connection[dict[str, Any]],
         decisions: tuple[CanonicalDecision, ...],
     ) -> None:
-        for decision in decisions:
-            connection.execute(
+        rows = [
+            (
+                decision.release_id,
+                decision.decision_id,
+                decision.canonical_identity_id,
+                decision.field_path,
+                decision.state.value,
+                decision.policy.policy_id,
+                decision.policy.policy_version,
+                decision.method.value,
+                decision.method_version,
+                decision.decision_run_id,
+                decision.confidence,
+                decision.rationale,
+                decision.decided_at,
+                decision.supersedes_decision_id,
+                cls._trace_json(decision),
+                cls._review_json(decision),
+            )
+            for decision in decisions
+        ]
+        if rows:
+            connection.executemany(
                 "INSERT INTO knowledge.canonical_decision "
                 "(release_id, decision_id, canonical_identity_id, field_path, state, "
                 "policy_id, policy_version, method, method_version, decision_run_id, "
@@ -517,24 +538,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                 "human_review_resolution) "
                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
                 "%s, %s, %s)",
-                (
-                    decision.release_id,
-                    decision.decision_id,
-                    decision.canonical_identity_id,
-                    decision.field_path,
-                    decision.state.value,
-                    decision.policy.policy_id,
-                    decision.policy.policy_version,
-                    decision.method.value,
-                    decision.method_version,
-                    decision.decision_run_id,
-                    decision.confidence,
-                    decision.rationale,
-                    decision.decided_at,
-                    decision.supersedes_decision_id,
-                    cls._trace_json(decision),
-                    cls._review_json(decision),
-                ),
+                rows,
             )
 
     @classmethod
@@ -543,8 +547,37 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
         connection: psycopg.Connection[dict[str, Any]],
         decisions: tuple[RelationshipDecision, ...],
     ) -> None:
-        for decision in decisions:
-            connection.execute(
+        rows = [
+            (
+                decision.release_id,
+                decision.decision_id,
+                decision.canonical_relationship_id,
+                decision.relationship_type_id,
+                decision.relationship_type_version,
+                decision.source_canonical_identity_id,
+                decision.target_canonical_identity_id,
+                decision.state.value,
+                Jsonb(decision.role_bindings),
+                decision.policy.policy_id,
+                decision.policy.policy_version,
+                decision.method.value,
+                decision.method_version,
+                decision.decision_run_id,
+                decision.confidence,
+                decision.rationale,
+                _legacy_instant(decision.valid_from),
+                _legacy_instant(decision.valid_to),
+                _temporal_json(decision.valid_from),
+                _temporal_json(decision.valid_to),
+                decision.decided_at,
+                decision.supersedes_decision_id,
+                cls._trace_json(decision),
+                cls._review_json(decision),
+            )
+            for decision in decisions
+        ]
+        if rows:
+            connection.executemany(
                 "INSERT INTO knowledge.relationship_decision "
                 "(release_id, decision_id, canonical_relationship_id, "
                 "relationship_type_id, relationship_type_version, "
@@ -556,32 +589,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                 "human_review_resolution) "
                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
                 "%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                (
-                    decision.release_id,
-                    decision.decision_id,
-                    decision.canonical_relationship_id,
-                    decision.relationship_type_id,
-                    decision.relationship_type_version,
-                    decision.source_canonical_identity_id,
-                    decision.target_canonical_identity_id,
-                    decision.state.value,
-                    Jsonb(decision.role_bindings),
-                    decision.policy.policy_id,
-                    decision.policy.policy_version,
-                    decision.method.value,
-                    decision.method_version,
-                    decision.decision_run_id,
-                    decision.confidence,
-                    decision.rationale,
-                    _legacy_instant(decision.valid_from),
-                    _legacy_instant(decision.valid_to),
-                    _temporal_json(decision.valid_from),
-                    _temporal_json(decision.valid_to),
-                    decision.decided_at,
-                    decision.supersedes_decision_id,
-                    cls._trace_json(decision),
-                    cls._review_json(decision),
-                ),
+                rows,
             )
 
     @staticmethod
@@ -617,21 +625,27 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
             ("selected", decision.selected_assertion_ids),
             ("conflicting", decision.conflicting_assertion_ids),
         )
-        for role, assertion_ids in role_ids:
-            for assertion_id in assertion_ids:
-                connection.execute(
-                    sql.SQL(
-                        "INSERT INTO knowledge.{} "
-                        "(release_id, decision_id, assertion_id, assertion_role) "
-                        "VALUES (%s, %s, %s, %s)"
-                    ).format(sql.Identifier(table)),
-                    (
-                        decision.release_id,
-                        decision.decision_id,
-                        assertion_id,
-                        role,
-                    ),
-                )
+        rows = [
+            (
+                decision.release_id,
+                decision.decision_id,
+                assertion_id,
+                role,
+            )
+            for role, assertion_ids in role_ids
+            for assertion_id in assertion_ids
+        ]
+        if rows:
+            # executemany keeps the exact per-row statement while batching
+            # the round trips through the pipeline protocol.
+            connection.executemany(
+                sql.SQL(
+                    "INSERT INTO knowledge.{} "
+                    "(release_id, decision_id, assertion_id, assertion_role) "
+                    "VALUES (%s, %s, %s, %s)"
+                ).format(sql.Identifier(table)),
+                rows,
+            )
 
     @staticmethod
     def _insert_outcomes(
@@ -641,23 +655,28 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
         field_assertion_ids = {
             assertion.assertion_id for assertion in result.field_assertions
         }
+        rows_by_table: dict[str, list[tuple[Any, ...]]] = {}
         for outcome in result.constraint_outcomes:
             table = (
                 "canonical_decision_constraint_outcome"
                 if outcome.assertion_id in field_assertion_ids
                 else "relationship_decision_constraint_outcome"
             )
-            connection.execute(
-                f"INSERT INTO knowledge.{table} "
-                "(release_id, decision_id, assertion_id, admitted, reason_codes) "
-                "VALUES (%s, %s, %s, %s, %s)",
+            rows_by_table.setdefault(table, []).append(
                 (
                     outcome.release_id,
                     outcome.decision_id,
                     outcome.assertion_id,
                     outcome.admitted,
                     Jsonb(list(outcome.reason_codes)),
-                ),
+                )
+            )
+        for table, rows in rows_by_table.items():
+            connection.executemany(
+                f"INSERT INTO knowledge.{table} "
+                "(release_id, decision_id, assertion_id, admitted, reason_codes) "
+                "VALUES (%s, %s, %s, %s, %s)",
+                rows,
             )
 
     @staticmethod
@@ -665,6 +684,7 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
         connection: psycopg.Connection[dict[str, Any]],
         result: _engine.DecisionBatchResult,
     ) -> None:
+        rows_by_table: dict[str, list[tuple[Any, ...]]] = {}
         for decision in (*result.canonical_decisions, *result.relationship_decisions):
             table = (
                 "canonical_decision_identity_context"
@@ -672,18 +692,22 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                 else "relationship_decision_identity_context"
             )
             payload = _decision_identity_context_payload(result, decision)
-            connection.execute(
-                f"INSERT INTO knowledge.{table} "
-                "(release_id, decision_id, canonical_identity_contexts, "
-                "source_identity_contexts, content_sha256) "
-                "VALUES (%s, %s, %s, %s, %s)",
+            rows_by_table.setdefault(table, []).append(
                 (
                     decision.release_id,
                     decision.decision_id,
                     Jsonb(payload["canonical_identity_contexts"]),
                     Jsonb(payload["source_identity_contexts"]),
                     _engine._content_sha256(cast(JsonValue, payload)),
-                ),
+                )
+            )
+        for table, rows in rows_by_table.items():
+            connection.executemany(
+                f"INSERT INTO knowledge.{table} "
+                "(release_id, decision_id, canonical_identity_contexts, "
+                "source_identity_contexts, content_sha256) "
+                "VALUES (%s, %s, %s, %s, %s)",
+                rows,
             )
 
     def persist(
