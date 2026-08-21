@@ -864,17 +864,53 @@ class _PostgresDomainProjectionStore(DomainProjectionStore):
                 ),
                 evaluated_at=row["evaluated_at"],
             )
-            if (
-                row["build_run_id"] != manifest["build_run_id"]
-                or row["inclusion_decision_run_id"]
-                != manifest["inclusion_decision_run_id"]
-                or row["manifest_content_sha256"] != manifest["manifest_content_sha256"]
-                or row["inclusion_result_content_sha256"]
-                != manifest["inclusion_result_content_sha256"]
-                or row["content_sha256"] != _canonical_sha256(decision)
-            ):
+            mismatches = [
+                f"{field}: row={row[column]!r} manifest={manifest_value!r}"
+                for field, column, manifest_value in (
+                    ("build_run_id", "build_run_id", manifest["build_run_id"]),
+                    (
+                        "inclusion_decision_run_id",
+                        "inclusion_decision_run_id",
+                        manifest["inclusion_decision_run_id"],
+                    ),
+                    (
+                        "manifest_content_sha256",
+                        "manifest_content_sha256",
+                        manifest["manifest_content_sha256"],
+                    ),
+                    (
+                        "inclusion_result_content_sha256",
+                        "inclusion_result_content_sha256",
+                        manifest["inclusion_result_content_sha256"],
+                    ),
+                )
+                if row[column] != manifest_value
+            ] + [
+                "content_sha256: "
+                f"row={row['content_sha256']!r} "
+                f"reconstructed={_canonical_sha256(decision)!r} "
+                f"decision_id={row['decision_id']!r} "
+                f"path={decision.path!r} "
+                f"score row={row['score']!r} reconstructed={decision.score!r} "
+                f"limitations row={row['limitations']!r} "
+                f"reconstructed={decision.limitations!r} "
+                f"hard_exclusion_codes row={row['hard_exclusion_codes']!r} "
+                f"reconstructed={decision.hard_exclusion_codes!r} "
+                f"supporting_assertion_ids="
+                f"{decision.supporting_assertion_ids!r} "
+                f"evaluated_at row={row['evaluated_at']!r} "
+                f"reconstructed={decision.evaluated_at!r} "
+                f"policy join content_sha256={row['policy_content_sha256']!r} "
+                f"effective_at={row['policy_effective_at']!r} "
+                f"reconstructed={decision.policy!r}"
+                if row["content_sha256"] != _canonical_sha256(decision)
+                else ""
+            ]
+            mismatches = [item for item in mismatches if item]
+            if mismatches:
                 raise DomainProjectionPersistenceError(
-                    "durable inclusion decision envelope/hash is inconsistent"
+                    "durable inclusion decision envelope/hash is inconsistent: "
+                    + "; ".join(mismatches)
                 )
             if row["entity_type"] not in DOMAINS:
                 raise DomainProjectionPersistenceError(
