@@ -33,6 +33,13 @@ bash start.sh
 /home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/.venv/bin/python reconcile_light_lane.py
 ```
 
+## 管理界面（迁移后首先用它配模型 URL）
+
+浏览器打开 `http://<服务器>:18201/admin`——配置嵌入/对话接口的
+URL、模型名、密钥，**保存即生效（免重启）**，一键连通性测试
+（嵌入返回维度、对话返回延迟）。默认仅本机可管理；异地管理需在
+配置里设置管理令牌（页面/API 均用 `X-Admin-Token` 头）。
+
 ## 端点
 
 - `GET /` — 对话页（自然语言问答）
@@ -41,6 +48,7 @@ bash start.sh
 - `GET /api/company/{名}`（别名扩展的专利列表）/`/api/professor/{id}`（论文+DOI）/
   `/api/patent/{id}`（申请人解析）/`/api/paper/{id}`（公开链接）
 - `GET /api/inventory` — 对账数字
+- `GET/PUT /api/admin/config`（密钥打码/原子保存）、`POST /api/admin/config/test`（双探针）、`GET /admin`（管理页）
 
 ## 依赖与安全
 

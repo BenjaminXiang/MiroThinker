@@ -8,12 +8,13 @@ company patents, embodied-AI company lists, company detail profiles.
 from __future__ import annotations
 
 import threading
+import time
 from pathlib import Path
 
 import psycopg
 from psycopg.rows import dict_row
 import requests
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Body, FastAPI, HTTPException, Query, Request
 
 import os
 
@@ -41,6 +42,54 @@ def _embed_key() -> str:
     return os.environ.get("LIGHT_LANE_EMBED_KEY", "")
 
 app = FastAPI(title="mirothinker-light-lane", version="r1")
+CHAT_MODEL = os.environ.get("LIGHT_LANE_CHAT_MODEL", "deepseek-v4-flash")
+CHAT_BASE_URL = os.environ.get(
+    "LIGHT_LANE_CHAT_ENDPOINT", "https://api.deepseek.com/v1/chat/completions"
+)
+
+CONFIG_PATH = Path(__file__).resolve().parent / "config.json"
+RUNTIME_KEYS = (
+    "embed_endpoint", "embed_model", "embed_key",
+    "chat_endpoint", "chat_model", "chat_key", "admin_token",
+)
+DEFAULTS = {
+    "embed_endpoint": EMBED_ENDPOINT,
+    "embed_model": EMBED_MODEL,
+    "embed_key": "",
+    "chat_endpoint": CHAT_BASE_URL,
+    "chat_model": CHAT_MODEL,
+    "chat_key": "",
+    "admin_token": "",
+}
+
+
+def _runtime_config() -> dict:
+    try:
+        stored = json.loads(CONFIG_PATH.read_text()) if CONFIG_PATH.exists() else {}
+    except (OSError, json.JSONDecodeError):
+        stored = {}
+    return stored if isinstance(stored, dict) else {}
+
+
+def _cfg(field: str) -> str:
+    stored = _runtime_config().get(field)
+    if isinstance(stored, str) and stored.strip():
+        return stored.strip()
+    if field == "embed_key":
+        return _embed_key()
+    if field == "chat_key":
+        return _deepseek_key()
+    return DEFAULTS.get(field, "")
+
+
+def _save_runtime_config(update: dict) -> None:
+    stored = _runtime_config()
+    stored.update(update)
+    temporary = CONFIG_PATH.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(stored, ensure_ascii=False, indent=1))
+    temporary.replace(CONFIG_PATH)
+
+
 _local = threading.local()
 
 
@@ -57,9 +106,9 @@ def embed(text: str) -> str | None:
     caller can degrade to keyword-only instead of failing the request."""
     try:
         response = requests.post(
-            EMBED_ENDPOINT,
-            headers={"Authorization": f"Bearer {_embed_key()}"},
-            json={"model": EMBED_MODEL, "input": [text]},
+            _cfg("embed_endpoint"),
+            headers={"Authorization": f"Bearer {_cfg('embed_key')}"},
+            json={"model": _cfg("embed_model"), "input": [text]},
             timeout=15,
         )
         response.raise_for_status()
@@ -392,9 +441,6 @@ def inventory():
 
 import os
 
-CHAT_MODEL = os.environ.get("LIGHT_LANE_CHAT_MODEL", "deepseek-v4-flash")
-CHAT_BASE_URL = "https://api.deepseek.com/v1/chat/completions"
-
 SYSTEM_PROMPT = """你是深圳科创数据平台的查询助手。严格依据下面提供的【资料】回答用户问题，规则：
 1. 只用资料中的信息回答；资料不足以回答时，明确说"内部数据暂无相关记录"，不要编造。
 2. 企业联系方式（电话/邮箱）缺失时：直接说明"通过公开渠道无法获得联系方式"，然后简要介绍该公司业务，若资料中有邮箱则附上。绝不展示"-"之类的占位符。
@@ -419,14 +465,14 @@ def _deepseek_key() -> str:
 
 
 def _chat(messages: list[dict]) -> str | None:
-    key = _deepseek_key()
+    key = _cfg("chat_key")
     if not key:
         return None
     response = requests.post(
-        CHAT_BASE_URL,
+        _cfg("chat_endpoint"),
         headers={"Authorization": f"Bearer {key}"},
-        json={"model": CHAT_MODEL, "messages": messages, "temperature": 0.1,
-              "max_tokens": 4000},
+        json={"model": _cfg("chat_model"), "messages": messages,
+              "temperature": 0.1, "max_tokens": 4000},
         timeout=60,
     )
     if response.status_code != 200:
@@ -540,6 +586,121 @@ def ask(q: str = Query(min_length=1)):
 
 
 import json  # noqa: E402  (used by _build_context)
+
+def _admin_authorized(request) -> bool:
+    token = _cfg("admin_token")
+    supplied = request.headers.get("X-Admin-Token", "")
+    if token:
+        return supplied == token
+    return request.client.host in ("127.0.0.1", "::1") if request.client else False
+
+
+def _masked(value: str) -> str:
+    if not value:
+        return ""
+    return f"***({value[-4:]})" if len(value) > 8 else "***"
+
+
+@app.get("/api/admin/config")
+def admin_get_config(request: Request):
+    if not _admin_authorized(request):
+        raise HTTPException(403, "admin token required (set admin_token in config)")
+    return {
+        field: (_masked(_cfg(field)) if field.endswith("_key") or field == "admin_token" else _cfg(field))
+        for field in RUNTIME_KEYS
+    }
+
+
+@app.put("/api/admin/config")
+def admin_put_config(request: Request, payload: dict = Body(...)):
+    if not _admin_authorized(request):
+        raise HTTPException(403, "admin token required")
+    update = {
+        key: value for key, value in payload.items()
+        if key in RUNTIME_KEYS and isinstance(value, str)
+    }
+    unknown = sorted(set(payload) - set(RUNTIME_KEYS))
+    if unknown:
+        raise HTTPException(400, f"unknown fields: {unknown}")
+    _save_runtime_config(update)
+    return {"saved": sorted(update)}
+
+
+@app.post("/api/admin/config/test")
+def admin_test_config(request: Request):
+    """Probe both model endpoints with the effective config."""
+    if not _admin_authorized(request):
+        raise HTTPException(403, "admin token required")
+    result: dict = {}
+    started = time.time()
+    vector = embed("连通性测试")
+    result["embed"] = {
+        "ok": vector is not None,
+        "latency_ms": int((time.time() - started) * 1000),
+        "endpoint": _cfg("embed_endpoint"),
+        "model": _cfg("embed_model"),
+        "dimension": len(json.loads(vector)) if vector else None,
+    }
+    started = time.time()
+    answer = _chat([{"role": "user", "content": "回复：ok"}])
+    result["chat"] = {
+        "ok": answer is not None,
+        "latency_ms": int((time.time() - started) * 1000),
+        "endpoint": _cfg("chat_endpoint"),
+        "model": _cfg("chat_model"),
+        "sample": (answer or "")[:40],
+    }
+    return result
+
+
+ADMIN_PAGE = """<!doctype html><html lang="zh"><head><meta charset="utf-8">
+<title>模型配置 · 轻量线管理</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;padding:0 16px;background:#fafafa}
+h1{font-size:20px}table{width:100%;border-collapse:collapse;background:#fff}
+td{border:1px solid #e0e0e0;padding:8px;font-size:14px}
+td:first-child{width:180px;color:#555}input{width:95%;padding:6px;font-size:14px}
+button{padding:8px 16px;margin:12px 8px 0 0}#status{margin-top:16px;white-space:pre-wrap;font-size:13px;background:#fff;border:1px solid #e0e0e0;padding:12px;border-radius:8px}
+</style></head><body>
+<h1>模型配置（保存即生效，免重启）</h1>
+<table id="t"></table>
+<button onclick="save()">保存配置</button>
+<button onclick="testAll()">连通性测试</button>
+<div id="status">加载中…</div>
+<script>
+const FIELDS=[["embed_endpoint","嵌入接口 URL"],["embed_model","嵌入模型"],
+["embed_key","嵌入密钥（留空=沿用现值）"],["chat_endpoint","对话接口 URL"],
+["chat_model","对话模型"],["chat_key","对话密钥（留空=沿用现值）"],
+["admin_token","管理令牌（空=仅本机可管）"]];
+const token=prompt("管理令牌（未设置则直接确定）")||"";
+const H={"X-Admin-Token":token,"Content-Type":"application/json"};
+async function load(){const r=await fetch("/api/admin/config",{headers:H});const d=await r.json();
+if(d.detail){document.getElementById("status").textContent="鉴权失败："+d.detail;return;}
+const t=document.getElementById("t");t.innerHTML="";
+for(const [k,label] of FIELDS){const tr=document.createElement("tr");
+const cur=d[k]&&d[k].startsWith("***")?d[k]:"";
+tr.innerHTML=`<td>${label}<br><span style="font-size:11px;color:#999">${k}${cur?" 当前:"+cur:""}</span></td><td><input id="f_${k}" placeholder=""></td>`;
+t.appendChild(tr);}document.getElementById("status").textContent="已加载当前配置。带 *** 的为现值（打码），留空不修改。";}
+async function save(){const payload={};for(const [k] of FIELDS){const v=document.getElementById("f_"+k).value;if(v)payload[k]=v;}
+if(!Object.keys(payload).length){document.getElementById("status").textContent="没有修改。";return;}
+const r=await fetch("/api/admin/config",{method:"PUT",headers:H,body:JSON.stringify(payload)});
+document.getElementById("status").textContent=JSON.stringify(await r.json());load();}
+async function testAll(){document.getElementById("status").textContent="测试中…";
+const r=await fetch("/api/admin/config/test",{method:"POST",headers:H});
+const d=await r.json();
+document.getElementById("status").textContent=
+"嵌入："+(d.embed.ok?"✓ "+d.embed.dimension+" 维 / "+d.embed.latency_ms+"ms":"✗ 失败（语义检索将降级为关键词）")+"\n"+
+"对话："+(d.chat.ok?"✓ "+d.chat.latency_ms+"ms / 回复: "+d.chat.sample:"✗ 失败（问答将降级为检索直出）");}
+load();
+</script></body></html>"""
+
+
+@app.get("/admin")
+def admin_page():
+    from fastapi.responses import HTMLResponse
+
+    return HTMLResponse(ADMIN_PAGE)
+
 
 CHAT_PAGE = """<!doctype html><html lang="zh"><head><meta charset="utf-8">
 <title>科创数据查询（轻量线）</title>

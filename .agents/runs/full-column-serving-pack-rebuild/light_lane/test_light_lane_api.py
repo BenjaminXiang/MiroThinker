@@ -8,6 +8,10 @@ from __future__ import annotations
 
 import os
 
+from pathlib import Path
+
+import json
+
 import pytest
 import httpx
 
@@ -172,3 +176,70 @@ def test_qa_professor_papers(client):
     answer = payload["answer"]
     assert "33" in answer
     assert "论文" in answer
+
+
+# ---------------------------------------------------------------------------
+# Admin config interface (/api/admin/*)
+# ---------------------------------------------------------------------------
+
+CONFIG_PATH = Path(__file__).resolve().parent / "config.json"
+
+
+def _restore_config(original: str | None):
+    if original is None:
+        CONFIG_PATH.unlink(missing_ok=True)
+    else:
+        CONFIG_PATH.write_text(original)
+
+
+def test_admin_config_masks_secrets(client):
+    payload = client.get("/api/admin/config").json()
+    for key in ("embed_key", "chat_key"):
+        value = payload[key]
+        assert value == "" or value.startswith("***")
+
+
+def test_admin_config_update_persists_and_applies(client):
+    original = CONFIG_PATH.read_text() if CONFIG_PATH.exists() else None
+    try:
+        response = client.put(
+            "/api/admin/config", json={"embed_model": "probe-model-x"}
+        ).json()
+        assert response["saved"] == ["embed_model"]
+        stored = json.loads(CONFIG_PATH.read_text())
+        assert stored["embed_model"] == "probe-model-x"
+        assert client.get("/api/admin/config").json()["embed_model"] == "probe-model-x"
+        client.put("/api/admin/config", json={"embed_model": ""} if False else {"embed_model": "Qwen/Qwen3-Embedding-8B"})
+    finally:
+        _restore_config(original)
+
+
+def test_admin_config_rejects_unknown_fields(client):
+    response = client.put("/api/admin/config", json={"evil_field": "x"})
+    assert response.status_code == 400
+
+
+def test_admin_probe_reports_both_components(client):
+    payload = client.post("/api/admin/config/test").json()
+    assert set(payload) == {"embed", "chat"}
+    assert isinstance(payload["embed"]["ok"], bool)
+    assert isinstance(payload["chat"]["ok"], bool)
+    assert "dimension" in payload["embed"]
+    assert "latency_ms" in payload["chat"]
+
+
+def test_admin_token_enforced_when_set(client):
+    original = CONFIG_PATH.read_text() if CONFIG_PATH.exists() else None
+    try:
+        client.put("/api/admin/config", json={"admin_token": "secret-tok"})
+        wrong = client.get(
+            "/api/admin/config", headers={"X-Admin-Token": "nope"}
+        )
+        assert wrong.status_code == 403
+        right = client.get(
+            "/api/admin/config", headers={"X-Admin-Token": "secret-tok"}
+        )
+        assert right.status_code == 200
+    finally:
+        client.put("/api/admin/config", json={"admin_token": ""})
+        _restore_config(original)
