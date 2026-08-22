@@ -200,3 +200,408 @@ lookup 文档=投影模型 dump）。gate 四文档 hash 与 rebuild_write_gate.
 ruff 全过；manifest 过真实 SourceBuildManifest 校验；嵌入端点探针 4096 维。
 
 **影响哪些问题**：为 4.3 构建（P5/P8/论文覆盖/关系规模）铺平管道。
+
+---
+
+## 2026-08-19 R4：4.3 构建 gate 卡点修复（build-v2.sh 幂等重置 + 重启构建）
+
+**做了什么**：
+
+1. **定位报错**：`IsolatedKnowledgeBuildSafetyError: isolated target or
+   accepted backup gate validation failed`（`knowledge_build_isolated.py:8882`）
+   只是 `_preflight` 的统一包裹（:8878-8884 同时包住
+   `validate_fresh_targets` 与 `verify_accepted_gate` 两类失败）。本次
+   traceback 的真实失败点是 `_assert_fresh_database`："candidate database
+   is not fresh"（9 表非空）。
+2. **根因（不在 gate，在 build 脚本的 DB 状态假设）**：`build-v2.sh` 的
+   DB 准备逻辑把「库存在」当「已准备好」——上一轮构建中途因 psycopg2
+   `executemany` 崩溃（commit 5178a79 已修）留下
+   landing/knowledge/publish 残留数据，重跑脚本不清理 → fresh 校验拒绝；
+   之后手工 DROP/CREATE 重建的库虽空但丢失
+   `miroflow:destructive-target:v1:disposable:<db>` marker（脚本只在
+   「新建」分支打 marker）→ 直接重跑会死在库身份校验
+   （`verify_database_identity` 要求 marker 精确相等，alembic 环境同样
+   校验，当前实测库 marker=None）。
+3. **核对用户怀疑的 `verify_accepted_gate`(:7824)/`_gate_root` 路径绑定：
+   无问题**——boundary 组合时 `resolve(strict=False)` 存储（:7782）、每次
+   调用再 resolve 比较，两侧同源一致；gate 四文档
+   （s2/source-inventory、s2b/backup-manifest、restore-verification、
+   acceptance-record）实测 sha256 与 `rebuild_write_gate.py` 钉死常量
+   逐一相等；manifest `content_sha256`（a6e82fcd…）与 build/serve 脚本
+   pin 一致（整文件 sha acc62c33… 不同是预期——校验用内部内容哈希，
+   非误报修复项）；alembic head `C2_0013` = `_EXPECTED_ALEMBIC_REVISION`；
+   milvus.db sha256 与 pin 一致；envelope/staging/index 均 fresh。
+4. **修复 `build-v2.sh`**：DB 准备改为**幂等重置**——仅当库带本脚本
+   disposable marker（上次半途运行遗留，可安全丢弃）或**完全无表且无
+   marker**（手工重建的空壳）时 `DROP DATABASE … WITH (FORCE)` 后重建并
+   统一打 marker；带异 marker 且有表的库一律拒绝（防误删他人库）。
+   PG 16.13 支持 FORCE。归档失败日志为 `*.failed-20260819-pre-fix`，
+   重启 build-v2.sh（nohup，pid 209583）。
+
+**发现**：
+
+- 残留的 9 张表（knowledge.policy/relationship_type/release、
+  landing.evidence_artifact/ingest_run/parser_run/source_record、
+  publish.build_manifest/manifest_section）正是上次崩溃前构建最先写入
+  的表，与 executemany 崩溃时间线吻合。
+- 「库已重建为空」与「脚本能继续跑」之间隔着 marker 这道身份防线：
+  手工重建绕过脚本即绕过 marker，属于安全设计按预期拦人。
+
+**怎么验证的**：
+
+- 重置逻辑对当前真实状态（无标记空库）实跑："unmarked but empty target
+  dropped" → 重建后 psycopg 回读断言 marker 精确等于
+  `miroflow:destructive-target:v1:disposable:miroflow_candidate_v2_20260819_r1`。
+- 重启后：alembic 无错迁至 C2_0013 head；runner 进程存活（CPU ~88%）；
+  库内 `landing.ingest_run`=15、`landing.source_record` 73,907 且持续
+  增长——原 8882 卡点（preflight gate）已实际通过，构建进入数据写入
+  阶段。构建最终结果（envelope 产出/对账/18200 冒烟）见后续条目。
+
+**影响哪些问题**：解锁 Phase 4 全列重建本体（P5 专利关系、P8 企业
+全集与富字段、论文覆盖 24,101、教授↔论文 18,655 链接）。
+
+---
+
+## 2026-08-19 R5：4.3 二度卡点——fingerprint 回归修复 + 脚本全面可重入
+
+**做了什么**：
+
+1. **R4 重启的构建跑了 1h20m 后再崩**（这次远超 preflight，landing
+   73,907 条写完、合并/投影完成），死在 `_persist_owners` →
+   `canonical_identity_postgres.py:628`：
+   `AttributeError: 'SourceAssertion' object has no attribute
+   'assertion_fingerprint_sha256'`。
+2. **根因**：83faea0（批量 executemany 改写）把原助手调用
+   `_assertion_fingerprint(assertion)` 误替换为不存在的模型属性
+   `assertion.assertion_fingerprint_sha256`——fingerprint 是计算值
+   （canonical JSON 的 sha256，:133），不是 `SourceAssertion` 契约字段。
+   5178a79 只做了 `connection.executemany`→`connection.cursor()
+   .executemany` 的机械路由，无表达式替换。
+3. **同类位排查**（pattern 纪律，避免逐个再烧 1.5h）：逐行比对 83faea0
+   两文件全部改写表达式——identity 文件**仅此一处**助手→属性替换，
+   decision 文件全部忠实（`_legacy_instant`/`_temporal_json`/
+   `_trace_json`/`_review_json` 均保留）；2270d86 为纯新增；全库 grep
+   确认剩余 `assertion_fingerprint_sha256` 引用均为 SQL 列名或查询
+   结果字典（合法）。
+4. **修复 + 回归测试**（commit 9619b77）：恢复
+   `_assertion_fingerprint(assertion)`；新增单测
+   `test_insert_sources_and_assertions_batches_rows_with_computed_fingerprints`
+   ——用记录型 stub connection 驱动真实
+   `_insert_sources_and_assertions`，把 fingerprint 列钉死为
+   canonical-json sha256 配方（修复前精确复现生产 AttributeError）。
+5. **build-v2.sh 第二处可重入缺陷**：崩溃运行残留的
+   `/var/tmp/mirothinker-data-v2/{staging,index}-v1` 触发脚本自己的
+   "not fresh" 硬退出。改为**绑定校验后重置**：staging marker 必须精确
+   绑定本构建身份（schema_version + run_id + release + manifest sha）
+   才允许清除，否则拒绝。随后第三次重启构建。
+
+**发现**：
+
+- 既有测试为何没拦住：P4 的 9 个用例测 merge/authority，不触 persist
+  路径；能覆盖真实 persist 的 4 个全持久化 e2e 用例在本环境挂起
+  （等 127.0.0.1:5432 trust 库，基线同样挂），属已知环境门控缺口。
+- 崩溃时间线本身证明新代码路径其余部分健康：source_identity 与
+  source_identity_record 两条 `cursor().executemany` 已成功执行，
+  psycopg3 路由与 `source.*` 全部属性有效。
+- 一次机械重构（循环→批量）引入的缺陷只在 1.5h 深的运行时暴露——
+  可重入的构建脚本（DB/staging 自动重置）把重试成本从"人工清场"
+  降为"直接重跑"。
+
+**怎么验证的**：
+
+- 回归测试 RED→GREEN：修复前失败于生产同款 AttributeError，修复后
+  4 passed（identity 文件 35 skipped 均为既有环境门控）；
+- P4 套件 9/9 PASS；ruff 全过；`test_knowledge_build_isolated.py`
+  因 4 个基线挂起用例中断收集（非本切片回归，与 R3 记录一致）；
+- 重启实战验证两条重置路径：staging/index 按 marker 绑定清除 +
+  脏库按 marker 归属 DROP 重建（两次日志原句
+  "stale staging/index roots from a failed run of this build removed" /
+  "stale disposable target dropped (owned by a previous run)"），
+  alembic 至 C2_0013，runner 进入构建。
+- 构建最终结果（envelope/对账/18200 冒烟）待构建完成，见下一条目。
+
+**影响哪些问题**：同 R4；另沉淀可重入构建脚本体（DB + staging/index
+marker 绑定重置），后续任何中途崩溃可直接重跑。
+
+---
+
+## 2026-08-20 R6：4.3 三度卡点——容器 shm 64MB 瓶颈（非代码问题）
+
+**做了什么**：
+
+1. **R5 重启的构建（第三次尝试）跑了 ~13h 后在决策持久化阶段再崩**。
+   顶层异常是泛化包装（"canonical-decision verification or transaction
+   failed"），完整日志里的底层原因是：
+   `psycopg.errors.DiskFull: could not resize shared memory segment
+   "/PostgreSQL.838765374" to 80337184 bytes: No space left on device`。
+2. **根因**：候选库长到 1.8GB 后，决策阶段的大查询触发 PostgreSQL
+   **并行查询**，并行 worker 需要把共享内存段扩到 ~80MB，而构建容器
+   `canonical-v2-s12c-pg-20260726-r8` 的 `/dev/shm` 是 Docker 默认
+   **64MB**。宿主机资源充足（内存 503G/磁盘 1.3T 空闲），瓶颈只在
+   容器 shm 上限——非代码缺陷，非数据问题。
+3. **重要里程碑（顺带验证）**：本次运行已把上次的崩溃点完整走完——
+   `knowledge.source_assertion` 提交了 **132,358 行**，R5 的 fingerprint
+   修复经实战充分验证；这次死在更深一层（决策持久化）。
+4. **修复**：按原配置重建容器（同镜像 pgvector/pgvector:pg16、同端口
+   127.0.0.1:55458、同数据卷、同环境变量），唯一变化
+   `--shm-size 64M → 1g`。重建后核验：/dev/shm=1.0G，**全部 9 个库
+   完好**（s12c/s12e/s12f 历史库、候选库、测试库均在）。第四次重启
+   build-v2.sh（自动重置脏 DB + staging，全部日志原句见 nohup）。
+
+**发现**：
+
+- 三次崩溃三种性质：R4 安全防线按设计拦人（脚本假设错误）→ R5 代码
+  笔误（机械重构引入）→ R6 基础设施容量（数据规模长大后必然触发）。
+  每次都比上一次深一层：preflight(分钟级) → identity persist(1h20m)
+  → decision persist(13h)。
+- 64MB shm 对 s12 时代的小库够用，P4 全列库（GB 级）必然不够——
+  这是数据规模跨量级后第一次暴露的容量假设。
+
+**怎么验证的**：
+
+- docker inspect 实测 ShmSize=67108864（64MB）+ 容器内 df 确认
+  /dev/shm 64M；错误信息本身（resize to ~80MB 失败）与 64MB 上限
+  吻合；
+- 重建后 /dev/shm=1.0G、9 库齐全、构建第四次启动通过全部守卫并进入
+  landing（7.3 万源记录重灌中）；
+- 构建最终结果（envelope/对账/18200 冒烟）待完成，见下一条目。
+
+**影响哪些问题**：同 R4/R5；基础设施容量假设修复后，全列构建的
+最后一层已知风险清除。
+
+---
+
+## 2026-08-20 R7：容量前置放大（用户决策）——shm 8GB + 维护内存 1GB
+
+**做了什么**：
+
+1. **用户裁定**：与其带着 1GB shm 跑 13 小时赌决策段够用，不如立即
+   放大容量、放弃当时跑了 ~45min 的第四次尝试、从头重跑——机器
+   503GB 内存，容量成本为零，重试成本（13h+）远高于重启成本（<1h）。
+2. **容器再重建**（同镜像/端口/卷/环境变量）：
+   `--shm-size 1g → 8g`（实测崩溃需求 ~80MB/段，1GB≈12 段并发余量，
+   8GB 给未探明的投影/建索引段留足空间）。
+3. **`ALTER SYSTEM SET maintenance_work_mem = '1GB'`**（写入数据卷内
+   postgresql.auto.conf，随卷在容器重建间持久；新会话实测生效）——
+   为后续 CREATE INDEX/ANALYZE 阶段预置，避免磁盘排序拖慢索引段。
+4. 第五次启动 build-v2.sh（自动重置 DB + staging，监控在位）。
+
+**发现（过程坑，记录备查）**：`pkill -f "build-v2.sh"` 会匹配到执行
+它的 shell 自身命令串而自杀，导致 runner 成孤儿进程——按 pid 精确
+kill 收尾。容器重建后 `SHOW` 旧会话仍显示旧值（会话级 GUC 初始化
+早于 reload），须用新会话验证。
+
+**怎么验证的**：`df /dev/shm`=8.0G；新会话 `SHOW maintenance_work_mem`
+=1GB；9 个库全部完好（含 s12f 历史库与候选库）；第五次构建通过
+全部守卫并完成 alembic C2_0013 迁移。
+
+**影响哪些问题**：同 R6——把"13 小时处撞墙"的残余风险与建索引段
+的容量风险一次性清除；构建时长预期不变（>13h 到决策段，全流程
+一天以上）。
+
+---
+
+## 2026-08-21 R8：4.3 四度卡点——域投影持久化哈希校验失败（诊断中）
+
+**做了什么**：
+
+1. **第五次尝试跑了 ~29h 后在域投影持久化再崩**（比上次又深一层：
+   身份 ✓ 132,358 + 决策 ✓ 10,773 均已提交，域投影写入中途）：
+   `DomainProjectionPersistenceError: durable inclusion decision
+   envelope/hash is inconsistent`（domain_projection_postgres.py:876，
+   整个事务回滚，现场无数据可查）。
+2. **静态排查（全部排除）**：该错误由五项比对触发（4 项信封列 +
+   1 项"存储哈希 vs 重建对象重算哈希"）。逐一核查：
+   - `path` 字段不对称（读回不恢复 path）：排除——域纳入引擎全部
+     决策 path=None（模型校验器强制 inclusion 决策不得带 path）；
+   - `supporting_assertion_ids` 顺序（写入原序/读回 SQL 排序）：
+     排除——InclusionCandidate 校验器强制排序；
+   - 双重持久化同 release 撞行：排除——_insert_row 是裸 INSERT，
+     会先撞唯一键而非哈希错；
+   - C2_0013 迁移动过 manifest 表：排除——只动了 identity/relationship
+     两张 run 表；
+   - policy 表跨 lane 内容冲突：排除——有前置守卫（:457）且未触发。
+3. **尝试本地快速复现（未成）**：test_domain_projection_postgres.py
+   有全套真库回环测试但被 4 个 CANONICAL_V2_TEST_* 环境变量门控；
+   搭好带 marker 的基座库 + 真 gate root 后实跑：10 失败全部因
+   **fixture 钉的目录证据是 C2_0009 时代、与现行 C2_0013 pin 不符**
+   （"projection request does not bind the installed catalog"）——
+   测试基建老化，与本次崩溃无关，属另一待修项。
+4. **落地方案（commit 6c517b1）**：把该五项校验改为**自诊断式**——
+   报错附带具体差异字段与两侧值（含 content_sha256 行值/重建值、
+   score/limitations/assertion_ids/evaluated_at/policy 的原始行值与
+   重建值）。第六次启动构建（预计 ~20h 再抵此处），届时要么通过、
+   要么报出精确根因。
+
+**发现**：
+
+- 四次崩溃四种性质逐层深入：安全防线 → 代码笔误 → 基础设施容量 →
+  **数据/序列化一致性**（当前）。前三类的修复在本轮全部经受住考验
+  （本次运行完整通过了全部三个旧崩溃点）。
+- 域投影 e2e 测试套件（C2_0009 时代 fixture）已与现行 schema pin
+  脱节——构建管道演进时未同步维护这批门控测试，是需要单独排期的
+  测试债。
+
+**怎么验证的**：
+
+- 自诊断报错改造后：ruff 过、模块导入过、文件内非门控单测过；
+- 第六次构建启动日志确认 DB/staging 自动重置正常、alembic 至
+  C2_0013、runner 存活。
+
+**影响哪些问题**：同前；本次为构建可观测性投资——下一轮运行必出
+精确根因（或直接通过），不再有猜谜成本。
+
+---
+
+## 2026-08-21 备忘：候选项目「构建检查点续跑」（用户裁定暂缓）
+
+**背景**：四轮重跑累计代价 ~60h，用户提出"已完成段能否持久化、
+下次续跑"。结论（详见当日对话）：
+
+- **现状**：各阶段成果崩溃后本就留在库里（identity/decision 已
+  验证跨崩溃存活），store 层支持同内容重放——技术基础存在；
+- **障碍**：preflight 强制全新空库 + 单次构建生命周期 + envelope
+  全链路哈希绑定，"从半成品续跑"被安全设计**有意禁止**（与
+  2026-08-19 首次崩溃的 fresh 校验是同一设计）；
+- **量级**：需动 preflight/构建器/凭证绑定，属独立工程项目，
+  非局部补丁；
+- **裁定**：本轮先不做（自诊断运行要么成功要么分钟级修复），
+  **触发条件**=全列重建成为常态需求（如月度重灌）或再发生
+  ≥2 次深水区崩溃。届时按 OpenSpec 标准流程立项。
+
+**再评估时点**：本轮构建出结果后。
+
+---
+
+## 2026-08-21 需求备忘（用户裁定）：联系方式缺失时的回答规则（P10）
+
+**规则**：用户查询公司联系方式时，若电话/邮箱为占位符或缺失——
+
+1. 直接说明"通过公开渠道无法获得联系方式"，不展示占位符；
+2. 转而简要介绍该公司（业务/行业等核心信息）；
+3. 若邮箱存在则附上邮箱。
+
+**归属**：服务线（答案合成层）行为，非数据线。落地窗口：P4
+数据切换后的下一轮服务线修改（需按 OpenSpec 门禁立项）。**P4
+冒烟验收时先人工核对该场景**（18200 上问公司联系方式，看是否
+出现"电话：-"式回答——出现即记缺陷）。
+
+**背景**：企业源里电话/邮箱大量为 "-" 占位（爬取时确实无此
+信息，占位合理）；风险仅在答案层把占位符当真值展示。
+
+---
+
+## 2026-08-21 产品定位澄清（用户裁定）：出处能力 =「尽量能指出处」
+
+**裁定**：产品定位从「每个答案都能指出处」修正为**「尽量能指出处」**。
+理由：库内数据本身是爬取所得，爬取过程中原始出处（URL）已大量丢失；
+只指向"内部库"意义不大。
+
+**实测事实**（当日核查源 payload）：
+
+- 爬取 URL 几乎全丢：论文批次无任何 url 字段（5,000 条抽查 0 命中）；
+  链接批次只有来源**类型**标签（"个人主页"），无主页地址；
+- **但持久标识符大量存活**：论文带 doi / arxiv_id / openalex_id；
+  专利带公开号；企业带法人名——这些都能**复原出真实可核查的公开
+  出处链接**（doi.org/…、arxiv.org/abs/…、专利公示页）。
+
+**影响三处**：
+
+1. **答案层引用策略**：优先用存活标识符生成公开出处链接（论文/
+   专利基本全覆盖）；无法复原的诚实说明"内部整理数据"，不硬凑；
+   禁止把"内部库记录 id"包装成出处。
+2. **重量账本重算**：深度内部血缘（记录→断言→决策链）的用户价值
+   降级，主要剩工程价值（构建完整性/排错）。后续轻量路线评估时
+   不再以"答案可深链溯源"作为保留重架构的理由。
+3. **根因修复方向**：新采集工具必须记录来源 URL + 采集时间，
+   让"尽量"随数据迭代逐次变强。
+
+**P4 验收口径调整**：出处能力按"可复原公开链接覆盖率"报告
+（论文 DOI/arXiv 覆盖率、专利公开号覆盖率 100%），不再按内部
+血缘深度报告。
+
+---
+
+## 2026-08-21 R9：轻量检索线落地（用户裁定"等不起反复折腾"后与重线并行）
+
+**背景**：用户明确时间约束反转——重线第六次构建仍需 ~7h 到观测
+点且不保证通关，不能再单点押注。裁定：**轻量线立即启动，与重线
+并行**（重线不杀，跑成是增量收益）。
+
+**做了什么**（`light_lane/`，独立库 `miroflow_light_lane_r1` 带
+disposable marker，零接触重线/线上）：
+
+1. `load_light_lane.py`：六个已抽取 JSONL 直接灌库——热字段建列 +
+   全量 raw JSONB 保留；pg_trgm 关键词索引；pgvector 扩展。
+   计数：company 6,514 / patent 11,408 / paper 24,101 /
+   professor 3,652（源 3,735 行含 75 个完全重复编号，首写保留，
+   零信息损失）/ link 18,655 / applicant 2,373。
+2. `embed_light_lane.py`：4.5 万对象经学校 Qwen3 端点全量嵌入
+   （16/批 × 24 并发，断点续传，内容哈希键控幂等）——
+   **45,675 条向量，9.5 分钟，零失败**。
+3. 三路检索实测全通：
+   - SQL：`applicants @> '["深圳市欧拉智造科技有限公司"]'` → 3 条
+     真实专利；
+   - 关键词（trigram）：论文标题模糊匹配连 en-dash 变体可容错；
+   - 语义：四连测全中——「做电池研究的教授」→ 李宝华（真实电池
+     领域教授）/「机器人路径规划的专利」→ 3 条对题专利 /「深圳
+     做机器人的公司」→ 3 家深圳机器人企业。
+
+**发现**：
+
+- 轻量线从决定到全功能落地 **~1.5 小时**（含嵌入），与重线形成
+  数量级的工期对照——代价是无裁决档案/无锚定门/教授不去重变体
+  （仅首写去重完全重复行）；论文 24,101 全量可搜（重线按锚定门
+  会移除一部分）。
+- 嵌入端点吞吐实测 ~80 条/秒，全量 4.5 万 <10 分钟——若将来重建，
+  轻量线全程可压缩到 2 小时内。
+
+**怎么验证的**：装载后逐表 count 对账（与 batch-inventory 一致）；
+三路检索各≥1 个真实目标命中；嵌入 ok=45,671 fail=0（+4 条冒烟）。
+
+**影响哪些问题**：P5/P8 的"能查到"维度即刻可用（语义/关键词/SQL
+三路 + 关系表）；答案生成与出处策略待接服务层。重线结果出来后
+两线对照，再定服务线最终用哪条（或重线为主、轻量为检索加速层）。
+
+---
+
+## 2026-08-23 R10：轻量线查询服务交付（12h 交付线，对齐旧 session 三场景）
+
+**背景**：用户裁定时间优先（"等不起反复折腾"），并澄清任务谱系
+——本任务由旧 session（sess_0270a6c2）扩展而来，其 Phase 4 验收
+画面是三个具体产品场景（优必选专利/具身智能清单/公司详情）。
+12 小时交付线据此定义。
+
+**做了什么**（`light_lane/`）：
+
+1. `api.py`（FastAPI，127.0.0.1:18201，admin-console venv）：
+   - `/api/search` 语义/关键词/混合（RRF 融合）三模式 + 四域过滤；
+   - `/api/company|professor|patent|paper/{id}` 详情端点：公司带
+     别名/网页出处/专利列表（按别名扩展匹配）；教授带论文列表
+     （附 DOI 公开链接）；专利带申请人解析；论文带公开标识链接；
+   - `/api/inventory` 对账数字；占位符（"-"）不出现在详情字段
+     （P10 规则落地）。
+2. `test_light_lane_api.py`：**11 用例全绿**——三场景 + 语义/关键词
+   检索 + 详情/出处/404/占位符过滤 + 计数对账。
+3. `reconcile_light_lane.py` + `reconcile-report.md`（P8 口径）：
+   四域计数全达标；企业↔专利 **7,668 对**（基线≈0）；教授↔论文
+   存活 **12,238** 条（旧包 580）；DOI 覆盖 **98.0%**；专利公开号
+   100%；绑定网页出处 684 条；缺口四项如实列出（1,239 未解析
+   申请人、6,417 悬空链接、别名覆盖不全、论文无锚定门口径说明）。
+
+**过程坑（记录备查）**：① 重灌表时 DDL 误 DROP embedding 表清空
+4.5 万向量——已改为 IF NOT EXISTS 永不重置派生数据，向量重灌
+零失败；② 关键词检索最初误绑 embedding JOIN（向量清空期连带
+失效）——改为直查实体表；③ `pkill -f` 对含同串的自身命令
+反复自杀（第三次）——kill 与 start 严格分调用、awk 匹配过滤
+自身；④ payload 键名核对（product_summary 而非
+product_description，绑定表 resolved_company/aliases/evidence_urls）。
+
+**怎么验证的**：pytest 11/11（含崩溃后重灌再跑）；对账脚本实测
+数字如上；三场景 curl 实测（优必选 448 专利含别名 UBTECH 与
+百科/天眼查出处；深圳机器人公司 top5 全对）。
+
+**影响哪些问题**：P5 数据根因闭环（7,668 对企业↔专利 + 448 条
+优必选专利可查）；P8 清单完整（6,514 全企业 + 语义/行业过滤）；
+P4/P10 规则落地（占位符过滤）。服务端切换仍待终局决策
+（轻量线 API vs 重线 serving pack，重线 run 6 仍在跑）。
