@@ -159,3 +159,14 @@ def test_qa_contact_info(client):
     assert not re.search(r"[:：]\s*[-—]\s*$", answer, re.MULTILINE), (
         "placeholder-only field values must never surface"
     )
+
+
+def test_qa_professor_papers(client):
+    """G2/G4 形：教授论文问答（简称生效、计数与样例齐全）。"""
+    payload = client.get(
+        "/api/ask", params={"q": "杨贤有哪些论文"}
+    ).json()
+    assert payload["grounded"] is True
+    answer = payload["answer"]
+    assert "33" in answer
+    assert "论文" in answer
