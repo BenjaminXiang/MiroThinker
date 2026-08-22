@@ -6,10 +6,12 @@ reconciliation shape. Runs against the live service on 127.0.0.1:18201.
 
 from __future__ import annotations
 
+import os
+
 import pytest
 import httpx
 
-BASE = "http://127.0.0.1:18201"
+BASE = os.environ.get("LIGHT_LANE_TEST_BASE", "http://127.0.0.1:18201")
 
 
 @pytest.fixture(scope="module")

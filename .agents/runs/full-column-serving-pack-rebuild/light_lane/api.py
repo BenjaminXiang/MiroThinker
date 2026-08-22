@@ -15,12 +15,30 @@ from psycopg.rows import dict_row
 import requests
 from fastapi import FastAPI, HTTPException, Query
 
-DATABASE = "miroflow_light_lane_r1"
-EMBED_ENDPOINT = "http://100.64.0.27:18005/v1/embeddings"
-EMBED_MODEL = "Qwen/Qwen3-Embedding-8B"
-EMBED_KEY = (
-    Path("/home/longxiang/MiroThinker/.sglang_api_key").read_text().splitlines()[0]
+import os
+
+DATABASE_URL = os.environ.get(
+    "LIGHT_LANE_DATABASE_URL",
+    "postgresql://miroflow@127.0.0.1:55458/miroflow_light_lane_r1",
 )
+HOST = os.environ.get("LIGHT_LANE_HOST", "127.0.0.1")
+PORT = int(os.environ.get("LIGHT_LANE_PORT", "18201"))
+EMBED_ENDPOINT = os.environ.get(
+    "LIGHT_LANE_EMBED_ENDPOINT",
+    "http://100.64.0.27:18005/v1/embeddings",
+)
+EMBED_MODEL = os.environ.get("LIGHT_LANE_EMBED_MODEL", "Qwen/Qwen3-Embedding-8B")
+EMBED_KEY_PATH = os.environ.get(
+    "LIGHT_LANE_EMBED_KEY_PATH",
+    "/home/longxiang/MiroThinker/.sglang_api_key",
+)
+
+
+def _embed_key() -> str:
+    path = Path(EMBED_KEY_PATH)
+    if path.exists():
+        return path.read_text().splitlines()[0]
+    return os.environ.get("LIGHT_LANE_EMBED_KEY", "")
 
 app = FastAPI(title="mirothinker-light-lane", version="r1")
 _local = threading.local()
@@ -29,24 +47,26 @@ _local = threading.local()
 def connection() -> psycopg.Connection:
     if getattr(_local, "conn", None) is None or _local.conn.closed:
         _local.conn = psycopg.connect(
-            f"postgresql://miroflow@127.0.0.1:55458/{DATABASE}",
-            autocommit=True,
-            connect_timeout=5,
-            row_factory=dict_row,
+            DATABASE_URL, autocommit=True, connect_timeout=5, row_factory=dict_row
         )
     return _local.conn
 
 
-def embed(text: str) -> str:
-    response = requests.post(
-        EMBED_ENDPOINT,
-        headers={"Authorization": f"Bearer {EMBED_KEY}"},
-        json={"model": EMBED_MODEL, "input": [text]},
-        timeout=60,
-    )
-    response.raise_for_status()
-    vector = response.json()["data"][0]["embedding"]
-    return "[" + ",".join(repr(value) for value in vector) + "]"
+def embed(text: str) -> str | None:
+    """Query embedding; returns None when the endpoint is unreachable so the
+    caller can degrade to keyword-only instead of failing the request."""
+    try:
+        response = requests.post(
+            EMBED_ENDPOINT,
+            headers={"Authorization": f"Bearer {_embed_key()}"},
+            json={"model": EMBED_MODEL, "input": [text]},
+            timeout=15,
+        )
+        response.raise_for_status()
+        vector = response.json()["data"][0]["embedding"]
+        return "[" + ",".join(repr(value) for value in vector) + "]"
+    except (requests.RequestException, KeyError, IndexError, ValueError):
+        return None
 
 
 ENTITY_COLUMNS = {
@@ -156,10 +176,13 @@ def search(
     mode: str = Query(default="hybrid", pattern="^(semantic|keyword|hybrid)$"),
     limit: int = Query(default=10, ge=1, le=50),
 ):
-    if mode in ("semantic", "hybrid"):
-        semantic = _semantic_hits(embed(q), type, 30)
+    query_vector = embed(q) if mode in ("semantic", "hybrid") else None
+    if query_vector is not None:
+        semantic = _semantic_hits(query_vector, type, 30)
     else:
         semantic = []
+        if mode == "semantic":
+            mode = "keyword"
     keyword = _keyword_hits(q, type, 30) if mode in ("keyword", "hybrid") else []
     if mode == "semantic":
         results = [
@@ -173,7 +196,13 @@ def search(
         ]
     else:
         results = _fuse(semantic, keyword, limit)
-    return {"query": q, "mode": mode, "type": type, "results": results}
+    return {
+        "query": q,
+        "mode": mode,
+        "type": type,
+        "semantic_available": query_vector is not None,
+        "results": results,
+    }
 
 
 def _public_paper_link(row) -> list[str]:
@@ -378,9 +407,10 @@ def _deepseek_key() -> str:
     key = os.environ.get("DEEPSEEK_API_KEY", "")
     if key:
         return key
-    env_path = Path(
-        "/home/longxiang/MiroThinker/apps/miroflow-agent/.env"
-    )
+    env_path = Path(os.environ.get(
+        "LIGHT_LANE_DEEPSEEK_KEY_FILE",
+        "/home/longxiang/MiroThinker/apps/miroflow-agent/.env",
+    ))
     if env_path.exists():
         for line in env_path.read_text().splitlines():
             if line.startswith("DEEPSEEK_API_KEY="):
@@ -438,11 +468,11 @@ def _named_entities(question: str) -> list[dict]:
 
 def _build_context(question: str) -> tuple[str, list[dict]]:
     named = _named_entities(question)
-    hits = _fuse(
-        _semantic_hits(embed(question), None, 10),
-        _keyword_hits(question, None, 10),
-        10,
+    query_vector = embed(question)
+    semantic_hits = (
+        _semantic_hits(query_vector, None, 10) if query_vector is not None else []
     )
+    hits = _fuse(semantic_hits, _keyword_hits(question, None, 10), 10)
     named_keys = {(item["entity_type"], item["entity_id"]) for item in named}
     ordered = named + [
         hit for hit in hits
@@ -552,4 +582,4 @@ def chat_page():
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="127.0.0.1", port=18201)
+    uvicorn.run(app, host=HOST, port=PORT)
