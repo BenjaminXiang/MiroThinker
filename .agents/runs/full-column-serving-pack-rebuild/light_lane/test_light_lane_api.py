@@ -117,3 +117,45 @@ def test_placeholder_contact_fields_not_shown(client):
     ).json()
     for value in detail["fields"].values():
         assert value != "-"
+
+
+# ---------------------------------------------------------------------------
+# Grounded QA (/api/ask) — loose assertions: LLM wording varies, structure
+# and grounding must not.
+# ---------------------------------------------------------------------------
+
+
+def test_qa_company_patents(client):
+    payload = client.get(
+        "/api/ask", params={"q": "优必选有哪些专利"}
+    ).json()
+    assert payload["grounded"] is True
+    answer = payload["answer"]
+    assert "448" in answer, "must cite the exact patent count"
+    assert "优必选" in answer
+    assert any("CN" in s["url"] or s["url"].startswith("http") for s in payload["sources"])
+
+
+def test_qa_company_list(client):
+    payload = client.get(
+        "/api/ask", params={"q": "深圳做机器人的公司有哪些"}
+    ).json()
+    assert payload["grounded"] is True
+    answer = payload["answer"]
+    assert "机器人" in answer
+    assert sum("深圳" in line or "有限" in line for line in answer.splitlines()) >= 3
+
+
+def test_qa_contact_info(client):
+    payload = client.get(
+        "/api/ask", params={"q": "优必选的联系方式"}
+    ).json()
+    assert payload["grounded"] is True
+    answer = payload["answer"]
+    assert ("@" in answer or "公开渠道" in answer), (
+        "either real contact info or the P10 no-contact phrasing"
+    )
+    import re
+    assert not re.search(r"[:：]\s*[-—]\s*$", answer, re.MULTILINE), (
+        "placeholder-only field values must never surface"
+    )

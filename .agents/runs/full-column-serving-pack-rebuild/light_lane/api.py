@@ -354,6 +354,201 @@ def inventory():
     }
 
 
+
+
+# ---------------------------------------------------------------------------
+# Grounded QA over the light lane: retrieve → compose with an LLM (env-keyed
+# DeepSeek, project default) → answer only from retrieved context.
+# ---------------------------------------------------------------------------
+
+import os
+
+CHAT_MODEL = os.environ.get("LIGHT_LANE_CHAT_MODEL", "deepseek-v4-flash")
+CHAT_BASE_URL = "https://api.deepseek.com/v1/chat/completions"
+
+SYSTEM_PROMPT = """你是深圳科创数据平台的查询助手。严格依据下面提供的【资料】回答用户问题，规则：
+1. 只用资料中的信息回答；资料不足以回答时，明确说"内部数据暂无相关记录"，不要编造。
+2. 企业联系方式（电话/邮箱）缺失时：直接说明"通过公开渠道无法获得联系方式"，然后简要介绍该公司业务，若资料中有邮箱则附上。绝不展示"-"之类的占位符。
+3. 回答末尾列出处：论文用 DOI 链接、专利用公开号、企业解析附网页出处（资料里给了才列）。
+4. 用简洁中文回答，列表优先，数字要准确（资料里给了数量就用准确数）。
+5. 资料只给了部分样例时，说明"共 N 项，以下为部分列举"，不要说查不到。"""
+
+
+def _deepseek_key() -> str:
+    key = os.environ.get("DEEPSEEK_API_KEY", "")
+    if key:
+        return key
+    env_path = Path(
+        "/home/longxiang/MiroThinker/apps/miroflow-agent/.env"
+    )
+    if env_path.exists():
+        for line in env_path.read_text().splitlines():
+            if line.startswith("DEEPSEEK_API_KEY="):
+                return line.split("=", 1)[1].strip()
+    return ""
+
+
+def _chat(messages: list[dict]) -> str | None:
+    key = _deepseek_key()
+    if not key:
+        return None
+    response = requests.post(
+        CHAT_BASE_URL,
+        headers={"Authorization": f"Bearer {key}"},
+        json={"model": CHAT_MODEL, "messages": messages, "temperature": 0.1,
+              "max_tokens": 4000},
+        timeout=60,
+    )
+    if response.status_code != 200:
+        return None
+    content = response.json()["choices"][0]["message"]["content"]
+    return content if content and content.strip() else None
+
+
+def _named_entities(question: str) -> list[dict]:
+    """Companies/professors whose name contains a question n-gram (short-name match)."""
+    question = "".join(ch for ch in question if not ch.isspace())
+    grams: list[str] = []
+    for size in (5, 4, 3):
+        for start in range(0, max(len(question) - size + 1, 0) + 1):
+            gram = question[start:start + size]
+            if len(gram) == size:
+                grams.append(gram)
+    grams = [f"%{gram}%" for gram in grams]
+    if not grams:
+        return []
+    conn = connection()
+    found: list[dict] = []
+    for row in conn.execute(
+        "SELECT DISTINCT company_name AS name FROM company "
+        "WHERE company_name LIKE ANY(%s) LIMIT 3", (grams,)
+    ).fetchall():
+        found.append({"entity_type": "company", "entity_id": row["name"], "label": row["name"]})
+    for row in conn.execute(
+        "SELECT professor_id, name FROM professor WHERE name LIKE ANY(%s) LIMIT 3",
+        (grams,),
+    ).fetchall():
+        found.append({
+            "entity_type": "professor",
+            "entity_id": row["professor_id"],
+            "label": row["name"],
+        })
+    return found[:4]
+
+
+def _build_context(question: str) -> tuple[str, list[dict]]:
+    named = _named_entities(question)
+    hits = _fuse(
+        _semantic_hits(embed(question), None, 10),
+        _keyword_hits(question, None, 10),
+        10,
+    )
+    named_keys = {(item["entity_type"], item["entity_id"]) for item in named}
+    ordered = named + [
+        hit for hit in hits
+        if (hit["entity_type"], hit["entity_id"]) not in named_keys
+    ]
+    blocks: list[str] = []
+    sources: list[dict] = []
+    for hit in ordered[:6]:
+        etype, eid, label = hit["entity_type"], hit["entity_id"], hit["label"]
+        if etype == "company":
+            detail = company_detail(label)
+            patents = detail["patents"][:12]
+            block = {
+                "类型": "企业", "名称": detail["name"],
+                "字段": detail["fields"], "别名": detail["aliases"],
+                "专利数": detail["patent_count"],
+                "专利样例": [f"{p['number']} {p['title']}（{p['type']}）" for p in patents],
+            }
+            for url in detail["sources"][:2]:
+                sources.append({"type": "企业解析", "label": detail["name"], "url": url})
+        elif etype == "professor":
+            detail = professor_detail(eid)
+            block = {
+                "类型": "教授", "姓名": detail["name"],
+                "字段": {k: v for k, v in detail["fields"].items() if not isinstance(v, (list, dict))},
+                "论文数": detail["paper_count"],
+                "论文样例": [p["title"] for p in detail["papers"][:8]],
+            }
+            for p in detail["papers"][:3]:
+                if p["public_link"]:
+                    sources.append({"type": "论文", "label": p["title"][:40], "url": p["public_link"]})
+        elif etype == "patent":
+            detail = patent_detail(eid)
+            block = {"类型": "专利", "标题": detail["fields"].get("title"),
+                     "公开号": detail["fields"].get("patent_number"),
+                     "类型/摘要": detail["fields"].get("patent_type")}
+            sources.append({"type": "专利", "label": detail["fields"].get("title", "")[:40],
+                            "url": detail["fields"].get("patent_number", "")})
+        else:
+            detail = paper_detail(eid)
+            block = {"类型": "论文", "标题": detail["fields"].get("title"),
+                     "作者数": len(detail["authors"]),
+                     "摘要片段": str(detail["fields"].get("abstract", ""))[:200]}
+            for url in detail["public_links"][:1]:
+                sources.append({"type": "论文", "label": detail["fields"].get("title", "")[:40], "url": url})
+        blocks.append(json.dumps(block, ensure_ascii=False, default=str))
+    context = "\n\n".join(f"【资料{i+1}】\n{b}" for i, b in enumerate(blocks))
+    return context, sources
+
+
+@app.get("/api/ask")
+def ask(q: str = Query(min_length=1)):
+    context, sources = _build_context(q)
+    if not context:
+        return {"question": q, "answer": "内部数据暂无相关记录。", "sources": [], "grounded": False}
+    answer = _chat([
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": f"【问题】{q}\n\n{context}"},
+    ])
+    if answer is None:
+        return {"question": q, "answer": None, "sources": sources,
+                "grounded": False, "note": "LLM 不可用，返回检索结果供人工查看",
+                "retrieved": context[:2000]}
+    return {"question": q, "answer": answer, "sources": sources, "grounded": True}
+
+
+import json  # noqa: E402  (used by _build_context)
+
+CHAT_PAGE = """<!doctype html><html lang="zh"><head><meta charset="utf-8">
+<title>科创数据查询（轻量线）</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;padding:0 16px;background:#fafafa}
+h1{font-size:20px} #q{width:70%;padding:10px;font-size:15px} button{padding:10px 18px;font-size:15px}
+#a{margin-top:24px;white-space:pre-wrap;background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:18px;min-height:60px}
+.src{margin-top:10px;font-size:13px;color:#555}.src a{color:#06c}
+</style></head><body>
+<h1>深圳科创数据查询（轻量线 · 全列数据）</h1>
+<div><input id="q" placeholder="例如：优必选有哪些专利？/ 深圳做机器人的公司有哪些？" autofocus>
+<button onclick="ask()">查询</button></div>
+<div id="a">输入问题开始查询。</div>
+<script>
+async function ask(){
+  const q=document.getElementById('q').value; if(!q)return;
+  document.getElementById('a').textContent='查询中…';
+  try{
+    const r=await fetch('/api/ask?q='+encodeURIComponent(q));
+    const d=await r.json();
+    let html=(d.answer||d.note||'')+'';
+    if(d.sources&&d.sources.length){
+      html+='\\n\\n出处：';
+      for(const s of d.sources.slice(0,6)) html+='\\n· '+(s.url.startsWith('http')?'<a href="'+s.url+'" target="_blank">'+s.label+'</a>':s.label+'（'+s.url+'）');
+    }
+    document.getElementById('a').innerHTML=html;
+  }catch(e){document.getElementById('a').textContent='查询失败：'+e;}
+}
+document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')ask();});
+</script></body></html>"""
+
+
+@app.get("/")
+def chat_page():
+    from fastapi.responses import HTMLResponse
+
+    return HTMLResponse(CHAT_PAGE)
+
+
 if __name__ == "__main__":
     import uvicorn
 
