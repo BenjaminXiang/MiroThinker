@@ -130,10 +130,21 @@ PROFESSOR_HOT = (
 )
 
 
+INVISIBLE = "\u200b\u200c\u200d\ufeff\u00a0"
+
+
+def _clean_text(value):
+    if not isinstance(value, str):
+        return value
+    return value.translate({ord(ch): None for ch in INVISIBLE}).strip()
+
+
 def _hot(record: dict, fields: tuple[str, ...]) -> list:
     values = []
     for field in fields:
         value = record.get(field)
+        if isinstance(value, str):
+            value = _clean_text(value)
         values.append(json.dumps(value, ensure_ascii=False) if isinstance(value, (list, dict)) else value)
     return values
 
