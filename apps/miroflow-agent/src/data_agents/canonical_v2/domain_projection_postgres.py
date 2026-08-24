@@ -522,49 +522,34 @@ class _PostgresDomainProjectionStore(DomainProjectionStore):
                 for rejected in result.rejected_projections
             }
         )
-        write_dump_path = "/tmp/domain-inclusion-write-dump.jsonl"
-        with open(write_dump_path, "a", encoding="utf-8") as write_dump:
-            for decision in result.inclusion_decisions:
-                content_hash = _canonical_sha256(decision)
-                write_dump.write(
-                    json.dumps(
-                        {
-                            "decision_id": decision.decision_id,
-                            "content_sha256": content_hash,
-                            "dump": decision.model_dump(mode="json"),
-                        },
-                        ensure_ascii=False,
-                        separators=(",", ":"),
-                    )
-                    + "\n"
-                )
-                cls._insert_row(
-                    connection,
-                    INCLUSION_DECISION_TABLE,
-                    {
-                        "release_id": result.release_id,
-                        "build_run_id": result.build_run_id,
-                        "decision_id": decision.decision_id,
-                        "canonical_identity_id": decision.subject_identity_id,
-                        "entity_type": entity_by_identity[decision.subject_identity_id],
-                        "policy_id": decision.policy.policy_id,
-                        "policy_version": decision.policy.policy_version,
-                        "policy_kind": decision.policy.policy_kind.value,
-                        "outcome": decision.outcome.value,
-                        "score": decision.score,
-                        "limitations": list(decision.limitations),
-                        "hard_exclusion_codes": list(decision.hard_exclusion_codes),
-                        "evaluated_at": decision.evaluated_at,
-                        "inclusion_decision_run_id": (
-                            result.inclusion_result.decision_run_id
-                        ),
-                        "inclusion_result_content_sha256": (
-                            result.inclusion_result_content_sha256
-                        ),
-                        "manifest_content_sha256": result.content_sha256,
-                        "content_sha256": content_hash,
-                    },
-                )
+        for decision in result.inclusion_decisions:
+            cls._insert_row(
+                connection,
+                INCLUSION_DECISION_TABLE,
+                {
+                    "release_id": result.release_id,
+                    "build_run_id": result.build_run_id,
+                    "decision_id": decision.decision_id,
+                    "canonical_identity_id": decision.subject_identity_id,
+                    "entity_type": entity_by_identity[decision.subject_identity_id],
+                    "policy_id": decision.policy.policy_id,
+                    "policy_version": decision.policy.policy_version,
+                    "policy_kind": decision.policy.policy_kind.value,
+                    "outcome": decision.outcome.value,
+                    "score": decision.score,
+                    "limitations": list(decision.limitations),
+                    "hard_exclusion_codes": list(decision.hard_exclusion_codes),
+                    "evaluated_at": decision.evaluated_at,
+                    "inclusion_decision_run_id": (
+                        result.inclusion_result.decision_run_id
+                    ),
+                    "inclusion_result_content_sha256": (
+                        result.inclusion_result_content_sha256
+                    ),
+                    "manifest_content_sha256": result.content_sha256,
+                    "content_sha256": _canonical_sha256(decision),
+                },
+            )
             for assertion_id in decision.supporting_assertion_ids:
                 cls._insert_row(
                     connection,
@@ -844,6 +829,12 @@ class _PostgresDomainProjectionStore(DomainProjectionStore):
             assertions_by_decision.setdefault(row["decision_id"], []).append(
                 row["assertion_id"]
             )
+        # The database collation orders strings differently from Python's
+        # byte-wise sorted() when names differ only by punctuation (e.g.
+        # "tech_tags" vs "technology_route_summary"), so the write-side hash
+        # order must be restored in Python, never trusted to SQL ORDER BY.
+        for decision_id in assertions_by_decision:
+            assertions_by_decision[decision_id].sort()
         rows = connection.execute(
             "SELECT decision.*, policy.content_sha256 AS policy_content_sha256, "
             "policy.effective_at AS policy_effective_at "
