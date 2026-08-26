@@ -18,8 +18,8 @@ export CANONICAL_V2_MANUAL_RECALL_DIR=/var/tmp/mirothinker-data-v2/manual-recall
 export CHAT_LLM_PROFILE=${CHAT_LLM_PROFILE:-gemma4}
 export CHAT_LLM_TIMEOUT_SECONDS=${CHAT_LLM_TIMEOUT_SECONDS:-90}
 
-cd "$APP_ROOT"
-exec uv run python "$GATE_ROOT/s12e/serve_s12e_port.py" 18200 \
+cd /home/longxiang/MiroThinker
+exec .venv/bin/python "$GATE_ROOT/s12e/serve_s12e_port.py" 18200 \
   --database-url postgresql://miroflow@127.0.0.1:55458/miroflow_candidate_v2_20260819_r1 \
   --expected-database miroflow_candidate_v2_20260819_r1 \
   --database-target-kind disposable \
@@ -53,6 +53,8 @@ exec uv run python "$GATE_ROOT/s12e/serve_s12e_port.py" 18200 \
   --policy-version released_objects_mapper=canonical-v2-released-objects-mapper-v2 \
   --model-version embedding=Qwen/Qwen3-Embedding-8B \
   --recorded-decision-bundle "$GATE_ROOT/s12a/recorded-decision-bundle-v1.json" \
+  --recorded-serving-bundle "$RUN_ROOT/serving-bundle-p4.json" \
+  --recorded-serving-bundle-sha256 ddee3610c7e9258f04b34a4de24c6d73c08522142b653633477a25613f1715fc \
   --recorded-embedding-bundle "$GATE_ROOT/s12c/qwen-embedding-bundle-v1.json" \
   --envelope-output "$GATE_ROOT/s12a/complete-candidate-build-envelope.json" \
   --accepted-original-milvus-path /home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db \
