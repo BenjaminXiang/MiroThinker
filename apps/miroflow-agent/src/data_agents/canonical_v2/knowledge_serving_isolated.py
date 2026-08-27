@@ -6027,7 +6027,7 @@ def load_recorded_serving_inputs(
         # case; 10s produced receipt-exhausted integrity failures (409-class)
         # on exactly those turns. 30s is the serving-policy ceiling for that
         # pipeline, not a per-turn target.
-        max_wall_time_ms=max(bundle.web_timeout_ms, 30_000),
+        max_wall_time_ms=bundle.web_timeout_ms,
         max_provider_calls=2,
         max_retries=0,
         # Room for the widest probe family: theme-verification probes across
