@@ -1734,25 +1734,6 @@ _CONCEPT_TERM_VIEW_RULES: tuple[tuple[tuple[str, ...], str], ...] = (
         ("合成数据",),
         "具身智能 合成数据 物理仿真引擎 生成式模型 规则 方法 厂商",
     ),
-    # Industry alias expansion for company enumeration (G7/G5): map the
-    # user's domain vocabulary to industry tags that exist in the local
-    # lookup data so both local and web lanes recall the right companies.
-    (
-        ("具身智能", "人形机器人"),
-        "机器人 人工智能 具身智能 公司 厂商 深圳",
-    ),
-    (
-        ("半导体", "芯片"),
-        "半导体 芯片 集成电路 公司 厂商 深圳",
-    ),
-    (
-        ("锂电池", "新能源"),
-        "电池 新能源 材料 公司 厂商 深圳",
-    ),
-    (
-        ("生物医药", "医疗器械"),
-        "生物 医药 医疗 公司 厂商 深圳",
-    ),
 )
 
 

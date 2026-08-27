@@ -8071,45 +8071,8 @@ def _matches_lexical_request(
                 domain == "company"
                 and _matches_transposed_company_name(query_phrase, display_terms)
             )
-            or (
-                domain == "company"
-                and any(
-                    alias in term
-                    for alias in _industry_alias_terms(query_phrase)
-                    for term in content_terms
-                )
-            )
         )
     )
-
-
-# Industry alias expansion for company enumeration queries (G7/G5 fuzzy
-# routing).  The lexical lane matches the WHOLE query phrase as a substring
-# of a single content term, so "具身智能机器人的公司" never hits a company
-# whose industry field says "机器人".  These aliases map the user's domain
-# vocabulary to the industry tags that actually exist in the lookup data.
-_INDUSTRY_ALIASES: dict[str, tuple[str, ...]] = {
-    "具身智能": ("机器人", "人工智能", "智能硬件", "自动化"),
-    "人形机器人": ("机器人",),
-    "智能机器人": ("机器人", "人工智能"),
-    "服务机器人": ("机器人",),
-    "工业机器人": ("机器人",),
-    "embodied": ("机器人", "人工智能"),
-    "锂电池": ("电池", "新能源", "材料"),
-    "半导体": ("芯片", "集成电路", "半导体"),
-    "生物医药": ("生物", "医药", "医疗"),
-    "新能源": ("电池", "能源", "材料"),
-    "量子": ("量子", "物理"),
-}
-
-
-def _industry_alias_terms(query_phrase: str) -> tuple[str, ...]:
-    """Industry aliases triggered by domain terms in the query phrase."""
-    aliases: set[str] = set()
-    for domain_term, industry_terms in _INDUSTRY_ALIASES.items():
-        if domain_term in query_phrase.casefold():
-            aliases.update(industry_terms)
-    return tuple(aliases)
 
 
 _COMPANY_LEGAL_SUFFIXES = (
