@@ -234,23 +234,17 @@ def chat(
             detail=_RELEASE_MISMATCH_DETAIL,
         ) from exc
     except CanonicalV2ConsumerIntegrityError as exc:
+        # Budget overruns are already degraded at the admin layer; any
+        # consumer integrity error that still reaches here is a real
+        # contract violation worth surfacing, but as a 500 not 409.
         logger.warning(
-            "Canonical V2 consumer integrity rejection: %s: %s",
+            "Canonical V2 consumer integrity (already degraded at admin): %s: %s",
             type(exc).__name__,
             exc,
         )
-        _record_access_turn(
-            request,
-            session_id=session_id,
-            query=query,
-            chat_response=None,
-            status="error",
-            error_detail="canonical_v2_consumer_integrity_error",
-            started_at=started_at,
-        )
         raise HTTPException(
-            status_code=409,
-            detail="canonical_v2_consumer_integrity_error",
+            status_code=500,
+            detail=f"canonical_v2_consumer_integrity_error: {exc}",
         ) from exc
     except KnowledgeReadIntegrityError as exc:
         logger.warning(

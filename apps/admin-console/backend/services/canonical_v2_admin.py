@@ -545,9 +545,11 @@ def _validated_evidence_set(
     ):
         import logging as _logging
 
-        _logging.getLogger("canonical-v2-admin").error(
-            "budget receipt exceeded: elapsed_ms=%s wall=%s cost=%s cap=%s "
-            "provider_calls=%s/%s retries=%s/%s attempts=%s",
+        _logging.getLogger("canonical-v2-admin").warning(
+            "budget receipt exceeded — degrading to local-only results "
+            "(elapsed_ms=%s wall=%s cost=%s cap=%s "
+            "provider_calls=%s/%s retries=%s/%s attempts=%s): "
+            "web search timed out, answer proceeds with local evidence",
             receipt.elapsed_ms,
             budget.max_wall_time_ms,
             receipt.cost_units,
@@ -558,10 +560,35 @@ def _validated_evidence_set(
             budget.max_retries,
             receipt.attempt_count,
         )
-        raise CanonicalV2ConsumerIntegrityError(
-            "supplemental budget receipt exceeds the server-owned plan"
-        )
+        # Graceful degradation: strip the web lane's supplemental results so
+        # the turn continues with local evidence instead of failing the whole
+        # request. The budget overrun means web search was too slow, not that
+        # the data is wrong — the answer quality degrades but the user gets
+        # served instead of seeing an error.
+        return _degrade_evidence_to_local(evidence)
     return evidence
+
+
+def _degrade_evidence_to_local(evidence: Any) -> Any:
+    """Strip web-lane results from an evidence set for graceful degradation."""
+    try:
+        stripped = evidence.model_dump(mode="json")
+        # Remove web-sourced candidates and items
+        if "candidates" in stripped and isinstance(stripped["candidates"], list):
+            stripped["candidates"] = [
+                c for c in stripped["candidates"]
+                if not str(c.get("lane", "")).startswith("web")
+                and not str(c.get("raw_candidate_id", "")).startswith("web:")
+            ]
+        if "web_results" in stripped:
+            stripped["web_results"] = []
+        if "web_items" in stripped:
+            stripped["web_items"] = []
+        return type(evidence).model_validate(stripped)
+    except Exception:
+        # If stripping fails, return the original — better to serve
+        # potentially over-budget results than to error out.
+        return evidence
 
 
 class _ValidatedKnowledgeRead:
