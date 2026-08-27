@@ -570,9 +570,23 @@ def _validated_evidence_set(
 
 
 def _degrade_evidence_to_local(evidence: Any) -> Any:
-    """Strip web-lane results from an evidence set for graceful degradation."""
+    """Strip web-lane results from an evidence set for graceful degradation.
+
+    Handles binary/invalid-UTF-8 web content that crashes model_dump by
+    returning an empty evidence set as the safest fallback.
+    """
     try:
         stripped = evidence.model_dump(mode="json")
+    except (UnicodeDecodeError, ValueError, TypeError):
+        # Web content contains undecodable bytes — return empty evidence
+        # rather than crashing the entire request.
+        import logging as _logging
+        _logging.getLogger("canonical-v2-admin").warning(
+            "evidence model_dump failed (likely binary web content); "
+            "degrading to empty evidence"
+        )
+        return _empty_evidence(evidence)
+    try:
         # Remove web-sourced candidates and items
         if "candidates" in stripped and isinstance(stripped["candidates"], list):
             stripped["candidates"] = [
@@ -586,8 +600,14 @@ def _degrade_evidence_to_local(evidence: Any) -> Any:
             stripped["web_items"] = []
         return type(evidence).model_validate(stripped)
     except Exception:
-        # If stripping fails, return the original — better to serve
-        # potentially over-budget results than to error out.
+        return _empty_evidence(evidence)
+
+
+def _empty_evidence(evidence: Any) -> Any:
+    """Return a minimal valid evidence object of the same type."""
+    try:
+        return type(evidence).model_validate({})
+    except Exception:
         return evidence
 
 
