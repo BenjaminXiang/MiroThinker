@@ -1651,6 +1651,22 @@ class CanonicalV2ChatAdapter:
             )
             or normalized_query
         )
+        # Domain carryover (G11T2): a signal-less topic follow-up would fall
+        # back to ALL domains and professor vector noise wins; hand the
+        # planner the prior turn's raw query so it can inherit that turn's
+        # inferred domains. Only meaningful on turn >= 2 with a distinct
+        # prior query.
+        prior_turn_query_value = (
+            None
+            if committed is None
+            else str(getattr(committed.answer, "original_query", "") or "")
+        )
+        prior_turn_query = (
+            prior_turn_query_value
+            if prior_turn_query_value
+            and prior_turn_query_value != normalized_query
+            else None
+        )
         planning_request = QueryPlanningRequest(
             request_id=f"query-request:chat:{turn_id}",
             release_id=self._release_id,
@@ -1664,6 +1680,7 @@ class CanonicalV2ChatAdapter:
                 as_of=observed_as_of,
             ),
             soft_context_subject=soft_context_subject,
+            prior_turn_query=prior_turn_query,
         )
 
         emit("stage", {"name": "planning"})

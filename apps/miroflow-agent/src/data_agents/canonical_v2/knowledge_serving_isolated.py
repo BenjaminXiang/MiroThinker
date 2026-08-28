@@ -642,6 +642,17 @@ def _proposal_provider(
             lanes = ("relationship", "web")
         else:
             domains = _infer_domains(request.original_query)
+            if (
+                tuple(domains) == tuple(_PUBLIC_DOMAINS)
+                and request.prior_turn_query
+            ):
+                # Domain carryover (G11T2): the follow-up carries no domain
+                # signal of its own — inherit the prior turn's inferred
+                # domains instead of letting professor vector noise win the
+                # all-domain fallback.
+                inherited = _infer_domains(request.prior_turn_query)
+                if tuple(inherited) != tuple(_PUBLIC_DOMAINS):
+                    domains = inherited
             lanes = ("exact", "structured", "lexical", "vector", "web")
         search_text = (
             _contextual_web_search_view(request.original_query)

@@ -324,6 +324,12 @@ class QueryPlanningRequest(ContractModel):
     # own. Independent of displayed_entity_names/ids (those bind canonical
     # anchors); never set by the planner itself.
     soft_context_subject: str | None = None
+    # Domain carryover: the prior turn's raw query, injected by the chat
+    # layer. A signal-less follow-up ("在真实数据采集路线中有哪些具体方式")
+    # otherwise falls back to ALL domains and professor vector noise wins;
+    # the planner inherits the prior turn's inferred domains instead. Never
+    # set by the planner itself.
+    prior_turn_query: str | None = None
     original_query_sha256: str = Field(default=_ZERO_SHA256, pattern=r"^[0-9a-f]{64}$")
     ambiguity_candidate_manifest_sha256: str = Field(
         default=_ZERO_SHA256,
