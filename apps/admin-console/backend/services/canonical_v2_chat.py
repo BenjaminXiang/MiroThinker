@@ -1664,56 +1664,50 @@ class CanonicalV2ChatAdapter:
         )
         emit("stage", {"name": "retrieval"})
 
-        # Run retrieval in a background thread and emit progress events
-        # at known timing milestones so the user sees activity instead of
-        # a static "正在检索…" indicator for 5-40 seconds.
+        # Emit progress events from a lightweight background timer while the
+        # retrieval runs in the MAIN thread (thread-local DB connections and
+        # serving-stack state must stay on the request thread). The timer
+        # stops as soon as retrieval completes.
         import threading
         import time as _time
 
-        _retrieval_result: list[Any] = []
-        _retrieval_done = threading.Event()
+        _stop_progress = threading.Event()
 
-        def _run_retrieval() -> None:
-            try:
-                _retrieval_result.append(self._knowledge_read.execute(plan))
-            except Exception as exc:
-                _retrieval_result.append(exc)
-            finally:
-                _retrieval_done.set()
+        def _emit_progress() -> None:
+            milestones: list[tuple[float, str]] = [
+                (0.5, "📚 本地知识库检索中…"),
+                (2.0, "🔍 网络搜索中…"),
+                (4.0, "🌐 正在获取网页内容…"),
+                (6.0, "⏳ 检索即将完成…"),
+            ]
+            idx = 0
+            started = _time.time()
+            while not _stop_progress.is_set() and idx < len(milestones):
+                if _time.time() - started >= milestones[idx][0]:
+                    emit(
+                        "progress",
+                        {
+                            "detail": milestones[idx][1],
+                            "elapsed": round(_time.time() - started, 1),
+                        },
+                    )
+                    idx += 1
+                _stop_progress.wait(timeout=0.5)
 
-        _retrieval_thread = threading.Thread(
-            target=_run_retrieval, daemon=True, name="canonical-v2-retrieval"
+        _progress_thread = threading.Thread(
+            target=_emit_progress, daemon=True, name="canonical-v2-progress"
         )
-        _retrieval_thread.start()
+        _progress_thread.start()
 
-        _progress_milestones: list[tuple[float, str]] = [
-            (0.5, "📚 本地知识库检索中…"),
-            (2.0, "🔍 网络搜索中…"),
-            (4.0, "🌐 正在获取网页内容…"),
-            (6.0, "⏳ 检索即将完成…"),
-        ]
-        _milestone_idx = 0
-        _retrieval_start = _time.time()
-
-        while not _retrieval_done.is_set():
-            elapsed = _time.time() - _retrieval_start
-            while (
-                _milestone_idx < len(_progress_milestones)
-                and elapsed >= _progress_milestones[_milestone_idx][0]
-            ):
-                emit(
-                    "progress",
-                    {
-                        "detail": _progress_milestones[_milestone_idx][1],
-                        "elapsed": round(elapsed, 1),
-                    },
-                )
-                _milestone_idx += 1
-            _retrieval_done.wait(timeout=0.5)
-
-        raw_evidence_set = _retrieval_result[0]
-        if isinstance(raw_evidence_set, Exception):
-            raise raw_evidence_set
+        try:
+            with turn_gate.active():
+                pass
+            raw_evidence_set = self._knowledge_read.execute(plan)
+            with turn_gate.active():
+                pass
+        finally:
+            _stop_progress.set()
+            _progress_thread.join(timeout=1.0)
 
         # Emit actual lane results so the user sees what was found
         with turn_gate.active():
