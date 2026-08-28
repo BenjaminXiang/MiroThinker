@@ -38,6 +38,7 @@ from src.data_agents.canonical_v2.followup_referents import (
     has_continuation_intent,
     has_explicit_named_subject,
     has_internal_set_antecedent,
+    has_personal_pronoun,
     has_set_referent,
     has_singular_referent,
     is_subject_carryover_reference,
@@ -771,6 +772,25 @@ def _referent_clarification_needed(
             and not has_internal_set_antecedent(query)
             and not _history_displayed_ids(query=query, history=history)
         )
+    # Personal-pronoun × anchor-type guard (fix-pronoun-anchor-type-guard,
+    # G3): a 他/她 can only bind a person anchor. Over an organization /
+    # paper / patent anchor the referent cannot resolve — clarify instead of
+    # free-retrieving arbitrary papers. A person binding in the referent
+    # history still satisfies the pronoun.
+    if has_personal_pronoun(query) and context is not None:
+        anchor = context.active_anchor
+        if anchor is not None and str(getattr(anchor, "domain", "") or "") not in (
+            "professor",
+        ):
+            history_has_person = any(
+                getattr(entry, "domain", None) == "professor"
+                for entry in history
+            )
+            if not history_has_person:
+                return (
+                    not has_explicit_named_subject(query)
+                    and not _history_displayed_ids(query=query, history=history)
+                )
     return False
 
 
