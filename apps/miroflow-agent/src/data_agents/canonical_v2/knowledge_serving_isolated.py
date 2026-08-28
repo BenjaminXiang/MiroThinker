@@ -1465,6 +1465,9 @@ class _DualWebLaneAdapter:
         )
 
     def __call__(self, request: LaneRequest) -> RetrievalLaneResult:
+        import time as _time
+        _deadline = _time.monotonic() + 5.0  # hard 5s wall clock for the web lane
+
         query_text = re.sub(
             r"\s*\[lane=web\]\s*$",
             "",
@@ -1476,7 +1479,8 @@ class _DualWebLaneAdapter:
         )
         gated = _apply_web_subject_consistency(results=merged, request=request)
         if (
-            any(
+            _time.monotonic() < _deadline
+            and any(
                 marker in request.original_query
                 for marker in _ENUMERATION_QUERY_MARKERS
             )
@@ -1504,41 +1508,16 @@ class _DualWebLaneAdapter:
                 retained=len(gated),
                 filtered=len(merged) - len(gated),
             )
-        # List-style questions get deeper page fetches: company/theme mentions
-        # that bind recall (开普勒/九号 in brand listicles) sit below the
-        # snippet cut, so two fetches miss them.
-        fetch_depth = (
-            8
-            if any(
-                marker in request.original_query
-                for marker in _ENUMERATION_QUERY_MARKERS
-            )
-            else 2
-        )
-        organic = self._enrich_with_page_text(organic, depth=fetch_depth)
-        if self._gap_judge is not None and _should_rewrite_serving_query(
-            request.original_query
-        ):
-            digest = "\n".join(
-                f"- {item.title}：{item.snippet[:120]}" for item in organic[:8]
-            )
-            try:
-                gap_results = self._gap_judge.judge_batch(
-                    "gap_check",
-                    request.original_query,
-                    {"gap": digest},
-                )
-                gap = gap_results[0] if gap_results else None
-            except Exception:  # noqa: BLE001 - gap loop never breaks the lane
-                gap = None
-            if gap is not None and not gap.covered and gap.followup_queries:
-                followup_results = self._merged_results_for_views(
-                    tuple(gap.followup_queries[:2])
-                )
-                if followup_results:
-                    organic = _merge_web_results_across_views(
-                        [organic, followup_results]
-                    )
+        # Page fetch: cap at 2 pages (not 8 for enumerations) to keep the
+        # web lane inside its 5-second wall clock. Deeper fetches cost
+        # 3s per page and push TTFT past 20s for list questions.
+        fetch_depth = 2
+        if _time.monotonic() + 3.0 < _deadline:
+            organic = self._enrich_with_page_text(organic, depth=fetch_depth)
+        # Gap judging removed: the LLM gap evaluation costs 5-10s per
+        # query and rarely changes the outcome — the followup search it
+        # triggers adds another 2-5s. Search snippets plus 2 page fetches
+        # are sufficient evidence for the answer layer.
         if not organic:
             raise ConnectionError("Bocha and Serper Web search are unavailable")
         candidates: list[RecallCandidate] = []
