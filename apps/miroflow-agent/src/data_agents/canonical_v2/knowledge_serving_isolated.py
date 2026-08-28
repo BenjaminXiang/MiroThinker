@@ -1488,7 +1488,10 @@ class _DualWebLaneAdapter:
                 fetched_by_url[url] = text
         if not fetched_by_url:
             return results
-        snippet_window = 2400 if depth >= 5 else 1200
+        # Enumeration windows carry leaderboard tails: the 2400-char cut was
+        # dropping route wording and mid-list players before the selector
+        # ever saw them (2026-08-28 strict-ruler G2/G5/G11/G12 misses).
+        snippet_window = 6000 if depth >= 5 else 1200
         return tuple(
             _NormalizedWebResult(
                 title=result.title,
@@ -5140,6 +5143,36 @@ class _OpenAIProseRenderer:
             ],
             "enumeration_coverage": coverage_payload,
         }
+        _debug_dir = os.getenv("CANONICAL_V2_PROSE_DEBUG_DIR")
+        if _debug_dir:
+            # Payload forensics (P1-A/P1-B/P2-B): one JSON per turn holding the
+            # exact selector output the prose LLM sees plus the pre-selector
+            # evidence item heads. Env-gated; failures never break the turn.
+            try:
+                from pathlib import Path as _DebugPath
+
+                _q = re.sub(r"[^\w\u4e00-\u9fa5]+", "_", str(payload.get("user_question") or ""))[:48]
+                _evidence = getattr(result, "evidence_set", None)
+                _items = [
+                    {
+                        "evidence_id": getattr(i, "evidence_id", ""),
+                        "lane": getattr(i, "lane", ""),
+                        "domain": getattr(i, "domain", ""),
+                        "snippet_head": str(getattr(i, "snippet", "") or "")[:400],
+                    }
+                    for i in tuple(getattr(_evidence, "items", ()) or ())
+                ]
+                _DebugPath(_debug_dir).mkdir(parents=True, exist_ok=True)
+                (_DebugPath(_debug_dir) / f"prose-{monotonic():.0f}-{_q}.json").write_text(
+                    json.dumps(
+                        {"payload": payload, "evidence_items": _items},
+                        ensure_ascii=False,
+                        default=str,
+                    ),
+                    encoding="utf-8",
+                )
+            except Exception:
+                pass
         guidance = _multi_branch_context_for_result(result)
         messages = [
             {

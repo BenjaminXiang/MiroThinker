@@ -14,9 +14,11 @@ back to the tier-0 result, preserving the snippet semantics.
 from __future__ import annotations
 
 import logging
+import os
 import re
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
+from time import monotonic
 from typing import Any, Callable, Protocol, cast
 
 from bs4 import BeautifulSoup
@@ -108,7 +110,7 @@ def fetch_page_text(
 
 _MIN_RICH_TEXT_CHARS = 400
 _SCRIPT_RATIO_LIMIT = 0.6
-_BROWSER_TEXT_LIMIT = 4000
+_BROWSER_TEXT_LIMIT = 8000
 _BLOCK_MARKERS = (
     "访问验证",
     "安全验证",
@@ -244,26 +246,51 @@ def create_tiered_page_fetcher(
 ) -> "TieredPageFetcher":
     """T0 direct fetch with a T1 headless-Chromium fallback on thin results.
 
-    Tier 0 is `direct_fetcher or fetch_page_text`. When its result is thin or
-    blocked, tier 1 renders the page in headless Chromium (browser started
-    lazily, one page at a time on a dedicated thread). Any tier failure keeps
-    the tier-0 result, so the caller still degrades to the original snippet.
+    Tier 0 is `direct_fetcher or fetch_page_text` (raised extraction budget:
+    max_chars=8000 — leaderboard tails beyond the old 3000-char cut never
+    reached the selector). When tier 0 is thin or blocked, tier 1 renders the
+    page in headless Chromium (browser started lazily, one page at a time on
+    a dedicated thread). Any tier failure keeps the tier-0 result, so the
+    caller still degrades to the original snippet.
+
+    Results are cached per URL for a short TTL (default 900 s, env
+    CANONICAL_V2_PAGE_CACHE_TTL): every turn re-fetching with a fresh
+    TCP+TLS connection inside a 2 s race was the dominant source of
+    turn-to-turn evidence drift (2026-08-28 G7 essence analysis).
 
     The returned object is callable (``fetcher(url)``) and additionally
     exposes ``warm()`` for boot/keepwarm browser pre-start.
     """
-    direct = direct_fetcher or fetch_page_text
+    direct = direct_fetcher or (
+        lambda url: fetch_page_text(url, max_chars=8000)
+    )
     pool = _PlaywrightPagePool(browser_factory)
+    cache_ttl = max(0.0, float(os.getenv("CANONICAL_V2_PAGE_CACHE_TTL", "900")))
+    cache: dict[str, tuple[float, str]] = {}
+    cache_lock = Lock()
 
     def fetch(url: str) -> str | None:
+        now = monotonic()
+        with cache_lock:
+            hit = cache.get(url)
+        if hit is not None and now - hit[0] < cache_ttl:
+            return hit[1]
         direct_text = direct(url)
         if not _is_thin_or_blocked(direct_text):
-            return direct_text
-        try:
-            rendered = pool.fetch(url)
-        except Exception:  # noqa: BLE001 - headless failure keeps the snippet
-            return direct_text
-        return rendered if rendered is not None else direct_text
+            text = direct_text
+        else:
+            try:
+                rendered = pool.fetch(url)
+            except Exception:  # noqa: BLE001 - headless failure keeps the snippet
+                rendered = None
+            text = rendered if rendered is not None else direct_text
+        if text:
+            with cache_lock:
+                if len(cache) >= 1024:
+                    oldest = min(cache, key=lambda key: cache[key][0])
+                    cache.pop(oldest, None)
+                cache[url] = (now, text)
+        return text
 
     fetcher: TieredPageFetcher = cast(
         TieredPageFetcher,
