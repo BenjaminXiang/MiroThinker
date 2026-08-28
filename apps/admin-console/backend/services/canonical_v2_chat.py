@@ -388,6 +388,10 @@ _NEGATIVE_CLAIM_MARKERS = (
     "暂无公开",
     "无相关信息",
 )
+# Only a short answer can be a bare negative claim; a longer answer that
+# merely contains a negative fragment keeps its grounded content (mirrors
+# _REFUSAL_ANSWER_MAX_CHARS).
+_OUTAGE_REWRITE_MAX_CHARS = 120
 
 
 def _rewrite_lane_outage_answer_text(
@@ -395,7 +399,16 @@ def _rewrite_lane_outage_answer_text(
     *,
     anchor_name: str | None,
 ) -> str:
-    if not any(marker in answer_text for marker in _NEGATIVE_CLAIM_MARKERS):
+    """Last-resort guard: negative world claims over an outage turn are
+    rewritten — but only when the answer IS essentially that claim. A
+    substantive answer that merely contains a negative fragment keeps its
+    grounded content (2026-08-28 G12/问题14: the wholesale rewrite turned a
+    full local enumeration into a 79-char outage message on a transient
+    web stall)."""
+    stripped = answer_text.strip()
+    if len(stripped) > _OUTAGE_REWRITE_MAX_CHARS:
+        return answer_text
+    if not any(marker in stripped for marker in _NEGATIVE_CLAIM_MARKERS):
         return answer_text
     name = anchor_name or "您关注的主体"
     return (
