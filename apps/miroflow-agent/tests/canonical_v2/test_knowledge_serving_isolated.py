@@ -3300,7 +3300,10 @@ def test_dual_web_lane_reuses_request_transport_and_isolates_keepwarm_transport(
     assert observed["query"] == "王学谦"
     kwargs = observed["kwargs"]
     assert isinstance(kwargs, dict)
-    assert kwargs == {"timeout": pytest.approx(0.675)}
+    # Per-provider attempt budgets (fix-web-lane-timeout-and-utf8-truncation):
+    # the observed transport is Serper, whose floor is 4.0 s — the old shared
+    # 0.675 s sat below Serper's measured 1.7–2.8 s latency and starved it.
+    assert kwargs == {"timeout": 4.0}
 
 
 def test_dual_web_lane_deduplicates_url_and_retains_provider_provenance() -> None:

@@ -486,6 +486,28 @@ def _retained_evidence_references(evidence: EvidenceSet) -> set[str]:
     return references
 
 
+def _budget_receipt_overrun_kind(
+    receipt: object, budget: object
+) -> str | None:
+    """Classify a supplemental budget receipt overrun.
+
+    "wall_time" — only elapsed exceeded: the probes were slow, not invalid;
+    the already-fetched web evidence stays served. "resource" — provider
+    calls / retries / cost / attempts beyond the quota contract: web
+    evidence is stripped. None — within budget.
+    """
+    if (
+        receipt.provider_calls > budget.max_provider_calls
+        or receipt.retry_count > budget.max_retries
+        or receipt.cost_units > budget.max_cost_units
+        or receipt.attempt_count > budget.max_retries + 1
+    ):
+        return "resource"
+    if receipt.elapsed_ms > budget.max_wall_time_ms:
+        return "wall_time"
+    return None
+
+
 def _validated_evidence_set(
     value: object,
     *,
@@ -536,36 +558,49 @@ def _validated_evidence_set(
         raise CanonicalV2ConsumerIntegrityError(
             "release-bound read requires a supplemental budget"
         )
-    if receipt is not None and (
-        receipt.provider_calls > budget.max_provider_calls
-        or receipt.retry_count > budget.max_retries
-        or receipt.elapsed_ms > budget.max_wall_time_ms
-        or receipt.cost_units > budget.max_cost_units
-        or receipt.attempt_count > budget.max_retries + 1
-    ):
-        import logging as _logging
+    if receipt is not None:
+        overrun = _budget_receipt_overrun_kind(receipt, budget)
+        if overrun == "wall_time":
+            # Time-only overrun: the probes were slow, not invalid — keep the
+            # already-fetched web evidence instead of stripping the lane.
+            import logging as _logging
 
-        _logging.getLogger("canonical-v2-admin").warning(
-            "budget receipt exceeded — degrading to local-only results "
-            "(elapsed_ms=%s wall=%s cost=%s cap=%s "
-            "provider_calls=%s/%s retries=%s/%s attempts=%s): "
-            "web search timed out, answer proceeds with local evidence",
-            receipt.elapsed_ms,
-            budget.max_wall_time_ms,
-            receipt.cost_units,
-            budget.max_cost_units,
-            receipt.provider_calls,
-            budget.max_provider_calls,
-            receipt.retry_count,
-            budget.max_retries,
-            receipt.attempt_count,
-        )
-        # Graceful degradation: strip the web lane's supplemental results so
-        # the turn continues with local evidence instead of failing the whole
-        # request. The budget overrun means web search was too slow, not that
-        # the data is wrong — the answer quality degrades but the user gets
-        # served instead of seeing an error.
-        return _degrade_evidence_to_local(evidence)
+            _logging.getLogger("canonical-v2-admin").warning(
+                "supplemental budget wall-time overrun — keeping late web "
+                "evidence (elapsed_ms=%s wall=%s cost=%s cap=%s "
+                "provider_calls=%s/%s retries=%s/%s attempts=%s)",
+                receipt.elapsed_ms,
+                budget.max_wall_time_ms,
+                receipt.cost_units,
+                budget.max_cost_units,
+                receipt.provider_calls,
+                budget.max_provider_calls,
+                receipt.retry_count,
+                budget.max_retries,
+                receipt.attempt_count,
+            )
+            return evidence
+        if overrun == "resource":
+            import logging as _logging
+
+            _logging.getLogger("canonical-v2-admin").warning(
+                "supplemental budget resource overrun — degrading to "
+                "local-only results (elapsed_ms=%s wall=%s cost=%s cap=%s "
+                "provider_calls=%s/%s retries=%s/%s attempts=%s)",
+                receipt.elapsed_ms,
+                budget.max_wall_time_ms,
+                receipt.cost_units,
+                budget.max_cost_units,
+                receipt.provider_calls,
+                budget.max_provider_calls,
+                receipt.retry_count,
+                budget.max_retries,
+                receipt.attempt_count,
+            )
+            # Graceful degradation: strip the web lane's supplemental results
+            # so the turn continues with local evidence instead of failing
+            # the whole request on a quota-contract breach.
+            return _degrade_evidence_to_local(evidence)
     return evidence
 
 

@@ -999,6 +999,22 @@ def _relaxed_serper_query(query: str) -> str:
     return f"{search_name} {remainder}"
 
 
+def _utf8_truncated(content: str, max_bytes: int) -> bytes:
+    """UTF-8 encode ``content`` capped at ``max_bytes`` without splitting a
+    multi-byte character: a sliced lead byte makes the snapshot undecodable
+    and crashes the contract round-trip in _validate_recorded."""
+    encoded = content.encode("utf-8")
+    if len(encoded) <= max_bytes:
+        return encoded
+    cut = encoded[:max_bytes]
+    # Back off trailing bytes of a character whose sequence crossed the cap.
+    while cut and (cut[-1] & 0xC0) == 0x80:
+        cut = cut[:-1]
+    if cut and cut[-1] >= 0xC0:
+        cut = cut[:-1]
+    return cut
+
+
 class _DualWebLaneAdapter:
     def __init__(
         self,
@@ -1017,11 +1033,25 @@ class _DualWebLaneAdapter:
         self._timeout_ms = timeout_ms
         self._max_snapshot_bytes = max_snapshot_bytes
         self._clock = clock
-        provider_attempt_timeout = max(0.1, self._timeout_ms * 0.00045)
-        self._bocha = bocha or BochaSearchProvider(timeout=provider_attempt_timeout)
-        self._serper = serper or WebSearchProvider(timeout=provider_attempt_timeout)
+        # Per-provider attempt budgets (measured 2026-08-28 from this host:
+        # Bocha 0.3–0.4 s incl. summary; Serper 1.7–2.8 s international). The
+        # old shared formula (timeout_ms * 0.00045 → 0.675/1.35 s) sat below
+        # Serper's real latency, so the Serper leg always timed out, opened
+        # the breaker, and left the lane single-legged.
+        self._attempt_timeout_by_provider = {
+            "bocha-v1": max(2.0, self._timeout_ms * 0.0009),
+            "serper-v1": max(4.0, self._timeout_ms * 0.0009),
+        }
+        self._bocha = bocha or BochaSearchProvider(
+            timeout=self._attempt_timeout_by_provider["bocha-v1"]
+        )
+        self._serper = serper or WebSearchProvider(
+            timeout=self._attempt_timeout_by_provider["serper-v1"]
+        )
         self._page_fetcher = page_fetcher
-        self._page_fetch_timeout = max(2.0, provider_attempt_timeout)
+        self._page_fetch_timeout = max(
+            2.0, self._attempt_timeout_by_provider["bocha-v1"]
+        )
         self._extra_view_queries = extra_view_queries
         self._gap_judge = gap_judge
         self._breaker = breaker or WebLaneBreaker(clock=clock)
@@ -1036,6 +1066,16 @@ class _DualWebLaneAdapter:
             # a smaller pool would serialize later views past their deadline.
             max_workers=8,
             thread_name_prefix="canonical-v2-web",
+        )
+
+    def _outer_wait_seconds(self, provider_version: str) -> float:
+        """Outer future wait: the provider's attempt budget plus margin so a
+        slow-but-successful attempt resolves instead of being cut off."""
+        return (
+            self._attempt_timeout_by_provider.get(
+                provider_version, self._timeout_ms / 1000
+            )
+            + 0.5
         )
 
     def keepwarm_allowed(self, provider_version: str) -> bool:
@@ -1211,13 +1251,12 @@ class _DualWebLaneAdapter:
                 ("serper-v1", self._serper),
             )
         }
-        timeout_seconds = self._timeout_ms / 1000
         provider_results: dict[str, list[dict[str, Any]]] = {}
         timed_out: set[str] = set()
         for provider_version, future in futures.items():
             try:
                 provider_results[provider_version] = future.result(
-                    timeout=timeout_seconds
+                    timeout=self._outer_wait_seconds(provider_version)
                 )
             except FutureTimeoutError:
                 provider_results[provider_version] = []
@@ -1562,7 +1601,10 @@ class _DualWebLaneAdapter:
                 ensure_ascii=False,
                 sort_keys=True,
                 separators=(",", ":"),
-            ).encode("utf-8")[: self._max_snapshot_bytes]
+            )
+            snapshot_content = _utf8_truncated(
+                snapshot_content, self._max_snapshot_bytes
+            )
             snapshot_sha256 = hashlib.sha256(snapshot_content).hexdigest()
             snapshot_id = f"web-snapshot:sha256:{snapshot_sha256}"
             object_id = (
@@ -3507,7 +3549,10 @@ def _person_probe_evidence_item(
         ensure_ascii=False,
         sort_keys=True,
         separators=(",", ":"),
-    ).encode("utf-8")[:max_snapshot_bytes]
+    )
+    snapshot_content = _utf8_truncated(
+        snapshot_content, max_snapshot_bytes
+    )
     snapshot_sha256 = hashlib.sha256(snapshot_content).hexdigest()
     snapshot_id = f"web-snapshot:sha256:{snapshot_sha256}"
     evidence_identity = {
@@ -3777,7 +3822,10 @@ def _theme_probe_evidence_item(
         ensure_ascii=False,
         sort_keys=True,
         separators=(",", ":"),
-    ).encode("utf-8")[:max_snapshot_bytes]
+    )
+    snapshot_content = _utf8_truncated(
+        snapshot_content, max_snapshot_bytes
+    )
     snapshot_sha256 = hashlib.sha256(snapshot_content).hexdigest()
     snapshot_id = f"web-snapshot:sha256:{snapshot_sha256}"
     evidence_identity = {
@@ -3841,7 +3889,10 @@ def _relation_probe_evidence_item(
         ensure_ascii=False,
         sort_keys=True,
         separators=(",", ":"),
-    ).encode("utf-8")[:max_snapshot_bytes]
+    )
+    snapshot_content = _utf8_truncated(
+        snapshot_content, max_snapshot_bytes
+    )
     snapshot_sha256 = hashlib.sha256(snapshot_content).hexdigest()
     snapshot_id = f"web-snapshot:sha256:{snapshot_sha256}"
     evidence_identity = {
