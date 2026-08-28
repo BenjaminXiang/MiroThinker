@@ -1021,7 +1021,7 @@ class _DualWebLaneAdapter:
         self._bocha = bocha or BochaSearchProvider(timeout=provider_attempt_timeout)
         self._serper = serper or WebSearchProvider(timeout=provider_attempt_timeout)
         self._page_fetcher = page_fetcher
-        self._page_fetch_timeout = min(3.0, max(2.0, provider_attempt_timeout))
+        self._page_fetch_timeout = max(2.0, provider_attempt_timeout)
         self._extra_view_queries = extra_view_queries
         self._gap_judge = gap_judge
         self._breaker = breaker or WebLaneBreaker(clock=clock)
@@ -5965,18 +5965,13 @@ def load_recorded_serving_inputs(
         max_provider_calls=2,
         max_planning_attempts=1,
     )
-    # Cap the effective web timeout at 5 seconds regardless of bundle setting:
-    # users get a local-quality answer in ~6s instead of waiting 20-50s for
-    # web results that may not arrive. The budget-overrun graceful degradation
-    # in canonical_v2_admin.py handles the case where search exceeds this cap.
-    effective_web_timeout_ms = min(bundle.web_timeout_ms, 5_000)
-    provider_attempt_timeout = max(0.1, effective_web_timeout_ms * 0.00045)
+    provider_attempt_timeout = max(0.1, bundle.web_timeout_ms * 0.00045)
     query_view_store = _ServingQueryViewStore()
     selected_query_rewriter = (
         _ServingQueryRewriter() if query_rewriter is None else query_rewriter
     )
     web_search = _DualWebLaneAdapter(
-        timeout_ms=effective_web_timeout_ms,
+        timeout_ms=bundle.web_timeout_ms,
         max_snapshot_bytes=bundle.web_snapshot_max_bytes,
         clock=clock,
         page_fetcher=page_fetcher,
