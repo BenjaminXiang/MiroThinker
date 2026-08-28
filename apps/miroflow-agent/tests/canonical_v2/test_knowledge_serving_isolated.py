@@ -838,13 +838,13 @@ def test_openai_prose_renderer_treats_selection_marker_strict_prefix_at_eof_as_p
 @pytest.mark.parametrize(
     ("position", "prefix", "suffix"),
     (
-        ("start", "", "公开后文"),
+        # start omitted: marker-led response is protocol framing, not echo
         ("middle", "公开前文", "公开后文"),
         ("end", "公开前文", ""),
     ),
 )
 @pytest.mark.parametrize("wire_mode", ("plain", "framed"))
-def test_openai_prose_renderer_rejects_private_marker_in_answer_before_publish(
+def test_openai_prose_renderer_strips_private_marker_in_answer_before_publish(
     marker: str,
     position: str,
     prefix: str,
@@ -852,6 +852,9 @@ def test_openai_prose_renderer_rejects_private_marker_in_answer_before_publish(
     wire_mode: str,
 ) -> None:
     del position
+    # Contract change (fix-prose-marker-strip): one echoed protocol marker
+    # must cost its own removal, not the whole synthesized answer — the
+    # all-or-nothing raise degraded full answers to raw-candidate dumps.
     answer = f"{prefix}{marker}{suffix}"
     content = _prose_wire(answer) if wire_mode == "framed" else answer
     completions = _RecordedProseCompletions(content, chunk_width=1)
@@ -859,12 +862,14 @@ def test_openai_prose_renderer_rejects_private_marker_in_answer_before_publish(
     result, _, _ = _prose_result()
     published: list[str] = []
 
-    with pytest.raises(ValueError):
-        renderer(result)
-    with pytest.raises(ValueError):
-        renderer.stream(result, on_chunk=published.append)
+    synced = renderer(result)
+    renderer.stream(result, on_chunk=published.append)
 
-    assert "".join(published) == prefix
+    synced_text = (
+        synced if isinstance(synced, str) else synced.answer_text
+    )
+    assert synced_text == f"{prefix}{suffix}"
+    assert "".join(published) == f"{prefix}{suffix}"
     assert _PROSE_SELECTION_MARKER not in "".join(published)
     assert _PROSE_ANSWER_MARKER not in "".join(published)
     assert len(completions.calls) == 2

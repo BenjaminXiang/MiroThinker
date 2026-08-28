@@ -4383,8 +4383,16 @@ class _ProseWireDecoder:
             if any(marker.startswith(candidate) for marker in _PROSE_PRIVATE_MARKERS):
                 self._marker_candidate = candidate
                 if candidate in _PROSE_PRIVATE_MARKERS:
+                    # Protocol-marker echo: strip it and keep the prose. The
+                    # all-or-nothing raise turned one echoed marker into the
+                    # degraded raw-candidate dump for the whole turn
+                    # (2026-08-28 G6: a full paper-profile answer became a
+                    # candidate list). The guard's purpose — the marker never
+                    # reaches the user — is preserved by dropping it.
                     self._marker_candidate = ""
-                    raise ValueError("LLM prose response contains a private marker")
+                    _logger.warning(
+                        "prose echoed a private protocol marker; stripped"
+                    )
                 continue
 
             safe_parts.append(self._marker_candidate)

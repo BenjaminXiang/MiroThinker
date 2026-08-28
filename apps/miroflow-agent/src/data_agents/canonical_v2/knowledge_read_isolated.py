@@ -8028,7 +8028,20 @@ def _matches_exact_request(
             protected_exact_match = True
     if protected_exact_match:
         return True
-    return _normalize(request.query_text) in searchable_terms
+    if _normalize(request.query_text) in searchable_terms:
+        return True
+    if domain in ("paper", "patent"):
+        # Long-title containment (G6): a full-title query with a trailing
+        # Chinese ask ("...这篇论文的详细信息") never EQUALS the title, so
+        # the local canonical paper dropped out of the exact lane and the
+        # selector saw only web duplicates. Substantial titles (>= 20 chars)
+        # match by containment; short names keep the strict equality path.
+        normalized_query = _normalize(request.query_text)
+        return any(
+            len(term) >= 20 and term in normalized_query
+            for term in display_terms
+        )
+    return False
 
 
 def _matches_structured_request(
