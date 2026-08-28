@@ -4290,6 +4290,12 @@ def _semantic_text(item: EvidenceItem, display_name: str) -> str:
         authors = _list_names(payload.get("authors"))
         if authors:
             parts.append(f"作者：{authors}")
+        arxiv_id = str(payload.get("arxiv_id") or "").strip()
+        if arxiv_id:
+            parts.append(f"链接：https://arxiv.org/abs/{arxiv_id}")
+        doi = str(payload.get("doi") or "").strip()
+        if doi and not arxiv_id:
+            parts.append(f"DOI：{doi}")
         venue = payload.get("venue")
         if isinstance(venue, dict) and str(venue.get("name") or "").strip():
             parts.append(f"发表 venue：{str(venue['name']).strip()}")
