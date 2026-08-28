@@ -4207,7 +4207,10 @@ def _list_names(value: object) -> str:
             item.get("company_name") or item.get("name") or ""
         ).strip()
     ]
-    return "、".join(names[:6])
+    # 12 keeps full paper author rosters reachable (pFedGPA's 9-author list
+    # cut at 6 hid Wenbo Ding — the 8th author the test set expects bound to
+    # the local professor) while still bounding patent applicant sprawl.
+    return "、".join(names[:12])
 
 
 _WEB_CLAIM_SNIPPET_LIMIT = 240

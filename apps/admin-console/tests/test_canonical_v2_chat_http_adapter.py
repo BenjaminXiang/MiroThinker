@@ -1463,8 +1463,13 @@ def test_referent_clarification_matrix(
     expected: bool,
 ) -> None:
     service = import_module("backend.services.canonical_v2_chat")
+    # G3 pronoun x anchor-type guard (513858e): the anchor's domain now
+    # matters for personal pronouns. The historical rows mean "a person
+    # anchor binds the referent", so the dummy anchor is professor-typed.
     context = SimpleNamespace(
-        active_anchor=object() if has_anchor else None,
+        active_anchor=(
+            SimpleNamespace(domain="professor") if has_anchor else None
+        ),
         displayed_result_set=object() if has_set else None,
     )
     committed = (
@@ -1475,6 +1480,37 @@ def test_referent_clarification_matrix(
 
     assert (
         service._referent_clarification_needed(query=query, committed=committed)
+        is expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("anchor_domain", "expected"),
+    (
+        ("professor", False),
+        ("company", True),
+        ("paper", True),
+        ("patent", True),
+    ),
+)
+def test_referent_clarification_personal_pronoun_anchor_domain_matrix(
+    anchor_domain: str,
+    expected: bool,
+) -> None:
+    """G3: a personal pronoun only binds a person anchor; organization /
+    paper / patent anchors must clarify instead of free-retrieving."""
+    service = import_module("backend.services.canonical_v2_chat")
+    committed = SimpleNamespace(
+        context_receipt=SimpleNamespace(
+            active_anchor=SimpleNamespace(domain=anchor_domain),
+            displayed_result_set=object(),
+        ),
+    )
+
+    assert (
+        service._referent_clarification_needed(
+            query="他有哪些代表性研究成果", committed=committed
+        )
         is expected
     )
 

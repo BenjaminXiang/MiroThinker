@@ -17,6 +17,7 @@ import logging
 import os
 import re
 from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FuturesTimeoutError
 from threading import Lock
 from time import monotonic
 from typing import Any, Callable, Protocol, cast
@@ -207,7 +208,17 @@ class _PlaywrightPagePool:
 
     def fetch(self, url: str, *, timeout_ms: int = 5000) -> str | None:
         future = self._t1.submit(self._fetch_on_t1, url, timeout_ms=timeout_ms)
-        return future.result()
+        # Bound the wait: one hung page (browser thread wedged past goto's
+        # own timeout) must not queue every later fetch behind it forever —
+        # the shared web-lane executor drains, provider searches starve, and
+        # the whole web lane dies mid-session (2026-08-28 strict run: 8
+        # consecutive turns with zero web claims from one wedged page).
+        try:
+            return future.result(timeout=timeout_ms / 1000 + 3.0)
+        except FuturesTimeoutError:
+            future.cancel()
+            logger.warning("tier-1 page fetch timed out; url=%s", url)
+            return None
 
     def warm(self, timeout: float = 10.0) -> bool:
         """Start the browser on the dedicated thread without poisoning retries.

@@ -1770,11 +1770,13 @@ class CanonicalV2ChatAdapter:
         self._require_release(raw_evidence_set, stage="read")
         evidence_set = _validated_model(raw_evidence_set, EvidenceSet)
         self._require_release(evidence_set, stage="read")
+        # Service-boundary lane view: candidate totals per lane as observed
+        # on the evidence set. The deeper retained/filtered split and web
+        # provider outcomes land with the serving-layer reporting (1.1.3).
+        # Initialized unconditionally: the progress events below read it even
+        # when no trace journal is attached (fail-open tracing contract).
+        lane_totals: dict[str, int] = {}
         if trace is not None:
-            # Service-boundary lane view: candidate totals per lane as observed
-            # on the evidence set. The deeper retained/filtered split and web
-            # provider outcomes land with the serving-layer reporting (1.1.3).
-            lane_totals: dict[str, int] = {}
             for lane_trace in evidence_set.traces:
                 lane_name = getattr(lane_trace, "lane", None)
                 if not isinstance(lane_name, str) or not lane_name:

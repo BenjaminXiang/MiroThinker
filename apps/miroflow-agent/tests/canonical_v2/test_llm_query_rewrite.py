@@ -546,7 +546,13 @@ def test_rewriter_timeout_falls_back_to_deterministic_view(
     evidence_set = _read(inputs, plan)
 
     deterministic_text = plan.query_views[0].text
-    assert providers.bocha_queries == [deterministic_text]
+    # Enumeration refinement (Phase 5): a thin enumeration result set triggers
+    # one budgeted round-2 榜单/名单 refinement pass on the deterministic view.
+    assert providers.bocha_queries == [
+        deterministic_text,
+        f"{deterministic_text} 榜单",
+        f"{deterministic_text} 名单",
+    ]
     assert [item.source_locator for item in _web_items(evidence_set)] == [
         "https://example.test/hotel-robot-overview"
     ]
@@ -582,7 +588,14 @@ def test_rewriter_empty_output_falls_back_to_deterministic_view(
 
     assert len(plan.query_views) == 1
     evidence_set = _read(inputs, plan)
-    assert providers.bocha_queries == [plan.query_views[0].text]
+    # Enumeration refinement (Phase 5): the thin enumeration result set adds
+    # the budgeted 榜单/名单 round-2 views after the deterministic view.
+    deterministic_text = plan.query_views[0].text
+    assert providers.bocha_queries == [
+        deterministic_text,
+        f"{deterministic_text} 榜单",
+        f"{deterministic_text} 名单",
+    ]
     assert len(_web_items(evidence_set)) == 1
 
 

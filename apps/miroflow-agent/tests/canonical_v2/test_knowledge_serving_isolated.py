@@ -1325,9 +1325,10 @@ def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
     assert "语义覆盖而非逐字匹配" in serialized
     assert "不要逐一列名" in serialized
     # Enumeration contract (2026-08-18 ruling): budgeted representative
-    # list replaces the 求全 directive.
+    # list replaces the 求全 directive; cbd5c3a later reshaped the tail to
+    # a "more exists" hook instead of "代表性清单" phrasing.
     assert "条目预算" in serialized
-    assert "代表性清单" in serialized
+    assert "示意还有更多" in serialized
     assert "另有X、Y暂未能确认" not in serialized
     assert "材料显示" in serialized
     assert "直接绑定具体产品与具体功能" in serialized
