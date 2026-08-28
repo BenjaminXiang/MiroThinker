@@ -702,35 +702,172 @@ def admin_page():
     return HTMLResponse(ADMIN_PAGE)
 
 
-CHAT_PAGE = """<!doctype html><html lang="zh"><head><meta charset="utf-8">
-<title>科创数据查询（轻量线）</title>
+CHAT_PAGE = """<!doctype html>
+<html lang="zh"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>科创数据查询 · 深圳科创数据平台</title>
 <style>
-body{font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;padding:0 16px;background:#fafafa}
-h1{font-size:20px} #q{width:70%;padding:10px;font-size:15px} button{padding:10px 18px;font-size:15px}
-#a{margin-top:24px;white-space:pre-wrap;background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:18px;min-height:60px}
-.src{margin-top:10px;font-size:13px;color:#555}.src a{color:#06c}
+:root{--bg:#f4f6fa;--card:#ffffff;--ink:#1a2233;--sub:#5b6478;--line:#e4e8f0;
+--brand:#2f5cff;--brand-ink:#fff;--ok:#0a8f4d;--warn:#c77d0a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:820px;margin:0 auto;padding:0 16px 60px}
+header{display:flex;align-items:center;gap:12px;padding:22px 2px 14px}
+.logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#2f5cff,#7a3cff);
+display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:17px}
+h1{font-size:17px;margin:0;flex:1;line-height:1.3}
+h1 small{display:block;font-size:12px;color:var(--sub);font-weight:400;margin-top:2px}
+.pill{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;
+color:var(--sub);background:var(--card);white-space:nowrap}
+.pill a{color:var(--brand);text-decoration:none;font-weight:600}
+.hero{background:linear-gradient(135deg,#eef2ff,#f7f3ff);border:1px solid var(--line);
+border-radius:16px;padding:26px 22px;margin-bottom:18px}
+.hero h2{margin:0 0 6px;font-size:20px}
+.hero p{margin:0;color:var(--sub);font-size:13.5px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{cursor:pointer;border:1px solid #c9d4ff;background:#fff;color:#2a4bd7;
+border-radius:999px;padding:7px 14px;font-size:13px;transition:all .15s}
+.chip:hover{background:#2f5cff;color:#fff;border-color:#2f5cff}
+.qbox{position:sticky;top:10px;z-index:5;background:var(--bg);padding:10px 0 14px}
+.qrow{display:flex;gap:10px;background:var(--card);border:1px solid var(--line);
+border-radius:14px;padding:10px 10px 10px 16px;box-shadow:0 6px 20px rgba(20,30,60,.06)}
+textarea{flex:1;border:0;outline:0;resize:none;font:inherit;font-size:15px;
+max-height:120px;background:transparent;color:var(--ink)}
+button.send{border:0;background:var(--brand);color:var(--brand-ink);border-radius:10px;
+padding:0 18px;font-size:14px;font-weight:600;cursor:pointer;min-height:40px}
+button.send:disabled{opacity:.5;cursor:default}
+.hint{text-align:center;font-size:11.5px;color:#9aa3b5;margin-top:6px}
+.msg{margin:14px 0}
+.msg.user{display:flex;justify-content:flex-end}
+.msg.user .b{background:#2f5cff;color:#fff;border-radius:14px 14px 4px 14px;
+padding:10px 16px;max-width:78%;white-space:pre-wrap;font-size:14.5px;line-height:1.55}
+.msg.ai .b{background:var(--card);border:1px solid var(--line);border-radius:4px 14px 14px 14px;
+padding:14px 18px;font-size:14.5px;line-height:1.7;overflow:hidden}
+.b h3{margin:12px 0 4px;font-size:14.5px}
+.b p{margin:6px 0}
+.b ul,.b ol{margin:6px 0;padding-left:22px}
+.b li{margin:3px 0}
+.b code{background:#f1f3f9;border-radius:4px;padding:1px 5px;font-size:13px}
+.typing{display:inline-flex;gap:5px;padding:6px 2px}
+.typing i{width:7px;height:7px;border-radius:50%;background:#a8b3cc;animation:bl 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes bl{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.srcs{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
+.srcs .t{font-size:12px;color:var(--sub);margin-bottom:6px;font-weight:600}
+.src{display:inline-flex;align-items:center;gap:6px;margin:0 8px 8px 0;background:#f6f8ff;
+border:1px solid #dbe3ff;color:#2a4bd7;border-radius:8px;padding:5px 10px;font-size:12.5px;
+text-decoration:none;max-width:100%}
+.src.plain{color:var(--sub);background:#f4f6fa;border-color:var(--line)}
+.src .dot{width:6px;height:6px;border-radius:50%;background:#2f5cff;flex:none}
+.badge{display:inline-block;font-size:11px;color:var(--sub);background:#f1f3f9;
+border-radius:5px;padding:1px 7px;margin-right:6px;vertical-align:1px}
+.err{color:#b3261e;background:#fdf2f0;border:1px solid #f5d4cf;border-radius:10px;padding:10px 14px;font-size:13.5px}
+footer{margin-top:26px;text-align:center;font-size:12px;color:#9aa3b5}
+@media(max-width:560px){.hero{padding:18px 14px}.msg.user .b{max-width:88%}}
 </style></head><body>
-<h1>深圳科创数据查询（轻量线 · 全列数据）</h1>
-<div><input id="q" placeholder="例如：优必选有哪些专利？/ 深圳做机器人的公司有哪些？" autofocus>
-<button onclick="ask()">查询</button></div>
-<div id="a">输入问题开始查询。</div>
+<div class="wrap">
+<header>
+  <div class="logo">科</div>
+  <h1>科创数据查询<small>教授 · 企业 · 论文 · 专利 全列知识库（轻量线）</small></h1>
+  <span class="pill" id="stat">检测中…</span>
+  <span class="pill"><a href="/admin">管理</a></span>
+</header>
+
+<div class="hero" id="hero">
+  <h2>用自然语言查询深圳科创生态</h2>
+  <p>覆盖 6,514 家企业 · 11,408 项专利 · 24,101 篇论文 · 3,652 位教授；回答附可核查出处。</p>
+  <div class="chips">
+    <span class="chip" onclick="ask('专利 CN117873146A 的详细信息是什么')">专利 CN117873146A</span>
+    <span class="chip" onclick="ask('优必选有哪些专利')">优必选有哪些专利</span>
+    <span class="chip" onclick="ask('请介绍无界智航的相关信息')">介绍无界智航</span>
+    <span class="chip" onclick="ask('我想找PCB打板，有哪些推荐')">PCB打板推荐</span>
+  </div>
+</div>
+
+<div class="qbox">
+  <div class="qrow">
+    <textarea id="q" rows="1" placeholder="输入问题，例如：优必选有哪些专利？/ 专利 CN117873146A？"></textarea>
+    <button class="send" id="btn" onclick="send()">查询</button>
+  </div>
+  <div class="hint">回答仅基于库内资料并附出处 · Enter 发送，Shift+Enter 换行</div>
+</div>
+
+<div id="chat"></div>
+<footer>深圳科创数据平台 · 轻量检索线 · <span id="ft"></span></footer>
+</div>
+
 <script>
-async function ask(){
-  const q=document.getElementById('q').value; if(!q)return;
-  document.getElementById('a').textContent='查询中…';
-  try{
-    const r=await fetch('/api/ask?q='+encodeURIComponent(q));
-    const d=await r.json();
-    let html=(d.answer||d.note||'')+'';
-    if(d.sources&&d.sources.length){
-      html+='\\n\\n出处：';
-      for(const s of d.sources.slice(0,6)) html+='\\n· '+(s.url.startsWith('http')?'<a href="'+s.url+'" target="_blank">'+s.label+'</a>':s.label+'（'+s.url+'）');
-    }
-    document.getElementById('a').innerHTML=html;
-  }catch(e){document.getElementById('a').textContent='查询失败：'+e;}
+const chat=document.getElementById('chat'),q=document.getElementById('q'),
+btn=document.getElementById('btn'),hero=document.getElementById('hero');
+q.addEventListener('input',()=>{q.style.height='auto';q.style.height=Math.min(q.scrollHeight,120)+'px'});
+q.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function md(t){
+  let h=esc(t),out=[],inList=false;
+  h=h.split('\n');
+  for(let line of h){
+    let m=line.match(/^\s*[-*]\s+(.*)/);
+    if(m){if(!inList){out.push('<ul>');inList=true}out.push('<li>'+inline(m[1])+'</li>');continue}
+    m=line.match(/^\s*(\d+)[.、)]\s+(.*)/);
+    if(m){if(!inList){out.push('<ul>');inList=true}out.push('<li>'+inline(m[2])+'</li>');continue}
+    if(inList){out.push('</ul>');inList=false}
+    if(line.trim()==='')continue;
+    if(/^#{1,4}\s/.test(line)){out.push('<h3>'+inline(line.replace(/^#+\s/,''))+'</h3>')}
+    else{out.push('<p>'+inline(line)+'</p>')}
+  }
+  if(inList)out.push('</ul>');
+  return out.join('');
 }
-document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')ask();});
-</script></body></html>"""
+function inline(s){return s.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
+  .replace(/`([^`]+)`/g,'<code>$1</code>')
+  .replace(/(https?:\/\/[!-~]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>')}
+function bubbleUser(t){const d=document.createElement('div');d.className='msg user';
+d.innerHTML='<div class="b"></div>';d.firstChild.textContent=t;chat.appendChild(d)}
+function bubbleAI(){const d=document.createElement('div');d.className='msg ai';
+d.innerHTML='<div class="b"><span class="typing"><i></i><i></i><i></i></span></div>';
+chat.appendChild(d);return d.firstChild}
+function srcHTML(list){
+  if(!list||!list.length)return '';
+  let s='<div class="srcs"><div class="t">出处（点击核查）</div>';
+  for(const x of list.slice(0,8)){
+    const label=esc(x.label||(x.url||'').slice(0,46));
+    if(x.url&&x.url.startsWith('http'))
+      s+='<a class="src" href="'+esc(x.url)+'" target="_blank" rel="noopener"><span class="dot"></span>'+label+'</a>';
+    else s+='<span class="src plain"><span class="dot" style="background:#9aa3b5"></span>'+label+'（'+esc(x.url||'')+'）</span>';
+  }
+  return s+'</div>';
+}
+async function send(){
+  const text=q.value.trim();if(!text)return;
+  hero.style.display='none';
+  bubbleUser(text);q.value='';q.style.height='auto';btn.disabled=true;q.disabled=true;
+  const b=bubbleAI();
+  try{
+    const r=await fetch('/api/ask?q='+encodeURIComponent(text));
+    const d=await r.json();
+    let html='';
+    if(d.answer)html=md(d.answer);
+    else if(d.note)html='<p>'+esc(d.note)+'</p><p style="color:var(--sub);font-size:13px">'+
+      (d.retrieved?esc(d.retrieved.slice(0,400)).replace(/\n/g,'<br>')+'…':'')+'</p>';
+    else html='<p>（无回答）</p>';
+    if(d.semantic_available===false&&d.grounded)html+='<p style="font-size:12px;color:var(--warn)">· 语义通道不可用，本次基于关键词检索</p>';
+    if(d.sources&&d.sources.length)html+=srcHTML(d.sources);
+    b.innerHTML=html;
+  }catch(e){b.innerHTML='<div class="err">查询失败：'+esc(String(e))+'</div>'}
+  btn.disabled=false;q.disabled=false;q.focus();
+  window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+}
+function ask(t){q.value=t;send()}
+(async()=>{try{
+  const h=await(await fetch('/api/inventory')).json();
+  const emb=h.counts.embedding||0;
+  document.getElementById('stat').innerHTML=emb>0?'● 服务正常':'● 异常';
+  document.getElementById('stat').style.color=emb>0?'var(--ok)':'#b3261e';
+  document.getElementById('ft').textContent='向量 '+emb.toLocaleString()+' 条';
+}catch(e){document.getElementById('stat').textContent='● 服务不可达'}})();
+</script></body></html>'
+"""
 
 
 @app.get("/")

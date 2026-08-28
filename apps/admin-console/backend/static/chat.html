@@ -730,12 +730,14 @@
       const demoGrid = document.getElementById("demo-grid");
       const demoToggle = document.getElementById("demo-toggle");
       // 示例问题对匿名用户可用：静态写死，不依赖需要登录的数据浏览 API。
+      // 示例问题以三轮实测为准（7–27s、关键点全中、无自白）。
+      // 淘汰记录：早稻田企业家题 web 通道连续两轮故障走降级话术；
+      // 无界智航题质量好但实测两轮 ~50s，不适合做首点样例。
       const STATIC_DEMO_QUESTIONS = Object.freeze([
-        { step: "企业", label: "了解产业概况", query: "深圳有哪些人工智能企业？" },
-        { step: "教授", label: "检索研究方向", query: "深圳有哪些研究集成电路的教授？" },
-        { step: "论文", label: "追踪学术成果", query: "深圳高校在人工智能领域有哪些代表性论文？" },
-        { step: "专利", label: "盘点技术布局", query: "深圳企业在新能源领域有哪些代表性专利？" },
-        { step: "企业", label: "核验企业动态", query: "介绍深圳的机器人产业，以及其中重点企业的最新动态" },
+        { step: "专利", label: "查询专利详情", query: "专利 CN117873146A 的详细信息是什么" },
+        { step: "专利", label: "盘点企业专利", query: "优必选有哪些专利" },
+        { step: "企业", label: "分析企业竞争力", query: "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样" },
+        { step: "企业", label: "获取采购推荐", query: "我想找PCB打板，有哪些推荐" },
       ]);
       const presentationStateValues = Object.freeze([
         "landing",

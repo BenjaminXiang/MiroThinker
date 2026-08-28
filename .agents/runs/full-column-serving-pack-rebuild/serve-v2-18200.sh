@@ -1,3 +1,4 @@
+PORT="${1:-18188}"
 #!/usr/bin/env bash
 # P4 scratch-port smoke serve of the v2 serving pack (port 18200).
 #
@@ -18,8 +19,10 @@ export CANONICAL_V2_MANUAL_RECALL_DIR=/var/tmp/mirothinker-data-v2/manual-recall
 export CHAT_LLM_PROFILE=${CHAT_LLM_PROFILE:-gemma4}
 export CHAT_LLM_TIMEOUT_SECONDS=${CHAT_LLM_TIMEOUT_SECONDS:-90}
 
+export PYTHONPATH="$WORKTREE/apps/miroflow-agent:$WORKTREE/apps/admin-console:$WORKTREE/libs/miroflow-tools:${PYTHONPATH:-}"
 cd /home/longxiang/MiroThinker
-exec .venv/bin/python "$GATE_ROOT/s12e/serve_s12e_port.py" 18200 \
+PORT="${1:-18188}"
+exec .venv/bin/python "$GATE_ROOT/s12e/serve_s12e_port.py" "$PORT" \
   --database-url postgresql://miroflow@127.0.0.1:55458/miroflow_candidate_v2_20260819_r1 \
   --expected-database miroflow_candidate_v2_20260819_r1 \
   --database-target-kind disposable \
