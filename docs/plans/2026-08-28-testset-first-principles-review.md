@@ -99,3 +99,30 @@ P2：枚举完整性（G7 成本矩阵）；引用补全
 **终态 E2E**：重放门 **19/19 全绿（首次）**；严格尺子 20-21/25（基线 16），
 剩余 5 失败全部定性（2 数据线 / 1 召回策略 / 2 措辞层）；admin 132/132、
 agent 266/0。
+
+## 七、run 10 前提修正（2026-08-28 深夜，决定性发现）
+
+**P4 全量批（6514 公司，字段最全）从未进入服务包**：`company-p4:` 对象数
+= 0，服务包 7089 家公司全部来自旧 s12 薄档案。根因在
+`_merge_p4_created_rows` 的保守合并语义：**与已有对象同名的 P4 记录直接
+跳过（skipped, never merged）**——而 P4 公司几乎全部与旧记录同名，于是
+application_scenarios（开普勒"酒店餐厅商场服务"、先行者K2 产品清单）、
+team（爱博合创郭书祥全文）、phone/email（P10 联系方式）**整体被丢弃**。
+
+**结论：单纯重跑现有管道不会改善任何数据缺口。** run 10 之前必须先把
+合并策略从 skip-on-overlap 改为**字段级补充合并**：重叠时只填充空字段/
+替换 fallback 占位文案（如 `technology_route_summary` 的
+"技术路线围绕机器人展开"占位 → 真 application_scenarios），不覆盖非空
+真实值。改动位置：`knowledge_build_isolated._merge_p4_created_rows` 的
+overlap 分支改为生成 field assertions。
+
+同轮交付（按用户排序 2→3 已完成）：
+- **P2-B 引用补全 ✅**：`_public_citations` 对 official 关卡拒掉的
+  current_web 证据直接出 web 卡（S11A 冻结哈希按协议更新、前端加"网络"
+  标签、契约测试改新语义）。G7 枚举答案 0→10 条可点引用。
+- **G5 lexical 修复 ✅**：整短语失配时回退到查询自带的拉丁标识符 token
+  （PCB/LED，不发明别名）——深南电路入列并带官网引用卡。
+
+当日验证记录：严格尺子 19-21/25 区间波动（G6 selector 轮换与 G5 十二
+条目预算挤压均为 web 骰子方差，等字段级合并后本地证据变厚自然收敛）；
+admin 132/132；agent 266/0；重放门 19/19。
