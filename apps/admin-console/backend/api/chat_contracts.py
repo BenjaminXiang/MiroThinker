@@ -12,7 +12,10 @@ TargetDomain = Literal["professor", "paper", "company", "patent"]
 
 
 class ChatCitation(BaseModel):
-    type: Literal["professor", "paper", "patent", "company"]
+    # "web": a public web source cited without an entity handle binding
+    # (enumeration/concept answers lean on listicles that bind no canonical
+    # entity — the user rule 尽量能指出处 requires them citable too).
+    type: Literal["professor", "paper", "patent", "company", "web"]
     id: str
     label: str
     url: str | None = None

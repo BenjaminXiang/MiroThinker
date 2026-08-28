@@ -36,7 +36,7 @@ SECRET_SENTINEL = "sk-s11a-do-not-expose"
 ACCEPTED_PHYSICAL_OWNER_SHA256 = (
     "3ae8b81597997b237e19017c8606d6e683f5b780a377e574916faa16abc3d98c"
 )
-CHAT_SCHEMA_SHA256 = "04584086d12ca5c56e5fd28f702d2fe5f71a20038be84f0dbdcc45524edcbd94"
+CHAT_SCHEMA_SHA256 = "04f4bb9e7be272f5b508e22360759ed6b0b32c59a3ffc18fb2cb9cf057b8f91c"
 CHAT_MODEL_NAMES = (
     "ChatCitation",
     "CandidateOption",
@@ -303,7 +303,14 @@ def test_public_web_citation_requires_same_entity_official_host(
         evidence_by_id={local.evidence_id: local, web.evidence_id: web},
     )
 
-    assert bool(citations) is expected
+    # Contract change (fix-web-citations): non-official web evidence now
+    # emits a web-type source card (user rule 尽量能指出处) instead of no
+    # card at all; official-host matches keep their company card.
+    if expected:
+        assert citations and citations[0].type == "company"
+    else:
+        assert citations and citations[0].type == "web"
+        assert citations[0].url == web_url
     if expected:
         assert citations[0].url == web_url
 

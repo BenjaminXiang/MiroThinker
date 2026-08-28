@@ -2276,6 +2276,7 @@ class CanonicalV2ChatAdapter:
                 handle_by_evidence_id.setdefault(evidence_id, (handle_id, handle))
         cards: list[ChatCitation] = []
         seen: set[str] = set()
+        emitted_evidence_ids: set[str] = set()
         official_hosts_by_handle_id: dict[str, frozenset[str]] = {}
         for citation in turn_result.citations:
             bound = handle_by_evidence_id.get(citation.evidence_id)
@@ -2315,6 +2316,34 @@ class CanonicalV2ChatAdapter:
                     id=f"official-source-{public_id}",
                     label=handle.display_name,
                     url=official_url,
+                )
+            )
+            emitted_evidence_ids.add(citation.evidence_id)
+        # Web evidence behind enumeration/concept answers still deserves its
+        # source card — the user rule is 尽量能指出处. This covers web items
+        # WITH handles too: the bound path above only emits cards for
+        # "official"-authority URLs, so listicle evidence dies there.
+        # Label = the page title head that already leads the evidence snippet.
+        for citation in turn_result.citations:
+            if len(cards) >= 12:
+                break
+            if citation.evidence_id in emitted_evidence_ids:
+                continue
+            evidence = evidence_by_id.get(citation.evidence_id)
+            if evidence is None or evidence.source_nature != "current_web":
+                continue
+            url = _public_url(evidence.source_locator)
+            if url is None or url in seen:
+                continue
+            seen.add(url)
+            head = str(evidence.snippet or "").strip().partition("：")[0][:40]
+            public_id = hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
+            cards.append(
+                ChatCitation(
+                    type="web",
+                    id=f"web-source-{public_id}",
+                    label=head or "公开网络资料",
+                    url=url,
                 )
             )
         return tuple(cards)

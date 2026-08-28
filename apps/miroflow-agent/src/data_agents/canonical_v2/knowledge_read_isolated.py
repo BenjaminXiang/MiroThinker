@@ -8084,8 +8084,31 @@ def _matches_lexical_request(
                 domain == "company"
                 and _matches_transposed_company_name(query_phrase, display_terms)
             )
+            or _matches_query_identifier_token(
+                query_phrase, content_terms
+            )
         )
     )
+
+
+_IDENTIFIER_TOKEN_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9\-]{2,}")
+
+
+def _matches_query_identifier_token(
+    query_phrase: str,
+    content_terms: frozenset[str],
+) -> bool:
+    """Fallback when the full phrase over-constrains: a Latin identifier
+    token from the query itself (PCB, LED, CN117…) matching a content term.
+    Only tokens the user literally typed — no alias invention, so the
+    over-matching that got the industry-alias attempt rolled back cannot
+    recur (2026-08-28: 「PCB打板」 never substring-matched 深南电路 whose
+    profile/industry literally carries PCB)."""
+    for token in _IDENTIFIER_TOKEN_PATTERN.findall(query_phrase):
+        folded = token.casefold()
+        if any(folded in term for term in content_terms):
+            return True
+    return False
 
 
 _COMPANY_LEGAL_SUFFIXES = (
