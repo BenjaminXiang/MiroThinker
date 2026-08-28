@@ -72,3 +72,55 @@ read 层丢弃是下一切片的阻断项。
 - `fix(web-lane)`: 三链修复 + 14 测试 + OpenSpec + 文档（worktree 分支
   data/p4-serving-pack-rebuild）
 - `ux(demo)`: 样例问题换为实测快速题 + 测试/服务脚本
+
+## R2（2026-08-28 下午）：read 层 web 外层等待修复 —— E2E 迭代闭环
+
+### 做了什么
+
+R1 E2E 发现的首要缺口（read 层 web 证据整批丢弃）根因闭合并修复
+（OpenSpec `fix-web-lane-read-outer-wait`）：
+
+- **根因**：read 编排层把 provider 搜索预算（`web_policy.timeout_ms=1500ms`）
+  复用成整条 web lane future 的外层等待；lane 真实工作（4 视图搜索×双
+  provider + 枚举 refinement + fetch_depth=8 抓页 + LLM gap judge）设计上
+  要跑 2–40 秒 → 超过 1.5s 即判 `unavailable`+0 候选，72 条结果整批丢弃
+  （lane 线程继续跑完，所以 serving 层 trace 显示 in=72）。
+- **修复**：`knowledge_read.py` 新增 `_web_lane_outer_wait_seconds()`
+  （地板值 20s，policy 更大时用 policy；disabled 返回 None），execute 的
+  web future 等待改用它。
+
+### 发现
+
+- G7（具身智能枚举）失败轮与通过轮的唯一差异 = web lane 是否在 1.5s 内
+  凑巧跑完（缓存全热）——这就是"忽好忽坏"的全部来源。
+- 早稻田 outage 话术的直接触发链：web trace `unavailable` →
+  `_web_lane_unavailable_from_traces` → 改写。证据薄时 LLM 写"未找到"
+  才触发；证据足时（supplemental 3 条）即使 lane 被杀也能答对——与 R1
+  观察完全吻合。
+
+### 怎么验证的
+
+- 新测试 2/2（地板值数学 + 2s 慢 lane 在 1.5s policy 下落盘成功）。
+- 回归 258 pass（1 处 HEAD 既有失败不变）。
+- **实时 6/6**：G7 ×3 全过（web lane succeeded/48、优必选在场、37–40s）、
+  早稻田 ×3 全过（12.5–13.1s、关键点命中、零 outage）。
+- **全量重放门 18/19**：G7 转绿；仅剩 G3（见下）。
+- **全量测试集 16 题：单轮 12/12 全过**（早稻田 1/1，含此前一直失败的
+  题目在内全部命中）、16/16 有答案、0 自白；4 个失败全为脚本无会话上下文
+  的多轮追问题（已知脚本限制）。
+
+### 影响哪些问题
+
+- G7 枚举重放从 4/6 波动转 6/6 稳定；早稻田从 67% 转 100%（本机采样）；
+  web 融合回答（PCB/无界智航等）不再依赖缓存运气；重放门从非绿转 18/19，
+  **热更新阻断解除**（除 G3 外）。
+- TTFT 影响：web lane 干真活的轮次要等它跑完（典型 +2~10s，枚举更长），
+  符合"质量优先+进度事件"裁定；纯本地轮（CN 专利 7s）不受影响。
+
+### 遗留（G3，独立家族，需要独立 slice）
+
+「他有哪些论文」接机构锚点：会话快照正确（机构锚点+指代提示在位），但
+规划器把人称代词绑到机构锚点且不做类型校验 → 放行 paper 域 A:answer，
+检索到垃圾论文。既有澄清规则（canonical_v2_chat.py:778「您的问题里使用
+了他/她/它…」）未触发。修复方向：代词绑定加锚点类型守卫（人称代词 ×
+非人物锚点 → 走澄清）。属规划器行为变更，按规矩立独立 change 再动。
