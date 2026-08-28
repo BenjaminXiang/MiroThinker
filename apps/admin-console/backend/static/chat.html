@@ -1829,6 +1829,18 @@
                 const viewCount = Array.isArray(data.views) ? data.views.length : 0;
                 process.set("planning", `✓ 已识别意图（${viewCount} 个检索视角）`, true);
                 notifyContentUpdate();
+              } else if (eventName === "progress") {
+                // Real-time retrieval progress: show what's being searched
+                // and what's been found, so the user sees activity instead
+                // of a static "正在检索…" for 5-40 seconds.
+                if (typeof data.detail === "string" && data.detail) {
+                  process.set(
+                    "retrieval",
+                    data.detail,
+                    typeof data.lane === "string" && data.lane,
+                  );
+                  notifyContentUpdate();
+                }
               } else if (eventName === "retrieval_done") {
                 process.set("retrieval", `✓ ${laneSummary(data.lanes)}`, true);
                 process.webItems(data.web_items);

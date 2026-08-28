@@ -1664,9 +1664,58 @@ class CanonicalV2ChatAdapter:
         )
         emit("stage", {"name": "retrieval"})
 
-        with turn_gate.active():
-            pass
-        raw_evidence_set = self._knowledge_read.execute(plan)
+        # Run retrieval in a background thread and emit progress events
+        # at known timing milestones so the user sees activity instead of
+        # a static "正在检索…" indicator for 5-40 seconds.
+        import threading
+        import time as _time
+
+        _retrieval_result: list[Any] = []
+        _retrieval_done = threading.Event()
+
+        def _run_retrieval() -> None:
+            try:
+                _retrieval_result.append(self._knowledge_read.execute(plan))
+            except Exception as exc:
+                _retrieval_result.append(exc)
+            finally:
+                _retrieval_done.set()
+
+        _retrieval_thread = threading.Thread(
+            target=_run_retrieval, daemon=True, name="canonical-v2-retrieval"
+        )
+        _retrieval_thread.start()
+
+        _progress_milestones: list[tuple[float, str]] = [
+            (0.5, "📚 本地知识库检索中…"),
+            (2.0, "🔍 网络搜索中…"),
+            (4.0, "🌐 正在获取网页内容…"),
+            (6.0, "⏳ 检索即将完成…"),
+        ]
+        _milestone_idx = 0
+        _retrieval_start = _time.time()
+
+        while not _retrieval_done.is_set():
+            elapsed = _time.time() - _retrieval_start
+            while (
+                _milestone_idx < len(_progress_milestones)
+                and elapsed >= _progress_milestones[_milestone_idx][0]
+            ):
+                emit(
+                    "progress",
+                    {
+                        "detail": _progress_milestones[_milestone_idx][1],
+                        "elapsed": round(elapsed, 1),
+                    },
+                )
+                _milestone_idx += 1
+            _retrieval_done.wait(timeout=0.5)
+
+        raw_evidence_set = _retrieval_result[0]
+        if isinstance(raw_evidence_set, Exception):
+            raise raw_evidence_set
+
+        # Emit actual lane results so the user sees what was found
         with turn_gate.active():
             pass
         self._require_release(raw_evidence_set, stage="read")
@@ -1690,6 +1739,25 @@ class CanonicalV2ChatAdapter:
                     trace.record_lane_counts(
                         lane_name, in_=total, retained=total, filtered=0
                     )
+        # Emit per-lane result counts as progress events so the user sees
+        # exactly what was found in each source before the answer starts.
+        _lane_labels: dict[str, str] = {
+            "exact": "精确匹配",
+            "structured": "结构化查询",
+            "lexical": "关键词检索",
+            "vector": "语义检索",
+            "web": "网络搜索",
+        }
+        for lane_name, total in sorted(lane_totals.items()):
+            label = _lane_labels.get(lane_name, lane_name)
+            emit(
+                "progress",
+                {
+                    "detail": f"✓ {label}：{total} 个结果",
+                    "lane": lane_name,
+                    "count": total,
+                },
+            )
         emit(
             "retrieval_done",
             {
