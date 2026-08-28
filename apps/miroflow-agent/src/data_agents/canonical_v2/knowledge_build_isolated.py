@@ -4112,6 +4112,93 @@ _P4_COMPANY_PROFILE_FALLBACK = (
     "No dedicated summary was supplied by the full-column workbook source."
 )
 _P4_COMPANY_ROUTE_FALLBACK = "Not supplied by the full-column workbook source."
+# Field-level supplemental merge for overlapping P4 company records: the
+# retained s12 object wins on identity; the P4 workbook only fills fields the
+# retained object leaves empty, and replaces route summaries that are
+# recognizable generated boilerplate (all three formulaic fragments present).
+_P4_COMPANY_FILL_FIELDS = (
+    "team_description",
+    "product_description",
+    "website",
+    "registered_address",
+)
+_P4_COMPANY_ROUTE_BOILERPLATE_MARKERS = (
+    "的技术路线围绕",
+    "当前重点落在",
+    "业务场景集中在",
+)
+
+
+def _p4_company_route_is_generated(value: object) -> bool:
+    if not isinstance(value, str) or not value.strip():
+        return True
+    return all(marker in value for marker in _P4_COMPANY_ROUTE_BOILERPLATE_MARKERS)
+
+
+def _p4_company_field_merge(
+    *,
+    existing: dict[str, JsonValue],
+    fill: Mapping[str, JsonValue],
+    object_id: str,
+    source_record_id: str,
+    run_id: str,
+    observed_at: datetime,
+    assertions: list[SourceAssertion],
+) -> int:
+    """Fill empty retained-company fields from an overlapping P4 record and
+    replace generated route boilerplate with the workbook's real
+    application scenarios. Never overwrites a non-empty real value. Returns
+    the number of fields filled."""
+
+    def assign(field: str, value: object) -> bool:
+        if not isinstance(value, str) or not value.strip():
+            return False
+        current = existing.get(field)
+        if isinstance(current, str) and current.strip():
+            return False
+        existing[field] = value.strip()
+        assertions.append(
+            SourceAssertion(
+                assertion_id=f"assertion:{object_id}:p4fill:{field}",
+                source_record_id=source_record_id,
+                source_identity_id=f"source-released-object:{object_id}",
+                subject_entity_type="company",
+                field_path=field,
+                value=value.strip(),
+                observed_at=observed_at,
+                assertion_run_id=f"assertions:{run_id}",
+            )
+        )
+        return True
+
+    filled = 0
+    for field in _P4_COMPANY_FILL_FIELDS:
+        if assign(field, fill.get(field)):
+            filled += 1
+    route = fill.get("technology_route_summary")
+    if (
+        isinstance(route, str)
+        and route.strip()
+        and route != _P4_COMPANY_ROUTE_FALLBACK
+        and _p4_company_route_is_generated(existing.get("technology_route_summary"))
+    ):
+        # Generated boilerplate is not a real value: replace it outright
+        # (the assign() emptiness guard must not protect it).
+        existing["technology_route_summary"] = route.strip()
+        assertions.append(
+            SourceAssertion(
+                assertion_id=f"assertion:{object_id}:p4fill:technology_route_summary",
+                source_record_id=source_record_id,
+                source_identity_id=f"source-released-object:{object_id}",
+                subject_entity_type="company",
+                field_path="technology_route_summary",
+                value=route.strip(),
+                observed_at=observed_at,
+                assertion_run_id=f"assertions:{run_id}",
+            )
+        )
+        filled += 1
+    return filled
 _P4_PATENT_SUMMARY_FALLBACK = "Not supplied by the full-column patent source."
 _P4_PAPER_VENUE_FALLBACK = "未提供期刊出处"
 _P4_LINK_EVIDENCE_SOURCE = "postgres_salvage_verified_link"
@@ -4484,24 +4571,32 @@ def _p4_existing_overlap_keys(
     *,
     selected_by_object: Mapping[str, Mapping[str, JsonValue]],
     domain_by_object: Mapping[str, str],
-) -> dict[str, dict[str, set[str]]]:
-    """Overlap indexes per domain for conservative create-or-skip decisions."""
+) -> tuple[dict[str, dict[str, set[str]]], dict[str, str]]:
+    """Overlap indexes per domain for create-or-skip decisions, plus a
+    company name-key -> existing object_id reverse map so overlapping P4
+    records can field-merge into the retained object instead of being
+    silently dropped (2026-08-28: the whole 6514-record P4 company batch
+    was discarded because every record shared a name with a thin s12
+    object)."""
     company: set[str] = set()
     patent: set[str] = set()
     paper_doi: set[str] = set()
     paper_title: set[str] = set()
     professor_name_institution: set[str] = set()
+    company_object_by_key: dict[str, str] = {}
     for object_id, domain in domain_by_object.items():
         selected = selected_by_object.get(object_id, {})
         if domain == "company":
             for value in (selected.get("name"), selected.get("normalized_name")):
                 if (key := _identity_lookup_key(value)) is not None:
                     company.add(key)
+                    company_object_by_key.setdefault(key, object_id)
             aliases = selected.get("aliases")
             if isinstance(aliases, list):
                 for alias in aliases:
                     if (key := _identity_lookup_key(alias)) is not None:
                         company.add(key)
+                        company_object_by_key.setdefault(key, object_id)
         elif domain == "patent":
             if (key := _identity_lookup_key(selected.get("patent_number"))) is not None:
                 patent.add(key)
@@ -4517,13 +4612,16 @@ def _p4_existing_overlap_keys(
                 professor_name_institution.add(name_key)
                 if institution_key is not None:
                     professor_name_institution.add(f"{name_key}|{institution_key}")
-    return {
-        "company": company,
-        "patent": patent,
-        "paper_doi": paper_doi,
-        "paper_title": paper_title,
-        "professor": professor_name_institution,
-    }
+    return (
+        {
+            "company": company,
+            "patent": patent,
+            "paper_doi": paper_doi,
+            "paper_title": paper_title,
+            "professor": professor_name_institution,
+        },
+        company_object_by_key,
+    )
 
 
 _P4_RECORD_BUILDERS = {
@@ -4561,7 +4659,7 @@ def _merge_p4_created_rows(
     genuinely new objects are synthesized and enter identity, decision,
     inclusion, and projection exactly like released rows.
     """
-    overlap = _p4_existing_overlap_keys(
+    overlap, company_object_by_key = _p4_existing_overlap_keys(
         selected_by_object=selected_by_object, domain_by_object=domain_by_object
     )
     stats = {
@@ -4569,6 +4667,8 @@ def _merge_p4_created_rows(
             "records_seen": 0,
             "records_created": 0,
             "records_skipped_existing": 0,
+            "records_field_merged": 0,
+            "fields_filled": 0,
             "records_duplicate": 0,
             "records_invalid": 0,
         }
@@ -4615,7 +4715,53 @@ def _merge_p4_created_rows(
         if domain == "company":
             name_key = _identity_lookup_key(selected.get("name"))
             if name_key in overlap["company"]:
-                current["records_skipped_existing"] += 1
+                # Field-level supplemental merge (2026-08-28): the retained
+                # object keeps its identity and every non-empty real value;
+                # the P4 workbook fills empty fields and replaces generated
+                # route boilerplate with real application scenarios. The
+                # whole batch used to be silently skipped here — 6514 rich
+                # records discarded because every name overlapped a thin
+                # s12 object.
+                existing_id = company_object_by_key.get(name_key)
+                existing = (
+                    selected_by_object.get(existing_id)
+                    if isinstance(existing_id, str)
+                    else None
+                )
+                if existing is None:
+                    current["records_skipped_existing"] += 1
+                    continue
+                filled = _p4_company_field_merge(
+                    existing=existing,
+                    fill=selected,
+                    object_id=existing_id,
+                    source_record_id=item.record.record_id,
+                    run_id=request.run_id,
+                    observed_at=now,
+                    assertions=merged_assertions,
+                )
+                current["records_field_merged"] += filled > 0
+                current["fields_filled"] += filled
+                if filled:
+                    adopted.append((existing_id, item.record.record_id))
+                    supplemental_domains_by_batch[item.source_batch_id].add(
+                        domain
+                    )
+                    source = source_identities.get(existing_id)
+                    if source is not None:
+                        source_identities[existing_id] = source.model_copy(
+                            update={
+                                "source_record_ids": tuple(
+                                    sorted(
+                                        {
+                                            *source.source_record_ids,
+                                            item.record.record_id,
+                                        }
+                                    )
+                                )
+                            },
+                            deep=True,
+                        )
                 continue
             if name_key in created_keys["company"]:
                 current["records_duplicate"] += 1

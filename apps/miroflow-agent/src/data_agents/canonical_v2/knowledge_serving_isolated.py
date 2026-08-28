@@ -4276,6 +4276,10 @@ def _semantic_text(item: EvidenceItem, display_name: str) -> str:
         for label, field in (
             ("简介", "profile_summary"),
             ("技术路线", "technology_route_summary"),
+            # P4 workbook fills: team bios (founders!) and product lines
+            # ride the claim so the answer names them without web dice.
+            ("核心团队", "team_description"),
+            ("产品", "product_description"),
         ):
             value = payload.get(field)
             if isinstance(value, str) and value.strip():

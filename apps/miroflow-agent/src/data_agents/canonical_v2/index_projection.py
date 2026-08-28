@@ -778,6 +778,14 @@ def _public_embedded_content(
             "profile_summary": projection.profile_summary,
             "product_description": projection.product_description,
             "technology_route_summary": projection.technology_route_summary,
+            # P4 workbook fills (team bios carry founders; real application
+            # scenarios replace generated route boilerplate) must be
+            # searchable or the field merge never surfaces in recall.
+            "team_description": (
+                projection.team_description[:600]
+                if projection.team_description
+                else None
+            ),
             "industry": (
                 projection.industry.model_dump(mode="json")
                 if projection.industry is not None

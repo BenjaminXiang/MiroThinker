@@ -239,8 +239,10 @@ def test_company_full_creates_full_column_and_skips_overlap() -> None:
     assert second.stats["company_full"]["records_created"] == 0
     assert second.stats["company_full"]["records_duplicate"] == 1
     assert first.selected[object_id]["industry"]["name"] == "人工智能"
-    # a different company name is skipped through the name-overlap key when
-    # a retained company already carries that name (alias lane).
+    # Contract change (fix-p4-company-field-merge): an overlapping P4 record
+    # now FIELD-MERGES into the retained company instead of being skipped —
+    # empty fields fill from the workbook, real values stay. The alias-lane
+    # scenario below is the one that used to discard the whole record.
     third = _merge_created(
         module,
         (
@@ -249,6 +251,9 @@ def test_company_full_creates_full_column_and_skips_overlap() -> None:
                 {
                     "__batch_id__": "p4-company-full-v1",
                     "company_name": "全列科技 alias 公司",
+                    "application_scenarios": "酒店餐厅商场服务，仓储物流分拣",
+                    "team": "杨华，创始人。",
+                    "product_summary": "先行者K2人形机器人。",
                 },
             ),
         ),
@@ -256,12 +261,18 @@ def test_company_full_creates_full_column_and_skips_overlap() -> None:
             "company-retained": {
                 "name": "全列科技 alias 公司",
                 "normalized_name": "全列科技 alias 公司",
+                "profile_summary": "已有人工智能简介。",
             }
         },
         initial_domains={"company-retained": "company"},
     )
     assert third.stats["company_full"]["records_created"] == 0
-    assert third.stats["company_full"]["records_skipped_existing"] == 1
+    assert third.stats["company_full"]["records_field_merged"] == 1
+    retained = third.selected["company-retained"]
+    assert retained["profile_summary"] == "已有人工智能简介。"  # real value kept
+    assert retained["team_description"] == "杨华，创始人。"  # empty field filled
+    assert retained["product_description"] == "先行者K2人形机器人。"
+    assert "酒店餐厅商场服务" in retained["technology_route_summary"]
 
 
 def test_patent_full_creates_with_type_and_skips_existing_number() -> None:
