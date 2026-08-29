@@ -133,29 +133,56 @@ def _legacy_instant(value: object | None) -> datetime | None:
     return value.value if isinstance(value, TemporalInstantValue) else None
 
 
+def _decision_identity_context_indexes(
+    result: _engine.DecisionBatchResult,
+) -> dict[str, Any]:
+    """Build the shared lookup indexes ONCE per persist batch.
+
+    The original payload builder rescanned manifests, rebuilt the full
+    ~132k-assertion by-id dict, and re-dumped every identity context PER
+    DECISION — O(|D|x(|M|+|A|+|C|)), the same quadratic family that hung
+    run 10 twice (2026-08-29)."""
+    return {
+        "manifests_by_decision": {
+            manifest.decision_id: manifest
+            for manifest in result.decision_group_manifests
+        },
+        "field_assertions_by_id": {
+            assertion.assertion_id: assertion
+            for assertion in result.field_assertions
+        },
+        "relationship_assertions_by_id": {
+            assertion.assertion_id: assertion
+            for assertion in result.relationship_assertions
+        },
+        "canonical_context_dump_by_id": {
+            context.canonical_identity_id: context.model_dump(mode="json")
+            for context in result.canonical_identity_contexts
+        },
+        "source_context_dump_by_id": {
+            context.source_identity_id: context.model_dump(mode="json")
+            for context in result.source_identity_contexts
+        },
+    }
+
+
 def _decision_identity_context_payload(
     result: _engine.DecisionBatchResult,
     decision: CanonicalDecision | RelationshipDecision,
+    indexes: dict[str, Any] | None = None,
 ) -> dict[str, JsonValue]:
-    manifest = next(
-        manifest
-        for manifest in result.decision_group_manifests
-        if manifest.decision_id == decision.decision_id
-    )
+    if indexes is None:
+        indexes = _decision_identity_context_indexes(result)
+    manifest = indexes["manifests_by_decision"][decision.decision_id]
     if isinstance(decision, CanonicalDecision):
-        assertions_by_id = {
-            assertion.assertion_id: assertion for assertion in result.field_assertions
-        }
+        assertions_by_id = indexes["field_assertions_by_id"]
         canonical_identity_ids = {decision.canonical_identity_id}
         source_identity_ids = {
             assertions_by_id[assertion_id].source_identity_id
             for assertion_id in manifest.assertion_ids
         }
     else:
-        relationship_assertions_by_id = {
-            assertion.assertion_id: assertion
-            for assertion in result.relationship_assertions
-        }
+        relationship_assertions_by_id = indexes["relationship_assertions_by_id"]
         canonical_identity_ids = {
             decision.source_canonical_identity_id,
             decision.target_canonical_identity_id,
@@ -172,14 +199,14 @@ def _decision_identity_context_payload(
         dict[str, JsonValue],
         {
             "canonical_identity_contexts": [
-                context.model_dump(mode="json")
-                for context in result.canonical_identity_contexts
-                if context.canonical_identity_id in canonical_identity_ids
+                indexes["canonical_context_dump_by_id"][identity_id]
+                for identity_id in canonical_identity_ids
+                if identity_id in indexes["canonical_context_dump_by_id"]
             ],
             "source_identity_contexts": [
-                context.model_dump(mode="json")
-                for context in result.source_identity_contexts
-                if context.source_identity_id in source_identity_ids
+                indexes["source_context_dump_by_id"][identity_id]
+                for identity_id in source_identity_ids
+                if identity_id in indexes["source_context_dump_by_id"]
             ],
         },
     )
@@ -685,13 +712,16 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
         result: _engine.DecisionBatchResult,
     ) -> None:
         rows_by_table: dict[str, list[tuple[Any, ...]]] = {}
+        indexes = _decision_identity_context_indexes(result)
         for decision in (*result.canonical_decisions, *result.relationship_decisions):
             table = (
                 "canonical_decision_identity_context"
                 if isinstance(decision, CanonicalDecision)
                 else "relationship_decision_identity_context"
             )
-            payload = _decision_identity_context_payload(result, decision)
+            payload = _decision_identity_context_payload(
+                result, decision, indexes=indexes
+            )
             rows_by_table.setdefault(table, []).append(
                 (
                     decision.release_id,
