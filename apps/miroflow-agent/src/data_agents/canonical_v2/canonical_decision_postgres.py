@@ -1704,9 +1704,31 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
         fields_by_id = {
             assertion.assertion_id: assertion for assertion in field_assertions
         }
+
+        def _validity_from_index(
+            selected_assertion_ids: tuple[str, ...],
+        ) -> tuple[
+            TemporalDateValue | TemporalInstantValue | None,
+            TemporalDateValue | TemporalInstantValue | None,
+        ]:
+            # Same semantics as _engine._selected_validity but reads the
+            # once-built fields_by_id index: the engine version rebuilt the
+            # full |assertions| dict PER DECISION (O(|D|x|A|) ~ 6e10 ops —
+            # run 10 spent 8+ hours spinning here).
+            if not selected_assertion_ids:
+                return None, None
+            intervals = {
+                (fields_by_id[id_].valid_from, fields_by_id[id_].valid_to)
+                for id_ in selected_assertion_ids
+            }
+            if len(intervals) != 1:
+                raise ValueError(
+                    "selected assertions must have one exact validity interval"
+                )
+            return next(iter(intervals))
+
         field_validity_by_decision = {
-            decision.decision_id: _engine._selected_validity(
-                field_assertions,
+            decision.decision_id: _validity_from_index(
                 decision.selected_assertion_ids,
             )
             for decision in field_decisions
