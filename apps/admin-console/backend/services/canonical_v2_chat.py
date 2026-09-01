@@ -1752,7 +1752,8 @@ class CanonicalV2ChatAdapter:
         _progress_thread = threading.Thread(
             target=_emit_progress, daemon=True, name="canonical-v2-progress"
         )
-        _progress_thread.start()
+        # _progress_thread.start()  # disabled 2026-08-31: progress thread
+        # crashes with _CanonicalV2ChatInterrupted killing the service
 
         try:
             with turn_gate.active():
@@ -1761,8 +1762,7 @@ class CanonicalV2ChatAdapter:
             with turn_gate.active():
                 pass
         finally:
-            _stop_progress.set()
-            _progress_thread.join(timeout=1.0)
+            _stop_progress.set()  # join disabled: thread never started
 
         # Emit actual lane results so the user sees what was found
         with turn_gate.active():

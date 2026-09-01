@@ -1,0 +1,30 @@
+Traceback (most recent call last):
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py", line 9237, in _persist_owners
+    readback = persist()
+               ^^^^^^^^^
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py", line 9220, in <lambda>
+    lambda: self._boundary.persist_domain_projection(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py", line 8431, in persist_domain_projection
+    store.persist(result)
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/domain_projection_postgres.py", line 1453, in persist
+    durable = self._load_snapshot(connection, validated.release_id)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/domain_projection_postgres.py", line 1322, in _load_snapshot
+    cls._load_inclusion_result(connection, manifest)
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/domain_projection_postgres.py", line 876, in _load_inclusion_result
+    raise DomainProjectionPersistenceError(
+src.data_agents.canonical_v2.domain_projection_postgres.DomainProjectionPersistenceError: durable inclusion decision envelope/hash is inconsistent
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete_candidate_runner.py", line 1183, in main
+    candidate = builder.build(_build_request(config))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py", line 9500, in build
+    self._persist_owners(graph)
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py", line 9239, in _persist_owners
+    raise IsolatedKnowledgeBuildError(
+src.data_agents.canonical_v2.knowledge_build_isolated.IsolatedKnowledgeBuildError: typed store conflict while persisting domain: durable inclusion decision envelope/hash is inconsistent
+complete candidate runner failed: IsolatedKnowledgeBuildError

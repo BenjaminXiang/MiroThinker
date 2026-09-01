@@ -1,0 +1,31 @@
+Traceback (most recent call last):
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py", line 9237, in _persist_owners
+    readback = persist()
+               ^^^^^^^^^
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py", line 9205, in <lambda>
+    lambda: self._boundary.persist_identity_resolution(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py", line 8410, in persist_identity_resolution
+    return store.persist(request, result)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/canonical_identity_postgres.py", line 1498, in persist
+    self._insert_sources_and_assertions(
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/canonical_identity_postgres.py", line 628, in _insert_sources_and_assertions
+    assertion.assertion_fingerprint_sha256,
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/.venv/lib/python3.12/site-packages/pydantic/main.py", line 991, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'SourceAssertion' object has no attribute 'assertion_fingerprint_sha256'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete_candidate_runner.py", line 1183, in main
+    candidate = builder.build(_build_request(config))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py", line 9500, in build
+    self._persist_owners(graph)
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py", line 9239, in _persist_owners
+    raise IsolatedKnowledgeBuildError(
+src.data_agents.canonical_v2.knowledge_build_isolated.IsolatedKnowledgeBuildError: typed store conflict while persisting identity: 'SourceAssertion' object has no attribute 'assertion_fingerprint_sha256'
+complete candidate runner failed: IsolatedKnowledgeBuildError
