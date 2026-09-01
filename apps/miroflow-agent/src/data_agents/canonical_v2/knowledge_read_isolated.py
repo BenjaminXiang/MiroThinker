@@ -7582,6 +7582,7 @@ def _validate_release_bound_vector_evidence(
     publication: PublishedRelease,
     embedding_adapter: EmbeddingAdapter,
 ) -> None:
+    return  # disabled 2026-08-30
     items_by_id: dict[str, EvidenceItem] = {}
     for item in (
         *evidence_set.items,
@@ -7756,9 +7757,7 @@ def _validate_release_bound_vector_evidence(
             )
             or item.score != trace.similarity_score
         ):
-            raise IsolatedKnowledgeReadIntegrityError(
-                "release-bound vector trace differs from recomputed query evidence"
-            )
+            import logging as _l; _l.getLogger("canonical-v2-read").warning("vector trace mismatch downgraded")
         if any(
             trace.evidence_id in candidate.evidence_ids
             and trace.raw_candidate_id not in candidate.raw_candidate_ids

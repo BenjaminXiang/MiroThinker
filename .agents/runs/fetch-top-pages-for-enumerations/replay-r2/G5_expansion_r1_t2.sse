@@ -1,0 +1,12 @@
+event: stage
+data: {"name":"planning"}
+
+event: plan_done
+data: {"lanes":["exact","structured","lexical","vector","web"],"domains":["company"],"views":["与深圳市优必选科技股份有限公司类似的公司","人形机器人公司排名 深圳","通用人形机器人厂商 深圳","服务机器人头部企业 深圳"]}
+
+event: stage
+data: {"name":"retrieval"}
+
+event: error
+data: {"detail":"internal_error"}
+

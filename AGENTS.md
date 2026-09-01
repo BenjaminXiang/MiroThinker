@@ -149,7 +149,10 @@ Mandatory rules (violating any is a defect of the slice):
 ## 4. Workflow
 
 Establish the task contract before editing (Goal / Expected behavior / Context /
-Constraints / Done when / Out of scope), then classify:
+Constraints / Done when / Out of scope). State assumptions explicitly; when the
+request admits multiple readings, surface them — never silently pick one.
+Anything needing 3+ steps, 3+ files, or an architecture decision is at least
+standard work. Then classify:
 
 ```text
 tiny fix       obvious, local, reversible, 1–2 files, no contract/schema/security impact → fix + narrow check
@@ -157,6 +160,24 @@ standard work  local feature / refactor / contract change → short plan (files,
 pattern fix    系统性/同类/根因/反复出现/patch-only → use .agents/skills/pattern-repair/SKILL.md (sibling search + shared fix + regression matrix)
 risky work     new area, schema/API/public contract, auth/secrets, concurrency/retries, retrieval-critical, multi-agent → stop for re-planning first
 ```
+
+**Anti-premature-action checks** (run all of these before writing any code):
+
+- Confirm the real goal first: restate what "fixed" means for the user, not
+  the first symptom reported.
+- Read the system structure around the problem before touching it; place the
+  problem at the layer it belongs to (UI vs prompt vs retrieval vs storage vs
+  data), and distinguish user-visible surfaces from internal engineering
+  objects — a symptom on a surface does not mean the fix belongs there.
+- A recurring problem is treated as a structural defect first (pattern-fix
+  class), not another local patch.
+- Delete wrong logic before adding new logic: removing the cause of the error
+  outranks compensating for it.
+- Decide up front what this slice is — delete / refactor / implement / copy &
+  UI-only — and say so in the plan; copy-and-UI changes must not be delivered
+  as code changes.
+- Define acceptance (how this will be verified, per the TDD boundary) before
+  implementing; no acceptance criteria, no code.
 
 **OpenSpec gate**: behavior-affecting work (user-visible behavior, public API or
 data contract, business rules, RAG retrieval/fusion/rerank/answer/citation,
@@ -177,6 +198,36 @@ Candidate → stop and report the blocker.
 RED artifacts come from OpenSpec or the verification contract. For RAG/chat/
 routing/prompt/policy work, a unit test alone is not sufficient GREEN evidence.
 Detailed policy: `openspec/specs/development-methodology/spec.md`.
+
+**Coding discipline** (every class above; bias caution over speed):
+
+- Simplicity first: no unrequested features, speculative flexibility, or error
+  handling for impossible cases. Pick solutions in order — skip it (YAGNI) →
+  reuse existing helpers/patterns → stdlib → platform-native → installed
+  dependencies → minimal new code — and only after reading the code about to be
+  touched. Never simplify away trust-boundary validation, data-loss protection,
+  security checks, or explicitly requested behavior. A deliberate shortcut gets
+  a `debt:` comment naming its ceiling and upgrade path.
+- Precise modification: every changed line traces back to the task contract; no
+  drive-by "improvements" of adjacent code, comments, or formatting. Delete
+  orphans your own change creates; leave pre-existing dead code alone and
+  mention it instead. Challenge a non-trivial change once for a cleaner shape,
+  but rewrite only code this change introduced.
+- Goal-driven completion: a step is done only when proven — plan steps carry
+  their own verify check (`step → verify: ...`); bug fix = a reproducing test
+  that fails before and passes after; refactor = before/after equivalence
+  evidence. If execution drifts from the plan, stop and re-plan rather than
+  push through.
+- Root-cause autonomy: clear-answer bug fixes go straight to the root cause —
+  no stopgap patches, no waiting to be walked through; §8 still governs when
+  to stop and escalate.
+- Self-improvement loop: after each user correction, capture the
+  anti-recurrence rule — repo lessons to `docs/solutions/` or the active plan
+  log, cross-project preferences to persistent memory; repeated violations get
+  promoted per §10 (test/lint/hook/CI or a rule here), not more prompt text.
+- Sub-agents: delegate research, exploration, and parallel analysis — one task
+  each, spawned for a need, not for compute's sake; decisions stay in the
+  main context.
 
 ---
 
@@ -239,6 +290,9 @@ End every non-trivial task with:
 ## OpenSpec — change-id, tasks n/m, acceptance n/m, change-log entries; or "not applicable: <why>"
 ## 文档确认块 — per §3 (index/log/cross-links/checkboxes)
 ```
+
+Self-review bar: would a senior engineer approve this diff — nothing overbuilt,
+nothing that cannot be traced back to the task contract?
 
 Verification reporting must be layered (user rule 2026-08-18 — aggregate
 "all green" counts are illegible): ① new tests written this slice (count,

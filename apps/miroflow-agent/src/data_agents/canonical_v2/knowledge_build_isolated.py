@@ -263,7 +263,7 @@ _RECORDED_EMBEDDING_BUNDLE_SHA256 = (
 )
 _RECORDED_EMBEDDING_DIMENSION = 32
 _QWEN_EMBEDDING_BUNDLE_SHA256 = (
-    "05473fabc8055e9ce3ebca9d846761cab7cb8c89eb51c96607172c402d1f46db"
+    "3fa2631b538f801d2bcb5ec9428bf3ce288f3cc8be369be6d4c9bff2c962ef8c"
 )
 _QWEN_EMBEDDING_DIMENSION = 4096
 _ACCEPTED_EMBEDDING_AUTHORITIES = frozenset(
@@ -6724,7 +6724,7 @@ def load_content_addressed_embedding_adapter(path: Path) -> _EmbeddingAdapter:
         "provider": "openai-compatible",
         "model_id": "Qwen/Qwen3-Embedding-8B",
         "dimension": _QWEN_EMBEDDING_DIMENSION,
-        "base_url": "http://100.64.0.27:18005/v1",
+        "base_url": "https://star.sustech.edu.cn/service/model/embedding/v1",
         "api_key_source": "local_api_key",
         "batch_size": 32,
         "max_workers": 32,

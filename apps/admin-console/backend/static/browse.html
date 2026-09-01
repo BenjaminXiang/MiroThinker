@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light" />
-    <title>Canonical V2 科创知识平台</title>
+    <title>深圳科创知识平台</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23143d59'/%3E%3Cpath d='M17 19h8v11l12-11h10L33 32l15 13H37L25 34v11h-8z' fill='white'/%3E%3C/svg%3E" />
     <style>
       :root {
@@ -414,19 +414,19 @@
         <div class="brand">
           <div class="brand-mark" aria-hidden="true">V2</div>
           <div>
-            <h1>Canonical V2 科创知识平台</h1>
-            <p>发布版本绑定 · 可追溯证据 · 四域知识目录</p>
+            <h1>深圳科创知识平台</h1>
+            <p>可追溯证据 · 四域知识目录 · 深圳</p>
           </div>
         </div>
         <div class="top-actions">
           <span class="release-pill" id="release-pill" aria-live="polite">正在连接候选版本…</span>
-          <a class="chat-link" href="chat">进入 V2 对话 <span aria-hidden="true">↗</span></a>
+          <a class="chat-link" href="chat">进入对话 <span aria-hidden="true">↗</span></a>
         </div>
       </div>
     </header>
 
     <main class="page">
-      <section aria-labelledby="overview-title">
+      <section id="overview-section" aria-labelledby="overview-title">
         <div class="section-heading">
           <div>
             <p class="eyebrow">Release snapshot</p>
@@ -727,9 +727,8 @@
           asOf.textContent = `数据时间点：${formatTime(status.as_of)}`;
           renderMetrics(status);
         } catch (error) {
-          releasePill.textContent = "候选运行时暂不可用";
-          asOf.textContent = "无法读取版本时间点";
-          summaryGrid.replaceChildren(stateBox("error", `版本概览加载失败 · ${errorText(error)}`));
+          // 版本概览依赖候选运行时；不可用时整块移除，不留报错占位。
+          document.getElementById("overview-section")?.remove();
         }
       }
 
