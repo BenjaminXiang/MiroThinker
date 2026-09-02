@@ -150,7 +150,9 @@ Mandatory rules (violating any is a defect of the slice):
 
 Establish the task contract before editing (Goal / Expected behavior / Context /
 Constraints / Done when / Out of scope). State assumptions explicitly; when the
-request admits multiple readings, surface them — never silently pick one.
+request admits multiple readings, surface them — never silently pick one. Where
+a simpler approach than the requested one exists, say so; where the request
+itself looks wrong, push back — do not silently build either.
 Anything needing 3+ steps, 3+ files, or an architecture decision is at least
 standard work. Then classify:
 
@@ -165,10 +167,11 @@ risky work     new area, schema/API/public contract, auth/secrets, concurrency/r
 
 - Confirm the real goal first: restate what "fixed" means for the user, not
   the first symptom reported.
-- Read the system structure around the problem before touching it; place the
-  problem at the layer it belongs to (UI vs prompt vs retrieval vs storage vs
-  data), and distinguish user-visible surfaces from internal engineering
-  objects — a symptom on a surface does not mean the fix belongs there.
+- Read the system structure around the problem before touching it — trace the
+  real call path and how the symptom actually triggers; place the problem at
+  the layer it belongs to (UI vs prompt vs retrieval vs storage vs data), and
+  distinguish user-visible surfaces from internal engineering objects — a
+  symptom on a surface does not mean the fix belongs there.
 - A recurring problem is treated as a structural defect first (pattern-fix
   class), not another local patch.
 - Delete wrong logic before adding new logic: removing the cause of the error
@@ -205,9 +208,11 @@ Detailed policy: `openspec/specs/development-methodology/spec.md`.
   handling for impossible cases. Pick solutions in order — skip it (YAGNI) →
   reuse existing helpers/patterns → stdlib → platform-native → installed
   dependencies → minimal new code — and only after reading the code about to be
-  touched. Never simplify away trust-boundary validation, data-loss protection,
-  security checks, or explicitly requested behavior. A deliberate shortcut gets
-  a `debt:` comment naming its ceiling and upgrade path.
+  touched. Record runtime-environment constraints in comments rather than
+  contorting code to adapt to them. Never simplify away trust-boundary
+  validation, data-loss protection, security checks, or explicitly requested
+  behavior. A deliberate shortcut gets a `debt:` comment naming its ceiling and
+  upgrade path.
 - Precise modification: every changed line traces back to the task contract; no
   drive-by "improvements" of adjacent code, comments, or formatting. Delete
   orphans your own change creates; leave pre-existing dead code alone and
