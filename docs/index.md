@@ -21,6 +21,7 @@
 - [**计划索引（活跃 + 完成 + 归档）**](./plans/index.md)
 - [解决方案与经验沉淀索引](./solutions/index.md)
 - [**Agentic RAG 运维手册**](./Agentic-RAG-Operating-Guide.md) — 当前在线 `/api/chat` 的运维口径
+- [Embedding 模型一致性契约](./Embedding-Model-Consistency.md) — 入库/查询共用模型、端点、维度与三层强制校验；换端点/换模型的红线流程
 - [架构决策记录（ADR）](./architecture-decisions/README.md)
 
 ## 当前主线（2026-05-04）
