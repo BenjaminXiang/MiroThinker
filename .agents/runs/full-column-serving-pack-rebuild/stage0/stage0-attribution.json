@@ -3,8 +3,8 @@
     "点名/company": {
       "n": 7,
       "verdicts": {
-        "LOCAL_DROPPED": 5,
-        "PASS": 2
+        "PASS": 4,
+        "LOCAL_DROPPED": 3
       }
     },
     "点名/professor": {
@@ -22,8 +22,7 @@
     "点名/paper": {
       "n": 4,
       "verdicts": {
-        "LOCAL_DROPPED": 2,
-        "PASS": 2
+        "PASS": 4
       }
     },
     "点名-池外/paper": {
@@ -42,7 +41,8 @@
     "属性/professor": {
       "n": 2,
       "verdicts": {
-        "LOCAL_DROPPED": 2
+        "PASS": 1,
+        "LOCAL_DROPPED": 1
       }
     },
     "关系/company": {
@@ -61,7 +61,7 @@
   "metrics": {
     "点名命中(exact>0 or PASS)": 3,
     "点名总数": 24,
-    "属性本地引用": 2,
+    "属性本地引用": 3,
     "关系车道触发": 3
   },
   "rows": [
@@ -87,13 +87,14 @@
         "web": 3
       },
       "citation_types": {
-        "web": 1
+        "web": 1,
+        "company": 1
       },
       "target_in_answer": true,
-      "verdict": "LOCAL_DROPPED",
-      "answer_head": "深圳市飞象工业科技有限公司是一家聚焦人工智能的企业，其业务定位为智能家电品制造商。公司专注于集新型发热材料研发、模块设计及制造为一体，主要产品包括暖风机、电风扇等。这些产品应用于小家电、个人护理、医疗",
+      "verdict": "PASS",
+      "answer_head": "深圳市飞象工业科技有限公司是一家聚焦人工智能的企业，其业务定位明确为智能家电品制造商。\n\n该公司专注于集新型发热材料研发、模块设计及制造为一体，核心产品包括暖风机、电风扇等。其技术路线围绕人工智能展开",
       "error": null,
-      "seconds": 12.9
+      "seconds": 4.2
     },
     {
       "kind": "company",
@@ -124,7 +125,7 @@
       "verdict": "PASS",
       "answer_head": "新濠天地控股集团有限公司成立于2015年12月22日，法定代表人为王铮，统一社会信用代码为914403003596224711。该公司定位为减速器生产商，总经理为闫敏。\n\n公开信息显示，该机构在北京设",
       "error": null,
-      "seconds": 6.4
+      "seconds": 5.2
     },
     {
       "kind": "company",
@@ -148,14 +149,14 @@
         "web": 16
       },
       "citation_types": {
-        "web": 2,
+        "web": 1,
         "company": 1
       },
       "target_in_answer": true,
       "verdict": "PASS",
-      "answer_head": "高宝睡眠科技（深圳）有限公司位于广东省深圳市。\n\n根据公开信息，该公司成立于2010年，是一家专注于智慧睡眠解决方案的企业。其核心业务覆盖高端家庭主卧、智慧家居套房、轻奢酒店行政房、康养公寓及亚健康人",
+      "answer_head": "高宝睡眠科技（深圳）有限公司位于广东省深圳市。\n\n该公司成立于2010年，是一家专注于智慧睡眠解决方案的企业。其核心业务涵盖高端家庭主卧、智慧家居套房、轻奢酒店行政房、康养公寓及亚健康人群睡眠管理中心",
       "error": null,
-      "seconds": 9.4
+      "seconds": 4.6
     },
     {
       "kind": "company",
@@ -185,7 +186,7 @@
       "verdict": "LOCAL_DROPPED",
       "answer_head": "Future Mobility Corporation Limited（曾用名：Byton Limited）是一家成立于2017年的企业，注册地位于香港特别行政区，主要从事汽车及其他机动车相关业务。\n",
       "error": null,
-      "seconds": 53.3
+      "seconds": 16.5
     },
     {
       "kind": "company",
@@ -215,7 +216,7 @@
       "verdict": "LOCAL_DROPPED",
       "answer_head": "ByteDance Ltd.（字节跳动有限公司）是字节跳动（ByteDance）的关联实体。公开信息显示，ByteDance 是一家总部位于北京的中国互联网科技公司，致力于通过人工智能技术提供内容分享",
       "error": null,
-      "seconds": 52.4
+      "seconds": 16.4
     },
     {
       "kind": "company",
@@ -239,13 +240,14 @@
         "web": 3
       },
       "citation_types": {
-        "web": 3
+        "web": 3,
+        "company": 1
       },
       "target_in_answer": true,
-      "verdict": "LOCAL_DROPPED",
+      "verdict": "PASS",
       "answer_head": "深圳市新华鹏激光设备有限公司是一家位于深圳的高新技术企业，已通过广东省专精特新企业认证。公司专业从事工业激光设备的研发、生产和销售，拥有完善的生产基地及强大的技术团队。\n\n其主要产品涵盖精密激光焊接机",
       "error": null,
-      "seconds": 5.9
+      "seconds": 4.9
     },
     {
       "kind": "company",
@@ -275,7 +277,7 @@
       "verdict": "LOCAL_DROPPED",
       "answer_head": "字节跳动（ByteDance）成立于2012年3月，是一家全球性的互联网科技公司，其产品和服务已覆盖全球150个国家和地区、75个语种，曾在40多个国家和地区位居应用商店总榜前列。\n\n公司旗下拥有庞大",
       "error": null,
-      "seconds": 49.5
+      "seconds": 16.2
     },
     {
       "kind": "professor",
@@ -306,7 +308,7 @@
       "verdict": "PASS",
       "answer_head": "公开信息显示，名为“洪子扬”的教授主要任职于以下两所机构：\n\n1. **哈尔滨工业大学（深圳）**：洪子扬任职于该校智能科学与工程学院，其研究领域聚焦于控制科学与工程，核心研究方向涵盖水下机器人技术及",
       "error": null,
-      "seconds": 49.3
+      "seconds": 16.6
     },
     {
       "kind": "professor",
@@ -337,7 +339,7 @@
       "verdict": "PASS",
       "answer_head": "金春媛现任深圳大学人文学院教师，主要研究方向为中国古代文学与诗词学。\n\n公开信息显示，金春媛（1986年3月出生）是黑龙江省哈尔滨人。其学术背景包括：2009年9月至2014年6月，师从著名中国古典文",
       "error": null,
-      "seconds": 49.5
+      "seconds": 22.8
     },
     {
       "kind": "professor",
@@ -358,18 +360,18 @@
         "structured": 0,
         "lexical": 2,
         "vector": 16,
-        "web": 16
+        "web": 3
       },
       "citation_types": {
-        "web": 8,
-        "professor": 1,
-        "company": 1
+        "web": 2,
+        "company": 1,
+        "professor": 1
       },
       "target_in_answer": true,
       "verdict": "PASS",
-      "answer_head": "（以下为基于本地数据的简要信息）\n- 深圳市光迹科技有限公司；简介：未找到；技术路线：室内商业照明；核心团队：许灵敏，CEO，曾任Cree中国市场销售经理、Philips Lumileds商务拓展经理",
+      "answer_head": "在深圳市光迹科技有限公司，刘晓光担任董事长一职。此前他曾担任磊迈照明总经理。\n\n此外，公开信息显示还有两位名为刘晓光的教授：一位是南开大学的教授、博士生导师，拥有计算机科学与技术专业博士学位；另一位是",
       "error": null,
-      "seconds": 56.9
+      "seconds": 15.2
     },
     {
       "kind": "professor",
@@ -393,14 +395,14 @@
         "web": 16
       },
       "citation_types": {
-        "web": 1,
+        "web": 3,
         "professor": 1
       },
       "target_in_answer": true,
       "verdict": "PASS",
-      "answer_head": "王恺是南方科技大学电子系长聘教授、博士生导师，国家优秀青年科学基金获得者。他本科和博士毕业于华中科技大学，师从刘胜院士，主要研究方向为量子点光电器件，在高效发光、光场调控、新型器件结构等方面取得了系列",
+      "answer_head": "公开信息显示，王恺是南方科技大学电子系长聘教授、博士生导师，也是国家优秀青年科学基金获得者。他本科和博士毕业于华中科技大学，师从刘胜院士。\n\n王恺的研究方向主要集中在量子点光电器件领域，在量子点高效发",
       "error": null,
-      "seconds": 49.7
+      "seconds": 19.0
     },
     {
       "kind": "professor",
@@ -421,17 +423,17 @@
         "structured": 0,
         "lexical": 2,
         "vector": 16,
-        "web": 16
+        "web": 3
       },
       "citation_types": {
-        "professor": 1,
-        "company": 1
+        "company": 1,
+        "professor": 1
       },
       "target_in_answer": true,
       "verdict": "PASS",
-      "answer_head": "徐斌是深圳市罗博泰尔机器人技术有限公司的执行董事兼总经理。\n\n该公司专注于为家具、工程机械、电子与通信、汽车整车及零部件等行业提供自动化加工解决方案，主要应用场景涵盖打磨、抛光、去毛刺及倒角等工序。\n",
+      "answer_head": "在深圳市罗博泰尔机器人技术有限公司中，徐斌担任执行董事兼总经理，是公司的核心管理层成员。\n\n此外，深圳大学机电与控制工程学院也有一位名为徐斌的教师，其研究方向主要集中在微细电火花加工和微细电解加工领域",
       "error": null,
-      "seconds": 49.5
+      "seconds": 15.7
     },
     {
       "kind": "patent",
@@ -454,12 +456,14 @@
         "vector": 16,
         "web": 3
       },
-      "citation_types": {},
+      "citation_types": {
+        "patent": 1
+      },
       "target_in_answer": true,
       "verdict": "PASS",
       "answer_head": "CN117180760A 是一项名为“一种模拟冰壶的投掷方法及其投掷装置和投掷比赛系统”的专利，由乐聚（深圳）机器人技术有限公司申请。\n\n该技术方案主要解决模拟冰壶运动中人工投掷精准度低、操作难度大的",
       "error": null,
-      "seconds": 52.9
+      "seconds": 15.8
     },
     {
       "kind": "patent",
@@ -482,12 +486,14 @@
         "vector": 16,
         "web": 3
       },
-      "citation_types": {},
+      "citation_types": {
+        "patent": 1
+      },
       "target_in_answer": true,
       "verdict": "PASS",
       "answer_head": "CN222494275U 是一项由徕福机器人（深圳）有限公司申请的专利，名称为“机械臂及其机器人”。该技术方案主要涉及一种机械臂结构，其核心特征在于将驱动机械爪组件转动的第一驱动机构的动力源设置在臂部",
       "error": null,
-      "seconds": 50.0
+      "seconds": 15.7
     },
     {
       "kind": "patent",
@@ -510,12 +516,14 @@
         "vector": 16,
         "web": 3
       },
-      "citation_types": {},
+      "citation_types": {
+        "patent": 1
+      },
       "target_in_answer": true,
       "verdict": "PASS",
       "answer_head": "CN116038707A 对应的专利名称为“一种基于数据驱动的智能故障自动诊断系统”，申请人为深圳技术大学。\n\n该专利主要涉及故障诊断领域，核心方案通过设置机器人、检测模块以及数据处理模块来实现。其工",
       "error": null,
-      "seconds": 50.2
+      "seconds": 16.8
     },
     {
       "kind": "paper",
@@ -539,13 +547,14 @@
         "web": 16
       },
       "citation_types": {
-        "web": 3
+        "web": 4,
+        "company": 1
       },
       "target_in_answer": true,
-      "verdict": "LOCAL_DROPPED",
-      "answer_head": "“High‐Performance [001]c‐Textured PNN‐PZT Relaxor Ferroelectr”指的是一篇关于高性能[001]c取向PNN-PZT弛豫铁电陶瓷的学术论文，而",
+      "verdict": "PASS",
+      "answer_head": "深圳市格熙信息科技有限公司与“High‐Performance [001]c‐Textured PNN‐PZT Relaxor Ferroelectr”这一特定科研论文或技术主题无直接业务关联。\n\n深",
       "error": null,
-      "seconds": 53.4
+      "seconds": 26.4
     },
     {
       "kind": "paper",
@@ -577,7 +586,7 @@
       "verdict": "PASS",
       "answer_head": "<|canonical_v2_selection_v1>\n{\"selected_claim_indexes\": [1, 4, 7, 9, 11], \"selected_entity_indexes\":",
       "error": null,
-      "seconds": 60.7
+      "seconds": 17.7
     },
     {
       "kind": "paper",
@@ -601,13 +610,14 @@
         "web": 16
       },
       "citation_types": {
-        "web": 4
+        "web": 6,
+        "company": 2
       },
       "target_in_answer": true,
-      "verdict": "LOCAL_DROPPED",
-      "answer_head": "“Decentralized Multiarea Robust Generation Unit and Tie-Line”（去中心化多区域鲁棒机组与联络线调度）并非深圳市尚锐科技有限公司、深圳市皕像科",
+      "verdict": "PASS",
+      "answer_head": "深圳市尚锐科技有限公司、深圳市皕像科技有限公司、深圳市大耳马科技有限公司均无公开信息表明其涉及“Decentralized Multiarea Robust Generation Unit and T",
       "error": null,
-      "seconds": 58.0
+      "seconds": 24.7
     },
     {
       "kind": "paper",
@@ -631,14 +641,14 @@
         "web": 16
       },
       "citation_types": {
-        "web": 2,
+        "web": 7,
         "company": 1
       },
       "target_in_answer": true,
       "verdict": "PASS",
-      "answer_head": "深圳市尚锐科技有限公司并非从事股票行业指数趋势预测业务的企业，其公开信息显示主营业务为GPS跟踪器供应商。\n\n关于“基于金融文本的股票行业指数趋势预测”（Trend Prediction Of Sto",
+      "answer_head": "深圳市尚锐科技有限公司的主营业务为GPS跟踪器，未涉及股票行业指数趋势预测业务。\n\n在股票行业指数趋势预测领域，公开信息显示相关研究主要集中在学术论文层面，具体包括：\n1. 基于金融文本的研究：论文《",
       "error": null,
-      "seconds": 53.3
+      "seconds": 20.7
     },
     {
       "kind": "paper",
@@ -662,13 +672,13 @@
         "web": 16
       },
       "citation_types": {
-        "web": 4
+        "web": 5
       },
       "target_in_answer": true,
       "verdict": "LOCAL_DROPPED",
       "answer_head": "“Mask-Enhanced Autoregressive Prediction: Pay Less Attention to Learn More”（简称 MEAP）是一项关于大语言模型训练范式的学",
       "error": null,
-      "seconds": 52.8
+      "seconds": 18.5
     },
     {
       "kind": "paper",
@@ -698,7 +708,7 @@
       "verdict": "PASS",
       "answer_head": "艾犀科技（深圳）有限公司是一家坐标硅谷的AI+健康科技初创公司。其创始团队来自斯坦福大学，并在苹果（Apple）产品设计与数据模型团队工作超过十年，主导过 iPhone、Apple Watch、App",
       "error": null,
-      "seconds": 52.5
+      "seconds": 18.2
     },
     {
       "kind": "paper",
@@ -728,7 +738,7 @@
       "verdict": "LOCAL_DROPPED",
       "answer_head": "针对伊马替尼（Imatinib）耐药的皮肤纤维肉瘤（Dermatofibrosarcoma Protuberans, DFSP），全基因组测序研究揭示了多种导致对PDGFRB抑制产生耐药性的潜在候选机",
       "error": null,
-      "seconds": 50.5
+      "seconds": 25.4
     },
     {
       "kind": "paper",
@@ -758,7 +768,7 @@
       "verdict": "LOCAL_DROPPED",
       "answer_head": "“Gradually Enhanced Adversarial Perturbations on Color Pixel”是一篇学术论文的标题，由西安交通大学的研究团队提出。该研究主要关注彩色图像的安",
       "error": null,
-      "seconds": 58.9
+      "seconds": 18.4
     },
     {
       "kind": "paper",
@@ -788,7 +798,7 @@
       "verdict": "LOCAL_DROPPED",
       "answer_head": "“Large-Scale Land Cover Mapping with Fine-Grained Classes via Class-Aware Semi-Supervised Semantic S",
       "error": null,
-      "seconds": 52.9
+      "seconds": 19.1
     },
     {
       "kind": "company",
@@ -819,7 +829,7 @@
       "verdict": "PASS",
       "answer_head": "深圳市银众信息技术有限公司是一家专注于工业与科研领域电子测试测量仪器研发、生产与销售的高新技术企业。公司由张银担任执行董事兼总经理，成立于2015年，注册资本380万人民币，注册地位于深圳市龙华区。\n",
       "error": null,
-      "seconds": 6.0
+      "seconds": 5.2
     },
     {
       "kind": "company",
@@ -848,9 +858,9 @@
       },
       "target_in_answer": true,
       "verdict": "PASS",
-      "answer_head": "深圳未艾教育科技有限公司是一家聚焦人工智能领域的企业，其核心业务定位为智能教育服务商。\n\n公司致力于打造产业互联网时代“AI技术+应用场景”的综合服务平台，重点围绕人工智能技术，特别是在智能教育方向，",
+      "answer_head": "深圳未艾教育科技有限公司是一家聚焦人工智能领域的企业，核心业务定位为智能教育服务商。\n\n公司致力于打造产业互联网时代“AI技术+应用场景”的综合服务平台，重点围绕人工智能技术，特别是智能教育方向，为未",
       "error": null,
-      "seconds": 4.0
+      "seconds": 3.6
     },
     {
       "kind": "professor",
@@ -874,13 +884,14 @@
         "web": 3
       },
       "citation_types": {
-        "web": 1
+        "web": 1,
+        "professor": 1
       },
       "target_in_answer": true,
-      "verdict": "LOCAL_DROPPED",
+      "verdict": "PASS",
       "answer_head": "姬生健是南方科技大学生物系的教授，其研究方向主要集中在发育神经生物学领域。\n\n具体而言，他领导的课题组利用先进的分子和细胞神经生物学技术，重点研究控制神经系统发育和再生的转录后调控新机制，例如RNA相",
       "error": null,
-      "seconds": 38.4
+      "seconds": 5.1
     },
     {
       "kind": "professor",
@@ -910,7 +921,7 @@
       "verdict": "LOCAL_DROPPED",
       "answer_head": "公开信息中有多位名为“Yang Jian”（杨健/杨舰/杨建）的学者，其研究方向因所属机构不同而有所差异，具体如下：\n\n*   **杨舰（清华大学深圳国际研究生院）**：公开主页显示其姓名及所属机构，",
       "error": null,
-      "seconds": 40.5
+      "seconds": 6.4
     },
     {
       "kind": "company",
@@ -932,7 +943,7 @@
       "verdict": "RELATION_NOT_PLANNED",
       "answer_head": "关于该主体：本地知识库中暂未建立其专利关联，这是当前数据覆盖的缺口，并不代表其没有专利；上面已给出可确认的主体信息。网络检索恢复后会尝试补全专利部分，也可以稍后再次提问。",
       "error": null,
-      "seconds": 3.7
+      "seconds": 2.9
     },
     {
       "kind": "company",
@@ -947,14 +958,14 @@
       ],
       "lane_candidates": {
         "relationship": 0,
-        "web": 44
+        "web": 43
       },
       "citation_types": {},
       "target_in_answer": false,
       "verdict": "RELATION_NOT_PLANNED",
       "answer_head": "关于该主体：本地知识库中暂未建立其专利关联，这是当前数据覆盖的缺口，并不代表其没有专利；上面已给出可确认的主体信息。网络检索恢复后会尝试补全专利部分，也可以稍后再次提问。",
       "error": null,
-      "seconds": 4.2
+      "seconds": 4.1
     },
     {
       "kind": "company",
@@ -976,7 +987,7 @@
       "verdict": "RELATION_NOT_PLANNED",
       "answer_head": "关于该主体：本地知识库中暂未建立其专利关联，这是当前数据覆盖的缺口，并不代表其没有专利；上面已给出可确认的主体信息。网络检索恢复后会尝试补全专利部分，也可以稍后再次提问。",
       "error": null,
-      "seconds": 12.4
+      "seconds": 2.9
     },
     {
       "kind": "professor",
@@ -998,7 +1009,7 @@
       "verdict": "PASS",
       "answer_head": "公开信息中未检索到与“杨贤”直接关联的论文列表。\n\n上述候选信息中列出的论文（如《Special Issues Relating to Corporate Governance and Family ",
       "error": null,
-      "seconds": 6.9
+      "seconds": 2.7
     },
     {
       "kind": "professor",
@@ -1022,7 +1033,7 @@
       "verdict": "PASS",
       "answer_head": "公开信息显示，陈名华（Minghua Chen）参与发表的多篇学术论文包括：\n\n1. 《Minimizing AoI With Throughput Requirements in Multi-Pat",
       "error": null,
-      "seconds": 9.4
+      "seconds": 5.1
     },
     {
       "kind": "professor",
@@ -1044,9 +1055,9 @@
       },
       "target_in_answer": true,
       "verdict": "PASS",
-      "answer_head": "公开信息显示，邵明文参与发表的代表性学术论文包括以下三篇：\n\n1. **Improving knowledge distillation via pseudo-multi-teacher networ",
+      "answer_head": "公开信息显示，邵明文参与发表的代表性学术论文包括以下三篇：\n\n1. **《Improving knowledge distillation via pseudo-multi-teacher netwo",
       "error": null,
-      "seconds": 7.0
+      "seconds": 4.6
     }
   ]
 }

@@ -859,3 +859,41 @@ stream 接口，逐车道归因。完整报告见
 **影响哪些问题**：P5 数据根因细化为 G3（类型断链，非"绑定不存在"）；
 P8 质量提升路径明确（G1 引用层先行）；阶段1切片顺序更新为
 G1→G3→G2→G4→G5；阶段2（决策持久层修形）仍为 G4 前置。
+
+---
+
+## 2026-09-04 G1 切片交付：本地引用下限（local-citation-floor）——点名 in-pack 12/19→16/19
+
+**背景**：阶段0基线把 G1（引用层 web 挤出本地）列为最高 ROI。本切片按
+OpenSpec change `local-citation-floor` 交付。
+
+**做了什么**：两道 floor——
+1. **选择层**（`knowledge_serving_isolated.py::_answer_selector`）：点名查询
+   （display_name==检索视图）在主循环没绑出本地 claim 时，为每个被点名
+   实体合成一条 entity_profile floor claim（本地证据 + 语义文本，计入
+   local_claim_limit）。根因：整档案 lookup 证据不带字段 claim_binding，
+   主循环按 binding 过滤导致本地全灭（飞象实锤：lexical retained=1、
+   answer_subject 正确、citation_count=1 全 web）。
+2. **映射层**（`canonical_v2_chat.py::_public_citations`）：handle 绑定的
+   本地引用在无官网/主页/DOI 白名单 URL 时不再整卡丢弃，改为发出
+   url=None 的档案卡（id=handle id，每 handle 一张，排在 web 卡之前）。
+   chat.html 本就支持无 URL 卡渲染。
+
+**发现**：
+- 残差 3 例（ByteDance Ltd./字节跳动/Future Mobility）trace 显示
+  answer_subject=深圳市安络科技——**英文名主体解析锚错实体**，归 G2
+  （别名+实体解析），非本切片回归。
+- 运维新知：冷实例首查 ~9-10 分钟（全量 lookup 解析+校验后入缓存）；
+  快速重启会撞 Milvus Lite 文件锁崩溃（须等端口释放）；二分证实首查
+  挂起与本次改动无关。
+
+**怎么验证**：分层证据见
+`.agents/runs/local-citation-floor/verification.md`——①新测试 6 个
+（2 RED→GREEN + 4 对照）②回归 adapter 132/132、serving 套件 15/15
+（closure 套件 3 失败为预存，stash 对照排除）③E2E golden set 复跑：
+点名 in-pack **12/19→16/19**（企业 2/7→4/7、论文 2/4→4/4、教授/专利
+保持）、语义 2/4→3/4、关系 3/6 不变（G3 范围）、池外论文 0/5 诚实保持。
+飞象答案正文改为本地档案内容+本地引用卡。
+
+**影响哪些问题**：G1 关闭；G2 获得新证据（英文名锚错实体）；
+P5（G3）与 G4（论文范围）不变；目标函数"可达"腿的引用环节达标。

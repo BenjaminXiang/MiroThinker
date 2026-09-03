@@ -2319,6 +2319,43 @@ class CanonicalV2ChatAdapter:
                 )
             )
             emitted_evidence_ids.add(citation.evidence_id)
+        # Stage0-G1 mapping floor: a handle-bound LOCAL citation whose entity
+        # profile lacks a whitelisted official URL field (company website /
+        # professor homepage / paper DOI) still deserves its archive card —
+        # the local knowledge base is the source of record for this answer
+        # (user rule 尽量能指出处). One card per handle, url-less; the chat
+        # page renders those as non-link rows.
+        emitted_handles = {
+            handle_by_evidence_id[citation.evidence_id][0]
+            for citation in turn_result.citations
+            if citation.evidence_id in emitted_evidence_ids
+        }
+        for citation in turn_result.citations:
+            if len(cards) >= 12:
+                break
+            if citation.evidence_id in emitted_evidence_ids:
+                continue
+            bound = handle_by_evidence_id.get(citation.evidence_id)
+            evidence = evidence_by_id.get(citation.evidence_id)
+            if bound is None or evidence is None:
+                continue
+            handle_id, handle = bound
+            if evidence.source_nature == "current_web" or handle.domain not in _PUBLIC_DOMAINS:
+                continue
+            if handle_id in emitted_handles:
+                continue
+            emitted_handles.add(handle_id)
+            cards.append(
+                ChatCitation(
+                    type=handle.domain,
+                    # The archive card cites the entity handle itself —
+                    # stable, and the public citation id stays the handle id.
+                    id=handle_id,
+                    label=handle.display_name,
+                    url=None,
+                )
+            )
+            emitted_evidence_ids.add(citation.evidence_id)
         # Web evidence behind enumeration/concept answers still deserves its
         # source card — the user rule is 尽量能指出处. This covers web items
         # WITH handles too: the bound path above only emits cards for

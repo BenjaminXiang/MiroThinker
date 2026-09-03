@@ -2311,7 +2311,12 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
         citation.type in {"professor", "company", "paper", "patent"}
         for citation in first.citations
     )
-    assert all("/browse" not in citation.url for citation in first.citations)
+    # url=None is a valid local-archive card (Stage0-G1 mapping floor); the
+    # invariant is only that no citation leaks the internal /browse page.
+    assert all(
+        citation.url is None or "/browse" not in citation.url
+        for citation in first.citations
+    )
     assert first.citation_map == {
         str(index): citation.id
         for index, citation in enumerate(first.citations, start=1)

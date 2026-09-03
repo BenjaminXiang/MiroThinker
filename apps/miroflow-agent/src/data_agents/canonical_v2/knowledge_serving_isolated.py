@@ -5980,6 +5980,76 @@ def _answer_selector(
             )
             if len(claims) >= claim_limit:
                 break
+        # Stage0-G1 selector floor: a query that names a canonical entity
+        # must keep one local claim for it. Whole-profile lookup evidence
+        # carries no field claim_binding, so without this floor the named
+        # entity's claim set cedes entirely to web evidence (verified:
+        # golden-set LOCAL_DROPPED rows).
+        if exact_named_objects:
+            object_by_evidence = {
+                candidate.evidence_id: candidate.object_id
+                for candidate in request.evidence_set.items
+                if candidate.source_nature != "current_web"
+            }
+            locally_claimed = {
+                object_by_evidence[evidence_id]
+                for claim in claims
+                for evidence_id in claim.evidence_ids
+                if evidence_id in object_by_evidence
+            }
+            handle_by_id = {
+                (
+                    handle.canonical_id
+                    if handle.kind == "canonical"
+                    else handle.handle_id
+                ): handle
+                for handle in handles
+            }
+            for named_id in sorted(exact_named_objects - locally_claimed):
+                if local_claim_count >= local_claim_limit:
+                    break
+                floor_item = next(
+                    (
+                        candidate
+                        for candidate in request.evidence_set.items
+                        if candidate.object_id == named_id
+                        and candidate.source_nature != "current_web"
+                    ),
+                    None,
+                )
+                if floor_item is None:
+                    continue
+                handle = handle_by_id.get(named_id)
+                display_name = (
+                    handle.display_name if handle is not None else named_id
+                )
+                floor_text = _semantic_text(floor_item, display_name)
+                if claim_text_is_raw_dump(floor_text):
+                    continue
+                if handle is not None:
+                    handle_id = (
+                        handle.canonical_id
+                        if handle.kind == "canonical"
+                        else handle.handle_id
+                    )
+                    if handle_id not in displayed_handle_ids:
+                        displayed_handle_ids.append(handle_id)
+                claims.append(
+                    MaterialClaimProposal(
+                        claim_id=(
+                            f"claim:serving-floor:{request.turn_id}:"
+                            f"{hashlib.sha256(floor_item.evidence_id.encode()).hexdigest()[:16]}"
+                        ),
+                        claim_type="entity_profile",
+                        text=floor_text,
+                        subject_id=named_id,
+                        predicate="entity_profile",
+                        value=display_name,
+                        evidence_ids=(floor_item.evidence_id,),
+                        status="accepted",
+                    )
+                )
+                local_claim_count += 1
         return AnswerSelectionProposal(
             selection_input_sha256=request.content_sha256,
             schema_version="answer-selection-v1",
