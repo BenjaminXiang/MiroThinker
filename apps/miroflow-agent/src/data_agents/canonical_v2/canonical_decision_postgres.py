@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections import Counter
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any, LiteralString, cast
+
+import os
 
 import psycopg
 from psycopg import sql
@@ -46,6 +50,10 @@ from .rebuild_write_gate import require_accepted_backup_gate
 
 MINIMUM_REVISION = "C2_0008"
 VERSION_TABLE = "public.canonical_v2_alembic_version"
+
+# R15-推论一②: batches above this size skip the post-commit object rebuild
+# (storage consistency is already proven by the in-transaction column check).
+_REBUILD_CHECK_MAX_DECISIONS = 5_000
 
 
 class CanonicalDecisionPersistenceError(RuntimeError):
@@ -212,6 +220,24 @@ def _decision_identity_context_payload(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class _WrittenBatch:
+    """One executemany target plus the read-back scope for its verification.
+
+    R15-推论一①: verification compares raw column tuples (multiset) against
+    what was written — the row construction here is deliberately independent
+    of the insert helpers so any drift between the two fails loudly instead
+    of silently verifying nothing.
+    """
+
+    table: str
+    columns: tuple[str, ...]
+    rows: tuple[tuple[Any, ...], ...]
+    scope_sql: str
+    scope_params: tuple[Any, ...]
+    on_conflict_nothing: bool = False
+
+
 class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
     def __init__(
         self,
@@ -362,10 +388,82 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
         return cast(int, row["decision_count"])
 
     @staticmethod
+    def _hashable_cell(value: Any) -> Any:
+        # R16/R15-推论一①: raw column verification needs order-insensitive,
+        # type-normalized cells (Jsonb wrappers and fetched jsonb dicts must
+        # compare equal without building model objects).
+        if isinstance(value, Jsonb):
+            value = value.obj
+        if isinstance(value, dict):
+            return tuple(
+                sorted(
+                    (key, _PostgresCanonicalDecisionStore._hashable_cell(child))
+                    for key, child in value.items()
+                )
+            )
+        if isinstance(value, (list, tuple)):
+            return tuple(
+                _PostgresCanonicalDecisionStore._hashable_cell(child)
+                for child in value
+            )
+        return value
+
+    @classmethod
+    def _rows_counter(cls, rows: Any) -> Counter:
+        return Counter(
+            tuple(cls._hashable_cell(cell) for cell in row) for row in rows
+        )
+
+    @classmethod
+    def _verify_written_batch(
+        cls,
+        connection: psycopg.Connection[dict[str, Any]],
+        batch: "_WrittenBatch",
+    ) -> None:
+        column_list = ", ".join(batch.columns)
+        fetched = connection.execute(
+            f"SELECT {column_list} FROM knowledge.{batch.table} "
+            f"WHERE {batch.scope_sql}",
+            batch.scope_params,
+        ).fetchall()
+        expected = cls._rows_counter(batch.rows)
+        observed = Counter(
+            tuple(
+                cls._hashable_cell(
+                    row[column] if isinstance(row, Mapping) else cell
+                )
+                for column, cell in zip(batch.columns, row)
+            )
+            for row in fetched
+        )
+        if expected == observed:
+            return
+        missing = expected - observed
+        unexpected = observed - expected
+        detail = ""
+        if missing:
+            row, _ = missing.most_common(1)[0]
+            detail = f" missing row ({batch.table}): {row!r}"
+        if unexpected:
+            row, _ = unexpected.most_common(1)[0]
+            detail += f" unexpected row ({batch.table}): {row!r}"
+        raise CanonicalDecisionPersistenceError(
+            "durable decision content does not exactly match its "
+            f"validated input;{detail[:400]}"
+        )
+
+    @staticmethod
     def _require_exact_supersession_heads(
         connection: psycopg.Connection[dict[str, Any]],
         result: _engine.DecisionBatchResult,
     ) -> None:
+        """Set-based supersession gate (R16 follow-up: the per-decision
+        recursive-CTE loop made bulk batches issue 190k+ recursive queries).
+
+        Same semantics, two batched queries per family: no-predecessor rows
+        must not collide with any existing lineage head; superseding rows
+        must target the exact unsuperseded head of their subject lineage.
+        """
         families = (
             (
                 "canonical_decision",
@@ -384,65 +482,100 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                 ),
             ),
         )
+        chunk_limit = 20_000
         for table, decisions, subject_columns in families:
-            for decision in decisions:
-                predecessor_id = decision.supersedes_decision_id
-                subject_predicate = " AND ".join(
-                    f"predecessor.{column} = %s" for column in subject_columns
+            incoming = [
+                (
+                    *(cast(str, getattr(decision, column)) for column in subject_columns),
+                    decision.decision_id,
+                    decision.supersedes_decision_id,
                 )
-                subject_values = tuple(
-                    cast(str, getattr(decision, column)) for column in subject_columns
+                for decision in decisions
+            ]
+            for start in range(0, len(incoming), chunk_limit):
+                chunk = incoming[start : start + chunk_limit]
+                _PostgresCanonicalDecisionStore._check_supersession_chunk(
+                    connection,
+                    table=table,
+                    subject_columns=subject_columns,
+                    rows=chunk,
+                    release_id=result.release_id,
                 )
-                lineage_sql = (
-                    "WITH RECURSIVE release_lineage AS ("
-                    "SELECT release_id, previous_release_id FROM knowledge.release "
-                    "WHERE release_id = %s UNION "
-                    "SELECT parent.release_id, parent.previous_release_id "
-                    "FROM knowledge.release AS parent JOIN release_lineage AS child "
-                    "ON parent.release_id = child.previous_release_id) "
-                )
-                if predecessor_id is None:
-                    existing = connection.execute(
-                        cast(
-                            LiteralString,
-                            lineage_sql
-                            + f"SELECT predecessor.decision_id FROM knowledge.{table} "
-                            "AS predecessor JOIN release_lineage AS lineage "
-                            "ON lineage.release_id = predecessor.release_id "
-                            f"WHERE {subject_predicate} LIMIT 1",
-                        ),
-                        (result.release_id, *subject_values),
-                    ).fetchone()
-                    if existing is not None:
-                        raise CanonicalDecisionPersistenceError(
-                            "a later release cannot create a new root for an existing "
-                            "decision lineage head"
-                        )
-                    continue
-                row = connection.execute(
-                    cast(
-                        LiteralString,
-                        lineage_sql
-                        + f"SELECT predecessor.decision_id, EXISTS (SELECT 1 FROM knowledge.{table} "
-                        "AS child WHERE child.supersedes_decision_id = "
-                        "predecessor.decision_id) AS already_superseded "
-                        f"FROM knowledge.{table} AS predecessor JOIN release_lineage AS lineage "
-                        "ON lineage.release_id = predecessor.release_id "
-                        "WHERE predecessor.decision_id = %s "
-                        f"AND predecessor.release_id <> %s AND {subject_predicate}",
-                    ),
-                    (
-                        result.release_id,
-                        predecessor_id,
-                        result.release_id,
-                        *subject_values,
-                    ),
-                ).fetchone()
-                if row is None or row["already_superseded"]:
-                    raise CanonicalDecisionPersistenceError(
-                        "decision supersession must target the exact unsuperseded head "
-                        "in the target release ancestry"
-                    )
+
+    @staticmethod
+    def _check_supersession_chunk(
+        connection: psycopg.Connection[dict[str, Any]],
+        *,
+        table: str,
+        subject_columns: tuple[str, ...],
+        rows: list[tuple[Any, ...]],
+        release_id: str,
+    ) -> None:
+        width = len(subject_columns)
+        arrays = [ [row[index] for row in rows] for index in range(width) ]
+        decision_ids = [row[width] for row in rows]
+        predecessors = [row[width + 1] for row in rows]
+        select_list = ", ".join(
+            [f"unnest(%s::text[]) AS s{index}" for index in range(width)]
+            + ["unnest(%s::text[]) AS decision_id",
+               "unnest(%s::text[]) AS predecessor_id"]
+        )
+        params: list[Any] = [*arrays, decision_ids, predecessors]
+        lineage_sql = (
+            "WITH RECURSIVE release_lineage AS ("
+            "SELECT release_id, previous_release_id FROM knowledge.release "
+            "WHERE release_id = %s UNION "
+            "SELECT parent.release_id, parent.previous_release_id "
+            "FROM knowledge.release AS parent JOIN release_lineage AS child "
+            "ON parent.release_id = child.previous_release_id), "
+            f"incoming AS (SELECT {select_list}) "
+        )
+        subject_match = " AND ".join(
+            f"predecessor.{column} = incoming.s{index}"
+            for index, column in enumerate(subject_columns)
+        )
+        root_params = [release_id, *params]
+        row = connection.execute(
+            cast(
+                LiteralString,
+                lineage_sql
+                + f"SELECT incoming.decision_id FROM incoming "
+                f"JOIN knowledge.{table} AS predecessor ON {subject_match} "
+                "JOIN release_lineage AS lineage "
+                "ON lineage.release_id = predecessor.release_id "
+                "WHERE incoming.predecessor_id IS NULL LIMIT 1",
+            ),
+            root_params,
+        ).fetchone()
+        if row is not None:
+            raise CanonicalDecisionPersistenceError(
+                "a later release cannot create a new root for an existing "
+                f"decision lineage head (first violating decision: {row['decision_id']})"
+            )
+        supersede_params = [release_id, *params, release_id]
+        row = connection.execute(
+            cast(
+                LiteralString,
+                lineage_sql
+                + f"SELECT incoming.decision_id FROM incoming "
+                f"LEFT JOIN knowledge.{table} AS predecessor "
+                f"ON predecessor.decision_id = incoming.predecessor_id "
+                f"AND predecessor.release_id <> %s AND {subject_match} "
+                "LEFT JOIN release_lineage AS lineage "
+                "ON lineage.release_id = predecessor.release_id "
+                f"LEFT JOIN knowledge.{table} AS child "
+                "ON child.supersedes_decision_id = predecessor.decision_id "
+                "WHERE incoming.predecessor_id IS NOT NULL "
+                "AND (predecessor.decision_id IS NULL OR lineage.release_id IS NULL "
+                "OR child.decision_id IS NOT NULL) LIMIT 1",
+            ),
+            supersede_params,
+        ).fetchone()
+        if row is not None:
+            raise CanonicalDecisionPersistenceError(
+                "decision supersession must target the exact unsuperseded head "
+                f"in the target release ancestry (first violating decision: {row['decision_id']})"
+            )
 
     @staticmethod
     def _insert_field_assertions(
@@ -740,6 +873,399 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                 rows,
             )
 
+    @classmethod
+    def _written_batches(
+        cls,
+        validated: _engine.DecisionBatchResult,
+    ) -> tuple[_WrittenBatch, ...]:
+        """Independently rebuild every row persist writes, for verification.
+
+        Mirrors the _insert_* helpers' row construction; any divergence
+        between the two constructions surfaces as a verification failure
+        (fail-closed), never as a silent pass.
+        """
+        release_id = validated.release_id
+        run_scope = (
+            "release_id = %s AND decision_run_id = %s",
+            (release_id, validated.decision_run_id),
+        )
+        decision_ids = [
+            decision.decision_id
+            for decision in (
+                *validated.canonical_decisions,
+                *validated.relationship_decisions,
+            )
+        ]
+        decision_scope = ("decision_id = ANY(%s)", (decision_ids,))
+
+        field_assertion_rows = tuple(
+            (
+                assertion.assertion_id,
+                assertion.source_record_id,
+                assertion.source_identity_id,
+                assertion.subject_entity_type,
+                assertion.field_path,
+                Jsonb(assertion.value),
+                _assertion_fingerprint(assertion),
+                assertion.observed_at,
+                assertion.source_event_time,
+                _legacy_instant(assertion.valid_from),
+                _legacy_instant(assertion.valid_to),
+                _temporal_json(assertion.valid_from),
+                _temporal_json(assertion.valid_to),
+                assertion.assertion_run_id,
+            )
+            for assertion in validated.field_assertions
+        )
+        relationship_assertion_rows = tuple(
+            (
+                assertion.assertion_id,
+                assertion.relationship_type_id,
+                assertion.relationship_type_version,
+                assertion.source_record_id,
+                assertion.source_endpoint.identity_id,
+                assertion.target_endpoint.identity_id,
+                Jsonb(assertion.attributes),
+                _assertion_fingerprint(assertion),
+                assertion.observed_at,
+                assertion.source_event_time,
+                _legacy_instant(assertion.valid_from),
+                _legacy_instant(assertion.valid_to),
+                _temporal_json(assertion.valid_from),
+                _temporal_json(assertion.valid_to),
+                assertion.assertion_run_id,
+            )
+            for assertion in validated.relationship_assertions
+        )
+
+        def _role_rows(
+            decisions: Any,
+        ) -> tuple[tuple[Any, ...], ...]:
+            rows = []
+            for decision in decisions:
+                role_ids = (
+                    ("candidate", decision.candidate_assertion_ids),
+                    ("selected", decision.selected_assertion_ids),
+                    ("conflicting", decision.conflicting_assertion_ids),
+                )
+                rows.extend(
+                    (decision.release_id, decision.decision_id, assertion_id, role)
+                    for role, assertion_ids in role_ids
+                    for assertion_id in assertion_ids
+                )
+            return tuple(rows)
+
+        field_assertion_ids = {
+            assertion.assertion_id for assertion in validated.field_assertions
+        }
+        outcome_rows_by_table: dict[str, list[tuple[Any, ...]]] = {}
+        for outcome in validated.constraint_outcomes:
+            table = (
+                "canonical_decision_constraint_outcome"
+                if outcome.assertion_id in field_assertion_ids
+                else "relationship_decision_constraint_outcome"
+            )
+            outcome_rows_by_table.setdefault(table, []).append(
+                (
+                    outcome.release_id,
+                    outcome.decision_id,
+                    outcome.assertion_id,
+                    outcome.admitted,
+                    Jsonb(list(outcome.reason_codes)),
+                )
+            )
+
+        indexes = _decision_identity_context_indexes(validated)
+        snapshot_rows_by_table: dict[str, list[tuple[Any, ...]]] = {}
+        for decision in (
+            *validated.canonical_decisions,
+            *validated.relationship_decisions,
+        ):
+            table = (
+                "canonical_decision_identity_context"
+                if isinstance(decision, CanonicalDecision)
+                else "relationship_decision_identity_context"
+            )
+            payload = _decision_identity_context_payload(
+                validated, decision, indexes=indexes
+            )
+            snapshot_rows_by_table.setdefault(table, []).append(
+                (
+                    decision.release_id,
+                    decision.decision_id,
+                    Jsonb(payload["canonical_identity_contexts"]),
+                    Jsonb(payload["source_identity_contexts"]),
+                    _engine._content_sha256(cast(JsonValue, payload)),
+                )
+            )
+
+        batches: list[_WrittenBatch] = [
+            _WrittenBatch(
+                table="source_assertion",
+                columns=(
+                    "assertion_id",
+                    "source_record_id",
+                    "source_identity_id",
+                    "subject_entity_type",
+                    "field_path",
+                    "value",
+                    "assertion_fingerprint_sha256",
+                    "observed_at",
+                    "source_event_time",
+                    "valid_from",
+                    "valid_to",
+                    "valid_from_temporal",
+                    "valid_to_temporal",
+                    "assertion_run_id",
+                ),
+                rows=field_assertion_rows,
+                scope_sql="assertion_id = ANY(%s)",
+                scope_params=(
+                    [row[0] for row in field_assertion_rows],
+                ),
+                on_conflict_nothing=True,
+            ),
+            _WrittenBatch(
+                table="relationship_assertion",
+                columns=(
+                    "assertion_id",
+                    "relationship_type_id",
+                    "relationship_type_version",
+                    "source_record_id",
+                    "source_identity_id",
+                    "target_identity_id",
+                    "attributes",
+                    "assertion_fingerprint_sha256",
+                    "observed_at",
+                    "source_event_time",
+                    "valid_from",
+                    "valid_to",
+                    "valid_from_temporal",
+                    "valid_to_temporal",
+                    "assertion_run_id",
+                ),
+                rows=relationship_assertion_rows,
+                scope_sql="assertion_id = ANY(%s)",
+                scope_params=(
+                    [row[0] for row in relationship_assertion_rows],
+                ),
+                on_conflict_nothing=True,
+            ),
+            _WrittenBatch(
+                table="canonical_decision",
+                columns=(
+                    "release_id",
+                    "decision_id",
+                    "canonical_identity_id",
+                    "field_path",
+                    "state",
+                    "policy_id",
+                    "policy_version",
+                    "method",
+                    "method_version",
+                    "decision_run_id",
+                    "confidence",
+                    "rationale",
+                    "decided_at",
+                    "supersedes_decision_id",
+                    "llm_trace",
+                    "human_review_resolution",
+                ),
+                rows=tuple(
+                    (
+                        decision.release_id,
+                        decision.decision_id,
+                        decision.canonical_identity_id,
+                        decision.field_path,
+                        decision.state.value,
+                        decision.policy.policy_id,
+                        decision.policy.policy_version,
+                        decision.method.value,
+                        decision.method_version,
+                        decision.decision_run_id,
+                        decision.confidence,
+                        decision.rationale,
+                        decision.decided_at,
+                        decision.supersedes_decision_id,
+                        cls._trace_json(decision),
+                        cls._review_json(decision),
+                    )
+                    for decision in validated.canonical_decisions
+                ),
+                scope_sql=run_scope[0],
+                scope_params=run_scope[1],
+            ),
+            _WrittenBatch(
+                table="relationship_decision",
+                columns=(
+                    "release_id",
+                    "decision_id",
+                    "canonical_relationship_id",
+                    "relationship_type_id",
+                    "relationship_type_version",
+                    "source_canonical_identity_id",
+                    "target_canonical_identity_id",
+                    "state",
+                    "role_bindings",
+                    "policy_id",
+                    "policy_version",
+                    "method",
+                    "method_version",
+                    "decision_run_id",
+                    "confidence",
+                    "rationale",
+                    "valid_from",
+                    "valid_to",
+                    "valid_from_temporal",
+                    "valid_to_temporal",
+                    "decided_at",
+                    "supersedes_decision_id",
+                    "llm_trace",
+                    "human_review_resolution",
+                ),
+                rows=tuple(
+                    (
+                        decision.release_id,
+                        decision.decision_id,
+                        decision.canonical_relationship_id,
+                        decision.relationship_type_id,
+                        decision.relationship_type_version,
+                        decision.source_canonical_identity_id,
+                        decision.target_canonical_identity_id,
+                        decision.state.value,
+                        Jsonb(decision.role_bindings),
+                        decision.policy.policy_id,
+                        decision.policy.policy_version,
+                        decision.method.value,
+                        decision.method_version,
+                        decision.decision_run_id,
+                        decision.confidence,
+                        decision.rationale,
+                        _legacy_instant(decision.valid_from),
+                        _legacy_instant(decision.valid_to),
+                        _temporal_json(decision.valid_from),
+                        _temporal_json(decision.valid_to),
+                        decision.decided_at,
+                        decision.supersedes_decision_id,
+                        cls._trace_json(decision),
+                        cls._review_json(decision),
+                    )
+                    for decision in validated.relationship_decisions
+                ),
+                scope_sql=run_scope[0],
+                scope_params=run_scope[1],
+            ),
+            _WrittenBatch(
+                table="canonical_decision_assertion",
+                columns=(
+                    "release_id",
+                    "decision_id",
+                    "assertion_id",
+                    "assertion_role",
+                ),
+                rows=_role_rows(validated.canonical_decisions),
+                scope_sql=decision_scope[0],
+                scope_params=decision_scope[1],
+            ),
+            _WrittenBatch(
+                table="relationship_decision_assertion",
+                columns=(
+                    "release_id",
+                    "decision_id",
+                    "assertion_id",
+                    "assertion_role",
+                ),
+                rows=_role_rows(validated.relationship_decisions),
+                scope_sql=decision_scope[0],
+                scope_params=decision_scope[1],
+            ),
+            _WrittenBatch(
+                table="canonical_decision_constraint_outcome",
+                columns=(
+                    "release_id",
+                    "decision_id",
+                    "assertion_id",
+                    "admitted",
+                    "reason_codes",
+                ),
+                rows=tuple(outcome_rows_by_table.get(
+                    "canonical_decision_constraint_outcome", ()
+                )),
+                scope_sql=decision_scope[0],
+                scope_params=decision_scope[1],
+            ),
+            _WrittenBatch(
+                table="relationship_decision_constraint_outcome",
+                columns=(
+                    "release_id",
+                    "decision_id",
+                    "assertion_id",
+                    "admitted",
+                    "reason_codes",
+                ),
+                rows=tuple(outcome_rows_by_table.get(
+                    "relationship_decision_constraint_outcome", ()
+                )),
+                scope_sql=decision_scope[0],
+                scope_params=decision_scope[1],
+            ),
+            _WrittenBatch(
+                table="canonical_decision_identity_context",
+                columns=(
+                    "release_id",
+                    "decision_id",
+                    "canonical_identity_contexts",
+                    "source_identity_contexts",
+                    "content_sha256",
+                ),
+                rows=tuple(snapshot_rows_by_table.get(
+                    "canonical_decision_identity_context", ()
+                )),
+                scope_sql=decision_scope[0],
+                scope_params=decision_scope[1],
+            ),
+            _WrittenBatch(
+                table="relationship_decision_identity_context",
+                columns=(
+                    "release_id",
+                    "decision_id",
+                    "canonical_identity_contexts",
+                    "source_identity_contexts",
+                    "content_sha256",
+                ),
+                rows=tuple(snapshot_rows_by_table.get(
+                    "relationship_decision_identity_context", ()
+                )),
+                scope_sql=decision_scope[0],
+                scope_params=decision_scope[1],
+            ),
+        ]
+        context = validated.temporal_comparison_context
+        if context is not None:
+            payload = cast(JsonValue, context.model_dump(mode="json"))
+            batches.append(
+                _WrittenBatch(
+                    table="decision_batch_temporal_context",
+                    columns=(
+                        "release_id",
+                        "decision_run_id",
+                        "comparison_context",
+                        "content_sha256",
+                    ),
+                    rows=(
+                        (
+                            validated.release_id,
+                            validated.decision_run_id,
+                            Jsonb(payload),
+                            _engine._content_sha256(payload),
+                        ),
+                    ),
+                    scope_sql=run_scope[0],
+                    scope_params=run_scope[1],
+                )
+            )
+        return tuple(batches)
+
     def persist(
         self, result: _engine.DecisionBatchResult
     ) -> _engine.DecisionBatchResult:
@@ -758,23 +1284,27 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                         (lock_identity,),
                     )
                     self._lock_release_boundary(connection)
+                    batches = self._written_batches(validated)
                     if self._batch_decision_count(
                         connection,
                         release_id=validated.release_id,
                         decision_run_id=validated.decision_run_id,
                     ):
-                        existing = self._load_result(
-                            connection,
-                            release_id=validated.release_id,
-                            decision_run_id=validated.decision_run_id,
-                        )
-                        if existing != validated:
+                        # R15-推论一① replay: raw column-tuple comparison
+                        # against the durable rows; no object rebuild. Equal
+                        # by proof ⇒ returning the validated input is
+                        # equivalent to returning the loaded result.
+                        try:
+                            for batch in batches:
+                                self._verify_written_batch(connection, batch)
+                        except CanonicalDecisionPersistenceError as exc:
                             raise CanonicalDecisionPersistenceError(
-                                "one release/decision_run_id cannot identify changed "
-                                "decision content; replay conflict"
-                            )
+                                "one release/decision_run_id cannot identify "
+                                "changed decision content; replay conflict "
+                                f"({exc})"
+                            ) from exc
                         connection.rollback()
-                        return existing
+                        return validated
 
                     self._require_durable_identity_contexts(connection, validated)
                     self._require_exact_supersession_heads(connection, validated)
@@ -811,18 +1341,12 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
                         )
                     self._insert_outcomes(connection, validated)
 
-                    durable = self._load_result(
-                        connection,
-                        release_id=validated.release_id,
-                        decision_run_id=validated.decision_run_id,
-                    )
-                    if durable != validated:
-                        raise CanonicalDecisionPersistenceError(
-                            "durable decision content does not exactly match its "
-                            "validated input"
-                        )
+                    # R15-推论一①: storage consistency is proven by raw
+                    # column tuples read back inside this transaction — the
+                    # object-graph rebuild (重建等价) moved post-commit.
+                    for batch in batches:
+                        self._verify_written_batch(connection, batch)
                     connection.commit()
-                    return durable
                 except Exception:
                     connection.rollback()
                     raise
@@ -832,6 +1356,39 @@ class _PostgresCanonicalDecisionStore(CanonicalDecisionStore):
             raise CanonicalDecisionPersistenceError(
                 "canonical-decision batch could not be persisted exactly"
             ) from exc
+        self._post_commit_rebuild_check(validated)
+        return validated
+
+    def _post_commit_rebuild_check(
+        self, validated: _engine.DecisionBatchResult
+    ) -> None:
+        """R15-推论一②: rebuild equivalence as an independent POST-commit check.
+
+        Detection stays (a load-back rebuild must equal the input); blocking
+        does not — the write is already durable. Bulk batches skip the
+        rebuild by default (the column check above already proved storage
+        consistency; the rebuild proved the loader, which unit tests cover).
+        """
+        mode = os.environ.get("CANONICAL_V2_DECISION_REBUILD_CHECK", "auto")
+        if mode == "off":
+            return
+        decision_count = len(validated.canonical_decisions) + len(
+            validated.relationship_decisions
+        )
+        if mode == "auto" and decision_count > _REBUILD_CHECK_MAX_DECISIONS:
+            return
+        with self._connection(write=False) as connection:
+            durable = self._load_result(
+                connection,
+                release_id=validated.release_id,
+                decision_run_id=validated.decision_run_id,
+            )
+            connection.rollback()
+        if durable != validated:
+            raise CanonicalDecisionPersistenceError(
+                "post-commit rebuild differs from its validated input "
+                f"(detected after commit; batch decision_count={decision_count})"
+            )
 
     def load(
         self,
