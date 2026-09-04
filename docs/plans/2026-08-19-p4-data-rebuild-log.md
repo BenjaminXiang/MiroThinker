@@ -897,3 +897,33 @@ OpenSpec change `local-citation-floor` 交付。
 
 **影响哪些问题**：G1 关闭；G2 获得新证据（英文名锚错实体）；
 P5（G3）与 G4（论文范围）不变；目标函数"可达"腿的引用环节达标。
+
+---
+
+## 2026-09-04 G3 诊断修正：关系遍历代码无辜，缺口在绑定数据（48 家 vs 950 家）
+
+**背景**：阶段0报告初判 G3 为"关系类型断链"。本切片准备修代码前先做
+根因深化，结果推翻初判。
+
+**做了什么**：证据链三步——①trace 证实 golden 三条失败查询的锚定与
+路径规划都成功（domains=['patent']、relationship 车道已规划）；
+②读遍历实现发现类型翻译层本就存在（company_has_patent→
+patent_has_applicant inverse）；③流式扫描 2.4GB relationships.json +
+阳性对照探针。
+
+**发现**：
+- **serving 遍历代码正常**：普渡科技（包内绑定 Top1，85 条）查询返回
+  relationship:17 候选——阳性对照通过。
+- **真实缺口是数据**：包内仅 **48 家企业**有申请人绑定（~290 实例），
+  池内 950 家/7,668 对；golden 三家全不在包内绑定集（其 canonical id
+  在文件里只出现在断言/决策上下文，从不在 target_endpoint）。
+- 缺失批次 = `p4-applicant-binding-full-v1`——正是被杀的 run 9/10
+  在重建的东西。
+
+**怎么验证**：`.agents/runs/full-column-serving-pack-rebuild/stage0/
+g3-diagnosis.md`（含复现命令）；阶段0报告 G3 节已按此修正。
+
+**影响哪些问题**：G3 从"代码修复"改道"数据交付"——绑定批次入包
+依赖阶段2瘦管线修形（决策持久层），优先级与 G4（论文批次）合并；
+下一刀改为 G2（别名/主体解析，纯代码线，有 G1 残差 3 例新证据）。
+P5 数据根因口径同步修正。

@@ -47,8 +47,8 @@ uv run --directory ../../../../../apps/miroflow-agent python stage0_golden_attri
 **G2 exact 车道对名称零命中 + 别名面缺失**
 名称查询 exact=0（含规范名全等情形——exact 匹配规则对名称类 display terms 是否生效存疑，修复切片需先读 `_matches_exact_request`）；包内企业别名仅 4.8% 有值（342/7,089），ByteDance Ltd. 全包无任何中文对应（仅 2 家英文名企业无 CJK）。修复面=exact 匹配规则 + 别名闭包（数据工件，载体无关）。
 
-**G3 企业↔专利关系类型断链（关系命中率 0/3 的根因）**
-规划策略 `supported_relationship_paths` 含 `company_has_patent` 双向（[knowledge_serving_isolated.py:6054](../../apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_serving_isolated.py)），但**包内关系注册表没有该类型**——绑定以 `patent_has_applicant` 入库（注册表 c 段完整枚举所有 company_* 类型，无 company_has_patent），规划器永不会遍历它。2.4GB 关系文件里躺着池内 957 条 resolved 绑定却不可达。修复面=构建侧统一关系类型 ID（或在路径注册支持 applicant 遍历）——一次类型映射修复，关系命中率 0/3→可通。
+**G3 企业↔专利关系：数据缺口（9-04 诊断修正，详见 `.agents/runs/full-column-serving-pack-rebuild/stage0/g3-diagnosis.md`）**
+初判"类型断链"**有误**：存在类型翻译层（`_SOURCE_BOUND_RELATIONSHIP_PATHS`：规划路径 company_has_patent → 存储类型 patent_has_applicant，inverse 方向），serving 遍历链路已实证正常（普渡科技查询返回 relationship:17 候选）。真实根因：**包内仅 48 家企业有申请人绑定（~290 实例），池内 950 家/7,668 对**——golden 三家（智赛/陶世/威洛博，池内专利数前列）都不在包内绑定集；缺的正是被杀的 run 9/10 要交付的 `p4-applicant-binding-full-v1` 批次。修复面=数据侧（阶段2 瘦管线后的绑定批次入包），非 serving 代码。
 
 **G4 论文池覆盖 41%（唯一剩余范围缺口）**
 包内 10,390 vs 池 24,058，缺 14,189。端到端确认：池外论文点名 0/5 全灭（本地只有语义邻居顶包+web）。企业/专利/教授池覆盖≈100%（0/0/2 缺）——**范围缺口已收敛到论文单域**。修复面=瘦构建补论文批次（阶段2管线修形后）。
@@ -62,7 +62,7 @@ research_directions 仅 37.0% 非空、name_en 7.0%、教授别名 0/3,958、仅
 ## 四、对阶段1/2 方案的更新
 
 - **G1 提为阶段1第一切片**：纯代码、最高频、直接兑现「查得到→引本地」。
-- 阶段1数据补齐顺序：G3（类型断链，一次修复通关系）→ G2 别名闭包 → G4 论文批次（依赖阶段2瘦管线）→ G5 教授字段。
+- 阶段1数据补齐顺序（9-04 修正）：G2 别名闭包+主体解析 → G5 教授字段 → G3/G4 批次入包（同依赖阶段2瘦管线修形）。
 - 阶段2（决策持久层修形，上轮方案B）不变，是 G4 的前置。
 - 传感器复用：本 golden set + 归因脚本作为回归基线，每切片后复测三命中率。
 
