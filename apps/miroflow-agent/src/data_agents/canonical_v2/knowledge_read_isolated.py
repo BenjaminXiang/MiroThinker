@@ -7983,6 +7983,21 @@ def _lexical_query_phrase(query_text: str) -> str:
     return _normalize(value)
 
 
+def _exact_query_phrase(query_text: str) -> str:
+    # The planner stamps lane queries as f"{pure_topic} [lane={lane}]"; the
+    # exact lane must strip its own marker before equality matching or no
+    # display name can ever equal the suffixed text (Stage0-G2a).
+    marker = "[lane=exact]"
+    value = query_text.strip()
+    if value.endswith(marker):
+        value = value[: -len(marker)].rstrip()
+    for opening, closing in (("“", "”"), ('"', '"')):
+        if value.startswith(opening) and value.endswith(closing):
+            value = value[len(opening) : -len(closing)].strip()
+            break
+    return _normalize(value)
+
+
 def _normalized_scalar_values(value: object) -> frozenset[str]:
     values: set[str] = set()
 
@@ -8035,7 +8050,7 @@ def _matches_exact_request(
             protected_exact_match = True
     if protected_exact_match:
         return True
-    if _normalize(request.query_text) in searchable_terms:
+    if _exact_query_phrase(request.query_text) in searchable_terms:
         return True
     if domain in ("paper", "patent"):
         # Long-title containment (G6): a full-title query with a trailing
@@ -8043,7 +8058,7 @@ def _matches_exact_request(
         # the local canonical paper dropped out of the exact lane and the
         # selector saw only web duplicates. Substantial titles (>= 20 chars)
         # match by containment; short names keep the strict equality path.
-        normalized_query = _normalize(request.query_text)
+        normalized_query = _exact_query_phrase(request.query_text)
         return any(
             len(term) >= 20 and term in normalized_query
             for term in display_terms

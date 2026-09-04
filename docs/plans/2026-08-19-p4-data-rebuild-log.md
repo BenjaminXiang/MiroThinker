@@ -927,3 +927,28 @@ g3-diagnosis.md`（含复现命令）；阶段0报告 G3 节已按此修正。
 依赖阶段2瘦管线修形（决策持久层），优先级与 G4（论文批次）合并；
 下一刀改为 G2（别名/主体解析，纯代码线，有 G1 残差 3 例新证据）。
 P5 数据根因口径同步修正。
+
+---
+
+## 2026-09-04 G2a 切片交付：exact 车道剥 `[lane=exact]` 标记——exact 命中 3/24→16/24，点名 in-pack 18/19
+
+**根因**（一行）：planner 给每条车道查询盖章
+`f"{pure_topic} [lane={lane}]"`，lexical/vector/web 车道都会剥自己的
+标记再匹配，**exact 车道从不剥**——名称等值匹配结构性不可能，只有
+专利号走 `exact_identifier` 保护槽（值干净）幸存。G6 长标题 containment
+对尾部标记不敏感，所以这个 bug 藏在 G6 后面。
+
+**做了什么**：`_matches_exact_request` 改用 `_exact_query_phrase`
+（仿 `_lexical_query_phrase`：剥标记+剥引号），等值与 containment 两处。
+
+**怎么验证**（`.agents/runs/exact-lane-name-marker-strip/verification.md`）：
+①新测试 3 个（1 RED→GREEN + 2 对照，对照证明标记是唯一破坏点）；
+②exact/lexical 扫描 84 过 1 挂（挂的为预存，stash 对照排除）；
+③E2E 重启复跑 golden set：**exact 命中 3/24→16/24；点名 in-pack
+16/19→18/19（95%）**；ByteDance Ltd. 与 Future Mobility 从"主体锚错"
+翻转为正确锚定 PASS。残差：字节跳动（别名不在包内，归 G2b 数据项）、
+池外论文 0/5（归 G4）。
+
+**影响哪些问题**：G2 的代码侧闭环；G1 残差 3 例中 2 例消除；
+目标函数"可达"腿的确定性锚定（exact）恢复。剩余 G2b（别名闭包，
+数据工件）与 G3/G4 同为数据线队列。

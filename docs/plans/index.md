@@ -56,7 +56,12 @@ web 挤出本地（最高频，纯代码线）→ G3 企业↔专利关系类型
 **G3 诊断修正（9-04）**：遍历代码无辜（普渡 17 候选实证）；真实缺口是
 绑定数据（包内 48 家 vs 池内 950 家，缺 p4-applicant-binding-full 批次）
 ——G3/G4 并轨归阶段2瘦管线后的数据交付。
-**下一刀：G2（别名闭包+英文名主体解析，纯代码线）。**
+**G2a 已交付（9-04，exact-lane-name-marker-strip）**：exact 车道剥
+`[lane=exact]` 标记（lexical/vector/web 都剥、唯独 exact 不剥——名称等值
+结构性不可能）。golden set：**exact 命中 3/24→16/24，点名 in-pack
+16/19→18/19（95%）**；ByteDance/Future Mobility 主体锚错翻正。
+**剩余：G2b 别名闭包 + G5 教授字段 + G3/G4 批次（数据线，依赖阶段2
+瘦管线修形）。**
 
 | 文档 | 作用 |
 |---|---|
