@@ -4674,6 +4674,8 @@ def _merge_p4_created_rows(
         }
         for purpose in _P4_RECORD_BUILDERS
     }
+    # Batch ledger (Stage0 meta-gap): whole-batch silent drops must be loud.
+    representative_records: dict[str, SourceRecord] = {}
     created_keys: dict[str, set[str]] = {
         "company": set(),
         "patent": set(),
@@ -4690,6 +4692,7 @@ def _merge_p4_created_rows(
             continue
         current = stats[purpose]
         current["records_seen"] += 1
+        representative_records.setdefault(purpose or "", item.record)
         built = builder(item.payload, now=now)
         if built is None:
             current["records_invalid"] += 1
@@ -4853,6 +4856,35 @@ def _merge_p4_created_rows(
         current["records_created"] += 1
         adopted.append((object_id, item.record.record_id))
         supplemental_domains_by_batch[item.source_batch_id].add(domain)
+    # Batch ledger (Stage0 meta-gap): print the per-purpose in/out counts and
+    # raise a typed gap whenever a non-empty batch contributed nothing — a
+    # whole-batch silent drop must never again hide behind discarded stats
+    # (run 10: p4-paper-salvage 24,101 rows → 0 new papers, unnoticed).
+    print(
+        "P4_MERGE_LEDGER "
+        + json.dumps(stats, ensure_ascii=False, sort_keys=True),
+        flush=True,
+    )
+    for purpose, counts in sorted(stats.items()):
+        if (
+            counts["records_seen"] > 0
+            and counts["records_created"] == 0
+            and counts["records_field_merged"] == 0
+        ):
+            gaps.append(
+                _gap(
+                    release_id=request.candidate_release_id,
+                    run_id=request.run_id,
+                    record=representative_records[purpose],
+                    domain="cross_domain",
+                    reason=(
+                        "p4 supplemental batch contributed zero objects: "
+                        + json.dumps(counts, ensure_ascii=False, sort_keys=True)
+                    ),
+                    affected_paths=("supporting_source.batch_ledger",),
+                    now=now,
+                )
+            )
     return (
         merged_assertions,
         merged_identity_assertions,
@@ -5899,6 +5931,23 @@ def _map_public_authority(
         gaps=gaps,
         supplemental_domains_by_batch=supplemental_domains_by_batch,
         now=now,
+    )
+    # Batch ledger (Stage0 meta-gap): run 10 produced ZERO patent-applicant
+    # relationships where the Aug-26 pack had 48 companies bound — this
+    # print makes the next run's binding ledger visible in build.log.
+    print(
+        "APPLICANT_BINDING_LEDGER "
+        + json.dumps(
+            _applicant_binding_stats.__dict__
+            if hasattr(_applicant_binding_stats, "__dict__")
+            else dict(_applicant_binding_stats._asdict())
+            if hasattr(_applicant_binding_stats, "_asdict")
+            else repr(_applicant_binding_stats),
+            ensure_ascii=False,
+            sort_keys=True,
+            default=str,
+        ),
+        flush=True,
     )
 
     source_identity_values = tuple(
