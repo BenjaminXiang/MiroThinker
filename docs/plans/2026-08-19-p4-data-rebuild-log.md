@@ -1036,3 +1036,29 @@ purpose in/out 计数入 build.log）+ 零贡献批次响亮 typed gap；申请�
 **决策**：新包**不切换**（严格劣于旧包：对象同数、绑定更少）；18188
 继续服务旧包。下一刀：离线重放 salvage 行过 `_map_public_authority`
 （带台账），定位掉行后修复，再重跑。
+
+---
+
+## 2026-09-05 run 11 发射（台账武装）+ 双台账即时读数：合并恢复正常
+
+**离线重放结论**：合并函数孤立运行完美（探针行 created=1、7 断言、
+台账打印）——静态链路（源→landing→过滤→合并）逐环验证全部无戉，
+但 run 10 结果为零，无法静态定位。
+
+**run 11 发射**（11:30，run 10 envelope 保留为 -run10.json，DB/staging
+幂等重置）。台账 ~2 分钟即打出：
+
+- P4_MERGE_LEDGER：**paper_salvage seen=24,101 / created=23,957**（104
+  重复、30 无效、10 重叠跳过）；company_full created=5,491 + 字段补齐
+  1,023（5078678 修复在工作）；patent_full created=9,573；
+  professor_full created=2,530。
+- APPLICANT_BINDING_LEDGER：**applicants_bound=7,650 / patents_bound=
+  7,650**（resolved 1,662/3,192，未解析 1,530 如实计数）。
+
+**判定**：run 10 的双异常（论文 0、绑定 0）在 run 11 **均未复现**——
+同输入、合并代码仅差语义中性的台账打印。run 10 异常定性为环境性偶发
+（疑似此前被杀运行留下的 staging/标记状态与幂等重置相互作用），
+无法回顾性定论；台账现已守护该类问题（零贡献即响亮 gap）。
+
+**进行中**：run 11 预计 ~21:30-22:30 完成；完成后走对账（预期论文
+10,390→~34k、绑定 0→7,650）→ golden set → 切换评估。
