@@ -1062,3 +1062,31 @@ purpose in/out 计数入 build.log）+ 零贡献批次响亮 typed gap；申请�
 
 **进行中**：run 11 预计 ~21:30-22:30 完成；完成后走对账（预期论文
 10,390→~34k、绑定 0→7,650）→ golden set → 切换评估。
+
+---
+
+## 2026-09-05 深夜定案：G4=教授锚定门（设计行为）；run 10"偶发"结论撤回
+
+**run 11 完成**（21:20，9h50m）。对账：包仍 32,941 同数——但这次台账+
+代码联读把全链条钉死了：
+
+1. **合并层无戉**：两轮运行都创建全部批次（run 11 台账实证
+   created=23,957）。
+2. **G4 根因=教授锚定门**（knowledge_build_isolated.py 5809-5841）：
+   `anchor_by_paper` 只含教授链接论文；**无锚定论文被整实体移除**
+   （source_identities/selected/domain/row/identity_assertions/
+   field_assertions 全 pop + 逐篇 typed gap）。14,189"缺失"论文=
+   未锚定集，轻量线口径差早已标注。这是设计（发现域锚定约束），
+   不是缺陷。
+3. **撤回 run 10 偶发结论**：两轮行为一致（创建→门删），无环境因素；
+   昨日"未复现"实为"未看见"——台账让既有行为显形。
+4. **G3 绑定半通**：字段级绑定落地（applicants 断言含 company 的
+   7,078 条在库）✓；但 patent_has_applicant 关系决策=0——掉点在
+   `_relationship_authority` 派生/`_remap_applicant_binding_canonical_ids`
+   （source-released-object 前缀 vs P4 创建对象 id 空间疑似不匹配），
+   待下一刀诊断。
+
+**修复路线（对齐目标函数"可达×诚实分级"）**：G4/G6 合并为一个准入
+矩阵决策——未锚定论文不再整删，改为 `limited` 准入（披露限制
+paper_unanchored），论文覆盖 41%→100%；G3 补 remap 诊断。均为
+OpenSpec change（行为/数据契约变更），待用户裁定后执行。
