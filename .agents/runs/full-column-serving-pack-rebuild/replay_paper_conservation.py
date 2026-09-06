@@ -72,6 +72,10 @@ def load_rows() -> tuple[tuple, set[str]]:
         "s12a-released-objects-full-v1": None,
         "p4-professor-full-v1": None,
         "p4-professor-paper-links-v1": None,
+        "p4-patent-full-v1": None,
+        "p4-company-full-v1": None,
+        "p4-applicant-binding-full-v1": None,
+        "s12f-applicant-binding-v1": None,
         "s12f-company-backfill-v1": None,
         "s12e-professor-backfill-v1": None,
         "s12c-r7-company-workbook-supplement-v1": None,
@@ -243,6 +247,57 @@ def main() -> None:
     anchor_gaps = [g for g in gaps if "professor_anchor" in str(getattr(getattr(g, "signal", None), "affected_paths", ()))]
     print("anchor-gap count (unanchored papers, kept):", len(anchor_gaps))
     print("links:", len(links))
+
+    # ---- full-chain extension: relationship + index authorities ----------
+    (
+        internal_request,
+        internal_result,
+        candidate_request,
+        candidate_result,
+    ) = module._internal_candidate_authority(
+        request=request,
+        domain_request=domain_request,
+        domain_result=domain_result,
+        now=NOW,
+    )
+    relationship_request, relationship_result = module._relationship_authority(
+        request=request,
+        identity_result=identity_result,
+        decision_result=decision_result,
+        domain_result=domain_result,
+        internal_request=internal_request,
+        internal_result=internal_result,
+        links=links,
+        now=NOW,
+        source_rows=rows,
+    )
+    rel_counts = _C(
+        d.relationship_type_id for d in relationship_result.relationship_decisions
+    )
+    print("\n=== RELATIONSHIP AUTHORITY ===")
+    print("relationship decisions by type:", dict(rel_counts))
+    current_rels = _C(
+        cr.relationship_type_id
+        for cr in relationship_result.current_relationships
+    )
+    print("current relationships by type:", dict(current_rels))
+
+    _, _, index_request, pure_index_result = module._index_authority(
+        request=request,
+        candidate_request=candidate_request,
+        candidate_result=candidate_result,
+        now=NOW,
+    )
+    print("\n=== INDEX AUTHORITY ===")
+    doc_domains = _C(d.domain for d in pure_index_result.lookup_documents)
+    print("lookup documents by domain:", dict(doc_domains))
+    doc_limits = _C(
+        (d.domain, tuple(d.eligibility_limitations))
+        for d in pure_index_result.lookup_documents
+        if d.eligibility_limitations
+    )
+    print("documents with limitations:", dict(doc_limits))
+    print("vector points:", len(pure_index_result.points))
 
 
 if __name__ == "__main__":

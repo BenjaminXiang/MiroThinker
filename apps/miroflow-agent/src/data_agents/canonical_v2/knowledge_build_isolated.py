@@ -6393,6 +6393,17 @@ def _typed_relationship_seeds(
     }
     if bound_company_ids_by_patent is None:
         bound_company_ids_by_patent = {}
+    # Bound applicants carry CANONICAL company ids; seeds must carry source
+    # OBJECT ids (the relationship authority maps every endpoint through
+    # canonical_by_source["source-released-object:{object_id}"] — a canonical
+    # id inside that prefix is a KeyError there).
+    source_object_by_canonical: dict[str, str] = {}
+    for object_id in rows_by_object:
+        canonical_id = canonical_by_source.get(
+            f"source-released-object:{object_id}"
+        )
+        if canonical_id is not None and canonical_id not in source_object_by_canonical:
+            source_object_by_canonical[canonical_id] = object_id
     company_ids_by_name: dict[str, set[str]] = defaultdict(set)
     professor_ids_by_name: dict[str, set[str]] = defaultdict(set)
     company_name_entries: list[CompanyNameEntry] = []
@@ -6567,13 +6578,19 @@ def _typed_relationship_seeds(
             for bound_canonical_id in bound_company_ids_by_patent.get(
                 object_id, ()
             ):
-                if canonical_domains.get(bound_canonical_id) != "company":
+                bound_object_id = source_object_by_canonical.get(
+                    bound_canonical_id
+                )
+                if bound_object_id is None:
+                    # The bound company did not survive identity resolution
+                    # as a seeded object (merged into another canonical);
+                    # the surviving canonical's object seeds instead.
                     continue
                 add_seed(
                     relationship_type_id="patent_has_applicant",
                     source_object_id=object_id,
                     source_domain="patent",
-                    target_object_id=bound_canonical_id,
+                    target_object_id=bound_object_id,
                     target_domain="company",
                     role_id="applicant",
                     role_owner="target",
