@@ -1090,3 +1090,31 @@ purpose in/out 计数入 build.log）+ 零贡献批次响亮 typed gap；申请�
 矩阵决策——未锚定论文不再整删，改为 `limited` 准入（披露限制
 paper_unanchored），论文覆盖 41%→100%；G3 补 remap 诊断。均为
 OpenSpec change（行为/数据契约变更），待用户裁定后执行。
+
+---
+
+## 2026-09-06 G4/G6+G3 代码切片交付 + run 12 发射
+
+**交付**（admit-unanchored-papers，commits 26f6e3b + a27c8af）：
+1. **G4/G6 准入矩阵（论文域）**：`_map_public_authority` 不再整删未锚定
+   论文（typed gap 保留）；`domain_inclusion` 论文规则改为三态——
+   锚定→admitted、在范围无锚→**admitted+limitations=("paper_unanchored",)**
+   （诚实分级标签沿 inclusion→path eligibility→lookup/vector
+   eligibility_limitations 全链传播）、范围外→excluded 不变。
+2. **G3 绑定播种**：`_typed_relationship_seeds` 新增
+   `bound_company_ids_by_patent`（从 decision_result 的重映射 applicants
+   断言构建），resolved_binding 优先播种 patent_has_applicant。
+3. **真回归一枚（已修）**：门移除暴露包含候选构造器的 KeyError
+   （无条件查 anchor_by_paper）→ anchor-less 走 None 分支。
+
+**验证**：包含合同 8/8（新中间态 RED→GREEN+旧语义控制）、播种 2/2、
+p4 合并 13/13、authority/mapper/paper/inclusion 簇 33/33；契约测试
+更新为"论文留存"。预存与本切片无关：10 个 boundary nonfresh 参数化
+（前代码同样挂，git checkout 真对照证实）+1 个 schema-fingerprint
+隔离失败（单跑过）+套件 ~74% 环境性卡点（两向皆现）。过程教训：
+bot 自动快照提交使 stash 对照失效一次——今日改用 git checkout 真对照。
+
+**run 12 发射**（~13:50，run 11 envelope 保留）：双台账读数与 run 11
+一致（论文全建、绑定 7,650）——这次锚定门已改，预期对账：论文
+10,390→~34k（全量）、patent_has_applicant 0→~7.6k、未锚定论文 lookup
+带 paper_unanchored 限制标签。完成后走对账→golden set→切换评估。
