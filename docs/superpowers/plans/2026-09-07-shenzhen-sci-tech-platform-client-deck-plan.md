@@ -28,7 +28,7 @@
 **Interfaces:**
 - Produces: two authentic interface images with known pixel dimensions, ready for placement in the deck.
 
-- [ ] **Step 1: Verify source screenshots and crop targets**
+- [x] **Step 1: Verify source screenshots and crop targets**
 
 Run:
 
@@ -38,15 +38,15 @@ identify baseline-home.png baseline-professors-list.png
 
 Expected: both files are 1280x900 PNGs showing the admin console.
 
-- [ ] **Step 2: Create a presentation asset directory**
+- [x] **Step 2: Create a presentation asset directory**
 
 Create `artifacts/screenshots/` and copy the two source images there without modifying the originals. Use the exact filenames above so the deck build is reproducible.
 
-- [ ] **Step 3: Check whether `/chat` can be captured**
+- [x] **Step 3: Check whether `/chat` can be captured**
 
-Inspect `apps/admin-console/backend/main.py` and existing launch scripts. Only capture a live page if a server and data runtime already exist; otherwise keep the two verified screenshots and record the limitation in the final verification.
+Inspect `apps/admin-console/backend/main.py` and existing launch scripts. A live `/chat` capture was not added because the local data runtime/model dependencies were not started; the two verified admin-console screenshots are used instead and the limitation is recorded in the final verification.
 
-- [ ] **Step 4: Verify image readability**
+- [x] **Step 4: Verify image readability**
 
 Open the copied images at high detail and ensure the dashboard cards, table headers, and filters remain legible after a 16:9 slide placement.
 
@@ -62,23 +62,23 @@ Open the copied images at high detail and ensure the dashboard cards, table head
 - Script entry point: `python artifacts/build_client_intro_deck.py`
 - Output: a two-slide 16:9 `Presentation` saved to the artifact path.
 
-- [ ] **Step 1: Add the slide theme and helper functions**
+- [x] **Step 1: Add the slide theme and helper functions**
 
 Define constants for 13.333x7.5 inch slides, navy/teal/amber/line colors, and helpers for title text, rounded panels, arrows, badges, image frames, and footer labels. Use Aptos/Arial-compatible fonts and keep text sizes at or above 11 pt except for small captions.
 
-- [ ] **Step 2: Build slide 1**
+- [x] **Step 2: Build slide 1**
 
 Place the title and one-sentence value statement at the top. Add a five-stage horizontal flow (`问题理解`, `意图路由`, `单域/跨域检索`, `召回融合 + rerank`, `结构化答案 + evidence`) in the left/middle area. Add a compact four-domain strip (`教授 / 企业 / 论文 / 专利`) and two authentic screenshots on the right/bottom with captions `运营总览` and `教授数据资产`.
 
-- [ ] **Step 3: Build slide 2**
+- [x] **Step 3: Build slide 2**
 
 Place the title at the top. Draw three bounded architecture bands: `交互与运营层`, `Canonical-v2 服务层`, `数据与检索层`. Show PostgreSQL, Milvus, Web Search, unified identity, projections, relationships, evidence, streaming session, and multi-turn context. Add a right-side evidence rail with five proof points and two small screenshot crops linked to `可运营` and `可追溯`.
 
-- [ ] **Step 4: Keep copy accurate and client-readable**
+- [x] **Step 4: Keep copy accurate and client-readable**
 
 Use only capabilities supported by the PRD/shared spec: four domains, semantic routing, cross-domain aggregation, multi-turn context, PostgreSQL + Milvus, evidence traceability, quality gates, relationship projection, and replay validation. Do not mention unfinished readiness ratios, accuracy claims, or model benchmark scores.
 
-- [ ] **Step 5: Run the generator**
+- [x] **Step 5: Run the generator**
 
 Run:
 
@@ -99,7 +99,7 @@ Expected: `artifacts/shenzhen-sci-tech-platform-client-intro.pptx` exists and co
 - Uses LibreOffice headless conversion and PDF rasterization available in the environment.
 - Produces visual evidence for the final handoff.
 
-- [ ] **Step 1: Convert PPTX to PDF**
+- [x] **Step 1: Convert PPTX to PDF**
 
 Run:
 
@@ -109,11 +109,11 @@ libreoffice --headless --convert-to pdf --outdir artifacts artifacts/shenzhen-sc
 
 Expected: a two-page PDF is created in `artifacts/`.
 
-- [ ] **Step 2: Render both pages to PNG**
+- [x] **Step 2: Render both pages to PNG**
 
 Use `pdftoppm -png -r 144` or an equivalent installed renderer to create `artifacts/rendered/slide-1.png` and `slide-2.png`.
 
-- [ ] **Step 3: Inspect rendered pages**
+- [x] **Step 3: Inspect rendered pages**
 
 Open both rendered PNGs and check: no text is clipped, the architecture arrows remain aligned, screenshots are not stretched, captions are readable, and the slide hierarchy is clear at 144 dpi.
 
@@ -123,7 +123,7 @@ Open both rendered PNGs and check: no text is clipped, the architecture arrows r
 - Modify: `docs/superpowers/plans/2026-09-07-shenzhen-sci-tech-platform-client-deck-plan.md`
 - Optional: `docs/plans/index.md` only if a human-doc entry is explicitly desired; otherwise leave unchanged
 
-- [ ] **Step 1: Verify file list and slide count**
+- [x] **Step 1: Verify file list and slide count**
 
 Run:
 
@@ -141,11 +141,10 @@ pdfinfo artifacts/shenzhen-sci-tech-platform-client-intro.pdf | rg '^Pages:'
 
 Expected: `slides 2`, a non-zero file size, and `Pages: 2`.
 
-- [ ] **Step 2: Report verification in layers**
+- [x] **Step 2: Report verification in layers**
 
 Final response must distinguish: (1) new artifact checks and visual inspection, (2) pre-existing system screenshots reused, (3) live `/chat` capture status and any environment limitation.
 
-- [ ] **Step 3: Mark plan tasks complete**
+- [x] **Step 3: Mark plan tasks complete**
 
 Update checkboxes only after each command and visual check has actually run in this session.
-
