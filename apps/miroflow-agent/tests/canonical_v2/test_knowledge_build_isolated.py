@@ -3862,9 +3862,11 @@ def test_public_authority_records_missing_paper_anchor_as_typed_path_gap() -> No
         now=NOW,
     )
 
+    # admit-unanchored-papers: the unanchored paper STAYS in the projection
+    # (was removed entirely); the typed anchor gap is still recorded.
     assert result[4].counts_by_domain == {
         "company": 0,
-        "paper": 0,
+        "paper": 1,
         "patent": 0,
         "professor": 0,
     }

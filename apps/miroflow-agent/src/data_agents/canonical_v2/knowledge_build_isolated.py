@@ -6216,6 +6216,9 @@ def _map_public_authority(
                     f"source-released-object:{anchor_by_paper[object_id_by_canonical[identity.canonical_identity_id]][0]}"
                 ]
                 if identity.entity_type == "paper"
+                and identity.canonical_identity_id in object_id_by_canonical
+                and object_id_by_canonical[identity.canonical_identity_id]
+                in anchor_by_paper
                 else None
             ),
         )
