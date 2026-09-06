@@ -1530,3 +1530,80 @@ def test_incremental_company_validation_evidence_cannot_cross_wire_subjects() ->
                 incremental_company_validation_decisions=(validation,),
             ),
         )
+
+
+def test_in_scope_unanchored_paper_is_admitted_with_paper_unanchored_limitation() -> (
+    None
+):
+    # admit-unanchored-papers (G4/G6 admission matrix): an in-scope paper
+    # WITHOUT a Professor anchor stays reachable, honestly tiered — was
+    # hard-excluded (outside_paper_discovery_scope) before the change.
+    module = _module()
+    paper_batch_id = "batch:approved-paper-without-anchor"
+    paper_artifact_id = "artifact:approved-paper-without-anchor"
+    paper_artifact = _artifact(
+        artifact_id=paper_artifact_id,
+        content_sha256="d" * 64,
+    )
+    paper_record = _source_record(
+        record_id="record:unanchored-paper:1",
+        source_batch_id=paper_batch_id,
+        artifact_id=paper_artifact_id,
+        payload={"title": "An in-scope paper with no professor anchor"},
+    )
+    paper_source = _source_identity(
+        source_identity_id="source-paper-unanchored-1",
+        entity_type="paper",
+        record_id=paper_record.record_id,
+        source_key="in-scope-unanchored-paper",
+    )
+    paper_identity = _canonical_identity(
+        canonical_identity_id="paper-unanchored-c1",
+        entity_type="paper",
+        source_identity_id=paper_source.source_identity_id,
+    )
+    paper_assertions = (
+        _assertion(
+            assertion_id="assertion:unanchored-paper-title",
+            source_identity=paper_source,
+            field_path="title",
+            value="An in-scope paper with no professor anchor",
+        ),
+    )
+    paper_candidate = _candidate(
+        module,
+        identity=paper_identity,
+        source_identity=paper_source,
+        record=paper_record,
+        assertions=paper_assertions,
+    )
+    manifest = _approved_manifest(
+        module,
+        (
+            "paper",
+            "paper_roster_discovery",
+            paper_batch_id,
+            paper_artifact_id,
+            "d" * 64,
+        ),
+    )
+    result = _evaluate(
+        module,
+        _request(
+            module,
+            manifest=manifest,
+            candidates=(paper_candidate,),
+            identities=(paper_identity,),
+            source_identities=(paper_source,),
+            artifacts=(paper_artifact,),
+            records=(paper_record,),
+            assertions=paper_assertions,
+        ),
+    )
+    paper_decision = _decision(result, paper_identity.canonical_identity_id)
+    assert paper_decision.outcome.value == "admitted"
+    assert paper_decision.limitations == ("paper_unanchored",)
+    assert paper_decision.hard_exclusion_codes == ()
+    assert result.admitted_identity_ids_by_domain["paper"] == (
+        paper_identity.canonical_identity_id,
+    )
