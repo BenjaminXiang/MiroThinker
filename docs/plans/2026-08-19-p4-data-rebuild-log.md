@@ -1167,3 +1167,28 @@ index/embedding 层。
 
 **方法沉淀**：回放脚本可复用为数据变更的标准预检（分钟级、
 gate 无关、真实行输入）——比 10h 构建快两个数量级的守恒验证器。
+
+---
+
+## 2026-09-06 全链守恒回放 GREEN + run 12 停止 + 播种崩溃 bug 修复
+
+**用户判断**："先停 run 12、把分钟级验证做扎实后再开始"——被实时
+验证为正确：回放在关系权威段抓到播种修复的一个真崩溃 bug（canonical
+id 作为 seed target → `canonical_by_source[source-released-object:{canonical}]`
+KeyError）——**run 12 跑到关系段（~7h 后）必然崩溃**。已停止 run 12。
+
+**修复**（ec4f460）：播种时将绑定的 canonical 企业 id 反查回源对象 id
+（下游统一走 `source-released-object:{object_id}` 前缀映射）。
+
+**全链守恒回放 GREEN**（50,107 行真实数据 → 逻辑图全链，~35 分钟）：
+| 层 | 结果 |
+|---|---|
+| 合并 | 论文 300 created、绑定 7,650（台账） |
+| 身份解析 | 样本存活 300/301（99%）、canonical 23,414 |
+| 包含 | 120 anchored-admitted + 180 unanchored-limited |
+| 域投影 | 4 域全覆盖（7,089+863+11,504+3,958） |
+| 关系权威 | professor_attributed 735、**patent_has_applicant 123**（样本规模）、company_role 1 |
+| 索引权威 | 全域 lookup + **27,372 向量** + **180 paper 文档带 paper_unanchored 标签** |
+| 退出码 | **exit=0、零 KeyError、零守恒差额** |
+
+**run 13 就绪**：已验证代码 + 台账 + 守恒回放——这次有依据。
