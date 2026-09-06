@@ -25,11 +25,27 @@ INVENTORY = json.loads((RUN_ROOT / "batch-inventory.json").read_text())
 
 BATCH_IDS = {
     "professor_full": "p4-professor-full-v1",
+    "paper_salvage": "p4-paper-salvage-v1",
+    "professor_paper_links": "p4-professor-paper-links-v1",
+    "applicant_binding_full": "p4-applicant-binding-full-v1",
 }
 RATIONALES = {
     "professor_full": (
         "Mini rehearsal admits the legacy professor JSONL union so the p4 "
         "merge path runs end-to-end at reduced scale."
+    ),
+    "paper_salvage": (
+        "Mini rehearsal admits the salvage ready-paper set to verify "
+        "unanchored papers survive to projection with the paper_unanchored "
+        "limitation (admit-unanchored-papers)."
+    ),
+    "professor_paper_links": (
+        "Mini rehearsal admits verified attribution links so anchored "
+        "papers and link survival are observable."
+    ),
+    "applicant_binding_full": (
+        "Mini rehearsal admits resolved applicant bindings to verify "
+        "patent_has_applicant relationships materialize (G3 seeding)."
     ),
 }
 

@@ -1118,3 +1118,25 @@ bot 自动快照提交使 stash 对照失效一次——今日改用 git checkou
 一致（论文全建、绑定 7,650）——这次锚定门已改，预期对账：论文
 10,390→~34k（全量）、patent_has_applicant 0→~7.6k、未锚定论文 lookup
 带 paper_unanchored 限制标签。完成后走对账→golden set→切换评估。
+
+---
+
+## 2026-09-06 D9 资产核实 + mini 构建路径被 gate 钉死
+
+**D9（教授主页周期维护）资产核实**：
+- 规格齐全：professor-seed-management（professor_seed 表契约：
+  school/department/seed_url/last_run_status + 管理 CRUD + 运行状态机）、
+  adapter-coverage（各校花名册页适配器可用性）、controlled-full-recollection、
+  recollection-readiness、ops-hardening、blocked-seed-source-remediation。
+- 代码基座：run_unified_professor_crawl.py（统一采集）+ 归档 tag
+  archive/szu-seed5-quality-20260613（深大适配器，需移植）。
+- **种子数据不在本机**：55458 集群无 professor_seed 表（只有候选库+
+  轻量线库）；旧线运营库在迁移 tar（stage/postgres）——D9 第一步是
+  恢复种子数据或按规格重建深圳高校花名册 URL 清单。
+
+**mini 构建路径证伪**：build-mini.sh 设计良好但 gate 将"已接受源集合
++批次内容哈希"钉死（58=52 基座+6 个 p4 批次）——无法用子集批次构建。
+快速验证的替代=进程内重放（合并段已验证，扩展至锚定门+身份解析段，
+喂全量 released 5,561 + salvage 子集）。run 12 的 watchdog 自旋告警为
+身份解析段已知模式（栈在循环位，与 run 10/11 一致），论文量 3 倍后
+该段预期更长，整体完成时间可能超 10h。
