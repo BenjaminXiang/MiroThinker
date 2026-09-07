@@ -838,6 +838,11 @@ def _public_embedded_content(
     # valid descriptions (vector + lexical recall).
     if supplementary_values:
         content["_supplementary"] = supplementary_values
+    # Ranking signal: anchored entities (professor-linked papers, fully
+    # profiled professors) sort higher in the answer selector; the flag is
+    # internal metadata, never rendered to users as a limitation.
+    if isinstance(projection, PaperProjection):
+        content["_quality_tier"] = "anchored" if not supplementary_values else "enriched"
     return json.dumps(
         cast(JsonValue, content),
         ensure_ascii=False,

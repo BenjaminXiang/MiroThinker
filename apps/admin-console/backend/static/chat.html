@@ -1309,6 +1309,11 @@
         material_evidence_missing: "缺少支持证据",
         material_evidence_conflicting: "证据存在冲突",
         direct_product_capability_evidence_missing: "缺少直接产品能力证据",
+        // Internal-only signals (new product rule: 模糊回答+引导): these
+        // render as empty — quality metadata is used for ranking, never
+        // shown to users as limitations.
+        paper_unanchored: "",
+        profile_incomplete: "",
       });
       const laneLabels = Object.freeze({
         exact: "精确检索",
