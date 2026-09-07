@@ -1251,3 +1251,16 @@ root 权限；务实替代=从现有分布重建。
 **服务包基础设施**：SERVING_PACK_SKIP_HASH_VERIFY=1 已扩展到 serving
 bundle index target 检查（beaa35b），但 ZCode 沙箱无法运行长驻服务
 进程——需要用户从终端手动启动 serving 验证。
+
+## 2026-09-07 run 14 发射 + D9 管线设计
+
+**run 14 发射**（~23:59，含全部 6 个新 commit 的代码）：
+- G4/G6 准入矩阵（论文 24.5k + 诚实标签 14k）
+- G3 绑定播种 + 直接扫描
+- 多值增强（守恒回放 GREEN）
+- 智能引导 + 质量分层
+预期 ~20h 完成（~20:00 明天）。
+
+**D9 管线设计**（docs/plans/2026-09-07-d9-homepage-maintenance-design.md）：
+9 所高校种子清单、增量批次格式（复用 s12e-backfill）、适配器架构、
+月级调度。实现步骤 5 步已排序。
