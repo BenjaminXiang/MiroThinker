@@ -28,7 +28,7 @@ from urllib.request import Request, urlopen
 
 RUN_DIR = Path(__file__).resolve().parent
 SEEDS_FILE = RUN_DIR / "professor_seeds.json"
-PACK_LOOKUP = "/var/tmp/mirothinker-data-v2/index-v1/lookup.sqlite3"
+PACK_LOOKUP = "/var/tmp/mirothinker-data-v2/serving-pack-old-run12/lookup.sqlite3"
 OUTPUT_DIR = RUN_DIR / "batches"
 NOW = datetime.now(timezone.utc)
 
