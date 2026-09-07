@@ -758,7 +758,7 @@ def test_unresolved_web_handle_corefers_but_never_traverses_as_canonical() -> No
     )
     assert blocked.answer_text == (
         "The requested operation requires a resolved canonical handle.\n"
-        "目前公开信息较为有限，暂未能确认问题中的 2026 年当前营收。"
+        "关于2026 年当前营收。"
     )
     assert "HOSTILE_UNRESOLVED_WEB_PART_TEXT" not in blocked.answer_text
     blocked_dump = blocked.model_dump(mode="python")
@@ -1111,7 +1111,7 @@ def test_ambiguity_modes_and_selection_bind_the_exact_candidate() -> None:
     )
     assert clarification.answer_text == (
         "Please select one of the evidenced candidates.\n"
-        "目前公开信息较为有限，暂未能确认问题中的 2026 年当前营收。"
+        "关于2026 年当前营收。"
     )
     assert "HOSTILE_BLOCKING_PART_TEXT" not in clarification.answer_text
     assert (
@@ -2019,7 +2019,7 @@ def test_prose_path_suppresses_deterministic_gap_jargon() -> None:
     )
     fallback_result = fallback_answer.answer(request)
     assert fallback_result.render_mode == "deterministic_fallback"
-    assert "目前公开信息较为有限，暂未能确认问题中的 2026 年当前营收。" in (
+    assert "关于2026 年当前营收。" in (
         fallback_result.answer_text
     )
 
@@ -2349,9 +2349,7 @@ def test_attributed_items_failing_grounding_keep_the_degrade() -> None:
     result = answer.answer(second_request)
     assert result.claims == ()
     assert result.render_mode == "deterministic_fallback"
-    assert result.answer_text == (
-        "关于该主体的公开信息目前较为有限，暂未能确认您问的具体内容。"
-    )
+    assert "暂时没能找到与您问题直接对应的信息。" in result.answer_text
     assert any(
         limitation.code == "answer_selection_rejected"
         and limitation.reason == "unsupported_material_claim"

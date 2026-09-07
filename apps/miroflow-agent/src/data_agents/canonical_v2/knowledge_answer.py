@@ -1213,14 +1213,20 @@ def _material_gap_sentence(
         label = "关键部分" if chinese else "the material part of the question"
     if chinese:
         return (
-            f"目前公开信息较为有限，暂未能确认问题中的 {label}。"
+            f"关于{label}，暂时没有找到直接对应的信息。"
+            "如果您能提供更多背景（比如具体年份、相关机构或技术方向），"
+            "我可以帮您更精确地查找。"
             if outcome == "missing"
-            else f"目前公开信息对问题中的 {label}存在不一致说法，暂未能确认。"
+            else f"关于{label}，目前存在不同说法，暂未能确认哪个更准确。"
+            "如果您有更多上下文，我可以帮您进一步核实。"
         )
     return (
-        f"Public information is currently too limited to confirm {label}."
+        f"I couldn't find information matching {label} directly. "
+        "Try adding more context (a specific year, institution, or "
+        "technical direction) and I can search more precisely."
         if outcome == "missing"
-        else f"Public information currently conflicts on {label}."
+        else f"There are conflicting reports on {label}. "
+        "With more context I can help verify which is more accurate."
     )
 
 
@@ -1303,8 +1309,51 @@ _DETERMINISTIC_ANSWER_MAX_CHARS = 2000
 # Soft non-refusal fallback: the chat always answers and never bounces the
 # question back to the user, even when nothing can be confirmed directly.
 _SOFT_FALLBACK_ANSWER_TEXT = (
-    "关于该主体的公开信息目前较为有限，暂未能确认您问的具体内容。"
+    "暂时没能找到与您问题直接对应的信息。"
+    "您可以尝试换个角度提问——比如指定某位教授、某家公司或某项专利的具体名称，"
+    "或者描述您想了解的具体方面（研究方向、业务范围、技术方案等）。"
 )
+
+# Domain-specific follow-up suggestions for the degraded path: guide the
+# user to ask more specifically instead of exposing data limitations.
+_GUIDANCE_BY_DOMAIN: dict[str, tuple[str, ...]] = {
+    "professor": (
+        "这位教授的研究方向是什么？",
+        "这位教授发表过哪些论文？",
+        "这位教授与哪些企业有合作？",
+    ),
+    "company": (
+        "这家公司的主要业务是什么？",
+        "这家公司申请了哪些专利？",
+        "这家公司的创始人是谁？",
+    ),
+    "paper": (
+        "这篇论文的摘要是什么？",
+        "这篇论文的作者是谁？",
+        "这篇论文发表于哪一年？",
+    ),
+    "patent": (
+        "这项专利的技术方案是什么？",
+        "这项专利的申请人是哪家公司？",
+        "这项专利属于哪个技术领域？",
+    ),
+}
+_GUIDANCE_GENERIC = (
+    "请提供您想了解的实体名称（教授/公司/论文/专利）",
+    "描述您感兴趣的具体技术方向或行业领域",
+)
+
+
+def _smart_guidance_followups(request: TurnRequest) -> tuple[str, ...]:
+    """Suggest domain-aware follow-ups when results are weak."""
+    domains = {
+        handle.domain
+        for handle in request.evidence_set.entity_handles
+    }
+    for domain in ("professor", "company", "paper", "patent"):
+        if domain in domains:
+            return _GUIDANCE_BY_DOMAIN[domain]
+    return _GUIDANCE_GENERIC
 # Deterministic/fallback rendering must never publish raw search dumps:
 # source-locator tails (；来源：https://…) and document-mill page text
 # (淘豆网/原创力文档/豆丁网/…) are stripped from each grounded point.
@@ -3342,12 +3391,17 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             _SOFT_FALLBACK_ANSWER_TEXT,
             (*required_sentences, *gap_sentences),
         )
+        # Smart guidance (new product rule: 模糊回答+引导, not audit-grade
+        # disclosure): suggest more specific follow-ups instead of exposing
+        # internal data quality limitations.
+        guidance = _smart_guidance_followups(request)
         return TurnResult(
             session_id=request.session_id,
             turn_id=request.turn_id,
             release_id=request.release_id,
             answer_text=answer_text,
             limitations=(*base_limitations, *gap_limitations),
+            suggested_followups=guidance,
             selector_traces=(
                 SelectorDecisionTrace(
                     stage="answer_selection",
