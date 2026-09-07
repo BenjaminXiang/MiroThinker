@@ -4108,6 +4108,38 @@ def _remap_applicant_binding_canonical_ids(
     return merged
 
 
+
+
+def _supplementary_field_values(
+    *,
+    identity_result: Any,
+    decision_result: Any,
+) -> dict[str, dict[str, list[str]]]:
+    """Collect non-selected valid assertion values per canonical identity."""
+    canonical_by_source = {
+        assignment.source_identity_id: assignment.canonical_identity_id
+        for assignment in identity_result.source_identity_assignments
+    }
+    selected: dict[tuple[str, str], str] = {}
+    for cf in decision_result.current_fields:
+        if isinstance(cf.value, str) and cf.value.strip():
+            selected[(cf.canonical_identity_id, cf.field_path)] = cf.value.strip()
+    supplementary: dict[str, dict[str, list[str]]] = {}
+    for assertion in decision_result.field_assertions:
+        canonical_id = canonical_by_source.get(assertion.source_identity_id)
+        if canonical_id is None:
+            continue
+        value = assertion.value
+        if not isinstance(value, str) or not value.strip():
+            continue
+        key = (canonical_id, assertion.field_path)
+        if key in selected and value.strip() != selected[key]:
+            field_supp = supplementary.setdefault(canonical_id, {})
+            values = field_supp.setdefault(assertion.field_path, [])
+            if value.strip() not in values:
+                values.append(value.strip())
+    return supplementary
+
 _P4_COMPANY_PROFILE_FALLBACK = (
     "No dedicated summary was supplied by the full-column workbook source."
 )
@@ -5829,30 +5861,16 @@ def _map_public_authority(
                 domain="paper",
                 reason=(
                     f"released_objects row {paper_id}: no valid Professor "
-                    "relationship supplies discovery.professor_anchor_identity_id"
+                    "relationship supplies discovery.professor_anchor_identity_id "
+                    "(admitted with paper_unanchored limitation)"
                 ),
                 affected_paths=("discovery.professor_anchor_identity_id",),
                 now=now,
             )
         )
-        source_identities.pop(paper_id)
-        selected_by_object.pop(paper_id)
-        domain_by_object.pop(paper_id)
-        row_by_object.pop(paper_id)
-    if unanchored_paper_ids:
-        removed_source_ids = {
-            f"source-released-object:{paper_id}" for paper_id in unanchored_paper_ids
-        }
-        identity_assertions = [
-            assertion
-            for assertion in identity_assertions
-            if assertion.source_identity_id not in removed_source_ids
-        ]
-        field_assertions = [
-            assertion
-            for assertion in field_assertions
-            if assertion.source_identity_id not in removed_source_ids
-        ]
+        # admit-unanchored-papers (G4/G6): the paper STAYS in the graph —
+        # domain inclusion marks it admitted with the paper_unanchored
+        # limitation; the old gate removed it (with its assertions) entirely.
 
     # Professor backfill merges after derived attribution so backfilled emails
     # never create new author-attribution aliases; it only fills projection
@@ -6230,6 +6248,9 @@ def _map_public_authority(
                     f"source-released-object:{anchor_by_paper[object_id_by_canonical[identity.canonical_identity_id]][0]}"
                 ]
                 if identity.entity_type == "paper"
+                and identity.canonical_identity_id in object_id_by_canonical
+                and object_id_by_canonical[identity.canonical_identity_id]
+                in anchor_by_paper
                 else None
             ),
         )
@@ -6395,12 +6416,26 @@ def _typed_relationship_seeds(
     source_rows: tuple[_ParsedReleasedObject, ...],
     canonical_by_source: Mapping[str, str],
     canonical_domains: Mapping[str, str],
+    bound_company_ids_by_patent: Mapping[str, tuple[str, ...]] | None = None,
 ) -> tuple[_TypedRelationshipSeed, ...]:
     rows_by_object = {
         cast(str, row.payload["id"]): row
         for row in source_rows
         if isinstance(row.payload.get("id"), str)
     }
+    if bound_company_ids_by_patent is None:
+        bound_company_ids_by_patent = {}
+    # Bound applicants carry CANONICAL company ids; seeds must carry source
+    # OBJECT ids (the relationship authority maps every endpoint through
+    # canonical_by_source["source-released-object:{object_id}"] — a canonical
+    # id inside that prefix is a KeyError there).
+    source_object_by_canonical: dict[str, str] = {}
+    for object_id in rows_by_object:
+        canonical_id = canonical_by_source.get(
+            f"source-released-object:{object_id}"
+        )
+        if canonical_id is not None and canonical_id not in source_object_by_canonical:
+            source_object_by_canonical[canonical_id] = object_id
     company_ids_by_name: dict[str, set[str]] = defaultdict(set)
     professor_ids_by_name: dict[str, set[str]] = defaultdict(set)
     company_name_entries: list[CompanyNameEntry] = []
@@ -6570,6 +6605,36 @@ def _typed_relationship_seeds(
                         source_row=row,
                     )
         if source_domain == "patent" and isinstance(core, dict):
+            # Resolved applicant bindings first (highest confidence: the
+            # binding merge resolved them against the full company graph).
+            for bound_canonical_id in bound_company_ids_by_patent.get(
+                object_id, ()
+            ):
+                bound_object_id = source_object_by_canonical.get(
+                    bound_canonical_id
+                )
+                if bound_object_id is None:
+                    # The bound company did not survive identity resolution
+                    # as a seeded object (merged into another canonical);
+                    # the surviving canonical's object seeds instead.
+                    continue
+                add_seed(
+                    relationship_type_id="patent_has_applicant",
+                    source_object_id=object_id,
+                    source_domain="patent",
+                    target_object_id=bound_object_id,
+                    target_domain="company",
+                    role_id="applicant",
+                    role_owner="target",
+                    evidence_kind="patent_applicant_assertion",
+                    requested_paths=("company_to_patent", "patent_to_company"),
+                    catalog_scenario_id="catalog_scenario.patent_has_applicant",
+                    evidence_metadata={
+                        "source_field": "core_facts.applicants",
+                        "match_kind": "resolved_binding",
+                    },
+                    source_row=row,
+                )
             target_object_ids = core.get("company_ids")
             if not isinstance(target_object_ids, list):
                 target_object_ids = []
@@ -6678,10 +6743,35 @@ def _relationship_authority(
         decision.canonical_relationship_id: decision
         for decision in decision_result.relationship_decisions
     }
+    # admit-unanchored-papers (G3): the applicant-binding merge resolved
+    # applicants to canonical company ids inside the patents' `applicants`
+    # field assertions; seed patent_has_applicant directly from those
+    # resolved bindings instead of relying on core_facts.company_ids (absent
+    # for P4 patents) or re-resolving names against released companies.
+    bound_company_ids_by_patent: dict[str, tuple[str, ...]] = {}
+    for assertion in decision_result.field_assertions:
+        if assertion.field_path != "applicants":
+            continue
+        patent_object_id = assertion.source_identity_id.removeprefix(
+            "source-released-object:"
+        )
+        value = assertion.value
+        if not isinstance(value, list):
+            continue
+        bound_ids = tuple(
+            applicant["canonical_company_id"]
+            for applicant in value
+            if isinstance(applicant, dict)
+            and isinstance(applicant.get("canonical_company_id"), str)
+            and applicant["canonical_company_id"].startswith("company-")
+        )
+        if bound_ids:
+            bound_company_ids_by_patent.setdefault(patent_object_id, bound_ids)
     typed_seeds = _typed_relationship_seeds(
         source_rows=source_rows,
         canonical_by_source=canonical_by_source,
         canonical_domains=canonical_ids,
+        bound_company_ids_by_patent=bound_company_ids_by_patent,
     )
 
     for item in links:
@@ -7020,6 +7110,7 @@ def _index_authority(
     candidate_request: CandidateProjectionRequest,
     candidate_result: CandidateProjectionResult,
     now: datetime,
+    supplementary_field_values: dict[str, dict[str, list[str]]] | None = None,
 ) -> tuple[
     tuple[PathEligibilityRequest, ...],
     tuple[PathEligibilityResult, ...],
@@ -7082,6 +7173,7 @@ def _index_authority(
         embedding_model=request.model_versions["embedding"],
         internal_auxiliary_policy_version="internal-evidence-anchor-v1",
         build_mode="full",
+        supplementary_field_values=supplementary_field_values or {},
     )
     pure_result = create_ephemeral_index_projection_builder().build(index_request)
     return request_values, result_values, index_request, pure_result
@@ -9275,6 +9367,10 @@ class _IsolatedKnowledgeBuild(KnowledgeBuild):
             candidate_request=candidate_request,
             candidate_result=candidate_result,
             now=now,
+            supplementary_field_values=_supplementary_field_values(
+                identity_result=identity_result,
+                decision_result=decision_result,
+            ),
         )
         return _MappedAuthority(
             identity_request=identity_request,

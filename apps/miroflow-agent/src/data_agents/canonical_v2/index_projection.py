@@ -271,6 +271,10 @@ class IndexProjectionRequest(ContractModel):
     internal_auxiliary_policy_version: NonEmptyStr
     build_mode: Literal["full", "incremental"]
     prior_accepted_snapshot: IndexProjectionPolicySnapshot | None = None
+    # Multi-value enrichment: non-selected assertion values per canonical
+    # identity, included in embedded_content and lookup_content to widen
+    # the vector and lexical search surfaces.
+    supplementary_field_values: dict[str, dict[str, list[str]]] = {}
 
     @model_validator(mode="after")
     def validate_envelope(self) -> IndexProjectionRequest:
@@ -471,11 +475,17 @@ class IndexProjectionBuilder:
                 "index policy state requires a full rebuild: " + ", ".join(reason_codes)
             )
         full_rebuild = validated.build_mode == "full"
-        points = _vector_points(validated, candidate_result, path_pairs)
+        points = _vector_points(
+            validated,
+            candidate_result,
+            path_pairs,
+            supplementary_by_canonical=validated.supplementary_field_values,
+        )
         lookup_documents = _lookup_documents(
             validated,
             candidate_result,
             path_pairs,
+            supplementary_by_canonical=validated.supplementary_field_values,
         )
         expected_index_projections = build_index_projection_manifests(
             request=validated,
@@ -728,6 +738,7 @@ def _internal_evidence_ids(
 def _public_embedded_content(
     projection: PublicDomainProjection,
     view: ProjectionView,
+    supplementary_values: dict[str, list[str]] | None = None,
 ) -> str:
     if isinstance(projection, ProfessorProjection):
         if view is ProjectionView.identity:
@@ -821,6 +832,12 @@ def _public_embedded_content(
         }
     else:
         raise IndexProjectionIntegrityError("unknown public projection type")
+    # Multi-value enrichment: all valid assertion values widen the search
+    # surface — the decision-selected value stays primary (deterministic
+    # answers), supplementary values make the entity findable by ANY of its
+    # valid descriptions (vector + lexical recall).
+    if supplementary_values:
+        content["_supplementary"] = supplementary_values
     return json.dumps(
         cast(JsonValue, content),
         ensure_ascii=False,
@@ -899,6 +916,7 @@ def _vector_points(
     request: IndexProjectionRequest,
     candidate_result: CandidateProjectionResult,
     path_pairs: dict[str, tuple[PathEligibilityRequest, PathEligibilityResult]],
+    supplementary_by_canonical: dict[str, dict[str, list[str]]] | None = None,
 ) -> tuple[IndexProjectionPoint, ...]:
     points: list[IndexProjectionPoint] = []
     for projection in candidate_result.public_domain_projections:
@@ -909,8 +927,11 @@ def _vector_points(
         eligibility_outcome: Literal["admitted", "limited"] = (
             "admitted" if semantic.outcome is PolicyOutcome.admitted else "limited"
         )
+        supp = (supplementary_by_canonical or {}).get(
+            projection.canonical_identity_id
+        )
         for view, projection_id in _public_vector_specs(projection):
-            content = _public_embedded_content(projection, view)
+            content = _public_embedded_content(projection, view, supp)
             points.append(
                 IndexProjectionPoint(
                     point_id=_stable_id(
@@ -999,6 +1020,7 @@ def _lookup_documents(
     request: IndexProjectionRequest,
     candidate_result: CandidateProjectionResult,
     path_pairs: dict[str, tuple[PathEligibilityRequest, PathEligibilityResult]],
+    supplementary_by_canonical: dict[str, dict[str, list[str]]] | None = None,
 ) -> tuple[LookupProjectionDocument, ...]:
     documents: list[LookupProjectionDocument] = []
     for projection in candidate_result.public_domain_projections:
@@ -1011,6 +1033,18 @@ def _lookup_documents(
         )
         projection_id = _lookup_projection_id(projection.entity_type)
         content = projection.model_dump_json()
+        supp = (supplementary_by_canonical or {}).get(
+            projection.canonical_identity_id
+        )
+        if supp:
+            enriched = json.loads(content)
+            enriched["_supplementary"] = supp
+            content = json.dumps(
+                enriched,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
         view = (
             ProjectionView.identity
             if isinstance(projection, ProfessorProjection)
