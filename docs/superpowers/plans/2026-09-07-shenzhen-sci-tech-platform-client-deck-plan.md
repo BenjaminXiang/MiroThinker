@@ -4,7 +4,7 @@
 
 **Goal:** 生成一份两页、面向业务负责人和技术负责人的深圳科创数据平台客户介绍 PPT，并附真实系统截图与可预览 PDF。
 
-**Architecture:** 用 Python `python-pptx` 生成 16:9 PPTX。第一页表达“自然语言问题如何变成带证据的答案”，第二页表达“四域数据底座 + Canonical-v2 服务层 + 运营闭环”。截图使用仓库已有真实界面，若本地服务可启动则再补 `/chat` 截图；所有文案以仓库文档为准，不添加未验证指标。
+**Architecture:** 用 Python `python-pptx` 生成 16:9 PPTX。第一页表达“自然语言问题如何变成带证据的答案”，第二页表达“四域数据底座 + Canonical-v2 服务层 + 运营闭环”。截图使用仓库已有真实界面，并补充一张完整离线服务包上的真实 `/chat` 对话截图；所有文案以仓库文档为准，不添加未验证指标。
 
 **Tech Stack:** Python 3.12+, `python-pptx`, Pillow, LibreOffice headless PDF export, existing PNG/JPG assets.
 
@@ -23,7 +23,7 @@
 **Files:**
 - Read: `docs/Agentic-RAG-PRD.md`, `docs/Data-Agent-Shared-Spec.md`, `apps/admin-console/backend/static/chat.html`
 - Copy/derive: `artifacts/screenshots/baseline-home.png`, `artifacts/screenshots/baseline-professors-list.png`
-- Optional: `artifacts/screenshots/chat-live.png` only if a local `/chat` page can be started without changing runtime configuration
+- Added: `artifacts/screenshots/chat-live-top.png` plus presentation crop `artifacts/screenshots/chat-live-card.png`, captured from a temporary `/chat` service using the complete candidate-s12f serving pack
 
 **Interfaces:**
 - Produces: two authentic interface images with known pixel dimensions, ready for placement in the deck.
@@ -42,9 +42,9 @@ Expected: both files are 1280x900 PNGs showing the admin console.
 
 Create `artifacts/screenshots/` and copy the two source images there without modifying the originals. Use the exact filenames above so the deck build is reproducible.
 
-- [x] **Step 3: Check whether `/chat` can be captured**
+- [x] **Step 3: Capture a real `/chat` conversation**
 
-Inspect `apps/admin-console/backend/main.py` and existing launch scripts. A live `/chat` capture was not added because the local data runtime/model dependencies were not started; the two verified admin-console screenshots are used instead and the limitation is recorded in the final verification.
+Start a temporary service with the complete candidate-s12f serving pack, submit `优必选有哪些专利`, capture the first viewport containing both the user question and the structured answer, and derive a presentation crop that keeps the chat header, query, and first answer block legible. Keep the existing admin-console screenshots as the operational and asset-management evidence.
 
 - [x] **Step 4: Verify image readability**
 
@@ -68,7 +68,7 @@ Define constants for 13.333x7.5 inch slides, navy/teal/amber/line colors, and he
 
 - [x] **Step 2: Build slide 1**
 
-Place the title and one-sentence value statement at the top. Add a five-stage horizontal flow (`问题理解`, `意图路由`, `单域/跨域检索`, `召回融合 + rerank`, `结构化答案 + evidence`) in the left/middle area. Add a compact four-domain strip (`教授 / 企业 / 论文 / 专利`) and two authentic screenshots on the right/bottom with captions `运营总览` and `教授数据资产`.
+Place the title and one-sentence value statement at the top. Add a five-stage horizontal flow (`问题理解`, `意图路由`, `单域/跨域检索`, `召回融合 + rerank`, `结构化答案 + evidence`) in the left/middle area. Add a compact four-domain strip (`教授 / 企业 / 论文 / 专利`) and two authentic screenshots on the right/bottom with captions `运营总览` and `真实对话 · 流式检索回答`.
 
 - [x] **Step 3: Build slide 2**
 
@@ -143,7 +143,7 @@ Expected: `slides 2`, a non-zero file size, and `Pages: 2`.
 
 - [x] **Step 2: Report verification in layers**
 
-Final response must distinguish: (1) new artifact checks and visual inspection, (2) pre-existing system screenshots reused, (3) live `/chat` capture status and any environment limitation.
+Final response must distinguish: (1) new artifact checks and visual inspection, (2) pre-existing system screenshots reused, and (3) the live `/chat` capture query and serving-pack environment used for it.
 
 - [x] **Step 3: Mark plan tasks complete**
 

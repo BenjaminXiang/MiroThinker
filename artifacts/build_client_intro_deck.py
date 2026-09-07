@@ -204,7 +204,8 @@ def build_deck():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     home = SCREENSHOT_DIR / "baseline-home.png"
     professors = SCREENSHOT_DIR / "baseline-professors-list.png"
-    if not home.exists() or not professors.exists():
+    chat = SCREENSHOT_DIR / "chat-live-card.png"
+    if not home.exists() or not professors.exists() or not chat.exists():
         raise FileNotFoundError("Expected real system screenshots under artifacts/screenshots/")
 
     prs = Presentation()
@@ -263,7 +264,7 @@ def build_deck():
     add_text(slide, "真实系统运行界面", 8.45, 1.82, 3.85, 0.28, size=12.2, color=NAVY_DARK, bold=True)
     add_text(slide, "同一套数据底座，同时服务运营与检索。", 8.45, 2.12, 3.75, 0.24, size=9.6, color=MUTED)
     screenshot_card(slide, home, 8.45, 2.53, 4.28, 2.04, "运营总览 · 数据质量动态", accent=AMBER)
-    screenshot_card(slide, professors, 8.45, 4.78, 4.28, 2.04, "教授数据资产 · 条件筛选", accent=TEAL)
+    screenshot_card(slide, chat, 8.45, 4.78, 4.28, 2.04, "真实对话 · 流式检索回答", accent=TEAL)
 
     add_text(slide, "深圳科创数据平台", 0.6, 7.14, 3.0, 0.18, size=8, color=MUTED, bold=True)
     add_text(slide, "把分散的科创数据，变成可检索、可解释、可继续追问的答案。", 5.2, 7.1, 7.5, 0.22, size=8.6, color=TEAL, bold=True, align=PP_ALIGN.RIGHT)
