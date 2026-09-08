@@ -220,44 +220,9 @@ doc = SimpleDocTemplate(
     title="系统收尾两周交付计划", author="Z.ai", creator="Z.ai",
     subject="科创数据平台系统收尾两周交付计划（里程碑 M1-M5）",
 )
-doc.build(story, onFirstPage=page_deco, onLaterPages=page_deco)
+doc.build(story)
 print("body ok:", BODY_PDF)
 
-# ── Cover (template 03 Monolith, proposal/plan) ──
-from cover_render import render_cover, detect_fonts
-cover_content = {
-    "kicker": "科创数据平台 · 系统收尾专项",
-    "hero": "系统收尾两周交付计划",
-    "summary": "覆盖管理配置中心、数据管理操作面、周期数据采集与发布、用户会话审计四大板块；9 月 8 日开工、9 月 21 日完成，共 10 个工作日，五个里程碑逐项交付、逐项验收。",
-    "meta": "2026 年 9 月",
-    "footer": "SYSTEM WRAP-UP DELIVERY PLAN",
-}
-cover_palette = {"primary": "#278eb0", "text": "#1d1f20", "muted": "#6e767a", "bg": "#ffffff"}
-render_cover("03", cover_content, COVER_PDF, palette=cover_palette, fonts=detect_fonts())
-print("cover ok:", COVER_PDF)
-
-# ── Merge cover + body ──
-from pypdf import PdfReader, PdfWriter
-A4_W, A4_H = 595.28, 841.89
-
-def normalize(page):
-    w, h = float(page.mediabox.width), float(page.mediabox.height)
-    if abs(w - A4_W) > 2 or abs(h - A4_H) > 2:
-        from pypdf import Transformation
-        page.add_transformation(Transformation().scale(sx=A4_W / w, sy=A4_H / h))
-        page.mediabox.lower_left = (0, 0)
-        page.mediabox.upper_right = (A4_W, A4_H)
-    return page
-
-writer = PdfWriter()
-writer.add_page(normalize(PdfReader(COVER_PDF).pages[0]))
-for p in PdfReader(BODY_PDF).pages:
-    writer.add_page(normalize(p))
-writer.add_metadata({
-    "/Title": "系统收尾两周交付计划",
-    "/Author": "Z.ai", "/Creator": "Z.ai",
-    "/Subject": "科创数据平台系统收尾两周交付计划（里程碑 M1-M5）",
-})
-with open(FINAL_PDF, "wb") as f:
-    writer.write(f)
-print("final ok:", FINAL_PDF)
+import shutil
+shutil.copyfile(BODY_PDF, FINAL_PDF)
+print("final ok (no cover, no header/footer):", FINAL_PDF)
