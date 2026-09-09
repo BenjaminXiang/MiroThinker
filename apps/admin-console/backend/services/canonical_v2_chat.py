@@ -2264,7 +2264,27 @@ class CanonicalV2ChatAdapter:
                     evidence,
                     official_hosts=official_hosts,
                 )
-            if official_url is None or official_url in seen:
+            if official_url is None:
+                # Relationship-lane local evidence (the release's own
+                # traversal/field bindings) carries no official URL; surface
+                # it as a URL-less local card so locally answered turns still
+                # expose their provenance. Other lanes keep requiring a URL.
+                if evidence.lane != "relationship":
+                    continue
+                local_key = f"local:{handle_id}"
+                if local_key in seen:
+                    continue
+                seen.add(local_key)
+                local_id = hashlib.sha256(local_key.encode("utf-8")).hexdigest()[:16]
+                cards.append(
+                    ChatCitation(
+                        type=handle.domain,
+                        id=f"local-source-{local_id}",
+                        label=handle.display_name,
+                    )
+                )
+                continue
+            if official_url in seen:
                 continue
             seen.add(official_url)
             public_id = hashlib.sha256(official_url.encode("utf-8")).hexdigest()[:16]

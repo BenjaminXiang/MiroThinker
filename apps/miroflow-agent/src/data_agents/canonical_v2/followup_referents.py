@@ -339,6 +339,37 @@ def _has_explicit_company_name(query: str) -> bool:
     )
 
 
+def _compact_company_alias(entity_name: str) -> str:
+    """Derive the distinctive short form of a legal company name.
+
+    "深圳市优必选科技股份有限公司" compacts to "优必选": parenthesized
+    qualifiers, the legal suffix, a leading city prefix, and a trailing or
+    leading industry word are stripped in that order. The result may still be
+    the full name when nothing distinctive remains.
+    """
+    search_name = entity_name.strip().strip('"')
+    # Parenthesized segments (（深圳）) never belong to the brand.
+    search_name = re.sub(r"（[^）]*）|\([^)]*\)", "", search_name)
+    search_name = re.sub(r"(?:股份)?有限公司$", "", search_name)
+    search_name = re.sub(r"^[一-鿿]{2,4}市", "", search_name, count=1)
+    search_name = re.sub(
+        r"(?:(?:智能)?科技|(?:科学)?技术|自动化|机器人)$",
+        "",
+        search_name,
+    )
+    # The distinctive brand is the leading run before the first industry word
+    # (帕西尼感知科技 -> 帕西尼, 全世萝卜机器人应用科技 -> 全世萝卜); only take it
+    # when it actually shortens the alias.
+    brand = re.split(
+        r"(?:科技|技术|机器人|自动化|智能|感知|电子|实业|控股|集团|工业|医疗|生物|信息)",
+        search_name,
+        maxsplit=1,
+    )[0]
+    if 2 <= len(brand) < len(search_name):
+        return brand
+    return search_name if len(search_name) >= 2 else entity_name
+
+
 def has_explicit_named_subject(query: str) -> bool:
     """Whether the query itself names a resolvable subject.
 

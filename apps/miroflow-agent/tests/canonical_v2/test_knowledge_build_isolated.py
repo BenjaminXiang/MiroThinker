@@ -3677,6 +3677,342 @@ def test_source_bound_relationship_request_is_hashed_once_per_authority(
     assert trace.relationship_request_sha256 == expected_request_sha256
 
 
+def _company_patent_scan_inputs() -> dict[str, Any]:
+    """Shared projections for the company→patent direct applicant-scan tests.
+
+    The restored-shape fixture's table patent binds the company through the
+    relationship pipeline; the extra "scan" patent exists only as a public
+    projection whose applicant field carries the canonical company id — the
+    shape the s12f pack's field-level bindings materialize as.
+    """
+    module = _module()
+    read_module = import_module("src.data_agents.canonical_v2.knowledge_read")
+    contracts_module = import_module("src.data_agents.canonical_v2.contracts")
+    isolated_read_module = import_module(
+        "src.data_agents.canonical_v2.knowledge_read_isolated"
+    )
+    payloads = _restored_shape_payloads(professor_company_role=True)
+    rows = _parsed_released_objects(module, payloads)
+    public = module._map_public_authority(
+        request=_request(module),
+        rows=rows,
+        initial_gaps=(),
+        decision_adapter=_RecordingDecisionAdapter(),
+        now=NOW,
+    )
+    internal = module._internal_candidate_authority(
+        request=_request(module),
+        domain_request=public[3],
+        domain_result=public[4],
+        now=NOW,
+    )
+    candidate_result = internal[3]
+    company = next(
+        projection
+        for projection in candidate_result.public_domain_projections
+        if projection.entity_type == "company"
+    )
+    table_patent = next(
+        projection
+        for projection in candidate_result.public_domain_projections
+        if projection.entity_type == "patent"
+    )
+    scan_patent = table_patent.model_copy(
+        update={
+            "canonical_identity_id": "patent-c-extra-scan-0001",
+            "id": "patent-c-extra-scan-0001",
+            "patent_number": "CN117873146A",
+            "title": "一种机器人足式落地控制方法",
+            "applicants": (
+                table_patent.applicants[0].model_copy(
+                    update={
+                        "canonical_company_id": company.canonical_identity_id,
+                        "company_name": "Company 00070",
+                    }
+                ),
+            ),
+        }
+    )
+    candidate_result = candidate_result.model_copy(
+        update={
+            "public_domain_projections": (
+                *candidate_result.public_domain_projections,
+                scan_patent,
+            )
+        }
+    )
+
+    def eligibility_row(identity_id: str, **decision_updates: Any) -> Any:
+        return SimpleNamespace(
+            subject_identity_id=identity_id,
+            decisions=(
+                SimpleNamespace(
+                    **{
+                        "path": "verified_relationship_traversal",
+                        "outcome": contracts_module.PolicyOutcome.admitted,
+                        "hard_exclusion_codes": (),
+                        **decision_updates,
+                    }
+                ),
+            ),
+        )
+
+    return {
+        "module": module,
+        "read_module": read_module,
+        "contracts_module": contracts_module,
+        "isolated_read_module": isolated_read_module,
+        "rows": rows,
+        "public": public,
+        "internal": internal,
+        "candidate_result": candidate_result,
+        "company_id": company.canonical_identity_id,
+        "table_patent": table_patent,
+        "scan_patent": scan_patent,
+        "eligibility_row": eligibility_row,
+    }
+
+
+def _company_patent_lane_request(read_module: Any, company_id: str) -> Any:
+    return read_module.LaneRequest(
+        lane="relationship",
+        release_id=RELEASE_ID,
+        query_view="view:original",
+        original_query="该公司有哪些专利",
+        behavior_class="D",
+        interaction_mode="information_retrieval",
+        web_policy=read_module.WebSearchPolicy(
+            mode="universal",
+            max_provider_calls=1,
+            timeout_ms=1_000,
+            max_results=5,
+        ),
+        query_text="该公司有哪些专利",
+        domains=("patent",),
+        protected_slots=(
+            read_module.ProtectedSlot(
+                kind="displayed_entity_set",
+                value="displayed_entity_set",
+                entity_ids=(company_id,),
+            ),
+        ),
+        structured_constraints=read_module.StructuredConstraints(
+            displayed_entity_ids=(company_id,)
+        ),
+        max_candidates=10,
+        relationship_paths=(
+            read_module.RelationshipPathProposal(
+                relationship_type_id="company_has_patent",
+                direction="company_to_patent",
+                source_type="company",
+                target_type="patent",
+            ),
+        ),
+        relationship_enumeration_policy=read_module.EnumerationPolicy(
+            mode="representative",
+            scope="该公司有哪些专利",
+            as_of=NOW,
+        ),
+    )
+
+
+def test_customer_company_patent_relationship_unions_direct_applicant_scan() -> None:
+    """The source-bound company→patent reader must union the relationship-table
+    traversal with the direct applicant-field scan: a patent whose applicant
+    field binds the displayed company answers even without a relationship-table
+    row, and carries the typed claim binding the answer selector requires."""
+    inputs = _company_patent_scan_inputs()
+    module = inputs["module"]
+    read_module = inputs["read_module"]
+    isolated_read_module = inputs["isolated_read_module"]
+    company_id = inputs["company_id"]
+    table_patent = inputs["table_patent"]
+    scan_patent = inputs["scan_patent"]
+    relationship_request, relationship_result = module._relationship_authority(
+        request=_request(module),
+        identity_result=inputs["public"][1],
+        decision_result=inputs["public"][2],
+        domain_result=inputs["public"][4],
+        internal_request=inputs["internal"][0],
+        internal_result=inputs["internal"][1],
+        links=inputs["public"][5],
+        source_rows=inputs["rows"],
+        now=NOW,
+    )
+    authority = SimpleNamespace(
+        relationship_request=relationship_request,
+        relationship_result=relationship_result,
+        relationship_request_content_sha256=read_module._canonical_sha256(
+            relationship_request.model_dump(mode="json")
+        ),
+        candidate_result=inputs["candidate_result"],
+        internal_authority=SimpleNamespace(
+            bundle=SimpleNamespace(
+                release_id=RELEASE_ID,
+                index_target=SimpleNamespace(
+                    target_id="index:s12b-test",
+                    marker_sha256="a" * 64,
+                ),
+                manifest=SimpleNamespace(manifest_sha256="b" * 64),
+                index_result=SimpleNamespace(content_sha256="c" * 64),
+            ),
+            publication=SimpleNamespace(
+                verification_evidence_ids=("verification:s12b-test",)
+            ),
+            index_request=SimpleNamespace(
+                public_path_eligibility_results=(
+                    inputs["eligibility_row"](company_id),
+                    inputs["eligibility_row"](table_patent.canonical_identity_id),
+                    inputs["eligibility_row"](scan_patent.canonical_identity_id),
+                )
+            ),
+        ),
+    )
+
+    candidates = isolated_read_module._source_bound_relationship_candidates(
+        request=_company_patent_lane_request(read_module, company_id),
+        authority=authority,
+    )
+
+    assert len(candidates) == 2
+    table_candidate = next(
+        candidate
+        for candidate in candidates
+        if candidate.canonical_id == table_patent.canonical_identity_id
+    )
+    trace = table_candidate.evidence[0].local_projection_trace
+    assert isinstance(trace, read_module.LocalSourceRelationshipTrace)
+    assert trace.candidate_canonical_id == table_patent.canonical_identity_id
+
+    scan_candidate = next(
+        candidate
+        for candidate in candidates
+        if candidate.canonical_id == scan_patent.canonical_identity_id
+    )
+    assert scan_candidate.raw_candidate_id == (
+        f"direct-patent:{scan_patent.canonical_identity_id}"
+    )
+    assert scan_candidate.raw_score == 0.8
+    scan_evidence = scan_candidate.evidence[0]
+    assert scan_evidence.local_projection_trace is None
+    binding = scan_evidence.claim_binding
+    assert binding is not None
+    assert (
+        binding.subject_id == f"canonical:patent:{scan_patent.canonical_identity_id}"
+    )
+    assert binding.predicate == "patent_has_applicant"
+    assert binding.value == f"canonical:company:{company_id}"
+    assert binding.status == "accepted"
+
+
+def test_direct_patent_applicant_scan_honors_endpoint_eligibility_guardrail() -> None:
+    """The direct scan must stay behind the same path-eligibility guardrail as
+    the table traversal: a missing, excluded, or hard-coded eligibility row for
+    the displayed company — or an excluded row for the candidate patent — yields
+    no candidate, and patents the table traversal already returned are never
+    duplicated."""
+    inputs = _company_patent_scan_inputs()
+    read_module = inputs["read_module"]
+    contracts_module = inputs["contracts_module"]
+    isolated_read_module = inputs["isolated_read_module"]
+    company_id = inputs["company_id"]
+    scan_patent = inputs["scan_patent"]
+    lane_request = _company_patent_lane_request(read_module, company_id)
+    public_projections = {
+        (projection.entity_type, projection.canonical_identity_id): projection
+        for projection in inputs["candidate_result"].public_domain_projections
+    }
+
+    def authority(*rows: Any) -> Any:
+        return SimpleNamespace(
+            internal_authority=SimpleNamespace(
+                bundle=SimpleNamespace(release_id=RELEASE_ID),
+                index_request=SimpleNamespace(
+                    public_path_eligibility_results=rows,
+                ),
+            )
+        )
+
+    def scan(*rows: Any, existing: frozenset[str] = frozenset()) -> tuple[Any, ...]:
+        return isolated_read_module._direct_patent_applicant_scan(
+            request=lane_request,
+            authority=authority(*rows),
+            public_projections=public_projections,
+            displayed_company_id=company_id,
+            existing_patent_ids=existing,
+        )
+
+    company_row = inputs["eligibility_row"](company_id)
+    scan_row = inputs["eligibility_row"](scan_patent.canonical_identity_id)
+
+    admitted = scan(company_row, scan_row)
+    assert [candidate.canonical_id for candidate in admitted] == [
+        scan_patent.canonical_identity_id
+    ]
+
+    # No eligibility row for the displayed company: not returnable.
+    assert scan(scan_row) == ()
+    # The displayed company is policy-excluded or hard-coded: not returnable.
+    assert (
+        scan(
+            inputs["eligibility_row"](
+                company_id, outcome=contracts_module.PolicyOutcome.excluded
+            ),
+            scan_row,
+        )
+        == ()
+    )
+    assert (
+        scan(
+            inputs["eligibility_row"](
+                company_id, hard_exclusion_codes=("publication_gate",)
+            ),
+            scan_row,
+        )
+        == ()
+    )
+    # The candidate patent itself is policy-excluded: dropped with it.
+    assert (
+        scan(
+            company_row,
+            inputs["eligibility_row"](
+                scan_patent.canonical_identity_id,
+                outcome=contracts_module.PolicyOutcome.excluded,
+            ),
+        )
+        == ()
+    )
+    # Already returned by the table traversal: never duplicated.
+    assert (
+        scan(company_row, existing=frozenset({scan_patent.canonical_identity_id}))
+        == ()
+    )
+
+    # An applicant binding a different company is not this turn's answer.
+    other_patent = scan_patent.model_copy(
+        update={
+            "applicants": (
+                scan_patent.applicants[0].model_copy(
+                    update={"canonical_company_id": "company-c-other"}
+                ),
+            ),
+        }
+    )
+    assert (
+        isolated_read_module._direct_patent_applicant_scan(
+            request=lane_request,
+            authority=authority(company_row, scan_row),
+            public_projections={
+                **public_projections,
+                ("patent", scan_patent.canonical_identity_id): other_patent,
+            },
+            displayed_company_id=company_id,
+            existing_patent_ids=frozenset(),
+        )
+        == ()
+    )
+
+
 def test_public_authority_records_every_unknown_payload_path_without_suppressing_allowed_projection() -> (
     None
 ):

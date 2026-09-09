@@ -35,6 +35,7 @@ from .followup_referents import (
     COMPANY_NAME_PATTERN,
     IDENTIFIER_PATTERN,
     _EXPLICIT_COMPANY_REJECT_MARKERS,
+    _compact_company_alias,
     _search_view,
     extract_institution_person_name,
     extract_leading_company_name,
@@ -965,30 +966,6 @@ def _normalized_web_url(value: str) -> str:
     return urlunsplit(
         (parsed.scheme.lower(), parsed.netloc.lower(), path, parsed.query, "")
     )
-
-
-def _compact_company_alias(entity_name: str) -> str:
-    search_name = entity_name.strip().strip('"')
-    # Parenthesized segments (（深圳）) never belong to the brand.
-    search_name = re.sub(r"（[^）]*）|\([^)]*\)", "", search_name)
-    search_name = re.sub(r"(?:股份)?有限公司$", "", search_name)
-    search_name = re.sub(r"^[\u4e00-\u9fff]{2,4}市", "", search_name, count=1)
-    search_name = re.sub(
-        r"(?:(?:智能)?科技|(?:科学)?技术|自动化|机器人)$",
-        "",
-        search_name,
-    )
-    # The distinctive brand is the leading run before the first industry word
-    # (帕西尼感知科技 -> 帕西尼, 全世萝卜机器人应用科技 -> 全世萝卜); only take it
-    # when it actually shortens the alias.
-    brand = re.split(
-        r"(?:科技|技术|机器人|自动化|智能|感知|电子|实业|控股|集团|工业|医疗|生物|信息)",
-        search_name,
-        maxsplit=1,
-    )[0]
-    if 2 <= len(brand) < len(search_name):
-        return brand
-    return search_name if len(search_name) >= 2 else entity_name
 
 
 def _relaxed_serper_query(query: str) -> str:
@@ -5698,6 +5675,28 @@ def _relationship_trace_anchor_id(trace: Any) -> str | None:
     return None
 
 
+def _claim_binding_binds_anchor(binding: Any, displayed_anchor_ids: Any) -> bool:
+    """Whether a typed claim binding ties its candidate to a displayed anchor.
+
+    Relationship candidates without a projection trace (the direct
+    field-binding scan) still prove their displayed-anchor binding through the
+    canonical endpoints of their claim binding: the scan emits
+    subject="canonical:patent:<candidate>", value="canonical:company:<anchor>".
+    Only the value endpoint counts — trace-bound traversal claims use the
+    opposite orientation (subject is the anchor), so accepting the subject
+    side would re-admit untraceable or cross-anchor candidates that happen to
+    carry a company-oriented binding.
+    """
+    if binding is None:
+        return False
+    value = binding.value
+    return (
+        isinstance(value, str)
+        and value.startswith("canonical:")
+        and value.rsplit(":", 1)[-1] in displayed_anchor_ids
+    )
+
+
 def _answer_selector(
     *,
     bundle: RecordedServingBundle,
@@ -5766,12 +5765,19 @@ def _answer_selector(
                 # claims are the answer itself, never focus noise — but only
                 # when the item's trace proves it is bound to the turn's
                 # displayed anchor, so cross-pool or untraceable relationship
-                # candidates cannot answer.
+                # candidates cannot answer. Trace-less candidates from the
+                # direct field-binding scan prove the same anchor through
+                # their typed claim binding instead.
                 or (
                     item.lane == "relationship"
                     and displayed_anchor_ids
-                    and _relationship_trace_anchor_id(item.local_projection_trace)
-                    in displayed_anchor_ids
+                    and (
+                        _relationship_trace_anchor_id(item.local_projection_trace)
+                        in displayed_anchor_ids
+                        or _claim_binding_binds_anchor(
+                            item.claim_binding, displayed_anchor_ids
+                        )
+                    )
                 )
             )
         else:

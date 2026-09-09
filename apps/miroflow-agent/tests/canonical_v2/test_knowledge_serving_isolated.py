@@ -5576,6 +5576,158 @@ def test_named_company_patent_query_requires_single_ownership_source(
     assert owned.relationship_paths[0].direction == "company_to_patent"
 
 
+def test_named_company_patent_query_binds_derived_compact_alias(
+    tmp_path: Path,
+) -> None:
+    """Packs do not always list the bare brand as an alias (优必选's aliases
+    start at 优必选科技): the compact form derived from the legal name must
+    still bind the traversal when it is globally distinctive, while every
+    declared alias keeps binding verbatim."""
+    planner = _release_bound_planner_with_named_resolution(
+        tmp_path,
+        (),
+        companies=(
+            _stub_company(
+                "company-c-ubtech",
+                "深圳市优必选科技股份有限公司",
+                "深圳市优必选科技股份有限公司",
+                aliases=("优必选科技", "UBTECH", "深圳市优必选科技有限公司"),
+            ),
+            _stub_company(
+                "company-c-pudu",
+                "深圳市普渡科技有限公司",
+                "深圳市普渡科技有限公司",
+                aliases=("普渡科技",),
+            ),
+        ),
+    )
+
+    derived = planner.plan(
+        QueryPlanningRequest(
+            request_id="query-request:named-company-derived-alias",
+            release_id=RELEASE_ID,
+            original_query="优必选有哪些专利",
+            as_of=NOW,
+        )
+    )
+    assert derived.structured_constraints.displayed_entity_ids == (
+        "company-c-ubtech",
+    )
+    assert len(derived.relationship_paths) == 1
+    assert derived.relationship_paths[0].direction == "company_to_patent"
+
+    verbatim_alias = planner.plan(
+        QueryPlanningRequest(
+            request_id="query-request:named-company-verbatim-alias",
+            release_id=RELEASE_ID,
+            original_query="深圳市优必选科技有限公司的专利有哪些",
+            as_of=NOW,
+        )
+    )
+    assert verbatim_alias.structured_constraints.displayed_entity_ids == (
+        "company-c-ubtech",
+    )
+    assert len(verbatim_alias.relationship_paths) == 1
+    assert verbatim_alias.relationship_paths[0].direction == "company_to_patent"
+
+
+def test_derived_compact_alias_is_globally_distinctive_or_unusable(
+    tmp_path: Path,
+) -> None:
+    """Two legal names compacting to the same short form ("普渡") make that
+    form unusable, but a declared alias ("普渡科技") still binds its own
+    projection verbatim — the derived channel must not disturb it."""
+    planner = _release_bound_planner_with_named_resolution(
+        tmp_path,
+        (),
+        companies=(
+            _stub_company(
+                "company-c-pudu-shenzhen",
+                "深圳市普渡科技有限公司",
+                "深圳市普渡科技有限公司",
+                aliases=("普渡科技",),
+            ),
+            _stub_company(
+                "company-c-pudu-chengdu",
+                "成都市普渡机器人有限公司",
+                "成都市普渡机器人有限公司",
+            ),
+        ),
+    )
+
+    verbatim = planner.plan(
+        QueryPlanningRequest(
+            request_id="query-request:named-company-verbatim-under-collision",
+            release_id=RELEASE_ID,
+            original_query="普渡科技的专利有哪些",
+            as_of=NOW,
+        )
+    )
+    assert verbatim.structured_constraints.displayed_entity_ids == (
+        "company-c-pudu-shenzhen",
+    )
+    assert len(verbatim.relationship_paths) == 1
+    assert verbatim.relationship_paths[0].direction == "company_to_patent"
+
+    collided = planner.plan(
+        QueryPlanningRequest(
+            request_id="query-request:named-company-collided-short",
+            release_id=RELEASE_ID,
+            original_query="普渡有哪些专利",
+            as_of=NOW,
+        )
+    )
+    assert collided.structured_constraints.displayed_entity_ids == ()
+    assert collided.relationship_paths == ()
+
+
+def test_derived_compact_alias_yields_to_any_other_surface_form(
+    tmp_path: Path,
+) -> None:
+    """A compact form owned by any other projection — even as that
+    projection's primary name ("优必选" the robot company) — is unusable for
+    the legal-name projection; referent lookalikes never bind either."""
+    planner = _release_bound_planner_with_named_resolution(
+        tmp_path,
+        (),
+        companies=(
+            _stub_company(
+                "company-c-ubtech",
+                "深圳市优必选科技股份有限公司",
+                "深圳市优必选科技股份有限公司",
+                aliases=("优必选科技", "UBTECH", "深圳市优必选科技有限公司"),
+            ),
+            _stub_company(
+                "company-c-ubtech-robot",
+                "优必选",
+                "优必选机器人",
+            ),
+        ),
+    )
+
+    cross_form = planner.plan(
+        QueryPlanningRequest(
+            request_id="query-request:named-company-cross-form-collision",
+            release_id=RELEASE_ID,
+            original_query="优必选有哪些专利",
+            as_of=NOW,
+        )
+    )
+    assert cross_form.structured_constraints.displayed_entity_ids == ()
+    assert cross_form.relationship_paths == ()
+
+    referent = planner.plan(
+        QueryPlanningRequest(
+            request_id="query-request:named-company-referent-lookalike",
+            release_id=RELEASE_ID,
+            original_query="这些公司的专利有哪些",
+            as_of=NOW,
+        )
+    )
+    assert referent.structured_constraints.displayed_entity_ids == ()
+    assert referent.relationship_paths == ()
+
+
 def test_focused_named_traversal_keeps_relationship_claims_eligible() -> None:
     """A named-entity traversal turn has a focused search view and no
     exact-lane hits; the selector must still admit release-bound relationship
@@ -5685,6 +5837,109 @@ def test_focused_named_traversal_keeps_relationship_claims_eligible() -> None:
     assert len(patent_claims) == 3
     assert any("专利标题0" in claim.text for claim in patent_claims)
     assert any("专利标题1" in claim.text for claim in patent_claims)
+
+
+def test_focused_traversal_admits_traceless_scan_items_bound_by_claim_binding() -> None:
+    """Direct field-scan candidates carry no projection trace; their typed
+    claim binding is the only proof of the displayed-anchor binding. The
+    selector must admit the ones bound to the displayed anchor and exclude
+    ones bound to any other company."""
+    query = "深圳市普渡科技有限公司有哪些专利"
+    company_id = "company-c-pudu"
+
+    def scan_item(index: int, *, bound_company_id: str) -> EvidenceItem:
+        return EvidenceItem(
+            evidence_id=f"evidence:direct-patent:{index}",
+            object_id=f"patent-c-{index}",
+            domain="patent",
+            lane="relationship",
+            source_nature="local",
+            source_locator=f"artifact:patent:patent-c-{index}#applicants",
+            snippet=json.dumps(
+                {
+                    "title": f"专利标题{index}",
+                    "patent_number": f"CN10000000{index}U",
+                    "applicant": "深圳市普渡科技有限公司",
+                },
+                ensure_ascii=False,
+            ),
+            score=0.8,
+            claim_binding=EvidenceClaimBinding(
+                subject_id=f"canonical:patent:patent-c-{index}",
+                predicate="patent_has_applicant",
+                value=f"canonical:company:{bound_company_id}",
+                status="accepted",
+            ),
+        )
+
+    bound_items = tuple(scan_item(index, bound_company_id=company_id) for index in range(2))
+    alien_item = scan_item(2, bound_company_id="company-c-other")
+    web_item = EvidenceItem(
+        evidence_id="evidence:web:1",
+        object_id="web:1",
+        domain="patent",
+        lane="web",
+        source_nature="current_web",
+        source_locator="https://example.com/news",
+        snippet="深圳市普渡科技取得一项名为示例方法的专利：金融界消息……",
+        score=0.9,
+        source_authority="public_web",
+        claim_binding=EvidenceClaimBinding(
+            subject_id=f"canonical:company:{company_id}",
+            predicate="patent_has_applicant",
+            value="web:patent:example",
+            status="accepted",
+        ),
+    )
+    evidence_set = EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query=query,
+        protected_slots=(
+            ProtectedSlot(
+                kind="displayed_entity_set",
+                value="displayed_entity_set",
+                raw_text="",
+                entity_ids=(company_id,),
+            ),
+        ),
+        items=(*bound_items, alien_item, web_item),
+        traces=(),
+        limitations=(),
+        entity_handles=tuple(
+            CanonicalEntityHandle(
+                canonical_id=item.object_id,
+                domain="patent",
+                display_name=f"专利标题{index}",
+                evidence_ids=(item.evidence_id,),
+            )
+            for index, item in enumerate((*bound_items, alien_item))
+        ),
+    )
+    selector = serving_module._answer_selector(
+        bundle=SimpleNamespace(
+            max_candidates=12,
+            max_web_results=8,
+            answer_model_id="canonical-v2-deterministic-answer-v1",
+        )
+    )
+
+    proposal = selector(
+        TurnRequest(
+            session_id="session:focused-traversal-scan",
+            turn_id="turn:focused-traversal-scan",
+            query=query,
+            release_id=RELEASE_ID,
+            evidence_set=evidence_set,
+        )
+    )
+
+    patent_claims = [
+        claim for claim in proposal.claims if claim.predicate == "patent_has_applicant"
+    ]
+    assert len(patent_claims) == 3
+    assert any("专利标题0" in claim.text for claim in patent_claims)
+    assert any("专利标题1" in claim.text for claim in patent_claims)
+    assert not any("专利标题2" in claim.text for claim in patent_claims)
 
 
 def test_theme_probes_include_web_extracted_company_names_ordered_by_partial_match() -> None:
