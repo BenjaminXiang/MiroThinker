@@ -1319,7 +1319,10 @@ def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
     assert "逐字一致" in serialized
     assert "语义覆盖而非逐字匹配" in serialized
     assert "不要逐一列名" in serialized
-    assert "宁多勿漏" in serialized
+    # Enumeration contract (2026-08-18 ruling): budgeted representative
+    # list replaces the 求全 directive.
+    assert "条目预算" in serialized
+    assert "代表性清单" in serialized
     assert "另有X、Y暂未能确认" not in serialized
     assert "材料显示" in serialized
     assert "直接绑定具体产品与具体功能" in serialized
@@ -1686,8 +1689,11 @@ def test_mentions_anchor_qualified_accepts_framing_opener_with_repeated_stem() -
 
 
 def test_mentions_anchor_unqualified_path_unchanged() -> None:
-    # phase-1 semantics: a single mid-answer mention still counts.
-    assert serving_module._answer_mentions_anchor(
+    # Phase 3 semantics (G1 T3 form): a single mid-answer name-drop inside a
+    # differently-framed answer is the drift signature — it must trigger the
+    # correction retry, so it no longer counts as anchored. Leading or
+    # recurring mentions still count (see test_answer_anchor_lead.py).
+    assert not serving_module._answer_mentions_anchor(
         "从公开信息看，这家机构的分量不低。国际先进技术应用推进中心（合肥）采用理事会模式。",
         "国际先进技术应用推进中心",
     )
@@ -2259,7 +2265,7 @@ def test_environment_prose_renderer_reuses_client_for_warm_and_answers(
     assert renderer(result) == "已整理回答"
 
     assert len(client_calls) == 1
-    assert [call["max_tokens"] for call in completion_calls] == [3000, 1, 3000]
+    assert [call["max_tokens"] for call in completion_calls] == [6000, 1, 6000]
 
 
 def test_environment_prose_renderer_stays_out_of_answer_session_copy() -> None:
@@ -3285,7 +3291,12 @@ def test_dual_web_lane_reuses_request_transport_and_isolates_keepwarm_transport(
 
     assert len(result.candidates) == 1
     assert len(repeated_result.candidates) == 1
-    assert observed["provider_constructions"] == 2
+    # Web-lane resilience contract (add-turn-trace-observability 1.3): the
+    # lane transport is constructed once and reused across requests, and
+    # keepwarm now routes through the SAME lane transport (gated by the
+    # quota watermark + breaker) — warming a separate transport burned quota
+    # on connections the serving lane never used.
+    assert observed["provider_constructions"] == 1
     assert observed["query"] == "王学谦"
     kwargs = observed["kwargs"]
     assert isinstance(kwargs, dict)

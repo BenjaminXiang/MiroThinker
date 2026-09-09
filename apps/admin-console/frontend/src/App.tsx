@@ -1,4 +1,4 @@
-import { Layout, Menu } from "antd";
+import { Layout, Menu, Alert } from "antd";
 import {
   DashboardOutlined,
   TeamOutlined,
@@ -45,6 +45,21 @@ export default function App() {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
+      {/* P9 convergence: the streaming /chat page is the reference frontend;
+          this SPA's sync chat is deprecated. */}
+      <Alert
+        type="warning"
+        message="对话功能已迁移"
+        description={(
+          <span>
+            用户对话检索请使用流式版
+            <a href="/chat" style={{ marginLeft: 4 }}> /chat</a>
+            （支持实时输出与追问）。本页对话为旧版同步接口，仅供管理员调试。
+          </span>
+        )}
+        closable
+        style={{ position: "fixed", top: 0, left: 200, right: 0, zIndex: 1000 }}
+      />
       <Sider theme="dark" width={200}>
         <div
           style={{

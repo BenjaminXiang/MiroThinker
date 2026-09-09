@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
+from contextvars import copy_context
 from datetime import datetime, timedelta, timezone
 import hashlib
 import json
@@ -7559,7 +7560,12 @@ class _EphemeralKnowledgeRead(KnowledgeRead):
                 ):
                     outcomes[lane] = (None, "budget_exhausted")
                 else:
+                    # ThreadPoolExecutor does not propagate contextvars; the
+                    # turn-trace reporter rides a per-lane context snapshot so
+                    # serving-layer reporting stays visible on lane threads.
+                    lane_context = copy_context()
                     futures[lane] = executor.submit(
+                        lane_context.run,
                         self._invoke_lane,
                         plan,
                         lane,

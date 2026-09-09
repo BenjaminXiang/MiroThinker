@@ -14,9 +14,12 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import hashlib
 import json
+import logging
 import re
 from types import MappingProxyType
 from typing import Any, Literal
+
+_logger = logging.getLogger(__name__)
 
 from pydantic import Field, ValidationError, model_serializer, model_validator
 
@@ -1399,6 +1402,41 @@ def _deterministic_answer_text(
     return _append_required_sentences(answer, required_sentences)
 
 
+_PUBLISHED_PARTIAL_MIN_CHARS = 800
+
+
+def _published_prose_fallback(
+    result: TurnResult,
+    emitted: list[str],
+    *,
+    failure_kind: str,
+) -> TurnResult | None:
+    """已发布即事实（G7 修复原则 1）： substantial prose reached the user,
+    no late failure may replace it with the deterministic template — the
+    shipped answer IS the published prose."""
+    text = "".join(emitted).strip()
+    if len(text) < _PUBLISHED_PARTIAL_MIN_CHARS:
+        return None
+    limitation = AnswerLimitation(
+        code="prose_synthesis_failed",
+        material=False,
+        stage="prose",
+        failure_kind=f"{failure_kind}:shipped_published_prose",
+    )
+    return result.model_copy(
+        update={
+            "answer_text": text,
+            "render_mode": "prose_partial",
+            "limitations": (*result.limitations, limitation),
+        }
+    )
+
+
+def _degraded_fallback_text(result: TurnResult) -> str:
+    """原则 2/4：兜底答案必须自标降级，不冒充完整回答。"""
+    return f"（以下为基于本地数据的简要信息）\n{result.answer_text}"
+
+
 def _structured_only_public_values(
     result: TurnResult,
     evidence_set: EvidenceSet,
@@ -2173,10 +2211,20 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
                 published_parts = attempt_parts
                 break
             if rendered is None and published_parts:
+                shipped = _published_prose_fallback(
+                    result, published_parts, failure_kind="no_final_answer"
+                )
+                if shipped is not None:
+                    return shipped
                 abort_prose_attempt()
                 raise ValueError("prose stream has no final answer")
             if rendered is None and isinstance(synthesis_error, TimeoutError):
-                fallback_text = result.answer_text
+                shipped = _published_prose_fallback(
+                    result, published_parts, failure_kind="timeout"
+                )
+                if shipped is not None:
+                    return shipped
+                fallback_text = _degraded_fallback_text(result)
                 prose_limitation = AnswerLimitation(
                     code="prose_synthesis_failed",
                     material=True,
@@ -2197,6 +2245,15 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
                     }
                 )
         except (TypeError, ValueError, ValidationError):
+            shipped = _published_prose_fallback(
+                result, attempt_parts, failure_kind="invalid_output"
+            )
+            if shipped is not None:
+                _logger.info(
+                    "prose invalid_output superseded by published partial (%d chars)",
+                    len("".join(attempt_parts)),
+                )
+                return shipped
             if answer_text_published or progress_failed:
                 rollback_session()
                 raise
@@ -2208,6 +2265,7 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             )
             return result.model_copy(
                 update={
+                    "answer_text": _degraded_fallback_text(result),
                     "limitations": (*result.limitations, prose_limitation),
                     "render_mode": "deterministic_fallback",
                     "fallback_sha256": _canonical_sha256(
@@ -2250,7 +2308,7 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
                 if answer_text_published:
                     raise ValueError("published prose stream failed safety validation")
                 abort_prose_attempt()
-                fallback_text = result.answer_text
+                fallback_text = _degraded_fallback_text(result)
                 prose_limitation = AnswerLimitation(
                     code="prose_synthesis_failed",
                     material=True,
@@ -2283,6 +2341,15 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
                         gap_sentences=(),
                     )
                 except (TypeError, ValueError, ValidationError):
+                    shipped = _published_prose_fallback(
+                        result, attempt_parts, failure_kind="invalid_selection"
+                    )
+                    if shipped is not None:
+                        _logger.info(
+                            "prose invalid_selection superseded by published partial (%d chars)",
+                            len("".join(attempt_parts)),
+                        )
+                        return shipped
                     if answer_text_published:
                         raise
                     abort_prose_attempt()
@@ -2294,6 +2361,7 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
                     )
                     return result.model_copy(
                         update={
+                            "answer_text": _degraded_fallback_text(result),
                             "limitations": (*result.limitations, prose_limitation),
                             "render_mode": "deterministic_fallback",
                             "fallback_sha256": _canonical_sha256(
@@ -2316,6 +2384,11 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
                         "render_mode": "prose_renderer",
                     }
                 )
+            shipped = _published_prose_fallback(
+                result, published_parts, failure_kind="unrecognized_rendered"
+            )
+            if shipped is not None:
+                return shipped
             return result
         except BaseException:
             abort_prose_attempt()

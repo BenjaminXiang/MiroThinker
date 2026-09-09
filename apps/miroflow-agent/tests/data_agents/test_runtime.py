@@ -338,7 +338,7 @@ def test_web_search_provider_surfaces_serper_api_error_body(monkeypatch):
         provider.search("apple inc")
 
 
-def test_web_search_provider_disables_after_serper_credit_exhaustion(monkeypatch):
+def test_web_search_provider_no_sticky_disable_on_credit_exhaustion(monkeypatch):
     monkeypatch.setenv("SERPER_API_KEY", "env-token")
 
     class ErrorResponse:
@@ -365,7 +365,10 @@ def test_web_search_provider_disables_after_serper_credit_exhaustion(monkeypatch
     with pytest.raises(RuntimeError, match="Not enough credits"):
         provider.search("apple inc")
 
-    assert len(session.calls) == 1
+    # No process-lifetime sticky disable (web-lane resilience contract): the
+    # provider keeps attempting; the canonical-v2 lane circuit breaker owns
+    # failure isolation with probe recovery.
+    assert len(session.calls) == 2
 
 
 

@@ -1,0 +1,21 @@
+event: stage
+data: {"name":"planning"}
+
+event: plan_done
+data: {"lanes":["exact","structured","lexical","vector","web"],"domains":["professor","company","paper","patent"],"views":["优必选科技怎么样","优必选科技 主营业务 营收","优必选科技 人形机器人 技术路线","优必选科技 上市 财务状况 风险"]}
+
+event: stage
+data: {"name":"retrieval"}
+
+event: retrieval_done
+data: {"lanes":[{"lane":"exact","status":"succeeded","candidates":0},{"lane":"structured","status":"succeeded","candidates":0},{"lane":"lexical","status":"succeeded","candidates":0},{"lane":"vector","status":"succeeded","candidates":16},{"lane":"web","status":"succeeded","candidates":16}],"web_items":[{"title":"「优必选怎么样」深圳市优必选科技股份有限公司 - 企查查","url":"https://www.qcc.com/ccomment/cd6b024cf176db2943619725b60b499d","source":"www.qcc.com"},{"title":"UBTECH 优必选官网-智能服务机器人领导者","url":"https://www.ubtrobot.com/cn?srsltid=AfmBOorQN4DAh2Y4KdRI_6BSl9qUT4voPuidKA2yp0Uu6XzcNb22Fmsz","source":"www.ubtrobot.com"},{"title":"优必选UBTECH是个什么品牌，这个品牌怎么样？","url":"https://www.7dingdong.cn/a/5672.html","source":"www.7dingdong.cn"},{"title":"关于优必选科技 - UBTECH Robotics","url":"https://www.ubtrobot.com/cn/about/company-profile?srsltid=AfmBOoovJOVt4sm59bnh7mrOLmnMfA7TfC008__c7RQlU3G3ms9rTL8V","source":"www.ubtrobot.com"},{"title":"深圳市优必选科技股份有限公司-特种装备网","url":"https://ubtechtob.tezhongzhuangbei.com/jmzs.html","source":"ubtechtob.tezhongzhuangbei.com"},{"title":"深圳市优必选科技股份有限公司 - 百度百科","url":"https://baike.baidu.com/item/%E6%B7%B1%E5%9C%B3%E5%B8%82%E4%BC%98%E5%BF%85%E9%80%89%E7%A7%91%E6%8A%80%E8%82%A1%E4%BB%BD%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/23492514","source":"baike.baidu.com"},{"title":"「优必选怎么样」深圳市优必选科技股份有限公司 - 职友集","url":"https://www.jobui.com/company/10545972/comment/268809796/","source":"www.jobui.com"},{"title":"优必选，本土人形机器人一哥？ - 知乎专栏","url":"https://zhuanlan.zhihu.com/p/1949507009100650113","source":"zhuanlan.zhihu.com"}]}
+
+event: stage
+data: {"name":"synthesis"}
+
+event: answer
+data: {"query":"优必选科技怎么样","query_type":"canonical_v2:A:answer","answer_text":"- 深圳市优必选科技股份有限公司；简介：深圳市优必选科技股份有限公司是一家集人工智能和人形机器人研发、平台软件开发运用及产品销售为一体的全球性高科技创新企业。公司专注于人形机器人及其核心驱动技术的研发与制造，主要产品线包括Walker系列全尺寸人形机器人（如应用于智能制造领域的WalkerS2工业人形机器人、全尺寸科研教育人形机器人天工行者）、Alpha系列；技术路线：Not supplied by……\n- 「优必选怎么样」深圳市优必选科技股份有限公司 - 企查查：缔造有远见的商业传奇 全国企业信用查询系统 应用 企业套餐 深圳市优必选科技股份有限公司怎么样 深圳市优必选科技股份有限公司 2026-08-18 14:47:42 来源： 企查查 1、基本信息 深圳市优必选科技股份有限公司（曾用名：深圳市优必选科技有限公司）是⼀家成⽴于2012年03月31日的股份有限公司，也是优必选旗下企业，属于以从事科……\n- 深圳市优必行科技有限公司；简介：深圳市优必行科技有限公司是一家科技型企业，其业务可能围绕智能出行、智慧交通、物联网或智能硬件相关领域展开。公司可能提供智能终端设备、出行服务平台或行业应用解决方案，服务于智慧城市、车联网、物流配送或共享出行等场景。由于缺乏有效搜索结果，具体产品形态与业务细节以官方信息为准；技术路线：Not supplied by the backfill source.。\n- UBTECH 优必选官网-智能服务机器人领导者：我们如何使用cookie\n我们的网站使用Cookie和其他类似技术将您与我们网站的其他用户区分开来，并提供您拥有丰富的经验，使我们能够改进我们的网站。请参阅我们的 Cookie政策了解更多信息。\n只接受必要的cookie\n只接受必要的cookie\n中文\n关于优必选投资者关系核心技术人形机器人AI教育商用康养物流消费级\n大型人形机器人应用场景\n\n以用户……\n- 深圳市酷选科技有限公司；简介：深圳市酷选科技有限公司是一家聚焦硬件的企业。细分方向覆盖智能家居。当前业务定位为智能家居产品研发商。深圳市酷选科技有限公司，是一家研发智能家居产品及系统的智能硬件公司，公司集平台建设及运营、智能硬件开发于一体。；技术路线：深圳市酷选科技有限公司的技术路线围绕硬件展开。当前重点落在智能家居。业务场景集中在智能家居产品研发商。深圳市酷选科技有限公司，是一家研发智能家居产品……\n- 优必选UBTECH是个什么品牌，这个品牌怎么样？：集人工智能和人形机器人研发、制造和销售一体的高科技创牌。优必选成立于2012年。2008年,优必选从人形机器人的核心源动力伺服舵机研发起步,逐步推出了消费级人形机器人Alpha系列、STEM教育智能编\n- 关于优必选科技 - UBTECH Robotics：优必选是全球极少数具备人形机器人全栈式技术能力的公司。 ... 在仿人小脑领域，我们融合全身遥操作、模仿学习、强化学习和经典控制技术，让机器人运动更敏捷。\n- 深圳市优必选科技股份有限公司-特种装备网：优必选科技成立于2012年3月,是全球顶尖的人工智能和人形机器人研发、制造和销售为一体的高科技创新企业。公司秉承着“让智能机器人走进千家万户”的使命,专注于人工智能及机器人核心技术的应用型研发、前瞻性\n- 深圳市优必选科技股份有限公司 - 百度百科：深圳市优必选科技有限公司成立于2012年，位于深圳市南山区桃源街道长源社区学苑大道1001号南山智园C1栋2201，是一家集人工智能和人形机器人研发、平台软件开发运用及产品 ...\n- 「优必选怎么样」深圳市优必选科技股份有限公司 - 职友集：公司概况 规模: 1000-4999人 成立: 13年 全称: 深圳市优必选科技股份有限公司。 发展阶段 阶段: 基石轮,5亿人民币。 产品: Alpha 1 优必选教育 等10个。 排名: 深圳智能\n……（其余 1 条候选省略）","citations":[],"evidence":[],"clarification":null,"structured_payload":{},"answer_style":"template","citation_map":{},"suggested_followups":[]}
+
+event: done
+data: {}
+

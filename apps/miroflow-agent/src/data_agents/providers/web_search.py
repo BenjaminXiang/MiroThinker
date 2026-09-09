@@ -59,7 +59,6 @@ class WebSearchProvider:
         self.timeout = timeout
         self.session = session or requests.Session()
         self.curl_runner = curl_runner or subprocess.run
-        self._disabled_reason: str | None = None
         if hasattr(self.session, "trust_env"):
             self.session.trust_env = False
 
@@ -83,9 +82,6 @@ class WebSearchProvider:
         }
 
     def search(self, query: str, *, gl: str | None = None, hl: str | None = None) -> dict[str, Any]:
-        if self._disabled_reason:
-            raise RuntimeError(self._disabled_reason)
-
         payload = self.build_payload(query, gl=gl, hl=hl)
         try:
             response = self.session.post(
@@ -133,8 +129,9 @@ class WebSearchProvider:
         else:
             detail = default_message
 
-        if "not enough credits" in message.casefold():
-            self._disabled_reason = detail
+        # No process-lifetime sticky disable: the canonical-v2 web lane's
+        # circuit breaker owns failure isolation (open + probe recovery), and
+        # quota errors stay retryable-by-operator only via the breaker reason.
         return RuntimeError(detail)
 
     def _extract_error_payload(self, response: Any | None) -> dict[str, Any]:

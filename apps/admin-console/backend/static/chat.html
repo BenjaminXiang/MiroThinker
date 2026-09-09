@@ -1539,10 +1539,29 @@
         const bubble = view ? view.bubble : messageShell("assistant").bubble;
         const answer = safePublicText(data.answer_text) || "当前版本未生成可安全展示的回答。";
         const box = answerBox || create("div", "answer");
+        // Phase 7.2: understanding disclosure — show what the system
+        // understood the query to be about, above the answer text.
+        const subject = safePublicText(data.understood_subject) || "";
+        if (subject && !preserveStreamed) {
+          const disclosure = create("div", "understood-subject");
+          disclosure.style.cssText = "font-size:12px;color:var(--text-muted,#888);margin-bottom:4px;padding:2px 8px;background:rgba(0,120,212,0.06);border-radius:4px;";
+          disclosure.textContent = `系统理解为：关于${subject}`;
+          box.append(disclosure);
+        }
         // preserveStreamed：流式渲染结果已与最终答案一致，保留现有 DOM，
         // 跳过 replaceChildren + 全量 renderMarkdown，避免长答案下的重复长任务。
         if (answerBox && !preserveStreamed) box.replaceChildren(); // 流式容器：整体重渲染，消除缓冲差异
-        if (!preserveStreamed) renderMarkdown(box, answer);
+        if (!preserveStreamed) {
+          if (subject) {
+            const d = create("div");
+            d.style.cssText = "font-size:12px;color:var(--text-muted,#888);margin-bottom:4px;";
+            d.textContent = `系统理解为：关于${subject}`;
+            box.append(d);
+          }
+          const md = create("div", "answer");
+          renderMarkdown(md, answer);
+          box.append(md);
+        }
         if (!box.parentNode) bubble.append(box);
         if (Array.isArray(data.citations) && data.citations.length) {
           const evidenceDetails = create("details", "evidence-disclosure");
