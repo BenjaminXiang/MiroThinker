@@ -9,7 +9,7 @@
 
 | Gap | 断言 | 锚点 | RED 证据（离线复判存档） |
 |---|---|---|---|
-| GAP-01 企业→专利不可达 | g17-t1: ≥3 个 CN 号 + local_citations ≥1 | `g17-t1` | RED: patent_ids 1<3, local 0<1 |
+| GAP-01 企业→专利不可达 | g17-t1: ≥3 个 CN 号 + local_citations ≥1 | `g17-t1` | **GREEN**（2026-09-10 B1 三轮，live 18188）: 16 CN 号 + 本地引用 16，三层全过；16/16 CN 经 SQLite 复核绑定优必选。原 RED: patent_ids 1<3, local 0<1 |
 | GAP-02 枚举召回不完整 | g2-t1: 五家关键点全出现 | `g2-t1` entities | RED: missing 开普勒/九号 |
 | GAP-03 多约束人物检索 | g7-t1: ≥2 金标人物/公司 | `g7-t1` pool | RED: pool 0<2 |
 | GAP-04 上下文收窄不完整 | g2-t2 / g5-t2: 收窄覆盖 GT ≥80% | `g2-t2`,`g5-t2` | RED: 1/6, 2/12 |

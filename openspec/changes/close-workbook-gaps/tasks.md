@@ -6,14 +6,35 @@
        into deployment-line `knowledge_read_isolated.py` (no new imports).
        (commit `b20161d`, +79 lines incl. path-eligibility guardrail the
        source block lacked)
-- [ ] B1.2 Restart 18188; RED→GREEN on g17-t1 assertion (≥3 CN ids,
+- [x] B1.2 Restart 18188; RED→GREEN on g17-t1 assertion (≥3 CN ids,
        citations_local ≥1); replay gate 7/7.
-- [ ] B1.3 Gate A: patent-intent patterns cover "有哪些专利/的专利有哪些";
+       (GREEN 2026-09-10 round 3: g17-t1 three-layer PASS on live 18188 —
+       16 CN ids + 16 local citations; replay-b1-r3 7/7, zero jitter
+       signatures)
+- [x] B1.3 Gate A: patent-intent patterns cover "有哪些专利/的专利有哪些";
        derived short-name channel with uniqueness guard binds 优必选.
-- [ ] B1.4 Gate B: shared `_direct_patent_applicant_scan` helper called
+       (round 2, tests `673edb7`: `_compact_company_alias` short-name
+       channel binds company-c-64e631c0e0cd9e91d032d209; possessive-pattern
+       extension deliberately skipped — the short-name channel covers it and
+       the extension would mis-fire on "…的竞争对手有哪些专利")
+- [x] B1.4 Gate B: shared `_direct_patent_applicant_scan` helper called
        from `_source_bound_relationship_candidates` for company→patent;
        positive control (普渡 17) not regressed.
-- [ ] B1.5 Relationship-lane local citations surface in the answer.
+       (round 2, snapshot `1860b8c`: 优必选 48 candidates = 58 bindings −
+       10 path-eligibility exclusions; 普渡 17/16 CN/16 local cards held
+       again in round 3)
+- [x] B1.5 Relationship-lane local citations surface in the answer.
+       (round 2: `local-source-<sha>` cards for URL-less local evidence in
+       `_public_citations`; g17-t1 local_citations 0→16)
+- [x] B1.6 Gate C: claim-binding witness branch in `_apply_constraints`
+       (relationship lane only, trace branches keep precedence, binding
+       value endpoint `canonical:<domain>:<displayed id>` with subject ==
+       candidate); negative tests (cross-anchor / subject-side) +
+       selector-equivalence contract test vs `_claim_binding_binds_anchor`;
+       g17-t1 three-layer GREEN on live 18188.
+       (commit `197b7f5`: knowledge_read.py +21; 3 new tests RED→GREEN —
+       positive value-endpoint witness, 4 negatives, 5-fixture selector
+       equivalence; focused suite 96 passed / 0 failed)
 - [ ] B2.1 Layer D narrowing = displayed-id set ∩ condition; g2-t2/g5-t2
        coverage ≥80% of GT.
 - [ ] B3.1 Enumeration key-entity self-check; g2-t1 five GT companies all
@@ -41,6 +62,7 @@
 
 ## Spec deltas
 
-- [ ] S-delta B1: `canonical-v2-chat` — company→patent local traversal
-       requirement (added with B1).
+- [x] S-delta B1: `canonical-v2-chat` — company→patent local traversal
+       requirement (added with B1; both scenarios now satisfied live —
+       g17-t1 GREEN round 3, honest-fallback wording unchanged).
 - [ ] S-deltas for B2–B5 added with their slices.

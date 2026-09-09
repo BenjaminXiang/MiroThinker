@@ -1,0 +1,93 @@
+[
+ {
+  "group": 17,
+  "turns": [
+   {
+    "turn": 1,
+    "query": "优必选有哪些专利",
+    "key_point": "获取数据库信息与网络搜索结果",
+    "error": null,
+    "elapsed": 11.2,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "优必选（UBTECH）在人形机器人领域布局了大量专利，涵盖运动控制、伺服驱动、视觉感知、语音交互、机器人关节结构等核心技术方向。公开信息显示，该公司在Walker系列人形机器人、Alpha系列教育机器人以及商用服务机器人等产品线上均有相应的专利积累，专利类型以发明专利和实用新型专利为主。\n\n不过，关于优必选专利的具体数量、代表性专利名称或专利号等明细，当前检索与本地库覆盖暂不完整，未能建立到具体专利条目的关联。如果您更关心某一技术方向（如运动控制算法、关节模组设计）或某条产品线的专利布局，我可以再深入检索。",
+    "citations_total": 0,
+    "citations_local": 0,
+    "citations_web": 0,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 255,
+     "answer": 1,
+     "done": 1
+    },
+    "scored": {
+     "pass": false,
+     "layers": {
+      "entity": {
+       "pass": true,
+       "fails": []
+      },
+      "provenance": {
+       "pass": false,
+       "fails": [
+        "local_citations:0<1",
+        "patent_ids:0<3"
+       ]
+      }
+     },
+     "note": "GAP-01: 企业→专利清单(数据库+网络), >=3 CN号+本地引用",
+     "human_verified": false
+    }
+   },
+   {
+    "turn": 2,
+    "query": "专利 CN117873146A 的详细信息是什么",
+    "key_point": "知识库获取结果",
+    "error": null,
+    "elapsed": 4.0,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "专利 CN117873146A 的详细信息如下：\n\n- **专利名称**：一种机器人的落地控制方法、机器人及终端设备\n- **专利类型**：发明专利\n- **申请人**：深圳市优必选科技股份有限公司\n\n该专利适用于机器人技术领域，核心是一种机器人的落地控制方法。其技术方案大致为：在检测到机器人跳跃并稳定落地后，获取落地时间、腿部所受冲击力以及腰部实际高度；随后根据落地时间计算腿部实际刚度，再结合腿部所受冲击力计算腰部期望高度，进而得出腰部高度控制量，最终据此调节机器人在落地后的腰部高度，以优化落地姿态与稳定性。",
+    "citations_total": 0,
+    "citations_local": 0,
+    "citations_web": 0,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 255,
+     "answer": 1,
+     "done": 1
+    },
+    "scored": {
+     "pass": false,
+     "layers": {
+      "entity": {
+       "pass": true,
+       "fails": []
+      },
+      "completeness": {
+       "pass": true,
+       "hits": 4,
+       "total": 5,
+       "ratio": 0.8,
+       "fails": []
+      },
+      "provenance": {
+       "pass": false,
+       "fails": [
+        "local_citations:0<1"
+       ]
+      }
+     },
+     "note": "专利号精确详情(知识库)",
+     "human_verified": false
+    }
+   }
+  ],
+  "passed": 0,
+  "total": 2
+ }
+]

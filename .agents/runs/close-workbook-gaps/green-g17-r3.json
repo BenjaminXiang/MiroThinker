@@ -1,0 +1,90 @@
+[
+ {
+  "group": 17,
+  "turns": [
+   {
+    "turn": 1,
+    "query": "优必选有哪些专利",
+    "key_point": "获取数据库信息与网络搜索结果",
+    "error": null,
+    "elapsed": 11.1,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "优必选公开的专利布局覆盖机器人结构、控制算法、传感与驱动等多个方向，以下为其中具有代表性的专利（共检索到48件相关专利，此处列出部分示例）：\n\n**结构与机械类**\n- 主控器连接结构及电子设备（CN117697724A）\n- 壳体拆装结构及机器人（CN118024214A）\n- 夹持装置、机械臂设备及机器人（CN117697805A）\n- 同步带张紧装置及机器人（CN118088636A）\n- 传感器调平装置（CN220772236U）\n\n**控制与算法类**\n- 故障检测方法、故障检测装置、机器人及存储介质（CN117773945A）\n- 力矩校正方法、力矩校正装置、机器人及存储介质（CN118832585A）\n- 前臂关节扭矩预测方法及预测模型获取方法、和装置（CN118303873A）\n- 障碍物检测方法、装置、电子设备及存储介质（CN119810747A）\n- 语义分割模型的训练方法、装置、设备及计算机可读介质（CN118015265A）\n- 图像数据处理方法、装置、电子设备及可读存储介质（CN120495557A）\n- 模型的训练方法、装置、电子设备、存储介质及程序产品（CN120673201A）\n\n**应用与系统类**\n- 扫地机及其分区清扫的规划方法、装置及存储介质（CN117873060A）\n- 驱动保护电路和泳池机器人（CN117559877A）\n- 通讯接口、传输线材、功能模组、电子设备及控制方法（CN117539811A）\n- 一种控制方法、装置、箱门组件、递送机器人和储物柜（CN116357192A）\n\n整体来看，优必选的专利既涉及人形机器人核心的关节驱动、力矩控制与结构设计，也延伸到扫地机、泳池机器人、递送机器人等具体产品形态，以及视觉语义、模型训练等AI算法层面。您更关心哪条产品线或技术方向的专利细节？我可以再深入展开。",
+    "citations_total": 16,
+    "citations_local": 16,
+    "citations_web": 0,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 768,
+     "answer": 1,
+     "done": 1
+    },
+    "scored": {
+     "pass": true,
+     "layers": {
+      "entity": {
+       "pass": true,
+       "fails": []
+      },
+      "provenance": {
+       "pass": true,
+       "fails": []
+      }
+     },
+     "note": "GAP-01: 企业→专利清单(数据库+网络), >=3 CN号+本地引用",
+     "human_verified": false
+    }
+   },
+   {
+    "turn": 2,
+    "query": "专利 CN117873146A 的详细信息是什么",
+    "key_point": "知识库获取结果",
+    "error": null,
+    "elapsed": 4.2,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "专利 CN117873146A 的详细信息如下：\n\n- **专利名称**：一种机器人的落地控制方法、机器人及终端设备\n- **专利类型**：发明专利\n- **申请人**：深圳市优必选科技股份有限公司\n- **技术领域**：机器人技术领域\n\n**技术方案摘要**：该专利提供了一种机器人的落地控制方法、机器人及终端设备。核心流程为：在检测到机器人跳跃并稳定落地后，获取落地时间、腿部所受冲击力以及腰部实际高度；根据落地时间计算腿部实际刚度；结合腿部实际刚度与冲击力计算腰部期望高度；再根据腰部实际高度与期望高度之差得到高度控制量，据此调节机器人落地后的腰部高度。\n\n简言之，该专利通过主动调节腰部高度来缓冲落地冲击，提升机器人跳跃落地时的稳定性。",
+    "citations_total": 0,
+    "citations_local": 0,
+    "citations_web": 0,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 318,
+     "answer": 1,
+     "done": 1
+    },
+    "scored": {
+     "pass": false,
+     "layers": {
+      "entity": {
+       "pass": true,
+       "fails": []
+      },
+      "completeness": {
+       "pass": true,
+       "hits": 4,
+       "total": 5,
+       "ratio": 0.8,
+       "fails": []
+      },
+      "provenance": {
+       "pass": false,
+       "fails": [
+        "local_citations:0<1"
+       ]
+      }
+     },
+     "note": "专利号精确详情(知识库)",
+     "human_verified": false
+    }
+   }
+  ],
+  "passed": 1,
+  "total": 2
+ }
+]

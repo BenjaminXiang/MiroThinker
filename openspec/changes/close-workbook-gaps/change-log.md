@@ -34,3 +34,34 @@
   on this pack). Interim acceptance policy recorded in design.md; jitter
   fix queued as `harden-serving-test-harness` A3.4.
 - Tasks B1.3–B1.5 added; B1.1 marked done.
+
+## 2026-09-10 — B1 round 2: Gates A/B + citation floor landed; Gate C found
+
+- Round 2 landed on `codex/canonical-v2-s12a-ready` (source in auto
+  snapshot `1860b8c`, tests `673edb7`): Gate A binds the bare short name
+  ("优必选有哪些专利" → `company-c-64e631c0e0cd9e91d032d209`) through the
+  `_compact_company_alias` channel — the originally sketched possessive
+  pattern extension was correctly skipped (the short-name channel covers
+  it, and the extension would mis-fire on "…的竞争对手有哪些专利");
+  Gate B unions `_direct_patent_applicant_scan` into
+  `_source_bound_relationship_candidates` (优必选: 48 candidates = 58
+  bindings − 10 path-eligibility exclusions); B1c emits
+  `local-source-<sha>` citation cards for URL-less relationship evidence.
+  Positive control 普渡 end-to-end green: 17 candidates → 16 CN numbers +
+  16 local cards (archive `pudu-answer-r2.json`).
+- g17-t1 stayed RED at a third, deeper gate: `_apply_constraints`
+  (knowledge_read.py:6174) derives `displayed_entity_witness_ids` only from
+  relationship projection traces; scan items carry a typed claim binding
+  and no trace (by design), so the `displayed_entity_set` slot rejects all
+  48. Minimal repro:
+  `.agents/runs/close-workbook-gaps/repro_constraint_gate_scan_items.py`.
+- Mechanism verified line-by-line before designing the fix: witness ids are
+  consumed solely by the `displayed_entity_set` branch (geography /
+  exact-identifier slots use claim-subject / identity paths); the answer
+  selector already admits these candidates via `_claim_binding_binds_anchor`
+  (knowledge_serving_isolated.py:5678); `_apply_constraints` is shared by
+  the main read flow (:7961) and the release-bound relationship validator
+  (knowledge_read_isolated.py:6118), so one edit keeps both consistent.
+- design.md §B1 revision 2 adds the Gate C fix (claim-binding witness
+  branch mirroring the selector's value-endpoint semantics) with rejected
+  alternatives and the round-3 test matrix; task B1.6 added.

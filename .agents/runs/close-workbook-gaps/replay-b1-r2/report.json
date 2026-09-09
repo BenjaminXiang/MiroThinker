@@ -1,0 +1,220 @@
+{
+  "base_url": "http://127.0.0.1:18188",
+  "generated_at": "2026-09-10T04:18:03",
+  "sessions": {
+    "G1_framing": {
+      "turns": [
+        {
+          "query": "介绍一下 国际先进技术应用推进中心（深圳）",
+          "repeat": 1,
+          "sse": "G1_framing_r1_t1.sse",
+          "seconds": 10.0,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）于2025年4月在河套深港科技创新合作区深圳园区揭牌成立，简称“国先中心”。该中心依托粤港澳大湾区数字经济研究院建设，属于其他事业单位性质，位于广东省深圳市。\n\n中心聚焦人工智能、具身智能、低空经济等重点领域",
+          "failures": []
+        },
+        {
+          "query": "有没有更详细的信息",
+          "repeat": 1,
+          "sse": "G1_framing_r1_t2.sse",
+          "seconds": 10.7,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）是国家发展改革委支持授权下设立的机构，依托粤港澳大湾区数字经济研究院运行，核心使命是“为技术对接场景，为产业寻找技术”，重点聚焦人工智能、具身智能等通用机器人相关的重要技术方向，致力于推动全球前沿技术产业化。",
+          "failures": []
+        },
+        {
+          "query": "它有哪些布局和进展",
+          "repeat": 1,
+          "sse": "G1_framing_r1_t3.sse",
+          "seconds": 16.7,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "河套深圳园区（即河套深港科技创新合作区深圳园区）的布局与进展，可以从空间规划、平台建设、产业方向几个层面来看。\n\n**空间与区位布局**\n园区地处香港北部与深圳市中南部跨境接壤地带，总面积约3.89平方公里，其中深圳园区约3.02平方公里。",
+          "failures": [
+            "subject not in first sentence: 国际先进技术应用推进中心"
+          ]
+        }
+      ],
+      "pass": false
+    },
+    "G2_bare_name": {
+      "turns": [
+        {
+          "query": "国际先进技术应用推进中心（深圳）",
+          "repeat": 1,
+          "sse": "G2_bare_name_r1_t1.sse",
+          "seconds": 9.5,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）位于深圳市，具体设在河套深港科技创新合作区深圳园区内，于2025年4月揭牌成立，简称“国先中心”。\n\n该中心依托粤港澳大湾区数字经济研究院建设，聚焦人工智能、具身智能、低空经济等重点领域，为技术应用对接场景、",
+          "failures": []
+        },
+        {
+          "query": "这个中心的企业培育情况怎么样",
+          "repeat": 1,
+          "sse": "G2_bare_name_r1_t2.sse",
+          "seconds": 8.2,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "您问的“这个中心”如果指国际先进技术应用推进中心（深圳），公开信息显示它于2025年4月在河套深港科技创新合作区深圳园区揭牌，由粤港澳大湾区数字经济研究院承担建设运营，定位是对标全球领先研究机构、提升大湾区数字经济领域科研与产业化水平。深圳",
+          "failures": []
+        },
+        {
+          "query": "国际先进技术应用推进中心（深圳）",
+          "repeat": 2,
+          "sse": "G2_bare_name_r2_t1.sse",
+          "seconds": 8.9,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）位于深圳市，于2025年4月在河套深港科技创新合作区深圳园区揭牌成立，简称“国先中心”。该中心依托粤港澳大湾区数字经济研究院建设，聚焦人工智能、具身智能、低空经济等重点领域，为技术应用对接场景、为企业需求提供",
+          "failures": []
+        },
+        {
+          "query": "这个中心的企业培育情况怎么样",
+          "repeat": 2,
+          "sse": "G2_bare_name_r2_t2.sse",
+          "seconds": 8.5,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "您问的“这个中心”应是指国际先进技术应用推进中心（深圳）。关于该中心的企业培育情况，公开信息显示它正处于建设起步和平台搭建阶段，具体入孵企业名单及培育成效尚未系统披露。\n\n从已公开的进展看，该中心于2025年4月下旬在河套深港科技创新合作区",
+          "failures": []
+        },
+        {
+          "query": "国际先进技术应用推进中心（深圳）",
+          "repeat": 3,
+          "sse": "G2_bare_name_r3_t1.sse",
+          "seconds": 9.2,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）位于深圳市，具体设在河套深港科技创新合作区深圳园区内，于2025年4月揭牌成立，简称“国先中心”。\n\n该中心依托粤港澳大湾区数字经济研究院建设，聚焦人工智能、具身智能、低空经济等重点领域，为技术应用对接场景、",
+          "failures": []
+        },
+        {
+          "query": "这个中心的企业培育情况怎么样",
+          "repeat": 3,
+          "sse": "G2_bare_name_r3_t2.sse",
+          "seconds": 9.0,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "您问的“这个中心”如果指国际先进技术应用推进中心（深圳），公开信息显示它于2025年4月在河套深港科技创新合作区深圳园区揭牌，由粤港澳大湾区数字经济研究院承担建设运营，定位是对标全球领先研究机构、提升大湾区数字经济领域科研与产业化水平。深圳",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G3_person_pronoun": {
+      "turns": [
+        {
+          "query": "介绍一下 国际先进技术应用推进中心（深圳）",
+          "repeat": 1,
+          "sse": "G3_person_pronoun_r1_t1.sse",
+          "seconds": 8.6,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）于2025年4月在河套深港科技创新合作区深圳园区揭牌成立，简称“国先中心”。该中心依托粤港澳大湾区数字经济研究院建设，属于其他事业单位性质，位于广东省深圳市。\n\n中心聚焦人工智能、具身智能、低空经济等重点领域",
+          "failures": []
+        },
+        {
+          "query": "他有哪些论文",
+          "repeat": 1,
+          "sse": "G3_person_pronoun_r1_t2.sse",
+          "seconds": 1.3,
+          "query_type": "canonical_v2:G:clarification_only",
+          "answer_head": "您的问题里使用了“他/她/它/这家”等指代词，但我暂时无法确定具体指代对象，为了准确回答，请补充您想了解的对象（例如教授姓名、公司名、论文标题或专利号），我会立即为您查询。如果您只是想了解某一类信息的大致情况，也可以直接描述需求，我会先给出",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G4_patents": {
+      "turns": [
+        {
+          "query": "优必选科技怎么样",
+          "repeat": 1,
+          "sse": "G4_patents_r1_t1.sse",
+          "seconds": 10.6,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "优必选科技是一家全球领先的人工智能与人形机器人研发、制造和销售企业，整体实力和行业地位都相当突出。\n\n公司成立于2012年3月，定位为具身智能生态平台及物理AI终端公司，使命是“让智能机器人走进千家万户”。业务覆盖人形机器人、AI教育、商用",
+          "failures": []
+        },
+        {
+          "query": "该公司的专利有哪些",
+          "repeat": 1,
+          "sse": "G4_patents_r1_t2.sse",
+          "seconds": 7.4,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳市优必选科技股份有限公司是人形机器人与人工智能领域的知名企业，公开信息显示其在机器人运动控制、伺服驱动、人工智能交互等方面有持续的技术积累和专利布局。不过，关于该公司专利的具体清单（如专利名称、专利号、技术分类等），当前检索与本地库覆盖",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G5_expansion": {
+      "turns": [
+        {
+          "query": "优必选科技怎么样",
+          "repeat": 1,
+          "sse": "G5_expansion_r1_t1.sse",
+          "seconds": 10.4,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "优必选科技是一家全球领先的人工智能与人形机器人企业，整体实力和行业地位都相当突出。\n\n公司成立于2012年3月，定位为具身智能生态平台及物理AI终端公司，使命是“让智能机器人走进千家万户”。业务覆盖人形机器人、AI教育、商用服务、康养、物流",
+          "failures": []
+        },
+        {
+          "query": "还有哪些类似的公司",
+          "repeat": 1,
+          "sse": "G5_expansion_r1_t2.sse",
+          "seconds": 31.1,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "与深圳市优必选科技股份有限公司（优必选）业务类似的公司，主要集中在深圳的人形机器人整机与智能机器人赛道。优必选成立于2012年，是人形机器人的领导者和智能服务机器人的领航企业，产品线包括Walker系列全尺寸人形机器人（如Walker S2",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G6_anaphoric_opener": {
+      "turns": [
+        {
+          "query": "这个中心是做什么的",
+          "repeat": 1,
+          "sse": "G6_anaphoric_opener_r1_t1.sse",
+          "seconds": 1.2,
+          "query_type": "canonical_v2:G:clarification_only",
+          "answer_head": "您的问题里使用了“他/她/它/这家”等指代词，但我暂时无法确定具体指代对象，为了准确回答，请补充您想了解的对象（例如教授姓名、公司名、论文标题或专利号），我会立即为您查询。如果您只是想了解某一类信息的大致情况，也可以直接描述需求，我会先给出",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G7_enumeration": {
+      "turns": [
+        {
+          "query": "深圳有哪些做具身智能的公司",
+          "repeat": 1,
+          "sse": "G7_enumeration_r1_t1.sse",
+          "seconds": 25.7,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳从事具身智能的公司数量可观，已形成从核心零部件、整机制造到场景应用的完整产业链。公开信息显示，深圳人形机器人产业链企业已超过60家，具身智能机器人产业集群相关企业超过1200家。以下按不同定位列举其中具有代表性的企业：\n\n**整机与本体",
+          "failures": []
+        },
+        {
+          "query": "深圳有哪些做具身智能的公司",
+          "repeat": 2,
+          "sse": "G7_enumeration_r2_t1.sse",
+          "seconds": 41.0,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳在具身智能领域已聚集一批研发企业，覆盖人形机器人、工业具身智能、仿生机器人、灵巧手及视觉感知等方向，以下为其中有代表性的公司：\n\n**人形与通用具身智能**\n- **深圳诺因智能有限公司**：2025年6月成立的新兴具身智能公司，由华为",
+          "failures": [
+            "required substring missing: 优必选"
+          ]
+        },
+        {
+          "query": "深圳有哪些做具身智能的公司",
+          "repeat": 3,
+          "sse": "G7_enumeration_r3_t1.sse",
+          "seconds": 41.0,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳在具身智能领域已聚集一批研发企业，覆盖人形机器人、工业具身智能、仿生机器人、灵巧手及视觉感知等方向。以下是其中较有代表性的公司：\n\n**人形与仿生机器人**\n- **深圳诺因智能有限公司**：2025年6月成立的新兴具身智能公司，由华为",
+          "failures": [
+            "required substring missing: 优必选"
+          ]
+        }
+      ],
+      "pass": false
+    }
+  },
+  "all_pass": false,
+  "total_failures": 3
+}

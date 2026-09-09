@@ -116,6 +116,89 @@ run whose only failures match the documented pre-existing jitter signature
 set, with the jitter table attached. Jitter quantification/fix is added to
 `harden-serving-test-harness` as task A3.4.
 
+## B1 revision 2 (2026-09-10, after round 2) — Gate C: constraint-layer witness for trace-less scan candidates
+
+Round 2 landed Gate A (bare-short-name binding via the
+`_compact_company_alias` channel), Gate B (shared
+`_direct_patent_applicant_scan` unioned into
+`_source_bound_relationship_candidates`; 优必选 yields 48 candidates =
+58 bindings − 10 path-eligibility exclusions), and B1c (`local-source-<sha>`
+citation cards for URL-less relationship evidence). The 普渡 positive
+control is end-to-end green (17 candidates → 16 CN numbers + 16 local
+cards). g17-t1 still failed RED at a third gate (evidence:
+`verification-b1.md` round 2; minimal repro
+`.agents/runs/close-workbook-gaps/repro_constraint_gate_scan_items.py`).
+
+**Gate C — the displayed_entity_set constraint has no witness source for
+trace-less scan candidates.** Scan `EvidenceItem`s carry a typed claim
+binding (`subject=canonical:patent:<candidate>`,
+`predicate=patent_has_applicant`,
+`value=canonical:company:<displayed anchor>`, `status=accepted`) and, by
+design, no `local_projection_trace` (scan edges have no per-edge
+relationship authority). `_apply_constraints` (knowledge_read.py:6174)
+derives `displayed_entity_witness_ids` only from the five relationship
+trace branches (:6207/:6245/:6288/:6319/:6360), so scan candidates get an
+empty witness tuple; their identity ids are patent ids, which never
+intersect the company anchor in `slot.entity_ids`; every candidate is
+rejected (:6542–6555) and the answer degrades to "未能建立关联".
+
+**Fix — a claim-binding witness branch in `_apply_constraints`**, mirroring
+the answer selector's `_claim_binding_binds_anchor`
+(knowledge_serving_isolated.py:5678, call site :5777) — the selector already
+admits exactly these candidates; the constraint layer must not be stricter
+than the downstream selector:
+
+1. Fires only for relationship-lane candidates
+   (`candidate.origin_lane == "relationship"`), and only when no trace
+   branch derived a witness (trace branches keep precedence; same-turn
+   traces and scan bindings bind the same anchor, so precedence is
+   behaviorally neutral today).
+2. Witness = the terminal id of each claim-binding **value** of the shape
+   `canonical:<domain>:<id>`, restricted to bindings whose subject is the
+   candidate itself (`canonical:<candidate.domain>:<candidate.canonical_id>`).
+   Value endpoint only, never subject — trace-bound traversal claims use
+   the opposite orientation, so accepting the subject side would re-admit
+   cross-anchor candidates (selector docstring rationale applies verbatim).
+3. Consumption stays single-point: the `displayed_entity_set` branch
+   intersects `identity_ids ∪ witness_ids` with `slot.entity_ids`. A
+   binding pointing at a non-displayed company never intersects → still
+   rejected (negative direction locked by test). Geography and
+   exact-identifier slots consume claim-subject / identity paths, never
+   witnesses — verified unaffected.
+
+**Consistency is structural.** `_apply_constraints` has exactly two
+callers — the main read flow (knowledge_read.py:7961) and the release-bound
+relationship validator (knowledge_read_isolated.py:6118), which recomputes
+expected selections with the same function. One edit keeps read flow and
+validator in agreement; after the fix the validator *requires* the scan
+items it previously excluded, and the read flow supplies them.
+
+**Equivalence lock.** A contract test asserts the read-layer branch and the
+serving selector's `_claim_binding_binds_anchor` agree over a fixture
+matrix (anchor in/out of the displayed set, subject-side vs value-side
+orientation, non-canonical values), so the two gates cannot drift apart.
+
+**Rejected alternatives.** ① Attaching a synthetic
+`LocalSourceRelationshipTrace` to scan items — fabricates per-edge
+authority the scan never executed (trace fields bind the release hash chain
+and path-eligibility evidence); the claim binding is the truthful
+provenance shape. ② Routing scan candidates through
+`_apply_direct_item_constraints` — that path has no witness concept and
+would need the same branch anyway, plus loses fused-candidate receipts.
+③ Fixing in the selector — the selector sits downstream of constraints;
+rejected candidates never reach it (claims=0 → "未能建立关联"), so the fix
+belongs at the constraint layer.
+
+**Round-3 tests.** Positive: a fused scan-only candidate bound to the
+displayed anchor passes `displayed_entity_set`. Negatives: binding value
+pointing at a non-displayed company still rejected; subject-side-only
+canonical binding (traversal orientation) yields no witness and is still
+rejected. Equivalence: read branch ≡ `_claim_binding_binds_anchor` over
+the matrix. End-to-end: g17-t1 three-layer GREEN on the live 18188
+endpoint (优必选 + ≥3 CN ids + local_citations ≥1), CN ids cross-checked
+against the pack SQLite; 普渡 positive control not regressed; replay gate
+per the interim jitter policy.
+
 ## B2–B6, C1–C5 — design stubs (filled at slice start)
 
 - **B2**: narrowing = previous displayed-id set ∩ filter; the displayed-id

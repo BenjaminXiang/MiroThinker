@@ -91,3 +91,101 @@
 3. **数据线同源缺陷**：790f4d1 的 G3 块缺路径资格护栏（data-rebuild 上同测试失败），建议数据线回植本提交的护栏逻辑。
 4. **回归门抖动治理**：G1-T3/G7 两条断言在 LLM 综合答案上不稳定（历史即如此），与本次改动无关但会反复干扰门禁判定——建议主上下文考虑隔离/加固（属 B4/B5 面）。
 5. 服务当前运行的是 b20161d 代码；回滚方式：`git revert b20161d`（或 checkout 该文件）后 `systemctl --user restart canonical-v2-backend.service`——数据未动。
+
+## 第二轮（2026-09-10）：闸门 A/B + 引用楼层落地；g17-t1 仍 RED，根因定位为第三道闸门（约束层）
+
+执行：子代理（B1 slice 第二轮）。代码位置：worktree 分支 `codex/canonical-v2-s12a-ready`，生产代码由系统自动快照 commit `1860b8c` 收录，本轮补提测试 commit `673edb7`（4 个测试文件，不 push）。服务已重启加载本轮代码（`systemctl --user restart canonical-v2-backend.service`）。
+
+### 结论（先说结果）
+
+- **g17-t1 未转绿**，但第一轮识别的两道闸门均已验证打开：Gate A（裸短名"优必选"绑定 → 规划排 relationship 道）✓、Gate B（直扫落入 `_source_bound_relationship_candidates` 并集，车道返回 48 候选）✓。第一轮的"引用楼层依赖"（遗留事项 2）也已落地并端到端验证 ✓。
+- **48→0 的真正丢失点在本轮定位：第三道闸门（约束层）**。`knowledge_read.py:_apply_constraints` 的 `displayed_entity_set` 保护槽把 48 个直扫候选**全部硬拒**——直扫证据项按设计不携带 `LocalSourceRelationshipTrace`（扫描边没有逐边关系权威可绑），而 displayed-witness 只从各类 trace 派生 → 无见证 → 槽拒 → 候选不进证据集 → claims=0 → 答案"未能建立到具体专利条目的关联"、citations=0。最小复现：`.agents/runs/close-workbook-gaps/repro_constraint_gate_scan_items.py`（worktree 内 `uv run python` 直跑，输出 `outcome: rejected / failed slot: displayed_entity_set`）。
+- **正对照端到端全绿**：「深圳市普渡科技有限公司有哪些专利」→ relationship 道 17 候选 → 答案 16 个 CN 号 + **16 张 `local-source-*` 本地引用卡**（type=patent, url=null）。
+
+### 本轮改动（均在 1860b8c / 673edb7）
+
+1. `followup_referents.py`：`_compact_company_alias` 移入（Gate A 共享）。
+2. `knowledge_read_isolated.py`：`_resolve_named_company_patent_source` 增派生短名通道（Gate A）；`_direct_patent_applicant_scan` 提取为共享辅助并被 `_source_bound_relationship_candidates` 并集调用（Gate B）。
+3. `knowledge_serving_isolated.py`：选择器聚焦分支接纳无 trace 直扫项——新增 `_claim_binding_binds_anchor`（**只认绑定值端**，subject 侧会误放回跨锚候选，负向测试锁定）。
+4. `canonical_v2_chat.py`：`_public_citations` 对 relationship 道无 URL 本地证据发 `local-source-<sha256(local:{handle_id})[:16]>` 卡（不暴露内部 id）。
+5. 测试：Gate A 绑定 3 例 + 选择器 1 例（serving）、Gate B 并集 2 例 + 护栏 2 例（build）、s8r2 authoritative_zero 期望改为 1 个扫描候选（contract）、chat adapter 新增 local-card 测试 + 物理属主 sha 更新。
+
+**偏差上报**：设计 Gate A 第 1 条（扩展 `_NAMED_COMPANY_PATENT_PATTERN` 到"X有哪些专利"句型）**跳过未做**——探测证明派生短名通道已覆盖该句型，且天真扩展所有格模式会让「…的竞争对手有哪些专利」误触发所有权意图、打破既有锁定测试。
+
+### g17（新三层 runner，green-g17-r2.json）
+
+命令：`python3 .agents/runs/testset-baseline-20260909/run_testset.py --base-url http://127.0.0.1:18188 --only 17 --out .agents/runs/close-workbook-gaps/green-g17-r2.json`
+
+- **t1「优必选有哪些专利」**：entity ✓ / provenance ✗（`local_citations:0<1`、`patent_ids:0<3`）。答案为 LLM 综合（answer_style=llm_synthesized），自称"未能建立到具体专利条目的关联"。
+- **t2「专利 CN117873146A 的详细信息是什么」**：entity ✓ / completeness ✓（4/5=0.8）/ provenance ✗（`local_citations:0<1`）。t2 引用层红是预存 B4 范围（精确道本地证据无 URL 仍无卡，本轮只覆盖 relationship 道）；实体+完整层保住 = 无退化。
+
+### 逐层证据（绑定 / 扫描 / 约束 / 选择 / 引用）
+
+1. **绑定（Gate A）**：turn-trace `var/turn-trace/2026-09-09.jsonl` 19:46–19:48Z 三轮「优必选有哪些专利」均 `lanes=["relationship","web"]`（第一轮同问句为 exact/structured/lexical/vector/web 五道无 relationship）。
+2. **扫描（Gate B）**：同一 trace `relationship: in=48, retained=48`；SSE `retrieval_done` 同数。注意 trace 的 retained 取自 `evidence_set.traces[].candidate_count`（车道层计数），**不代表候选进入证据集**——本轮根因正藏在这个读数下游。包内核对（probe_s12f_bindings.py）：优必选绑定 58 条、关系表提及 0 行 → 48 候选全部来自直扫（58−48=10 条被资格护栏排除）。
+3. **约束层（根因）**：见上"结论"。补充：release-bound verifier 用同一 `_apply_constraints` 重算期望收据，观测=期望（全拒配全拒），故 turn 正常完成无完整性错误——缺陷是"静默全拒"而非崩溃。
+4. **选择层**：静态确认不阻塞。t1 句型 `_search_view(query)==query` → 非聚焦分支 + "哪些"枚举全量准入；聚焦句型（"深圳市优必选科技有限公司的专利有哪些"）由本轮 `_claim_binding_binds_anchor` 值端见证兜底。
+5. **引用层**：普渡 turn 16 张 local-source 卡端到端证明 `_public_citations` 改动生效；优必选 citations=0 是上游 claims=0 的果，非引用层之过。
+
+### SQLite 交叉核对（只读）
+
+- 普渡 = `company-c-c7447b81221857b0e6d3279c`：`applicants[].canonical_company_id` 绑定 **0 条**（直扫对普渡无贡献，17 候选全来自关系表）；关系表 17 行专利的 CN 号与答案 16 个 CN 号**完全重合**（唯一未入答案的是 CN223605703U）→ 普渡答案全本地。答案存档：`.agents/runs/close-workbook-gaps/pudu-answer-r2.json`。
+- **修正第一轮的一处机制判断**：第一轮称"普渡答案 CN 号均不在本地绑定 → 来自网络/LLM"，当时核对的是 applicants 绑定表；按关系表专利的 CN 号核对则 16/16 全中——CN 号实际来自 traversal 候选 claim 的 snippet（第一轮 citations=0 仍属实，是引用楼层问题）。第一轮"闸门 B 分发绕过"等主结论不受影响。
+- 优必选 g17-t1 答案无 CN 号，无"答案↔绑定"可核对；58 条绑定清单见第一轮。
+
+### 回归门（replay_fix_round1.py --out-dir replay-b1-r2）
+
+6/7 会话通过。3 处失败**全部命中历史抖动签名**，无新签名：G1-T3「subject not in first sentence: 国际先进技术应用推进中心」×1；G7「required substring missing: 优必选」×2（#2/#3）。G3-T2 本轮通过（其抖动未触发）。与本轮改动面最近的 G4_patents（T2「该公司的专利有哪些」）通过。历史同签名记录见第一轮"回归门"节。
+
+### 修复建议（需主上下文决策，超出本轮授权，未实施）
+
+在 `_apply_constraints`（knowledge_read.py，共享核）增一个与选择器 `_claim_binding_binds_anchor` **同语义**的 claim-binding 见证分支：relationship 道、绑定值端为 `canonical:<domain>:<id>`、status=accepted 时，把该端点 id 计入 `displayed_entity_witness_ids`。该见证只被 `displayed_entity_set` 分支消费（geography 槽走独立的 claim-subject 路径，注释明确见证永不满足地理槽），爆炸半径可控；发布侧 verifier 用同一函数重算期望，一致性自保持。属 retrieval-critical 行为变更，需先修订 design.md §B1 并加 OpenSpec 任务。
+
+### 第二轮遗留 / 未决
+
+1. g17-t1 转绿只差上述约束层见证一处改动；改后 t1 句型下选择层与引用层均已就位（聚焦句型亦已由 `_claim_binding_binds_anchor` 覆盖）。
+2. t2 的 `local_citations ≥ 1` 依赖 B4 引用楼层扩展到精确道本地证据（本轮只覆盖 relationship 道）。
+3. 第一轮遗留事项 3（数据线同源护栏回植）、4（抖动治理）不变。
+4. 服务当前运行 1860b8c+673edb7 代码；回滚：`git revert 673edb7 1860b8c` 后重启服务（数据未动）。
+
+## 第三轮（2026-09-10）：Gate C 约束层见证修复 —— g17-t1 三层全绿
+
+执行：子代理（B1 slice 第三轮）。设计依据：`openspec/changes/close-workbook-gaps/design.md` "B1 revision 2 — Gate C" 节（主上下文已批准；锁定语义逐条核对与实际代码无冲突，`FusedCandidate.origin_lane` 字段名相符）。commit `197b7f5`（worktree 分支，未 push）。
+
+### 结论（先说结果）
+
+- **g17-t1 三层全绿**（新三层 runner）：entity ✓ / provenance ✓（`cit=16(L16/W0)`，16 个 CN 号 ≥3，本地引用 ≥1）。GAP-01 的 t1 目标达成。
+- g17-t2 仍红在引用层（`local_citations:0<1`）——精确道本地证据无 URL 不发卡，属已知 B4 范围（第二轮已记录），本轮未动。
+- 正对照普渡不回退（17 候选 / 16 CN / 16 本地卡）；replay 门 **7/7 全过**（本轮连历史抖动签名都未出现）。
+
+### 改动（commit 197b7f5，+219 行，其中生产 +21）
+
+`knowledge_read.py:_apply_constraints` 新增 claim-binding 见证分支（五个 trace 分支之后、`_constraint_failures` 之前）：仅当 `candidate.origin_lane == "relationship"` 且 trace 分支未产出见证时触发（trace 优先）；见证 = 绑定 **value 端**末端 id（`canonical:<domain>:<id>` 形状），且仅统计 `subject_id == canonical:<candidate.domain>:<candidate.canonical_id>` 的绑定（绑定必须是关于候选自己的）；不查 status（与 `_claim_binding_binds_anchor` 同语义——约束层不得比下游选择器更严）。爆炸半径：见证只被 `displayed_entity_set` 分支消费（geography 走 claim-subject 路径、exact_identifier 走 identity 路径，均不受影响）；`_apply_constraints` 全仓两个调用方（主流 + release-bound validator）共用同一函数，自洽。
+
+### RED → GREEN
+
+- 新增 3 个测试（`test_knowledge_read_atomic_green_contract.py` 尾部，直接打 `_apply_constraints`，沿用该文件 `module._constraint_failures` 私测惯例）：
+  1. `test_scan_candidate_claim_value_witnesses_displayed_anchor`（正向：扫描候选经 value 端见证通过 displayed_entity_set）——RED 失败 → GREEN 通过；
+  2. `test_scan_candidate_claim_value_witness_rejections`（负向 ×4：跨锚 value / subject 端朝向 / 非 canonical value / 非 relationship 道，全拒）——RED 阶段即过（测的是拒绝方向），锁定不误放；
+  3. `test_constraint_witness_matches_selector_claim_binding_anchor`（等价契约：5  fixture 矩阵上读层分支 ≡ 选择器 `_claim_binding_binds_anchor`）——RED 失败（锚在集合内那例两侧不一致）→ GREEN 通过。
+- repro 脚本翻转：`.agents/runs/close-workbook-gaps/repro_constraint_gate_scan_items.py` 由"期望拒绝"翻转为 GREEN 护栏（`eligible: 1 / outcome: accepted`），docstring 同步更新。
+- 静态：`ruff check` 全过；`ruff format` 我的行全 clean（测试文件仅剩 2151–2205 四块 HEAD 预存漂移，未动）。
+- 预存回归：原子约束契约文件 8 passed；聚焦套件 `-k "relationship or patent"` **96 passed / 26 skipped / 0 failed**（138s，skip 均为预存 Postgres 集成条件）——无需改期望：s8r2 断言的 `fused_candidates` 是约束前全集，约束收据两侧同函数重算。
+
+### 端到端证据
+
+- runner：`python3 .agents/runs/testset-baseline-20260909/run_testset.py --base-url http://127.0.0.1:18188 --only 17 --out .agents/runs/close-workbook-gaps/green-g17-r3.json` → `[g17-t1] PASS 11.1s cit=16(L16/W0)`。
+- turn-trace 前后对照（同问句、同车道计数）：19:48Z（修前）`relationship in=48/retained=48, citation_count=0` → 20:46Z（修后）`in=48/retained=48, citation_count=16`。48 个候选本轮终于穿过约束层进入证据集（约束前车道计数不变，变化发生在其下游——正是第二轮定位的丢失点）。
+- 答案质量：列出 16 个 CN 号并诚实披露"共检索到48件相关专利，此处列出部分示例"（枚举覆盖披露机制正常工作）。
+- **SQLite 交叉核对**：答案 16 个 CN 号在 s12f 包 lookup.sqlite3 中 **16/16 全部经 `applicants[].canonical_company_id` 绑定优必选**（含 1 条联合申请 CN117559877A：优纪元+优必选）。无虚构、无网络串号。
+
+### 正对照与回归门
+
+- 普渡（不重跑 runner，直接 SSE）：relationship 17 候选、答案 16 CN、16 张 local-source 卡——与第二轮一致，不回退（存档 `pudu-answer-r3.json`）。
+- replay（`--out-dir replay-b1-r3`）：**7/7 ALL PASS**。前两轮的历史抖动签名（G1-T3 subject-not-in-first-sentence、G7 required-substring-优必选、G3-T2 clarification）本轮零出现；无需动用临时抖动政策。
+
+### 第三轮遗留 / 未决
+
+1. g17-t2 的 `local_citations ≥ 1`：精确道本地证据引用卡，属 B4（GAP-07 引用楼层扩展）范围。
+2. 第二轮遗留 3（数据线同源护栏回植）、4（replay 抖动治理——本轮虽全过，历史签名仍在册）不变。
+3. 服务当前运行 197b7f5；回滚：`git revert 197b7f5` 后 `systemctl --user restart canonical-v2-backend.service`（数据未动；前两轮回滚点见各轮末节）。
