@@ -23,6 +23,69 @@ from urllib.parse import urlparse, parse_qs
 PACK_DIR = Path("/var/tmp/mirothinker-data-v2/serving-pack-run14")
 PORT = int(os.environ.get("SIMPLE_SERVE_PORT", "18190"))
 
+# ─── LLM answer generation ─────────────────────────────────────────────────
+
+_LLM_BASE_URL = os.environ.get("LOCAL_LLM_BASE_URL", "https://api.deepseek.com")
+_LLM_MODEL = os.environ.get("LOCAL_LLM_MODEL", "deepseek-v4-pro")
+_LLM_API_KEY = os.environ.get("LOCAL_LLM_API_KEY") or os.environ.get("DEEPSEEK_API_KEY", "")
+
+
+def llm_answer(query: str, results: list[dict]) -> str | None:
+    """Generate a natural-language answer from search results using LLM."""
+    if not _LLM_API_KEY or not results:
+        return None
+
+    # Build context from top 5 results
+    context_parts = []
+    for i, r in enumerate(results[:5], 1):
+        content = r["content"]
+        fields = []
+        for key in ("name", "title", "business", "industry", "profile_summary",
+                     "abstract", "institution", "research_directions",
+                     "product_description", "technology_route_summary",
+                     "patent_number", "doi", "founded_at"):
+            val = content.get(key)
+            if isinstance(val, str) and val.strip():
+                fields.append(f"{key}: {val[:200]}")
+            elif isinstance(val, list) and val:
+                fields.append(f"{key}: {'、'.join(str(v)[:50] for v in val[:3])}")
+        context_parts.append(f"[{i}] {r['domain']}: {r['name']}\n" + "\n".join(fields))
+
+    context = "\n\n".join(context_parts)
+    prompt = f"""基于以下检索结果，用中文回答用户问题。要求：
+1. 直接回答，不说"根据检索结果"等废话
+2. 引用具体实体名称和关键数据
+3. 如果信息有限，坦诚说明并建议更具体的问法
+4. 回答简洁（3-5 句）
+
+用户问题：{query}
+
+检索结果：
+{context}"""
+
+    try:
+        from urllib.request import Request, urlopen
+        body = json.dumps({
+            "model": _LLM_MODEL,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 500,
+            "temperature": 0.3,
+        }).encode()
+        req = Request(
+            f"{_LLM_BASE_URL}/v1/chat/completions",
+            data=body,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {_LLM_API_KEY}",
+            },
+            method="POST",
+        )
+        with urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read())
+            return data["choices"][0]["message"]["content"]
+    except Exception:
+        return None
+
 # ─── Data loading ─────────────────────────────────────────────────────────
 
 _conn: sqlite3.Connection | None = None
@@ -196,6 +259,32 @@ def detect_domain(query: str) -> str | None:
     return None
 
 
+def extract_entity_name(query: str) -> str:
+    """Extract the core entity name from a natural-language query.
+
+    Strips common suffixes like "是做什么的", "有哪些专利", "的研究方向" etc.
+    """
+    name = query.strip()
+    # Remove common question patterns (longest first)
+    patterns = [
+        "是做什么研究的", "是做什么工作的", "是做什么的", "研究方向是什么",
+        "的研究方向", "的论文有哪些", "的专利有哪些", "有哪些专利",
+        "有哪些论文", "的主营业务是什么", "主营业务是什么",
+        "的主要业务是什么", "主要业务是什么", "的简介", "的详细信息",
+        "的联系方式", "的背景", "简介", "怎么样", "如何", "是谁",
+        "有哪些公司", "有哪些企业", "做机器人的", "公司",
+    ]
+    for p in patterns:
+        if name.endswith(p):
+            name = name[: -len(p)].strip()
+            break
+    # Remove leading question words
+    for prefix in ("请问", "查询", "搜索", "帮我查", "介绍一下", "介绍"):
+        if name.startswith(prefix):
+            name = name[len(prefix):].strip()
+    return name
+
+
 # ─── Answer generation ─────────────────────────────────────────────────────
 
 DOMAIN_LABELS = {
@@ -217,11 +306,27 @@ def format_answer(query: str, results: list[dict]) -> dict:
             "suggested_followups": [],
         }
 
+    # Try LLM-generated answer first
+    llm_text = llm_answer(query, results)
+    if llm_text:
+        citations = [
+            {"type": r["domain"], "label": r["name"],
+             "url": r["content"].get("website") or r["content"].get("doi") or ""}
+            for r in results[:5]
+        ]
+        domain = results[0]["domain"]
+        followups = _FOLLOWUPS.get(domain, [])
+        return {
+            "answer_text": llm_text,
+            "citations": citations,
+            "suggested_followups": followups,
+        }
+
+    # Deterministic fallback (no LLM available or LLM failed)
     top = results[0]
     domain_label = DOMAIN_LABELS.get(top["domain"], top["domain"])
     content = top["content"]
 
-    # Build answer from the entity's content
     parts = [f"{top['name']}（{domain_label}）"]
     for field, label in [
         ("business", "主营业务"), ("industry", "所属行业"),
@@ -240,7 +345,6 @@ def format_answer(query: str, results: list[dict]) -> dict:
         others = [r["name"] for r in results[1:5]]
         parts.append(f"\n其他相关{domain_label}：{'、'.join(others)}")
 
-    # Citations
     citations = []
     for r in results[:5]:
         citations.append({
@@ -249,19 +353,20 @@ def format_answer(query: str, results: list[dict]) -> dict:
             "url": content.get("website") or content.get("doi") or "",
         })
 
-    # Follow-ups
-    followups = {
-        "professor": ["这位教授的研究方向是什么？", "这位教授有哪些论文？"],
-        "company": ["这家公司的主要业务是什么？", "这家公司有哪些专利？"],
-        "paper": ["这篇论文的摘要是什什么？", "这篇论文的作者是谁？"],
-        "patent": ["这项专利的技术方案是什么？", "这项专利的申请人是哪家公司？"],
-    }
-
+    domain = top["domain"]
     return {
         "answer_text": "\n\n".join(parts),
         "citations": citations,
-        "suggested_followups": followups.get(top["domain"], []),
+        "suggested_followups": _FOLLOWUPS.get(domain, []),
     }
+
+
+_FOLLOWUPS = {
+    "professor": ["这位教授的研究方向是什么？", "这位教授有哪些论文？"],
+    "company": ["这家公司的主要业务是什么？", "这家公司有哪些专利？"],
+    "paper": ["这篇论文的摘要是什么？", "这篇论文的作者是谁？"],
+    "patent": ["这项专利的技术方案是什么？", "这项专利的申请人是哪家公司？"],
+}
 
 
 # ─── HTTP handler ──────────────────────────────────────────────────────────
@@ -282,7 +387,14 @@ class Handler(BaseHTTPRequestHandler):
                 return
 
             domain = detect_domain(query)
-            if domain:
+            # Extract entity name from natural-language query
+            entity_name = extract_entity_name(query)
+            if entity_name and entity_name != query:
+                # Try exact match on extracted name first
+                results = search_exact(entity_name) or search_contains(entity_name)
+                if not results and domain:
+                    results = search_by_keywords(entity_name, domain)
+            elif domain:
                 results = search_domain(query, domain)
                 if not results:
                     results = search_by_keywords(query, domain)
