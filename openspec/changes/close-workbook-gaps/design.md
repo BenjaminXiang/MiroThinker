@@ -57,6 +57,65 @@ AND citations_local ≥1) fails today (baseline: 1 CN id, citations_local=0,
 answer sourced from web/Tianyancha). GREEN: same assertion passes on the
 live 18188 endpoint after restart; replay gate stays 7/7.
 
+## B1 revision (2026-09-10, after first implementation round)
+
+The literal port landed (commit `b20161d`) but is **unreachable on the s12f
+pack** — evidence in
+`.agents/runs/close-workbook-gaps/verification-b1.md`. Two upstream gates
+must open for g17-t1, plus the citation floor. Design corrections:
+
+**Gate A — planner never binds 优必选 (knowledge_read_isolated.py:414–490).**
+`_NAMED_COMPANY_PATENT_PATTERN` only matches "X的[相关]专利" ("有哪些专利"
+and "的专利有哪些" shapes miss), and the verbatim channel needs a literal
+alias/normalized_name hit while the pack's aliases lack the bare short name
+"优必选". Fix:
+1. Extend the pattern to the "X有哪些专利" / "X的专利有哪些" shapes.
+2. Add a derived short-name channel: strip legal prefix/suffix
+   (深圳市…股份有限公司/有限公司 etc.) from each company projection's name
+   (reuse an existing company-name normalizer if one exists; otherwise a
+   minimal fixed-suffix stripper), match when the short name (len ≥ 2)
+   appears in the query. The existing `len(matched) != 1 → None` uniqueness
+   guard already prevents ambiguous binds; the resolver only fires on
+   patent-intent queries, bounding the blast radius. Systemic alias
+   completion stays with C1; this is the serving-side minimum.
+
+**Gate B — read-side dispatch bypasses the scan (:5409–5439).** s12f has 0
+relationship-scoped eligibility rows, so company→patent always routes to
+`_source_bound_relationship_candidates` (:4965), which scans only the
+relationship table (121 rows / 48 companies, 优必选 absent). Fix: extract
+the ported field-binding scan into a shared helper
+(`_direct_patent_applicant_scan`) and call it from
+`_source_bound_relationship_candidates` for the company→patent path
+(`_COMPANY_TO_PATENT_QUERY_PATH`), unioned with relationship-table
+candidates and deduplicated by patent id. Do NOT re-route the dispatch to
+`_company_to_patent_relationship_candidates` — on packs without per-edge
+eligibility its relationship-trace section yields 0 and would regress the
+positive control (普渡 = 17 table rows). The ported block in
+`_company_to_patent_relationship_candidates` stays (correct on packs with
+per-edge eligibility) and now shares the helper.
+
+**B1c — citation floor for relationship candidates.** Positive control
+shows 17 local relationship candidates still produce citations=0. For the
+spec-delta scenario (citations_local ≥1), the answer renderer must surface
+local citations from relationship-lane candidates' evidence items. Scope
+to the relationship lane here; the general citation floor + web hygiene is
+B4.
+
+**Source-block defect (follow-up, data line).** The verbatim port
+re-admitted path-eligibility-excluded endpoints; the deployment-line port
+added a guardrail. The same defect exists in the data line (`790f4d1`) —
+back-port the guardrail there (recorded in change-log; data line is not
+the serving line, not blocking).
+
+**Replay-gate jitter (interim policy).** Three replay runs on b20161d gave
+7/7, 6/7, 6/7 with mutually different failure subsets; every failing
+signature also appears in historical logs on unmodified code
+(`testset-baseline-20260909/regression/replay-*.log`) and the ported code
+is unreachable on this pack (no causal path). Interim acceptance: a replay
+run whose only failures match the documented pre-existing jitter signature
+set, with the jitter table attached. Jitter quantification/fix is added to
+`harden-serving-test-harness` as task A3.4.
+
 ## B2–B6, C1–C5 — design stubs (filled at slice start)
 
 - **B2**: narrowing = previous displayed-id set ∩ filter; the displayed-id

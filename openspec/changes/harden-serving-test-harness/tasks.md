@@ -38,8 +38,17 @@
        satisfied without 122 errors.
 - [ ] A3.3 Re-run the three canonical_v2 suites + admin-console; zero
        environment-class failures recorded in verification.md.
+- [ ] A3.4 Replay-gate jitter: quantify the LLM-render flaky assertions
+       (evidence: close-workbook-gaps verification-b1.md jitter table +
+       historical replay logs); fix or make deterministic; until then the
+       interim policy in close-workbook-gaps/design.md §B1 applies.
 
 ## A4 Traffic evidence (read-only analysis)
 
-- [ ] A4.1 Measure pack hit rate on real traffic (access-log 462+696 turns
+- [x] A4.1 Measure pack hit rate on real traffic (access-log 462+696 turns
        vs current pack coverage); record the number as data-priority input.
+       (751 non-error turns analyzed; enumeration 38.1% + follow-up 32.9%
+       dominate; named-entity coverage 12.0% s12f vs 5.6% run14 with
+       substring-match noise; run14 adds only 3 named-entity queries —
+       its value is answer depth on the same hot entities, not new-query
+       coverage. Details in verification.md §A4.1.)

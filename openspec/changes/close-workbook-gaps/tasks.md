@@ -2,10 +2,18 @@
 
 ## Stage B — core gap fixes
 
-- [ ] B1.1 Port `_company_to_patent_relationship_candidates` G3-simple scan
+- [x] B1.1 Port `_company_to_patent_relationship_candidates` G3-simple scan
        into deployment-line `knowledge_read_isolated.py` (no new imports).
+       (commit `b20161d`, +79 lines incl. path-eligibility guardrail the
+       source block lacked)
 - [ ] B1.2 Restart 18188; RED→GREEN on g17-t1 assertion (≥3 CN ids,
        citations_local ≥1); replay gate 7/7.
+- [ ] B1.3 Gate A: patent-intent patterns cover "有哪些专利/的专利有哪些";
+       derived short-name channel with uniqueness guard binds 优必选.
+- [ ] B1.4 Gate B: shared `_direct_patent_applicant_scan` helper called
+       from `_source_bound_relationship_candidates` for company→patent;
+       positive control (普渡 17) not regressed.
+- [ ] B1.5 Relationship-lane local citations surface in the answer.
 - [ ] B2.1 Layer D narrowing = displayed-id set ∩ condition; g2-t2/g5-t2
        coverage ≥80% of GT.
 - [ ] B3.1 Enumeration key-entity self-check; g2-t1 five GT companies all
