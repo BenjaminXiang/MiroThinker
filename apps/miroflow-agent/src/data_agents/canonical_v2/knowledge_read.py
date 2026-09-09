@@ -6391,6 +6391,27 @@ def _apply_constraints(
                         or item.claim_binding.subject_id in professor_subject_ids
                     )
                 )
+        if candidate.origin_lane == "relationship" and not displayed_entity_witness_ids:
+            # Trace-less scan candidates (the direct field-binding scan emits
+            # claim bindings instead of projection traces) prove the same
+            # displayed-anchor binding through the value endpoint of their
+            # claim — the mirror of the answer selector's
+            # _claim_binding_binds_anchor, which the constraint layer must not
+            # be stricter than. Value endpoint only, never subject: traversal
+            # claims use the opposite orientation, so accepting the subject
+            # side would re-admit cross-anchor candidates. The binding must be
+            # about the candidate itself.
+            claim_witness_ids = {
+                value.rsplit(":", 1)[-1]
+                for item in candidate.evidence
+                if (binding := item.claim_binding) is not None
+                and binding.subject_id
+                == f"canonical:{candidate.domain}:{candidate.canonical_id}"
+                and isinstance(value := binding.value, str)
+                and value.startswith("canonical:")
+            }
+            if claim_witness_ids:
+                displayed_entity_witness_ids = tuple(sorted(claim_witness_ids))
         failures = _constraint_failures(
             slots=slots,
             identity_ids=primary_identity_ids,

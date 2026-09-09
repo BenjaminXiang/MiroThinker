@@ -2328,3 +2328,201 @@ def test_geography_slot_accepts_relation_and_registered_name_evidence() -> None:
         ),
     )
     assert [failure.slot_kind for failure in other_city_failures] == ["geography"]
+
+
+def _scan_fused_candidate(
+    module: Any,
+    *,
+    canonical_id: str,
+    binding: Any,
+    lane: str = "relationship",
+) -> Any:
+    """A fused relationship-lane scan candidate: claim binding, no trace."""
+    evidence = module.EvidenceItem(
+        evidence_id=f"evidence:direct-patent:{canonical_id}",
+        object_id=canonical_id,
+        domain="patent",
+        lane=lane,
+        source_nature="local",
+        source_locator=f"artifact:patent:{canonical_id}#applicants",
+        snippet=f"Recorded scan evidence for {canonical_id}.",
+        score=0.8,
+        claim_binding=binding,
+    )
+    return module.FusedCandidate(
+        result_id=f"fused-result:{canonical_id}",
+        canonical_id=canonical_id,
+        display_name="扫描命中的专利",
+        domain="patent",
+        raw_candidate_ids=(f"direct-patent:{canonical_id}",),
+        evidence_ids=(evidence.evidence_id,),
+        evidence=(evidence,),
+        quality_flags=(),
+        raw_score=0.8,
+        identity_kind="canonical",
+        resolution_state="resolved",
+        origin_lane=lane,
+        origin_attempt=1,
+        adapter_versions=("canonical-v2-isolated-relationship-v1",),
+        provider_versions=(),
+    )
+
+
+def _displayed_slot(module: Any, entity_ids: tuple[str, ...]) -> Any:
+    return module.ProtectedSlot(
+        kind="displayed_entity_set",
+        value="displayed_entity_set",
+        entity_ids=entity_ids,
+    )
+
+
+def test_scan_candidate_claim_value_witnesses_displayed_anchor() -> None:
+    """Gate C: a trace-less relationship scan candidate whose claim binding
+    points its value endpoint at the displayed anchor satisfies the
+    displayed_entity_set slot — the constraint layer must not be stricter
+    than the answer selector's ``_claim_binding_binds_anchor``."""
+    module = _module()
+    bound = _scan_fused_candidate(
+        module,
+        canonical_id="patent-c-scan",
+        binding=module.EvidenceClaimBinding(
+            subject_id="canonical:patent:patent-c-scan",
+            predicate="patent_has_applicant",
+            value="canonical:company:company-c-anchor",
+            status="accepted",
+        ),
+    )
+
+    eligible, receipts, rejected = module._apply_constraints(
+        (bound,), (_displayed_slot(module, ("company-c-anchor",)),)
+    )
+
+    assert [candidate.canonical_id for candidate in eligible] == ["patent-c-scan"]
+    assert [receipt.outcome for receipt in receipts] == ["accepted"]
+    assert rejected == frozenset()
+
+
+def test_scan_candidate_claim_value_witness_rejections() -> None:
+    """The witness is the value endpoint only, relationship lane only: a
+    cross-anchor value, the traversal (subject-side) orientation, a
+    non-canonical value, and a non-relationship lane all stay rejected."""
+    module = _module()
+    slot = _displayed_slot(module, ("company-c-anchor",))
+
+    def outcome(candidate: Any) -> tuple[str, tuple[str, ...]]:
+        eligible, receipts, rejected = module._apply_constraints((candidate,), (slot,))
+        assert not eligible
+        assert rejected == frozenset(candidate.raw_candidate_ids)
+        assert len(receipts) == 1
+        return (
+            receipts[0].outcome,
+            tuple(failure.slot_kind for failure in receipts[0].failed_slots),
+        )
+
+    cross_anchor = _scan_fused_candidate(
+        module,
+        canonical_id="patent-c-scan",
+        binding=module.EvidenceClaimBinding(
+            subject_id="canonical:patent:patent-c-scan",
+            predicate="patent_has_applicant",
+            value="canonical:company:company-c-other",
+            status="accepted",
+        ),
+    )
+    assert outcome(cross_anchor) == ("rejected", ("displayed_entity_set",))
+
+    subject_side_only = _scan_fused_candidate(
+        module,
+        canonical_id="patent-c-scan",
+        binding=module.EvidenceClaimBinding(
+            subject_id="canonical:company:company-c-anchor",
+            predicate="patent_has_applicant",
+            value="canonical:patent:patent-c-scan",
+            status="accepted",
+        ),
+    )
+    assert outcome(subject_side_only) == ("rejected", ("displayed_entity_set",))
+
+    non_canonical_value = _scan_fused_candidate(
+        module,
+        canonical_id="patent-c-scan",
+        binding=module.EvidenceClaimBinding(
+            subject_id="canonical:patent:patent-c-scan",
+            predicate="patent_has_applicant",
+            value="深圳市优必选科技股份有限公司",
+            status="accepted",
+        ),
+    )
+    assert outcome(non_canonical_value) == ("rejected", ("displayed_entity_set",))
+
+    non_relationship_lane = _scan_fused_candidate(
+        module,
+        canonical_id="patent-c-scan",
+        lane="exact",
+        binding=module.EvidenceClaimBinding(
+            subject_id="canonical:patent:patent-c-scan",
+            predicate="patent_has_applicant",
+            value="canonical:company:company-c-anchor",
+            status="accepted",
+        ),
+    )
+    assert outcome(non_relationship_lane) == ("rejected", ("displayed_entity_set",))
+
+
+def test_constraint_witness_matches_selector_claim_binding_anchor() -> None:
+    """Equivalence lock: the read-layer witness branch and the serving
+    selector's ``_claim_binding_binds_anchor`` agree on every fixture, so the
+    two displayed-anchor gates cannot drift apart."""
+    module = _module()
+    serving = import_module("src.data_agents.canonical_v2.knowledge_serving_isolated")
+    cases = (
+        # value endpoint bound to the displayed anchor
+        (
+            "canonical:patent:patent-c-scan",
+            "canonical:company:company-c-anchor",
+            ("company-c-anchor",),
+        ),
+        # value endpoint bound to a company that is not displayed
+        (
+            "canonical:patent:patent-c-scan",
+            "canonical:company:company-c-other",
+            ("company-c-anchor",),
+        ),
+        # traversal orientation: anchor on the subject side only
+        (
+            "canonical:company:company-c-anchor",
+            "canonical:patent:patent-c-scan",
+            ("company-c-anchor",),
+        ),
+        # non-canonical value
+        (
+            "canonical:patent:patent-c-scan",
+            "深圳市优必选科技股份有限公司",
+            ("company-c-anchor",),
+        ),
+        # bound anchor absent from the displayed set
+        (
+            "canonical:patent:patent-c-scan",
+            "canonical:company:company-c-anchor",
+            ("company-c-other",),
+        ),
+    )
+    for subject_id, value, anchors in cases:
+        binding = module.EvidenceClaimBinding(
+            subject_id=subject_id,
+            predicate="patent_has_applicant",
+            value=value,
+            status="accepted",
+        )
+        candidate = _scan_fused_candidate(
+            module,
+            canonical_id="patent-c-scan",
+            binding=binding,
+        )
+        eligible, _, _ = module._apply_constraints(
+            (candidate,), (_displayed_slot(module, anchors),)
+        )
+        selector_admits = serving._claim_binding_binds_anchor(
+            binding, frozenset(anchors)
+        )
+        assert bool(eligible) == selector_admits, (subject_id, value, anchors)
