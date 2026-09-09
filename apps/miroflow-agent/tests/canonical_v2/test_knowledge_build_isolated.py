@@ -3897,9 +3897,7 @@ def test_customer_company_patent_relationship_unions_direct_applicant_scan() -> 
     assert scan_evidence.local_projection_trace is None
     binding = scan_evidence.claim_binding
     assert binding is not None
-    assert (
-        binding.subject_id == f"canonical:patent:{scan_patent.canonical_identity_id}"
-    )
+    assert binding.subject_id == f"canonical:patent:{scan_patent.canonical_identity_id}"
     assert binding.predicate == "patent_has_applicant"
     assert binding.value == f"canonical:company:{company_id}"
     assert binding.status == "accepted"
@@ -3984,8 +3982,7 @@ def test_direct_patent_applicant_scan_honors_endpoint_eligibility_guardrail() ->
     )
     # Already returned by the table traversal: never duplicated.
     assert (
-        scan(company_row, existing=frozenset({scan_patent.canonical_identity_id}))
-        == ()
+        scan(company_row, existing=frozenset({scan_patent.canonical_identity_id})) == ()
     )
 
     # An applicant binding a different company is not this turn's answer.

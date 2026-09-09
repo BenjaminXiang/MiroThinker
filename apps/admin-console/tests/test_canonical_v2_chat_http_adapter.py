@@ -34,7 +34,7 @@ RELEASE_MISMATCH = "canonical_v2_release_mismatch"
 RAW_SELECTOR_DRAFT = "RAW_SELECTOR_DRAFT_DO_NOT_EXPOSE"
 SECRET_SENTINEL = "sk-s11a-do-not-expose"
 ACCEPTED_PHYSICAL_OWNER_SHA256 = (
-    "3ae8b81597997b237e19017c8606d6e683f5b780a377e574916faa16abc3d98c"
+    "de94b45e854dfad5008a85417df1bc6efaa419365e13057b986746a6fd87baea"
 )
 CHAT_SCHEMA_SHA256 = "04584086d12ca5c56e5fd28f702d2fe5f71a20038be84f0dbdcc45524edcbd94"
 CHAT_MODEL_NAMES = (
@@ -219,6 +219,89 @@ def test_public_citation_uses_official_homepage_without_internal_identity() -> N
     assert citations[0].url == "http://www.sigs.tsinghua.edu.cn/dwb/main.htm"
     assert "professor-c-ding-wenbo" not in citations[0].id
     assert "/browse" not in citations[0].url
+
+
+def test_relationship_lane_local_evidence_surfaces_url_less_local_card() -> None:
+    """Relationship-lane local evidence (traversal rows and the direct
+    applicant-field scan) carries no official URL; it must still surface as a
+    URL-less local card — hashed, never exposing the internal canonical id —
+    while other local lanes without a URL stay cardless."""
+    service = import_module("backend.services.canonical_v2_chat")
+    answer = import_module("src.data_agents.canonical_v2.knowledge_answer")
+    read = import_module("src.data_agents.canonical_v2.knowledge_read")
+
+    def patent_evidence(evidence_id: str, object_id: str, *, lane: str) -> Any:
+        return read.EvidenceItem(
+            evidence_id=evidence_id,
+            object_id=object_id,
+            domain="patent",
+            lane=lane,
+            source_nature="local",
+            source_locator=f"artifact:patent:{object_id}#applicants",
+            snippet=json.dumps(
+                {
+                    "title": "一种机器人足式落地控制方法",
+                    "patent_number": "CN117873146A",
+                    "applicant": "深圳市优必选科技股份有限公司",
+                },
+                ensure_ascii=False,
+            ),
+            score=0.8,
+            claim_binding=read.EvidenceClaimBinding(
+                subject_id=f"canonical:patent:{object_id}",
+                predicate="patent_has_applicant",
+                value="canonical:company:company-c-ubtech",
+                status="accepted",
+            ),
+        )
+
+    first = patent_evidence(
+        "evidence:direct-patent:patent-c-1", "patent-c-1", lane="relationship"
+    )
+    second = patent_evidence(
+        "evidence:direct-patent:patent-c-2", "patent-c-2", lane="relationship"
+    )
+    exact = patent_evidence("evidence:exact:patent-c-3", "patent-c-3", lane="exact")
+    handles = tuple(
+        read.CanonicalEntityHandle(
+            canonical_id=item.object_id,
+            domain="patent",
+            display_name="一种机器人足式落地控制方法",
+            evidence_ids=(item.evidence_id,),
+        )
+        for item in (first, second, exact)
+    )
+    turn_result = answer.TurnResult(
+        session_id="session:s12g-local-card",
+        turn_id="turn:s12g-local-card",
+        release_id=RELEASE_ID,
+        answer_text="优必选拥有多项机器人专利。",
+        citations=tuple(
+            answer.Citation(
+                evidence_id=item.evidence_id,
+                source_nature="local",
+                source_locator=item.source_locator,
+            )
+            for item in (first, second, exact)
+        ),
+    )
+
+    citations = service.CanonicalV2ChatAdapter._public_citations(
+        turn_result=turn_result,
+        handles_by_id={handle.canonical_id: handle for handle in handles},
+        evidence_by_id={item.evidence_id: item for item in (first, second, exact)},
+    )
+
+    assert len(citations) == 2
+    assert {citation.type for citation in citations} == {"patent"}
+    assert all(citation.url is None for citation in citations)
+    assert all(citation.id.startswith("local-source-") for citation in citations)
+    assert all(
+        internal_id not in citation.id
+        for citation in citations
+        for internal_id in ("patent-c-1", "patent-c-2", "patent-c-3")
+    )
+    assert citations[0].label == "一种机器人足式落地控制方法"
 
 
 @pytest.mark.parametrize(

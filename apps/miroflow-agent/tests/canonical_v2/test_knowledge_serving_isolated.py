@@ -5610,9 +5610,7 @@ def test_named_company_patent_query_binds_derived_compact_alias(
             as_of=NOW,
         )
     )
-    assert derived.structured_constraints.displayed_entity_ids == (
-        "company-c-ubtech",
-    )
+    assert derived.structured_constraints.displayed_entity_ids == ("company-c-ubtech",)
     assert len(derived.relationship_paths) == 1
     assert derived.relationship_paths[0].direction == "company_to_patent"
 
@@ -5872,7 +5870,9 @@ def test_focused_traversal_admits_traceless_scan_items_bound_by_claim_binding() 
             ),
         )
 
-    bound_items = tuple(scan_item(index, bound_company_id=company_id) for index in range(2))
+    bound_items = tuple(
+        scan_item(index, bound_company_id=company_id) for index in range(2)
+    )
     alien_item = scan_item(2, bound_company_id="company-c-other")
     web_item = EvidenceItem(
         evidence_id="evidence:web:1",

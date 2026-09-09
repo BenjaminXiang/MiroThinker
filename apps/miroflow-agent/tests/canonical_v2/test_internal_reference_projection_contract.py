@@ -16018,7 +16018,14 @@ def test_s8r2_executes_release_scoped_company_to_patent_relationship_traversal(
         authoritative_zero,
         web_calls=zero_web_calls,
     )
-    assert zero_result.fused_candidates == ()
+    # An empty relationship table no longer empties the lane: the direct
+    # applicant-field scan serves the release-bound field binding
+    # (patent-ada's applicants reference company-robotics) for
+    # eligibility-admitted endpoints, unioned with the (empty) table walk.
+    assert len(zero_result.fused_candidates) == 1
+    zero_candidate = zero_result.fused_candidates[0]
+    assert zero_candidate.canonical_id == "patent-ada"
+    assert zero_candidate.origin_lane == "relationship"
     assert len(zero_web_calls) == 1
 
     valid_company_no_edge = _s8r2_scenario(
