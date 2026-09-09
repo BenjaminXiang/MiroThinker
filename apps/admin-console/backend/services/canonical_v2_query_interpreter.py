@@ -27,6 +27,7 @@ from pydantic import BaseModel, Field
 
 from src.data_agents.canonical_v2.followup_referents import (
     has_explicit_named_subject,
+    has_singular_referent,
     referent_subject_domain,
 )
 from src.data_agents.professor.llm_profiles import (
@@ -36,7 +37,11 @@ from src.data_agents.professor.llm_profiles import (
 
 _logger = logging.getLogger(__name__)
 
-INTERPRETATION_TIMEOUT_SECONDS = 1.5
+# Hard timeout for the interpreter LLM call. The Phase 6 GO gate accepted 1.5s
+# against the school-gateway model; the 2026-09-09 switch to deepseekv4flash
+# (1.6-1.9s on the follow-up prompt) made every call time out, so the user
+# raised the contract to 3.0s.
+INTERPRETATION_TIMEOUT_SECONDS = 3.0
 _MIN_CONFIDENCE = 0.7
 
 
@@ -77,6 +82,21 @@ def is_headline_shaped_name(name: str | None) -> bool:
     from backend.services.canonical_v2_chat import is_headline_shaped_name as _check
 
     return _check(name)
+
+
+_ENUMERATION_MARKERS = ("哪些", "谁", "多少", "几个", "列出")
+
+
+def query_is_enumeration(query: str) -> bool:
+    """Whether the query asks for a set of entities.
+
+    Singular-referent follow-ups ("它有哪些布局和进展", "他有哪些论文") ask
+    about the anchor's attributes, not about a set — treating them as
+    enumeration made validation check ⑥ reject a correct interpretation
+    (the G1-T3 replay failure)."""
+    return any(marker in query for marker in _ENUMERATION_MARKERS) and not (
+        has_singular_referent(query)
+    )
 
 
 def validate_interpretation(
@@ -190,9 +210,7 @@ class ContextualQueryInterpreter:
             interpretation = Interpretation.model_validate_json(raw)
         except Exception:
             return None
-        query_is_enum = any(
-            marker in query for marker in ("哪些", "谁", "多少", "几个", "列出")
-        )
+        query_is_enum = query_is_enumeration(query)
         return validate_interpretation(
             interpretation,
             query=query,

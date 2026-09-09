@@ -99,6 +99,14 @@ class TestValidation:
         )
         assert result is not None
 
+    def test_singular_referent_is_not_enumeration(self) -> None:
+        """G1-T3: '它有哪些…' asks about the anchor's attributes, not a set."""
+        assert not interp.query_is_enumeration("它有哪些布局和进展")
+        assert not interp.query_is_enumeration("他有哪些论文")
+        assert not interp.query_is_enumeration("该公司的专利有哪些")
+        assert interp.query_is_enumeration("深圳有哪些做具身智能的公司")
+        assert interp.query_is_enumeration("上述企业里总部在深圳的企业有哪些")
+
     def test_explicit_named_subject_veto(self) -> None:
         """Query names 云迹科技 explicitly; interpretation resolves to anchor
         (different subject) → veto."""
