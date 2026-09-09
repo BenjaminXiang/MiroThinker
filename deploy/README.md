@@ -14,8 +14,14 @@ Milvus Lite + 本地 serving-pack。对外经 **dbg21（100.64.0.34）的 nginx*
   `serving-pack/`（结构化数据 + milvus.db）、`index-v1/`（向量索引）、
   `access-logs.sqlite3`（访问日志）、`corrections.sqlite3`（修正覆盖库，见下）、
   `manual-recall-v1/`（人工知识侧车，见下）。
-- 外部依赖只有 embedding（100.64.0.27:18005）和 reranker（18006），fail-closed，
+- 外部依赖：embedding（100.64.0.27:18005）与 reranker（18006），fail-closed，
   远端挂了检索即不可用——需要在那台机器上保证这两个服务常驻。
+- **聊天 LLM 也是外部依赖**（2026-09-09 起）：`CHAT_LLM_PROFILE=deepseekv4flash`
+  （`api.deepseek.com`，密钥 `.deepseek_api_key`）。原 `gemma4` 档走学校网关
+  `star.sustech.edu.cn`，2026-09-09 实测整站 502，答案静默退化为模板；切换后恢复
+  `answer_style=llm_synthesized`。档位选择依据测试集实测：flash 22/25 > pro 21/25，
+  且 pro 在「优必选有哪些专利」触发 `LLM prose response contains a private marker`
+  导致**空答案**。LLM 不可用时服务不报错、答案退化为模板，属静默降级。
 - 已知迁移阻塞项：Milvus Lite 2.5.1 close 死锁（见 FIXLOG 2026-08-07 条目），
   只影响重新构建的收尾，不影响运行中的服务。
 
