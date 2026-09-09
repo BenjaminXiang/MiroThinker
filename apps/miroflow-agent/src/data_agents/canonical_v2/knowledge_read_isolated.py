@@ -3798,6 +3798,85 @@ def _company_to_patent_relationship_candidates(
             candidate.raw_candidate_id,
         )
     )
+
+    # G3-simple: direct field scan for patents whose applicants reference
+    # the target company — bypasses the relationship projection bottleneck
+    # (~123 of ~7,078 field-level bindings materialize through the pipeline).
+    # Deployment-line port addition: the scan honors path eligibility — an
+    # endpoint whose relationship traversal is policy-excluded was dropped by
+    # the traversal above and must not be re-admitted here.
+    def direct_scan_returnable(identity_id: str) -> bool:
+        result = path_results.get(identity_id)
+        if result is None:
+            return False
+        return all(
+            decision.outcome is not PolicyOutcome.excluded
+            and not decision.hard_exclusion_codes
+            for decision in result.decisions
+            if decision.path == "verified_relationship_traversal"
+        )
+
+    existing_patent_ids = {candidate.canonical_id for candidate in candidates}
+    company_returnable = direct_scan_returnable(displayed_company_id)
+    for proj_key, projection in sorted(public_projections.items()):
+        if not company_returnable:
+            break
+        if proj_key[0] != "patent" or proj_key[1] in existing_patent_ids:
+            continue
+        if not isinstance(projection, PatentProjection):
+            continue
+        if not direct_scan_returnable(proj_key[1]):
+            continue
+        if not any(
+            applicant.canonical_company_id == displayed_company_id
+            for applicant in projection.applicants
+        ):
+            continue
+        applicant = next(
+            a
+            for a in projection.applicants
+            if a.canonical_company_id == displayed_company_id
+        )
+        snippet = json.dumps(
+            {
+                "patent_number": projection.patent_number,
+                "title": projection.title,
+                "applicant": applicant.name,
+                "company_name": applicant.company_name,
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+        evidence = EvidenceItem(
+            evidence_id=f"evidence:direct-patent:{proj_key[1]}",
+            object_id=proj_key[1],
+            domain="patent",
+            lane="relationship",
+            source_nature="local",
+            source_locator=f"artifact:patent:{proj_key[1]}#applicants",
+            snippet=snippet,
+            score=0.8,
+        )
+        candidates.append(
+            RecallCandidate(
+                raw_candidate_id=f"direct-patent:{proj_key[1]}",
+                display_name=projection.title,
+                domain="patent",
+                identity_kind="canonical",
+                canonical_id=proj_key[1],
+                reference_type="patent",
+                resolution_state="resolved",
+                relationship_state="accepted",
+                origin_public_evidence_ids=(evidence.evidence_id,),
+                query_view=request.query_view,
+                lane="relationship",
+                attempt=1,
+                release_id=bundle.release_id,
+                adapter_version=_RELATIONSHIP_ADAPTER_VERSION,
+                raw_score=0.8,
+                evidence=(evidence,),
+            )
+        )
     return tuple(candidates[: request.max_candidates])
 
 
