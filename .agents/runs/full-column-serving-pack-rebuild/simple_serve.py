@@ -117,6 +117,65 @@ def search_contains(query: str, domain: str | None = None) -> list[dict]:
     return [e for _, e in results[:20]]
 
 
+# Known Shenzhen institutions for institutional queries
+_INSTITUTIONS = [
+    "南方科技大学", "深圳大学", "哈尔滨工业大学深圳", "哈工大深圳",
+    "清华大学深圳", "清华深研院", "中山大学深圳", "深圳技术大学",
+    "北京大学深圳", "北大深研院", "香港中文大学深圳", "深圳理工大学",
+    "深圳先进技术研究院", "中科院深圳",
+]
+
+
+def search_by_keywords(query: str, domain: str | None = None) -> list[dict]:
+    """Extract keywords from query and score by overlap with entity text.
+
+    Handles institutional queries ("南方科技大学教授") by matching
+    institution names in entity profiles.
+    """
+    # Check for institution name in query
+    inst_match = None
+    for inst in _INSTITUTIONS:
+        if inst in query:
+            inst_match = inst
+            break
+
+    if inst_match:
+        # Search for entities mentioning this institution
+        inst_norm = _norm(inst_match)
+        results = []
+        for e in _entries:
+            if domain and e["domain"] != domain:
+                continue
+            if inst_norm in e["norm_text"]:
+                score = 3.0  # institution match
+                # Boost if the entity IS at this institution
+                if inst_norm in e["norm_name"]:
+                    score = 5.0
+                results.append((score, e))
+        results.sort(key=lambda x: -x[0])
+        return [e for _, e in results[:10]]
+
+    # General keyword search: split query into meaningful tokens
+    # and score by how many appear in entity text
+    tokens = [t for t in re.split(r"[\s,，、。？！]+", _norm(query)) if len(t) >= 2]
+    if not tokens:
+        return []
+    results = []
+    for e in _entries:
+        if domain and e["domain"] != domain:
+            continue
+        score = 0
+        for token in tokens:
+            if token in e["norm_name"]:
+                score += 3
+            elif token in e["norm_text"]:
+                score += 1
+        if score >= 2:  # at least 2 points (1 token in text, or name match)
+            results.append((score, e))
+    results.sort(key=lambda x: -x[0])
+    return [e for _, e in results[:20]]
+
+
 def search_domain(query: str, domain: str) -> list[dict]:
     """Search within a specific domain."""
     exact = search_exact(query, domain)
@@ -225,8 +284,10 @@ class Handler(BaseHTTPRequestHandler):
             domain = detect_domain(query)
             if domain:
                 results = search_domain(query, domain)
+                if not results:
+                    results = search_by_keywords(query, domain)
             else:
-                results = search_exact(query) or search_contains(query)
+                results = search_exact(query) or search_contains(query) or search_by_keywords(query)
 
             response = format_answer(query, results)
             response["query"] = query
